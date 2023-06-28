@@ -57,6 +57,8 @@ const (
 	ChromePolicyRealUserLoggedIn = "chromePolicyRealUserLoggedIn"
 	// ChromePolicyLoggedInDevToolsAvailable is a fixture name.
 	ChromePolicyLoggedInDevToolsAvailable = "chromePolicyLoggedInDevToolsAvailable"
+	// ChromePolicyLoggedInAdvancedProtection is a fixture name.
+	ChromePolicyLoggedInAdvancedProtection = "chromePolicyLoggedInAdvancedProtection"
 )
 
 // Fixtures defined in go.chromium.org/tast-tests/cros/local/mgs/fixture.go.
@@ -85,6 +87,8 @@ const (
 	LacrosEnrolledLoggedIn = "lacrosEnrolledLoggedIn"
 	// LacrosEnrolledLoggedInShortMetricsInterval is a fixture name.
 	LacrosEnrolledLoggedInShortMetricsInterval = "lacrosEnrolledLoggedInShortMetricsInterval"
+	// LacrosPolicyLoggedInAdvancedProtection is a fixture name.
+	LacrosPolicyLoggedInAdvancedProtection = "lacrosPolicyLoggedInAdvancedProtection"
 )
 
 // Fixtures defined in go.chromium.org/tast-tests/cros/local/policyutil/fixtures/persistent.go.

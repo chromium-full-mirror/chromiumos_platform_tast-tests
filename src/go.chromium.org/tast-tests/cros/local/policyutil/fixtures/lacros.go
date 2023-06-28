@@ -170,6 +170,23 @@ func init() {
 		PostTestTimeout: 15 * time.Second,
 		Parent:          fixture.PersistentLacrosEnrolled,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.LacrosPolicyLoggedInAdvancedProtection,
+		Desc:     "Logged into a fake user session with advanced protection enabled",
+		Contacts: []string{"chiav@google.com", "dp-chromeos-eng@google.com"},
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+					chrome.LacrosExtraArgs("--safe-browsing-treat-user-as-advanced-protection"))).Opts()
+			},
+		},
+		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.PersistentLacros,
+	})
 }
 
 type policyRealUserFixture struct {

@@ -286,6 +286,22 @@ func init() {
 		PostTestTimeout: 15 * time.Second,
 		Parent:          fixture.FakeDMS,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromePolicyLoggedInAdvancedProtection,
+		Desc:     "Logged into a fake user session with advanced protection enabled",
+		Contacts: []string{"chiav@google.com", "dp-chromeos-eng@google.com"},
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{chrome.ExtraArgs("--safe-browsing-treat-user-as-advanced-protection")}, nil
+			},
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.FakeDMS,
+	})
 }
 
 type policyChromeFixture struct {
