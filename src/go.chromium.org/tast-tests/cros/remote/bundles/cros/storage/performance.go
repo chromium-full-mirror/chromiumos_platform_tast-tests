@@ -148,6 +148,21 @@ func init() {
 			Val:               "seq_write",
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsStorageSeqWriteTp, tdreq.UfsStorageSeqWriteLatency},
+		}, {
+			Name:              "nvme_surfing",
+			Val:               "surfing",
+			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
+			ExtraRequirements: []string{tdreq.NvmeStorageUserSimReadLatency, tdreq.NvmeStorageUserSimWriteLatency},
+		}, {
+			Name:              "emmc_surfing",
+			Val:               "surfing",
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraRequirements: []string{tdreq.EmmcStorageUserSimReadLatency, tdreq.EmmcStorageUserSimWriteLatency},
+		}, {
+			Name:              "ufs_surfing",
+			Val:               "surfing",
+			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
+			ExtraRequirements: []string{tdreq.UfsStorageUserSimReadLatency, tdreq.UfsStorageUserSimWriteLatency},
 		}},
 	})
 }

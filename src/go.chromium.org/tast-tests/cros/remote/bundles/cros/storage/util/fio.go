@@ -26,6 +26,7 @@ var (
 		"4k_write",
 		"4k_read_qd4",
 		"4k_write_qd4",
+		"surfing",
 	}
 )
 
