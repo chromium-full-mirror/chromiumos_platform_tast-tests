@@ -47,21 +47,17 @@ func init() {
 			{
 				Name: "google_photos",
 				Val: ambient.TestParams{
-					TopicSource:            ambient.GooglePhotos,
-					Theme:                  ambient.SlideShow,
-					AnimationPlaybackSpeed: ambient.AnimationDefaultPlaybackSpeed,
-					StartupTimeout:         ambient.StartSlideShowDefaultTimeout,
-					PlayTestVideo:          false,
+					TopicSource:    ambient.GooglePhotos,
+					Theme:          ambient.SlideShow,
+					StartupTimeout: ambient.StartSlideShowDefaultTimeout,
 				},
 			},
 			{
 				Name: "art_gallery",
 				Val: ambient.TestParams{
-					TopicSource:            ambient.ArtGallery,
-					Theme:                  ambient.SlideShow,
-					AnimationPlaybackSpeed: ambient.AnimationDefaultPlaybackSpeed,
-					StartupTimeout:         ambient.StartSlideShowDefaultTimeout,
-					PlayTestVideo:          false,
+					TopicSource:    ambient.ArtGallery,
+					Theme:          ambient.SlideShow,
+					StartupTimeout: ambient.StartSlideShowDefaultTimeout,
 				},
 			},
 			// For animated themes:
@@ -79,7 +75,6 @@ func init() {
 					Theme:                  ambient.FeelTheBreeze,
 					AnimationPlaybackSpeed: ambient.AnimationFastForwardPlaybackSpeed,
 					StartupTimeout:         ambient.StartAnimationDefaultTimeout,
-					PlayTestVideo:          false,
 				},
 			},
 			{
@@ -214,6 +209,29 @@ func prepareScreenSaver(tconn *chrome.TestConn, ui *uiauto.Context, testParams a
 				}
 			} else {
 				return errors.Errorf("topicSource - %v is invalid", testParams.TopicSource)
+			}
+		} else if testParams.Theme == ambient.VideoTheme {
+			// Always make sure only the default video is selected initially.
+			selectedVideos, err := ui.NodesInfo(ctx, nodewith.HasClass(ambient.AlbumSelectedClassName))
+			if err != nil {
+				return errors.Wrap(err, "failed to find the selected video albums")
+			}
+			if len(selectedVideos) != 1 {
+				return errors.New("exactly 1 selected video album expected")
+			}
+			if selectedVideos[0].Name != ambient.DefaultVideoName {
+				return errors.New("incorrect default ambient video is selected")
+			}
+
+			// Select the correct video if a non-default is requested.
+			if testParams.VideoThemeAlbum != ambient.DefaultVideoName {
+				albumToSelect := ambient.FindAlbumWithName(testParams.VideoThemeAlbum, albums)
+				if albumToSelect == nil {
+					return errors.New("failed to find video album with name " + testParams.VideoThemeAlbum)
+				}
+				if err := ambient.SelectAlbum(ctx, ui, albumToSelect); err != nil {
+					return errors.Wrap(err, "failed to select video album "+testParams.VideoThemeAlbum)
+				}
 			}
 		}
 

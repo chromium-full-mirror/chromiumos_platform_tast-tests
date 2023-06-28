@@ -30,6 +30,7 @@ import (
 const (
 	GooglePhotos = "Google Photos"
 	ArtGallery   = "Art gallery"
+	VideoSource  = "Dawn to dark"
 	OnStatus     = "On"
 	OffStatus    = "Off"
 )
@@ -39,7 +40,18 @@ const (
 	SlideShow     = "Slide show"
 	FeelTheBreeze = "Feel the breeze"
 	FloatOnBy     = "Float on by"
+	VideoTheme    = "Dawn to dark"
 )
+
+// const for ambient video choices.
+const (
+	CloudsVideoName    = "Cloud Flow"
+	NewMexicoVideoName = "Earth Flow"
+)
+
+// DefaultVideoName specifies the video selected by default when the video theme
+// is active.
+const DefaultVideoName = NewMexicoVideoName
 
 // AlbumSelectedClassName specifies the label given to ambient albums that have
 // been selected in the hub.
@@ -54,9 +66,11 @@ const (
 	// significantly more than slide show, the timeout should be larger.
 	StartSlideShowDefaultTimeout = 15 * time.Second
 	StartAnimationDefaultTimeout = 30 * time.Second
-	// Keeps the animation playback speed set at the default (no fast forwarding).
-	// For use with themes that do not use lottie animations.
-	AnimationDefaultPlaybackSpeed = 1
+	// Video files by design should almost always be cached on disc by the time a
+	// screen saver session starts, leading to zero delay in rendering. In corner
+	// cases where it's not, it should be downloaded immediately before rendering
+	// can start, which should take at most ~15 seconds.
+	StartVideoDefaultTimeout = 15 * time.Second
 	// Typical animation cycle duration is currently 60 seconds. 60 seconds / 20
 	// = 3 second cycle duration. This should give the test ample time to iterate
 	// through 2 full animation cycles, giving it sufficient test coverage.
@@ -75,9 +89,6 @@ var TestVideoSrc = youtube.VideoSrc{
 type TestParams struct {
 	TopicSource string
 	Theme       string
-	// Only used if the `Theme` is a Lottie-animated theme. Specifies the
-	// animation's playback rate so that the test can run faster.
-	AnimationPlaybackSpeed float32
 	// Amount of time to wait for an ambient session to start (can include things
 	// like downloading photos, etc). Applies to all themes.
 	StartupTimeout time.Duration
@@ -86,6 +97,13 @@ type TestParams struct {
 	// launch ambient mode with a YT video playing in the background). It is not
 	// theme-specific.
 	PlayTestVideo bool
+
+	// Only used if the `Theme` is `VideoTheme`. Specifies the "album" name of
+	// video to play.
+	VideoThemeAlbum string
+	// Only used if the `Theme` is a Lottie-animated theme. Specifies the
+	// animation's playback rate so that the test can run faster.
+	AnimationPlaybackSpeed float32
 }
 
 // DeviceSettings that must be set on the DUT before the test begins. These
@@ -140,14 +158,17 @@ func SetDeviceSettings(tconn *chrome.TestConn, deviceSettings DeviceSettings) ui
 			return errors.Wrap(err, "failed to set photo refresh interval")
 		}
 
-		if err := tconn.Call(
-			ctx,
-			nil,
-			`tast.promisify(chrome.settingsPrivate.setPref)`,
-			"ash.ambient.animation_playback_speed",
-			deviceSettings.AnimationPlaybackSpeed,
-		); err != nil {
-			return errors.Wrap(err, "failed to set playback speed")
+		// 0 means the field was default initialized and is not intended to be used.
+		if deviceSettings.AnimationPlaybackSpeed > 0 {
+			if err := tconn.Call(
+				ctx,
+				nil,
+				`tast.promisify(chrome.settingsPrivate.setPref)`,
+				"ash.ambient.animation_playback_speed",
+				deviceSettings.AnimationPlaybackSpeed,
+			); err != nil {
+				return errors.Wrap(err, "failed to set playback speed")
+			}
 		}
 		return nil
 	}
@@ -211,6 +232,20 @@ func waitForPhotoTransitions(
 		nil,
 		`tast.promisify(chrome.autotestPrivate.waitForAmbientPhotoAnimation)`,
 		numCompletions,
+		toNearestSecond(timeout),
+	)
+}
+
+// waitForVideo blocks until video playback has started.
+func waitForVideo(
+	ctx context.Context,
+	tconn *chrome.TestConn,
+	timeout time.Duration,
+) error {
+	return tconn.Call(
+		ctx,
+		nil,
+		`tast.promisify(chrome.autotestPrivate.waitForAmbientVideo)`,
 		toNearestSecond(timeout),
 	)
 }
@@ -301,13 +336,14 @@ func UnlockScreen(tconn *chrome.TestConn, username, password string) uiauto.Acti
 // the number of photo transitions during ambient mode.
 func waitForAmbientStart(tconn *chrome.TestConn, ui *uiauto.Context, testParams TestParams) uiauto.Action {
 	return func(ctx context.Context) error {
-		if err := waitForPhotoTransitions(
-			ctx,
-			tconn,
-			2,
-			testParams.StartupTimeout,
-		); err != nil {
-			return errors.Wrap(err, "failed to wait for photo transitions")
+		var err error
+		if testParams.Theme == VideoTheme {
+			err = waitForVideo(ctx, tconn, testParams.StartupTimeout)
+		} else {
+			err = waitForPhotoTransitions(ctx, tconn, 2, testParams.StartupTimeout)
+		}
+		if err != nil {
+			return errors.Wrap(err, "failed to wait for ambient autotest API")
 		}
 		if testParams.PlayTestVideo {
 			return showMediaStringInScreenSaver(ctx, ui)
