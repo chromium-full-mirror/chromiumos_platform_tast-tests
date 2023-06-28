@@ -58,7 +58,7 @@ func init() {
 					accountSwitchEnabled: true,
 				},
 				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name: "blocklist_vm",
