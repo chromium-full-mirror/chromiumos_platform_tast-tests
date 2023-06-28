@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -135,11 +136,10 @@ func (e *Element) Login(ctx context.Context, username string) error {
 
 	const waitingStatusTextID = elementIDPrefix + "waitingStatusText"
 	notNowButton := e.d.Object(ui.Text("NOT NOW"), ui.ResourceID(elementIDPrefix+"later"))
-	createRoomButton := e.d.Object(ui.Description("Create a new conversation or room"), ui.ResourceID(createChatButtonID))
 	waitingStatusText := e.d.Object(ui.ResourceID(waitingStatusTextID), ui.ClassName(textClass))
 	return uiauto.NamedCombine("skip splash",
 		apputil.ClickIfExist(notNowButton, defaultUITimeout),
-		apputil.WaitForExists(createRoomButton, defaultUITimeout),
+		e.dismissNotificationPrompt,
 		// Wait for the app finishes syncing the account data with the server.
 		// 1. If the account only joins a few rooms, the text would immediately disappear
 		// after being shown, and the UI might fail to capture it.
@@ -229,6 +229,25 @@ func (e *Element) dismissEncryptionAlert(ctx context.Context) error {
 		apputil.WaitForExists(alert, defaultUITimeout),
 		dismissAlert,
 	)(ctx)
+}
+
+// dismissNotificationPrompt dismisses the notification prompt if it pops up and
+// waits for the create room button to appear.
+func (e *Element) dismissNotificationPrompt(ctx context.Context) error {
+	createRoomButton := e.d.Object(ui.Description("Create a new conversation or room"), ui.ResourceID(createChatButtonID))
+	notificationText := e.d.Object(ui.Text("Allow Element to send you notifications?"), ui.ClassName(textClass))
+	foundObject, err := cuj.FindAnyExists(ctx, defaultUITimeout, createRoomButton, notificationText)
+	if err != nil {
+		return errors.Wrap(err, "failed to find objects before dismissing notification prompt")
+	}
+	if foundObject == notificationText {
+		dontAllowButton := e.d.Object(ui.Text("Don’t allow"), ui.ResourceID("com.android.permissioncontroller:id/permission_deny_button"))
+		return uiauto.NamedCombine("dismiss notification prompt",
+			apputil.FindAndClick(dontAllowButton, defaultUITimeout),
+			apputil.WaitForExists(createRoomButton, defaultUITimeout),
+		)(ctx)
+	}
+	return nil
 }
 
 // SignOut signs out from Element app.
