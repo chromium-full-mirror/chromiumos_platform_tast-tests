@@ -1,4 +1,4 @@
-// Copyright 2023 The ChromiumOS Authors
+// Copyright 2020 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,186 +7,50 @@ package arc
 import (
 	"context"
 	"net"
-	"time"
 
 	"golang.org/x/sync/errgroup"
 
 	"chromiumos/tast/local/bundles/cros/arc/multicast"
 
-	"go.chromium.org/tast-tests/cros/common/android/ui"
-	"go.chromium.org/tast-tests/cros/local/network/hwsim"
-	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
-	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
-	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
-	"go.chromium.org/tast-tests/cros/local/shill"
-	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast-tests/cros/local/arc"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
-
-// multicastForwarderTestCase defines ARC multicast lock held status
-// and device power state we want to use in this test.
-type multicastForwarderTestCase struct {
-	// Whether ARC multicast lock is held by any app.
-	multicastLockHeld bool
-	// Whether device is in idle power state or not.
-	deviceIdle bool
-	// Whether it is a test to test WiFi multicast traffic or ethernet multicast traffic
-	isWifi bool
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MulticastForwarder,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if multicast forwarder works correctly with Android multicast lock and Android interactive state on ARC",
-		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
+		Desc:         "Checks if multicast forwarder works on ARC++",
+		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com"},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "wifi"},
-		Timeout:      4 * time.Minute,
-		Fixture:      "shillSimulatedWiFiWithArcBooted",
-		Params: []testing.Param{
-			{
-				Name: "idle_multicast_lock_not_held_wifi",
-				Val: multicastForwarderTestCase{
-					multicastLockHeld: false,
-					deviceIdle:        true,
-					isWifi:            true,
-				},
-				ExtraSoftwareDeps: []string{"arc"},
-			}, {
-				Name: "idle_multicast_lock_not_held_ethernet",
-				Val: multicastForwarderTestCase{
-					multicastLockHeld: false,
-					deviceIdle:        true,
-					isWifi:            false,
-				},
-				ExtraSoftwareDeps: []string{"arc"},
-			}, {
-				Name: "idle_multicast_lock_held_wifi",
-				Val: multicastForwarderTestCase{
-					multicastLockHeld: true,
-					deviceIdle:        true,
-					isWifi:            true,
-				},
-				ExtraSoftwareDeps: []string{"arc"},
-			}, {
-				Name: "idle_multicast_lock_held_ethernet",
-				Val: multicastForwarderTestCase{
-					multicastLockHeld: true,
-					deviceIdle:        true,
-					isWifi:            false,
-				},
-				ExtraSoftwareDeps: []string{"arc"},
-			}, {
-				Name: "interactive_multicast_lock_held_wifi",
-				Val: multicastForwarderTestCase{
-					multicastLockHeld: true,
-					deviceIdle:        false,
-					isWifi:            true,
-				},
-				ExtraSoftwareDeps: []string{"arc"},
-			}, {
-				Name: "interactive_multicast_lock_held_ethernet",
-				Val: multicastForwarderTestCase{
-					multicastLockHeld: true,
-					deviceIdle:        false,
-					isWifi:            false,
-				},
-				ExtraSoftwareDeps: []string{"arc"},
-			}, {
-				Name: "interactive_multicast_lock_not_held_wifi",
-				Val: multicastForwarderTestCase{
-					multicastLockHeld: false,
-					deviceIdle:        false,
-					isWifi:            true,
-				},
-				ExtraSoftwareDeps: []string{"arc"},
-			}, {
-				Name: "interactive_multicast_lock_not_held_ethernet",
-				Val: multicastForwarderTestCase{
-					multicastLockHeld: false,
-					deviceIdle:        false,
-					isWifi:            false,
-				},
-				ExtraSoftwareDeps: []string{"arc"},
-			},
-		},
+		SoftwareDeps: []string{"chrome"},
+		Fixture:      "arcBooted",
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"android_p"},
+		}, {
+			Name:              "vm",
+			ExtraSoftwareDeps: []string{"android_vm"},
+		}},
 	})
 }
 
-// MulticastForwarder tests that multicast traffic on WiFi is only allowed when Android
-// multicast lock is held and Android power state is interactive, and multicast traffic
-// on ethernet is only allowed when Android power state is interactive.
 func MulticastForwarder(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	pc, err := patchpanel.New(ctx)
+	ifnames, err := multicast.SupportedInterfaces(ctx)
 	if err != nil {
-		s.Fatal("Failed to create patchpanel client: ", err)
+		s.Fatal("Failed to get multicast supported interface names: ", err)
 	}
-	manager, err := shill.NewManager(ctx)
-	if err != nil {
-		s.Fatal("Failed creating shill manager proxy: ", err)
-	}
-
-	isWifi := s.Param().(multicastForwarderTestCase).isWifi
-	var ifnames []string
-
-	// If this test is for testing WiFi mutlicast traffic, use simulated WiFi interface.
-	// If not, use ethernet interface.
-	if isWifi {
-		// Prepare the environment.
-		simWiFi := s.FixtValue().(*hwsim.ShillSimulatedWiFi)
-		pool := subnet.NewPool()
-		wifi, err := virtualnet.CreateWifiRouterEnv(ctx, simWiFi.AP[0], manager, pool, virtualnet.EnvOptions{EnableDHCP: true})
-		if err != nil {
-			s.Fatal("Failed to create virtual WiFi router: ", err)
-		}
-		defer func() {
-			if err := wifi.Cleanup(cleanupCtx); err != nil {
-				s.Error("Failed to clean up virtual WiFi router: ", err)
-			}
-		}()
-
-		if err := wifi.Service.Connect(ctx); err != nil {
-			s.Fatal("Failed to connect to WiFi: ", err)
-		}
-		if err := wifi.Service.WaitForConnectedOrError(ctx); err != nil {
-			s.Fatal("Failed to wait for to WiFi connected status: ", err)
-		}
-
-		ifnames = s.FixtValue().(*hwsim.ShillSimulatedWiFi).Client
-	} else {
-		pool := subnet.NewPool()
-		svc, rt, err := virtualnet.CreateRouterEnv(ctx, manager, pool, virtualnet.EnvOptions{EnableDHCP: true})
-		if err != nil {
-			s.Fatal("Failed to set up ethernet network env: ", err)
-		}
-		defer func() {
-			if rt != nil {
-				rt.Cleanup(cleanupCtx)
-			}
-		}()
-
-		if err := svc.WaitForConnectedOrError(ctx); err != nil {
-			s.Fatal("Failed to wait for to ethernet connected status: ", err)
-		}
-		ifnames = []string{rt.VethOutName}
-	}
-
 	// No valid multicast interface to test.
 	if len(ifnames) == 0 {
 		return
 	}
 
 	// Start ARC multicast sender app.
-	a := s.FixtValue().(*hwsim.ShillSimulatedWiFi).ARC
-	d := s.FixtValue().(*hwsim.ShillSimulatedWiFi).UIDevice
+	a := s.FixtValue().(*arc.PreData).ARC
+	d := s.FixtValue().(*arc.PreData).UIDevice
 
 	multicast.InstallAndStartTestApp(ctx, d, a)
 
@@ -207,41 +71,12 @@ func MulticastForwarder(ctx context.Context, s *testing.State) {
 	// Adds IPv6 multicast expectations for tcpdump.
 	expectOut[multicast.MdnsPrefix+multicast.MdnsHostnameOutIPv6] = "IPv6 mDNS"
 	expectOut[multicast.MdnsPrefix+multicast.LegacyMDNSHostnameOutIPv6] = "IPv6 legacy mDNS"
-	expectIn[multicast.MdnsPrefix+multicast.MdnsHostnameInIPv6] = "IPv6 mDNS"
-	expectIn[multicast.MdnsPrefix+multicast.LegacyMDNSHostnameInIPv6] = "IPv6 legacy mDNS"
 	// Skipped SSDP IPv6 expectations as we don't currently have the firewall rule.
+	// Skipped inbound IPv6 mDNS expectations as the lab doesn't have IPv6 connectivity.
 
-	// If this is a WiFi multicast traffic test, multicast traffic should only be expected when
-	// Android multicast lock is held and device is not idle. If this is an ethernet multicast
-	// traffic test, multicast traffic is expected as long as device is not idle.
-	multicastLockHeld := s.Param().(multicastForwarderTestCase).multicastLockHeld
-	deviceIdle := s.Param().(multicastForwarderTestCase).deviceIdle
-	var expectPacketReceived bool
-	if isWifi {
-		expectPacketReceived = multicastLockHeld && !deviceIdle
-	} else {
-		expectPacketReceived = !deviceIdle
-	}
-
-	if deviceIdle {
-		if _, err := pc.NotifyAndroidInteractiveState(ctx, false); err != nil {
-			s.Fatal("Failed to set interactive state: ", err)
-		}
-		defer func() {
-			if _, err := pc.NotifyAndroidInteractiveState(cleanupCtx, true); err != nil {
-				s.Fatal("Failed to set interactive state: ", err)
-			}
-		}()
-	} else {
-		if _, err := pc.NotifyAndroidInteractiveState(ctx, true); err != nil {
-			s.Fatal("Failed to set interactive state: ", err)
-		}
-	}
-
-	if multicastLockHeld {
-		if err := d.Object(ui.ID(multicast.AcquireLockButtonID)).Click(ctx); err != nil {
-			s.Error("Failed acquire lock button: ", err)
-		}
+	vmEnabled, err := arc.VMEnabled()
+	if err != nil {
+		s.Fatal("Failed to check whether ARCVM is enabled: ", err)
 	}
 
 	s.Log("Starting tcpdump")
@@ -252,24 +87,24 @@ func MulticastForwarder(ctx context.Context, s *testing.State) {
 		// * -l to make stdout line buffered,
 		// * --immediate-mode to disable packet buffering.
 		ifname := ifname // https://golang.org/doc/faq#closures_and_goroutines
-		if expectPacketReceived {
-			g.Go(func() error {
-				tcpdumpCmd := []string{"/usr/local/sbin/tcpdump", "-Alni", "arc_" + ifname, "port", "5353", "or", "port", "1900", "-Q", "out", "--immediate-mode"}
-				if err := multicast.StreamCmd(ctx, tcpdumpCmd, expectIn); err != nil {
-					return errors.Wrap(err, "inbound test failed")
-				}
-				return nil
-			})
-		} else {
-			g.Go(func() error {
-				tcpdumpCmd := []string{"/usr/local/sbin/tcpdump", "-Alni", "arc_" + ifname, "port", "5353", "or", "port", "1900", "-Q", "out", "--immediate-mode"}
-				if err := multicast.StreamCmdExpectNotFound(ctx, tcpdumpCmd, expectIn); err != nil {
-					return errors.Wrap(err, "inbound test failed")
-				}
-				return nil
-			})
+		g.Go(func() error {
+			tcpdumpCmd := []string{"/usr/local/sbin/tcpdump", "-Alni", ifname, "port", "5353", "or", "port", "1900", "-Q", "out", "--immediate-mode"}
+			if err := multicast.StreamCmd(ctx, tcpdumpCmd, expectOut); err != nil {
+				return errors.Wrap(err, "outbound test failed")
+			}
+			return nil
+		})
+		// Skip testing inbound multicast for ARCVM.
+		if vmEnabled {
+			continue
 		}
-
+		g.Go(func() error {
+			tcpdumpCmd := []string{"/usr/local/sbin/tcpdump", "-Alni", "arc_" + ifname, "port", "5353", "or", "port", "1900", "-Q", "out", "--immediate-mode"}
+			if err := multicast.StreamCmd(ctx, tcpdumpCmd, expectIn); err != nil {
+				return errors.Wrap(err, "inbound test failed")
+			}
+			return nil
+		})
 	}
 
 	s.Log("Sending IPv4 multicast packets")
@@ -317,39 +152,38 @@ func MulticastForwarder(ctx context.Context, s *testing.State) {
 	// Send outbound multicast packets from ARC.
 	// Outbound IPv6 multicast should always be tested because there is a kernel provisioned address.
 	// Run IPv6 mDNS query.
-	// Send inbound multicast packets by sending multicast packet that loops back.
-	for _, ifname := range ifnames {
-		// Run mDNS query.
-		if err := multicast.SendMDNS(ctx, multicast.MdnsHostnameIn, ifname, multicast.MdnsPort, mdnsDst); err != nil {
-			s.Error("Failed starting inbound mDNS test: ", err)
-		}
-		// Run legacy mDNS query.
-		if err := multicast.SendMDNS(ctx, multicast.LegacyMDNSHostnameIn, ifname, multicast.LegacyMDNSPort, mdnsDst); err != nil {
-			s.Error("Failed starting inbound legacy mDNS test: ", err)
-		}
-		// Run SSDP query
-		if err := multicast.SendSSDP(ctx, multicast.SsdpUserAgentIn, ifname, multicast.SsdpPort, ssdpDst); err != nil {
-			s.Error("Failed starting inbound SSDP test: ", err)
-		}
+	if err := multicast.SetTextsAndClick(ctx, d, multicast.MdnsHostnameOutIPv6, multicast.MdnsButtonID, multicast.MdnsPort); err != nil {
+		s.Error("Failed starting outbound IPv6 mDNS test: ", err)
+	}
+	// Run IPv6 legacy mDNS query.
+	if err := multicast.SetTextsAndClick(ctx, d, multicast.LegacyMDNSHostnameOutIPv6, multicast.MdnsButtonID, multicast.LegacyMDNSPort); err != nil {
+		s.Error("Failed starting outbound IPv6 legacy mDNS test: ", err)
+	}
+	// Run IPv6 SSDP query
+	if err := multicast.SetTextsAndClick(ctx, d, multicast.SsdpUserAgentOutIPv6, multicast.SsdpButtonID, multicast.SsdpPort); err != nil {
+		s.Error("Failed starting outbound IPv6 SSDP test: ", err)
 	}
 
-	// Set up multicast destination addresses for IPv6 multicast.
-	mdnsDst = &net.UDPAddr{IP: net.ParseIP("ff02::fb"), Port: 5353}
-	ssdpDst = &net.UDPAddr{IP: net.ParseIP("ff02::c"), Port: 1900}
+	// Skip IPv6 inboud multicast test if there is no connectivity.
+	if multicast.Ipv6Multicast {
+		// Set up multicast destination addresses for IPv6 multicast.
+		mdnsDst := &net.UDPAddr{IP: net.ParseIP("ff02::fb"), Port: 5353}
+		ssdpDst := &net.UDPAddr{IP: net.ParseIP("ff02::c"), Port: 1900}
 
-	// Send inbound multicast packets by sending multicast packet that loops back.
-	for _, ifname := range ifnames {
-		// Run IPv6 mDNS query.
-		if err := multicast.SendMDNS(ctx, multicast.MdnsHostnameInIPv6, ifname, multicast.MdnsPort, mdnsDst); err != nil {
-			s.Error("Failed starting inbound IPv6 mDNS test: ", err)
-		}
-		// Run IPv6 legacy mDNS query.
-		if err := multicast.SendMDNS(ctx, multicast.LegacyMDNSHostnameInIPv6, ifname, multicast.LegacyMDNSPort, mdnsDst); err != nil {
-			s.Error("Failed starting inbound IPv6 legacy mDNS test: ", err)
-		}
-		// Run IPv6 SSDP query
-		if err := multicast.SendSSDP(ctx, multicast.SsdpUserAgentInIPv6, ifname, multicast.SsdpPort, ssdpDst); err != nil {
-			s.Error("Failed starting inbound IPv6 SSDP test: ", err)
+		// Send inbound multicast packets by sending multicast packet that loops back.
+		for _, ifname := range ifnames {
+			// Run IPv6 mDNS query.
+			if err := multicast.SendMDNS(ctx, multicast.MdnsHostnameInIPv6, ifname, multicast.MdnsPort, mdnsDst); err != nil {
+				s.Error("Failed starting inbound IPv6 mDNS test: ", err)
+			}
+			// Run IPv6 legacy mDNS query.
+			if err := multicast.SendMDNS(ctx, multicast.LegacyMDNSHostnameInIPv6, ifname, multicast.LegacyMDNSPort, mdnsDst); err != nil {
+				s.Error("Failed starting inbound IPv6 legacy mDNS test: ", err)
+			}
+			// Run IPv6 SSDP query
+			if err := multicast.SendSSDP(ctx, multicast.SsdpUserAgentInIPv6, ifname, multicast.SsdpPort, ssdpDst); err != nil {
+				s.Error("Failed starting inbound IPv6 SSDP test: ", err)
+			}
 		}
 	}
 

@@ -34,8 +34,6 @@ const (
 	MdnsButtonID = "org.chromium.arc.testapp.multicast_forwarder:id/button_mdns"
 	// SsdpButtonID is the ID for button to send SSDP packet.
 	SsdpButtonID = "org.chromium.arc.testapp.multicast_forwarder:id/button_ssdp"
-	// AcquireLockButtonID is the ID for button to acquire multicast lock.
-	AcquireLockButtonID = "org.chromium.arc.testapp.multicast_forwarder:id/button_acquire"
 	// DataID is the ID for text input box to set data.
 	DataID = "org.chromium.arc.testapp.multicast_forwarder:id/data"
 	// PortID is the ID for text input box to set port.
@@ -81,7 +79,8 @@ const (
 	// MdnsPrefix is used to search the correct mDNS packets from tcpdump.
 	MdnsPrefix = "(QM)? "
 
-	waitForPacketTimeout = 30 * time.Second
+	// Ipv6Multicast defines whether to check ipv6 multicast traffic.
+	Ipv6Multicast = false
 )
 
 // SendMDNS creates an mDNS question query for hostname with a socket bound to port and ifname.
@@ -340,72 +339,6 @@ func StreamCmd(ctx context.Context, cmdList []string, m map[string]string) error
 	close(completedChan)
 
 	// Above goroutine exited when context is time out.
-	if err := <-exitChan; err != nil {
-		return errors.Wrap(err, "failed to scan for streaming output")
-	}
-	return nil
-}
-
-// StreamCmdExpectNotFound takes a command cmd and stream its output. It search its output for
-// every key in map |m|. This function will return an error if any key in |s| is found within
-// time window of waitForPacketTimeout.
-func StreamCmdExpectNotFound(ctx context.Context, cmdList []string, m map[string]string) error {
-	cmd := testexec.CommandContext(ctx, cmdList[0], cmdList[1:]...)
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-
-	if err := cmd.Start(); err != nil {
-		return errors.Wrap(err, "failed to start command")
-	}
-
-	// Signal channel used to notify error of exiting on context time out.
-	exitChan := make(chan error, 1)
-	// Signal channel used to terminate goroutine for cmd if unneeded anymore.
-	errChan := make(chan error, 1)
-	// sc.Scan() below might block. Release bufio.Scanner by killing command if the
-	// process execution time exceeds waitForPacketTimeout.
-	go func(ctx context.Context) {
-		var err error
-		defer func() {
-			exitChan <- err
-			close(exitChan)
-			close(errChan)
-		}()
-		select {
-		// If we don't get error within waitForPacketTimeout, pass.
-		case <-ctx.Done():
-			err = ctx.Err()
-		case err = <-errChan:
-		case <-time.After(waitForPacketTimeout):
-			err = nil
-		}
-		// sc.Scan() below might block. Release bufio.Scanner by killing command if the
-		// process execution time exceeds context deadline.
-		cmd.Kill()
-		cmd.Wait()
-	}(ctx)
-
-	// Watch and wait until command have the expected outputs.
-	sc := bufio.NewScanner(stdout)
-
-scanloop:
-	for {
-		if !sc.Scan() {
-			break
-		}
-
-		t := sc.Text()
-		for a, name := range m {
-			if strings.Contains(t, a) {
-				// Signal the goroutine that it's being completed and stops goroutine.
-				errChan <- errors.Wrap(err, "not expected but output line contains: "+name)
-				break scanloop
-			}
-		}
-	}
-
 	if err := <-exitChan; err != nil {
 		return errors.Wrap(err, "failed to scan for streaming output")
 	}

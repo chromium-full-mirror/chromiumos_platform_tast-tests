@@ -23,18 +23,6 @@
         android:layout_height="wrap_content"
         android:text="@string/button_ssdp"
         android:onClick="testSsdp" />
-    <Button
-        android:id="@+id/button_acquire"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/button_acquire"
-        android:onClick="acquireMulticastLock" />
-    <Button
-        android:id="@+id/button_release"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/button_release"
-        android:onClick="releaseMulticastLock" />
     <CheckBox android:id="@+id/checkbox_ipv6"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

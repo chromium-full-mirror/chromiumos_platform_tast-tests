@@ -19,15 +19,14 @@ import (
 )
 
 const (
-	jobName                             = "patchpanel"
-	dbusName                            = "org.chromium.PatchPanel"
-	dbusPath                            = "/org/chromium/PatchPanel"
-	connectNamespaceMethod              = "org.chromium.PatchPanel.ConnectNamespace"
-	getDevicesMethod                    = "org.chromium.PatchPanel.GetDevices"
-	getTrafficCountersMethod            = "org.chromium.PatchPanel.GetTrafficCounters"
-	terminaVMStartupMethod              = "org.chromium.PatchPanel.TerminaVmStartup"
-	terminaVMShutdownMethod             = "org.chromium.PatchPanel.TerminaVmShutdown"
-	notifyAndroidInteractiveStateMethod = "org.chromium.PatchPanel.NotifyAndroidInteractiveState"
+	jobName                  = "patchpanel"
+	dbusName                 = "org.chromium.PatchPanel"
+	dbusPath                 = "/org/chromium/PatchPanel"
+	connectNamespaceMethod   = "org.chromium.PatchPanel.ConnectNamespace"
+	getDevicesMethod         = "org.chromium.PatchPanel.GetDevices"
+	getTrafficCountersMethod = "org.chromium.PatchPanel.GetTrafficCounters"
+	terminaVMStartupMethod   = "org.chromium.PatchPanel.TerminaVmStartup"
+	terminaVMShutdownMethod  = "org.chromium.PatchPanel.TerminaVmShutdown"
 )
 
 // Client is a wrapper around patchpanel DBus API.
@@ -176,28 +175,6 @@ func (c *Client) GetTrafficCounters(ctx context.Context, devices []string) (*pp.
 	response := &pp.TrafficCountersResponse{}
 	if err = proto.Unmarshal(result, response); err != nil {
 		return nil, errors.Wrapf(err, "failed unmarshaling %s response", getTrafficCountersMethod)
-	}
-	return response, nil
-}
-
-// NotifyAndroidInteractiveState sends a NotifyAndroidInteractiveState to change device power interactive status.
-func (c *Client) NotifyAndroidInteractiveState(ctx context.Context, interactive bool) (*pp.NotifyAndroidInteractiveStateResponse, error) {
-	request := &pp.NotifyAndroidInteractiveStateRequest{
-		Interactive: interactive,
-	}
-	buf, err := proto.Marshal(request)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed marshaling %s request", notifyAndroidInteractiveStateMethod)
-	}
-
-	var result []uint8
-	if err = c.obj.CallWithContext(ctx, notifyAndroidInteractiveStateMethod, 0, buf).Store(&result); err != nil {
-		return nil, errors.Wrapf(err, "failed reading %s response", notifyAndroidInteractiveStateMethod)
-	}
-
-	response := &pp.NotifyAndroidInteractiveStateResponse{}
-	if err = proto.Unmarshal(result, response); err != nil {
-		return nil, errors.Wrapf(err, "failed unmarshaling %s response", notifyAndroidInteractiveStateMethod)
 	}
 	return response, nil
 }
