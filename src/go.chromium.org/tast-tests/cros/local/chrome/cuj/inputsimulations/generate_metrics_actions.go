@@ -12,8 +12,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/errors"
 )
@@ -49,10 +49,16 @@ func DoSystemTrayWorkflow(ctx context.Context, tconn *chrome.TestConn, pc pointe
 		return err
 	}
 
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to init quicksettings")
+	}
+	defer cleanup()
+
 	// Open and close the system tray bubble.
 	// There is more than one "UnifiedSystemTray" on the UI tree when an extended display is connected.
-	systemTray := nodewith.HasClass("UnifiedSystemTray").First()
-	systemTrayContainer := nodewith.HasClass("SystemTrayContainer")
+	systemTray := quicksettings.SystemTray.First()
+	quickSettingsRoot := quicksettings.GetRootFinder()
 	ac := uiauto.New(tconn)
 
 	return uiauto.Combine(
@@ -64,12 +70,12 @@ func DoSystemTrayWorkflow(ctx context.Context, tconn *chrome.TestConn, pc pointe
 			return nil
 		},
 		pc.Click(systemTray),
-		ac.WaitUntilExists(systemTrayContainer),
+		ac.WaitUntilExists(quickSettingsRoot),
 		// Add a fixed sleep to simulate a user looking for the button that
 		// they want to press.
 		uiauto.Sleep(500*time.Millisecond),
 		pc.Click(systemTray),
-		ac.WaitUntilGone(systemTrayContainer),
+		ac.WaitUntilGone(quickSettingsRoot),
 	)(ctx)
 }
 

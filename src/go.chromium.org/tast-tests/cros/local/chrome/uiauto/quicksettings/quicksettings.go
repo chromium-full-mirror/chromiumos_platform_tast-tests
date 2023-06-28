@@ -77,15 +77,35 @@ func clickAndWaitForAnimation(ctx context.Context, tconn *chrome.TestConn, node 
 // depending on its state in chrome. The state might vary because the feature
 // flag default was flipped in a chrome uprev, or because a test explicitly
 // opted-in or opted-out of the feature. Returns a cleanup function which
-// callers should defer.
+// callers should defer. Init can be safely called multiple times as long as the
+// cleanup function is deferred and scopes are nested. For example, this code
+// will work:
+//
+//	func Foo() {
+//	    cleanup, err := quicksettings.Init(...)
+//	    if err != nil { ... }
+//	    defer cleanup()
+//	    ...
+//	    Bar();
+//	    ...
+//	}
+//
+//	func Bar() {
+//	    cleanup, err := quicksettings.Init(...)
+//	    if err != nil { ... }
+//	    defer cleanup()
+//	    ...
+//	}
+//
+// TODO(b/289240282): Figure out a way to initialize quicksettings only once,
+// during chrome startup.
 func Init(ctx context.Context, tconn *chrome.TestConn) (func(), error) {
-	var qs bool
-	if err := tconn.Call(ctx, &qs,
+	oldQsRevampEnabled := qsRevampEnabled
+	if err := tconn.Call(ctx, &qsRevampEnabled,
 		"tast.promisify(chrome.autotestPrivate.isFeatureEnabled)", "QsRevamp"); err != nil {
 		return nil, errors.Wrap(err, "failed to get QsRevamp feature state")
 	}
-	qsRevampEnabled = qs
-	return func() { qsRevampEnabled = false }, nil
+	return func() { qsRevampEnabled = oldQsRevampEnabled }, nil
 }
 
 // QsRevampEnabled returns whether this package has been configured to assume
