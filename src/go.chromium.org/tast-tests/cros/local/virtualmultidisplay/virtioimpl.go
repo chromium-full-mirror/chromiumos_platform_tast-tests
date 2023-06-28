@@ -5,11 +5,14 @@
 package virtualmultidisplay
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type virtioGpuDummyMultiDisplayController struct {
@@ -21,14 +24,14 @@ const (
 	multiDisplayEnablePattern    = "%s%d/enabled"
 )
 
-func (c *virtioGpuDummyMultiDisplayController) DisplayEnabled(displayId int) (bool, error) {
-	if displayId >= c.maxDisplays || displayId < 0 {
-		return false, errors.Errorf("no such display %d, must be in the range [0,%d)", displayId, c.maxDisplays)
+func (c *virtioGpuDummyMultiDisplayController) DisplayEnabled(displayID int) (bool, error) {
+	if displayID >= c.maxDisplays || displayID < 0 {
+		return false, errors.Errorf("no such display %d, must be in the range [0,%d)", displayID, c.maxDisplays)
 	}
 
-	enabled, err := os.ReadFile(fmt.Sprintf(multiDisplayEnablePattern, multiDisplayControlDirectory, displayId))
+	enabled, err := os.ReadFile(fmt.Sprintf(multiDisplayEnablePattern, multiDisplayControlDirectory, displayID))
 	if err != nil {
-		return false, errors.Wrapf(err, "could not read display state for display id: %d", displayId)
+		return false, errors.Wrapf(err, "could not read display state for display id: %d", displayID)
 	}
 
 	return strings.TrimSpace(string(enabled)) == "1", nil
@@ -58,19 +61,19 @@ func (c *virtioGpuDummyMultiDisplayController) writeToDisplayDebugFs(displayID i
 	}
 
 	if rb := string(readback[:]); rb != value {
-		return errors.Errorf("While setting display %d, wanted %s but read back %s", displayID, value, rb)
+		return errors.Errorf("set display enabled for display %d to %s but read back %s", displayID, value, rb)
 	}
 
 	return nil
 }
 
-func (c *virtioGpuDummyMultiDisplayController) ensureOutputCallValid(displayId int) error {
+func (c *virtioGpuDummyMultiDisplayController) ensureOutputCallValid(displayID int) error {
 	if err := ensureVirtioGpuDummyModuleLoaded(); err != nil {
 		return err
 	}
 
-	if displayId > c.maxDisplays {
-		return errors.Errorf("%d exceeds max display count: %d", displayId, c.maxDisplays)
+	if displayID > c.maxDisplays {
+		return errors.Errorf("%d exceeds max display count: %d", displayID, c.maxDisplays)
 	}
 
 	return nil
@@ -80,16 +83,65 @@ func (c *virtioGpuDummyMultiDisplayController) DisplayCount() (int, error) {
 	return c.maxDisplays, nil
 }
 
-func (c *virtioGpuDummyMultiDisplayController) InternalDisplayId() (int, error) {
+func (c *virtioGpuDummyMultiDisplayController) InternalDisplayID() (int, error) {
 	return 0, nil
 }
 
-
-// ExternalDisplayIds Returns a list of all the displays 1..maxDisplays.
-func (c *virtioGpuDummyMultiDisplayController) ExternalDisplayIds() ([]int, error) {
-	list := make([]int, c.maxDisplays - 1)
+// ExternalDisplayIDs Returns a list of all the displays 1..maxDisplays.
+func (c *virtioGpuDummyMultiDisplayController) ExternalDisplayIDs() ([]int, error) {
+	list := make([]int, c.maxDisplays-1)
 	for i := range list {
 		list[i] = i + 1
 	}
 	return list, nil
+}
+
+func (c *virtioGpuDummyMultiDisplayController) AdditionalFixtureSetup(ctx context.Context) error {
+	testing.ContextLog(ctx, "Entering virtio-gpu-dummy controller setup")
+
+	if err := killDrmProcessesAndServices(ctx); err != nil {
+		return errors.Wrap(err, "could not kill DRM processes")
+	}
+
+	testing.ContextLog(ctx, "Checking if VKMS is loaded")
+	if err := ensureModuleLoadedOrNot("vkms", true); err == nil {
+		testing.ContextLog(ctx, "VKMS Detected, removing")
+		// If we can't unload vkms we are in trouble and should just bail out.
+		// We're going to leave tast in a bad state otherwise.
+		if err := testexec.CommandContext(ctx, "rmmod", "vkms").Run(); err != nil {
+			return errors.Wrap(err, "could not unload module vkms")
+		}
+	}
+
+	outputsArg := fmt.Sprintf("max_outputs=%d", c.maxDisplays)
+	testing.ContextLog(ctx, "Loading virtio-gpu-dummy")
+	if err := testexec.CommandContext(ctx, "modprobe", "virtio-gpu-dummy", outputsArg).Run(); err != nil {
+		return errors.Wrap(err, "could not run modprobe for module for virtio-gpu-dummy")
+	}
+
+	if err := resumeDrmServices(ctx); err != nil {
+		return errors.Wrap(err, "could not resume drm services")
+	}
+
+	return nil
+}
+
+func (c *virtioGpuDummyMultiDisplayController) AdditionalFixtureTeardown(ctx context.Context) error {
+	if err := killDrmProcessesAndServices(ctx); err != nil {
+		return errors.Wrap(err, "could not kill DRM processes")
+	}
+
+	if err := testexec.CommandContext(ctx, "rmmod", "virtio-gpu-dummy").Run(); err != nil {
+		return errors.Wrap(err, "could not unload module virtio-gpu-dummy")
+	}
+
+	if err := testexec.CommandContext(ctx, "modprobe", "vkms").Run(); err != nil {
+		return errors.Wrap(err, "could not load module vkms")
+	}
+
+	if err := resumeDrmServices(ctx); err != nil {
+		return errors.Wrap(err, "could not resume drm services")
+	}
+
+	return nil
 }

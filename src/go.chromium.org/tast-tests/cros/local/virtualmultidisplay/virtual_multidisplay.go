@@ -17,9 +17,12 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// WaitForCondition wait for a specific window state to exist.
 func ensureVirtioGpuDummyModuleLoaded() error {
 	return ensureModuleLoadedOrNot("virtio_gpu_dummy", true)
+}
+
+func ensureVkmsDriverLoaded() error {
+	return ensureModuleLoadedOrNot("vkms", true)
 }
 
 func ensureModuleLoadedOrNot(moduleName string, loaded bool) error {

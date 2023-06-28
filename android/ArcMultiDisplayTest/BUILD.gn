@@ -6,5 +6,5 @@ android_apk("ArcMultiDisplayTest") {
   manifest = "AndroidManifest.xml"
   source_dirs = ["src"]
   resource_dirs = ["res"]
-  target_sdk_version = "29"
+  target_sdk_version = "28"
 }

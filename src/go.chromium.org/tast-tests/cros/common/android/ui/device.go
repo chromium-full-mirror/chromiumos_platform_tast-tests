@@ -94,7 +94,7 @@ func NewDevice(ctx context.Context, d *adb.Device) (*Device, error) {
 	// Check if there's already running UI Automator server.
 	out, err := d.ShellCommand(ictx, "ps").CombinedOutput(testexec.DumpLogOnError)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to run ps command")
+		return nil, errors.Wrapf(err, "failed to run ps command, out contains %s", out)
 	}
 	if strings.Contains(string(out), appPackage) {
 		return nil, errors.New("UI Automator server is already running")

@@ -112,6 +112,49 @@ func FirstDisplayIDByType(ctx context.Context, a *ARC, displayType DisplayType) 
 	return -1, errors.Errorf("failed to find display with type %q", displayType)
 }
 
+// DisplaysIds returns the list of all display ids in the ARC system.
+func DisplaysIds(ctx context.Context, a *ARC) ([]int, error) {
+	sdkVersion, err := SDKVersion()
+
+	if sdkVersion == SDKP {
+		return nil, errors.Errorf("can only enumerate displays on ARC R or higher, currently %d", sdkVersion)
+	}
+
+	// Parse from dumpsys for ARC R and above.
+	cmd := a.Command(ctx, "dumpsys", "display")
+	output, err := cmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to execute 'dumpsys display'")
+	}
+
+	// Looking for:
+	// mDisplayId=...
+	// ...
+	// mBaseDisplayInfo=DisplayInfo{... type EXTERNAL, ...}
+	re := regexp.MustCompile(`(?m)` + // Enable multiline.
+		`mDisplayId=(\d+)` + // Gather displayId number.
+		`(?:\s+.*$)*?\s+` + // Skip lines and words.
+		`mBaseDisplayInfo=[\W\w]+?type ` + // Locate to type string.
+		`([\W\w]+?),`) // Gather type string.
+	groups := re.FindAllStringSubmatch(string(output), -1)
+	if len(groups) == 0 {
+		testing.ContextLogf(ctx, "Failed to parse display info from dumpsys output: %q", output)
+		return nil, errors.New("failed to find any display from `dumpsys display`")
+	}
+
+	var displayIds []int
+	for _, group := range groups {
+		id, err := strconv.Atoi(group[1])
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse display id: %q", group[1])
+		}
+		displayIds = append(displayIds, id)
+	}
+
+	return displayIds, nil
+}
+
+
 // CaptionHeight returns the caption height in pixels.
 func (d *Display) CaptionHeight(ctx context.Context) (h int, err error) {
 	cmd := d.a.Command(ctx, "dumpsys", "display")

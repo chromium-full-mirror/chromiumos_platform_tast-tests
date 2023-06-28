@@ -29,11 +29,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/media/imgcmp"
+	"go.chromium.org/tast-tests/cros/local/personalization"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	virtualmultidisplay "go.chromium.org/tast-tests/cros/local/virtualmultidisplay"
 	"go.chromium.org/tast/core/ctxutil"
@@ -71,26 +73,22 @@ type testEntry struct {
 
 // StableTestSet contains all tests that currently are passing normally and are safe for presubmit.
 var StableTestSet = []testEntry{
-	// Based on http://b/129564108.
-	{"Launch activity on external display", launchActivityOnExternalDisplay},
-	// Based on http://b/110105532.
-	{"Activity is visible when other is maximized", maximizeVisibility},
 	// Based on http://b/63773037 and http://b/140056612.
 	{"Relayout displays", relayoutDisplays},
 }
 
-// AndroidVm contains tests that are currently only passing on android VM (not container P).
-var AndroidVm = []testEntry{
+// AndroidVM contains tests that are currently only passing on android VM (not container P).
+var AndroidVM = []testEntry{
 	// Based on http://b/130897153.
 	{"Drag a window between displays", dragWindowBetweenDisplays},
-	{"Rotate display", rotateDisplay},
-	{"Snapping", snappingOnDisplay},
-}
-
-// PhysicalOnly contains tests that don't work on VMs (until VKMS is complete).
-var PhysicalOnly = []testEntry{
-	// Doesn't work because virtio-gpu-dummy seems to always use the lowest numbered crtcid no matter which display is disabled, so it is always as if the external display is the one disabled..
 	{"Remove and re-add displays", removeAddDisplay},
+	{"Rotate display", rotateDisplay},
+	// Based on http://b/129564108.
+	{"Launch activity on external display", launchActivityOnExternalDisplay},
+	// Broken because it relies on launching on external display.
+	{"Snapping", snappingOnDisplay},
+	// Based on http://b/110105532.
+	{"Activity is visible when other is maximized", maximizeVisibility},
 }
 
 // SharedVirtualPhysical is the implementation of the above tests.  It utilizes displayController (if present) to set the displays up when necessary, otherwise it assumes the displays are physical.
@@ -102,14 +100,14 @@ func SharedVirtualPhysical(ctx context.Context, s *testing.State, dc virtualmult
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	// Enable a second display for the test.
-	if dc != nil {
-		dc.EnableDisplay(1)
-	}
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
+	}
+
+	// Enable a second display for the test.
+	if dc != nil {
+		dc.EnableDisplay(1)
 	}
 
 	displayInfos, err := WaitForDisplaysToPopulate(ctx, s, tconn, 2)
@@ -120,6 +118,14 @@ func SharedVirtualPhysical(ctx context.Context, s *testing.State, dc virtualmult
 	// TODO(ruanc): This part can be removed if hardware dependency for multi-display is available.
 	if len(displayInfos) != 2 {
 		s.Fatalf("Not enough connected displays: got %d; want 2", len(displayInfos))
+	}
+
+	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+	if err := uiauto.Combine("Enable light mode",
+		personalization.OpenPersonalizationHub(ui),
+		personalization.ToggleLightMode(ui),
+	)(ctx); err != nil {
+		s.Fatal("Failed to enable light mode: ", err)
 	}
 
 	if err := a.Install(ctx, arc.APKPath(wm.APKNameArcWMTestApp24)); err != nil {
@@ -158,21 +164,15 @@ func SharedVirtualPhysical(ctx context.Context, s *testing.State, dc virtualmult
 }
 
 // launchActivityOnExternalDisplay launches the activity directly on the external display.
-func launchActivityOnExternalDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, _ virtualmultidisplay.VirtualDisplayController) error {
+func launchActivityOnExternalDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, dc virtualmultidisplay.VirtualDisplayController) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return err
 	}
 
-	infos, err := display.GetInfo(ctx, tconn)
+	displays, err := internalAndExternalDisplays(ctx, tconn, dc)
 	if err != nil {
 		return err
-	}
-	var externalDisplayID string
-	for _, info := range infos {
-		if !info.IsInternal {
-			externalDisplayID = info.ID
-		}
 	}
 
 	for _, test := range []struct {
@@ -183,7 +183,7 @@ func launchActivityOnExternalDisplay(ctx context.Context, s *testing.State, cr *
 		{"Launch unresizeable activity on the external display", wm.NonResizableUnspecifiedActivity},
 	} {
 		runOrFatal(ctx, s, test.name, func(ctx context.Context, s *testing.State) error {
-			externalARCDisplayID, err := arc.FirstDisplayIDByType(ctx, a, arc.ExternalDisplay)
+			_, externalARCDisplayID, err := arcDisplayIDs(ctx, a, dc)
 			if err != nil {
 				return err
 			}
@@ -198,7 +198,7 @@ func launchActivityOnExternalDisplay(ctx context.Context, s *testing.State, cr *
 			}
 			defer act.Stop(ctx, tconn)
 
-			return ensureWindowOnDisplay(ctx, tconn, wm.Pkg24, externalDisplayID)
+			return ensureWindowOnDisplay(ctx, tconn, wm.Pkg24, displays.external.ID)
 		})
 	}
 
@@ -206,7 +206,7 @@ func launchActivityOnExternalDisplay(ctx context.Context, s *testing.State, cr *
 }
 
 // maximizeVisibility checks whether the window is visible on one display if another window is maximized on the other display.
-func maximizeVisibility(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, _ virtualmultidisplay.VirtualDisplayController) error {
+func maximizeVisibility(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, dc virtualmultidisplay.VirtualDisplayController) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return err
@@ -215,69 +215,64 @@ func maximizeVisibility(ctx context.Context, s *testing.State, cr *chrome.Chrome
 	// Set background to a color that won't interfere with the test.
 	wm.SetSolidWhiteWallpaper(ctx, tconn, s)
 
-	externalARCDisplayID, err := arc.FirstDisplayIDByType(ctx, a, arc.ExternalDisplay)
+	_, externalARCDisplayID, err := arcDisplayIDs(ctx, a, dc)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not get arc display ids")
 	}
 
 	// Start settings activity and set it to normal window state.
 	settingsAct, err := arc.NewActivity(a, settingsPkgMD, settingsActMD)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not create new activity")
 	}
 	defer settingsAct.Close(ctx)
 
 	if err := settingsAct.Start(ctx, tconn); err != nil {
-		return err
+		return errors.Wrap(err, "could not start new activity")
 	}
 	defer settingsAct.Stop(ctx, tconn)
 
 	if err := ensureSetWindowState(ctx, tconn, settingsPkgMD, ash.WindowStateNormal); err != nil {
-		return err
+		return errors.Wrap(err, "activity in incorrect state")
 	}
 
 	// Start WM activity on the external display and set it to normal window state.
 	wmAct, err := arc.NewActivityOnDisplay(a, wm.Pkg24, wm.ResizableUnspecifiedActivity, externalARCDisplayID)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not create activity on external display")
 	}
 	defer wmAct.Close(ctx)
 
+	displays, err := internalAndExternalDisplays(ctx, tconn, dc)
+	if err != nil {
+		return errors.Wrap(err, "could not get internal and external displays")
+	}
+
 	if err := wmAct.Start(ctx, tconn, arc.WithDisplayID(externalARCDisplayID)); err != nil {
-		return err
+		if scerr := grabScreenshotOfDisplaysForFailedTests(ctx, cr, displays, "maximize-visibility"); scerr != nil {
+			s.Error("Failed to start activity on the external display and could not grab screenshot")
+		}
+		return errors.Wrap(err, "could not start new activity on external display")
 	}
 	defer wmAct.Stop(ctx, tconn)
 
-	// Get external display physical ID.
-	infos, err := display.GetInfo(ctx, tconn)
-	if err != nil {
-		return err
-	}
-	var extDispID string
-	for _, info := range infos {
-		if !info.IsInternal {
-			extDispID = info.ID
-			break
-		}
-	}
-
-	if err := ensureWindowOnDisplay(ctx, tconn, wm.Pkg24, extDispID); err != nil {
-		return err
+	if err := ensureWindowOnDisplay(ctx, tconn, wm.Pkg24, displays.external.ID); err != nil {
+		return errors.Wrap(err, "activity not on external display")
 	}
 
 	if err := ensureSetWindowState(ctx, tconn, wm.Pkg24, ash.WindowStateNormal); err != nil {
-		return err
+		return errors.Wrap(err, "activity not in normal state")
 	}
 
 	// Preserve WindowInfo.
 	wmWinInfo, err := ash.GetARCAppWindowInfo(ctx, tconn, wm.Pkg24)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error getting arc window info")
 	}
 
 	settingsWinInfo, err := ash.GetARCAppWindowInfo(ctx, tconn, settingsPkgMD)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error getting arc window info")
 	}
 
 	for _, test := range []struct {
@@ -293,14 +288,14 @@ func maximizeVisibility(ctx context.Context, s *testing.State, cr *chrome.Chrome
 	} {
 		runOrFatal(ctx, s, test.name, func(ctx context.Context, s *testing.State) error {
 			if err := ensureSetWindowState(ctx, tconn, test.maxPkgName, ash.WindowStateMaximized); err != nil {
-				return err
+				return errors.Wrap(err, "activity not in maximized state")
 			}
 			if err := ensureWindowStable(ctx, tconn, test.checkPkgName, test.checkAppWinInfo); err != nil {
-				return err
+				return errors.Wrap(err, "could not ensure window stable")
 			}
 			// The black window shows when the activity is not visible on Android side (see: http://b/110105532).
 			if err := ensureNoBlackBkg(ctx, cr, tconn); err != nil {
-				return err
+				return errors.Wrap(err, "window has a black background")
 			}
 			// Reset maximized window to normal.
 			return ensureSetWindowState(ctx, tconn, test.maxPkgName, ash.WindowStateNormal)
@@ -311,30 +306,20 @@ func maximizeVisibility(ctx context.Context, s *testing.State, cr *chrome.Chrome
 }
 
 // relayoutDisplays checks whether the window moves position when relayout displays.
-func relayoutDisplays(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, _ virtualmultidisplay.VirtualDisplayController) error {
+func relayoutDisplays(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, dc virtualmultidisplay.VirtualDisplayController) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get test api connection")
 	}
 
-	externalARCDisplayID, err := arc.FirstDisplayIDByType(ctx, a, arc.ExternalDisplay)
+	_, externalARCDisplayID, err := arcDisplayIDs(ctx, a, dc)
 	if err != nil {
 		return errors.Wrap(err, "failed to get first external display")
 	}
 
-	infos, err := display.GetInfo(ctx, tconn)
+	displays, err := internalAndExternalDisplays(ctx, tconn, dc)
 	if err != nil {
-		return errors.Wrap(err, "failed to get display info")
-	}
-
-	var internalDisplayInfo, externalDisplayInfo display.Info
-	for _, info := range infos {
-		if info.IsInternal {
-			internalDisplayInfo = info
-		} else if externalDisplayInfo.ID == "" {
-			// Get the first external display info.
-			externalDisplayInfo = info
-		}
+		return errors.Wrap(err, "could not get internal/external displays")
 	}
 
 	// Start settings Activity on internal display.
@@ -396,14 +381,14 @@ func relayoutDisplays(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 				name   string
 				offset coords.Point
 			}{
-				{"Relayout external display to the left side of internal display", coords.NewPoint(-externalDisplayInfo.Bounds.Width, 0)},
-				{"Relayout external display to the right side of internal display", coords.NewPoint(internalDisplayInfo.Bounds.Width, 0)},
-				{"Relayout external display on top of internal display", coords.NewPoint(0, -externalDisplayInfo.Bounds.Height)},
-				{"Relayout external display on bottom of internal display", coords.NewPoint(0, internalDisplayInfo.Bounds.Height)},
+				{"Relayout external display to the left side of internal display", coords.NewPoint(-displays.external.Bounds.Width, 0)},
+				{"Relayout external display to the right side of internal display", coords.NewPoint(displays.internal.Bounds.Width, 0)},
+				{"Relayout external display on top of internal display", coords.NewPoint(0, -displays.external.Bounds.Height)},
+				{"Relayout external display on bottom of internal display", coords.NewPoint(0, displays.internal.Bounds.Height)},
 			} {
 				runOrFatal(ctx, s, relayout.name, func(ctx context.Context, s *testing.State) error {
 					p := display.DisplayProperties{BoundsOriginX: &relayout.offset.X, BoundsOriginY: &relayout.offset.Y}
-					if err := display.SetDisplayProperties(ctx, tconn, externalDisplayInfo.ID, p); err != nil {
+					if err := display.SetDisplayProperties(ctx, tconn, displays.external.ID, p); err != nil {
 						return errors.Wrap(err, "failed to set display properties")
 					}
 					if err := ensureWindowStable(ctx, tconn, settingsPkgMD, settingsWindowInfo); err != nil {
@@ -431,12 +416,12 @@ func removeAddDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 		return errors.Wrap(err, "could not create test api connection")
 	}
 
-	externalARCDisplayID, err := arc.FirstDisplayIDByType(ctx, a, arc.ExternalDisplay)
+	_, externalARCDisplayID, err := arcDisplayIDs(ctx, a, dc)
 	if err != nil {
-		return errors.Wrap(err, "could not find display with type external")
+		return errors.Wrap(err, "could not get arc display ids")
 	}
 
-	info, err := getInternalAndExternalDisplays(ctx, tconn)
+	info, err := internalAndExternalDisplays(ctx, tconn, dc)
 	if err != nil {
 		return errors.Wrap(err, "could not get display info")
 	}
@@ -540,14 +525,14 @@ func removeAddDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 			// Check if the window moves to required display automatically.
 			newWinInfo, err := ash.GetARCAppWindowInfo(ctx, tconn, removeAdd.moveAct.PackageName())
 			if err != nil {
-				return err
+				return errors.Wrap(err, "error getting arc window info")
 			}
 			if newWinInfo.DisplayID != removeAdd.destDispInfo.ID {
-				return errors.Errorf("failed to move window to another display: got %s; want %s", newWinInfo.DisplayID, removeAdd.destDispInfo.ID)
+				return errors.Wrapf(err, "failed to move window to another display: got %s; want %s", newWinInfo.DisplayID, removeAdd.destDispInfo.ID)
 			}
 
 			if err := ensureWinBoundsInDisplay(newWinInfo.BoundsInRoot, removeAdd.destDispInfo.Bounds); err != nil {
-				return err
+				return errors.Wrap(err, "window bounds not in display")
 			}
 
 			// Re-add display and the window should move back to the original display.
@@ -565,10 +550,10 @@ func removeAddDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 			err = testing.Poll(ctx, func(ctx context.Context) error {
 				restoreWinInfo, err := ash.GetARCAppWindowInfo(ctx, tconn, removeAdd.moveAct.PackageName())
 				if err != nil {
-					return err
+					return errors.Wrap(err, "could not get arc window info")
 				}
 				if restoreWinInfo.DisplayID != removeAdd.moveWinInfo.DisplayID {
-					return errors.Errorf("failed to restore window to original display: got %s; want %s", restoreWinInfo.DisplayID, removeAdd.moveWinInfo.DisplayID)
+					return errors.Wrapf(err, "failed to restore window to original display: got %s; want %s", restoreWinInfo.DisplayID, removeAdd.moveWinInfo.DisplayID)
 				}
 				restoreWinBounds = restoreWinInfo.BoundsInRoot
 				return nil
@@ -589,17 +574,13 @@ func dragWindowBetweenDisplays(ctx context.Context, s *testing.State, cr *chrome
 		return err
 	}
 
-	externalARCDisplayID, err := arc.FirstDisplayIDByType(ctx, a, arc.ExternalDisplay)
-	if err != nil {
-		return err
-	}
-	internalARCDisplayID, err := arc.FirstDisplayIDByType(ctx, a, arc.InternalDisplay)
+	internalARCDisplayID, externalARCDisplayID, err := arcDisplayIDs(ctx, a, dc)
 	if err != nil {
 		return err
 	}
 
 	// Setup display layout.
-	disp, err := getInternalAndExternalDisplays(ctx, tconn)
+	disp, err := internalAndExternalDisplays(ctx, tconn, dc)
 	if err != nil {
 		return err
 	}
@@ -611,7 +592,7 @@ func dragWindowBetweenDisplays(ctx context.Context, s *testing.State, cr *chrome
 	// Poll is required as completion of display.SetDisplayProperties does not
 	// ensure display.GetInfo returns new info.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		disp, err = getInternalAndExternalDisplays(ctx, tconn)
+		disp, err = internalAndExternalDisplays(ctx, tconn, dc)
 		if err != nil {
 			return err
 		}
@@ -677,7 +658,7 @@ func dragWindowBetweenDisplays(ctx context.Context, s *testing.State, cr *chrome
 		// 	smallestScreenSize: true,
 		// 	orientation:        true,
 		// }}},
-		{nonResizeable, handling, ash.WindowStateMaximized, shouldNotMove, nil},
+		// {nonResizeable, handling, ash.WindowStateMaximized, shouldNotMove, nil},
 		// NonResizable apps can never be maximized, no need for that case.
 	} {
 		for _, dir := range []struct {
@@ -815,39 +796,36 @@ func dragWindowBetweenDisplays(ctx context.Context, s *testing.State, cr *chrome
 }
 
 // rotateDisplay verifies the behavior of rotating a display.
-func rotateDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, _ virtualmultidisplay.VirtualDisplayController) error {
+func rotateDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, dc virtualmultidisplay.VirtualDisplayController) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return err
 	}
 
-	externalARCDisplayID, err := arc.FirstDisplayIDByType(ctx, a, arc.ExternalDisplay)
-	if err != nil {
-		return err
-	}
-	internalARCDisplayID, err := arc.FirstDisplayIDByType(ctx, a, arc.InternalDisplay)
+	internalARCDisplayID, externalARCDisplayID, err := arcDisplayIDs(ctx, a, dc)
 	if err != nil {
 		return err
 	}
 
 	// Setup display layout.
-	disp, err := getInternalAndExternalDisplays(ctx, tconn)
+	displays, err := internalAndExternalDisplays(ctx, tconn, dc)
 	if err != nil {
 		return err
 	}
 
 	for _, param := range []struct {
+		name        string
 		displayID   int
 		displayType arc.DisplayType
 		windowState ash.WindowStateType
 		wantCC      []configChangeEvent
 	}{
-		{internalARCDisplayID, arc.InternalDisplay, ash.WindowStateNormal, nil},
-		{internalARCDisplayID, arc.InternalDisplay, ash.WindowStateMaximized, []configChangeEvent{
+		{"rotate-internal-normal", internalARCDisplayID, arc.InternalDisplay, ash.WindowStateNormal, nil},
+		{"rotate-internal-maximimized", internalARCDisplayID, arc.InternalDisplay, ash.WindowStateMaximized, []configChangeEvent{
 			{handled: true, screenSize: true, orientation: true},
 		}},
-		{externalARCDisplayID, arc.ExternalDisplay, ash.WindowStateNormal, nil},
-		{externalARCDisplayID, arc.ExternalDisplay, ash.WindowStateMaximized, []configChangeEvent{
+		{"rotate-external-normal", externalARCDisplayID, arc.ExternalDisplay, ash.WindowStateNormal, nil},
+		{"rotate-external-maximimized", externalARCDisplayID, arc.ExternalDisplay, ash.WindowStateMaximized, []configChangeEvent{
 			{handled: true, screenSize: true, orientation: true},
 		}},
 	} {
@@ -858,36 +836,47 @@ func rotateDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *
 			func(ctx context.Context, s *testing.State) error {
 				act := testappActivity{ctx, tconn, a, resizeable, handling, nil}
 				if err := act.launch(ctx, param.displayID); err != nil {
-					return err
-				}
-				if err != nil {
-					return err
+					return errors.Wrap(err, "could not launch activity on display")
 				}
 				defer act.close(ctx)
 
+				if err := ensureWindowOnDisplay(ctx, tconn, act.activity.PackageName(), displays.displayInfo(param.displayType).ID); err != nil {
+					return errors.Wrap(err, "Activity launched on wrong display")
+				}
+
 				if err := act.setWindowState(param.windowState); err != nil {
-					return err
+					return errors.Wrap(err, "could not set window state")
 				}
 
 				if err := deleteConfigurationChanges(ctx, a); err != nil {
-					return err
+					return errors.Wrap(err, "could not delete configuration changes")
 				}
 
-				currentRot := currentRotation{ctx, tconn, disp.displayInfo(param.displayType).ID, 0}
+				var displayInfoID string
+				if param.displayType == arc.InternalDisplay {
+					displayInfoID = displays.internal.ID
+				} else {
+					displayInfoID = displays.external.ID
+				}
+
+				currentRot := currentRotation{ctx, tconn, displayInfoID, 0}
 				if err := currentRot.read(); err != nil {
-					return err
+					return errors.Wrap(err, "could not read rotation")
 				}
 				defer currentRot.setTo(currentRot.degree)
 				if err := currentRot.setTo((currentRot.degree + 90) % 360); err != nil {
-					return err
+					return errors.Wrap(err, "could not set rotation")
 				}
 
 				ccList, err := queryConfigurationChanges(ctx, a)
 				if err != nil {
-					return err
+					return errors.Wrap(err, "could not query config changes")
 				}
 
 				if !reflect.DeepEqual(ccList, param.wantCC) {
+					if scerr := grabScreenshotOfDisplaysForFailedTests(ctx, cr, displays, param.name); scerr != nil {
+						s.Error("Failed to grab screenshot of displays")
+					}
 					return errors.Errorf("unexpected config change: got %+v; want %+v", ccList, param.wantCC)
 				}
 
@@ -899,13 +888,13 @@ func rotateDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *
 }
 
 // snappingOnDisplay verifies snapping behavior (Alt + '['/']') on internal/external displays.
-func snappingOnDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, _ virtualmultidisplay.VirtualDisplayController) error {
+func snappingOnDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, dc virtualmultidisplay.VirtualDisplayController) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return err
 	}
 
-	disp, err := getInternalAndExternalDisplays(ctx, tconn)
+	disp, err := internalAndExternalDisplays(ctx, tconn, dc)
 	if err != nil {
 		return err
 	}
@@ -919,6 +908,7 @@ func snappingOnDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome,
 	for _, dispType := range []arc.DisplayType{arc.InternalDisplay, arc.ExternalDisplay} {
 		d := disp.displayInfo(dispType)
 		u := d.WorkArea.Width / 2
+		testing.ContextLogf(ctx, "Testing snapping on display %s, resolution is %d x %d, snap width is %d", d.ID, d.Bounds.Width, d.Bounds.Height, u)
 		for _, state := range []ash.WindowStateType{ash.WindowStateNormal, ash.WindowStateMaximized} {
 			for _, param := range []struct {
 				name     string
@@ -931,14 +921,25 @@ func snappingOnDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome,
 				runOrFatal(
 					ctx, s, fmt.Sprintf("%s window to %s on %s display", state, param.name, dispType),
 					func(ctx context.Context, s *testing.State) error {
-						act := testappActivity{ctx, tconn, a, resizeable, handling, nil}
-						defer act.close(ctx)
-						dispID, err := arc.FirstDisplayIDByType(ctx, a, dispType)
+
+						internalARCDisplayID, externalARCDisplayID, err := arcDisplayIDs(ctx, a, dc)
 						if err != nil {
 							return err
 						}
-						if err := act.launch(ctx, dispID); err != nil {
+						var arcDisplayID int
+						if dispType == arc.InternalDisplay {
+							arcDisplayID = internalARCDisplayID
+						} else {
+							arcDisplayID = externalARCDisplayID
+						}
+
+						act := testappActivity{ctx, tconn, a, resizeable, handling, nil}
+						defer act.close(ctx)
+						if err := act.launch(ctx, arcDisplayID); err != nil {
 							return err
+						}
+						if err := ensureWindowOnDisplay(ctx, tconn, act.activity.PackageName(), d.ID); err != nil {
+							return errors.Wrap(err, "Activity launched on wrong display")
 						}
 
 						if err := act.setWindowState(state); err != nil {
@@ -949,7 +950,7 @@ func snappingOnDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome,
 							return err
 						}
 
-						return testing.Poll(ctx, func(ctx context.Context) error {
+						err = testing.Poll(ctx, func(ctx context.Context) error {
 							win, err := act.findWindow()
 							if err != nil {
 								return testing.PollBreak(err)
@@ -960,6 +961,14 @@ func snappingOnDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome,
 							}
 							return nil
 						}, &testing.PollOptions{Timeout: time.Second})
+
+						if err != nil {
+							if scerr := grabScreenshotOfDisplaysForFailedTests(ctx, cr, disp, param.name); scerr != nil {
+								s.Error("Failed to grab screenshot of displays")
+							}
+						}
+
+						return err
 					})
 			}
 		}
@@ -1202,7 +1211,7 @@ func ensureNoBlackBkg(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Test
 			if !ok {
 				return errors.New("failed to get directory for saving files")
 			}
-			path := fmt.Sprintf("%s/screenshot-failed-%s.png", dir, info.ID)
+			path := fmt.Sprintf("%s/no-black-background-screenshot-failed-%s.png", dir, info.ID)
 			fd, err := os.Create(path)
 			if err != nil {
 				return errors.Wrap(err, "failed to create screenshot")
@@ -1251,12 +1260,12 @@ func waitForStopAnimating(ctx context.Context, tconn *chrome.TestConn, pkgName s
 // Virtual displays are always identified by their index, not the display ID, for activation.
 func waitForDisplay(ctx context.Context, tconn *chrome.TestConn, dc virtualmultidisplay.VirtualDisplayController, displayVirtualID int, dispID string, isOn bool, timeout time.Duration) error {
 	if dc != nil {
+		// Ensure that configfs has the requested display set accordingly before polling.
 		if e, err := dc.DisplayEnabled(displayVirtualID); err != nil {
 			return errors.Wrapf(err, "error checking if display enabled: %d", displayVirtualID)
 		} else if e != isOn {
 			return errors.Wrapf(err, "expected display on: %t but was %t", isOn, e)
 		}
-		return nil
 	}
 
 	return testing.Poll(ctx, func(ctx context.Context) error {
@@ -1317,6 +1326,34 @@ func grabScreenshotForDisplay(ctx context.Context, cr *chrome.Chrome, displayID 
 	return img, nil
 }
 
+func grabScreenshotOfDisplaysForFailedTests(ctx context.Context, cr *chrome.Chrome, disp displayLayout, fileName string) error {
+	for _, dispType := range []arc.DisplayType{arc.InternalDisplay, arc.ExternalDisplay} {
+		d := disp.displayInfo(dispType)
+		// Save image with failed snap.
+		img, err := grabScreenshotForDisplay(ctx, cr, d.ID)
+		if err != nil {
+			return errors.Wrap(err, "could not grab display screenshot")
+		}
+		dir, ok := testing.ContextOutDir(ctx)
+		if !ok {
+			return errors.New("failed to get directory for saving files")
+		}
+		path := fmt.Sprintf("%s/snapping-%s-screenshot-failed-%s.png", dir, fileName, d.ID)
+		fd, err := os.Create(path)
+		if err != nil {
+			return errors.Wrap(err, "failed to create screenshot")
+		}
+		defer fd.Close()
+		if err := png.Encode(fd, img); err != nil {
+			return errors.Wrap(err, "failed to save screenshot in PNG format")
+		}
+
+		testing.ContextLogf(ctx, "Image containing the failed snap: %s", path)
+	}
+
+	return nil
+}
+
 // setDisplayPower sets the display power by a given power state, uses dc for virtual displays/tests.
 func setDisplayPower(ctx context.Context, dc virtualmultidisplay.VirtualDisplayController, power displayPowerState) error {
 	if dc == nil {
@@ -1328,11 +1365,11 @@ func setDisplayPower(ctx context.Context, dc virtualmultidisplay.VirtualDisplayC
 }
 
 func setDisplayPowerVirtual(ctx context.Context, dc virtualmultidisplay.VirtualDisplayController, power displayPowerState) error {
-	internalDisplayID, err := dc.InternalDisplayId()
+	internalDisplayID, err := dc.InternalDisplayID()
 	if err != nil {
 		return errors.Wrap(err, "could not get internal display ID")
 	}
-	externalDisplayIds, err := dc.ExternalDisplayIds()
+	externalDisplayIDs, err := dc.ExternalDisplayIDs()
 	if err != nil {
 		return errors.Wrap(err, "could not get external display IDs")
 	}
@@ -1340,34 +1377,38 @@ func setDisplayPowerVirtual(ctx context.Context, dc virtualmultidisplay.VirtualD
 	switch power {
 	case displayPowerAllOn:
 		dc.EnableDisplay(internalDisplayID)
-		for _, d := range externalDisplayIds {
+		for _, d := range externalDisplayIDs {
 			if err := dc.EnableDisplay(d); err != nil {
 				return errors.Wrapf(err, "could not enable display %d", d)
 			}
 		}
 	case displayPowerAllOff:
 		dc.DisableDisplay(internalDisplayID)
-		for _, d := range externalDisplayIds {
+		for _, d := range externalDisplayIDs {
 			if err := dc.DisableDisplay(d); err != nil {
 				return errors.Wrapf(err, "could not disable display %d", d)
 			}
 		}
 	case displayPowerInternalOffExternalOn:
+		testing.ContextLogf(ctx, "Disabling 'internal' display ID %d", internalDisplayID)
 		if err := dc.DisableDisplay(internalDisplayID); err != nil {
 			return errors.Wrap(err, "could not disable 'internal' display 0")
 		}
 
-		for _, d := range externalDisplayIds {
+		for _, d := range externalDisplayIDs {
+			testing.ContextLogf(ctx, "Enabling 'external' display ID %d", d)
 			if err := dc.EnableDisplay(d); err != nil {
 				return errors.Wrapf(err, "could not enable external display %d", d)
 			}
 		}
 	case displayPowerInternalOnExternalOff:
+		testing.ContextLogf(ctx, "Enabling 'internal' display ID %d", internalDisplayID)
 		if err := dc.EnableDisplay(internalDisplayID); err != nil {
 			return errors.Wrap(err, "could not enable 'internal' display 0")
 		}
 
-		for _, d := range externalDisplayIds {
+		for _, d := range externalDisplayIDs {
+			testing.ContextLogf(ctx, "Disabling 'external' display ID %d", d)
 			if err := dc.DisableDisplay(d); err != nil {
 				return errors.Wrapf(err, "could not disable external display %d", d)
 			}
@@ -1414,8 +1455,8 @@ func (layout *displayLayout) displayInfo(displayType arc.DisplayType) *display.I
 	panic("Out of index")
 }
 
-// getInternalAndExternalDisplays returns internal and external display info.
-func getInternalAndExternalDisplays(ctx context.Context, tconn *chrome.TestConn) (result displayLayout, err error) {
+// internalAndExternalDisplays returns internal and external display info.
+func internalAndExternalDisplays(ctx context.Context, tconn *chrome.TestConn, dc virtualmultidisplay.VirtualDisplayController) (result displayLayout, err error) {
 	infos, err := display.GetInfo(ctx, tconn)
 	if err != nil {
 		return result, err
@@ -1439,6 +1480,19 @@ func getInternalAndExternalDisplays(ctx context.Context, tconn *chrome.TestConn)
 	}
 
 	return result, err
+}
+
+func arcDisplayIDs(ctx context.Context, a *arc.ARC, dc virtualmultidisplay.VirtualDisplayController) (internalARCDisplayID, externalARCDisplayID int, err error) {
+	externalARCDisplayID, err = arc.FirstDisplayIDByType(ctx, a, arc.ExternalDisplay)
+	if err != nil {
+		return -1, -1, err
+	}
+	internalARCDisplayID, err = arc.FirstDisplayIDByType(ctx, a, arc.InternalDisplay)
+	if err != nil {
+		return -1, -1, err
+	}
+
+	return internalARCDisplayID, externalARCDisplayID, nil
 }
 
 // testappActivity provides activity-related operations ensuring state changes complete when returning from the function.

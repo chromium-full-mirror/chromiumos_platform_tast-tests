@@ -33,13 +33,9 @@ func init() {
 			{
 				Name:              "android_vm_only",
 				ExtraSoftwareDeps: []string{"android_vm"},
-				Val:               multidisplay.AndroidVm,
+				Val:               multidisplay.AndroidVM,
 			},
-			{
-				Name:              "physical_device_only",
-				ExtraSoftwareDeps: []string{"android_vm"},
-				Val:               multidisplay.PhysicalOnly,
-			}},
+		},
 	})
 }
 

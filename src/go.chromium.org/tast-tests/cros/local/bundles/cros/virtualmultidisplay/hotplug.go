@@ -32,12 +32,12 @@ func init() {
 func Hotplug(ctx context.Context, s *testing.State) {
 	displayController := s.FixtValue().(virtualmultidisplay.HasVirtualDisplayController).VirtualDisplayController()
 
-	internalDisplayID, err := displayController.InternalDisplayId()
+	internalDisplayID, err := displayController.InternalDisplayID()
 	if err != nil {
 		s.Fatal("Could not get internal display id: ", err)
 	}
 
-	externalDisplays, err := displayController.ExternalDisplayIds()
+	externalDisplays, err := displayController.ExternalDisplayIDs()
 	if err != nil {
 		s.Fatal("Could not get external display ids: ", err)
 	}

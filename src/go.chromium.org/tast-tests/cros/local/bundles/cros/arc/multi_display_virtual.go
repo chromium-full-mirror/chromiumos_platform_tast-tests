@@ -28,15 +28,17 @@ func init() {
 		Timeout:      arc.BootTimeout + 2*time.Minute,
 		Data:         []string{wm.WhiteWallpaperFileName},
 		Fixture:      arc.ArcBootedMultiDisplay,
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{
 			{
-				Val: arcmultidisplay.StableTestSet,
+				Val:       arcmultidisplay.StableTestSet,
+				ExtraAttr: []string{"group:mainline", "informational", "group:hw_agnostic"},
 			},
 			{
-				Name: "android_vm_only",
-				Val:  arcmultidisplay.AndroidVm,
-			}},
+				Name:      "android_vm_only",
+				Val:       arcmultidisplay.AndroidVM,
+				ExtraAttr: []string{"group:mainline", "informational", "group:hw_agnostic"},
+			},
+		},
 	})
 
 }

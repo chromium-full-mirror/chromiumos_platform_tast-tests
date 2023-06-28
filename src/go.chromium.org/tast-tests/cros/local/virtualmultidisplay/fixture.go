@@ -7,14 +7,12 @@ package virtualmultidisplay
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
@@ -23,6 +21,7 @@ import (
 )
 
 const (
+	// VirtualMultiDisplay fixture name
 	VirtualMultiDisplay = "virtualMultiDisplay"
 )
 
@@ -54,7 +53,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixtureWithParentState(func(s *testing.FixtState) interface{} {
 			return s.ParentValue()
 		}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.ExtraArgs("—drm-virtual-connector-is-external")}, nil
+			return []chrome.Option{chrome.ExtraArgs("--drm-virtual-connector-is-external", "--use-first-display-as-internal")}, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -63,7 +62,7 @@ func init() {
 
 	fixtureConfig := arc.DefaultBootedFixtureConfig()
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs("—drm-virtual-connector-is-external")}, nil
+		return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs("--drm-virtual-connector-is-external", "--use-first-display-as-internal")}, nil
 	}
 	fixtureConfig.ParentStateProvider = func(s *testing.FixtState) interface{} {
 		return s.ParentValue()
@@ -136,63 +135,48 @@ func NewMultiDisplayFixture(fOpts chrome.OptionsCallback) testing.FixtureImpl {
 }
 
 func (f *multiDisplayFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	if err := killDrmProcessesAndServices(ctx); err != nil {
-		s.Error("Could not kill DRM processes: ", err)
-	}
-
-	s.Log("Checking if VKMS is loaded")
-	if err := ensureModuleLoadedOrNot("vkms", true); err == nil {
-		s.Log("VKMS Detected, removing")
-		// Unload VKMS if it is loaded.
-		if err := testexec.CommandContext(ctx, "rmmod", "vkms").Run(); err != nil {
-			s.Error("Could not unload module vkms: ", err)
-		}
-	}
-
-	outputsArg := fmt.Sprintf("max_outputs=%d", f.maxOutputs)
-	s.Log("Loading virtio-gpu-dummy")
-	if err := testexec.CommandContext(ctx, "modprobe", "virtio-gpu-dummy", outputsArg).Run(); err != nil {
-		s.Fatal("Could not run modprobe for module for virtio-gpu-dummy: ", err)
-	}
-
-	if err := resumeDrmServices(ctx); err != nil {
-		s.Fatal("Could not resume drm services: ", err)
-	}
-
-	if multidisplayController, err := multidisplayController(f); err != nil {
+	multidisplayController, err := multidisplayController(ctx, f)
+	if err != nil {
 		s.Fatal("Could not get multi display controller: ", err)
-	} else {
-		f.multiDisplayController = multidisplayController
 	}
+
+	if err := multidisplayController.AdditionalFixtureSetup(ctx); err != nil {
+		teardownErr := multidisplayController.AdditionalFixtureTeardown(ctx)
+
+		if teardownErr != nil {
+			s.Error("Error during teardown: ", teardownErr)
+		}
+
+		s.Fatal("Failed to set up multi display controller backing driver: ", err)
+	}
+
+	f.multiDisplayController = multidisplayController
 
 	return f
 }
 
-func multidisplayController(f *multiDisplayFixture) (*virtioGpuDummyMultiDisplayController, error) {
-	if kernelVersion, _, err := sysutil.KernelVersionAndArch(); err != nil {
+func multidisplayController(ctx context.Context, f *multiDisplayFixture) (VirtualDisplayController, error) {
+	kernelVersion, _, err := sysutil.KernelVersionAndArch()
+	if err != nil {
 		return nil, errors.Wrap(err, "could not get kernel version and arch")
-	} else if !kernelVersion.Is(5, 15) {
-		return nil, errors.New("in order to use virtio-gpu-dummy multi display controller, the system must be a betty vm with kernel 5.15")
 	}
 
-	return &virtioGpuDummyMultiDisplayController{maxDisplays: f.maxOutputs}, nil
+	if kernelVersion.Is(5, 15) {
+		testing.ContextLog(ctx, "Kernel 5.15 detected, using virtio-gpu-dummy driver")
+		return &virtioGpuDummyMultiDisplayController{maxDisplays: f.maxOutputs}, nil
+	}
+
+	if kernelVersion.IsOrLater(6, 1) {
+		testing.ContextLog(ctx, "Kernel 6.1+ detected, using vkms driver")
+		return &vkmsMultiDisplayController{maxDisplays: f.maxOutputs}, nil
+	}
+
+	return nil, errors.Errorf("no virtual display controller driver for this kernel version: %s", kernelVersion.String())
 }
 
 func (f *multiDisplayFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if err := killDrmProcessesAndServices(ctx); err != nil {
-		s.Error("Could not kill DRM processes: ", err)
-	}
-
-	if err := testexec.CommandContext(ctx, "rmmod", "virtio-gpu-dummy").Run(); err != nil {
-		s.Fatal("Could not unload module virtio-gpu-dummy: ", err)
-	}
-
-	if err := testexec.CommandContext(ctx, "modprobe", "vkms").Run(); err != nil {
-		s.Fatal("Could not load module vkms: ", err)
-	}
-
-	if err := resumeDrmServices(ctx); err != nil {
-		s.Fatal("Could not resume drm services: ", err)
+	if err := f.multiDisplayController.AdditionalFixtureTeardown(ctx); err != nil {
+		s.Fatal("Could not teardown multi display fixture: ", err)
 	}
 }
 
