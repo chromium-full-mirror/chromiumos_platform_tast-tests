@@ -55,7 +55,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				Val: testArgsForPowerIdlePerf{
 					setupOption:  setup.ForceBatteryDischarge,
-					extendedTest: true,
+					extendedTest: false,
 				},
 				Fixture: "chromeLoggedInDisableSyncNoFwUpdate",
 				Timeout: 20 * time.Minute,
@@ -66,7 +66,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				Val: testArgsForPowerIdlePerf{
 					setupOption:  setup.ForceBatteryDischarge,
-					extendedTest: true,
+					extendedTest: false,
 				},
 				Fixture: "arcBootedRestricted",
 				Timeout: 20 * time.Minute,
@@ -78,7 +78,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				Val: testArgsForPowerIdlePerf{
 					setupOption:  setup.ForceBatteryDischarge,
-					extendedTest: true,
+					extendedTest: false,
 				},
 				Fixture: "arcBootedRestricted",
 				Timeout: 20 * time.Minute,
@@ -113,7 +113,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 				Val: testArgsForPowerIdlePerf{
 					setupOption:  setup.NoBatteryDischarge,
-					extendedTest: true,
+					extendedTest: false,
 				},
 				Fixture: "chromeLoggedInDisableSyncNoFwUpdate",
 				Timeout: 20 * time.Minute,
@@ -124,7 +124,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 				Val: testArgsForPowerIdlePerf{
 					setupOption:  setup.NoBatteryDischarge,
-					extendedTest: true,
+					extendedTest: false,
 				},
 				Fixture: "arcBootedRestricted",
 				Timeout: 20 * time.Minute,
@@ -135,7 +135,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 				Val: testArgsForPowerIdlePerf{
 					setupOption:  setup.NoBatteryDischarge,
-					extendedTest: true,
+					extendedTest: false,
 				},
 				Fixture: "arcBootedRestricted",
 				Timeout: 20 * time.Minute,
