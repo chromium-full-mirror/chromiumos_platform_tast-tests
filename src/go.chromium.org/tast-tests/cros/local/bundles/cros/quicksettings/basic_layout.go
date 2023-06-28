@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -48,7 +47,7 @@ func init() {
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		Fixture:      "chromeLoggedInQsRevampEnabled",
 		Params: []testing.Param{
 			{
 				ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
@@ -103,6 +102,12 @@ func BasicLayout(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
+
+	cleanupQs, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanupQs()
 
 	param := s.Param().(basicLayoutTestParam)
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, param.isTabletMode)
@@ -169,11 +174,6 @@ func BasicLayout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check sliders in Quick Settings: ", err)
 	}
 
-	s.Log("Checking date in Quick Settings")
-	if err := resources.ui.WaitUntilExists(quicksettings.DateView)(ctx); err != nil {
-		s.Fatal("Failed to find Date info: ", err)
-	}
-
 	// If DUT does not have battery (e.g., Chromeboxes and Chromebits),
 	// skip battery icon verification.
 	s.Log("Checking battery in Quick Settings")
@@ -186,28 +186,27 @@ func BasicLayout(ctx context.Context, s *testing.State) {
 
 func checkUser(ctx context.Context, res *basicLayoutTestResources) error {
 	userEmail := res.cr.User()
-	userName := strings.Split(userEmail, "@")[0]
 
-	return uiauto.Combine(fmt.Sprintf("find user: %s, email: %s", userName, userEmail),
-		res.pc.Click(res.btn.NameStartingWith(userName)),
-		res.ui.WaitUntilExists(nodewith.Role(role.StaticText).Name(userName)),
-		res.ui.WaitUntilExists(nodewith.Role(role.StaticText).Name(userEmail)),
-		res.ui.WaitUntilExists(nodewith.HasClass("RoundedImageView").First()),
-		res.pc.Click(res.btn.Name("Close").HasClass("IconButton")),
+	// The user's email should be in the power menu.
+	return uiauto.Combine(fmt.Sprintf("find email: %s", userEmail),
+		res.pc.Click(quicksettings.PowerMenuButton),
+		res.ui.WaitUntilExists(nodewith.Role(role.MenuItem).Name(userEmail)),
+		// Close the menu after checking.
+		res.pc.Click(quicksettings.PowerMenuButton),
+		res.ui.WaitUntilGone(nodewith.Role(role.MenuItem).Name(userEmail)),
 	)(ctx)
 }
 
 func checkButtons(ctx context.Context, res *basicLayoutTestResources) error {
 	for _, node := range []*nodewith.Finder{
-		quicksettings.SignoutButton,
-		quicksettings.LockButton,
-		quicksettings.SettingsButton,
-		quicksettings.CollapseButton,
+		quicksettings.FeatureTileNetwork,
+		quicksettings.FeatureTileScreenCapture,
+		quicksettings.FeatureTileDoNotDisturb,
+		quicksettings.FeatureTileBluetooth,
+		quicksettings.FeatureTileCast,
 		quicksettings.VolumeToggle,
-		quicksettings.PodIconButton(quicksettings.SettingPodNetwork),
-		quicksettings.PodIconButton(quicksettings.SettingPodBluetooth),
-		quicksettings.PodIconButton(quicksettings.SettingPodDoNotDisturb),
-		quicksettings.PodIconButton(quicksettings.SettingPodNightLight),
+		quicksettings.PowerMenuButton,
+		quicksettings.SettingsButton,
 	} {
 		nodeInfo, err := res.ui.Info(ctx, node)
 		if err != nil || nodeInfo == nil {
@@ -219,22 +218,22 @@ func checkButtons(ctx context.Context, res *basicLayoutTestResources) error {
 }
 
 func checkPanels(ctx context.Context, res *basicLayoutTestResources) error {
-	for _, pod := range []quicksettings.SettingPod{
-		quicksettings.SettingPodNetwork,
-		quicksettings.SettingPodBluetooth,
-		quicksettings.SettingPodAccessibility,
-		quicksettings.SettingPodKeyboard,
-		quicksettings.SettingPodDoNotDisturb,
-	} {
-		podLabelBtn := quicksettings.PodLabelButton(pod)
+	// Associate the tiles with names for better error reporting.
+	tiles := map[string]*nodewith.Finder{
+		"Network":       quicksettings.FeatureTileNetwork,
+		"Bluetooth":     quicksettings.FeatureTileBluetooth,
+		"Accessibility": quicksettings.FeatureTileAccessibility,
+		"Keyboard":      quicksettings.FeatureTileKeyboard,
+	}
+	for name, tile := range tiles {
 		if err := uiauto.Combine("check panel",
-			searchPanelInQuickSettings(res, podLabelBtn),
-			res.pc.Click(podLabelBtn),
+			searchPanelInQuickSettings(res, tile),
+			res.pc.Click(tile),
 			res.pc.Click(res.btn.Name("Previous menu")),
 		)(ctx); err != nil {
-			return errors.Wrapf(err, "failed to check panel %q", string(pod))
+			return errors.Wrapf(err, "failed to check panel %q", name)
 		}
-		testing.ContextLogf(ctx, "Panel %q found", string(pod))
+		testing.ContextLogf(ctx, "Panel %q found", name)
 
 		// Click on page one button if it exists.
 		pageBtn := res.btn.NameRegex(regexp.MustCompile(`Page 1 of \d+`)).HasClass("PageIndicatorView")
