@@ -244,6 +244,21 @@ func simpleConnect80211ax() []*simpleConnectParams {
 	}}
 }
 
+func simpleConnectOWE() []*simpleConnectParams {
+	return []*simpleConnectParams{{
+		Name:      "owe",
+		Fixture:   defaultFixture,
+		Doc:       simpleConnectDocPref("an OWE network on 2.4GHz."),
+		ExtraAttr: []string{"wificell_unstable"},
+		Val: []simpleConnectParamsVal{{
+			APOpts:           simpleConnectCommonSecApOpts,
+			SecConfFac:       "owe.NewConfigFactory()",
+			ExpectedSecurity: "shillconst.SecurityOWE",
+		}},
+		ExtraRequirements: []string{tdreq.WiFiSecSupportOWE, tdreq.WiFiCertOWE},
+	}}
+}
+
 func simpleConnectHidden() []*simpleConnectParams {
 	return []*simpleConnectParams{{
 		Name:    "hidden24g",
@@ -917,6 +932,7 @@ func TestSimpleConnect(t *testing.T) {
 	ps = append(ps, simpleConnect80211nsgi())
 	ps = append(ps, simpleConnect80211ac()...)
 	ps = append(ps, simpleConnect80211ax()...)
+	ps = append(ps, simpleConnectOWE()...)
 	ps = append(ps, simpleConnectHidden()...)
 	ps = append(ps, simpleConnectWEP()...)
 	ps = append(ps, simpleConnectWEPHidden())

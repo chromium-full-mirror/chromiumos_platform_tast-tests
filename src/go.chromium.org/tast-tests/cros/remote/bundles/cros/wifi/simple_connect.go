@@ -17,6 +17,7 @@ import (
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/dynamicwep"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/owe"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/tunneled1x"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wep"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
@@ -242,6 +243,17 @@ func init() {
 				}},
 				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
+			}, {
+				// Verifies that DUT can connect to an OWE network on 2.4GHz.
+				Name:      "owe",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr: []string{"wificell_unstable"},
+				Val: []simpleConnectTestcase{{
+					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+					secConfFac:       owe.NewConfigFactory(),
+					expectedSecurity: shillconst.SecurityOWE,
+				}},
+				ExtraRequirements: []string{"wifi-sec-0008-v02", "wifi-cert-0004-v02"},
 			}, {
 				// Verifies that DUT can connect to a hidden network on 2.4GHz channel.
 				Name:    "hidden24g",

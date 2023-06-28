@@ -179,6 +179,9 @@ const (
 	// WiFiSecSupportWEP the device MUST support WEP as defined in the WiFi Alliance specification.
 	WiFiSecSupportWEP = "wifi-sec-0007-v01"
 
+	// WiFiSecSupportOWE if the device supports Wi-Fi 6E, it MUST support OWE as defined in the WiFi Alliance specification.
+	WiFiSecSupportOWE = "wifi-sec-0008-v02"
+
 	// [[ WiFi standard specifications ]]
 
 	// WiFiSpecUlMIMO the Wi-Fi controller MAY support UL MU-MIMO.
@@ -278,6 +281,11 @@ const (
 
 	// WiFiTputVHT80TCPRxTx with Wi-Fi connection of 802.11ac 80Mhz, 2 streams in AES RX+TX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 200 mpbs.
 	WiFiTputVHT80TCPRxTx = "wifi-tput-0047-v01"
+
+	// [[ WiFi certification ]]
+
+	// WiFiCertOWE the device SHOULD obtain the Wi-Fi Enhanced Open Connectivity Certification.
+	WiFiCertOWE = "wifi-cert-0004-v02"
 
 	// Storage Requirements
 
