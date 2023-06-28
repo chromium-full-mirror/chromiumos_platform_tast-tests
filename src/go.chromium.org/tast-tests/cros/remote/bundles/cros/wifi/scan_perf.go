@@ -33,8 +33,17 @@ type scanPerfTestCase struct {
 	useRelaxedThreshold bool
 }
 
-// TODO(b/263890395): The following chipsets are known to fail the AVL requirement.
-// Separate these chipsets and move into wificell_unstable suite until fixed.
+// TODO(b/263890395): The following chipsets are known to fail the AVL. Remove
+// a chip when its issue is fixed and its test results on the unstable test
+// variants are healthy. For each chipset, tests are run twice:
+// 1. Run in the regular suite with relaxed requirements so that we can make
+// sure their performance will not deteriorate;
+// 2. run in the wificell_unstable suite (corresponding test variants suffixed
+// by "unstable") with regular requirements so that partners can verify their
+// fix.
+// For example, chipsets listed below will run once in wifi.ScanPerf.dtim1 with
+// relaxed requirements and another time in wifi.ScanPerf.dtim1unstable with
+// regular requirements.
 var deviceWithUnstableScan = []wlan.DeviceID{
 	wlan.QualcommWCN6750,
 	wlan.QualcommWCN6855,
@@ -127,8 +136,9 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		fgFullScanThreshold        = 4 * time.Second
 		bgFullScanThreshold        = 7 * time.Second
 		bgFullScanThresholdRelaxed = 9 * time.Second
-		fgFullScanThresholdWiFi6E  = 15 * time.Second
-		bgFullScanThresholdWiFi6E  = 20 * time.Second
+		// TODO(b/256486257): Move these 6E requirements to new test variants when new AVL requirements are settled.
+		fgFullScanThresholdWiFi6ERelaxed = 15 * time.Second
+		bgFullScanThresholdWiFi6ERelaxed = 15 * time.Second
 	)
 
 	// TODO(b/253096914): The following chipsets are known to have slower bg scan times.
@@ -269,7 +279,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	threshold := fgFullScanThreshold
 	if tc.useRelaxedThreshold {
 		if _, ok := wifi6eRelaxedChipsets[devID]; ok {
-			threshold = fgFullScanThresholdWiFi6E
+			threshold = fgFullScanThresholdWiFi6ERelaxed
 			s.Logf("There is a known issue (b/256486257) for this WiFi6E chip (%s), use a sufficiently long threshold and this test always passes", devInfo.Name)
 		}
 	}
@@ -326,7 +336,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 			threshold = bgFullScanThresholdRelaxed
 			s.Logf("There is a known issue (b/253096914) for this WiFi chip (%s), use a relaxed threshold: %s", devInfo.Name, threshold)
 		} else if _, ok := wifi6eRelaxedChipsets[devID]; ok {
-			threshold = bgFullScanThresholdWiFi6E
+			threshold = bgFullScanThresholdWiFi6ERelaxed
 			s.Logf("There is a known issue (b/256486257) for this WiFi6E chip (%s), use a sufficiently long threshold and this test always passes", devInfo.Name)
 		}
 	}
