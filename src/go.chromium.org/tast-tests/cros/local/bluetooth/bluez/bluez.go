@@ -15,6 +15,11 @@ import (
 type BlueZ struct {
 }
 
+// Disable powers on the adapter.
+func (b *BlueZ) Disable(ctx context.Context) error {
+	return Disable(ctx)
+}
+
 // Enable powers on the adapter.
 func (b *BlueZ) Enable(ctx context.Context) error {
 	return Enable(ctx)

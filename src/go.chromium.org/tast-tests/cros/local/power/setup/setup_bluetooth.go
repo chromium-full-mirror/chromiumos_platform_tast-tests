@@ -8,33 +8,45 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
+	"go.chromium.org/tast-tests/cros/local/bluetooth/facade/floss"
 	"go.chromium.org/tast/core/testing"
 )
 
-func disableBluetoothAdapter(ctx context.Context, adapter *bluez.Adapter) (CleanupCallback, error) {
-	prev, err := adapter.Powered(ctx)
-	if err != nil {
-		return nil, err
-	}
-	testing.ContextLogf(ctx, "Setting bluetooth adapter %q powered to false from %t", adapter.DBusObject().ObjectPath(), prev)
-	if err := adapter.SetPowered(ctx, false); err != nil {
-		return nil, err
+func disableBluezAdapter(ctx context.Context) (CleanupCallback, error) {
+	testing.ContextLog(ctx, "Disabling the bluez adapter")
+	if err := bluez.Disable(ctx); err != nil {
+		return func(ctx context.Context) error { return nil }, err
 	}
 	return func(ctx context.Context) error {
-		testing.ContextLogf(ctx, "Resetting bluetooth adapter %q powered to %t", adapter.DBusObject().ObjectPath(), prev)
-		return adapter.SetPowered(ctx, prev)
+		testing.ContextLog(ctx, "Enabling the bluez adapter")
+		return bluez.Enable(ctx)
 	}, nil
 }
 
-// DisableBluetooth disables all bluetooth adapters on the DUT.
+func disableFlossAdapter(ctx context.Context) (CleanupCallback, error) {
+	testing.ContextLog(ctx, "Disabling the floss adapter")
+	if err := floss.SetFlossEnabled(ctx, false); err != nil {
+		return func(ctx context.Context) error { return nil }, err
+	}
+	return func(ctx context.Context) error {
+		testing.ContextLog(ctx, "Enabling the floss adapter")
+		return floss.SetFlossEnabled(ctx, true)
+	}, nil
+}
+
+// DisableBluetooth disables bluetooth service.
+// Check if the floss service is enabled, if yes disable it.
+// If not, then bluez service is enabled, disable it instead.
 func DisableBluetooth(ctx context.Context) (CleanupCallback, error) {
 	return Nested(ctx, "disable bluetooth", func(s *Setup) error {
-		adapters, err := bluez.Adapters(ctx)
+		isFlossEnabled, err := floss.GetFlossEnabled(ctx)
 		if err != nil {
 			return err
 		}
-		for _, adapter := range adapters {
-			s.Add(disableBluetoothAdapter(ctx, adapter))
+		if isFlossEnabled {
+			s.Add(disableFlossAdapter(ctx))
+		} else {
+			s.Add(disableBluezAdapter(ctx))
 		}
 		return nil
 	})

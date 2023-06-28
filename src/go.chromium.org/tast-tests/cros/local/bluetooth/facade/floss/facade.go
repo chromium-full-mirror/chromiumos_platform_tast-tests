@@ -19,6 +19,19 @@ import (
 
 const flossManagerDaemonJob = "btmanagerd"
 
+// GetFlossEnabled returns the enabled state of floss.
+func GetFlossEnabled(ctx context.Context) (bool, error) {
+	manager, err := floss.DefaultManagerClient(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get default floss manager client")
+	}
+	isFlossEnabled, err := manager.GetFlossEnabled(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to call GetFlossEnabled with floss manager client")
+	}
+	return isFlossEnabled, nil
+}
+
 // SetFlossEnabled will attempt to start the floss manager daemon and set it as
 // the provided enabled state.
 //
