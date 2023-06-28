@@ -50,12 +50,23 @@ var md5OfYUV = map[string]string{
 	"static-1920x1080_30frames.i420.yuv": "f7d07243a9b5bbaa77930e66c9b64379",
 }
 
-// DecodeInI420 decodes webMFile and creates the associated I420 file for test.
-// The returned value is the path of the created I420file. It must be removed in the end of test, because its size is expected to be large.
-// The input WebM files are vp9 codec. They are generated from raw YUV data by libvpx like "vpxenc foo.yuv -o foo.webm --codec=vp9 -w <width> -h <height> --lossless=1"
+// DecodeInI420 decodes all the frames in webMFile and saved in an I420 file.
+// The returned value is the path of the created I420 file.
+func DecodeInI420(ctx context.Context, webMFile string) (string, error) {
+	return DecodeInI420WithNumFrames(ctx, webMFile, -1, "")
+}
+
+// DecodeInI420WithNumFrames decodes the specified number of frames in webMFile and saved in an I420 file.
+// The returned value is the path of the created an I420 file.
+// If the number of frames to be decoded is specified, the expected md5 value needs to be specified.
+// It must be removed in the end of test, because its size is expected to be large.
+// The input WebM file must be vp9 webm file. They are generated from raw YUV data by libvpx like "vpxenc foo.yuv -o foo.webm --codec=vp9 -w <width> -h <height> --lossless=1"
 // Please use "--lossless=1" option. Lossless compression is required to ensure we are testing streams at the same quality as original raw streams,
 // to test encoder capabilities (performance, bitrate convergence, etc.) correctly and with sufficient complexity/PSNR.
-func DecodeInI420(ctx context.Context, webMFile string) (string, error) {
+func DecodeInI420WithNumFrames(ctx context.Context, webMFile string, numFrames int, md5 string) (string, error) {
+	if numFrames > 0 && md5 == "" {
+		return "", errors.New("md5 must be given if the number of frames is specified")
+	}
 	const webMSuffix = ".vp9.webm"
 	if !strings.HasSuffix(webMFile, webMSuffix) {
 		return "", errors.Errorf("source video %v must be VP9 WebM", webMFile)
@@ -64,6 +75,12 @@ func DecodeInI420(ctx context.Context, webMFile string) (string, error) {
 	yuvFile := strings.TrimSuffix(webMFile, ".vp9.webm") + ".i420.yuv"
 	yuvName := filepath.Base(yuvFile)
 
+	var expectedHash string
+	if md5 != "" {
+		expectedHash = md5
+	} else {
+		expectedHash = md5OfYUV[yuvName]
+	}
 	// If the raw video file already exists and the hash matches the expected value we can skip extraction.
 	if _, err := os.Stat(yuvFile); !os.IsNotExist(err) {
 		yuvHash, err := calculateHash(yuvFile)
@@ -71,7 +88,7 @@ func DecodeInI420(ctx context.Context, webMFile string) (string, error) {
 			return "", err
 		}
 
-		if hash, found := md5OfYUV[yuvName]; found && yuvHash == hash {
+		if yuvHash == expectedHash {
 			testing.ContextLogf(ctx, "Skipping extraction of %s: %s already exists", webMName, yuvName)
 			return yuvFile, nil
 		}
@@ -96,6 +113,9 @@ func DecodeInI420(ctx context.Context, webMFile string) (string, error) {
 		threads = 16
 	}
 	command := []string{"vpxdec", webMFile, "-t", strconv.Itoa(threads), "-o", yuvFile, "--codec=vp9", "--i420"}
+	if numFrames > 0 {
+		command = append(command, "--limit="+strconv.Itoa(numFrames))
+	}
 	testing.ContextLogf(ctx, "Running %s", shutil.EscapeSlice(command))
 	cmd := testexec.CommandContext(ctx, command[0], command[1:]...)
 	if err := cmd.Run(); err != nil {
@@ -108,7 +128,7 @@ func DecodeInI420(ctx context.Context, webMFile string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if yuvHash != md5OfYUV[yuvName] {
+	if yuvHash != expectedHash {
 		return "", errors.Errorf("unexpected MD5 value of %s (got %s, want %s)", yuvName, yuvHash, md5OfYUV[yuvName])
 	}
 

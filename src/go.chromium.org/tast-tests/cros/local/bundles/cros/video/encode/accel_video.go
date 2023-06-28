@@ -28,8 +28,33 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// Duration of the interval during which CPU usage will be measured in the performance test.
-const measureInterval = 20 * time.Second
+const (
+	// Duration of the interval during which CPU usage will be measured in the performance test.
+	measureInterval = 20 * time.Second
+	// The number of frames to be used in video_encode_accelerator_tests and
+	// --speed tests in video_encode_accelerator_perf_tests.
+	numEncodeFrames = 60
+)
+
+// The md5 hash values of the first 60 frames in the video file.
+var md5OfYUV60Frames = map[string]string{
+	"tulip2-240x135.vp9.webm":            "183c24cff98f2aafa6ede6a8a7d70495",
+	"tulip2-320x180.vp9.webm":            "70c45d69a505ca59afa5c0d5c955bc15",
+	"tulip2-480x270.vp9.webm":            "4044ee0e5a6bb93698820c83b0b4ea2d",
+	"tulip2-640x360.vp9.webm":            "bca049daf2d10f368a04c269ded07945",
+	"tulip2-960x540.vp9.webm":            "8c6e4dc15e51dd8faf10dc97d894cf9d",
+	"tulip2-1280x720.vp9.webm":           "d8a42dafb4c68d2ed94148e1febf1cf7",
+	"crowd-1920x1080.vp9.webm":           "770a0c14e5202b1bde67c2f498eba682",
+	"crowd-3840x2160.vp9.webm":           "c0cf5576391ec6e2439a8d0fc7207662",
+	"crowd-320x180_30frames.vp9.webm":    "795d9e03fc4631245558cc522462a1e5",
+	"crowd-480x270_30frames.vp9.webm":    "21c426bea751e475533d2480b4b33426",
+	"crowd-640x360_30frames.vp9.webm":    "134fecaaae471820dede6c761e4d8f4b",
+	"crowd-960x540_30frames.vp9.webm":    "c1ab2a4af9bc76fc5d659fcf19fbee09",
+	"crowd-1280x720_30frames.vp9.webm":   "f26bff398809056165be970922492281",
+	"crowd-1920x1080_30frames.vp9.webm":  "13e4f50ad665e27c2a8603d6e65a0a39",
+	"crowd-3840x2160_30frames.vp9.webm":  "a739d49d4072bc91ca7b9b223e4b117f",
+	"static-1920x1080_30frames.vp9.webm": "f7d07243a9b5bbaa77930e66c9b64379",
+}
 
 // TestOptions is the options for runAccelVideoTest.
 type TestOptions struct {
@@ -164,13 +189,19 @@ func codecProfileToEncodeCodecOption(profile videotype.CodecProfile) (string, er
 
 // RunAccelVideoTest runs all tests in video_encode_accelerator_tests.
 func RunAccelVideoTest(ctx context.Context, s *testing.State, opts TestOptions) {
+	md5Hash, found := md5OfYUV60Frames[opts.webMName]
+	if !found {
+		s.Fatal("Unknown webm file: ", opts.webMName)
+	}
+
 	vl, err := logging.NewVideoLogger()
 	if err != nil {
 		s.Fatal("Failed to set values for verbose logging")
 	}
 	defer vl.Close()
 
-	yuvPath, err := encoding.DecodeInI420(ctx, s.DataPath(opts.webMName))
+	yuvPath, err := encoding.DecodeInI420WithNumFrames(ctx, s.DataPath(opts.webMName),
+		numEncodeFrames, md5Hash)
 	if err != nil {
 		s.Fatal("Failed to create a yuv file: ", err)
 	} else if videovars.ShouldRemoveArtifacts(ctx) {
@@ -249,6 +280,11 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 		exec = "video_encode_accelerator_perf_tests"
 	)
 
+	md5Hash, found := md5OfYUV60Frames[opts.webMName]
+	if !found {
+		s.Fatal("Unknown webm file: ", opts.webMName)
+	}
+
 	// Setup benchmark mode.
 	cleanUpBenchmark, err := mediacpu.SetUpBenchmark(ctx)
 	if err != nil {
@@ -256,7 +292,8 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 	}
 	defer cleanUpBenchmark(ctx)
 
-	yuvPath, err := encoding.DecodeInI420(ctx, s.DataPath(opts.webMName))
+	yuvPath, err := encoding.DecodeInI420WithNumFrames(ctx, s.DataPath(opts.webMName),
+		numEncodeFrames, md5Hash)
 	if err != nil {
 		s.Fatal("Failed to create a yuv file: ", err)
 	} else if videovars.ShouldRemoveArtifacts(ctx) {
