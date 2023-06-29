@@ -64,13 +64,8 @@ func Ti50SystemTestImage(ctx context.Context, s *testing.State) {
 
 	hasKernelTests := s.Param().(bool)
 	if hasKernelTests {
-		if f.TestbedType == ti50.GscHostEmulation {
-			// TODO(b/287468118 b/288103083) Kernel tests should pass in host emulation.
-			s.Log("Skipping kernel tests due to host emulation bugs")
-		} else {
-			s.Log("Kernel tests:")
-			checkTestResults(ctx, s, board, "KERNEL")
-		}
+		s.Log("Kernel tests:")
+		checkTestResults(ctx, s, board, "KERNEL")
 	}
 
 	s.Log("App tests:")
