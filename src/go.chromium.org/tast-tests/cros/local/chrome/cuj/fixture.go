@@ -613,7 +613,7 @@ func init() {
 		},
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("ArcMglruReclaim:interval/30000/swappiness/60"),
+				chrome.EnableFeatures("ArcMglruReclaim:interval/30000/swappiness/60,ArcLmkPerceptibleMinStateUpdate"),
 			},
 			bt: browser.TypeAsh,
 		},
