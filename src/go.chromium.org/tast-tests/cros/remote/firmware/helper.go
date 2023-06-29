@@ -139,6 +139,10 @@ const (
 	// on setting servo control while DUT is still
 	// in the process of waking up from hibernation.
 	FromHibernation WaitConnectOption = "hibernation"
+
+	// ResetEthernetDongle resets the ethernet dongle
+	// for speed-up in ssh connection.
+	ResetEthernetDongle WaitConnectOption = "reset_ethernet"
 )
 
 // SetupUSBOption includes options for setting up a USB device.
@@ -850,8 +854,10 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 	// Resetting ethernet dongle might speed up connection to the dut.
 	// At the moment, it seems that only servo v4.1 supports this feature.
 	// Don't fail if the control didn't work, and log the error instead.
-	if err := h.ResetServoEthernetDongle(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to reset ethernet dongle: ", err)
+	if wcOptsContain(opts, ResetEthernetDongle) {
+		if err := h.ResetServoEthernetDongle(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to reset ethernet dongle: ", err)
+		}
 	}
 	testing.ContextLogf(ctx, "Waiting for %s to connect", h.DUT.HostName())
 	for {

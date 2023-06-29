@@ -419,10 +419,10 @@ func waitConnectFromSuspend(ctx context.Context, h *firmware.Helper) error {
 		return state
 	}
 
+	waitConnectOpt := []firmware.WaitConnectOption{firmware.ResetEthernetDongle}
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancelWaitConnect()
-
-	err := h.WaitConnect(waitConnectCtx)
+	err := h.WaitConnect(waitConnectCtx, waitConnectOpt...)
 	if err != nil {
 		value := checkPowerState()
 		return errors.Wrapf(err, "dut unreachable with power state %s", value)

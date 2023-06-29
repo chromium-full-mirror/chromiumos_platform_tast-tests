@@ -143,11 +143,11 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 	if err := h.RequireConfig(ctx); err != nil {
 		return errors.Wrap(err, "failed to require config at the start of RebootToMode")
 	}
-
+	waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
 	if !h.DUT.Connected(ctx) {
 		connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancel()
-		if err := h.WaitConnect(connectCtx); err != nil {
+		if err := h.WaitConnect(connectCtx, waitConnectOpt...); err != nil {
 			return errors.Wrap(err, "failed to ssh at the start of RebootToMode")
 		}
 	}
@@ -244,7 +244,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 		}
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 		defer cancelWaitConnect()
-		if err := h.WaitConnect(waitConnectCtx); err != nil {
+		if err := h.WaitConnect(waitConnectCtx, waitConnectOpt...); err != nil {
 			return errors.Wrap(err, "failed to reconnect to DUT")
 		}
 	}
@@ -305,7 +305,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			testing.ContextLog(ctx, "Reestablishing connection to DUT")
 			connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 			defer cancel()
-			if err := h.WaitConnect(connectCtx); err != nil {
+			if err := h.WaitConnect(connectCtx, waitConnectOpt...); err != nil {
 				return errors.Wrapf(err, "failed to reconnect to DUT after booting to %s", toMode)
 			}
 		}
@@ -319,7 +319,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 		testing.ContextLog(ctx, "Reestablishing connection to DUT")
 		connectCtx, cancel := context.WithTimeout(ctx, h.Config.USBImageBootTimeout)
 		defer cancel()
-		if err := h.WaitConnect(connectCtx); err != nil {
+		if err := h.WaitConnect(connectCtx, waitConnectOpt...); err != nil {
 			return errors.Wrapf(err, "failed to reconnect to DUT after booting to %s", toMode)
 		}
 	case fwCommon.BootModeDev:
@@ -364,14 +364,6 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			}
 			if err := ms.FwScreenToDevMode(ctx, opts...); err != nil {
 				return errors.Wrap(err, "moving from firmware screen to dev mode")
-			}
-		} else {
-			// Reconnect to the DUT.
-			testing.ContextLog(ctx, "Reestablishing connection to DUT")
-			connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-			defer cancel()
-			if err := h.WaitConnect(connectCtx); err != nil {
-				return errors.Wrapf(err, "failed to reconnect to DUT after booting to %s", toMode)
 			}
 		}
 	case fwCommon.BootModeUSBDev:
@@ -463,7 +455,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 		testing.ContextLog(ctx, "Reestablishing connection to DUT")
 		connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancel()
-		if err := h.WaitConnect(connectCtx); err != nil {
+		if err := h.WaitConnect(connectCtx, waitConnectOpt...); err != nil {
 			return errors.Wrapf(err, "failed to reconnect to DUT after booting to %s", toMode)
 		}
 	default:
@@ -642,10 +634,11 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 			return errors.Wrap(err, "bypassing fw screen")
 		}
 	} else {
+		waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
 		testing.ContextLog(ctx, "Reestablishing connection to DUT")
 		connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancel()
-		if err := h.WaitConnect(connectCtx); err != nil {
+		if err := h.WaitConnect(connectCtx, waitConnectOpt...); err != nil {
 			return errors.Wrap(err, "failed to connect to DUT")
 		}
 	}
@@ -682,6 +675,7 @@ func (ms *ModeSwitcher) devModeFWScreenBypass(ctx context.Context) error {
 		return errors.Wrap(err, "requiring servo")
 	}
 	connectTimeout := 2 * time.Second
+	waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// The sequence will be repeated on reconnect timeout.
 		switch h.Config.ModeSwitcherType {
@@ -732,7 +726,11 @@ func (ms *ModeSwitcher) devModeFWScreenBypass(ctx context.Context) error {
 		ctx, cancel := context.WithTimeout(ctx, connectTimeout)
 		defer cancel()
 		connectTimeout += time.Second
-		return h.DUT.WaitConnect(ctx)
+		if err := h.WaitConnect(ctx, waitConnectOpt...); err != nil {
+			waitConnectOpt = nil
+			return err
+		}
+		return nil
 	}, &testing.PollOptions{Timeout: h.Config.DelayRebootToPing}); err != nil {
 		return errors.Wrap(err, "failed to reconnect to DUT")
 	}
@@ -754,6 +752,7 @@ func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSw
 	}
 	// Keep pressing the normal mode keys until connected, but wait a little longer for the connect each time.
 	connectTimeout := 2 * time.Second
+	waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		switch h.Config.ModeSwitcherType {
 		case KeyboardDevSwitcher:
@@ -834,7 +833,11 @@ func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSw
 		ctx, cancel := context.WithTimeout(ctx, connectTimeout)
 		defer cancel()
 		connectTimeout += time.Second
-		return h.DUT.WaitConnect(ctx)
+		if err := h.WaitConnect(ctx, waitConnectOpt...); err != nil {
+			waitConnectOpt = nil
+			return err
+		}
+		return nil
 	}, &testing.PollOptions{Timeout: h.Config.DelayRebootToPing}); err != nil {
 		return errors.Wrap(err, "failed to reconnect to DUT")
 	}
@@ -886,6 +889,7 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 		// 3. Wait until the confirm screen appears.
 		// 4. Push some button depending on the DUT's config: toggle the rec button, press power, or press enter.
 		connectTimeout := 2 * time.Second
+		waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			testing.ContextLog(ctx, "Pressing CTRL-D")
 			if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
@@ -947,7 +951,11 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 			ctx, cancel := context.WithTimeout(ctx, connectTimeout)
 			defer cancel()
 			connectTimeout += time.Second
-			return h.DUT.WaitConnect(ctx)
+			if err := h.WaitConnect(ctx, waitConnectOpt...); err != nil {
+				waitConnectOpt = nil
+				return err
+			}
+			return nil
 		}, &testing.PollOptions{Timeout: h.Config.DelayRebootToPing}); err != nil {
 			return errors.Wrap(err, "failed to reconnect to DUT")
 		}
@@ -978,9 +986,10 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 			return errors.Wrap(err, "selecting menu item 'Confirm enabling developer mode' on TO_DEV screen")
 		}
 		// Reconnect to the DUT.
+		waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
 		connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancel()
-		if err := h.WaitConnect(connectCtx); err != nil {
+		if err := h.WaitConnect(connectCtx, waitConnectOpt...); err != nil {
 			return errors.Wrap(err, "failed to reconnect to DUT")
 		}
 	default:
@@ -1013,6 +1022,7 @@ func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context) error {
 		}
 		// Keep pressing CTRL-U until connected, but wait a little longer for the connect each time.
 		connectTimeout := 2 * time.Second
+		waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			testing.ContextLog(ctx, "Pressing CTRL-U")
 			if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlU, servo.DurTab); err != nil {
@@ -1021,7 +1031,11 @@ func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context) error {
 			ctx, cancel := context.WithTimeout(ctx, connectTimeout)
 			defer cancel()
 			connectTimeout += time.Second
-			return h.DUT.WaitConnect(ctx)
+			if err := h.WaitConnect(ctx, waitConnectOpt...); err != nil {
+				waitConnectOpt = nil
+				return err
+			}
+			return nil
 		}, &testing.PollOptions{Timeout: h.Config.USBImageBootTimeout}); err != nil {
 			return errors.Wrap(err, "failed to reconnect to DUT")
 		}

@@ -25,8 +25,7 @@ import (
 
 // ctrluParams contain parameters relevant to this test.
 type ctrluParams struct {
-	validUSB         bool
-	reconnectTimeout time.Duration
+	validUSB bool
 }
 
 func init() {
@@ -42,8 +41,7 @@ func init() {
 		Fixture:      fixture.DevMode,
 		Params: []testing.Param{{
 			Val: &ctrluParams{
-				validUSB:         true, // Test b:200305066.
-				reconnectTimeout: 10 * time.Minute,
+				validUSB: true, // Test b:200305066.
 			},
 			ExtraAttr: []string{"firmware_usb"},
 			Timeout:   90 * time.Minute,
@@ -51,11 +49,6 @@ func init() {
 			Name: "no_usb",
 			Val: &ctrluParams{
 				validUSB: false, // Test b:200305314.
-				// To-do: replace with DelayRebootToPing in the future, but monitor results from
-				// chromium: 4548855 first to find out how each machine varies in their boot-up
-				// time. 8 minutes appeared to help when the test was run on leased machines,
-				// though this duration might have also covered the time for remote connection.
-				reconnectTimeout: 8 * time.Minute,
 			},
 			Timeout: 30 * time.Minute,
 		}},
@@ -90,6 +83,7 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set USBMux: ", err)
 	}
 
+	var reconnectTimeout time.Duration
 	testOpt := s.Param().(*ctrluParams)
 	if testOpt.validUSB {
 		s.Log("Setting up the USB key")
@@ -108,6 +102,13 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		if err := h.SetupUSBKey(ctx, cs); err != nil {
 			s.Fatal("USBKey not working: ", err)
 		}
+		reconnectTimeout = h.Config.USBImageBootTimeout
+	} else {
+		// To-do: replace with DelayRebootToPing in the future, but monitor results from
+		// chromium: 4548855 first to find out how each machine varies in their boot-up
+		// time. 8 minutes appeared to help when the test was run on leased machines,
+		// though this duration might have also covered the time for remote connection.
+		reconnectTimeout = 8 * time.Minute
 	}
 
 	ms, err := firmware.NewModeSwitcher(ctx, h)
@@ -253,6 +254,7 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	waitConnectOpt := []firmware.WaitConnectOption{firmware.ResetEthernetDongle}
 	sshConnectionStart := time.Now()
 	// When there's no valid usb, pressing ctrl_d would help duts
 	// leave the firmware screen and continue booting to ChromeOS.
@@ -264,16 +266,20 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 			}
 			ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
-			return h.WaitConnect(ctx)
-		}, &testing.PollOptions{Timeout: testOpt.reconnectTimeout}); err != nil {
+			if err := h.WaitConnect(ctx, waitConnectOpt...); err != nil {
+				waitConnectOpt = nil
+				return errors.Wrap(err, "failed to connect to dut")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: reconnectTimeout}); err != nil {
 			s.Fatal("Failed to reconnect to dut after pressing ctrl d: ", err)
 		}
 	} else {
 		s.Log("Waiting for DUT to reconnect")
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, testOpt.reconnectTimeout)
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, reconnectTimeout)
 		defer cancelWaitConnect()
 
-		if err := h.WaitConnect(waitConnectCtx); err != nil {
+		if err := h.WaitConnect(waitConnectCtx, waitConnectOpt...); err != nil {
 			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
 	}
