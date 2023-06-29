@@ -402,13 +402,13 @@ func measurePerformance(ctx context.Context, filename, exec string, args []strin
 
 	// TODO(jchinlee): Modify collection of "metrics per time", i.e. GPU/CPU metrics, such that
 	// they can be collected in the same run as "metrics per run".
-	testing.ContextLogf(ctx, "Collecting metrics per time: looping %s on %s", exec, filename)
 	decodeCmd = testexec.CommandContext(ctx, exec, append(args, platform.LoopArgs(exec, 0, 0)...)...)
+	testing.ContextLogf(ctx, "Collecting metrics per time: looping %q on %s", decodeCmd, filename)
 	if err := collectMetricsPerTime(ctx, decodeCmd, p); err != nil {
 		return err
 	}
 
-	testing.ContextLogf(ctx, "Collecting metrics per run: running %s on %s, first %d frames %d times", exec, filename, framesPerIteration, measurementIterations)
+	testing.ContextLogf(ctx, "Collecting metrics per run: running %q on %s, first %d frames %d times", decodeCmd, filename, framesPerIteration, measurementIterations)
 	decodeCmd = testexec.CommandContext(ctx, exec, append(args, platform.LoopArgs(exec, measurementIterations, framesPerIteration)...)...)
 	if err := collectMetricsPerRun(ctx, decodeCmd, p); err != nil {
 		return err

@@ -145,8 +145,9 @@ func LoopArgs(decoder string, numLoops, numFrames int) []string {
 // VPxDecodeArgs provides the arguments to use with vpxdec decoding binary exe.
 func VPxDecodeArgs(ctx context.Context, filename string) []string {
 	// With --md5 and -o options the md5 of each frame is calculated but frame
-	// files are not created.
-	return []string{"--i420", filename}
+	// files are not created. --noblit prevents  the video frame contents from
+	// being dumped on stdout when --md5 is not specified.
+	return []string{"--i420", filename, "--noblit"}
 }
 
 // Openh264DecodeArgs provides the arguments to use with openh264dec decoding binary exe.
