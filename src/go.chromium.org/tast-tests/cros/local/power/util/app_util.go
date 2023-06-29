@@ -42,7 +42,7 @@ func logAppVersion(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName string
 	splitOutput := strings.Split(output, "\n")
 	const versionNamePrefix = "versionName="
 	for splitLine := range splitOutput {
-		if strings.HasPrefix(splitOutput[splitLine], versionNamePrefix) {
+		if strings.Contains(splitOutput[splitLine], versionNamePrefix) {
 			versionName := strings.Split(splitOutput[splitLine], "=")[1]
 			testing.ContextLogf(ctx, "App version: %s", versionName)
 			break
