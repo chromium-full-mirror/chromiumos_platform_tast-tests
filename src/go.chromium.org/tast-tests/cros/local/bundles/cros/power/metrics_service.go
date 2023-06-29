@@ -108,12 +108,9 @@ func (m *MetricsService) Setup(ctx context.Context, req *power.SetupRequest) (*e
 	}
 
 	// Wait until CPU is cooled down and idle.
-	_, err := cpu.WaitUntilCoolDown(ctx, cpu.IdleCoolDownConfig())
+	err := cpu.Cooldown(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "CPU failed to cool down")
-	}
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		return nil, errors.Wrap(err, "CPU failed to idle")
 	}
 
 	interval := req.GetIntervalSecond()

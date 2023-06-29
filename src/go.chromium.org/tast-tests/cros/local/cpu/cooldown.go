@@ -8,6 +8,7 @@ import (
 	"context"
 	"io/ioutil"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -178,6 +179,24 @@ func WaitUntilCoolDown(ctx context.Context, config CoolDownConfig) (time.Duratio
 	duration := timeAfter.Sub(timeBefore)
 	testing.ContextLogf(ctx, "CPU is cooled down (took %f seconds)", duration.Seconds())
 	return duration, nil
+}
+
+// Cooldown thoroughly cools down for power measurement
+func Cooldown(ctx context.Context) error {
+	// Wait until CPU is cooled down and idle.
+	if _, err := WaitUntilCoolDown(ctx, IdleCoolDownConfig()); err != nil {
+		return errors.Wrap(err, "CPU failed to cool down")
+	}
+	if err := WaitUntilIdle(ctx); err != nil {
+		return errors.Wrap(err, "CPU failed to idle")
+	}
+	// Usually takes longer than WaitUntilIdle().
+	if arch := runtime.GOARCH; arch != "arm" && arch != "arm64" {
+		if err := WaitUntilPkgStateIdleWithConfig(ctx, DefaultPkgIdleConfig()); err != nil {
+			return errors.Wrap(err, "CPU package c-state failed to idle")
+		}
+	}
+	return nil
 }
 
 // temperatureThreshold gets the temperatuer threshold given the CoolDownConfig.

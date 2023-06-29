@@ -6,7 +6,6 @@ package power
 
 import (
 	"context"
-	"runtime"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -58,20 +57,7 @@ type Recorder struct {
 // Out:
 // error: propagate back to the test.
 func (r *Recorder) Cooldown(ctx context.Context) error {
-	// Wait until CPU is cooled down and idle.
-	if _, err := cpu.WaitUntilCoolDown(ctx, cpu.IdleCoolDownConfig()); err != nil {
-		return errors.Wrap(err, "CPU failed to cool down")
-	}
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		return errors.Wrap(err, "CPU failed to idle")
-	}
-	// Usually takes longer than WaitUntilIdle().
-	if arch := runtime.GOARCH; arch != "arm" && arch != "arm64" {
-		if err := cpu.WaitUntilPkgStateIdleWithConfig(ctx, cpu.DefaultPkgIdleConfig()); err != nil {
-			return errors.Wrap(err, "CPU package c-state failed to idle")
-		}
-	}
-	return nil
+	return cpu.Cooldown(ctx)
 }
 
 // Start collecting power metrics.
