@@ -30,7 +30,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker()),
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		Timeout:      3*time.Minute + power.RecorderTimeout,
+		Timeout:      10*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{
 			{
 				Name: "no_effects",
@@ -119,7 +119,7 @@ func CrasNoiseCancellationPower(ctx context.Context, s *testing.State) {
 
 	const (
 		interval     = 1 * time.Second // Power metrics collect interval.
-		testDuration = 1 * time.Minute
+		testDuration = 5 * time.Minute
 		blockSize    = 480
 	)
 
