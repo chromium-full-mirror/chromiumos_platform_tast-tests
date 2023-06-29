@@ -48,7 +48,6 @@ func init() {
 		Desc:         "Verifies that the hps detects single person in backlit environments",
 		Contacts: []string{
 			"chromeos-hps-swe@google.com",
-			"alonusem@google.com",
 			"eunicesun@google.com",
 			"mblsha@google.com",
 		},

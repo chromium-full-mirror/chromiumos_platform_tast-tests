@@ -18,7 +18,9 @@ func init() {
 		Func:         AssertCellularData,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the DUT is able to establish a data connection under various RAT scenarios",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "latware@google.com"},
+		Contacts: []string{
+			"chromeos-cellular-team@google.com",
+		},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_callbox"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},

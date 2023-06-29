@@ -17,9 +17,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WriteProtectCrossystem,
-		Desc:         "Verify that enabled and disabled hardware write protect is reflected in crossystem wpsw_cur",
-		Contacts:     []string{"cros-flashrom-team@google.com", "evanbenn@google.com"},
+		Func: WriteProtectCrossystem,
+		Desc: "Verify that enabled and disabled hardware write protect is reflected in crossystem wpsw_cur",
+		Contacts: []string{
+			"cros-flashrom-team@google.com",
+		},
 		BugComponent: "b:750299",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},

@@ -19,7 +19,9 @@ func init() {
 		Func:         DynamicColor,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that ArcSystemUIService changes Settings.Secure",
-		Contacts:     []string{"arc-app-dev@google.com", "ttefera@google.com"},
+		Contacts: []string{
+			"arc-app-dev@google.com",
+		},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		Attr:         []string{"group:mainline", "informational"},

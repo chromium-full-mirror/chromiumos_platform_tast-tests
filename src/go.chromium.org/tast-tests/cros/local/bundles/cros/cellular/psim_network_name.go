@@ -23,7 +23,6 @@ func init() {
 		Desc:         "Tests the network name on non-connected psim",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"azeemarshad@google.com",
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},

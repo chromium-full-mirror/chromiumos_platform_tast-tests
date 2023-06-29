@@ -29,8 +29,7 @@ func init() {
 		Desc:         "GAIA Enroll a device and verify heartbeat reporting functionality",
 		Contacts: []string{
 			"cros-reporting-team@google.com",
-			"albertojuarez@google.com", // Test owner
-			"tylergarrett@google.com",  // Test owner
+			"albertojuarez@google.com",
 			"rzakarian@google.com",
 		},
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting

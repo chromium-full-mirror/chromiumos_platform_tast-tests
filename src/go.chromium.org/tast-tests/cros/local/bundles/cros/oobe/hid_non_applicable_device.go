@@ -21,7 +21,6 @@ func init() {
 		Desc:         "Checks that OOBE HID Detection screen is skipped on non-applicable devices",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"andrewdear@google.com",
 		},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",

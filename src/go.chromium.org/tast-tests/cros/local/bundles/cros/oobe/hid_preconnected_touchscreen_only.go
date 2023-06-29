@@ -21,7 +21,6 @@ func init() {
 		Desc:         "Checks that OOBE HID Detection screen is shown with the correct devices enabled on touchscreen devices",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"andrewdear@google.com",
 		},
 		BugComponent: "b:1131776",
 		VarDeps: []string{

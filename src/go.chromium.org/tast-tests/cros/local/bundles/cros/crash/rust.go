@@ -23,7 +23,6 @@ func init() {
 		Contacts: []string{
 			"cros-telemetry@google.com",
 			"allenwebb@chromium.org",
-			"psoberoi@google.com",
 		},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},
