@@ -340,7 +340,7 @@ func getMinutesBatteryLife(ctx context.Context, innerDataMap map[string][]float6
 			chargeUsedInPercent = chargeValue[len(chargeValue)-1] - chargeValue[0]
 		}
 		// For longer tests (> 1hr), charge (Ah) consumption is more accurate for calculating projected battery life.
-		// For shorter tests (< 1hr), energy (Wh) consumption is more accurate for calculating projected battery life.
+		// For shorter tests (< 1hr), power integral (Wh) is more accurate for calculating projected battery life.
 		const MinReasonableDuration = 3600
 		if totalDurationSec > MinReasonableDuration && chargeUsedInPercent > 0 {
 			// Use charge to project operation time when test run time > 1 hour.

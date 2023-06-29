@@ -402,7 +402,8 @@ func SysfsBatteryPath(ctx context.Context) (string, error) {
 // SysfsBatteryMetrics hold the metrics read from sysfs.
 type SysfsBatteryMetrics struct {
 	batteryPath             string
-	initialEnergy           float64 // in Wh
+	lastTime                time.Time
+	powerIntegral           float64 // in J
 	batteryChargeSize       float64 // in Ah
 	batteryChargeDesignSize float64 // in Ah
 	chargeRemainingMetric   perf.Metric
@@ -437,10 +438,6 @@ func (b *SysfsBatteryMetrics) Setup(ctx context.Context, prefix, intervalName st
 		return errors.Errorf("unexpected number of batteries: got %d; want 1", len(batteryPaths))
 	}
 	b.batteryPath = batteryPaths[0]
-	b.initialEnergy, err = ReadBatteryEnergy(ctx, b.batteryPath)
-	if err != nil {
-		return err
-	}
 	b.batteryChargeSize, err = ReadBatteryChargeSize(ctx, b.batteryPath)
 	if err != nil {
 		return err
@@ -474,6 +471,7 @@ func (b *SysfsBatteryMetrics) Setup(ctx context.Context, prefix, intervalName st
 // relative to.
 func (b *SysfsBatteryMetrics) Start(ctx context.Context) error {
 	testing.ContextLog(ctx, "Start captures the initial battery state")
+	b.lastTime = time.Now()
 	return nil
 }
 
@@ -495,6 +493,11 @@ func (b *SysfsBatteryMetrics) Snapshot(ctx context.Context, values *perf.Values)
 		testing.ContextLog(ctx, "Failed to read system charge remaining: ", err)
 		return err
 	}
+
+	snapshotTime := time.Now()
+	b.powerIntegral += snapshotTime.Sub(b.lastTime).Seconds() * power
+	b.lastTime = snapshotTime
+
 	values.Append(b.powerMetric, power)
 	values.Append(b.chargeRemainingMetric, (chargeRemaining/b.batteryChargeSize)*100)
 	return nil
@@ -505,11 +508,14 @@ func (b *SysfsBatteryMetrics) Stop(ctx context.Context, values *perf.Values) err
 	if len(b.batteryPath) == 0 {
 		return nil
 	}
-
-	energy, err := ReadBatteryEnergy(ctx, b.batteryPath)
+	power, err := ReadSystemPower(ctx, b.batteryPath)
 	if err != nil {
+		testing.ContextLog(ctx, "Failed to read system power: ", err)
 		return err
 	}
-	values.Set(b.dischargeMetric, 1000*(b.initialEnergy-energy))
+	b.powerIntegral += time.Now().Sub(b.lastTime).Seconds() * power
+
+	// Change energy(J) to energy(mWh).
+	values.Set(b.dischargeMetric, 1000*b.powerIntegral/3600)
 	return nil
 }

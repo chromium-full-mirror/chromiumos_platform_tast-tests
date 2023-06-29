@@ -18,8 +18,8 @@ This document lists the metrics collected in power package through TestMetrics()
 | dram                        | W     | Energy consumption across the DRAM.                                          |
 | **Sysfs Battery Metrics**   |
 | Name                        | Unit  | Note                                                                         |
-| system                      | W     | Total energy consumption out of the battery.                                 |
-| discharge_mwh               | mWh   | Total energy discharge during test run.                                      |
+| system                      | W     | Instantaneous power consumption out of the battery.                          |
+| discharge_mwh               | mWh   | Total energy consumption by integral of system power during test run.        |
 | battery_percent             | %     | Remaining battery charge percentage over full charge by design.              |
 | **Sysfs Thermal Metrics**   |
 | Name                        | Unit  | Note                                                                         |
