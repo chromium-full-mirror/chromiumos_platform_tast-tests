@@ -43,7 +43,7 @@ func TestPlatformDecodingPerfParams(t *testing.T) {
 				param := paramData{
 					Name:               fmt.Sprintf("vaapi_%s", testInfo),
 					Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-					DecoderArgsBuilder: fmt.Sprintf("platform.%sDecodeVAAPIargs", strings.ToUpper(codec)),
+					DecoderArgsBuilder: fmt.Sprintf("platform.%sDecodeVAAPIargsNoLogs", strings.ToUpper(codec)),
 					File:               dataPath,
 					SoftwareDeps:       append(fillSwDeps(codec, resolution, frameRate), "vaapi"),
 					Metadata:           []string{dataPath},

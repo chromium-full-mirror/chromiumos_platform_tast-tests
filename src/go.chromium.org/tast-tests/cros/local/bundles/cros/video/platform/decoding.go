@@ -95,6 +95,31 @@ func HEVCDecodeVAAPIargs(ctx context.Context, filename string) []string {
 	return append(getVAAPIArgs(ctx, filename), "--codec=H265")
 }
 
+// AV1DecodeVAAPIargsNoLogs provides the AV1DecodeVAAPIargs, with logging turned off.
+func AV1DecodeVAAPIargsNoLogs(ctx context.Context, filename string) []string {
+	return append(AV1DecodeVAAPIargs(ctx, filename), "-v=-1")
+}
+
+// VP9DecodeVAAPIargsNoLogs provides the VP9DecodeVAAPIargs, with logging turned off.
+func VP9DecodeVAAPIargsNoLogs(ctx context.Context, filename string) []string {
+	return append(VP9DecodeVAAPIargs(ctx, filename), "-v=-1")
+}
+
+// VP8DecodeVAAPIargsNoLogs provides the VP8DecodeVAAPIargs, with logging turned off.
+func VP8DecodeVAAPIargsNoLogs(ctx context.Context, filename string) []string {
+	return append(VP8DecodeVAAPIargs(ctx, filename), "-v=-1")
+}
+
+// H264DecodeVAAPIargsNoLogs provides the H264DecodeVAAPIargs, with logging turned off.
+func H264DecodeVAAPIargsNoLogs(ctx context.Context, filename string) []string {
+	return append(H264DecodeVAAPIargs(ctx, filename), "-v=-1")
+}
+
+// HEVCDecodeVAAPIargsNoLogs provides the HEVCDecodeVAAPIargs, with logging turned off.
+func HEVCDecodeVAAPIargsNoLogs(ctx context.Context, filename string) []string {
+	return append(HEVCDecodeVAAPIargs(ctx, filename), "-v=-1")
+}
+
 // FFMPEGMD5DecodeVAAPIArgs provides the arguments to use with the `ffmpeg_md5` binary exe for vaapi.
 func FFMPEGMD5DecodeVAAPIArgs(ctx context.Context, filename string) []string {
 	return []string{
