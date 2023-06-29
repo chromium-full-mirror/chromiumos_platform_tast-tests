@@ -288,10 +288,9 @@ func init() {
 			Name:              "branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_p"},
-			// x86 ARC: caroline(caroline-Intel), asuka(asuka-Intel)
-			// x86-64 ARC: careena(grunt-Intel)
-			// arm64 ARC: krane(kukui), kevin(kevin)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("caroline", "asuka", "careena", "krane", "kevin")),
+			// x86-64 ARC: babytiger(coral-Intel), babymega (coral-Intel), basking(reef-Intel)
+			// arm64 ARC: elm(elm) - 1 model exception with all other devices either reached AUE or migrated to R.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("babytiger", "babymega", "basking", "elm")),
 			Val: testParam{
 				vmEnabled:                     false,
 				androidPackage:                "android-container-pi",
