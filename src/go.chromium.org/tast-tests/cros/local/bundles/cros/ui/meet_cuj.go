@@ -1000,7 +1000,17 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("The number of bots is unexpected: ", err)
 	}
 
-	moreOptions := nodewith.Name("More options").Role(role.PopUpButton)
+	doDefaultMoreOptions := func(ctx context.Context) error {
+		moreOptionsFinder := nodewith.Name("More options").Role(role.PopUpButton)
+		moreOptionsButtons, err := ui.NodesInfo(ctx, moreOptionsFinder)
+		if err != nil || len(moreOptionsButtons) < 1 {
+			return errors.Wrap(err, "failed to find more options button")
+		}
+		// Sometimes, the UI has two identical "More Options" buttons, which requires
+		// selecting the last one to be the correct button.
+		return ui.DoDefault(moreOptionsFinder.Nth(len(moreOptionsButtons) - 1))(ctx)
+	}
+
 	applyEffects := nodewith.Name("Apply visual effects").Role(role.MenuItem)
 	blur := nodewith.Name("Blur your background").Role(role.ToggleButton).Focusable()
 	turnOffBlur := nodewith.Name("Turn off visual effects").Role(role.ToggleButton).Focusable()
@@ -1010,7 +1020,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			fmt.Sprintf("set effect with node %v", effect),
 			// Open the "More options" popup, and wait until we see
 			// "Apply visual effects".
-			ui.DoDefault(moreOptions),
+			doDefaultMoreOptions,
 			uiLongWait.WaitUntilExists(applyEffects),
 
 			// Open the visual effects section.
