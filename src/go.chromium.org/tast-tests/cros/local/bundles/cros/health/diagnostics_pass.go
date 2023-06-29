@@ -130,7 +130,7 @@ func init() {
 		}, {
 			Name:      "sensitive_sensor",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor),
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:      "fingerprint",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),

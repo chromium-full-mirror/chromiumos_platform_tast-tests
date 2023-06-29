@@ -114,7 +114,7 @@ func init() {
 			Name: "sensitive_sensor",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor),
 			// TODO(b/280388091): Promote to critical.
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "fingerprint",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
