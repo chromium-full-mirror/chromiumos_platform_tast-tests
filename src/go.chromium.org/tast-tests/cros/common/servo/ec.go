@@ -51,6 +51,12 @@ const (
 	reBasestateStatus    string = `\[\S+ base state: (attached|detached)\]`
 	reBdStatus           string = `\[\S+ BD forced (connected|disconnected)\]`
 	reLidAccel           string = `\[\S+ Lid Accel ODR:(?i)[^\n\r]*(?i)(1|0)\S+]`
+	reVupBtnPressed      string = `\[\S+ Button \'Volume Up\' was pressed(.|\n)*buttons: 2\]`
+	reVupBtnReleased     string = `\[\S+ Button \'Volume Up\' was released(.|\n)*buttons: 0\]`
+	reVdownBtnPressed    string = `\[\S+ Button \'Volume Down\' was pressed(.|\n)*buttons: 4\]`
+	reVdownBtnReleased   string = `\[\S+ Button \'Volume Down\' was released(.|\n)*buttons: 0\]`
+	rePwrBtnPressed      string = `\[\S+ power button pressed(.|\n)*buttons: 1\]`
+	rePwrBtnReleased     string = `\[\S+ power button released(.|\n)*buttons: 0\]`
 )
 
 // USBCDataRole is a USB-C data role.
@@ -477,6 +483,106 @@ func (s *Servo) SetHostevent(ctx context.Context, event ECHostevent) error {
 	testing.ContextLogf(ctx, "Setting hostevent: %q", hosteventCmd)
 	if err := s.RunECCommand(ctx, hosteventCmd); err != nil {
 		return errors.Wrap(err, "failed to set hostevent")
+	}
+	return nil
+}
+
+// ECChannelName holds the ec channel names.
+type ECChannelName string
+
+// These are some of the ec channel names available.
+// To-do: expand when necessary.
+const (
+	ECChanKeyboard ECChannelName = "keyboard"
+	ECChanSwitch   ECChannelName = "switch"
+)
+
+// FindECChanMask accepts an ec channel name, and runs ec 'chan' command to look for
+// the corresponding mask value.
+func (s *Servo) FindECChanMask(ctx context.Context, chanName ECChannelName) (maskVal string, retErr error) {
+	if err := s.RunECCommand(ctx, "chan save"); err != nil {
+		return "", errors.Wrap(err, "failed to send 'chan save' to EC")
+	}
+	if err := s.RunECCommand(ctx, "chan 0"); err != nil {
+		return "", errors.Wrap(err, "failed to send 'chan 0' to EC")
+	}
+	defer func() {
+		testing.ContextLog(ctx, "Restoring chan")
+		if err := s.RunECCommand(ctx, "chan restore"); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to send 'chan restore' to EC")
+			} else {
+				testing.ContextLog(ctx, "Failed to send 'chan restore' to EC: ", err)
+			}
+		}
+	}()
+	match := fmt.Sprintf(`([0-9a-fA-F]{8})\s+\W?\s+%s`, string(chanName))
+	out, err := s.RunECCommandGetOutput(ctx, "chan", []string{match})
+	if err != nil {
+		return "", err
+	}
+	if out == nil || len(out[0]) < 2 {
+		return "", errors.Errorf("failed to parse chan output correctly, got: %v", out)
+	}
+	return out[0][1], nil
+}
+
+// SetECChanMasks accepts a map of ec channel names with their masks, and sets them.
+func (s *Servo) SetECChanMasks(ctx context.Context, ecChanMasks map[ECChannelName]string) error {
+	var maskFinal int64
+	for name, mask := range ecChanMasks {
+		decimalVal, err := strconv.ParseInt(mask, 16, 64)
+		if err != nil {
+			return errors.Errorf("failed to parse mask value: %s, for ec chan: %s", mask, name)
+		}
+		maskFinal += decimalVal
+	}
+	testing.ContextLogf(ctx, "Setting chan mask: %d", maskFinal)
+	if err := s.RunECCommand(ctx, fmt.Sprintf("chan %d", maskFinal)); err != nil {
+		return errors.Wrap(err, "setting chan mask failed")
+	}
+	return nil
+}
+
+// DetachableECButton holds ec button controls for a detachable,
+// which can take customized durations in milliseconds.
+type DetachableECButton string
+
+// These are the available ec button controls for a detachable.
+const (
+	ECVupButton   DetachableECButton = "button vup"
+	ECVdownButton DetachableECButton = "button vdown"
+	ECPwrButton   DetachableECButton = "powerbtn"
+)
+
+// PressECBtnVerifyOutput sends a DetachableECButton and verifies in the output that
+// the button was successfully pressed and released. Call FindECChanMask first to find
+// the mask values for ECChanKeyboard and ECChanSwitch, and pass them to PressECBtnVerifyOutput.
+func (s *Servo) PressECBtnVerifyOutput(ctx context.Context, button DetachableECButton, duration int, ecChanMasks map[ECChannelName]string) error {
+	requiredMasks := []ECChannelName{ECChanKeyboard, ECChanSwitch}
+	for _, name := range requiredMasks {
+		if _, ok := ecChanMasks[name]; !ok {
+			return errors.Errorf("missing mask value for ec chan: %s", name)
+		}
+	}
+	if err := s.SetECChanMasks(ctx, ecChanMasks); err != nil {
+		return err
+	}
+	var checkPressEffective string
+	switch button {
+	case ECVupButton:
+		checkPressEffective = `(` + reVupBtnPressed + `(.|\n)*` + reVupBtnReleased + `)`
+	case ECVdownButton:
+		checkPressEffective = `(` + reVdownBtnPressed + `(.|\n)*` + reVdownBtnReleased + `)`
+	case ECPwrButton:
+		checkPressEffective = `(` + rePwrBtnPressed + `(.|\n)*` + rePwrBtnReleased + `)`
+	default:
+		return errors.Errorf("unable to recognize %s", button)
+	}
+	testing.ContextLogf(ctx, "Pressing %s for %d milliseconds", button, duration)
+	control := fmt.Sprintf("%s %s", button, strconv.Itoa(duration))
+	if _, err := s.RunECCommandGetOutput(ctx, control, []string{checkPressEffective}); err != nil {
+		return errors.Wrapf(err, "pressing %s failed", button)
 	}
 	return nil
 }
