@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Tests that Lacros should not be older than Ash based on the version skew policy",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "lacros-team@google.com", "hyungtaekim@chromium.org"},
 		BugComponent: "crbug:OS>LaCrOS",
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:criticalstaging", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 	})
 }
