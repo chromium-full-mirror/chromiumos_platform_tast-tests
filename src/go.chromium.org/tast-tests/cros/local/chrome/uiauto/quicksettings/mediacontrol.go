@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/errors"
 )
 
 // MediaControlsDetailView is the detailed Media controls view within the Quick Settings.
@@ -24,8 +25,13 @@ var PinnedMediaControls = nodewith.Role(role.Button).Name("Control your music, v
 var MediaControlsDialog = nodewith.Role(role.Dialog).Name("Media controls").HasClass("RootView")
 
 // MediaControlsPod returns the 'Media controls' pod in Quick Settings.
-func MediaControlsPod() *nodewith.Finder {
-	return nodewith.NameStartingWith("Media controls").HasClass("Button").Ancestor(GetRootFinder())
+// It depends on whether the chrome feature QsRevamp is enabled.
+func MediaControlsPod(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
+	quickSettingsRoot, err := GetRootFinder(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get quick settings root finder")
+	}
+	return nodewith.NameStartingWith("Media controls").HasClass("Button").Ancestor(quickSettingsRoot), nil
 }
 
 // PinMediaControlsPod pins the Media controls pod from the detail page.
@@ -56,9 +62,14 @@ func NavigateToMediaControlsSubpage(tconn *chrome.TestConn, title string) uiauto
 			return err
 		}
 
+		mediaControlsPod, err := MediaControlsPod(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get media controls pod finder")
+		}
+
 		ui := uiauto.New(tconn)
 		return uiauto.Combine("click the Media controls title",
-			ui.LeftClick(nodewith.Name(title).HasClass("Label").Ancestor(MediaControlsPod())),
+			ui.LeftClick(nodewith.Name(title).HasClass("Label").Ancestor(mediaControlsPod)),
 			ui.WaitUntilExists(MediaControlsDetailView),
 		)(ctx)
 	}

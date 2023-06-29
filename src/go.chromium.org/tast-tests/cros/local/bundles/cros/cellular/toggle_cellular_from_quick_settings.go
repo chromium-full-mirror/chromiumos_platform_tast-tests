@@ -51,11 +51,6 @@ func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quicksettings: ", err)
-	}
-	defer cleanup()
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
@@ -66,10 +61,15 @@ func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable Cellular: ", err)
 	}
 
+	mobileDataToggle, err := quicksettings.NetworkDetailedViewMobileDataToggle(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get mobile data toggle: ", err)
+	}
+
 	// QsRevamp does not use a button with a checked state, so look for the name.
 	if err := uiauto.Combine("Wait until cellular is enabled in UI and not inhibited",
-		ui.WaitUntilExists(quicksettings.NetworkDetailedViewMobileDataToggle().NameContaining("Mobile data is turned on")),
-		ui.WaitUntilEnabled(quicksettings.NetworkDetailedViewMobileDataToggle()),
+		ui.WaitUntilExists(mobileDataToggle.NameContaining("Mobile data is turned on")),
+		ui.WaitUntilEnabled(mobileDataToggle),
 	)(ctx); err != nil {
 		s.Fatal("Failed: ", err)
 	}
@@ -80,7 +80,7 @@ func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
 	for i := 0; i < iterations; i++ {
 		s.Logf("Toggling Cellular (iteration %d of %d)", i+1, iterations)
 
-		if err := ui.LeftClick(quicksettings.NetworkDetailedViewMobileDataToggle())(ctx); err != nil {
+		if err := ui.LeftClick(mobileDataToggle)(ctx); err != nil {
 			s.Fatal("Failed to click on cellular toggle button")
 		}
 
@@ -96,8 +96,8 @@ func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
 			name = "Mobile data is turned off"
 		}
 		if err := uiauto.Combine("Wait until cellular is in expected state in UI and not inhibited",
-			ui.WaitUntilExists(quicksettings.NetworkDetailedViewMobileDataToggle().NameContaining(name)),
-			ui.WaitUntilEnabled(quicksettings.NetworkDetailedViewMobileDataToggle()),
+			ui.WaitUntilExists(mobileDataToggle.NameContaining(name)),
+			ui.WaitUntilEnabled(mobileDataToggle),
 		)(ctx); err != nil {
 			s.Fatal("Failed: ", err)
 		}

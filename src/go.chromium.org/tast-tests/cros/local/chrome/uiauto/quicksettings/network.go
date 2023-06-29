@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -26,6 +27,14 @@ var (
 func NavigateToNetworkDetailedView(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
 
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get QsRevamp state")
+	}
+	networkDetailedView, err := NetworkDetailedView(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get network detailed view")
+	}
 	// The quicksettings could be collapsed during navigating to the certain view,
 	// typically caused by pop-up window, notifications or other display rendering event, retrying it is essential.
 	return testing.Poll(ctx, func(ctx context.Context) error {
@@ -35,14 +44,14 @@ func NavigateToNetworkDetailedView(ctx context.Context, tconn *chrome.TestConn) 
 
 		// The network item depends on whether QsRevamp is enabled or not.
 		var networkItem *nodewith.Finder
-		if QsRevampEnabled() {
+		if qsRevampEnabled {
 			networkItem = FeatureTileNetwork
 		} else {
 			networkItem = nodewith.HasClass("FeaturePodLabelButton").NameContaining("network").Ancestor(LegacyRootFinder)
 		}
 		return uiauto.Combine("click the Network item in quick setttings",
 			ui.WithTimeout(5*time.Second).LeftClick(networkItem),
-			ui.WithTimeout(5*time.Second).WaitUntilExists(NetworkDetailedView()),
+			ui.WithTimeout(5*time.Second).WaitUntilExists(networkDetailedView),
 		)(ctx)
 	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second})
 }
@@ -52,39 +61,71 @@ func NavigateToNetworkDetailedView(ctx context.Context, tconn *chrome.TestConn) 
 func OpenNetworkSettings(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
 
-	networkSettingsButton := nodewith.HasClass("IconButton").Name("Network settings").Ancestor(GetRootFinder())
+	quickSettingsRoot, err := GetRootFinder(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get quick settings root")
+	}
+	networkDetailedView, err := NetworkDetailedView(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get network detailed view")
+	}
+	networkSettingsButton := nodewith.HasClass("IconButton").Name("Network settings").Ancestor(quickSettingsRoot)
 	return uiauto.Combine("click the Network settings",
 		ui.LeftClick(networkSettingsButton),
-		ui.WaitUntilGone(NetworkDetailedView()),
+		ui.WaitUntilGone(networkDetailedView),
 	)(ctx)
 }
 
 // NetworkDetailedView returns the detailed Network view within Quick Settings.
-func NetworkDetailedView() *nodewith.Finder {
-	return nodewith.HasClass("NetworkDetailedNetworkViewImpl").Ancestor(GetRootFinder())
+func NetworkDetailedView(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
+	quickSettingsRoot, err := GetRootFinder(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get quick settings root")
+	}
+	return nodewith.HasClass("NetworkDetailedNetworkViewImpl").Ancestor(quickSettingsRoot), nil
 }
 
 // NetworkListItemView returns the network item list on the network view in Quick Settings.
-func NetworkListItemView() *nodewith.Finder {
-	return nodewith.HasClass("NetworkListNetworkItemView").Ancestor(GetRootFinder())
+func NetworkListItemView(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
+	quickSettingsRoot, err := GetRootFinder(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get quick settings root")
+	}
+	return nodewith.HasClass("NetworkListNetworkItemView").Ancestor(quickSettingsRoot), nil
 }
 
 // NetworkDetailedViewWifiToggleButton returns the WiFi toggle within the Network detailed view.
-func NetworkDetailedViewWifiToggleButton() *nodewith.Finder {
+func NetworkDetailedViewWifiToggleButton(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get QsRevamp state")
+	}
+	networkDetailedView, err := NetworkDetailedView(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get network detailed view")
+	}
 	// Legacy quick settings uses a TrayToggleButton.
-	if !QsRevampEnabled() {
-		return nodewith.HasClass("TrayToggleButton").NameContaining("Wi-Fi").Ancestor(NetworkDetailedView())
+	if !qsRevampEnabled {
+		return nodewith.HasClass("TrayToggleButton").NameContaining("Wi-Fi").Ancestor(networkDetailedView), nil
 	}
 	// QsRevamp uses an ordinary button.
-	return nodewith.Role(role.Button).NameContaining("Toggle Wi-Fi").Ancestor(NetworkDetailedView())
+	return nodewith.Role(role.Button).NameContaining("Toggle Wi-Fi").Ancestor(networkDetailedView), nil
 }
 
 // NetworkDetailedViewMobileDataToggle returns the switch to enable/disable Mobile data within network quick settings.
-func NetworkDetailedViewMobileDataToggle() *nodewith.Finder {
+func NetworkDetailedViewMobileDataToggle(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get QsRevamp state")
+	}
+	networkDetailedView, err := NetworkDetailedView(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get network detailed view")
+	}
 	// Legacy quick settings uses a TrayToggleButton.
-	if !QsRevampEnabled() {
-		return nodewith.Name("Mobile data").HasClass("TrayToggleButton").Ancestor(NetworkDetailedView())
+	if !qsRevampEnabled {
+		return nodewith.Name("Mobile data").HasClass("TrayToggleButton").Ancestor(networkDetailedView), nil
 	}
 	// QsRevamp uses an ordinary button.
-	return nodewith.Role(role.Button).NameContaining("Toggle mobile data").Ancestor(NetworkDetailedView())
+	return nodewith.Role(role.Button).NameContaining("Toggle mobile data").Ancestor(networkDetailedView), nil
 }

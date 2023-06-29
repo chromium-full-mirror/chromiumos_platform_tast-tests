@@ -49,16 +49,13 @@ func DoSystemTrayWorkflow(ctx context.Context, tconn *chrome.TestConn, pc pointe
 		return err
 	}
 
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to init quicksettings")
-	}
-	defer cleanup()
-
 	// Open and close the system tray bubble.
 	// There is more than one "UnifiedSystemTray" on the UI tree when an extended display is connected.
 	systemTray := quicksettings.SystemTray.First()
-	quickSettingsRoot := quicksettings.GetRootFinder()
+	quickSettingsRoot, err := quicksettings.GetRootFinder(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get quick settings root finder")
+	}
 	ac := uiauto.New(tconn)
 
 	return uiauto.Combine(

@@ -55,9 +55,6 @@ const (
 
 // PinUnpinMediaPod checks the pin/unpin/re-pin for media control pod.
 func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
-	cleanupQs := quicksettings.SetQsRevampEnabled(true)
-	defer cleanupQs()
-
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
 	device := s.FixtValue().(*arc.PreData).UIDevice
@@ -163,15 +160,15 @@ func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
 
 	// currentMediaName is used to enter the media control pod detail view,
 	// where the pin button and all media control panels are located.
-	if err := pinAndVerify(ui, tconn, currentMediaName)(ctx); err != nil {
+	if err := pinAndVerify(ctx, ui, tconn, currentMediaName)(ctx); err != nil {
 		s.Fatal("Failed to pin and verify: ", err)
 	}
 
-	if err := unpinAndVerify(ui, tconn)(ctx); err != nil {
+	if err := unpinAndVerify(ctx, ui, tconn)(ctx); err != nil {
 		s.Fatal("Failed to unpin and verify: ", err)
 	}
 
-	if err := pinAndVerify(ui, tconn, currentMediaName)(ctx); err != nil {
+	if err := pinAndVerify(ctx, ui, tconn, currentMediaName)(ctx); err != nil {
 		s.Fatal("Failed to pin again and verify: ", err)
 	}
 }
@@ -197,8 +194,15 @@ func focusOnAppWindowAndPlay(tconn *chrome.TestConn, pkgName string, player appu
 }
 
 // unpinAndVerify unpins media pod and verify it is appeared in quick settings.
-func unpinAndVerify(ui *uiauto.Context, tconn *chrome.TestConn) uiauto.Action {
+func unpinAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn) uiauto.Action {
 	dialogView := nodewith.Ancestor(quicksettings.MediaControlsDialog)
+
+	mediaControlsPod, err := quicksettings.MediaControlsPod(ctx, tconn)
+	if err != nil {
+		return func(context.Context) error {
+			return errors.Wrap(err, "failed to get media controls pod finder")
+		}
+	}
 
 	return uiauto.Combine("unpin and find media pod in quick settings",
 		ui.LeftClick(quicksettings.PinnedMediaControls),
@@ -206,14 +210,21 @@ func unpinAndVerify(ui *uiauto.Context, tconn *chrome.TestConn) uiauto.Action {
 		ui.WaitUntilExists(dialogView.Role(role.ListItem).NameStartingWith(ytAppVideo)),
 		quicksettings.UnpinMediaControlsPod(tconn),
 		reopenQuickSettings(tconn),
-		ui.WaitUntilExists(quicksettings.MediaControlsPod()),
+		ui.WaitUntilExists(mediaControlsPod),
 	)
 }
 
 // pinAndVerify verifies both media control panels are inside detail view,
 // then pins media pod and verifies it is disappeared in quick settings.
-func pinAndVerify(ui *uiauto.Context, tconn *chrome.TestConn, title string) uiauto.Action {
+func pinAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, title string) uiauto.Action {
 	detailView := nodewith.Ancestor(quicksettings.MediaControlsDetailView)
+
+	mediaControlsPod, err := quicksettings.MediaControlsPod(ctx, tconn)
+	if err != nil {
+		return func(context.Context) error {
+			return errors.Wrap(err, "failed to get media controls pod finder")
+		}
+	}
 
 	return uiauto.Combine("pin media pod and verify it is disappeared in quick settings",
 		quicksettings.NavigateToMediaControlsSubpage(tconn, title),
@@ -221,7 +232,7 @@ func pinAndVerify(ui *uiauto.Context, tconn *chrome.TestConn, title string) uiau
 		ui.WaitUntilExists(detailView.Role(role.ListItem).NameStartingWith(ytAppVideo)),
 		quicksettings.PinMediaControlsPod(tconn),
 		reopenQuickSettings(tconn),
-		ui.WaitUntilGone(quicksettings.MediaControlsPod()),
+		ui.WaitUntilGone(mediaControlsPod),
 	)
 }
 

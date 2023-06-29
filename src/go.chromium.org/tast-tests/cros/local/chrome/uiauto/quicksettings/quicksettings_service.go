@@ -14,7 +14,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/common"
 	pb "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast/core/errors"
@@ -63,19 +62,21 @@ func (s *Service) ToggleOption(ctx context.Context, req *pb.ToggleOptionRequest)
 		}
 		defer cleanup(ctx)
 
-		var toggleButton *nodewith.Finder
 		switch req.GetToggleButton() {
 		case pb.ToggleOptionRequest_Wifi:
-			toggleButton = NetworkDetailedViewWifiToggleButton()
+			toggleButton, err := NetworkDetailedViewWifiToggleButton(ctx, tconn)
+			if err != nil {
+				return &emptypb.Empty{}, errors.Wrap(err, "failed to get Wi-Fi toggle button")
+			}
 
 			if err := NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 				return &emptypb.Empty{}, errors.Wrap(err, "failed to navigate to network detailed view")
 			}
+			return &emptypb.Empty{}, ToggleOption(ctx, tconn, toggleButton, req.GetEnabled())
+
 		default:
 			return nil, errors.New("not supported toggle option")
 		}
-
-		return &emptypb.Empty{}, ToggleOption(ctx, tconn, toggleButton, req.GetEnabled())
 	})
 }
 
@@ -85,7 +86,11 @@ func (s *Service) ToggleOption(ctx context.Context, req *pb.ToggleOptionRequest)
 // the view is not presented.
 func (s *Service) AvailableWifiNetworks(ctx context.Context, e *empty.Empty) (*pb.AvailableWifiNetworksResponse, error) {
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (_ *pb.AvailableWifiNetworksResponse, retErr error) {
-		infos, err := uiauto.New(tconn).NodesInfo(ctx, NetworkListItemView())
+		networkListItemView, err := NetworkListItemView(ctx, tconn)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get network list item view")
+		}
+		infos, err := uiauto.New(tconn).NodesInfo(ctx, networkListItemView)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to retrieve the info of items in network list")
 		}

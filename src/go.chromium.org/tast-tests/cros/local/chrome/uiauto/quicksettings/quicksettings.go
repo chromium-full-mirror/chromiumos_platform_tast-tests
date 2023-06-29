@@ -31,9 +31,6 @@ import (
 
 const uiTimeout = 10 * time.Second
 
-// Whether these helper functions assume the new "QsRevamp" UI is enabled.
-var qsRevampEnabled = false
-
 // findStatusArea finds the status area UI node.
 func findStatusArea(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
 	ui := uiauto.New(tconn)
@@ -73,62 +70,42 @@ func clickAndWaitForAnimation(ctx context.Context, tconn *chrome.TestConn, node 
 	return nil
 }
 
-// Init configures the package with the correct value of feature QsRevamp,
-// depending on its state in chrome. The state might vary because the feature
-// flag default was flipped in a chrome uprev, or because a test explicitly
-// opted-in or opted-out of the feature. Returns a cleanup function which
-// callers should defer. Init can be safely called multiple times as long as the
-// cleanup function is deferred and scopes are nested. For example, this code
-// will work:
-//
-//	func Foo() {
-//	    cleanup, err := quicksettings.Init(...)
-//	    if err != nil { ... }
-//	    defer cleanup()
-//	    ...
-//	    Bar();
-//	    ...
-//	}
-//
-//	func Bar() {
-//	    cleanup, err := quicksettings.Init(...)
-//	    if err != nil { ... }
-//	    defer cleanup()
-//	    ...
-//	}
-//
-// TODO(b/289240282): Figure out a way to initialize quicksettings only once,
-// during chrome startup.
+// Init is deprecated and does nothing.
+// TODO(b/289240282): Delete all calls to this function.
 func Init(ctx context.Context, tconn *chrome.TestConn) (func(), error) {
-	oldQsRevampEnabled := qsRevampEnabled
+	return func() {}, nil
+}
+
+// QsRevampEnabled returns whether the chrome feature "QsRevamp" is enabled. The
+// state might vary because the feature flag default was flipped in a chrome
+// uprev, or because a test explicitly opted-in or opted-out of the feature.
+// Returns a cleanup function which
+func QsRevampEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
+	var qsRevampEnabled bool
 	if err := tconn.Call(ctx, &qsRevampEnabled,
 		"tast.promisify(chrome.autotestPrivate.isFeatureEnabled)", "QsRevamp"); err != nil {
-		return nil, errors.Wrap(err, "failed to get QsRevamp feature state")
+		return false, errors.Wrap(err, "failed to get QsRevamp feature state")
 	}
-	return func() { qsRevampEnabled = oldQsRevampEnabled }, nil
+	return qsRevampEnabled, nil
 }
 
-// QsRevampEnabled returns whether this package has been configured to assume
-// feature QsRevamp is enabled in chrome, usually by calling Init() above.
-func QsRevampEnabled() bool {
-	return qsRevampEnabled
-}
-
-// SetQsRevampEnabled configures the package to assume the feature QsRevamp is
-// either enabled or disabled. Returns a cleanup function which callers should
-// defer.
+// SetQsRevampEnabled is deprecated and does nothing.
+// TODO(b/289240282): Delete all calls to this function.
 func SetQsRevampEnabled(enabled bool) func() {
-	qsRevampEnabled = enabled
-	return func() { qsRevampEnabled = false }
+	return func() {}
 }
 
 // GetRootFinder returns the finder for the root quick settings view.
 // The finder is different based on whether QsRevamp is enabled or not.
-func GetRootFinder() *nodewith.Finder {
-	if qsRevampEnabled {
-		return QsRootFinder
+func GetRootFinder(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get QsRevamp state")
 	}
-	return LegacyRootFinder
+	if qsRevampEnabled {
+		return QsRootFinder, nil
+	}
+	return LegacyRootFinder, nil
 }
 
 // Rect returns a coords.Rect struct for the Quick Settings area, which contains
@@ -144,8 +121,13 @@ func Rect(ctx context.Context, tconn *chrome.TestConn) (coords.Rect, error) {
 		return coords.Rect{}, errors.Wrap(err, "failed to find quick settings")
 	}
 
+	rootFinder, err := GetRootFinder(ctx, tconn)
+	if err != nil {
+		return coords.Rect{}, errors.Wrap(err, "failed to get root finder")
+	}
+
 	for i := range results {
-		if err := ui.Exists(GetRootFinder().Ancestor(bubbleFrameView.Nth(i)))(ctx); err == nil {
+		if err := ui.Exists(rootFinder.Ancestor(bubbleFrameView.Nth(i)))(ctx); err == nil {
 			return results[i].Location, nil
 		}
 	}
@@ -168,7 +150,11 @@ func ClickStatusArea(ctx context.Context, tconn *chrome.TestConn) error {
 
 // Shown checks if Quick Settings exists in the UI.
 func Shown(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
-	return uiauto.New(tconn).IsNodeFound(ctx, GetRootFinder())
+	rootFinder, err := GetRootFinder(ctx, tconn)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get root finder")
+	}
+	return uiauto.New(tconn).IsNodeFound(ctx, rootFinder)
 }
 
 // Show will click the status area to show Quick Settings and wait for it to appear.
@@ -186,8 +172,13 @@ func Show(ctx context.Context, tconn *chrome.TestConn) error {
 		return errors.Wrap(err, "failed to click the status area")
 	}
 
+	rootFinder, err := GetRootFinder(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get root finder")
+	}
+
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(GetRootFinder())(ctx); err != nil {
+	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(rootFinder)(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for quick settings to appear")
 	}
 	return nil
@@ -206,8 +197,13 @@ func Hide(ctx context.Context, tconn *chrome.TestConn) error {
 		return errors.Wrap(err, "failed to click the status area")
 	}
 
+	rootFinder, err := GetRootFinder(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get root finder")
+	}
+
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(uiTimeout).WaitUntilGone(GetRootFinder())(ctx); err != nil {
+	if err := ui.WithTimeout(uiTimeout).WaitUntilGone(rootFinder)(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for quick settings to be hidden")
 	}
 	return nil
@@ -224,6 +220,11 @@ func Collapse(ctx context.Context, tconn *chrome.TestConn) error {
 
 	if err := ShowWithRetry(ctx, tconn, 5*time.Second); err != nil {
 		return err
+	}
+
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get QsRevamp state")
 	}
 
 	if qsRevampEnabled {
@@ -258,6 +259,11 @@ func Expand(ctx context.Context, tconn *chrome.TestConn) error {
 		return err
 	}
 
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get QsRevamp state")
+	}
+
 	if qsRevampEnabled {
 		// Quick settings with QsRevamp cannot be collapsed, so there is nothing to expand.
 		return nil
@@ -289,9 +295,14 @@ func ShowWithRetry(ctx context.Context, tconn *chrome.TestConn, timeout time.Dur
 		return errors.Wrap(err, "failed to find the status area widget")
 	}
 
+	rootFinder, err := GetRootFinder(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get root finder")
+	}
+
 	ui := uiauto.New(tconn)
 	if err := ui.WithPollOpts(testing.PollOptions{Timeout: timeout, Interval: time.Second}).
-		LeftClickUntil(statusArea, ui.Exists(GetRootFinder()))(ctx); err != nil {
+		LeftClickUntil(statusArea, ui.Exists(rootFinder))(ctx); err != nil {
 		return errors.Wrap(err, "quick settings not shown")
 	}
 	return nil
@@ -300,12 +311,8 @@ func ShowWithRetry(ctx context.Context, tconn *chrome.TestConn, timeout time.Dur
 // PodIconButton generates nodewith.Finder for the specified quick setting feature pod icon button.
 // This function is not supported with QsRevamp. Use the constants quicksettings.FeatureTile*
 // instead.
+// TODO(b/252870625): Remove all calls to this function.
 func PodIconButton(setting SettingPod) *nodewith.Finder {
-	if qsRevampEnabled {
-		// Not supported with QsRevamp, see function docs.
-		return nil
-	}
-
 	// The network pod cannot be easily found by its Name attribute in both logged-in and lock screen states.
 	// Instead, find it by its unique ClassName.
 	if setting == SettingPodNetwork {
@@ -320,12 +327,8 @@ func PodIconButton(setting SettingPod) *nodewith.Finder {
 // PodLabelButton generates nodewith.Finder to enter the panel of the specified quick setting pod.
 // This function is not supported with QsRevamp. Use the constants quicksettings.FeatureTile*
 // instead.
+// TODO(b/252870625): Remove all calls to this function.
 func PodLabelButton(setting SettingPod) *nodewith.Finder {
-	if qsRevampEnabled {
-		// Not supported with QsRevamp, see function docs.
-		return nil
-	}
-
 	if setting == SettingPodDoNotDisturb {
 		return nodewith.HasClass("FeaturePodLabelButton").NameContaining("notification")
 	}
@@ -361,6 +364,11 @@ func ensureVisible(ctx context.Context, tconn *chrome.TestConn) (func(ctx contex
 // if it's not already, but the original state will be restored once the check
 // is complete.
 func BluetoothEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get QsRevamp state")
+	}
+
 	if !qsRevampEnabled {
 		return false, errors.New("BluetoothEnabled() requires QsRevamp enabled")
 	}
@@ -382,6 +390,11 @@ func BluetoothEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error)
 // be shown if it's not already, but the original state will be restored once
 // the check is complete.
 func DoNotDisturbEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get QsRevamp state")
+	}
+
 	if !qsRevampEnabled {
 		return false, errors.New("DoNotDisturbEnabled() requires QsRevamp enabled")
 	}
@@ -401,6 +414,11 @@ func DoNotDisturbEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, err
 // SetDoNotDisturb enables or disables the Do Not Disturb feature using its
 // feature tile.
 func SetDoNotDisturb(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get QsRevamp state")
+	}
+
 	if !qsRevampEnabled {
 		// Use the legacy feature pod button.
 		if err := ToggleSetting(ctx, tconn, SettingPodDoNotDisturb, enable); err != nil {
@@ -534,6 +552,11 @@ func ToggleOption(ctx context.Context, tconn *chrome.TestConn, toggleButton *nod
 // TileRestricted checks if a feature tile is restricted and unable to be used
 // on the lock screen.
 func TileRestricted(ctx context.Context, tconn *chrome.TestConn, tile *nodewith.Finder) (bool, error) {
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get QsRevamp state")
+	}
+
 	if !qsRevampEnabled {
 		return false, errors.New("TileRestricted() requires QsRevamp enabled")
 	}
@@ -593,6 +616,11 @@ func LockScreen(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 	defer cleanup(ctx)
 
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get QsRevamp state")
+	}
+
 	ui := uiauto.New(tconn)
 	if qsRevampEnabled {
 		if err := ui.WithTimeout(uiTimeout).LeftClick(PowerMenuButton)(ctx); err != nil {
@@ -620,6 +648,10 @@ func LockScreen(ctx context.Context, tconn *chrome.TestConn) error {
 // first waits for the button to appear. This function is useful if a test
 // wants to show a notification view without it timing out.
 func ShowNotificationCenter(ctx context.Context, tconn *chrome.TestConn) error {
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get QsRevamp state")
+	}
 	if !qsRevampEnabled {
 		return errors.New("ShowNotificationCenter() requires QsRevamp enabled")
 	}
@@ -637,6 +669,10 @@ func ShowNotificationCenter(ctx context.Context, tconn *chrome.TestConn) error {
 // NotificationsHidden checks that the 'Notifications are hidden' notification
 // appears and that no other notifications are visible.
 func NotificationsHidden(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get QsRevamp state")
+	}
 	if !qsRevampEnabled {
 		return false, errors.New("NotificationsHidden() requires QsRevamp enabled")
 	}
@@ -672,6 +708,10 @@ func findSlider(ctx context.Context, tconn *chrome.TestConn, slider SliderType) 
 	if slider == SliderTypeMicGain {
 		if err := OpenAudioSettings(ctx, tconn); err != nil {
 			return nil, err
+		}
+		qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get QsRevamp state")
 		}
 		// Quick settings may have multiple sliders, one per microphone. The
 		// active microphone's slider is the only focusable one.
@@ -972,6 +1012,11 @@ func RestrictedFeatureTiles(ctx context.Context) (map[string]*nodewith.Finder, e
 // CommonElements returns a map that contains ui.FindParams for Quick Settings UI elements that are present in all sign-in states (signed in, signed out, screen locked).
 // The keys of the map are descriptive names for the UI elements.
 func CommonElements(ctx context.Context, tconn *chrome.TestConn, hasBattery, isLockedScreen bool) (map[string]*nodewith.Finder, error) {
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get QsRevamp state")
+	}
+
 	if !qsRevampEnabled {
 		return nil, errors.New("CommonElements() requires QsRevamp enabled")
 	}
@@ -1014,6 +1059,11 @@ func SignOut(ctx context.Context, tconn *chrome.TestConn) error {
 
 	if err := Show(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to open Uber tray")
+	}
+
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get QsRevamp state")
 	}
 
 	if !qsRevampEnabled {

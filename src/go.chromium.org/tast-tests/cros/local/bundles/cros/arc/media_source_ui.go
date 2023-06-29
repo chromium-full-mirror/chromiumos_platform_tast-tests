@@ -53,9 +53,6 @@ func init() {
 
 // MediaSourceUI checks the media control is displaying the most recent activated media source.
 func MediaSourceUI(ctx context.Context, s *testing.State) {
-	cleanup := quicksettings.SetQsRevampEnabled(true)
-	defer cleanup()
-
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
 	device := s.FixtValue().(*arc.PreData).UIDevice
@@ -146,7 +143,12 @@ func MediaSourceUI(ctx context.Context, s *testing.State) {
 			defer quicksettings.Hide(cleanupCtx, tconn)
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, outDir, s.HasError, cr, "ui_quicksettings")
 
-			resourceName := nodewith.Name(media.Subtitle).HasClass("Label").Ancestor(quicksettings.MediaControlsPod())
+			mediaControlsPod, err := quicksettings.MediaControlsPod(ctx, tconn)
+			if err != nil {
+				s.Fatal("Failed to get media controls pod finder: ", err)
+			}
+
+			resourceName := nodewith.Name(media.Subtitle).HasClass("Label").Ancestor(mediaControlsPod)
 			if err := ui.WaitUntilExists(resourceName)(ctx); err != nil {
 				s.Fatal("Failed to check media control UI: ", err)
 			}

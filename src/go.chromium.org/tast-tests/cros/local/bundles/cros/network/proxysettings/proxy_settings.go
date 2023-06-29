@@ -177,13 +177,16 @@ func launchProxySettingsFromQuickSettings(ctx context.Context, tconn *chrome.Tes
 	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to navigate to network detailed view")
 	}
-
+	networkListItemView, err := quicksettings.NetworkListItemView(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get network list item view")
+	}
 	var networkList *nodewith.Finder
 	switch networkType {
 	case netconfigtypes.Ethernet:
-		networkList = quicksettings.NetworkListItemView().NameContaining("Ethernet")
+		networkList = networkListItemView.NameContaining("Ethernet")
 	case netconfigtypes.WiFi:
-		networkList = quicksettings.NetworkListItemView().NameContaining(wifiSsid)
+		networkList = networkListItemView.NameContaining(wifiSsid)
 	default:
 		return errors.Errorf("unsupported network type: %d", networkType)
 	}

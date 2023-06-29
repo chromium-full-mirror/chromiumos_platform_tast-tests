@@ -82,7 +82,12 @@ func CellularConnectDisconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to navigate to the network section of Quick Settings: ", err)
 	}
 
-	cellularNetworkQuickSettingsView := nodewith.Role(role.Button).NameRegex(regexp.MustCompile(networkName)).Ancestor(quicksettings.NetworkDetailedView())
+	networkDetailedView, err := quicksettings.NetworkDetailedView(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get network detailed view: ", err)
+	}
+
+	cellularNetworkQuickSettingsView := nodewith.Role(role.Button).NameRegex(regexp.MustCompile(networkName)).Ancestor(networkDetailedView)
 	connectedQuickSettingsLabel := nodewith.Role(role.StaticText).NameRegex(regexp.MustCompile("Connected")).Ancestor(cellularNetworkQuickSettingsView)
 
 	if err := ui.WithTimeout(15 * time.Second).WaitUntilExists(connectedQuickSettingsLabel)(ctx); err != nil {
