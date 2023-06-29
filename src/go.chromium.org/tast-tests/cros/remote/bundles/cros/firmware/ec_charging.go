@@ -8,10 +8,11 @@ import (
 	"context"
 	"strconv"
 	"strings"
+	"time"
 
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -70,7 +71,7 @@ func checkCharging(ctx context.Context, h *firmware.Helper, s *testing.State) {
 		s.Fatal("DUT is not charging (DUT is on AC but does not report charging)")
 	}
 	if chargingInt(cs["batt.current"], "mA") < 0 {
-		s.Fatal("DUT is not charging (batterry current below zero)")
+		s.Fatalf("DUT is not charging (battery current below zero: %s)", cs["batt.current"])
 	}
 	if (chargingInt(cs["batt.desired_current"], "mA") < 100) &&
 		(chargingInt(cs["batt.state_of_charge"], "%") < 100) {
@@ -108,6 +109,49 @@ func getBatteryPercent(ctx context.Context, h *firmware.Helper, s *testing.State
 
 }
 
+func disconnectCharger(ctx context.Context, h *firmware.Helper, s *testing.State) {
+	s.Log("Stopping power supply")
+	if err := h.SetDUTPower(ctx, false); err != nil {
+		s.Fatal("Failed to remove charger: ", err)
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		cs, err := firmware.GetChargingState(ctx, h)
+		if err != nil {
+			s.Fatal("Failed querying EC for charge state: ", err)
+		}
+		if cs["global.ac"] != "0" {
+			return errors.New("Charger is not disconnected yet")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second}); err != nil {
+		s.Fatal("Failed to disconnect charger: ", err)
+	}
+}
+
+func connectCharger(ctx context.Context, h *firmware.Helper, s *testing.State) {
+	s.Log("Starting power supply")
+	if err := h.SetDUTPower(ctx, true); err != nil {
+		s.Fatal("Failed to attach charger: ", err)
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		cs, err := firmware.GetChargingState(ctx, h)
+		if err != nil {
+			s.Fatal("Failed querying EC for charge state: ", err)
+		}
+		if cs["global.ac"] != "1" {
+			return errors.New("Charger is not attached yet")
+		} else if chargingInt(cs["batt.current"], "mA") < 0 {
+			return errors.New("Battery still supplying current")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second}); err != nil {
+		s.Fatal("Failed to connect charger: ", err)
+	}
+}
+
 // ECCharging discharges the DUT then checks its voltages
 // and current to determine its charging circuitry and EC
 // reporting is working as intended
@@ -129,9 +173,7 @@ func ECCharging(ctx context.Context, s *testing.State) {
 		// TODO: Convert this code to either poll against target battery percent
 		// or use the power facilities (requires test conv)
 		s.Log("Initiating battery discharging")
-		if err := h.Servo.SetPDRole(ctx, servo.PDRoleSnk); err != nil {
-			s.Fatal("Failed to initialize battery discharging: ", err)
-		}
+		disconnectCharger(ctx, h, s)
 
 		// As the firmware test with bootModeNormal does not receive
 		// browser services on its initialization, we cannot easily
@@ -145,17 +187,12 @@ func ECCharging(ctx context.Context, s *testing.State) {
 		const stressingScript = `
 			cd /tmp; stress-ng --cpu 32 --timeout 4m
 	`
-		/*
-			s.Log("Stressing CPU to discharge battery")
-			if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", stressingScript).Run(); err != nil {
-				s.Fatal("Failed to discharge battery using CPU stress: ", err)
-			}
-		*/
-		s.Log("Whew! That was stressful. Go back to charging")
-		if err := h.Servo.SetPDRole(ctx, servo.PDRoleSrc); err != nil {
-			s.Fatal("Failed to start charging: ", err)
+		s.Log("Stressing CPU to discharge battery")
+		if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", stressingScript).Run(); err != nil {
+			s.Fatal("Failed to discharge battery using CPU stress: ", err)
 		}
-
+		s.Log("Whew! That was stressful. Go back to charging")
+		connectCharger(ctx, h, s)
 	}
 
 	checkCharging(ctx, h, s)
