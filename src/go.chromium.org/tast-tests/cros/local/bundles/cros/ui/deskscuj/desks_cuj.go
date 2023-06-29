@@ -43,8 +43,6 @@ func Run(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	bt := s.Param().(browser.Type)
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
@@ -140,10 +138,8 @@ func Run(ctx context.Context, s *testing.State) {
 		return ash.WaitForOverviewState(ctx, tconn, ash.Shown, time.Minute)
 	}
 
-	if bt == browser.TypeLacros {
-		if err := browser.CloseTabByTitle(ctx, bTconn, "about:blank"); err != nil {
-			s.Fatal(`Failed to close blank tab: `, err)
-		}
+	if err := browser.CloseTabByTitle(ctx, bTconn, "about:blank"); err != nil {
+		s.Fatal(`Failed to close blank tab: `, err)
 	}
 
 	// Get a list of metrics to collect for each test phase.
