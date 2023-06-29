@@ -427,7 +427,7 @@ func verifyDownloads(ctx context.Context, ui *uiauto.Context, br *browser.Browse
 
 const (
 	// Arbitrary page title.
-	pageTitle = "Alphabet"
+	pageTitle = "Alphabet Investor Relations"
 	// Arbitrary page URL.
 	pageURL = "https://abc.xyz"
 	// chrome://downloads page title.

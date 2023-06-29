@@ -22,9 +22,9 @@ import (
 
 // Constants needed to check if already bookmarked page can be accessed after applying policy.
 const (
-	nameOfInitialBookmark           = "Alphabet"        // displayed on the bookmarks bar
-	urlOfInitialBookmark            = "https://abc.xyz" // used for navigation
-	visibleAddressOfInitialBookmark = "abc.xyz"         // used in validation
+	nameOfInitialBookmark           = "Alphabet Investor Relations" // displayed on the bookmarks bar
+	urlOfInitialBookmark            = "https://abc.xyz"             // used for navigation
+	visibleAddressOfInitialBookmark = "abc.xyz"                     // used in validation
 )
 
 func init() {
