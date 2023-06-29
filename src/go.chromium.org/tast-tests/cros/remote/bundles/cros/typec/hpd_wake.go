@@ -69,6 +69,9 @@ func HpdWake(ctx context.Context, s *testing.State) {
 		s.Fatal("Couldn't verify DUT become unreachable after suspend: ", err)
 	}
 
+	// Adding a delay to make more room for DUT EC to complete S0ix trasition
+	testing.Sleep(ctx, 10*time.Second)
+
 	s.Log("Setting HPD to high")
 	if err := svo.RunUSBCDPConfigCommand(ctx, "hpd", "h"); err != nil {
 		s.Fatal("Failed to set HPD high: ", err)
