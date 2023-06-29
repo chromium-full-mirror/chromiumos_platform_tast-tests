@@ -241,6 +241,7 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 
 	if _, err := user.Lookup("missived"); err == nil {
 		prependPatterns(NewPattern(Tree("encrypted/var/cache/reporting"), Users("missived"), Groups("missived"), NotMode(022)))
+		prependPatterns(NewPattern(Tree("encrypted/var/lib/reporting"), Users("missived"), Groups("missived"), NotMode(022)))
 		prependPatterns(NewPattern(Tree("encrypted/var/spool/reporting"), Users("missived"), Groups("missived"), NotMode(022)))
 	}
 
