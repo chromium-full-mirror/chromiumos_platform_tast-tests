@@ -301,9 +301,6 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		chrome.EnableFeatures("CrOSLateBootAudioFlexibleLoopback"),
 		chrome.EnableFeatures("SystemLiveCaption"),
 		chrome.ExtraArgs("--disable-sync"),
-		// Disable WindowLayoutMenu to prevent `Keep hovering for more layout options` nudge.
-		// The nudge is overlap with app window and causes screen diff flakiness.
-		chrome.DisableFeatures("WindowLayoutMenu"),
 	}
 
 	if f.installExt {
