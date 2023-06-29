@@ -29,7 +29,7 @@ var OctaneInfo = benchmarkInfo{
 }
 
 // RunOctane runs the Octane test.
-func RunOctane(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Context) error {
+func RunOctane(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Context, params map[string]string) error {
 	if err := benchmarkConn.Eval(ctx, `
 	new Promise(resolve => {
 		BenchmarkSuite.scoreMap = new Map();
@@ -53,7 +53,7 @@ func RunOctane(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Conte
 }
 
 // RetrieveOctaneScore retrieves the score after Octane finished.
-func RetrieveOctaneScore(ctx context.Context, benchmarkConn *chrome.Conn, scores map[string]float64) error {
+func RetrieveOctaneScore(ctx context.Context, benchmarkConn *chrome.Conn, scores map[string][]float64) error {
 	benchmarkScores := make(map[string]float64)
 	if err := benchmarkConn.Eval(ctx, `
 	new Promise(resolve => {
@@ -69,7 +69,7 @@ func RetrieveOctaneScore(ctx context.Context, benchmarkConn *chrome.Conn, scores
 		return errors.New("Octane crashed during the test")
 	}
 	for metric, value := range benchmarkScores {
-		scores[octanePrefix+metric] = value
+		scores[octanePrefix+metric] = []float64{value}
 	}
 	return nil
 }

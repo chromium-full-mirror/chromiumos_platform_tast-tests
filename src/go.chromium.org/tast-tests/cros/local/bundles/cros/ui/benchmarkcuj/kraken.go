@@ -31,7 +31,7 @@ var KrakenInfo = benchmarkInfo{
 }
 
 // RunKraken runs the Kraken test.
-func RunKraken(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Context) error {
+func RunKraken(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Context, params map[string]string) error {
 	// Running Kraken is just navigating to the driver page
 	if err := benchmarkConn.Navigate(ctx, "https://mozilla.github.io/krakenbenchmark.mozilla.org/kraken-1.1/driver"); err != nil {
 		return errors.Wrap(err, "failed to start Kraken")
@@ -44,7 +44,7 @@ func RunKraken(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Conte
 }
 
 // RetrieveKrakenScore retrieves the score after Kraken finished.
-func RetrieveKrakenScore(ctx context.Context, benchmarkConn *chrome.Conn, scores map[string]float64) error {
+func RetrieveKrakenScore(ctx context.Context, benchmarkConn *chrome.Conn, scores map[string][]float64) error {
 	benchmarkScores := make(map[string]float64)
 	if err := benchmarkConn.Eval(ctx, `
 	new Promise(resolve => {
@@ -67,7 +67,7 @@ func RetrieveKrakenScore(ctx context.Context, benchmarkConn *chrome.Conn, scores
 		return errors.New("Kraken crashed during the test")
 	}
 	for metric, value := range benchmarkScores {
-		scores[krakenPrefix+metric] = value
+		scores[krakenPrefix+metric] = []float64{value}
 	}
 	return nil
 }

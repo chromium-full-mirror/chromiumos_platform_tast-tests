@@ -29,6 +29,11 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
+		Vars: []string{
+			// Iterations are limited by the specific benchmark:
+			// Speedometer: Default to 10.
+			"iterations",
+		},
 		Params: []testing.Param{
 			{
 				Name:    "speedometer",
