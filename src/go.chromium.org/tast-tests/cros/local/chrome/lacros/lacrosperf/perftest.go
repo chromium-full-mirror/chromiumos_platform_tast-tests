@@ -56,16 +56,22 @@ func SetupPerfTest(ctx context.Context, tconn *chrome.TestConn, name string) (re
 		return nil, errors.Wrap(err, "failed to setup power test environment")
 	}
 
-	if err := quicksettings.ToggleSetting(ctx, tconn, quicksettings.SettingPodDoNotDisturb, true); err != nil {
-		return nil, errors.Wrap(err, "failed to disable notifications")
+	cleanupQs, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to init quicksettings")
+	}
+	defer cleanupQs()
+
+	if err := quicksettings.SetDoNotDisturb(ctx, tconn, true); err != nil {
+		return nil, errors.Wrap(err, "failed to enable do not disturb")
 	}
 	cleanup = CombineCleanup(ctx, cleanup, func(ctx context.Context) error {
-		return quicksettings.ToggleSetting(ctx, tconn, quicksettings.SettingPodDoNotDisturb, false)
-	}, "failed to re-enable notifications")
+		return quicksettings.SetDoNotDisturb(ctx, tconn, false)
+	}, "failed to disable do not disturb")
 
 	// Disable automation feature for performance test.
 	// ResetAutomation should be already called previously, but automation is implicitly enabled by
-	// quicksettings.ToggleSetting, so we ensure it is disabled by calling ResetAutomation again.
+	// quicksettings.SetDoNotDisturb, so we ensure it is disabled by calling ResetAutomation again.
 	// TODO(b/199815100): Call private API to block accessibility features here.
 	if err := tconn.ResetAutomation(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to reset the automation feature")

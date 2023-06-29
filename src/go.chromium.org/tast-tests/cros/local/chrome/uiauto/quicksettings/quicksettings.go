@@ -398,6 +398,43 @@ func DoNotDisturbEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, err
 	return ui.IsNodeFound(ctx, FeatureTileDoNotDisturb.NameContaining("Do not disturb is on"))
 }
 
+// SetDoNotDisturb enables or disables the Do Not Disturb feature using its
+// feature tile.
+func SetDoNotDisturb(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
+	if !qsRevampEnabled {
+		// Use the legacy feature pod button.
+		if err := ToggleSetting(ctx, tconn, SettingPodDoNotDisturb, enable); err != nil {
+			return errors.Wrap(err, "failed to toggle Do Not Disturb")
+		}
+		return nil
+	}
+
+	// Open quick settings, since checking DoNotDisturbEnabled() needs it open.
+	// This avoids opening and closing quick settings twice.
+	cleanup, err := ensureVisible(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to ensure visible")
+	}
+	defer cleanup(ctx)
+
+	currentState, err := DoNotDisturbEnabled(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get Do Not Disturb state")
+	}
+
+	if currentState == enable {
+		// Nothing to do.
+		return nil
+	}
+
+	// Toggle the state using the feature tile.
+	ui := uiauto.New(tconn)
+	if err := ui.DoDefault(FeatureTileDoNotDisturb)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click Do Not Disturb tile")
+	}
+	return nil
+}
+
 // SettingEnabled checks if the specified quick setting is on or off.
 // In order to check the setting, Quick Settings will be shown if it's not already,
 // but the original state will be restored once the check is complete.
