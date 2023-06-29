@@ -283,13 +283,14 @@ func init() {
 			// case all possible CPU ABI caches are generated.
 			// Limit the run for several key models only once caches are model
 			// agnostic.
+			// Follow the policy 2+ models per ARCH of different boards.
+			// 8GB+ if possible for ureadahead generation.
 			Name:              "branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_p"},
-			// Follow the policy 2 models per ARCH of different boards.
-			// x86 ARC: caroline, asuka
-			// x86-64 ARC: morphius(zork), careena(grunt)
-			// arm64 ARC: krane(kukui), kevin
+			// x86 ARC: caroline(caroline-Intel), asuka(asuka-Intel)
+			// x86-64 ARC: careena(grunt-Intel)
+			// arm64 ARC: krane(kukui), kevin(kevin)
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("caroline", "asuka", "careena", "krane", "kevin")),
 			Val: testParam{
 				vmEnabled:                     false,
@@ -306,6 +307,7 @@ func init() {
 			Name:              "container_r_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_container_r"},
+			// x86-64 ARC: careena(grunt-Intel), treeya(grunt-Intel)
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("treeya", "careena")),
 			Val: testParam{
 				vmEnabled:                     false,
@@ -322,14 +324,30 @@ func init() {
 			Name:              "vm_r_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_r"},
-			// Follow the policy 2 models per ARCH of different boards.
-			// 8GB if possible to match requirement for ureadahead generation.
-			// x86-64 ARC: kohaku(hatch), eve
-			// arm64 ARC: gimble(herobrine), steelix(corsola)
+			// x86-64 ARC: kohaku(hatch-Intel), eve(eve-Intel), gimble(brya-Intel), morphius(zork-AMD)
+			// arm64 ARC: hoglin(herobrine), steelix(corsola), krane(kukui)
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "eve", "gimble", "morphius", "steelix", "hoglin", "krane")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-rvc",
+				upload:                        true,
+				uploadPackagesReference:       false,
+				uprevBranch:                   true,
+				dexOptCacheGen:                false,
+				requiredCPUAbisForBranchUprev: []string{"x86_64", "arm64"},
+				dataDir:                       "/tmp/data_collector",
+				tmpCachesDir:                  "",
+			},
+		}, {
+			Name:              "vm_t_branch_uprev",
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"android_vm_t"},
+			// x86-64 ARC: kohaku(hatch-Intel), gimble(brya-Intel), morphius(zork-AMD)
+			// arm64 ARC: tomato(cherry), steelix(corsola), krane(kukui)
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "gimble", "morphius", "steelix", "tomato", "krane")),
+			Val: testParam{
+				vmEnabled:                     true,
+				androidPackage:                "android-vm-tm",
 				upload:                        true,
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
