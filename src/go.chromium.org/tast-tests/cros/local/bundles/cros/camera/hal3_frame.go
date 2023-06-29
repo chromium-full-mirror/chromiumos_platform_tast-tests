@@ -27,7 +27,7 @@ func init() {
 		// exercise all resolutions on all cameras. Currently the device that
 		// needs longest timeout is Krane, which supports many resolutions
 		// up to 3264x2448 as well private/YUV reprocessing.
-		Timeout:      15 * time.Minute,
+		Timeout:      15*time.Minute + hal3.AdditionalTimeout,
 		BugComponent: "b:167281",
 	})
 }

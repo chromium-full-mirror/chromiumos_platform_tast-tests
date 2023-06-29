@@ -23,7 +23,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
 		Pre:          chrome.LoggedIn(),
-		Timeout:      4 * time.Minute,
+		Timeout:      4*time.Minute + hal3.AdditionalTimeout,
 		BugComponent: "b:167281",
 	})
 }

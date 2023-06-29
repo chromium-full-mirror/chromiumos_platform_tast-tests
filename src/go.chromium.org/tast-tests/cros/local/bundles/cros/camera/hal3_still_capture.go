@@ -25,7 +25,7 @@ func init() {
 		Pre:          chrome.LoggedIn(),
 		// Krane needs 4 minutes and 30 seconds for whole dark environment(covering the camera lens).
 		// We also need rooms for preparation time.
-		Timeout:      6 * time.Minute,
+		Timeout:      6*time.Minute + hal3.AdditionalTimeout,
 		BugComponent: "b:167281",
 	})
 }

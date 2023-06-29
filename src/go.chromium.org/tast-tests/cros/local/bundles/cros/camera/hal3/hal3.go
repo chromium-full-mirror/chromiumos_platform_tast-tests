@@ -32,6 +32,12 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// AdditionalTimeout is added to each test's timeout. Since we run
+// cpu.WaitUntilIdle() at most 3 times and its timeout is 2 minutes, we need to
+// extend the test timeout by 6 minutes to avoid failing the test due to the CPU
+// idle wait timeouts.
+const AdditionalTimeout = 6 * time.Minute
+
 const (
 	builtInUSBCameraConfigPath = "/etc/camera/camera_characteristics.conf"
 	cameraHALGlobPattern       = "/usr/lib*/camera_hal/*.so"

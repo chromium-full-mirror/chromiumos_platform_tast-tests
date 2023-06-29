@@ -23,7 +23,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera-postsubmit"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
 		Pre:          chrome.LoggedIn(),
-		Timeout:      4 * time.Minute,
+		Timeout:      4*time.Minute + hal3.AdditionalTimeout,
 		BugComponent: "b:167281",
 	})
 }

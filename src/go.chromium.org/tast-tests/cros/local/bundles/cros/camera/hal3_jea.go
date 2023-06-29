@@ -24,7 +24,7 @@ func init() {
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.HWEncodeJPEG},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		Pre:          chrome.LoggedIn(),
-		Timeout:      4 * time.Minute,
+		Timeout:      4*time.Minute + hal3.AdditionalTimeout,
 		Params: []testing.Param{{
 			Val:               "usb",
 			ExtraSoftwareDeps: []string{caps.BuiltinUSBCamera},
