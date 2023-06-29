@@ -56,6 +56,7 @@ const (
 	Watchdog              StringControl = "watchdog"
 	WatchdogAdd           StringControl = "watchdog_add"
 	WatchdogRemove        StringControl = "watchdog_remove"
+	PDAdapterSrcCaps      StringControl = "ada_srccaps"
 
 	// DUTConnectionType was previously known as V4Type ("servo_v4_type")
 	DUTConnectionType StringControl = "root.dut_connection_type"
@@ -1020,6 +1021,17 @@ func (s *Servo) SetPowerState(ctx context.Context, value PowerStateValue) (retEr
 	}
 	testing.ContextLogf(ctx, "Setting %q to %q", PowerState, value)
 	return s.SetStringTimeout(ctx, PowerState, string(value), 30*time.Second)
+}
+
+// GetPDAdapterSrcCaps gets the attached charger's source caps
+func (s *Servo) GetPDAdapterSrcCaps(ctx context.Context) ([]string, error) {
+	var value []string
+
+	if err := s.xmlrpc.Run(ctx, xmlrpc.NewCall("get", PDAdapterSrcCaps), &value); err != nil {
+		return value, errors.Wrapf(err, "getting value for servo control %q", PDAdapterSrcCaps)
+	}
+
+	return value, nil
 }
 
 // SetFWWPState sets the FWWPState control.
