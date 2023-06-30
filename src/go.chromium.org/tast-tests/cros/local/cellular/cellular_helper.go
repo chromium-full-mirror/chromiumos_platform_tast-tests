@@ -35,6 +35,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/cellularconst"
 	"go.chromium.org/tast/core/timing"
 )
 
@@ -222,6 +223,39 @@ func CheckIfVilbozVerizonAndFixAttachAPN(ctx context.Context) {
 	testing.ContextLog(ctx, "Verizon Vilboz device: Try fixing the attach APN")
 	if err := modemmanager.SetInitialEpsBearerSettings(ctx, modem3gpp, map[string]interface{}{"apn": "vzwinternet", "ip-type": mmconst.BearerIPFamilyIPv4v6}); err != nil {
 		testing.ContextLog(ctx, "Failed to set initial EPS bearer settings: ", err)
+	}
+}
+
+// CheckIfl850VerizonAndFixDefaultAPN checks if the device has a L850GL modem with a verizon SIM card,
+// and tries to fix the default APN in the modem. This is needed because there are 2 bugs
+// in the modem FW that causes the modem to report the last used APN as provisioned by the carrier(b/289540816, b/289530609).
+func CheckIfl850VerizonAndFixDefaultAPN(ctx context.Context) {
+	modemType, err := GetModemType(ctx)
+	if err != nil || modemType != cellularconst.ModemTypeL850 {
+		return
+	}
+	modem, err := modemmanager.NewModem(ctx)
+	if err != nil {
+		return
+	}
+	operatorID, err := modem.GetOperatorIdentifier(ctx)
+	if err != nil || operatorID != "311480" {
+		return
+	}
+	simpleModem, err := modem.GetSimpleModem(ctx)
+	if err != nil {
+		return
+	}
+	testing.ContextLog(ctx, "Verizon L850 device: Try fixing the default APN")
+
+	if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
+		testing.ContextLog(ctx, "Failed to disconnect: ", err)
+	}
+	if _, err := modemmanager.Connect(ctx, simpleModem, map[string]interface{}{"apn": "vzwinternet", "ip-type": mmconst.BearerIPFamilyIPv4v6}); err != nil {
+		testing.ContextLog(ctx, "Failed to connect: ", err)
+	}
+	if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
+		testing.ContextLog(ctx, "Failed to disconnect: ", err)
 	}
 }
 

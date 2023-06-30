@@ -102,6 +102,7 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 	ctx, cancel = ctxutil.Shorten(ctx, 6*time.Second)
 	defer cancel()
 	defer func(ctx context.Context) {
+		cellular.CheckIfl850VerizonAndFixDefaultAPN(ctx)
 		// Restart shill after deleting |modbOverrideProto|.
 		if errs := helper.ResetShill(ctx); errs != nil {
 			s.Fatal("Failed to reset shill: ", errs)
