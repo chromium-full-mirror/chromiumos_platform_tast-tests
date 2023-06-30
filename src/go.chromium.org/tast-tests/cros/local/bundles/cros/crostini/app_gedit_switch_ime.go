@@ -31,8 +31,8 @@ func init() {
 		Func:         AppGeditSwitchIME,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that users can type and view characters on switching input methods in one app",
-		Contacts:     []string{"clumptini@google.com", "sophialin@google.com"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Contacts:     []string{"clumptini+oncall@google.com"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
 		Params: []testing.Param{

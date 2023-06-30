@@ -27,7 +27,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens Visual Studio Code from terminal and type using an IME",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
