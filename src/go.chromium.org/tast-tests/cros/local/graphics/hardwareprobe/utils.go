@@ -19,9 +19,11 @@ const (
 )
 
 type pciDevice struct {
-	BDF     string `json:"BDF"`
-	Name    string `json:"Name"`
-	BootVGA bool   `json:"BootVGA"`
+	BDF      string `json:"BDF"`
+	Name     string `json:"Name"`
+	BootVGA  bool   `json:"BootVGA"`
+	VendorID string `json:"VendorID"`
+	DeviceID string `json:"DeviceID"`
 }
 
 type gpuInfo struct {
