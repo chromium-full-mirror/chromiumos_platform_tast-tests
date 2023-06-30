@@ -34,7 +34,7 @@ func init() {
 			"dp-chromeos-eng@google.com",
 			"crmullins@google.com",
 		},
-		Attr:         []string{"group:commercial_limited"},
+		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		SearchFlags: []*testing.StringPair{
