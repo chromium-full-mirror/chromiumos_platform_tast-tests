@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -42,13 +43,16 @@ import (
 
 const (
 	// CPUCoolDownTimeout is the time to wait for cpu cool down.
-	CPUCoolDownTimeout = 10 * time.Minute
+	CPUCoolDownTimeout = 7 * time.Minute
 	// CPUIdleTimeout is the time to wait for cpu utilization to go down.
 	// This value should match waitIdleCPUTimeout in cpu/idle.go.
 	CPUIdleTimeout = 2 * time.Minute
+	// CPUPkgStateTimeout is the max amount of time needed for cpu
+	// pkg state activity to drop.
+	CPUPkgStateTimeout = 3 * time.Minute
 	// CPUStablizationTimeout is the time to wait for cpu stablization, which
-	// is the sum of cpu cool down time and cpu idle time.
-	CPUStablizationTimeout = CPUCoolDownTimeout + CPUIdleTimeout
+	// is the sum of cpu cool down time, cpu idle time, and cpu pkg state activity drop time.
+	CPUStablizationTimeout = CPUCoolDownTimeout + CPUIdleTimeout + CPUPkgStateTimeout
 	// BatteryChargingTimeout is the battery charging duration if capacity is
 	//  below 25%
 	BatteryChargingTimeout = 3 * time.Minute
@@ -773,6 +777,13 @@ func CPUCoolDownConfig() cpu.CoolDownConfig {
 	return cdConfig
 }
 
+// CPUPkgIdleConfig returns a cpu.IdleConfig to be used for CUJ tests.
+func CPUPkgIdleConfig() cpu.IdleConfig {
+	pkgIdleConfig := cpu.DefaultPkgIdleConfig()
+	pkgIdleConfig.Timeout = CPUPkgStateTimeout
+	return pkgIdleConfig
+}
+
 // chargeBatteryCapacity allows charging of the battery for 3 minutes if battery capacity
 // is not higher than a pre-defined level (minimumBatteryCapacity+lowBatteryShutdownPercent).
 func chargeBatteryCapacity(ctx context.Context, minimumBatteryCapacity float64, chargeBatteryTestPollOpt *testing.PollOptions) error {
@@ -861,6 +872,13 @@ func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 		// Log the cpu stabilizing wait failure instead of make it fatal.
 		// TODO(b/213238698): Include the error as part of test data.
 		s.Log("Failed to wait for CPU to become idle: ", err)
+	}
+
+	// Usually takes longer than cpu.WaitUntilIdle(). Check x86 microarchitecture as well.
+	if arch := runtime.GOARCH; arch != "arm" && arch != "arm64" {
+		if err := cpu.WaitUntilPkgStateIdleWithConfig(ctx, CPUPkgIdleConfig()); err != nil {
+			s.Log("CPU package c-state failed to idle: ", err)
+		}
 	}
 
 	// Ensure display on to record UI performance correctly. Keep trying for 2 min
