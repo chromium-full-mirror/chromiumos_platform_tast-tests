@@ -207,7 +207,7 @@ func clickCurrentDeskButton(ctx context.Context, ac *uiauto.Context) error {
 		return errors.Wrap(err, "failed to press Tab")
 	}
 
-	currentDeskToggleButton := nodewith.HasClass("WindowCycleTabSliderButton").Name("Current desk")
+	currentDeskToggleButton := nodewith.HasClass("LabelSliderButton").Name("Current desk")
 	if err := ac.WithTimeout(5 * time.Second).WaitUntilExists(currentDeskToggleButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to get Current desk button")
 	}
