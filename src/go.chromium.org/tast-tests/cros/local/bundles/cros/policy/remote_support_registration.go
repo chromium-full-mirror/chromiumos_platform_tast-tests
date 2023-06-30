@@ -17,13 +17,21 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/crd"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+)
+
+const (
+	ftlMessagingClientReceiveMessagesAnnotationID  = "136248372"
+	ftlRegistrationManagerAnnotationID             = "38256901"
+	remotingRegisterSupportHostRequestAnnotationID = "67117364"
 )
 
 func init() {
@@ -58,12 +66,20 @@ func init() {
 
 func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+	isLacros := s.Param().(browser.Type) == browser.TypeLacros
 
 	gaiaCreds, err := credconfig.PickRandomCreds(
 		s.RequiredVar("policy.managedUserAccountPool"))
 	if err != nil {
 		s.Fatal("Failed to parse managed user creds: ", err)
 	}
+
+	// Set up keyboard.
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get keyboard: ", err)
+	}
+	defer kb.Close(ctx)
 
 	policyBlob := policy.NewBlob()
 	policyBlob.PolicyUser = gaiaCreds.User
@@ -77,7 +93,7 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 		chrome.ExtraArgs("--force-devtools-available"),
 	}
 
-	if s.Param().(browser.Type) == browser.TypeLacros {
+	if isLacros {
 		opts = append(opts, chrome.LacrosExtraArgs("--force-devtools-available"))
 		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		if err != nil {
@@ -104,21 +120,25 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 	for _, param := range []struct {
 		name                   string
 		shouldCrdLaunchSucceed bool
+		shouldFindAnnotation   bool
 		policy                 *policy.RemoteAccessHostAllowRemoteSupportConnections
 	}{
 		{
 			name:                   "unset",
 			shouldCrdLaunchSucceed: true,
+			shouldFindAnnotation:   true,
 			policy:                 &policy.RemoteAccessHostAllowRemoteSupportConnections{Stat: policy.StatusUnset},
 		},
 		{
 			name:                   "enabled",
 			shouldCrdLaunchSucceed: true,
+			shouldFindAnnotation:   true,
 			policy:                 &policy.RemoteAccessHostAllowRemoteSupportConnections{Val: true},
 		},
 		{
 			name:                   "disabled",
 			shouldCrdLaunchSucceed: false,
+			shouldFindAnnotation:   false,
 			policy:                 &policy.RemoteAccessHostAllowRemoteSupportConnections{Val: false},
 		},
 	} {
@@ -149,11 +169,31 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 			defer closeBrowser(cleanupCtx)
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
+			// These network calls are only made by the host in the lacros environment.
+			// In the ash clients these calls are handled by the website instead.
+			// So we only perform this check for lacros clients.
+			if isLacros {
+				if err := annotations.StartOSLogging(ctx, cr, br, kb); err != nil {
+					s.Fatal("Failed to start logging: ", err)
+				}
+			}
+
 			didCrdLaunchSucceed := true
 			errContainsRemoteSupportBlockedMessage := false
 			if err := crd.Launch(ctx, br, tconn); err != nil {
 				didCrdLaunchSucceed = false
 				errContainsRemoteSupportBlockedMessage = strings.Contains(err.Error(), "Remote support connections blocked")
+			}
+
+			hashCodes := []string{
+				ftlMessagingClientReceiveMessagesAnnotationID,
+				ftlRegistrationManagerAnnotationID,
+				remotingRegisterSupportHostRequestAnnotationID,
+			}
+			if isLacros {
+				if _, err := annotations.StopOSLoggingVerifyAnnotationSet(ctx, cr, br, kb, param.shouldFindAnnotation, hashCodes); err != nil {
+					s.Fatal("Failed to stop OS logging and verify logs: ", err)
+				}
 			}
 
 			if param.shouldCrdLaunchSucceed && didCrdLaunchSucceed == false {
