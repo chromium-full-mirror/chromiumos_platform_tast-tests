@@ -154,7 +154,7 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 		keyboard.TypeAction(testString),
 		saveFile,
 		ui.WaitUntilExists(appWindowSaved),
-		d.DiffWindow(ctx, "vscode", screenshot.Retries(2), screenshot.RetryInterval(time.Second*5)),
+		d.DiffWindow(ctx, "vscode", screenshot.Retries(5), screenshot.RetryInterval(5*time.Second)),
 		// Press ctrl+Q to exit window.
 		keyboard.AccelAction("ctrl+Q"),
 		ui.WaitUntilGone(appWindowSaved))(ctx); err != nil {

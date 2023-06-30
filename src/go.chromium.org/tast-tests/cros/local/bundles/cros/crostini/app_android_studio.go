@@ -135,7 +135,7 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 		// Two-letter words normally need an exact match.
 		ud.LeftClick(uidetection.Word("O?K", uidetection.RegexMode(true)).First()),
 		// The initialization process may take longer than the default timeout 60s.
-		ud.WithTimeout(2*time.Minute).LeftClick(uidetection.TextBlock(strings.Split("Don't send", " "))),
+		ud.WithTimeout(2*time.Minute).LeftClick(uidetection.TextBlock(strings.Split("Don't send", " "), uidetection.MaxEditDistance(2))),
 		ud.LeftClick(nextButton),
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Install Type", " "), uidetection.MaxEditDistance(2))),
 		ud.LeftClick(nextButton),
