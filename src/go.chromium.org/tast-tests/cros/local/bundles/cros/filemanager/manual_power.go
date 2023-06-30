@@ -6,6 +6,7 @@ package filemanager
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -18,13 +19,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManualPower,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures power usage for 15 minutes",
+		Desc:         "Measures power usage for an hour",
 		BugComponent: "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"joelhockey@google.org",
 		},
-		Timeout: 20 * time.Minute,
+		Timeout: time.Hour,
 	})
 }
 
@@ -61,13 +62,22 @@ func ManualPower(ctx context.Context, s *testing.State) {
 	}
 	testing.ContextLog(ctx, "Ready")
 
-	var sleepTotal = 15
+	// Continue collecting data up until the context deadline occurs, to stop
+	// the metric collection run `touch /tmp/stop_power_test` on the DUT and
+	// this will schedule the metrics collection to stop in 3 more iterations.
+	var sleepTotal = 10000
+	fileFound := false
 	for i := 0; i < sleepTotal; i++ {
 		testing.ContextLogf(ctx, "Recording metrics (%02d/%d)", i+1, sleepTotal)
 		// GoBigSleepLint: sleep while we record metrics.
 		if err := testing.Sleep(ctx, 1*time.Minute); err != nil {
 			s.Error("Failed to sleep: ", err)
 			break
+		}
+		if _, err := os.Stat("/tmp/stop_power_test"); err == nil && !fileFound {
+			s.Log("Stop file found")
+			fileFound = true
+			sleepTotal = i + 3
 		}
 	}
 
