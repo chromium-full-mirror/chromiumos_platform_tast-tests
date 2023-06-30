@@ -18,13 +18,16 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power/util"
+	"go.chromium.org/tast-tests/cros/local/uidetection"
 )
 
 const (
 	// SuperTuxKartAppName is the app name of SuperTuxKart game.
-	SuperTuxKartAppName     = "SuperTuxKart"
-	superTuxKartPackageName = "org.supertuxkart.stk"
-	superTuxKartIDPrefix    = superTuxKartPackageName + ":id/"
+	SuperTuxKartAppName = "SuperTuxKart"
+	// SuperTuxKartIconGameScene is the icon data used in SuperTuxKart game.
+	SuperTuxKartIconGameScene = "gameapp/supertuxkart_game_scene.png"
+	superTuxKartPackageName   = "org.supertuxkart.stk"
+	superTuxKartIDPrefix      = superTuxKartPackageName + ":id/"
 )
 
 // SuperTuxKart holds the information for Game App testing.
@@ -33,16 +36,18 @@ type SuperTuxKart struct {
 	d        *androidui.Device
 	kb       *input.KeyboardEventWriter
 	tconn    *chrome.TestConn
+	dataPath func(string) string
 	launched bool
 }
 
 // NewSuperTuxKart creates SuperTuxKart instance which implements GameApp interface.
-func NewSuperTuxKart(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *androidui.Device) GameApp {
+func NewSuperTuxKart(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *androidui.Device, dataPath func(string) string) GameApp {
 	return &SuperTuxKart{
-		a:     a,
-		d:     d,
-		kb:    kb,
-		tconn: tconn,
+		a:        a,
+		d:        d,
+		kb:       kb,
+		tconn:    tconn,
+		dataPath: dataPath,
 	}
 }
 
@@ -71,42 +76,40 @@ func (s *SuperTuxKart) Launch(ctx context.Context) error {
 // EnterGameScene enters the game scene by keyboard.
 func (s *SuperTuxKart) EnterGameScene(ctx context.Context) error {
 	const (
-		okButton    = "'OK' button"
-		applyButton = "'Apply' button"
-		yesButton   = "'Yes' button"
+		okButton       = "'OK' button"
+		applyButton    = "'Apply' button"
+		yesButton      = "'Yes' button"
+		buttonWaitTime = 2 * time.Second
 	)
 	kb := s.kb
 	ui := uiauto.New(s.tconn)
 	gotItButton := nodewith.Name("Got it").Role(role.Button)
+	ud := uidetection.NewDefault(s.tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
+	applyWord := uidetection.Word("Apply")
+	gameScene := uidetection.CustomIcon(s.dataPath(SuperTuxKartIconGameScene))
 
+	enterControllerSelectionScene := ui.WithTimeout(2*time.Minute).RetryUntil(kb.AccelAction("Enter"),
+		ud.WithTimeout(15*time.Second).WaitUntilExists(applyWord))
+	goThroughConfirmation := uiauto.NamedCombine("go through confirmation",
+		uiauto.NamedAction("press enter for "+applyButton, kb.AccelAction("Enter")),
+		// Wait up to 2s for the 'Yes' button.
+		uiauto.NamedAction("wait "+yesButton, uiauto.Sleep(buttonWaitTime)),
+		uiauto.NamedAction("press enter for "+yesButton, kb.AccelAction("Enter")),
+		// Wait up to 2s for the 'Yes' button.
+		uiauto.NamedAction("wait "+yesButton, uiauto.Sleep(buttonWaitTime)),
+		uiauto.NamedAction("press enter for "+yesButton, kb.AccelAction("Enter")),
+	)
 	return uiauto.NamedCombine("enter game scene",
 		uiauto.IfSuccessThen(ui.WithTimeout(5*time.Second).WaitUntilExists(gotItButton), ui.LeftClick(gotItButton)),
-		uiauto.NamedAction("press enter to skip animation", kb.AccelAction("Enter")),
-		// Most UI elements in the game don't have a resource-id, so currently
-		// we're using sleep to wait for the UI element to appear, while this
-		// is well known as the source of flakiness for short term.
-		// TODO(b/289855454): Use uidetection to wait the event properly to
-		// stabilize the tests. Until that, we expect tests using this will not
-		// run in any of automated suite without manual triages of failures.
-		// On low-end devices, wait up to 40s for the 'OK' button.
-		// TODO(b/289855454): Use uidetection to wait for the 'OK' button.
-		uiauto.NamedAction("wait "+okButton, uiauto.Sleep(40*time.Second)),
-		uiauto.NamedAction("press enter for "+okButton, kb.AccelAction("Enter")),
-		// On low-end devices, wait up to 2s for the 'Apply' button.
-		// TODO(b/289855454): Use uidetection to wait for the 'Apply' button.
-		uiauto.NamedAction("wait "+applyButton, uiauto.Sleep(2*time.Second)),
-		uiauto.NamedAction("press enter for "+applyButton, kb.AccelAction("Enter")),
-		// On low-end devices, wait up to 2s for the 'Yes' button.
-		// TODO(b/289855454): Use uidetection to wait for the 'Yes' button.
-		uiauto.NamedAction("wait "+yesButton, uiauto.Sleep(2*time.Second)),
-		uiauto.NamedAction("press enter for "+yesButton, kb.AccelAction("Enter")),
-		// On low-end devices, wait up to 2s for the 'Yes' button.
-		// TODO(b/289855454): Use uidetection to wait for the 'Yes' button.
-		uiauto.NamedAction("wait "+yesButton, uiauto.Sleep(2*time.Second)),
-		uiauto.NamedAction("press enter for "+yesButton, kb.AccelAction("Enter")),
-		// On low-end devices, wait up to 15s for entering the game scene.
-		// TODO(b/289855454): Use uidetection to verify entering the game scene.
-		uiauto.NamedAction("wait entering the game scene", uiauto.Sleep(15*time.Second)))(ctx)
+		// The DUT might get into the game scene when trying to enter the
+		// controller selection scene.
+		// Directly wait for the game scene if |enterControllerSelectionScene| fails.
+		uiauto.IfSuccessThen(
+			enterControllerSelectionScene,
+			goThroughConfirmation,
+		),
+		uiauto.NamedAction("wait to enter the game scene", ud.WaitUntilExists(gameScene)),
+	)(ctx)
 }
 
 // Play plays the game by keyboard for play time.

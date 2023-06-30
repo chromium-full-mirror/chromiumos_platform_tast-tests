@@ -17,11 +17,16 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power/util"
+	"go.chromium.org/tast-tests/cros/local/uidetection"
 )
 
 const (
 	// Asphalt8AppName is the app name of Asphalt8.
-	Asphalt8AppName     = "Asphalt 8"
+	Asphalt8AppName = "Asphalt 8"
+	// Asphalt8IconGameScene is the icon data of the game scene used in Asphalt8.
+	Asphalt8IconGameScene = "gameapp/asphalt8_game_scene.png"
+	// Asphalt8IconRaceNow is the icon data of the prepare scene used in Asphalt8.
+	Asphalt8IconRaceNow = "gameapp/asphalt8_race_now.png"
 	asphalt8PackageName = "com.gameloft.android.ANMP.GloftA8HM"
 	asphalt8IDPrefix    = asphalt8PackageName + ":id/"
 )
@@ -32,16 +37,18 @@ type Asphalt8 struct {
 	d        *androidui.Device
 	kb       *input.KeyboardEventWriter
 	tconn    *chrome.TestConn
+	dataPath func(string) string
 	launched bool
 }
 
 // NewAsphalt8 creates Asphalt8 instance which implements GameApp interface.
-func NewAsphalt8(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *androidui.Device) GameApp {
+func NewAsphalt8(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *androidui.Device, dataPath func(string) string) GameApp {
 	return &Asphalt8{
-		a:     a,
-		d:     d,
-		kb:    kb,
-		tconn: tconn,
+		a:        a,
+		d:        d,
+		kb:       kb,
+		tconn:    tconn,
+		dataPath: dataPath,
 	}
 }
 
@@ -70,32 +77,27 @@ func (as *Asphalt8) Launch(ctx context.Context) error {
 // EnterGameScene enters the game scene by keyboard.
 func (as *Asphalt8) EnterGameScene(ctx context.Context) error {
 	kb := as.kb
-	actionBarRoot := as.d.Object(androidui.ID(asphalt8IDPrefix + "action_bar_root"))
+	ud := uidetection.NewDefault(as.tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
 
+	actionBarRoot := as.d.Object(androidui.ID(asphalt8IDPrefix + "action_bar_root"))
+	gameScene := uidetection.CustomIcon(as.dataPath(Asphalt8IconGameScene))
+	raceNow := uidetection.CustomIcon(as.dataPath(Asphalt8IconRaceNow))
 	return uiauto.NamedCombine("enter game scene",
 		cuj.WaitForExists(actionBarRoot, defaultUITimeout),
 		uiauto.NamedAction("press enter to skip animation", kb.AccelAction("Enter")),
-		// Most UI elements in the game don't have a resource-id, so currently
-		// we're using sleep to wait for the UI element to appear, while this
-		// is well known as the source of flakiness for short term.
-		// TODO(b/289855454): Use uidetection to wait the event properly to
-		// stabilize the tests. Until that, we expect tests using this will not
-		// run in any of automated suite without manual triages of failures.
-		// On low-end devices, wait up to 6s for the 'RACE-NOW' button.
-		// TODO(b/289855454): Use uidetection to wait the 'RACE-NOW' button.
-		uiauto.NamedAction("wait 'RACE-NOW' button", uiauto.Sleep(6*time.Second)),
+		// On low-end devices, wait up to 2 minutes for the 'RACE-NOW' button.
+		uiauto.NamedAction("wait 'RACE-NOW' button", ud.WithTimeout(2*time.Minute).WaitUntilExists(raceNow)),
 		uiauto.NamedAction("press 'RACE-NOW' button", kb.AccelAction("Enter")),
-		// On low-end devices, wait up to 2s for the 'LEARN TO DRIVE' menu.
-		// TODO(b/289855454): Use uidetection to wait the 'LEARN TO DRIVE' menu.
+		// Wait up to 2s for the 'LEARN TO DRIVE' menu.
 		uiauto.NamedAction("wait 'LEARN TO DRIVE' menu", uiauto.Sleep(2*time.Second)),
 		uiauto.NamedAction("press left to select 'MINI-GAME' button", kb.AccelAction("Left")),
-		// On low-end devices, wait up to 2s for the 'MINI-GAME' button.
-		// TODO(b/289855454): Use uidetection to wait the 'MINI-GAME' button.
+		// Wait up to 2s for the 'MINI-GAME' button.
 		uiauto.NamedAction("wait 'MINI-GAME' button", uiauto.Sleep(2*time.Second)),
 		uiauto.NamedAction("press enter to enter the game scene", kb.AccelAction("Enter")),
-		// On low-end devices, wait up to 30s for entering the game scene.
-		// TODO(b/289855454): Use uidetection to verify entering the game scene.
-		uiauto.NamedAction("wait entering the game scene", uiauto.Sleep(30*time.Second)))(ctx)
+		// On low-end devices, wait up to 2 minutes for entering the game scene.
+		uiauto.NamedAction("wait entering the game scene",
+			ud.WithTimeout(2*time.Minute).WaitUntilExists(gameScene)),
+	)(ctx)
 }
 
 // Play plays the game by keyboard for play time.

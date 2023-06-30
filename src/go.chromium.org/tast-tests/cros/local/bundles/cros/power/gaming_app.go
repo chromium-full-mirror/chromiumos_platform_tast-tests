@@ -20,7 +20,7 @@ import (
 )
 
 type gamingAppParams struct {
-	game func(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *androidui.Device) gameapp.GameApp
+	game func(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *androidui.Device, dataPath func(string) string) gameapp.GameApp
 }
 
 const (
@@ -51,12 +51,14 @@ func init() {
 				Val: gamingAppParams{
 					game: gameapp.NewAsphalt8,
 				},
+				ExtraData: []string{gameapp.Asphalt8IconGameScene, gameapp.Asphalt8IconRaceNow},
 			},
 			{
 				Name: "super_tux_kart",
 				Val: gamingAppParams{
 					game: gameapp.NewSuperTuxKart,
 				},
+				ExtraData: []string{gameapp.SuperTuxKartIconGameScene},
 			},
 		},
 	})
@@ -86,7 +88,8 @@ func GamingApp(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
-	game := s.Param().(gamingAppParams).game(ctx, kb, tconn, a, d)
+	game := s.Param().(gamingAppParams).game(ctx, kb, tconn, a, d, s.DataPath)
+	// Run the app and collect the power data in the meantime.
 	if err := gameapp.Run(ctx, cr, a, d, game, s.OutDir(), s.TestName(), gamingAppPlayTime); err != nil {
 		s.Fatal("Failed to run game app: ", err)
 	}
