@@ -23,7 +23,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Timeout:      9 * time.Minute,
+		Timeout:      10 * time.Minute,
 		Fixture:      "ccaLaunchedWithTimeLapseOnFakeHALCamera",
 		BugComponent: "b:978428",
 	})
@@ -37,7 +37,6 @@ func CCAUITimeLapse(ctx context.Context, s *testing.State) {
 	if err := app.SwitchToTimeLapseMode(ctx); err != nil {
 		s.Error("Failed to switch to time-lapse mode")
 	}
-	// TODO(b/236800499): Test pausing/resuming the recording.
 	for _, tc := range []struct {
 		name    string
 		run     func(context.Context, *cca.App) error
@@ -46,6 +45,7 @@ func CCAUITimeLapse(ctx context.Context, s *testing.State) {
 		{"testSimpleRecording", testSimpleRecording, 2 * time.Minute},
 		{"testAutoSpeedRecording", testAutoSpeedRecording, 4 * time.Minute},
 		{"testRecordInMinimizedWindow", testRecordInMinimizedWindow, time.Minute},
+		{"testPauseResume", testPauseResumeTimeLapse, time.Minute},
 	} {
 		subTestCtx, cancel := context.WithTimeout(ctx, tc.timeout)
 		s.Run(subTestCtx, tc.name, func(ctx context.Context, s *testing.State) {
@@ -105,6 +105,48 @@ func testRecordInMinimizedWindow(ctx context.Context, app *cca.App) error {
 		return errors.Wrap(err, "failed to stop recording the time-lapse video")
 	}
 	expectedDuration := activeRecordTime + minimizedRecordTime + activeRecordTime
+	return validateTimeLapseDuration(ctx, app, fileInfo.Name(), expectedDuration)
+}
+
+// testPauseResumeTimeLapse tests recording time-lapse with pause/resume
+// operations during the recording.
+func testPauseResumeTimeLapse(ctx context.Context, app *cca.App) error {
+	startTime, err := app.StartRecording(ctx, cca.TimerOff)
+	if err != nil {
+		return errors.Wrap(err, "failed to start recording a time-lapse video")
+	}
+	if err := performActivityForDuration(ctx, "Record a time-lapse video", 5*time.Second); err != nil {
+		return err
+	}
+	// Pauses the recording for 10 seconds.
+	// TODO(b/281625728): Observe on the button UI instead of the state.
+	pausedTime, err := app.TriggerStateChange(ctx, "recording-paused", true, func() error {
+		if err := app.Click(ctx, cca.VideoPauseResumeButton); err != nil {
+			return errors.Wrap(err, "failed to pause the recording")
+		}
+		return nil
+	})
+	if err := performActivityForDuration(ctx, "Keep the recording paused", 10*time.Second); err != nil {
+		return err
+	}
+	// Resumes the recording for 5 more seconds.
+	resumedTime, err := app.TriggerStateChange(ctx, "recording-paused", false, func() error {
+		if err := app.Click(ctx, cca.VideoPauseResumeButton); err != nil {
+			return errors.Wrap(err, "failed to resume the recording")
+		}
+		return nil
+	})
+	if err := performActivityForDuration(ctx, "Continues recording after resuming", 5*time.Second); err != nil {
+		return err
+	}
+	// Stops the recording and verifies the video duration.
+	fileInfo, endTime, err := app.StopRecording(ctx, cca.TimerOff, startTime)
+	if err != nil {
+		return errors.Wrap(err, "failed to stop recording the time-lapse video")
+	}
+	pausedDuration := resumedTime.Sub(pausedTime)
+	totalDuration := endTime.Sub(startTime)
+	expectedDuration := totalDuration - pausedDuration
 	return validateTimeLapseDuration(ctx, app, fileInfo.Name(), expectedDuration)
 }
 
