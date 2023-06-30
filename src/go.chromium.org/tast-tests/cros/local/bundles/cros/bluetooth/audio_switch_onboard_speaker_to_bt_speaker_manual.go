@@ -161,6 +161,7 @@ func AudioSwitchOnboardSpeakerToBTSpeakerManual(ctx context.Context, s *testing.
 	if err := adapter.StartDiscovery(ctx); err != nil {
 		s.Fatal("Failed to enable discovery: ", err)
 	}
+	defer adapter.StopDiscovery(ctx)
 
 	if err := bluez.DisconnectAllDevices(ctx); err != nil {
 		s.Fatal("Failed to disconnect the devices: ", err)

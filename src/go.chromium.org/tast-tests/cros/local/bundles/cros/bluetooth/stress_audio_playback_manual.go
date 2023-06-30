@@ -28,7 +28,7 @@ type audioStress struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioPlaybackStress,
+		Func:         StressAudioPlaybackManual,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies audio playback over BT headset for long duration",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
@@ -59,9 +59,9 @@ func init() {
 	})
 }
 
-// AudioPlaybackStress plays audio file over BT speaker for long duration.
+// StressAudioPlaybackManual plays audio file over BT speaker for long duration.
 // Manual step: bluetooth.btDeviceName bluetooth device has to be set to pairing mode before executing test-script.
-func AudioPlaybackStress(ctx context.Context, s *testing.State) {
+func StressAudioPlaybackManual(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*chrome.Chrome)
 	testOpt := s.Param().(audioStress)
 
@@ -93,6 +93,7 @@ func AudioPlaybackStress(ctx context.Context, s *testing.State) {
 	if err := adapter.StartDiscovery(ctx); err != nil {
 		s.Fatal("Failed to enable discovery: ", err)
 	}
+	defer adapter.StopDiscovery(ctx)
 
 	// Waits for a specific BT device to be found.
 	var btDevice *bluez.Device

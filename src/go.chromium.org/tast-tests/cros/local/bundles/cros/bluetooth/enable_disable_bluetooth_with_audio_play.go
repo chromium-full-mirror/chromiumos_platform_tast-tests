@@ -89,6 +89,7 @@ func EnableDisableBluetoothWithAudioPlay(ctx context.Context, s *testing.State) 
 	if err := adapter.StartDiscovery(ctx); err != nil {
 		s.Fatal("Failed to enable discovery: ", err)
 	}
+	defer adapter.StopDiscovery(ctx)
 
 	// Waits for a specific BT device to be found.
 	var btDevice *bluez.Device

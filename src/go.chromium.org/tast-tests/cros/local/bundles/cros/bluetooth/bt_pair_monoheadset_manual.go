@@ -50,6 +50,7 @@ func BTPairMonoheadsetManual(ctx context.Context, s *testing.State) {
 	if err := adapter.StartDiscovery(ctx); err != nil {
 		s.Fatal("Failed to enable discovery: ", err)
 	}
+	defer adapter.StopDiscovery(ctx)
 
 	var btDevice *bluez.Device
 	if err := testing.Poll(ctx, func(ctx context.Context) error {

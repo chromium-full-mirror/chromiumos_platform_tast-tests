@@ -74,6 +74,7 @@ func AudioPlaybackVolumeSliderManual(ctx context.Context, s *testing.State) {
 	if err := adapter.StartDiscovery(ctx); err != nil {
 		s.Fatal("Failed to enable discovery: ", err)
 	}
+	defer adapter.StopDiscovery(ctx)
 
 	// Waits for a specific BT device to be found.
 	var btDevice *bluez.Device
@@ -127,7 +128,7 @@ func AudioPlaybackVolumeSliderManual(ctx context.Context, s *testing.State) {
 		Rate:          48000,
 		Frequencies:   []int{440, 440},
 		Volume:        0.05,
-		Duration:      30,
+		Duration:      60,
 	}
 	if err := audio.GenerateTestRawData(ctx, rawFile); err != nil {
 		s.Fatal("Failed to generate audio test data: ", err)
