@@ -30,7 +30,7 @@ func init() {
 		Params: []testing.Param{{
 			Name:              "battery_capacity",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryCapacity),
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 		}, {
 			Name:              "battery_health",
@@ -82,7 +82,7 @@ func init() {
 		}, {
 			Name:      "lan_connectivity",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineLanConnectivity),
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:      "signal_strength",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineSignalStrength),
@@ -98,19 +98,19 @@ func init() {
 		}, {
 			Name:      "dns_resolver_present",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:      "dns_latency",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineDNSLatency),
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:      "dns_resolution",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:      "captive_portal",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:      "http_firewall",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineHTTPFirewall),
@@ -183,7 +183,7 @@ func init() {
 		}, {
 			Name:      "disk_read",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineDiskRead),
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:      "power_button",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutinePowerButton),
