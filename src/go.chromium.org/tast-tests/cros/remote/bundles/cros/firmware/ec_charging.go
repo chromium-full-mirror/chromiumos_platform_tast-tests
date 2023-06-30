@@ -23,6 +23,8 @@ func init() {
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"js@semihalf.com",
+			"epeers@google.com",
+			"jbettis@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
@@ -31,6 +33,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.ui.PowerMenuService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
+		Timeout:      time.Hour,
 	})
 }
 
