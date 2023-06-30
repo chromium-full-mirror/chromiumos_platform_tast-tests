@@ -30,8 +30,6 @@ type TestConfig struct {
 	// ConnectToCameraService is the flag to connect to the cros-camera service,
 	// instead of loading camera HALs.
 	ConnectToCameraService bool
-	// PortraitModeTestData is the portrait mode test data to be downloaded.
-	PortraitModeTestData string
 	// Number of faces should be detected for face detection test.
 	ExpectedNumFaces string
 }
@@ -118,16 +116,6 @@ func StillCaptureTestConfig() TestConfig {
 func StreamTestConfig() TestConfig {
 	return TestConfig{
 		GtestFilter: "Camera3StreamTest/*",
-	}
-}
-
-// PortraitModeTestConfig returns test config for running HAL3PortraitMode test.
-func PortraitModeTestConfig(generatePerfLog bool, portraitModeTestFile string) TestConfig {
-	return TestConfig{
-		GtestFilter:            "Camera3PortraitModeTest/*",
-		ConnectToCameraService: true,
-		GeneratePerfLog:        generatePerfLog,
-		PortraitModeTestData:   portraitModeTestFile,
 	}
 }
 
