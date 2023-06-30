@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/mmconst"
@@ -233,7 +234,9 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 
 		apn := serviceLastAttachAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
 		expectedAPN := knownAPN.APNInfo[shillconst.DevicePropertyCellularAPNInfoApnName]
-		if knownAPN.IsAttachAPN() && apn != expectedAPN {
+		// Some US carriers allow any attach APN, so the test should not fail if the APN matches the wrong one inserted by the test.
+		ignoreAttachMismatch := testNewAPNUIRevamp && strings.HasPrefix(apn, "wrong-apn")
+		if knownAPN.IsAttachAPN() && apn != expectedAPN && !ignoreAttachMismatch {
 			if knownAPN.Optional {
 				continue
 			}
