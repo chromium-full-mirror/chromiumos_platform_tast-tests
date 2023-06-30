@@ -89,9 +89,9 @@ func init() {
 				Name:      "hidden",
 				ExtraAttr: []string{"wificell_suspend"},
 				Val: []suspendStressParam{
-					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(6), hostapd.Mode(hostapd.Mode80211g), hostapd.Hidden()}},
-					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(36), hostapd.Mode(hostapd.Mode80211nPure), hostapd.Hidden(), hostapd.HTCaps(hostapd.HTCapHT20)}},
-					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(48), hostapd.Mode(hostapd.Mode80211nPure), hostapd.Hidden(), hostapd.HTCaps(hostapd.HTCapHT20)}},
+					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(6), hostapd.Mode(hostapd.Mode80211g), hostapd.Hidden(), hostapd.SpectrumManagement()}},
+					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(36), hostapd.Mode(hostapd.Mode80211nPure), hostapd.Hidden(), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.SpectrumManagement()}},
+					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(48), hostapd.Mode(hostapd.Mode80211nPure), hostapd.Hidden(), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.SpectrumManagement()}},
 				},
 				ExtraRequirements: []string{tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 			},
