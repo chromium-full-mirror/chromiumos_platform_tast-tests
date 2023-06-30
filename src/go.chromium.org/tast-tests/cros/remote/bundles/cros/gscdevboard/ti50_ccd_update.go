@@ -65,9 +65,10 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	}
 
 	i := ti50.NewCrOSImage(b)
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	// Wait for reboot output to finish before reading version.
-	testing.Sleep(ctx, 1*time.Second) // GoBigSleepLint: TODO(b/278113474) fix this
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	outStr, err := i.Command(ctx, "version")
 	if err != nil {
@@ -101,7 +102,7 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for reboot output to finish before reading version.
-	testing.Sleep(ctx, 1*time.Second) // GoBigSleepLint: TODO(b/278113474) fix this
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	outStr, err = i.Command(ctx, "version")
 	if err != nil {
@@ -137,7 +138,7 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for reboot output to finish before reading version.
-	testing.Sleep(ctx, 1*time.Second) // GoBigSleepLint: TODO(b/278113474) fix this
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	outStr, err = i.Command(ctx, "version")
 	if err != nil {

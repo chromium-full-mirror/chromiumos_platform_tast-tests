@@ -20,8 +20,8 @@ type CrOSImage struct {
 
 // NewCrOSImage creates a new CrOSImage.
 func NewCrOSImage(board DevBoard) *CrOSImage {
-	// Allow for timestamp to be present before prompt "[ 999999.999] > " or just "> "
-	return &CrOSImage{CommandImage: NewCommandImage(board, "\r", "\n(\\[[ 0-9.]+\\] )?> ")}
+	// Allow for timestamp to be present before prompt "[ 999999.999 C] > " or just "> "
+	return &CrOSImage{CommandImage: NewCommandImage(board, "\n", "^(\\[[ 0-9.]+.\\] )?> ")}
 }
 
 // WaitUntilBooted waits until the image is fully booted.

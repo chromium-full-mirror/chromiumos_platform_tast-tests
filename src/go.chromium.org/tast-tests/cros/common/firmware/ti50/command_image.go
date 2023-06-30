@@ -34,7 +34,7 @@ type CommandImage struct {
 }
 
 // NewCommandImage creates a new CommandImage. Typical examples of promptCmd and
-// promptPattern are "\r" and "\n\r> " respectively.
+// promptPattern are "\n" and "> " respectively.
 func NewCommandImage(board DevBoard, promptCmd, promptPattern string) *CommandImage {
 	return &CommandImage{board, promptCmd, promptPattern, regexp.MustCompile(promptPattern)}
 }
@@ -64,7 +64,9 @@ func (i *CommandImage) RawCommand(ctx context.Context, rawCmd string, re *regexp
 // command up to the next prompt.
 func (i *CommandImage) Command(ctx context.Context, cmd string) (string, error) {
 	rawCmd := cmd + i.promptCmd
-	matches, err := i.RawCommand(ctx, rawCmd, regexp.MustCompile("(?s)"+regexp.QuoteMeta(rawCmd)+"(.*)"+i.promptPattern))
+	// (?s) for dot matches newline, for multiple lines of output within (.*)
+	// (?m) for ^ matches start of each line, for ^ in promptPattern.
+	matches, err := i.RawCommand(ctx, rawCmd, regexp.MustCompile("(?sm)"+regexp.QuoteMeta(cmd)+"(.*)"+i.promptPattern))
 	if err != nil {
 		return "", err
 	}
