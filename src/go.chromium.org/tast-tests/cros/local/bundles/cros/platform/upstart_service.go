@@ -31,14 +31,16 @@ type UpstartService struct {
 
 // CheckJob validates that the given upstart job is running.
 func (*UpstartService) CheckJob(ctx context.Context, request *platform.CheckJobRequest) (*empty.Empty, error) {
-	return &empty.Empty{}, upstart.CheckJob(ctx, request.JobName)
+	args := unpackRequestArgs(request.GetArgs())
+	return &empty.Empty{}, upstart.CheckJob(ctx, request.JobName, args...)
 }
 
 // JobStatus returns the current status of job.
 // If the PID is unavailable (i.e. the process is not running), 0 will be returned.
 // An error will be returned if the job is unknown (i.e. it has no config in /etc/init).
 func (*UpstartService) JobStatus(ctx context.Context, request *platform.JobStatusRequest) (*platform.JobStatusResponse, error) {
-	goal, state, pid, err := upstart.JobStatus(ctx, request.JobName)
+	args := unpackRequestArgs(request.GetArgs())
+	goal, state, pid, err := upstart.JobStatus(ctx, request.JobName, args...)
 	return &platform.JobStatusResponse{
 		Goal:  string(goal),
 		State: string(state),
@@ -48,16 +50,14 @@ func (*UpstartService) JobStatus(ctx context.Context, request *platform.JobStatu
 
 // StartJob starts job. If it is already running, this returns an error.
 func (*UpstartService) StartJob(ctx context.Context, request *platform.StartJobRequest) (*empty.Empty, error) {
-	var args []upstart.Arg
-	for _, arg := range request.GetArgs() {
-		args = append(args, upstart.WithArg(arg.GetKey(), arg.GetValue()))
-	}
+	args := unpackRequestArgs(request.GetArgs())
 	return &empty.Empty{}, upstart.StartJob(ctx, request.JobName, args...)
 }
 
 // StopJob stops job. If it is not currently running, this is a no-op.
 func (*UpstartService) StopJob(ctx context.Context, request *platform.StopJobRequest) (*empty.Empty, error) {
-	return &empty.Empty{}, upstart.StopJob(ctx, request.JobName)
+	args := unpackRequestArgs(request.GetArgs())
+	return &empty.Empty{}, upstart.StopJob(ctx, request.JobName, args...)
 }
 
 // EnableJob enables an upstart job that was previously disabled.
@@ -78,11 +78,23 @@ func (*UpstartService) IsJobEnabled(ctx context.Context, request *platform.IsJob
 
 // WaitForJobStatus waits for the given upstart job to have the status described by goal/state.
 func (*UpstartService) WaitForJobStatus(ctx context.Context, request *platform.WaitForJobStatusRequest) (*empty.Empty, error) {
+	args := unpackRequestArgs(request.GetArgs())
 	return &empty.Empty{}, upstart.WaitForJobStatus(ctx,
 		request.JobName,
 		upstartcommon.Goal(request.Goal),
 		upstartcommon.State(request.State),
 		upstart.TolerateWrongGoal,
 		request.Timeout.AsDuration(),
+		args...,
 	)
+}
+
+// unpackRequestArgs unpacks the grpc request Arg slice into an upstart.Arg
+// slice.
+func unpackRequestArgs(requestArgs []*platform.Arg) []upstart.Arg {
+	var args []upstart.Arg
+	for _, arg := range requestArgs {
+		args = append(args, upstart.WithArg(arg.GetKey(), arg.GetValue()))
+	}
+	return args
 }
