@@ -31,7 +31,7 @@ func addDevAndroidFixtures() {
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 		},
-		Parent:          "nearbyShareGAIALoginAndroidAccountDev",
+		Parent:          "nearbyShareGAIALoginDev",
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,

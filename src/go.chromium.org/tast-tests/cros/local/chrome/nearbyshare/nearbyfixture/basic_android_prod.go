@@ -31,7 +31,7 @@ func addProdAndroidFixtures() {
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 		},
-		Parent:          "nearbyShareGAIALoginAndroidAccountProd",
+		Parent:          "nearbyShareGAIALoginProd",
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,

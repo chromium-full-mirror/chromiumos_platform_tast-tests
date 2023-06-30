@@ -32,7 +32,7 @@ func addFlossModulefoodAndroidFixtures() {
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 		},
-		Parent:          "nearbyShareGAIALoginAndroidAccountFloss",
+		Parent:          "nearbyShareGAIALoginFloss",
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -43,7 +43,7 @@ func addFlossModulefoodAndroidFixtures() {
 	testing.AddFixture(&testing.Fixture{
 		Name:   "nearbyShareDataUsageOnlineAllContactsFloss",
 		Desc:   "Nearby Share enabled on CrOS and Android configured with 'Data Usage' set to 'Online',  'Visibility' set to 'All Contacts'",
-		Parent: "nearbyShareGAIALoginAndroidAccountFloss",
+		Parent: "nearbyShareGAIALoginFloss",
 		Impl: NewNearbyShareFixture(fixtureOptions{
 			crosDataUsage:              nearbycommon.DataUsageOnline,
 			crosVisibility:             nearbycommon.VisibilityAllContacts,
