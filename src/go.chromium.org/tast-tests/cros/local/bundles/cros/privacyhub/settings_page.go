@@ -85,7 +85,8 @@ func init() {
 					checkMicrophoneControl: true,
 					checkLocationControl:   true,
 				},
-				ExtraAttr: []string{"group:mainline"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(goldenModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			// Legacy to be removed before V0 is removed from chromium.
 			{
