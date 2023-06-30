@@ -130,7 +130,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		fullURL := inputURL
 		jsonURL := ""
 		// Assume URL is a build folder if it doesn't end in .bin.
-		if strings.HasSuffix(inputURL, ".bin") {
+		if !strings.HasSuffix(inputURL, ".bin") {
 			tastURL := gsPrefix + filepath.Join(inputURL[len(gsPrefix):], "tast")
 			args := []string{"ls", tastURL}
 			testing.ContextLogf(ctx, "Looking for tast directory: gsutil %s", strings.Join(args, " "))
