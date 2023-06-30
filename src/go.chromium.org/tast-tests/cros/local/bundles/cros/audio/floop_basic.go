@@ -70,7 +70,15 @@ func FloopBasic(ctx context.Context, s *testing.State) {
 		s.Fatal("RequestFloopMask failed for mask=1: ", err)
 	}
 
-	// TODO(b/227449103): Test the same mask results in the same device id.
+	tempDev, err := crastestclient.RequestFloopMask(ctx, 1)
+	if err != nil {
+		s.Fatal("RequestFloopMask failed for mask=1: ", err)
+	}
+	if tempDev != dev1 {
+		s.Errorf("consecutive RequestFloopMask with same masks returned different devices: first -> %d; second -> %d",
+			dev1, tempDev,
+		)
+	}
 
 	dev2, err := crastestclient.RequestFloopMask(ctx, 2)
 	if err != nil {
