@@ -337,6 +337,17 @@ func TestPlaybackPerfParams(t *testing.T) {
 		}
 	}
 
+	for _, codec := range []string{"h264", "vp9", "av1"} {
+		resolution, fps, dec := 1080, 30, "hw"
+		file := playbackPerfLongFile[codec]
+		param := genPlaybackParam(codec, file, resolution, fps, dec,
+			"intel_mc", "chromeVideoWithIntelMediaCompression",
+			[]string{})
+		param.HardwareDeps = "hwdep.GPUFamily([]string{\"meteorlake\", \"alderlake\", \"raptorlake\"})"
+		param.MeasureRoughness = true
+		params = append(params, param)
+	}
+
 	code := genparams.Template(t, `{{ range . }}{
 		Name: {{ .Name | fmt }},
 		Val:  playbackPerfParams{

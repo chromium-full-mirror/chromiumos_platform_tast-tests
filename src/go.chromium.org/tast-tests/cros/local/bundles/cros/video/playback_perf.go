@@ -1862,6 +1862,45 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 				Fixture:           "chromeVideoWithGlobalVaapiLockDisabled",
 			},
+			{
+				Name: "h264_1080p_30fps_hw_intel_mc",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080.mp4",
+					decoderType:      0,
+					browserType:      browser.TypeAsh,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.GPUFamily([]string{"meteorlake", "alderlake", "raptorlake"})),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
+				ExtraData:         []string{"crosvideo/1080.mp4"},
+				Fixture:           "chromeVideoWithIntelMediaCompression",
+			},
+			{
+				Name: "vp9_1080p_30fps_hw_intel_mc",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080.webm",
+					decoderType:      0,
+					browserType:      browser.TypeAsh,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.GPUFamily([]string{"meteorlake", "alderlake", "raptorlake"})),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30"},
+				ExtraData:         []string{"crosvideo/1080.webm"},
+				Fixture:           "chromeVideoWithIntelMediaCompression",
+			},
+			{
+				Name: "av1_1080p_30fps_hw_intel_mc",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/av1_1080p_30fps.mp4",
+					decoderType:      0,
+					browserType:      browser.TypeAsh,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.GPUFamily([]string{"meteorlake", "alderlake", "raptorlake"})),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
+				ExtraData:         []string{"crosvideo/av1_1080p_30fps.mp4"},
+				Fixture:           "chromeVideoWithIntelMediaCompression",
+			},
 		},
 	})
 }
