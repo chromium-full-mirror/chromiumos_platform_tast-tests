@@ -70,8 +70,6 @@ const (
 
 	// Temporary directory to store copy of non-ureadahead cache artifacts prior
 	// to running genUreadaheadPack.
-	// TODO(b/279554423): Eventually enable this for container-rvc and vm-rvc
-	// devices after initial experiments are conducted on pi-container and vm-tm.
 	tmpContainerCacheArtifactsRoot = "/mnt/stateful_partition/unencrypted/apkcache/data_collector"
 	tmpVMCacheArtifactsRoot        = "/var/run/arcvm/testharness/data_collector"
 )
@@ -608,8 +606,8 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to get %q from the device: %v", response.PackagesCacheName, err)
 		}
 
-		// TODO(b/279554423): Only use dev caches in local builds until all caches are
-		// installed and extra verification checks are in place.
+		// TODO(b/279554423): Eventually enable this for container-rvc, vm-rvc, pi-arc,
+		// vm-tm devices after initial experiments are conducted on local.
 		if useDevCaches && !param.upload {
 			testing.ContextLogf(ctx, "Installing GMS core caches into dev directory: %q", tmpCachesDir)
 			if err := decompressSystemImage(ctx, d, param.vmEnabled, tempDir); err != nil {
@@ -740,11 +738,8 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// TODO(b/279554423): Add post-processing steps for cache artifacts in tmpCachesDir
-	// after https://crrev.com/c/4485622 lands.
 	// Make sure ureadahead pack generation is the last data to be generated and
-	// collected because it depends on other caches being pre-installed in the
-	// system to operate correctly.
+	// collected since it depends on other caches being pre-installed in the system.
 	attempts = 0
 	for {
 		err := genUreadaheadPack()
