@@ -75,7 +75,7 @@ func checkCharging(ctx context.Context, h *firmware.Helper, s *testing.State) {
 	}
 	if (chargingInt(cs["batt.desired_current"], "mA") < 100) &&
 		(chargingInt(cs["batt.state_of_charge"], "%") < 100) {
-		s.Fatalf("Trickling charging battery? Need more discharge? (desired current: %s)",
+		s.Fatalf("Trickle charging battery? Need more discharge? (desired current: %s)",
 			cs["batt.desired_current"])
 	}
 
@@ -156,11 +156,6 @@ func connectCharger(ctx context.Context, h *firmware.Helper, s *testing.State) {
 // and current to determine its charging circuitry and EC
 // reporting is working as intended
 func ECCharging(ctx context.Context, s *testing.State) {
-	const (
-		// TrickleChargingThreshold is the current in mA below which is classified as a trickle charge.
-		TrickleChargingThreshold = 100
-	)
-
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -169,9 +164,10 @@ func ECCharging(ctx context.Context, s *testing.State) {
 	cleanup := setupChan(ctx, h, s) // Make things quiet.
 	defer cleanup()
 
-	if getBatteryPercent(ctx, h, s) > 95 {
-		// TODO: Convert this code to either poll against target battery percent
-		// or use the power facilities (requires test conv)
+	// Dewatt requested 0mA at 95%. 94% had a request. Picked 93 for a bit of margin.
+	targetDischarge := 93
+
+	if getBatteryPercent(ctx, h, s) > targetDischarge {
 		s.Log("Initiating battery discharging")
 		disconnectCharger(ctx, h, s)
 
@@ -179,18 +175,28 @@ func ECCharging(ctx context.Context, s *testing.State) {
 		// browser services on its initialization, we cannot easily
 		// use Chrome for battery drain procedure. Instead, we can
 		// simply spawn stress-ng (which seems to be available in
-		// base rootfs) for specified amount of time
-		// In the future, it might be more valuable to just create
-		// the dedicated stressing service on DUT which will also
-		// allow to monitor the battery status live
-
+		// base rootfs) for specified amount of time.
+		// See also battery_service.go:DrainBattery
 		const stressingScript = `
-			cd /tmp; stress-ng --cpu 32 --timeout 4m
+			cd /tmp; stress-ng --cpu 32 --timeout 1m
 	`
-		s.Log("Stressing CPU to discharge battery")
-		if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", stressingScript).Run(); err != nil {
-			s.Fatal("Failed to discharge battery using CPU stress: ", err)
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			s.Log("Stressing CPU to discharge battery")
+			if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", stressingScript).Run(); err != nil {
+				s.Fatal("Failed to discharge battery using CPU stress: ", err)
+			}
+
+			currentBatteryPercent := getBatteryPercent(ctx, h, s)
+			if currentBatteryPercent > targetDischarge {
+				return errors.Errorf("Not enough battery discharged: %d, want %d", currentBatteryPercent, targetDischarge)
+			}
+
+			return nil
+			// poll at 1s since the stress script will block progress for 1 minute
+		}, &testing.PollOptions{Timeout: time.Hour, Interval: time.Second}); err != nil {
+			s.Fatal("Failed to discharge battery : ", err)
 		}
+
 		s.Log("Whew! That was stressful. Go back to charging")
 		connectCharger(ctx, h, s)
 	}
