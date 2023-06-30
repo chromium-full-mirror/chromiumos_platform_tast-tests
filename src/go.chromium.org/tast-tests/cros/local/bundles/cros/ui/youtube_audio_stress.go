@@ -133,7 +133,7 @@ func YoutubeAudioStress(ctx context.Context, s *testing.State) {
 
 	var videoSource = youtube.VideoSrc{
 		URL:     "https://www.youtube.com/watch?v=g3PWYH1P7Oo",
-		Title:   "12 Hours Of Tropical Coral Reef Fishes At Monterey Bay Aquarium | Littoral Relaxocean - YouTube",
+		Title:   "12 Hours Of Tropical Coral Reef Fishes At Monterey Bay Aquarium | Littoral Relaxocean",
 		Quality: "1080p60",
 	}
 	// Create an instance of YtWeb to perform actions on youtube web.
