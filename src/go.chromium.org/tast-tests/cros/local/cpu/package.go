@@ -214,7 +214,7 @@ func ReadPackageCStates(perPackageCPUs []int, pCStates map[string]int64) (map[st
 	ret[aggregateNonC0C1Key] = 0
 
 	for _, cpu := range perPackageCPUs {
-		tsc, err := readMSR(0x10, 0)
+		tsc, err := readMSR(0x10, cpu)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read tsc value")
 		}
