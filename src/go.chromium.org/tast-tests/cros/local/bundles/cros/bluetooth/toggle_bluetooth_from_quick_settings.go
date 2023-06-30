@@ -8,8 +8,12 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/local/bluetooth"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -42,16 +46,8 @@ func init() {
 // the Bluetooth state using the Bluetooth feature pod icon button within the
 // Quick Settings.
 func ToggleBluetoothFromQuickSettings(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn := s.FixtValue().(bluetooth.HasTconn).Tconn()
-
-	// The Quick Settings is collapsed to avoid being taken to the detailed
-	// Bluetooth view when we press the Bluetooth feature pod icon button
-	// and it enables Bluetooth.
-	if err := quicksettings.Collapse(ctx, tconn); err != nil {
-		s.Fatal("Failed to collapse the Quick Settings: ", err)
-	}
-	defer quicksettings.Expand(ctx, tconn)
-
 	bt := s.FixtValue().(bluetooth.HasBluetoothImpl).BluetoothImpl()
 
 	if err := bt.Enable(ctx); err != nil {
@@ -60,16 +56,40 @@ func ToggleBluetoothFromQuickSettings(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
+
+	if err := quicksettings.Show(ctx, tconn); err != nil {
+		s.Fatal("Failed to show quick settings: ", err)
+	}
+	defer quicksettings.Hide(ctx, tconn)
+
+	// Dump UI tree while quick settings is open.
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
+
 	state := false
 	const iterations = 20
 	for i := 0; i < iterations; i++ {
 		s.Logf("Toggling Bluetooth (iteration %d of %d)", i+1, iterations)
 
-		if err := ui.LeftClick(quicksettings.PodIconButton(quicksettings.SettingPodBluetooth))(ctx); err != nil {
+		if err := ui.LeftClick(quicksettings.FeatureTileBluetoothToggle)(ctx); err != nil {
 			s.Fatal("Failed to click the Bluetooth feature pod icon button: ", err)
 		}
 		if err := bt.PollForAdapterState(ctx, state); err != nil {
 			s.Fatal("Failed to toggle Bluetooth state: ", err)
+		}
+		if state {
+			// Enabling bluetooth takes us to the bluetooth detailed page.
+			// Navigate back to the main page.
+			previousMenu := nodewith.Role(role.Button).NameContaining("Previous menu")
+			if err := uiauto.Combine("navigate back to main page",
+				ui.WaitUntilExists(previousMenu),
+				ui.DoDefault(previousMenu))(ctx); err != nil {
+				s.Fatal("Failed to click on previous menu button: ", err)
+			}
 		}
 		state = !state
 	}

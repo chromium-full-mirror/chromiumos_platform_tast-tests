@@ -46,7 +46,7 @@ func (svc *OobeHidBluetoothService) NewChrome(ctx context.Context, req *pb.NewCh
 		chrome.EnableHIDScreenOnOOBE(),
 		chrome.LoadSigninProfileExtension(req.SigninProfileTestExtension),
 		chrome.EnableFeatures(
-			"OobeHidDetectionRevamp",
+			"OobeHidDetectionRevamp", "QsRevamp",
 		),
 	}
 	cr, err := chrome.New(ctx, chromeOpts...)
@@ -150,17 +150,20 @@ func (svc *OobeHidBluetoothService) DisableBluetoothFromQuickSettings(ctx contex
 		return nil, errors.Wrap(err, "failed to create the signin profile test API connection")
 	}
 
-	// The Quick Settings is collapsed to avoid being taken to the detailed
-	// Bluetooth view when we press the Bluetooth feature pod icon button
-	// and it enables Bluetooth.
-	if err := quicksettings.Collapse(ctx, tconn); err != nil {
-		return nil, errors.Wrap(err, "failed to collapse the Quick Settings")
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to init quicksettings")
 	}
-	defer quicksettings.Expand(ctx, tconn)
+	defer cleanup()
+
+	if err := quicksettings.Show(ctx, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to show quick settings")
+	}
+	defer quicksettings.Hide(ctx, tconn)
 
 	ui := uiauto.New(tconn)
-	if err := ui.LeftClick(quicksettings.PodIconButton(quicksettings.SettingPodBluetooth))(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to click the Bluetooth feature pod icon button")
+	if err := ui.LeftClick(quicksettings.FeatureTileBluetoothToggle)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to click the Bluetooth feature tile toggle button")
 	}
 
 	// TODO(b/242071154): Add floss implementation.

@@ -10,6 +10,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bluetooth"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast/core/testing"
 )
@@ -58,9 +59,18 @@ func PairNewDeviceFromBluetoothQuickSettings(ctx context.Context, s *testing.Sta
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn := s.FixtValue().(bluetooth.HasTconn).Tconn()
 
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
+
 	if err := quicksettings.NavigateToBluetoothDetailedView(ctx, tconn); err != nil {
 		s.Fatal("Failed to navigate to the detailed Bluetooth view: ", err)
 	}
+	defer quicksettings.Hide(ctx, tconn)
+
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	bt := s.FixtValue().(bluetooth.HasBluetoothImpl).BluetoothImpl()
 

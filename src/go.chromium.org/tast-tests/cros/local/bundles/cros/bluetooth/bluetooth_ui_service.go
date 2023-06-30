@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bluetooth"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
@@ -263,14 +264,29 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
 	}
 
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to init quicksettings")
+	}
+	defer cleanup()
+
 	if err := quicksettings.NavigateToBluetoothDetailedView(ctx, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to the detailed Bluetooth view")
 	}
-
 	defer quicksettings.Hide(ctx, tconn)
 
+	// On failure, dump the UI tree while quick settings is open.
+	contextOutDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return nil, errors.New("failed to get the context output directory")
+	}
+	defer faillog.DumpUITree(ctx, contextOutDir, tconn)
+
 	ui := uiauto.New(tconn)
-	if err := ui.LeftClickUntil(quicksettings.BluetoothDetailedViewPairNewDeviceButton,
+	// Pre-QsRevamp there are two buttons labeled "Pair new device" (the whole
+	// HoverHighlightView and the plus icon), so click the first one.
+	// Post-QsRevamp there is only one button labeled "Pair new device".
+	if err := ui.LeftClickUntil(quicksettings.BluetoothDetailedViewPairNewDeviceButton.First(),
 		ui.Exists(quicksettings.BluetoothPairNewDeviceDialog))(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to open the pairing dialog")
 	}

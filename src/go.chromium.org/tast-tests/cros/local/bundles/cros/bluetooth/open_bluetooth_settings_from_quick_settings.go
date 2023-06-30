@@ -49,6 +49,12 @@ func OpenBluetoothSettingsFromQuickSettings(ctx context.Context, s *testing.Stat
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn := s.FixtValue().(bluetooth.HasTconn).Tconn()
 
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
+
 	if err := quicksettings.NavigateToBluetoothDetailedView(ctx, tconn); err != nil {
 		s.Fatal("Failed to navigate to the detailed Bluetooth view: ", err)
 	}
