@@ -163,6 +163,11 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		return nil, errors.Wrap(err, "failed to create test API connection")
 	}
 
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return nil, errors.New("failed to get name of the output directory")
+	}
+
 	// Drop caches before starting ureadahead generation.
 	if err := disk.DropCaches(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to drop caches")
@@ -180,7 +185,7 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		vmLogPath = filepath.Join(ureadaheadDataDir, vmLogName)
 
 		// Pull and obtain ARCVM pack from guest OS and dump pack file content to log.
-		vmPackPath, err = getGuestPack(ctx, vmLogPath, request.UseDevCaches)
+		vmPackPath, err = getGuestPack(ctx, outDir, vmLogPath, request.UseDevCaches)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain ureadahead pack from ARCVM guest OS")
 		}
@@ -309,6 +314,15 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		if err = ureadahead.CheckPackFileDump(ctx, logPath, minAcceptableHostPackSizeKB); err != nil {
 			return nil, errors.Wrapf(err, "failed to verify host ureadahead pack file dump, please check %q", logName)
 		}
+
+		a, err := arc.New(ctx, outDir)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not connect to ARC Container")
+		}
+
+		if err := verifyDevCachesInstalled(ctx, a, request.UseDevCaches); err != nil {
+			return nil, errors.Wrap(err, "failed to verify dev caches were installed during tracing")
+		}
 	}
 
 	response := arcpb.UreadaheadPackResponse{
@@ -398,7 +412,7 @@ func verifyTracedServicesStopped(ctx context.Context, a *arc.ARC) error {
 }
 
 // getGuestPack pulls ureadahead initial pack for requested Chrome login mode from guest OS.
-func getGuestPack(ctx context.Context, logPath string, useDevCaches bool) (string, error) {
+func getGuestPack(ctx context.Context, outDir, logPath string, useDevCaches bool) (string, error) {
 	const (
 		ureadaheadDataDir = "/var/lib/ureadahead"
 
@@ -416,15 +430,10 @@ func getGuestPack(ctx context.Context, logPath string, useDevCaches bool) (strin
 		return "", errors.Wrapf(err, "failed to clean up %s on the host", packPath)
 	}
 
-	outDir, ok := testing.ContextOutDir(ctx)
-	if !ok {
-		return "", errors.New("failed to get name of the output directory")
-	}
-
 	// Connect to ARCVM instance.
 	a, err := arc.New(ctx, outDir)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to connect ARCVM")
+		return "", errors.Wrap(err, "could not connect to ARCVM")
 	}
 	defer a.Close(ctx)
 
@@ -450,15 +459,11 @@ func getGuestPack(ctx context.Context, logPath string, useDevCaches bool) (strin
 
 	// Verify ureadahead exited which is triggered by opt-in completion.
 	if value, err := a.GetProp(ctx, "dev.arc.ureadahead.exit"); err != nil || value != "1" {
-		return "", errors.Wrap(err, "failed to verify ureadahead to exited")
+		return "", errors.Wrap(err, "failed to verify ureadahead exited")
 	}
 
-	if useDevCaches {
-		// Confirm dev caches were installed properly by arccachesetup service.
-		// Value of 3 corresponds to GMS Core, Packages and File Hashes caches.
-		if value, err := a.GetProp(ctx, "dev.arc.caches_installed"); err != nil || value != "3" {
-			return "", errors.Wrap(err, "failed to verify dev caches installed correctly")
-		}
+	if err := verifyDevCachesInstalled(ctx, a, useDevCaches); err != nil {
+		return "", errors.Wrap(err, "failed to verify dev caches were installed during tracing")
 	}
 
 	// Check for existence of newly generated pack file on guest side and get size.
@@ -488,4 +493,15 @@ func getGuestPack(ctx context.Context, logPath string, useDevCaches bool) (strin
 	}
 
 	return packPath, nil
+}
+
+// verifyDevCachesInstalled verifies dev caches were installed properly by arccachesetup service.
+func verifyDevCachesInstalled(ctx context.Context, a *arc.ARC, useDevCaches bool) error {
+	if useDevCaches {
+		// Value of 3 corresponds to GMS Core, Packages and File Hashes caches.
+		if value, err := a.GetProp(ctx, "dev.arc.caches_installed"); err != nil || value != "3" {
+			return errors.Wrap(err, "failed to verify dev caches installed correctly")
+		}
+	}
+	return nil
 }

@@ -169,7 +169,7 @@ func init() {
 				uprevBranch:             false,
 				dexOptCacheGen:          false,
 				dataDir:                 "",
-				tmpCachesDir:            tmpContainerCacheArtifactsRoot,
+				tmpCachesDir:            "",
 			},
 		}, {
 			Name:              "container_r",
@@ -183,7 +183,7 @@ func init() {
 				uprevBranch:             false,
 				dexOptCacheGen:          false,
 				dataDir:                 "",
-				tmpCachesDir:            "",
+				tmpCachesDir:            tmpContainerCacheArtifactsRoot,
 			},
 		}, {
 			Name:              "vm_r",
@@ -224,7 +224,7 @@ func init() {
 				uprevBranch:             false,
 				dexOptCacheGen:          false,
 				dataDir:                 "/tmp/data_collector",
-				tmpCachesDir:            tmpContainerCacheArtifactsRoot,
+				tmpCachesDir:            "",
 			},
 		}, {
 			Name:              "container_r_local",
@@ -237,7 +237,7 @@ func init() {
 				uprevBranch:             false,
 				dexOptCacheGen:          false,
 				dataDir:                 "/tmp/data_collector",
-				tmpCachesDir:            "",
+				tmpCachesDir:            tmpContainerCacheArtifactsRoot,
 			},
 		}, {
 			Name:              "vm_r_local",
@@ -610,7 +610,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 
 		if useDevCaches {
 			testing.ContextLogf(ctx, "Installing GMS core caches into dev directory: %q", tmpCachesDir)
-			// TODO(b/289858912): Find workaround for raw images not available in non-local builds.
+			// TODO(b/289858912): Find workaround for unsquashfs not available in Uprev.
 			if err := decompressSystemImage(ctx, d, param.vmEnabled, tempDir); err != nil {
 				s.Fatal("Failed to decompress system image: ", err)
 			}
