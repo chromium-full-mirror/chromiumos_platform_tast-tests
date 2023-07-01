@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/ui/geekbench5_x86_64_20230630",
+  "size": 57511816,
+  "sha256sum": "bb0c4bc97fc09f823f03c834ccfd4160426ccd8b373b6e2229a644928d6e38d7"
+}
