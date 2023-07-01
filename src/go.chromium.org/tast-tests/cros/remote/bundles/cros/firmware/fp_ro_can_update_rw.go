@@ -74,7 +74,7 @@ func testFlashingRWFirmware(ctx context.Context, d *rpcdut.RPCDUT, params *testR
 // firmware with version string that ends in '.dev' (also has rollback ID '0')
 // and validates that it is running.
 func FpROCanUpdateRW(ctx context.Context, s *testing.State) {
-	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint(), "cros")
+	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect RPCDUT: ", err)
 	}

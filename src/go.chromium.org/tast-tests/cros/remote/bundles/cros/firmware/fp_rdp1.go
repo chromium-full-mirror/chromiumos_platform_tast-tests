@@ -57,7 +57,7 @@ func init() {
 // that the bytes in the output are all 0xFF and that the firmware is no longer
 // functional.
 func FpRDP1(ctx context.Context, s *testing.State) {
-	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint(), "cros")
+	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect RPCDUT: ", err)
 	}

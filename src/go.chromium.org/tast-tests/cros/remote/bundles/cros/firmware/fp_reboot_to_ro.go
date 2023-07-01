@@ -36,7 +36,7 @@ func init() {
 }
 
 func FpRebootToRO(ctx context.Context, s *testing.State) {
-	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint(), "cros")
+	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect RPCDUT: ", err)
 	}

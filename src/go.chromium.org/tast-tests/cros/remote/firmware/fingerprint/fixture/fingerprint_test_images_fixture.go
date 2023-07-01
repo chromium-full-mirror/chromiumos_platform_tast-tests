@@ -79,7 +79,7 @@ func devKeyForFPBoard(fpBoard fp.BoardName) string {
 }
 
 func (f *fingerprintImagesFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	dut, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint(), "cros")
+	dut, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect RPCDUT: ", err)
 	}
@@ -116,7 +116,7 @@ func (f *fingerprintImagesFixture) SetUp(ctx context.Context, s *testing.FixtSta
 }
 
 func (f *fingerprintImagesFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	dut, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint(), "cros")
+	dut, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect RPCDUT: ", err)
 	}

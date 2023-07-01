@@ -57,7 +57,7 @@ func (ServicesOnBootFixt) SetUp(ctx context.Context, s *testing.FixtState) inter
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, servicesOnBootCleanupTimeout)
 	defer cancel()
 
-	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint(), "cros")
+	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect RPCDUT: ", err)
 	}

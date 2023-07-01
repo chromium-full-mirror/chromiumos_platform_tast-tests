@@ -43,7 +43,7 @@ func init() {
 // wpsw_cur value (from crossystem) reports WP state properly and check if
 // WP state reported by FPMCU is also correct.
 func FpCheckWriteProtect(ctx context.Context, s *testing.State) {
-	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint(), "cros")
+	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect RPCDUT: ", err)
 	}

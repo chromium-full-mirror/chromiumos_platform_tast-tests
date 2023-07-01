@@ -30,15 +30,14 @@ import (
 //
 // Note that this implementation is not thread safe.
 type RPCDUT struct {
-	d          *dut.DUT
-	h          *testing.RPCHint
-	bundleName string
-	cl         *rpc.Client
+	d  *dut.DUT
+	h  *testing.RPCHint
+	cl *rpc.Client
 }
 
 // NewRPCDUT creates a new RPCDUT with a dialed rpc connection.
-func NewRPCDUT(ctx context.Context, d *dut.DUT, h *testing.RPCHint, bundleName string) (*RPCDUT, error) {
-	rd := &RPCDUT{d: d, h: h, bundleName: bundleName}
+func NewRPCDUT(ctx context.Context, d *dut.DUT, h *testing.RPCHint) (*RPCDUT, error) {
+	rd := &RPCDUT{d: d, h: h}
 
 	if err := rd.RPCDial(ctx); err != nil {
 		return nil, err

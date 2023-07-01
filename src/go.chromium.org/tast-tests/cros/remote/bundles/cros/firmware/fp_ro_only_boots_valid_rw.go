@@ -70,7 +70,7 @@ func testFlashingFirmwareVersion(ctx context.Context, d *rpcdut.RPCDUT, params *
 }
 
 func FpROOnlyBootsValidRW(ctx context.Context, s *testing.State) {
-	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint(), "cros")
+	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect RPCDUT: ", err)
 	}

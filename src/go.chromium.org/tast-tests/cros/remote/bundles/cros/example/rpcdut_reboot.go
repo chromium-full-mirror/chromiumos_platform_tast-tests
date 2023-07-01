@@ -52,7 +52,7 @@ func readBootTime(ctx context.Context, d *rpcdut.RPCDUT) (int64, error) {
 
 // RPCDUTReboot demonstrates how you'd use RPCDUT.
 func RPCDUTReboot(ctx context.Context, s *testing.State) {
-	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint(), "cros")
+	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect RPCDUT: ", err)
 	}

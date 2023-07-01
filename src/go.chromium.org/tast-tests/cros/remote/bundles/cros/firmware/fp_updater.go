@@ -113,7 +113,7 @@ func flashOldRWFirmware(ctx context.Context, s *testing.State, d *rpcdut.RPCDUT)
 }
 
 func FpUpdater(ctx context.Context, s *testing.State) {
-	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint(), "cros")
+	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect RPCDUT: ", err)
 	}

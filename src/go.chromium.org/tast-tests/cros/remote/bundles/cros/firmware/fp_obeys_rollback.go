@@ -82,7 +82,7 @@ func testFlashingFirmwareRollback(ctx context.Context, d *rpcdut.RPCDUT, params 
 // (i.e., not running older version). Finally, flashes RW firmware with rollback
 // ID of '9' and validates that the RW version of '9' is running.
 func FpObeysRollback(ctx context.Context, s *testing.State) {
-	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint(), "cros")
+	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect RPCDUT: ", err)
 	}
