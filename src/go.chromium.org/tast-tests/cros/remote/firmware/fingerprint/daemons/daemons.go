@@ -61,14 +61,14 @@ type DaemonState struct {
 
 // StopDaemons stops the specified daemons/jobs and returns their original states.
 func StopDaemons(ctx context.Context, upstartService platform.UpstartServiceClient, jobs []UpstartJob) ([]DaemonState, error) {
-	var ret []DaemonState
+	var states []DaemonState
 	for _, job := range jobs {
 		status, err := upstartService.JobStatus(ctx, &platform.JobStatusRequest{
 			JobName: job.Name,
 			Args:    job.requestArgs(),
 		})
 		if err != nil {
-			return ret, errors.Wrap(err, "failed to get status for "+job.String())
+			return states, errors.Wrap(err, "failed to get status for "+job.String())
 		}
 
 		daemonWasStarted := upstart.Goal(status.GetGoal()) == upstart.StartGoal
@@ -79,17 +79,17 @@ func StopDaemons(ctx context.Context, upstartService platform.UpstartServiceClie
 				JobName: job.Name,
 				Args:    job.requestArgs(),
 			}); err != nil {
-				return ret, errors.Wrap(err, "failed to stop "+job.String())
+				return states, errors.Wrap(err, "failed to stop "+job.String())
 			}
 		}
 
-		ret = append(ret, DaemonState{
+		states = append(states, DaemonState{
 			job:        job,
 			wasStarted: daemonWasStarted,
 		})
 	}
 
-	return ret, nil
+	return states, nil
 }
 
 // RestoreDaemons restores the daemons to the state provided in states.
@@ -97,16 +97,16 @@ func RestoreDaemons(ctx context.Context, upstartService platform.UpstartServiceC
 	var firstErr error
 
 	for i := len(oldStates) - 1; i >= 0; i-- {
-		daemon := oldStates[i]
+		state := oldStates[i]
 
-		if daemon.wasStarted && !skipWaitingForJob {
+		if state.wasStarted && !skipWaitingForJob {
 			// The service can be in stop/waiting state when
 			// dependencies are not satisfied yet. Let's wait for
 			// the service to enter running state.
-			testing.ContextLog(ctx, "Waiting for ", daemon.job, " to reach start/running state")
+			testing.ContextLog(ctx, "Waiting for ", state.job, " to reach start/running state")
 			_, err := upstartService.WaitForJobStatus(ctx, &platform.WaitForJobStatusRequest{
-				JobName: daemon.job.Name,
-				Args:    daemon.job.requestArgs(),
+				JobName: state.job.Name,
+				Args:    state.job.requestArgs(),
 				Goal:    string(upstart.StartGoal),
 				State:   string(upstart.RunningState),
 				Timeout: durationpb.New(10 * time.Second),
@@ -114,38 +114,38 @@ func RestoreDaemons(ctx context.Context, upstartService platform.UpstartServiceC
 			if err == nil {
 				continue
 			}
-			testing.ContextLog(ctx, "Wait for ", daemon.job, " finished with: ", err)
+			testing.ContextLog(ctx, "Wait for ", state.job, " finished with: ", err)
 		}
 
-		testing.ContextLog(ctx, "Checking state for ", daemon.job)
+		testing.ContextLog(ctx, "Checking state for ", state.job)
 		status, err := upstartService.JobStatus(ctx, &platform.JobStatusRequest{
-			JobName: daemon.job.Name,
-			Args:    daemon.job.requestArgs(),
+			JobName: state.job.Name,
+			Args:    state.job.requestArgs(),
 		})
 		if err != nil {
-			testing.ContextLog(ctx, "Failed to get state for ", daemon.job, ": ", err)
+			testing.ContextLog(ctx, "Failed to get state for ", state.job, ": ", err)
 			if firstErr == nil {
 				firstErr = err
 			}
 			continue
 		}
 
-		testing.ContextLog(ctx, "Job ", daemon.job, " is ",
+		testing.ContextLog(ctx, "Job ", state.job, " is ",
 			status.GetGoal(), "/", status.GetState())
 
 		started := upstart.Goal(status.GetGoal()) == upstart.StartGoal
 
-		if daemon.wasStarted {
+		if state.wasStarted {
 			if !started {
-				testing.ContextLog(ctx, "Starting ", daemon.job)
+				testing.ContextLog(ctx, "Starting ", state.job)
 				// StartJob blocks until job enters 'running'
 				// state.
 				_, err := upstartService.StartJob(ctx, &platform.StartJobRequest{
-					JobName: daemon.job.Name,
-					Args:    daemon.job.requestArgs(),
+					JobName: state.job.Name,
+					Args:    state.job.requestArgs(),
 				})
 				if err != nil {
-					testing.ContextLog(ctx, "Failed to start ", daemon.job, ": ", err)
+					testing.ContextLog(ctx, "Failed to start ", state.job, ": ", err)
 					if firstErr == nil {
 						firstErr = err
 					}
@@ -153,13 +153,13 @@ func RestoreDaemons(ctx context.Context, upstartService platform.UpstartServiceC
 			}
 		} else {
 			if started {
-				testing.ContextLog(ctx, "Stopping ", daemon.job)
+				testing.ContextLog(ctx, "Stopping ", state.job)
 				_, err := upstartService.StopJob(ctx, &platform.StopJobRequest{
-					JobName: daemon.job.Name,
-					Args:    daemon.job.requestArgs(),
+					JobName: state.job.Name,
+					Args:    state.job.requestArgs(),
 				})
 				if err != nil {
-					testing.ContextLog(ctx, "Failed to stop ", daemon.job, ": ", err)
+					testing.ContextLog(ctx, "Failed to stop ", state.job, ": ", err)
 					if firstErr == nil {
 						firstErr = err
 					}
