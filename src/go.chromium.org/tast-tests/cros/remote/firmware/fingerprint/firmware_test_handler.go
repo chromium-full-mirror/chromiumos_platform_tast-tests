@@ -102,9 +102,10 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 		return nil, errors.Wrap(err, "failed to get upstart client instance")
 	}
 
-	t.daemonState, err = daemons.StopDaemons(ctx, upstartService, []string{
-		biodUpstartJobName,
-	})
+	t.daemonState, err = daemons.StopDaemons(ctx, upstartService,
+		[]daemons.UpstartJob{
+			{Name: biodUpstartJobName},
+		})
 	// Start daemons when this function is going to return an error.
 	defer func(ctx context.Context) {
 		if initError != nil {
