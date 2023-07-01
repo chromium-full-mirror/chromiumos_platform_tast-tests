@@ -8,12 +8,10 @@ import (
 	"context"
 	"time"
 
-	"google.golang.org/protobuf/types/known/durationpb"
-
 	fp "go.chromium.org/tast-tests/cros/common/fingerprint"
 	"go.chromium.org/tast-tests/cros/common/servo"
-	"go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
+	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint/daemons"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint/rpcdut"
 	"go.chromium.org/tast-tests/cros/remote/sysutil"
 	"go.chromium.org/tast-tests/cros/services/cros/platform"
@@ -30,7 +28,7 @@ type FirmwareTest struct {
 	servo                    *servo.Proxy
 	fpBoard                  fp.BoardName
 	firmwareFile             FirmwareFile
-	daemonState              []daemonState
+	daemonState              []daemons.DaemonState
 	needsRebootAfterFlashing bool
 	cleanupTime              time.Duration
 	dutTempDir               string
@@ -104,7 +102,7 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 		return nil, errors.Wrap(err, "failed to get upstart client instance")
 	}
 
-	t.daemonState, err = stopDaemons(ctx, upstartService, []string{
+	t.daemonState, err = daemons.StopDaemons(ctx, upstartService, []string{
 		biodUpstartJobName,
 	})
 	// Start daemons when this function is going to return an error.
@@ -115,7 +113,7 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 			// Get upstart service client instance and restore daemons.
 			upstartService, err := t.UpstartService(ctx)
 			if err == nil {
-				err = restoreDaemons(ctx, upstartService, true, t.daemonState)
+				err = daemons.RestoreDaemons(ctx, upstartService, true, t.daemonState)
 			}
 
 			if err != nil {
@@ -286,7 +284,7 @@ func (t *FirmwareTest) Close(ctx context.Context) error {
 	}
 
 	if upstartService != nil {
-		if err := restoreDaemons(ctx, upstartService, t.needsRebootAfterFlashing, t.daemonState); err != nil && firstErr == nil {
+		if err := daemons.RestoreDaemons(ctx, upstartService, t.needsRebootAfterFlashing, t.daemonState); err != nil && firstErr == nil {
 			firstErr = err
 		}
 	}
@@ -345,111 +343,6 @@ func (t *FirmwareTest) DUTTempDir() string {
 // FPBoard gets the fingerprint board name.
 func (t *FirmwareTest) FPBoard() fp.BoardName {
 	return t.fpBoard
-}
-
-type daemonState struct {
-	name       string
-	wasStarted bool // True if daemon was originally started.
-}
-
-// stopDaemons stops the specified daemons and returns their original state.
-func stopDaemons(ctx context.Context, upstartService platform.UpstartServiceClient, daemons []string) ([]daemonState, error) {
-	var ret []daemonState
-	for _, name := range daemons {
-		status, err := upstartService.JobStatus(ctx, &platform.JobStatusRequest{JobName: name})
-		if err != nil {
-			return ret, errors.Wrap(err, "failed to get status for "+name)
-		}
-
-		daemonWasStarted := upstart.Goal(status.GetGoal()) == upstart.StartGoal
-
-		if daemonWasStarted {
-			testing.ContextLog(ctx, "Stopping ", name)
-			if _, err := upstartService.StopJob(ctx, &platform.StopJobRequest{
-				JobName: name,
-			}); err != nil {
-				return ret, errors.Wrap(err, "failed to stop "+name)
-			}
-		}
-
-		ret = append(ret, daemonState{
-			name:       name,
-			wasStarted: daemonWasStarted,
-		})
-	}
-
-	return ret, nil
-}
-
-// restoreDaemons restores the daemons to the state provided in daemonState.
-func restoreDaemons(ctx context.Context, upstartService platform.UpstartServiceClient, skipWaitingForJob bool, daemons []daemonState) error {
-	var firstErr error
-
-	for i := len(daemons) - 1; i >= 0; i-- {
-		daemon := daemons[i]
-
-		if daemon.wasStarted && !skipWaitingForJob {
-			// The service can be in stop/waiting state when
-			// dependencies are not satisfied yet. Let's wait for
-			// the service to enter running state.
-			testing.ContextLog(ctx, "Waiting for "+daemon.name+" to reach start/running state")
-			_, err := upstartService.WaitForJobStatus(ctx, &platform.WaitForJobStatusRequest{
-				JobName: daemon.name,
-				Goal:    string(upstart.StartGoal),
-				State:   string(upstart.RunningState),
-				Timeout: durationpb.New(10 * time.Second),
-			})
-			if err == nil {
-				continue
-			}
-			testing.ContextLog(ctx, "Wait for "+daemon.name+" finished with: ", err)
-		}
-
-		testing.ContextLog(ctx, "Checking state for ", daemon.name)
-		status, err := upstartService.JobStatus(ctx, &platform.JobStatusRequest{JobName: daemon.name})
-		if err != nil {
-			testing.ContextLog(ctx, "Failed to get state for "+daemon.name+": ", err)
-			if firstErr == nil {
-				firstErr = err
-			}
-			continue
-		}
-
-		testing.ContextLog(ctx, "Job "+daemon.name+" is "+status.GetGoal()+"/"+status.GetState())
-
-		started := upstart.Goal(status.GetGoal()) == upstart.StartGoal
-
-		if daemon.wasStarted {
-			if !started {
-				testing.ContextLog(ctx, "Starting ", daemon.name)
-				// StartJob blocks until job enters 'running'
-				// state.
-				_, err := upstartService.StartJob(ctx, &platform.StartJobRequest{
-					JobName: daemon.name,
-				})
-				if err != nil {
-					testing.ContextLog(ctx, "Failed to start "+daemon.name+": ", err)
-					if firstErr == nil {
-						firstErr = err
-					}
-				}
-			}
-		} else {
-			if started {
-				testing.ContextLog(ctx, "Stopping ", daemon.name)
-				_, err := upstartService.StopJob(ctx, &platform.StopJobRequest{
-					JobName: daemon.name,
-				})
-				if err != nil {
-					testing.ContextLog(ctx, "Failed to stop "+daemon.name+": ", err)
-					if firstErr == nil {
-						firstErr = err
-					}
-				}
-			}
-		}
-	}
-	return firstErr
 }
 
 // IsFPUpdaterEnabled returns true if the fingerprint updater is enabled.
