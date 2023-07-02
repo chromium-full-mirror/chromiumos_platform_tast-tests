@@ -8,7 +8,9 @@ import (
 	"context"
 	"regexp"
 	"strconv"
+	"strings"
 
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -30,4 +32,23 @@ func FindSingleHexInt64NvmeRegs(ctx context.Context, identity, key string) (int6
 		return 0, false
 	}
 	return value, true
+}
+
+// GetTBWFromInfo finds and parses TBW in NVMe storage info.
+func GetTBWFromInfo(ctx context.Context, smartInfo string) (int64, error) {
+	pattern := `Data Units Written:\s+([0-9\,]+)`
+	re := regexp.MustCompile(pattern)
+	match := re.FindStringSubmatch(smartInfo)
+	if len(match) <= 1 {
+		return 0, errors.New("can't find TBW field")
+	}
+
+	duwStr := strings.ReplaceAll(match[1], ",", "")
+	duw, err := strconv.ParseInt(duwStr, 10, 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "can't parse local int value %v", duwStr)
+	}
+
+	// SMART reports Data Units written 512,000 bytes units
+	return duw * 512 * 1000, nil
 }

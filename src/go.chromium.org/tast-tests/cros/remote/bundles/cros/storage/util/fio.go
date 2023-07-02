@@ -20,6 +20,7 @@ var (
 	Configs = []string{
 		"seq_read",
 		"seq_write",
+		"tbw_probe",
 		"16k_read",
 		"16k_write",
 		"4k_read",

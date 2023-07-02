@@ -1,0 +1,15 @@
+; Copyright 2023 The ChromiumOS Authors
+; Use of this source code is governed by a BSD-style license that can be
+; found in the LICENSE file.
+;
+; Sequential write performance at the front of the disk
+;
+
+[tbw_probe]
+
+ioengine=libaio
+iodepth=1
+direct=1
+
+readwrite=write
+bs=512k

@@ -154,6 +154,20 @@ func getRootDevName(ctx context.Context, dut *dut.DUT) (string, error) {
 	return rootDevPathComponents[2], nil
 }
 
+func getRootDevPartition(ctx context.Context, dut *dut.DUT) (string, error) {
+	rootDevPath, err := RunCmdWithStringOutput(ctx, dut, "rootdev", "-s")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to query rootdev")
+	}
+
+	rootDevPathComponents := strings.Split(rootDevPath, "/")
+	if len(rootDevPathComponents) != 3 {
+		return "", errors.Errorf("malformed rootdev path: %q", rootDevPath)
+	}
+
+	return rootDevPathComponents[2], nil
+}
+
 func getBlockDevList(ctx context.Context, dut *dut.DUT) ([]string, error) {
 	sysBlockLs, err := RunCmdWithStringOutput(ctx, dut, "ls", "/sys/block")
 	if err != nil {
@@ -256,6 +270,37 @@ func GetInternalStorageFromInternalBoot(ctx context.Context, dut *dut.DUT) (*Dis
 		Name: rootDevName,
 		Size: rootDevSize,
 		Type: GetDiskType(rootDevName)}, nil
+}
+
+// GetStandbyRootfsFromInternalBoot returns disk structure representing
+// the non-active rootfs partition for the system booth from the device.
+// TODO(dlunev): This can pick up wrong device. It will get fixed, but ok for
+// now to start working on tests.
+func GetStandbyRootfsFromInternalBoot(ctx context.Context, dut *dut.DUT) (*Disk, error) {
+	partitionName, err := getRootDevPartition(ctx, dut)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't get rootfs partition")
+	}
+
+	partitionIndex := partitionName[len(partitionName)-1:]
+	if partitionIndex != "3" && partitionIndex != "5" {
+		return nil, errors.Errorf("invalid index of root parition: %s", partitionIndex)
+	}
+	spareRootMap := map[string]string{"3": "5", "5": "3"}
+	partitionName = partitionName[:len(partitionName)-1]
+	partitionName = partitionName + spareRootMap[partitionIndex]
+
+	partitionPath := filepath.Join("/dev", partitionName)
+	partitionSize, err := getBlockDeviceSize(ctx, dut, partitionPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't get standby rootfs partition size")
+	}
+
+	return &Disk{
+		Path: partitionPath,
+		Name: partitionName,
+		Size: partitionSize,
+		Type: GetDiskType(partitionName)}, nil
 }
 
 // GetInternalStorageFromRemovableBoot returns the disk structure representing

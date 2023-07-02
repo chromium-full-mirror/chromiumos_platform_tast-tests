@@ -368,6 +368,9 @@ const (
 	// EmmcStorage16kWriteLatency with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device latency MUST NOT exceed 35ms for the 99th percentile of 16k random writes, with iodepth=4 workload.
 	EmmcStorage16kWriteLatency = "store-emmc-0020-v01"
 
+	// StorageTBWReport with If the ChromeOS device provides non-volatile storage via an interface whose standard specifies reporting written/read bytes, its non-volatile storage MUST support reporting written/read bytes.
+	StorageTBWReport = "store-storagedev-0007-v01"
+
 	// NvmeStorageOnPcie with If the ChromeOS device uses NVMe to provide non-volatile storage, it MUST provide NVMe over PCIe physical interface.
 	NvmeStorageOnPcie = "store-nvme-0001-v01"
 
@@ -376,6 +379,9 @@ const (
 
 	// NvmeStorageProtocolVersion with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device MUST support NVMe 1.3 or higher.
 	NvmeStorageProtocolVersion = "store-nvme-0004-v01"
+
+	// NvmeStorageHealthInfo with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device MUST provide health info via SMART / Health Information Log.
+	NvmeStorageHealthInfo = "store-nvme-0006-v01"
 
 	// NvmeStorage16kReadLatency with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device latency MUST NOT exceed 12ms for the 99th percentile of 16k random reads, with iodepth=4 workload.
 	NvmeStorage16kReadLatency = "store-nvme-0015-v01"
