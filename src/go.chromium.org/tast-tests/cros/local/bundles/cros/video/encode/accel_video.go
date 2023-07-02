@@ -63,37 +63,40 @@ var md5OfYUV60Frames = map[string]string{
 
 // TestOptions is the options for runAccelVideoTest.
 type TestOptions struct {
-	webMName string
-	profile  videotype.CodecProfile
+	// WebName is the file name of vp9 webm used in video_encode_accelerator_tests.
+	WebMName string
+
+	// Profile is the codec that the encoder produces.
+	Profile videotype.CodecProfile
 
 	// The SVC scalability mode See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes*.
-	svcMode string
+	SVCMode string
 
 	// Used bitrate mode. Either cbr or vbr.
-	bitrateMode string
+	BitrateMode string
 
 	// Encode bitrate.
-	bitrate int
+	Bitrate int
 
 	// Controls the global VAAPI Lock.
-	disableGlobalVaapiLock bool
+	DisableGlobalVaapiLock bool
 }
 
 // MakeTestOptions creates TestOptions from webMName and profile.
 func MakeTestOptions(webMName string, profile videotype.CodecProfile) TestOptions {
 	return TestOptions{
-		webMName:    webMName,
-		profile:     profile,
-		bitrateMode: "cbr",
+		WebMName:    webMName,
+		Profile:     profile,
+		BitrateMode: "cbr",
 	}
 }
 
 // MakeVBRTestOptions creates TestOptions from webMName and profile and bitrate mode is VBR.
 func MakeVBRTestOptions(webMName string, profile videotype.CodecProfile) TestOptions {
 	return TestOptions{
-		webMName:    webMName,
-		profile:     profile,
-		bitrateMode: "vbr",
+		WebMName:    webMName,
+		Profile:     profile,
+		BitrateMode: "vbr",
 	}
 }
 
@@ -101,10 +104,10 @@ func MakeVBRTestOptions(webMName string, profile videotype.CodecProfile) TestOpt
 // Sets bitrate for testing quality changes.
 func MakeBitrateTestOptions(webMName string, profile videotype.CodecProfile, bitrate int, bitrateMode string) TestOptions {
 	return TestOptions{
-		webMName:    webMName,
-		profile:     profile,
-		bitrateMode: bitrateMode,
-		bitrate:     bitrate,
+		WebMName:    webMName,
+		Profile:     profile,
+		BitrateMode: bitrateMode,
+		Bitrate:     bitrate,
 	}
 }
 
@@ -112,10 +115,10 @@ func MakeBitrateTestOptions(webMName string, profile videotype.CodecProfile, bit
 // Always disables the global VAAPI lock.
 func MakeTestOptionsWithNoGlobalVaapiLock(webMName string, profile videotype.CodecProfile) TestOptions {
 	return TestOptions{
-		webMName:               webMName,
-		profile:                profile,
-		bitrateMode:            "cbr",
-		disableGlobalVaapiLock: true,
+		WebMName:               webMName,
+		Profile:                profile,
+		BitrateMode:            "cbr",
+		DisableGlobalVaapiLock: true,
 	}
 }
 
@@ -123,10 +126,10 @@ func MakeTestOptionsWithNoGlobalVaapiLock(webMName string, profile videotype.Cod
 // svcMode is the string defined in https://w3c.github.io/webrtc-svc/#scalabilitymodes.
 func MakeTestOptionsWithSVCMode(webMName string, profile videotype.CodecProfile, svcMode string) TestOptions {
 	return TestOptions{
-		webMName:    webMName,
-		profile:     profile,
-		svcMode:     svcMode,
-		bitrateMode: "cbr",
+		WebMName:    webMName,
+		Profile:     profile,
+		SVCMode:     svcMode,
+		BitrateMode: "cbr",
 	}
 }
 
@@ -134,7 +137,7 @@ func MakeTestOptionsWithSVCMode(webMName string, profile videotype.CodecProfile,
 // svcMode is the string defined in https://w3c.github.io/webrtc-svc/#scalabilitymodes.
 func MakeVBRTestOptionsWithSVCMode(webMName string, profile videotype.CodecProfile, svcMode string) TestOptions {
 	testOpts := MakeTestOptionsWithSVCMode(webMName, profile, svcMode)
-	testOpts.bitrateMode = "vbr"
+	testOpts.BitrateMode = "vbr"
 	return testOpts
 }
 
@@ -251,9 +254,9 @@ func codecProfileToEncodeCodecOption(profile videotype.CodecProfile) (string, er
 
 // RunAccelVideoTest runs all tests in video_encode_accelerator_tests.
 func RunAccelVideoTest(ctx context.Context, s *testing.State, opts TestOptions) {
-	md5Hash, found := md5OfYUV60Frames[opts.webMName]
+	md5Hash, found := md5OfYUV60Frames[opts.WebMName]
 	if !found {
-		s.Fatal("Unknown webm file: ", opts.webMName)
+		s.Fatal("Unknown webm file: ", opts.WebMName)
 	}
 
 	vl, err := logging.NewVideoLogger()
@@ -262,7 +265,7 @@ func RunAccelVideoTest(ctx context.Context, s *testing.State, opts TestOptions) 
 	}
 	defer vl.Close()
 
-	yuvPath, err := encoding.DecodeInI420WithNumFrames(ctx, s.DataPath(opts.webMName),
+	yuvPath, err := encoding.DecodeInI420WithNumFrames(ctx, s.DataPath(opts.WebMName),
 		numEncodeFrames, md5Hash)
 	if err != nil {
 		s.Fatal("Failed to create a yuv file: ", err)
@@ -271,13 +274,13 @@ func RunAccelVideoTest(ctx context.Context, s *testing.State, opts TestOptions) 
 	}
 
 	yuvJSONPath := yuvPath + ".json"
-	if err := fillYUVJSON(yuvJSONPath, s.DataPath(webMJSONFileNameFor(opts.webMName))); err != nil {
+	if err := fillYUVJSON(yuvJSONPath, s.DataPath(webMJSONFileNameFor(opts.WebMName))); err != nil {
 		s.Fatal("Failed to create a yuv json file: ", err)
 	} else if videovars.ShouldRemoveArtifacts(ctx) {
 		defer os.Remove(yuvJSONPath)
 	}
 
-	codec, err := codecProfileToEncodeCodecOption(opts.profile)
+	codec, err := codecProfileToEncodeCodecOption(opts.Profile)
 	if err != nil {
 		s.Fatal("Failed to get codec option: ", err)
 	}
@@ -288,13 +291,13 @@ func RunAccelVideoTest(ctx context.Context, s *testing.State, opts TestOptions) 
 		yuvJSONPath,
 	}
 
-	if opts.svcMode != "" {
-		testArgs = append(testArgs, fmt.Sprintf("--svc_mode=%s", opts.svcMode))
+	if opts.SVCMode != "" {
+		testArgs = append(testArgs, fmt.Sprintf("--svc_mode=%s", opts.SVCMode))
 	}
-	if opts.bitrateMode != "" {
-		testArgs = append(testArgs, fmt.Sprintf("--bitrate_mode=%s", opts.bitrateMode))
+	if opts.BitrateMode != "" {
+		testArgs = append(testArgs, fmt.Sprintf("--bitrate_mode=%s", opts.BitrateMode))
 	}
-	if opts.disableGlobalVaapiLock {
+	if opts.DisableGlobalVaapiLock {
 		testArgs = append(testArgs, "--disable_vaapi_lock")
 	}
 
@@ -341,9 +344,9 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 		exec = "video_encode_accelerator_perf_tests"
 	)
 
-	md5Hash, found := md5OfYUV60Frames[opts.webMName]
+	md5Hash, found := md5OfYUV60Frames[opts.WebMName]
 	if !found {
-		s.Fatal("Unknown webm file: ", opts.webMName)
+		s.Fatal("Unknown webm file: ", opts.WebMName)
 	}
 
 	// Setup benchmark mode.
@@ -353,7 +356,7 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 	}
 	defer cleanUpBenchmark(ctx)
 
-	yuvPath, err := encoding.DecodeInI420WithNumFrames(ctx, s.DataPath(opts.webMName),
+	yuvPath, err := encoding.DecodeInI420WithNumFrames(ctx, s.DataPath(opts.WebMName),
 		numEncodeFrames, md5Hash)
 	if err != nil {
 		s.Fatal("Failed to create a yuv file: ", err)
@@ -362,7 +365,7 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 	}
 
 	yuvJSONPath, err := encoding.PrepareYUVJSON(ctx, yuvPath,
-		s.DataPath(yuvJSONFileNameFor(opts.webMName)))
+		s.DataPath(yuvJSONFileNameFor(opts.WebMName)))
 	if err != nil {
 		s.Fatal("Failed to create a yuv json file: ", err)
 	} else if videovars.ShouldRemoveArtifacts(ctx) {
@@ -373,7 +376,7 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 		return errors.Wrap(err, "failed to wait for CPU to become idle")
 	}
 
-	codec, err := codecProfileToEncodeCodecOption(opts.profile)
+	codec, err := codecProfileToEncodeCodecOption(opts.Profile)
 	if err != nil {
 		return errors.Wrap(err, "failed to get codec option")
 	}
@@ -389,20 +392,20 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 
 	spatialLayers := 1
 	temporalLayers := 1
-	if opts.svcMode != "" {
-		spatialLayers, temporalLayers, err = layersOfSVCMode(opts.svcMode)
+	if opts.SVCMode != "" {
+		spatialLayers, temporalLayers, err = layersOfSVCMode(opts.SVCMode)
 		if err != nil {
 			return errors.Wrap(err, "failed to get the number of layers from svc mode")
 		}
-		testArgs = append(testArgs, fmt.Sprintf("--svc_mode=%s", opts.svcMode))
+		testArgs = append(testArgs, fmt.Sprintf("--svc_mode=%s", opts.SVCMode))
 	}
-	if opts.bitrateMode != "" {
-		testArgs = append(testArgs, fmt.Sprintf("--bitrate_mode=%s", opts.bitrateMode))
+	if opts.BitrateMode != "" {
+		testArgs = append(testArgs, fmt.Sprintf("--bitrate_mode=%s", opts.BitrateMode))
 	}
-	if opts.bitrate > 0 {
-		testArgs = append(testArgs, fmt.Sprintf("--bitrate=%d", opts.bitrate))
+	if opts.Bitrate > 0 {
+		testArgs = append(testArgs, fmt.Sprintf("--bitrate=%d", opts.Bitrate))
 	}
-	if opts.disableGlobalVaapiLock {
+	if opts.DisableGlobalVaapiLock {
 		testArgs = append(testArgs, "--disable_vaapi_lock")
 	}
 
@@ -431,7 +434,7 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 	}
 
 	qualityJSONPath := filepath.Join(s.OutDir(), "VideoEncoderTest", qualityTestname)
-	if opts.svcMode != "" {
+	if opts.SVCMode != "" {
 		for sID := 1; sID <= spatialLayers; sID++ {
 			for tID := 1; tID <= temporalLayers; tID++ {
 				scalabilityMode := fmt.Sprintf("L%dT%d", sID, tID)
