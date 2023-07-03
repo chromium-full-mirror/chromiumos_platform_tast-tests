@@ -176,7 +176,13 @@ func WilcoTPMKeyLadderVerification(ctx context.Context, s *testing.State) {
 		acIsConnected bool
 		bootMode      fwCommon.BootMode
 	}
+	currentState := dutStates{dutConnected: true, acIsConnected: true, bootMode: fwCommon.BootModeNormal}
 	defer func() {
+		if !currentState.dutConnected {
+			if err := rebootWithColdReset(ctx, h); err != nil {
+				s.Fatal("Failed to cold reset DUT: ", err)
+			}
+		}
 		s.Log("Connecting charger")
 		if err := h.SetDUTPower(ctx, true); err != nil {
 			s.Fatal("Unable to connect charger: ", err)
@@ -185,7 +191,6 @@ func WilcoTPMKeyLadderVerification(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to check charger: ", err)
 		}
 	}()
-	currentState := dutStates{dutConnected: true, acIsConnected: true, bootMode: fwCommon.BootModeNormal}
 	for _, step := range runCases {
 		// Reboot DUT to ensure that it is awake, prior to verifying
 		// boot mode and AC status.
