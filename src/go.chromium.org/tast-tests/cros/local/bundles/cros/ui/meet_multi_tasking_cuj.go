@@ -82,7 +82,6 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 		createConfTimeout   = 30 * time.Second
 		addBotTimeout       = 100 * time.Second
 		docsScrollTimeout   = 30 * time.Second
-		slidesURL           = "https://docs.google.com/presentation/d/1lItrhkgBqXF_bsP-tOqbjcbBFa86--m3DT5cLxegR2k/edit?usp=sharing&resourcekey=0-FmuN4N-UehRS2q4CdQzRXA"
 		slidesScrollTimeout = 30 * time.Second
 		gmailURL            = "https://gmail.com"
 		gmailScrollTimeout  = 10 * time.Second
@@ -419,6 +418,10 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 		// 2. Multi-tasking with Google Slides by opening a large Slides file and going through the deck.
 		// ================================================================================
 
+		slidesURL, err := cuj.GetTestSlidesURL(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get Google Slides URL")
+		}
 		slidesConn, err := cs.NewConn(ctx, slidesURL, browser.WithNewWindow())
 		if err != nil {
 			return errors.Wrap(err, "failed to open the google slides website")
