@@ -1,0 +1,5 @@
+{
+  "sha256sum": "4695c475888373d173323a309c1b65f7477841999d2ee55cb08d0249b224846c",
+  "size": 106,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/encode//crowd_run-320x180_60frames_20230703.vp9.webm.json"
+}

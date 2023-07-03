@@ -1,0 +1,5 @@
+{
+  "sha256sum": "56cb2fe114d7e1121fcba8cd1f52893b0a531671b3994b2a88e770a3526a077e",
+  "size": 215455893,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/encode//gipsrecmotion-960x540_850frames_20230703.vp9.webm"
+}
