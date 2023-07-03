@@ -27,6 +27,8 @@ const (
 	playbackMode
 )
 
+const defaultDevice = -1
+
 // blockSize calculates default block size from rate. This should be aligned as defined in cras_test_client.
 func blockSize(rate int) int {
 	const playbackBufferedTimeUs = 5000
@@ -34,39 +36,50 @@ func blockSize(rate int) int {
 }
 
 // crasTestClientCommand creates a cras_test_client command.
-func crasTestClientCommand(ctx context.Context, mode cmdMode, file string, duration, channels, blocksize, rate int) *testexec.Cmd {
+func crasTestClientCommand(ctx context.Context, mode cmdMode, file string, dev, duration, channels, blocksize, rate int) *testexec.Cmd {
 	runStr := "--playback_file"
 	if mode == captureMode {
 		runStr = "--capture_file"
 	}
 
-	return testexec.CommandContext(
+	cmd := testexec.CommandContext(
 		ctx, "cras_test_client",
 		runStr, file,
 		"--duration", strconv.Itoa(duration),
 		"--num_channels", strconv.Itoa(channels),
 		"--block_size", strconv.Itoa(blocksize),
 		"--rate", strconv.Itoa(rate))
+
+	if dev != defaultDevice {
+		cmd.Args = append(cmd.Args, "--pin_device", strconv.Itoa(dev))
+	}
+
+	return cmd
 }
 
 // PlaybackFileCommand creates a cras_test_client playback-from-file command.
 func PlaybackFileCommand(ctx context.Context, file string, duration, channels, rate int) *testexec.Cmd {
-	return crasTestClientCommand(ctx, playbackMode, file, duration, channels, blockSize(rate), rate)
+	return crasTestClientCommand(ctx, playbackMode, file, defaultDevice, duration, channels, blockSize(rate), rate)
 }
 
 // PlaybackCommand creates a cras_test_client playback command.
 func PlaybackCommand(ctx context.Context, duration, blocksize int) *testexec.Cmd {
-	return crasTestClientCommand(ctx, playbackMode, "/dev/zero", duration, 2, blocksize, 48000)
+	return crasTestClientCommand(ctx, playbackMode, "/dev/zero", defaultDevice, duration, 2, blocksize, 48000)
 }
 
 // CaptureFileCommand creates a cras_test_client capture-to-file command.
 func CaptureFileCommand(ctx context.Context, file string, duration, channels, rate int) *testexec.Cmd {
-	return crasTestClientCommand(ctx, captureMode, file, duration, channels, blockSize(rate), rate)
+	return crasTestClientCommand(ctx, captureMode, file, defaultDevice, duration, channels, blockSize(rate), rate)
 }
 
 // CaptureCommand creates a cras_test_client capture command.
 func CaptureCommand(ctx context.Context, duration, blocksize int) *testexec.Cmd {
-	return crasTestClientCommand(ctx, captureMode, "/dev/null", duration, 2, blocksize, 48000)
+	return crasTestClientCommand(ctx, captureMode, "/dev/null", defaultDevice, duration, 2, blocksize, 48000)
+}
+
+// PinCaptureCommand creates a cras_test_client capture command with pinned device `dev`.
+func PinCaptureCommand(ctx context.Context, dev, duration, blocksize int) *testexec.Cmd {
+	return crasTestClientCommand(ctx, captureMode, "/dev/null", dev, duration, 2, blocksize, 48000)
 }
 
 // FirstRunningDevice returns the first input/output device by parsing audio thread logs.
