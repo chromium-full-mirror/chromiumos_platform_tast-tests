@@ -306,8 +306,7 @@ func InstalledFakeApps(ctx context.Context, tconn *chrome.TestConn) ([]*ChromeAp
 	var installedApps []*ChromeApp
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		var err error
-		installedApps, err = ChromeApps(ctx, tconn)
-		if err != nil {
+		if installedApps, err = ChromeApps(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to obtain the list of the installed apps")
 		}
 
@@ -326,6 +325,29 @@ func InstalledFakeApps(ctx context.Context, tconn *chrome.TestConn) ([]*ChromeAp
 		return nil, errors.Wrap(err, "failed to wait for fake apps to be installed")
 	}
 	return installedApps, nil
+}
+
+// AppsInLauncher returns a list of the apps shown in the launcher.
+func AppsInLauncher(ctx context.Context, tconn *chrome.TestConn) ([]*ChromeApp, error) {
+	// Poll until apps are installed.
+	var installedApps []*ChromeApp
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		if installedApps, err = ChromeApps(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to obtain the list of installed apps")
+		}
+		return nil
+	}, &testing.PollOptions{Interval: 2 * time.Second}); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for apps to be installed")
+	}
+
+	var appsInLauncher []*ChromeApp
+	for _, app := range installedApps {
+		if app.ShowInLauncher {
+			appsInLauncher = append(appsInLauncher, app)
+		}
+	}
+	return appsInLauncher, nil
 }
 
 // The remaining definitions are needed only for faillog & CaptureCDP.
