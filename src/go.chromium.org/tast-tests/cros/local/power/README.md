@@ -1,17 +1,35 @@
-# Local Tast Power Tests: the Beginner's Guide
+# Local Tast Power Tests: the Beginner's Guide <!-- omit from toc -->
 
 > This document assumes that you are familiar with [general Tast documentation].
 
+[general Tast documentation]: https://chromium.googlesource.com/chromiumos/platform/tast/+/HEAD/docs/
+
+
+- [Introduction](#introduction)
+	- [Set up the device to run a power test](#set-up-the-device-to-run-a-power-test)
+		- [Power fixtures (Recommended)](#power-fixtures-recommended)
+		- [Test specific setup](#test-specific-setup)
+	- [Start power metrics collection](#start-power-metrics-collection)
+	- [Run the test workload](#run-the-test-workload)
+	- [Finish power metrics collection](#finish-power-metrics-collection)
+		- [Add custom perf metrics](#add-custom-perf-metrics)
+- [Manual Testing](#manual-testing)
+	- [Run a Manual Power Test](#run-a-manual-power-test)
+- [Results](#results)
+	- [Look at the collected power metrics](#look-at-the-collected-power-metrics)
+		- [Local visualization](#local-visualization)
+		- [Power dashboard](#power-dashboard)
+		- [Crosbolt dashboard](#crosbolt-dashboard)
+- [Feedback](#feedback)
+
+
+# Introduction
 This instruction outlines the structure of a simple local Tast test to set up a
 device for power measurement and collect power metrics while running a workload.
 By following this instruction, we can quickly get started with evaluating the
-power impact of a particular use case or a new feature.
+power impact of a particular use case or a new feature.****
 
-[TOC]
-
-[general Tast documentation]: https://chromium.googlesource.com/chromiumos/platform/tast/+/HEAD/docs/
-
-## Set up the device for running a power test
+## Set up the device to run a power test
 
 For device power qualification and local testing, the recommendation is to run
 power tests without AC and ethernet connection, to eliminate unnecessary power
@@ -19,7 +37,7 @@ consumption. For regression monitoring and lab testing, they can be run with AC
 and/or ethernet connection, but be sure to take into account their impact when
 calculating battery life estimations.
 
-### Standard setup: power fixtures
+### Power fixtures (Recommended)
 
 The following fixtures are recommended:
 - powerNoUINoWiFi (can only run with ethernet / in lab)
@@ -44,7 +62,7 @@ TODO: b/283738206 - add a link to `PowerTestSetup`.
 [ExampleUI]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/example_ui.go
 [ExampleNoUIManualMetrics]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/example_no_ui_manual_metrics.go
 
-### Additional functionality / test specific setup
+### Test specific setup
 
 Additional setup procedures can be done in the test main body, using [ExampleUI]
 test as an example.
@@ -143,7 +161,7 @@ create data visualizations.
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}
 ```
-### Adding custom perf metrics
+### Add custom perf metrics
 If you have custom `perf` values to report, you can call `Finish` and provide one or more custom values to the recorder.
 
 All collected power metrics are located at `tests/<TEST NAME>/power_log.json`.
@@ -154,7 +172,25 @@ All collected power metrics are located at `tests/<TEST NAME>/power_log.json`.
 	}
 ```
 
+# Manual Testing
+## Run a Manual Power Test
 
+You can run a manual UI test from [manual_ui.go].
+
+Currently the test supports `ash/lacros` browsers, and `ARC/GAIA` variants.
+
+
+Refer to the available test names in `ManualUI` for specifics.
+
+```
+$ tast run <DUT_IP> power.ManualUI.<testname>
+```
+
+
+[manual_ui.go]: (http://cs/h/chromium/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/manual_ui.go?l=1)
+
+
+# Results
 ## Look at the collected power metrics
 To understand the metrics that are collected, see [metrics.md].
 
@@ -175,3 +211,12 @@ criteria to view data visualization.
 http://go/crosbolt and filter the criteria to view.
 
 To monitor regression through crosbolt, see go/power-test-regression.
+
+# Feedback
+
+If you have any feature requests / bugs / feedback please feel free to share with us:
+* [Power Buganizer List]
+* [ChromeOS Power Q&A Chat Room]
+
+[ChromeOS Power Q&A Chat Room]: http://chat/room/AAAAzgc_z2Y
+[Power Buganizer List]: http://b/issues?q=status:open%20componentid:1361410
