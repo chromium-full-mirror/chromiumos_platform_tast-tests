@@ -187,17 +187,15 @@ func (h StringDescriptor) MarshalBinary() (data []byte, err error) {
 const (
 	// Version11 represents USB version 1.1.0 in Binary-Coded Decimal.
 	Version11 = 0x0110
-	// HidVersion111 represents hID version 1.1.1 in Binary-Coded Decimal.
+	// HidVersion111 represents HID version 1.1.1 in Binary-Coded Decimal.
 	HidVersion111 = 0x0111
 
-	// VendorIDGoogle represents google Vendor ID.
+	// VendorIDGoogle represents Google Vendor ID.
 	VendorIDGoogle = 0x18D1
-	// ProductIDGoogleKeyboard represents google Keyboard Product ID. This is a non-existing ID.
-	ProductIDGoogleKeyboard = 0x0123 // TODO(b/283696258): introduce a separate ID and replace here
-	// VendorIDLogitech represents logitech Vendor ID.
-	VendorIDLogitech = 0x046D // TODO(b/283696258): remove, use Google ID instead
-	// ProductIDLogitechMouse represents logitech Mouse Product ID.
-	ProductIDLogitechMouse = 0xc077 // TODO(b/283696258): introduce a separate ID and replace here
+	// ProductIDGoogleKeyboard represents Google Virtual USB Keyboard Product ID.
+	ProductIDGoogleKeyboard = 0x5062
+	// ProductIDGoogleMouse represents Google Virtual USB Mouse Product ID.
+	ProductIDGoogleMouse = 0x5063
 	// BcdDeviceVersion1 represents device release number 1.0.0.
 	BcdDeviceVersion1 = 0x0100
 

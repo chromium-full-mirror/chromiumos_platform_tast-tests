@@ -49,7 +49,7 @@ func DeviceList(ctx context.Context, s *testing.State) {
 	if !strings.Contains(devList, expectedKeyboard) {
 		s.Fatalf("Usbip list returned unexpected result: expected to contain %q got: %q", expectedKeyboard, devList)
 	}
-	expectedMouse := fmt.Sprintf("1-1.1: unknown vendor : unknown product (%04x:%04x)", usbdevice.VendorIDLogitech, usbdevice.ProductIDLogitechMouse)
+	expectedMouse := fmt.Sprintf("1-1.1: unknown vendor : unknown product (%04x:%04x)", usbdevice.VendorIDGoogle, usbdevice.ProductIDGoogleMouse)
 	if !strings.Contains(devList, expectedMouse) {
 		s.Fatalf("Usbip list returned unexpected result: expected to contain %q got: %q", expectedMouse, devList)
 	}

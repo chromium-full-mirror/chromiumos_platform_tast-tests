@@ -75,7 +75,7 @@ func DeviceAttach(ctx context.Context, s *testing.State) {
 		if !strings.Contains(allDevices, keyboardID) {
 			return errors.Errorf("Usbip port returned unexpected imported devices: expected to contain %q got: %q", keyboardID, allDevices)
 		}
-		mouseID := fmt.Sprintf("%04x:%04x", usbdevice.VendorIDLogitech, usbdevice.ProductIDLogitechMouse)
+		mouseID := fmt.Sprintf("%04x:%04x", usbdevice.VendorIDGoogle, usbdevice.ProductIDGoogleMouse)
 		if !strings.Contains(allDevices, mouseID) {
 			return errors.Errorf("Usbip port returned unexpected imported devices: expected to contain %q got: %q", mouseID, allDevices)
 		}

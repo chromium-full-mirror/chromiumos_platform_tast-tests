@@ -40,8 +40,8 @@ const (
 )
 
 var mouseStrings = map[int]string{
-	mouseStringManufacturer:  "Logitech, Inc.",     // TODO(b/283696258) replace with Google, once registered
-	mouseStringProduct:       "M105 Optical Mouse", // TODO(b/283696258) replace with a Google mouse, once registered
+	mouseStringManufacturer:  "Google",
+	mouseStringProduct:       "Virtual USB Mouse",
 	mouseStringSerialNumber:  "No Serial Number",
 	mouseStringConfiguration: "Default Configuration",
 	mouseStringInterface:     "Default Interface",
@@ -145,13 +145,13 @@ func (m *usbMouseImpl) DeviceDescriptor() DeviceDescriptor {
 	return DeviceDescriptor{
 		BLength:            sizeOf[DeviceDescriptor](),
 		BDescriptorType:    DescriptorDevice,
-		BcdUSB:             Version11,              // Using USB 1.1.0 to avoid handling additional descriptors in 2.0+.
-		BDeviceClass:       0,                      // Must be 0 for a HID device.
-		BDeviceSubclass:    0,                      // Must be 0 for a HID device.
-		BDeviceProtocol:    0,                      // Must be 0 for a HID device.
-		BMaxPacketSize:     8,                      // Copied from a real device using usbmon.
-		IDVendor:           VendorIDLogitech,       // Must be an existing vendor ID, otherwise ChromeOS will disconnect the mouse.
-		IDProduct:          ProductIDLogitechMouse, // Must be an existing product ID, otherwise ChromeOS will disconnect the mouse.
+		BcdUSB:             Version11,            // Using USB 1.1.0 to avoid handling additional descriptors in 2.0+.
+		BDeviceClass:       0,                    // Must be 0 for a HID device.
+		BDeviceSubclass:    0,                    // Must be 0 for a HID device.
+		BDeviceProtocol:    0,                    // Must be 0 for a HID device.
+		BMaxPacketSize:     8,                    // Copied from a real device using usbmon.
+		IDVendor:           VendorIDGoogle,       // Must be an existing vendor ID, otherwise ChromeOS will disconnect the mouse.
+		IDProduct:          ProductIDGoogleMouse, // Must be an existing product ID, otherwise ChromeOS will disconnect the mouse.
 		BcdDevice:          BcdDeviceVersion1,
 		IManufacturer:      mouseStringManufacturer, // Corresponding manufacturer string index.
 		IProduct:           mouseStringProduct,      // Corresponding product string index.

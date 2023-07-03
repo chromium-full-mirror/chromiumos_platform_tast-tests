@@ -30,7 +30,7 @@ const (
 
 var keyboardStrings = map[int]string{
 	keyboardStringManufacturer:  "Google",
-	keyboardStringProduct:       "Virtual Keyboard",
+	keyboardStringProduct:       "Virtual USB Keyboard",
 	keyboardStringSerialNumber:  "No Serial Number",
 	keyboardStringConfiguration: "Default Configuration",
 	keyboardStringInterface:     "Default Interface",
