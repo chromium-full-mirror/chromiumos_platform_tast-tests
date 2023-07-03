@@ -110,7 +110,7 @@ func OpenCloseSwitchApps(ctx context.Context, s *testing.State) {
 		s.Fatalf("Could not find the %v browser app: %v", bt, err)
 	}
 	// Chrome app name doesn't exactly match the chrome shelf name so modify it here for simpler code later.
-	if browserApp.Name == apps.Chrome.Name && browserApp.ID != apps.LacrosID {
+	if browserApp.Name == apps.Chrome.Name && browserApp.ID != apps.Lacros.ID {
 		browserApp.Name = "Google Chrome"
 	}
 

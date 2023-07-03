@@ -49,11 +49,7 @@ func AppLauncherLaunch(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
 	defer kb.Close(ctx)
-	lacrosApp, err := apps.Lacros(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to get lacros app: ", err)
-	}
-	if err := applauncher.SearchAndLaunch(tconn, kb, lacrosApp.Name)(ctx); err != nil {
+	if err := applauncher.SearchAndLaunch(tconn, kb, apps.Lacros.Name)(ctx); err != nil {
 		s.Fatal("Failed to search and launch Lacros app: ", err)
 	}
 

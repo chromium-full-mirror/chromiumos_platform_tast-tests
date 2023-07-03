@@ -66,7 +66,7 @@ func init() {
 			Fixture: "driveFsStarted",
 		}, {
 			Name:              "lacros",
-			Val:               apps.LacrosID,
+			Val:               apps.Lacros.ID,
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           "driveFsStartedLacros",
 		}},

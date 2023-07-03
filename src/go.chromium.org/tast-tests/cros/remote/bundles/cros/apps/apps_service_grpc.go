@@ -47,7 +47,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: testParams{
 					chromeRequest: &ui.NewRequest{DisableFeatures: disableFeatures, EnableFeatures: []string{"LacrosOnly"}, LacrosExtraArgs: []string{"--no-first-run"}},
-					browserID:     "jaimifaeiicidiikhmjedcgdimealfbh", // See LacrosID in local/apps/apps.go.
+					browserID:     "jaimifaeiicidiikhmjedcgdimealfbh", // See Lacros.ID in local/apps/apps.go.
 				},
 			},
 		},

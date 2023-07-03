@@ -133,7 +133,7 @@ func SearchHelpContent(ctx context.Context, s *testing.State) {
 	// Verify browser is opened.
 	id := apps.Chrome.ID
 	if bt != browser.TypeAsh {
-		id = apps.LacrosID
+		id = apps.Lacros.ID
 	}
 	if err = ash.WaitForApp(ctx, tconn, id, time.Minute); err != nil {
 		s.Fatal("Could not find browser in shelf after launch: ", err)

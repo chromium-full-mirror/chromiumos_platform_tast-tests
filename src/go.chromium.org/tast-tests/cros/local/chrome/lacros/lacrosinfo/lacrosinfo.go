@@ -22,10 +22,8 @@ type LacrosMode = lacros.LacrosMode
 
 // LacrosMode values.
 const (
-	LacrosModeDisabled   LacrosMode = lacros.LacrosModeDisabled
-	LacrosModeSideBySide LacrosMode = lacros.LacrosModeSideBySide
-	LacrosModePrimary    LacrosMode = lacros.LacrosModePrimary
-	LacrosModeOnly       LacrosMode = lacros.LacrosModeOnly
+	LacrosModeDisabled LacrosMode = lacros.LacrosModeDisabled
+	LacrosModeOnly     LacrosMode = lacros.LacrosModeOnly
 )
 
 // Info represents the format returned from autotestPrivate.getLacrosInfo.

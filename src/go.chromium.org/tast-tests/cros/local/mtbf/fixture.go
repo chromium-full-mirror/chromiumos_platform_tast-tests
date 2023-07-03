@@ -191,12 +191,7 @@ func (f *mtbfCleanTabsFixture) PostTest(ctx context.Context, s *testing.FixtTest
 // PrepareLacros prepares the Lacros browser for MTBF tests.
 // It connects to existing Lacros if the Lacros is running, set up a new Lacros browser otherwise.
 func PrepareLacros(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (*browser.Browser, func(context.Context) error, error) {
-	lacrosApp, err := apps.Lacros(ctx, tconn)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to get lacros app")
-	}
-
-	lacrosRunning, err := ash.AppRunning(ctx, tconn, lacrosApp.ID)
+	lacrosRunning, err := ash.AppRunning(ctx, tconn, apps.Lacros.ID)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to check if Lacros is not running before launch")
 	}

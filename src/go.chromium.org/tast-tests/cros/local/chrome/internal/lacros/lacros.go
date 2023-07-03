@@ -39,10 +39,8 @@ type LacrosMode string
 
 // LacrosMode values.
 const (
-	LacrosModeDisabled   LacrosMode = "Disabled"
-	LacrosModeSideBySide LacrosMode = "SideBySide"
-	LacrosModePrimary    LacrosMode = "Primary"
-	LacrosModeOnly       LacrosMode = "Only"
+	LacrosModeDisabled LacrosMode = "Disabled"
+	LacrosModeOnly     LacrosMode = "Only"
 )
 
 // Info represents the format returned from autotestPrivate.getLacrosInfo.

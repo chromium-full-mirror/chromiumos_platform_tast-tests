@@ -362,7 +362,7 @@ func waitUntilWindowStable(ctx context.Context, tconn *chrome.TestConn, resizeAp
 			case "":
 				// For Play Store, we use exact string "Google Play Store" to find the window.
 				return w.Title == "Google Play Store"
-			case apps.LacrosID:
+			case apps.Lacros.ID:
 				// For browser, we use exact string "New Tab" to find the window.
 				return strings.Contains(w.Title, "New Tab")
 			default:
