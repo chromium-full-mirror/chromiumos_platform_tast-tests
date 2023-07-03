@@ -130,6 +130,70 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 			scenario: "Type Romaji and check correct Hiragana",
 			action:   its.ValidateInputOnField(inputField, kb.TypeAction("nihongo"), "にほんご"),
 		},
+		// Type and edit the composition with various keys.
+		// TODO(b/289738600): Add test for Ctrl+Space and Ctrl+Shift+Space once they work.
+		{
+			name:     "EditComposition",
+			scenario: "Type some text and edit it",
+			action: uiauto.Combine("type some text and edit it",
+				its.ClearThenClickFieldAndWaitForActive(inputField),
+				kb.TypeAction("nihongo"),
+				// Use various shortcuts to move the cursor left character by character.
+				kb.AccelAction("Left"),
+				kb.AccelAction("Ctrl+k"),
+				kb.AccelAction("Ctrl+s"),
+				kb.AccelAction("Shift+Left"),
+				// Cursor should be at the beginning of the text.
+				// Insert 'aa' at the beginning.
+				kb.TypeAction("aa"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ああにほんご"),
+				// Use various shortcuts to move the cursor right character by character.
+				kb.AccelAction("Right"),
+				kb.AccelAction("Ctrl+d"),
+				kb.AccelAction("Ctrl+l"),
+				kb.AccelAction("Shift+Right"),
+				// Cursor should be at the end of the text.
+				// Insert 'aa' at the end.
+				kb.TypeAction("aa"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ああにほんごああ"),
+				// Move to the beginning of the text and delete the first character.
+				kb.AccelAction("Ctrl+a"),
+				kb.AccelAction("Ctrl+g"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "あにほんごああ"),
+				// Move to the end of the text and delete the last character.
+				kb.AccelAction("Ctrl+x"),
+				kb.AccelAction("Ctrl+h"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "あにほんごあ"),
+				// Move to the beginning of the text and delete the first character.
+				kb.AccelAction("Ctrl+e"),
+				kb.AccelAction("Alt+Backspace"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "にほんごあ"),
+				// Move to the end of the text and delete the last character.
+				kb.AccelAction("Ctrl+f"),
+				kb.AccelAction("Backspace"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "にほんご"),
+				// Move to the beginning of the text and delete the first character.
+				kb.AccelAction("Ctrl+Left"),
+				kb.AccelAction("Alt+Backspace"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ほんご"),
+				// Move to the end of the text and delete the last character.
+				kb.AccelAction("Ctrl+Right"),
+				kb.AccelAction("Backspace"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ほん"),
+				// Move to the beginning of the text, move right, and replace.
+				kb.AccelAction("Ctrl+Up"),
+				kb.AccelAction("Right"),
+				kb.AccelAction("Backspace"),
+				kb.TypeAction("a"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "あん"),
+				// Move to the end of the text, move left, and replace .
+				kb.AccelAction("Ctrl+Down"),
+				kb.AccelAction("Left"),
+				kb.AccelAction("Alt+Backspace"),
+				kb.TypeAction("a"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ああ"),
+			),
+		},
 		// Type and press Tab/Shift+Tab to select different candidates.
 		// The text field should show the selected candidate.
 		{
@@ -207,15 +271,23 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 				}),
 			),
 		},
-		// Type and press space multiple times to go through different conversion candidates.
+		// Type and use shortcuts to go through different conversion candidates.
 		// The text field should show the selected candidate.
 		{
-			name:     "SpaceCyclesThroughConversionCandidates",
-			scenario: "Type and press SPACE multiple times to go through different conversion candidates",
+			name:     "ShortcutsCycleThroughConversionCandidates",
+			scenario: "Type and use shortcuts to go through different conversion candidates",
 			action: uiauto.Combine("type some text",
 				its.ClearThenClickFieldAndWaitForActive(inputField),
 				kb.TypeAction("nihongo"),
 				uiauto.Repeat(5, kb.AccelAction("Space")),
+				validateInputFieldFromNthCandidate(its, tconn, inputField, 4),
+				kb.AccelAction("Ctrl+e"),
+				validateInputFieldFromNthCandidate(its, tconn, inputField, 3),
+				kb.AccelAction("Ctrl+up"),
+				validateInputFieldFromNthCandidate(its, tconn, inputField, 2),
+				kb.AccelAction("Ctrl+x"),
+				validateInputFieldFromNthCandidate(its, tconn, inputField, 3),
+				kb.AccelAction("Down"),
 				validateInputFieldFromNthCandidate(its, tconn, inputField, 4),
 			),
 		},
@@ -235,6 +307,103 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 						util.WaitForFieldTextToBe(tconn, inputField.Finder(), text),
 					)
 				}),
+			),
+		},
+		// Use shortcuts to convert the output script (e.g. Hiragana, Katakana).
+		{
+			name:     "ConvertScriptShortcuts",
+			scenario: "Use shortcuts to convert the output script",
+			action: uiauto.Combine("type some text and press shortcuts",
+				its.ClearThenClickFieldAndWaitForActive(inputField),
+				kb.TypeAction("nihongo"),
+				// Convert to Hiragana
+				kb.AccelAction("Ctrl+u"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "にほんご"),
+				// Convert to Half Width Katakana
+				kb.AccelAction("Ctrl+o"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ﾆﾎﾝｺﾞ"),
+				// Convert to Katakana
+				kb.AccelAction("Ctrl+i"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ニホンゴ"),
+				// Convert to Latin
+				kb.AccelAction("Ctrl+p"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ｎｉｈｏｎｇｏ"),
+				// Convert to Half Width Latin
+				kb.AccelAction("Ctrl+t"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "nihongo"),
+				// Same as above, but with function keys.
+				kb.AccelAction("F6"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "にほんご"),
+				kb.AccelAction("F8"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ﾆﾎﾝｺﾞ"),
+				kb.AccelAction("F7"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ニホンゴ"),
+				kb.AccelAction("F9"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ｎｉｈｏｎｇｏ"),
+				kb.AccelAction("F10"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "nihongo"),
+			),
+		},
+		// Type a complex phrase and convert the segments individually.
+		// Although other tests do not rely on specific candidates, this one unavoidably relies on "tenkigaii" converting to 天気がいい.
+		// If that's not the case, it's highly likely there's a bug in the input method.
+		{
+			name:     "ConversionSegments",
+			scenario: "Use shortcuts to convert segments of a phrase",
+			action: uiauto.Combine("type some text and press shortcuts",
+				its.ClearThenClickFieldAndWaitForActive(inputField),
+				// Create two segments: 天気が|いい
+				kb.TypeAction("tenkigaii "),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "天気がいい"),
+				// Shrink the first segment to create 3 segments: 天気|が|いい
+				kb.AccelAction("Shift+Left"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "天気がいい"),
+				// Move right to the 2nd segment (が) and convert it to Half Width Latin.
+				kb.AccelAction("Right"),
+				kb.AccelAction("Ctrl+t"),
+				// Move right to the 3rd segment (いい) and convert it to Hiragana.
+				kb.AccelAction("Ctrl+d"),
+				kb.AccelAction("Ctrl+u"),
+				// Jump back to 1st segment (天気) and convert it to Katakana.
+				kb.AccelAction("Ctrl+a"),
+				kb.AccelAction("Ctrl+i"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "テンキgaいい"),
+				// Jump to last segment and convert it to Katakana.
+				kb.AccelAction("Ctrl+f"),
+				kb.AccelAction("Ctrl+i"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "テンキgaイイ"),
+				// Jump to first segment and convert it to Half Width Latin.
+				kb.AccelAction("Ctrl+Left"),
+				kb.AccelAction("Ctrl+t"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "tenkigaイイ"),
+				// Jump to last segment and convert it to Hiragana.
+				kb.AccelAction("Ctrl+Right"),
+				kb.AccelAction("Ctrl+u"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "tenkigaいい"),
+				// Move left to the middle segment and convert it to Hiragana.
+				kb.AccelAction("Left"),
+				kb.AccelAction("Ctrl+u"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "tenkiがいい"),
+				// Move left to the first segment and convert it to Hiragana.
+				kb.AccelAction("Ctrl+s"),
+				kb.AccelAction("Ctrl+u"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "てんきがいい"),
+				// Expand the first segment so that there's only two segments: 天気が|いい
+				// It should automatically convert back to the original Kanji result.
+				kb.AccelAction("Shift+Right"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "天気がいい"),
+				// Commit only the first segment, leaving only いい in composition.
+				kb.AccelAction("Ctrl+Down"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "天気がいい"),
+				// Shrink the segment so there's two segments: い|い
+				// Then convert it to Half Width Latin
+				kb.AccelAction("Shift+Left"),
+				kb.AccelAction("Ctrl+t"),
+				kb.AccelAction("Ctrl+n"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "天気がiい"),
+				// Convert the final segment (い) to Katakana.
+				kb.AccelAction("Ctrl+i"),
+				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "天気がiイ"),
 			),
 		},
 	}
