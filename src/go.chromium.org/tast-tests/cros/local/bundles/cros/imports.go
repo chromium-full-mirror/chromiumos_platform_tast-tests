@@ -122,6 +122,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/taskmanager"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/telemetryextension"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/terminal"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/timberslide"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/touchpad"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/typec"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/u2fd"
