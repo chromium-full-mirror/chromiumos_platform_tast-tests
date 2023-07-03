@@ -287,7 +287,7 @@ func getCodecImplementation(ctx context.Context, conn *chrome.Conn, decode bool)
 		if err != nil {
 			return errors.Wrap(err, "failed to retrieve and/or parse RTCStatsReport")
 		}
-		if impl == "unknown" {
+		if impl == "" || impl == "unknown" {
 			return errors.New("getStats() didn't fill in the codec implementation (yet)")
 		}
 		// "ExternalEncoder" is the default value for encoder implementations
