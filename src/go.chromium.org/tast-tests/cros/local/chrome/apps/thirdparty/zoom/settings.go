@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
@@ -18,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/uidetection"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -47,24 +49,30 @@ func (zm *Zoom) ChangeSettings(actions ...action.Action) action.Action {
 	)
 }
 
+var audioOptionsFinder = uidetection.TextBlock(strings.Split("Audio Options", " "))
+
 // expandAudioOption expands audio option menu.
 func (zm *Zoom) expandAudioOption(ctx context.Context) error {
 	ui := zm.ui
+	ud := uidetection.NewDefault(zm.tconn)
 	moreAudioControlsButton := nodewith.Name("More audio controls").Role(role.Button)
-	moreAudioControlsMenu := nodewith.Name("More audio controls").Role(role.Menu)
-	return uiauto.NamedCombine("expand audio option",
-		ui.LeftClickUntil(moreAudioControlsButton,
-			ui.WithTimeout(shortUITimeout).WaitUntilExists(moreAudioControlsMenu)))(ctx)
+
+	return uiauto.NamedAction("expand audio option",
+		ui.LeftClickUntil(
+			moreAudioControlsButton,
+			ud.WaitUntilExists(audioOptionsFinder),
+		))(ctx)
 }
 
 // leaveComputerAudio leaves computer audio from audio option menu.
 func (zm *Zoom) leaveComputerAudio(ctx context.Context) error {
-	ui := zm.ui
-	leaveComputerAudioItem := nodewith.Name("Leave Computer Audio").Role(role.MenuItem)
+	ud := uidetection.NewDefault(zm.tconn)
+	leaveComputerAudioFinder := uidetection.TextBlock(strings.Split("Leave Computer Audio", " "))
 	return uiauto.NamedCombine("leave computer audio",
 		zm.expandAudioOption,
-		ui.LeftClickUntil(leaveComputerAudioItem,
-			ui.WithTimeout(shortUITimeout).WaitUntilGone(leaveComputerAudioItem)))(ctx)
+		ud.LeftClick(leaveComputerAudioFinder),
+		ud.WaitUntilGone(audioOptionsFinder),
+	)(ctx)
 }
 
 // SetJoinAudio chooses an audio option or dismisses the dialog on the Join Audio page.
