@@ -18,6 +18,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/bruschetta/constants"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -146,7 +148,7 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		Stat: policy.StatusSet,
 		Val: map[string]interface{}{
 			"glinux-latest": map[string]interface{}{
-				"name":          "Test VM Configuration",
+				"name":          constants.BruschettaVMName,
 				"enabled_state": "INSTALL_ALLOWED",
 				"installer_image_x86_64": map[string]interface{}{
 					"url":  fmt.Sprintf("http://%s/%s", httpAddr, httpInstallerPath),
@@ -221,12 +223,12 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	s.Log("Starting installed VM")
 
 	// Now use the terminal app to boot the VM.
-	term, err := terminalapp.FindBruschetta(ctx, f.tconn)
+	_, err = terminalapp.FindBruschetta(ctx, f.tconn)
 	if err != nil {
 		s.Fatal("Failed to start bruschetta VM using terminal app: ", err)
 	}
 
-	if err := term.Close()(ctx); err != nil {
+	if err = apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
 		s.Fatal("Failed to close terminal app: ", err)
 	}
 
@@ -255,11 +257,11 @@ func (f *bruschettaFixture) Reset(ctx context.Context) error {
 	}
 
 	// Start up the VM, if it's not already running.
-	term, err := terminalapp.LaunchBruschetta(ctx, f.tconn)
+	_, err := terminalapp.LaunchBruschetta(ctx, f.tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to start bruschetta VM using terminal app")
 	}
-	if err := term.Close()(ctx); err != nil {
+	if err = apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
 		return errors.Wrap(err, "failed to close terminal app")
 	}
 

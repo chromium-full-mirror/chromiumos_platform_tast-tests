@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/apps"
+	bruconstants "go.chromium.org/tast-tests/cros/local/bruschetta/constants"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
@@ -43,7 +44,7 @@ const LaunchTerminalTimeout = 2 * time.Minute
 
 var (
 	linuxLink           = nodewith.Name("penguin").Role(role.Link)
-	bruschettaLink      = nodewith.Name("Bruschetta").Role(role.Link)
+	bruschettaLink      = nodewith.Name(bruconstants.BruschettaVMName).Role(role.Link)
 	linuxTab            = nodewith.NameContaining("@penguin: ").Role(role.Window).ClassName("BrowserFrame")
 	bruschettaTab       = nodewith.NameContaining("chronos@localhost: ").Role(role.Window).ClassName("BrowserFrame")
 	sshTab              = nodewith.NameContaining("chronos@localhost:").Role(role.Window).ClassName("BrowserFrame")
