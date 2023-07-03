@@ -35,6 +35,18 @@ const (
 	MmcDisk
 )
 
+// DiskPowerState represents disk's power state.
+type DiskPowerState int64
+
+const (
+	//DiskUnknownPowerState represents unknown power state
+	DiskUnknownPowerState = iota
+	// DiskHighPowerState represents high power state
+	DiskHighPowerState
+	// DiskLowPowerState represents high power state
+	DiskLowPowerState
+)
+
 // DiskTypeToString returns string name of a disk type.
 func DiskTypeToString(t DiskType) string {
 	switch t {
@@ -93,6 +105,8 @@ type Disk struct {
 	Name string
 	Size int
 	Type DiskType
+
+	nvmePowerConfig *NvmePowerConfig
 }
 
 func newDisk(ctx context.Context, dut *dut.DUT, path string) (*Disk, error) {
@@ -112,6 +126,14 @@ func newDisk(ctx context.Context, dut *dut.DUT, path string) (*Disk, error) {
 		Type: GetDiskType(name),
 	}
 
+	if disk.Type == NvmeDisk {
+		powerConfig, err := readNvmePowerConfig(ctx, disk)
+		if err != nil {
+			return nil, errors.Wrap(err, "can't get nvme power config")
+		}
+		disk.nvmePowerConfig = powerConfig
+	}
+
 	return disk, nil
 }
 
@@ -123,6 +145,37 @@ func (d *Disk) debugfsEntry() string {
 		return "mmc" + d.Name[len(d.Name)-1:]
 	default:
 		return "not_implemented_debugfs_entry"
+	}
+}
+
+func (d *Disk) powerStateFromSysfs(ctx context.Context) (DiskPowerState, error) {
+	state, err := d.ReadSysfsString(ctx, "device/power/runtime_status")
+	if err != nil {
+		return DiskUnknownPowerState, errors.Wrap(err, "can't get power state from sysfs")
+	}
+
+	if state == "suspended" {
+		return DiskLowPowerState, nil
+	}
+	if state == "active" {
+		return DiskHighPowerState, nil
+	}
+	return DiskUnknownPowerState, errors.Errorf("unknown sysfs power state %q", state)
+}
+
+// CurrentPowerState returns device's current power state
+func (d *Disk) CurrentPowerState(ctx context.Context) (DiskPowerState, error) {
+	switch d.Type {
+	case NvmeDisk:
+		return getNvmePowerState(ctx, d)
+	case MmcDisk:
+		fallthrough
+	case EmmcDisk:
+		fallthrough
+	case UfsDisk:
+		return d.powerStateFromSysfs(ctx)
+	default:
+		return DiskUnknownPowerState, errors.New("Power State check not implemented")
 	}
 }
 
