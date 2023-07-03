@@ -87,7 +87,7 @@ func RunArcConnectivityApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestCo
 	if useSystemProxy {
 		// Wait for the system-proxy daemon to ask for proxy credentials and authenticate in the system dialog.
 		if err := systemproxy.DoSystemProxyAuthentication(ctx, tconn, username, password); err != nil {
-			return proxy, errors.Wrap(err, "system-proxy authentication failed")
+			return proxy, errors.Wrapf(err, "system-proxy (%s) authentication failed", proxy)
 		}
 	}
 	field = d.Object(ui.ID(waitButtonID))

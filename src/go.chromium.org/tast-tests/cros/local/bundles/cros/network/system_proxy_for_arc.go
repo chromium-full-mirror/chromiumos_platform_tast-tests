@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -46,6 +47,10 @@ func init() {
 				// Verify that traffic from the device goes through the managed proxy (COM_FOUND_CUJ6_TASK3_WF1).
 				Value: "screenplay-4b1ea96e-e06c-4c3a-b153-626de2ebdaf8",
 			},
+			pci.SearchFlag(&policy.ProxyMode{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.ProxyServer{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.SystemProxySettings{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 		},
 	})
 }
@@ -70,6 +75,8 @@ func SystemProxyForArc(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start a local proxy on the DUT: ", err)
 	}
+
+	s.Logf("Started proxy server at address %s", ps.HostAndPort)
 
 	defer ps.Stop(ctx)
 
