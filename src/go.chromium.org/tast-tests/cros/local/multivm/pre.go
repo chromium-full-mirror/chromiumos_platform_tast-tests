@@ -40,7 +40,7 @@ var noVMStartedPre = NewMultiVMPrecondition(
 	"multivm_no_vm",
 	NewStateManager(
 		DefaultChromeOptions,
-	))
+	).SetForceActivate(true))
 
 // NoVMStarted returns a Precondition that logs into Chrome without starting any
 // VMs.
@@ -52,7 +52,7 @@ var noVMLacrosStartedPre = NewMultiVMPrecondition(
 	"multivm_no_vm_lacros",
 	NewStateManager(
 		LacrosChromeOptions,
-	))
+	).SetForceActivate(true))
 
 // NoVMLacrosStarted returns a Precondition that logs into Lacros Chrome without
 // starting any VMs.
@@ -93,7 +93,7 @@ var arcStartedPre = NewMultiVMPrecondition(
 	NewStateManager(
 		DefaultChromeOptions,
 		DefaultARCOptions,
-	))
+	).SetForceActivate(true))
 
 // ArcStarted returns a Precondition that logs into Chrome and starts ARCVM.
 func ArcStarted() testing.Precondition {
@@ -105,7 +105,7 @@ var arcLacrosStartedPre = NewMultiVMPrecondition(
 	NewStateManager(
 		LacrosChromeOptions,
 		DefaultARCOptions,
-	))
+	).SetForceActivate(true))
 
 // ArcLacrosStarted returns a Precondition that logs into Lacros Chrome and
 // starts ARCVM.
@@ -161,10 +161,10 @@ type PreData struct {
 // NewMultiVMPrecondition returns a new precondition that can be used be
 // used by tests that expect multiple VMs to be started at the start of the
 // test.
-func NewMultiVMPrecondition(name string, vmState StateManager) testing.Precondition {
+func NewMultiVMPrecondition(name string, vmState *StateManager) testing.Precondition {
 	return &preImpl{
 		name:    name,
-		vmState: vmState,
+		vmState: *vmState,
 	}
 }
 
@@ -187,11 +187,15 @@ func (p *preImpl) preData() *PreData {
 // active.
 func (p *preImpl) Prepare(ctx context.Context, s *testing.PreState) interface{} {
 	if p.vmState.Active() {
-		err := p.vmState.CheckAndReset(ctx, s)
-		if err == nil {
-			return p.preData()
+		if !p.vmState.IsForceActivateEnabled() {
+			err := p.vmState.CheckAndReset(ctx, s)
+			if err == nil {
+				return p.preData()
+			}
+			s.Log("Failed checking or resetting Chrome+VMs: ", err)
+		} else {
+			s.Log("Already-active precondition forced to re-activate")
 		}
-		s.Log("Failed checking or resetting Chrome+VMs: ", err)
 		if err := p.vmState.Deactivate(ctx); err != nil {
 			s.Fatal("Failed to deactivate Chrome+VMs after check failed: ", err)
 		}

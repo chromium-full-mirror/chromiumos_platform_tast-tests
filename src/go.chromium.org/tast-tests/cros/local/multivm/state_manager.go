@@ -57,8 +57,9 @@ type VMActivation interface {
 // between tests, and deactivated.
 type StateManager struct {
 	// Activate options.
-	crOptions ChromeOptions
-	vmOptions []VMOptions
+	crOptions     ChromeOptions
+	vmOptions     []VMOptions
+	forceActivate bool
 
 	// Managed Chrome and VMs. Default zero values set inactive state.
 	cr       *chrome.Chrome
@@ -71,16 +72,29 @@ type StateManager struct {
 
 // NewStateManager creates a state manager from ChromeOptions, and optional
 // VMOptions, depending on the VMs to be launched.
-func NewStateManager(crOptions ChromeOptions, vms ...VMOptions) StateManager {
-	return StateManager{
-		crOptions: crOptions,
-		vmOptions: vms,
-		vms:       make(map[string]VMActivation),
-		cr:        nil,
-		tconn:     nil,
-		keyboard:  nil,
-		active:    false,
+func NewStateManager(crOptions ChromeOptions, vms ...VMOptions) *StateManager {
+	return &StateManager{
+		crOptions:     crOptions,
+		vmOptions:     vms,
+		forceActivate: false,
+		vms:           make(map[string]VMActivation),
+		cr:            nil,
+		tconn:         nil,
+		keyboard:      nil,
+		active:        false,
 	}
+}
+
+// SetForceActivate changes the forceActivateFlag. Returns 'this' for
+// easy chaining with NewStateManager.
+func (s *StateManager) SetForceActivate(newValue bool) *StateManager {
+	s.forceActivate = newValue
+	return s
+}
+
+// IsForceActivateEnabled gets the value of the forceActivate flag.
+func (s *StateManager) IsForceActivateEnabled() bool {
+	return s.forceActivate
 }
 
 // StateManagerTestingState is the subset of testing.State or testing.PreState
