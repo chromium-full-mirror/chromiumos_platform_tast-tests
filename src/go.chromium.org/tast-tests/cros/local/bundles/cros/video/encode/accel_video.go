@@ -39,18 +39,6 @@ const (
 
 // The md5 hash values of the first 60 frames in the video file.
 var md5OfYUV60Frames = map[string]string{
-	// TODO(b/282878066): Replace them new files.
-	"crowd-1920x1080.vp9.webm":           "770a0c14e5202b1bde67c2f498eba682",
-	"crowd-3840x2160.vp9.webm":           "c0cf5576391ec6e2439a8d0fc7207662",
-	"crowd-320x180_30frames.vp9.webm":    "795d9e03fc4631245558cc522462a1e5",
-	"crowd-480x270_30frames.vp9.webm":    "21c426bea751e475533d2480b4b33426",
-	"crowd-640x360_30frames.vp9.webm":    "134fecaaae471820dede6c761e4d8f4b",
-	"crowd-960x540_30frames.vp9.webm":    "c1ab2a4af9bc76fc5d659fcf19fbee09",
-	"crowd-1280x720_30frames.vp9.webm":   "f26bff398809056165be970922492281",
-	"crowd-1920x1080_30frames.vp9.webm":  "13e4f50ad665e27c2a8603d6e65a0a39",
-	"crowd-3840x2160_30frames.vp9.webm":  "a739d49d4072bc91ca7b9b223e4b117f",
-	"static-1920x1080_30frames.vp9.webm": "f7d07243a9b5bbaa77930e66c9b64379",
-
 	"encode/desktop2-240x135_850frames.vp9.webm":   "3ac3550a9082255ebb423fdf991ff245",
 	"encode/desktop2-320x180_850frames.vp9.webm":   "63c5e91eef6e0c99431f4e3ff17ed8f9",
 	"encode/desktop2-480x270_850frames.vp9.webm":   "e1ebf7d5b2abf9ee3d7a60493c1153db",
@@ -59,7 +47,51 @@ var md5OfYUV60Frames = map[string]string{
 	"encode/desktop2-1280x720_850frames.vp9.webm":  "44148a6abc24bd136588564a5f0d6562",
 	"encode/desktop2-1920x1080_850frames.vp9.webm": "3009e864f85fff8ebe41d73971792311",
 	"encode/desktop2-3840x2160_430frames.vp9.webm": "650a6b03a33db4822541b4f652764f39",
+
+	"encode/crowd_run-320x180_60frames.vp9.webm":   "7abb7e1db24d92ce733bf29f45ba6e54",
+	"encode/crowd_run-480x270_60frames.vp9.webm":   "aa7d027201634fe2015009e48e3e352c",
+	"encode/crowd_run-640x360_60frames.vp9.webm":   "f65cb8d48140296490d35e492aef8f71",
+	"encode/crowd_run-960x540_60frames.vp9.webm":   "adc1be70223745c547edf5385333bf6e",
+	"encode/crowd_run-1280x720_60frames.vp9.webm":  "3ac4bda5f031923bcb9aa3d91d705691",
+	"encode/crowd_run-1920x1080_60frames.vp9.webm": "1d8ded3ff5d8ebca7593ebf4f74f73cc",
+	"encode/crowd_run-3840x2160_60frames.vp9.webm": "efd01049a3869ef64ac0e60a195aaf52",
+
+	"encode/fallout4-1280x720_600frames.vp9.webm":  "9bad73fd85cc928632473b4f2ffb19f3",
+	"encode/fallout4-1920x1080_600frames.vp9.webm": "f30d4ca840541ad8ed6a190b7518224d",
+	"encode/fallout4-3840x2160_250frames.vp9.webm": "ef7a8783fed0915679f0a12f261943e7",
+
+	"encode/gipsrecmotion-320x180_850frames.vp9.webm":   "e7c22a24cf97c8e504df27a042f94919",
+	"encode/gipsrecmotion-480x270_850frames.vp9.webm":   "7c2d22379256f2f1d99096e94269626b",
+	"encode/gipsrecmotion-640x360_850frames.vp9.webm":   "ad828894670ef9c42a42f79276962c64",
+	"encode/gipsrecmotion-960x540_850frames.vp9.webm":   "883a251a180041d8657f96a6d1fad694",
+	"encode/gipsrecmotion-1280x720_850frames.vp9.webm":  "a8b5749855522d837765728effcfa5ce",
+	"encode/gipsrecmotion-1920x1080_850frames.vp9.webm": "e804086216bb777b789f9214ac9c9a9d",
+	"encode/gipsrecmotion-3840x2160_360frames.vp9.webm": "965a2c31fe3cc96a6b142e080f22d03a",
+
+	"encode/gipsrestat-320x180_846frames.vp9.webm":   "8d8963d58e4806733e37969159d7bdd4",
+	"encode/gipsrestat-480x270_846frames.vp9.webm":   "0c425071c180d8a9552e330d684b0e6e",
+	"encode/gipsrestat-640x360_846frames.vp9.webm":   "559638803b898bd1190301af6fa99806",
+	"encode/gipsrestat-960x540_846frames.vp9.webm":   "24b33fc0725aebc608aba60b1bed68ee",
+	"encode/gipsrestat-1280x720_846frames.vp9.webm":  "7de17229c45c5d4936beaafe4f0d81d8",
+	"encode/gipsrestat-1920x1080_846frames.vp9.webm": "f79541aee3d2af780a20ca12cafb9846",
+	"encode/gipsrestat-3840x2160_360frames.vp9.webm": "c4a42ff9ae6c8205900ecf5f1b84fea2",
+
+	"encode/static-1920x1080_600frames.vp9.webm": "f70998128376800b1dc27e70ff2c335d",
 }
+
+// AccelPerfTestType denotes the tests to be run with video_encode_accelerator_perf_tests.
+type AccelPerfTestType int
+
+const (
+	// None is only used to check if the AccelPerfTestType has the bit mask.
+	None AccelPerfTestType = 0
+	// Quality runs the quality performance tests.
+	Quality AccelPerfTestType = (1 << 0)
+	// Speed runs the speed performance tests.
+	Speed AccelPerfTestType = (1 << 1)
+	// SpeedAndQuality runs the speed and quality performance tests.
+	SpeedAndQuality AccelPerfTestType = Quality | Speed
+)
 
 // TestOptions is the options for runAccelVideoTest.
 type TestOptions struct {
@@ -68,6 +100,9 @@ type TestOptions struct {
 
 	// Profile is the codec that the encoder produces.
 	Profile videotype.CodecProfile
+
+	// TestType specifies the tests to be run.
+	TestType AccelPerfTestType
 
 	// The SVC scalability mode See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes*.
 	SVCMode string
@@ -322,74 +357,31 @@ func RunAccelVideoTest(ctx context.Context, s *testing.State, opts TestOptions) 
 	}
 }
 
-// RunAccelVideoPerfTest runs video_encode_accelerator_perf_tests with the specified
-// video file.
-// - Uncapped performance: the specified test video is encoded for 300 frames by the hardware encoder as fast as possible.
-// This provides an estimate of the decoder's max performance (e.g. the maximum FPS).
-// - Capped performance: the specified test video is encoded for 300 frames by the hardware encoder at 30fps.
+// RunAccelVideoPerfTest runs video_encode_accelerator_perf_tests with the specified video file.
+// if opts.TestType has Speed mask, then uncapped performance, capped performance, multiple concurrent performance runs.
+// The first 60 frames are decoded from the file to the I420 file. The test runs with the I420 file.
+// Each test encodes 300 frames using the 60 frames.
+// - Uncapped performance: encodes the frames by the hardware encoder as fast as possible.
+// This provides an estimate of the encoders's max performance (e.g. the maximum FPS).
+// - Capped performance: encodes by the hardware encoder with inputting frames at 30fps.
 // This is used to measure cpu usage and power consumption in the practical case.
-// - Quality performance: the specified test video is encoded for 300 frames and computes the SSIM and PSNR metrics of the encoded stream.
 // - Multiple concurrent performance: the specified test video is encoded with multiple concurrent encoders as fast as possible.
+// If opts.TestType has Quality mask, then quality performance runs.
+// The vp9 webm file is input to the video_encode_accelerator_perf_tests. It encodes all the frames with decoding frames on demand.
+// So that the input vp9 webm needs to have frequent key frames. The example command is below.
+// `ffmpeg -i input.y4m -vcodec libvpx-vp9 -lossless 1 -force_key_frames "expr:gte(n,n_forced*10)" output.vp9.webm`
+// - Quality performance: computes the quality metrics of the encoded stream.
 func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptions) error {
-	const (
-		// Name of the uncapped performance test.
-		uncappedTestname = "MeasureUncappedPerformance"
-		// Name of the capped performance test.
-		cappedTestname = "MeasureCappedPerformance"
-		// Name of the bitstream quality test.
-		qualityTestname = "MeasureProducedBitstreamQuality"
-		// Name of the multiple concurrent encoders test.
-		multipleConcurrentTestname = "MeasureUncappedPerformance_MultipleConcurrentEncoders"
-		// The binary performance test.
-		exec = "video_encode_accelerator_perf_tests"
-	)
-
-	md5Hash, found := md5OfYUV60Frames[opts.WebMName]
-	if !found {
-		s.Fatal("Unknown webm file: ", opts.WebMName)
-	}
-
-	// Setup benchmark mode.
-	cleanUpBenchmark, err := mediacpu.SetUpBenchmark(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to set up benchmark mode")
-	}
-	defer cleanUpBenchmark(ctx)
-
-	yuvPath, err := encoding.DecodeInI420WithNumFrames(ctx, s.DataPath(opts.WebMName),
-		numEncodeFrames, md5Hash)
-	if err != nil {
-		s.Fatal("Failed to create a yuv file: ", err)
-	} else if videovars.ShouldRemoveArtifacts(ctx) {
-		defer os.Remove(yuvPath)
-	}
-
-	yuvJSONPath, err := encoding.PrepareYUVJSON(ctx, yuvPath,
-		s.DataPath(yuvJSONFileNameFor(opts.WebMName)))
-	if err != nil {
-		s.Fatal("Failed to create a yuv json file: ", err)
-	} else if videovars.ShouldRemoveArtifacts(ctx) {
-		defer os.Remove(yuvJSONPath)
-	}
-
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for CPU to become idle")
-	}
-
 	codec, err := codecProfileToEncodeCodecOption(opts.Profile)
 	if err != nil {
 		return errors.Wrap(err, "failed to get codec option")
 	}
 
-	// Test 1: Measure maximum FPS and the quality of the encoded bitstream.
 	testArgs := []string{
 		fmt.Sprintf("--codec=%s", codec),
 		fmt.Sprintf("--output_folder=%s", s.OutDir()),
 		"--reverse",
-		yuvPath,
-		yuvJSONPath,
 	}
-
 	spatialLayers := 1
 	temporalLayers := 1
 	if opts.SVCMode != "" {
@@ -409,10 +401,78 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 		testArgs = append(testArgs, "--disable_vaapi_lock")
 	}
 
+	p := perf.NewValues()
+	if opts.TestType&Speed != None {
+		if err := runAccelVideoSpeedPerfTest(ctx, s, testArgs, opts.WebMName, p); err != nil {
+			return err
+		}
+	}
+	if opts.TestType&Quality != None {
+		if err := runAccelVideoQualityPerfTest(ctx, s, testArgs, opts.WebMName, spatialLayers, temporalLayers, p); err != nil {
+			return err
+		}
+	}
+
+	if err := p.Save(s.OutDir()); err != nil {
+		return errors.Wrap(err, "failed to save performance metrics")
+	}
+
+	return nil
+}
+
+func runAccelVideoSpeedPerfTest(ctx context.Context, s *testing.State, testArgs []string, webMName string, p *perf.Values) error {
+	const (
+		// Name of the uncapped performance test.
+		uncappedTestname = "MeasureUncappedPerformance"
+		// Name of the capped performance test.
+		cappedTestname = "MeasureCappedPerformance"
+		// Name of the multiple concurrent encoders test.
+		multipleConcurrentTestname = "MeasureUncappedPerformance_MultipleConcurrentEncoders"
+		// The binary performance test.
+		exec = "video_encode_accelerator_perf_tests"
+	)
+
+	md5Hash, found := md5OfYUV60Frames[webMName]
+	if !found {
+		s.Fatal("Unknown webm file: ", webMName)
+	}
+
+	yuvPath, err := encoding.DecodeInI420WithNumFrames(ctx, s.DataPath(webMName),
+		numEncodeFrames, md5Hash)
+	if err != nil {
+		s.Fatal("Failed to create a yuv file: ", err)
+	} else if videovars.ShouldRemoveArtifacts(ctx) {
+		defer os.Remove(yuvPath)
+	}
+	yuvJSONPath := yuvPath + ".json"
+	if err := fillYUVJSON(yuvJSONPath, s.DataPath(webMJSONFileNameFor(webMName))); err != nil {
+		s.Fatal("Failed to create a yuv json file: ", err)
+	} else if videovars.ShouldRemoveArtifacts(ctx) {
+		defer os.Remove(yuvJSONPath)
+	}
+
+	// Setup benchmark mode.
+	cleanUpBenchmark, err := mediacpu.SetUpBenchmark(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to set up benchmark mode")
+	}
+	defer cleanUpBenchmark(ctx)
+
+	if err := cpu.WaitUntilIdle(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for CPU to become idle")
+	}
+
+	testArgs = append(testArgs, []string{
+		"--speed",
+		yuvPath,
+		yuvJSONPath,
+	}...)
+
+	// Test 1: Measure maximum FPS.
 	if report, err := gtest.New(
 		filepath.Join(chrome.BinTestDir, exec),
-		gtest.Logfile(filepath.Join(s.OutDir(), exec+".uncap_and_quality.log")),
-		gtest.Filter(fmt.Sprintf("*%s:*%s:*%s", uncappedTestname, qualityTestname, multipleConcurrentTestname)),
+		gtest.Logfile(filepath.Join(s.OutDir(), exec+".uncap.log")),
+		gtest.Filter(fmt.Sprintf("*%s:*%s", uncappedTestname, multipleConcurrentTestname)),
 		gtest.ExtraArgs(testArgs...),
 		gtest.UID(int(sysutil.ChronosUID)),
 	).Run(ctx); err != nil {
@@ -423,30 +483,12 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 		}
 		return errors.Wrapf(err, "failed to run %v", exec)
 	}
-
-	p := perf.NewValues()
 	uncappedJSON := filepath.Join(s.OutDir(), "VideoEncoderTest", uncappedTestname+".json")
 	if _, err := os.Stat(uncappedJSON); os.IsNotExist(err) {
 		return errors.Wrap(err, "failed to find uncapped performance metrics file")
 	}
 	if err := encoding.ParseUncappedPerfMetrics(uncappedJSON, p, "single_encoder"); err != nil {
 		return errors.Wrap(err, "failed to parse uncapped performance metrics")
-	}
-
-	qualityJSONPath := filepath.Join(s.OutDir(), "VideoEncoderTest", qualityTestname)
-	if opts.SVCMode != "" {
-		for sID := 1; sID <= spatialLayers; sID++ {
-			for tID := 1; tID <= temporalLayers; tID++ {
-				scalabilityMode := fmt.Sprintf("L%dT%d", sID, tID)
-				if err := addQualityMetrics(qualityJSONPath, scalabilityMode, p); err != nil {
-					return errors.Wrapf(err, "failed to parse quality performance metrics for %v", scalabilityMode)
-				}
-			}
-		}
-	} else {
-		if err := addQualityMetrics(qualityJSONPath, "", p); err != nil {
-			return errors.Wrap(err, "failed to parse quality performance metrics")
-		}
 	}
 
 	multipleConcurrentJSON := filepath.Join(s.OutDir(), "VideoEncoderTest", multipleConcurrentTestname+".json")
@@ -489,11 +531,53 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 			Direction: perf.SmallerIsBetter,
 		}, power)
 	}
+	return nil
+}
 
-	if err := p.Save(s.OutDir()); err != nil {
-		return errors.Wrap(err, "failed to save performance metrics")
+func runAccelVideoQualityPerfTest(ctx context.Context, s *testing.State, testArgs []string, webMName string, spatialLayers, temporalLayers int, p *perf.Values) error {
+	const (
+		// Name of the bitstream quality test.
+		qualityTestname = "MeasureProducedBitstreamQuality"
+		// The binary performance test.
+		exec = "video_encode_accelerator_perf_tests"
+	)
+	testArgs = append(testArgs, []string{
+		"--quality",
+		s.DataPath(webMName),
+		s.DataPath(webMJSONFileNameFor(webMName)),
+	}...)
+
+	// Test: Measure quality of the encoded bitstream.
+	if report, err := gtest.New(
+		filepath.Join(chrome.BinTestDir, exec),
+		gtest.Logfile(filepath.Join(s.OutDir(), exec+".quality.log")),
+		gtest.Filter(fmt.Sprintf("*%s", qualityTestname)),
+		gtest.ExtraArgs(append(testArgs, "--quality")...),
+		gtest.UID(int(sysutil.ChronosUID)),
+	).Run(ctx); err != nil {
+		if report != nil {
+			for _, name := range report.FailedTestNames() {
+				s.Error(name, " failed")
+			}
+		}
+		return errors.Wrapf(err, "failed to run %v", exec)
 	}
 
+	qualityJSONPath := filepath.Join(s.OutDir(), "VideoEncoderTest", qualityTestname)
+	if temporalLayers > 1 || spatialLayers > 1 {
+		for sID := 1; sID <= spatialLayers; sID++ {
+			for tID := 1; tID <= temporalLayers; tID++ {
+				scalabilityMode := fmt.Sprintf("L%dT%d", sID, tID)
+				if err := addQualityMetrics(qualityJSONPath, scalabilityMode, p); err != nil {
+					return errors.Wrapf(err, "failed to parse quality performance metrics for %v", scalabilityMode)
+				}
+			}
+		}
+	} else {
+		if err := addQualityMetrics(qualityJSONPath, "", p); err != nil {
+			return errors.Wrap(err, "failed to parse quality performance metrics")
+		}
+	}
 	return nil
 }
 
