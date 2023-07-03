@@ -46,7 +46,7 @@ func EmmcConfiguration(ctx context.Context, s *testing.State) {
 
 	perfValues := perf.NewValues()
 
-	emmcRevision, err := disk.ReadSysfsHexInt64(ctx, s.DUT(), "device/rev")
+	emmcRevision, err := disk.ReadSysfsHexInt64(ctx, "device/rev")
 	if err != nil {
 		s.Fatal("Failed to read eMMC revision: ", err)
 	}
@@ -57,7 +57,7 @@ func EmmcConfiguration(ctx context.Context, s *testing.State) {
 		Direction: perf.BiggerIsBetter,
 	}, float64(emmcRevision))
 
-	ffu, err := disk.ReadSysfsInt64(ctx, s.DUT(), "device/ffu_capable")
+	ffu, err := disk.ReadSysfsInt64(ctx, "device/ffu_capable")
 	if err != nil {
 		s.Fatal("Failed to read FFU capability: ", err)
 	}
@@ -68,7 +68,7 @@ func EmmcConfiguration(ctx context.Context, s *testing.State) {
 		Direction: perf.BiggerIsBetter,
 	}, float64(ffu))
 
-	caps2, err := disk.ReadDebugfsHexInt64(ctx, s.DUT(), "caps2")
+	caps2, err := disk.ReadDebugfsHexInt64(ctx, "caps2")
 	if err != nil {
 		s.Fatal("Failed to read eMMC capabilities: ", err)
 	}
@@ -96,7 +96,7 @@ func EmmcConfiguration(ctx context.Context, s *testing.State) {
 		Direction: perf.BiggerIsBetter,
 	}, cqe)
 
-	if _, err := disk.ReadSysfsString(ctx, s.DUT(), "device/life_time"); err != nil {
+	if _, err := disk.ReadSysfsString(ctx, "device/life_time"); err != nil {
 		s.Fatal("Failed to read eMMC lifetime: ", err)
 	}
 

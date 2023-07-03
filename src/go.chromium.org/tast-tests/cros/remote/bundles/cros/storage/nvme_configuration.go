@@ -57,7 +57,7 @@ func NvmeConfiguration(ctx context.Context, s *testing.State) {
 	}, float64(version))
 
 	isPcieTransport := float64(0)
-	transport, err := disk.ReadSysfsString(ctx, s.DUT(), "device/transport")
+	transport, err := disk.ReadSysfsString(ctx, "device/transport")
 	if err != nil {
 		s.Fatal("Can't determine NVMe transport: ", err)
 	}
@@ -72,7 +72,7 @@ func NvmeConfiguration(ctx context.Context, s *testing.State) {
 		Direction: perf.BiggerIsBetter,
 	}, isPcieTransport)
 
-	linkSpeedStr, err := disk.ReadSysfsString(ctx, s.DUT(), "device/device/current_link_speed")
+	linkSpeedStr, err := disk.ReadSysfsString(ctx, "device/device/current_link_speed")
 	if err != nil {
 		s.Fatal("Can't determine NVMe link speed: ", err)
 	}

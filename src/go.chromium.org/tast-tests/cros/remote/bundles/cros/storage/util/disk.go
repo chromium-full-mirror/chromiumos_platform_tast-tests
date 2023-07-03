@@ -56,12 +56,63 @@ func DiskTypeToString(t DiskType) string {
 	return "invalid enum type"
 }
 
+func getBlockDeviceSize(ctx context.Context, dut *dut.DUT, devPath string) (int, error) {
+	blockCountStr, err := RunCmdWithStringOutput(ctx, dut, "blockdev", "--getsz", devPath)
+	if err != nil {
+		return -1, errors.Wrapf(err, "can't get block count for %q", devPath)
+	}
+
+	blockCount, err := strconv.Atoi(blockCountStr)
+	if err != nil {
+		return -1, errors.Wrapf(err, "can't parse int from %q", blockCountStr)
+	}
+
+	return blockCount * 512, nil
+}
+
+// GetDiskType returns disk type based on its name.
+// TODO(dlunev): this is a crude stub, a more reliable method should be developed.
+func GetDiskType(devName string) DiskType {
+	if strings.HasPrefix(devName, "mmcblk") {
+		return EmmcDisk
+	}
+	if strings.HasPrefix(devName, "nvme") {
+		return NvmeDisk
+	}
+	if strings.HasPrefix(devName, "sd") {
+		return UfsDisk
+	}
+
+	return UnknownDisk
+}
+
 // Disk structure represents a block device.
 type Disk struct {
+	DUT  *dut.DUT
 	Path string
 	Name string
 	Size int
 	Type DiskType
+}
+
+func newDisk(ctx context.Context, dut *dut.DUT, path string) (*Disk, error) {
+	pathComponents := strings.Split(path, "/")
+	name := pathComponents[len(pathComponents)-1]
+
+	size, err := getBlockDeviceSize(ctx, dut, path)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't get dev size")
+	}
+
+	disk := &Disk{
+		DUT:  dut,
+		Path: path,
+		Name: name,
+		Size: size,
+		Type: GetDiskType(name),
+	}
+
+	return disk, nil
 }
 
 func (d *Disk) debugfsEntry() string {
@@ -76,18 +127,18 @@ func (d *Disk) debugfsEntry() string {
 }
 
 // ReadDebugfsString reads string from the debugfs of the device.
-func (d *Disk) ReadDebugfsString(ctx context.Context, dut *dut.DUT, relativePath string) (string, error) {
+func (d *Disk) ReadDebugfsString(ctx context.Context, relativePath string) (string, error) {
 	path := "/sys/kernel/debug/" + d.debugfsEntry() + "/" + relativePath
-	data, err := RunCmdWithStringOutput(ctx, dut, "cat", path)
+	data, err := RunCmdWithStringOutput(ctx, d.DUT, "cat", path)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to read sysfs path: "+path)
+		return "", errors.Wrap(err, "failed to read debugfs path: "+path)
 	}
 	return data, nil
 }
 
 // ReadDebugfsHexInt64 reads hex int from the debugfs of the device.
-func (d *Disk) ReadDebugfsHexInt64(ctx context.Context, dut *dut.DUT, relativePath string) (int64, error) {
-	strVal, err := d.ReadDebugfsString(ctx, dut, relativePath)
+func (d *Disk) ReadDebugfsHexInt64(ctx context.Context, relativePath string) (int64, error) {
+	strVal, err := d.ReadDebugfsString(ctx, relativePath)
 	if err != nil {
 		return 0, err
 	}
@@ -102,9 +153,9 @@ func (d *Disk) ReadDebugfsHexInt64(ctx context.Context, dut *dut.DUT, relativePa
 }
 
 // ReadSysfsString reads string from the sysfs of the device.
-func (d *Disk) ReadSysfsString(ctx context.Context, dut *dut.DUT, relativePath string) (string, error) {
+func (d *Disk) ReadSysfsString(ctx context.Context, relativePath string) (string, error) {
 	path := "/sys/block/" + d.Name + "/" + relativePath
-	data, err := RunCmdWithStringOutput(ctx, dut, "cat", path)
+	data, err := RunCmdWithStringOutput(ctx, d.DUT, "cat", path)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read sysfs path: "+path)
 	}
@@ -112,8 +163,8 @@ func (d *Disk) ReadSysfsString(ctx context.Context, dut *dut.DUT, relativePath s
 }
 
 // ReadSysfsHexInt64 reads hex int from the sysfs of the device.
-func (d *Disk) ReadSysfsHexInt64(ctx context.Context, dut *dut.DUT, relativePath string) (int64, error) {
-	strVal, err := d.ReadSysfsString(ctx, dut, relativePath)
+func (d *Disk) ReadSysfsHexInt64(ctx context.Context, relativePath string) (int64, error) {
+	strVal, err := d.ReadSysfsString(ctx, relativePath)
 	if err != nil {
 		return 0, err
 	}
@@ -128,8 +179,8 @@ func (d *Disk) ReadSysfsHexInt64(ctx context.Context, dut *dut.DUT, relativePath
 }
 
 // ReadSysfsInt64 reads decimal int from the sysfs of the device.
-func (d *Disk) ReadSysfsInt64(ctx context.Context, dut *dut.DUT, relativePath string) (int64, error) {
-	strVal, err := d.ReadSysfsString(ctx, dut, relativePath)
+func (d *Disk) ReadSysfsInt64(ctx context.Context, relativePath string) (int64, error) {
+	strVal, err := d.ReadSysfsString(ctx, relativePath)
 	if err != nil {
 		return 0, err
 	}
@@ -201,36 +252,6 @@ func getRemovableMmcName(ctx context.Context, dut *dut.DUT) (string, error) {
 	return "", errors.New("can't find mmc card")
 }
 
-func getBlockDeviceSize(ctx context.Context, dut *dut.DUT, devPath string) (int, error) {
-	blockCountStr, err := RunCmdWithStringOutput(ctx, dut, "blockdev", "--getsz", devPath)
-	if err != nil {
-		return -1, errors.Wrapf(err, "can't get block count for %q", devPath)
-	}
-
-	blockCount, err := strconv.Atoi(blockCountStr)
-	if err != nil {
-		return -1, errors.Wrapf(err, "can't parse int from %q", blockCountStr)
-	}
-
-	return blockCount * 512, nil
-}
-
-// GetDiskType returns disk type based on its name.
-// TODO(dlunev): this is a crude stub, a more reliable method should be developed.
-func GetDiskType(devName string) DiskType {
-	if strings.HasPrefix(devName, "mmcblk") {
-		return EmmcDisk
-	}
-	if strings.HasPrefix(devName, "nvme") {
-		return NvmeDisk
-	}
-	if strings.HasPrefix(devName, "sd") {
-		return UfsDisk
-	}
-
-	return UnknownDisk
-}
-
 // GetRemovableMmc returns the disk structure representing the removable MMC
 // TODO(dlunev): This can pick up wrong device. It will get fixed, but ok for
 // now to start working on tests.
@@ -241,12 +262,8 @@ func GetRemovableMmc(ctx context.Context, dut *dut.DUT) (*Disk, error) {
 	}
 
 	mmcPath := filepath.Join("/dev", mmcName)
-	mmcSize, err := getBlockDeviceSize(ctx, dut, mmcPath)
-	if err != nil {
-		return nil, errors.Wrap(err, "can't get mmc card size")
-	}
 
-	return &Disk{Path: mmcPath, Name: mmcName, Size: mmcSize, Type: MmcDisk}, nil
+	return newDisk(ctx, dut, mmcPath)
 }
 
 // GetInternalStorageFromInternalBoot returns the disk structure representing
@@ -260,16 +277,8 @@ func GetInternalStorageFromInternalBoot(ctx context.Context, dut *dut.DUT) (*Dis
 	}
 
 	rootDevPath := filepath.Join("/dev", rootDevName)
-	rootDevSize, err := getBlockDeviceSize(ctx, dut, rootDevPath)
-	if err != nil {
-		return nil, errors.Wrap(err, "can't get rootdev size")
-	}
 
-	return &Disk{
-		Path: rootDevPath,
-		Name: rootDevName,
-		Size: rootDevSize,
-		Type: GetDiskType(rootDevName)}, nil
+	return newDisk(ctx, dut, rootDevPath)
 }
 
 // GetStandbyRootfsFromInternalBoot returns disk structure representing
@@ -291,16 +300,8 @@ func GetStandbyRootfsFromInternalBoot(ctx context.Context, dut *dut.DUT) (*Disk,
 	partitionName = partitionName + spareRootMap[partitionIndex]
 
 	partitionPath := filepath.Join("/dev", partitionName)
-	partitionSize, err := getBlockDeviceSize(ctx, dut, partitionPath)
-	if err != nil {
-		return nil, errors.Wrap(err, "can't get standby rootfs partition size")
-	}
 
-	return &Disk{
-		Path: partitionPath,
-		Name: partitionName,
-		Size: partitionSize,
-		Type: GetDiskType(partitionName)}, nil
+	return newDisk(ctx, dut, partitionPath)
 }
 
 // GetInternalStorageFromRemovableBoot returns the disk structure representing
@@ -319,10 +320,6 @@ func GetInternalStorageFromRemovableBoot(ctx context.Context, dut *dut.DUT) (*Di
 	}
 
 	var internalDevName string
-	var internalDevType DiskType
-
-	internalDevType = UnknownDisk
-
 	for _, bdev := range blockDevNames {
 		if bdev != rootDevName && GetDiskType(bdev) != UnknownDisk {
 			internalDevName = bdev
@@ -332,14 +329,6 @@ func GetInternalStorageFromRemovableBoot(ctx context.Context, dut *dut.DUT) (*Di
 	}
 
 	internalDevPath := filepath.Join("/dev", internalDevName)
-	internalDevSize, err := getBlockDeviceSize(ctx, dut, internalDevPath)
-	if err != nil {
-		return nil, errors.Wrap(err, "can't get rootdev size")
-	}
 
-	return &Disk{
-		Path: internalDevPath,
-		Name: internalDevName,
-		Size: internalDevSize,
-		Type: internalDevType}, nil
+	return newDisk(ctx, dut, internalDevPath)
 }
