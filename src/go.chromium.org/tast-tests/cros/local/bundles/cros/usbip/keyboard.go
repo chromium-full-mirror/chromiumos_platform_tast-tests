@@ -64,17 +64,18 @@ func Keyboard(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
 	defer kb.Close(cleanupCtx)
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "keyboard")
 
 	var detach usbip.DetachFn
 	testText := "This is a test message."
-	prompt := "crosh>"
+	promptText := "crosh>"
 	window := nodewith.Name("crosh").Role(role.Window).ClassName("BrowserFrame")
+	prompt := nodewith.Ancestor(window).Name(promptText).Role(role.StaticText).First()
 	ui := uiauto.New(tconn)
 	if err := uiauto.Repeat(2, uiauto.Combine("Open launcher and type text",
 		func(ctx context.Context) error { return apps.Launch(ctx, tconn, apps.Crosh.ID) },
+		ui.WaitUntilExists(prompt),
 		ui.LeftClick(window),
-		ui.WaitUntilExists(nodewith.Ancestor(window).Name(prompt).Role(role.StaticText).First()),
 		func(ctx context.Context) error {
 			var err error
 			detach, err = attach(ctx)
@@ -84,7 +85,7 @@ func Keyboard(ctx context.Context, s *testing.State) {
 			k.Type(testText)
 			return nil
 		},
-		ui.WaitUntilExists(nodewith.Ancestor(window).Name(fmt.Sprintf("%s %s", prompt, testText)).Role(role.StaticText).First()),
+		ui.WaitUntilExists(nodewith.Ancestor(window).Name(fmt.Sprintf("%s %s", promptText, testText)).Role(role.StaticText).First()),
 		// Close crosh.
 		kb.AccelAction("Enter"),
 		kb.TypeAction("exit"),
