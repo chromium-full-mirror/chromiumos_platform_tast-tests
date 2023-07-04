@@ -588,6 +588,11 @@ func AudioLoopbackCorrectness(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	// Restart CRAS to reset state that might affect this test (e.g. system mute)
+	if _, err := audio.RestartCras(ctx); err != nil {
+		s.Fatal("Failed to restart cras: ", err)
+	}
+
 	// Reserve time to remove input file and unload ALSA loopback at the end of the test.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
