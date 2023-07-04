@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/config"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
@@ -197,20 +198,57 @@ func getFirstTargetWithPrefix(ctx context.Context, sess *driver.Session, urlPref
 // waitForPageWithPrefixToBeDismissed waits for a OOBE page with a given prefix to disappear.
 func waitForPageWithPrefixToBeDismissed(ctx context.Context, sess *driver.Session, urlPrefix string) error {
 	testing.ContextLogf(ctx, "Waiting for OOBE %s to be dismissed", urlPrefix)
-	err := testing.Poll(ctx, func(ctx context.Context) error {
+	errStillExists := errors.Errorf("%s target still exists", urlPrefix)
+
+	// Save 5 seconds to try to get OOBE screen details in case of a failure.
+	pollCtx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	err := testing.Poll(pollCtx, func(ctx context.Context) error {
 		if t, err := getFirstTargetWithPrefix(ctx, sess, urlPrefix); err != nil {
 			// This is likely a Chrome crash. So there's no chance that
 			// waiting for the dismiss succeeds later. Quit the polling now.
 			return testing.PollBreak(err)
 		} else if t != nil {
-			return errors.Errorf("%s target still exists", urlPrefix)
+			return errStillExists
 		}
 		return nil
 	}, pollOpts)
 
 	if err != nil {
+		// If we are still on an OOBE page, try to get some details.
+		if errors.Is(err, errStillExists) {
+			// If the call fails, we fall back to the original error message.
+			if name, step, screenErr := currentOOBEScreenDetails(ctx, sess); screenErr != nil {
+				testing.ContextLog(ctx, "Failed to get OOBE screen details: ", screenErr)
+			} else {
+				return errors.Wrapf(sess.Watcher().ReplaceErr(err), "OOBE not dismissed, it is on screen %q, step %q", name, step)
+			}
+		}
+
 		return errors.Wrap(sess.Watcher().ReplaceErr(err), "OOBE not dismissed")
 	}
 
 	return nil
+}
+
+// currentOOBEScreenDetails returns with the name and step name of the current OOBE screen.
+func currentOOBEScreenDetails(ctx context.Context, sess *driver.Session) (string, string, error) {
+	conn, err := WaitForOOBEConnection(ctx, sess)
+	if err != nil {
+		return "", "", err
+	}
+
+	var screenName string
+	var screenStep string
+
+	if err := conn.Eval(ctx, "OobeAPI.getCurrentScreenName()", &screenName); err != nil {
+		return "", "", errors.Wrap(err, "failed to get OOBE screen name")
+	}
+
+	if err := conn.Eval(ctx, "OobeAPI.getCurrentScreenStep()", &screenStep); err != nil {
+		return "", "", errors.Wrapf(err, "failed to get OOBE step on screen %q", screenName)
+	}
+
+	return screenName, screenStep, nil
 }
