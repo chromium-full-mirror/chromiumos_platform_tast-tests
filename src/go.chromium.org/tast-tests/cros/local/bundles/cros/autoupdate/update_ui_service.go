@@ -76,7 +76,7 @@ func (u *UpdateUIService) RelaunchAfterUpdate(ctx context.Context, req *empty.Em
 	restart := nodewith.Name("Restart").Role(role.Button)
 	ui := uiauto.New(tconn)
 
-	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, u.cr, "help/about", ui.Exists(restart)); err != nil {
+	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, u.cr, "help", ui.Exists(restart)); err != nil {
 		return nil, errors.Wrap(err, "failed to launch about ChromeOS settings")
 	}
 
