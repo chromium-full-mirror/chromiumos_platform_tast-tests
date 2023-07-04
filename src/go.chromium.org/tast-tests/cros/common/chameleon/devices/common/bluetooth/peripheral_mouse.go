@@ -58,7 +58,6 @@ type MousePeripheral interface {
 // provides methods for making XMLRPC calls to a chameleond daemon.
 // See the MousePeripheral interface for more detailed documentation.
 type CommonMousePeripheral struct {
-	xmlrpc.CommonRPCInterface
 	CommonBluezPeripheral
 }
 
