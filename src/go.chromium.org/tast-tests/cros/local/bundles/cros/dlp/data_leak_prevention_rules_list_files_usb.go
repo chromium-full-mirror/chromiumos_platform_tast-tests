@@ -105,12 +105,6 @@ func init() {
 		// ChromeOS > Software > Commercial (Enterprise) > DLP (Data Loss Prevention)
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
-		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),
 			{
@@ -132,14 +126,26 @@ func init() {
 			}},
 		Params: []testing.Param{
 			{
-				Name:    "ash_allowed",
+				Name: "ash_allowed",
+				ExtraAttr: []string{
+					"group:golden_tier",
+					"group:medium_low_tier",
+					"group:hardware",
+					"group:complementary",
+				},
 				Fixture: fixture.ChromePolicyLoggedIn,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeAsh,
 					restriction: restrictionlevel.Allowed,
 				},
 			}, {
-				Name:              "lacros_allowed",
+				Name: "lacros_allowed",
+				ExtraAttr: []string{
+					"group:golden_tier",
+					"group:medium_low_tier",
+					"group:hardware",
+					"group:complementary",
+				},
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.LacrosPolicyLoggedIn,
 				Val: fileUSBCopyTestParams{
@@ -147,14 +153,16 @@ func init() {
 					restriction: restrictionlevel.Allowed,
 				},
 			}, {
-				Name:    "ash_blocked",
-				Fixture: fixture.ChromePolicyLoggedIn,
+				Name:      "ash_blocked",
+				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				Fixture:   fixture.ChromePolicyLoggedIn,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeAsh,
 					restriction: restrictionlevel.Blocked,
 				},
 			}, {
 				Name:              "lacros_blocked",
+				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.LacrosPolicyLoggedIn,
 				Val: fileUSBCopyTestParams{
@@ -162,14 +170,16 @@ func init() {
 					restriction: restrictionlevel.Blocked,
 				},
 			}, {
-				Name:    "ash_warn_proceeded",
-				Fixture: fixture.ChromePolicyLoggedIn,
+				Name:      "ash_warn_proceeded",
+				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				Fixture:   fixture.ChromePolicyLoggedIn,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeAsh,
 					restriction: restrictionlevel.WarnProceeded,
 				},
 			}, {
 				Name:              "lacros_warn_proceeded",
+				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.LacrosPolicyLoggedIn,
 				Val: fileUSBCopyTestParams{
@@ -177,14 +187,26 @@ func init() {
 					restriction: restrictionlevel.WarnProceeded,
 				},
 			}, {
-				Name:    "ash_warn_cancelled",
+				Name: "ash_warn_cancelled",
+				ExtraAttr: []string{
+					"group:golden_tier",
+					"group:medium_low_tier",
+					"group:hardware",
+					"group:complementary",
+				},
 				Fixture: fixture.ChromePolicyLoggedIn,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeAsh,
 					restriction: restrictionlevel.WarnCancelled,
 				},
 			}, {
-				Name:              "lacros_warn_cancelled",
+				Name: "lacros_warn_cancelled",
+				ExtraAttr: []string{
+					"group:golden_tier",
+					"group:medium_low_tier",
+					"group:hardware",
+					"group:complementary",
+				},
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.LacrosPolicyLoggedIn,
 				Val: fileUSBCopyTestParams{

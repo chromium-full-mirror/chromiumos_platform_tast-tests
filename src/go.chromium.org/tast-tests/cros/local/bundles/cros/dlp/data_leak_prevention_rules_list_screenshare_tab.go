@@ -43,10 +43,6 @@ func init() {
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
 			"group:hw_agnostic"},
 		Data: []string{"text_1.html", "text_2.html"},
 		SearchFlags: []*testing.StringPair{{
@@ -67,8 +63,9 @@ func init() {
 			Value: "screenplay-04f5ed0b-518f-4138-8a8a-2e0046205723",
 		}},
 		Params: []testing.Param{{
-			Name:    "ash_blocked",
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_blocked",
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "blocked",
 				Restriction: restrictionlevel.Blocked,
@@ -76,7 +73,12 @@ func init() {
 				BrowserType: browser.TypeAsh,
 			},
 		}, {
-			Name:    "ash_allowed",
+			Name: "ash_allowed",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "allowed",
@@ -85,8 +87,9 @@ func init() {
 				BrowserType: browser.TypeAsh,
 			},
 		}, {
-			Name:    "ash_warn_proceeded",
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_warn_proceeded",
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "warn_proceeded",
 				Restriction: restrictionlevel.WarnProceeded,
@@ -94,7 +97,12 @@ func init() {
 				BrowserType: browser.TypeAsh,
 			},
 		}, {
-			Name:    "ash_warn_cancelled",
+			Name: "ash_warn_cancelled",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "warn_cancelled",

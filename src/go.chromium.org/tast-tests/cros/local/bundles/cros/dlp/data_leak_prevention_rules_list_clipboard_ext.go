@@ -49,22 +49,19 @@ func init() {
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
-			"group:hw_agnostic"},
-		Fixture: "fakeDMS",
+		Attr:         []string{"group:hw_agnostic"},
+		Fixture:      "fakeDMS",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policyBlob.LacrosAvailability{}, pci.Served),
 		},
 		Data: []string{"manifest.json", "background.js", "content.js", "text_1.html", "text_2.html", "editable_text_box.html"},
 		Params: []testing.Param{{
-			Name: "ash",
-			Val:  browser.TypeAsh,
+			Name:      "ash",
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			Val:       browser.TypeAsh,
 		}, {
 			Name:              "lacros",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               browser.TypeLacros,
 		}},

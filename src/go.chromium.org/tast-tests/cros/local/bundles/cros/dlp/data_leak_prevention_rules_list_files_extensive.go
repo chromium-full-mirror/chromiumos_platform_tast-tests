@@ -53,10 +53,7 @@ func init() {
 		},
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr: []string{
-			"group:mainline",
-			"informational",
-		},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.Served),

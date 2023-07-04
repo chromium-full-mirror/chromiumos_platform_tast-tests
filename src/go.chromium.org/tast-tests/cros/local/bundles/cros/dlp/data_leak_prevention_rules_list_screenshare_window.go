@@ -43,10 +43,6 @@ func init() {
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
 			"group:hw_agnostic"},
 		Data: []string{"text_1.html", "text_2.html"},
 		SearchFlags: []*testing.StringPair{{
@@ -67,8 +63,9 @@ func init() {
 			Value: "screenplay-1e0b14ae-d9d3-4ae7-9962-0e6d342f58a1",
 		}},
 		Params: []testing.Param{{
-			Name:    "ash_blocked",
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_blocked",
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "blocked",
 				Restriction: restrictionlevel.Blocked,
@@ -76,7 +73,12 @@ func init() {
 				BrowserType: browser.TypeAsh,
 			},
 		}, {
-			Name:    "ash_allowed",
+			Name: "ash_allowed",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "allowed",
@@ -85,8 +87,9 @@ func init() {
 				BrowserType: browser.TypeAsh,
 			},
 		}, {
-			Name:    "ash_warn_proceeded",
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_warn_proceeded",
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "warn_proceeded",
 				Restriction: restrictionlevel.WarnProceeded,
@@ -94,7 +97,12 @@ func init() {
 				BrowserType: browser.TypeAsh,
 			},
 		}, {
-			Name:    "ash_warn_cancelled",
+			Name: "ash_warn_cancelled",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "warn_cancelled",
@@ -104,6 +112,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_blocked",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: screenshare.TestParams{
@@ -113,7 +122,12 @@ func init() {
 				BrowserType: browser.TypeLacros,
 			},
 		}, {
-			Name:              "lacros_allowed",
+			Name: "lacros_allowed",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: screenshare.TestParams{
@@ -124,6 +138,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_warn_proceeded",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: screenshare.TestParams{
@@ -133,7 +148,12 @@ func init() {
 				BrowserType: browser.TypeLacros,
 			},
 		}, {
-			Name:              "lacros_warn_cancelled",
+			Name: "lacros_warn_cancelled",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: screenshare.TestParams{

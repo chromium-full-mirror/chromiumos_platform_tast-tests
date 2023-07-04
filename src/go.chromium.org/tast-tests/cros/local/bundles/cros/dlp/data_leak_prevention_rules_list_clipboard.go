@@ -55,13 +55,8 @@ func init() {
 		},
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
-			"group:hw_agnostic"},
-		Data: []string{"text_1.html", "text_2.html", "editable_text_box.html"},
+		Attr:         []string{"group:hw_agnostic"},
+		Data:         []string{"text_1.html", "text_2.html", "editable_text_box.html"},
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Block users from sharing confidential information (clipboard): COM_DATPROT_CUJ3_TASK1_WF1.
@@ -80,8 +75,9 @@ func init() {
 			Value: "screenplay-09adb37a-9c53-4249-a417-f298ef0a2861",
 		}},
 		Params: []testing.Param{{
-			Name:    "ash_blocked",
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_blocked",
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: clipboardTestParams{
 				name:        "blocked",
 				restriction: restrictionlevel.Blocked,
@@ -89,7 +85,12 @@ func init() {
 				browserType: browser.TypeAsh,
 			},
 		}, {
-			Name:    "ash_allowed",
+			Name: "ash_allowed",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: clipboardTestParams{
 				name:        "allowed",
@@ -98,8 +99,9 @@ func init() {
 				browserType: browser.TypeAsh,
 			},
 		}, {
-			Name:    "ash_warn_proceeded",
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_warn_proceeded",
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: clipboardTestParams{
 				name:        "warn_proceded",
 				restriction: restrictionlevel.WarnProceeded,
@@ -107,7 +109,12 @@ func init() {
 				browserType: browser.TypeAsh,
 			},
 		}, {
-			Name:    "ash_warn_cancelled",
+			Name: "ash_warn_cancelled",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: clipboardTestParams{
 				name:        "warn_cancelled",
@@ -117,6 +124,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_blocked",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: clipboardTestParams{
@@ -126,7 +134,12 @@ func init() {
 				browserType: browser.TypeLacros,
 			},
 		}, {
-			Name:              "lacros_allowed",
+			Name: "lacros_allowed",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: clipboardTestParams{
@@ -137,6 +150,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_warn_proceeded",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: clipboardTestParams{
@@ -146,7 +160,12 @@ func init() {
 				browserType: browser.TypeLacros,
 			},
 		}, {
-			Name:              "lacros_warn_cancelled",
+			Name: "lacros_warn_cancelled",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: clipboardTestParams{

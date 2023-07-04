@@ -38,12 +38,6 @@ func init() {
 		BugComponent: "b:892101",
 		// ChromeOS > Software > Commercial (Enterprise) > DLP (Data Loss Prevention)
 		SoftwareDeps: []string{"chrome"},
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
-		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.Served),
@@ -51,10 +45,17 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:              "arc_container",
+				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 				Fixture:           fixture.ChromePolicyLoggedInARC,
 				ExtraSoftwareDeps: []string{"android_p"},
 			}, {
-				Name:              "arc_vm",
+				Name: "arc_vm",
+				ExtraAttr: []string{
+					"group:golden_tier",
+					"group:medium_low_tier",
+					"group:hardware",
+					"group:complementary",
+				},
 				Fixture:           fixture.ChromePolicyLoggedInARC,
 				ExtraSoftwareDeps: []string{"android_vm"},
 			},

@@ -46,16 +46,13 @@ func init() {
 		Attr:         []string{"group:hw_agnostic"},
 		Data:         []string{"text_1.html", "text_2.html"},
 		Params: []testing.Param{{
+			Name:      "ash",
 			ExtraAttr: []string{"group:mainline"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val:       browser.TypeAsh,
 		}, {
-			Name: "lacros",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
+			Name:              "lacros",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
