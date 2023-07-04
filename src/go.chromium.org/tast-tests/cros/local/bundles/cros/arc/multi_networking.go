@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -51,17 +52,22 @@ func MultiNetworking(ctx context.Context, s *testing.State) {
 		configurationPollTimeout         = 1 * time.Second  // The time to wait for remaining configurations after detecting virtual network
 	)
 
+	// Reserve some time for cleanup code.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
+	defer cancel()
+
 	startARC := func() {
 		cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU())
 		if err != nil {
 			s.Fatal("Failed to connect to Chrome: ", err)
 		}
-		defer cr.Close(ctx)
+		defer cr.Close(cleanupCtx)
 		a, err := arc.New(ctx, s.OutDir())
 		if err != nil {
 			s.Fatal("Failed to start ARC: ", err)
 		}
-		defer a.Close(ctx)
+		defer a.Close(cleanupCtx)
 	}
 
 	startARC()
@@ -74,7 +80,7 @@ func MultiNetworking(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to hide unused ethernet: ", err)
 	}
-	defer restoreEthernet(ctx)
+	defer restoreEthernet(cleanupCtx)
 
 	s.Log("Testing multinet behavior on device addition")
 
@@ -84,12 +90,12 @@ func MultiNetworking(ctx context.Context, s *testing.State) {
 		// Ignore failure here for potential netns already exists case. If it's a legitimate failure it will fail at next step.
 		s.Logf("Failed to create test netns %s: %s", testNetnsName, err)
 	}
-	defer testexec.CommandContext(ctx, "/bin/ip", "netns", "delete", testNetnsName).Run()
+	defer testexec.CommandContext(cleanupCtx, "/bin/ip", "netns", "delete", testNetnsName).Run()
 
 	if err := testexec.CommandContext(ctx, "/bin/ip", "link", "add", ifName, "type", "veth", "peer", "name", peerIFName, "netns", testNetnsName).Run(testexec.DumpLogOnError); err != nil {
 		s.Fatalf("Failed to create test interface %s: %s", ifName, err)
 	}
-	defer testexec.CommandContext(ctx, "/bin/ip", "link", "delete", ifName).Run()
+	defer testexec.CommandContext(cleanupCtx, "/bin/ip", "link", "delete", ifName).Run()
 
 	verifyDeviceAdded := func() {
 		// Verify bridge and veth created correctly and veth moved to ARC netns.
