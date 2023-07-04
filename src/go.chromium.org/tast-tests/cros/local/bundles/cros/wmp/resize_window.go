@@ -141,19 +141,16 @@ func ResizeWindow(ctx context.Context, s *testing.State) {
 		s.Fatal("Unknown case type: ", param.caseType)
 	}
 
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, param.browserType, lacrosfixt.NewConfig(), opts...)
+	cr, err := browserfixt.NewChrome(ctx, param.browserType, lacrosfixt.NewConfig(), opts...)
 	if err != nil {
-		s.Fatal("Failed to set up chrome and browser: ", err)
+		s.Fatal("Failed to restart Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get the connection to the test API: ", err)
 	}
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	var appList []*wmputils.ResizeApp
 	switch param.caseType {
@@ -167,7 +164,7 @@ func ResizeWindow(ctx context.Context, s *testing.State) {
 		var browserRoot *nodewith.Finder
 		if param.browserType == browser.TypeLacros {
 			classNameRegexp := regexp.MustCompile(`^ExoShellSurface(-\d+)?$`)
-			browserRoot = nodewith.Role(role.Window).ClassNameRegex(classNameRegexp).NameContaining("Chrome")
+			browserRoot = nodewith.Role(role.Window).ClassNameRegex(classNameRegexp).NameContaining("New Tab")
 		} else {
 			browserRoot = nodewith.Role(role.Window).HasClass("BrowserFrame")
 		}
@@ -271,7 +268,7 @@ func ResizeWindow(ctx context.Context, s *testing.State) {
 	}
 }
 
-func resizeSubTest(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, resizeApp *wmputils.ResizeApp, ourDir string) (retErr error) {
+func resizeSubTest(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, resizeApp *wmputils.ResizeApp, outDir string) (retErr error) {
 	cleanupSubTestCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -285,7 +282,7 @@ func resizeSubTest(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCon
 		return errors.Wrapf(err, "failed to launch app %q", resizeApp.Name)
 	}
 	defer closeApp(cleanupSubTestCtx, tconn, resizeApp)
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupSubTestCtx, ourDir, func() bool { return retErr != nil }, cr, resizeApp.Name)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupSubTestCtx, outDir, func() bool { return retErr != nil }, cr, resizeApp.Name)
 
 	// Ensure there is only one window remain on the screen.
 	testing.ContextLogf(ctx, "Waiting for the window of App %q to be shown and stabilized", resizeApp.Name)
@@ -366,8 +363,8 @@ func waitUntilWindowStable(ctx context.Context, tconn *chrome.TestConn, resizeAp
 				// For Play Store, we use exact string "Google Play Store" to find the window.
 				return w.Title == "Google Play Store"
 			case apps.LacrosID:
-				// For browser, we use exact string "New Tab - Google Chrome" to find the window.
-				return strings.Contains(w.Title, "New Tab - Google Chrome")
+				// For browser, we use exact string "New Tab" to find the window.
+				return strings.Contains(w.Title, "New Tab")
 			default:
 				// For regular apps(i.e., apps with valid ID), we use app name to find the correct window.
 				return strings.Contains(w.Title, resizeApp.Name)
