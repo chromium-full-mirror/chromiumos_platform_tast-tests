@@ -25,8 +25,5 @@ func RunCmdWithOutput(ctx context.Context, dut *dut.DUT, bin string, args ...str
 // output to a string.
 func RunCmdWithStringOutput(ctx context.Context, dut *dut.DUT, bin string, args ...string) (string, error) {
 	out, err := RunCmdWithOutput(ctx, dut, bin, args...)
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSuffix(string(out), "\n"), nil
+	return strings.TrimSuffix(string(out), "\n"), err
 }
