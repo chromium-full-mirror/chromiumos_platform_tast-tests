@@ -252,8 +252,8 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInAndKeepStateWithBatterySaver",
-		Desc: "The CUJ test fixture which keeps login state and turns on battery saver",
+		Name: "loggedInAndKeepStateWithBatterySaverParent",
+		Desc: "The CUJ test fixture which keeps login state and turns on battery saver without Android battery saver",
 		Contacts: []string{
 			"cwd@google.com",
 			"cros-vm-technology@google.com",
@@ -275,6 +275,20 @@ func init() {
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInAndKeepStateWithBatterySaver",
+		Desc: "The CUJ test fixture which keeps login state and turns on battery saver",
+		Contacts: []string{
+			"cwd@google.com",
+			"cros-vm-technology@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl:            &androidBatterySaverFixture{},
+		Parent:          "loggedInAndKeepStateWithBatterySaverParent",
+		SetUpTimeout:    batterySaverTimeout,
+		TearDownTimeout: batterySaverTimeout,
+		PreTestTimeout:  batterySaverTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInAndKeepStateWithFakeCamera",
@@ -731,8 +745,8 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithBatterySaver",
-		Desc: "CUJ test fixture with battery saver",
+		Name: "loggedInToCUJUserWithBatterySaverParent",
+		Desc: "CUJ test fixture with battery saver without Android",
 		Contacts: []string{
 			"cwd@google.com",
 			"cros-vm-technology@google.com",
@@ -751,6 +765,20 @@ func init() {
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBatterySaver",
+		Desc: "CUJ test fixture with battery saver",
+		Contacts: []string{
+			"cwd@google.com",
+			"cros-vm-technology@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl:            &androidBatterySaverFixture{},
+		Parent:          "loggedInToCUJUserWithBatterySaverParent",
+		SetUpTimeout:    batterySaverTimeout,
+		TearDownTimeout: batterySaverTimeout,
+		PreTestTimeout:  batterySaverTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingAndBatterySaver",
@@ -812,8 +840,8 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
-		Desc: "CUJ fixture that skips CPU cooldown and has battery saver active",
+		Name: "loggedInToCUJUserWithBatterySaverWithoutCooldownParent",
+		Desc: "CUJ fixture that skips CPU cooldown and has battery saver active without Android battery saver",
 		Contacts: []string{
 			"cwd@google.com",
 			"cros-vm-technology@google.com",
@@ -831,6 +859,20 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
+		Desc: "CUJ fixture that skips CPU cooldown and has battery saver active",
+		Contacts: []string{
+			"cwd@google.com",
+			"cros-vm-technology@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl:            &androidBatterySaverFixture{},
+		Parent:          "loggedInToCUJUserWithBatterySaverWithoutCooldownParent",
+		SetUpTimeout:    batterySaverTimeout,
+		TearDownTimeout: batterySaverTimeout,
+		PreTestTimeout:  batterySaverTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserLacrosWithoutCooldown",
@@ -1505,4 +1547,74 @@ func (f *loggedInToCUJUserFixture) PostTest(ctx context.Context, s *testing.Fixt
 			s.Logf("Failed to delete %q: %s", filename, err)
 		}
 	}
+}
+
+// androidBatterySaverFixture does the extra work needed to enable battery
+// saver on Android.
+// Android won't turn on battery saver unless the device is disconnected from
+// power. So we run `dumpsys battery unplug` to simulate it, and then toggle
+// battery saver to properly propegate the state into Android.
+type androidBatterySaverFixture struct {
+	arc *arc.ARC
+}
+
+func (f *androidBatterySaverFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	value := s.ParentValue().(FixtureData)
+	f.arc = value.ARC
+
+	// Android's battery saver won't enable when charging, so simulate being unplugged.
+	if err := f.arc.Command(ctx, "dumpsys", "battery", "unplug").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to unplug battery in Android: ", err)
+	}
+
+	powerd, err := power.NewPowerManager(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to Power Manager: ", err)
+	}
+	// Battery Saver should be automatically re-enabled, this call forces a new
+	// signal to be emitted from powerd allowing Android to synchronize battery
+	// saver state.
+	if err := powerd.SetBatterySaverModeState(ctx, false); err != nil {
+		s.Fatal("Failed to toggle battery saver: ", err)
+	}
+
+	// Wait for battery saver to be enabled.
+	if err := testing.Poll(ctx, func(context context.Context) error {
+		state, err := powerd.GetBatterySaverModeState(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get battery saver state")
+		}
+		if state.Enabled == nil || *state.Enabled == false {
+			return errors.New("battery saver is not enabled")
+		}
+		return nil
+	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 5 * time.Second}); err != nil {
+		s.Fatal("Failed to wait for battery saver to reenable: ", err)
+	}
+
+	return value
+}
+
+func (f *androidBatterySaverFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if err := f.arc.Command(ctx, "dumpsys", "battery", "reset").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to reset battery unplug in Android: ", err)
+	}
+	f.arc = nil
+}
+
+func (f *androidBatterySaverFixture) Reset(ctx context.Context) error {
+	return nil
+}
+
+func (f *androidBatterySaverFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	out, err := f.arc.Command(ctx, "settings", "get", "global", "low_power").Output(testexec.DumpLogOnError)
+	if err != nil {
+		s.Fatal("Failed to get Android battery saver state: ", err)
+	}
+	if string(out) != "1\n" {
+		s.Fatal("Android battery saver is not on")
+	}
+}
+
+func (f *androidBatterySaverFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
