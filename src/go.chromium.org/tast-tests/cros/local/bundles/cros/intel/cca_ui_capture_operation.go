@@ -6,6 +6,7 @@ package intel
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
@@ -176,6 +177,14 @@ func captureVideo(ctx context.Context, app *cca.App) error {
 	}
 	if videoPath == "" {
 		return errors.New("captured video path is empty")
+	}
+	fileInfo, err = os.Stat(videoPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to get captured video info")
+	}
+	fileSize := fileInfo.Size()
+	if fileSize == 0 {
+		return errors.New("failed to capture video")
 	}
 	return nil
 }
