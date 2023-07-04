@@ -26,15 +26,15 @@ func init() {
 		SoftwareDeps: []string{"reboot"},
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline"},
 		Fixture:      fixture.ServicesOnBoot,
 		Timeout:      1 * time.Minute,
 		Params: []testing.Param{
 			// The early-failure service always fails.
 			// Use this to check the fixture is collecting logs correctly.
 			{
-				Name: "smoke",
-				Val:  checkFailed("early-failure", 124),
+				Name:      "smoke",
+				Val:       checkFailed("early-failure", 124),
+				ExtraAttr: []string{"group:mainline"},
 			},
 			// All services.
 			// This allows us to catch failures in newly added services.
@@ -47,14 +47,13 @@ func init() {
 						"cras", "sound_card_init", // these have separate tests
 					},
 				}),
-				ExtraAttr: []string{"informational"},
 			},
 			// Audio services.
 			// Contacts: aaronyu@google.com, chromeos-audio-sw@google.com.
 			{
 				Name:              "cras",
 				Val:               checkStatus("cras", upstartcommon.StartGoal, upstartcommon.RunningState),
-				ExtraAttr:         []string{"group:audio"},
+				ExtraAttr:         []string{"group:mainline", "group:audio"},
 				ExtraSoftwareDeps: []string{"cras"},
 			},
 			{
@@ -62,7 +61,7 @@ func init() {
 				Val:  checkStatus("sound_card_init", upstartcommon.StopGoal, upstartcommon.WaitingState),
 				// TODO(b/254566972): hwdep.SmartAmp() is narrower than having /etc/init/sound_card_init.conf
 				// If we can have sound_card_init as a SoftwareDep, use that instead.
-				ExtraAttr:         []string{"group:audio"},
+				ExtraAttr:         []string{"group:mainline", "group:audio"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SmartAmp()),
 				ExtraSoftwareDeps: []string{"cras"},
 			},
