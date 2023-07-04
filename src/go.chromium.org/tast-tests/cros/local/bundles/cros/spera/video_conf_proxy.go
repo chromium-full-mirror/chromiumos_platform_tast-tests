@@ -24,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -43,6 +44,7 @@ func init() {
 		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Vars: []string{
 			"spera.cuj_mode",                  // Optional. Expecting "tablet" or "clamshell".
 			"spera.collectTrace",              // Optional. Expecting "enable" or "disable", default is "disable".
