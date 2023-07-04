@@ -6,15 +6,14 @@ package videoconferencing
 
 import (
 	"context"
-	"strings"
+	"net/http"
+	"net/http/httptest"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakehtml"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
@@ -27,23 +26,27 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MeetEffects,
+		Func:         CameraEffectsChrome,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks Video Effects in Google Meet",
+		Desc:         "Verify camera effects using screen test",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"shengjun@chromium.org",
+			"chromeos-platform-ml@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent: "b:187682",
-		Timeout:      10 * time.Minute,
 		Attr: []string{
 			"group:camera_dependent",
-			"group:external-dependency",
 			"group:video_conference",
 			"video_conference_per_build",
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
+		Timeout:      5 * time.Minute,
+		Data: []string{
+			"effects_frame_metrics.js",
+			"effects_video_script.html",
+		},
+		Vars: screenshot.ScreenDiffVars,
 		SearchFlags: []*testing.StringPair{
 			{
 				// Enable background blur.
@@ -63,84 +66,49 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Name:    "pwa",
-				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
-				Val:     common.LaunchAppInPWA,
+				Fixture: fixture.LoggedInWithFakeHALAndEffectsEnabled,
 			},
 			{
-				Name:    "web",
-				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
-				Val:     common.LaunchAppInWeb,
-			},
-			{
-				Name:              "pwa_lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:               common.LaunchAppInPWA,
-			},
-			{
-				Name:              "web_lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:               common.LaunchAppInWeb,
+				Name:    "lacros",
+				Fixture: fixture.LoggedInLacrosWithFakeHALAndEffectsEnabled,
 			},
 		},
-		// Each parameterized test contains multiple subtests.
-		// Using -var "subtests" to make it possible limiting the subtests to run.
-		// e.g. tast run -var=subtests=backgroundblur_off_portraitrelighting_off
-		// <dut> videoconferencing.MeetEffects.clamshell_web
-		Vars: append(screenshot.ScreenDiffVars, "subtests"),
 	})
 }
 
-func MeetEffects(ctx context.Context, s *testing.State) {
+func CameraEffectsChrome(ctx context.Context, s *testing.State) {
+	// Shorten context to allow for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
+	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
+	// Open video on simple javascript browser.
+	testing.ContextLog(ctx, "Opening Simple Meeting")
+	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer srv.Close()
 
-	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
+	url := srv.URL + fakehtml.PageURL
+	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, url)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
+	defer conn.CloseTarget(cleanupCtx)
+	defer conn.Close()
 	defer cleanup(cleanupCtx)
 
-	var gm *googlemeet.GoogleMeet
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
-		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, br, googlemeet.WithAllPermissions)
-	} else {
-		// Meet can dynamically switch between different segmentation models.
-		// Force the same model the platform effects use with the experiment ?e=ForceSegmentationModelVariant::GpuMid.
-		gm, err = googlemeet.StartNewMeeting(ctx, cr, br, conn,
-			map[string]string{
-				"e": "ForceSegmentationModelVariant::GpuMid",
-			}, googlemeet.WithAllPermissions)
-	}
-	if err != nil {
-		s.Fatal("Failed to start meeting: ", err)
-	}
-	defer gm.Close(cleanupCtx)
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_with_meet")
-
-	if err := uiauto.Combine("configure Meet",
-		gm.MuteIfMicAvailable,
-		gm.ChangeSettings(
-			gm.SetSendResolution(googlemeet.ResolutionHD720P),
-		),
-		gm.SwitchVideo(true),
-	)(ctx); err != nil {
-		s.Fatal("Failed to configure Meet: ", err)
+	fakeHTMLUI := fakehtml.NewUI(tconn)
+	if err := fakeHTMLUI.MayBeAllowCameraAccess(ctx); err != nil {
+		s.Fatal("Failed to allow camera access: ", err)
 	}
 
 	// Maximize VC app window in clamshell mode to reduce resolution noises on different devices.
@@ -148,7 +116,7 @@ func MeetEffects(ctx context.Context, s *testing.State) {
 	if inTabletMode, err := ash.TabletModeEnabled(ctx, tconn); err != nil {
 		s.Fatal("Failed to get tablet-mode status: ", err)
 	} else if !inTabletMode {
-		if _, err := ash.MaximizeWindowTitleContains(ctx, tconn, "Meet"); err != nil {
+		if _, err := ash.MaximizeWindowTitleContains(ctx, tconn, fakehtml.PageTitle); err != nil {
 			s.Fatal("Failed to maximize Camera window: ", err)
 		}
 	}
@@ -194,23 +162,7 @@ func MeetEffects(ctx context.Context, s *testing.State) {
 		},
 	}
 
-	enabledSubtests := make(map[string]struct{})
-	subtestsVar, ok := s.Var("subtests")
-	if ok {
-		testing.ContextLog(ctx, "Enabled subtests: ", subtestsVar)
-		for _, subTest := range strings.Split(subtestsVar, ",") {
-			enabledSubtests[subTest] = struct{}{}
-		}
-	}
-
 	for _, subTest := range subTests {
-		// Check whether this subtest is enabled in the test var.
-		if len(enabledSubtests) > 0 {
-			if _, ok := enabledSubtests[subTest.name]; !ok {
-				continue
-			}
-		}
-
 		s.Run(ctx, subTest.name, func(ctx context.Context, s *testing.State) {
 			if err := vcTray.SetCameraEffects(subTest.backgroundBlur, subTest.portraitRelighting)(ctx); err != nil {
 				s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting %v: %v",
@@ -222,16 +174,13 @@ func MeetEffects(ctx context.Context, s *testing.State) {
 					DefaultOptions: screenshot.Options{
 						WindowState: ash.WindowStateDefault,
 					},
-					// This is important to get consistent window size.
-					// When using DpiNormalization by default, it resizes the window differently on ash and lacros.
-					// Refer to b/275932928.
 					SkipDpiNormalization: true,
 				})
 			if err != nil {
 				s.Fatal("Failed to start screen differ: ", err)
 			}
 			defer d.DieOnFailedDiffs()
-			if err := d.Diff(ctx, subTest.name, googlemeet.VideoNode,
+			if err := d.Diff(ctx, subTest.name, fakehtml.VideoNode,
 				screenshot.Retries(5),
 				screenshot.RetryInterval(time.Second),
 			)(ctx); err != nil {

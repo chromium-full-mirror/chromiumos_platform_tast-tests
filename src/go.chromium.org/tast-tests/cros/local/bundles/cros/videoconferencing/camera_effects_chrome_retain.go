@@ -6,12 +6,14 @@ package videoconferencing
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/apps"
-	"go.chromium.org/tast-tests/cros/local/camera/cca"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakehtml"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
@@ -25,17 +27,21 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CCAEffectsRetain,
+		Func:         CameraEffectsChromeRetain,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks Video Effects retains after re-launching vc apps",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"shengjun@chromium.org",
+			"chromeos-platform-ml@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      10 * time.Minute,
 		Attr: []string{
-			"group:video_conference", "video_conference_per_build", "group:external-dependency",
+			"group:video_conference", "video_conference_per_build",
+		},
+		Data: []string{
+			"effects_frame_metrics.js",
+			"effects_video_script.html",
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
@@ -70,26 +76,41 @@ func init() {
 	})
 }
 
-func CCAEffectsRetain(ctx context.Context, s *testing.State) {
+func CameraEffectsChromeRetain(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	if err := apps.Launch(ctx, tconn, apps.Camera.ID); err != nil {
-		s.Fatal("Failed to launch Camera app: ", err)
+	//  Open video on simple javascript browser.
+	testing.ContextLog(ctx, "Opening Simple Meeting")
+	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer srv.Close()
+
+	url := srv.URL + fakehtml.PageURL
+	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, url)
+	if err != nil {
+		s.Fatal("Failed to launch browser: ", err)
 	}
-	defer apps.Close(cleanupCtx, tconn, apps.Camera.ID)
+	defer conn.CloseTarget(cleanupCtx)
+	defer conn.Close()
+	defer cleanup(cleanupCtx)
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	if err := uiauto.New(tconn).WaitUntilExists(cca.A11yCanvasNode)(ctx); err != nil {
+	fakeHTMLUI := fakehtml.NewUI(tconn)
+	if err := fakeHTMLUI.MayBeAllowCameraAccess(ctx); err != nil {
+		s.Fatal("Failed to allow camera access: ", err)
+	}
+
+	if err := uiauto.New(tconn).WaitUntilExists(fakehtml.VideoNode)(ctx); err != nil {
 		s.Fatal("Camera is not working appropriately: ", err)
 	}
 
@@ -99,24 +120,17 @@ func CCAEffectsRetain(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set camera effects: ", err)
 	}
 
-	// Re-launch Camera app and verify screen again to check effects retain.
-	if err := apps.Close(ctx, tconn, apps.Camera.ID); err != nil {
-		s.Fatal("Failed to close Camera: ", err)
+	if err := conn.CloseTarget(ctx); err != nil {
+		s.Fatal("Failed to close fake HTML page: ", err)
 	}
 
-	if err := apps.Launch(ctx, tconn, apps.Camera.ID); err != nil {
-		s.Fatal("Failed to re-launch Camera: ", err)
+	conn, _, cleanup, err = browserfixt.SetUpWithURL(ctx, cr, browserType, url)
+	if err != nil {
+		s.Fatal("Failed to launch browser: ", err)
 	}
-
-	// Maximize VC app window in clamshell mode to reduce resolution noises on different devices.
-	// Skip Tablet mode as app is full screen by default.
-	if inTabletMode, err := ash.TabletModeEnabled(ctx, tconn); err != nil {
-		s.Fatal("Failed to get tablet-mode status: ", err)
-	} else if !inTabletMode {
-		if _, err := ash.MaximizeWindowTitleContains(ctx, tconn, "Camera"); err != nil {
-			s.Fatal("Failed to maximize Camera window: ", err)
-		}
-	}
+	defer conn.CloseTarget(cleanupCtx)
+	defer conn.Close()
+	defer cleanup(cleanupCtx)
 
 	d, err := screenshot.NewDifferFromChrome(ctx, s, cr,
 		screenshot.Config{
@@ -129,7 +143,7 @@ func CCAEffectsRetain(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start screen differ: ", err)
 	}
 	defer d.DieOnFailedDiffs()
-	if err := d.Diff(ctx, "backgroundblur_full_portraitrelighting_on", cca.A11yCanvasNode,
+	if err := d.Diff(ctx, "backgroundblur_full_portraitrelighting_on", fakehtml.VideoNode,
 		screenshot.Retries(5),
 		screenshot.RetryInterval(time.Second),
 	)(ctx); err != nil {

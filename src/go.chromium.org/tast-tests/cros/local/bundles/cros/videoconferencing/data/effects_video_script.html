@@ -14,7 +14,7 @@
     height: 100vh;
   }
 </style>
-<video id="video" autoplay role="button" aria-label="video"></video>
+<video id="video" autoplay role="canvas" aria-label="video"></video>
 <script type="text/javascript">
   const video = document.querySelector('#video');
 
@@ -36,7 +36,8 @@
   window.addEventListener('DOMContentLoaded', (event) => {
     const params = new URLSearchParams(window.location.search);
     const defaultResolution = 720
-    const resolution = params.has('resolution') ? params.get('resolution') : defaultResolution;
+    const resolution = params.has('resolution') && params.get('resolution').length > 0?
+        params.get('resolution') : defaultResolution;
     requestVideo(resolution);
   });
 

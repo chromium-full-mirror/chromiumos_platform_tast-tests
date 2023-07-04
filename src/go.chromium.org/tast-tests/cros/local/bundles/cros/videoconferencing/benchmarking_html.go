@@ -13,11 +13,9 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/effects"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakehtml"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
@@ -26,7 +24,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-const simpleURL = "/effects_video_script.html?resolution="
 const defaultResolution = 720
 const highResolution = 1080
 
@@ -165,7 +162,6 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 	p := perf.NewValues()
 	fixt := s.FixtValue().(fixture.BenchmarkSetUpFixtureData)
 	cr := fixt.Chrome
-	ui := uiauto.New(fixt.TestAPIConn)
 
 	// Record Memory usage.
 	initMemUsage, err := effects.GetSwapAndRSSBytes(ctx)
@@ -184,7 +180,7 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 	//  Open video on simple javascript browser.
 	testing.ContextLog(ctx, "Opening Simple Meeting")
 	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	url := srv.URL + simpleURL + strconv.Itoa(param.resolution)
+	url := srv.URL + fakehtml.PageURL + strconv.Itoa(param.resolution)
 
 	defer srv.Close()
 	conn, err := cr.NewConn(ctx, url, browser.WithNewWindow())
@@ -195,27 +191,13 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	// Find camera permissions prompt.
-	bubble := nodewith.ClassName("PermissionPromptBubbleBaseView").First()
-	allow := nodewith.Name("Allow").Role(role.Button).Ancestor(bubble)
-
-	// Find the web view of Simple Meeting window.
-	// doubleclick event on javascript window will prompt fullscreen.
-	webview := nodewith.ClassName("ContentsWebView").Role(role.WebView)
-	webArea := nodewith.Role(role.RootWebArea).Ancestor(webview)
-
-	testing.ContextLog(ctx, "Letting things settle for 5 seconds before UI interactions")
-	// GoBigSleepLint: Allow UI transitions to complete before interacting.
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		s.Fatal("Failed to let things settle: ", err)
+	fakeHTMLUI := fakehtml.NewUI(fixt.TestAPIConn)
+	if err := fakeHTMLUI.MayBeAllowCameraAccess(ctx); err != nil {
+		s.Fatal("Failed to allow camera access: ", err)
 	}
 
-	if err := uiauto.Combine("Configure Javascript video display",
-		ui.LeftClick(allow),
-		ui.WaitUntilGone(allow),
-		ui.DoubleClick(webArea),
-	)(ctx); err != nil {
-		s.Fatal("Failed to do some bigger action: ", err)
+	if err := fakeHTMLUI.EnterFullScreen(ctx); err != nil {
+		s.Fatal("Failed to enter full screen: ", err)
 	}
 
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_tree")
