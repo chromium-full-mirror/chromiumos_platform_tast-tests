@@ -45,6 +45,8 @@ type testParam struct {
 	useIoUringBlock bool
 	// Whether to enable multiple workers feature for block devices in crosvm.
 	useMultipleWorkersBlock bool
+	// Whether to use O_DIRECT on /data
+	useODirectDataDisk bool
 }
 
 const (
@@ -119,6 +121,15 @@ func init() {
 				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 3,
 				chromeArgs:        []string{"--enable-features=ArcEnableVirtioBlkForData"},
+			},
+		}, {
+			Name:              "unmanaged_o_direct_virtio_blk_vm",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			Val: testParam{
+				browserType:        browser.TypeAsh,
+				maxErrorBootCount:  3,
+				chromeArgs:         []string{"--enable-features=ArcEnableVirtioBlkForData"},
+				useODirectDataDisk: true,
 			},
 		}, {
 			Name:              "unmanaged_iouring_virtio_blk_vm",
@@ -223,6 +234,9 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 
 	arcvmDevConf := ""
 
+	if param.useODirectDataDisk {
+		arcvmDevConf += "O_DIRECT_N=4\n"
+	}
 	if param.useIoUringBlock {
 		arcvmDevConf += "BLOCK_ASYNC_EXECUTOR=uring\n"
 	}

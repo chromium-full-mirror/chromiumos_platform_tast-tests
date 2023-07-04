@@ -19,6 +19,8 @@ type bootConfig struct {
 	numTrials int
 	// Use O_DIRECT in read-only system/vendor disk access for ARCVM
 	rootfsODirect bool
+	// Use O_DIRECT in /data disk access for ARCVM
+	dataDiskODirect bool
 	// Use io_uring-enabled virtio-blk in crosvm.
 	ioUringBlock bool
 	// Extra Chrome command line options
@@ -73,6 +75,18 @@ func init() {
 				},
 			},
 			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"android_vm"},
+			Timeout:           5 * time.Minute,
+		}, {
+			Name: "vm_virtio_blk_data_o_direct",
+			Val: bootConfig{
+				numTrials: 1,
+				chromeArgs: []string{
+					"--enable-features=ArcEnableVirtioBlkForData",
+				},
+				dataDiskODirect: true,
+			},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           5 * time.Minute,
 		}, {
@@ -147,6 +161,9 @@ func runBoot(ctx context.Context, s *testing.State) {
 	if s.Param().(bootConfig).rootfsODirect {
 		// Set up O_DIRECT for /dev/vda (system.img) and /dev/vdb (vendor.img).
 		arcvmConf += "O_DIRECT_N=0\nO_DIRECT_N=1\n"
+	}
+	if s.Param().(bootConfig).dataDiskODirect {
+		arcvmConf += "O_DIRECT_N=4\n"
 	}
 	if s.Param().(bootConfig).ioUringBlock {
 		arcvmConf += "BLOCK_ASYNC_EXECUTOR=uring\n"
