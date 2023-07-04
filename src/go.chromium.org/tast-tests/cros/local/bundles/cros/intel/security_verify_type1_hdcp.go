@@ -44,7 +44,6 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		// TODO(b/238157101): We are not running this test on any bots intentionally.
 		// Test H/W topology requires DUT connected to external typec DP display.
 		Func:         SecurityVerifyType1HDCP,
 		Desc:         "Verifies security verification of Type 1 content on HDCP 1.4 compatible panel in extended/mirror mode",
@@ -54,6 +53,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInRootfsRemoved",
 		HardwareDeps: hwdep.D(setup.PerfHDCPDevices()),
+		Attr:         []string{"group:intel-dp-type-c"},
 		Params: []testing.Param{{
 			Name: "h264_subsample",
 			Val: securityVerifyTestParams{

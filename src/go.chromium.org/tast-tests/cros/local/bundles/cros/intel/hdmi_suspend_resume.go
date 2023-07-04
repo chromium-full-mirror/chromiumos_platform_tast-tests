@@ -23,8 +23,7 @@ func init() {
 		Desc:         "Verifies HDMI native port functionality with suspend-resume cycles",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
-		// Disabled due to <1% pass rate over 30 days. See b/241943556
-		//Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:intel-hdmi"},
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),
 		Timeout:      8 * time.Minute,

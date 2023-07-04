@@ -33,6 +33,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.InternalDisplay()),
+		Attr:         []string{"group:intel-hdmi-type-c"},
 		Timeout:      5 * time.Minute,
 		Vars: []string{
 			"servo",

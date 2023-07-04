@@ -85,7 +85,8 @@ func init() {
 				is4KDisplay:         true,
 				contentUrls:         []string{urlconst.H264UHD},
 				proxyURL:            urlconst.ProxyHDCPV2},
-			Timeout: 4 * time.Minute,
+			Timeout:   4 * time.Minute,
+			ExtraAttr: []string{"group:intel-dp-type-c"},
 		}, {
 			// Test H/W topology requires DUT connected to external typec HDMI display.
 			Name: "hevc_cbcs_hdcp2_2_v1_display",
@@ -96,7 +97,8 @@ func init() {
 				displayInfoReString: `.*DP branch device present.*yes\n.*Type.*HDMI`,
 				contentUrls:         []string{urlconst.HEVCCBCS},
 				proxyURL:            urlconst.ProxyHDCPV1},
-			Timeout: 4 * time.Minute,
+			Timeout:   4 * time.Minute,
+			ExtraAttr: []string{"group:intel-hdmi-type-c"},
 		}, {
 			// Test H/W topology requires DUT connected to external typec HDMI 4K display.
 			Name: "hevc_cbcs_hdcp1_4_v1_display",
@@ -108,7 +110,8 @@ func init() {
 				is4KDisplay:         true,
 				contentUrls:         []string{urlconst.HEVCCBCS},
 				proxyURL:            urlconst.ProxyHDCPV1},
-			Timeout: 4 * time.Minute,
+			Timeout:   4 * time.Minute,
+			ExtraAttr: []string{"group:intel-hdmi-type-c"},
 		}, {
 			// Test H/W topology requires DUT connected to external typec DP 4K display.
 			Name: "h264_hdcpv2_4k_display",
@@ -120,7 +123,8 @@ func init() {
 				is4KDisplay:         true,
 				contentUrls:         []string{urlconst.H264Fullsample, urlconst.H264Subsample, urlconst.H264CBCS},
 				proxyURL:            urlconst.ProxyHDCPV2},
-			Timeout: 7 * time.Minute,
+			Timeout:   7 * time.Minute,
+			ExtraAttr: []string{"group:intel-dp-type-c"},
 		}, {
 			// Test H/W topology requires DUT connected to external typec HDMI 4K display.
 			Name: "vp9_hdcpv2_4k_display",
@@ -132,7 +136,8 @@ func init() {
 				is4KDisplay:         true,
 				contentUrls:         []string{urlconst.VP9Subsample, urlconst.VP9Superframe, urlconst.VP9UHD},
 				proxyURL:            urlconst.ProxyHDCPV2},
-			Timeout: 7 * time.Minute,
+			Timeout:   7 * time.Minute,
+			ExtraAttr: []string{"group:intel-hdmi-type-c"},
 		}, {
 			// Test H/W topology requires DUT connected to external typec DP 4K display.
 			Name: "play_all_hevc_contents_4k_display",
@@ -145,7 +150,8 @@ func init() {
 				contentUrls: []string{urlconst.HEVCclip, urlconst.HEVC4K, urlconst.HEVCclipSD, urlconst.HEVCclipHD,
 					urlconst.HEVCCBCS, urlconst.HEVCCBCS2},
 				proxyURL: urlconst.ProxyHDCPV2},
-			Timeout: 12 * time.Minute,
+			Timeout:   12 * time.Minute,
+			ExtraAttr: []string{"group:intel-dp-type-c"},
 		}, {
 			// Test H/W topology required as below:
 			// DUT ---> TBT Dock station ---> typec 4K DP display.
@@ -158,7 +164,8 @@ func init() {
 				is4KDisplay:         true,
 				contentUrls:         []string{urlconst.HEVCCBCS, urlconst.HEVCclip},
 				proxyURL:            urlconst.ProxyHDCPV2},
-			Timeout: 7 * time.Minute,
+			Timeout:   7 * time.Minute,
+			ExtraAttr: []string{"group:intel-dp-type-c"},
 		}, {
 			// Test H/W topology required as below:
 			// DUT ---> USB4 Gatkex ---> typec 4K DP display.
@@ -172,7 +179,8 @@ func init() {
 				isTBTDevice:         true,
 				contentUrls:         []string{urlconst.VP9Subsample, urlconst.VP9Superframe, urlconst.VP9UHD},
 				proxyURL:            urlconst.ProxyHDCPV2},
-			Timeout: 7 * time.Minute,
+			Timeout:   7 * time.Minute,
+			ExtraAttr: []string{"group:intel-dp-type-c"},
 		}},
 	})
 }

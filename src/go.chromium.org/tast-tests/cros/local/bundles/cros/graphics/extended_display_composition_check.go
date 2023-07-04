@@ -53,6 +53,7 @@ func init() {
 					"connectedPtrns":     regexp.MustCompile(`\[CONNECTOR:\d+:HDMI.*status: connected`),
 				},
 			},
+			ExtraAttr: []string{"group:intel-hdmi"},
 		}, {
 			Name: "hdmi_tablet_mode",
 			Val: displayCompositionTestParams{
@@ -62,6 +63,7 @@ func init() {
 					"connectedPtrns":     regexp.MustCompile(`\[CONNECTOR:\d+:HDMI.*status: connected`),
 				},
 			},
+			ExtraAttr: []string{"group:intel-hdmi"},
 		}, {
 			Name: "dp_clamshell_mode",
 			Val: displayCompositionTestParams{
@@ -71,6 +73,7 @@ func init() {
 					"connectedPtrns":     regexp.MustCompile(`\[CONNECTOR:\d+:DP.*status: connected`),
 				},
 			},
+			ExtraAttr: []string{"group:intel-dp"},
 		}},
 	})
 }

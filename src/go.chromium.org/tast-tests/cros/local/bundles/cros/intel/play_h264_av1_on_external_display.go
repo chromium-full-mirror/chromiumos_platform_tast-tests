@@ -37,7 +37,6 @@ type playH264AV1Params struct {
 }
 
 func init() {
-	// TODO(b/238157101): Wait for the intel specific suite for running the test.
 	// The test requires that the DUT connects to an external Type-C DP 4K display.
 	testing.AddTest(&testing.Test{
 		Func:         PlayH264AV1OnExternalDisplay,
@@ -49,6 +48,7 @@ func init() {
 		Vars:         []string{"intel.videoDuration"},
 		Fixture:      "chromeLoggedInRootfsRemoved",
 		HardwareDeps: hwdep.D(setup.PerfHDCPDevices()),
+		Attr:         []string{"group:intel-dp-type-c"},
 		Params: []testing.Param{{
 			Name: "h264_subsample",
 			Val: playH264AV1Params{

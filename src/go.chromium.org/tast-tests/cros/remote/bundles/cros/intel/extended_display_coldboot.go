@@ -58,7 +58,8 @@ func init() {
 				ecStateToCheck: "S5",
 				isTypecDP:      true,
 			},
-			Timeout: 15 * time.Minute,
+			Timeout:   15 * time.Minute,
+			ExtraAttr: []string{"group:intel-dp-type-c"},
 		}, {
 			Name: "native_dp",
 			Val: extendedDisplayTestParams{
@@ -66,7 +67,8 @@ func init() {
 				ecStateToCheck: "S5",
 				isTypecDP:      false,
 			},
-			Timeout: 15 * time.Minute,
+			Timeout:   15 * time.Minute,
+			ExtraAttr: []string{"group:intel-dp"},
 		}, {
 			Name: "typec_hdmi",
 			Val: extendedDisplayTestParams{
@@ -74,7 +76,8 @@ func init() {
 				ecStateToCheck: "G3",
 				isTypecDP:      false,
 			},
-			Timeout: 15 * time.Minute,
+			Timeout:   15 * time.Minute,
+			ExtraAttr: []string{"group:intel-hdmi-type-c"},
 		}, {
 			Name: "native_hdmi",
 			Val: extendedDisplayTestParams{
@@ -82,7 +85,8 @@ func init() {
 				ecStateToCheck: "S5",
 				isTypecDP:      false,
 			},
-			Timeout: 15 * time.Minute,
+			Timeout:   15 * time.Minute,
+			ExtraAttr: []string{"group:intel-hdmi"},
 		}},
 	})
 }
