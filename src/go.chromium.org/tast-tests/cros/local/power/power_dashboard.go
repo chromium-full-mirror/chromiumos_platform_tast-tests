@@ -502,9 +502,12 @@ func UploadToDashboard(ctx context.Context, powerLogDict map[string]interface{},
 	if err != nil {
 		return errors.Wrap(err, "failed to upload to power dashboard")
 	}
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return errors.New("unsuccessful http response from power dashboard: " + resp.Status)
 	}
+
 	return nil
 }
 
@@ -681,10 +684,6 @@ func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName str
 		return errors.Wrap(err, "failed to generate power log")
 	}
 
-	if err := UploadToDashboard(ctx, powerLogDict, ""); err != nil {
-		return errors.Wrap(err, "failed to upload to power dashboard")
-	}
-
 	if powerDict == nil {
 		testing.ContextLog(ctx, "Power dictionary is empty. Don't save perf values for crosbolt")
 		return nil
@@ -692,6 +691,10 @@ func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName str
 
 	if err := values.Save(outDir); err != nil {
 		return errors.Wrap(err, "failed to save perf data for crosbolt")
+	}
+
+	if err := UploadToDashboard(ctx, powerLogDict, ""); err != nil {
+		return errors.Wrap(err, "failed to upload to power dashboard")
 	}
 
 	return nil
