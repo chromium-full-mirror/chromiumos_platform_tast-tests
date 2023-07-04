@@ -19,6 +19,7 @@ import (
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -29,6 +30,7 @@ func init() {
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
+		HardwareDeps: hwdep.D(hwdep.MinMemory(7169)),
 		BugComponent: "b:1122570",
 		Params: []testing.Param{
 			{
@@ -36,6 +38,14 @@ func init() {
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"crostini_app", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniAppUnstable,
+				Fixture:           "crostiniBullseyeLargeContainerClamshellWithoutArc",
+				Timeout:           15 * time.Minute,
+			},
+			{
+				Name:              "bullseye_clamshell_stable_no_arc",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"crostini_app", "dlc"},
+				ExtraHardwareDeps: crostini.CrostiniAppStable,
 				Fixture:           "crostiniBullseyeLargeContainerClamshellWithoutArc",
 				Timeout:           15 * time.Minute,
 			},
