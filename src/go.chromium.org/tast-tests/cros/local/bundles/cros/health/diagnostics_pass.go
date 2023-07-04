@@ -172,12 +172,12 @@ func init() {
 		}, {
 			Name:              "bluetooth_discovery",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothDiscovery),
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
 			Name:              "bluetooth_scanning",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothScanning),
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
 			Name:      "disk_read",

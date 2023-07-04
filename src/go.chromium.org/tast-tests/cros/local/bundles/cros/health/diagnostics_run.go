@@ -162,13 +162,13 @@ func init() {
 			Name: "bluetooth_discovery",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothDiscovery),
 			// TODO(b/280388009): Promote to critical.
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
 			Name: "bluetooth_scanning",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothScanning),
 			// TODO(b/280388009): Promote to critical.
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
 			Name: "disk_read",
