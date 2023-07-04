@@ -146,6 +146,22 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for reboot start.
+        // TODO(chenghan): Replace testing.Sleep with testing.Poll.
+	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
+		s.Error("Fail to sleep: ", err)
+	}
+
+	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	if err != nil {
+		s.Fatal("Fail to initialize RMA Helper: ", err)
+	}
+	// Restart will dispose resources, so don't dispose resources explicitly.
+
+	if err := uiHelper.WriteProtectDisabledPageOperation(ctx); err != nil {
+		s.Fatal("Fail to navigate to WP disable Complete page: ", err)
+	}
+
+	// Wait for reboot start.
 	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
 		s.Error("Fail to sleep: ", err)
 	}
@@ -160,17 +176,11 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	// Since we already run Manual test case (removal battery) in skylab and install firmware from USB,
 	// we skip firmware installation in all RSU test cases.
 	if wpOption == rmaweb.Manual && !skipFlashUSB {
-		if err := action.Combine("navigate to firmware installation page and install firmware",
-			uiHelper.WriteProtectDisabledPageOperation,
-			uiHelper.WaitForFirmwareInstallation,
-		)(ctx); err != nil {
+		if err := uiHelper.WaitForFirmwareInstallation(ctx); err != nil {
 			s.Fatal("Fail to navigate to firmware installation page and install firmware: ", err)
 		}
 	} else {
-		if err := action.Combine("navigate to firmware installation page and bypass firmware install",
-			uiHelper.WriteProtectDisabledPageOperation,
-			uiHelper.BypassFirmwareInstallation,
-		)(ctx); err != nil {
+		if err := uiHelper.BypassFirmwareInstallation(ctx); err != nil {
 			s.Fatal("Fail to navigate to firmware installation page and bypass firmware install: ", err)
 		}
 	}
