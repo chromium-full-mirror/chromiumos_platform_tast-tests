@@ -102,14 +102,9 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 	var packPath string
 	var logPath string
 	if vmEnabled {
-		// Pass kernel params to ARCVM dev config
+		// Pass kernel param to ARCVM dev config
 		if err := arc.AppendToArcvmDevConf(ctx, "--params=androidboot.arcvm_mount_debugfs=1"); err != nil {
-			return nil, errors.Wrap(err, "failed to write mount debugfs boot flag to arcvm dev config")
-		}
-		if request.UseDevCaches {
-			if err := arc.AppendToArcvmDevConf(ctx, "--params=androidboot.use_dev_caches=true"); err != nil {
-				return nil, errors.Wrap(err, "failed to write use dev caches boot flag to arcvm dev config")
-			}
+			return nil, errors.Wrap(err, "failed to write arcvm dev config")
 		}
 		defer arc.RestoreArcvmDevConf(ctx)
 	} else {
@@ -138,6 +133,9 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 	if vmEnabled {
 		// If VM, only generate guest OS pack file.
 		chromeArgs = append(chromeArgs, "--arcvm-ureadahead-mode=generate")
+		if request.UseDevCaches == true {
+			chromeArgs = append(chromeArgs, "--params=androidboot.user_dev_caches=true")
+		}
 	} else {
 		chromeArgs = append(chromeArgs, "--arc-host-ureadahead-generation")
 	}
@@ -180,7 +178,7 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		vmLogPath = filepath.Join(ureadaheadDataDir, vmLogName)
 
 		// Pull and obtain ARCVM pack from guest OS and dump pack file content to log.
-		vmPackPath, err = getGuestPack(ctx, vmLogPath, request.UseDevCaches)
+		vmPackPath, err = getGuestPack(ctx, vmLogPath)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain ureadahead pack from ARCVM guest OS")
 		}
@@ -398,7 +396,7 @@ func verifyTracedServicesStopped(ctx context.Context, a *arc.ARC) error {
 }
 
 // getGuestPack pulls ureadahead initial pack for requested Chrome login mode from guest OS.
-func getGuestPack(ctx context.Context, logPath string, useDevCaches bool) (string, error) {
+func getGuestPack(ctx context.Context, logPath string) (string, error) {
 	const (
 		ureadaheadDataDir = "/var/lib/ureadahead"
 
@@ -451,14 +449,6 @@ func getGuestPack(ctx context.Context, logPath string, useDevCaches bool) (strin
 	// Verify ureadahead exited which is triggered by opt-in completion.
 	if value, err := a.GetProp(ctx, "dev.arc.ureadahead.exit"); err != nil || value != "1" {
 		return "", errors.Wrap(err, "failed to verify ureadahead to exited")
-	}
-
-	if useDevCaches {
-		// Confirm dev caches were installed properly by arccachesetup service.
-		// Value of 3 corresponds to GMS Core, Packages and File Hashes caches.
-		if value, err := a.GetProp(ctx, "dev.arc.caches_installed"); err != nil || value != "3" {
-			return "", errors.Wrap(err, "failed to verify dev caches installed correctly")
-		}
 	}
 
 	// Check for existence of newly generated pack file on guest side and get size.
