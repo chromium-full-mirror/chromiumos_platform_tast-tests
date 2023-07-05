@@ -6,10 +6,11 @@ package videoconferencing
 
 import (
 	"context"
+	"time"
+
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
-	"time"
 
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -27,20 +28,15 @@ func init() {
 		BugComponent: "b:1140118",
 		Attr: []string{
 			"group:camera_dependent",
+			"group:video_conference",
+			"video_conference_per_build",
+			"video_conference_cq_critical",
 		},
 		Fixture:      fixture.LoggedInWithFakeHALAndEffectsEnabled,
 		SoftwareDeps: []string{"camera_feature_effects"},
-		Params: []testing.Param{
-			{
-				Name: "effects_stream_manipulator",
-				// This binary is installed from cros-camera-effects-sm-tests
-				// into /usr/local/bin/.
-				ExtraAttr: []string{
-					"group:video_conference", "video_conference_per_build",
-				},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
-			},
-		},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
+		// This binary is installed from cros-camera-effects-sm-tests
+		// into /usr/local/bin/.
 	})
 }
 

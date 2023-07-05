@@ -30,7 +30,11 @@ func init() {
 			"zhaon@google.com",
 		},
 		BugComponent: "b:1212695",
-		Attr:         []string{"group:video_conference", "video_conference_per_build"},
+		Attr: []string{
+			"group:video_conference",
+			"video_conference_per_build",
+			"video_conference_cq_critical",
+		},
 		Fixture:      fixture.LoggedInWithFakeHALAndEffectsEnabled,
 		SoftwareDeps: []string{"camera_feature_effects"},
 	})
