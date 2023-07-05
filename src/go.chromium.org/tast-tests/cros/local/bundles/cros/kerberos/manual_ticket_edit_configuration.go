@@ -30,7 +30,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManualTicketEditConfiguration,
+		Func: ManualTicketEditConfiguration,
+		// Kerberos integration with Lacros will be covered by the
+		// kerberos.ManualTicketAccessWebsite tast.
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that changing Kerberos config works properly",
 		Contacts: []string{

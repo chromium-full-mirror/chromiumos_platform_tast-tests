@@ -26,8 +26,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManualTicketAccessFileSystem,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		Func: ManualTicketAccessFileSystem,
+		// This tast doesn't interact with the browser.
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks the behavior of accessing a file system secured with Kerberos after manually adding a Kerberos ticket",
 		Contacts: []string{
 			"cros-3pidp@google.com",

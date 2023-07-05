@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package ad provides Active Directory related tests (Kerberos, ChromeOS
-// Active Directory integration aka. Chromad).
+// Package ad provides Active Directory related tests (e.g. Kerberos).
 package ad
 
 import (
@@ -21,7 +20,9 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: KerberosDaemon,
-		Desc: "Verifies that the Kerberos system daemon works as expected",
+		// This tast doesn't interact with the browser.
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verifies that the Kerberos system daemon works as expected",
 		Contacts: []string{
 			"cros-3pidp@google.com",
 			"slutskii@google.com",
