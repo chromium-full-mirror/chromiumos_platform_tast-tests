@@ -21,6 +21,7 @@ func init() {
 			"dlunev@google.com", // Test author
 		},
 		BugComponent: "b:974567",
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Requirements: []string{tdreq.UfsInterface},
 	})
 }

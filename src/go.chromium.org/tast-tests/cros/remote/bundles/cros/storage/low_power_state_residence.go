@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
 	"go.chromium.org/tast/core/testing"
 )
@@ -31,10 +32,13 @@ func init() {
 			"chromeos-storage@google.com",
 			"dlunev@google.com", // Test author
 		},
-		//TODO(dlunev): add requirement for link with PVS, once requirement is added.
 		//TODO(dlunev): run the test in the lab for regression testing.
 		//TODO(dlunev): should it report percent high power time to crosbolt?
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Requirements: []string{
+			tdreq.InternalStorageGeneral,
+		},
 	})
 }
 

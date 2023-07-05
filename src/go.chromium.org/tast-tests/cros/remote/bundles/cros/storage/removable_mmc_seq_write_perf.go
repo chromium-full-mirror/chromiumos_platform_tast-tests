@@ -22,6 +22,7 @@ func init() {
 			"dlunev@google.com", // Test author
 		},
 		BugComponent: "b:974567",
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Data:         util.Configs,
 		Requirements: []string{tdreq.RemovableStorageSeqTp},
 		Timeout:      10 * time.Minute,

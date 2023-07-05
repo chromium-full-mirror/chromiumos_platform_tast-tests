@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
 	"go.chromium.org/tast/core/testing"
 )
@@ -22,7 +23,10 @@ func init() {
 			"dlunev@google.com", // Test author
 		},
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
-		//TODO(dlunev): add requirements for link with PVS, once added.
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Requirements: []string{
+			tdreq.InternalStorageGeneral,
+		},
 	})
 }
 

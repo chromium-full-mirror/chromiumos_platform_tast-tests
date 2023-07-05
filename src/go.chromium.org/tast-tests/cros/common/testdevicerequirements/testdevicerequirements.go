@@ -278,6 +278,10 @@ const (
 
 	// Storage Requirements
 
+	// InternalStorageGeneral with The ChromeOS device MUST provide storage with a non-volatile solid-state storage device.
+	// This is a catch-all requirement for all tests that don't have a dedicated requirement at the moment.
+	InternalStorageGeneral = "store-general-0001-v01"
+
 	// InternalStorageInterface with The ChromeOS device MUST provide non-volatile storage via one or more of the following interfaces:
 	// * eMMC
 	// * NVMe
