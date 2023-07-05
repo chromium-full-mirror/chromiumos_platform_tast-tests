@@ -32,7 +32,7 @@ func RemovableMmcSeqWritePerf(ctx context.Context, s *testing.State) {
 	resultWriter := &util.FioResultWriter{}
 	defer resultWriter.Save(ctx, s.OutDir(), true)
 
-	disk, err := util.GetRemovableMmc(ctx, s.DUT())
+	disk, err := util.GetRemovableSD(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get removable disk: ", err)
 	}

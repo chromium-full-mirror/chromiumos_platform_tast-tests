@@ -31,8 +31,11 @@ const (
 	SataDisk
 	// UsbDisk represents a USB storage.
 	UsbDisk
-	// MmcDisk represents a removable mmc card.
-	MmcDisk
+	// SDCard represents a removable SD card.
+	SDCard
+	// EmmcOverNvmeDisk represents an eMMC device that is exposed via an
+	// eMMC-NVMe bridge (e.g. BH799)
+	EmmcOverNvmeDisk
 )
 
 // DiskPowerState represents disk's power state.
@@ -62,8 +65,10 @@ func DiskTypeToString(t DiskType) string {
 		return "SATA"
 	case UsbDisk:
 		return "usb-storage"
-	case MmcDisk:
+	case SDCard:
 		return "SD card"
+	case EmmcOverNvmeDisk:
+		return "eMMC-NVMe"
 	}
 	return "invalid enum type"
 }
@@ -82,36 +87,26 @@ func getBlockDeviceSize(ctx context.Context, dut *dut.DUT, devPath string) (int,
 	return blockCount * 512, nil
 }
 
-// GetDiskType returns disk type based on its name.
-// TODO(dlunev): this is a crude stub, a more reliable method should be developed.
-func GetDiskType(devName string) DiskType {
-	if strings.HasPrefix(devName, "mmcblk") {
-		return EmmcDisk
-	}
-	if strings.HasPrefix(devName, "nvme") {
-		return NvmeDisk
-	}
-	if strings.HasPrefix(devName, "sd") {
-		return UfsDisk
-	}
-
-	return UnknownDisk
-}
-
 // Disk structure represents a block device.
 type Disk struct {
-	DUT  *dut.DUT
-	Path string
-	Name string
-	Size int
-	Type DiskType
+	DUT                *dut.DUT
+	Path               string
+	Name               string
+	PhysicalDeviceName string
+	Size               int
+	Type               DiskType
 
 	nvmePowerConfig *NvmePowerConfig
 }
 
-func newDisk(ctx context.Context, dut *dut.DUT, path string) (*Disk, error) {
+func newDisk(ctx context.Context, dut *dut.DUT, path string, isPartition bool) (*Disk, error) {
 	pathComponents := strings.Split(path, "/")
 	name := pathComponents[len(pathComponents)-1]
+	physDevName := name
+
+	if isPartition {
+		physDevName = physDevName[:len(physDevName)-2]
+	}
 
 	size, err := getBlockDeviceSize(ctx, dut, path)
 	if err != nil {
@@ -119,11 +114,16 @@ func newDisk(ctx context.Context, dut *dut.DUT, path string) (*Disk, error) {
 	}
 
 	disk := &Disk{
-		DUT:  dut,
-		Path: path,
-		Name: name,
-		Size: size,
-		Type: GetDiskType(name),
+		DUT:                dut,
+		Path:               path,
+		Name:               name,
+		PhysicalDeviceName: physDevName,
+		Size:               size,
+		Type:               UnknownDisk,
+	}
+
+	if err := disk.detectType(ctx); err != nil {
+		return nil, errors.Wrap(err, "can't detect disk type")
 	}
 
 	if disk.Type == NvmeDisk {
@@ -137,12 +137,60 @@ func newDisk(ctx context.Context, dut *dut.DUT, path string) (*Disk, error) {
 	return disk, nil
 }
 
+const bh799Ven = 0x1217
+const bh799Dev = 0x0002
+
+func (d *Disk) detectType(ctx context.Context) error {
+	if strings.HasPrefix(d.PhysicalDeviceName, "mmcblk") {
+		sysfsType, err := d.ReadSysfsString(ctx, "device/type")
+		if err != nil {
+			return errors.Wrap(err, "can't read mmc type value")
+		}
+		if sysfsType == "SD" {
+			d.Type = SDCard
+		} else if sysfsType == "MMC" {
+			d.Type = EmmcDisk
+		}
+	} else if strings.HasPrefix(d.PhysicalDeviceName, "nvme") {
+		subsysVen, err := d.ReadSysfsHexInt64(ctx, "device/device/subsystem_vendor")
+		if err != nil {
+			return errors.Wrap(err, "can't read `susbsystem_vendor` value")
+		}
+		subsysDev, err := d.ReadSysfsHexInt64(ctx, "device/device/subsystem_device")
+		if err != nil {
+			return errors.Wrap(err, "can't read `subsystem_device` value")
+		}
+
+		if subsysVen == bh799Ven && subsysDev == bh799Dev {
+			d.Type = EmmcOverNvmeDisk
+		} else {
+			d.Type = NvmeDisk
+		}
+	} else if strings.HasPrefix(d.PhysicalDeviceName, "sd") {
+		removable, err := d.ReadSysfsInt64(ctx, "device/removable")
+		if err != nil {
+			return errors.Wrap(err, "can't read `removable` value")
+		}
+
+		if removable == 0 {
+			d.Type = UfsDisk
+		} else {
+			d.Type = UsbDisk
+		}
+	}
+
+	// If we don't match anything, we leave Type field as is, but report no
+	// error. The calling code will check if UnknownDisk is an appropriate
+	// status.
+	return nil
+}
+
 func (d *Disk) debugfsEntry() string {
 	switch d.Type {
 	case EmmcDisk:
 		fallthrough
-	case MmcDisk:
-		return "mmc" + d.Name[len(d.Name)-1:]
+	case SDCard:
+		return "mmc" + d.PhysicalDeviceName[len(d.PhysicalDeviceName)-1:]
 	default:
 		return "not_implemented_debugfs_entry"
 	}
@@ -168,7 +216,7 @@ func (d *Disk) CurrentPowerState(ctx context.Context) (DiskPowerState, error) {
 	switch d.Type {
 	case NvmeDisk:
 		return getNvmePowerState(ctx, d)
-	case MmcDisk:
+	case SDCard:
 		fallthrough
 	case EmmcDisk:
 		fallthrough
@@ -177,6 +225,11 @@ func (d *Disk) CurrentPowerState(ctx context.Context) (DiskPowerState, error) {
 	default:
 		return DiskUnknownPowerState, errors.New("Power State check not implemented")
 	}
+}
+
+// IsInternal returns true if the disk is an internal storage.
+func (d *Disk) IsInternal() bool {
+	return d.Type != UnknownDisk && d.Type != UsbDisk && d.Type != SDCard
 }
 
 // ReadDebugfsString reads string from the debugfs of the device.
@@ -207,7 +260,7 @@ func (d *Disk) ReadDebugfsHexInt64(ctx context.Context, relativePath string) (in
 
 // ReadSysfsString reads string from the sysfs of the device.
 func (d *Disk) ReadSysfsString(ctx context.Context, relativePath string) (string, error) {
-	path := "/sys/block/" + d.Name + "/" + relativePath
+	path := "/sys/block/" + d.PhysicalDeviceName + "/" + relativePath
 	data, err := RunCmdWithStringOutput(ctx, d.DUT, "cat", path)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read sysfs path: "+path)
@@ -244,20 +297,6 @@ func (d *Disk) ReadSysfsInt64(ctx context.Context, relativePath string) (int64, 
 	return value, nil
 }
 
-func getRootDevName(ctx context.Context, dut *dut.DUT) (string, error) {
-	rootDevPath, err := RunCmdWithStringOutput(ctx, dut, "rootdev", "-s", "-d")
-	if err != nil {
-		return "", errors.Wrap(err, "failed to query rootdev")
-	}
-
-	rootDevPathComponents := strings.Split(rootDevPath, "/")
-	if len(rootDevPathComponents) != 3 {
-		return "", errors.Errorf("malformed rootdev path: %q", rootDevPath)
-	}
-
-	return rootDevPathComponents[2], nil
-}
-
 func getRootDevPartition(ctx context.Context, dut *dut.DUT) (string, error) {
 	rootDevPath, err := RunCmdWithStringOutput(ctx, dut, "rootdev", "-s")
 	if err != nil {
@@ -281,64 +320,30 @@ func getBlockDevList(ctx context.Context, dut *dut.DUT) ([]string, error) {
 	return strings.Fields(sysBlockLs), nil
 }
 
-func getRemovableMmcName(ctx context.Context, dut *dut.DUT) (string, error) {
-	rootDevName, err := getRootDevName(ctx, dut)
-	if err != nil {
-		return "", errors.Wrap(err, "can't get rootdev")
-	}
-
+// GetRemovableSD returns the disk structure representing a removable SD card.
+func GetRemovableSD(ctx context.Context, dut *dut.DUT) (*Disk, error) {
 	blockDevNames, err := getBlockDevList(ctx, dut)
 	if err != nil {
-		return "", errors.Wrap(err, "can't list block devices")
+		return nil, errors.Wrap(err, "can't list block devices")
 	}
 
 	for _, bdev := range blockDevNames {
-		if bdev == rootDevName {
-			continue
+		devPath := filepath.Join("/dev", bdev)
+		disk, err := newDisk(ctx, dut, devPath, false)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to process block device %q", devPath)
 		}
-
-		if strings.HasPrefix(bdev, "mmcblk") {
-			return bdev, nil
+		if disk.Type == SDCard {
+			return disk, nil
 		}
 	}
 
-	return "", errors.New("can't find mmc card")
+	return nil, errors.New("can not detect SD card")
 }
 
-// GetRemovableMmc returns the disk structure representing the removable MMC
-// TODO(dlunev): This can pick up wrong device. It will get fixed, but ok for
-// now to start working on tests.
-func GetRemovableMmc(ctx context.Context, dut *dut.DUT) (*Disk, error) {
-	mmcName, err := getRemovableMmcName(ctx, dut)
-	if err != nil {
-		return nil, errors.Wrap(err, "can't find mmc card")
-	}
-
-	mmcPath := filepath.Join("/dev", mmcName)
-
-	return newDisk(ctx, dut, mmcPath)
-}
-
-// GetInternalStorageFromInternalBoot returns the disk structure representing
-// the internal device for the system boot from the device.
-// TODO(dlunev): This can pick up wrong device. It will get fixed, but ok for
-// now to start working on tests.
-func GetInternalStorageFromInternalBoot(ctx context.Context, dut *dut.DUT) (*Disk, error) {
-	rootDevName, err := getRootDevName(ctx, dut)
-	if err != nil {
-		return nil, errors.Wrap(err, "can't get rootdev")
-	}
-
-	rootDevPath := filepath.Join("/dev", rootDevName)
-
-	return newDisk(ctx, dut, rootDevPath)
-}
-
-// GetStandbyRootfsFromInternalBoot returns disk structure representing
-// the non-active rootfs partition for the system booth from the device.
-// TODO(dlunev): This can pick up wrong device. It will get fixed, but ok for
-// now to start working on tests.
-func GetStandbyRootfsFromInternalBoot(ctx context.Context, dut *dut.DUT) (*Disk, error) {
+// GetStandbyRootfs returns disk structure representing the non-active rootfs
+// partition of the internal storage device.
+func GetStandbyRootfs(ctx context.Context, dut *dut.DUT) (*Disk, error) {
 	partitionName, err := getRootDevPartition(ctx, dut)
 	if err != nil {
 		return nil, errors.Wrap(err, "can't get rootfs partition")
@@ -354,34 +359,36 @@ func GetStandbyRootfsFromInternalBoot(ctx context.Context, dut *dut.DUT) (*Disk,
 
 	partitionPath := filepath.Join("/dev", partitionName)
 
-	return newDisk(ctx, dut, partitionPath)
-}
-
-// GetInternalStorageFromRemovableBoot returns the disk structure representing
-// the internal device for the system boot from the removable storage.
-// TODO(dlunev): This can pick up wrong device. It will get fixed, but ok for
-// now to start working on tests.
-func GetInternalStorageFromRemovableBoot(ctx context.Context, dut *dut.DUT) (*Disk, error) {
-	rootDevName, err := getRootDevName(ctx, dut)
+	disk, err := newDisk(ctx, dut, partitionPath, true)
 	if err != nil {
-		return nil, errors.Wrap(err, "can't get rootdev")
+		return nil, err
 	}
 
+	if !disk.IsInternal() {
+		return nil, errors.New("stand-by rootfs can be used only on internal device")
+	}
+
+	return disk, nil
+}
+
+// GetInternalStorage returns the disk structure representing the internal
+// storage device.
+func GetInternalStorage(ctx context.Context, dut *dut.DUT) (*Disk, error) {
 	blockDevNames, err := getBlockDevList(ctx, dut)
 	if err != nil {
 		return nil, errors.Wrap(err, "can't list block devices")
 	}
 
-	var internalDevName string
 	for _, bdev := range blockDevNames {
-		if bdev != rootDevName && GetDiskType(bdev) != UnknownDisk {
-			internalDevName = bdev
-			break
+		devPath := filepath.Join("/dev", bdev)
+		disk, err := newDisk(ctx, dut, devPath, false)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to process block device %q", devPath)
 		}
-
+		if disk.IsInternal() {
+			return disk, nil
+		}
 	}
 
-	internalDevPath := filepath.Join("/dev", internalDevName)
-
-	return newDisk(ctx, dut, internalDevPath)
+	return nil, errors.New("can not detect internal storage device")
 }

@@ -35,7 +35,7 @@ func init() {
 const tbwProbeSize = 512 * 1024 * 1024 // 512 MiB
 
 func NvmeTBW(ctx context.Context, s *testing.State) {
-	disk, err := util.GetStandbyRootfsFromInternalBoot(ctx, s.DUT())
+	disk, err := util.GetStandbyRootfs(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get internal disk: ", err)
 	}

@@ -171,7 +171,7 @@ func Performance(ctx context.Context, s *testing.State) {
 	resultWriter := &util.FioResultWriter{}
 	defer resultWriter.Save(ctx, s.OutDir(), true)
 
-	disk, err := util.GetInternalStorageFromRemovableBoot(ctx, s.DUT())
+	disk, err := util.GetInternalStorage(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get internal disk: ", err)
 	}

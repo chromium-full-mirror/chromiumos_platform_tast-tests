@@ -27,7 +27,7 @@ func init() {
 }
 
 func InternalDeviceTypeCheck(ctx context.Context, s *testing.State) {
-	disk, err := util.GetInternalStorageFromInternalBoot(ctx, s.DUT())
+	disk, err := util.GetInternalStorage(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get internal disk: ", err)
 	}

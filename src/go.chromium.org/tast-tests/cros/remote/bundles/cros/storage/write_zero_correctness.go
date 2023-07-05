@@ -28,7 +28,7 @@ func init() {
 }
 
 func WriteZeroCorrectness(ctx context.Context, s *testing.State) {
-	disk, err := util.GetStandbyRootfsFromInternalBoot(ctx, s.DUT())
+	disk, err := util.GetStandbyRootfs(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get internal disk: ", err)
 	}
