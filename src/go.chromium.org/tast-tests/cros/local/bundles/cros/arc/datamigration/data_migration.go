@@ -6,6 +6,8 @@ package datamigration
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -44,6 +46,16 @@ func MountVaultWithArchivedHomeData(ctx context.Context, homeDataPath, username,
 	if err := testexec.CommandContext(
 		ctx, "tar", "--xattrs", "--selinux", "-C", vaultPath, "-xjf", homeDataPath).Run(testexec.DumpLogOnError); err != nil {
 		return func(context.Context) {}, errors.Wrap(err, "failed to unarchive home data under vault")
+	}
+
+	// TODO(b/284921319): Mount virtio-blk /data as writable at
+	// |filepath.Join(vaultPath, "root/android-data/data")| when we add virtio-blk variants of
+	// R->T upgrade test cases to arc.DataMigration.
+
+	// Remove adb_temp_keys.xml to avoid invalidating test adb key in T+ (b/289798262).
+	// For ARC R and earlier, this should be no-op.
+	if err := os.RemoveAll(filepath.Join(vaultPath, "root/android-data/data/misc/adb/adb_temp_keys.xml")); err != nil {
+		return func(context.Context) {}, errors.Wrap(err, "failed to remove adb_temp_keys.xml")
 	}
 
 	return cleanupFunc, nil
