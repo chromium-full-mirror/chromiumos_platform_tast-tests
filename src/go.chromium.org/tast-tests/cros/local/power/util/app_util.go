@@ -6,11 +6,15 @@ package util
 
 import (
 	"context"
+	"os"
+	"path"
+	"path/filepath"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
@@ -28,6 +32,31 @@ func InstallApp(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *andr
 		return errors.Wrapf(err, "failed to install %s", pkgName)
 	}
 
+	return logAppVersion(ctx, a, d, pkgName)
+}
+
+// InstallAppFromAPKURL installs the app from the given APK URL.
+func InstallAppFromAPKURL(ctx context.Context, a *arc.ARC, d *androidui.Device, pkgName, apkURL string) error {
+	// Uninstall the app if it is already installed
+	// to ensure the app is installed from the given APK.
+	if err := UninstallApp(ctx, a, pkgName); err != nil {
+		return errors.Wrap(err, "failed to uninstall app before installing from APK URL")
+	}
+
+	apkContent, err := utils.FetchFromURL(ctx, apkURL)
+	if err != nil {
+		return errors.Wrapf(err, "failed to fetch apk content from %s", apkURL)
+	}
+
+	apkPath := filepath.Join(os.TempDir(), path.Base(apkURL))
+	if err := os.WriteFile(apkPath, []byte(apkContent), 0644); err != nil {
+		return errors.Wrap(err, "failed to write apk file")
+	}
+	defer os.Remove(apkPath)
+
+	if err := a.Install(ctx, apkPath); err != nil {
+		return errors.Wrapf(err, "failed to install %s from apk", pkgName)
+	}
 	return logAppVersion(ctx, a, d, pkgName)
 }
 

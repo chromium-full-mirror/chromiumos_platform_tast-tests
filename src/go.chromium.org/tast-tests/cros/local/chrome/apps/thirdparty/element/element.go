@@ -62,28 +62,33 @@ var (
 
 // Element represents a type of Element instance.
 type Element struct {
-	tconn *chrome.TestConn
-	ui    *uiauto.Context
-	kb    *input.KeyboardEventWriter
-	a     *arc.ARC
-	d     *ui.Device
+	tconn  *chrome.TestConn
+	ui     *uiauto.Context
+	kb     *input.KeyboardEventWriter
+	a      *arc.ARC
+	d      *ui.Device
+	apkURL string
 }
 
 // New returns a new Element object.
-func New(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *ui.Device) *Element {
+func New(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *ui.Device, apkURL string) *Element {
 	return &Element{
-		tconn: tconn,
-		ui:    uiauto.New(tconn),
-		kb:    kb,
-		a:     a,
-		d:     d,
+		tconn:  tconn,
+		ui:     uiauto.New(tconn),
+		kb:     kb,
+		a:      a,
+		d:      d,
+		apkURL: apkURL,
 	}
 }
 
 // Install installs or updates the Element app through Play Store.
 // The app version will be logged after the installation.
 func (e *Element) Install(ctx context.Context) error {
-	return util.InstallApp(ctx, e.tconn, e.a, e.d, elementPackage)
+	if e.apkURL == "" {
+		return util.InstallApp(ctx, e.tconn, e.a, e.d, elementPackage)
+	}
+	return util.InstallAppFromAPKURL(ctx, e.a, e.d, elementPackage, e.apkURL)
 }
 
 // Uninstall uninstalls the Element app if it is installed.

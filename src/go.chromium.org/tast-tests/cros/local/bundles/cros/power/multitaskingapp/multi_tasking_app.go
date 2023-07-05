@@ -43,6 +43,7 @@ type TestParams struct {
 	WebSource     cuj.WebSourceType
 	TestName      string
 	OutDir        string
+	ElementAPKURL string
 	TabletMode    bool
 	BrowserTime   time.Duration
 	SocialAppTime time.Duration
@@ -91,6 +92,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		bt            = params.BrowserType
 		outDir        = params.OutDir
 		testName      = params.TestName
+		elementAPKURL = params.ElementAPKURL
 		browserTime   = params.BrowserTime
 		socialAppTime = params.SocialAppTime
 		videoAppTime  = params.VideoAppTime
@@ -130,7 +132,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		return errors.Wrapf(err, "failed to get username from the account: %s", cr.Creds().User)
 	}
 	username := splitAccount[0]
-	socialApp := socialapp.NewElement(tconn, kb, a, d, username)
+	socialApp := socialapp.NewElement(tconn, kb, a, d, username, elementAPKURL)
 	if err := socialApp.Install(ctx); err != nil {
 		return errors.Wrap(err, "failed to install social app")
 	}

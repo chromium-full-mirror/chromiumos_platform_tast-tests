@@ -17,18 +17,36 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/element"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
 	testRoomID   = "#power_test:matrix.org"
 	testRoomName = "Power test room"
+
+	// There are different APK urls according to the system architecture.
+	// The urls can be found under <target release> -> Assets
+	// in https://github.com/vector-im/element-android/tags.
+	elementArmAPKVarName    = "power.element_arm_apk_url"
+	elementArm64APKVarName  = "power.element_arm64_apk_url"
+	elementX86APKVarName    = "power.element_x86_apk_url"
+	elementX86_64APKVarName = "power.element_x86_64_apk_url"
 )
 
 var (
 	// ElementAppName represents the name of the Element app.
 	ElementAppName AppName = apps.Element.Name
 	elementID              = apps.Element.ID
+
+	// ElementApkURLVars contains all variable names of the element apk.
+	ElementApkURLVars = []string{
+		elementArmAPKVarName,
+		elementArm64APKVarName,
+		elementX86APKVarName,
+		elementX86_64APKVarName,
+	}
 )
 
 // Element implements the SocialApp interface with the Element app.
@@ -39,10 +57,38 @@ type Element struct {
 	roomName string
 }
 
+// ParseElementAPKURL returns the element APK URL corresponding to the DUT architecture.
+func ParseElementAPKURL(ctx context.Context, testCaseVar func(string) (string, bool)) (string, error) {
+	_, arch, err := sysutil.KernelVersionAndArch()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get system arch")
+	}
+
+	var varName string
+	switch arch {
+	case "armv7l", "armv8l":
+		varName = elementArmAPKVarName
+	case "aarch64":
+		varName = elementArm64APKVarName
+	case "i686":
+		varName = elementX86APKVarName
+	case "x86_64":
+		varName = elementX86_64APKVarName
+	default:
+		return "", errors.Errorf("unsupported arch: %s", arch)
+	}
+
+	if url, ok := testCaseVar(varName); ok {
+		testing.ContextLog(ctx, "Element APK URL parsed from runtime variable: ", url)
+		return url, nil
+	}
+	return "", errors.Errorf("runtime variable %s is not set", varName)
+}
+
 // NewElement returns a new Element object.
-func NewElement(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *ui.Device, username string) *Element {
+func NewElement(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *ui.Device, username, apkURL string) *Element {
 	return &Element{
-		ele:      element.New(tconn, kb, a, d),
+		ele:      element.New(tconn, kb, a, d, apkURL),
 		tconn:    tconn,
 		username: username,
 	}

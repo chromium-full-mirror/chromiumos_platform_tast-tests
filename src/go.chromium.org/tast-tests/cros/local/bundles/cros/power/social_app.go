@@ -41,6 +41,7 @@ func init() {
 		},
 		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
 		SoftwareDeps: []string{"chrome", "arc"},
+		Vars:         socialapp.ElementApkURLVars, // Optional. The URL of the APK file of Element app.
 		Timeout:      socialAppTimeout,
 		Params: []testing.Param{{
 			Name:    "element_ash",
@@ -89,7 +90,15 @@ func SocialApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get username from the account: ", cr.Creds().User)
 	}
 	username := splitAccount[0]
-	app := socialapp.NewElement(tconn, kb, a, d, username)
+
+	apkURL, err := socialapp.ParseElementAPKURL(ctx, s.Var)
+	if err != nil {
+		// If the DUT failed to parse the APK URL, the returned |apkURL| would be empty.
+		// Log the error and try to continue running the case, the DUT would try to install
+		// the app from Play Store in this case.
+		s.Log("Failed to parse Element APK URL: ", err)
+	}
+	app := socialapp.NewElement(tconn, kb, a, d, username, apkURL)
 
 	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	if bt == browser.TypeLacros {

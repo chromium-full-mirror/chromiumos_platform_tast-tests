@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/multitaskingapp"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/socialapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
@@ -43,6 +44,7 @@ func init() {
 		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "arc"},
+		Vars:         socialapp.ElementApkURLVars, // Optional. The URL of the APK file of Element app.
 		Timeout:      multiTaskingAppTimeout,
 		Params: []testing.Param{
 			{
@@ -115,11 +117,20 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 		Br:        br,
 	}
 
+	elementAPKURL, err := socialapp.ParseElementAPKURL(ctx, s.Var)
+	if err != nil {
+		// If the DUT failed to parse the APK URL, the returned |apkURL| would be empty.
+		// Log the error and try to continue running the case, the DUT would try to install
+		// the app from Play Store in this case.
+		s.Log("Failed to parse Element APK URL: ", err)
+	}
+
 	params := &multitaskingapp.TestParams{
 		BrowserType:   bt,
 		OutDir:        s.OutDir(),
 		WebSource:     cuj.GoogleWebSource,
 		TestName:      s.TestName(),
+		ElementAPKURL: elementAPKURL,
 		TabletMode:    tabletMode,
 		BrowserTime:   browserTime,
 		SocialAppTime: socialAppTime,
