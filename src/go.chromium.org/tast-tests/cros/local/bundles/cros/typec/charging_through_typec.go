@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/cswitch"
+	"go.chromium.org/tast-tests/cros/common/cswitch"
 	pow "go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

@@ -13,9 +13,9 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/cswitch"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/usbutils"
-	"go.chromium.org/tast-tests/cros/local/cswitch"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecutils"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast-tests/cros/services/cros/typec"

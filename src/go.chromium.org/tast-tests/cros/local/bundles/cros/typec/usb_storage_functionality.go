@@ -13,10 +13,10 @@ import (
 	"path"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/cswitch"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/typec/setup"
 	deviceSpeed "go.chromium.org/tast-tests/cros/local/bundles/cros/typec/typecutils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/cswitch"
 	"go.chromium.org/tast-tests/cros/local/typecutils"
 	"go.chromium.org/tast-tests/cros/local/usbutil"
 	"go.chromium.org/tast/core/ctxutil"
