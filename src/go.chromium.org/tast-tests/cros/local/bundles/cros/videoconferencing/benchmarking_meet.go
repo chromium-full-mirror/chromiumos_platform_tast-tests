@@ -50,7 +50,7 @@ func init() {
 		BugComponent: "b:260653207",
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
-		Timeout:      35 * time.Minute,
+		Timeout:      15 * time.Minute,
 		Vars: []string{
 			// How many minutes to capture metrics.
 			"videoconferencing.test_duration",

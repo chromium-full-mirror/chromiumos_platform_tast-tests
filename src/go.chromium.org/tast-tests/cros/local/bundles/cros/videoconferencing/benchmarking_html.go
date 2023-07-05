@@ -55,7 +55,7 @@ func init() {
 		Attr:         []string{"group:ml_benchmark", "ml_benchmark_nightly"},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
-		Timeout:      35 * time.Minute,
+		Timeout:      15 * time.Minute,
 		Vars: []string{
 			// How many seconds to capture metrics.
 			"videoconferencing.test_duration",
