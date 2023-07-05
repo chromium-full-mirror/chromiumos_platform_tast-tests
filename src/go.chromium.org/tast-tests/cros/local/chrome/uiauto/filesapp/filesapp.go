@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filepicker/vars"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -592,4 +593,18 @@ func (f *FilesApp) EjectAll() uiauto.Action {
 		}
 		return uiauto.Combine("UnmountAll", steps...)(ctx)
 	}
+}
+
+// OpenOfficeFile opens the office file passed in and returns a cloud upload instance for further setup.
+func (f *FilesApp) OpenOfficeFile(ctx context.Context, baseDir, fileName string) (*cloudupload.CloudUpload, error) {
+	if err := f.OpenDir(baseDir, FilesTitlePrefix+baseDir)(ctx); err != nil {
+		return nil, err
+	}
+
+	if err := uiauto.Combine("Open office file",
+		f.WaitForFile(fileName),
+		f.OpenFile(fileName))(ctx); err != nil {
+		return nil, err
+	}
+	return cloudupload.App(f.tconn), nil
 }

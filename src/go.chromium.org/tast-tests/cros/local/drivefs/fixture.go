@@ -124,6 +124,23 @@ func init() {
 			"drivefs.extensionClientID",
 		},
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "driveFsStartedWithOfficeEnabled", Desc: "Ensures DriveFS is mounted with #upload-to-office enabled",
+		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromium.org"},
+		Impl: &fixture{
+			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud")},
+			bt:            browser.TypeAsh,
+		},
+		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
+		ResetTimeout:    driveFsSetupAndTearDownTimeout,
+		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
+		Vars: []string{
+			"drivefs.accountPool",
+			"drivefs.extensionClientID",
+		},
+	})
+
 }
 
 // FixtureData is the struct available for tests.

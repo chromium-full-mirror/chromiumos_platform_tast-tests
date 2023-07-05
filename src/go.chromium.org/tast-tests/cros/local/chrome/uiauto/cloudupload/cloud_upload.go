@@ -1,0 +1,180 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package cloudupload contains the page object and common functions for
+// the cloud upload dialogs inside Files app.
+package cloudupload
+
+import (
+	"context"
+	"regexp"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+// Provider is either Google Drive or Microsoft OneDrive.
+type Provider string
+
+// Provider names.
+const (
+	GoogleDrive Provider = "googledrive"
+	OneDrive    Provider = "onedrive"
+)
+
+// CloudUpload represents an instance of the Cloud Upload UI.
+type CloudUpload struct {
+	ui    *uiauto.Context
+	tconn *chrome.TestConn
+}
+
+// App returns an instance of the Cloud Upload that can be used to find/wait and
+// interact with the CloudUpload WebUI, which is implemented here:
+// https://source.chromium.org/chromium/chromium/src/+/main:chrome/browser/resources/chromeos/cloud_upload/
+func App(tconn *chrome.TestConn) *CloudUpload {
+	// Create a uiauto.Context with default timeout.
+	ui := uiauto.New(tconn).WithInterval(500 * time.Millisecond)
+
+	return &CloudUpload{ui: ui, tconn: tconn}
+}
+
+var fileHandlerDialog = nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("Choose an app to open *"))
+var fileHandlerOpenButton = nodewith.Ancestor(fileHandlerDialog).Role(role.Button).Name("Open")
+
+// WaitFileHandlerAndChoose waits for the File Handlers dialog and chooses the target cloud to open office files.
+func (cu *CloudUpload) WaitFileHandlerAndChoose(provider Provider) uiauto.Action {
+
+	var option *nodewith.Finder
+	if provider == GoogleDrive {
+		option = nodewith.Ancestor(fileHandlerDialog).Role(role.ListBoxOption).NameRegex(regexp.MustCompile("Google * Uses Google Drive*"))
+	} else if provider == OneDrive {
+		option = nodewith.Ancestor(fileHandlerDialog).Role(role.ListBoxOption).NameRegex(regexp.MustCompile("Microsoft 365*"))
+	}
+
+	return uiauto.Combine("File handlers dialog: choose Google Drive",
+		cu.ui.WaitUntilExists(fileHandlerDialog),
+		cu.ui.LeftClick(option),
+		cu.ui.LeftClick(fileHandlerOpenButton),
+		cu.ui.WaitUntilGone(fileHandlerDialog),
+	)
+}
+
+// WaitGetStartedDialogAndClickNext waits for the dialog Get Started and clicks the button to proceed.
+func (cu *CloudUpload) WaitGetStartedDialogAndClickNext() uiauto.Action {
+	dialog := nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("Set up Microsoft 365 *"))
+	getStartedButton := nodewith.Ancestor(dialog).Role(role.Button).Name("Get started")
+	return uiauto.Combine("Setup OneDrive dialog: get started",
+		cu.ui.WaitUntilExists(dialog),
+		cu.ui.LeftClick(getStartedButton),
+		cu.ui.WaitUntilGone(dialog),
+	)
+}
+
+// WaitInstallPWADialogAndClickInstall waits for the Install PWA dialog and clicks "Install".
+func (cu *CloudUpload) WaitInstallPWADialogAndClickInstall() uiauto.Action {
+	installPWADialog := nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile(`Install.* Microsoft 365`))
+	installButton := nodewith.Ancestor(installPWADialog).Role(role.Button).Name("Install")
+	return uiauto.Combine("Install PWA dialog: install",
+		cu.ui.WaitUntilExists(installPWADialog),
+		cu.ui.WaitUntilExists(installButton),
+		cu.ui.LeftClick(installButton),
+		cu.ui.WithTimeout(2*time.Minute).WaitUntilAnyExists(
+			installButton, // it will appear again if it fails to install.
+
+			// The next page is either one of those dialogs.
+			connectToOneDriveDialog,
+			SetupCompleteDialog,
+		),
+		func(ctx context.Context) error {
+
+			found, err := cu.ui.FindAnyExists(ctx, installButton, connectToOneDriveDialog, SetupCompleteDialog)
+			if err != nil {
+				return errors.Wrap(err, "failed to find the next step after Install PWA dialog")
+			}
+			if found == installButton {
+				testing.ContextLog(ctx, "Trying again to install PWA")
+				if err := cu.WaitInstallPWADialogAndClickInstall()(ctx); err != nil {
+					return err
+				}
+			}
+			// The next dialogs were found, nothing to do.
+			return nil
+		},
+	)
+}
+
+var connectToOneDriveDialog = nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile(`Connect to Microsoft OneDrive.*`))
+
+// WaitConnectToOneDriveDialogAndClickConnect waits for the Connect To OneDrive dialog and clicks "Connect to OneDrive".
+func (cu *CloudUpload) WaitConnectToOneDriveDialogAndClickConnect() uiauto.Action {
+	connectToOneDriveDialog := connectToOneDriveDialog
+	connectButton := nodewith.Ancestor(connectToOneDriveDialog).Role(role.Button).Name("Connect to OneDrive")
+	return uiauto.Combine("Connect to OneDrive dialog: connect",
+		cu.ui.WaitUntilExists(connectToOneDriveDialog),
+		cu.ui.LeftClick(connectButton),
+		cu.ui.WaitUntilGone(connectToOneDriveDialog),
+	)
+}
+
+// SetupCompleteDialog to find the setup complete dialog.
+var SetupCompleteDialog = nodewith.Role(role.Dialog).Name("Microsoft 365 setup complete")
+
+// WaitSetupCompleteDialogAndClickDone waits for the Setup Complete dialog and clicks Done.
+func (cu *CloudUpload) WaitSetupCompleteDialogAndClickDone() uiauto.Action {
+	doneButton := nodewith.Ancestor(SetupCompleteDialog).Role(role.Button).Name("Done")
+	return uiauto.Combine("Setup Complete dialog: done",
+		cu.ui.WaitUntilExists(SetupCompleteDialog),
+		cu.ui.LeftClick(doneButton),
+		cu.ui.WaitUntilGone(SetupCompleteDialog),
+	)
+}
+
+// WaitUploadConfirmationDialogAndClickToUpload waits for the dialog confirming copy or move to the Cloud, and confirms the upload.
+func (cu *CloudUpload) WaitUploadConfirmationDialogAndClickToUpload() uiauto.Action {
+	dialog := nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("(Move|Copy) .* to .* OneDrive .*"))
+	moveButton := nodewith.Ancestor(dialog).Role(role.Button).NameRegex(regexp.MustCompile("(Move|Copy) and open"))
+
+	return uiauto.Combine("Move to cloud dialog: done",
+		cu.ui.WaitUntilExists(dialog),
+		cu.ui.LeftClick(moveButton),
+		cu.ui.WaitUntilGone(dialog),
+	)
+}
+
+// RunOneDriveSetupFlow runs the step to test the setup flow.
+func RunOneDriveSetupFlow(ctx context.Context, accountPool string, cloudUpload *CloudUpload, ms365App *ms365.Ms365) error {
+	msCreds, err := credconfig.PickRandomCreds(accountPool)
+	if err != nil {
+		errors.Wrap(err, "failed to get the user/passwd for Office 365")
+	}
+
+	testing.ContextLog(ctx, "MS user:", msCreds.User)
+	user := msCreds.User
+	passwd := msCreds.Pass
+
+	if err := uiauto.Combine("Setup dialog steps",
+		// Dialog setting up the File Handler, configuring the file type to open with Office 365.
+		cloudUpload.WaitFileHandlerAndChoose(OneDrive),
+		// Fist setup dialog.
+		cloudUpload.WaitGetStartedDialogAndClickNext(),
+		// This step is quite slow because it downloads from the internet.
+		cloudUpload.WaitInstallPWADialogAndClickInstall(),
+		// Connect/mount the ODFS.
+		cloudUpload.WaitConnectToOneDriveDialogAndClickConnect(),
+		// Authenticate to OneDrive to mount ODFS.
+		ms365App.LoginToMicrosoft365(user, passwd, SetupCompleteDialog),
+		// Last step of the setup flow.
+		cloudUpload.WaitSetupCompleteDialogAndClickDone(),
+	)(ctx); err != nil {
+		errors.Wrap(err, "failed to complete the setup dialog steps")
+	}
+	return nil
+}

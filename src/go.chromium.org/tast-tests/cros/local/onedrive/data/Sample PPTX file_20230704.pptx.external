@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/filemanager/Sample PPTX file_20320704.pptx",
+  "url": "gs://chromiumos-test-assets-public/tast/cros/filemanager/Sample PPTX file_20230704.pptx",
   "size": 163106,
   "sha256sum": "121d91ddbf5248c6bd85fd3b965243ed8361431571182e057efec3ec23dff9ba"
 }
