@@ -51,7 +51,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "scan_enabled_allows_immediate_and_unscannable_ash",
-				Fixture: "lacrosGaiaSignedInProdPolicyWPEnabledAllowExtra",
+				Fixture: "ashGaiaSignedInProdPolicyWPEnabledAllowExtra",
 				Val: helpers.TestParams{
 					AllowsImmediateDelivery: true,
 					AllowsUnscannableFiles:  true,
@@ -61,7 +61,7 @@ func init() {
 			},
 			{
 				Name:    "scan_enabled_blocks_immediate_and_unscannable_ash",
-				Fixture: "lacrosGaiaSignedInProdPolicyWPEnabledBlockExtra",
+				Fixture: "ashGaiaSignedInProdPolicyWPEnabledBlockExtra",
 				Val: helpers.TestParams{
 					AllowsImmediateDelivery: false,
 					AllowsUnscannableFiles:  false,
@@ -71,7 +71,7 @@ func init() {
 			},
 			{
 				Name:    "scan_disabled_ash",
-				Fixture: "lacrosGaiaSignedInProdPolicyWPDisabled",
+				Fixture: "ashGaiaSignedInProdPolicyWPDisabled",
 				Val: helpers.TestParams{
 					AllowsImmediateDelivery: true,
 					AllowsUnscannableFiles:  true,

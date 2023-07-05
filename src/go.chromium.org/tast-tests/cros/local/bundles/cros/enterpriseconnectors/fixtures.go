@@ -14,7 +14,67 @@ import (
 )
 
 func init() {
-	// Note that for these fixtures the credentials are configured with the specific policy parameters through the admin dpanel.
+	// Note that for these fixtures the credentials are configured with the specific policy parameters through dpanel.
+	testing.AddFixture(&testing.Fixture{
+		Name: "ashGaiaSignedInProdPolicyWPEnabledAllowExtra",
+		Desc: "Fixture that allows usage of ash, with a gaia login with production policy and enabled WebProtect scanning which allows immediate file transfers, large and encrypted files",
+		Contacts: []string{
+			"sseckler@google.com",
+			"cros-enterprise-connectors@google.com",
+			"webprotect-eng@google.com",
+		},
+		Impl: CreateFixture(
+			"enterpriseconnectors.ash_username3",
+			"enterpriseconnectors.ash_password3",
+		),
+		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Vars: []string{
+			"enterpriseconnectors.ash_username3",
+			"enterpriseconnectors.ash_password3",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "ashGaiaSignedInProdPolicyWPEnabledBlockExtra",
+		Desc: "Fixture that allows usage of ash, with a gaia login with production policy and enabled WebProtect scanning which blocks immediate file transfers, large and encrypted files",
+		Contacts: []string{
+			"sseckler@google.com",
+			"cros-enterprise-connectors@google.com",
+			"webprotect-eng@google.com",
+		},
+		Impl: CreateFixture(
+			"enterpriseconnectors.ash_username1",
+			"enterpriseconnectors.ash_password1",
+		),
+		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Vars: []string{
+			"enterpriseconnectors.ash_username1",
+			"enterpriseconnectors.ash_password1",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "ashGaiaSignedInProdPolicyWPDisabled",
+		Desc: "Fixture that allows usage of ash, with a gaia login with production policy and disabled WebProtect scanning",
+		Contacts: []string{
+			"sseckler@google.com",
+			"cros-enterprise-connectors@google.com",
+			"webprotect-eng@google.com",
+		},
+		Impl: CreateFixture(
+			"enterpriseconnectors.ash_username2",
+			"enterpriseconnectors.ash_password2",
+		),
+		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Vars: []string{
+			"enterpriseconnectors.ash_username2",
+			"enterpriseconnectors.ash_password2",
+		},
+	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "lacrosGaiaSignedInProdPolicyWPEnabledAllowExtra",
 		Desc: "Fixture that allows usage of Lacros, with a gaia login with production policy and enabled WebProtect scanning which allows immediate file transfers, large and encrypted files",
@@ -24,15 +84,15 @@ func init() {
 			"webprotect-eng@google.com",
 		},
 		Impl: CreateFixture(
-			"enterpriseconnectors.username1",
-			"enterpriseconnectors.password1",
+			"enterpriseconnectors.lacros_username3",
+			"enterpriseconnectors.lacros_password3",
 		),
 		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars: []string{
-			"enterpriseconnectors.username1",
-			"enterpriseconnectors.password1",
+			"enterpriseconnectors.lacros_username3",
+			"enterpriseconnectors.lacros_password3",
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -44,15 +104,15 @@ func init() {
 			"webprotect-eng@google.com",
 		},
 		Impl: CreateFixture(
-			"enterpriseconnectors.username2",
-			"enterpriseconnectors.password2",
+			"enterpriseconnectors.lacros_username1",
+			"enterpriseconnectors.lacros_password1",
 		),
 		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars: []string{
-			"enterpriseconnectors.username2",
-			"enterpriseconnectors.password2",
+			"enterpriseconnectors.lacros_username1",
+			"enterpriseconnectors.lacros_password1",
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -64,15 +124,15 @@ func init() {
 			"webprotect-eng@google.com",
 		},
 		Impl: CreateFixture(
-			"enterpriseconnectors.username3",
-			"enterpriseconnectors.password3",
+			"enterpriseconnectors.lacros_username2",
+			"enterpriseconnectors.lacros_password2",
 		),
 		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars: []string{
-			"enterpriseconnectors.username3",
-			"enterpriseconnectors.password3",
+			"enterpriseconnectors.lacros_username2",
+			"enterpriseconnectors.lacros_password2",
 		},
 	})
 }
