@@ -69,7 +69,7 @@ func CrasRecordQuality(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	cras, err := audio.NewCras(ctx)
+	cras, err := audio.RestartCras(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to CRAS: ", err)
 	}
