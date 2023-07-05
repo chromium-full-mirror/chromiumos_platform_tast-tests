@@ -19,6 +19,9 @@
     const SERVICE_WORKER_JS = 'default_notifications_setting_gcm_traffic_annotation_service-worker.js';
     const STATUS_HEADING = document.querySelector('#status');
 
+    // Regex to capture subscription endpoint.
+    const ENDPOINT_REGEX = RegExp("(?<=fcm\/send\/).*.");
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         navigator.serviceWorker.register(SERVICE_WORKER_JS);
@@ -31,7 +34,9 @@
         Notification.requestPermission().then(() => {
           return registration.pushManager.subscribe(SUBSCRIPTION_OPTIONS);
         }).then((pushSubscription) => {
-          updateStatus(JSON.stringify(pushSubscription));
+          // This endpoint will match the token in the netlogs raw bytes associated with gcm_registration network annotation.
+          const match = ENDPOINT_REGEX.exec(pushSubscription.endpoint);
+          updateStatus(match);
         }, (error) => {
           updateStatus(error);
         });

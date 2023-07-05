@@ -6,10 +6,14 @@ package policy
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -25,9 +29,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -56,7 +62,7 @@ func init() {
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
 		}},
-		Timeout: 5 * time.Minute,
+		Timeout: 4 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DefaultNotificationsSetting{}, pci.VerifiedFunctionalityUI),
 		},
@@ -160,15 +166,8 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 			url := serverURL.String()
 			defer server.Close()
 
-			// GoBigSleepLint: wait for Chrome startup GCM registrations to complete.
-			// GCM registrations happen in the background and may be recognized as false positives by this test.
-			// Wait 20 seconds to allow background registrations to occur before logging.
-			if err := testing.Sleep(ctx, 20*time.Second); err != nil {
-				s.Fatal("Failed while waiting for Chrome startup GCM registrations to complete: ", err)
-			}
-
-			// Open the net-export page and start logging.
-			if err := annotations.StartLogging(ctx, cr, br); err != nil {
+			// Open the net-export page and start logging with raw bytes.
+			if err := annotations.StartLogging(ctx, cr, br, true); err != nil {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
@@ -186,8 +185,6 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 			blockButton := nodewith.Name("Block").Role(role.Button)
 
 			// Click on the subscribe button to trigger permissions request and push notification subscription.
-			// Save triggerTime for annotation check.
-			triggerTime := time.Now()
 			if err := ui.DoDefault(nodewith.Name("subscribe").Role(role.Button))(ctx); err != nil {
 				s.Fatal("Failed to click Subscribe button: ", err)
 			}
@@ -221,14 +218,95 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 				}
 			}
 
-			// Stop logging and check the logs for gcm_registration NetworkTrafficAnnotationTag. Filter out annotations before trigger.
-			foundAnnotation, err := annotations.StopLoggingCheckLogsFilterByTriggerTime(ctx, cr, br, annotationID, triggerTime)
-			if err != nil {
-				s.Fatal("Failed to stop logging and check logs: ", err)
+			// Wait to allow GCM to log network calls. Network call is sometimes delayed in logging.
+			var errorCheckingForToken error
+			foundAnnotationErr := testing.Poll(ctx, func(ctx context.Context) error {
+				isFound := false
+				isFound, errorCheckingForToken = checkUIForMatchingGcmToken(ctx, cr, ui, annotationID)
+				if errorCheckingForToken != nil {
+					return testing.PollBreak(errorCheckingForToken)
+				}
+				if isFound {
+					return nil
+				}
+				return errors.New("Annotation with matching token not found yet")
+			}, &testing.PollOptions{
+				Timeout:  15 * time.Second,
+				Interval: 5 * time.Second,
+			})
+
+			// Check if there was an error when checking logs.
+			// Based on policy value, annotations/tokens are not expected to be found in some cases.
+			// Annotations will be checked based on the policy at the end of the test.
+			if errorCheckingForToken != nil {
+				s.Fatal("Failed to check for gcm token: ", foundAnnotationErr)
+			}
+			foundAnnotation := foundAnnotationErr == nil
+
+			if err := annotations.StopLogging(ctx, cr, br); err != nil {
+				s.Fatal("Failed to stop logging: ", err)
 			}
 			if param.shouldFindAnnotation != foundAnnotation {
 				s.Fatalf("Annotation mismatch. Got: %t. Expected: %t", foundAnnotation, param.shouldFindAnnotation)
 			}
 		})
 	}
+}
+
+// checkUIForMatchingGcmToken checks if the webpage UI has text matching any tokens associated with gcm_registration annotation.
+// Returns whether the annotation with the token matches the UI and if there was an error reading the log file.
+func checkUIForMatchingGcmToken(ctx context.Context, cr *chrome.Chrome, ui *uiauto.Context, annotationID string) (bool, error) {
+	gcmTokens, err := getGcmTokensFromLogs(ctx, cr, annotationID)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get raw bytes")
+	}
+	for _, gcmToken := range gcmTokens {
+		// Check if webpage has text matching the GCM network request tokens.
+		// If there is a match, return true.
+		found, err := ui.IsNodeFound(ctx, nodewith.Name(gcmToken).Role(role.StaticText))
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to check node for %s", gcmToken)
+		}
+		if found {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// getGcmTokensFromLogs checks logs for gcm_registration annotation and returns the tokens associated with the subscription URL request.
+func getGcmTokensFromLogs(ctx context.Context, cr *chrome.Chrome, annotation string) (tokens []string, err error) {
+	// Get the net export log file.
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get user's Download path")
+	}
+	downloadLocation := filepath.Join(downloadsPath, annotations.DownloadName)
+
+	// Read the net export log file.
+	logFile, err := ioutil.ReadFile(downloadLocation)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open logfile")
+	}
+
+	// Identify the ids associated with the annotation id.
+	annotationPrefix := fmt.Sprintf("\"traffic_annotation\":%s", annotation)
+	reForID := regexp.MustCompile(fmt.Sprintf(`%s.*\"id\":(\d+)`, annotationPrefix))
+	ids := reForID.FindAllSubmatch(logFile, -1)
+	// Go through all ids and check if there is a byte sequence for a GCM subscription token.
+	for _, id := range ids {
+		// Capture the base64 string associated with the URL request. "dG9rZW49" decodes to "token=".
+		reForBase64Token := regexp.MustCompile(fmt.Sprintf("bytes\":\"dG9rZW49(.+)\"}.*\"id\":%s", id[1]))
+		tokenMatches := reForBase64Token.FindAllSubmatch(logFile, -1)
+		// Decode base64 string and return token.
+		for _, token := range tokenMatches {
+			tokenDecoded, err := base64.StdEncoding.DecodeString(string(token[1]))
+			if err == nil {
+				tokens = append(tokens, string(tokenDecoded))
+			} else {
+				return nil, errors.Wrap(err, "failed to decode")
+			}
+		}
+	}
+	return tokens, nil
 }

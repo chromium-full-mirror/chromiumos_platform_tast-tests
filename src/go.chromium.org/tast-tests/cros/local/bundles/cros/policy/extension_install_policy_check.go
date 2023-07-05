@@ -139,7 +139,7 @@ func ExtensionInstallPolicyCheck(ctx context.Context, s *testing.State) {
 			}
 
 			// Open the net-export page and start logging.
-			if err := annotations.StartLogging(ctx, cr, cr.Browser()); err != nil {
+			if err := annotations.StartLogging(ctx, cr, cr.Browser(), false); err != nil {
 				s.Fatal("Failed to start logging: ", err)
 			}
 

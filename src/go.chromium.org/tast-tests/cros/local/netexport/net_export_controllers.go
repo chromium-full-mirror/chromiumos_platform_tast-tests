@@ -39,7 +39,7 @@ type chromeController struct {
 }
 
 func (c chromeController) Start() error {
-	return annotations.StartLogging(c.ctx, c.cr, c.br)
+	return annotations.StartLogging(c.ctx, c.cr, c.br, false)
 }
 
 func (c chromeController) Stop(ctx context.Context) error {

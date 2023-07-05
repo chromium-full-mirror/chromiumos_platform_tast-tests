@@ -88,7 +88,7 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 	}
 
 	// Open the net-export page and start logging.
-	if err := annotations.StartLogging(ctx, cr, br); err != nil {
+	if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
 		return errors.Wrap(err, "failed to start logging")
 	}
 

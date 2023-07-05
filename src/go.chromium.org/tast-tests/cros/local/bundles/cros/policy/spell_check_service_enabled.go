@@ -94,7 +94,7 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
 			// Open the net-export page and start logging.
-			if err := annotations.StartLogging(ctx, cr, br); err != nil {
+			if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
