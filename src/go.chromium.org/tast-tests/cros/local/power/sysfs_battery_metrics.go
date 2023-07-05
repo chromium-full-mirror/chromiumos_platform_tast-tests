@@ -403,12 +403,14 @@ func SysfsBatteryPath(ctx context.Context) (string, error) {
 type SysfsBatteryMetrics struct {
 	batteryPath             string
 	lastTime                time.Time
+	startTime               time.Time
 	powerIntegral           float64 // in J
 	batteryChargeSize       float64 // in Ah
 	batteryChargeDesignSize float64 // in Ah
 	chargeRemainingMetric   perf.Metric
 	dischargeMetric         perf.Metric
 	powerMetric             perf.Metric
+	testDurationMetric      perf.Metric
 }
 
 // Assert that SysfsBatteryMetrics can be used in perf.Timeline.
@@ -464,6 +466,11 @@ func (b *SysfsBatteryMetrics) Setup(ctx context.Context, prefix, intervalName st
 		Unit:      "mWh", // discharge_mwh is a scalar metric, not defining a specific a variable for its unit here.
 		Direction: perf.SmallerIsBetter,
 		Multiple:  false}
+	b.testDurationMetric = perf.Metric{
+		Name:      generalPerfMetricType + minutesBatteryLifeTestedKey,
+		Unit:      "minute",
+		Direction: perf.SmallerIsBetter,
+	}
 	return nil
 }
 
@@ -471,6 +478,7 @@ func (b *SysfsBatteryMetrics) Setup(ctx context.Context, prefix, intervalName st
 // relative to.
 func (b *SysfsBatteryMetrics) Start(ctx context.Context) error {
 	testing.ContextLog(ctx, "Start captures the initial battery state")
+	b.startTime = time.Now()
 	b.lastTime = time.Now()
 	return nil
 }
@@ -517,5 +525,6 @@ func (b *SysfsBatteryMetrics) Stop(ctx context.Context, values *perf.Values) err
 
 	// Change energy(J) to energy(mWh).
 	values.Set(b.dischargeMetric, 1000*b.powerIntegral/3600)
+	values.Set(b.testDurationMetric, time.Now().Sub(b.startTime).Minutes())
 	return nil
 }

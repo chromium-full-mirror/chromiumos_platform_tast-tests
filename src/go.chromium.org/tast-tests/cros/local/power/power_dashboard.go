@@ -157,6 +157,11 @@ const htmlChartStr = `
 </html>
 `
 
+const (
+	minutesBatteryLifeKey       = "minutes_battery_life"
+	minutesBatteryLifeTestedKey = "minutes_battery_life_tested"
+)
+
 // ConvertPowerPerfValue converts raw performance metric values to power dictionary.
 func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string]interface{}, error) {
 	measurement := values.GetValues()
@@ -247,19 +252,17 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 	}
 
 	var totalDurationSec float64
+	if value, ok := innerAverageMap[minutesBatteryLifeTestedKey]; ok {
+		totalDurationSec = value * 60
+	}
 	if value, ok := innerDataMap["t"]; ok {
 		var sampleCount = len(value)
 		powerDict["sample_count"] = sampleCount
-		if sampleCount > 1 {
-			totalDurationSec = value[sampleCount-1] - value[0]
-			powerDict["sample_duration"] = totalDurationSec / (float64(sampleCount) - 1)
+		if sampleCount > 0 {
+			lastTimestamp := value[sampleCount-1]
+			powerDict["sample_duration"] = lastTimestamp / float64(sampleCount)
 		}
 	}
-
-	const (
-		minutesBatteryLifeKey       = "minutes_battery_life"
-		minutesBatteryLifeTestedKey = "minutes_battery_life_tested"
-	)
 
 	minutesBatteryLife := getMinutesBatteryLife(ctx, innerDataMap, innerAverageMap, totalDurationSec)
 	values.Set(perf.Metric{
@@ -272,15 +275,7 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 	typeMap[minutesBatteryLifeKey] = "perf"
 	unitMap[minutesBatteryLifeKey] = "minute"
 
-	values.Set(perf.Metric{
-		Name:      generalPerfMetricType + minutesBatteryLifeTestedKey,
-		Unit:      "minute",
-		Direction: perf.BiggerIsBetter,
-	}, totalDurationSec/60.0)
-	innerDataMap[minutesBatteryLifeTestedKey] = []float64{totalDurationSec / 60.0}
-	innerAverageMap[minutesBatteryLifeTestedKey] = totalDurationSec / 60.0
 	typeMap[minutesBatteryLifeTestedKey] = "perf"
-	unitMap[minutesBatteryLifeTestedKey] = "minute"
 
 	// Check if package-0 is collected first because `rapl` is not supported on all platforms.
 	if _, ok := innerDataMap[package0]; ok && len(innerDataMap["system"]) == len(innerDataMap[package0]) {
