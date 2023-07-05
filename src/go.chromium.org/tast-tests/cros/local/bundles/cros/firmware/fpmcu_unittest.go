@@ -281,6 +281,7 @@ func rebootFpmcu(ctx context.Context) error {
 	if err := fpmcuPower(ctx, false); err != nil {
 		return err
 	}
+	// GoBigSleepLint: during reboot no response is expected.
 	testing.Sleep(ctx, time.Second)
 	if err := fpmcuPower(ctx, true); err != nil {
 		return err
@@ -413,6 +414,7 @@ func FpmcuUnittest(ctx context.Context, s *testing.State) {
 
 	s.Log("Waiting for FPMCU to reboot after flashing")
 	// Two seconds should be more than enough for the chip to boot.
+	// GoBigSleepLint: during reboot no response is expected.
 	testing.Sleep(ctx, 2*time.Second)
 	s.Log("Checking that FPMCU rebooted to RW")
 	if _, err = console.Write([]byte("sysinfo\n")); err != nil {
@@ -436,6 +438,7 @@ func FpmcuUnittest(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to switch FPMCU to RO: ", err)
 		}
 		// Two seconds should be more than enough for the chip to boot.
+		// GoBigSleepLint: during reboot no response is expected.
 		testing.Sleep(ctx, 2*time.Second)
 		s.Log("Checking that FPMCU rebooted to RO")
 		if _, err = console.Write([]byte("sysinfo\n")); err != nil {
