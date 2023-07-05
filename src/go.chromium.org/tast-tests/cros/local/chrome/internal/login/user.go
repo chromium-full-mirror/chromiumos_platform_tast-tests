@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/config"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast/core/ctxutil"
@@ -44,6 +45,13 @@ func loginUser(ctx context.Context, cfg *config.Config, sess *driver.Session) er
 	case config.GAIALogin, config.SAMLLogin:
 		// GAIA login requires Internet connectivity.
 		if err := shill.WaitForOnline(ctx); err != nil {
+			if pingErr := ping.VerifyInternetConnectivity(ctx, 5*time.Second); pingErr != nil {
+				testing.ContextLog(ctx, "Failed to wait for shill online test: ", err)
+				return errors.Wrap(pingErr, "pre login network connection tests failed")
+			}
+
+			// Fail even if the ping test was successful.
+			// TODO(b/268671917): Remove double check when the root cause is clear.
 			return err
 		}
 		if err := performGAIALogin(ctx, cfg, sess, conn); err != nil {
