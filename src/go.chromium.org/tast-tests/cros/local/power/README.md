@@ -186,6 +186,13 @@ Refer to the available test names in `ManualUI` for specifics.
 $ tast run <DUT_IP> power.ManualUI.<testname>
 ```
 
+Inside the Tast command, you can pass specific variables by leading with the -var flag.
+To set the test duration (between 1-1440 minutes i.e. 24 hours maximum), use the flag:
+
+```
+$ tast run -var "power.test_duration=<minutes>" <DUT_IP> ...
+
+```
 
 [manual_ui.go]: (http://cs/h/chromium/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/manual_ui.go?l=1)
 
