@@ -58,6 +58,11 @@ func init() {
 			Name:      "volume_button",
 			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			Name:              "led_lit_up",
+			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineLedLitUp},
+			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 		}}})
 }
 

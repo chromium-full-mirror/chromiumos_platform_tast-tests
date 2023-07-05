@@ -60,6 +60,12 @@ func init() {
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
 			// TODO(b/272217292): Promote tast to critical.
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			Name:              "led_lit_up",
+			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineLedLitUp},
+			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+			// TODO(b/274762028): Promote tast to critical.
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}}})
 }
 

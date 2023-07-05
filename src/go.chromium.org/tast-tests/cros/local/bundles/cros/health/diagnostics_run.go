@@ -143,10 +143,6 @@ func init() {
 			// TODO(b/279707249): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
-			Name:              "led_lit_up",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineLedLitUp),
-			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		}, {
 			Name: "audio_set_volume",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineAudioSetVolume),
 			// TODO(b/279670424): Promote to critical.

@@ -136,11 +136,6 @@ func init() {
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
 		}, {
-			Name:              "led_lit_up",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineLedLitUp),
-			ExtraAttr:         []string{"informational"},
-			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		}, {
 			Name:      "audio_set_volume",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineAudioSetVolume),
 			ExtraAttr: []string{"informational"},
