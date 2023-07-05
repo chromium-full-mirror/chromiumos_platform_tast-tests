@@ -606,9 +606,9 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to get %q from the device: %v", response.PackagesCacheName, err)
 		}
 
-		// TODO(b/279554423): Eventually enable dev caches install for container-rvc,
-		// vm-rvc, pi-arc devices after initial experiments are conducted on local and vm-tm.
-		if useDevCaches && (!param.upload || param.androidPackage == "android-vm-tm") {
+		// TODO(b/279554423): Eventually enable this for container-rvc, vm-rvc, pi-arc,
+		// vm-tm devices after initial experiments are conducted on local.
+		if useDevCaches && !param.upload {
 			testing.ContextLogf(ctx, "Installing GMS core caches into dev directory: %q", tmpCachesDir)
 			if err := decompressSystemImage(ctx, d, param.vmEnabled, tempDir); err != nil {
 				s.Fatal("Failed to decompress system image: ", err)
