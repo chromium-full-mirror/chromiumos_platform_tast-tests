@@ -22,3 +22,14 @@ func (c *Checker) GBBFlags(ctx context.Context, want *pb.GBBFlagsState) error {
 	}
 	return nil
 }
+
+// GBBFlagsByServo checks that the flags on DUT equals the wanted one using servo connection
+// You must add `ServiceDeps: []string{"tast.cros.firmware.BiosService"}` to your `testing.Test` to use this.
+func (c *Checker) GBBFlagsByServo(ctx context.Context, want *pb.GBBFlagsState) error {
+	if res, err := firmware.GetGBBFlagsByServo(ctx, c.h.ServoProxy); err != nil {
+		return errors.Wrap(err, "could not get GBB flags")
+	} else if !firmware.GBBFlagsStatesEqual(want, res) {
+		return errors.Errorf("GBB flags: got %v, want %v", res.Set, want)
+	}
+	return nil
+}

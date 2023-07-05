@@ -27,7 +27,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
-		Attr:         []string{"group:firmware", "firmware_smoke"},
+		Attr:         []string{"group:firmware", "group:labqual_informational", "firmware_smoke"},
 		SoftwareDeps: []string{"flashrom"},
 	})
 }

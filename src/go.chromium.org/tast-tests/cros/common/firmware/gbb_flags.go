@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -80,6 +81,20 @@ func getGBBFlagsInt(ctx context.Context, dut *dut.DUT) (uint32, error) {
 	if err != nil {
 		return 0, errors.Wrap(err, "futility gbb --get")
 	}
+	return getGBBFlagsIntConvert(out)
+}
+
+// getGBBFlagsIntByServo gets the flags that are set as an integer.
+func getGBBFlagsIntByServo(ctx context.Context, pxy *servo.Proxy) (uint32, error) {
+	out, err := pxy.OutputCommand(ctx, true, "futility", "gbb", "--get", "--servo_port", fmt.Sprintf("%d", pxy.GetPort()), "--flags")
+	if err != nil {
+		return 0, errors.Wrap(err, "futility gbb --get --servo_port")
+	}
+	return getGBBFlagsIntConvert(out)
+}
+
+// getGBBFlagsIntConvert converts the output of gbb flag reads from []byte to uint32
+func getGBBFlagsIntConvert(out []byte) (uint32, error) {
 	re, err := regexp.Compile(`flags: (0x[0-9a-fA-F]+)`)
 	if err != nil {
 		return 0, errors.Wrap(err, "parse gbb regex")
@@ -108,11 +123,50 @@ func GetGBBFlags(ctx context.Context, dut *dut.DUT) (*pb.GBBFlagsState, error) {
 	}, nil
 }
 
+// GetGBBFlagsByServo gets the flags that are cleared and set.
+// Uses servo connection
+func GetGBBFlagsByServo(ctx context.Context, pxy *servo.Proxy) (*pb.GBBFlagsState, error) {
+	currentGBB, err := getGBBFlagsIntByServo(ctx, pxy)
+	if err != nil {
+		return nil, err
+	}
+	testing.ContextLogf(ctx, "Current GBB flags = %#x", currentGBB)
+	return &pb.GBBFlagsState{
+		Clear: CalcGBBFlags(^currentGBB),
+		Set:   CalcGBBFlags(currentGBB),
+	}, nil
+}
+
+type getGbbFlagsFunc func(context.Context) (uint32, error)
+type setGbbFlagsFunc func(context.Context, uint32) error
+
 // ClearAndSetGBBFlags clears and sets specified GBB flags, leaving the rest unchanged.
 func ClearAndSetGBBFlags(ctx context.Context, dut *dut.DUT, state *pb.GBBFlagsState) (bool, error) {
+	return clearAndSetGBBFlagsImpl(
+		ctx,
+		state,
+		func(ctx context.Context) (uint32, error) { return getGBBFlagsInt(ctx, dut) },
+		func(ctx context.Context, newFlags uint32) error {
+			return dut.Conn().CommandContext(ctx, "futility", "gbb", "--set", "--flash", fmt.Sprintf("--flags=%#x", newFlags)).Run(exec.DumpLogOnError)
+		})
+}
+
+// ClearAndSetGBBFlagsByServo clears and sets specified GBB flags, leaving the rest unchanged.
+// Uses servo connection
+func ClearAndSetGBBFlagsByServo(ctx context.Context, pxy *servo.Proxy, state *pb.GBBFlagsState) (bool, error) {
+	return clearAndSetGBBFlagsImpl(
+		ctx,
+		state,
+		func(ctx context.Context) (uint32, error) { return getGBBFlagsIntByServo(ctx, pxy) },
+		func(ctx context.Context, newFlags uint32) error {
+			return pxy.RunCommand(ctx, true, "futility", "gbb", "--servo_port", fmt.Sprintf("%d", pxy.GetPort()), "--set", "--flags", fmt.Sprintf("%#x", newFlags))
+		})
+}
+
+func clearAndSetGBBFlagsImpl(ctx context.Context, state *pb.GBBFlagsState, getFlags getGbbFlagsFunc, setFlags setGbbFlagsFunc) (bool, error) {
 	gbbFlagChanged := false
 	state = canonicalGBBFlagsState(state)
-	currentGBB, err := getGBBFlagsInt(ctx, dut)
+	currentGBB, err := getFlags(ctx)
 	if err != nil {
 		return gbbFlagChanged, err
 	}
@@ -122,7 +176,7 @@ func ClearAndSetGBBFlags(ctx context.Context, dut *dut.DUT, state *pb.GBBFlagsSt
 	newGBB := CalcGBBBits(currentGBB, clearMask, setMask)
 	if newGBB != currentGBB {
 		testing.ContextLogf(ctx, "Setting GBB flags = %#x", newGBB)
-		if err := dut.Conn().CommandContext(ctx, "futility", "gbb", "--set", "--flash", fmt.Sprintf("--flags=%#x", newGBB)).Run(exec.DumpLogOnError); err != nil {
+		if err := setFlags(ctx, newGBB); err != nil {
 			return gbbFlagChanged, errors.Wrap(err, "futility gbb --set")
 		}
 		gbbFlagChanged = true
