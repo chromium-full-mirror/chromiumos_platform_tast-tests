@@ -271,3 +271,33 @@ func USBCamerasFromV4L2Test(ctx context.Context, dut *dut.DUT) ([]string, error)
 	}
 	return strings.Fields(string(out)), nil
 }
+
+// VideoDevices returns a list of video devices.
+func VideoDevices(ctx context.Context, dut *dut.DUT) ([]string, error) {
+	cmd := dut.Conn().CommandContext(ctx, "ls", "/dev/video*")
+	out, err := cmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run ls command")
+	}
+	return strings.Fields(string(out)), nil
+}
+
+// DevicesFromV4L2 returns a list of all video for linux devices.
+func DevicesFromV4L2(ctx context.Context, dut *dut.DUT) ([]string, error) {
+	cmd := dut.Conn().CommandContext(ctx, "v4l2-ctl", "--list-devices")
+	out, err := cmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run v4l2 command")
+	}
+	return strings.Fields(string(out)), nil
+}
+
+// Contains checks if an element of type string exists in a slice of strings.
+func Contains(list []string, s string) bool {
+	for _, line := range list {
+		if line == s {
+			return true
+		}
+	}
+	return false
+}
