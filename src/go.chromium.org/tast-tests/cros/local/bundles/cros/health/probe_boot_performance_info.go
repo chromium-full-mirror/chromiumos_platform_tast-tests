@@ -29,7 +29,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that we can probe cros_healthd for boot performance info",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
-		BugComponent: "b:982097",
+		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		// Skip on reven board (ChromeOS Flex) because the boot
 		// performance metrics are not supported on it.
@@ -75,6 +75,7 @@ func ProbeBootPerformanceInfo(ctx context.Context, s *testing.State) {
 	}
 
 	// Sleep 5 seconds, fetch data again. "boot_up_timestamp" should be the same.
+	// GoBigSleepLint: It's used to verify "boot_up_timestamp" doesn't change with time.
 	if err = testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

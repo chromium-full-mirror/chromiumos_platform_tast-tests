@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/health/iioservice"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -29,7 +28,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that cros_healthd can fetch sensor info",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
-		BugComponent: "b:982097",
+		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		// TODO(b/251306646): Promote to critical.
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},

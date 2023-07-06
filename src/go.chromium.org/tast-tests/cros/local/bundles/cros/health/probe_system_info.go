@@ -15,12 +15,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/health/utils"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast-tests/cros/local/jsontypes"
-
-	"go.chromium.org/tast-tests/cros/common/testexec"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
@@ -38,7 +36,7 @@ func init() {
 		Desc:         "Check that we can probe cros_healthd for system info",
 		Contacts: []string{"cros-tdm-tpe-eng@google.com",
 			"moises.veleta@intel.com"},
-		BugComponent: "b:982097",
+		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",

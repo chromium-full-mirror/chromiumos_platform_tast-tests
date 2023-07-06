@@ -41,7 +41,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that we can probe cros_healthd for battery metrics",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
-		BugComponent: "b:982097",
+		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		HardwareDeps: hwdep.D(hwdep.Battery()),

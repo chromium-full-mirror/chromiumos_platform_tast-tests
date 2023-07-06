@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
-
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -22,7 +21,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the cros_healthd diagnostic routines V2 can pass",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
-		BugComponent: "b:982097",
+		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      "crosHealthdRunning",

@@ -49,7 +49,7 @@ func init() {
 			"intel.chrome.automation.team@intel.com",
 			"pathan.jilani@intel.com",
 		},
-		BugComponent: "b:982097",
+		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",

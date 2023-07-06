@@ -34,7 +34,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Monitors unuploaded crash events detected properly or not",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
-		BugComponent: "b:982097",
+		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		// TODO(b/266018436): Promote to critical.
 		Attr:         []string{"group:criticalstaging", "group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
