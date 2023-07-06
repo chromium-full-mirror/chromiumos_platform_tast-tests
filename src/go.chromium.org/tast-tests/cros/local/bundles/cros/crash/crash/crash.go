@@ -49,6 +49,7 @@ type CrasherOptions struct {
 	Consent                 bool
 	CrasherPath             string
 	ExpectCrashReporterFail bool
+	ExpectedSeverity        string
 }
 
 // CrasherResult stores result status and outputs from a crasher process execution.
@@ -86,6 +87,7 @@ func DefaultCrasherOptions() CrasherOptions {
 		Consent:                 true,
 		CrasherPath:             CrasherPath,
 		ExpectCrashReporterFail: false,
+		ExpectedSeverity:        "ERROR",
 	}
 }
 
@@ -458,6 +460,31 @@ func RunCrasherProcessAndAnalyze(ctx context.Context, cr *chrome.Chrome, opts Cr
 
 	if err := crash.VerifyMetaFileRefs(result.Meta); err != nil {
 		return nil, errors.Wrap(err, ".meta file has invalid file reference")
+	}
+
+	// Verify the .meta file includes the correct computed_severity and computed_product values.
+	contents, err := ioutil.ReadFile(result.Meta)
+	if err != nil {
+		return nil, errors.Wrapf(err, "couldn't read meta file %s contents", result.Meta)
+	}
+	outDir, outDirExists := testing.ContextOutDir(ctx)
+	if !outDirExists {
+		testing.ContextLog(ctx, "Failed to obtain context output directory")
+	}
+	expectedValues := map[string]string{
+		"computed_severity": opts.ExpectedSeverity,
+		"computed_product":  "Platform",
+	}
+	for key, value := range expectedValues {
+		expectedValue := "upload_var_client_" + key + "=" + value
+		if !strings.Contains(string(contents), expectedValue) {
+			if outDirExists {
+				if err := crash.MoveFilesToOut(ctx, outDir, result.Meta); err != nil {
+					testing.ContextLog(ctx, "Failed to save the meta file: ", err)
+				}
+			}
+			return nil, errors.New(".meta file did not contain expected " + key)
+		}
 	}
 
 	return result, nil
