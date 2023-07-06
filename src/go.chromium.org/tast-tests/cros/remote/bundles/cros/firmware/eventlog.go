@@ -290,8 +290,8 @@ func Eventlog(ctx context.Context, s *testing.State) {
 		}
 		s.Log("DUT became unreachable (as expected)")
 
-		s.Log("Reconnecting to DUT")
-		shortCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+		s.Logf("Reconnecting to DUT (%s)", h.Config.DelayRebootToPing)
+		shortCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancel()
 		if err := h.WaitConnect(shortCtx); err != nil {
 			s.Fatal("Failed to reconnect to DUT: ", err)
