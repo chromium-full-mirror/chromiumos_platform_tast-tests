@@ -19,7 +19,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: TpmEvict,
 		Desc: "Tests the TPM under low-resource conditions",
-		Attr: []string{"group:mainline", "informational"},
+		Attr: []string{"group:hwsec", "hwsec_nightly", "group:chaps"},
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"chenyian@google.com",

@@ -34,7 +34,7 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm1"},
-		Attr:         []string{"group:mainline", "informational", "group:tpm_manager"},
+		Attr:         []string{"group:hwsec", "hwsec_nightly", "group:tpm_manager"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 		}, {

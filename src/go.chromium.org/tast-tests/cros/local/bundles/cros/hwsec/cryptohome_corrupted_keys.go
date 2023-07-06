@@ -47,7 +47,7 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm"},
-		Attr:         []string{"group:mainline", "informational", "group:cryptohome"},
+		Attr:         []string{"group:hwsec", "hwsec_nightly", "group:cryptohome"},
 		Params: []testing.Param{
 			{
 				// We only support the pin_weaver corrupted version now.

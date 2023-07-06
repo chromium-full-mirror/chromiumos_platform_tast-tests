@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AttestationNoExternalServer,
 		Desc:         "Verifies attestation-related functionality with the locally PCA and VA response",
-		Attr:         []string{"group:mainline", "informational", "group:attestation"},
+		Attr:         []string{"group:hwsec", "hwsec_nightly", "group:attestation"},
 		Contacts:     []string{"cros-hwsec@google.com", "chingkang@google.com"},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},

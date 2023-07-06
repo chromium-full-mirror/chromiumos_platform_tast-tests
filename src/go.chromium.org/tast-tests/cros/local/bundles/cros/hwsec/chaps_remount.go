@@ -21,7 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: ChapsRemount,
 		Desc: "Verifies chaps works correctly after remount",
-		Attr: []string{"group:mainline", "informational", "group:chaps"},
+		Attr: []string{"group:hwsec", "hwsec_nightly", "group:chaps"},
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"yich@google.com",

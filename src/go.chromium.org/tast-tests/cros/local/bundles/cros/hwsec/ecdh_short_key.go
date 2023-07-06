@@ -23,7 +23,7 @@ func init() {
 			"yich@google.com", // Test author.
 		},
 		BugComponent: "b:1188704",
-		Attr:         []string{"group:mainline", "informational", "group:hwsec_infra"},
+		Attr:         []string{"group:hwsec", "hwsec_nightly", "group:hwsec_infra"},
 		SoftwareDeps: []string{"tpm2"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},

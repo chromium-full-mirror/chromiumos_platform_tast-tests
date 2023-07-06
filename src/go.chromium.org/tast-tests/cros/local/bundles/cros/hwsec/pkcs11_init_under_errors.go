@@ -24,7 +24,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: Pkcs11InitUnderErrors,
 		Desc: "Tests pkcs11 initialization under various system states",
-		Attr: []string{"group:mainline", "informational", "group:chaps"},
+		Attr: []string{"group:hwsec", "hwsec_nightly", "group:chaps"},
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"chenyian@google.com",

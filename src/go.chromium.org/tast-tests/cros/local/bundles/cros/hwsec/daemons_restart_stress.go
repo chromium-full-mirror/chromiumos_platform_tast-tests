@@ -25,32 +25,32 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm"},
-		Attr:         []string{"group:mainline", "group:attestation", "group:bootlockbox", "group:chaps", "group:cryptohome", "group:hwsec_infra", "group:tpm_manager", "group:u2fd", "group:vtpm"},
+		Attr:         []string{"group:attestation", "group:bootlockbox", "group:chaps", "group:cryptohome", "group:hwsec_infra", "group:tpm_manager", "group:u2fd", "group:vtpm"},
 		Params: []testing.Param{{
 			Name:              "tpm1",
 			ExtraSoftwareDeps: []string{"tpm1", "no_tpm_dynamic"},
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"group:hwsec", "hwsec_nightly"},
 			Timeout:           4 * time.Minute,
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"tpm2", "qemu"},
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"group:hwsec", "hwsec_nightly"},
 			Timeout:           4 * time.Minute,
 		}, {
 			Name:              "tpm2",
 			ExtraSoftwareDeps: []string{"tpm2", "no_qemu", "no_tpm_dynamic"},
-			// No ExtraAttr; this test is critical.
+			ExtraAttr:         []string{"group:mainline"},
 		}, {
 			Name:              "tpm_dynamic_1",
 			ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm1()),
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"group:hwsec", "hwsec_nightly"},
 			Timeout:           4 * time.Minute,
 		}, {
 			Name:              "tpm_dynamic_2",
 			ExtraSoftwareDeps: []string{"no_qemu", "tpm_dynamic"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm2()),
-			// No ExtraAttr; this test is critical.
+			ExtraAttr:         []string{"group:mainline"},
 		}},
 	})
 }

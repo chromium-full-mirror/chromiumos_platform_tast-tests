@@ -20,7 +20,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: Pkcs11Events,
 		Desc: "Tests the response of the PKCS #11 system to login events",
-		Attr: []string{"group:mainline", "informational", "group:chaps"},
+		Attr: []string{"group:hwsec", "hwsec_nightly", "group:chaps"},
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"chenyian@google.com",

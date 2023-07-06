@@ -26,7 +26,7 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm"},
-		Attr:         []string{"group:mainline", "informational", "group:cryptohome", "group:criticalstaging"},
+		Attr:         []string{"group:hwsec", "hwsec_nightly", "group:cryptohome"},
 		Timeout:      10 * time.Minute,
 		Fixture:      "ussAuthSessionFixture",
 		Params: []testing.Param{{

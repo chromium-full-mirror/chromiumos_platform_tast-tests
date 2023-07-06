@@ -33,7 +33,7 @@ func init() {
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		Timeout:      4 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:hwsec", "hwsec_nightly"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
 			// checkSoftwareBacked: For devices with official TPM, we do not allow fallback
