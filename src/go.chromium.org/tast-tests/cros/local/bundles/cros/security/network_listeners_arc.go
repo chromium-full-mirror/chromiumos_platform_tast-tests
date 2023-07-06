@@ -44,7 +44,7 @@ func NetworkListenersARC(ctx context.Context, s *testing.State) {
 	// sslh is installed on ARC-capable systems to multiplex port 22 traffic between sshd and patchpaneld (for adb).
 	ls["*:22"] = "/usr/sbin/sslh-fork"
 	ls["*:2222"] = "/usr/sbin/sshd"
-	// node_exporter runs on port 9100 to monitor DUT resources.
-	ls["*:9100"] = "/usr/local/sbin/node_exporter"
+	// node_exporter runs on port 9090 to monitor DUT resources.
+	ls["*:9090"] = "/usr/local/sbin/node_exporter"
 	netlisten.CheckPorts(ctx, s, ls)
 }
