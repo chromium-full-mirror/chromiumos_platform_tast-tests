@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	pb "go.chromium.org/tast-tests/cros/services/cros/graphics"
@@ -58,7 +59,18 @@ func (s *ScreenshotService) CaptureScreenshot(ctx context.Context, req *pb.Captu
 	testing.ContextLog(ctx, "Capturing screenshot at ", path)
 
 	if err := screenshot.Capture(ctx, path); err != nil {
-		return nil, err
+		//TODO(b/290188177): Move the retry to the screenshot package.
+		testing.ContextLog(ctx, "Capturing screenshot failed: ", err)
+		testing.ContextLog(ctx, "Trying to turn on display")
+
+		if turnErr := power.TurnOnDisplay(ctx); turnErr != nil {
+			testing.ContextLog(ctx, "Failed to turn on display: ", turnErr)
+			return nil, err
+		}
+
+		if err := screenshot.Capture(ctx, path); err != nil {
+			return nil, err
+		}
 	}
 	return &empty.Empty{}, nil
 }
