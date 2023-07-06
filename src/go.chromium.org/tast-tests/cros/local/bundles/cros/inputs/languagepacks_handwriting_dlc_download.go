@@ -29,8 +29,8 @@ const dlcImagePath = "/run/imageloader/"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LanguagepacksHandwrittingDlcDownload,
-		Desc:         "Test language packs handwritting dlc mounting",
+		Func:         LanguagepacksHandwritingDlcDownload,
+		Desc:         "Test language packs handwriting dlc mounting",
 		Contacts:     []string{"cros-borders-eng@google.com", "xiuwen@google.com"},
 		BugComponent: "b:934840",
 		Attr:         []string{"group:language_packs_hw_recognition_dlc_download_daily"},
@@ -42,7 +42,7 @@ func init() {
 	})
 }
 
-func LanguagepacksHandwrittingDlcDownload(ctx context.Context, s *testing.State) {
+func LanguagepacksHandwritingDlcDownload(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(fixture.FixtData).Chrome
 	tconn := s.FixtValue().(fixture.FixtData).TestAPIConn
 	uc := s.FixtValue().(fixture.FixtData).UserContext
