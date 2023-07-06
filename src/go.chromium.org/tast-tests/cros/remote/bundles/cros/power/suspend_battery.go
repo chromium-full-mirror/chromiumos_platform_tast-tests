@@ -74,7 +74,7 @@ func SuspendBattery(ctx context.Context, s *testing.State) {
 	// Create our suspend context
 	suspendContext, err := suspend.NewContext(ctx, h)
 	if err != nil {
-
+		s.Fatal("Failed to create suspendContext: ", err)
 	}
 	defer suspendContext.Close()
 
@@ -88,11 +88,13 @@ func SuspendBattery(ctx context.Context, s *testing.State) {
 
 		s.Log("Suspending DUT")
 		if err := suspendContext.SuspendDUTAllTypes(suspend.DefaultSuspendArgs()); err != nil {
-			s.Fatal("Failed to suspend cycle DUT: ", err)
+			s.Fatal("Failed to suspend DUT: ", err)
 		}
 
 		s.Log("Waking DUT")
-		suspendContext.WakeDUT(suspend.DefaultWakeArgs())
+		if err := suspendContext.WakeDUT(suspend.DefaultWakeArgs()); err != nil {
+			s.Fatal("Failed to wake DUT: ", err)
+		}
 
 		// Check that the kernel registered one suspension
 		suspendCount, err := suspendContext.GetKernelSuspendCount()
