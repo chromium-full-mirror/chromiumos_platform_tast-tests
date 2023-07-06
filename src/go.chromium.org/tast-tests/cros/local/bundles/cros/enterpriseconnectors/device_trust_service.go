@@ -6,34 +6,22 @@ package enterpriseconnectors
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/signals"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/devicetrust"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	pb "go.chromium.org/tast-tests/cros/services/cros/enterpriseconnectors"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
-// defaultUITimeout is the default timeout for UI interactions.
-const defaultUITimeout = 20 * time.Second
 const sandboxDMServer = "https://crosman-alpha.sandbox.google.com/devicemanagement/data/api"
-const deviceTrustFeature = "DeviceTrustConnectorEnabled"
-
-// URL of a fake IdP, which is hosted and maintained by cbe-device-trust-eng@google.com
-const fakeIdPURL = "https://cbe-integrationtesting-sandbox.uc.r.appspot.com"
-
-// Expected error message for Device Trust attestation flows, where the host is not allowed.
-const errorMessageHostNotAllowed = "Missing X-Device-Trust header in the first request"
 
 func init() {
 	testing.AddService(&testing.Service{
@@ -116,7 +104,7 @@ func (service *DeviceTrustService) LoginWithFakeIdP(ctx context.Context, req *pb
 		chrome.DMSPolicy(sandboxDMServer),
 		chrome.LoadSigninProfileExtension(req.SigninProfileTestExtensionManifestKey),
 		chrome.SAMLLogin(fakeCreds),
-		chrome.EnableFeatures(deviceTrustFeature),
+		chrome.EnableFeatures(devicetrust.DeviceTrustFeature),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "Chrome login failed")
@@ -126,9 +114,9 @@ func (service *DeviceTrustService) LoginWithFakeIdP(ctx context.Context, req *pb
 	if err != nil {
 		return nil, errors.Wrap(err, "creating login test API connection failed")
 	}
-	ui := uiauto.New(tconn).WithTimeout(defaultUITimeout)
+	ui := uiauto.New(tconn).WithTimeout(devicetrust.DefaultUITimeout)
 
-	if err := testFakeIdP(ctx, ui); err != nil {
+	if err := devicetrust.StartAttestationFlowWithFakeIdP(ctx, ui); err != nil {
 		return nil, errors.Wrap(err, "Device Trust failed")
 	}
 
@@ -145,7 +133,7 @@ func (service *DeviceTrustService) ConnectToFakeIdP(ctx context.Context, req *pb
 		chrome.KeepEnrollment(),
 		chrome.DMSPolicy(sandboxDMServer),
 		chrome.GAIALogin(chrome.Creds{User: req.User, Pass: req.Pass}),
-		chrome.EnableFeatures(deviceTrustFeature),
+		chrome.EnableFeatures(devicetrust.DeviceTrustFeature),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "Chrome login failed")
@@ -156,15 +144,15 @@ func (service *DeviceTrustService) ConnectToFakeIdP(ctx context.Context, req *pb
 	if err != nil {
 		return nil, errors.Wrap(err, "creating test API connection failed")
 	}
-	ui := uiauto.New(tconn).WithTimeout(defaultUITimeout)
+	ui := uiauto.New(tconn).WithTimeout(devicetrust.DefaultUITimeout)
 
-	conn, err := cr.NewConn(ctx, fakeIdPURL)
+	conn, err := cr.NewConn(ctx, devicetrust.FakeIdPURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "connecting to URL failed")
 	}
 	defer conn.Close()
 
-	if err := testFakeIdP(ctx, ui); err != nil {
+	if err := devicetrust.StartAttestationFlowWithFakeIdP(ctx, ui); err != nil {
 		return nil, errors.Wrap(err, "Device Trust failed")
 	}
 
@@ -176,40 +164,11 @@ func (service *DeviceTrustService) ConnectToFakeIdP(ctx context.Context, req *pb
 // CheckFakeIdPStatus checks if the result of the Device Trust attestation flow is as expected based on the text on the fake IdP.
 func (service *DeviceTrustService) CheckFakeIdPStatus(ctx context.Context, req *pb.CheckFakeIdPStatusRequest) (_ *empty.Empty, retErr error) {
 	if service.cr == nil || service.ui == nil {
-		return nil, errors.New("Device Trust service is not set up properly")
+		return nil, errors.New("device Trust service is not set up properly")
 	}
 
-	deviceTrustSuccessful, err := wasDeviceTrustAttestationSuccessful(ctx, service.ui)
-	if err != nil {
-		return nil, errors.Wrap(err, " failed to check if Device Trust succeeded")
-	}
-
-	conn, err := service.cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(fakeIdPURL+"/idp/login"))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open existing connection")
-	}
-
-	if deviceTrustSuccessful {
-		if req.Expected != deviceTrustSuccessful {
-			return nil, errors.New("Device Trust succeeded unexpectedly")
-		}
-
-		if err := checkSignals(ctx, conn, req.IsInSession); err != nil {
-			return nil, errors.Wrap(err, "checking signals failed")
-		}
-	} else {
-		errorMessage, err := getErrorMessage(ctx, conn)
-		if err != nil {
-			return nil, errors.Wrap(err, "checking error message failed")
-		}
-
-		if req.Expected != deviceTrustSuccessful {
-			return nil, errors.New("Device trust failed with error: " + errorMessage)
-		}
-
-		if errorMessage != errorMessageHostNotAllowed {
-			return nil, errors.Errorf("unexpected value for errorMessage: got %q, want %q", errorMessage, errorMessageHostNotAllowed)
-		}
+	if err := devicetrust.CheckFakeIdPStatus(ctx, service.cr, service.ui, req.IsInSession, req.Expected); err != nil {
+		return nil, err
 	}
 
 	return &empty.Empty{}, nil
@@ -229,80 +188,4 @@ func (service *DeviceTrustService) StopChrome(ctx context.Context, req *empty.Em
 	service.cr = nil
 
 	return &empty.Empty{}, err
-}
-
-// getErrorMessage returns in case of an unsuccessful Device Trust attestation flow the error message, which should be displayed by the fake IdP.
-func getErrorMessage(ctx context.Context, conn *chrome.Conn) (string, error) {
-	var errorMessage string
-	if err := conn.Call(ctx, &errorMessage, "() => { return document.getElementById('errorMessage').innerText; }"); err != nil {
-		return "", err
-	}
-
-	errorMessage = strings.ReplaceAll(errorMessage, "\n", "")
-
-	return errorMessage, nil
-}
-
-// checkSignals checks the signals for completeness and validity in case of a successful Device Trust attestation flow.
-func checkSignals(ctx context.Context, conn *chrome.Conn, isInSession bool) error {
-	var serverSignalsString string
-	if err := conn.Call(ctx, &serverSignalsString, "() => { return document.getElementById('serverSignals').innerText; }"); err != nil {
-		return errors.Wrap(err, "failed reading server signals")
-	}
-	if serverSignalsString == "" {
-		return errors.New("Server signals were empty")
-	}
-
-	var clientSignalsString string
-	if err := conn.Call(ctx, &clientSignalsString, "() => { return document.getElementById('clientSignals').innerText; }"); err != nil {
-		return errors.Wrap(err, "failed reading client signals")
-	}
-	if clientSignalsString == "" {
-		return errors.New("Client signals were empty")
-	}
-
-	return signals.Verify([]byte(serverSignalsString), []byte(clientSignalsString), isInSession)
-}
-
-// wasDeviceTrustAttestationSuccessful analyzes the current content on the fake IdP site to decide whether the Device Trust attestation flow was successful or not.
-func wasDeviceTrustAttestationSuccessful(ctx context.Context, ui *uiauto.Context) (bool, error) {
-	root := nodewith.Name("Sample Login page").Role(role.RootWebArea)
-	signalText := nodewith.Name("Server Signals:").Role(role.StaticText).Ancestor(root)
-	errorMessage := nodewith.Name("Device Trust failed with error:").Role(role.StaticText).Ancestor(root)
-
-	result := false
-	err := testing.Poll(ctx, func(ctx context.Context) error {
-		err := ui.Exists(signalText)(ctx)
-		if err == nil {
-			result = true
-			return nil
-		}
-		err = ui.Exists(errorMessage)(ctx)
-		if err == nil {
-			result = false
-			return nil
-		}
-		return errors.Wrap(err, " found neither the signal list nor the error message")
-	}, &testing.PollOptions{Interval: 300 * time.Millisecond,
-		Timeout: defaultUITimeout})
-
-	if err != nil {
-		return false, err
-	}
-
-	return result, nil
-}
-
-func testFakeIdP(ctx context.Context, ui *uiauto.Context) error {
-	root := nodewith.Name("Device Trust IdP").Role(role.RootWebArea)
-
-	startButton := nodewith.Name("Start Device Trust Attestation(using VAv2)").Role(role.Link).Ancestor(root).Focusable()
-	if err := uiauto.Combine("Click on start button and proceed",
-		ui.WaitUntilExists(startButton),
-		ui.LeftClick(startButton),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to start the Device Trust attestation. Fake IdP not loaded correctly")
-	}
-
-	return nil
 }
