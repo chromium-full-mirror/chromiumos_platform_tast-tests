@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -180,14 +181,28 @@ func Browsing(ctx context.Context, s *testing.State) {
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}
+
+	loopCount := config.TimingData.LoopCount
+	secsPerPage := config.TimingData.SecsPerPage
+	secsPerScroll := config.TimingData.SecsPerScroll
+
+	// Generate custom perf.Values for summarize in power_log.html
+	configValues := perf.NewValues()
+	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_loopCount", Unit: "unit"}, float64(loopCount))
+	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_secsPerPage", Unit: "s"}, float64(secsPerPage))
+	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_secsPerScroll", Unit: "s"}, float64(secsPerScroll))
+	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_numPage", Unit: "unit"}, float64(config.URLData.NumPage))
+
+	// Put the value in the Name for String data.
+	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_ConfigName_" + configName, Unit: "unit"}, 0)
+	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_ConfigVersion_" + config.Version, Unit: "unit"}, 0)
+	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_ConfigURLVersion_" + config.URLData.Version, Unit: "unit"}, 0)
+
 	if err := r.Start(ctx); err != nil {
 		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
 
 	// Start of main test body.
-	loopCount := config.TimingData.LoopCount
-	secsPerPage := config.TimingData.SecsPerPage
-	secsPerScroll := config.TimingData.SecsPerScroll
 	for loop := 0; loop < loopCount; loop++ {
 		for _, site := range config.URLData.Pages {
 			startTime := time.Now()
@@ -222,7 +237,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 	}
 	// End of main test body.
 
-	if err := r.Finish(ctx); err != nil {
+	if err := r.Finish(ctx, configValues); err != nil {
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}
 }
