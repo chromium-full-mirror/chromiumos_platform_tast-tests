@@ -18,6 +18,8 @@ import (
 	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/crash"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -91,6 +93,24 @@ func checkUnuploadedOutput(ctx context.Context, s *testing.State, stdout []byte)
 }
 
 func MonitorUnuploadedCrashEvent(ctx context.Context, s *testing.State) {
+	// Reserve 5 seconds for cleaning up crash tests.
+	ctxForCleanUpCrashSetup := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	// This will ensure no pre-existing crashes are in /var/spool/crash etc.
+	// It will ensure that no other instance of crash_sender is running. It
+	// will also help set up consent.
+	//
+	// It will also kill existing crash_sender processes. This isn't a
+	// problem for the test because there is no subscriber at the beginning
+	// of this test and healthD doesn't invoke crash_sender --dry_run in
+	// this case.
+	crash.SetUpCrashTest(ctx, crash.WithMockConsent())
+	defer crash.TearDownCrashTest(ctxForCleanUpCrashSetup)
+	// Don't actually upload crashes.
+	crash.EnableMockSending(true)
+
 	// Trigger unuploaded crash event: Run the sleep command and crash it.
 	sleepCmd := testexec.CommandContext(ctx, "sleep", "100")
 	if err := sleepCmd.Start(); err != nil {
@@ -106,11 +126,6 @@ func MonitorUnuploadedCrashEvent(ctx context.Context, s *testing.State) {
 	}
 	if !waitStatus.Signaled() || waitStatus.Signal() != unix.SIGSEGV {
 		s.Fatal("Failed to crash sleep: ", err)
-	}
-
-	// Consent for metrics.
-	if err := testexec.CommandContext(ctx, "metrics_client", "-C").Run(); err != nil {
-		s.Fatal("Failed to consent for metrics: ", err)
 	}
 
 	// Run monitor command in background.
