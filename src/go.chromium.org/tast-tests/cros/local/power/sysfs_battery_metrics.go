@@ -244,7 +244,7 @@ func ReadBatteryDesignEnergySize(ctx context.Context, devPath string) (float64, 
 		}
 		result = chargeFullDesign * voltageNominal * 1e-12
 	}
-	return math.Round(result), nil
+	return result, nil
 }
 
 // ReadBatteryEnergySize returns the size of battery in Wh.
