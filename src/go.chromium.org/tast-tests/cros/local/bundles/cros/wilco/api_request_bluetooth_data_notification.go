@@ -9,6 +9,7 @@ import (
 	"time"
 
 	dtcpb "chromiumos/wilco_dtc"
+
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wilco/bt"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wilco/pre"
 	"go.chromium.org/tast-tests/cros/local/wilco"
@@ -18,13 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: APIRequestBluetoothDataNotification,
-		Desc: "Test sending RequestBluetoothDataNotification gRPC request from Wilco DTC VM to the Wilco DTC Support Daemon and expect a response",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Func:     APIRequestBluetoothDataNotification,
+		Desc:     "Test sending RequestBluetoothDataNotification gRPC request from Wilco DTC VM to the Wilco DTC Support Daemon and expect a response",
+		Contacts: []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr:         []string{"group:mainline"},

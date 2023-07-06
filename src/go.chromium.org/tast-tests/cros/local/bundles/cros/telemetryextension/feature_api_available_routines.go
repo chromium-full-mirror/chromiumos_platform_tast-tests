@@ -17,11 +17,7 @@ func init() {
 		Func:         FeatureAPIAvailableRoutines,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests chrome.os.diagnostics.getAvailableRoutines Chrome Extension API function exposed to Telemetry Extension and check availability of all routines",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Contacts:     []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr:         []string{"group:telemetry_extension_hw"},

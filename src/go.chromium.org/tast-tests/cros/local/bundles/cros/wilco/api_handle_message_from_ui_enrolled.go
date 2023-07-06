@@ -10,6 +10,7 @@ import (
 	"time"
 
 	dtcpb "chromiumos/wilco_dtc"
+
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wilco/wilcoextension"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/wilco"
@@ -21,11 +22,7 @@ func init() {
 		Func:         APIHandleMessageFromUIEnrolled,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test sending a message from a Chromium extension to the Wilco DTC VM",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Contacts:     []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		// TODO(b/274585281): Fix and reenable test.

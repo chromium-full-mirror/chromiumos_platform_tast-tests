@@ -18,13 +18,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: VMDTC,
-		Desc: "Starts an instance of the Wilco DTC VM and tests the DTC (Diagnostics and Telemetry Controller) binaries using partner provided utilities",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Func:     VMDTC,
+		Desc:     "Starts an instance of the Wilco DTC VM and tests the DTC (Diagnostics and Telemetry Controller) binaries using partner provided utilities",
+		Contacts: []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		// TODO(b/274585281): Fix and reenable test.

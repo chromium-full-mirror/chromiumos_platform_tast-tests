@@ -10,6 +10,7 @@ import (
 
 	pmpb "chromiumos/system_api/power_manager_proto"
 	dtcpb "chromiumos/wilco_dtc"
+
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wilco/pre"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/wilco"
@@ -19,13 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: APIHandlePowerEvent,
-		Desc: "Tests that the Wilco DTC VM receives power events using the DPSL",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Func:     APIHandlePowerEvent,
+		Desc:     "Tests that the Wilco DTC VM receives power events using the DPSL",
+		Contacts: []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr: []string{

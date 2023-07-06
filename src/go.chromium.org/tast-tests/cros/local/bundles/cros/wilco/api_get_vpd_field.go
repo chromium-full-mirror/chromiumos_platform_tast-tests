@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	dtcpb "chromiumos/wilco_dtc"
+
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wilco/pre"
 	"go.chromium.org/tast-tests/cros/local/wilco"
 	"go.chromium.org/tast/core/errors"
@@ -18,13 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: APIGetVPDField,
-		Desc: "Test sending GetVpdField gRPC request from Wilco DTC VM to the Wilco DTC Support Daemon",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Func:     APIGetVPDField,
+		Desc:     "Test sending GetVpdField gRPC request from Wilco DTC VM to the Wilco DTC Support Daemon",
+		Contacts: []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr:         []string{"group:mainline"},

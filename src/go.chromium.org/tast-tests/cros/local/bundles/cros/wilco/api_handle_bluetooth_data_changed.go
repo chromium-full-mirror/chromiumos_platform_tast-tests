@@ -9,6 +9,7 @@ import (
 	"time"
 
 	dtcpb "chromiumos/wilco_dtc"
+
 	"go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wilco/bt"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wilco/pre"
@@ -19,13 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: APIHandleBluetoothDataChanged,
-		Desc: "Tests that the Wilco DTC VM receives Bluetooth events using the DPSL",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Func:     APIHandleBluetoothDataChanged,
+		Desc:     "Tests that the Wilco DTC VM receives Bluetooth events using the DPSL",
+		Contacts: []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr:         []string{"group:mainline"},

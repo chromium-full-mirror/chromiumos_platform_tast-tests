@@ -12,6 +12,7 @@ import (
 	"time"
 
 	dtcpb "chromiumos/wilco_dtc"
+
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -27,13 +28,9 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: "wilcoDTCAllowed",
-		Desc: "Wilco DTC fixture with support for DTC VM, Supportd daemon and Wilco Chrome Extension",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Name:            "wilcoDTCAllowed",
+		Desc:            "Wilco DTC fixture with support for DTC VM, Supportd daemon and Wilco Chrome Extension",
+		Contacts:        []string{"chromeos-oem-services@google.com"},
 		Impl:            NewWilcoFixture(false),
 		Parent:          fixture.FakeDMSEnrolled,
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout + 30*time.Second,
@@ -43,13 +40,9 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "wilcoDTCAllowedVMTestMode",
-		Desc: "Wilco DTC fixture with support for DTC VM (Test Mode Configuration), Supportd daemon and Wilco Chrome Extension",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Name:            "wilcoDTCAllowedVMTestMode",
+		Desc:            "Wilco DTC fixture with support for DTC VM (Test Mode Configuration), Supportd daemon and Wilco Chrome Extension",
+		Contacts:        []string{"chromeos-oem-services@google.com"},
 		Impl:            NewWilcoFixture(true),
 		Parent:          fixture.FakeDMSEnrolled,
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout + time.Minute,

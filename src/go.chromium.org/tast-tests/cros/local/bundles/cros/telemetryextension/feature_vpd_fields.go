@@ -18,11 +18,7 @@ func init() {
 		Func:         FeatureVPDFields,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests that VPD fields are properly set on the DUT",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Contacts:     []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr:         []string{"group:telemetry_extension_hw"},

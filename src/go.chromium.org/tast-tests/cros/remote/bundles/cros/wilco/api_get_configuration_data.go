@@ -27,11 +27,7 @@ func init() {
 		Func:         APIGetConfigurationData,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test sending GetConfigurationData gRPC request from Wilco DTC VM to the Wilco DTC Support Daemon",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Contacts:     []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr:         []string{"group:enrollment"},

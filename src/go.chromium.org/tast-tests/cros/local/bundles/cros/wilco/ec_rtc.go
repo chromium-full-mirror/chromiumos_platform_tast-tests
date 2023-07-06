@@ -16,13 +16,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ECRTC,
-		Desc: "Checks that the EC RTC on Wilco devices is readable, writable, and updates itself",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Func:     ECRTC,
+		Desc:     "Checks that the EC RTC on Wilco devices is readable, writable, and updates itself",
+		Contacts: []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		SoftwareDeps: []string{"wilco"},

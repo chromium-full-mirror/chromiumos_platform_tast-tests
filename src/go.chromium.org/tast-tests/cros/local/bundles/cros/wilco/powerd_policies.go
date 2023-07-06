@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	pmpb "chromiumos/system_api/power_manager_proto"
+
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
@@ -20,13 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: PowerdPolicies,
-		Desc: "Tests whether powerd correctly handles Wilco specific power policies received over D-Bus and writes correct data to exposed sysfs files by Dell EC drivers",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Func:     PowerdPolicies,
+		Desc:     "Tests whether powerd correctly handles Wilco specific power policies received over D-Bus and writes correct data to exposed sysfs files by Dell EC drivers",
+		Contacts: []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr: []string{

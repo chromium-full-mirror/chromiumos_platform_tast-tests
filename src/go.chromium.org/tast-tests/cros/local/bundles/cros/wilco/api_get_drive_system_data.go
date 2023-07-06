@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	dtcpb "chromiumos/wilco_dtc"
+
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wilco/pre"
 	"go.chromium.org/tast-tests/cros/local/wilco"
 	"go.chromium.org/tast/core/testing"
@@ -16,13 +17,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: APIGetDriveSystemData,
-		Desc: "Test sending GetDriveSystemData gRPC request from Wilco DTC VM to the Wilco DTC Support Daemon",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Func:     APIGetDriveSystemData,
+		Desc:     "Test sending GetDriveSystemData gRPC request from Wilco DTC VM to the Wilco DTC Support Daemon",
+		Contacts: []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr:         []string{"group:mainline"},

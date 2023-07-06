@@ -37,11 +37,7 @@ func init() {
 		Func:         DeviceDockMacAddressSource,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test setting the DeviceDockMacAddressSource policy by checking if the DUT changing MAC address",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Contacts:     []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		SoftwareDeps: []string{"chrome", "wilco"},

@@ -20,11 +20,7 @@ func init() {
 		Func:         PlatformAPIEventsKeyboardDiagnostic,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests keyboard diagnostics part of the chrome.os.events Chrome Extension API exposed to Telemetry Extension",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Contacts:     []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr: []string{

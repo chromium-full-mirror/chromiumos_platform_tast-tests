@@ -10,6 +10,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	dtcpb "chromiumos/wilco_dtc"
+
 	"go.chromium.org/tast-tests/cros/local/wilco"
 	"go.chromium.org/tast/core/testing"
 )
@@ -19,11 +20,7 @@ func init() {
 		Func:         APIGetStatefulPartitionAvailableCapacityEnrolled,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test sending GetStatefulPartitionAvailableCapacity gRPC requests from Wilco DTC VM to the Wilco DTC Support Daemon",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Contacts:     []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		// TODO(b/274585281): Fix and reenable test.

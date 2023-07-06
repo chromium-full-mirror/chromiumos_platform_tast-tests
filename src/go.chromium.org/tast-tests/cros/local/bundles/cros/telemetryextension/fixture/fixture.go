@@ -45,13 +45,9 @@ const (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: TelemetryExtension,
-		Desc: "Telemetry Extension fixture with running PWA and companion Telemetry Extension",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Name:            TelemetryExtension,
+		Desc:            "Telemetry Extension fixture with running PWA and companion Telemetry Extension",
+		Contacts:        []string{"chromeos-oem-services@google.com"},
 		Impl:            newTelemetryExtensionFixture(),
 		SetUpTimeout:    chrome.LoginTimeout + 30*time.Second + cleanupTimeout,
 		TearDownTimeout: cleanupTimeout,
@@ -60,13 +56,9 @@ func init() {
 		Data:            extFiles(),
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: TelemetryExtensionLacros,
-		Desc: "Telemetry Extension fixture with running PWA and companion Telemetry Extension in Lacros browser",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Name:            TelemetryExtensionLacros,
+		Desc:            "Telemetry Extension fixture with running PWA and companion Telemetry Extension in Lacros browser",
+		Contacts:        []string{"chromeos-oem-services@google.com"},
 		Impl:            newTelemetryExtensionFixture(lacros()),
 		SetUpTimeout:    chrome.LoginTimeout + 30*time.Second + cleanupTimeout,
 		TearDownTimeout: cleanupTimeout,
@@ -75,13 +67,9 @@ func init() {
 		Data:            extFiles(),
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: TelemetryExtensionSkipOEMNameCheck,
-		Desc: "Telemetry Extension fixture with running PWA and companion Telemetry Extension on devices that are not officially supported yet",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Name:            TelemetryExtensionSkipOEMNameCheck,
+		Desc:            "Telemetry Extension fixture with running PWA and companion Telemetry Extension on devices that are not officially supported yet",
+		Contacts:        []string{"chromeos-oem-services@google.com"},
 		Impl:            newTelemetryExtensionFixture(skipOEMNameCheck()),
 		SetUpTimeout:    chrome.LoginTimeout + 30*time.Second + cleanupTimeout,
 		TearDownTimeout: cleanupTimeout,
@@ -90,13 +78,9 @@ func init() {
 		Data:            extFiles(),
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: TelemetryExtensionSkipOEMNameCheckLacros,
-		Desc: "Telemetry Extension fixture with running PWA and companion Telemetry Extension in Lacros browser on devices that are not officially supported yet",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Name:            TelemetryExtensionSkipOEMNameCheckLacros,
+		Desc:            "Telemetry Extension fixture with running PWA and companion Telemetry Extension in Lacros browser on devices that are not officially supported yet",
+		Contacts:        []string{"chromeos-oem-services@google.com"},
 		Impl:            newTelemetryExtensionFixture(lacros(), skipOEMNameCheck()),
 		SetUpTimeout:    chrome.LoginTimeout + 30*time.Second + cleanupTimeout,
 		TearDownTimeout: cleanupTimeout,

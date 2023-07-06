@@ -10,6 +10,7 @@ import (
 	"time"
 
 	dtcpb "chromiumos/wilco_dtc"
+
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wilco/routines"
 	"go.chromium.org/tast-tests/cros/local/wilco"
 	"go.chromium.org/tast/core/errors"
@@ -21,11 +22,7 @@ func init() {
 		Func:         APIRoutineEnrolled,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test sending RunRoutineRequest and GetRoutineUpdate gRPC requests from Wilco DTC VM to the Wilco DTC Support Daemon",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
+		Contacts:     []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		// TODO(b/274585281): Fix and reenable test.
