@@ -47,6 +47,12 @@ type testParam struct {
 	useMultipleWorkersBlock bool
 }
 
+const (
+	// Default number of passing ARC boots to collect result. Overridden by var
+	// "arc.AuthPerf.successBootCount".
+	defaultSuccessBootCount = 7
+)
+
 var resultPropRegexp = regexp.MustCompile(`OK,(\d+)`)
 
 func init() {
@@ -62,6 +68,7 @@ func init() {
 		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		Vars:         []string{"arc.AuthPerf.successBootCount"},
 		// This test steps through opt-in flow 10 times and each iteration takes 20~40 seconds.
 		Timeout: 30 * time.Minute,
 		Params: []testing.Param{{
@@ -199,10 +206,17 @@ func createChrome(ctx context.Context, gaia chrome.Option, param testParam) (*ch
 // sign-in time and Play Store shown time.
 // It also reports average, min and max results.
 func AuthPerf(ctx context.Context, s *testing.State) {
-	const (
-		// successBootCount is the number of passing ARC boots to collect results.
-		successBootCount = 7
-	)
+	// successBootCount is the number of passing ARC boots to collect results.
+	successBootCount := defaultSuccessBootCount
+	if bootCountOverride, ok := s.Var("arc.AuthPerf.successBootCount"); ok {
+		if i, err := strconv.Atoi(bootCountOverride); err == nil {
+			successBootCount = i
+		} else {
+			// User might want to override the default value of successBootCount
+			// but passed a malformed value. Fail the test to inform the user.
+			s.Fatal("Invalid arc.PerfBoot.successBootCount value: ", bootCountOverride)
+		}
+	}
 
 	param := s.Param().(testParam)
 	maxErrorBootCount := param.maxErrorBootCount
