@@ -1671,7 +1671,7 @@ func (h *Helper) CheckChgFrmPwrSuppInfo(ctx context.Context, connectAC bool) err
 	return nil
 }
 
-// ResetServoEthernetDongle resets the ethernet dongle if it supports.
+// ResetServoEthernetDongle resets the ethernet adapter if it supports.
 func (h *Helper) ResetServoEthernetDongle(ctx context.Context) error {
 	ok, err := h.Servo.HasControl(ctx, string(servo.DutEthPwrEn))
 	if err != nil {
@@ -1680,6 +1680,6 @@ func (h *Helper) ResetServoEthernetDongle(ctx context.Context) error {
 	if !ok {
 		return errors.Errorf("control %v doesn't exist", servo.DutEthPwrEn)
 	}
-	testing.ContextLog(ctx, "Resetting the enthernet dongle")
+	testing.ContextLog(ctx, "Resetting the ethernet adapter")
 	return h.Servo.ToggleOffOn(ctx, servo.DutEthPwrEn)
 }
