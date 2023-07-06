@@ -298,6 +298,15 @@ func GetDeviceVariant(ctx context.Context) (string, error) {
 	return deviceVariant, nil
 }
 
+// GetBoard gets the board name of the DUT.
+func GetBoard(ctx context.Context) (string, error) {
+	device, err := getDevice(ctx)
+	if err != nil {
+		return "", err
+	}
+	return device.Board, nil
+}
+
 func getDevice(ctx context.Context) (cellularconst.DeviceInfo, error) {
 	dutVariant, err := GetDeviceVariant(ctx)
 	if err != nil {

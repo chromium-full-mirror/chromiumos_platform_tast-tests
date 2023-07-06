@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/shill"
 
@@ -38,19 +40,13 @@ func ShillHotspotVariantBlocklist(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get Upstream Technologies property: ", err)
 	}
 
-	if !contains(technologies, shill.TechnologyCellular) {
-		s.Fatal("Variant does not support hotspot over cellular")
+	board, err := cellular.GetBoard(ctx)
+	if err != nil {
+		s.Fatalf("Failed to get board: %s", err)
 	}
-}
-
-// contains returns whether the slice "list" contains "s".
-// This can be replaced with slices.Contains() once Go releases the slices
-// package: https://pkg.go.dev/golang.org/x/exp/slices#Contains
-func contains(list []shill.Technology, s shill.Technology) bool {
-	for _, v := range list {
-		if v == s {
-			return true
-		}
+	shouldSupportHotspot := !(board == "trogdor" || board == "strongbad")
+	cellularInUpstreamTechCrOS := slices.Contains(technologies, shill.TechnologyCellular)
+	if shouldSupportHotspot != cellularInUpstreamTechCrOS {
+		s.Fatalf("Hotspot variant support mismatch, got: %t want: %t", cellularInUpstreamTechCrOS, shouldSupportHotspot)
 	}
-	return false
 }
