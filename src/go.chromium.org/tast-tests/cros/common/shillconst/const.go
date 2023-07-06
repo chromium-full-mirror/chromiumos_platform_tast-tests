@@ -45,16 +45,17 @@ const (
 	DevicePropertySelectedService = "SelectedService"
 
 	// Cellular device property names.
-	DevicePropertyCellularAPNList            = "Cellular.APNList"
-	DevicePropertyCellularHomeProvider       = "Cellular.HomeProvider"
-	DevicePropertyCellularICCID              = "Cellular.ICCID"
-	DevicePropertyCellularIMEI               = "Cellular.IMEI"
-	DevicePropertyCellularIMSI               = "Cellular.IMSI"
-	DevicePropertyCellularMDN                = "Cellular.MDN"
-	DevicePropertyCellularPolicyAllowRoaming = "Cellular.PolicyAllowRoaming"
-	DevicePropertyCellularSIMPresent         = "Cellular.SIMPresent"
-	DevicePropertyCellularSIMSlotInfo        = "Cellular.SIMSlotInfo"
-	DevicePropertyCellularSIMLockStatus      = "Cellular.SIMLockStatus"
+	DevicePropertyCellularAPNList                 = "Cellular.APNList"
+	DevicePropertyCellularHomeProvider            = "Cellular.HomeProvider"
+	DevicePropertyCellularICCID                   = "Cellular.ICCID"
+	DevicePropertyCellularIMEI                    = "Cellular.IMEI"
+	DevicePropertyCellularIMSI                    = "Cellular.IMSI"
+	DevicePropertyCellularMDN                     = "Cellular.MDN"
+	DevicePropertyCellularPolicyAllowRoaming      = "Cellular.PolicyAllowRoaming"
+	DevicePropertyCellularSIMPresent              = "Cellular.SIMPresent"
+	DevicePropertyCellularSIMSlotInfo             = "Cellular.SIMSlotInfo"
+	DevicePropertyCellularSIMLockStatus           = "Cellular.SIMLockStatus"
+	DevicePropertyCellularProviderRequiresRoaming = "Cellular.ProviderRequiresRoaming"
 
 	// Keys into the dictionaries exposed as properties
 	DevicePropertyCellularSIMLockStatusLockType    = "LockType"
@@ -159,6 +160,7 @@ const (
 	ServicePropertyCellularRoamingState      = "Cellular.RoamingState"
 	ServicePropertyCellularServingOperator   = "Cellular.ServingOperator"
 	ServicePropertyCellularCustomAPNList     = "Cellular.CustomAPNList"
+	ServicePropertyCellularActivationState   = "Cellular.ActivationState"
 
 	// Keys into the dictionaries exposed as properties for LastAttachAPN and LastGoodAPN
 	DevicePropertyCellularAPNInfoApnName           = "apn"

@@ -1145,6 +1145,20 @@ func (h *Helper) GetIMSIFromShill(ctx context.Context) (string, error) {
 	return h.getCellularDeviceProperty(ctx, shillconst.DevicePropertyCellularIMSI)
 }
 
+// GetProviderRequiresRoamingFromShill gets current ProviderRequiresRoaming boolean from shill.
+func (h *Helper) GetProviderRequiresRoamingFromShill(ctx context.Context) (bool, error) {
+	props, err := h.Device.GetProperties(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get Device properties")
+	}
+	providerRequiresRoaming, err := props.GetBool(shillconst.DevicePropertyCellularProviderRequiresRoaming)
+	if err != nil {
+		return false, errors.Wrapf(err, "error getting property %q", shillconst.DevicePropertyCellularProviderRequiresRoaming)
+	}
+
+	return providerRequiresRoaming, nil
+}
+
 // SetServiceProvidersExclusiveOverride adds an override MODB to shill.
 // The function returns a closure to delete the override file.
 func SetServiceProvidersExclusiveOverride(ctx context.Context, sourceFile string) (func(), error) {
@@ -1312,6 +1326,11 @@ func (h *Helper) GetNetworkProvisionedCellularIPTypes(ctx context.Context) (ipv4
 	return ipv4Present, ipv6Present, nil
 }
 
+// GetCurrentEID gets current EID
+func (h *Helper) GetCurrentEID(ctx context.Context) (string, error) {
+	return h.getCellularServiceProperty(ctx, shillconst.ServicePropertyCellularEID)
+}
+
 // GetCurrentICCID gets current ICCID
 func (h *Helper) GetCurrentICCID(ctx context.Context) (string, error) {
 	return h.getCellularServiceProperty(ctx, shillconst.ServicePropertyCellularICCID)
@@ -1320,6 +1339,21 @@ func (h *Helper) GetCurrentICCID(ctx context.Context) (string, error) {
 // GetCurrentNetworkName gets current Network name
 func (h *Helper) GetCurrentNetworkName(ctx context.Context) (string, error) {
 	return h.getCellularServiceProperty(ctx, shillconst.ServicePropertyName)
+}
+
+// GetCurrentNetworkTechnology gets current NetworkTechnology
+func (h *Helper) GetCurrentNetworkTechnology(ctx context.Context) (string, error) {
+	return h.getCellularServiceProperty(ctx, shillconst.ServicePropertyCellularNetworkTechnology)
+}
+
+// GetCurrentRoamingState gets current RoamingState
+func (h *Helper) GetCurrentRoamingState(ctx context.Context) (string, error) {
+	return h.getCellularServiceProperty(ctx, shillconst.ServicePropertyCellularRoamingState)
+}
+
+// GetCurrentActivationState gets current ActivationState
+func (h *Helper) GetCurrentActivationState(ctx context.Context) (string, error) {
+	return h.getCellularServiceProperty(ctx, shillconst.ServicePropertyCellularActivationState)
 }
 
 // disableNonCellularInterfaceforTesting disable all non cellular interfaces
