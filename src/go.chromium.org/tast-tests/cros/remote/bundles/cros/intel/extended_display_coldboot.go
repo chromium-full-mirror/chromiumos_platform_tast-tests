@@ -7,10 +7,8 @@ package intel
 import (
 	"context"
 	"regexp"
-	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/cswitch"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast/core/ctxutil"
@@ -24,6 +22,7 @@ type extendedDisplayTestParams struct {
 	displayInfoRe  []string
 	ecStateToCheck string
 	isTypecDP      bool
+	iterationCount int
 }
 
 const (
@@ -45,45 +44,84 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.InternalDisplay()),
-		Vars: []string{
-			"servo",
-			"intel.cSwitchPort",
-			"intel.domainIP",
-		},
-		VarDeps: []string{"intel.iteration"},
+		Vars:         []string{"servo"},
 		Params: []testing.Param{{
-			Name: "typec_dp",
+			Name: "typec_dp_g3",
+			Val: extendedDisplayTestParams{
+				displayInfoRe:  []string{connectorDP, connectedDP, fullHDMode},
+				ecStateToCheck: "G3",
+				isTypecDP:      true,
+				iterationCount: 1,
+			},
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-dp-type-c"},
+		}, {
+			Name: "typec_dp_s5",
 			Val: extendedDisplayTestParams{
 				displayInfoRe:  []string{connectorDP, connectedDP, fullHDMode},
 				ecStateToCheck: "S5",
 				isTypecDP:      true,
+				iterationCount: 10,
 			},
 			Timeout:   15 * time.Minute,
 			ExtraAttr: []string{"group:intel-dp-type-c"},
 		}, {
-			Name: "native_dp",
+			Name: "native_dp_s5",
 			Val: extendedDisplayTestParams{
 				displayInfoRe:  []string{connectorDP, connectedDP, fullHDMode},
 				ecStateToCheck: "S5",
 				isTypecDP:      false,
+				iterationCount: 10,
 			},
 			Timeout:   15 * time.Minute,
 			ExtraAttr: []string{"group:intel-dp"},
 		}, {
-			Name: "typec_hdmi",
+			Name: "native_dp_g3",
+			Val: extendedDisplayTestParams{
+				displayInfoRe:  []string{connectorDP, connectedDP, fullHDMode},
+				ecStateToCheck: "G3",
+				isTypecDP:      false,
+				iterationCount: 10,
+			},
+			Timeout:   15 * time.Minute,
+			ExtraAttr: []string{"group:intel-dp"},
+		}, {
+			Name: "typec_hdmi_g3",
 			Val: extendedDisplayTestParams{
 				displayInfoRe:  []string{connectorDP, connectedDP, fullHDMode, typecHDMI},
 				ecStateToCheck: "G3",
 				isTypecDP:      false,
+				iterationCount: 10,
 			},
 			Timeout:   15 * time.Minute,
 			ExtraAttr: []string{"group:intel-hdmi-type-c"},
 		}, {
-			Name: "native_hdmi",
+			Name: "typec_hdmi_s5",
+			Val: extendedDisplayTestParams{
+				displayInfoRe:  []string{connectorDP, connectedDP, fullHDMode, typecHDMI},
+				ecStateToCheck: "S5",
+				isTypecDP:      false,
+				iterationCount: 1,
+			},
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-hdmi-type-c"},
+		}, {
+			Name: "native_hdmi_g3",
+			Val: extendedDisplayTestParams{
+				displayInfoRe:  []string{connectorHDMI, connectedHDMI, fullHDMode},
+				ecStateToCheck: "G3",
+				isTypecDP:      false,
+				iterationCount: 10,
+			},
+			Timeout:   15 * time.Minute,
+			ExtraAttr: []string{"group:intel-hdmi"},
+		}, {
+			Name: "native_hdmi_s5",
 			Val: extendedDisplayTestParams{
 				displayInfoRe:  []string{connectorHDMI, connectedHDMI, fullHDMode},
 				ecStateToCheck: "S5",
 				isTypecDP:      false,
+				iterationCount: 10,
 			},
 			Timeout:   15 * time.Minute,
 			ExtraAttr: []string{"group:intel-hdmi"},
@@ -121,46 +159,15 @@ func ExtendedDisplayColdboot(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to login to Chrome: ", err)
 		}
 
-		if testOpt.isTypecDP {
-			// cswitch port ID.
-			cSwitchON := s.RequiredVar("intel.cSwitchPort")
-			// IP address of Tqc server hosting device.
-			domainIP := s.RequiredVar("intel.domainIP")
-
-			// Create C-Switch session that performs hot plug-unplug external display.
-			sessionID, err := cswitch.CreateSession(ctx, domainIP)
-			if err != nil {
-				s.Fatal("Failed to create session: ", err)
-			}
-
-			if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
-				s.Fatal("Failed to enable c-switch port: ", err)
-			}
-
-			cSwitchOFF := "0"
-			defer func(ctx context.Context) {
-				if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchOFF, domainIP); err != nil {
-					s.Fatal("Failed to disable c-switch port: ", err)
-				}
-
-				if err := cswitch.CloseSession(ctx, sessionID, domainIP); err != nil {
-					s.Log("Failed to close session: ", err)
-				}
-			}(cleanupCtx)
-		}
-
 		if err := externalDisplayDetection(ctx, dut, 1, testOpt.displayInfoRe, testOpt.isTypecDP); err != nil {
 			s.Fatal("Failed detecting external display: ", err)
 		}
 	}
 
 	loginChrome(ctx)
-	iter, err := strconv.Atoi(s.RequiredVar("intel.iteration"))
-	if err != nil {
-		s.Fatal("Failed to convert string to integer: ", err)
-	}
-	for i := 1; i <= iter; i++ {
-		s.Logf("Iteration: %d/%d ", i, iter)
+
+	for i := 1; i <= testOpt.iterationCount; i++ {
+		s.Logf("Iteration: %d/%d ", i, testOpt.iterationCount)
 		if err := powercontrol.ShutdownAndWaitForPowerState(ctx, pxy, dut, testOpt.ecStateToCheck); err != nil {
 			s.Fatalf("Failed to shutdown and wait for %q powerstate: %v", testOpt.ecStateToCheck, err)
 		}
