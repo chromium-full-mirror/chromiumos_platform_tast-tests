@@ -15,11 +15,11 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -66,37 +66,32 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to get config: ", err)
 	}
 
-	// Perform a hard reset on DUT to ensure removal of any
-	// old settings that might potentially have an impact on
-	// this test.
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-		s.Fatal("Failed to cold reset DUT at the beginning of test: ", err)
-	}
-
 	if err := h.RequireRPCClient(ctx); err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 
 	s.Log("Starting a new Chrome")
-	chromeRequest := pb.NewRequest{
-		LoginMode: pb.LoginMode_LOGIN_MODE_GUEST_LOGIN,
-	}
 	chromeService := pb.NewChromeServiceClient(h.RPCClient.Conn)
-	if _, err := chromeService.New(ctx, &chromeRequest); err != nil {
+	if _, err := chromeService.New(ctx, &pb.NewRequest{
+		LoginMode: pb.LoginMode_LOGIN_MODE_GUEST_LOGIN,
+	}); err != nil {
 		s.Fatal("Failed to create new Chrome at login: ", err)
 	}
 	defer chromeService.Close(ctx, &empty.Empty{})
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
+
 	s.Log("Screen recorder started")
 	filePath := filepath.Join(s.OutDir(), "kblightRecord.webm")
-	startRequest := pb.StartRequest{
-		FileName: filePath,
-	}
 	screenRecorder := pb.NewScreenRecorderServiceClient(h.RPCClient.Conn)
-	if _, err := screenRecorder.Start(ctx, &startRequest); err != nil {
+	if _, err := screenRecorder.Start(ctx, &pb.StartRequest{
+		FileName: filePath,
+	}); err != nil {
 		s.Fatal("Failed to start recording: ", err)
 	}
-	defer func() {
+	defer func(ctx context.Context) {
 		res, err := screenRecorder.Stop(ctx, &empty.Empty{})
 		if err != nil {
 			s.Log("Unable to save the recording: ", err)
@@ -104,29 +99,14 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 			s.Logf("Screen recording saved to %s", res.FileName)
 		}
 
-		testing.ContextLog(ctx, "Copying screen recording from DUT to local machine")
+		s.Log("Copying screen recording from DUT to local machine")
 		destPath := filepath.Join(s.OutDir(), filepath.Base(res.FileName))
 		if err := linuxssh.GetFile(ctx, s.DUT().Conn(), res.FileName, destPath, linuxssh.DereferenceSymlinks); err != nil {
 			s.Fatal("Failed to copy screen recording to local machine: ", err)
 		}
-	}()
+	}(cleanupCtx)
 
-	kbLightUp := "<f7>"
-	kbLightDown := "<f6>"
-	modelsWithShiftedShortcuts := []string{"atlas", "eve"}
-	// Some models use <f6> and <f5> instead for adjusting the kb light.
-	if func(modelName string, modelPool []string) bool {
-		for _, m := range modelPool {
-			if modelName == m {
-				return true
-			}
-		}
-		return false
-	}(h.Model, modelsWithShiftedShortcuts) {
-		kbLightUp = "<f6>"
-		kbLightDown = "<f5>"
-	}
-
+	kbLightUp, kbLightDown := getKeyForKbLightUpAndDown(h)
 	// Initialize the method for getting kb light value.
 	getKBLightFnc = func(h *firmware.Helper, ctx context.Context) (int, error) {
 		return h.Servo.GetKBBacklight(ctx)
@@ -150,42 +130,10 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 			s.Fatal("Unexpected error: ", err)
 		}
 	}
-
-	// Nightfury and Kohaku have their keyboard backlight brightness constrained
-	// to the limits specified in keyboard-backlight-user-steps. Declare the default min,
-	// and max brightness values as 0 and 100 respectively, but switch to the ones in
-	// keyboard-backlight-user-steps if they are available.
-	var (
-		minBrightness = 0
-		maxBrightness = 100
-	)
-	// Connect to the RPC service on the DUT.
-	if err := h.RequireRPCClient(ctx); err != nil {
-		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
-	}
-	fs := dutfs.NewClient(h.RPCClient.Conn)
-	userStepConfigPath := "/run/chromeos-config/v1/power/keyboard-backlight-user-steps"
-	exists, err := fs.Exists(ctx, userStepConfigPath)
+	fsClient := dutfs.NewClient(h.RPCClient.Conn)
+	minBrightness, maxBrightness, err := getMaxAndMinBrightness(ctx, h, fsClient)
 	if err != nil {
-		s.Fatalf("Failed to check for the existence of %s: %v", userStepConfigPath, err)
-	}
-	if exists {
-		out, err := h.Reporter.CatFileLines(ctx, userStepConfigPath)
-		if err != nil {
-			s.Fatalf("Failed to read %s: %v", userStepConfigPath, err)
-		}
-		if len(out) != 0 {
-			max, err := strconv.ParseFloat(out[len(out)-1], 64)
-			if err != nil {
-				s.Fatal("Failed to parse for max value: ", err)
-			}
-			min, err := strconv.ParseFloat(out[0], 64)
-			if err != nil {
-				s.Fatal("Failed to parse for min value: ", err)
-			}
-			maxBrightness = int(max)
-			minBrightness = int(min)
-		}
+		s.Fatal("Failed to get min and max kb backlight brightness level: ", err)
 	}
 
 	kbBacklightTesting := make(map[int]string, 2)
@@ -282,6 +230,10 @@ func adjustKBBacklight(ctx context.Context, h *firmware.Helper, d *dut.DUT, extr
 func pressShortcut(ctx context.Context, h *firmware.Helper, actionKey string) error {
 	// ShortCuts for decreasing keyboard backlight: Alt+F6 (Alt+BrightnessDown).
 	// ShortCuts for increasing keyboard backlight: Alt+F7 (Alt+BrightnessUp).
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+
 	if err := func(ctx context.Context) error {
 		keyNames := []string{"<alt_l>", actionKey}
 		for _, key := range keyNames {
@@ -301,7 +253,7 @@ func pressShortcut(ctx context.Context, h *firmware.Helper, actionKey string) er
 					return errors.Wrapf(err, "failed to release %s", releaseKey)
 				}
 				return nil
-			}(ctx, releaseKey, key)
+			}(cleanupCtx, releaseKey, key)
 		}
 		return nil
 	}(ctx); err != nil {
@@ -357,10 +309,65 @@ func getKBLightValFromPowerd(ctx context.Context, h *firmware.Helper) (int, erro
 	if err != nil {
 		return 0, err
 	}
-	reg := regexp.MustCompile(`Setting brightness to (\d+)`)
+	reg := regexp.MustCompile(`Setting brightness to \d+ \((\d+)%\)`)
 	val := reg.FindSubmatch(out)
 	if len(val) == 0 {
 		return 0, errors.New("unable to find match for kb backlight brightness value")
 	}
 	return strconv.Atoi(string(val[1]))
+}
+
+// getKeyForKbLightUpAndDown checks for the respective shortcuts to increase
+// and decrease keyboard backlight brightness.
+func getKeyForKbLightUpAndDown(h *firmware.Helper) (string, string) {
+	kbLightUp := "<f7>"
+	kbLightDown := "<f6>"
+	modelsWithShiftedShortcuts := []string{"atlas", "eve"}
+	// Some models use <f6> and <f5> instead for adjusting the kb light.
+	for _, model := range modelsWithShiftedShortcuts {
+		if h.Model == model {
+			kbLightUp = "<f6>"
+			kbLightDown = "<f5>"
+		}
+	}
+	return kbLightUp, kbLightDown
+}
+
+// getMaxAndMinBrightness checks for the maximum and minimum brightness level.
+func getMaxAndMinBrightness(ctx context.Context, h *firmware.Helper, fsClient *dutfs.Client) (int, int, error) {
+	if fsClient == nil {
+		return 0, 0, errors.New("fsClient is nil")
+	}
+	// Nightfury and Kohaku have their keyboard backlight brightness constrained
+	// to the limits specified in keyboard-backlight-user-steps. Declare the default min,
+	// and max brightness values as 0 and 100 respectively, but switch to the ones in
+	// keyboard-backlight-user-steps if they are available.
+	var (
+		minBrightness = 0
+		maxBrightness = 100
+	)
+	userStepConfigPath := "/run/chromeos-config/v1/power/keyboard-backlight-user-steps"
+	exists, err := fsClient.Exists(ctx, userStepConfigPath)
+	if err != nil {
+		return minBrightness, maxBrightness, errors.Wrapf(err, "failed to check for the existence of %s", userStepConfigPath)
+	}
+	if exists {
+		out, err := h.Reporter.CatFileLines(ctx, userStepConfigPath)
+		if err != nil {
+			return minBrightness, maxBrightness, errors.Wrapf(err, "failed to read %s", userStepConfigPath)
+		}
+		if len(out) != 0 {
+			max, err := strconv.ParseFloat(out[len(out)-1], 64)
+			if err != nil {
+				return minBrightness, maxBrightness, errors.Wrap(err, "failed to parse for max value")
+			}
+			min, err := strconv.ParseFloat(out[0], 64)
+			if err != nil {
+				return minBrightness, maxBrightness, errors.Wrap(err, "failed to parse for min value")
+			}
+			maxBrightness = int(max)
+			minBrightness = int(min)
+		}
+	}
+	return minBrightness, maxBrightness, nil
 }
