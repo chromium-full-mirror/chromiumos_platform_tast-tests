@@ -36,6 +36,10 @@ func init() {
 		},
 		BugComponent: "b:187682",
 		Timeout:      10 * time.Minute,
+		Data: []string{
+			"effects_frame_metrics.js",
+			"effects_video_script.html",
+		},
 		Attr: []string{
 			"group:camera_dependent",
 			"group:video_conference",
