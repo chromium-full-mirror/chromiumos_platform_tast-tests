@@ -75,33 +75,47 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 	ttsLink := nodewith.NameStartingWith("Text-to-Speech").Role(role.Link)
 
 	for i, extension := range []struct {
-		settingsWindowTitle string
 		openSettings        func(ctx context.Context, ui *uiauto.Context) error
+		checkSettingsOpened func(ctx context.Context, ui *uiauto.Context) error
+		numOfWindows        int
 	}{{
-		settingsWindowTitle: "Settings - ChromeVox",
+		// ChromeVox
 		openSettings: func(ctx context.Context, ui *uiauto.Context) (retErr error) {
 			return uiauto.Combine("open ChromeVox settings",
 				ui.DoDefault(nodewith.Name("ChromeVox settings").Role(role.Link)),
 			)(ctx)
 		},
+		checkSettingsOpened: func(ctx context.Context, ui *uiauto.Context) (retErr error) {
+			announceTextStylingButton := nodewith.NameStartingWith("Announce text styling").Role(role.ToggleButton)
+			return ui.WithTimeout(5 * time.Second).WaitUntilExists(announceTextStylingButton)(ctx)
+		},
+		numOfWindows: 1,
 	}, {
-		settingsWindowTitle: "eSpeak-NG Options",
+		// eSpeak-NG
 		openSettings: func(ctx context.Context, ui *uiauto.Context) (retErr error) {
 			return uiauto.Combine("open eSpeak-NG settings",
 				ui.DoDefault(nodewith.NameStartingWith("Text-to-Speech voice settings").Role(role.Link)),
 				ui.DoDefault(nodewith.Name("Settings").Role(role.Button).ClassName("tast-eSpeakNG text-to-speech extension")),
 			)(ctx)
 		},
+		checkSettingsOpened: func(ctx context.Context, ui *uiauto.Context) (retErr error) {
+			return ash.WaitForCondition(ctx, tconn, settingsWindowMatch(ctx, bt, "eSpeak-NG Options"), &testing.PollOptions{Timeout: 5 * time.Second})
+		},
+		numOfWindows: 2,
 	}, {
-		settingsWindowTitle: "Google TTS Settings",
+		// Google TTS
 		openSettings: func(ctx context.Context, ui *uiauto.Context) (retErr error) {
 			return uiauto.Combine("open Google TTS settings",
 				ui.DoDefault(nodewith.NameStartingWith("Text-to-Speech voice settings").Role(role.Link)),
 				ui.DoDefault(nodewith.Name("Settings").Role(role.Button).ClassName("tast-Chrome OS built-in text-to-speech extension")),
 			)(ctx)
 		},
+		checkSettingsOpened: func(ctx context.Context, ui *uiauto.Context) (retErr error) {
+			return ash.WaitForCondition(ctx, tconn, settingsWindowMatch(ctx, bt, "Google TTS Settings"), &testing.PollOptions{Timeout: 5 * time.Second})
+		},
+		numOfWindows: 2,
 	}} {
-		s.Run(ctx, extension.settingsWindowTitle, func(ctx context.Context, s *testing.State) {
+		s.Run(ctx, fmt.Sprintf("Extension settings test %d", i), func(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
 			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 			defer cancel()
@@ -117,15 +131,15 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 			if err := extension.openSettings(ctx, ui); err != nil {
 				s.Fatal("Failed to open extension's settings: ", err)
 			}
-			if err := ash.WaitForCondition(ctx, tconn, settingsWindowMatch(ctx, bt, extension.settingsWindowTitle), &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-				s.Fatalf("Failed to find `%s` window: %v", extension.settingsWindowTitle, err)
+			if err := extension.checkSettingsOpened(ctx, ui); err != nil {
+				s.Fatal("Failed to check settings opened: ", err)
 			}
 			ws, err := ash.GetAllWindows(ctx, tconn)
 			if err != nil {
 				s.Fatal("Failed to get all windows: ", err)
 			}
-			if len(ws) != 2 {
-				s.Fatalf("Unexpected number of windows, want 2, got %d", len(ws))
+			if len(ws) != extension.numOfWindows {
+				s.Fatalf("Unexpected number of windows, want %d, got %d", extension.numOfWindows, len(ws))
 			}
 		})
 		if err := cr.ResetState(ctx); err != nil {
