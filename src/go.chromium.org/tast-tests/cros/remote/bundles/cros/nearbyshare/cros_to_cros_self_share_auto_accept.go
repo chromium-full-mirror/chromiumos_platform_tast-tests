@@ -44,8 +44,8 @@ func init() {
 				Timeout: nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
-				Name:    "dataoffline_allcontacts_txt30mb",
-				Fixture: "nearbyShareRemoteDataUsageOfflineSelfShare",
+				Name:    "dataonline_allcontacts_txt30mb",
+				Fixture: "nearbyShareRemoteDataUsageOnlineSelfShare",
 				Val: nearbycommon.TestData{
 					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
 				ExtraData:         []string{"big_txt.zip"},
@@ -72,8 +72,8 @@ func init() {
 				Timeout: nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
-				Name:      "dataoffline_allcontacts_txt30mb_floss",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineSelfShareFloss",
+				Name:      "dataonline_allcontacts_txt30mb_floss",
+				Fixture:   "nearbyShareRemoteDataUsageOnlineSelfShareFloss",
 				ExtraAttr: []string{"cross-device-remote_floss"},
 				Val: nearbycommon.TestData{
 					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
@@ -118,7 +118,7 @@ func CrosToCrosSelfShareAutoAccept(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to select share target on DUT1 (Sender): ", err)
 	}
 
-	s.Log("Waiting for transfer complete notification on Receiver (DUT2) (skipping Auto-Accept notification).")
+	s.Log("Waiting for transfer complete notification on Receiver (DUT2) (skipping Accept notification with auto-accept)")
 	transferTimeoutSeconds := int32(testData.TransferTimeout.Seconds())
 	receiveReq := &nearbyservice.CrOSReceiveFilesRequest{SenderName: senderDisplayName, TransferTimeoutSeconds: transferTimeoutSeconds}
 	_, err = receiver.WaitForIncomingShareCompletionNotification(ctx, receiveReq)
