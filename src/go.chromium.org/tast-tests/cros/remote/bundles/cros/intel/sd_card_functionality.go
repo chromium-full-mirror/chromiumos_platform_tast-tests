@@ -2,16 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package sdcard
+package intel
 
 import (
 	"context"
 	"regexp"
-	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/policy/dututils"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -23,6 +21,7 @@ import (
 type sdCardTestParams struct {
 	powerMode       string
 	cbmemSleepState int
+	iterCount       int
 }
 
 func init() {
@@ -34,7 +33,7 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
-		Vars:         []string{"servo", "sdcard.functionality_iterations"},
+		Vars:         []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Attr:         []string{"group:intel-usb-set1"},
 		Timeout:      15 * time.Minute,
@@ -43,12 +42,23 @@ func init() {
 			Val: sdCardTestParams{
 				powerMode:       "shutdown",
 				cbmemSleepState: 5, // cbmemSleepState must be 5 for coldboot validation.
+				iterCount:       1,
 			},
 		}, {
+
+			Name: "shutdown_stress",
+			Val: sdCardTestParams{
+				powerMode:       "shutdown",
+				cbmemSleepState: 5, // cbmemSleepState must be 5 for coldboot validation.
+				iterCount:       10,
+			},
+		}, {
+
 			Name: "reboot",
 			Val: sdCardTestParams{
 				powerMode:       "reboot",
 				cbmemSleepState: 0, // cbmemSleepState must be 0 for warmboot validation.
+				iterCount:       1,
 			},
 		}},
 	})
@@ -73,19 +83,12 @@ func SDCardFunctionality(ctx context.Context, s *testing.State) {
 	}
 	defer pxy.Close(cleanupCtx)
 
-	iterCount := 1 // Default to one iteration.
-	if iter, ok := s.Var("sdcard.functionality_iterations"); ok {
-		if iterCount, err = strconv.Atoi(iter); err != nil {
-			s.Fatalf("Failed to parse iteration value %q: %v", iter, err)
-		}
-	}
-
 	testOpt := s.Param().(sdCardTestParams)
 
 	defer func(ctx context.Context) {
 		testing.ContextLog(ctx, "Performing cleanup")
-		if err := dututils.EnsureDUTIsOn(ctx, dut, pxy.Servo()); err != nil {
-			s.Error("Failed to ensure DUT is powered on: ", err)
+		if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
+			s.Fatal("Failed to wake up DUT: ", err)
 		}
 	}(cleanupCtx)
 
@@ -94,8 +97,8 @@ func SDCardFunctionality(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to login to chrome: ", err)
 	}
 
-	for i := 1; i <= iterCount; i++ {
-		s.Logf("Iteration: %d/%d", i, iterCount)
+	for i := 1; i <= testOpt.iterCount; i++ {
+		s.Logf("Iteration: %d/%d", i, testOpt.iterCount)
 		if err := sdCardDetection(ctx, dut); err != nil {
 			s.Fatal("Failed to detect SD card: ", err)
 		}
