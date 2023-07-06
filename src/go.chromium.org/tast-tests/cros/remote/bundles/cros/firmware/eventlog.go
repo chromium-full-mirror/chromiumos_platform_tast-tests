@@ -127,9 +127,8 @@ func init() {
 			},
 			// Test eventlog upon rec->normal reboot.
 			{
-				Name: "rec_normal",
-				// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-				ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
+				Name:      "rec_normal",
+				ExtraAttr: []string{"firmware_bios", "firmware_level4", "firmware_usb"},
 				Fixture:   fixture.RecModeNoServices,
 				Val: eventLogParams{
 					bootToMode:        fwCommon.BootModeNormal,
