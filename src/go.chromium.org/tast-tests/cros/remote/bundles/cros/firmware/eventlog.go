@@ -10,16 +10,13 @@ import (
 	"strconv"
 	"time"
 
-	gossh "golang.org/x/crypto/ssh"
-
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
+	"go.chromium.org/tast-tests/cros/remote/firmware/suspend"
 
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -239,32 +236,23 @@ func Eventlog(ctx context.Context, s *testing.State) {
 		}
 		h.CloseRPCConnection(ctx)
 
-		s.Log("Suspending DUT")
-		shortCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
-		defer cancel()
-		if err := h.DUT.Conn().CommandContext(shortCtx, "powerd_dbus_suspend").Run(ssh.DumpLogOnError); err != nil &&
-			!errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, &gossh.ExitMissingError{}) {
-			s.Fatal("Failed to suspend: ", err)
-		}
-
-		// Let the DUT stay in suspend a little while. 10s seems to be enough to allow wake up. Shorter times might work also.
-		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-			s.Fatal("Failed to sleep: ", err)
-		}
-
-		powerState, err := h.Servo.GetECSystemPowerState(ctx)
+		suspendContext, err := suspend.NewContext(ctx, h)
 		if err != nil {
-			s.Error("Failed to get power state: ", err)
+			s.Fatal("Failed to create suspendContext: ", err)
 		}
-		s.Log("Power state: ", powerState)
+		defer suspendContext.Close()
+		s.Log("Suspending DUT")
+		if err := suspendContext.SuspendDUTAllTypes(suspend.DefaultSuspendArgs()); err != nil {
+			s.Fatal("Failed to suspend DUT: ", err)
+		}
 
-		s.Log("Pressing ENTER key to wake DUT")
-		if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurTab); err != nil {
-			s.Fatal("Failed to press enter key")
+		s.Log("Waking DUT")
+		if err := suspendContext.WakeDUT(suspend.DefaultWakeArgs()); err != nil {
+			s.Fatal("Failed to wake DUT: ", err)
 		}
 
 		s.Log("Reconnecting to DUT")
-		shortCtx, cancel = context.WithTimeout(ctx, 60*time.Second)
+		shortCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 		defer cancel()
 		if err := h.WaitConnect(shortCtx); err != nil {
 			s.Fatal("Failed to reconnect to DUT: ", err)
