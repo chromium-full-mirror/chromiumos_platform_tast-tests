@@ -72,7 +72,7 @@ func navigateToAnEmptyTabAndSwitchBetweenThemLacros(ctx context.Context, tconn *
 	if err != nil {
 		return errors.Wrap(err, "failed to find an about:blank tab")
 	}
-	if err := conn.Navigate(ctx, "https://www.youtube.com/"); err != nil {
+	if err := conn.Navigate(ctx, "chrome://newtab"); err != nil {
 		return errors.Wrap(err, "failed to navigate to YouTube")
 	}
 	ltconn, err := l.TestAPIConn(ctx)
@@ -91,7 +91,7 @@ func navigateToAnEmptyTabAndSwitchBetweenThemLacros(ctx context.Context, tconn *
 		return errors.Wrap(err, "failed to close youtube tab connection")
 	}
 	for i := 0; i < 4; i++ {
-		conn, err := l.NewConn(ctx, "https://www.youtube.com/")
+		conn, err := l.NewConn(ctx, "chrome://newtab")
 		if err != nil {
 			return errors.Wrap(err, "failed to open youtube tab")
 		}
@@ -100,7 +100,7 @@ func navigateToAnEmptyTabAndSwitchBetweenThemLacros(ctx context.Context, tconn *
 		}
 	}
 	// GoBigSleepLint: sleep to let memory settle.
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep before the test begins")
 	}
 	vmstat, err := mem.VirtualMemory()
@@ -115,35 +115,48 @@ func navigateToAnEmptyTabAndSwitchBetweenThemLacros(ctx context.Context, tconn *
 		return errors.Wrap(err, "failed to get keyboard")
 	}
 	defer kb.Close(ctx)
-	for i := 0; i < 100; i++ {
+
+	// Fixed iterations of 8 with fixed time of 7 seconds means this test will have a max of 56 seconds.
+	for k := 0; k < 8; k++ {
+		// To initiate a press we first need to press and release once.
 		if err := kb.Accel(ctx, "Ctrl+Tab"); err != nil {
 			return errors.Wrap(err, "failed to send Ctrl+Tab")
 		}
-	}
-	// GoBigSleepLint: sleep to let memory settle.
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep after the test completed")
-	}
-	vmstat, err = mem.VirtualMemory()
-	if err != nil {
-		return errors.Wrap(err, "failed to get memory stats")
-	}
-	freeBytesAfter := vmstat.Free
-	testing.ContextLogf(ctx, "MemFree after: %v MB", freeBytesAfter/mb)
-	if freeBytesBefore <= freeBytesAfter {
-		testing.ContextLog(ctx, "MemFree delta is negative. This indicates there's no leak")
-		return nil
-	}
-	deltaPercentage := 100 * (freeBytesBefore - freeBytesAfter) / freeBytesBefore
-	testing.ContextLogf(ctx, "MemFree delta percentage: %v %%", deltaPercentage)
-	// In normal, non-leaky environment, this delta is single digit or even negative,
-	// as pointed out by the above negativity check. In the case of a dma buf leak,
-	// or other kernel/driver leak, on a 8GB RAM device, this delta can easily get
-	// bloated to 80 or more. As a result, we tentative set 50 as the cutoff value
-	// here. Potentially we can drastically lower the cutoff value to something like
-	// 20 or even 10 to make this test more sensitive.
-	if deltaPercentage > 50 {
-		return errors.New("Potential memory leak detected during tab switching")
+
+		// This press will rapidly iterate through all tabs in the window.
+		if err := kb.AccelPress(ctx, "Ctrl+Tab"); err != nil {
+			return errors.Wrap(err, "failed to send Ctrl+Tab")
+		}
+		// GoBigSleepLint: This will be the press(hold) time.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep after the test completed")
+		}
+		if err := kb.AccelRelease(ctx, "Ctrl+Tab"); err != nil {
+			return errors.Wrap(err, "failed to send Ctrl+Tab")
+		}
+		// GoBigSleepLint: sleep to let memory settle.
+		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep after the test completed")
+		}
+		vmstat, err = mem.VirtualMemory()
+		if err != nil {
+			return errors.Wrap(err, "failed to get memory stats")
+		}
+		freeBytesAfter := vmstat.Free
+		testing.ContextLogf(ctx, "MemFree after: %v MB iter %v", freeBytesAfter/mb, k)
+		if freeBytesAfter >= freeBytesBefore {
+			testing.ContextLog(ctx, "MemFree delta is negative. This indicates there's no leak")
+			continue
+		}
+		deltaPercentage := 100 * (freeBytesBefore - freeBytesAfter) / freeBytesBefore
+		testing.ContextLogf(ctx, "MemFree delta percentage: %v %%", deltaPercentage)
+		// In normal, non-leaky environment, this delta is single digit or even negative,
+		// as pointed out by the above negativity check. In the case of a dma buf leak,
+		// or other kernel/driver leak, on a 8GB RAM device, this delta can easily get
+		// bloated to 80 or more.
+		if deltaPercentage > 20 {
+			return errors.New("Potential memory leak detected during tab switching")
+		}
 	}
 	return nil
 }
