@@ -157,6 +157,28 @@ func GetNthCandidateText(ctx context.Context, tconn *chrome.TestConn, n int) (st
 	return curText, nil
 }
 
+// WaitForNCandidates waits until there are exactly n candidates in the candidates window.
+func WaitForNCandidates(tconn *chrome.TestConn, n int) uiauto.Action {
+	ui := uiauto.New(tconn)
+
+	return func(ctx context.Context) error {
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			candidate, err := ui.NodesInfo(ctx, PKCandidatesFinder)
+			if err != nil {
+				return err
+			}
+			if len(candidate) != n {
+				return err
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 2 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
 // RunSubtestsPerInputMethodAndMessage runs subtest that uses testName and inputdata on
 // every combination of given input methods and messages.
 func RunSubtestsPerInputMethodAndMessage(ctx context.Context, uc *useractions.UserContext, s *testing.State,

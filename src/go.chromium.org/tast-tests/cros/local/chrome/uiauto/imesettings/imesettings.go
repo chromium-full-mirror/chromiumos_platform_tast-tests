@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -35,13 +36,24 @@ type settingOption string
 
 // Available IME setting items.
 const (
-	GlideTyping             settingOption = "Enable glide typing"
-	AutoCapitalization      settingOption = "Auto-capitalization"
-	ShowInputOptionsInShelf settingOption = "Show input options in the shelf"
-	KoreanKeyboardLayout    settingOption = "Korean keyboard layout"
-	AutoCorrection          settingOption = "Auto-correction"
-	SpellingGrammarCheck    settingOption = "Spelling and grammar check"
-	SpellCheck              settingOption = "Spell check"
+	GlideTyping                            settingOption = "Enable glide typing"
+	AutoCapitalization                     settingOption = "Auto-capitalization"
+	ShowInputOptionsInShelf                settingOption = "Show input options in the shelf"
+	KoreanKeyboardLayout                   settingOption = "Korean keyboard layout"
+	AutoCorrection                         settingOption = "Auto-correction"
+	SpellingGrammarCheck                   settingOption = "Spelling and grammar check"
+	SpellCheck                             settingOption = "Spell check"
+	JapaneseInputMode                      settingOption = "Input mode"
+	JapanesePunctuationStyle               settingOption = "Punctuation style"
+	JapaneseSymbolStyle                    settingOption = "Symbol style"
+	JapaneseSpaceInputStyle                settingOption = "Space input style"
+	JapaneseSelectionShortcut              settingOption = "Selection shortcut"
+	JapaneseKeymapStyle                    settingOption = "Keymap style"
+	JapaneseAutomaticallySwitchToHalfwidth settingOption = "Automatically switch to halfwidth"
+	JapaneseShiftKeyModeSwitch             settingOption = "Shift key mode switch"
+	JapaneseUseInputHistory                settingOption = "Use input history"
+	JapaneseUseSystemDictionary            settingOption = "Use system dictionary"
+	JapaneseNumberOfSuggestions            settingOption = "Number of suggestions"
 )
 
 // IMESettings is a wrapper around the settings app used to control the inputs settings page.
@@ -104,12 +116,16 @@ func (i *IMESettings) RemoveInputMethod(inputMethodName string) uiauto.Action {
 // Japanese is the only exemption in "IME settings in the OS setting".
 func (i *IMESettings) OpenInputMethodSetting(tconn *chrome.TestConn, im ime.InputMethod) uiauto.Action {
 	return func(ctx context.Context) error {
+		var imeSettingHeading *nodewith.Finder
+		// Japanese input settings page has not been migrated to OS Settings yet.
+		// Remove this special case once it is migrated.
 		if im.Equal(ime.JapaneseWithUSKeyboard) || im.Equal(ime.Japanese) {
-			return errors.Errorf("Open japanese settings in OS Settings is not supported %q", im)
+			imeSettingHeading = nodewith.Name("Japanese input settings").Role(role.Heading)
+		} else {
+			imeSettingHeading = nodewith.Name(im.Name).Role(role.Heading).Ancestor(ossettings.WindowFinder)
 		}
 
 		imSettingButton := nodewith.Name("Open settings page for " + im.Name)
-		imeSettingHeading := nodewith.Name(im.Name).Role(role.Heading).Ancestor(ossettings.WindowFinder)
 		successCondition := uiauto.New(tconn).WithTimeout(5 * time.Second).WaitUntilExists(imeSettingHeading)
 		return i.LeftClickUntil(imSettingButton, successCondition)(ctx)
 	}
@@ -200,5 +216,33 @@ func (i *IMESettings) setPKAutoCorrection(cr *chrome.Chrome, expected bool) uiau
 		}
 		optionFinder := nodewith.Name(string(AutoCorrection)).First()
 		return i.LeftClick(optionFinder)(ctx)
+	}
+}
+
+// SetJapaneseDropdown sets a dropdown in the Japanese settings page to the specified value.
+func SetJapaneseDropdown(ui *uiauto.Context, setting settingOption, value string) uiauto.Action {
+	dropdownFinder := nodewith.Name(string(setting)).Role(role.ComboBoxSelect)
+	dropdownItemFinder := nodewith.Name(value).Role(role.ListBoxOption)
+	return uiauto.Combine("set drop down option",
+		ui.LeftClick(dropdownFinder),
+		ui.WaitUntilExists(dropdownItemFinder),
+		ui.MakeVisible(dropdownItemFinder),
+		ui.LeftClick(dropdownItemFinder),
+	)
+}
+
+// SetJapaneseCheckbox sets a checkbox in the Japanese settings page to the specified value.
+func SetJapaneseCheckbox(ui *uiauto.Context, setting settingOption, value checked.Checked) uiauto.Action {
+	checkboxFinder := nodewith.Name(string(setting)).Role(role.CheckBox)
+	return func(ctx context.Context) error {
+		info, err := ui.Info(ctx, checkboxFinder)
+		if err != nil {
+			return errors.Wrap(err, "failed to get checkbox value")
+		}
+		if info.Checked == value {
+			testing.ContextLogf(ctx, "Skip to change %q: the current value is already %q", setting, value)
+			return nil
+		}
+		return ui.LeftClick(checkboxFinder)(ctx)
 	}
 }

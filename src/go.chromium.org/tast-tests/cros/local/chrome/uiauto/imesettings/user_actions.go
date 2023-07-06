@@ -303,3 +303,51 @@ func SetKoreanKeyboardLayout(uc *useractions.UserContext, keyboardLayout string)
 		},
 	)
 }
+
+func closeJapaneseSettings(uc *useractions.UserContext) uiauto.Action {
+	const url = "chrome-extension://jkghodnilhceideoidjikpgommlajknk/mozc_option.html"
+	return func(ctx context.Context) error {
+		if err := uc.TestAPIConn().Call(ctx, nil, `async (url) => {
+                  const query = tast.promisify(chrome.tabs.query);
+                  const remove = tast.promisify(chrome.tabs.remove);
+                  const tabs = await query({ url });
+                  console.error(tabs)
+                  // Works for any number of tabs, even if it will usually be 1.
+                  await Promise.all(tabs.map(t => remove(t.id)));
+          }`, url); err != nil {
+			return errors.Wrapf(err, "failed to close tab %q", url)
+		}
+		return nil
+	}
+}
+
+// SetJapaneseKeyboardSettings returns a user action to open the Japanese input settings and run the specified action to change the settings.
+// The input method should either be Japanese or Japanese with US keyboard
+func SetJapaneseKeyboardSettings(uc *useractions.UserContext, ui *uiauto.Context, im ime.InputMethod, settingAction uiauto.Action) uiauto.Action {
+	action := func(ctx context.Context) error {
+		setting, err := LaunchAtInputsSettingsPage(ctx, uc.TestAPIConn(), uc.Chrome())
+		if err != nil {
+			return errors.Wrap(err, "failed to launch input settings")
+		}
+
+		return uiauto.Combine("test input method settings change",
+			setting.OpenInputMethodSetting(uc.TestAPIConn(), im),
+			settingAction,
+			setting.Close,
+			closeJapaneseSettings(uc),
+		)(ctx)
+	}
+
+	return uiauto.UserAction(
+		"Change Japanese keyboard setting",
+		action,
+		uc,
+		&useractions.UserActionCfg{
+			Attributes: map[string]string{
+				useractions.AttributeFeature:      useractions.FeatureIMESpecific,
+				useractions.AttributeTestScenario: fmt.Sprintf("Change Japanese keyboard settings"),
+			},
+			Tags: []useractions.ActionTag{useractions.ActionTagEssentialInputs},
+		},
+	)
+}
