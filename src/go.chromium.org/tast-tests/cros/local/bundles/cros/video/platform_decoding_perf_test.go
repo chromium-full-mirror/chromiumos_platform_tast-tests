@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/genparams"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -17,6 +18,14 @@ import (
 // NB: If modifying any of the files or test specifications, be sure to
 // regenerate the test parameters by running the following in a chroot:
 // TAST_GENERATE_UPDATE=1 ~/trunk/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/video
+
+// getTestTimeout returns the test case timeout depending on resolution: larger resolutions need longer timeouts.
+func getTestTimeout(resolution string) time.Duration {
+	if resolution == "2160" {
+		return 4 * time.Minute
+	}
+	return 2 * time.Minute
+}
 
 func TestPlatformDecodingPerfParams(t *testing.T) {
 	type paramData struct {
@@ -27,6 +36,7 @@ func TestPlatformDecodingPerfParams(t *testing.T) {
 		SoftwareDeps       []string
 		Metadata           []string
 		Attr               []string
+		Timeout            time.Duration
 	}
 
 	var params []paramData
@@ -48,6 +58,7 @@ func TestPlatformDecodingPerfParams(t *testing.T) {
 					SoftwareDeps:       append(fillSwDeps(codec, resolution, frameRate), "vaapi"),
 					Metadata:           []string{dataPath},
 					Attr:               []string{fmt.Sprintf("graphics_video_%s", codec)},
+					Timeout:            getTestTimeout(resolution),
 				}
 				params = append(params, param)
 
@@ -59,6 +70,7 @@ func TestPlatformDecodingPerfParams(t *testing.T) {
 						File:               dataPath,
 						Metadata:           []string{dataPath},
 						Attr:               []string{fmt.Sprintf("graphics_video_%s", codec)},
+						Timeout:            getTestTimeout(resolution),
 					}
 					params = append(params, param)
 				}
@@ -71,6 +83,7 @@ func TestPlatformDecodingPerfParams(t *testing.T) {
 						File:               dataPath,
 						Metadata:           []string{dataPath},
 						Attr:               []string{fmt.Sprintf("graphics_video_%s", codec)},
+						Timeout:            getTestTimeout(resolution),
 					}
 					params = append(params, param)
 				}
@@ -85,6 +98,7 @@ func TestPlatformDecodingPerfParams(t *testing.T) {
 			decoder: {{ .Decoder | fmt }},
 			decoderArgsBuilder: {{ .DecoderArgsBuilder }},
 		},
+		Timeout: {{ .Timeout | fmt }},
 		{{ if .SoftwareDeps }}
 		ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},
 		{{ end }}
