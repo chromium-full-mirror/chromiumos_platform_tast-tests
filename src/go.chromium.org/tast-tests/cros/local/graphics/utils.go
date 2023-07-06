@@ -516,3 +516,60 @@ func DumpGraphicsDebugFiles(ctx context.Context, outDir string) error {
 	}
 	return nil
 }
+
+const (
+	waitTime      = 5 * time.Second
+	vt2Path       = "/run/frecon/vt1"
+	escapeCodeVT1 = "\\033]switchvt:0\\a"
+	escapeCodeVT2 = "\\033]switchvt:1\\a"
+	// FreconCurrentPath is the symlink path to the currently active terminal
+	FreconCurrentPath = "/run/frecon/current"
+)
+
+// OpenVT1 switches to the VT1 terminal
+func OpenVT1(ctx context.Context) error {
+	// If link does not exist we do not need to switch
+	if _, err := os.Stat(FreconCurrentPath); err != nil {
+		return nil
+	}
+	/* Frecon needs quotes around the command see the following:
+	 * https://source.corp.google.com/chromeos_public/src/platform/frecon/README.md
+	 */
+	testing.ContextLog(ctx, "Switching to VT1")
+	cmd := "printf \"" + escapeCodeVT1 + "\" > \"" + FreconCurrentPath + "\""
+	err := testexec.CommandContext(ctx, "bash", "-c", cmd).Run(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to switch to VT1 through frecon escape code")
+	}
+	// Delete link
+	os.Remove(FreconCurrentPath)
+	// GoBigSleepLint: Allowing some wait time for switching to happen.
+	// TODO(b:198837833): Replace with testing.Poll to query the current vts node.
+	if err = testing.Sleep(ctx, waitTime); err != nil {
+		return errors.Wrap(err, "error while waiting for switching to VT1")
+	}
+	return nil
+}
+
+// OpenVT2 switches to the VT2 terminal
+func OpenVT2(ctx context.Context) error {
+	/* Frecon needs quotes around the command see the following:
+	 * https://source.corp.google.com/chromeos_public/src/platform/frecon/README.md
+	 */
+	cmd := "printf \"" + escapeCodeVT2 + "\" > \"" + FreconCurrentPath + "\""
+	err := testexec.CommandContext(ctx, "ln", "-s", vt2Path, FreconCurrentPath).Run(testexec.DumpLogOnError)
+	testing.ContextLog(ctx, "Switching to VT2")
+	if err != nil {
+		return errors.Wrap(err, "failed to link VT2 through frecon")
+	}
+	err = testexec.CommandContext(ctx, "bash", "-c", cmd).Run(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to switch to VT2 through frecon escape code")
+	}
+	// GoBigSleepLint: Allowing some wait time for switching to happen.
+	// TODO(b:198837833): Replace with testing.Poll to query the current vts node.
+	if err = testing.Sleep(ctx, waitTime); err != nil {
+		return errors.Wrap(err, "error while waiting for switching to VT2")
+	}
+	return nil
+}

@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -54,63 +55,12 @@ func init() {
 }
 
 const (
-	waitTime          = 5 * time.Second
-	samenessRatio     = 0.05
-	vt2Path           = "/run/frecon/vt1"
-	escapeCodeVT1     = "\\033]switchvt:0\\a"
-	escapeCodeVT2     = "\\033]switchvt:1\\a"
-	freconCurrentPath = "/run/frecon/current"
+	samenessRatio = 0.05
 )
 
 var (
 	perceptualDiffRe = regexp.MustCompile((`(\d+) pixels are different`))
 )
-
-func openVT1(ctx context.Context) error {
-	// If link does not exist we do not need to switch
-	if _, err := os.Stat(freconCurrentPath); err != nil {
-		return nil
-	}
-	/* Frecon needs quotes around the command see the following:
-	 * https://source.corp.google.com/chromeos_public/src/platform/frecon/README.md
-	 */
-	testing.ContextLog(ctx, "Switching to VT1")
-	cmd := "printf \"" + escapeCodeVT1 + "\" > \"" + freconCurrentPath + "\""
-	err := testexec.CommandContext(ctx, "bash", "-c", cmd).Run(testexec.DumpLogOnError)
-	if err != nil {
-		return errors.Wrap(err, "failed to switch to VT1 through frecon escape code")
-	}
-	// Delete link
-	os.Remove(freconCurrentPath)
-	// GoBigSleepLint: Allowing some wait time for switching to happen.
-	// TODO(b:198837833): Replace with testing.Poll to query the current vts node.
-	if err = testing.Sleep(ctx, waitTime); err != nil {
-		return errors.Wrap(err, "error while waiting for switching to VT1")
-	}
-	return nil
-}
-
-func openVT2(ctx context.Context) error {
-	/* Frecon needs quotes around the command see the following:
-	 * https://source.corp.google.com/chromeos_public/src/platform/frecon/README.md
-	 */
-	cmd := "printf \"" + escapeCodeVT2 + "\" > \"" + freconCurrentPath + "\""
-	err := testexec.CommandContext(ctx, "ln", "-s", vt2Path, freconCurrentPath).Run(testexec.DumpLogOnError)
-	testing.ContextLog(ctx, "Switching to VT2")
-	if err != nil {
-		return errors.Wrap(err, "failed to link VT2 through frecon")
-	}
-	err = testexec.CommandContext(ctx, "bash", "-c", cmd).Run(testexec.DumpLogOnError)
-	if err != nil {
-		return errors.Wrap(err, "failed to switch to VT2 through frecon escape code")
-	}
-	// GoBigSleepLint: Allowing some wait time for switching to happen.
-	// TODO(b:198837833): Replace with testing.Poll to query the current vts node.
-	if err = testing.Sleep(ctx, waitTime); err != nil {
-		return errors.Wrap(err, "error while waiting for switching to VT2")
-	}
-	return nil
-}
 
 func savePerf(number float64, name, unit string, pv *perf.Values) {
 	direction := perf.BiggerIsBetter
@@ -183,7 +133,7 @@ func VTSwitch(ctx context.Context, s *testing.State) {
 	 * we can ignore the error since it simply means the link does not
 	 * exist
 	 */
-	testexec.CommandContext(ctx, "rm", "-rf", freconCurrentPath).Run(testexec.DumpLogOnError)
+	testexec.CommandContext(ctx, "rm", "-rf", graphics.FreconCurrentPath).Run(testexec.DumpLogOnError)
 	iterations := s.Param().(int)
 	s.Logf("No. of iterations: %d", iterations)
 	numErrors := 0
@@ -191,13 +141,13 @@ func VTSwitch(ctx context.Context, s *testing.State) {
 	_ = s.FixtValue().(*chrome.Chrome)
 
 	defer func(ctx context.Context) {
-		if err := openVT1(ctx); err != nil {
+		if err := graphics.OpenVT1(ctx); err != nil {
 			s.Fatal("Failed to open VT1: ", err)
 		}
 	}(ctx)
 
 	// Make sure we start in VT1.
-	if err := openVT1(ctx); err != nil {
+	if err := graphics.OpenVT1(ctx); err != nil {
 		s.Fatal("Failed to open VT1: ", err)
 	}
 
@@ -208,7 +158,7 @@ func VTSwitch(ctx context.Context, s *testing.State) {
 	}
 
 	// Go to VT2 and take screenshot
-	if err := openVT2(ctx); err != nil {
+	if err := graphics.OpenVT2(ctx); err != nil {
 		s.Fatal("Failed to open VT2: ", err)
 	}
 
@@ -270,23 +220,23 @@ func VTSwitch(ctx context.Context, s *testing.State) {
 	}
 	// Repeatedly switch between VT1 and VT2 images.
 	for i := 0; i < iterations; i++ {
-		if err := openVT1(ctx); err != nil {
+		if err := graphics.OpenVT1(ctx); err != nil {
 			s.Fatalf("Failed to open vt1 at iteration %d", i)
 		}
 		captureAndCompare(1, i, vt1Screenshot)
 
-		if err := openVT2(ctx); err != nil {
+		if err := graphics.OpenVT2(ctx); err != nil {
 			s.Fatalf("Failed to open vt2 at iteration %d", i)
 		}
 		captureAndCompare(2, i, vt2Screenshot)
 	}
 
 	// Switch back to main screen
-	if err := openVT1(ctx); err != nil {
+	if err := graphics.OpenVT1(ctx); err != nil {
 		s.Fatal("Failed to open VT1: ", err)
 	}
 	// Clean up link in case it exists
-	defer os.Remove(freconCurrentPath)
+	defer os.Remove(graphics.FreconCurrentPath)
 	savePerf(100.00*maxDifferenceRatio[1], "percent_VT1_screenshot_max_difference", "percent", pv)
 	savePerf(100.00*maxDifferenceRatio[2], "percent_VT2_screenshot_max_difference", "percent", pv)
 	savePerf(float64(identicalScreenshots[1]), "num_identical_vt1_screenshots", "count", pv)
