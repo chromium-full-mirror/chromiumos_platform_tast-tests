@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -18,20 +17,14 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/annotations"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/remotedesktop"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/crd"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
-)
-
-const (
-	ftlMessagingClientReceiveMessagesAnnotationID  = "136248372"
-	ftlRegistrationManagerAnnotationID             = "38256901"
-	remotingRegisterSupportHostRequestAnnotationID = "67117364"
 )
 
 func init() {
@@ -117,32 +110,8 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	for _, param := range []struct {
-		name                   string
-		shouldCrdLaunchSucceed bool
-		shouldFindAnnotation   bool
-		policy                 *policy.RemoteAccessHostAllowRemoteSupportConnections
-	}{
-		{
-			name:                   "unset",
-			shouldCrdLaunchSucceed: true,
-			shouldFindAnnotation:   true,
-			policy:                 &policy.RemoteAccessHostAllowRemoteSupportConnections{Stat: policy.StatusUnset},
-		},
-		{
-			name:                   "enabled",
-			shouldCrdLaunchSucceed: true,
-			shouldFindAnnotation:   true,
-			policy:                 &policy.RemoteAccessHostAllowRemoteSupportConnections{Val: true},
-		},
-		{
-			name:                   "disabled",
-			shouldCrdLaunchSucceed: false,
-			shouldFindAnnotation:   false,
-			policy:                 &policy.RemoteAccessHostAllowRemoteSupportConnections{Val: false},
-		},
-	} {
-		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+	for index, param := range remotedesktop.TestCases() {
+		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -150,7 +119,7 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 			}
 
 			// Update policies.
-			policies := []policy.Policy{param.policy}
+			policies := []policy.Policy{param.Policy}
 			policyBlob := policy.NewBlob()
 			policyBlob.PolicyUser = gaiaCreds.User
 			policyBlob.AddPolicies(policies)
@@ -167,7 +136,7 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to open the browser: ", err)
 			}
 			defer closeBrowser(cleanupCtx)
-			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
+			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
 			// These network calls are only made by the host in the lacros environment.
 			// In the ash clients these calls are handled by the website instead.
@@ -178,34 +147,19 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			didCrdLaunchSucceed := true
-			errContainsRemoteSupportBlockedMessage := false
-			if err := crd.Launch(ctx, br, tconn); err != nil {
-				didCrdLaunchSucceed = false
-				errContainsRemoteSupportBlockedMessage = strings.Contains(err.Error(), "Remote support connections blocked")
+			if err := remotedesktop.TriggerRemoteSupportRegistration(ctx, nil, nil, br, nil, tconn, index); err != nil {
+				s.Fatal("Failure during CRD launch: ", err)
 			}
 
 			hashCodes := []string{
-				ftlMessagingClientReceiveMessagesAnnotationID,
-				ftlRegistrationManagerAnnotationID,
-				remotingRegisterSupportHostRequestAnnotationID,
+				remotedesktop.FTLMessagingClientReceiveMessagesHashCode,
+				remotedesktop.FTLRegistrationManagerHashCode,
+				remotedesktop.RemotingRegisterSupportHostRequestHashCode,
 			}
 			if isLacros {
-				if _, err := annotations.StopOSLoggingVerifyAnnotationSet(ctx, cr, br, kb, param.shouldFindAnnotation, hashCodes); err != nil {
+				if _, err := annotations.StopOSLoggingVerifyAnnotationSet(ctx, cr, br, kb, param.ShouldFindAnnotations, hashCodes); err != nil {
 					s.Fatal("Failed to stop OS logging and verify logs: ", err)
 				}
-			}
-
-			if param.shouldCrdLaunchSucceed && didCrdLaunchSucceed == false {
-				s.Fatal("Remote desktop unexpectedly failed")
-			}
-
-			if !param.shouldCrdLaunchSucceed && didCrdLaunchSucceed == true {
-				s.Fatal("Remote desktop succeeded when expected to fail")
-			}
-
-			if !param.shouldCrdLaunchSucceed && errContainsRemoteSupportBlockedMessage == false {
-				s.Fatal("Remote desktop failure message did not include connections blocked")
 			}
 		})
 	}

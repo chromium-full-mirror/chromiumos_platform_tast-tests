@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/nearbyshare"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/passwordleakdetection"
 	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/remotedesktop"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/searchsuggestion"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/spellcheck"
 	ukm "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/urlkeydatacollection"
@@ -75,6 +76,7 @@ func init() {
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.RemoteAccessHostAllowRemoteSupportConnections{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SafeBrowsingProtectionLevel{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.SearchSuggestEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SearchSuggestEnabled{}, pci.VerifiedFunctionalityOS),
@@ -151,6 +153,17 @@ func optionalServices() []optionalService {
 			policies:              []policy.Policy{&policy.QuickAnswersUnitConversionEnabled{Val: false}},
 			trigger:               policyquickanswers.TriggerQuickAnswersUnitConversion,
 			dataFiles:             policyquickanswers.GetDataFiles(),
+		},
+		{
+			name: "remote_desktop",
+			associatedAnnotations: []string{
+				remotedesktop.FTLMessagingClientReceiveMessagesHashCode,
+				remotedesktop.FTLRegistrationManagerHashCode,
+				remotedesktop.RemotingRegisterSupportHostRequestHashCode,
+			},
+			policies:  []policy.Policy{&policy.RemoteAccessHostAllowRemoteSupportConnections{Val: false}},
+			trigger:   remotedesktop.TriggerRemoteSupportRegistration,
+			dataFiles: []string{},
 		},
 		{
 			name:                  "search_suggestion",
@@ -239,10 +252,12 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 
 	opts := []chrome.Option{
-		chrome.DMSPolicy(fdms.URL),                      // FakeDMS for setting policies.
-		chrome.GAIALogin(gaiaCreds),                     // Some of the optional service tests need a real GAIA account.
-		chrome.ExtraArgs("--log-net-log"),               // Enable netlog on startup.
-		chrome.ExtraArgs("--metrics-upload-interval=1"), // Reduce upload interval for UKM.
+		chrome.DMSPolicy(fdms.URL),                           // FakeDMS for setting policies.
+		chrome.GAIALogin(gaiaCreds),                          // Some of the optional service tests need a real GAIA account.
+		chrome.ExtraArgs("--log-net-log"),                    // Enable netlog on startup.
+		chrome.ExtraArgs("--metrics-upload-interval=1"),      // Reduce upload interval for UKM.
+		chrome.ExtraArgs("--force-devtools-available"),       // Enable developer tools for extensions.
+		chrome.LacrosExtraArgs("--force-devtools-available"), // Enable developer tools for extensions.
 	}
 	// If browser type is lacros, handle differently.
 	if s.Param().(browser.Type) == browser.TypeLacros {
