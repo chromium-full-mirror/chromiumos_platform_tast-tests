@@ -148,6 +148,8 @@ func clickExpandButtonAndWaitForAnimation(ctx context.Context, ui *uiauto.Contex
 	return nil
 }
 
+// testExpandButton verifies the notification bounds should be "toggled" (i.e., be changed and reverted) by clicking the expand button twice.
+// Here we're not interested whether the notification is expanded/collapsed by default which is the Android framework's decision.
 func testExpandButton(ctx context.Context, ui *uiauto.Context, mousePC pointer.Context) error {
 	initialBounds, err := ui.Location(ctx, arcNotificationContentView)
 	if err != nil {
@@ -158,29 +160,29 @@ func testExpandButton(ctx context.Context, ui *uiauto.Context, mousePC pointer.C
 		return errors.Wrap(err, "failed to click the expand button to collapse")
 	}
 
-	collapsedBounds, err := ui.Location(ctx, arcNotificationContentView)
+	changedBounds, err := ui.Location(ctx, arcNotificationContentView)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the notification bounds")
 	}
 
-	if collapsedBounds.Width != initialBounds.Width {
-		return errors.Wrapf(err, "the collapsed width (%d) should be equals to the initial width (%d)", collapsedBounds.Width, initialBounds.Width)
+	if changedBounds.Width != initialBounds.Width {
+		return errors.Wrapf(err, "changed width is different from initial width unexpectedly: want %v, got %v", initialBounds.Width, changedBounds.Width)
 	}
-	if collapsedBounds.Height >= initialBounds.Height {
-		return errors.Wrapf(err, "the collapsed height (%d) should be less than the initial height (%d)", collapsedBounds.Height, initialBounds.Height)
+	if changedBounds.Height == initialBounds.Height {
+		return errors.Wrapf(err, "changed height is the same as initial height unexpectedly: got %v", changedBounds.Height)
 	}
 
 	if err := clickExpandButtonAndWaitForAnimation(ctx, ui, mousePC); err != nil {
 		return errors.Wrap(err, "failed to click the expand button to expand")
 	}
 
-	expandedBounds, err := ui.Location(ctx, arcNotificationContentView)
+	revertedBounds, err := ui.Location(ctx, arcNotificationContentView)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the notification bounds")
 	}
 
-	if !expandedBounds.Equals(*initialBounds) {
-		return errors.Wrapf(err, "the expanded bounds (%v) should be equals to the initial bounds (%v)", expandedBounds, initialBounds)
+	if !revertedBounds.Equals(*initialBounds) {
+		return errors.Wrapf(err, "reverted bounds is different from initial bounds unexpectedly: want %v, got %v", initialBounds, revertedBounds)
 	}
 
 	return nil
