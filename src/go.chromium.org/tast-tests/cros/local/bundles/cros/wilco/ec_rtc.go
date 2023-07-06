@@ -107,6 +107,7 @@ func ECRTC(ctx context.Context, s *testing.State) {
 	writeECRTC(mainCtx, startTime)
 	realStartTime := time.Now()
 
+	// GoBigSleepLint: It's used to check the RTC elapsed time.
 	testing.Sleep(mainCtx, sleepTime)
 
 	elapsed := readECRTC().Sub(startTime)
