@@ -206,8 +206,8 @@ func (s *OSSettings) VerifyAPNSubpageConnectedApnUI(ctx context.Context, tconn *
 		return errors.Wrap(err, "failed to find connected APN row text")
 	}
 
-	if !strings.Contains(connectedNodeInnterText, apn) {
-		return errors.New("failed to show APN name in connected APN row text")
+	if !strings.Contains(strings.ToUpper(connectedNodeInnterText), strings.ToUpper(apn)) {
+		return errors.Errorf("failed to show APN name %q in connected APN row text; shows %q instead", connectedNodeInnterText, apn)
 	}
 
 	// If the APN is automatically detected, it is provided by the modb.
@@ -265,11 +265,27 @@ func VerifyAPNMoreActionsMenuItemsPresent(ctx context.Context, tconn *chrome.Tes
 }
 
 // VerifyApnIsVisibleInSubtext will verify that the APN shows in the subtext of cellular details page.
-func VerifyApnIsVisibleInSubtext(ctx context.Context, tconn *chrome.TestConn, apn string) error {
+func (s *OSSettings) VerifyApnIsVisibleInSubtext(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, apn string) error {
 	ui := uiauto.New(tconn)
-	apnSubpageButton := nodewith.NameContaining("Access point name").NameContaining(apn).Role(role.Link)
+	apnSubpageButton := nodewith.NameContaining("Access point name").Role(role.Link)
 
-	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(apnSubpageButton)(ctx); err != nil {
+	expr := `var node = shadowPiercingQuery(
+		'cr-link-row#apnSubpageButton div#subLabel');
+		if (node == undefined) {
+			throw new Error("APN name not found");
+		}
+		node.innerText;
+		`
+	var sublabelText string
+	if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, &sublabelText); err != nil {
+		return errors.Wrap(err, "failed to find APN in sublabel")
+	}
+
+	if !strings.Contains(strings.ToUpper(sublabelText), strings.ToUpper(apn)) {
+		return errors.Errorf("failed to find APN name of %q in sublabel; shows %q instead", apn, sublabelText)
+	}
+
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(apnSubpageButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find APN in subtext")
 	}
 	return nil
