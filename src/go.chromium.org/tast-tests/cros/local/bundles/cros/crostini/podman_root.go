@@ -58,7 +58,7 @@ func PodmanRoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to load container image: ", err)
 	}
 
-	cmd = cont.Command(ctx, "sudo", "podman", "run", oci.HelloWorldContainer)
+	cmd = cont.Command(ctx, "sudo", "podman", "run", "--pull=never", oci.HelloWorldContainer)
 	out, stderr, err := cmd.SeparatedOutput()
 	if err != nil {
 		s.Logf("stderr: %q", string(stderr))
