@@ -117,6 +117,7 @@ const (
 	ManagerTetheringAllowed               = "TetheringAllowed"
 	ManagerPropertyServiceCompleteList    = "ServiceCompleteList"
 	ManagerPropertyTetheringAllowed       = "TetheringAllowed"
+	ManagerPropertyTetheringCapabilities  = "TetheringCapabilities"
 	ManagerPropertyGlobalFTEnabled        = "WiFi.GlobalFTEnabled"
 	ManagerPropertyScanAllowRoam          = "WiFi.ScanAllowRoam"
 	ManagerPropertyDOHProviders           = "DNSProxyDOHProviders"

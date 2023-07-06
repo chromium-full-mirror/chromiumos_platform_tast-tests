@@ -760,6 +760,51 @@ func (m *Manager) WaitForUserProfile(ctx context.Context) (dbus.ObjectPath, erro
 	return path, nil
 }
 
+// GetTetheringCapabilities returns the tethering capabilities dict.
+func (m *Manager) GetTetheringCapabilities(ctx context.Context) (*dbusutil.Properties, error) {
+	p, err := m.GetProperties(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return p.GetMap(shillconst.ManagerPropertyTetheringCapabilities)
+}
+
+// GetTetheringCapabilityUpstreamTechnologies returns the upstream technologies from the tethering capabilities dict.
+func (m *Manager) GetTetheringCapabilityUpstreamTechnologies(ctx context.Context) ([]Technology, error) {
+	p, err := m.GetTetheringCapabilities(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	technologies, err := p.GetStrings(shillconst.TetheringCapUpstream)
+	var upstreamTechnologies []Technology
+	if err != nil {
+		return upstreamTechnologies, errors.Wrapf(err, "failed to get property: %s", shillconst.TetheringCapUpstream)
+	}
+	for _, t := range technologies {
+		upstreamTechnologies = append(upstreamTechnologies, Technology(t))
+	}
+	return upstreamTechnologies, nil
+}
+
+// GetTetheringCapabilityDownstreamTechnologies returns the downstream technologies from the tethering capabilities dict.
+func (m *Manager) GetTetheringCapabilityDownstreamTechnologies(ctx context.Context) ([]Technology, error) {
+	p, err := m.GetTetheringCapabilities(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	technologies, err := p.GetStrings(shillconst.TetheringCapDownstream)
+	var downstreamTechnologies []Technology
+	if err != nil {
+		return downstreamTechnologies, errors.Wrapf(err, "failed to get property: %s", shillconst.TetheringCapDownstream)
+	}
+	for _, t := range technologies {
+		downstreamTechnologies = append(downstreamTechnologies, Technology(t))
+	}
+	return downstreamTechnologies, nil
+}
+
 // ConfigureTethering is a wrapper for conveniently setting of tethering configuration.
 func (m *Manager) ConfigureTethering(ctx context.Context, props map[string]interface{}) error {
 	return m.SetProperty(ctx, "TetheringConfig", props)
