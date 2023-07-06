@@ -33,7 +33,7 @@ func NetworkListenersNonARC(ctx context.Context, s *testing.State) {
 	cr := s.PreValue().(*chrome.Chrome)
 	ls := netlisten.Common(cr)
 	ls["*:22"] = "/usr/sbin/sshd"
-	ls["*:9100"] = "/usr/local/sbin/node_exporter"
+	ls["*:9090"] = "/usr/local/sbin/node_exporter"
 
 	if moblab.IsMoblab() {
 		ls["*:80"] = "/usr/sbin/apache2"
