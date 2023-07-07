@@ -71,12 +71,16 @@ func init() {
 			Name: "lan_connectivity",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineLanConnectivity),
 		}, {
+			// Cannot be added to DiagnosticsPass.* since the result would be
+			// "Not run" in lab's network. See b/286497166.
 			Name: "signal_strength",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineSignalStrength),
 		}, {
 			Name: "gateway_can_be_pinged",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineGatewayCanBePinged),
 		}, {
+			// Cannot be added to DiagnosticsPass.* since the result would be
+			// "Not run" in lab's network. See b/286497147.
 			Name: "has_secure_wifi_connection",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHasSecureWifiConnection),
 		}, {

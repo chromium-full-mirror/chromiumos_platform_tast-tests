@@ -83,16 +83,8 @@ func init() {
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineLanConnectivity),
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name:      "signal_strength",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineSignalStrength),
-			ExtraAttr: []string{"informational"},
-		}, {
 			Name:      "gateway_can_be_pinged",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineGatewayCanBePinged),
-			ExtraAttr: []string{"informational"},
-		}, {
-			Name:      "has_secure_wifi_connection",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineHasSecureWifiConnection),
 			ExtraAttr: []string{"informational"},
 		}, {
 			Name:      "dns_resolver_present",
