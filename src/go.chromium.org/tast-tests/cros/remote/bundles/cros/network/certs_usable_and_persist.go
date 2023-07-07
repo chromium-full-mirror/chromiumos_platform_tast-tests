@@ -9,26 +9,27 @@ import (
 	"fmt"
 	"time"
 
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/rpc"
-	"go.chromium.org/tast/core/ssh"
-	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpaeap"
+	cert "go.chromium.org/tast-tests/cros/remote/network"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/network"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CertsUsableAfterResume,
+		Func:         CertsUsableAndPersist,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Verify that installed certificates are usable after suspend and resume",
 		Contacts: []string{
@@ -36,6 +37,9 @@ func init() {
 			"chromeos-connectivity-engprod@google.com",
 			"shijinabraham@google.com",
 			"chadduffin@chromium.org",
+			"edgar.chang@cienet.com",
+			"cienet-development@googlegroups.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
@@ -49,6 +53,7 @@ func init() {
 		},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("bruce", "sona", "syndra")),
 		SoftwareDeps: []string{"chrome"},
+		VarDeps:      certsUsableAndPersistVars(),
 		Fixture:      "wificellFixt",
 		Params: []testing.Param{
 			{
@@ -60,24 +65,19 @@ func init() {
 	})
 }
 
-// CertsUsableAfterResume verifies that installed certificates are usable after suspend and resume.
-func CertsUsableAfterResume(ctx context.Context, s *testing.State) {
-	var (
-		// Organization info isn't available in this certs, ChromeOS will use its common name instead.
-		clientOrgName = certificate.TestCert1().ClientCred.Info.CommonName
-		caOrgName     = certificate.TestCert1().CACred.Info.CommonName
-	)
+// CertsUsableAndPersist verifies that installed certificates are usable after suspend and resume.
+func CertsUsableAndPersist(ctx context.Context, s *testing.State) {
+	testCerts := cert.LoadCertsFromVars()
 	const clientCertPassword = "12345"
 
 	tf := s.FixtValue().(*wificell.TestFixture)
 
 	opt := []hostapd.Option{hostapd.Mode(hostapd.Mode80211g), hostapd.Channel(1)}
-	testCert := certificate.TestCert1()
 	cfg := wpaeap.NewConfigFactory(
-		testCert.CACred.Cert,
-		testCert.ServerCred,
-		wpaeap.ClientCACert(testCert.CACred.Cert),
-		wpaeap.ClientCred(testCert.ClientCred),
+		testCerts.CACred.Cert,
+		testCerts.ServerCred,
+		wpaeap.ClientCACert(testCerts.CACred.Cert),
+		wpaeap.ClientCred(testCerts.ClientCred),
 	)
 
 	ap, err := tf.ConfigureAP(ctx, opt, cfg)
@@ -133,19 +133,19 @@ func CertsUsableAfterResume(ctx context.Context, s *testing.State) {
 				network.Certificate_CLIENT: {
 					Certificate: &network.Certificate{
 						Type:         network.Certificate_CLIENT,
-						Name:         clientOrgName,
-						Organization: clientOrgName,
+						Name:         testCerts.ClientCred.Info.CommonName,
+						Organization: testCerts.ClientCred.Info.Organization,
 						Password:     clientCertPassword,
 					},
-					CertStore: testCert,
+					CertStore: testCerts,
 				},
 				network.Certificate_CA: {
 					Certificate: &network.Certificate{
 						Type:         network.Certificate_CA,
-						Name:         caOrgName,
-						Organization: caOrgName,
+						Name:         testCerts.CACred.Info.CommonName,
+						Organization: testCerts.CACred.Info.Organization,
 					},
-					CertStore: testCert,
+					CertStore: testCerts,
 				},
 			},
 		}, {
@@ -154,18 +154,18 @@ func CertsUsableAfterResume(ctx context.Context, s *testing.State) {
 				network.Certificate_CLIENT: {
 					Certificate: &network.Certificate{
 						Type:         network.Certificate_CLIENT,
-						Name:         clientOrgName,
-						Organization: clientOrgName,
+						Name:         testCerts.ClientCred.Info.CommonName,
+						Organization: testCerts.ClientCred.Info.Organization,
 					},
-					CertStore: testCert,
+					CertStore: testCerts,
 				},
 				network.Certificate_CA: {
 					Certificate: &network.Certificate{
 						Type:         network.Certificate_CA,
-						Name:         caOrgName,
-						Organization: caOrgName,
+						Name:         testCerts.CACred.Info.CommonName,
+						Organization: testCerts.CACred.Info.Organization,
 					},
-					CertStore: testCert,
+					CertStore: testCerts,
 				},
 			},
 		},
@@ -192,11 +192,11 @@ func CertsUsableAfterResume(ctx context.Context, s *testing.State) {
 				Security: &wifi.JoinWifiRequest_EapTls{
 					EapTls: &wifi.JoinWifiRequest_SecurityEapTls{
 						ClientCert: fmt.Sprintf("%s [%s]",
-							test.certDetails[network.Certificate_CA].Organization,
-							test.certDetails[network.Certificate_CLIENT].Organization),
+							test.certDetails[network.Certificate_CA].Name,
+							test.certDetails[network.Certificate_CLIENT].Name),
 						CaCert: fmt.Sprintf("%s [%s]",
-							test.certDetails[network.Certificate_CA].Organization,
-							test.certDetails[network.Certificate_CA].Organization),
+							test.certDetails[network.Certificate_CA].Name,
+							test.certDetails[network.Certificate_CA].Name),
 					},
 				},
 			}); err != nil {
@@ -304,4 +304,14 @@ func dumpUITreeWithScreenshotOnError(ctx context.Context, rpcClient *rpc.Client,
 	if hasError() {
 		ui.NewChromeUIServiceClient(rpcClient.Conn).DumpUITreeWithScreenshotToFile(ctx, &ui.DumpUITreeWithScreenshotToFileRequest{FilePrefix: filePrefix})
 	}
+}
+
+func certsUsableAndPersistVars() []string {
+	variables := make([]string, 0, 12)
+
+	variables = append(variables, cert.CaCertificateVariables...)
+	variables = append(variables, cert.ServerCertificateVariables...)
+	variables = append(variables, cert.ClientCertificateVariables...)
+
+	return variables
 }
