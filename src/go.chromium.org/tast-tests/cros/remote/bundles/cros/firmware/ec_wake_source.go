@@ -55,7 +55,7 @@ func init() {
 			},
 			{
 				Name:              "keypress",
-				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard(), hwdep.SkipOnFormFactor(hwdep.Detachable)),
 				Val:               wakeByKeyboard,
 			},
 			{
