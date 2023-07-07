@@ -77,8 +77,8 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 			Uri:         "socket://" + printerAddr + "/ipp/fake_printer",
 			PpdContents: ppd}); err != nil {
 		s.Error("Failed to call CupsAddManuallyConfiguredPrinter: ", err)
-	} else if printscanmgr.CUPSResult(result.Result) != printscanmgr.CUPSSuccess {
-		s.Error("Could not set up valid printer: ", printscanmgr.CUPSResult(result.Result))
+	} else if result.Result != ppb.AddPrinterResult_ADD_PRINTER_RESULT_SUCCESS {
+		s.Error("Could not set up valid printer: ", result.Result)
 	}
 
 	s.Log("Verifying that an error is returned for lpadmin failure")
@@ -89,8 +89,8 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 			Uri:         "socket://" + printerAddr + "/ipp/fake_printer",
 			PpdContents: ppd}); err != nil {
 		s.Error("Failed to call CupsAddManuallyConfiguredPrinter: ", err)
-	} else if printscanmgr.CUPSResult(result.Result) != printscanmgr.CUPSFatal {
-		s.Error("Names with spaces should be rejected by CUPS: ", printscanmgr.CUPSResult(result.Result))
+	} else if result.Result != ppb.AddPrinterResult_ADD_PRINTER_RESULT_CUPS_FATAL {
+		s.Error("Names with spaces should be rejected by CUPS: ", result.Result)
 	}
 
 	s.Log("Validating that malformed PPDs are rejected")
@@ -102,8 +102,8 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 			Uri:         "socket://" + printerAddr + "/ipp/fake_printer",
 			PpdContents: badPPD}); err != nil {
 		s.Error("Failed to call CupsAddManuallyConfiguredPrinter: ", err)
-	} else if printscanmgr.CUPSResult(result.Result) != printscanmgr.CUPSInvalidPPD {
-		s.Error("Incorrect error code received: ", printscanmgr.CUPSResult(result.Result))
+	} else if result.Result != ppb.AddPrinterResult_ADD_PRINTER_RESULT_CUPS_INVALID_PPD {
+		s.Error("Incorrect error code received: ", result.Result)
 	}
 
 	s.Log("Attempting to add an unreachable autoconfigured printer")
@@ -113,8 +113,8 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 			Name: "AutoconfPrinter",
 			Uri:  "ipp://" + printerAddr + "/ipp/print"}); err != nil {
 		s.Error("Failed to call CupsAddAutoConfiguredPrinter: ", err)
-	} else if printscanmgr.CUPSResult(result.Result) != printscanmgr.CUPSPrinterUnreachable {
-		s.Error("Incorrect error code received: ", printscanmgr.CUPSResult(result.Result))
+	} else if result.Result != ppb.AddPrinterResult_ADD_PRINTER_RESULT_CUPS_PRINTER_UNREACHABLE {
+		s.Error("Incorrect error code received: ", result.Result)
 	}
 
 	// Make sure that the HTTP server on port 7001 is ready.
@@ -140,7 +140,7 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 			Name: "NotAPrinter",
 			Uri:  "ipp://localhost:7001/bad_request"}); err != nil {
 		s.Error("Calling printer setup crashed: ", err)
-	} else if printscanmgr.CUPSResult(result.Result) != printscanmgr.CUPSPrinterWrongResponse {
-		s.Error("Incorrect error code received: ", printscanmgr.CUPSResult(result.Result))
+	} else if result.Result != ppb.AddPrinterResult_ADD_PRINTER_RESULT_CUPS_PRINTER_WRONG_RESPONSE {
+		s.Error("Incorrect error code received: ", result.Result)
 	}
 }

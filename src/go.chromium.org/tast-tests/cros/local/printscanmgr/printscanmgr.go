@@ -8,7 +8,6 @@ package printscanmgr
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
@@ -23,87 +22,6 @@ const (
 	dbusPath      = "/org/chromium/printscanmgr"
 	dbusInterface = "org.chromium.printscanmgr"
 )
-
-// CUPSResult is a status code for the CUPS related printscanmgr D-Bus methods.
-// Values are from
-// src/platform2/system_api/dbus/printscanmgr/printscanmgr_service.proto
-type CUPSResult int32
-
-const (
-	// CUPSUnspecified indicates an error occurred.
-	CUPSUnspecified CUPSResult = 0
-
-	// CUPSSuccess indicates the operation succeeded.
-	CUPSSuccess CUPSResult = 1
-
-	// CUPSFatal indicates the operation failed for an unknown reason.
-	CUPSFatal CUPSResult = 2
-
-	// CUPSInvalidPPD indicates the operation failed because the given PPD is
-	// invalid.
-	CUPSInvalidPPD CUPSResult = 3
-
-	// CUPSLPAdminFailure indicates the operation failed because the lpadmin
-	// command failed.
-	CUPSLPAdminFailure CUPSResult = 4
-
-	// CUPSAutoconfFailure indicates the operation failed due to autoconf
-	// failures.
-	CUPSAutoconfFailure CUPSResult = 5
-
-	// CUPSBadURI indicates that the operation failed because printscanmgr
-	// rejected the printer URI.
-	CUPSBadURI CUPSResult = 6
-
-	// CUPSIOError indicates that the operation failed because of an I/O error.
-	CUPSIOError CUPSResult = 7
-
-	// CUPSMemoryAllocError indicates that the operation failed because of a
-	// memory allocation error.
-	CUPSMemoryAllocError CUPSResult = 8
-
-	// CUPSPrinterUnreachable indicates that the printer did not respond.
-	CUPSPrinterUnreachable CUPSResult = 9
-
-	// CUPSPrinterWrongResponse indicates that the printer sent an unexpected
-	// response.
-	CUPSPrinterWrongResponse CUPSResult = 10
-
-	// CUPSPrinterNotAutoconf indicates that the operation failed because the
-	// printer is not autoconfigurable as it supposed to be.
-	CUPSPrinterNotAutoconf CUPSResult = 11
-)
-
-func (r CUPSResult) String() string {
-	switch r {
-	case CUPSUnspecified:
-		return fmt.Sprintf("CUPSUnspecified(%d)", r)
-	case CUPSSuccess:
-		return fmt.Sprintf("CUPSSuccess(%d)", r)
-	case CUPSFatal:
-		return fmt.Sprintf("CUPSFatal(%d)", r)
-	case CUPSInvalidPPD:
-		return fmt.Sprintf("CUPSInvalidPPD(%d)", r)
-	case CUPSLPAdminFailure:
-		return fmt.Sprintf("CUPSLPAdminFailure(%d)", r)
-	case CUPSAutoconfFailure:
-		return fmt.Sprintf("CUPSAutoconfFailure(%d)", r)
-	case CUPSBadURI:
-		return fmt.Sprintf("CUPSBadURI(%d)", r)
-	case CUPSIOError:
-		return fmt.Sprintf("CUPSIOError(%d)", r)
-	case CUPSMemoryAllocError:
-		return fmt.Sprintf("CUPSMemoryAllocError(%d)", r)
-	case CUPSPrinterUnreachable:
-		return fmt.Sprintf("CUPSPrinterUnreachable(%d)", r)
-	case CUPSPrinterWrongResponse:
-		return fmt.Sprintf("CUPSPrinterWrongResponse(%d)", r)
-	case CUPSPrinterNotAutoconf:
-		return fmt.Sprintf("CUPSPrinterNotAutoconf(%d)", r)
-	default:
-		return fmt.Sprintf("Unknown(%d)", r)
-	}
-}
 
 // Printscanmgr is used to interact with the printscanmgr process over D-Bus.
 // For a detailed specification of each D-Bus method, see
