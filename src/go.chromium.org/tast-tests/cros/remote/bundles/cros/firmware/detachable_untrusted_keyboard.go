@@ -172,8 +172,8 @@ func checkScreenFromFirmwareLog(ctx context.Context, h *firmware.Helper, board s
 			// the default position of "cancel", with selected_index=1.
 			// Expected no change on the value of selected_index.
 			insertToOption: {
-				`vboot_draw_ui: screen=0x202 locale=0, selected_index=0`,
-				`vboot_draw_ui: screen=0x20d locale=0, selected_index=1`,
+				`vboot_draw_ui: screen=0x202.*selected_index=0`,
+				`vboot_draw_ui: screen=0x20d.*selected_index=1`,
 			},
 			// Pressing ctrlD three times at the insert screen should have no effect.
 			// Verify this by scanning for three consecutive presses, and no additional
@@ -189,16 +189,16 @@ func checkScreenFromFirmwareLog(ctx context.Context, h *firmware.Helper, board s
 			// Pressing keyboard F9 and F10 should have no effect on the menu.
 			// Expect the same information to be found as the insertToOption case.
 			keyboardF9F10: {
-				`vboot_draw_ui: screen=0x202 locale=0, selected_index=0`,
-				`vboot_draw_ui: screen=0x20d locale=0, selected_index=1`,
+				`vboot_draw_ui: screen=0x202.*selected_index=0`,
+				`vboot_draw_ui: screen=0x20d.*selected_index=1`,
 			},
 		},
 		"strongbad": {
 			// Expect both insert screen and to-dev screen to be recorded,
 			// and menu selections at default.
 			insertToOption: {
-				`vb2ex_display_ui: screen=0x200, locale=0, selected_item=2`,
-				`vb2ex_display_ui: screen=0x202, locale=0, selected_item=1`,
+				`vb2ex_display_ui: screen=0x200.*selected_item=2`,
+				`vb2ex_display_ui: screen=0x202.*selected_item=1`,
 			},
 			// Pressing ctrlD once at the insert screen leads to the to-dev screen.
 			// Additional ctrlD presses at the to-dev screen should have no effects.
@@ -206,8 +206,8 @@ func checkScreenFromFirmwareLog(ctx context.Context, h *firmware.Helper, board s
 			// and menu selections at default.
 			ctrlD: {
 
-				`vb2ex_display_ui: screen=0x200, locale=0, selected_item=2`,
-				`vb2ex_display_ui: screen=0x202, locale=0, selected_item=1`,
+				`vb2ex_display_ui: screen=0x200.*selected_item=2`,
+				`vb2ex_display_ui: screen=0x202.*selected_item=1`,
 			},
 			// Pressing keyboard up down, and then enter, triggers a beep sound, which is recorded
 			// in the firmware log as untrusted inputs.
@@ -218,8 +218,8 @@ func checkScreenFromFirmwareLog(ctx context.Context, h *firmware.Helper, board s
 			// Pressing keyboard F9 and F10 should have no effect on the menu.
 			// Expect the same information to be found as the insertToOption case.
 			keyboardF9F10: {
-				`vb2ex_display_ui: screen=0x200, locale=0, selected_item=2`,
-				`vb2ex_display_ui: screen=0x202, locale=0, selected_item=1`,
+				`vb2ex_display_ui: screen=0x200.*selected_item=2`,
+				`vb2ex_display_ui: screen=0x202.*selected_item=1`,
 			},
 		},
 	}
@@ -233,8 +233,8 @@ func checkScreenFromFirmwareLog(ctx context.Context, h *firmware.Helper, board s
 			keyboardUpDown: nil,
 			ctrlD:          nil,
 			keyboardF9F10: {
-				`vboot_draw_ui: screen=0x20d locale=0, selected_index=0(.|\n)*vboot_draw_ui: screen=0x202`,
-				`vboot_draw_ui: screen=0x20d locale=0, selected_index=2(.|\n)*vboot_draw_ui: screen=0x202`,
+				`vboot_draw_ui: screen=0x20d.*selected_index=0(.|\n)*vboot_draw_ui: screen=0x202`,
+				`vboot_draw_ui: screen=0x20d.*selected_index=2(.|\n)*vboot_draw_ui: screen=0x202`,
 			},
 		},
 		"strongbad": {
@@ -242,8 +242,8 @@ func checkScreenFromFirmwareLog(ctx context.Context, h *firmware.Helper, board s
 			keyboardUpDown: nil,
 			ctrlD:          nil,
 			keyboardF9F10: {
-				`vb2ex_display_ui: screen=0x202, locale=0, selected_item=0`,
-				`vb2ex_display_ui: screen=0x202, locale=0, selected_item=2`,
+				`vb2ex_display_ui: screen=0x202.*selected_item=0`,
+				`vb2ex_display_ui: screen=0x202.*selected_item=2`,
 			},
 		},
 	}

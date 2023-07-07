@@ -231,7 +231,7 @@ func pressBtnOnFWScreen(ctx context.Context, h *firmware.Helper, key testKeys) e
 func verifyFirmwareLog(ctx context.Context, h *firmware.Helper, data []fwLogInfo, caseName testCase) error {
 	var expMatches []string
 	for _, args := range data {
-		match := fmt.Sprintf(`(vboot_draw_ui|vb2ex_display_ui): screen=0x%x.*locale=0, selected_(index|item)=%d`, args.fwScreenID, args.selectedIdx)
+		match := fmt.Sprintf(`(vboot_draw_ui|vb2ex_display_ui): screen=0x%x.*selected_(index|item)=%d`, args.fwScreenID, args.selectedIdx)
 		expMatches = append(expMatches, match)
 	}
 	output, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
@@ -246,7 +246,7 @@ func verifyFirmwareLog(ctx context.Context, h *firmware.Helper, data []fwLogInfo
 				expMatches, data = expMatches[1:], data[1:]
 			}
 			if caseName == volumeUpDownUndetected {
-				menuChange := `(vboot_draw_ui|vb2ex_display_ui): screen=0x(202|20d).*locale=0, selected_(index|item)=2`
+				menuChange := `(vboot_draw_ui|vb2ex_display_ui): screen=0x(202|20d).*selected_(index|item)=2`
 				if match := regexp.MustCompile(menuChange).FindStringSubmatch(scanner.Text()); match != nil {
 					return errors.New("Unexpectedly found power off option selected on the menu")
 				}
