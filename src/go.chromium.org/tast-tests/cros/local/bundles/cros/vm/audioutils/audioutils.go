@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
@@ -33,7 +34,7 @@ type Config struct {
 
 // RunCrosvm runs crosvm and the crosvm vhost user device if required.
 func RunCrosvm(ctx context.Context, kernelPath, kernelLogPath string, kernelArgs []string, config Config) error {
-	crosvmCmd, devCmd, cleanupFunc, err := crosvmCmd(ctx, kernelPath, kernelLogPath, kernelArgs, config)
+	crosvmCmd, devCmd, cleanupFunc, vhostSockFile, err := crosvmCmd(ctx, kernelPath, kernelLogPath, kernelArgs, config)
 	if err != nil {
 		return errors.Wrap(err, "failed to get crosvm cmd")
 	}
@@ -43,6 +44,19 @@ func RunCrosvm(ctx context.Context, kernelPath, kernelLogPath string, kernelArgs
 		testing.ContextLog(ctx, "Starting crosvm device")
 		if err = devCmd.Start(); err != nil {
 			return errors.Wrap(err, "failed to start crosvm device")
+		}
+
+		// Wait until vhost socket file is created
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if _, err := os.Stat(vhostSockFile); err != nil {
+				return errors.Wrap(err, "failed to check the existence of vhost socket file")
+			}
+			return nil // Found vhost socket file
+		}, &testing.PollOptions{
+			Interval: 100 * time.Millisecond,
+			Timeout:  3 * time.Second,
+		}); err != nil {
+			return errors.Wrap(err, "failed to wait for vhost socket file")
 		}
 	}
 
@@ -61,7 +75,7 @@ func RunCrosvm(ctx context.Context, kernelPath, kernelLogPath string, kernelArgs
 }
 
 // crosvmCmd setups the crosvm and device command for audio device testing.
-func crosvmCmd(ctx context.Context, kernelPath, kernelLogPath string, kernelArgs []string, config Config) (crosvmCmd, devCmd *testexec.Cmd, cleanupFunc func() error, retErr error) {
+func crosvmCmd(ctx context.Context, kernelPath, kernelLogPath string, kernelArgs []string, config Config) (crosvmCmd, devCmd *testexec.Cmd, cleanupFunc func() error, vhostSockFile string, retErr error) {
 	cleanupFunc = func() error { return nil }
 	defer func() {
 		if retErr != nil {
@@ -74,16 +88,16 @@ func crosvmCmd(ctx context.Context, kernelPath, kernelLogPath string, kernelArgs
 	if len(config.VhostUserArgs) > 0 {
 		tempDir, err := ioutil.TempDir("/usr/local/tmp", "CrosvmCmd.")
 		if err != nil {
-			return nil, nil, cleanupFunc, errors.Wrap(err, "failed to create temporary directory")
+			return nil, nil, cleanupFunc, "", errors.Wrap(err, "failed to create temporary directory")
 		}
 		cleanupFunc = func() error {
 			return os.RemoveAll(tempDir)
 		}
-		sock := filepath.Join(tempDir, "vhost-user-snd.sock")
+		vhostSockFile = filepath.Join(tempDir, "vhost-user-snd.sock")
 		deviceArgs := append([]string{"device"}, config.VhostUserArgs...)
-		deviceArgs = append(deviceArgs, "--socket", sock)
+		deviceArgs = append(deviceArgs, "--socket", vhostSockFile)
 		devCmd = testexec.CommandContext(ctx, "crosvm", deviceArgs...)
-		config.CrosvmArgs = append(config.CrosvmArgs, "--vhost-user-snd", sock)
+		config.CrosvmArgs = append(config.CrosvmArgs, "--vhost-user-snd", vhostSockFile)
 	}
 
 	kernelParams := []string{
@@ -115,11 +129,11 @@ func crosvmCmd(ctx context.Context, kernelPath, kernelLogPath string, kernelArgs
 		// vhost-user device does not need this as it doesn't involve minijail.
 		crasGrp, err := user.LookupGroup("cras")
 		if err != nil {
-			return nil, nil, cleanupFunc, errors.Wrap(err, "failed to find group id for cras")
+			return nil, nil, cleanupFunc, "", errors.Wrap(err, "failed to find group id for cras")
 		}
 		crasGrpID, err := strconv.ParseUint(crasGrp.Gid, 10, 32)
 		if err != nil {
-			return nil, nil, cleanupFunc, errors.Wrap(err, "failed to convert cras grp id to integer")
+			return nil, nil, cleanupFunc, "", errors.Wrap(err, "failed to convert cras grp id to integer")
 		}
 		crosvmCmd.Cred(syscall.Credential{
 			Uid:         0,
@@ -129,5 +143,5 @@ func crosvmCmd(ctx context.Context, kernelPath, kernelLogPath string, kernelArgs
 		})
 	}
 
-	return crosvmCmd, devCmd, cleanupFunc, nil
+	return crosvmCmd, devCmd, cleanupFunc, vhostSockFile, nil
 }
