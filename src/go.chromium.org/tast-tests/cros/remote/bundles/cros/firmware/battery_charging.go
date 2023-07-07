@@ -154,14 +154,14 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 			if err := cmd.Start(); err != nil {
 				return err
 			}
-			// Check for DUT in S0ix, S3, S5, or G3 power state.
-			if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 1*time.Minute, "S0ix", "S3", "S5", "G3"); err != nil {
+			// Check for DUT's power state at S0ix, or S3.
+			if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 1*time.Minute, "S0ix", "S3"); err != nil {
 				// Stainless reported some DUTs at S0 and unreachable after suspend.
 				// Continue the test if DUT is at the unreachable state.
 				if !h.DUT.Connected(ctx) {
 					return nil
 				}
-				return errors.Wrap(err, "failed to get power state at S0ix, S3, S5, or G3")
+				return errors.Wrap(err, "failed to get power state at S0ix or S3")
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: 3 * time.Minute}); err != nil {

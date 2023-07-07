@@ -33,7 +33,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
-		Timeout:      10 * time.Minute,
+		Timeout:      8 * time.Minute,
 	})
 }
 
@@ -47,12 +47,9 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 	}
 
 	logPath := "/var/log/messages"
-	if err := h.DUT.Conn().CommandContext(ctx, "rm", "-f", logPath).Run(); err != nil {
+	s.Logf("Cleaning %s", logPath)
+	if err := h.DUT.Conn().CommandContext(ctx, "truncate", "--size=0", logPath).Run(); err != nil {
 		s.Fatal("Failed to remove kernel message file: ", err)
-	}
-
-	if err := h.DUT.Reboot(ctx); err != nil {
-		s.Fatal("Failed to reboot DUT: ", err)
 	}
 
 	// Get the number of usb buses.
@@ -73,9 +70,9 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 	if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
 		s.Fatal("Failed to wait DUT unreachable: ", err)
 	}
-	s.Log("Checking for S0ix, S3, S5, or G3 powerstate")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0ix", "S3", "S5", "G3"); err != nil {
-		s.Fatal("Failed to get power state at S0ix, S3, S5, or G3, but found dut disconnected: ", err)
+	s.Log("Checking for S0ix or S3 powerstate")
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0ix", "S3"); err != nil {
+		s.Fatal("Failed to get power state at S0ix or S3, but found dut disconnected: ", err)
 	}
 
 	wakeupKey := servo.Enter
@@ -88,7 +85,7 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 	}
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancelWaitConnect()
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		s.Fatal("Failed to reconnect to DUT: ", err)
 	}
 
