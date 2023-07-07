@@ -100,7 +100,9 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
 		}, bootMetrics.enabledScreenDuration.Seconds())
-		bootMetrics.appKills.AppendPerfMetrics(perfValues, "")
+		if bootMetrics.appKills != nil {
+			bootMetrics.appKills.AppendPerfMetrics(perfValues, "")
+		}
 	}
 
 	if err := perfValues.Save(s.OutDir()); err != nil {
@@ -239,7 +241,7 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 
 	result.appKills, err = arc.GetAppKills(ctx, tconn)
 	if err != nil {
-		return &result, errors.Wrap(err, "failed to get app kill counts")
+		testing.ContextLog(ctx, "Failed to collect ARC app kill counts: ", err)
 	}
 
 	return &result, nil

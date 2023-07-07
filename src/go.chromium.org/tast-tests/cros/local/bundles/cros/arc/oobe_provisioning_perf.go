@@ -133,7 +133,9 @@ func OobeProvisioningPerf(ctx context.Context, s *testing.State) {
 		}
 
 		provisioningTimes = append(provisioningTimes, oobeMetrics.provisioningTime)
-		appKills = append(appKills, oobeMetrics.appKills)
+		if oobeMetrics.appKills != nil {
+			appKills = append(appKills, oobeMetrics.appKills)
+		}
 	}
 
 	perfValues := perf.NewValues()
@@ -195,7 +197,7 @@ func oobeProvisioningPerfIteration(ctx context.Context, s *testing.State, gaia c
 
 	result.appKills, err = arc.GetAppKills(ctx, tconn)
 	if err != nil {
-		return &result, errors.Wrap(err, "failed to get app kill counts")
+		testing.ContextLog(ctx, "Failed to collect ARC app kill counts: ", err)
 	}
 
 	return &result, nil

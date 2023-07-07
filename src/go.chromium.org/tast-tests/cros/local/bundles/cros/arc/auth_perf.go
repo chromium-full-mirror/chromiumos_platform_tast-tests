@@ -303,7 +303,9 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 		networkWaitTimes = append(networkWaitTimes, v.networkWaitTime)
 		signInTimes = append(signInTimes, v.signInTime)
 		bootTimes = append(bootTimes, v.bootTime)
-		appKills = append(appKills, v.appKills)
+		if v.appKills != nil {
+			appKills = append(appKills, v.appKills)
+		}
 		if v.energyUsage != nil {
 			energyUsage = append(energyUsage, v.energyUsage)
 		}
@@ -528,7 +530,7 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 
 	v.appKills, err = arc.GetAppKills(ctx, tconn)
 	if err != nil {
-		return v, errors.Wrap(err, "failed to get app kill counts")
+		s.Log("Failed to collect ARC app kill counts: ", err)
 	}
 
 	return v, nil
