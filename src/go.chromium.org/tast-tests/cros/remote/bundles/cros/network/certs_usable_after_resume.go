@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/network"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -46,6 +47,7 @@ func init() {
 			"tast.cros.wifi.WifiService",
 			wificell.ShillServiceName,
 		},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("bruce", "sona", "syndra")),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "wificellFixt",
 		Params: []testing.Param{
