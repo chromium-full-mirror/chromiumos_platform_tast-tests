@@ -30,7 +30,7 @@ func init() {
 			"ti50-core@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab"},
+		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_nightly"},
 		Params: []testing.Param{{
 			Name:      "sta",
 			Val:       true, // hasKernelTests

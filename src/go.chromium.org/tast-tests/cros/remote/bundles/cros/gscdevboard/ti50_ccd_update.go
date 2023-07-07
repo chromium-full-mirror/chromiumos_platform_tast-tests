@@ -41,7 +41,7 @@ func init() {
 			"ti50-core@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_image_ti50"},
+		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.Ti50CcdOpen,
 	})
 }
