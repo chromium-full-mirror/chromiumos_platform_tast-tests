@@ -11,12 +11,11 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/hardware/iio"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/hardware/iioservice"
 	"go.chromium.org/tast/core/testing"
 )
 
-const onErrorOccurred = "OnErrorOccurred:"
 const latencyExceedsTolerance = "Max latency exceeds latency tolerance."
-const succeedReadingSamples = "Number of success reads"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -66,11 +65,11 @@ func SensorIioservice(ctx context.Context, s *testing.State) {
 		}
 
 		strOut = string(out)
-		if strings.Contains(strOut, onErrorOccurred) {
+		if strings.Contains(strOut, iioservice.OnErrorOccurredText) {
 			s.Error("OnErrorOccurred: ", sn.Name)
 		} else if strings.Contains(strOut, latencyExceedsTolerance) {
 			s.Error("Latency Exceeds Tolerance: ", sn.Name)
-		} else if !strings.Contains(strOut, succeedReadingSamples) {
+		} else if !strings.Contains(strOut, iioservice.SucceedReadingText) {
 			s.Error("Not enough successful readsamples on sensor: ", sn.Name)
 		} else {
 			s.Logf("Test passed on device name: %v, id: %v", sn.Name, sn.IioID)
