@@ -383,3 +383,8 @@ func (c *Conn) GetMediaPropertiesChangedObserver(ctx context.Context) (observer 
 	}
 	return observer, nil
 }
+
+// EnableBypassCSP enable bypassing CSP when initializing the CSP.
+func (c *Conn) EnableBypassCSP(ctx context.Context) error {
+	return c.cl.Page.SetBypassCSP(ctx, page.NewSetBypassCSPArgs(true))
+}

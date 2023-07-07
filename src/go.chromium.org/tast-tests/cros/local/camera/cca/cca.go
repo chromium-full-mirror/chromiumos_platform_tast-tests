@@ -1506,3 +1506,30 @@ func (f *FPSObserver) Stop(ctx context.Context) error {
 	defer f.jsObj.Release(ctx)
 	return f.jsObj.Call(ctx, nil, "function() { return this.stop(); }")
 }
+
+// EnableBypassCSP enables bypassing CSP. A refresh is needed as CSP bypassing
+// happens during CSP initialization instead of evaluation.
+func (a *App) EnableBypassCSP(ctx context.Context, tb *testutil.TestBridge) error {
+	if err := a.conn.EnableBypassCSP(ctx); err != nil {
+		return errors.Wrap(err, "failed to enable bypassing CSP")
+	}
+	if err := a.Refresh(ctx, tb); err != nil {
+		return errors.Wrap(err, "failed to refresh")
+	}
+	if err := a.WaitForVideoActive(ctx); err != nil {
+		return errors.Wrap(err, "preview is not shown after refreshing")
+	}
+	return nil
+}
+
+// EnableGa4Metrics enables CCA to send GA4 metrics during Tast tests. A mock url is
+// required as we don't want to actually send metrics to GA4 backend.
+func (a *App) EnableGa4Metrics(ctx context.Context, url string) error {
+	if err := a.conn.Call(ctx, nil, "CCATest.setMeasurementProtocolUrl", url); err != nil {
+		return errors.Wrap(err, "failed to set replace measurement protocol's URL")
+	}
+	if err := a.conn.Call(ctx, nil, "CCATest.enableGa4Metrics"); err != nil {
+		return errors.Wrap(err, "failed to enable GA4 metrics")
+	}
+	return nil
+}

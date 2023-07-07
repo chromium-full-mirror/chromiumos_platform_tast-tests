@@ -323,3 +323,8 @@ func (tconn *TestConn) ResetAutomation(ctx context.Context) error {
 func PrivateReleaseAllObjects(ctx context.Context, tconn *TestConn) error {
 	return tconn.conn.co.ReleaseAllObjects(ctx)
 }
+
+// EnableBypassCSP enable bypassing CSP.
+func (c *Conn) EnableBypassCSP(ctx context.Context) error {
+	return c.co.EnableBypassCSP(ctx)
+}
