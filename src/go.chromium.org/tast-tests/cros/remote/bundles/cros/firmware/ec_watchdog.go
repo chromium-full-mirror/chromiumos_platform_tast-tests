@@ -36,12 +36,10 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		// Small delay to make ensure watchdog does not kick in too early.
 		noWatchdogDelayMS = 500
 		noWatchdogDelay   = noWatchdogDelayMS * time.Millisecond
-		// Delay of spin-wait in ms. Nuvoton boards set the hardware watchdog to
-		// 3187.5ms and also sets a timer to 2200ms. Set the timeout long enough to
-		// exceed the hardware watchdog timer because the timer isn't 100% reliable.
-		// If there are other platforms that use a longer watchdog timeout, this
-		// may need to be adjusted.
-		watchdogDelayMS = 3700
+		// Delay of spin-wait in ms. Different boards use different
+		// timeouts, values up to 10 seconds have been set in the
+		// repository.
+		watchdogDelayMS = 11000
 		watchdogDelay   = watchdogDelayMS * time.Millisecond
 		// Delay of EC power on.
 		ecBootDelay = 1000 * time.Millisecond
