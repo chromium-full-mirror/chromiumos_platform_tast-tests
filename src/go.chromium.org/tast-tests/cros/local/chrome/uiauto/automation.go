@@ -777,7 +777,54 @@ func (ac *Context) RetrieveTextSelectionInfo(ctx context.Context, conn *chrome.C
 // WaitUntilExists returns a function that waits until the node found by the input finder exists.
 func (ac *Context) WaitUntilExists(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
-		return testing.Poll(ctx, ac.Exists(finder), &ac.pollOpts)
+		q, err := finder.GenerateQuery()
+		if err != nil {
+			return err
+		}
+
+		expr := fmt.Sprintf(`async function() {
+			let desktop = await tast.automation.getDesktop();
+			async function runQuery() {
+				%s
+			}
+			try {
+				await runQuery();
+			} catch (error) {
+				let lastError = error;
+				var retryQuery;
+				await new Promise((resolve, reject) => {
+					setTimeout(reject, %d);
+					retryQuery = async function () {
+						chrome.automation.removeTreeChangeObserver(retryQuery);
+						var pending;
+						async function exectureQuery() {
+							try {
+								await runQuery();
+								resolve();
+							} catch (error) {
+								lastError = error;
+							}
+							pending = null;
+							chrome.automation.addTreeChangeObserver('allTreeChanges',retryQuery);
+						}
+						if (pending) {
+							return;
+						}
+						pending = setTimeout(exectureQuery, 200);
+					};
+					chrome.automation.addTreeChangeObserver('allTreeChanges',retryQuery);
+				}).then(() => {
+				}, () => {
+					throw "context deadline exceeded during a poll with timeout %.fs; " + lastError;
+				}).finally(() => {
+					chrome.automation.removeTreeChangeObserver(retryQuery);
+				});
+			} finally {
+				tast.automation.releaseDesktop();
+			}
+		}`, q, ac.pollOpts.Timeout.Milliseconds(), ac.pollOpts.Timeout.Seconds())
+
+		return ac.tconn.Call(ctx, nil, expr)
 	}
 }
 
