@@ -21,6 +21,8 @@ func init() {
 		Register: func(srv *grpc.Server, s *testing.ServiceState) {
 			hwsecpb.RegisterOwnershipServiceServer(srv, &OwnershipService{s})
 		},
+		// GuaranteeCompatibility allows tests outside ChromeOS to call this service.
+		GuaranteeCompatibility: true,
 	})
 }
 
