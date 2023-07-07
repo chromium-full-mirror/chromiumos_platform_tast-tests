@@ -1,0 +1,128 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package arc
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/arc/arcent"
+	"go.chromium.org/tast-tests/cros/local/arc/playstore"
+	"go.chromium.org/tast-tests/cros/local/arc/unicorn"
+	"go.chromium.org/tast-tests/cros/local/retry"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         UnicornDisabledApps,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verifies that disabled apps can be installed but not launched",
+		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		// ChromeOS > Software > ARC++ > Commercial
+		BugComponent: "b:157100",
+		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
+		SoftwareDeps: []string{
+			"chrome",
+			"chrome_internal",
+			"play_store",
+		},
+		Timeout: 15 * time.Minute,
+		VarDeps: []string{unicorn.ParentUserVar, unicorn.ParentPasswordVar, unicorn.ChildUserVar, unicorn.ChildPasswordVar},
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"android_container"},
+			ExtraAttr:         []string{"informational"},
+		}, {
+			Name:              "vm",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraAttr:         []string{"informational"},
+		}},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+		},
+	})
+}
+
+func UnicornDisabledApps(ctx context.Context, s *testing.State) {
+	const (
+		bootTimeout         = 4 * time.Minute
+		provisioningTimeout = 3 * time.Minute
+		disabledPackage     = "com.google.android.calculator"
+		appMainActivity     = "com.android.calculator2.Calculator"
+	)
+
+	rl := &retry.Loop{Attempts: 1,
+		MaxAttempts: 2,
+		DoRetries:   true,
+		Fatalf:      s.Fatalf,
+		Logf:        s.Logf}
+
+	childUser := s.RequiredVar(unicorn.ChildUserVar)
+	arcPolicy := arcent.CreateArcPolicyWithApps([]string{disabledPackage}, arcent.InstallTypeAvailable, arcent.PlayStoreModeBlockList)
+	arcPolicy.Val.Applications[0].Disabled = true
+	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
+	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+
+	fdms, err := unicorn.SetUpFakePolicyServer(ctx, s.OutDir(), childUser, policies)
+	if err != nil {
+		s.Fatal("Failed to setup fake policy server: ", err)
+	}
+	defer fdms.Stop(cleanupCtx)
+
+	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
+		cr, err := unicorn.StartChromeWithARC(ctx,
+			childUser,
+			s.RequiredVar(unicorn.ChildPasswordVar),
+			s.RequiredVar(unicorn.ParentUserVar),
+			s.RequiredVar(unicorn.ParentPasswordVar),
+			fdms.URL)
+		if err != nil {
+			return rl.Retry("start Chrome", err)
+		}
+		defer cr.Close(cleanupCtx)
+
+		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
+		if err != nil {
+			return rl.Retry("connect to ARC", err)
+		}
+		defer a.Close(cleanupCtx)
+
+		if err := a.WaitForProvisioning(ctx, provisioningTimeout); err != nil {
+			return rl.Retry("wait for provisioning", err)
+		}
+
+		d, err := a.NewUIDevice(ctx)
+		if err != nil {
+			return rl.Exit("initialize UI Automator", err)
+		}
+		defer d.Close(cleanupCtx)
+
+		if err := playstore.InstallApp(ctx, a, d, disabledPackage, &playstore.Options{}); err != nil {
+			return rl.Retry("install the disabled app", err)
+		}
+
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			return rl.Retry("create test API Connection", err)
+		}
+
+		if err := arcent.ValidateDisabledAppLaunch(ctx, tconn, a, d, disabledPackage, appMainActivity); err != nil {
+			return rl.Exit("verify disabled app can't be launched", err)
+		}
+
+		return nil
+	}, nil); err != nil {
+		s.Fatal("Failed to verify blocked apps flow: ", err)
+	}
+}

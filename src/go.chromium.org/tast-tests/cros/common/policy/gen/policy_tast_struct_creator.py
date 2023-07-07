@@ -576,6 +576,7 @@ def parse_override_arc_policy(p, refs):
 type Application struct {
 \tPackageName\tstring\t`json:"packageName"`
 \tInstallType\tstring\t`json:"installType"`
+\tDisabled\tbool\t`json:"disabled"`
 \tDefaultPermissionPolicy\tstring\t`json:"defaultPermissionPolicy"`
 \tManagedConfiguration\tmap[string]interface{}\t`json:"managedConfiguration"`
 }

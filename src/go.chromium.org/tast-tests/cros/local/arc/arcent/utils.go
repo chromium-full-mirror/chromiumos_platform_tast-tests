@@ -11,10 +11,12 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -78,6 +80,31 @@ func DumpBugReportOnError(ctx context.Context, hasError func() bool, a *arc.ARC,
 func ConfigureProvisioningLogs(ctx context.Context, a *arc.ARC) error {
 	verboseTags := []string{"clouddpc", "Finsky", "Volley", "PlayCommon"}
 	return a.EnableVerboseLogging(ctx, verboseTags...)
+}
+
+// ValidateDisabledAppLaunch validates that a disabled app cannot be launched.
+func ValidateDisabledAppLaunch(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, disabledPackage, mainActivity string) error {
+	const (
+		disabledAppResourceID  = "com.android.settings:id/admin_support_dialog_title"
+		disabledAppTextPattern = "(?i)Can.t open this app"
+	)
+
+	uia := uiauto.New(tconn)
+
+	// Sometimes "am start" command doesn't return an error and the app doesn't launch either.
+	return uia.Retry(2, func(ctx context.Context) error {
+		testing.ContextLog(ctx, "Launching the app")
+		if _, err := a.Command(ctx, "am", "start", "-n", fmt.Sprintf("%s/%s", disabledPackage, mainActivity)).Output(testexec.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "failed to create main activity")
+		}
+
+		testing.ContextLog(ctx, "Waiting for the app disabled message to show")
+		if err := d.Object(ui.ResourceID(disabledAppResourceID), ui.TextMatches(disabledAppTextPattern)).WaitForExists(ctx, 5*time.Second); err != nil {
+			return errors.Wrap(err, "launch error not found")
+		}
+
+		return nil
+	})(ctx)
 }
 
 // ValidateBlockedAppInstall validates that the blocked app cannot be installed or is uninstalled automatically if installed.

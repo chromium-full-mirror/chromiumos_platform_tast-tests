@@ -6735,6 +6735,7 @@ type ArcPolicy struct {
 type Application struct {
 	PackageName             string                 `json:"packageName"`
 	InstallType             string                 `json:"installType"`
+	Disabled                bool                   `json:"disabled"`
 	DefaultPermissionPolicy string                 `json:"defaultPermissionPolicy"`
 	ManagedConfiguration    map[string]interface{} `json:"managedConfiguration"`
 }
