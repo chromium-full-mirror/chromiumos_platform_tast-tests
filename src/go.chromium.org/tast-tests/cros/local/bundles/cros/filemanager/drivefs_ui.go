@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -38,36 +37,18 @@ func init() {
 			"group:hw_agnostic",
 			"group:mainline",
 		},
-		VarDeps: []string{
-			"filemanager.DrivefsUI.username",
-			"filemanager.DrivefsUI.password",
-		},
+		Fixture: "driveFsStarted",
 	})
 }
 
 func DrivefsUI(ctx context.Context, s *testing.State) {
 	const testFileName = "drivefs"
-	username := s.RequiredVar("filemanager.DrivefsUI.username")
-	password := s.RequiredVar("filemanager.DrivefsUI.password")
 
-	// Start up Chrome.
-	cr, err := chrome.New(ctx, chrome.GAIALogin(chrome.Creds{User: username, Pass: password}))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(ctx)
-
-	mountPath, err := drivefs.WaitForDriveFs(ctx, username)
-	if err != nil {
-		s.Fatal("Failed to wait for DriveFS to be mounted: ", err)
-	}
-
-	// Open the test API.
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API Connection: ", err)
-	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	fixt := s.FixtValue().(*drivefs.FixtureData)
+	cr := fixt.Chrome
+	tconn := fixt.TestAPIConn
+	mountPath := fixt.MountPath
+	cleanupCtx := ctx
 
 	// Create a test file inside Drive.
 	drivefsRoot := filepath.Join(mountPath, "root")
@@ -78,6 +59,9 @@ func DrivefsUI(ctx context.Context, s *testing.State) {
 	testFile.Close()
 	// Don't delete the test file after the test as there may not be enough time
 	// after the test for the deletion to be synced to Drive.
+
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer drivefs.SaveDriveLogsOnError(ctx, s.HasError, cr.NormalizedUser(), mountPath)
 
 	// Launch Files App.
 	files, err := filesapp.Launch(ctx, tconn)
