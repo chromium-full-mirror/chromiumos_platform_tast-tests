@@ -44,7 +44,7 @@ func init() {
 			},
 			{
 				Name:              "betty",
-				ExtraSoftwareDeps: []string{"android_p", "qemu"},
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{

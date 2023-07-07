@@ -36,7 +36,7 @@ func init() {
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
