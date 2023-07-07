@@ -397,9 +397,9 @@ type NetworkFilter struct {
 
 // SIMLockStatus is the SIM card lock status for Cellular networks.
 type SIMLockStatus struct {
-	LockType    string `json:"locktype"`
-	LockEnabled bool   `json:"lockenabled"`
-	RetriesLeft int32  `json:"retriesleft"`
+	LockType    string `json:"lockType"`
+	LockEnabled bool   `json:"lockEnabled"`
+	RetriesLeft int32  `json:"retriesLeft"`
 }
 
 // SIMInfo is details about a sim slot available on the device.
@@ -434,17 +434,17 @@ const (
 
 // DeviceStateProperties is returned by GetDeviceStateList
 type DeviceStateProperties struct {
-	Ipv4Address             IPAddress       `json:"ipv4address,omitempty"`
-	Ipv6Address             IPAddress       `json:"ipv6address,omitempty"`
-	MacAddress              string          `json:"macaddress,omitempty"`
+	Ipv4Address             IPAddress       `json:"ipv4Address,omitempty"`
+	Ipv6Address             IPAddress       `json:"ipv6Address,omitempty"`
+	MacAddress              string          `json:"macAddress,omitempty"`
 	Scanning                bool            `json:"scanning"`
-	SimLockStatus           SIMLockStatus   `json:"simlockstatus"`
-	SimInfos                []SIMInfo       `json:"siminfos,omitempty"`
-	InhibitReason           InhibitReason   `json:"inhibitreason"`
-	SimAbsent               bool            `json:"simabsent"`
-	DeviceState             DeviceStateType `json:"devicestate"`
+	SimLockStatus           SIMLockStatus   `json:"simLockStatus"`
+	SimInfos                []SIMInfo       `json:"simInfos,omitempty"`
+	InhibitReason           InhibitReason   `json:"inhibitReason"`
+	SimAbsent               bool            `json:"simAbsent"`
+	DeviceState             DeviceStateType `json:"deviceState"`
 	Type                    NetworkType     `json:"type"`
-	ManagedNetworkAvailable bool            `json:"managednetworkavailable"`
+	ManagedNetworkAvailable bool            `json:"managedNetworkAvailable"`
 }
 
 // VPNConfigProperties is used to create new VPN services or augment existing
@@ -453,7 +453,7 @@ type VPNConfigProperties struct {
 	Host      string                     `json:"host"`
 	Type      VPNTypeConfig              `json:"type"`
 	IPsec     *IPsecConfigProperties     `json:"ipSec"`
-	L2TP      *L2TPConfigProperties      `json:"l2tp"`
+	L2TP      *L2TPConfigProperties      `json:"l2Tp"`
 	OpenVPN   *OpenVPNConfigProperties   `json:"openVpn"`
 	WireGuard *WireGuardConfigProperties `json:"wireguard"`
 }
