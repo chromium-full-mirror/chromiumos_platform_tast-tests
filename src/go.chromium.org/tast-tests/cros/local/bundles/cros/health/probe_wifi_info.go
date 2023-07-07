@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type wirelessLinkInfo struct {
@@ -50,18 +49,9 @@ func init() {
 			"pathan.jilani@intel.com",
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:intel-nda"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
-		Params: []testing.Param{{
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("brya-kernelnext")),
-			ExtraAttr:         []string{"group:intel-nda"},
-		}, {
-			// TODO(b/277564353): Remove this after the brya-kernelnext issue is fixed.
-			Name:              "brya_kernelnext",
-			ExtraAttr:         []string{"informational"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Platform("brya-kernelnext")),
-		}},
 	})
 }
 
