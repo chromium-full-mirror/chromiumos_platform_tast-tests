@@ -297,7 +297,7 @@ func simpleConnectOWE() []*simpleConnectParams {
 		ExtraAttr: []string{"wificell_unstable"},
 		Val: []simpleConnectParamsVal{{
 			APOpts:           simpleConnectCommonSecApOpts,
-			SecConfFac:       "owe.NewConfigFactory()",
+			SecConfFac:       "owe.NewConfigFactory(owe.ModePureOWE)",
 			ExpectedSecurity: "shillconst.SecurityOWE",
 		}},
 		ExtraRequirements: []string{tdreq.WiFiSecSupportOWE, tdreq.WiFiCertOWE},

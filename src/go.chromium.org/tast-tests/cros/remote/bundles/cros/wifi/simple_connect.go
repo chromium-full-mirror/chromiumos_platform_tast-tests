@@ -299,7 +299,7 @@ func init() {
 				ExtraAttr: []string{"wificell_unstable"},
 				Val: []simpleConnectTestcase{{
 					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       owe.NewConfigFactory(),
+					secConfFac:       owe.NewConfigFactory(owe.ModePureOWE),
 					expectedSecurity: shillconst.SecurityOWE,
 				}},
 				ExtraRequirements: []string{"wifi-sec-0008-v02", "wifi-cert-0004-v02"},

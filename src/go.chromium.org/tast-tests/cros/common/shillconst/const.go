@@ -288,6 +288,7 @@ const (
 // Security options defined in dbus-constants.h
 const (
 	SecurityNone               = "none"
+	SecurityTransOWE           = "trans-owe"
 	SecurityOWE                = "owe"
 	SecurityWEP                = "wep"
 	SecurityWPA                = "wpa"
