@@ -45,6 +45,12 @@ func TmuxManageTabs(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
+	cleanup, err := terminalapp.DontModifyPS1(ctx)
+	if err != nil {
+		s.Fatal("Failed to set DontModifyPS1: ", err)
+	}
+	defer cleanup()
+
 	cr, err := chrome.New(ctx, chrome.EnableFeatures("TerminalAlternativeEmulator", "TerminalTmuxIntegration"))
 	if err != nil {
 		s.Fatal("Cannot start Chrome: ", err)
