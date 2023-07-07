@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -448,6 +449,36 @@ func init() {
 			},
 		),
 		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "powerAshGAIAWithSpeakOnMute",
+		Desc: "Fixture for speak-on-mute power test",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+			"aaronyu@google.com",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+			Wifi:               DisableWifiInterfaces,
+			Audio:              DoNotChangeAudio, // Uses audio.
+		}, PowerFixtureOptions{
+			BrowserType:     browser.TypeAsh,
+			EnableGAIALogin: true,
+			BrowserExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("CrosPrivacyHub"),
+				chrome.EnableFeatures("VideoConference"),
+			},
+		}),
+		Parent:          fixture.StereoAloopLoaded,
+		SetUpTimeout:    chrome.GAIALoginTimeout + setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
 		PreTestTimeout:  preTestTimeout,

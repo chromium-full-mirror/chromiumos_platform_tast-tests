@@ -10,14 +10,13 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/input/voice"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
@@ -25,8 +24,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
-
-const audioInputFile = "voice_en_hello.wav"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -43,7 +40,7 @@ func init() {
 			"group:video_conference",
 			"video_conference_per_build",
 		},
-		Data:         []string{audioInputFile},
+		Data:         []string{data.SpeechInputFile},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
@@ -83,8 +80,6 @@ func init() {
 		},
 	})
 }
-
-var speakOnMuteNudge = nodewith.NameStartingWith("Are you talking?").Role(role.StaticText).First()
 
 func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
@@ -151,9 +146,9 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 		vcTray.ToggleAVDevice(vctray.DevMicrophone, false),
 		uiauto.Retry(10, uiauto.Combine("",
 			func(ctx context.Context) error {
-				return audio.PlayWavToPCM(ctx, s.DataPath(audioInputFile), "hw:Loopback,0")
+				return audio.PlayWavToPCM(ctx, s.DataPath(data.SpeechInputFile), "hw:Loopback,0")
 			},
-			ui.WithTimeout(time.Second).WaitUntilExists(speakOnMuteNudge),
+			ui.WithTimeout(time.Second).WaitUntilExists(common.SpeakOnMuteNudge),
 		)),
 	)
 
@@ -163,7 +158,7 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("unmute clears nudge",
 		vcTray.ToggleAVDevice(vctray.DevMicrophone, true),
-		ui.WaitUntilGone(speakOnMuteNudge),
+		ui.WaitUntilGone(common.SpeakOnMuteNudge),
 	)(ctx); err != nil {
 		s.Fatal("Failed to verify unmute: ", err)
 	}
