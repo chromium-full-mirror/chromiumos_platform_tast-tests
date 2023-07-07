@@ -391,7 +391,7 @@ const (
 // NetworkFilter is passed to GetNetworkStateList to filter the list of networks returned.
 type NetworkFilter struct {
 	Filter      FilterType  `json:"filter"`
-	NetworkType NetworkType `json:"networktype"`
+	NetworkType NetworkType `json:"networkType"`
 	Limit       int32       `json:"limit"`
 }
 
