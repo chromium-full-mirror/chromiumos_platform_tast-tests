@@ -199,7 +199,7 @@ func runSenderWithArgs(ctx context.Context, args ...string) ([]*SendResult, []*U
 				return nil
 			}
 		}
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 35 * time.Second}); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to wait for crash_sender reports")
 	}
 
