@@ -176,7 +176,7 @@ const (
 type CellularStateProperties struct {
 	Iccid             string              `json:"iccid"`
 	Eid               string              `json:"eid"`
-	ActivationState   ActivationStateType `json:"activationSstate"`
+	ActivationState   ActivationStateType `json:"activationState"`
 	NetworkTechnology string              `json:"networkTechnology"`
 	Roaming           bool                `json:"roaming"`
 	SignalStrength    int32               `json:"signalStrength"`
