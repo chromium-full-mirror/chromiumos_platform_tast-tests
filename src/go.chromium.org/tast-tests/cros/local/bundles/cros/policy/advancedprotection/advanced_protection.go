@@ -82,17 +82,12 @@ func TriggerUploadForScanning(ctx context.Context, _ *testing.State, _ *chrome.C
 	// additional scanning.
 	ui := uiauto.New(tconn)
 	sendFile := nodewith.Name("Send").Role(role.Button)
-	discardFile := nodewith.Name("Discard").Role(role.Button)
 	if err := uiauto.Combine("Upload file for scanning",
 		// If prompted to upload file for scanning, click 'Send'. This will
 		// only show if Advanced Protection is allowed.
 		uiauto.IfSuccessThen(
 			ui.WithTimeout(3*time.Second).WaitUntilExists(sendFile),
 			ui.DoDefault(sendFile)),
-		// In both enabled and disabled cases, the file will be marked as dangerous.
-		// Click 'Discard' to cleanup.
-		ui.WaitUntilExists(discardFile),
-		ui.DoDefault(discardFile),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to upload file for scanning")
 	}
