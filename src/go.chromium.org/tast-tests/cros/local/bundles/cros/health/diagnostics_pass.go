@@ -111,14 +111,6 @@ func init() {
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name:      "http_firewall",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineHTTPFirewall),
-			ExtraAttr: []string{"informational"},
-		}, {
-			Name:      "https_firewall",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSFirewall),
-			ExtraAttr: []string{"informational"},
-		}, {
 			Name:      "https_latency",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSLatency),
 			ExtraAttr: []string{"informational"},
