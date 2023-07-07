@@ -1,5 +1,5 @@
 {
-	"url": "gs://chromiumos-test-assets-public/tast/cros/crostini/hello-world-arm64-20230504.tar",
+	"url": "gs://chromiumos-test-assets-public/tast/cros/crostini/hello-world-arm64-fixed-20230504.tar",
 	"size": 19968,
-	"sha256sum": "ae9fe6466cc9ae3aa44e523f931c4da4595409b5a8d9ee069434bfc9a238d6ac"
+	"sha256sum": "b891b575b2770d0011c04176529910d9fd5531a65a22f1311be3e70aa3f173e9"
 }
