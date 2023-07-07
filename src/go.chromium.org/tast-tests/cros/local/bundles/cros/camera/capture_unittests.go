@@ -118,7 +118,7 @@ func CaptureUnittests(ctx context.Context, s *testing.State) {
 		filepath.Join(chrome.BinTestDir, exec),
 		gtest.Logfile(logFile),
 		gtest.Filter(filter),
-		gtest.ExtraArgs(logging.ChromeVmoduleFlag(), "--test-launcher-jobs=1"),
+		gtest.ExtraArgs(logging.ChromeVmoduleFlag(), "--test-launcher-jobs=1", "--test-child-process"),
 		gtest.UID(int(sysutil.ChronosUID)),
 	).Run(shortCtx); err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
