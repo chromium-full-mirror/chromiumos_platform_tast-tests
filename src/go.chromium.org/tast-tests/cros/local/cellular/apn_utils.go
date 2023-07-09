@@ -23,23 +23,26 @@ type KnownAPN struct {
 	APNTypes []string
 }
 
-type carrier int
+// Carrier represents a cellular carrier.
+type Carrier int
 
+// List of all cellular carriers in the lab.
 const (
-	carrierAmarisoft carrier = iota
-	carrierVerizon
-	carrierTmobile
-	carrierAtt
-	carrierSoftbank
-	carrierKDDI
-	carrierDocomo
-	carrierRakuten
-	carrierEEUK
-	carrierVodafoneUK
+	CarrierUnknown Carrier = iota
+	CarrierAmarisoft
+	CarrierVerizon
+	CarrierTmobile
+	CarrierAtt
+	CarrierSoftbank
+	CarrierKDDI
+	CarrierDocomo
+	CarrierRakuten
+	CarrierEEUK
+	CarrierVodafoneUK
 )
 
 const (
-	// Create variables with short names to use them in |carrierAPNs| and make the dict declaration legible.
+	// Create variables with short names to use them in |CarrierAPNs| and make the dict declaration legible.
 	apn         = shillconst.DevicePropertyCellularAPNInfoApnName
 	ipType      = shillconst.DevicePropertyCellularAPNInfoApnIPType
 	ipv4        = shillconst.DevicePropertyCellularAPNInfoApnIPTypeIPv4
@@ -57,26 +60,26 @@ const (
 var (
 	// When updating this list, please also update the list in cellular/data/test_no_apns.prototxt
 	// and regenerate the *.pbf files by following the directions in cellular/data/README.md.
-	carrierMapping = map[string]carrier{
-		"00101":  carrierAmarisoft,
-		"001010": carrierAmarisoft,
-		"23415":  carrierVodafoneUK,
-		"23430":  carrierEEUK,
-		"310260": carrierTmobile,
-		"311882": carrierTmobile,
-		"310280": carrierAtt,
-		"310410": carrierAtt,
-		"311480": carrierVerizon,
-		"44010":  carrierDocomo,
-		"44011":  carrierRakuten,
-		"44020":  carrierSoftbank,
-		"44051":  carrierKDDI,
+	carrierMapping = map[string]Carrier{
+		"00101":  CarrierAmarisoft,
+		"001010": CarrierAmarisoft,
+		"23415":  CarrierVodafoneUK,
+		"23430":  CarrierEEUK,
+		"310260": CarrierTmobile,
+		"311882": CarrierTmobile,
+		"310280": CarrierAtt,
+		"310410": CarrierAtt,
+		"311480": CarrierVerizon,
+		"44010":  CarrierDocomo,
+		"44011":  CarrierRakuten,
+		"44020":  CarrierSoftbank,
+		"44051":  CarrierKDDI,
 	}
 )
 
-func initializeCarrierAPNs() map[carrier][]KnownAPN {
-	return map[carrier][]KnownAPN{
-		carrierAmarisoft: []KnownAPN{
+func initializeCarrierAPNs() map[Carrier][]KnownAPN {
+	return map[Carrier][]KnownAPN{
+		CarrierAmarisoft: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4", ipType: ipv4}, APNTypes: []string{typeDefault, typeIA}},
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4", ipType: ipv4}, APNTypes: []string{typeDefault}},
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4-chap", ipType: ipv4, username: "username", password: "password"}, APNTypes: []string{typeDefault, typeIA}},
@@ -85,40 +88,40 @@ func initializeCarrierAPNs() map[carrier][]KnownAPN {
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4v6", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
 		},
 		// US
-		carrierTmobile: []KnownAPN{
+		CarrierTmobile: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "fast.t-mobile.com", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "fast.t-mobile.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "fast.t-mobile.com", ipType: ipv4}, APNTypes: []string{typeDefault}},
 		},
-		carrierAtt: []KnownAPN{
+		CarrierAtt: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "broadband", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "broadband"}, APNTypes: []string{typeDefault}},
 		},
-		carrierVerizon: []KnownAPN{
+		CarrierVerizon: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "vzwinternet", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "vzwinternet"}, APNTypes: []string{typeDefault}},
 		},
 		// Japan
-		carrierKDDI: []KnownAPN{
+		CarrierKDDI: []KnownAPN{
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "au.au-net.ne.jp", ipType: ipv4v6, username: "user@au.au-net.ne.jp", password: "au", auth: chap}, APNTypes: []string{typeDefault, typeIA}},
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "uno.au-net.ne.jp", ipType: ipv4v6, username: "685840734641020@uno.au-net.ne.jp", password: "KpyrR6BP", auth: chap}, APNTypes: []string{typeDefault, typeIA}},
 		},
-		carrierDocomo: []KnownAPN{
+		CarrierDocomo: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "spmode.ne.jp", ipType: ipv4v6, auth: chap}, APNTypes: []string{typeDefault, typeIA}},
 		},
-		carrierRakuten: []KnownAPN{
+		CarrierRakuten: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "rakuten.jp", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
 		},
-		carrierSoftbank: []KnownAPN{
+		CarrierSoftbank: []KnownAPN{
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "plus.acs.jp.v6", ipType: ipv4v6, username: "ym", password: "ym", auth: chap}, APNTypes: []string{typeDefault, typeIA}},
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "cmn.mgx", ipType: ipv4v6, username: "cmn@mgx", password: "mgx", auth: pap}, APNTypes: []string{typeDefault, typeIA}},
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "plus.4g", ipType: ipv4v6, username: "plus", password: "4g", auth: chap}, APNTypes: []string{typeDefault, typeIA}},
 		},
 		// UK
-		carrierEEUK: []KnownAPN{
+		CarrierEEUK: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "everywhere", ipType: ipv4v6, username: "eesecure", password: "secure", auth: pap}, APNTypes: []string{typeDefault}},
 		},
-		carrierVodafoneUK: []KnownAPN{
+		CarrierVodafoneUK: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "wap.vodafone.co.uk", ipType: ipv4v6, username: "wap", password: "wap"}, APNTypes: []string{typeDefault}},
 		},
 	}
@@ -137,20 +140,28 @@ func (knownAPN KnownAPN) IsAttachAPN() bool {
 // GetKnownAPNsForOperator returns a modifiable list of known APNs for a carrier.
 func GetKnownAPNsForOperator(operatorID string) ([]KnownAPN, error) {
 	carrierAPNs := initializeCarrierAPNs()
-	carrier, ok := carrierMapping[operatorID]
-	if !ok {
-		operatorID1 := operatorID[0:5]
-		carrier, ok = carrierMapping[operatorID1]
-		if !ok {
-			return nil, errors.Errorf("cannot find carrier for operators %q or %q", operatorID, operatorID1)
-		}
-		operatorID = operatorID1
+	carrier, err := GetCarrier(operatorID)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot get KnownAPNs")
 	}
 	apns, ok := carrierAPNs[carrier]
 	if !ok {
 		return nil, errors.Errorf("there are no APNs for operator %q", operatorID)
 	}
 	return apns, nil
+}
+
+// GetCarrier returns the carrier that matches the operatorID.
+func GetCarrier(operatorID string) (Carrier, error) {
+	carrier, ok := carrierMapping[operatorID]
+	if !ok {
+		operatorID1 := operatorID[0:5]
+		carrier, ok = carrierMapping[operatorID1]
+		if !ok {
+			return carrier, errors.Errorf("cannot find carrier for operators %q or %q", operatorID, operatorID1)
+		}
+	}
+	return carrier, nil
 }
 
 // GetAPNForModemManager removes any keys not recognized by MM from ApnInfo and replaces

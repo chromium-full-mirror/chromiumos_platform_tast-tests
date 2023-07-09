@@ -132,6 +132,10 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 	if _, _, err = helper.GetHomeProviderFromShill(ctx); err != nil {
 		s.Fatal("Failed to get HomeProvider from shill: ", err)
 	}
+	isTmobile := false
+	if board, _ := cellular.GetCarrier(operatorID); board == cellular.CarrierTmobile {
+		isTmobile = true
+	}
 
 	knownAPNs, err := cellular.GetKnownAPNsForOperator(operatorID)
 	if err != nil {
@@ -249,7 +253,9 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 		}
 
 		apn = serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
-		if apn != expectedAPN {
+		// Tmobile allows any Default APN, so the test should not fail if the APN matches the wrong one inserted by the test.
+		ignoreDefaultMismatch := testNewAPNUIRevamp && isTmobile && strings.HasPrefix(apn, "wrong-apn")
+		if apn != expectedAPN && !ignoreDefaultMismatch {
 			// We reach this point when shill connected to cellular, but with a different APN.
 			// This is considered a failure to connect, unless the APN is optional.
 			// This usually happens with SetApn if an early APN succeeds, but latter connections use a wrong APN.
