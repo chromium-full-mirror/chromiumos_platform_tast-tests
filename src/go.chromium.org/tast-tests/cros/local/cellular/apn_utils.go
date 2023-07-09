@@ -72,8 +72,10 @@ var (
 		"44020":  carrierSoftbank,
 		"44051":  carrierKDDI,
 	}
+)
 
-	carrierAPNs = map[carrier][]KnownAPN{
+func initializeCarrierAPNs() map[carrier][]KnownAPN {
+	return map[carrier][]KnownAPN{
 		carrierAmarisoft: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4", ipType: ipv4}, APNTypes: []string{typeDefault, typeIA}},
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4", ipType: ipv4}, APNTypes: []string{typeDefault}},
@@ -120,7 +122,7 @@ var (
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "wap.vodafone.co.uk", ipType: ipv4v6, username: "wap", password: "wap"}, APNTypes: []string{typeDefault}},
 		},
 	}
-)
+}
 
 // IsAttachAPN returns true if the ApnTypes contains DevicePropertyCellularAPNInfoApnIA
 func (knownAPN KnownAPN) IsAttachAPN() bool {
@@ -132,8 +134,9 @@ func (knownAPN KnownAPN) IsAttachAPN() bool {
 	return false
 }
 
-// GetKnownAPNsForOperator returns a list of known APNs for a carrier.
+// GetKnownAPNsForOperator returns a modifiable list of known APNs for a carrier.
 func GetKnownAPNsForOperator(operatorID string) ([]KnownAPN, error) {
+	carrierAPNs := initializeCarrierAPNs()
 	carrier, ok := carrierMapping[operatorID]
 	if !ok {
 		operatorID1 := operatorID[0:5]
