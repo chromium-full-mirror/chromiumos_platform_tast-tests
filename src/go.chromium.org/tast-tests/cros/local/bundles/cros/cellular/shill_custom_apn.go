@@ -223,6 +223,10 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 			if knownAPN.Optional {
 				continue
 			}
+			// Tmobile rarely provides an IPv4, so we cannot set the tmobile APN using SetApn because that API only allows IPv4.
+			if isTmobile && !testNewAPNUIRevamp {
+				err = cellular.TagKnownBug(ctx, err, "b/290425429")
+			}
 			s.Fatal("Unable to Connect to Service: ", err)
 		}
 

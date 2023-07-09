@@ -328,13 +328,18 @@ func IsModemType(ctx context.Context, modemType cellularconst.ModemType) (bool, 
 	return device.Modem == modemType, nil
 }
 
+// TagKnownBug adds a tag to the error code.
+func TagKnownBug(ctx context.Context, errIn error, bugNumber string) error {
+	return errors.Wrapf(errIn, "known bug: %q", bugNumber)
+}
+
 // TagKnownBugOnVariant adds a tag to the error code if any of the |variants| matches the DUT's variant.
 func TagKnownBugOnVariant(ctx context.Context, errIn error, bugNumber string, variants []string) error {
 	dutVariant, err := GetDeviceVariant(ctx)
 	if err == nil {
 		for _, variant := range variants {
 			if dutVariant == variant {
-				return errors.Wrapf(err, "known bug on variant: %q bug: %q", variant, bugNumber)
+				return errors.Wrapf(errIn, "known bug on variant: %q bug: %q", variant, bugNumber)
 			}
 		}
 	}
