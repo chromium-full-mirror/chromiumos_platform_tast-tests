@@ -152,11 +152,11 @@ func OverflowShelfAlignment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check if DUT is in tablet mode: ", err)
 	}
 
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, isInTablet)
+	cleanupTabletMode, err := ash.EnsureTabletModeEnabled(ctx, tconn, isInTablet)
 	if err != nil {
 		s.Fatalf("Failed to ensure the tablet state %t: %v", isInTablet, err)
 	}
-	defer cleanup(cleanUpCtx)
+	defer cleanupTabletMode(cleanUpCtx)
 
 	// Get the primary display info.
 	dispInfo, err := display.GetPrimaryInfo(ctx, tconn)
@@ -166,20 +166,13 @@ func OverflowShelfAlignment(ctx context.Context, s *testing.State) {
 
 	if !isInTablet {
 		// Ensure that the shelf is placed at the bottom when the test runs in the clamshell mode.
-		var err error
-		originalAlignment, err := ash.GetShelfAlignment(ctx, tconn, dispInfo.ID)
+		cleanupShelfAlignment, err := ash.EnsureShelfAlignmentBottom(ctx, tconn, dispInfo.ID)
 		if err != nil {
-			s.Fatal("Failed to get the shelf alignment: ", err)
+			s.Fatal("Failed to ensure shelf alignment is Bottom: ", err)
 		}
 
-		if originalAlignment != ash.ShelfAlignmentBottom {
-			if err := ash.SetShelfAlignment(ctx, tconn, dispInfo.ID, ash.ShelfAlignmentBottom); err != nil {
-				s.Fatal("Failed to place the shelf at the bottom: ", err)
-			}
-
-			// Restore the original alignment.
-			defer ash.SetShelfAlignment(ctx, tconn, dispInfo.ID, originalAlignment)
-		}
+		// Restore the original alignment.
+		defer cleanupShelfAlignment(cleanUpCtx)
 	}
 
 	resetPinState, err := ash.ResetShelfPinState(ctx, tconn)

@@ -90,11 +90,11 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure that the device is in clamshell mode.
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	cleanupTabletMode, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
 		s.Fatal("Failed to ensure clamshell mode: ", err)
 	}
-	defer cleanup(cleanUpCtx)
+	defer cleanupTabletMode(cleanUpCtx)
 
 	resetPinState, err := ash.ResetShelfPinState(ctx, tconn)
 	if err != nil {
@@ -138,12 +138,17 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure that the shelf is placed at the bottom.
-	originalAlignment, err := ash.GetShelfAlignment(ctx, tconn, dispInfo.ID)
-	if originalAlignment != ash.ShelfAlignmentBottom {
-		if err := ash.SetShelfAlignment(ctx, tconn, dispInfo.ID, ash.ShelfAlignmentBottom); err != nil {
-			s.Fatal("Failed to place the shelf at the bottom: ", err)
-		}
+	cleanupShelfAlignment, err := ash.EnsureShelfAlignmentBottom(ctx, tconn, dispInfo.ID)
+	if err != nil {
+		s.Fatal("Failed to ensure shelf alignment is Bottom: ", err)
 	}
+
+	// Restore the shelf alignment.
+	defer func(ctx context.Context) {
+		if err := cleanupShelfAlignment(ctx); err != nil {
+			s.Fatal("Failed to restore the shelf alignment: ", err)
+		}
+	}(cleanUpCtx)
 
 	// Wait until the UI becomes idle.
 	ui := uiauto.New(tconn)
@@ -296,10 +301,5 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 	// Unpin the Files app.
 	if err := ash.UnpinApps(ctx, tconn, []string{apps.Files.ID}); err != nil {
 		s.Fatal("Failed to unpin Files when the shelf alignment is ShelfAlignmentRight")
-	}
-
-	// Restore the shelf alignment.
-	if err := ash.SetShelfAlignment(ctx, tconn, dispInfo.ID, originalAlignment); err != nil {
-		s.Fatalf("Failed to restore the shelf alignment to %v: %v", originalAlignment, err)
 	}
 }
