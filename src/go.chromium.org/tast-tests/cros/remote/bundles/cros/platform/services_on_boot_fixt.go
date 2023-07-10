@@ -12,9 +12,9 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/upstart"
-	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint/rpcdut"
 	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -57,19 +57,19 @@ func (ServicesOnBootFixt) SetUp(ctx context.Context, s *testing.FixtState) inter
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, servicesOnBootCleanupTimeout)
 	defer cancel()
 
-	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
-	if err != nil {
-		s.Fatal("Failed to connect RPCDUT: ", err)
+	if err := s.DUT().Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to DUT: ", err)
 	}
 
-	defer func(ctx context.Context) {
-		if err := d.Close(ctx); err != nil {
-			s.Fatal("Failed to close RPCDUT: ", err)
-		}
-	}(cleanupCtx)
+	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+
+	defer cl.Close(cleanupCtx)
 
 	s.Log("Waiting for system-services")
-	upstartService := platform.NewUpstartServiceClient(d.RPC().Conn)
+	upstartService := platform.NewUpstartServiceClient(cl.Conn)
 	if _, err := upstartService.WaitForJobStatus(ctx, &platform.WaitForJobStatusRequest{
 		JobName: "system-services",
 		Goal:    string(upstart.StartGoal),
