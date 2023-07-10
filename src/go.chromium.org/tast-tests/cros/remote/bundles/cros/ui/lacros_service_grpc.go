@@ -24,16 +24,6 @@ func init() {
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "ythjkt@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Params: []testing.Param{
-			{
-				Name: "lacros_primary",
-				Val:  &pb.NewRequest{Lacros: &pb.Lacros{Mode: pb.Lacros_MODE_PRIMARY}},
-			},
-			{
-				Name: "lacros_only",
-				Val:  &pb.NewRequest{Lacros: &pb.Lacros{Mode: pb.Lacros_MODE_ONLY}},
-			},
-		},
 	})
 }
 
@@ -45,11 +35,13 @@ func LacrosServiceGRPC(ctx context.Context, s *testing.State) {
 	}
 	defer cl.Close(ctx)
 
-	newReq := s.Param().(*pb.NewRequest)
-	newReq.LoginMode = pb.LoginMode_LOGIN_MODE_FAKE_LOGIN
-	newReq.Credentials = &pb.NewRequest_Credentials{
-		Username: "user@test.com",
-		Password: "password",
+	newReq := &pb.NewRequest{
+		Lacros:    &pb.Lacros{},
+		LoginMode: pb.LoginMode_LOGIN_MODE_FAKE_LOGIN,
+		Credentials: &pb.NewRequest_Credentials{
+			Username: "user@test.com",
+			Password: "password",
+		},
 	}
 
 	// Start Chrome on DUT.
