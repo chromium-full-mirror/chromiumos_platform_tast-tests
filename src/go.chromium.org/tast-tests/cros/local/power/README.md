@@ -215,8 +215,8 @@ To monitor regression through crosbolt, see http://go/power-test-regression.
 # Feedback
 
 If you have any feature requests / bugs / feedback please feel free to share with us:
-* [Power Buganizer List]
-* [ChromeOS Power Q&A Chat Room]
+* [Power Buganizer List] (go/cros-power-buganizer)
+* [ChromeOS Power Q&A Chat Room] (go/cros-power-q&a)
 
-[ChromeOS Power Q&A Chat Room]: http://chat/room/AAAAzgc_z2Y
-[Power Buganizer List]: http://b/issues?q=status:open%20componentid:1361410
+[ChromeOS Power Q&A Chat Room]: go/cros-power-q&a
+[Power Buganizer List]: go/cros-power-buganizer
