@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -20,7 +21,7 @@ func init() {
 		// Disabled because this is an example test for other tests to follow.
 		// Attr:      []string{"group:mainline", "informational"},
 		Timeout: 1 * time.Minute,
-		Fixture: "powerMetricsNoUI",
+		Fixture: setup.PowerMetricsNoUI,
 	})
 }
 

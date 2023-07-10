@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -26,21 +27,21 @@ func init() {
 		Timeout: 1*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:    "fastest",
-			Fixture: "powerNoUINoWiFi",
+			Fixture: setup.PowerNoUINoWiFi,
 			Val: power.TimeParams{
 				Interval: 1 * time.Second,
 				Total:    10 * time.Second,
 			},
 		}, {
 			Name:    "fast",
-			Fixture: "powerNoUINoWiFi",
+			Fixture: setup.PowerNoUINoWiFi,
 			Val: power.TimeParams{
 				Interval: 5 * time.Second,
 				Total:    20 * time.Second,
 			},
 		}, {
 			Name:    "wifi",
-			Fixture: "powerNoUIWiFi",
+			Fixture: setup.PowerNoUIWiFi,
 			Val: power.TimeParams{
 				Interval: 1 * time.Second,
 				Total:    10 * time.Second,

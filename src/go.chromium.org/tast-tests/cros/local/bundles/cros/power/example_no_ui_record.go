@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -22,7 +23,7 @@ func init() {
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		// Disabled because this is an example test for other tests to follow.
 		// Attr:      []string{"group:mainline", "informational"},
-		Fixture: "powerNoUINoWiFi",
+		Fixture: setup.PowerNoUINoWiFi,
 		Timeout: 3 * time.Minute,
 	})
 }

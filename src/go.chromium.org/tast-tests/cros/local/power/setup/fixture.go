@@ -32,6 +32,42 @@ const (
 	postTestTimeout = 1 * time.Minute
 )
 
+// List of power fixtures.
+const (
+	PowerNoUINoWiFi        = "powerNoUINoWiFi"
+	PowerNoUIWiFi          = "powerNoUIWiFi"
+	PowerMetricsNoUI       = "powerMetricsNoUI"
+	PowerNoUIPlatformAudio = "powerNoUIPlatformAudio"
+
+	// UI
+	PowerAsh       = "powerAsh"
+	PowerLacros    = "powerLacros"
+	PowerAshARC    = "powerAshARC"
+	PowerLacrosARC = "powerLacrosARC"
+
+	// Keyboard backlight
+	PowerAshKbbl    = "powerAshKbbl"
+	PowerLacrosKbbl = "powerLacrosKbbl"
+
+	// With GAIA login
+	PowerAshGAIA    = "powerAshGAIA"
+	PowerLacrosGAIA = "powerLacrosGAIA"
+
+	// With ramfs setup
+	PowerAshRamfs    = "powerAshRamfs"
+	PowerLacrosRamfs = "powerLacrosRamfs"
+
+	// With Dark theme
+	PowerAshDark    = "powerAshDark"
+	PowerLacrosDark = "powerLacrosDark"
+
+	// With Nightlight
+	PowerAshNightlight    = "powerAshNightlight"
+	PowerLacrosNightlight = "powerLacrosNightlight"
+
+	PowerAshPlatformAudio = "powerAshPlatformAudio"
+)
+
 // PowerFixtureOptions describes options used by the fixture only.
 type PowerFixtureOptions struct {
 	BrowserType      browser.Type
@@ -54,7 +90,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerNoUINoWiFi",
+		Name: PowerNoUINoWiFi,
 		Desc: "Set up test environment for tests with no UI, no backlight, no WiFi",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -74,7 +110,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerNoUIWiFi",
+		Name: PowerNoUIWiFi,
 		Desc: "Set up test environment for tests with no UI, no backlight, WiFi set to default",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -93,7 +129,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerNoUIPlatformAudio",
+		Name: PowerNoUIPlatformAudio,
 		Desc: "The powerNoUINoWiFi fixture customized for testing platform audio features that do not depend on ash running",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -119,7 +155,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerMetricsNoUI",
+		Name: PowerMetricsNoUI,
 		Desc: "Set up test environment for tests needing no UI or backlight, collect power metrics, visualize and upload data",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -135,7 +171,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerAshKbbl",
+		Name: PowerAshKbbl,
 		Desc: "Keyboard backlight default level, recommended for simulating user behavior",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -154,7 +190,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerAsh",
+		Name: PowerAsh,
 		Desc: "Keyboard backlight off, recommended for testing feature power",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -173,7 +209,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerLacrosKbbl",
+		Name: PowerLacrosKbbl,
 		Desc: "Keyboard backlight default level, recommended for simulating user behavior",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -192,7 +228,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerLacros",
+		Name: PowerLacros,
 		Desc: "Keyboard backlight off, recommended for testing feature power",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -211,7 +247,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerAshGAIA",
+		Name: PowerAshGAIA,
 		Desc: "Keyboard backlight off with GAIA login, recommended for testing feature power",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -233,7 +269,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerLacrosGAIA",
+		Name: PowerLacrosGAIA,
 		Desc: "Keyboard backlight off with GAIA login, recommended for testing feature power",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -255,7 +291,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerAshARC",
+		Name: PowerAshARC,
 		Desc: "Keyboard backlight off with ARC enabled, recommended for testing feature power",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -278,7 +314,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerLacrosARC",
+		Name: PowerLacrosARC,
 		Desc: "Lacros variation of powerAshARC",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -301,7 +337,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerAshRamfs",
+		Name: PowerAshRamfs,
 		Desc: "PowerAsh with ramfs setup for local data",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -321,7 +357,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerLacrosRamfs",
+		Name: PowerLacrosRamfs,
 		Desc: "PowerLacros with ramfs setup for local data",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -341,7 +377,7 @@ func init() {
 	})
 	// Dark theme basic fixtures
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerAshDark",
+		Name: PowerAshDark,
 		Desc: "Dark theme version of powerAsh",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -359,7 +395,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerLacrosDark",
+		Name: PowerLacrosDark,
 		Desc: "Dark theme version of powerLacros",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -378,7 +414,7 @@ func init() {
 	})
 	// Nightlight basic fixtures
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerAshNightlight",
+		Name: PowerAshNightlight,
 		Desc: "Nightlight version of powerAsh",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -396,7 +432,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerLacrosNightlight",
+		Name: PowerLacrosNightlight,
 		Desc: "Nightlight version of powerLacros",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -415,7 +451,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerAshPlatformAudio",
+		Name: PowerAshPlatformAudio,
 		Desc: "PowerAsh customized for testing platform audio features",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
