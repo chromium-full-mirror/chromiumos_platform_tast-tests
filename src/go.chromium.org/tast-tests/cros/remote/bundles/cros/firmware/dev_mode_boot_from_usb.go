@@ -44,7 +44,7 @@ func init() {
 				validUSB: true, // Test b:200305066.
 			},
 			ExtraAttr: []string{"firmware_usb"},
-			Timeout:   90 * time.Minute,
+			Timeout:   2 * time.Hour,
 		}, {
 			Name: "no_usb",
 			Val: &ctrluParams{

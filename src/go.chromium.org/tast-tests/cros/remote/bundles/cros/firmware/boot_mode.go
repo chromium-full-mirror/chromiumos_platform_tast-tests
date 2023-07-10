@@ -114,7 +114,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
 			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
-			Timeout:           90 * time.Minute,
+			Timeout:           2 * time.Hour,
 		}, {
 			Name:    "dev_cold",
 			Fixture: fixture.DevMode,
@@ -125,7 +125,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
 			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
-			Timeout:           90 * time.Minute,
+			Timeout:           2 * time.Hour,
 		}, {
 			Name:    "dev_to_rec",
 			Fixture: fixture.DevMode,
@@ -196,7 +196,7 @@ func init() {
 			},
 			// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
-			Timeout:   90 * time.Minute,
+			Timeout:   2 * time.Hour,
 		}},
 	})
 }

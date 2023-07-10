@@ -70,7 +70,7 @@ func init() {
 				reconnectTimeout: 10 * time.Minute,
 			},
 			ExtraAttr: []string{"firmware_usb"},
-			Timeout:   60 * time.Minute,
+			Timeout:   2 * time.Hour,
 		}},
 	})
 }

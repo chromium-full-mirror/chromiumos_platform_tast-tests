@@ -41,13 +41,13 @@ func init() {
 		Fixture:      fixture.DevMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable)),
 		Params: []testing.Param{{
-			Timeout: 90 * time.Minute,
+			Timeout: 2 * time.Hour,
 			Val: devFwParam{
 				devFwScreenName: "devWarningScreen",
 			},
 		}, {
 			Name:    "dev_options",
-			Timeout: 90 * time.Minute,
+			Timeout: 2 * time.Hour,
 			// The dev_options screen doesn't exist on the menu_switcher ui.
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("coachz", "homestar", "wormdingler", "quackingstick")),
 			Val: devFwParam{

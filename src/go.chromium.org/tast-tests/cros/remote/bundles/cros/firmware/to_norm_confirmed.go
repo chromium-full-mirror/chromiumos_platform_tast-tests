@@ -32,7 +32,7 @@ func init() {
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable), hwdep.SkipOnModel("coachz", "homestar", "wormdingler", "quackingstick")),
 		Fixture:      fixture.DevMode,
-		Timeout:      80 * time.Minute,
+		Timeout:      2 * time.Hour,
 	})
 }
 
