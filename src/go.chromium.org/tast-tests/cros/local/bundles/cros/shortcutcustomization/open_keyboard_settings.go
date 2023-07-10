@@ -84,7 +84,7 @@ func OpenKeyboardSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Settings app did not appear in shelf: ", err)
 	}
 	// Verify that essential elements exist.
-	viewKeyboardShortcutsLink := nodewith.Name("View and customize keyboard shortcuts").Role(role.Link)
+	viewKeyboardShortcutsLink := nodewith.Name("View keyboard shortcuts").Role(role.Link)
 	changeInputSettingsLink := nodewith.Name("Change input settings").Role(role.Link)
 	if err := uiauto.Combine("Verify essential elements exist",
 		ui.WaitUntilExists(viewKeyboardShortcutsLink),

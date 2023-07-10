@@ -93,9 +93,9 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 		description string
 		keys        sc.ShortcutKeys
 	}{
-		{"Open notifications", sc.ShortcutKeys{Keys: "alt shift n", Role: role.Cell}},
-		{"Open Crosh window", sc.ShortcutKeys{Keys: "ctrl alt t", Role: role.Cell}},
-		{"Open feedback tool", sc.ShortcutKeys{Keys: "alt shift i", Role: role.Cell}},
+		{"Open notifications", sc.ShortcutKeys{Keys: "alt shift n", Role: role.GenericContainer}},
+		{"Open Crosh window", sc.ShortcutKeys{Keys: "ctrl alt t", Role: role.GenericContainer}},
+		{"Open feedback tool", sc.ShortcutKeys{Keys: "alt shift i", Role: role.GenericContainer}},
 	}
 	for _, shortcut := range shortcutsInGeneralCategory {
 		if err := sc.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
@@ -118,9 +118,9 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 		description string
 		keys        sc.ShortcutKeys
 	}{
-		{"Reset zoom level", sc.ShortcutKeys{Keys: "ctrl shift 0", Role: role.Cell}},
-		{"Show stylus tools", sc.ShortcutKeys{Keys: "alt shift p", Role: role.Cell}},
-		{"Switch to last language selected", sc.ShortcutKeys{Keys: "ctrl space", Role: role.Cell}},
+		{"Reset zoom level", sc.ShortcutKeys{Keys: "ctrl shift 0", Role: role.GenericContainer}},
+		{"Show stylus tools", sc.ShortcutKeys{Keys: "alt shift p", Role: role.GenericContainer}},
+		{"Switch to last language selected", sc.ShortcutKeys{Keys: "ctrl space", Role: role.GenericContainer}},
 	}
 	for _, shortcut := range shortcutsInDeviceCategory {
 		if err := sc.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
@@ -143,9 +143,9 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 		description string
 		keys        sc.ShortcutKeys
 	}{
-		{"Open History page", sc.ShortcutKeys{Keys: "ctrl h", Role: role.Cell}},
-		{"Open Downloads page", sc.ShortcutKeys{Keys: "ctrl j", Role: role.Cell}},
-		{"Open file in Chrome browser", sc.ShortcutKeys{Keys: "ctrl o", Role: role.Cell}},
+		{"Open History page", sc.ShortcutKeys{Keys: "ctrl h", Role: role.GenericContainer}},
+		{"Open Downloads page", sc.ShortcutKeys{Keys: "ctrl j", Role: role.GenericContainer}},
+		{"Open file in Chrome browser", sc.ShortcutKeys{Keys: "ctrl o", Role: role.GenericContainer}},
 	}
 	for _, shortcut := range shortcutsInBrowserCategory {
 		if err := sc.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
@@ -168,9 +168,9 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 		description string
 		keys        sc.ShortcutKeys
 	}{
-		{"Copy selected content to clipboard", sc.ShortcutKeys{Keys: "ctrl c", Role: role.Cell}},
-		{"Select everything on page", sc.ShortcutKeys{Keys: "ctrl a", Role: role.Cell}},
-		{"Undo last action", sc.ShortcutKeys{Keys: "ctrl z", Role: role.Cell}},
+		{"Copy selected content to clipboard", sc.ShortcutKeys{Keys: "ctrl c", Role: role.GenericContainer}},
+		{"Select everything on page", sc.ShortcutKeys{Keys: "ctrl a", Role: role.GenericContainer}},
+		{"Undo last action", sc.ShortcutKeys{Keys: "ctrl z", Role: role.GenericContainer}},
 	}
 	for _, shortcut := range shortcutsInTextCategory {
 		if err := sc.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
@@ -193,9 +193,9 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 		description string
 		keys        sc.ShortcutKeys
 	}{
-		{"Maximize window", sc.ShortcutKeys{Keys: "alt =", Role: role.Cell}},
-		{"Minimize window", sc.ShortcutKeys{Keys: "alt -", Role: role.Cell}},
-		{"Close current window", sc.ShortcutKeys{Keys: "ctrl shift w", Role: role.Cell}},
+		{"Maximize window", sc.ShortcutKeys{Keys: "alt =", Role: role.GenericContainer}},
+		{"Minimize window", sc.ShortcutKeys{Keys: "alt -", Role: role.GenericContainer}},
+		{"Close current window", sc.ShortcutKeys{Keys: "ctrl shift w", Role: role.GenericContainer}},
 	}
 	for _, shortcut := range shortcutsInWindowsAndDesksCategory {
 		if err := sc.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
@@ -218,9 +218,9 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 		description string
 		keys        sc.ShortcutKeys
 	}{
-		{"Highlight Launcher button on shelf", sc.ShortcutKeys{Keys: "alt shift l", Role: role.Cell}},
-		{"Move focus to pop-ups and dialogs", sc.ShortcutKeys{Keys: "alt shift a", Role: role.Cell}},
-		{"Select first icon to the left of address bar", sc.ShortcutKeys{Keys: "alt shift t", Role: role.Cell}},
+		{"Highlight Launcher button on shelf", sc.ShortcutKeys{Keys: "alt shift l", Role: role.GenericContainer}},
+		{"Move focus to pop-ups and dialogs", sc.ShortcutKeys{Keys: "alt shift a", Role: role.GenericContainer}},
+		{"Select first icon to the left of address bar", sc.ShortcutKeys{Keys: "alt shift t", Role: role.GenericContainer}},
 	}
 	for _, shortcut := range shortcutsInAccessibilityCategory {
 		if err := sc.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {

@@ -39,9 +39,9 @@ func Launch(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, erro
 	defer kb.Close(ctx)
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// Launch Shortcut customization app with ctrl+alt+/.
-		if err := kb.Accel(ctx, "Ctrl+Alt+/"); err != nil {
-			return errors.Wrap(err, "failed pressing ctrl+alt+/")
+		// Launch Shortcut customization app with ctrl+search+s.
+		if err := kb.Accel(ctx, "Ctrl+Search+S"); err != nil {
+			return errors.Wrap(err, "failed pressing ctrl+search+s")
 		}
 		// Verify Shortcut customization app is launched.
 		if err = ash.WaitForApp(ctx, tconn, apps.ShortcutCustomization.ID, 20*time.Second); err != nil {
@@ -181,7 +181,7 @@ func SearchWithQuery(ctx context.Context, ui *uiauto.Context, kb *input.Keyboard
 		return results, false, err
 	}
 
-	SearchNoResultsFinder := nodewith.Name("No search results found").Role(role.StaticText)
+	SearchNoResultsFinder := nodewith.Name("No search results found").Role(role.StaticText).First()
 	if err := ui.WaitUntilExists(SearchNoResultsFinder)(ctx); err == nil {
 		// No errors, but no search results found.
 		return nil, true, nil
