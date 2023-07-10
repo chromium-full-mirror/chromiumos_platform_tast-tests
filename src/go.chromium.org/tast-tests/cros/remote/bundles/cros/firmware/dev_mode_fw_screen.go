@@ -162,7 +162,7 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 		expectedMode    fwCommon.BootMode
 	}{
 		{"0", []dmfsKeyVal{dmfsCtrlD}, true, fwCommon.BootModeDev},
-		{"1", []dmfsKeyVal{dmfsCtrlU}, true, fwCommon.BootModeDev},
+		{"1", []dmfsKeyVal{dmfsCtrlD}, true, fwCommon.BootModeDev},
 		{"0", []dmfsKeyVal{dmfsCtrlU, dmfsCtrlD}, true, fwCommon.BootModeDev},
 		{"1", []dmfsKeyVal{dmfsCtrlU, dmfsCtrlD}, true, fwCommon.BootModeUSBDev},
 		{"0", []dmfsKeyVal{dmfsCtrlD}, false, fwCommon.BootModeDev},
@@ -262,10 +262,11 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 			s.Fatal("Unexpected error while pressing keys: ", <-keyPressErrChan)
 		}
 		s.Log("Waiting for DUT to reconnect")
+		waitConnectOps := []firmware.WaitConnectOption{firmware.ResetEthernetDongle}
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, testOpt.reconnectTimeout)
 		defer cancelWaitConnect()
 
-		if err := h.WaitConnect(waitConnectCtx); err != nil {
+		if err := h.WaitConnect(waitConnectCtx, waitConnectOps...); err != nil {
 			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
 		if goRoutineRequired {

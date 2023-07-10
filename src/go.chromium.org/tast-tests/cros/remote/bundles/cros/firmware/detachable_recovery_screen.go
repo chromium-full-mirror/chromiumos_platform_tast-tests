@@ -7,13 +7,14 @@ package firmware
 import (
 	"bufio"
 	"context"
+	"regexp"
+	"strings"
+	"time"
+
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	"regexp"
-	"strings"
-	"time"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -190,10 +191,11 @@ func rebootAp(ctx context.Context, h *firmware.Helper) error {
 	}
 
 	testing.ContextLog(ctx, "Waiting for DUT to reconnect")
+	waitConnectOps := []firmware.WaitConnectOption{firmware.ResetEthernetDongle}
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancelWaitConnect()
 
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
+	if err := h.WaitConnect(waitConnectCtx, waitConnectOps...); err != nil {
 		return errors.Wrap(err, "failed to reconnect to DUT")
 	}
 	return nil
@@ -229,9 +231,10 @@ func recToDevMode(ctx context.Context, h *firmware.Helper) error {
 			return errors.Wrap(err, "failed to enable developer mode")
 		}
 	}
+	waitConnectOps := []firmware.WaitConnectOption{firmware.ResetEthernetDongle}
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 4*time.Minute)
 	defer cancelWaitConnect()
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
+	if err := h.WaitConnect(waitConnectCtx, waitConnectOps...); err != nil {
 		return errors.Wrap(err, "failed to reconnect to DUT")
 	}
 	return nil
