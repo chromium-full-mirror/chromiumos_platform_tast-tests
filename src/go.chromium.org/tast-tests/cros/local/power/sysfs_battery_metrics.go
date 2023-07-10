@@ -467,7 +467,7 @@ func (b *SysfsBatteryMetrics) Setup(ctx context.Context, prefix, intervalName st
 		Direction: perf.SmallerIsBetter,
 		Multiple:  false}
 	b.testDurationMetric = perf.Metric{
-		Name:      generalPerfMetricType + minutesBatteryLifeTestedKey,
+		Name:      prefix + generalPerfMetricType + minutesBatteryLifeTestedKey,
 		Unit:      "minute",
 		Direction: perf.SmallerIsBetter,
 	}
