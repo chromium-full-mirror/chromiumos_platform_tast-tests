@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/arcapp"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
@@ -84,7 +85,12 @@ func TrayTriggersARC(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to launch ARC camera app: ", err)
 	}
-	defer cleanupFunc(cleanupCtx, tconn)
+	defer func() {
+		if s.HasError() {
+			cleanupFunc(cleanupCtx, tconn)
+		}
+	}()
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
 
 	vcTray := vctray.New(ctx, tconn)
 	if err := uiauto.Combine("verify camera triggers vcTray",
