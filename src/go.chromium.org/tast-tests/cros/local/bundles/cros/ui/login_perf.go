@@ -618,6 +618,9 @@ func initializeLoginPerfTest(ctx context.Context,
 		chrome.EnableWebAppInstall(),
 		// Disable whats-new page. See crbug.com/1271436.
 		chrome.DisableFeatures("ChromeWhatsNewUI"),
+		// --disable-sync disables test account info sync, eg. Wi-Fi credentials,
+		// so that each test run does not remember info from last test run.
+		chrome.ExtraArgs("--disable-sync"),
 	}
 	// Only enable arc if it's supported.
 	if arc.Supported() {
