@@ -28,7 +28,7 @@ func init() {
 			"neis@chromium.org",
 		},
 		BugComponent: "crbug:OS>LaCrOS",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Timeout:      3 * time.Minute,
 	})
