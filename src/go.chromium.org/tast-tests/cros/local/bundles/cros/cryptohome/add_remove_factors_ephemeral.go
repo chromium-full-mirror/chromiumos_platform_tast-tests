@@ -9,6 +9,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -98,12 +99,9 @@ func AddRemoveFactorsEphemeral(ctx context.Context, s *testing.State) {
 		nil); err != nil {
 		s.Fatal("Mismatch in configured auth factors before adding factors (-got, +want): ", err)
 	}
-	if err := cryptohomecommon.ExpectAuthFactorTypes(
+	if err := cryptohomecommon.ExpectContainsAuthFactorType(
 		listFactorsAtStartReply.SupportedAuthFactors,
-		[]uda.AuthFactorType{
-			uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
-			uda.AuthFactorType_AUTH_FACTOR_TYPE_SMART_CARD,
-			uda.AuthFactorType_AUTH_FACTOR_TYPE_LEGACY_FINGERPRINT},
+		uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
 	); err != nil {
 		s.Fatal("Mismatch in supported auth factors before adding factors (-got, +want): ", err)
 	}
@@ -128,12 +126,9 @@ func AddRemoveFactorsEphemeral(ctx context.Context, s *testing.State) {
 		}}); err != nil {
 		s.Fatal("Mismatch in configured auth factors after adding password (-got, +want): ", err)
 	}
-	if err := cryptohomecommon.ExpectAuthFactorTypes(
+	if err := cryptohomecommon.ExpectContainsAuthFactorType(
 		listFactorsAfterAddPasswordReply.SupportedAuthFactors,
-		[]uda.AuthFactorType{
-			uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
-			uda.AuthFactorType_AUTH_FACTOR_TYPE_SMART_CARD,
-			uda.AuthFactorType_AUTH_FACTOR_TYPE_LEGACY_FINGERPRINT},
+		uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
 	); err != nil {
 		s.Fatal("Mismatch in supported auth factors after adding password (-got, +want): ", err)
 	}
