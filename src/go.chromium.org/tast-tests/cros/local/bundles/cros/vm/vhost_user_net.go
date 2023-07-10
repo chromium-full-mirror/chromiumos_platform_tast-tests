@@ -7,7 +7,6 @@ package vm
 import (
 	"bytes"
 	"context"
-	"encoding/binary"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -17,7 +16,6 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	pp "chromiumos/system_api/patchpanel_proto"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/dlc"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
@@ -47,21 +45,21 @@ type ifreq struct {
 	flags int16
 }
 
-func openTapDevice(device *pp.NetworkDevice) (int, error) {
+func openTapDevice(ifname string) (int, error) {
 	const path = "/dev/net/tun"
 
 	fd, err := unix.Open(path, unix.O_RDWR|unix.O_NONBLOCK, 0)
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to open Tap device: %v", device.Ifname)
+		return 0, errors.Wrapf(err, "failed to open Tap device: %v", ifname)
 	}
 
-	if len(device.Ifname) > unix.IFNAMSIZ-1 {
+	if len(ifname) > unix.IFNAMSIZ-1 {
 		unix.Close(fd)
-		return 0, errors.Wrapf(err, "too long Ifname: %s", device.Ifname)
+		return 0, errors.Wrapf(err, "too long Ifname: %s", ifname)
 	}
 
 	ifr := ifreq{}
-	copy(ifr.name[:], device.Ifname)
+	copy(ifr.name[:], ifname)
 	ifr.flags = unix.IFF_TAP | unix.IFF_NO_PI | unix.IFF_VNET_HDR
 	if _, _, errno := unix.Syscall(
 		unix.SYS_IOCTL,
@@ -124,24 +122,17 @@ func getTap(ctx context.Context, pc *patchpanel.Client, cid uint32) (device tapD
 		}
 	}
 
-	fd, err := openTapDevice(resp.Device)
+	fd, err := openTapDevice(resp.TapDeviceIfname)
 	if err != nil {
 		shutdown()
 		err = errors.Wrap(err, "failed to open Tap device")
 		return
 	}
 
-	// Convert BaseAddr into an IP address
-	// Note that we need to explicitly change byte order from "network order" (= big endian) to little endian.
-	gateway := make(net.IP, 4)
-	binary.LittleEndian.PutUint32(gateway[0:], resp.Device.HostIpv4Addr)
-	addr := make(net.IP, 4)
-	binary.LittleEndian.PutUint32(addr[0:], resp.Device.Ipv4Addr)
-
 	device = tapDevice{
 		fd:      fd,
-		addr:    addr,
-		gateway: gateway,
+		addr:    resp.Ipv4Address,
+		gateway: resp.GatewayIpv4Address,
 	}
 
 	cleanup = func() {
