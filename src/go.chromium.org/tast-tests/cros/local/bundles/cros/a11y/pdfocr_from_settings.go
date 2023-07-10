@@ -33,7 +33,7 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PDFOCR,
+		Func:         PDFOCRFromSettings,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Check the PDF OCR feature converts PDF image to text using the OCR (Optical Character Recognition) model available in the screen-ai dlc",
 		Contacts: []string{
@@ -60,7 +60,7 @@ func init() {
 	})
 }
 
-func PDFOCR(ctx context.Context, s *testing.State) {
+func PDFOCRFromSettings(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
