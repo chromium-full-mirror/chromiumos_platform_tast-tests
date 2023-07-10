@@ -39,7 +39,7 @@ func init() {
 			"hcyang@google.com",
 		},
 		BugComponent: "b:1188704",
-		Attr:         []string{"group:mainline", "informational", "group:u2fd"},
+		Attr:         []string{"group:hwsec", "hwsec_nightly", "group:u2fd"},
 		SoftwareDeps: []string{"chrome", "gsc"},
 		Timeout:      5 * time.Minute,
 		Data: []string{

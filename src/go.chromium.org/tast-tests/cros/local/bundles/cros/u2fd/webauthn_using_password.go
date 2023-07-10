@@ -32,7 +32,7 @@ func init() {
 			"hcyang@google.com",
 		},
 		BugComponent: "b:1188704",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:hwsec", "hwsec_nightly", "group:u2fd"},
 		SoftwareDeps: []string{"chrome", "tpm"},
 		Data: []string{
 			"webauthn.html",
@@ -41,39 +41,33 @@ func init() {
 		Params: []testing.Param{{
 			Name:              "tpm",
 			ExtraSoftwareDeps: []string{"no_gsc", "no_tpm_dynamic"},
-			ExtraAttr:         []string{"informational", "group:u2fd"},
 			Fixture:           "chromeLoggedIn",
 			Val:               browser.TypeAsh,
 		}, {
 			Name:              "tpm_lacros",
 			ExtraSoftwareDeps: []string{"no_gsc", "lacros", "no_tpm_dynamic"},
-			ExtraAttr:         []string{"informational", "group:u2fd"},
 			Fixture:           "lacros",
 			Val:               browser.TypeLacros,
 		}, {
 			Name:              "tpm_dynamic",
 			ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
-			ExtraAttr:         []string{"informational", "group:u2fd"},
 			Fixture:           "chromeLoggedIn",
 			Val:               browser.TypeAsh,
 		}, {
 			Name:              "tpm_dynamic_lacros",
 			ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc", "lacros"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
-			ExtraAttr:         []string{"informational", "group:u2fd"},
 			Fixture:           "lacros",
 			Val:               browser.TypeLacros,
 		}, {
 			Name:              "gsc",
 			ExtraSoftwareDeps: []string{"gsc"},
-			ExtraAttr:         []string{"informational", "group:u2fd"},
 			Fixture:           "chromeLoggedIn",
 			Val:               browser.TypeAsh,
 		}, {
 			Name:              "gsc_lacros",
 			ExtraSoftwareDeps: []string{"gsc", "lacros"},
-			ExtraAttr:         []string{"informational", "group:u2fd"},
 			Fixture:           "lacros",
 			Val:               browser.TypeLacros,
 		}},
