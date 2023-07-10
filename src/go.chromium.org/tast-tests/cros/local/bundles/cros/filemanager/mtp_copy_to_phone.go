@@ -91,10 +91,7 @@ func MTPCopyToPhone(ctx context.Context, s *testing.State) {
 		files.OpenPath(filesapp.FilesTitlePrefix+mtp.DeviceName, mtp.DeviceName, "Download"),
 		files.LeftClick(refreshButton), // TODO: remove once b/269057578 is fixed.
 		files.PasteFileFromClipboard(kb),
-		files.LeftClickUntil(
-			refreshButton, // TODO: remove once b/269058614 is fixed.
-			files.WithTimeout(time.Second).WaitForFile(testFile),
-		),
+		files.WithTimeout(5*time.Second).WaitForFile(testFile),
 	)(ctx); err != nil {
 		s.Fatalf("Failed to copy %q to the phone: %v", originalFileLocation, err)
 	}
