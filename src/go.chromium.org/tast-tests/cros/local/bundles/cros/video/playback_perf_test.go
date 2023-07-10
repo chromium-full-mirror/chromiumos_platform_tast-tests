@@ -314,6 +314,10 @@ func TestPlaybackPerfParams(t *testing.T) {
 					param.GridWidth = gridW
 					param.GridHeight = gridH
 					param.PerfTracing = true
+					if numVideos > 10 {
+						// More than 10 videos in parallel is too much for Grunt, see b/290637628.
+						param.HardwareDeps = "hwdep.SkipGPUFamily([]string{\"stoney\"})"
+					}
 					param.Attr = []string{"group:graphics", "graphics_video", "graphics_nightly"}
 					params = append(params, param)
 				}
