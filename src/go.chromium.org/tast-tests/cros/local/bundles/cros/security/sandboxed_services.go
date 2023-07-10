@@ -133,6 +133,7 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		{"cros_healthd", "cros_healthd", "cros_healthd", mntNS | restrictCaps | noNewPrivs | seccomp}, // main cros_healthd daemon
 		{"featured", "root", "root", 0},
 		{"cr50-disable-sl", "root", "root", 0},
+		{"cr50_disable_sl", "root", "root", 0},
 		{"rmad", "root", "root", mntNS},                                       // rmad's root-level executor
 		{"rmad", "rmad", "rmad", mntNS | restrictCaps | noNewPrivs | seccomp}, // main RMA daemon
 		{"lvmd", "root", "root", 0},                                           // TODO(b/278480982): reduce privileges allowed for lvmd.
