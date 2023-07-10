@@ -112,7 +112,7 @@ type FixtureData struct {
 func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	// Use a shortened context for setup operations to reserve time for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, uninstallationTimeout)
 	defer cancel()
 
 	f.fakeDMS = s.ParentValue().(*fixtures.FixtData).FakeDMS()
