@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 )
@@ -113,6 +114,9 @@ func launchApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn, act stri
 
 	if err = activity.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to start app")
+	}
+	if err := ash.WaitForVisible(ctx, tconn, cameraAppPackage); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for activity to be visible")
 	}
 	cleanupFunc = func(cleanupCtx context.Context, tconn *chrome.TestConn) {
 		defer activity.Close(cleanupCtx)
