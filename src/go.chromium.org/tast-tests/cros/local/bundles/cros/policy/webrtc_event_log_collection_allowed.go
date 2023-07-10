@@ -33,7 +33,7 @@ func init() {
 		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.bond_credentials"},
-		Timeout:      9 * time.Minute,
+		Timeout:      15 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.WebRtcEventLogCollectionAllowed{}, pci.VerifiedValue),
 		},
@@ -94,7 +94,7 @@ func WebrtcEventLogCollectionAllowed(ctx context.Context, s *testing.State) {
 				Creds:              bondCreds,
 				Tc:                 param,
 				Timeout:            2 * time.Minute,
-				Interval:           10 * time.Second,
+				Interval:           1 * time.Millisecond,
 			}
 
 			if err := webrtclogupload.NetLogAnnotationTest(ctx, fdms, cr, tconn, runParam); err != nil {

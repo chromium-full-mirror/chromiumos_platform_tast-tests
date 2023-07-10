@@ -17,7 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
@@ -69,19 +69,30 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 		return errors.Wrap(err, "failed to update policies")
 	}
 
-	// Setup the browser for lacros tests after the policy was set.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, runParam.Bt)
-	if err != nil {
-		return errors.Wrap(err, "failed to open the browser")
+	// Setup browser and connSource by type of browser.
+	var cs ash.ConnSource
+	var br *browser.Browser
+	switch runParam.Bt {
+	case browser.TypeLacros:
+		// Launch lacros.
+		l, err := lacros.Launch(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to launch lacros")
+		}
+		defer l.Close(closeCtx)
+		cs = l
+		br = l.Browser()
+	case browser.TypeAsh:
+		cs = cr
+		br = cr.Browser()
 	}
-	defer closeBrowser(closeCtx)
 
 	// Open the net-export page and start logging.
 	if err := annotations.StartLogging(ctx, cr, br); err != nil {
 		return errors.Wrap(err, "failed to start logging")
 	}
 
-	if err := TriggerWebRTCLogUploads(ctx, cr, br, tconn, runParam.Creds); err != nil {
+	if err := TriggerWebRTCLogUploads(ctx, cr, br, tconn, runParam.Creds, cs); err != nil {
 		return errors.Wrap(err, "failed to launch Meet client")
 	}
 
@@ -105,29 +116,25 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 		return errors.Wrap(errorCheckingLogs, "failed to check network logs")
 	}
 
-	if testCase.AnnotationLogExpected != foundAnnotation {
-		return errors.Errorf("unexpected annotation; expected: %t, got: %t", testCase.AnnotationLogExpected, foundAnnotation)
-	}
-
 	// Stop logging.
 	if err := annotations.StopLogging(ctx, cr, br); err != nil {
 		return errors.Wrap(err, "failed to stop logging and check logs")
+	}
+
+	if testCase.AnnotationLogExpected != foundAnnotation {
+		return errors.Errorf("unexpected annotation; expected: %t, got: %t", testCase.AnnotationLogExpected, foundAnnotation)
 	}
 
 	return nil
 }
 
 // TriggerWebRTCLogUploads is used to create a Meet client and trigger feedback to create WebRTC logs.
-func TriggerWebRTCLogUploads(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, tconn *chrome.TestConn, creds string) (errr error) {
+func TriggerWebRTCLogUploads(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, tconn *chrome.TestConn, creds string, connSource ash.ConnSource) (errr error) {
 	const (
 		createConfTimeout = 30 * time.Second
 		meetTimeout       = 10 * time.Minute
 	)
-
-	var connSource ash.ConnSource
-
 	closeCtx := ctx
-	connSource = cr
 
 	// Ensure that we close the Meet window at the end of the test in case
 	// the test fails.
@@ -238,8 +245,13 @@ func ensureMicAndCamAllowed(ctx context.Context, tconn *chrome.TestConn) error {
 	allowCam := nodewith.Name("Allow camera").Role(role.Button)
 	allowMicCam := nodewith.Name("Allow microphone and camera").Role(role.Button)
 
+	// GoBigSleepLint: Wait to let modal become available on screen.
+	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		return errors.Wrap(err, "failed to wait for modal")
+	}
+
 	// Click the "Allow camera" button if present.
-	if err := ui.WithTimeout(5 * time.Second).Exists(allowCam)(ctx); err == nil {
+	if err := ui.Exists(allowCam)(ctx); err == nil {
 		if err := uiauto.Combine("Click 'Allow camera' button",
 			ui.DoDefault(allowCam),
 			ui.WaitUntilGone(allowCam),
@@ -249,7 +261,7 @@ func ensureMicAndCamAllowed(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 
 	// Click the "Allow microphone and camera" button if present.
-	if err := ui.WithTimeout(5 * time.Second).Exists(allowMicCam)(ctx); err == nil {
+	if err := ui.Exists(allowMicCam)(ctx); err == nil {
 		if err := uiauto.Combine("Click 'Allow microphone and camera' button",
 			ui.DoDefault(allowMicCam),
 			ui.WaitUntilGone(allowMicCam),

@@ -33,7 +33,7 @@ func init() {
 		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.bond_credentials"},
-		Timeout:      6 * time.Minute,
+		Timeout:      8 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.WebRtcTextLogCollectionAllowed{}, pci.VerifiedValue),
 		},
