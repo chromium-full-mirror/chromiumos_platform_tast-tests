@@ -25,7 +25,7 @@ const lpstatPatternPrefix = `device for ([-a-zA-Z0-9]+): `
 // PrinterNameByURI runs the lpstat command to search for a configured printer
 // which corresponds to uri. Return the name of the matching printer if found.
 func PrinterNameByURI(ctx context.Context, uri string) (name string, err error) {
-	out, stderr, err := testexec.CommandContext(ctx, "lpstat", "-v").SeparatedOutput()
+	out, stderr, err := testexec.CommandContext(ctx, "lpstat", "-t").SeparatedOutput()
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to run scan for configured printers; %s", stderr)
 	}
@@ -34,7 +34,16 @@ func PrinterNameByURI(ctx context.Context, uri string) (name string, err error) 
 	for _, line := range strings.Split(string(out), "\n") {
 		submatches := r.FindStringSubmatch(line)
 		if submatches != nil {
-			return submatches[1], nil
+			name := submatches[1]
+
+			// check if the printer is idle and ready to accept jobs
+			lr := regexp.MustCompile(name + " accepting requests since")
+			for _, nline := range strings.Split(string(out), "\n") {
+				idleSubmatches := lr.FindStringSubmatch(nline)
+				if idleSubmatches != nil {
+					return name, nil
+				}
+			}
 		}
 	}
 
