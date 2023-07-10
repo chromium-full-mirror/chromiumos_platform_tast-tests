@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
+	"go.chromium.org/tast-tests/cros/local/a11y/pdfocr"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -25,24 +26,18 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	testPDFName       = "inaccessible-text.pdf"
-	pdfOCRStatusReady = "Image converted to text"
-	textInPDFImage    = "Hello, world!"
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PDFOCRFromSettings,
 		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Check the PDF OCR feature converts PDF image to text using the OCR (Optical Character Recognition) model available in the screen-ai dlc",
+		Desc:         "Check the PDF OCR feature converts PDF image to text using the OCR (Optical Character Recognition) model available in the screen-ai dlc. This test turns on PDF OCR from the Settings",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"kyungjunlee@chromium.org",     // Test author
 		},
 		BugComponent: "b:1272894", // ChromeOS Public Tracker > Experiences > Accessibility > Machine Intelligence
 		Attr:         []string{"group:mainline", "informational"},
-		Data:         []string{testPDFName}, // Testing PDF containing inaccessible text
+		Data:         []string{pdfocr.TestPDFName}, // Testing PDF containing inaccessible text
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
@@ -75,7 +70,7 @@ func PDFOCRFromSettings(ctx context.Context, s *testing.State) {
 		chrome.EnableFeatures("PdfOcr"),
 	)
 	if err != nil {
-		s.Fatal("Failed to start chrome: ", err)
+		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
 
@@ -89,34 +84,67 @@ func PDFOCRFromSettings(ctx context.Context, s *testing.State) {
 	}
 	defer a11y.ClearFeature(cleanupCtx, tconn, a11y.SpokenFeedback)
 
+	for _, pdfOCRSetting := range []struct {
+		scenario               string
+		toggleBeforeOpeningPDF bool
+	}{{
+		scenario:               "beforePDF",
+		toggleBeforeOpeningPDF: true,
+	}, {
+		scenario:               "afterPDF",
+		toggleBeforeOpeningPDF: false,
+	}} {
+		s.Run(ctx, pdfOCRSetting.scenario, func(ctx context.Context, s *testing.State) {
+			// The first testing scenario turns on PDF OCR from the Settings before opening a PDF.
+			if pdfOCRSetting.toggleBeforeOpeningPDF {
+				if err := togglePDFOCRAndWaitForDlcInstallation(ctx, cr, tconn); err != nil {
+					s.Fatal("Failed to toggle on PDF OCR and wait the screen-ai dlc to be installed: ", err)
+				}
+			}
+
+			// Open the test PDF.
+			conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/"+pdfocr.TestPDFName)
+			if err != nil {
+				s.Fatal("Failed to open test PDF: ", err)
+			}
+			defer closeBrowser(cleanupCtx)
+			defer conn.Close()
+
+			// The second testing scenario turns on PDF OCR from the Settings after opening a PDF.
+			if !pdfOCRSetting.toggleBeforeOpeningPDF {
+				if err := togglePDFOCRAndWaitForDlcInstallation(ctx, cr, tconn); err != nil {
+					s.Fatal("Failed to toggle on PDF OCR and wait the screen-ai dlc to be installed: ", err)
+				}
+			}
+
+			ui := uiauto.New(tconn)
+			pdfRoot := nodewith.Role(role.PdfRoot)
+			status := nodewith.Name(pdfocr.StatusReadyMessage).Role(role.Status)
+			ocredText := nodewith.Name(pdfocr.TextInPDFImage).Role(role.StaticText)
+
+			// Check if PDF OCR successfully extracts text from the inaccessible PDF.
+			if err := uiauto.Combine("Check OCR result",
+				ui.WithTimeout(30*time.Second).WaitUntilExists(pdfRoot),
+				ui.WithTimeout(60*time.Second).WaitUntilExists(status),
+				ui.WithTimeout(60*time.Second).WaitUntilExists(ocredText),
+			)(ctx); err != nil {
+				s.Fatal("Failed to verify text extracted by PDF OCR")
+			}
+
+			// Turn off PDF OCR from the Settings to clean up.
+			if err := ossettings.TogglePDFOCR(cr, tconn, false)(ctx); err != nil {
+				s.Fatal("Failed to toggle off PDF OCR: ", err)
+			}
+		})
+	}
+}
+
+// togglePDFOCRAndWaitForDlcInstallation toggles on PDF OCR from the Settings
+// and waits the screen-ai dlc to be installed.
+func togglePDFOCRAndWaitForDlcInstallation(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
 	if err := ossettings.TogglePDFOCR(cr, tconn, true)(ctx); err != nil {
-		s.Fatal("Failed to toggle on PDF OCR: ", err)
+		return err
 	}
-
 	// Wait until screen-ai dlc is installed.
-	if err := testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
-		s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
-	}
-
-	// Open the test PDF.
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/"+testPDFName)
-	if err != nil {
-		s.Fatal("Failed to open test PDF: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
-
-	ui := uiauto.New(tconn)
-	pdfRoot := nodewith.Role(role.PdfRoot)
-	status := nodewith.Name(pdfOCRStatusReady).Role(role.Status)
-	ocredText := nodewith.Name(textInPDFImage).Role(role.StaticText)
-
-	// Check if PDF OCR successfully extracts text from the inaccessible PDF.
-	if err := uiauto.Combine("Check OCR result",
-		ui.WithTimeout(30*time.Second).WaitUntilExists(pdfRoot),
-		ui.WithTimeout(60*time.Second).WaitUntilExists(status),
-		ui.WithTimeout(60*time.Second).WaitUntilExists(ocredText),
-	)(ctx); err != nil {
-		s.Fatal("Failed to verify text extracted by PDF OCR")
-	}
+	return testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second})
 }
