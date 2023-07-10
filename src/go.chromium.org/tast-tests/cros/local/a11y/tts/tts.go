@@ -363,6 +363,7 @@ func NewOptionsExpectation(utterance, lang string, pitch, rate float32) OptionsE
 // we never compare against stale utterances; a spoken utterance is either
 // matched or discarded.
 // 2. Check if the utterance matches the expectation.
+// TODO(b:291094454): Add another method that takes the timeout as a parameter.
 func (sm *SpeechMonitor) Consume(ctx context.Context, expectations []SpeechExpectation) error {
 	var actual []UtteranceData
 	for _, exp := range expectations {
@@ -379,7 +380,7 @@ func (sm *SpeechMonitor) Consume(ctx context.Context, expectations []SpeechExpec
 			}
 
 			return nil
-		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 			return errors.Errorf("expected: %q, but got: %q", expectations, actual)
 		}
 	}

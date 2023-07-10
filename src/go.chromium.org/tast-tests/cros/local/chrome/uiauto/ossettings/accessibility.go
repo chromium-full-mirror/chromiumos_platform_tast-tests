@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/local/a11y/pdfocr"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -18,8 +19,6 @@ import (
 const (
 	liveCaptionSubPageURL = "audioAndCaptions"
 	liveCaptionToggleName = "Live Caption"
-	pdfOCRSubPageURL      = "textToSpeech"
-	pdfOCRToggleName      = "Convert PDF images to text"
 )
 
 // ToggleLiveCaption toggles on/off live caption option in Accessibiility tab.
@@ -44,14 +43,14 @@ func TogglePDFOCR(cr *chrome.Chrome, tconn *chrome.TestConn, value bool) action.
 	return func(ctx context.Context) error {
 		ui := uiauto.New(tconn)
 		ttsHeading := nodewith.NameStartingWith("Text-to-Speech").Role(role.Heading)
-		settings, err := LaunchAtPageURL(ctx, tconn, cr, pdfOCRSubPageURL, ui.Exists(ttsHeading))
+		settings, err := LaunchAtPageURL(ctx, tconn, cr, pdfocr.SettingsSubPageURL, ui.Exists(ttsHeading))
 		if err != nil {
 			return errors.Wrap(err, "failed to open Text-to-Speech setting page")
 		}
 		defer settings.Close(ctx)
 		return uiauto.Combine("toggle PDF OCR",
-			ui.WaitUntilExists(nodewith.Name(pdfOCRToggleName).Role(role.ToggleButton)),
-			settings.SetToggleOption(cr, pdfOCRToggleName, value),
+			ui.WaitUntilExists(nodewith.Name(pdfocr.SettingsToggleName).Role(role.ToggleButton)),
+			settings.SetToggleOption(cr, pdfocr.SettingsToggleName, value),
 		)(ctx)
 	}
 }
