@@ -22,6 +22,7 @@ import (
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/rpc"
@@ -48,6 +49,17 @@ const (
 	fwTryCountFlag = "fw_try_count"
 	// Boot result of the currently booted FW slot.
 	fwResultFlag = "fw_result"
+)
+
+const (
+	// The crossystem `fwTryCountFlag` is set to `resetFWTryCount`
+	// when a firmware update is invalidated, to indicate
+	// that currently booted firmware successfully booted.
+	resetFWTryCount = "0"
+	// Arbitrary value to set the crossystem `fwTryCountFlag` to
+	// to indicate the number of tries to try the next firmware update.
+	// Used to fake a firmware update.
+	updateFWTryCount = "5"
 )
 
 func init() {
@@ -89,7 +101,6 @@ func OmahaInvalidation(ctx context.Context, s *testing.State) {
 			s.Error("Failed to reset TPM after test: ", err)
 		}
 	}(cleanupCtx)
-
 	if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
 		s.Fatal("Failed to reset TPM: ", err)
 	}
@@ -98,7 +109,11 @@ func OmahaInvalidation(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
-	defer cl.Close(cleanupCtx)
+	defer func(ctx context.Context) {
+		if cl != nil {
+			cl.Close(ctx)
+		}
+	}(cleanupCtx)
 
 	// Enroll the DUT and set the policy.
 	pb := policy.NewBlob()
@@ -121,7 +136,14 @@ func OmahaInvalidation(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to enroll: ", err)
 	}
-	defer policyClient.StopChromeAndFakeDMS(ctx, &empty.Empty{})
+	defer func(ctx context.Context) {
+		if cl != nil {
+			// Recreating since the client can have a stale RPC connection
+			// after the reboot.
+			policyClient := pspb.NewPolicyServiceClient(cl.Conn)
+			policyClient.StopChromeAndFakeDMS(ctx, &empty.Empty{})
+		}
+	}(cleanupCtx)
 
 	// Save current root and firmware partition information
 	// to verify the invalidation later.
@@ -130,7 +152,7 @@ func OmahaInvalidation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get current root partition: ", err)
 	}
 
-	mainFWAct, err := getCrossystemFlag(ctx, s, mainFWActFlag)
+	mainFWAct, err := getCrossystemFlag(ctx, s.DUT(), mainFWActFlag)
 	if err != nil {
 		s.Fatal("Failed to get current firmware partition: ", err)
 	}
@@ -154,9 +176,14 @@ func OmahaInvalidation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to update image: ", err)
 	}
 
-	if err := fakeFirmwareUpdate(ctx, s); err != nil {
+	if err := fakeFirmwareUpdate(ctx, s.DUT()); err != nil {
 		s.Fatal("Failed to fake firmware update: ", err)
 	}
+	defer func(ctx context.Context) {
+		if err := revertFakeFirmwareUpdate(ctx, s.DUT()); err != nil {
+			s.Error("Failed to reset fake firmware update: ", err)
+		}
+	}(cleanupCtx)
 
 	// Configure nebraska to invalidate the installed update.
 	nebraskaClient := nebraska.NewServiceClient(cl.Conn)
@@ -165,7 +192,12 @@ func OmahaInvalidation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Nebraska")
 	}
 	defer func(ctx context.Context) {
-		nebraskaClient.Stop(ctx, &empty.Empty{})
+		if cl != nil {
+			// Recreating since the client can have a stale RPC connection
+			// after the reboot.
+			nebraskaClient := nebraska.NewServiceClient(cl.Conn)
+			nebraskaClient.Stop(ctx, &empty.Empty{})
+		}
 	}(cleanupCtx)
 
 	if _, err := nebraskaClient.SetInvalidateLastUpdate(ctx, &nebraska.SetInvalidateLastUpdateRequest{InvalidateLastUpdate: true}); err != nil {
@@ -179,49 +211,28 @@ func OmahaInvalidation(ctx context.Context, s *testing.State) {
 	})
 
 	// Verify that the update is invalidated.
-	if err := verifyInvalidatedUpdate(ctx, s, mainFWAct, string(rootdev)); err != nil {
+	if err := verifyInvalidatedUpdate(ctx, s.DUT(), mainFWAct, string(rootdev)); err != nil {
 		s.Fatal("Failed to verify the update invalidation: ", err)
 	}
 
-	// Reboot and try to ssh into the device
-	// to verify that a device still boots properly.
-	bootID, err := updateutil.ReadBootID(ctx, s.DUT())
-	if err != nil {
-		s.Fatal("Failed to read current boot ID: ", err)
-	}
-
+	// Reboot and try to ssh into a device
+	// to verify that the device still boots properly.
 	if err := s.DUT().Reboot(ctx); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
-		defer cancel()
-		if err := s.DUT().WaitConnect(ctx); err != nil {
-			return errors.Wrap(err, "failed to connect to DUT")
-		}
-
-		id, err := updateutil.ReadBootID(ctx, s.DUT())
-		if err != nil {
-			return errors.Wrap(err, "failed to read boot_id")
-		}
-
-		if id == bootID {
-			return errors.New("device did not reboot")
-		}
-
-		return nil
-	}, &testing.PollOptions{Timeout: rebootTimeout, Interval: time.Second}); err != nil {
-		s.Fatal("Failed to wait for reboot: ", err)
+	// Recreating because the RPC connection is stale after the reboot.
+	cl, err = rpc.Dial(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 }
 
 // fakeFirmwareUpdate fakes a firmware update by setting appropriate crossystem
 // flags indicating the update.
 // Sets the next FW slot to try on next boot to alternative slot.
-func fakeFirmwareUpdate(ctx context.Context, s *testing.State) error {
+func fakeFirmwareUpdate(ctx context.Context, dut *dut.DUT) error {
 	// Get the currently booted FW partition slot.
-	mainFWAct, err := getCrossystemFlag(ctx, s, mainFWActFlag)
+	mainFWAct, err := getCrossystemFlag(ctx, dut, mainFWActFlag)
 	if err != nil {
 		return errors.Wrap(err, "failed to get current firmware partition")
 	}
@@ -237,12 +248,32 @@ func fakeFirmwareUpdate(ctx context.Context, s *testing.State) error {
 	}
 
 	// Set the fw_try_next crossystem flag to change the next FW slot to try.
-	if err := setCrossystemFlag(ctx, s, fwTryNextFlag, fwNext); err != nil {
+	if err := setCrossystemFlag(ctx, dut, fwTryNextFlag, fwNext); err != nil {
 		return errors.Wrap(err, "failed to change next FW slot")
 	}
 
 	// Set the fw_try_count crossystem flag to indicate number of tries to try the next FW slot.
-	if err := setCrossystemFlag(ctx, s, fwTryCountFlag, "5"); err != nil {
+	if err := setCrossystemFlag(ctx, dut, fwTryCountFlag, updateFWTryCount); err != nil {
+		return errors.Wrap(err, "failed to change FW slot try count")
+	}
+
+	return nil
+}
+
+// revertFakeFirmwareUpdate reverts crossystem flags set by FakeFirmwareUpdate.
+func revertFakeFirmwareUpdate(ctx context.Context, dut *dut.DUT) error {
+	// Get the currently booted FW partition slot.
+	mainFWAct, err := getCrossystemFlag(ctx, dut, mainFWActFlag)
+	if err != nil {
+		return errors.Wrap(err, "failed to get current firmware partition")
+	}
+
+	// Set the fw_try_next crossystem flag to the currently booted FW partition.
+	if err := setCrossystemFlag(ctx, dut, fwTryNextFlag, mainFWAct); err != nil {
+		return errors.Wrap(err, "failed to change next FW slot")
+	}
+	// Set the fw_try_count crossystem flag to zero.
+	if err := setCrossystemFlag(ctx, dut, fwTryCountFlag, resetFWTryCount); err != nil {
 		return errors.Wrap(err, "failed to change FW slot try count")
 	}
 
@@ -252,54 +283,54 @@ func fakeFirmwareUpdate(ctx context.Context, s *testing.State) error {
 // verifyInvalidatedUpdate verifies that an update is invalidated by checking
 // that the root and the firmware partitions are reset to previous states.
 // Also verifies that the appropriate firmware flags are correctly reset.
-func verifyInvalidatedUpdate(ctx context.Context, s *testing.State, prevMainFwAct, prevRootSlot string) error {
+func verifyInvalidatedUpdate(ctx context.Context, dut *dut.DUT, prevMainFwAct, prevRootSlot string) error {
 	// Get the currently booted FW partition slot.
-	mainFWAct, err := getCrossystemFlag(ctx, s, mainFWActFlag)
+	mainFWAct, err := getCrossystemFlag(ctx, dut, mainFWActFlag)
 	if err != nil {
 		return errors.Wrap(err, "failed to read main_fw_act from crossystem")
 	}
 
 	// Get a value of the fw_try_next flag.
-	fwTryNext, err := getCrossystemFlag(ctx, s, fwTryNextFlag)
+	fwTryNext, err := getCrossystemFlag(ctx, dut, fwTryNextFlag)
 	if err != nil {
 		return errors.Wrap(err, "failed to read fw_try_next from crossystem")
 	}
 
 	// Get a value of the fw_try_count flag.
-	fwTryCount, err := getCrossystemFlag(ctx, s, fwTryCountFlag)
+	fwTryCount, err := getCrossystemFlag(ctx, dut, fwTryCountFlag)
 	if err != nil {
 		return errors.Wrap(err, "failed to read fw_try_count from crossystem")
 	}
 
 	// Get a value of the fw_result flag.
-	fwResult, err := getCrossystemFlag(ctx, s, fwResultFlag)
+	fwResult, err := getCrossystemFlag(ctx, dut, fwResultFlag)
 	if err != nil {
 		return errors.Wrap(err, "failed to read fw_result from crossystem")
 	}
 
 	// Verify that flags are properly reset.
-	if mainFWAct != prevMainFwAct || mainFWAct != fwTryNext || fwTryCount != "0" || fwResult != "success" {
+	if mainFWAct != prevMainFwAct || mainFWAct != fwTryNext || fwTryCount != resetFWTryCount || fwResult != "success" {
 		return errors.New("Firmware update is not invalidated")
 	}
 
 	// Verify that the root partition is properly reset.
-	rootdev, err := s.DUT().Conn().CommandContext(ctx, "rootdev", "-s").Output()
+	rootdev, err := dut.Conn().CommandContext(ctx, "rootdev", "-s").Output()
 	if string(rootdev) != prevRootSlot {
 		return errors.New("OS update is not invalidated")
 	}
 	return nil
 }
 
-func setCrossystemFlag(ctx context.Context, s *testing.State, flag, value string) error {
-	if err := s.DUT().Conn().CommandContext(ctx, "crossystem", fmt.Sprintf("%s=%s", flag, value)).Run(); err != nil {
+func setCrossystemFlag(ctx context.Context, dut *dut.DUT, flag, value string) error {
+	if err := dut.Conn().CommandContext(ctx, "crossystem", fmt.Sprintf("%s=%s", flag, value)).Run(); err != nil {
 		return errors.Wrapf(err, "failed to set crossystem %s=%s", flag, value)
 	}
 
 	return nil
 }
 
-func getCrossystemFlag(ctx context.Context, s *testing.State, flag string) (string, error) {
-	value, err := s.DUT().Conn().CommandContext(ctx, "crossystem", flag).Output()
+func getCrossystemFlag(ctx context.Context, dut *dut.DUT, flag string) (string, error) {
+	value, err := dut.Conn().CommandContext(ctx, "crossystem", flag).Output()
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to read crossystem %s", flag)
 	}
