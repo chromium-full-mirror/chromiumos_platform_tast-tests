@@ -29,15 +29,12 @@ import (
 // TODO(b/239385484) : remove "beetley" when b/239385484 is fixed.
 // TODO(b/272410497) : remove "redrix" when b/239385850 is fixed.
 // TODO(b/272410497) : remove "gimble" when b/239409160 is fixed.
-// TODO(b/239412705) : remove "primus" when b/239412705 is fixed.
 // TODO(b/272410497) : remove "anahera" when b/239412769 is fixed.
 // TODO(b/245058202) : remove "bob" when b/245058202 is fixed.
-// TODO(b/245056845) : remove "taniks" when b/245056845 is fixed.
 // TODO(b/244254621) : remove "sasukette" when b/244254621 is fixed.
-// TODO(b/249023249) : remove "vell" when b/249023249 is fixed.
 // TODO(b/272410497) : remove "yaviks", "yavikso" when b/244418775 is fixed.
 // TODO(b/285830729) : remove "geralt" when b/285830729 is fixed.
-var alsaConformanceUnstableModels = []string{"chronicler", "soraka", "karma", "beetley", "redrix", "gimble", "primus", "anahera", "taniks", "bob", "sasukette", "vell", "yaviks", "yavikso", "geralt"}
+var alsaConformanceUnstableModels = []string{"chronicler", "soraka", "karma", "beetley", "redrix", "gimble", "anahera", "bob", "sasukette", "yaviks", "yavikso", "geralt"}
 
 // TODO(b/136614687): Relex the criteria for grunt devices, the audio still sounds fine as CRAS can compensate the rate, if the rate error is not huge.
 var relexedCriteriaModels = []string{"aleena", "barla", "careena", "kasumi", "kasumi360", "liara", "treeya360", "treeya"}
