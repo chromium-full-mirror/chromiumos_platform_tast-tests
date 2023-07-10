@@ -499,41 +499,12 @@ func (r *Router) ReconfigureHostapd(ctx context.Context, hs *hostapd.Server, con
 // StartDHCP starts the DHCP server and configures the server IP. If DNS functionality is
 // not required, set dnsOpt to nil.
 func (r *Router) StartDHCP(ctx context.Context, name, iface string, ipStart, ipEnd, serverIP, broadcastIP net.IP, mask net.IPMask, dnsOpt *dhcp.DNSOption) (_ *dhcp.Server, retErr error) {
-	ctx, st := timing.Start(ctx, "router.StartDHCP")
-	defer st.End()
-
-	if err := r.ipr.FlushIP(ctx, iface); err != nil {
-		return nil, err
-	}
-	maskLen, _ := mask.Size()
-	if err := r.ipr.AddIP(ctx, iface, serverIP, maskLen, ip.AddIPBroadcast(broadcastIP)); err != nil {
-		return nil, err
-	}
-	defer func(ctx context.Context) {
-		if retErr != nil {
-			if err := r.ipr.FlushIP(ctx, iface); err != nil {
-				testing.ContextLogf(ctx, "Failed to flush the interface %s while StartDHCP has failed: %v", iface, err)
-			}
-		}
-	}(ctx)
-	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
-	defer cancel()
-	ds, err := dhcp.StartServer(ctx, r.host, name, iface, r.workDir(), ipStart, ipEnd, dnsOpt)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to start DHCP server")
-	}
-	return ds, nil
+	return common.StartDHCP(ctx, name, iface, r.workDir(), r.host, r.ipr, ipStart, ipEnd, serverIP, broadcastIP, mask, dnsOpt)
 }
 
 // StopDHCP stops the DHCP server and flushes the interface.
 func (r *Router) StopDHCP(ctx context.Context, ds *dhcp.Server) error {
-	var firstErr error
-	iface := ds.Interface()
-	if err := ds.Close(ctx); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop dhcpd"))
-	}
-	utils.CollectFirstErr(ctx, &firstErr, r.ipr.FlushIP(ctx, iface))
-	return firstErr
+	return common.StopDHCP(ctx, ds, r.ipr)
 }
 
 // StartHTTP starts the HTTP server.
