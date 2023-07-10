@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Verifies that late-startup attestation can still be prepared for enrollment after taking ownership and still capable of removing owner dependency",
 		Contacts:     []string{"cros-hwsec@google.com", "yich@google.com"},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"reboot", "tpm_clear_allowed"},
+		SoftwareDeps: []string{"reboot", "no_tpm_dynamic", "tpm_clear_allowed"},
 		Attr:         []string{"group:hwsec_destructive_func", "group:tpm_manager"},
 		ServiceDeps:  []string{"tast.cros.hwsec.AttestationDBusService"},
 	})
