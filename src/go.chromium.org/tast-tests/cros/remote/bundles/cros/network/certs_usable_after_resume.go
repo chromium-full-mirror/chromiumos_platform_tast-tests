@@ -95,7 +95,7 @@ func CertsUsableAfterResume(ctx context.Context, s *testing.State) {
 	isLacros := s.Param().(bool)
 	startChromeReq := &ui.NewRequest{}
 	if isLacros {
-		startChromeReq.Lacros = &ui.Lacros{Mode: ui.Lacros_MODE_ONLY}
+		startChromeReq.Lacros = &ui.Lacros{}
 	}
 
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)

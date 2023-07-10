@@ -78,9 +78,8 @@ func init() {
 				Lacros: &pb.Lacros{Selection: pb.Lacros_SELECTION_ROOTFS}},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
-			Name: "disabled_lacros",
-			Val: &pb.NewRequest{
-				Lacros: &pb.Lacros{Mode: pb.Lacros_MODE_DISABLED}},
+			Name:              "disabled_lacros",
+			Val:               &pb.NewRequest{},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})

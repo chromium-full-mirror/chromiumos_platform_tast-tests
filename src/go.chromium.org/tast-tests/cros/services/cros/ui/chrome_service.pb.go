@@ -138,61 +138,6 @@ func (ArcMode) EnumDescriptor() ([]byte, []int) {
 	return file_chrome_service_proto_rawDescGZIP(), []int{1}
 }
 
-// Mode is whether Lacros is enabled as a primary browser or else.
-// MODE_SIDEBYSIDE = 1 is no longer supported in Tast, while it is still served
-// for developers in Chrome.
-type Lacros_Mode int32
-
-const (
-	Lacros_MODE_UNSPECIFIED Lacros_Mode = 0
-	Lacros_MODE_PRIMARY     Lacros_Mode = 2
-	Lacros_MODE_ONLY        Lacros_Mode = 3
-	Lacros_MODE_DISABLED    Lacros_Mode = 4 // disable Lacros
-)
-
-// Enum value maps for Lacros_Mode.
-var (
-	Lacros_Mode_name = map[int32]string{
-		0: "MODE_UNSPECIFIED",
-		2: "MODE_PRIMARY",
-		3: "MODE_ONLY",
-		4: "MODE_DISABLED",
-	}
-	Lacros_Mode_value = map[string]int32{
-		"MODE_UNSPECIFIED": 0,
-		"MODE_PRIMARY":     2,
-		"MODE_ONLY":        3,
-		"MODE_DISABLED":    4,
-	}
-)
-
-func (x Lacros_Mode) Enum() *Lacros_Mode {
-	p := new(Lacros_Mode)
-	*p = x
-	return p
-}
-
-func (x Lacros_Mode) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (Lacros_Mode) Descriptor() protoreflect.EnumDescriptor {
-	return file_chrome_service_proto_enumTypes[2].Descriptor()
-}
-
-func (Lacros_Mode) Type() protoreflect.EnumType {
-	return &file_chrome_service_proto_enumTypes[2]
-}
-
-func (x Lacros_Mode) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use Lacros_Mode.Descriptor instead.
-func (Lacros_Mode) EnumDescriptor() ([]byte, []int) {
-	return file_chrome_service_proto_rawDescGZIP(), []int{1, 0}
-}
-
 // Selection is where to locate a Lacros browser.
 // TODO(b/246961327): Support locally deployed Lacros binary when needed.
 type Lacros_Selection int32
@@ -228,11 +173,11 @@ func (x Lacros_Selection) String() string {
 }
 
 func (Lacros_Selection) Descriptor() protoreflect.EnumDescriptor {
-	return file_chrome_service_proto_enumTypes[3].Descriptor()
+	return file_chrome_service_proto_enumTypes[2].Descriptor()
 }
 
 func (Lacros_Selection) Type() protoreflect.EnumType {
-	return &file_chrome_service_proto_enumTypes[3]
+	return &file_chrome_service_proto_enumTypes[2]
 }
 
 func (x Lacros_Selection) Number() protoreflect.EnumNumber {
@@ -241,7 +186,7 @@ func (x Lacros_Selection) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Lacros_Selection.Descriptor instead.
 func (Lacros_Selection) EnumDescriptor() ([]byte, []int) {
-	return file_chrome_service_proto_rawDescGZIP(), []int{1, 1}
+	return file_chrome_service_proto_rawDescGZIP(), []int{1, 0}
 }
 
 // NewRequest to login to Chrome with configurable features, arguments and GAIA
@@ -271,8 +216,7 @@ type NewRequest struct {
 	// LacrosExtraArgs contains arguments to be passed through to Lacros.
 	LacrosExtraArgs []string `protobuf:"bytes,10,rep,name=lacros_extra_args,json=lacrosExtraArgs,proto3" json:"lacros_extra_args,omitempty"`
 	// If |lacros| is set, Lacros browser will be enabled.
-	// If |lacros| is unset or lacros.Mode is set to MODE_DISABLED, Lacros
-	// browser will not be enabled.
+	// If |lacros| is unset, Lacros browser will not be enabled.
 	Lacros *Lacros `protobuf:"bytes,11,opt,name=lacros,proto3" json:"lacros,omitempty"`
 	// Describes the availability of ARC, e.g. enabled / disabled.
 	ArcMode ArcMode `protobuf:"varint,12,opt,name=arc_mode,json=arcMode,proto3,enum=tast.cros.browser.ArcMode" json:"arc_mode,omitempty"`
@@ -442,14 +386,13 @@ func (x *NewRequest) GetLacrosKeepAlive() bool {
 	return false
 }
 
-// Lacros to enable Lacros browser with configurable launch mode and/or
-// selection of whether rootfs or stateful is used.
+// Lacros to enable Lacros browser with configurable selection of whether rootfs
+// or stateful is used.
 type Lacros struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Mode      Lacros_Mode      `protobuf:"varint,1,opt,name=mode,proto3,enum=tast.cros.browser.Lacros_Mode" json:"mode,omitempty"`
 	Selection Lacros_Selection `protobuf:"varint,2,opt,name=selection,proto3,enum=tast.cros.browser.Lacros_Selection" json:"selection,omitempty"`
 }
 
@@ -483,13 +426,6 @@ func (x *Lacros) ProtoReflect() protoreflect.Message {
 // Deprecated: Use Lacros.ProtoReflect.Descriptor instead.
 func (*Lacros) Descriptor() ([]byte, []int) {
 	return file_chrome_service_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *Lacros) GetMode() Lacros_Mode {
-	if x != nil {
-		return x.Mode
-	}
-	return Lacros_MODE_UNSPECIFIED
 }
 
 func (x *Lacros) GetSelection() Lacros_Selection {
@@ -676,25 +612,17 @@ var file_chrome_service_proto_rawDesc = []byte{
 	0x28, 0x09, 0x52, 0x0e, 0x70, 0x61, 0x72, 0x65, 0x6e, 0x74, 0x55, 0x73, 0x65, 0x72, 0x6e, 0x61,
 	0x6d, 0x65, 0x12, 0x27, 0x0a, 0x0f, 0x70, 0x61, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x70, 0x61, 0x73,
 	0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x70, 0x61, 0x72,
-	0x65, 0x6e, 0x74, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x22, 0xa4, 0x02, 0x0a, 0x06,
-	0x4c, 0x61, 0x63, 0x72, 0x6f, 0x73, 0x12, 0x32, 0x0a, 0x04, 0x6d, 0x6f, 0x64, 0x65, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0e, 0x32, 0x1e, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73,
-	0x2e, 0x62, 0x72, 0x6f, 0x77, 0x73, 0x65, 0x72, 0x2e, 0x4c, 0x61, 0x63, 0x72, 0x6f, 0x73, 0x2e,
-	0x4d, 0x6f, 0x64, 0x65, 0x52, 0x04, 0x6d, 0x6f, 0x64, 0x65, 0x12, 0x41, 0x0a, 0x09, 0x73, 0x65,
-	0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x23, 0x2e,
-	0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x62, 0x72, 0x6f, 0x77, 0x73, 0x65,
-	0x72, 0x2e, 0x4c, 0x61, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x69,
-	0x6f, 0x6e, 0x52, 0x09, 0x73, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x50, 0x0a,
-	0x04, 0x4d, 0x6f, 0x64, 0x65, 0x12, 0x14, 0x0a, 0x10, 0x4d, 0x4f, 0x44, 0x45, 0x5f, 0x55, 0x4e,
-	0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x10, 0x0a, 0x0c, 0x4d,
-	0x4f, 0x44, 0x45, 0x5f, 0x50, 0x52, 0x49, 0x4d, 0x41, 0x52, 0x59, 0x10, 0x02, 0x12, 0x0d, 0x0a,
-	0x09, 0x4d, 0x4f, 0x44, 0x45, 0x5f, 0x4f, 0x4e, 0x4c, 0x59, 0x10, 0x03, 0x12, 0x11, 0x0a, 0x0d,
-	0x4d, 0x4f, 0x44, 0x45, 0x5f, 0x44, 0x49, 0x53, 0x41, 0x42, 0x4c, 0x45, 0x44, 0x10, 0x04, 0x22,
-	0x51, 0x0a, 0x09, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x19, 0x0a, 0x15,
-	0x53, 0x45, 0x4c, 0x45, 0x43, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43,
-	0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x14, 0x0a, 0x10, 0x53, 0x45, 0x4c, 0x45, 0x43,
-	0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x52, 0x4f, 0x4f, 0x54, 0x46, 0x53, 0x10, 0x01, 0x12, 0x13, 0x0a,
-	0x0f, 0x53, 0x45, 0x4c, 0x45, 0x43, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x4f, 0x4d, 0x41, 0x48, 0x41,
+	0x65, 0x6e, 0x74, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x22, 0xa4, 0x01, 0x0a, 0x06,
+	0x4c, 0x61, 0x63, 0x72, 0x6f, 0x73, 0x12, 0x41, 0x0a, 0x09, 0x73, 0x65, 0x6c, 0x65, 0x63, 0x74,
+	0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x23, 0x2e, 0x74, 0x61, 0x73, 0x74,
+	0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x62, 0x72, 0x6f, 0x77, 0x73, 0x65, 0x72, 0x2e, 0x4c, 0x61,
+	0x63, 0x72, 0x6f, 0x73, 0x2e, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x09,
+	0x73, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x51, 0x0a, 0x09, 0x53, 0x65, 0x6c,
+	0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x19, 0x0a, 0x15, 0x53, 0x45, 0x4c, 0x45, 0x43, 0x54,
+	0x49, 0x4f, 0x4e, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10,
+	0x00, 0x12, 0x14, 0x0a, 0x10, 0x53, 0x45, 0x4c, 0x45, 0x43, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x52,
+	0x4f, 0x4f, 0x54, 0x46, 0x53, 0x10, 0x01, 0x12, 0x13, 0x0a, 0x0f, 0x53, 0x45, 0x4c, 0x45, 0x43,
+	0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x4f, 0x4d, 0x41, 0x48, 0x41, 0x10, 0x02, 0x4a, 0x04, 0x08, 0x01,
 	0x10, 0x02, 0x2a, 0x92, 0x01, 0x0a, 0x09, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x4d, 0x6f, 0x64, 0x65,
 	0x12, 0x1a, 0x0a, 0x16, 0x4c, 0x4f, 0x47, 0x49, 0x4e, 0x5f, 0x4d, 0x4f, 0x44, 0x45, 0x5f, 0x55,
 	0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x17, 0x0a, 0x13,
@@ -742,36 +670,34 @@ func file_chrome_service_proto_rawDescGZIP() []byte {
 	return file_chrome_service_proto_rawDescData
 }
 
-var file_chrome_service_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_chrome_service_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
 var file_chrome_service_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_chrome_service_proto_goTypes = []interface{}{
 	(LoginMode)(0),                 // 0: tast.cros.browser.LoginMode
 	(ArcMode)(0),                   // 1: tast.cros.browser.ArcMode
-	(Lacros_Mode)(0),               // 2: tast.cros.browser.Lacros.Mode
-	(Lacros_Selection)(0),          // 3: tast.cros.browser.Lacros.Selection
-	(*NewRequest)(nil),             // 4: tast.cros.browser.NewRequest
-	(*Lacros)(nil),                 // 5: tast.cros.browser.Lacros
-	(*NewRequest_Credentials)(nil), // 6: tast.cros.browser.NewRequest.Credentials
-	(*emptypb.Empty)(nil),          // 7: google.protobuf.Empty
+	(Lacros_Selection)(0),          // 2: tast.cros.browser.Lacros.Selection
+	(*NewRequest)(nil),             // 3: tast.cros.browser.NewRequest
+	(*Lacros)(nil),                 // 4: tast.cros.browser.Lacros
+	(*NewRequest_Credentials)(nil), // 5: tast.cros.browser.NewRequest.Credentials
+	(*emptypb.Empty)(nil),          // 6: google.protobuf.Empty
 }
 var file_chrome_service_proto_depIdxs = []int32{
 	0, // 0: tast.cros.browser.NewRequest.login_mode:type_name -> tast.cros.browser.LoginMode
-	6, // 1: tast.cros.browser.NewRequest.credentials:type_name -> tast.cros.browser.NewRequest.Credentials
-	5, // 2: tast.cros.browser.NewRequest.lacros:type_name -> tast.cros.browser.Lacros
+	5, // 1: tast.cros.browser.NewRequest.credentials:type_name -> tast.cros.browser.NewRequest.Credentials
+	4, // 2: tast.cros.browser.NewRequest.lacros:type_name -> tast.cros.browser.Lacros
 	1, // 3: tast.cros.browser.NewRequest.arc_mode:type_name -> tast.cros.browser.ArcMode
-	2, // 4: tast.cros.browser.Lacros.mode:type_name -> tast.cros.browser.Lacros.Mode
-	3, // 5: tast.cros.browser.Lacros.selection:type_name -> tast.cros.browser.Lacros.Selection
-	4, // 6: tast.cros.browser.ChromeService.New:input_type -> tast.cros.browser.NewRequest
-	7, // 7: tast.cros.browser.ChromeService.Close:input_type -> google.protobuf.Empty
-	7, // 8: tast.cros.browser.ChromeService.Reconnect:input_type -> google.protobuf.Empty
-	7, // 9: tast.cros.browser.ChromeService.New:output_type -> google.protobuf.Empty
-	7, // 10: tast.cros.browser.ChromeService.Close:output_type -> google.protobuf.Empty
-	7, // 11: tast.cros.browser.ChromeService.Reconnect:output_type -> google.protobuf.Empty
-	9, // [9:12] is the sub-list for method output_type
-	6, // [6:9] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	2, // 4: tast.cros.browser.Lacros.selection:type_name -> tast.cros.browser.Lacros.Selection
+	3, // 5: tast.cros.browser.ChromeService.New:input_type -> tast.cros.browser.NewRequest
+	6, // 6: tast.cros.browser.ChromeService.Close:input_type -> google.protobuf.Empty
+	6, // 7: tast.cros.browser.ChromeService.Reconnect:input_type -> google.protobuf.Empty
+	6, // 8: tast.cros.browser.ChromeService.New:output_type -> google.protobuf.Empty
+	6, // 9: tast.cros.browser.ChromeService.Close:output_type -> google.protobuf.Empty
+	6, // 10: tast.cros.browser.ChromeService.Reconnect:output_type -> google.protobuf.Empty
+	8, // [8:11] is the sub-list for method output_type
+	5, // [5:8] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_chrome_service_proto_init() }
@@ -822,7 +748,7 @@ func file_chrome_service_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_chrome_service_proto_rawDesc,
-			NumEnums:      4,
+			NumEnums:      3,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
