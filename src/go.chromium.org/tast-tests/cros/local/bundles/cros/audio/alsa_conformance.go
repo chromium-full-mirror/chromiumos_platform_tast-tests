@@ -43,7 +43,7 @@ var alsaConformanceUnstableModels = []string{"chronicler", "soraka", "karma", "b
 var relexedCriteriaModels = []string{"aleena", "barla", "careena", "kasumi", "kasumi360", "liara", "treeya360", "treeya"}
 
 var mergeThresholdSize480Models = []string{
-	"nahera",
+	"anahera",
 	"banshee",
 	"brya",
 	"chronicler",
