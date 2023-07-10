@@ -160,21 +160,33 @@ func (fd FixtData) FakeDMS() *fakedms.FakeDMS {
 const uptimeBeforeTest = 2 * time.Minute
 
 func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	// Check if the modem is exported by ModemManager before calling NewHelper().
+	if _, err := modemmanager.NewModem(ctx); err != nil && ModemHelperPathExists() {
+		testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
+		if err := RestartModemWithHelper(ctx); err != nil {
+			s.Fatal("Failed to restart modem: ", err)
+		}
+	}
+
+	// Ensure that a Helper instance can be instantiated to use where needed.
+	helper, err := NewHelper(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Helper: ", err)
+	}
+	f.helper = helper
+
 	sfish, err := starfish.NewStarfish(ctx)
 	if err != nil {
 		s.Fatal("Failed to setup starfish module on supported setup: ", err)
 	}
-	f.sf = sfish
 	if sfish != nil {
-		helper, err := NewHelper(ctx)
-		if err != nil {
-			s.Fatal("Failed to create Helper: ", err)
-		}
 		// ResetModem needed to detect SIM.
-		if _, err := helper.ResetModem(ctx); err != nil {
-			s.Log("Failed to reset modem: ", err)
+		if _, err := f.helper.ResetModem(ctx); err != nil {
+			s.Log("Failed to reset modem for Starfish: ", err)
 		}
 	}
+	f.sf = sfish
+
 	var fdms *fakedms.FakeDMS
 	if f.useFakeDMS {
 		var ok bool
@@ -225,17 +237,6 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	if f.disableCellularTechnology {
-		// Check if the modem is exported by ModemManager before calling NewHelper().
-		if _, err := modemmanager.NewModem(ctx); err != nil && ModemHelperPathExists() {
-			testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
-			if err := RestartModemWithHelper(ctx); err != nil {
-				s.Fatal("Failed to restart modem: ", err)
-			}
-		}
-		f.helper, err = NewHelper(ctx)
-		if err != nil {
-			s.Fatal("Failed to create Helper: ", err)
-		}
 		// Disabling cellular in shill, prevents shill from re-enabling cellular
 		// after Modem disable called.
 		if _, err := f.helper.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyCellular); err != nil {
@@ -255,14 +256,11 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	if f.checkSim {
-		helper, err := NewHelperWithConnectedCellular(ctx)
-		if err != nil {
-			s.Fatal("Failed to create connected cellular.Helper: ", err)
+		if _, err := f.helper.Connect(ctx); err != nil {
+			s.Fatal("Failed to connect for checkSim: ", err)
 		}
-
-		_, err = helper.Disconnect(ctx)
-		if err != nil {
-			s.Fatal("Failed to disconnect: ", err)
+		if _, err := f.helper.Disconnect(ctx); err != nil {
+			s.Fatal("Failed to disconnect for checkSim: ", err)
 		}
 	}
 	return &FixtData{fdms, a}
@@ -282,6 +280,7 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 			s.Fatal("Failed to restart modem: ", err)
 		}
 	}
+
 	if f.disableCellularTechnology && f.restartMM {
 		modem, err := modemmanager.NewModemWithSim(ctx)
 		if err != nil {
@@ -330,6 +329,9 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	} else {
 		f.netUnlock = unlock
 	}
+
+	// Ensure that Cellular is Enabled and has a default Service before each test.
+	f.helper.EnsureDefaultService(ctx)
 }
 
 func getUpstartArgsForVerboseLogging(job string) []upstart.Arg {

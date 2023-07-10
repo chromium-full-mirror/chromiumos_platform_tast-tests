@@ -124,13 +124,8 @@ func NewHelper(ctx context.Context) (*Helper, error) {
 	}
 	helper := Helper{Manager: manager, Device: device}
 
-	// Ensure Cellular is enabled.
-	if enabled, err := manager.IsEnabled(ctx, shill.TechnologyCellular); err != nil {
-		return nil, errors.Wrap(err, "error requesting enabled state")
-	} else if !enabled {
-		if _, err := helper.Enable(ctx); err != nil {
-			return nil, errors.Wrap(err, "unable to enable Cellular")
-		}
+	if err := helper.EnsureDefaultService(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to find default Cellular Service")
 	}
 
 	CheckIfVilbozVerizonAndFixAttachAPN(ctx)
@@ -274,6 +269,39 @@ func (h *Helper) WaitForEnabledState(ctx context.Context, expected bool) error {
 		Timeout:  defaultTimeout,
 		Interval: 500 * time.Millisecond,
 	})
+}
+
+// EnsureDefaultService attempts to ensure that Cellular is enabled and that a
+// connectable default Service is available. If no Service is initially available,
+// the modem will be reset and a second check for a connectable service is performed.
+func (h *Helper) EnsureDefaultService(ctx context.Context) error {
+	// Ensure Cellular is enabled.
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Manager object")
+	}
+	if enabled, err := manager.IsEnabled(ctx, shill.TechnologyCellular); err != nil {
+		return errors.Wrap(err, "error requesting enabled state")
+	} else if !enabled {
+		if _, err := h.Enable(ctx); err != nil {
+			return errors.Wrap(err, "unable to enable Cellular")
+		}
+	}
+
+	// Ensure a Cellular Service is available.
+	if _, err = h.FindServiceForDevice(ctx); err != nil {
+		// If not available, try resetting the modem.
+		if _, err := h.ResetModem(ctx); err != nil {
+			return errors.Wrap(err, "failed to reset modem waiting for default cellular service")
+		}
+		if err := h.WaitForEnabledState(ctx, true); err != nil {
+			return errors.Wrap(err, "cellular not enabled after modem reset while waiting for default cellular service")
+		}
+		if _, err = h.FindServiceForDevice(ctx); err != nil {
+			return errors.Wrap(err, "unable to find a default cellular service")
+		}
+	}
+	return nil
 }
 
 // Enable calls Manager.EnableTechnology(cellular) and returns true if the enable succeeded, or an error otherwise.
