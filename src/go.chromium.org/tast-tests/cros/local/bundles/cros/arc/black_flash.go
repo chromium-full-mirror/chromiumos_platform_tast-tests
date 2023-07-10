@@ -66,26 +66,22 @@ func BlackFlash(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	cleanupTabletMode, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
 		s.Fatal("Failed to set clamshell mode: ", err)
 	}
-	defer cleanup(cleanupCtx)
+	defer cleanupTabletMode(cleanupCtx)
 
 	dispInfo, err := display.GetInternalInfo(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get internal display info: ", err)
 	}
 
-	origShelfBehavior, err := ash.GetShelfBehavior(ctx, tconn, dispInfo.ID)
+	cleanupShelfBehavior, err := ash.EnsureShelfBehavior(ctx, tconn, dispInfo.ID, ash.ShelfBehaviorAlwaysAutoHide)
 	if err != nil {
-		s.Fatal("Failed to get shelf behavior: ", err)
+		s.Fatal("Failed to ensure shelf behavior is Always Auto Hide: ", err)
 	}
-
-	if err := ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, ash.ShelfBehaviorAlwaysAutoHide); err != nil {
-		s.Fatal("Failed to set shelf behavior to Always Auto Hide: ", err)
-	}
-	defer ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, origShelfBehavior)
+	defer cleanupShelfBehavior(cleanupCtx)
 
 	if err := a.Install(ctx, arc.APKPath(apkName)); err != nil {
 		s.Fatal("Failed installing app: ", err)

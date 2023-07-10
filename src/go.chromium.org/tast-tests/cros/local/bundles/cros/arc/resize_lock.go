@@ -162,7 +162,7 @@ func ResizeLock(ctx context.Context, s *testing.State) {
 	// Be nice and restore shelf alignment to its original state on exit.
 	defer cleanupShelfAlignment(cleanupCtx)
 
-	cleanupShelfBehavior, err := ash.EnsureShelfBehaviorNeverAutoHide(ctx, tconn, dispInfo.ID)
+	cleanupShelfBehavior, err := ash.EnsureShelfBehavior(ctx, tconn, dispInfo.ID, ash.ShelfBehaviorNeverAutoHide)
 	if err != nil {
 		s.Fatal("Failed to ensure shelf behavior is Never Auto Hide: ", err)
 	}

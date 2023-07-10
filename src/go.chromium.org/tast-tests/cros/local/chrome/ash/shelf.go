@@ -1330,23 +1330,23 @@ func EnsureShelfAlignmentBottom(ctx context.Context, tconn *chrome.TestConn, dis
 	}, nil
 }
 
-// EnsureShelfBehaviorNeverAutoHide makes sure that the shelf behavior is NeverAutoHide,
+// EnsureShelfBehavior makes sure that the shelf behavior is as required,
 // and returns a function which reverts back to the original behavior.
 //
 // Typically, this will be used like:
 //
-//	cleanupShelfBehavior, err := ash.EnsureShelfBehaviorNeverAutoHide(ctx, tconn, dispInfoID)
+//	cleanupShelfBehavior, err := ash.EnsureShelfBehavior(ctx, tconn, dispInfoID, shelfBehavior)
 //	if err != nil {
-//	  s.Fatal("Failed to ensure shelf behavior is NeverAutoHide: ", err)
+//	  s.Fatalf("Failed to ensure shelf behavior is %v: %v", shelfBehavior, err)
 //	}
 //	defer cleanupShelfBehavior(ctx)
-func EnsureShelfBehaviorNeverAutoHide(ctx context.Context, tconn *chrome.TestConn, dispInfoID string) (func(ctx context.Context) error, error) {
+func EnsureShelfBehavior(ctx context.Context, tconn *chrome.TestConn, dispInfoID string, shelfBehavior ShelfBehavior) (func(ctx context.Context) error, error) {
 	originalShelfBehavior, err := GetShelfBehavior(ctx, tconn, dispInfoID)
 	if err != nil {
 		return nil, err
 	}
-	if originalShelfBehavior != ShelfBehaviorNeverAutoHide {
-		if err = SetShelfBehavior(ctx, tconn, dispInfoID, ShelfBehaviorNeverAutoHide); err != nil {
+	if originalShelfBehavior != shelfBehavior {
+		if err = SetShelfBehavior(ctx, tconn, dispInfoID, shelfBehavior); err != nil {
 			return nil, err
 		}
 	}

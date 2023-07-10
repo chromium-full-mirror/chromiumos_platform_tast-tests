@@ -76,28 +76,25 @@ func UniformScaleFactor(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get display mode: ", err)
 	}
 
-	origShelfBehavior, err := ash.GetShelfBehavior(ctx, tconn, dispInfo.ID)
+	// Hide shelf.
+	cleanupShelfBehavior, err := ash.EnsureShelfBehavior(ctx, tconn, dispInfo.ID, ash.ShelfBehaviorAlwaysAutoHide)
 	if err != nil {
-		s.Fatal("Failed to get shelf behavior: ", err)
+		s.Fatal("Failed to ensure shelf behavior is Always Auto Hide: ", err)
 	}
 
-	// Hide shelf.
-	if err := ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, ash.ShelfBehaviorAlwaysAutoHide); err != nil {
-		s.Fatal("Failed to set shelf behavior to Always Auto Hide: ", err)
-	}
 	// Restore shelf state to original behavior.
-	defer ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, origShelfBehavior)
+	defer cleanupShelfBehavior(ctx)
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, true)
+	cleanupTabletMode, err := ash.EnsureTabletModeEnabled(ctx, tconn, true)
 	if err != nil {
 		s.Fatal("Failed to set tablet mode to true: ", err)
 	}
-	defer cleanup(cleanupCtx)
+	defer cleanupTabletMode(cleanupCtx)
 
 	viewAct, err := perappdensity.StartActivityWithWindowState(ctx, tconn, a, arc.WindowStateFullscreen, perappdensity.ViewActivity)
 	if err != nil {
