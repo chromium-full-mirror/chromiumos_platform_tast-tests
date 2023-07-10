@@ -11,8 +11,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cws"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -63,43 +66,73 @@ func EnsureDocsOfflineInstalled(ctx context.Context, br *browser.Browser, tconn 
 // the browser and the current active user has it enabled in Drive's settings.
 // This function should be called before opening any docs if offline capability
 // is desired.
-func EnsureDocsOfflineEnabled(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) (retErr error) {
+func EnsureDocsOfflineEnabled(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) error {
 	if err := EnsureDocsOfflineInstalled(ctx, br, tconn); err != nil {
 		return errors.Wrap(err, "failed to install Docs offline extension")
 	}
-
-	// Open Drive settings page.
-	conn, err := br.NewConn(ctx, "https://drive.google.com/settings")
-	if err != nil {
-		return errors.Wrap(err, "failed to open Drive settings")
-	}
-	defer conn.Close()
-	defer conn.CloseTarget(ctx)
 
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok || outDir == "" {
 		return errors.New("failed to get the out directory to dump UI tree on failures")
 	}
 
-	// Shorten context to allow for dumping UI tree in case of failure.
-	closeCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
-	defer cancel()
+	const totalRetry = 3
+	retryNumber := 0
+	ensureOfflineCheckboxChecked := func(ctx context.Context) (retErr error) {
+		retryNumber++
 
-	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(closeCtx, outDir, func() bool { return retErr != nil }, tconn, "docs_offline_dump")
+		// Shorten context to allow for cleanup website resources and
+		// dumping UI tree in case of failure.
+		closeCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+		defer cancel()
 
-	// Wait for settings page to load and sync the account settings.
-	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
-		return errors.Wrap(err, "failed to wait for Drive settings to load")
+		// Open Drive settings page.
+		conn, err := br.NewConn(ctx, "https://drive.google.com/settings")
+		if err != nil {
+			return errors.Wrap(err, "failed to open Drive settings")
+		}
+		defer conn.Close()
+		defer conn.CloseTarget(closeCtx)
+
+		defer func(ctx context.Context) {
+			if retryNumber == totalRetry {
+				faillog.DumpUITreeWithScreenshotWithTestAPIOnError(ctx, outDir, func() bool { return retErr != nil }, tconn, "docs_offline_dump")
+			}
+		}(closeCtx)
+
+		ui := uiauto.New(tconn)
+		addAnotherAccountDialog := nodewith.HasClass("Widget").Role(role.Dialog)
+		addAnotherAccountHeading := nodewith.NameContaining("Add another Google Account for").Role(role.Heading).Ancestor(addAnotherAccountDialog)
+		closeButton := nodewith.Name("Close").Role(role.Button).HasClass("ImageButton").Ancestor(addAnotherAccountDialog)
+		googleDriveRootWebArea := nodewith.Name("Settings - Google Drive").Role(role.RootWebArea)
+		// It was found that during Lacros testing, the "Add another Google Account" dialog
+		// might pop up. Dismiss the dialog before checking the offline checkbox.
+		if err := uiauto.NamedCombine("dismiss 'Add another Google Account' dialog",
+			uiauto.IfSuccessThen(ui.Exists(addAnotherAccountHeading), ui.LeftClick(closeButton)),
+			uiauto.NamedAction("check if the page redirected to Drive Settings", ui.WithTimeout(5*time.Second).WaitUntilExists(googleDriveRootWebArea)),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to ensure the Drive Settings page exist")
+		}
+
+		// Wait for settings page to load and sync the account settings.
+		if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+			return errors.Wrap(err, "failed to wait for Drive settings to load")
+		}
+
+		// Make sure the "offline" checkbox is checked.
+		testing.ContextLog(ctx, "Making sure offline support is enabled")
+		if err := conn.Call(ctx, nil, `() => {
+				let offlineCheckbox = document.getElementsByName('offline')[0];
+				if (!offlineCheckbox.checked)
+					offlineCheckbox.click();
+			}`); err != nil {
+			return errors.Wrap(err, "failed to ensure offline checkbox checked")
+		}
+		return nil
 	}
 
-	// Make sure the "offline" checkbox is checked.
-	testing.ContextLog(ctx, "Making sure offline support is enabled")
-	if err := conn.Call(ctx, nil, `() => {
-		let offlineCheckbox = document.getElementsByName('offline')[0];
-		if (!offlineCheckbox.checked)
-			offlineCheckbox.click();
-	}`); err != nil {
+	if err := uiauto.Retry(totalRetry, ensureOfflineCheckboxChecked)(ctx); err != nil {
 		return errors.Wrap(err, "failed to ensure offline checkbox checked")
 	}
 
