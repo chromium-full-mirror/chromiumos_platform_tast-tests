@@ -178,8 +178,6 @@ func init() {
 		}, {
 			Name: "power_button",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutinePowerButton),
-			// TODO(b/272217292): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
