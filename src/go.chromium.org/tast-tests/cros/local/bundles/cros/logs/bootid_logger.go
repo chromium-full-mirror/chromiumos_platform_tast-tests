@@ -16,7 +16,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		BugComponent: "b:1029735",
+		BugComponent: "b:1339922",
 		Func:         BootidLogger,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests related to bootid-logger",
