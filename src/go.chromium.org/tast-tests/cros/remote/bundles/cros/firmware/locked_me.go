@@ -36,9 +36,10 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
+		Requirements: []string{"sys-fw-0024-v01", "sys-fw-0025-v01", "sys-fw-0021-v01"},
 		SoftwareDeps: []string{"flashrom"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.CPUSocFamily([]string{"intel"})),
+		HardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"intel"})),
 		Fixture:      fixture.NormalMode,
 		Timeout:      30 * time.Minute,
 	})
