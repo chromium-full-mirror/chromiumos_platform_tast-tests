@@ -87,3 +87,50 @@ func CloseFirefoxTestPage(ctx context.Context, uda *uidetection.Context, ui *uia
 	}
 	return nil
 }
+
+// VerifyFirefoxLaunchAndClose verifies that firefox window exists and firefox on shelf.
+// Firefox must have been launched.
+// It also closes firefox.
+func VerifyFirefoxLaunchAndClose(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter) error {
+	const startupTimeout = 2 * time.Minute // slower devices could take up to two minutes to start Firefox.
+	ud := uidetection.NewDefault(tconn)
+	ui := uiauto.New(tconn).WithTimeout(startupTimeout)
+	firefoxWindow := nodewith.NameRegex(regexp.MustCompile(`.*Mozilla Firefox`)).Role(role.Window).First()
+
+	// Check firefox window.
+	if err := uiauto.Combine("verify Firefox",
+		ui.WaitUntilExists(firefoxWindow),
+		uiauto.IfFailThen(
+			ud.WaitUntilExists(uidetection.TextBlock([]string{"Welcome", "to", "Firefox"}).WithinA11yNode(firefoxWindow).First()),
+			ud.WaitUntilExists(uidetection.TextBlock([]string{"Get", "started"}).WithinA11yNode(firefoxWindow).First()),
+		),
+	)(ctx); err != nil {
+		return err
+	}
+
+	// Check firefox is displayed on shelf.
+	shelfItems, err := ash.ShelfItems(ctx, tconn)
+	found := false
+	if err != nil {
+		return errors.Wrap(err, "failed to get shelf items")
+	}
+	for _, shelfItem := range shelfItems {
+		if shelfItem.Title == "Firefox ESR" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return errors.New("failed to find firefox on shelf")
+	}
+
+	// Close firefox.
+	if err := ui.WithInterval(time.Second).RetryUntil(
+		keyboard.AccelAction("ctrl+w"),
+		ui.WithTimeout(3*time.Second).WaitUntilGone(firefoxWindow),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to close firefox")
+	}
+
+	return nil
+}

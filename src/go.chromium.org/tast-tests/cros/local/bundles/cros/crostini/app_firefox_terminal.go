@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -10,8 +10,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/crostiniapps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/terminalapp"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -19,10 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppFirefox,
+		Func:         AppFirefoxTerminal,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         `Open Firefox, check rendering by looking for a rendered browser tab with the title "Welcome to Firefox" or "New Tab" via ACUITI`,
-		Contacts:     []string{"clumptini+oncall@google.com", "ashpakov@google.com"},
+		Desc:         `Open Firefox from terminal, check rendering by looking for a rendered browser tab with the title "Welcome to Firefox" or "New Tab" via ACUITI`,
+		Contacts:     []string{"clumptini+oncall@google.com", "jinrongwu@google.com"},
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
@@ -87,7 +87,7 @@ func init() {
 	})
 }
 
-func AppFirefox(ctx context.Context, s *testing.State) {
+func AppFirefoxTerminal(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
 	cr := s.FixtValue().(crostini.FixtureData).Chrome
@@ -98,8 +98,15 @@ func AppFirefox(ctx context.Context, s *testing.State) {
 	defer cancel()
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	if err := launcher.SearchAndLaunchWithQuery(tconn, keyboard, "f", "Firefox ESR")(ctx); err != nil {
-		s.Fatal("Failed to launch Firefox from launcher: ", err)
+	// Open Terminal app.
+	terminalApp, err := terminalapp.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to open Terminal app: ", err)
+	}
+	defer terminalApp.Close()(cleanupCtx)
+
+	if err := terminalApp.RunCommand(keyboard, "firefox-esr")(ctx); err != nil {
+		s.Fatal("Failed to launch Firefox from terminal: ", err)
 	}
 
 	if err := crostiniapps.VerifyFirefoxLaunchAndClose(ctx, tconn, keyboard); err != nil {
