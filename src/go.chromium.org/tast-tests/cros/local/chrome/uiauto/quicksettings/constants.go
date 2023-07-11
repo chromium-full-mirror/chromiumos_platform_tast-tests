@@ -86,31 +86,12 @@ var PowerMenuLockItem = nodewith.Role(role.MenuItem).NameContaining("Lock")
 // It only exists with QsRevamp.
 var PowerMenuSignOutItem = nodewith.Role(role.MenuItem).NameContaining("Sign out")
 
-// CollapseButton is the finder for the collapse button, which collapses Quick Settings.
-// This button does not exist with QsRevamp.
-var CollapseButton = nodewith.Role(role.Button).HasClass("CollapseButton").Name("Collapse menu")
-
-// ExpandButton is the finder for the expand button, which expands Quick Settings.
-// This button does not exist with QsRevamp.
-var ExpandButton = nodewith.Role(role.Button).HasClass("CollapseButton").Name("Expand menu")
-
-// LockButton is the finder for Quick Settings' lock button.
-// This button does not exist with QsRevamp.
-var LockButton = nodewith.Name("Lock").HasClass("IconButton")
-
 // SettingsButton is the finder for the Quick Settings' setting button.
 // This button is the same pre- and post-QsRevamp.
 var SettingsButton = nodewith.Name("Settings").HasClass("IconButton")
 
-// ShutdownButton is the finder for the shutdown button in Quick Settings.
-// This button does not exist with QsRevamp.
-var ShutdownButton = nodewith.Name("Shut down").HasClass("IconButton")
-
 // SignoutButton is the finder for the 'Sign out' Quick Settings button.
 var SignoutButton = nodewith.Role(role.Button).Name("Sign out").HasClass("PillButton")
-
-// VPNButton is the finder for the 'VPN' Quick Settings button.
-var VPNButton = nodewith.Role(role.Button).Name("VPN").HasClass("PillButton")
 
 // SliderType represents the Quick Settings slider elements.
 type SliderType string
@@ -153,10 +134,6 @@ var ManagedInfoView = nodewith.Role(role.Button).HasClass("EnterpriseManagedView
 // BatteryView is the finder for the Quick Settings battery display.
 var BatteryView = nodewith.Role(role.LabelText).NameContaining("Battery")
 
-// DateView is the finder for the Quick Settings date/time display.
-// This view does not exist with QsRevamp.
-var DateView = nodewith.Role(role.Button).HasClass("DateView")
-
 // SettingPod represents the name of a setting pod in Quick Settings.
 // These names are contained in the Name attribute of the automation node
 // for the corresponding pod icon button, so they can be used to find the
@@ -166,17 +143,11 @@ type SettingPod string
 // List of quick setting names, derived from the corresponding pod icon button node names.
 // Character case in the names should exactly match the pod icon button node Name attribute.
 // These nodes do not exist with QsRevamp.
+// TODO(b/252870625): Delete all these once every test is ported to QsRevamp.
 const (
-	SettingPodAccessibility     SettingPod = "accessibility"
-	SettingPodBluetooth         SettingPod = "Bluetooth"
 	SettingPodDoNotDisturb      SettingPod = "Do not disturb"
 	SettingPodNetwork           SettingPod = "network"
-	SettingPodNightLight        SettingPod = "Night Light"
 	SettingPodNearbyShare       SettingPod = "Nearby Share"
-	SettingPodKeyboard          SettingPod = "keyboard"
-	SettingPodScreenCapture     SettingPod = "Screen capture"
-	SettingPodVPN               SettingPod = "VPN"
-	SettingPodDarkTheme         SettingPod = "Toggle Dark theme"
 	SettingPodDarkThemeSettings SettingPod = "dark theme settings"
 	SettingPodCast              SettingPod = "cast"
 	SettingPodCameraFraming     SettingPod = "Camera framing"

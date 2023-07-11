@@ -31,6 +31,18 @@ import (
 
 const uiTimeout = 10 * time.Second
 
+// collapseButton is the finder for the collapse button, which collapses Quick Settings.
+// This button does not exist with QsRevamp.
+var collapseButton = nodewith.Role(role.Button).HasClass("CollapseButton").Name("Collapse menu")
+
+// expandButton is the finder for the expand button, which expands Quick Settings.
+// This button does not exist with QsRevamp.
+var expandButton = nodewith.Role(role.Button).HasClass("CollapseButton").Name("Expand menu")
+
+// lockButton is the finder for Quick Settings' lock button.
+// This button does not exist with QsRevamp.
+var lockButton = nodewith.Name("Lock").HasClass("IconButton")
+
 // findStatusArea finds the status area UI node.
 func findStatusArea(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
 	ui := uiauto.New(tconn)
@@ -232,7 +244,7 @@ func Collapse(ctx context.Context, tconn *chrome.TestConn) error {
 		return nil
 	}
 
-	exist, err := uiauto.New(tconn).IsNodeFound(ctx, ExpandButton)
+	exist, err := uiauto.New(tconn).IsNodeFound(ctx, expandButton)
 	if err != nil {
 		return errors.Wrap(err, "failed to check if the expand button already exists")
 	}
@@ -240,7 +252,7 @@ func Collapse(ctx context.Context, tconn *chrome.TestConn) error {
 		return nil
 	}
 
-	if err := clickAndWaitForAnimation(ctx, tconn, CollapseButton); err != nil {
+	if err := clickAndWaitForAnimation(ctx, tconn, collapseButton); err != nil {
 		return errors.Wrap(err, "the Quick Settings did not collapse")
 	}
 	return nil
@@ -269,7 +281,7 @@ func Expand(ctx context.Context, tconn *chrome.TestConn) error {
 		return nil
 	}
 
-	exist, err := uiauto.New(tconn).IsNodeFound(ctx, CollapseButton)
+	exist, err := uiauto.New(tconn).IsNodeFound(ctx, collapseButton)
 	if err != nil {
 		return errors.Wrap(err, "failed to check if the collapse button already exists")
 	}
@@ -277,7 +289,7 @@ func Expand(ctx context.Context, tconn *chrome.TestConn) error {
 		return nil
 	}
 
-	if err := clickAndWaitForAnimation(ctx, tconn, ExpandButton); err != nil {
+	if err := clickAndWaitForAnimation(ctx, tconn, expandButton); err != nil {
 		return errors.Wrap(err, "the Quick Settings did not expand")
 	}
 	return nil
@@ -630,7 +642,7 @@ func LockScreen(ctx context.Context, tconn *chrome.TestConn) error {
 			return errors.Wrap(err, "failed to find and click power menu lock item")
 		}
 	} else {
-		if err := ui.WithTimeout(uiTimeout).LeftClick(LockButton)(ctx); err != nil {
+		if err := ui.WithTimeout(uiTimeout).LeftClick(lockButton)(ctx); err != nil {
 			return errors.Wrap(err, "failed to find and click lock button")
 		}
 	}
@@ -1091,23 +1103,6 @@ func SignOut(ctx context.Context, tconn *chrome.TestConn) error {
 	// shut down, which closes the connection and always generates an error.
 	ui.WithTimeout(uiTimeout).LeftClick(PowerMenuSignOutItem)(ctx)
 	return nil
-}
-
-// TriggerAddingVPNDialog clicks VPN setting button in quick settings page
-// then clicking "+" button to trigger ADD dialog.
-// Note: VPN setting button is not shown in quick settings if no VPN added in OS setting.
-func TriggerAddingVPNDialog(tconn *chrome.TestConn) uiauto.Action {
-	ui := uiauto.New(tconn)
-
-	return func(ctx context.Context) error {
-		if err := Show(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to open Uber tray")
-		}
-		return uiauto.Combine("trigger adding VPN",
-			ui.LeftClick(PodIconButton(SettingPodVPN)),
-			ui.LeftClick(nodewith.Name("Add connection")),
-		)(ctx)
-	}
 }
 
 // StartCast casts by clicking Cast button in Uber tray.
