@@ -37,9 +37,6 @@ func init() {
 
 // NightLight tests that Night Light feature pod button is working correctly.
 func NightLight(ctx context.Context, s *testing.State) {
-	cleanup := quicksettings.SetQsRevampEnabled(true)
-	defer cleanup()
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

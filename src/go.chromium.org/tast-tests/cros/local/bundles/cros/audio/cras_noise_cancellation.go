@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -106,17 +105,6 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	}
 	cr, err := chrome.New(ctx, chromeOpts...)
 	defer cr.Close(cleanupCtx)
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Creating test API connection failed: ", err)
-	}
-
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quicksettings: ", err)
-	}
-	defer cleanup()
 
 	if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
 		s.Fatal("Cannot install nc-ap-dlc: ", err)

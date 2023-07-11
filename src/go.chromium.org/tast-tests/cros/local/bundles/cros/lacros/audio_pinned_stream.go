@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 
 	"go.chromium.org/tast/core/testing"
 )
@@ -53,9 +52,6 @@ func init() {
 }
 
 func AudioPinnedStream(ctx context.Context, s *testing.State) {
-	cleanup := quicksettings.SetQsRevampEnabled(true)
-	defer cleanup()
-
 	// Load ALSA loopback module.
 	unload, err := audio.LoadAloop(ctx)
 	if err != nil {

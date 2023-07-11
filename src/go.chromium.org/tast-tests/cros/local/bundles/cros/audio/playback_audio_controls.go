@@ -56,9 +56,6 @@ func init() {
 }
 
 func PlaybackAudioControls(ctx context.Context, s *testing.State) {
-	cleanup := quicksettings.SetQsRevampEnabled(true)
-	defer cleanup()
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// Open the test API.

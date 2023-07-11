@@ -36,9 +36,6 @@ func init() {
 }
 
 func DarkMode(ctx context.Context, s *testing.State) {
-	cleanup := quicksettings.SetQsRevampEnabled(true)
-	defer cleanup()
-
 	cr := s.FixtValue().(*arcpkg.PreData).Chrome
 	arc := s.FixtValue().(*arcpkg.PreData).ARC
 

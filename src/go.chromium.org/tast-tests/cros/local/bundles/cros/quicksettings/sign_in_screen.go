@@ -62,9 +62,6 @@ func init() {
 
 // SignInScreen verifies Quick Settings contents from the signin screen.
 func SignInScreen(ctx context.Context, s *testing.State) {
-	cleanup := quicksettings.SetQsRevampEnabled(true)
-	defer cleanup()
-
 	// NoLogin is used to land in signin screen.
 	cr, err := chrome.New(
 		ctx,

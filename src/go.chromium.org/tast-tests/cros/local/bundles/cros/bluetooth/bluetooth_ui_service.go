@@ -264,12 +264,6 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
 	}
 
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to init quicksettings")
-	}
-	defer cleanup()
-
 	if err := quicksettings.NavigateToBluetoothDetailedView(ctx, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to the detailed Bluetooth view")
 	}

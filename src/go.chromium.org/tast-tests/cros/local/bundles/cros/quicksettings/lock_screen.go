@@ -47,9 +47,6 @@ func init() {
 // LockScreen tests that the screen can be locked from Quick Settings
 // and verifies its contents when the screen is locked.
 func LockScreen(ctx context.Context, s *testing.State) {
-	cleanup := quicksettings.SetQsRevampEnabled(true)
-	defer cleanup()
-
 	const (
 		username = "testuser@gmail.com"
 		password = "pass"

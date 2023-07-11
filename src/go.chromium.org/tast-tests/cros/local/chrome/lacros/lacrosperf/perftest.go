@@ -56,12 +56,6 @@ func SetupPerfTest(ctx context.Context, tconn *chrome.TestConn, name string) (re
 		return nil, errors.Wrap(err, "failed to setup power test environment")
 	}
 
-	cleanupQs, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to init quicksettings")
-	}
-	defer cleanupQs()
-
 	if err := quicksettings.SetDoNotDisturb(ctx, tconn, true); err != nil {
 		return nil, errors.Wrap(err, "failed to enable do not disturb")
 	}

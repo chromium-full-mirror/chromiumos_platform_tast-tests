@@ -57,12 +57,6 @@ func BluetoothQueries(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating test API connection failed: ", err)
 	}
 
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quick settings")
-	}
-	defer cleanup()
-
 	// Open the Settings window, where we can verify Bluetooth/Wifi status
 	if err := apps.Launch(ctx, tconn, apps.Settings.ID); err != nil {
 		s.Fatal("Failed to launch Settings app: ", err)

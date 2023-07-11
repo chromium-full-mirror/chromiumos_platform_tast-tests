@@ -39,9 +39,6 @@ func init() {
 
 // FeatureRestrictedAtLockScreen verifies users are not able to use the quick settings Bluetooth feature at the lock screen.
 func FeatureRestrictedAtLockScreen(ctx context.Context, s *testing.State) {
-	cleanup := quicksettings.SetQsRevampEnabled(true)
-	defer cleanup()
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/audionode"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -159,17 +158,6 @@ func USBVolumeGranularity(ctx context.Context, s *testing.State) {
 	ctxForCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect Test API: ", err)
-	}
-
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quicksettings: ", err)
-	}
-	defer cleanup()
 
 	kb, err := input.VirtualKeyboard(ctx)
 	if err != nil {

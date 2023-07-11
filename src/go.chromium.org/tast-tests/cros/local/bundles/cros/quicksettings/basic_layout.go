@@ -103,12 +103,6 @@ func BasicLayout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	cleanupQs, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quicksettings: ", err)
-	}
-	defer cleanupQs()
-
 	param := s.Param().(basicLayoutTestParam)
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, param.isTabletMode)
 	if err != nil {

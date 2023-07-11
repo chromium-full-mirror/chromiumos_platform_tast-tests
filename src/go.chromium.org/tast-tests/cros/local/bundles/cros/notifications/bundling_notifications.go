@@ -77,12 +77,6 @@ func BundlingNotifications(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API")
 	}
 
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quicksettings: ", err)
-	}
-	defer cleanup()
-
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)

@@ -223,12 +223,6 @@ func signOut(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 	defer sw.Close(ctx)
 
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to init quick settings")
-	}
-	defer cleanup()
-
 	if err := quicksettings.SignOut(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to sign out with quick settings")
 	}

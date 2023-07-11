@@ -37,9 +37,6 @@ func init() {
 
 // MicGainSlider tests that the mic gain slider can be adjusted up and down.
 func MicGainSlider(ctx context.Context, s *testing.State) {
-	cleanup := quicksettings.SetQsRevampEnabled(true)
-	defer cleanup()
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

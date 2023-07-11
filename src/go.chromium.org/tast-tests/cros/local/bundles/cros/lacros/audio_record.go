@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 
 	"go.chromium.org/tast/core/testing"
 )
@@ -42,9 +41,6 @@ func init() {
 }
 
 func AudioRecord(ctx context.Context, s *testing.State) {
-	cleanup := quicksettings.SetQsRevampEnabled(true)
-	defer cleanup()
-
 	chrome := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// Load ALSA loopback module.

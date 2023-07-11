@@ -265,12 +265,6 @@ func signIn(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEvent
 
 // toggleBluetooth toggles the Bluetooth adapter state and verifies the new state equals |exp|.
 func toggleBluetooth(ctx context.Context, tconn *chrome.TestConn, bt bluetooth.Bluetooth, exp bool) error {
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to init quicksettings")
-	}
-	defer cleanup()
-
 	if err := quicksettings.Show(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to show the Quick Settings")
 	}

@@ -58,12 +58,6 @@ func Smoke(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	cleanupQs, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quicksettings: ", err)
-	}
-	defer cleanupQs()
-
 	// Setup a browser.
 	bt := s.Param().(browser.Type)
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)

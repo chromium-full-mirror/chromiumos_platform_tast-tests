@@ -43,9 +43,6 @@ func init() {
 }
 
 func SetDLThemeQuickSettings(ctx context.Context, s *testing.State) {
-	qsCleanup := quicksettings.SetQsRevampEnabled(true)
-	defer qsCleanup()
-
 	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx

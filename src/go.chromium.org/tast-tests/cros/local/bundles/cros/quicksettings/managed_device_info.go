@@ -117,9 +117,6 @@ func ManagedDeviceInfo(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	cleanup := quicksettings.SetQsRevampEnabled(param.qsRevamp)
-	defer cleanup()
-
 	if err := quicksettings.Show(ctx, tconn); err != nil {
 		s.Fatal("Failed to show Quick Settings: ", err)
 	}

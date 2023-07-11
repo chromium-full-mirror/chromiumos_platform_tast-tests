@@ -88,12 +88,6 @@ func LockScreen(ctx context.Context, s *testing.State) {
 	}(cleanupCtx, tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quicksettings: ", err)
-	}
-	defer cleanup()
-
 	if err := quicksettings.OpenAudioSettings(ctx, tconn); err != nil {
 		s.Fatal("Failed to open Quick Settings audio detail view")
 	}

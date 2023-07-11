@@ -61,12 +61,6 @@ func DoNotDisturbOSSettings(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn).WithTimeout(waitForNotificationTimeout)
 
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quicksettings: ", err)
-	}
-	defer cleanup()
-
 	// Setup a browser.
 	bt := s.Param().(browser.Type)
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)

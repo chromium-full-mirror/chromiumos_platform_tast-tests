@@ -47,9 +47,6 @@ func init() {
 
 // OpenSettings tests that we can open the settings app from Quick Settings.
 func OpenSettings(ctx context.Context, s *testing.State) {
-	cleanup := quicksettings.SetQsRevampEnabled(s.Param().(bool))
-	defer cleanup()
-
 	cr := s.FixtValue().(*chrome.Chrome)
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

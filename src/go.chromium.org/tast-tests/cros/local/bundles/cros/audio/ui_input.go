@@ -267,12 +267,6 @@ func UIInput(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
 
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quicksettings: ", err)
-	}
-	defer cleanup()
-
 	// Set up the keyboard, which is used to increment/decrement the slider.
 	// TODO(b/187793602): use better slider automation controls if possible, instead of keyboard controls.
 	kb, err := input.Keyboard(ctx)

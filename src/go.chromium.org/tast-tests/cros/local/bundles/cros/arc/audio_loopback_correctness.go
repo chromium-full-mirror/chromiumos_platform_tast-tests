@@ -575,9 +575,6 @@ func AudioLoopbackCorrectness(ctx context.Context, s *testing.State) {
 		keyPerformanceMode = "perf_mode"
 	)
 
-	cleanup := quicksettings.SetQsRevampEnabled(true)
-	defer cleanup()
-
 	a := s.FixtValue().(*arc.PreData).ARC
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	param := s.Param().(audioLoopbackCorrectnessVal)

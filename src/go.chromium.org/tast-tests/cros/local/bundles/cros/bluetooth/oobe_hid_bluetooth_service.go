@@ -150,12 +150,6 @@ func (svc *OobeHidBluetoothService) DisableBluetoothFromQuickSettings(ctx contex
 		return nil, errors.Wrap(err, "failed to create the signin profile test API connection")
 	}
 
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to init quicksettings")
-	}
-	defer cleanup()
-
 	if err := quicksettings.Show(ctx, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to show quick settings")
 	}

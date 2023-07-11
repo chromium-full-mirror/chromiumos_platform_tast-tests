@@ -126,12 +126,6 @@ func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 		s.Fatal("Error while waiting during sample time: ", err)
 	}
 
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quicksettings: ", err)
-	}
-	defer cleanup()
-
 	// Select output device.
 	if err := quicksettings.Show(ctx, tconn); err != nil {
 		s.Fatal("Failed to show Quick Settings")

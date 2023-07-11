@@ -40,9 +40,6 @@ func init() {
 
 // YoutubeAppPlayingWhenUnfocused keeps youtube app playing while window focus shifted.
 func YoutubeAppPlayingWhenUnfocused(ctx context.Context, s *testing.State) {
-	cleanup := quicksettings.SetQsRevampEnabled(true)
-	defer cleanup()
-
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
 	device := s.FixtValue().(*arc.PreData).UIDevice

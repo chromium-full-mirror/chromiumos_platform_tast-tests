@@ -58,12 +58,6 @@ func ClearAll(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	cleanupQs, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quicksettings: ", err)
-	}
-	defer cleanupQs()
-
 	// Setup a browser.
 	bt := s.Param().(browser.Type)
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)

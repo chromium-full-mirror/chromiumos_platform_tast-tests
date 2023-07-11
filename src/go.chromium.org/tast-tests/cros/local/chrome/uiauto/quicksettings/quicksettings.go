@@ -82,12 +82,6 @@ func clickAndWaitForAnimation(ctx context.Context, tconn *chrome.TestConn, node 
 	return nil
 }
 
-// Init is deprecated and does nothing.
-// TODO(b/289240282): Delete all calls to this function.
-func Init(ctx context.Context, tconn *chrome.TestConn) (func(), error) {
-	return func() {}, nil
-}
-
 // QsRevampEnabled returns whether the chrome feature "QsRevamp" is enabled. The
 // state might vary because the feature flag default was flipped in a chrome
 // uprev, or because a test explicitly opted-in or opted-out of the feature.
@@ -99,12 +93,6 @@ func QsRevampEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error) 
 		return false, errors.Wrap(err, "failed to get QsRevamp feature state")
 	}
 	return qsRevampEnabled, nil
-}
-
-// SetQsRevampEnabled is deprecated and does nothing.
-// TODO(b/289240282): Delete all calls to this function.
-func SetQsRevampEnabled(enabled bool) func() {
-	return func() {}
 }
 
 // GetRootFinder returns the finder for the root quick settings view.

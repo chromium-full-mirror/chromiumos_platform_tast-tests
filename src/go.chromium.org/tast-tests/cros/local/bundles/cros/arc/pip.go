@@ -154,12 +154,6 @@ func PIP(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quicksettings: ", err)
-	}
-	defer cleanup()
-
 	a := s.FixtValue().(*arc.PreData).ARC
 	dev := s.FixtValue().(*arc.PreData).UIDevice
 

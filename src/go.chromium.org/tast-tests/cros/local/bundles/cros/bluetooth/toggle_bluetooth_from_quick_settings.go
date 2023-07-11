@@ -56,12 +56,6 @@ func ToggleBluetoothFromQuickSettings(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	cleanup, err := quicksettings.Init(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to init quicksettings: ", err)
-	}
-	defer cleanup()
-
 	if err := quicksettings.Show(ctx, tconn); err != nil {
 		s.Fatal("Failed to show quick settings: ", err)
 	}

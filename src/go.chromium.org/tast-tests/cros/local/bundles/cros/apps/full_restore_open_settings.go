@@ -107,12 +107,6 @@ func FullRestoreOpenSettings(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for Settings apps page: ", err)
 		}
 
-		cleanup, err := quicksettings.Init(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to init quick settings: ", err)
-		}
-		defer cleanup()
-
 		// After clicking the SETTINGS button, the notification is hidden in the system tray.
 		// Show the notification center to find the notification.
 		if err := quicksettings.ShowNotificationCenter(ctx, tconn); err != nil {
