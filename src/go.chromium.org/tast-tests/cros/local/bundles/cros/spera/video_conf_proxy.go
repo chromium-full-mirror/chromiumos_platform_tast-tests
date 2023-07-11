@@ -42,7 +42,6 @@ func init() {
 		Desc:         "A test case that simulates the video call testing",
 		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "chicheny@google.com"},
 		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
-		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Vars: []string{
