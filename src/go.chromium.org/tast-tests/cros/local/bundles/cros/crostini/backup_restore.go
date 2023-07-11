@@ -8,8 +8,10 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
@@ -112,6 +114,10 @@ func BackupRestore(ctx context.Context, s *testing.State) {
 	if err := cont.WriteFile(ctx, testFileName, testFileContent); err != nil {
 		s.Fatalf("Failed to write file %v in container: %v", testFileName, err)
 	}
+	// Also modify the file's acl to check this is preserved on restore.
+	if out, err := cont.Command(ctx, "setfacl", "-m", "m::rx", testFileName).CombinedOutput(testexec.DumpLogOnError); err != nil {
+		s.Fatalf("Failed to set acl on file %v in container: %v, %v", testFileName, string(out), err)
+	}
 	if err := vm.ShrinkDefaultContainer(ctx, ownerID); err != nil {
 		s.Fatal("Failed to shrink container for backup: ", err)
 	}
@@ -138,5 +144,13 @@ func BackupRestore(ctx context.Context, s *testing.State) {
 
 	if err := cont.CheckFileContent(ctx, testFileName, testFileContent); err != nil {
 		s.Fatalf("Wrong file content for %v: %v", testFileContent, err)
+	}
+
+	out, err := cont.Command(ctx, "getfacl", testFileName).CombinedOutput(testexec.DumpLogOnError)
+	if err != nil {
+		s.Fatalf("Couldn't run 'getfacl %v' in container: %v", testFileName, err)
+	}
+	if !strings.Contains(string(out), "mask::r-x") {
+		s.Fatalf("Failed to restore acl for file %v in container: expected acl to contain 'mask::r-x', got %v", testFileName, string(out))
 	}
 }
