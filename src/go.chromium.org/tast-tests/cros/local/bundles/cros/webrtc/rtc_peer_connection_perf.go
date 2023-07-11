@@ -1240,6 +1240,36 @@ func init() {
 				Fixture:           "chromeVideoLacrosWithFakeWebcam",
 			},
 			{
+				Name: "vp8_1080p_tab_l1t3_sw_enc_hw_oopvd",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
+					Profile:           "VP8",
+					StreamWidth:       1920,
+					StreamHeight:      1080,
+					Svc:               "L1T3",
+					DisplayMediaType:  peerconnection.CaptureTab,
+					BrowserType:       browser.TypeAsh,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30"},
+				Fixture:           "chromeTabCaptureWithOOPVDAndSWEncoding",
+			},
+			{
+				Name: "vp8_1080p_tab_l1t3_lacros_sw_enc_hw_dec",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
+					Profile:           "VP8",
+					StreamWidth:       1920,
+					StreamHeight:      1080,
+					Svc:               "L1T3",
+					DisplayMediaType:  peerconnection.CaptureTab,
+					BrowserType:       browser.TypeLacros,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30"},
+				Fixture:           "chromeTabCaptureWithLacrosAndSWEncoding",
+			},
+			{
 				Name: "h264_720p_hw_enc_hw_dec_global_vaapi_lock_disabled",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,

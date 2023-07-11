@@ -580,6 +580,43 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeTabCaptureWithOOPVDAndSWEncoding",
+		Desc:     "Like chromeTabCapture but with out-of-process video decoding (OOP-VD) and software encoding",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				// Chrome automatically selects a tab page whose title contains "test".
+				chrome.ExtraArgs("--auto-select-tab-capture-source-by-title=test"),
+				chrome.ExtraArgs("--disable-accelerated-video-encode"),
+				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeTabCaptureWithLacrosAndSWEncoding",
+		Desc:     "Like chromeTabCapture but with LaCrOS and software encoding",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.LacrosExtraArgs(chromeVideoArgs...),
+				// Chrome automatically selects a tab page whose title contains "test".
+				chrome.LacrosExtraArgs("--auto-select-tab-capture-source-by-title=test"),
+				chrome.LacrosExtraArgs("--disable-accelerated-video-encode"))).Opts()
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeZeroCopyScreenCapture",
 		Desc:     "Logged into a user session with flag so that Chrome always picks the entire screen for getDisplayMedia(), bypassing the picker UI",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
