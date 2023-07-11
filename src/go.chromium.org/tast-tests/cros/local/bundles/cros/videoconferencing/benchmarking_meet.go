@@ -31,9 +31,8 @@ type meetParams struct {
 	appRelight      bool
 	platformBlur    bool
 	platformRelight bool
-	// Whether to use the low res ("full") segmentation model or not.
-	useLowResModel bool
-	botCount       int
+	modelType       effects.ModelType
+	botCount        int
 }
 
 const botDuration = 7 * time.Minute
@@ -78,13 +77,28 @@ func init() {
 				Name: "platform_blur_720p",
 				Val: meetParams{
 					platformBlur: true,
+					modelType:    effects.KHd,
 				},
 			},
 			{
 				Name: "platform_blur_720p_low_segm",
 				Val: meetParams{
-					platformBlur:   true,
-					useLowResModel: true,
+					platformBlur: true,
+					modelType:    effects.KFull,
+				},
+			},
+			{
+				Name: "platform_blur_720p_effnet256",
+				Val: meetParams{
+					platformBlur: true,
+					modelType:    effects.KEffnet256,
+				},
+			},
+			{
+				Name: "platform_blur_720p_effnet384",
+				Val: meetParams{
+					platformBlur: true,
+					modelType:    effects.KEffnet384,
 				},
 			},
 			{
@@ -97,13 +111,14 @@ func init() {
 				Name: "platform_relight_720p",
 				Val: meetParams{
 					platformRelight: true,
+					modelType:       effects.KHd,
 				},
 			},
 			{
 				Name: "platform_relight_720p_low_segm",
 				Val: meetParams{
 					platformRelight: true,
-					useLowResModel:  true,
+					modelType:       effects.KFull,
 				},
 			},
 			{
@@ -118,6 +133,7 @@ func init() {
 				Val: meetParams{
 					platformBlur:    true,
 					platformRelight: true,
+					modelType:       effects.KHd,
 				},
 			},
 			{
@@ -125,7 +141,23 @@ func init() {
 				Val: meetParams{
 					platformBlur:    true,
 					platformRelight: true,
-					useLowResModel:  true,
+					modelType:       effects.KFull,
+				},
+			},
+			{
+				Name: "platform_blur_relight_720p_effnet256",
+				Val: meetParams{
+					platformBlur:    true,
+					platformRelight: true,
+					modelType:       effects.KEffnet256,
+				},
+			},
+			{
+				Name: "platform_blur_relight_720p_effnet384",
+				Val: meetParams{
+					platformBlur:    true,
+					platformRelight: true,
+					modelType:       effects.KEffnet384,
 				},
 			},
 			{
@@ -145,6 +177,7 @@ func init() {
 				Name: "platform_relight_720p_4ppl",
 				Val: meetParams{
 					platformRelight: true,
+					modelType:       effects.KHd,
 					botCount:        3,
 				},
 			},
@@ -152,6 +185,7 @@ func init() {
 				Name: "platform_blur_720p_4ppl",
 				Val: meetParams{
 					platformBlur: true,
+					modelType:    effects.KHd,
 					botCount:     3,
 				},
 			},
@@ -160,6 +194,7 @@ func init() {
 				Val: meetParams{
 					platformBlur:    true,
 					platformRelight: true,
+					modelType:       effects.KHd,
 					botCount:        3,
 				},
 			},
@@ -180,6 +215,7 @@ func init() {
 				Name: "platform_relight_720p_10ppl",
 				Val: meetParams{
 					platformRelight: true,
+					modelType:       effects.KHd,
 					botCount:        9,
 				},
 			},
@@ -187,6 +223,7 @@ func init() {
 				Name: "platform_blur_720p_10ppl",
 				Val: meetParams{
 					platformBlur: true,
+					modelType:    effects.KHd,
 					botCount:     9,
 				},
 			},
@@ -195,6 +232,7 @@ func init() {
 				Val: meetParams{
 					platformBlur:    true,
 					platformRelight: true,
+					modelType:       effects.KHd,
 					botCount:        9,
 				},
 			},
@@ -323,7 +361,7 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure Meet: ", err)
 	}
 
-	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight, param.useLowResModel)
+	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight, param.modelType)
 	if err != nil {
 		s.Fatal("Failed to apply platform effects: ", err)
 	}

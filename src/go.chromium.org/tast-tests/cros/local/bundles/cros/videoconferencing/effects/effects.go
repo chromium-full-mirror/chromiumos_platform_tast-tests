@@ -36,8 +36,24 @@ type DataResult struct {
 	FpsData      []float64 `json:"fpsData"`
 }
 
+// ModelType is an enum to select the segmentation model type.
+type ModelType string
+
+const (
+	// KNone is the empty string used for no effects.
+	KNone ModelType = ""
+	// KHd is the standard "HD" model.
+	KHd ModelType = "hd"
+	// KFull is the standard "low res" model.
+	KFull ModelType = "full"
+	// KEffnet256 is a 256x160 resolution model.
+	KEffnet256 ModelType = "effnet256"
+	// KEffnet384 is a 384x224 resolution model.
+	KEffnet384 ModelType = "effnet384"
+)
+
 // ApplyPlatformEffects applies the configured platform effects.
-func ApplyPlatformEffects(ctx context.Context, blur, relight, useLowResModel bool) (func(ctx context.Context) error, error) {
+func ApplyPlatformEffects(ctx context.Context, blur, relight bool, modelType ModelType) (func(ctx context.Context) error, error) {
 	testing.ContextLog(ctx, "Configuring platform effects")
 	if err := os.Mkdir(platformEffectsOverrideDir, 0755); err != nil && !os.IsExist(err) {
 		return nil, errors.Wrap(err, "failed to write platform override")
@@ -58,12 +74,21 @@ func ApplyPlatformEffects(ctx context.Context, blur, relight, useLowResModel boo
 	} else if relight {
 		platformEffects.Effect = "relight"
 	}
-	if useLowResModel {
-		platformEffects.SegmentationModelType = "full"
+
+	platformEffects.GpuAPI = "vulkan"
+	if modelType == KHd {
+		platformEffects.SegmentationModelType = string(KHd)
+	} else if modelType == KEffnet256 {
+		platformEffects.SegmentationModelType = string(KEffnet256)
+	} else if modelType == KEffnet384 {
+		platformEffects.SegmentationModelType = string(KEffnet384)
+	} else if modelType == KFull {
+		platformEffects.SegmentationModelType = string(KFull)
 		platformEffects.GpuAPI = "opencl"
+	} else if modelType == KNone {
+		// Do nothing.
 	} else {
-		platformEffects.SegmentationModelType = "hd"
-		platformEffects.GpuAPI = "vulkan"
+		return nil, errors.Wrap(errors.New("invalid model config"), "invalid model config")
 	}
 
 	platformEffectsJSON, err := json.Marshal(platformEffects)

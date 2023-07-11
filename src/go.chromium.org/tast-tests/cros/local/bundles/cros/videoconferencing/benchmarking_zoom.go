@@ -27,10 +27,6 @@ type zoomParams struct {
 	appBlur         bool
 	platformBlur    bool
 	platformRelight bool
-	// Whether to use the low res ("full") segmentation model or not. Not used here, since
-	// BenchmarkZoom always uses the high res ("hd") model, but is a bit easier to understand
-	// as a variable.
-	useLowResModel bool
 }
 
 func init() {
@@ -148,7 +144,7 @@ func BenchmarkingZoom(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to configure background %q: %v", backgroundOption, err)
 	}
 
-	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight, param.useLowResModel)
+	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight, effects.KHd)
 	if err != nil {
 		s.Fatal("Failed to apply platform effects: ", err)
 	}
