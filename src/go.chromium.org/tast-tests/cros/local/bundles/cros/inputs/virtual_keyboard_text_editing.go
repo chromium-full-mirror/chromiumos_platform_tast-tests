@@ -99,30 +99,73 @@ func VirtualKeyboardTextEditing(ctx context.Context, s *testing.State) {
 	}
 
 	validateAction := uiauto.Combine("edit text using virtual keyboard",
-		// Edit text after swapping focus between text fields.
+		// Insert text into an input field.
 		its.ClickFieldUntilVKShown(inputField),
 		vkbCtx.TapKeys(strings.Split("Abcdfg", "")),
+		util.WaitForFieldTextToBe(tconn, inputField.Finder(), "Abcdfg"),
+
+		// Insert text into a different input field.
 		its.ClickFieldUntilVKShown(noCorrectionInputField),
 		vkbCtx.TapKeys(strings.Split("abd", "")),
+		util.WaitForFieldTextToBe(tconn, noCorrectionInputField.Finder(), "abd"),
+
+		// Move cursor back to the middle of the original input field and type.
 		clickTextRightBound(inputTextFinder, 4),
 		vkbCtx.TapKeys(strings.Split("de", "")),
+		util.WaitForFieldTextToBe(tconn, inputField.Finder(), "Abcddefg"),
+
+		// Move cursor to the middle of the other input field and type.
 		clickTextRightBound(noCorrectionInputFieldFinder, 2),
 		vkbCtx.TapKeys(strings.Split("c", "")),
+		util.WaitForFieldTextToBe(tconn, noCorrectionInputField.Finder(), "abcd"),
+
+		// Move cursor back to the middle of the original input field and delete with Backspace.
 		clickTextRightBound(inputTextFinder, 5),
 		vkbCtx.TapKey("backspace"),
+		util.WaitForFieldTextToBe(tconn, inputField.Finder(), "Abcdefg"),
+
+		// Move cursor to the middle other input field and insert Space.
 		clickTextRightBound(noCorrectionInputFieldFinder, 2),
 		vkbCtx.TapKey("space"),
-		util.WaitForFieldTextToBe(tconn, inputField.Finder(), "Abcdefg"),
 		util.WaitForFieldTextToBe(tconn, noCorrectionInputField.Finder(), "ab cd"),
 
-		// Edit text while focused in text field.
+		// Move cursor to the end of the original input field and insert at the end.
 		clickTextRightBound(inputTextFinder, 7),
 		vkbCtx.TapKeys(strings.Split("hjij", "")),
+		util.WaitForFieldTextToBe(tconn, inputField.Finder(), "Abcdefghjij"),
+
+		// Delete from the middle of the text with Backspace
 		clickTextRightBound(inputTextFinder, 9),
 		vkbCtx.TapKey("backspace"),
+		util.WaitForFieldTextToBe(tconn, inputField.Finder(), "Abcdefghij"),
+
+		// Insert in the middle with Space.
 		clickTextRightBound(inputTextFinder, 5),
 		vkbCtx.TapKey("space"),
 		util.WaitForFieldTextToBe(tconn, inputField.Finder(), "Abcde fghij"),
+
+		// Insert in the middle with Glide typing (inserts space automatically).
+		clickTextRightBound(inputTextFinder, 3),
+		vkbCtx.GlideTyping(strings.Split("hat", ""), util.WaitForFieldTextToBe(tconn, inputField.Finder(), "Abc hatde fghij")),
+
+		// Replace selected text with Space.
+		ui.SelectText(inputTextFinder, 1, 7),
+		vkbCtx.TapKey("space"),
+		util.WaitForFieldTextToBe(tconn, inputField.Finder(), "A de fghij"),
+
+		// Delete selected text with Backspace.
+		ui.SelectText(inputTextFinder, 5, 7),
+		vkbCtx.TapKey("backspace"),
+		util.WaitForFieldTextToBe(tconn, inputField.Finder(), "A de hij"),
+
+		// Replace selected text with typing.
+		ui.SelectText(inputTextFinder, 1, 4),
+		vkbCtx.TapKeys(strings.Split("bc", "")),
+		util.WaitForFieldTextToBe(tconn, inputField.Finder(), "Abc hij"),
+
+		// Replace selected text with Glide typing.
+		ui.SelectText(inputTextFinder, 3, 4),
+		vkbCtx.GlideTyping(strings.Split("hat", ""), util.WaitForFieldTextToBe(tconn, inputField.Finder(), "Abc hathij")),
 	)
 
 	if err := uiauto.UserAction("Edit text using virtual keyboard",
