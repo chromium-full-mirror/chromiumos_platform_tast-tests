@@ -30,7 +30,6 @@ func init() {
 			"lziest@google.com",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
-		Attr:         []string{"group:cryptohome"},
 		SoftwareDeps: []string{"pinweaver"},
 		Fixture:      "ussAuthSessionFakeBiometricsFixture",
 	})
