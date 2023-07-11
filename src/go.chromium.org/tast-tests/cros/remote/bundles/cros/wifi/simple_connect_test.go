@@ -191,7 +191,7 @@ func simpleConnect80211ax() []simpleConnectParams {
 		Doc:       simpleConnectDocPref("an open 802.11ax network on channel 60 with a channel width of 40MHz."),
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 		Val: []simpleConnectParamsVal{{APOpts: `
-			ap.Mode(ap.Mode80211axPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT40), ap.SpectrumManagement(),
+			ap.Mode(ap.Mode80211axPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC), ap.SpectrumManagement(),
 			ap.HEChWidth(ap.HEChWidth20Or40),
 		`}},
 	}, {
@@ -199,7 +199,7 @@ func simpleConnect80211ax() []simpleConnectParams {
 		Doc:       simpleConnectDocPref("an open 802.11ax network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz."),
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 		Val: []simpleConnectParamsVal{{APOpts: `
-			ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus),
+			ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
 		`}},
 	}, {
@@ -208,7 +208,7 @@ func simpleConnect80211ax() []simpleConnectParams {
 		Doc: append(simpleConnectDocPref("an open 802.11ax network on channel 157 with center channel of 155 and channel width of 80MHz."),
 			"The router is forced to use 80 MHz wide rates only."),
 		Val: []simpleConnectParamsVal{{APOpts: `
-			ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus),
+			ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
 		`}},
 	}}

@@ -191,7 +191,7 @@ func init() {
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT40), ap.SpectrumManagement(),
+						ap.Mode(ap.Mode80211axPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC), ap.SpectrumManagement(),
 						ap.HEChWidth(ap.HEChWidth20Or40),
 					},
 				}},
@@ -201,7 +201,7 @@ func init() {
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus),
+						ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
 					},
 				}},
@@ -212,7 +212,7 @@ func init() {
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus),
+						ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
 					},
 				}},

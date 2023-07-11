@@ -46,6 +46,7 @@ const (
 	HTCapHT40Plus                    // "[HT40+]"
 	HTCapSGI20                       // "[SHORT-GI-20]"
 	HTCapSGI40                       // "[SHORT-GI-40]"
+	HTCapLDPC                        // "[LDPC]"
 	// The test APs don't support Greenfield now. Comment out the option to avoid usage.
 	// (The capability can be shown with `iw phy`)
 	// HTCapGreenfield                   // "[GF]"
@@ -1160,6 +1161,9 @@ func (c *Config) htCapsString() string {
 	}
 	if c.HTCaps&HTCapSGI40 > 0 {
 		caps = append(caps, "[SHORT-GI-40]")
+	}
+	if c.HTCaps&HTCapLDPC > 0 {
+		caps = append(caps, "[LDPC]")
 	}
 	return strings.Join(caps, "")
 }
