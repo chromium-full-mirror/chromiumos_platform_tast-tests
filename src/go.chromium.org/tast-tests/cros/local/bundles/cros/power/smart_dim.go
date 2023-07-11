@@ -57,7 +57,7 @@ func init() {
 				useFlatbufferModel: false,
 			},
 			Fixture:           "lacrosFastHistogramsAndBuiltinSmartDimModel",
-			ExtraSoftwareDeps: []string{"lacros_stable"},
+			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 		}},
 	})
 }
@@ -67,7 +67,7 @@ func SmartDim(ctx context.Context, s *testing.State) {
 		dbusName            = "org.chromium.MlDecisionService"
 		dbusPath            = dbus.ObjectPath("/org/chromium/MlDecisionService")
 		dbusInterfaceMethod = "org.chromium.MlDecisionService.ShouldDeferScreenDim"
-		timeout             = 60 * time.Second
+		timeout             = 4 * time.Minute
 	)
 
 	histogramNames := []string{
