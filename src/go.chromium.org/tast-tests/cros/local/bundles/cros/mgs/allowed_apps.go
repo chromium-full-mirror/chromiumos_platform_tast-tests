@@ -14,6 +14,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfaillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/mgs"
@@ -21,10 +23,14 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type testParams struct {
+	isLacros bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AllowedApps,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that managed guest sessions only show allowed applications in the launcher",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
@@ -40,10 +46,22 @@ func init() {
 		},
 		Timeout: 3 * time.Minute,
 		Fixture: fixture.FakeDMSEnrolled,
+		Params: []testing.Param{
+			{
+				Val: testParams{isLacros: false},
+			},
+			{
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val:               testParams{isLacros: true},
+			},
+		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.SystemFeaturesDisableList{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SystemFeaturesDisableMode{}, pci.VerifiedFunctionalityUI),
-		}})
+			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
+		},
+	})
 }
 
 func AllowedApps(ctx context.Context, s *testing.State) {
@@ -53,16 +71,22 @@ func AllowedApps(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	mgs, cr, err := mgs.New(
-		ctx,
-		fdms,
+	opts := []mgs.Option{
 		mgs.DefaultAccount(),
 		mgs.AutoLaunch(mgs.MgsAccountID),
 		mgs.AddPublicAccountPolicies(mgs.MgsAccountID, []policy.Policy{
 			systemFeaturesDisableList(),
 			&policy.SystemFeaturesDisableMode{Val: "hidden"},
 		}),
-	)
+	}
+	isLacros := s.Param().(testParams).isLacros
+	if isLacros {
+		opts = append(opts, mgs.AddPublicAccountPolicies(mgs.MgsAccountID, []policy.Policy{
+			&policy.LacrosAvailability{Val: "lacros_only"},
+		}))
+	}
+
+	mgs, cr, err := mgs.New(ctx, fdms, opts...)
 	if err != nil {
 		s.Fatal("Failed to start MGS: ", err)
 	}
@@ -75,6 +99,13 @@ func AllowedApps(ctx context.Context, s *testing.State) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
+	}
+	if isLacros {
+		defer lacrosfaillog.SaveIf(cleanupCtx, tconn, s.HasError)
+
+		if _, err = lacrosproc.Root(ctx, tconn); err != nil {
+			s.Fatal("Failed to verify lacros is running: ", err)
+		}
 	}
 
 	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, false /*tabletMode*/, true /*stabilizeAppCount*/)
@@ -90,7 +121,7 @@ func AllowedApps(ctx context.Context, s *testing.State) {
 	}
 
 	for _, app := range appsInLauncher {
-		if !isAppAllowed(app) {
+		if !isAppAllowed(app, isLacros) {
 			s.Fatal("Found disallowed app in MGS launcher: ", app.Name)
 		}
 	}
@@ -112,13 +143,19 @@ func systemFeaturesDisableList() policy.Policy {
 }
 
 // isAppAllowed checks if the app is allowed to be displayed in the launcher.
-func isAppAllowed(app *ash.ChromeApp) bool {
+func isAppAllowed(app *ash.ChromeApp, isLacros bool) bool {
 	allowedApps := []apps.App{
 		apps.PrintManagement,
 		apps.FilesSWA,
 		apps.ShortcutCustomization,
-		apps.Chrome,
 	}
+	if isLacros {
+		// TODO(b/290891866): Remove WebStore once it can be disabled by policy in Lacros.
+		allowedApps = append(allowedApps, apps.Lacros, apps.WebStore)
+	} else {
+		allowedApps = append(allowedApps, apps.Chrome)
+	}
+
 	for _, expectedApp := range allowedApps {
 		if app.AppID == expectedApp.ID {
 			return true
