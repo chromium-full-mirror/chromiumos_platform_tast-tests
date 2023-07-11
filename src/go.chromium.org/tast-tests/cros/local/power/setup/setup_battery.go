@@ -6,12 +6,16 @@ package setup
 
 import (
 	"context"
+	"runtime"
+	"strconv"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -29,6 +33,11 @@ var (
 	ccNormal                   = chargeState{"chargecontrol", "normal", "Charge state machine is in normal mode."}
 	boardsCannotChargeOverride = []string{"jacuzzi", "jacuzzi64"}
 )
+
+// BatteryPreparationTimeout is the time required to charge and drain battery
+// to specified range. Use in conjunction with ReachBatteryRange function. This
+// timeout is an estimate for a fully charged device to drain to 97%
+const BatteryPreparationTimeout = 30 * time.Minute
 
 func contains(list []string, s string) bool {
 	for _, e := range list {
@@ -127,4 +136,200 @@ func AllowBatteryCharging(ctx context.Context) error {
 		chargeState = ccNormal
 	}
 	return setChargeState(ctx, chargeState)
+}
+
+// DisableBatteryCharging will force AC power to be temporarily disconnected to
+// prevent battery from being charged. However, this would be overridden when the
+// AC power cable is physically re-inserted to the DUT again.
+func DisableBatteryCharging(ctx context.Context) error {
+	chargeState := coDontCharge
+	if !supportChargeOverride() {
+		chargeState = ccDischarge
+	}
+	return setChargeState(ctx, chargeState)
+}
+
+// PrepareBattery charges or drains the battery to reach the specified
+// range. Upon completion, the DUT would be allowed to resume charging or
+// being forced to discharge as specified.
+func PrepareBattery(ctx context.Context, minPercentage, maxPercentage float64, dischargeOnCompletion bool) error {
+	if minPercentage < 0.0 || minPercentage > 100.0 {
+		return errors.New("invalid min percentage, it should be within [0.0, 100.0]")
+	}
+	if maxPercentage < 0.0 || maxPercentage > 100.0 {
+		return errors.New("invalid max percentage, it should be within [0.0, 100.0]")
+	}
+	if maxPercentage < minPercentage {
+		return errors.New("invalid battery range, max percentage is smaller than min percentage")
+	}
+
+	status, err := power.GetStatus(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain DUT power status")
+	}
+
+	currentPercentage := status.BatteryPercent
+	testing.ContextLogf(ctx, "Current battery charge is %.2f%%", currentPercentage)
+	testing.ContextLogf(ctx, "Acceptable battery range is [%.2f%%, %.2f%%]", minPercentage, maxPercentage)
+
+	if currentPercentage > minPercentage && currentPercentage < maxPercentage {
+		testing.ContextLog(ctx, "Current battery charge is within the acceptable range")
+		err = nil
+	} else if currentPercentage < minPercentage {
+		testing.ContextLog(ctx, "Current battery charge is below the acceptable range")
+		err = chargeBattery(ctx, minPercentage)
+	} else {
+		testing.ContextLog(ctx, "Current battery charge is above the acceptable range")
+		err = drainBattery(ctx, maxPercentage)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if dischargeOnCompletion {
+		return DisableBatteryCharging(ctx)
+	}
+
+	return AllowBatteryCharging(ctx)
+}
+
+func chargeBattery(ctx context.Context, targetPercentage float64) error {
+	testing.ContextLog(ctx, "Start charging battery")
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	resetScreenBrightness, err := SetBacklightBrightnessLinearPercent(ctx, 5)
+	if err != nil {
+		return errors.Wrap(err, "failed to minimise screen brightness")
+	}
+	defer resetScreenBrightness(cleanupCtx)
+
+	resetKeyboardBrightness, err := SetKeyboardBrightness(ctx, 0)
+	if err != nil {
+		return errors.Wrap(err, "failed to minimise keyboard brightness")
+	}
+	if resetScreenBrightness != nil {
+		defer resetKeyboardBrightness(cleanupCtx)
+	}
+
+	if err := AllowBatteryCharging(ctx); err != nil {
+		return errors.Wrap(err, "failed to disable charge override to allow charging on DUT")
+	}
+
+	if err := WaitUntilPowerSourceChanges(ctx, true); err != nil {
+		return errors.Wrap(err, "timed out while waiting for DUT to start charging")
+	}
+	return testing.Poll(ctx, func(context.Context) error {
+		status, err := power.GetStatus(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to obtain DUT power status"))
+		}
+		if !status.IsLinePowerConnected() {
+			return testing.PollBreak(errors.Wrap(err, "power source is not connected while charging"))
+		}
+		if status.BatteryPercent < targetPercentage {
+			return errors.New("failed to reach target battery charge")
+		}
+		testing.ContextLog(ctx, "Successfully charged battery")
+		return nil
+	}, &testing.PollOptions{
+		Interval: time.Second,
+	})
+}
+
+func drainBattery(ctx context.Context, targetPercentage float64) error {
+	testing.ContextLog(ctx, "Start draining battery")
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	resetScreenBrightness, err := SetBacklightBrightnessLinearPercent(ctx, 100)
+	if err != nil {
+		return errors.Wrap(err, "failed to maximise screen brightness")
+	}
+	defer resetScreenBrightness(cleanupCtx)
+
+	resetKeyboardBrightness, err := SetKeyboardBrightness(ctx, 100)
+	if err != nil {
+		return errors.Wrap(err, "failed to maximise keyboard brightness")
+	}
+	if resetScreenBrightness != nil {
+		defer resetKeyboardBrightness(cleanupCtx)
+	}
+
+	if err := DisableBatteryCharging(ctx); err != nil {
+		return errors.Wrap(err, "failed to enable charge override to discharge on DUT")
+	}
+
+	if err := WaitUntilPowerSourceChanges(ctx, false); err != nil {
+		return errors.Wrap(err, "timed out while waiting for DUT to start discharging")
+	}
+
+	stopStressTest, err := stressCPU(ctx, runtime.NumCPU(), "/tmp")
+	if err != nil {
+		return errors.Wrap(err, "unable to start stress-ng to drain battery")
+	}
+	defer stopStressTest(cleanupCtx)
+
+	return testing.Poll(ctx, func(context.Context) error {
+		status, err := power.GetStatus(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to obtain DUT power status"))
+		}
+		if status.IsLinePowerConnected() {
+			return testing.PollBreak(errors.Wrap(err, "power source is connected while discharging"))
+		}
+		if status.BatteryPercent > targetPercentage {
+			return errors.New("failed to reach target battery charge")
+		}
+		testing.ContextLog(ctx, "Successfully drained battery")
+		return nil
+	}, &testing.PollOptions{
+		Interval: time.Second,
+	})
+}
+
+// WaitUntilPowerSourceChanges waits until the power source is changed to the
+// specified source.
+func WaitUntilPowerSourceChanges(ctx context.Context, acConnected bool) error {
+	return testing.Poll(ctx, func(context.Context) error {
+		status, err := power.GetStatus(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to obtain DUT power status"))
+		}
+		if acConnected && !status.IsLinePowerConnected() {
+			return errors.New("expected device to connect to AC power source but device is discharging from battery")
+		}
+		if !acConnected && status.IsLinePowerConnected() {
+			return errors.New("expected device to discharge from battery but device is charging from AC power source")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout: 20 * time.Second,
+	})
+}
+
+func stressCPU(ctx context.Context, nCores int, tempPath string) (CleanupCallback, error) {
+	cmd := testexec.CommandContext(ctx, "stress-ng", "--cpu", strconv.Itoa(nCores), "--temp-path", tempPath)
+	err := cmd.Start()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start stress-ng")
+	}
+	return func(context.Context) error {
+		if err := cmd.Kill(); err != nil {
+			return errors.Wrap(err, "failed to send SIGKILL to terminate stress-ng process")
+		}
+		code, ok := testexec.ExitCode(cmd.Wait())
+		if !ok /* Exit Code Extraction Status */ {
+			return errors.New("stress-ng process failed to exit and exit code cannot be extracted")
+		}
+		if code != 137 /* SIGKILL */ {
+			return errors.Errorf("stress-ng process failed to exit with exit code %v", code)
+		}
+		return nil
+	}, nil
 }

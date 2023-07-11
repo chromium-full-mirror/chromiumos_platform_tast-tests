@@ -58,7 +58,7 @@ func charge(ctx context.Context, displayPercentage float64) error {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	if err := powerSourceStatus(ctx, true); err != nil {
+	if err := setup.WaitUntilPowerSourceChanges(ctx, true); err != nil {
 		return err
 	}
 
@@ -153,7 +153,7 @@ func drain(ctx context.Context, cr *chrome.Chrome, desiredPercentage float64) er
 		return errors.Wrap(err, "setup failed to setup battery drain conditions")
 	}
 
-	if err := powerSourceStatus(ctx, false); err != nil {
+	if err := setup.WaitUntilPowerSourceChanges(ctx, false); err != nil {
 		return err
 	}
 
@@ -195,24 +195,4 @@ func drain(ctx context.Context, cr *chrome.Chrome, desiredPercentage float64) er
 	testing.ContextLogf(ctx, "Succeeded in draining battery with %d force discharge errors", forceDischargeErrors)
 
 	return nil
-}
-
-// powerSourceStatus polls device power source connection status to tackle the micro delay between flipping
-// servo role and DUT reflects the status.
-func powerSourceStatus(ctx context.Context, acConnected bool) error {
-	return testing.Poll(ctx, func(context.Context) error {
-		status, err := power.GetStatus(ctx)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to obtain DUT power status"))
-		}
-		if acConnected && !status.IsLinePowerConnected() {
-			return errors.New("battery charging requires device conntected to an active power source")
-		}
-		if !acConnected && status.IsLinePowerConnected() {
-			return errors.New("battery draining requires device disconnected from the power source")
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout: 20 * time.Second,
-	})
 }
