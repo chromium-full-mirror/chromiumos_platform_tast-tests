@@ -35,6 +35,11 @@ const (
 	omahaInvalidationTimeout = prepTimeout + updateutil.UpdateTimeout + verificationTimeout + rebootTimeout + cleanupTimeout
 )
 
+type omahaInvalidationTestParam struct {
+	ExtraPolicies []policy.Policy
+	IsRollback    bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OmahaInvalidation,
@@ -49,6 +54,7 @@ func init() {
 		Attr:         []string{"group:autoupdate"},
 		SoftwareDeps: []string{"reboot", "chrome", "crossystem"},
 		ServiceDeps: []string{
+			"tast.cros.baserpc.FileSystem",
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.policy.PolicyService",
 			"tast.cros.nebraska.Service",
@@ -59,11 +65,37 @@ func init() {
 			pci.SearchFlag(&policy.DeviceAutoUpdateDisabled{}, pci.Served),
 			pci.SearchFlag(&policy.RebootAfterUpdate{}, pci.Served),
 			pci.SearchFlag(&policy.UptimeLimit{}, pci.Served),
+			pci.SearchFlag(&policy.ChromeOsReleaseChannel{}, pci.Served),
+			pci.SearchFlag(&policy.DeviceTargetVersionPrefix{}, pci.Served),
+			pci.SearchFlag(&policy.DeviceRollbackAllowedMilestones{}, pci.Served),
+			pci.SearchFlag(&policy.DeviceRollbackToTargetVersion{}, pci.Served),
 		},
+		Params: []testing.Param{{
+			Name: "stable",
+			Val: omahaInvalidationTestParam{
+				ExtraPolicies: []policy.Policy{
+					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
+				},
+				IsRollback: false,
+			},
+		}, {
+			Name: "rollback",
+			Val: omahaInvalidationTestParam{
+				ExtraPolicies: []policy.Policy{
+					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
+					&policy.DeviceTargetVersionPrefix{Val: "15532."},
+					&policy.DeviceRollbackAllowedMilestones{Val: 4},
+					&policy.DeviceRollbackToTargetVersion{Val: 3},
+				},
+				IsRollback: true,
+			},
+		}},
 	})
 }
 
 func OmahaInvalidation(ctx context.Context, s *testing.State) {
+	param := s.Param().(omahaInvalidationTestParam)
+
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTimeout)
@@ -97,6 +129,7 @@ func OmahaInvalidation(ctx context.Context, s *testing.State) {
 		&policy.DeviceAutoUpdateDisabled{Val: false},
 		&policy.RebootAfterUpdate{Val: false},
 	})
+	pb.AddPolicies(param.ExtraPolicies)
 	pJSON, err := json.Marshal(pb)
 	if err != nil {
 		s.Fatal("Failed to serialize policies: ", err)
@@ -144,25 +177,10 @@ func OmahaInvalidation(ctx context.Context, s *testing.State) {
 		s.Fatal("Builder path is missing")
 	}
 
-	// Update the DUT in-place.
-	if err := updateutil.UpdateFromGS(ctx, s.DUT(), s.OutDir(), s.RPCHint(), builderPath); err != nil {
-		s.Fatal("Failed to update image: ", err)
-	}
-
-	if err := updateutil.FakeFirmwareUpdate(ctx, s.DUT()); err != nil {
-		s.Fatal("Failed to fake firmware update: ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := updateutil.RevertFakeFirmwareUpdate(ctx, s.DUT()); err != nil {
-			s.Error("Failed to reset fake firmware update: ", err)
-		}
-	}(cleanupCtx)
-
-	// Configure nebraska to invalidate the installed update.
-	nebraskaClient := nebraska.NewServiceClient(cl.Conn)
-	startResponse, err := nebraskaClient.Start(ctx, &nebraska.StartRequest{})
+	// Create and set up a Nebraska client for an in-place update.
+	nebraskaClient, nebraskaPort, err := updateutil.ConfigureNebraskaFromGS(ctx, cl.Conn, s.DUT(), s.OutDir(), builderPath)
 	if err != nil {
-		s.Fatal("Failed to start Nebraska")
+		s.Fatal("Failed to set up nebraska for an in-place update")
 	}
 	defer func(ctx context.Context) {
 		if cl != nil {
@@ -173,14 +191,37 @@ func OmahaInvalidation(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	// Configure Nebraska to serve an enterprise rollback update if it is a rollback test.
+	if _, err := nebraskaClient.SetIsRollback(ctx, &nebraska.SetIsRollbackRequest{IsRollback: param.IsRollback}); err != nil {
+		s.Fatal("Failed to remove rollback flag from Nebraska")
+	}
+
+	// Force an update check to update in-place.
+	updateClient := autoupdate.NewUpdateServiceClient(cl.Conn)
+	updateClient.CheckForUpdate(ctx, &autoupdate.UpdateRequest{
+		OmahaUrl: fmt.Sprintf("http://127.0.0.1:%d/update", nebraskaPort),
+	})
+
+	if err := updateutil.FakeFirmwareUpdate(ctx, s.DUT()); err != nil {
+		s.Fatal("Failed to fake firmware update: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := updateutil.RevertFakeFirmwareUpdate(ctx, s.DUT()); err != nil {
+			s.Error("Failed to reset fake firmware update: ", err)
+		}
+	}(cleanupCtx)
+
+	// Configure Nebraska to issue an Omaha update invalidation.
 	if _, err := nebraskaClient.SetInvalidateLastUpdate(ctx, &nebraska.SetInvalidateLastUpdateRequest{InvalidateLastUpdate: true}); err != nil {
 		s.Fatal("Failed to configure Nebraska for invalidation")
 	}
+	if _, err := nebraskaClient.SetIsRollback(ctx, &nebraska.SetIsRollbackRequest{IsRollback: false}); err != nil {
+		s.Fatal("Failed to remove rollback flag from Nebraska")
+	}
 
-	// Force an update check to invalidate the update.
-	updateClient := autoupdate.NewUpdateServiceClient(cl.Conn)
+	// Force an update check to issue the invalidation.
 	updateClient.CheckForUpdate(ctx, &autoupdate.UpdateRequest{
-		OmahaUrl: fmt.Sprintf("http://127.0.0.1:%d/update", startResponse.Port),
+		OmahaUrl: fmt.Sprintf("http://127.0.0.1:%d/update", nebraskaPort),
 	})
 
 	// Verify that the update is invalidated.

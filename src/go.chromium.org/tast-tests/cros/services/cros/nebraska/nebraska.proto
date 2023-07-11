@@ -10,25 +10,24 @@ import "google/protobuf/empty.proto";
 
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/nebraska";
 
-// Service provides functions to interact with a Nebraska instance on the test device.
+// Service provides functions to interact with a Nebraska instance on the test
+// device.
 service Service {
-  rpc Start (StartRequest) returns (StartResponse) {}
-  rpc Stop (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc Start(StartRequest) returns (StartResponse) {}
+  rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
-  rpc UpdatePayload (UpdatePayloadRequest) returns (google.protobuf.Empty) {}
+  rpc UpdatePayload(UpdatePayloadRequest) returns (google.protobuf.Empty) {}
 
-  rpc ReadLog (google.protobuf.Empty) returns (ReadLogResponse) {}
+  rpc ReadLog(google.protobuf.Empty) returns (ReadLogResponse) {}
 
-  rpc SetInvalidateLastUpdate (SetInvalidateLastUpdateRequest) returns (google.protobuf.Empty) {}
+  rpc SetInvalidateLastUpdate(SetInvalidateLastUpdateRequest)
+      returns (google.protobuf.Empty) {}
+  rpc SetIsRollback(SetIsRollbackRequest) returns (google.protobuf.Empty) {}
 }
 
-message StartRequest {
-  optional int32 port = 1;
-}
+message StartRequest { optional int32 port = 1; }
 
-message UpdatePayloadRequest {
-  Payload update = 1;
-}
+message UpdatePayloadRequest { Payload update = 1; }
 
 message Payload {
   string address = 1;
@@ -42,10 +41,8 @@ message StartResponse {
   reserved 2;
 }
 
-message ReadLogResponse {
-  bytes data = 1;
-}
+message ReadLogResponse { bytes data = 1; }
 
-message SetInvalidateLastUpdateRequest {
-  bool invalidateLastUpdate = 1;
-}
+message SetInvalidateLastUpdateRequest { bool invalidateLastUpdate = 1; }
+
+message SetIsRollbackRequest { bool isRollback = 1; }

@@ -104,3 +104,12 @@ func (s *Service) SetInvalidateLastUpdate(ctx context.Context, req *nebraska.Set
 
 	return &empty.Empty{}, nil
 }
+
+// SetIsRollback configures Nebraska to serve the next update as rollback or not.
+func (s *Service) SetIsRollback(ctx context.Context, req *nebraska.SetIsRollbackRequest) (*empty.Empty, error) {
+	if err := s.instance.SetIsRollback(ctx, req.IsRollback); err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
+}

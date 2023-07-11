@@ -25,6 +25,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	aupb "go.chromium.org/tast-tests/cros/services/cros/autoupdate"
+	"go.chromium.org/tast-tests/cros/services/cros/baserpc"
 	"go.chromium.org/tast-tests/cros/services/cros/nebraska"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -232,22 +233,16 @@ func PeriodicUpdateFromGS(ctx context.Context, dut *dut.DUT, outdir string, rpcH
 	return updateFromGSInternal(ctx, dut, outdir, rpcHint, builderPath, up)
 }
 
-type updateFunc func(ctx context.Context, conn *grpc.ClientConn, rec *aupb.UpdateRequest) error
-
-// updateFromGSInternal sets up Nebraska and starts the update.
-// TODO(yuanpengni): Split up the function into individual utils.
-func updateFromGSInternal(ctx context.Context, dut *dut.DUT, outdir string, rpcHint *testing.RPCHint, builderPath string, doUpdate updateFunc) (retErr error) {
-	// Limit the timeout for the update.
-	updateCtx, cancel := context.WithTimeout(ctx, UpdateTimeout)
-	defer cancel()
-
-	// Reserve cleanup time for copying the logs from the DUT.
-	cleanupCtx := updateCtx
-	updateCtx, cancel = ctxutil.Shorten(updateCtx, 2*time.Minute)
+// ConfigureNebraskaFromGS creates a Nebraska client and configures it to serve
+// an image indicated by the `builderPath`.
+// Returns a client and a port at which Nebraska runs.
+func ConfigureNebraskaFromGS(ctx context.Context, conn *grpc.ClientConn, dut *dut.DUT, outdir, builderPath string) (nebraskaCl nebraska.ServiceClient, port int32, retErr error) {
+	cleanupCtx := ctx
+	setupCtx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
 	defer cancel()
 
 	// Limit the timeout for caching the update files.
-	cachingCtx, cancel := context.WithTimeout(updateCtx, 3*time.Minute)
+	cachingCtx, cancel := context.WithTimeout(setupCtx, 3*time.Minute)
 	defer cancel()
 
 	gsPathPrefix := fmt.Sprintf("gs://chromeos-image-archive/%s", builderPath)
@@ -256,34 +251,17 @@ func updateFromGSInternal(ctx context.Context, dut *dut.DUT, outdir string, rpcH
 	// The update images are stored in a GS bucket which requires corp access.
 	url, err := cacheForDUT(cachingCtx, dut, tlwAddress.Value(), gsPathPrefix)
 	if err != nil {
-		return errors.Wrap(err, "unexpected error when caching file")
+		return nil, 0, errors.Wrap(err, "unexpected error when caching file")
 	}
 
 	// Limit the timeout for preparation steps before the update.
-	preparationCtx, cancel := context.WithTimeout(updateCtx, time.Minute)
+	preparationCtx, cancel := context.WithTimeout(setupCtx, time.Minute)
 	defer cancel()
-
-	// Connect to DUT.
-	cl, err := rpc.Dial(preparationCtx, dut, rpcHint)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
-	}
-	defer cl.Close(cleanupCtx)
-
-	nebraskaClient := nebraska.NewServiceClient(cl.Conn)
-	startResponse, err := nebraskaClient.Start(preparationCtx, &nebraska.StartRequest{})
-	if err != nil {
-		return errors.Wrap(err, "failed to start Nebraska")
-	}
-	defer func(ctx context.Context) {
-		_, err := nebraskaClient.Stop(ctx, &empty.Empty{})
-		retErr = errors.Join(retErr, err)
-	}(cleanupCtx)
 
 	// Find the metadata file in the GS bucket, as we need the full filename to download it from the caching server.
 	out, err := testexec.CommandContext(preparationCtx, "gsutil", "ls", gsPathPrefix+"/chromeos_*_full_dev*bin.json").Output(testexec.DumpLogOnError)
 	if err != nil {
-		return errors.Wrap(err, "failed to list files in the GS bucket")
+		return nil, 0, errors.Wrap(err, "failed to list files in the GS bucket")
 	}
 
 	paths := strings.Split(strings.TrimSpace(string(out)), "\n")
@@ -293,9 +271,21 @@ func updateFromGSInternal(ctx context.Context, dut *dut.DUT, outdir string, rpcH
 			testing.ContextLog(cachingCtx, "Could not save GS bucket content: ", err)
 		}
 
-		return errors.Errorf("unexpected number of files; got %d, want 1", len(paths))
+		return nil, 0, errors.Errorf("unexpected number of files; got %d, want 1", len(paths))
 	}
 	metadataFilename := filepath.Base(paths[0])
+
+	nebraskaClient := nebraska.NewServiceClient(conn)
+	startResponse, err := nebraskaClient.Start(preparationCtx, &nebraska.StartRequest{})
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "failed to start Nebraska")
+	}
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			_, err := nebraskaClient.Stop(ctx, &empty.Empty{})
+			retErr = errors.Join(retErr, err)
+		}
+	}(cleanupCtx)
 
 	args := []string{
 		"--tries=1",
@@ -314,14 +304,50 @@ func updateFromGSInternal(ctx context.Context, dut *dut.DUT, outdir string, rpcH
 			testing.ContextLog(cachingCtx, "Could not save GS bucket content: ", err)
 		}
 
-		return errors.Wrap(err, "failed to download payload metadata")
+		return nil, 0, errors.Wrap(err, "failed to download payload metadata")
 	}
 
 	if _, err = nebraskaClient.UpdatePayload(ctx, &nebraska.UpdatePayloadRequest{Update: &nebraska.Payload{
 		Address:        url,
 		MetadataFolder: startResponse.RuntimeRoot}}); err != nil {
-		return errors.Wrap(err, "failed to stage payload in Nebraska")
+		return nil, 0, errors.Wrap(err, "failed to stage payload in Nebraska")
 	}
+
+	return nebraskaClient, startResponse.Port, nil
+}
+
+type updateFunc func(ctx context.Context, conn *grpc.ClientConn, rec *aupb.UpdateRequest) error
+
+// updateFromGSInternal sets up Nebraska and starts the update.
+func updateFromGSInternal(ctx context.Context, dut *dut.DUT, outdir string, rpcHint *testing.RPCHint, builderPath string, doUpdate updateFunc) (retErr error) {
+	// Limit the timeout for the update.
+	updateCtx, cancel := context.WithTimeout(ctx, UpdateTimeout)
+	defer cancel()
+
+	// Reserve cleanup time for copying the logs from the DUT.
+	cleanupCtx := updateCtx
+	updateCtx, cancel = ctxutil.Shorten(updateCtx, 2*time.Minute)
+	defer cancel()
+
+	// Limit the timeout for preparation step before the update.
+	preparationCtx, cancel := context.WithTimeout(updateCtx, time.Minute)
+	defer cancel()
+
+	// Connect to DUT.
+	cl, err := rpc.Dial(preparationCtx, dut, rpcHint)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+	}
+	defer cl.Close(cleanupCtx)
+
+	nebraskaClient, nebraskaPort, err := ConfigureNebraskaFromGS(updateCtx, cl.Conn, dut, outdir, builderPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to start Nebraska")
+	}
+	defer func(ctx context.Context) {
+		_, err := nebraskaClient.Stop(ctx, &empty.Empty{})
+		retErr = errors.Join(retErr, err)
+	}(cleanupCtx)
 
 	// Get the update log files even if the update fails.
 	defer func(ctx context.Context) {
@@ -332,7 +358,7 @@ func updateFromGSInternal(ctx context.Context, dut *dut.DUT, outdir string, rpcH
 
 	// Trigger the update and wait for the results.
 	return doUpdate(updateCtx, cl.Conn, &aupb.UpdateRequest{
-		OmahaUrl: fmt.Sprintf("http://127.0.0.1:%d/update?critical_update=True", startResponse.Port),
+		OmahaUrl: fmt.Sprintf("http://127.0.0.1:%d/update?critical_update=True", nebraskaPort),
 	})
 }
 
@@ -624,12 +650,27 @@ func VerifyInvalidatedUpdate(ctx context.Context, dut *dut.DUT, preUpdateFwAct, 
 
 // VerifyUpdateInvalidationPostReboot checks that a device still in a valid state
 // after the invalidation of an update and after reboot.
-// Checks that the update engine is in the IDLE state.
+// Checks that the update engine is in the IDLE state, and verifies
+// that powerwash does not happen after reboot by checking the existence of
+// the install attributes file.
 // Clients are expected to reboot a device before calling this method.
 func VerifyUpdateInvalidationPostReboot(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) error {
 	// Check the status of the update engine.
 	if err := EnsureUpdateStatusIdle(ctx, dut, rpcHint); err != nil {
 		return errors.Wrap(err, "failed to check the update engine state")
+	}
+
+	// Check if the install attributes file still exists.
+	cl, err := rpc.Dial(ctx, dut, rpcHint)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+	}
+	defer cl.Close(ctx)
+
+	const installAttributesPath = "/home/.shadow/install_attributes.pb"
+	fs := baserpc.NewFileSystemClient(cl.Conn)
+	if _, err := fs.Stat(ctx, &baserpc.StatRequest{Name: installAttributesPath}); err != nil {
+		return errors.Wrap(err, "failed to read install attribute file")
 	}
 
 	return nil
