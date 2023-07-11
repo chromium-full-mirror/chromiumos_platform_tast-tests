@@ -47,7 +47,7 @@ func init() {
 			"gredelston@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4"},
 		HardwareDeps: hwdep.D(
 			// Eventlog is broken/wontfix on veyron devices.
 			// See http://b/35585376#comment14 for more info.
@@ -60,8 +60,7 @@ func init() {
 		Params: []testing.Param{
 			// Test eventlog upon normal->normal reboot.
 			{
-				Name:      "normal",
-				ExtraAttr: []string{"firmware_bios", "firmware_level4"},
+				Name: "normal",
 				// Disable on rammus (b/184778308) and coral (b/250684696)
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("leona", "shyvana", "astronaut", "babymega", "babytiger", "blacktiplte", "nasher", "robo360")),
 				Fixture:           fixture.NormalMode,
@@ -74,7 +73,6 @@ func init() {
 			{
 				// Allow some normally disallowed events on rammus. b/184778308
 				Name:              "rammus_normal",
-				ExtraAttr:         []string{"firmware_bios", "firmware_level4"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("leona", "shyvana")),
 				Fixture:           fixture.NormalMode,
 				Val: eventLogParams{
@@ -87,7 +85,6 @@ func init() {
 			// Test eventlog upon dev->dev reboot.
 			{
 				Name:              "dev",
-				ExtraAttr:         []string{"firmware_bios", "firmware_level4"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("leona", "shyvana")),
 				Fixture:           fixture.DevModeGBB,
 				Val: eventLogParams{
@@ -99,7 +96,6 @@ func init() {
 			// Allow some normally disallowed events on rammus. b/184778308
 			{
 				Name:              "rammus_dev",
-				ExtraAttr:         []string{"firmware_bios", "firmware_level4"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("leona", "shyvana")),
 				Fixture:           fixture.DevModeGBB,
 				Val: eventLogParams{
@@ -111,9 +107,8 @@ func init() {
 			},
 			// Test eventlog upon normal->rec reboot.
 			{
-				Name: "normal_rec",
-				// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-				ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
+				Name:      "normal_rec",
+				ExtraAttr: []string{"firmware_usb"},
 				Fixture:   fixture.NormalMode,
 				Val: eventLogParams{
 					bootToMode:        fwCommon.BootModeRecovery,
@@ -125,7 +120,7 @@ func init() {
 			// Test eventlog upon rec->normal reboot.
 			{
 				Name:      "rec_normal",
-				ExtraAttr: []string{"firmware_bios", "firmware_level4", "firmware_usb"},
+				ExtraAttr: []string{"firmware_usb"},
 				Fixture:   fixture.RecModeNoServices,
 				Val: eventLogParams{
 					bootToMode:        fwCommon.BootModeNormal,
@@ -141,10 +136,8 @@ func init() {
 			// eldrid: S0ix Enter, S0ix Exit, Wake Source | Power Button | 0, EC Event | Power Button
 			// hayato: Sleep, Wake
 			{
-				Name: "suspend_resume",
-				// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-				ExtraAttr: []string{"firmware_unstable"},
-				Fixture:   fixture.NormalMode,
+				Name:    "suspend_resume",
+				Fixture: fixture.NormalMode,
 				Val: eventLogParams{
 					suspendResume: true,
 					requiredEventSets: [][]string{
@@ -158,7 +151,6 @@ func init() {
 			// Test eventlog with hardware watchdog.
 			{
 				Name:              "watchdog",
-				ExtraAttr:         []string{"firmware_bios", "firmware_level4"},
 				Fixture:           fixture.NormalMode,
 				ExtraSoftwareDeps: []string{"watchdog"},
 				Val: eventLogParams{
