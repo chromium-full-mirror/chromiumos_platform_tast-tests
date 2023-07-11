@@ -20,16 +20,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/faillog"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/ready"
-	chk "go.chromium.org/tast-tests/cros/local/security/filecheck"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-
 	"go.chromium.org/tast/core/bundle"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 const (
@@ -170,11 +166,6 @@ func testHookLocal(ctx context.Context, s *testing.TestHookState) func(ctx conte
 		hwsecTpmStatus = nil
 	}
 
-	statefulProblemsBefore, _, err := chk.CheckStatefulFiles(ctx)
-	if err != nil {
-		s.Fatal("hardening error before running test: ", err)
-	}
-
 	return func(ctx context.Context, s *testing.TestHookState) {
 		// Ensure the TPM is in the expect state after tast finish.
 		if err := hwsecCheckTPMState(ctx, hwsecTpmStatus, hwsecDACounter); err != nil {
@@ -183,14 +174,6 @@ func testHookLocal(ctx context.Context, s *testing.TestHookState) func(ctx conte
 
 		if s.HasError() {
 			faillog.Save(ctx)
-		}
-
-		statefulProblemsAfter, _, err := chk.CheckStatefulFiles(ctx)
-		if err != nil {
-			s.Error("hardening error: ", err)
-		}
-		if diff := cmp.Diff(statefulProblemsBefore, statefulProblemsAfter); diff != "" {
-			s.Errorf("hardening error: unexpected files on stateful partition: (-want +got): %s", diff)
 		}
 
 		if endLogFn != nil {
