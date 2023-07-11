@@ -106,16 +106,6 @@ func SelectImage(ui *uiauto.Context, image string) uiauto.Action {
 		ui.LeftClick(imageNode))
 }
 
-// ConfirmTimeOfDayWallpaper returns an action to click the confirm button in the dialog, which
-// indicates setting a time of day wallpaper will enable auto color mode and dynamic colors.
-func ConfirmTimeOfDayWallpaper(ui *uiauto.Context) uiauto.Action {
-	buttonNode := nodewith.Role(role.Button).Name("Confirm")
-	return uiauto.Combine("Confirming Time of Day wallpaper",
-		ui.WaitUntilExists(buttonNode),
-		ui.MakeVisible(buttonNode),
-		ui.LeftClick(buttonNode))
-}
-
 // BackToWallpaper presses the wallpaper tag from the breadcrumb.
 // Used to navigate from an individual collection to the collections list.
 func BackToWallpaper(ui *uiauto.Context) uiauto.Action {
