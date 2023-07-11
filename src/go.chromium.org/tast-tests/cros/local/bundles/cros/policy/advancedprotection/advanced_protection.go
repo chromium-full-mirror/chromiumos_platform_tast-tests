@@ -30,6 +30,12 @@ const UploadAnnotationHashCode = "4306022"
 // https://testsafebrowsing.appspot.com/s/bad_app_file_on_scan.exe
 const suspiciousFile = "bad_app_file_on_scan.exe"
 
+// DataFiles returns the list of data files needed to be copied to the dut
+// for running tests related to Advanced Protection.
+func DataFiles() []string {
+	return []string{suspiciousFile}
+}
+
 // testCase defines test expectations based on the policy value.
 type testCase struct {
 	Name                 string

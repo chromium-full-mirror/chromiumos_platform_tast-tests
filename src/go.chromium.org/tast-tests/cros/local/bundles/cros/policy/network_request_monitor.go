@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/annotations"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/advancedprotection"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/calendarintegration"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/defaultsearchprovider"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/nearbyshare"
@@ -66,6 +67,7 @@ func init() {
 		}},
 		Data: concatDataFileLists(),
 		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.AdvancedProtectionAllowed{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DefaultSearchProviderEnabled{}, pci.VerifiedFunctionalityUI),
@@ -109,6 +111,13 @@ type optionalService struct {
 
 func optionalServices() []optionalService {
 	return []optionalService{
+		{
+			name:                  "advanced_protection",
+			associatedAnnotations: []string{advancedprotection.UploadAnnotationHashCode},
+			policies:              []policy.Policy{&policy.AdvancedProtectionAllowed{Val: false}},
+			trigger:               advancedprotection.TriggerUploadForScanning,
+			dataFiles:             advancedprotection.DataFiles(),
+		},
 		{
 			name:                  "calendar_integration",
 			associatedAnnotations: []string{calendarintegration.AnnotationHashCode},

@@ -37,7 +37,7 @@ func init() {
 		BugComponent: "b:1129862",
 		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
-		Data:         []string{"bad_app_file_on_scan.exe"},
+		Data:         advancedprotection.DataFiles(),
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedInAdvancedProtection,
 			Val:     browser.TypeAsh,
