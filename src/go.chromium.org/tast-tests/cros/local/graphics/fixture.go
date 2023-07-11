@@ -6,7 +6,9 @@
 package graphics
 
 import (
+	"bufio"
 	"context"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -314,6 +316,31 @@ func (f *gpuWatchDogFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
+// isChromeGPUCrash returns true iff filename corresponds to a Chrome GPU crash dump.
+func isChromeGPUCrash(filename string) (bool, error) {
+	if !strings.HasSuffix(filename, crash.MinidumpExt) {
+		// We only care about minidump crash files.
+		return false, nil
+	}
+	// Inspect the corresponding crash metadata file.
+	metaFilename := strings.TrimSuffix(filename, crash.MinidumpExt) + crash.MetadataExt
+	f, err := os.Open(metaFilename)
+	if err != nil {
+		return false, errors.Wrapf(err, "could not open %v", metaFilename)
+	}
+	defer f.Close()
+	sc := bufio.NewScanner(f)
+	for sc.Scan() {
+		if sc.Text() == "upload_var_ptype=gpu-process" {
+			return true, nil
+		}
+	}
+	if err := sc.Err(); err != nil {
+		return false, errors.Wrapf(err, "could not read %v", metaFilename)
+	}
+	return false, nil
+}
+
 // getGPUCrash returns gpu related crash files found in system.
 func (f *gpuWatchDogFixture) getGPUCrash() ([]string, error) {
 	crashFiles, err := crash.GetCrashes(crash.DefaultDirs()...)
@@ -323,7 +350,14 @@ func (f *gpuWatchDogFixture) getGPUCrash() ([]string, error) {
 	// Filter the gpu related crash.
 	var crashes []string
 	for _, file := range crashFiles {
+		isGPUCrash := false
 		if strings.HasSuffix(file, crash.GPUStateExt) {
+			isGPUCrash = true
+		} else if isGPUCrash, err = isChromeGPUCrash(file); err != nil {
+			return nil, err
+		}
+
+		if isGPUCrash {
 			crashes = append(crashes, file)
 		}
 	}
