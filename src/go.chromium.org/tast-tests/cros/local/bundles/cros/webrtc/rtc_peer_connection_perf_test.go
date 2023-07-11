@@ -358,6 +358,46 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 		sourceDatas = append(sourceDatas, sourceData)
 	}
 
+	// Tab capture + OOP-VD test case.
+	tabCaptureOOPVDParamData := rtcTestParamsData{
+		VerifyDecoderMode: toVerifyDecoderMode(oopVD),
+		VerifyEncoderMode: toVerifyEncoderMode(swEnc),
+		Profile:           "VP8",
+		StreamWidth:       k1080p.Width,
+		StreamHeight:      k1080p.Height,
+		Svc:               "L1T3",
+		DisplayMediaType:  "peerconnection.CaptureTab",
+		BrowserType:       "browser.TypeAsh",
+		TraceChromeEvents: false,
+	}
+	tabCaptureOOPVDSourceData := rtcPerfTestSourceData{
+		Name:         "vp8_1080p_tab_l1t3_sw_enc_hw_oopvd",
+		ParamData:    tabCaptureOOPVDParamData,
+		SoftwareDeps: softwareCodecsDeps("vp8", swEnc, oopVD),
+		Fixture:      "chromeTabCaptureWithOOPVDAndSWEncoding",
+	}
+	sourceDatas = append(sourceDatas, tabCaptureOOPVDSourceData)
+
+	// Tab capture + LaCrOS test case.
+	tabCaptureLacrosParamData := rtcTestParamsData{
+		VerifyDecoderMode: toVerifyDecoderMode(hwDec),
+		VerifyEncoderMode: toVerifyEncoderMode(swEnc),
+		Profile:           "VP8",
+		StreamWidth:       k1080p.Width,
+		StreamHeight:      k1080p.Height,
+		Svc:               "L1T3",
+		DisplayMediaType:  "peerconnection.CaptureTab",
+		BrowserType:       "browser.TypeLacros",
+		TraceChromeEvents: false,
+	}
+	tabCaptureLacrosSourceData := rtcPerfTestSourceData{
+		Name:         "vp8_1080p_tab_l1t3_lacros_sw_enc_hw_dec",
+		ParamData:    tabCaptureLacrosParamData,
+		SoftwareDeps: softwareCodecsDeps("vp8", swEnc, hwDec),
+		Fixture:      "chromeTabCaptureWithLacrosAndSWEncoding",
+	}
+	sourceDatas = append(sourceDatas, tabCaptureLacrosSourceData)
+
 	// Vaapi lock disabled test cases.
 	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
 		dec := hwDec
