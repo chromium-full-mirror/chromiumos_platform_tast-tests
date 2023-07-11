@@ -30,7 +30,6 @@ func init() {
 		Desc:         "Measures the performance of critical user journey for the YouTube ARC app",
 		Contacts:     []string{"cros-sw-perf@google.com", "ramsaroop@chromium.org"},
 		BugComponent: "b:1045832",
-		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "arc"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Fixture:      "loggedInToCUJUser",
