@@ -42,6 +42,8 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_ec"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Lid()),
+		SoftwareDeps: []string{"chrome"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Requirements: []string{"sys-fw-0022-v02"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		Timeout:      10 * time.Minute,
@@ -111,6 +113,12 @@ func ECLidSwitch(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to close lid and wake immediately: ", err)
 		}
 	case unsuspendWithLid:
+		// Create instance of chrome for login so that DUT suspends and does not shut down.
+		s.Log("Use Chrome service")
+		if _, err := h.RPCUtils.ReuseChrome(ctx, &empty.Empty{}); err != nil {
+			s.Fatal("Failed to create instance of chrome: ", err)
+		}
+
 		s.Log("Suspend DUT and wake immediately")
 		if err := suspendAndWakeWithLid(ctx, h, noDelay); err != nil {
 			s.Fatal("Failed to suspend DUT and wake immediately: ", err)
