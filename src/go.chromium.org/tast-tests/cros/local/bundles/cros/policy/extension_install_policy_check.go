@@ -12,11 +12,13 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/extensioninstall"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -119,6 +121,10 @@ func ExtensionInstallPolicyCheck(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	tcs, ok := s.Param().([]extensioninstall.TestCase)
 	if !ok {
 		s.Fatal("Failed to convert test cases to the desired type")
@@ -139,23 +145,26 @@ func ExtensionInstallPolicyCheck(ctx context.Context, s *testing.State) {
 			}
 
 			// Open the net-export page and start logging.
-			if err := annotations.StartLogging(ctx, cr, cr.Browser(), false); err != nil {
-				s.Fatal("Failed to start logging: ", err)
+			netExport, err := netexport.Start(ctx, cr, cr.Browser(), browser.TypeAsh)
+			if err != nil {
+				s.Fatal("Failed to start net export: ", err)
 			}
+			defer netExport.Cleanup(cleanupCtx)
 
 			// Run actual test.
 			if err := extensioninstall.TriggerExtensionInstall(ctx, tc, tconn, cr.Browser()); err != nil {
 				s.Fatal("Test case failed: ", err)
 			}
 
-			// Stop logging and check the logs to verify if all/none annotations
-			// are found.
-			foundAnnotation, err := annotations.StopLoggingVerifyAnnotationSet(ctx, cr, cr.Browser(), tc.ShouldFindAnnotation, extensioninstall.GetAnnotations())
+			// Check the logs to verify if all/none annotations are found.
+			foundAnnotations, err := netExport.FindAll()
 			if err != nil {
-				s.Fatal("Unexpected error when verifying logs: Got: ", foundAnnotation, " Want:", tc.ShouldFindAnnotation, " Error:", err)
+				s.Fatal("Unexpected error when verifying logs: ", err)
 			}
-			if foundAnnotation != tc.ShouldFindAnnotation {
-				s.Fatal("Unexpected outcome when verifying logs: Got: ", foundAnnotation, " Want:", tc.ShouldFindAnnotation, " Error:", err)
+			for _, annotationID := range extensioninstall.GetAnnotations() {
+				if _, exists := foundAnnotations[annotationID]; exists != tc.ShouldFindAnnotation {
+					s.Errorf("Unexpected status of annotation = %s, got %t, want %t", annotationID, exists, tc.ShouldFindAnnotation)
+				}
 			}
 		})
 	}

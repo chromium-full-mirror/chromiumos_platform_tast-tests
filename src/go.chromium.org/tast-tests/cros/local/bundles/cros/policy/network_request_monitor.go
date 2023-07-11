@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/advancedprotection"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/calendarintegration"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/defaultsearchprovider"
@@ -34,6 +33,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
 	"go.chromium.org/tast/core/ctxutil"
@@ -105,8 +105,6 @@ type optionalService struct {
 	trigger triggerOptionalService
 	// Data files required to be copied to the dut before triggering the service.
 	dataFiles []string
-	// Annotation is logged with delay.
-	delayedAnnotation bool
 }
 
 func optionalServices() []optionalService {
@@ -194,7 +192,6 @@ func optionalServices() []optionalService {
 			policies:              []policy.Policy{&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: false}},
 			trigger:               ukm.TriggerAndVerifyUkmApp,
 			dataFiles:             []string{},
-			delayedAnnotation:     true,
 		},
 		{
 			name:                  "user_feedback",
@@ -203,20 +200,20 @@ func optionalServices() []optionalService {
 			trigger:               userfeedback.TriggerUserFeedback,
 			dataFiles:             []string{},
 		},
+		// Note: user_avatar_customization should be kept last in this list to avoid
+		// issues with other test cases.
+		{
+			name:                  "user_avatar_customization",
+			associatedAnnotations: []string{useravatar.AnnotationHashCode},
+			policies:              []policy.Policy{&policy.UserAvatarCustomizationSelectorsEnabled{Val: false}},
+			trigger:               useravatar.TriggerUserAvatarCustomization,
+		},
 	}
 }
 
 // concatPolicyLists concats the lists of policies associated with the optional
 // services and returns a single list.
-func concatPolicyLists() []policy.Policy {
-	// In lacros mode, for unknown reasons, we are unable to stop the browser
-	// network logging after we run user avatar customization logic. We need to
-	// ensure this runs after the stop logging call. That is why the function
-	// optionalServices() does not return user avatar customization service. We
-	// will separately trigger this service after we stop browser network logging.
-	// Adding the policy related to user avatar customization service as it is not
-	// returned by the function optionalServices().
-	policies := []policy.Policy{&policy.UserAvatarCustomizationSelectorsEnabled{Val: false}}
+func concatPolicyLists() (policies []policy.Policy) {
 	for _, service := range optionalServices() {
 		policies = append(policies, service.policies...)
 	}
@@ -235,7 +232,6 @@ func concatDataFileLists() []string {
 
 func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	isLacros := s.Param().(browser.Type) == browser.TypeLacros
 
 	// Reserve ten seconds for cleanup.
 	cleanupCtx := ctx
@@ -263,11 +259,13 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	opts := []chrome.Option{
 		chrome.DMSPolicy(fdms.URL),                           // FakeDMS for setting policies.
 		chrome.GAIALogin(gaiaCreds),                          // Some of the optional service tests need a real GAIA account.
-		chrome.ExtraArgs("--log-net-log"),                    // Enable netlog on startup.
 		chrome.ExtraArgs("--metrics-upload-interval=1"),      // Reduce upload interval for UKM.
 		chrome.ExtraArgs("--force-devtools-available"),       // Enable developer tools for extensions.
 		chrome.LacrosExtraArgs("--force-devtools-available"), // Enable developer tools for extensions.
 	}
+	// Add args to start net export on startup.
+	opts = append(opts, netexport.CommandLineArgs(s.Param().(browser.Type))...)
+
 	// If browser type is lacros, handle differently.
 	if s.Param().(browser.Type) == browser.TypeLacros {
 		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
@@ -324,25 +322,8 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_network_request_monitor")
 
-	// Open the net-export page and start logging.
-	if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
-		s.Fatal("Failed to start logging: ", err)
-	}
-
-	// If running in lacros mode, also start an OS net-export session. Annotations
-	// in the OS (Ash) binary will only be present in the OS net-export log file.
-	if isLacros {
-		if err := annotations.StartOSLogging(ctx, cr, br, kb); err != nil {
-			s.Fatal("Failed to start logging: ", err)
-		}
-	}
-
 	// Network traffic annotation hashcodes associated with the optional services.
 	var hashCodes []string
-
-	// Network traffic annotation hashcodes that are not immediately logged in net-log
-	// and need to be checked by polling net-log.
-	var pollHashCodes []string
 
 	// Trigger the optional services one by one.
 	for _, service := range optionalServices() {
@@ -350,69 +331,27 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 			if err := service.trigger(ctx, cr, br, server, tconn, 0); err != nil {
 				s.Fatalf("Failed to trigger %v: %v", service.name, err)
 			}
-			if service.delayedAnnotation {
-				pollHashCodes = append(pollHashCodes, service.associatedAnnotations...)
-			} else {
-				hashCodes = append(hashCodes, service.associatedAnnotations...)
-			}
+			hashCodes = append(hashCodes, service.associatedAnnotations...)
 		})
 	}
 
-	hcLogStatus, err := annotations.PollMultipleAnnotation(ctx, cr, 80*time.Second, 10*time.Second, pollHashCodes)
+	// Get net export session.
+	netExport, err := netexport.FromCommandLineArg(s.Param().(browser.Type))
+	if err != nil {
+		s.Fatal("Failed to get net export session: ", err)
+	}
+
+	// Verify network traffic annotations associated with the optional services
+	// are not found in the logs.
+	foundAnnotations, err := netExport.FindMultipleAnnotationsUntil(ctx, hashCodes,
+		&testing.PollOptions{Timeout: 80 * time.Second, Interval: 10 * time.Second})
 	if err != nil {
 		s.Fatal("Failed to poll hashcode in log: ", err)
 	}
 
-	// Stop logging and verify network traffic annotations associated with the
-	// optional services are not found in the logs.
-	_, err = annotations.StopLoggingVerifyAnnotationSet(ctx, cr, br, false, hashCodes)
-	if err != nil {
-		s.Fatal("Failed to stop logging and verify logs: ", err)
-	}
-	// Also check OS logs during lacros runs. Note that technically annotations
-	// would either be present in the browser logs or the OS logs, depending on
-	// which binary (Ash vs Lacros) they are part of. For now, we just check for
-	// all annotations in both log files.
-	if isLacros {
-		if _, err := annotations.StopOSLoggingVerifyAnnotationSet(ctx, cr, br, kb, false, hashCodes); err != nil {
-			s.Fatal("Failed to stop OS logging and verify logs: ", err)
+	for _, annotationID := range hashCodes {
+		if _, exists := foundAnnotations[annotationID]; exists {
+			s.Error("Found unexpected annotation = ", foundAnnotations)
 		}
-	}
-
-	// List all hashcodes that were found while polling.
-	var hcFound []string
-	for hc, found := range hcLogStatus {
-		if found {
-			hcFound = append(hcFound, hc)
-		}
-	}
-	if len(hcFound) > 0 {
-		s.Fatalf("Found unexpected annotations with the hash codes %+q", hcFound)
-	}
-
-	// Note: In lacros mode, for unknown reasons, we are unable to stop the
-	// browser network logging after we run this logic. We should ensure this
-	// runs after the stop logging call.
-	s.Run(ctx, "user_avatar_customization", func(ctx context.Context, s *testing.State) {
-		userAvatarCustomizationParam := useravatar.CustomizationTestCase{
-			Name:                      "disabled",
-			ShouldFindAnnotation:      false,
-			ShouldFindCustomSelectors: false,
-			Policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Val: false},
-		}
-		if err := useravatar.TriggerUserAvatarCustomization(ctx, userAvatarCustomizationParam, tconn); err != nil {
-			s.Fatal("Failed to trigger user avatar customization: ", err)
-		}
-	})
-
-	// Check annotations that are only present in the netlog created on startup.
-	// As of now, we only have one annotation where this is necessary. If we add
-	// more annotations in the future, we should consider refactoring this test.
-	foundAnnotation, err := annotations.CheckLogsFromFile(ctx, cr, useravatar.AnnotationHashCode, annotations.UserDirNetLogFile)
-	if err != nil {
-		s.Fatalf("Failed to check logs for %s: %v", annotations.UserDirNetLogFile, err)
-	}
-	if foundAnnotation {
-		s.Fatalf("Annotation %s should not have been found", useravatar.AnnotationHashCode)
 	}
 }

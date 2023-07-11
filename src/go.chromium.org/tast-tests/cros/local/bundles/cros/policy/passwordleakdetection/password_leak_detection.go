@@ -9,14 +9,11 @@ package passwordleakdetection
 import (
 	"context"
 	"net/http/httptest"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // TestCase defines test expectations based on the policy value.
@@ -80,26 +77,6 @@ func TriggerPasswordLeakDetection(ctx context.Context, cr *chrome.Chrome, br *br
 		return errors.Wrap(err, "failed to create new Chrome connection")
 	}
 	defer conn.Close()
-
-	// Check the logs for annotation lookup_single_password_leak. Use polling
-	// since the password check happens in the background, and there may not
-	// always be a UI popup to notify that it is done.
-	var errorCheckingLogs error
-	err = testing.Poll(ctx, func(ctx context.Context) error {
-		foundAnnotation := false
-		foundAnnotation, errorCheckingLogs = annotations.CheckLogs(ctx, cr, AnnotationHashCode)
-
-		if foundAnnotation {
-			return nil
-		}
-
-		// Annotation not found yet, keep polling.
-		return errors.New("Annotation ID not found yet")
-	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second})
-
-	if errorCheckingLogs != nil {
-		return errors.Wrap(errorCheckingLogs, "failed to check network logs")
-	}
 
 	return nil
 }

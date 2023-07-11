@@ -91,18 +91,6 @@ func Start(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, bt brows
 	return netExport, nil
 }
 
-// FromCommandLineArg should be used when Chrome is started with the arg:
-// `--log-net-log`. This means that the net export session is already
-// started and cannot be stopped, and the net log file already exists.
-// TODO(b/289435114): Extend this to support the Lacros binary.
-func FromCommandLineArg() NetExport {
-	return NetExport{
-		logFiles: []string{annotations.UserDirNetLogFile},
-		// Set controllers to nil, since the net export session is already started.
-		controllers: nil,
-	}
-}
-
 // NetExport is the object returned after starting a net export session. This
 // object provides helper functions for finding annotations in the net log
 // file(s).
@@ -142,6 +130,31 @@ func (ne *NetExport) Find(annotationID string) (foundAnnotation bool, err error)
 	return false, nil
 }
 
+// FindAll searches for all the annotationIDs in the log files(s). Returns
+// a map containing the found annotationIDs as keys.
+func (ne *NetExport) FindAll() (map[string]struct{}, error) {
+	// Compile the regular expression.
+	pattern := regexp.MustCompile(`\"traffic_annotation\":(\d+),`)
+
+	foundAnnotations := make(map[string]struct{})
+	for _, logFile := range ne.logFiles {
+		logs, err := ioutil.ReadFile(logFile)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to open logfile")
+		}
+
+		// Find all matches of the regular expression.
+		matches := pattern.FindAllSubmatch(logs, -1)
+
+		// For each match, extract the annotationID and add to result map.
+		for _, match := range matches {
+			foundAnnotations[string(match[1])] = struct{}{}
+		}
+	}
+
+	return foundAnnotations, nil
+}
+
 // FindUntil is similar to Find, however it polls for the annotationID for the
 // given duration. This is recommended for when the network call may occur
 // asynchronously within the test.
@@ -163,10 +176,41 @@ func (ne *NetExport) FindUntil(ctx context.Context, annotationID string, opts *t
 	return isFound, errorCheckingLogs
 }
 
-// Note: We can easily add new methods here since this is decoupled from
-// start/stop logging:
-//   * FindSet(['annotationID1', 'annotationID2'])
-//   * FindAfterTimestamp(...)
+// FindMultipleAnnotationsUntil polls the logs for a set of desired annotations,
+// until the polling options timeout has been reached. Returns a map of matching
+// annotation IDs found.
+func (ne *NetExport) FindMultipleAnnotationsUntil(ctx context.Context, annotationIDs []string, opts *testing.PollOptions) (map[string]struct{}, error) {
+	matchingAnnotationsFound := make(map[string]struct{})
+	var errorCheckingLogs error
+	testing.Poll(ctx, func(ctx context.Context) (err error) {
+		// Find all annotations in the log(s).
+		allAnnotationsFound, err := ne.FindAll()
+		if err != nil {
+			errorCheckingLogs = testing.PollBreak(err)
+			return errorCheckingLogs
+		}
+
+		// Get the subset of found annotations that match the desired annotations.
+		for _, annotationID := range annotationIDs {
+			if _, exists := allAnnotationsFound[annotationID]; exists {
+				matchingAnnotationsFound[annotationID] = struct{}{}
+			}
+		}
+
+		if len(matchingAnnotationsFound) != len(annotationIDs) {
+			return errors.New("not all annotations have been found yet")
+		}
+
+		// Found all annotations. Return nil to end polling.
+		return nil
+	}, opts)
+
+	if errorCheckingLogs != nil {
+		return nil, errors.Wrap(errorCheckingLogs, "failed to check network logs")
+	}
+
+	return matchingAnnotationsFound, nil
+}
 
 // Cleanup stops the net export session, and deletes the related log file(s). It
 // should generally be called via a defer function immediately after starting

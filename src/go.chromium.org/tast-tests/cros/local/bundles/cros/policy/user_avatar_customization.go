@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/useravatar"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -71,31 +72,13 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 	}
 
 	opts := []chrome.Option{
-		chrome.DMSPolicy(fdms.URL),        // FakeDMS for setting policies
-		chrome.GAIALogin(gaiaCreds),       // Real GAIA to enable calendar_get_events call
-		chrome.ExtraArgs("--log-net-log"), // Enable netlog on startup
+		chrome.DMSPolicy(fdms.URL),  // FakeDMS for setting policies
+		chrome.GAIALogin(gaiaCreds), // Real GAIA to enable calendar_get_events call
 	}
+	// Enable netlog on startup, since the profile image is fetched on startup.
+	opts = append(opts, netexport.CommandLineArgs(browser.TypeAsh)...)
 
-	for _, param := range []useravatar.CustomizationTestCase{
-		{
-			Name:                      "unset",
-			ShouldFindAnnotation:      true,
-			ShouldFindCustomSelectors: true,
-			Policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Stat: policy.StatusUnset},
-		},
-		{
-			Name:                      "enabled",
-			ShouldFindAnnotation:      true,
-			ShouldFindCustomSelectors: true,
-			Policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Val: true},
-		},
-		{
-			Name:                      "disabled",
-			ShouldFindAnnotation:      false,
-			ShouldFindCustomSelectors: false,
-			Policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Val: false},
-		},
-	} {
+	for index, param := range useravatar.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Start Chrome. Note that we restart Chrome for each test case to reset the netlog.
 			cr, err := chrome.New(ctx, opts...)
@@ -121,7 +104,10 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(),
 				s.HasError, cr, "ui_tree")
 
-			netExport := netexport.FromCommandLineArg()
+			netExport, err := netexport.FromCommandLineArg(browser.TypeAsh)
+			if err != nil {
+				s.Fatal("Failed to get net export session: ", err)
+			}
 
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 				s.Fatal("Failed to clean up: ", err)
@@ -139,7 +125,7 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to verify updated policies: ", err)
 			}
 
-			if err := useravatar.TriggerUserAvatarCustomization(ctx, param, tconn); err != nil {
+			if err := useravatar.TriggerUserAvatarCustomization(ctx, nil, nil, nil, tconn, index); err != nil {
 				s.Fatal("Failed to trigger and verify user avatar customization: ", err)
 			}
 

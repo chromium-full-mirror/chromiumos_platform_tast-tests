@@ -7,11 +7,13 @@ package useravatar
 
 import (
 	"context"
+	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -43,11 +45,39 @@ type CustomizationTestCase struct {
 	Policy                    *policy.UserAvatarCustomizationSelectorsEnabled
 }
 
+// TestCases returns the list of CustomizationTestCase objects on which
+// UserAvatarCustomizationSelectorsEnabled policy is tested.
+func TestCases() []CustomizationTestCase {
+	// The "disabled" test case must be the first element of the returned list.
+	// Otherwise, policy.NetworkRequestMonitor test will use the wrong test case.
+	return []CustomizationTestCase{
+		{
+			Name:                      "disabled",
+			ShouldFindAnnotation:      false,
+			ShouldFindCustomSelectors: false,
+			Policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Val: false},
+		},
+		{
+			Name:                      "unset",
+			ShouldFindAnnotation:      true,
+			ShouldFindCustomSelectors: true,
+			Policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Stat: policy.StatusUnset},
+		},
+		{
+			Name:                      "enabled",
+			ShouldFindAnnotation:      true,
+			ShouldFindCustomSelectors: true,
+			Policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Val: true},
+		},
+	}
+}
+
 // TriggerUserAvatarCustomization opens the user avatar customization app and
 // verifies that certain avatar selectors are disabled based on policy value.
-func TriggerUserAvatarCustomization(ctx context.Context, param CustomizationTestCase,
-	tconn *chrome.TestConn) (err error) {
+func TriggerUserAvatarCustomization(ctx context.Context, _ *chrome.Chrome,
+	_ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) error {
 
+	param := TestCases()[paramIndex]
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
 	// Open user avatar personalization app. Note: We retry here because sometimes the button

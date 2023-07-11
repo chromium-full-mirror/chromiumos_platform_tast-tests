@@ -14,12 +14,12 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/passwordleakdetection"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -97,19 +97,23 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 			defer closeBrowser(cleanupCtx)
 
 			// Open the net-export page and start logging.
-			if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
-				s.Fatal("Failed to start logging: ", err)
+			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			if err != nil {
+				s.Fatal("Failed to start net export: ", err)
 			}
+			defer netExport.Cleanup(cleanupCtx)
 
 			if err := passwordleakdetection.TriggerPasswordLeakDetection(ctx, cr, br, server, nil, 0); err != nil {
 				s.Fatal("Failed to trigger password leak detection: ", err)
 			}
 
-			// Stop logging and check the logs for annotation hashcode associated with
-			// the policy.
-			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, passwordleakdetection.AnnotationHashCode)
+			// Check the logs for annotation lookup_single_password_leak. Use polling
+			// since the password check happens in the background, and there may not
+			// always be a UI popup to notify that it is done.
+			foundAnnotation, err := netExport.FindUntil(ctx, passwordleakdetection.AnnotationHashCode,
+				&testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second})
 			if err != nil {
-				s.Fatal("Failed to stop logging and check logs: ", err)
+				s.Fatal("Failed to check network logs: ", err)
 			}
 
 			// Verify network annotation is present when expected.
