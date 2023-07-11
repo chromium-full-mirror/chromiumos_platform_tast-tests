@@ -72,6 +72,8 @@ func (s *Service) ToggleOption(ctx context.Context, req *pb.ToggleOptionRequest)
 			if err := NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 				return &emptypb.Empty{}, errors.Wrap(err, "failed to navigate to network detailed view")
 			}
+			// TODO(b/290821037): Port callers to support the new quick settings
+			// UI (QsRevamp). It uses "feature tiles" not toggle buttons.
 			return &emptypb.Empty{}, ToggleOption(ctx, tconn, toggleButton, req.GetEnabled())
 
 		default:

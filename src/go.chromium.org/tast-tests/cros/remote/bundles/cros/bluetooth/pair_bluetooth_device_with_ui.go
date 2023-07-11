@@ -51,7 +51,7 @@ func init() {
 
 // PairBluetoothDeviceWithUI tests that Bluetooth devices are able to pair with
 // the Quick Settings UI.
-// TODO(b/252870625): Update this test to work with QsRevamp.
+// TODO(b/290821851): Update this test to work with QsRevamp.
 func PairBluetoothDeviceWithUI(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 

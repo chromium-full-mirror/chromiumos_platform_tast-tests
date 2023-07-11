@@ -71,6 +71,9 @@ func AutoFramingUIToggle(ctx context.Context, s *testing.State) {
 		return Action{
 			name: "toggle \"Camera framing\" in Quick Settings",
 			run: func(ctx context.Context, app *cca.App) error {
+				// TODO(b/290826477): Fix this test for the new quick settings
+				// UI (QsRevamp). Quick settings now uses "feature tiles"
+				// instead of "settings pods".
 				return quicksettings.ToggleSetting(ctx, tconn, quicksettings.SettingPodCameraFraming, enable)
 			},
 		}

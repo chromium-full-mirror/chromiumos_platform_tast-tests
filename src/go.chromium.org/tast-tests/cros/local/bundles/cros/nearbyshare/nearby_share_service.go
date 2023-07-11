@@ -66,6 +66,9 @@ func (n *NearbyService) NewChromeLogin(ctx context.Context, req *nearbyservice.C
 	nearbyOpts := []chrome.Option{
 		chrome.EnableFeatures("GwpAsanMalloc", "GwpAsanPartitionAlloc"),
 		chrome.DisableFeatures("SplitSettingsSync"),
+		// TODO(b/290820341): Port nearby share tests to the new quick settings
+		// UI (QsRevamp).
+		chrome.DisableFeatures("QsRevamp"),
 		chrome.ExtraArgs("--nearby-share-certificate-validity-period-hours=4", "--nearby-share-num-private-certificates=1", "--nearby-share-verbose-logging", "--enable-logging", "--vmodule=*blue*=1", "--vmodule=*nearby*=1"),
 	}
 	n.username = chrome.DefaultUser

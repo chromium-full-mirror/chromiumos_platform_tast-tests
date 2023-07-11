@@ -71,7 +71,11 @@ func EnableDisableWifiAndCheckNetworkList(ctx context.Context, s *testing.State)
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
 
 	cr := ui.NewChromeServiceClient(rpcClient.Conn)
-	if _, err := cr.New(ctx, &ui.NewRequest{}); err != nil {
+	if _, err := cr.New(ctx, &ui.NewRequest{
+		// TODO(b/290821037): Fix this test for the new quick settings UI
+		// (QsRevamp).
+		DisableFeatures: []string{"QsRevamp"},
+	}); err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx, &emptypb.Empty{})

@@ -40,8 +40,10 @@ func init() {
 		Attr:         []string{"group:intel-usb-set2"},
 		Data:         []string{"bear-320x240.h264.mp4"},
 		Vars:         []string{"intel.usbDetectionName"},
-		Fixture:      "chromeLoggedIn",
-		Timeout:      7 * time.Minute,
+		// TODO(b/290826425): Update to work with QsRevamp and delete the
+		// function quicksettings.Collapse(). This test is the last caller.
+		Fixture: "chromeLoggedInQsRevampDisabled",
+		Timeout: 7 * time.Minute,
 	})
 }
 

@@ -213,13 +213,14 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 
 	enabledFeatures := cfg.EnableFeatures()
 	disabledFeatures := cfg.DisableFeatures()
-	// Force QsRevamp off unless the test has explicitly enabled it.
-	// We force the old quick settings UI because many tests rely on it to
-	// enable and disable features. In general, they aren't actually testing
-	// the UI. This way we can port tests one-by-one to work with the new UI.
+	// Force QsRevamp on unless the test has explicitly disabled it. We force
+	// the new quick settings UI because many tests have been updated to rely on
+	// the new UI to enable and disable features. In general, the tests aren't
+	// actually testing the UI. This way we can port the few remaining tests
+	// one-by-one, without worrying about the feature flag state in chrome.
 	// TODO(b/252870625): Remove this once all tests have been ported to work with QsRevamp.
-	if !contains(enabledFeatures, "QsRevamp") {
-		disabledFeatures = append(disabledFeatures, "QsRevamp")
+	if !contains(disabledFeatures, "QsRevamp") {
+		enabledFeatures = append(enabledFeatures, "QsRevamp")
 	}
 	if len(enabledFeatures) != 0 {
 		args = append(args, "--enable-features="+strings.Join(enabledFeatures, ","))

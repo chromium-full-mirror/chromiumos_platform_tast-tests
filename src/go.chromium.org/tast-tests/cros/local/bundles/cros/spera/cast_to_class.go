@@ -45,17 +45,19 @@ func init() {
 			"spera.collectTrace", // Optional. Expecting "enable" or "disable", default is "disable".
 		},
 		Data: []string{cujrecorder.SystemTraceConfigFile},
+		// TODO(b/252870625): Port these tests to the new quick settings UI
+		// (QsRevamp) by porting quicksettings.StartCast() and StopCast().
 		Params: []testing.Param{
 			{
 				Name:    "essential",
 				Timeout: 10 * time.Minute,
-				Fixture: "enrolledLoggedInToCUJUser",
+				Fixture: "enrolledLoggedInToCUJUserQsRevampDisabled",
 				Val:     browser.TypeAsh,
 			},
 			{
 				Name:              "essential_lacros",
 				Timeout:           10 * time.Minute,
-				Fixture:           "enrolledLoggedInToCUJUserLacros",
+				Fixture:           "enrolledLoggedInToCUJUserLacrosQsRevampDisabled",
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val:               browser.TypeLacros,
 			},

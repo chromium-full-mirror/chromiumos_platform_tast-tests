@@ -404,6 +404,55 @@ func init() {
 			"ui.cujAccountPool",
 		},
 	})
+	// TODO(b/252870625): Delete this once spera.CastToClass is ported to work
+	// with the new quick settings UI (QsRevamp).
+	testing.AddFixture(&testing.Fixture{
+		Name: "enrolledLoggedInToCUJUserQsRevampDisabled",
+		Desc: "Logged in with gaia user on an enrolled device with quick settings revamp disabled",
+		Contacts: []string{
+			"alston.huang@cienet.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.DisableFeatures("QsRevamp"),
+			},
+		},
+		Parent:          "prepareForCUJEnrolledWithCharge",
+		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars: []string{
+			"ui.cujAccountPool",
+		},
+	})
+	// TODO(b/252870625): Delete this once spera.CastToClass is ported to work
+	// with the new quick settings UI (QsRevamp).
+	testing.AddFixture(&testing.Fixture{
+		Name: "enrolledLoggedInToCUJUserLacrosQsRevampDisabled",
+		Desc: "Logged in with gaia user on an enrolled device and used for lacros variation of CUJ tests with quick settings revamp disabled",
+		Contacts: []string{
+			"jane.yang@cienet.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.DisableFeatures("QsRevamp"),
+			},
+			bt: browser.TypeLacros,
+		},
+		Parent:          "prepareForCUJEnrolledWithCharge",
+		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars: []string{
+			"ui.cujAccountPool",
+		},
+	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLogging",
 		Desc: "CUJ test fixture with WebRTC event logging",

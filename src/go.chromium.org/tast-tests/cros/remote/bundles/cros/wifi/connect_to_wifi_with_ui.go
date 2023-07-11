@@ -165,6 +165,9 @@ func ConnectToWifiWithUI(ctx context.Context, s *testing.State) {
 
 	if _, err := chrome.New(ctx, &ui.NewRequest{
 		LoginMode: ui.LoginMode_LOGIN_MODE_GUEST_LOGIN,
+		// TODO(b/290821037): Fix this test for the new quick settings UI
+		// (QsRevamp).
+		DisableFeatures: []string{"QsRevamp"},
 	}); err != nil {
 		s.Fatal("Failed to open Chrome on the DUT: ", err)
 	}

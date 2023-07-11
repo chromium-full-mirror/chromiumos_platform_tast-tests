@@ -25,7 +25,12 @@ const (
 	// Logged into a session with Gaia user where there are upcoming events.
 	ChromeLoggedInWithUpcomingCalendarEvents = "chromeLoggedInWithUpcomingCalendarEvents"
 	// Logged into a session with feature QsRevamp enabled.
+	// TODO(b/252870625): Delete this after M-117 branch when QsRevamp launches
+	// and we're sure the feature won't be rolled back in chrome.
 	ChromeLoggedInQsRevampEnabled = "chromeLoggedInQsRevampEnabled"
+	// Logged into a session with feature QsRevamp disabled.
+	// TODO(b/252870625): Delete this after all tests are ported to support QsRevamp.
+	ChromeLoggedInQsRevampDisabled = "chromeLoggedInQsRevampDisabled"
 	// Logged into a session with Gaia user.
 	ChromeLoggedInWithGaia = "chromeLoggedInWithGaia"
 	// Logged into a user session to support thunderbolt devices.
