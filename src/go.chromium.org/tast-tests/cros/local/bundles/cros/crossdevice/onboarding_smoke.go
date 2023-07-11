@@ -27,7 +27,8 @@ func init() {
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{
 			{
-				Fixture: "crossdeviceOnboardedAllFeatures",
+				Fixture:   "crossdeviceOnboardedAllFeatures",
+				ExtraAttr: []string{"cross-device_cq"},
 			},
 			{
 				Name:      "floss",
