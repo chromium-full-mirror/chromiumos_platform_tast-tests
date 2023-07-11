@@ -68,26 +68,56 @@ func UploadSystemBuildProp(ctx context.Context, a *arc.ARC, outdir string) error
 	return a.PullFile(ctx, "/system/build.prop", filepath.Join(outdir, "build.prop"))
 }
 
-// ValidateBuildProp checks that given meta file for crash_sender contains the specified build properties.
-func ValidateBuildProp(ctx context.Context, metafilePath string, bp *buildProp) (bool, error) {
-	b, err := ioutil.ReadFile(metafilePath)
+// FileContains checks that each value in |expectedValues| appears as a line in |filePath|.
+func FileContains(ctx context.Context, filePath string, expectedValues []string) (bool, error) {
+	b, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to read meta file")
 	}
 
 	lines := strings.Split(string(b), "\n")
-	contains := func(x string) bool {
+	for _, expectedValue := range expectedValues {
+		found := false
 		for _, l := range lines {
-			if x == l {
-				return true
+			if l == expectedValue {
+				found = true
+				break
 			}
 		}
-		testing.ContextLogf(ctx, "Missing %q", x)
-		return false
+		if !found {
+			testing.ContextLogf(ctx, "Missing %q", expectedValue)
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+// ValidateBuildProp checks that given meta file for crash_sender contains the specified build properties.
+func ValidateBuildProp(ctx context.Context, metafilePath string, bp *buildProp) (bool, error) {
+	expectedValues := []string{
+		"upload_var_device=" + bp.device,
+		"upload_var_board=" + bp.board,
+		"upload_var_cpu_abi=" + bp.cpuAbi,
+		"upload_var_arc_version=" + bp.fingerprint,
 	}
 
-	return contains("upload_var_device="+bp.device) &&
-		contains("upload_var_board="+bp.board) &&
-		contains("upload_var_cpu_abi="+bp.cpuAbi) &&
-		contains("upload_var_arc_version="+bp.fingerprint), nil
+	ok, err := FileContains(ctx, metafilePath, expectedValues)
+	if err != nil {
+		return false, err
+	}
+	return ok, nil
+}
+
+// ValidateComputedSeverity checks that the given meta file contains the correct computed_severity and computed_product values.
+func ValidateComputedSeverity(ctx context.Context, metafilePath string) (bool, error) {
+	expectedValues := []string{
+		"upload_var_client_computed_severity=ERROR",
+		"upload_var_client_computed_product=Arc",
+	}
+
+	ok, err := FileContains(ctx, metafilePath, expectedValues)
+	if err != nil {
+		return false, err
+	}
+	return ok, nil
 }

@@ -96,7 +96,9 @@ func AppCrash(ctx context.Context, s *testing.State) {
 	metaFiles := files[metaFileName]
 	if len(metaFiles) > 1 {
 		s.Errorf("Unexpectedly saw %d crashes of appcrash. Saving for debugging", len(metaFiles))
-		crash.MoveFilesToOut(ctx, s.OutDir(), metaFiles...)
+		if err := crash.MoveFilesToOut(ctx, s.OutDir(), metaFiles...); err != nil {
+			s.Error("Failed to save meta file: ", err)
+		}
 	}
 	// WaitForCrashFiles guarantees that there will be a match for all regexes if it succeeds,
 	// so this must exist.
@@ -116,6 +118,18 @@ func AppCrash(ctx context.Context, s *testing.State) {
 	}
 	if !isValid {
 		s.Error("validateBuildProp failed. Saving meta file")
-		crash.MoveFilesToOut(ctx, s.OutDir(), metaFile)
+		if err := crash.MoveFilesToOut(ctx, s.OutDir(), metaFile); err != nil {
+			s.Error("Failed to save meta file: ", err)
+		}
+	}
+	isValidSeverity, err := arccrash.ValidateComputedSeverity(ctx, metaFile)
+	if err != nil {
+		s.Fatal("Failed to validate meta file severity: ", err)
+	}
+	if !isValidSeverity {
+		s.Error("validateComputedSeverity failed. Saving meta file")
+		if err := crash.MoveFilesToOut(ctx, s.OutDir(), metaFile); err != nil {
+			s.Error("Failed to save meta file: ", err)
+		}
 	}
 }
