@@ -324,18 +324,6 @@ func PodIconButton(setting SettingPod) *nodewith.Finder {
 	return nodewith.HasClass("FeaturePodIconButton").NameContaining(string(setting))
 }
 
-// PodLabelButton generates nodewith.Finder to enter the panel of the specified quick setting pod.
-// This function is not supported with QsRevamp. Use the constants quicksettings.FeatureTile*
-// instead.
-// TODO(b/252870625): Remove all calls to this function.
-func PodLabelButton(setting SettingPod) *nodewith.Finder {
-	if setting == SettingPodDoNotDisturb {
-		return nodewith.HasClass("FeaturePodLabelButton").NameContaining("notification")
-	}
-
-	return nodewith.HasClass("FeaturePodLabelButton").NameContaining(string(setting))
-}
-
 // ensureVisible ensures that Quick Settings is shown. If it's not visible, this function will
 // show Quick Settings and return a cleanup function to hide it. If it is already visible,
 // this function will do nothing and the returned function will do nothing, since no cleanup is required.

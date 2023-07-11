@@ -145,10 +145,9 @@ type SettingPod string
 // These nodes do not exist with QsRevamp.
 // TODO(b/252870625): Delete all these once every test is ported to QsRevamp.
 const (
-	SettingPodDoNotDisturb      SettingPod = "Do not disturb"
-	SettingPodNetwork           SettingPod = "network"
-	SettingPodNearbyShare       SettingPod = "Nearby Share"
-	SettingPodDarkThemeSettings SettingPod = "dark theme settings"
-	SettingPodCast              SettingPod = "cast"
-	SettingPodCameraFraming     SettingPod = "Camera framing"
+	SettingPodDoNotDisturb  SettingPod = "Do not disturb"
+	SettingPodNetwork       SettingPod = "network"
+	SettingPodNearbyShare   SettingPod = "Nearby Share"
+	SettingPodCast          SettingPod = "cast"
+	SettingPodCameraFraming SettingPod = "Camera framing"
 )
