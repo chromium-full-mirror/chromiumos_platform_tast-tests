@@ -24,8 +24,7 @@ import (
 
 type params struct {
 	//Set up based on the need for a USB.
-	usbPresent       bool
-	reconnectTimeout time.Duration
+	usbPresent bool
 }
 
 type dmfsKeyVal int
@@ -56,18 +55,12 @@ func init() {
 		Params: []testing.Param{{
 			Val: &params{
 				usbPresent: false,
-				// To-do: replace with DelayRebootToPing in the future, but monitor results from
-				// chromium: 4548855 first to find out how each machine varies in their boot-up
-				// time. 8 minutes appeared to help when the test was run on leased machines,
-				// though this duration might have also covered the time for remote connection.
-				reconnectTimeout: 8 * time.Minute,
 			},
 			Timeout: 50 * time.Minute,
 		}, {
 			Name: "usb",
 			Val: &params{
-				usbPresent:       true,
-				reconnectTimeout: 10 * time.Minute,
+				usbPresent: true,
 			},
 			ExtraAttr: []string{"firmware_usb"},
 			Timeout:   2 * time.Hour,
@@ -86,6 +79,10 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
+	// connectionTimeout defines the duration in
+	// waiting for the dut to reconnect, either
+	// from a regular boot, or from a usb.
+	var connectionTimeout time.Duration
 	// Set up USB when there is one present, and
 	// for cases that depend on it.
 	testOpt := s.Param().(*params)
@@ -111,11 +108,13 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 			s.Fatal("Failed to set USBMux: ", err)
 		}
+		connectionTimeout = h.Config.USBImageBootTimeout
 	} else {
 		s.Logf("Setting USBMux to %s", servo.USBMuxOff)
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 			s.Fatal("Failed to set USBMux: ", err)
 		}
+		connectionTimeout = h.Config.DelayRebootToPing
 	}
 	// For DUTs using MenuSwitcher, or TabletDetachableSwitcher, we would
 	// use a goroutine to keep pressing the <up> key in the background,
@@ -263,7 +262,7 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 		}
 		s.Log("Waiting for DUT to reconnect")
 		waitConnectOps := []firmware.WaitConnectOption{firmware.ResetEthernetDongle}
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, testOpt.reconnectTimeout)
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, connectionTimeout)
 		defer cancelWaitConnect()
 
 		if err := h.WaitConnect(waitConnectCtx, waitConnectOps...); err != nil {
