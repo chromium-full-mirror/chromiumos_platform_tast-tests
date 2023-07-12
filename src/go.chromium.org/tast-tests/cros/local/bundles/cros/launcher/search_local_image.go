@@ -81,8 +81,8 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 
 	defer os.Remove(localPicturePath)
 
-	tconn := s.FixtValue().(fixture.ImageSearchFixtData).TestAPIConn
-	kb := s.FixtValue().(fixture.ImageSearchFixtData).Keyboard
+	tconn := s.FixtValue().(fixture.LauncherSearchFixtData).TestAPIConn
+	kb := s.FixtValue().(fixture.LauncherSearchFixtData).Keyboard
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()

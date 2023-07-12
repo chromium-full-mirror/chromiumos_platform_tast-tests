@@ -8,10 +8,9 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/launcher/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
-	"go.chromium.org/tast-tests/cros/local/input"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -42,7 +41,7 @@ func init() {
 		BugComponent: "b:1257106",
 		Attr:         []string{"group:launcher_search_quality_daily"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		Fixture:      fixture.NormalLauncherSearch,
 
 		Params: []testing.Param{
 			// --- Answer card test cases. ---
@@ -225,22 +224,11 @@ func init() {
 
 // SearchQuality checks inline answers for special queries.
 func SearchQuality(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
-
+	tconn := s.FixtValue().(fixture.LauncherSearchFixtData).TestAPIConn
+	kb := s.FixtValue().(fixture.LauncherSearchFixtData).Keyboard
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect Test API: ", err)
-	}
-
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to find keyboard: ", err)
-	}
-	defer kb.Close(ctx)
 
 	testCase := s.Param().(searchQualityTestCase)
 

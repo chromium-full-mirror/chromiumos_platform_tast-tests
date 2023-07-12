@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	imageSearchSetUpTestTimeout = 40 * time.Second
-	imageSearchPreTestTimeout   = 10 * time.Second
-	imageSearchPostTestTimeout  = 10 * time.Second
+	launcherSearchSetUpTestTimeout = 40 * time.Second
+	launcherSearchPreTestTimeout   = 10 * time.Second
+	launcherSearchPostTestTimeout  = 10 * time.Second
 )
 
 // fixture's name
@@ -28,10 +28,11 @@ const (
 	LauncherImageSearchOcr       = "launcherImageSearchOcr"
 	LauncherImageSearchIca       = "launcherImageSearchIca"
 	LauncherImageSearch          = "launcherImageSearch"
+	NormalLauncherSearch         = "normalLauncherSearch"
 )
 
-// imageSearchFixtureImpl implements testing.FixtureImpl.
-type imageSearchFixtureImpl struct {
+// launcherSearchFixtureImpl implements testing.FixtureImpl.
+type launcherSearchFixtureImpl struct {
 	featureFlags []string // Feature flags for testing.
 	tconn        *chrome.TestConn
 	cr           *chrome.Chrome
@@ -39,8 +40,8 @@ type imageSearchFixtureImpl struct {
 	recorder     *uiauto.ScreenRecorder
 }
 
-// ImageSearchFixtData is the data returned by SetUp and passed to tests.
-type ImageSearchFixtData struct {
+// LauncherSearchFixtData is the data returned by SetUp and passed to tests.
+type LauncherSearchFixtData struct {
 	TestAPIConn *chrome.TestConn
 	Keyboard    *input.KeyboardEventWriter
 }
@@ -53,10 +54,10 @@ func init() {
 			"xiuwen@google.com",
 			"ml-service-team@google.com",
 		},
-		Impl:            &imageSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch", "LauncherImageSearchOcr", "LauncherImageSearchIca"}},
-		SetUpTimeout:    imageSearchSetUpTestTimeout,
-		PreTestTimeout:  imageSearchPreTestTimeout,
-		PostTestTimeout: imageSearchPostTestTimeout,
+		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch", "LauncherImageSearchOcr", "LauncherImageSearchIca"}},
+		SetUpTimeout:    launcherSearchSetUpTestTimeout,
+		PreTestTimeout:  launcherSearchPreTestTimeout,
+		PostTestTimeout: launcherSearchPostTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: LauncherImageSearchOcr,
@@ -65,10 +66,10 @@ func init() {
 			"xiuwen@google.com",
 			"ml-service-team@google.com",
 		},
-		Impl:            &imageSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch", "LauncherImageSearchOcr"}},
-		SetUpTimeout:    imageSearchSetUpTestTimeout,
-		PreTestTimeout:  imageSearchPreTestTimeout,
-		PostTestTimeout: imageSearchPostTestTimeout,
+		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch", "LauncherImageSearchOcr"}},
+		SetUpTimeout:    launcherSearchSetUpTestTimeout,
+		PreTestTimeout:  launcherSearchPreTestTimeout,
+		PostTestTimeout: launcherSearchPostTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: LauncherImageSearchIca,
@@ -77,10 +78,10 @@ func init() {
 			"xiuwen@google.com",
 			"ml-service-team@google.com",
 		},
-		Impl:            &imageSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch", "LauncherImageSearchIca"}},
-		SetUpTimeout:    imageSearchSetUpTestTimeout,
-		PreTestTimeout:  imageSearchPreTestTimeout,
-		PostTestTimeout: imageSearchPostTestTimeout,
+		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch", "LauncherImageSearchIca"}},
+		SetUpTimeout:    launcherSearchSetUpTestTimeout,
+		PreTestTimeout:  launcherSearchPreTestTimeout,
+		PostTestTimeout: launcherSearchPostTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: LauncherImageSearch,
@@ -89,19 +90,37 @@ func init() {
 			"xiuwen@google.com",
 			"ml-service-team@google.com",
 		},
-		Impl:            &imageSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch"}},
-		SetUpTimeout:    imageSearchSetUpTestTimeout,
-		PreTestTimeout:  imageSearchPreTestTimeout,
-		PostTestTimeout: imageSearchPostTestTimeout,
+		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch"}},
+		SetUpTimeout:    launcherSearchSetUpTestTimeout,
+		PreTestTimeout:  launcherSearchPreTestTimeout,
+		PostTestTimeout: launcherSearchPostTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: NormalLauncherSearch,
+		Desc: "Normal launcher search",
+		Contacts: []string{
+			"xiuwen@google.com",
+			"ml-service-team@google.com",
+		},
+		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{}},
+		SetUpTimeout:    launcherSearchSetUpTestTimeout,
+		PreTestTimeout:  launcherSearchPreTestTimeout,
+		PostTestTimeout: launcherSearchPostTestTimeout,
 	})
 
 }
 
-func (f *imageSearchFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	cr, err := chrome.New(ctx, chrome.EnableFeatures(f.featureFlags...))
+func (f *launcherSearchFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	var opts []chrome.Option
+	for _, opt := range f.featureFlags {
+		opts = append(opts, chrome.ExtraArgs(opt))
+	}
+
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start chrome: ", err)
 	}
+
 	f.cr = cr
 
 	f.tconn, err = cr.TestAPIConn(ctx)
@@ -115,10 +134,10 @@ func (f *imageSearchFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState
 	}
 	f.kb = kb
 
-	return ImageSearchFixtData{TestAPIConn: f.tconn, Keyboard: kb}
+	return LauncherSearchFixtData{TestAPIConn: f.tconn, Keyboard: kb}
 }
 
-func (f *imageSearchFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+func (f *launcherSearchFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn)
 	if err != nil {
 		s.Log("Failed to create screen recorder: ", err)
@@ -131,18 +150,18 @@ func (f *imageSearchFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTes
 	f.recorder = recorder
 }
 
-func (f *imageSearchFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
+func (f *launcherSearchFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	// Do nothing if the recorder is not initialized.
 	if f.recorder != nil {
 		f.recorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
 	}
 }
 
-func (f *imageSearchFixtureImpl) Reset(ctx context.Context) error {
+func (f *launcherSearchFixtureImpl) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (f *imageSearchFixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
+func (f *launcherSearchFixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 	if err := f.cr.Close(ctx); err != nil {
 		s.Log("Failed to close Chrome connection: ", err)
 	}
