@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Check noise cancellation in CRAS using aloop",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		Fixture:      fixture.StereoAloopLoaded,
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
@@ -106,8 +106,10 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx, chromeOpts...)
 	defer cr.Close(cleanupCtx)
 
-	if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
-		s.Fatal("Cannot install nc-ap-dlc: ", err)
+	if param.noiseCancellationEnabled {
+		if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
+			s.Fatal("Cannot install nc-ap-dlc: ", err)
+		}
 	}
 
 	if err := audio.SetupLoopback(ctx, cr); err != nil {
