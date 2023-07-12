@@ -276,7 +276,7 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 	// Record Memory usage.
 	p := perf.NewValues()
 
-	initMemUsage, err := effects.GetSwapAndRSSBytes(ctx)
+	initMemUsage, err := effects.ReadSwapAndRSSBytes(ctx)
 	if err != nil {
 		s.Error("Failed to read memory usage: ", err)
 	} else {
@@ -391,7 +391,7 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 	}
 
 	memoryChannel := make(chan effects.PeakMemoryResult)
-	go effects.GetMaxMemoryUsage(ctx, memoryChannel, testDuration)
+	go effects.ReadMaxMemoryUsage(ctx, memoryChannel, testDuration, metricInterval)
 
 	// Capture metrics.
 	if err = effects.ReportFramePerfMetrics(ctx, p, gm.Conn(), s.DataPath("effects_frame_metrics.js"), testDuration); err != nil {

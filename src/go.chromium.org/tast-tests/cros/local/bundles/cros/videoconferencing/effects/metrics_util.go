@@ -25,7 +25,7 @@ const (
 	rssName          = "VmRSS"
 	swapName         = "VmSwap"
 	fieldFilter      = `:\s+(\d+) kB`
-	crosCameraFilter = `root(\s+)(\d+)(.+)cros_camera_service`
+	crosCameraFilter = `arc-cam\+(\s+)(\d+)(.+)cros_camera_service`
 
 	// DefaultTimeInterval defines the default time interval duration for power metric collection.
 	DefaultTimeInterval = 5 * time.Second
@@ -39,8 +39,8 @@ type PeakMemoryResult struct {
 	Err   error
 }
 
-// GetPercentileData returns a map of percentiles and their corresponding data for the given array.
-func GetPercentileData(ctx context.Context, data []float64) (map[int]float64, error) {
+// CalculatePercentileData returns a map of percentiles and their corresponding data for the given array.
+func CalculatePercentileData(ctx context.Context, data []float64) (map[int]float64, error) {
 	percentile := []int{50, 90, 95, 99}
 
 	sort.Sort(sort.Reverse(sort.Float64Slice(data)))
@@ -56,7 +56,7 @@ func GetPercentileData(ctx context.Context, data []float64) (map[int]float64, er
 	return m, nil
 }
 
-func getCameraServicePID(ctx context.Context) (int, error) {
+func findCameraServicePID(ctx context.Context) (int, error) {
 	// Find cros_camera_service pid.
 	pids, err := testexec.CommandContext(ctx, "ps", "-ef").CombinedOutput()
 	if err != nil {
@@ -64,6 +64,7 @@ func getCameraServicePID(ctx context.Context) (int, error) {
 	}
 	cregex := regexp.MustCompile(crosCameraFilter)
 	result := cregex.FindStringSubmatch(string(pids))
+
 	if len(result) < 3 {
 		return -1, errors.New("no pid for cros_camera_service found")
 	}
@@ -71,9 +72,10 @@ func getCameraServicePID(ctx context.Context) (int, error) {
 }
 
 func readProcFSMemoryField(ctx context.Context, fieldName string) (int, error) {
-	pid, err := getCameraServicePID(ctx)
+	pid, err := findCameraServicePID(ctx)
+
 	if err != nil {
-		return -1, errors.Wrap(err, "getCameraServicePID failed")
+		return -1, errors.Wrap(err, "findCameraServicePID failed")
 	}
 	cameraProcPath := strings.Replace(memoryInfo, "self", strconv.Itoa(pid), -1)
 	fileContent, err := os.ReadFile(cameraProcPath)
@@ -94,13 +96,12 @@ func readProcFSMemoryField(ctx context.Context, fieldName string) (int, error) {
 	return value, nil
 }
 
-// GetSwapAndRSSBytes gets the sum of RSS and Swap field from system.
-func GetSwapAndRSSBytes(ctx context.Context) (int, error) {
+// ReadSwapAndRSSBytes gets the sum of RSS and Swap field from system.
+func ReadSwapAndRSSBytes(ctx context.Context) (int, error) {
 	rssVal, err := readProcFSMemoryField(ctx, "VmRSS")
 	if err != nil {
 		return -1, errors.Wrap(err, "readProcFSMemoryField VmRSS failed")
 	}
-
 	swapVal, err := readProcFSMemoryField(ctx, "VmSwap")
 	if err != nil {
 		return -1, errors.Wrap(err, "readProcFSMemoryField VmSwap failed")
@@ -108,14 +109,17 @@ func GetSwapAndRSSBytes(ctx context.Context) (int, error) {
 	return (rssVal + swapVal) * 1024, nil
 }
 
-// GetMaxMemoryUsage gets the memory peak usage during the run time.
-func GetMaxMemoryUsage(ctx context.Context, result chan PeakMemoryResult, seconds int) {
-	testing.ContextLog(ctx, "Start recording memory usage for ", seconds, " seconds")
+// ReadMaxMemoryUsage gets the memory peak usage during the run time.
+func ReadMaxMemoryUsage(ctx context.Context, result chan PeakMemoryResult, testDuration int, interval time.Duration) {
+	testing.ContextLog(ctx, "Start recording memory usage for ", testDuration, " seconds")
 	var maxMemUsage = 0
-	for start := time.Now(); time.Since(start) < time.Duration(seconds)*time.Second; {
-		// GoBigSleepLint: Get memory usage every 5 seconds for 1 min.
-		testing.Sleep(ctx, 5*time.Second)
-		currentMemUsage, err := GetSwapAndRSSBytes(ctx)
+	for start := time.Now(); time.Since(start) < time.Duration(testDuration)*time.Second; {
+		// GoBigSleepLint: Get memory usage every interval, default at 5 seconds.
+		if err := testing.Sleep(ctx, interval); err != nil {
+			result <- PeakMemoryResult{Value: -1, Err: err}
+			return
+		}
+		currentMemUsage, err := ReadSwapAndRSSBytes(ctx)
 		if err != nil {
 			result <- PeakMemoryResult{Value: -1, Err: err}
 			return
@@ -124,5 +128,7 @@ func GetMaxMemoryUsage(ctx context.Context, result chan PeakMemoryResult, second
 			maxMemUsage = currentMemUsage
 		}
 	}
+	testing.ContextLog(ctx, "Max memory usage (bytes): ", maxMemUsage)
+
 	result <- PeakMemoryResult{Value: maxMemUsage, Err: nil}
 }

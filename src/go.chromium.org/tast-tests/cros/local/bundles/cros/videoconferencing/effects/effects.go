@@ -136,7 +136,7 @@ func ReportFramePerfMetrics(ctx context.Context, p *perf.Values, conn *browser.C
 		results.FpsAverage)
 
 	var percentileMap map[int]float64
-	if percentileMap, err = GetPercentileData(ctx, results.FpsData); err != nil {
+	if percentileMap, err = CalculatePercentileData(ctx, results.FpsData); err != nil {
 		return errors.Wrap(err, "failed to capture fps data")
 
 	}
@@ -149,7 +149,7 @@ func ReportFramePerfMetrics(ctx context.Context, p *perf.Values, conn *browser.C
 		}, value)
 	}
 
-	if percentileMap, err = GetPercentileData(ctx, results.DurationData); err != nil {
+	if percentileMap, err = CalculatePercentileData(ctx, results.DurationData); err != nil {
 		return errors.Wrap(err, "failed to capture frame duration data")
 
 	}
