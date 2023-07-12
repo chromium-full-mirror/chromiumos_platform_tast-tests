@@ -48,6 +48,7 @@ var mergeThresholdSize480Models = []string{
 	"copano",
 	"craask",
 	"craaskbowl",
+	"craaskino",
 	"craaskvin",
 	"craasneto",
 	"crota",
