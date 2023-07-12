@@ -11,7 +11,8 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
-const package0PowerConstraintName = "package-0-pl"
+// PL1 = Power Limit 1
+const package0PowerConstraintName = "PL1"
 
 // RAPLPowerMetrics records the power consumption in Watt of the DUT.
 type RAPLPowerMetrics struct {

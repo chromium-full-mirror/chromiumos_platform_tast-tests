@@ -12,7 +12,7 @@ This document lists the metrics collected in power package through TestMetrics()
 | Name                        | Unit  | Note                                                                         |
 | package-0                   | W     | Energy consumption across the entire SoC.                                    |
 | non_SoC                     | W     | Energy consumption of all subsystems (system total minus SoC).               |
-| package-0-pl                | W     | A threshold that power should not exceed on average in a longer span of time.|
+| PL1                         | W     | A threshold that power should not exceed on average in a longer span of time.|
 | core                        | W     | Energy consumption across all cpu cores.                                     |
 | uncore                      | W     | Energy consumption across integrated graphics.                               |
 | dram                        | W     | Energy consumption across the DRAM.                                          |
