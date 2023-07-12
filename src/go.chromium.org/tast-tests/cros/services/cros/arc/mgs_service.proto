@@ -1,0 +1,32 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.arc;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/arc";
+
+message EnrollRequest {
+  string user = 1;
+  string pass = 2;
+}
+
+message WaitForPackagesRequest {
+  repeated string packages = 1;
+}
+
+// MGSService provides RPC methods to be used by managed_guest_session_app_install remote test.
+service MGSService {
+  // Enroll enrolls the device.
+  rpc Enroll(EnrollRequest) returns (google.protobuf.Empty) {}
+
+  // RestartSession restarts the session.
+  rpc RestartSession(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // WaitForPackages waits for packages to install.
+  rpc WaitForPackages(WaitForPackagesRequest) returns (google.protobuf.Empty) {}
+}
