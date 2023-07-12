@@ -16,7 +16,7 @@ import (
 )
 
 // To regenerate the test parameters by running the following in a chroot:
-// TAST_GENERATE_UPDATE=1 ~/trunk/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/webrtc
+// TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/webrtc
 
 // This matches peerconnection.RTCTestParams except for a couple of things:
 //

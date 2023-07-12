@@ -5,11 +5,11 @@
 // Tool for generating a json file used in video_decode_accelerator_tests from
 // a video file. The json file is created in the same directory as the video file.
 // This script uses go.chromium.org/tast/core/errors, so it needs to run with
-// ~/trunk/src/platform/tast/tools/go.sh.
+// ~/chromiumos/src/platform/tast/tools/go.sh.
 //
 // Usage example:
-// $  ~/trunk/src/platform/tast/tools/go.sh run generate_json_for_decodertest.go test-25fps.h264
-// $  ~/trunk/src/platform/tast/tools/go.sh run generate_json_for_decodertest.go resolution_change.av1.ivf
+// $  ~/chromiumos/src/platform/tast/tools/go.sh run generate_json_for_decodertest.go test-25fps.h264
+// $  ~/chromiumos/src/platform/tast/tools/go.sh run generate_json_for_decodertest.go resolution_change.av1.ivf
 //
 // Note that "num_fragments" in the json file is probably not correct for H264
 // streams. The value needs to be obtained by running video_decode_accelerator_tests.

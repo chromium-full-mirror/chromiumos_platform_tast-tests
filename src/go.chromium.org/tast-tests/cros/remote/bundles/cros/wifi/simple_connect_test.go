@@ -5,9 +5,9 @@
 // This test file generates the Params in simple_connect.go.
 // Refer to go/tast-generate-params
 // After modified, to overwrite the old Params, run:
-// TAST_GENERATE_UPDATE=1 ~/trunk/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi
+// TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi
 // To check only, run:
-// ~/trunk/src/platform/tast/fast_build.sh -t go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi
+// ~/chromiumos/src/platform/tast/fast_build.sh -t go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi
 
 package wifi
 

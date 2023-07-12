@@ -7,5 +7,5 @@ package typec
 
 // Run the following command in CrOS chroot to regenerate protocol buffer bindings:
 //
-// ~/trunk/src/platform/tast/tools/go.sh generate go.chromium.org/tast-tests/cros/services/cros/typec
+// ~/chromiumos/src/platform/tast/tools/go.sh generate go.chromium.org/tast-tests/cros/services/cros/typec
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. service.proto

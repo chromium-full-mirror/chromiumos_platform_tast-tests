@@ -136,7 +136,7 @@ func init() {
 	errors, newCode := callEnsure(t, oldCode, testParams)
 	wantErrors := []string{
 		`code.go: Params is stale; run the following command to update:
-TAST_GENERATE_UPDATE=1 ~/trunk/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/common/genparams`,
+TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/common/genparams`,
 	}
 	if diff := cmp.Diff(errors, wantErrors); diff != "" {
 		t.Errorf("Errors mismatch (-got +want):\n%s", diff)
@@ -160,7 +160,7 @@ func init() {
 	errors, newCode := callEnsure(t, oldCode, testParams)
 	wantErrors := []string{
 		`code.go: Params is stale; run the following command to update:
-TAST_GENERATE_UPDATE=1 ~/trunk/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/common/genparams`,
+TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/common/genparams`,
 	}
 	if diff := cmp.Diff(errors, wantErrors); diff != "" {
 		t.Errorf("Errors mismatch (-got +want):\n%s", diff)

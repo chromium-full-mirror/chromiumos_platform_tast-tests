@@ -11,4 +11,4 @@ package power
 
 // Run the following command in CrOS chroot to regenerate protocol buffer bindings:
 //
-// ~/trunk/src/platform/tast/tools/go.sh generate go.chromium.org/tast-tests/cros/services/cros/power
+// ~/chromiumos/src/platform/tast/tools/go.sh generate go.chromium.org/tast-tests/cros/services/cros/power

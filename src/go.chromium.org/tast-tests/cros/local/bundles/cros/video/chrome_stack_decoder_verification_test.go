@@ -12,7 +12,7 @@ import (
 )
 
 // To regenerate the test parameters by running the following in a chroot:
-// TAST_GENERATE_UPDATE=1 ~/trunk/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/video
+// TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/video
 var h264FilesFromBugs = map[string]string{
 	"149068426":   "test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264",
 	"172838252":   "test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264",

@@ -5,13 +5,13 @@
 // Tool for generating a json file used in video_encode_accelerator_tests for
 // the vp9 webm file. The json file is created in the same directory as the video file.
 // This script uses go.chromium.org/tast/core/errors, so it needs to run with
-// ~/trunk/src/platform/tast/tools/go.sh.
+// ~/chromiumos/src/platform/tast/tools/go.sh.
 // This also computes the md5 value of the first 60 frames of the vp9 webm in I420 format.
 // It is useful to fill the table to verify vpxdec in the test is correct. See
 // https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/video/encode/accel_video.go
 //
 // Usage example:
-// $  ~/trunk/src/platform/tast/tools/go.sh run generate_json_for_encodertest.go desktop2-1280x720_850frames.vp9.webm
+// $  ~/chromiumos/src/platform/tast/tools/go.sh run generate_json_for_encodertest.go desktop2-1280x720_850frames.vp9.webm
 package main
 
 import (

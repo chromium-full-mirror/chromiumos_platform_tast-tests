@@ -154,6 +154,6 @@ var _ = []testing.Param{
 	if !bytes.Equal(newCode, oldCode) {
 		pkg, _ := packages.SplitFuncName(caller.Get(2))
 		t.Errorf(`%s: Params is stale; run the following command to update:
-%s=1 ~/trunk/src/platform/tast/tools/go.sh test -count=1 %s`, file, envName, pkg)
+%s=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 %s`, file, envName, pkg)
 	}
 }

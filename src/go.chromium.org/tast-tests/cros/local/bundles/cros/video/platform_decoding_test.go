@@ -21,7 +21,7 @@ const ffmpegMD5Path = "/usr/local/graphics/ffmpeg_md5sum"
 
 // NB: If modifying any of the files or test specifications, be sure to
 // regenerate the test parameters by running the following in a chroot:
-// TAST_GENERATE_UPDATE=1 ~/trunk/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/video
+// TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/video
 
 var av1Files = []string{
 	"test_vectors/av1/8-bit/00000527.ivf",

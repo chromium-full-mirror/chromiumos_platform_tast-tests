@@ -7,5 +7,5 @@ invocation. Run the following command in CrOS chroot to regenerate protocol
 buffer bindings:
 
 ```shell
-~/trunk/src/platform/tast/tools/go.sh generate go.chromium.org/tast-tests/cros/services/cros/arc
+~/chromiumos/src/platform/tast/tools/go.sh generate go.chromium.org/tast-tests/cros/services/cros/arc
 ```
