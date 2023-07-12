@@ -62,6 +62,10 @@ func (ali *AttestationLocalInfra) Enable(ctx context.Context) (lastErr error) {
 		return errors.Wrap(err, "failed to restore the fake attestation database")
 	}
 
+	if err := ali.enableFakePCAAgent(ctx); err != nil {
+		return errors.Wrap(err, "failed to enable fake pca agent")
+	}
+
 	if err := enckey.InjectWellKnownGoogleKeysAndRestart(ctx, ali.dc); err != nil {
 		return errors.Wrap(err, "failed to inject well-known keys")
 	}
@@ -75,9 +79,6 @@ func (ali *AttestationLocalInfra) Enable(ctx context.Context) (lastErr error) {
 		}
 	}(cleanupCtx)
 
-	if err := ali.enableFakePCAAgent(ctx); err != nil {
-		return errors.Wrap(err, "failed to enable fake pca agent")
-	}
 	return nil
 }
 
@@ -90,13 +91,13 @@ func (ali *AttestationLocalInfra) Disable(ctx context.Context) error {
 			lastErr = errors.Wrap(err, "failed to pop the snapshot of attestation database back")
 		}
 	}
-	if err := enckey.InjectNormalGoogleKeysAndRestart(ctx, ali.dc); err != nil {
-		testing.ContextLog(ctx, "Failed to inject the normal key back: ", err)
-		lastErr = errors.Wrap(err, "failed to inject the normal key back")
-	}
 	if err := ali.disableFakePCAAgent(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to disable fake pca agent: ", err)
 		lastErr = errors.Wrap(err, "failed to disable fake pca agent")
+	}
+	if err := enckey.InjectNormalGoogleKeysAndRestart(ctx, ali.dc); err != nil {
+		testing.ContextLog(ctx, "Failed to inject the normal key back: ", err)
+		lastErr = errors.Wrap(err, "failed to inject the normal key back")
 	}
 	return lastErr
 }
