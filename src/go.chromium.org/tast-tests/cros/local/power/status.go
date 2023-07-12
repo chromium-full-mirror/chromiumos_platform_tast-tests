@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -97,4 +98,15 @@ func GetStatus(ctx context.Context) (*Status, error) {
 		return nil, err
 	}
 	return s, nil
+}
+
+// IsLinePowerConnected returns a boolean indicating if the line power is
+// connected. "line_power_connected" from dump_power_status does not reflect the
+// true state of battery on Jacuzzi.
+func (s Status) IsLinePowerConnected() bool {
+	board := util.GetBoard()
+	if !strings.HasPrefix(board, "jacuzzi") {
+		return s.LinePowerConnected
+	}
+	return s.BatteryStatus != "Discharging"
 }

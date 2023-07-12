@@ -171,7 +171,7 @@ func drain(ctx context.Context, cr *chrome.Chrome, desiredPercentage float64) er
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to obtain DUT power status"))
 		}
-		if status.LinePowerConnected {
+		if status.IsLinePowerConnected() {
 			forceDischargeErrors++
 			// We can discard the cleanup callback since setup will take care of that.
 			if _, err = setup.SetBatteryDischarge(ctx, 5.0); err != nil {
@@ -205,10 +205,10 @@ func powerSourceStatus(ctx context.Context, acConnected bool) error {
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to obtain DUT power status"))
 		}
-		if acConnected && !status.LinePowerConnected {
+		if acConnected && !status.IsLinePowerConnected() {
 			return errors.New("battery charging requires device conntected to an active power source")
 		}
-		if !acConnected && status.LinePowerConnected {
+		if !acConnected && status.IsLinePowerConnected() {
 			return errors.New("battery draining requires device disconnected from the power source")
 		}
 		return nil
