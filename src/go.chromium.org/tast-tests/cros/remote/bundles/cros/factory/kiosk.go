@@ -32,7 +32,7 @@ func init() {
 		Contacts:     []string{"chromeos-factory-eng@google.com", "lschyi@google.com"},
 		// ChromeOS > Platform > Enablement > Factory
 		BugComponent: "b:167224",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      time.Minute,
 		Fixture:      fixture.EnsureToolkit,
 		// Skip "nyan_kitty" due to slow reboot speed, skip nocturne as
