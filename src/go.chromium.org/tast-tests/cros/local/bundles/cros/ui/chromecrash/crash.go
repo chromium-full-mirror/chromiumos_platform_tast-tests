@@ -21,8 +21,12 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 	"golang.org/x/sys/unix"
 
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosinfo"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -55,8 +59,11 @@ const (
 	// crashReporterExecPath is the path to the crash_reporter executable.
 	crashReporterExecPath = "/sbin/crash_reporter"
 
-	// crashpadExecPath is the path to the crashpad binary.
-	crashpadExecPath = "/opt/google/chrome/chrome_crashpad_handler"
+	// ashChromeCrashpadExecPath is the path to the ash-Chrome crashpad binary.
+	ashChromeCrashpadExecPath = "/opt/google/chrome/chrome_crashpad_handler"
+
+	// lacrosCrashpadExecName is the name of the crashpad binary in the Lacros directory.
+	lacrosCrashpadExecName = "chrome_crashpad_handler"
 
 	// chromeCrashFilePatternWithPid contains fmt.Sprintf format string that
 	// expects an integer PID of a chrome process. fmt.Sprintf will return a regex
@@ -188,27 +195,60 @@ func crashReporterRunning(ctx context.Context) (bool, error) {
 // It should be created (via NewCrashTester) before chrome.New is called. Close should be
 // called at the end of the test.
 type CrashTester struct {
-	ptype     ProcessType
-	waitFor   CrashFileType
-	killedPID int32
+	ptype       ProcessType
+	browserType browser.Type
+	waitFor     CrashFileType
+	tconn       *chrome.TestConn
+	lacrosPath  string
+	killedPID   int32
 }
 
 // NewCrashTester returns a CrashTester. This must be called before chrome.New.
 // ptype indicates the type of process the KillAndGetCrashFiles will kill. For
 // some process types, we wait for the crash file to appear. In these cases,
 // waitFor indicates the type of file we are waiting for.
-func NewCrashTester(ctx context.Context, ptype ProcessType, waitFor CrashFileType) (*CrashTester, error) {
+func NewCrashTester(ctx context.Context, ptype ProcessType, browserType browser.Type, waitFor CrashFileType) (*CrashTester, error) {
 	if ptype < Browser || ptype > Broker {
 		return nil, errors.Errorf("ptype out of range: %v", ptype)
+	}
+	if browserType != browser.TypeAsh && browserType != browser.TypeLacros {
+		return nil, errors.Errorf("browserType %v unknown", browserType)
 	}
 	if waitFor < MetaFile || waitFor > NoCrashFile {
 		return nil, errors.Errorf("waitFor out of range: %v", waitFor)
 	}
 
 	return &CrashTester{
-		ptype:   ptype,
-		waitFor: waitFor,
+		ptype:       ptype,
+		browserType: browserType,
+		waitFor:     waitFor,
 	}, nil
+}
+
+// AssociateWithChrome should be called once a stable ash-Chrome connection is
+// created via chrome.New and (if applicable) Lacros has been launched. (Or after
+// browserfixt,SetUpWithNewChrome has been called.) It is not needed if
+// ash-Chrome won't be up long enough to make a stable connection.
+func (ct *CrashTester) AssociateWithChrome(ctx context.Context, cr *chrome.Chrome) error {
+	if ct.browserType == browser.TypeAsh {
+		return nil
+	}
+
+	var err error
+	ct.tconn, err = cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "could not associate with chrome: could not get test API")
+	}
+
+	info, err := lacrosinfo.Snapshot(ctx, ct.tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to retrieve lacrosinfo")
+	}
+	if len(info.LacrosPath) == 0 {
+		return errors.New("lacros is not running (received empty LacrosPath)")
+	}
+	ct.lacrosPath = info.LacrosPath
+	return nil
 }
 
 // Close closes a CrashTester. It must be called on all CrashTesters returned from NewCrashTester.
@@ -314,18 +354,22 @@ func FindBreakpadDmpFilesIn(dirPattern string, files []string) error {
 }
 
 // waitForChromeProcesses waits for the Chrome to be up and then
-// returns a list of Processes of ash-chrome and its crashpad_handlers.
-func waitForChromeProcesses(ctx context.Context) ([]*process.Process, error) {
+// returns a list of Processes of chrome and its crashpad_handlers.
+func (ct *CrashTester) waitForChromeProcesses(ctx context.Context) ([]*process.Process, error) {
 	var procs []*process.Process
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		var err error
-		procs, err = ashproc.Processes()
+		if ct.browserType == browser.TypeAsh {
+			procs, err = ashproc.Processes()
+		} else {
+			procs, err = lacrosproc.ProcsFromPath(ctx, ct.lacrosPath)
+		}
 		if err != nil {
 			return testing.PollBreak(err)
 		}
 		// TODO(hidehiko): Move this out from Chrome processes, because in precise
 		// crashpad handler is not chrome.
-		chProcs, err := crashpadHandlerProcesses()
+		chProcs, err := ct.crashpadHandlerProcesses()
 		if err != nil {
 			return testing.PollBreak(err)
 		}
@@ -342,11 +386,18 @@ func waitForChromeProcesses(ctx context.Context) ([]*process.Process, error) {
 	return procs, nil
 }
 
-// crashpadHandlerProcesses returns all ash-chrome's crashpad handler processes.
-func crashpadHandlerProcesses() ([]*process.Process, error) {
+// crashpadHandlerProcesses returns all of Chrome's crashpad handler processes.
+func (ct *CrashTester) crashpadHandlerProcesses() ([]*process.Process, error) {
 	ps, err := process.Processes()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain processes")
+	}
+
+	var crashpadExecPath string
+	if ct.browserType == browser.TypeAsh {
+		crashpadExecPath = ashChromeCrashpadExecPath
+	} else {
+		crashpadExecPath = filepath.Join(ct.lacrosPath, lacrosCrashpadExecName)
 	}
 
 	var ret []*process.Process
@@ -367,9 +418,15 @@ func crashpadHandlerProcesses() ([]*process.Process, error) {
 // returned. Does not wait for the process to come up -- if none exist, this
 // just returns an error.
 func (ct *CrashTester) getNonBrowserProcess(ctx context.Context) (*process.Process, error) {
+	var err error
+	var processes []*process.Process
 	switch ct.ptype {
 	case GPUProcess:
-		processes, err := chromeproc.GetGPUProcesses()
+		if ct.browserType == browser.TypeAsh {
+			processes, err = chromeproc.GetGPUProcesses()
+		} else {
+			processes, err = lacrosproc.GPUProcesses(ctx, ct.tconn)
+		}
 		if err != nil {
 			return nil, errors.Wrapf(err, "error looking for Chrome %s", ct.ptype)
 		}
@@ -378,7 +435,11 @@ func (ct *CrashTester) getNonBrowserProcess(ctx context.Context) (*process.Proce
 		}
 		return processes[0], nil
 	case Broker:
-		processes, err := chromeproc.GetBrokerProcesses()
+		if ct.browserType == browser.TypeAsh {
+			processes, err = chromeproc.GetBrokerProcesses()
+		} else {
+			processes, err = lacrosproc.BrokerProcesses(ctx, ct.tconn)
+		}
 		if err != nil {
 			return nil, errors.Wrapf(err, "error looking for Chrome %s", ct.ptype)
 		}
@@ -477,8 +538,10 @@ func (ct *CrashTester) killNonBrowser(ctx context.Context, dirs []string) error 
 		timeToSleep := delay - time.Since(createTime)
 		if timeToSleep > 0 {
 			testing.ContextLogf(ctx, "Sleeping %v to wait for Chrome to stabilize", timeToSleep)
-			// GoBigSleepLint: Sleep briefly after the Chrome process we want starts so it has time to set
-			// up crashpad.
+			// GoBigSleepLint: Sleep briefly after the Chrome process we want starts
+			// so it has time to set up breakpad / crashpad.
+			// TODO(b/292578303): Improve by making it easier for this test to tell
+			// when crashpad is set up.
 			if err := testing.Sleep(ctx, timeToSleep); err != nil {
 				return testing.PollBreak(errors.Wrap(err, "timed out while waiting for Chrome startup"))
 			}
@@ -534,13 +597,16 @@ func (ct *CrashTester) killBrowser(ctx context.Context) error {
 	// (Also needed for https://crbug.com/906690)
 	const delay = 3 * time.Second
 	testing.ContextLogf(ctx, "Sleeping %v to wait for Chrome to stabilize", delay)
-	// GoBigSleepLint: Sleep briefly after Chrome starts so it has time to set up
-	// crashpad. (Also needed for https://crbug.com/906690)
+	// GoBigSleepLint: Sleep briefly after the Chrome process we want starts
+	// so it has time to set up breakpad or crashpad. (Also needed for
+	// https://crbug.com/906690)
+	// TODO(b/292578303): Improve by making it easier for this test to tell
+	// when crashpad is set up.
 	if err := testing.Sleep(ctx, delay); err != nil {
 		return errors.Wrap(err, "timed out while waiting for Chrome startup")
 	}
 
-	procs, err := waitForChromeProcesses(ctx)
+	procs, err := ct.waitForChromeProcesses(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to find Chrome process IDs")
 	}
@@ -548,7 +614,12 @@ func (ct *CrashTester) killBrowser(ctx context.Context) error {
 	// The root Chrome process (i.e. the one that doesn't have another Chrome process
 	// as its parent) is the browser process. It's not sandboxed, so it should be able
 	// to write a minidump file when it crashes.
-	rp, err := ashproc.Root()
+	var rp *process.Process
+	if ct.browserType == browser.TypeAsh {
+		rp, err = ashproc.Root()
+	} else {
+		rp, err = lacrosproc.Root(ctx, ct.tconn)
+	}
 	if err != nil {
 		return errors.Wrap(err, "failed to get Chrome root process")
 	}
@@ -622,7 +693,12 @@ func MetaFileContains(ctx context.Context, metaFile string, expectedValues map[s
 // ValidateComputedSeverity checks the computed_severity and computed_product
 // values in |metaFile|. Return nil if each value is found.
 func (ct *CrashTester) ValidateComputedSeverity(ctx context.Context, metaFile string) error {
-	expectedValues := map[string]string{"computed_product": "Ui"}
+	expectedValues := map[string]string{}
+	if ct.browserType == browser.TypeAsh {
+		expectedValues["computed_product"] = "Ui"
+	} else {
+		expectedValues["computed_product"] = "Lacros"
+	}
 	// TODO(crbug.com/1466932): Set computed_severity to "INFO" for Broker after
 	// Broker process crashes are reported with ptype=broker.
 	if ct.ptype == Browser {
@@ -673,13 +749,18 @@ func (ct *CrashTester) KillAndGetCrashFiles(ctx context.Context) ([]string, erro
 	// when we do GetCrashes. Retry several times to avoid brief flakes.
 	// TODO(crbug.com/1139494) Find root cause and remove this workaround.
 	testing.ContextLog(ctx, "Scanning crash directories")
-	var regexes, optionalRegexes []string
+	// NOTE: in some tests (particularly ChromeCrashLoop), we don't know if the
+	// files will be written out or not, so we can't just loop forever looking
+	// for the files.
+	const timeout = 5 * time.Second
+	opts := []crash.WaitForCrashFilesOpt{crash.Timeout(timeout)}
+	var regexes []string
 	switch ct.waitFor {
 	case NoCrashFile:
 		// We don't expect to find anything; we go through the WaitForCrashFiles
 		// loop once just to make sure there aren't unexpected files being written
 		// out.
-		optionalRegexes = []string{".*"}
+		opts = append(opts, crash.OptionalRegexes([]string{".*"}))
 	case BreakpadDmp:
 		// Filename doesn't include the PID, so just accept any dmp file as the
 		// expected one. (The problems we've seen have always been the entire
@@ -695,15 +776,16 @@ func (ct *CrashTester) KillAndGetCrashFiles(ctx context.Context) ([]string, erro
 		// can't block on that.
 		logs := fmt.Sprintf(chromeCrashFilePatternWithPid+"chrome.txt.gz", ct.killedPID)
 		i915 := fmt.Sprintf(chromeCrashFilePatternWithPid+"i915_error_state.log.xz", ct.killedPID)
-		optionalRegexes = []string{logs, i915}
+		opts = append(opts, crash.OptionalRegexes([]string{logs, i915}))
+		if ct.browserType == browser.TypeAsh {
+			opts = append(opts, crash.MetaString("upload_var_prod=Chrome_ChromeOS"))
+		} else {
+			opts = append(opts, crash.MetaString("upload_var_prod=Chrome_Lacros"))
+		}
 	}
 
-	// NOTE: in some tests (particularly ChromeCrashLoop), we don't know if the
-	// files will be written out or not, so we can't just loop forever looking
-	// for the files.
-	const timeout = 5 * time.Second
 	var matches map[string][]string
-	if matches, err = crash.WaitForCrashFiles(ctx, dirs, regexes, crash.OptionalRegexes(optionalRegexes), crash.Timeout(timeout)); err != nil {
+	if matches, err = crash.WaitForCrashFiles(ctx, dirs, regexes, opts...); err != nil {
 		notFoundErr, ok := err.(crash.RegexesNotFound)
 		if !ok {
 			return nil, errors.Wrap(err, "WaitForCrashFiles failed")
@@ -742,8 +824,9 @@ func (ct *CrashTester) KillAndGetCrashFiles(ctx context.Context) ([]string, erro
 	return files, nil
 }
 
-// KillCrashpad kills all chrome_crashpad_handler processes running in the system. It
-// returns when there are no more chrome_crashpad_handler processes running.
+// KillCrashpad kills all ash-Chrome chrome_crashpad_handler processes running
+// in the system. It returns when there are no more ash-Chrome
+// chrome_crashpad_handler processes running.
 func KillCrashpad(ctx context.Context) error {
 	testing.ContextLog(ctx, "Hunting and killing chrome_crashpad_handler proceesses")
 	return testing.Poll(ctx, func(ctx context.Context) error {
@@ -754,7 +837,7 @@ func KillCrashpad(ctx context.Context) error {
 
 		foundCrashpadProcess := false
 		for _, process := range all {
-			if exe, err := process.Exe(); err == nil && exe == crashpadExecPath {
+			if exe, err := process.Exe(); err == nil && exe == ashChromeCrashpadExecPath {
 				foundCrashpadProcess = true
 				testing.ContextLog(ctx, "Sending SIGKILL to chrome_crashpad_handler process ", process.Pid)
 				if err = unix.Kill(int(process.Pid), unix.SIGKILL); err != nil {

@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/chromecrash"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -138,7 +139,7 @@ func ChromeCrashReporterMetrics(ctx context.Context, s *testing.State) {
 	params := s.Param().(chromeCrashReporterMetricsParams)
 	// Crash GPUProcess. Do not crash Browser process. Crashing the Browser
 	// process will disconnect our cr object.
-	ct, err := chromecrash.NewCrashTester(ctx, chromecrash.GPUProcess, params.crashFileType)
+	ct, err := chromecrash.NewCrashTester(ctx, chromecrash.GPUProcess, browser.TypeAsh, params.crashFileType)
 	if err != nil {
 		s.Fatal("NewCrashTester failed: ", err)
 	}
@@ -158,6 +159,10 @@ func ChromeCrashReporterMetrics(ctx context.Context, s *testing.State) {
 		s.Fatal("SetUpCrashTest failed: ", err)
 	}
 	defer crash.TearDownCrashTest(cleanupCtx)
+
+	if err := ct.AssociateWithChrome(ctx, cr); err != nil {
+		s.Fatal("Failed to associate chrome with the crash tester: ", err)
+	}
 
 	if params.killCrashpad {
 		if err := chromecrash.KillCrashpad(ctx); err != nil {

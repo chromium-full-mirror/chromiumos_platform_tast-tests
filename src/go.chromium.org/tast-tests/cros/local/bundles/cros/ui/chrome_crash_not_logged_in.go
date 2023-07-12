@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/chromecrash"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -129,7 +130,7 @@ func init() {
 
 func ChromeCrashNotLoggedIn(ctx context.Context, s *testing.State) {
 	params := s.Param().(chromeCrashNotLoggedInParams)
-	ct, err := chromecrash.NewCrashTester(ctx, params.ptype, chromecrash.MetaFile)
+	ct, err := chromecrash.NewCrashTester(ctx, params.ptype, browser.TypeAsh, chromecrash.MetaFile)
 	if err != nil {
 		s.Fatal("NewCrashTester failed: ", err)
 	}
@@ -167,6 +168,9 @@ func ChromeCrashNotLoggedIn(ctx context.Context, s *testing.State) {
 		s.Fatal("Chrome startup failed: ", err)
 	}
 	defer cr.Close(ctx)
+	if err := ct.AssociateWithChrome(ctx, cr); err != nil {
+		s.Fatal("Failed to associate chrome with the crash tester: ", err)
+	}
 
 	files, err := ct.KillAndGetCrashFiles(ctx)
 	if err != nil {
