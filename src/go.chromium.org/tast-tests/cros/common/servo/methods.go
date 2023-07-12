@@ -49,6 +49,8 @@ const (
 	PDCommunication       StringControl = "servo_pd_comm"
 	SupportCrosECComm     StringControl = "supports_cros_ec_communication"
 	PwrButtonCtrl         StringControl = "pwr_button"
+	ServoDUTSBU1MV        StringControl = "servo_dut_sbu1_mv"
+	ServoDUTSBU2MV        StringControl = "servo_dut_sbu2_mv"
 
 	// DUTConnectionType was previously known as V4Type ("servo_v4_type")
 	DUTConnectionType StringControl = "root.dut_connection_type"

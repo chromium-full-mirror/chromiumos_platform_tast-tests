@@ -32,6 +32,7 @@ const (
 const (
 	ECUARTCapture   OnOffControl = "ec_uart_capture"
 	ECUARTTimestamp OnOffControl = "ec_uart_timestamp"
+	ECUARTFlush     OnOffControl = "ec_uart_flush"
 )
 
 // Cmd constants for RunECCommand.
@@ -250,6 +251,7 @@ func (s *Servo) ECHibernate(ctx context.Context, option HibernationOpt) error {
 
 	// Delay for a few seconds to allow proper propagation of the
 	// hibernation command, prior to checking EC unresponsive.
+	// GoBigSleepLint: sleep to let hibernation propagate
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}
