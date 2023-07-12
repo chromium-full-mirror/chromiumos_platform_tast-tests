@@ -25,11 +25,17 @@ func init() {
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Data:         util.Configs,
-		HardwareDeps: hwdep.D(hwdep.Nvme()),
 		Requirements: []string{
 			tdreq.StorageTBWReport,
 			tdreq.NvmeStorageHealthInfo,
 		},
+		Params: []testing.Param{{
+			Name:              "emmc_over_nvme",
+			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOverNvme()),
+		}, {
+			Name:              "nvme",
+			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
+		}},
 	})
 }
 

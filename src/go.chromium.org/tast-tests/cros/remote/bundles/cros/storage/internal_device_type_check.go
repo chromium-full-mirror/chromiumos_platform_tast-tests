@@ -34,9 +34,10 @@ func InternalDeviceTypeCheck(ctx context.Context, s *testing.State) {
 	}
 
 	ifaces := map[string]bool{
-		util.DiskTypeToString(util.UfsDisk):  true,
-		util.DiskTypeToString(util.EmmcDisk): true,
-		util.DiskTypeToString(util.NvmeDisk): true,
+		util.DiskTypeToString(util.UfsDisk):          true,
+		util.DiskTypeToString(util.EmmcDisk):         true,
+		util.DiskTypeToString(util.NvmeDisk):         true,
+		util.DiskTypeToString(util.EmmcOverNvmeDisk): true,
 	}
 
 	if _, ok := ifaces[util.DiskTypeToString(disk.Type)]; !ok {
