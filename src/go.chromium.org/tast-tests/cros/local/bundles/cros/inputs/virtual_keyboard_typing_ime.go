@@ -22,7 +22,7 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-var typingTestIMEs = []ime.InputMethod{
+var vkTypingTestIMEs = []ime.InputMethod{
 	ime.AlphanumericWithJapaneseKeyboard,
 	ime.Cantonese,
 	ime.ChineseCangjie,
@@ -37,9 +37,6 @@ var typingTestIMEs = []ime.InputMethod{
 	ime.Korean,
 	ime.SpanishSpain,
 	ime.Swedish,
-}
-
-var typingTestIMEsUpstream = []ime.InputMethod{
 	ime.Arabic,
 	ime.EnglishSouthAfrica,
 	ime.Khmer,
@@ -48,7 +45,7 @@ var typingTestIMEsUpstream = []ime.InputMethod{
 	ime.ThaiTis,
 }
 
-var typingTestMessages = []data.Message{data.TypingMessageHello}
+var vkTypingTestMessages = []data.Message{data.TypingMessageHello}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -57,37 +54,24 @@ func init() {
 		Desc:         "Checks that virtual keyboard works in different input methods",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
-		SearchFlags:  util.IMESearchFlags(typingTestIMEs),
+		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "informational"},
+		SearchFlags:  util.IMESearchFlags(vkTypingTestIMEs),
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
-		Timeout:      time.Duration(len(typingTestIMEs)+len(typingTestIMEsUpstream)) * time.Duration(len(typingTestMessages)) * time.Minute,
+		Timeout:      time.Duration(len(vkTypingTestIMEs)*len(vkTypingTestMessages)) * time.Minute,
 		Params: []testing.Param{
 			{
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				Val:               typingTestIMEs,
 				Fixture:           fixture.TabletVK,
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-			},
-			{
-				Name:              "upstream",
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				Val:               typingTestIMEsUpstream,
-				Fixture:           fixture.TabletVK,
-				ExtraAttr:         []string{"informational", "group:input-tools-upstream", "group:criticalstaging"},
-				ExtraSearchFlags:  util.IMESearchFlags(typingTestIMEsUpstream),
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:criticalstaging"},
 			},
 			{
 				Name:              "informational",
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
-				Val:               append(typingTestIMEs, typingTestIMEsUpstream...),
 				Fixture:           fixture.TabletVK,
-				ExtraAttr:         []string{"informational"},
-				ExtraSearchFlags:  util.IMESearchFlags(typingTestIMEsUpstream),
 			},
 			{
 				Name:              "lacros",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				Val:               typingTestIMEs,
 				Fixture:           fixture.LacrosTabletVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 			},
@@ -135,5 +119,5 @@ func VirtualKeyboardTypingIME(ctx context.Context, s *testing.State) {
 		}
 	}
 	// Run defined subtest per input method and message combination.
-	util.RunSubtestsPerInputMethodAndMessage(ctx, uc, s, typingTestIMEs, typingTestMessages, subtest)
+	util.RunSubtestsPerInputMethodAndMessage(ctx, uc, s, vkTypingTestIMEs, vkTypingTestMessages, subtest)
 }

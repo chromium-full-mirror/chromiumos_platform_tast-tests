@@ -108,24 +108,24 @@ var TypingMessageHello = typingMessage{
 		ExpectedText:    "مرحبا",
 	},
 	ime.Khmer: {
-		CharacterKeySeq: strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
-		LocationKeySeq:  strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
-		ExpectedText:    "បចដេថងហិ្កលមនោផឆរសតុវឹខយឋ",
+		CharacterKeySeq: []string{"ខ", "្", "ម", "shift", "ែ", "រ"},
+		LocationKeySeq:  strings.Split("xjmEr", ""),
+		ExpectedText:    "ខ្មែរ",
 	},
 	ime.Myanmar: {
-		CharacterKeySeq: strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
-		LocationKeySeq:  strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
-		ExpectedText:    "ဘေခိန်ါ့ငြုူာညသစဆမျအကလတထပဖ",
+		CharacterKeySeq: []string{"shift", "ဗ", "မ", "ာ"},
+		LocationKeySeq:  strings.Split("Arm", ""),
+		ExpectedText:    "ဗမာ",
 	},
 	ime.Sinhala: {
-		CharacterKeySeq: strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
-		LocationKeySeq:  strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
-		ExpectedText:    "්ඉජාැටෙයසවනකපබදචුරිඑමඩඅංහ'",
+		CharacterKeySeq: []string{"ස", "ි", "ං", "හ", "ල"},
+		LocationKeySeq:  strings.Split("isxy,", ""),
+		ExpectedText:    "සිංහල",
 	},
 	ime.ThaiTis: {
-		CharacterKeySeq: strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
-		LocationKeySeq:  strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
-		ExpectedText:    "ฟิแกำดเ้ร่าสทืนยๆพหะีอไปัผ",
+		CharacterKeySeq: []string{"ไ", "ท", "ย"},
+		LocationKeySeq:  strings.Split("wmp", ""),
+		ExpectedText:    "ไทย",
 	},
 }
 

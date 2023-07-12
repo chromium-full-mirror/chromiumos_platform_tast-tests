@@ -189,6 +189,10 @@ func (vkbCtx *VirtualKeyboardContext) tapKeyFunc(keyName string, ignoreCase bool
 	if ignoreCase {
 		keyFinder = KeyByNameIgnoringCase(keyName)
 	}
+	// There can be two shift keys on the virtual keyboard. Just take any.
+	if keyName == "shift" {
+		keyFinder = keyFinder.First()
+	}
 
 	return vkbCtx.TapNode(keyFinder)
 }
