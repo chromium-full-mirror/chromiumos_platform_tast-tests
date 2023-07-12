@@ -70,6 +70,24 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 
+	// To-do: Remove after we're able to correctly identify
+	// duts with keyboard backlight.
+	hwdepResults := checkKBLightDependency(ctx, h)
+	s.Log("Found hwdep values about keyboard backlight: ", hwdepResults)
+
+	hasKbLight := true
+	out, err := h.DUT.Conn().CommandContext(ctx, "backlight_tool", "--keyboard", "--get_brightness").CombinedOutput()
+	if err != nil {
+		testing.ContextLog(ctx, "Could not obtain output from backlight_tool: ", err)
+	}
+	outStr := strings.TrimSpace(string(out))
+	if strings.Contains(outStr, "No backlight in") {
+		hasKbLight = false
+	}
+	if !hasKbLight {
+		s.Logf("Current checks in hwdep.KeyboardBacklight identified %s with backlight, but backlight_tool indicates otherwise", h.Model)
+	}
+
 	s.Log("Starting a new Chrome")
 	chromeService := pb.NewChromeServiceClient(h.RPCClient.Conn)
 	if _, err := chromeService.New(ctx, &pb.NewRequest{
