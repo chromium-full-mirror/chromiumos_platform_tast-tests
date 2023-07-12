@@ -17,13 +17,19 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
+
+	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/common"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/network/dumputil"
@@ -793,4 +799,79 @@ func (c *PolicyService) newChrome(ctx context.Context, opts ...chrome.Option) er
 	}
 	c.sharedObject.Chrome = cr
 	return nil
+}
+
+// SendRemoteCommand sends a remote command request to the fake_dmserver.
+func (c *PolicyService) SendRemoteCommand(ctx context.Context, req *ppb.SendRemoteCommandRequest) (*ppb.SendRemoteCommandResponse, error) {
+	testing.ContextLog(ctx, "Sending remote command request")
+
+	if c.fakeDMS == nil {
+		return nil, errors.New("fakedms is not started")
+	}
+
+	rcReq := &empb.SendRemoteCommandRequest{RemoteCommand: &empb.RemoteCommand{}}
+	if err := proto.Unmarshal(req.RemoteCommand, rcReq.RemoteCommand); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal the RemoteCommand proto")
+	}
+
+	resp, err := c.fakeDMS.SendRemoteCommand(ctx, rcReq)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to send the remote command request")
+	}
+
+	return &ppb.SendRemoteCommandResponse{CommandId: *resp.CommandId}, nil
+}
+
+// WaitRemoteCommandResult waits for the result of the command with the specified id.
+func (c *PolicyService) WaitRemoteCommandResult(ctx context.Context, req *ppb.WaitRemoteCommandResultRequest) (*ppb.WaitRemoteCommandResultResponse, error) {
+	testing.ContextLog(ctx, "Waiting for remote command result")
+
+	if c.fakeDMS == nil {
+		return nil, errors.New("fakedms is not started")
+	}
+
+	resp, err := c.fakeDMS.WaitRemoteCommandResult(ctx, &req.CommandId)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to wait for the remote command result")
+	}
+
+	result, err := proto.Marshal(resp.Result)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal the WaitRemoteCommandResult proto")
+	}
+
+	return &ppb.WaitRemoteCommandResultResponse{Result: result}, nil
+}
+
+// RefreshRemoteCommands triggers remote_command request on the fake_dmserver to fetch and execute all the pending command sent.
+func (c *PolicyService) RefreshRemoteCommands(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	tconn, err := c.sharedObject.Chrome.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	// Refresh remote commands.
+	if err := tconn.Eval(ctx, `tast.promisify(chrome.autotestPrivate.refreshRemoteCommands)();`, nil); err != nil {
+		return nil, errors.Wrap(err, "failed to refresh remote commands")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// FindAndClickRestartNowButton finds and clicks the Restart now button that shows up after triggering DEVICE_REBOOT remote command.
+func (c *PolicyService) FindAndClickRestartNowButton(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	tconn, err := c.sharedObject.Chrome.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	ui := uiauto.New(tconn)
+	restartButton := nodewith.Name("Restart now").Role(role.Button)
+	if err := ui.WaitUntilExists(restartButton)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to find restart now button")
+	}
+	// Clicking on the restart button will restart immediately and disconnect the DUT, so we should ignore the error.
+	ui.LeftClick(restartButton)(ctx)
+
+	return &empty.Empty{}, nil
 }

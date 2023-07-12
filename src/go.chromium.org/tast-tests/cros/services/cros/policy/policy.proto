@@ -67,6 +67,14 @@ service PolicyService {
   rpc Logout(google.protobuf.Empty)
       returns (google.protobuf.Empty) {}
 
+  rpc SendRemoteCommand(SendRemoteCommandRequest)
+      returns (SendRemoteCommandResponse) {}
+  rpc WaitRemoteCommandResult(WaitRemoteCommandResultRequest)
+      returns (WaitRemoteCommandResultResponse) {}
+  rpc RefreshRemoteCommands(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+  rpc FindAndClickRestartNowButton(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
 }
 
 message VerifyPolicyStatusRequest {
@@ -183,4 +191,17 @@ message DirectoryAPIIDResponse {
 message UnlockDeviceWithPasswordRequest{
   string username = 1;
   string password = 2;
+}
+
+message SendRemoteCommandRequest {
+  bytes remote_command = 1;
+}
+message SendRemoteCommandResponse {
+  int64 command_id = 1;
+}
+message WaitRemoteCommandResultRequest {
+  int64 command_id = 1;
+}
+message WaitRemoteCommandResultResponse {
+  bytes result = 1;
 }

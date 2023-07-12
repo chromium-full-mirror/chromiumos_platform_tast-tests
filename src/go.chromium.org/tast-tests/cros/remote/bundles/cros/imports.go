@@ -39,6 +39,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/policy"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/power"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/pvs"
+	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/remotecommands"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/rollback"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/secagentd"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/security"
