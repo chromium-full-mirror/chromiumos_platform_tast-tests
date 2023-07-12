@@ -136,13 +136,11 @@ func init() {
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
 		}, {
-			Name:      "audio_set_volume",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineAudioSetVolume),
-			ExtraAttr: []string{"informational"},
+			Name: "audio_set_volume",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineAudioSetVolume),
 		}, {
-			Name:      "audio_set_gain",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineAudioSetGain),
-			ExtraAttr: []string{"informational"},
+			Name: "audio_set_gain",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineAudioSetGain),
 		}, {
 			Name:              "bluetooth_power",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothPower),

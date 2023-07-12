@@ -143,16 +143,6 @@ func init() {
 			// TODO(b/279707249): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
-			Name: "audio_set_volume",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineAudioSetVolume),
-			// TODO(b/279670424): Promote to critical.
-			ExtraAttr: []string{"informational"},
-		}, {
-			Name: "audio_set_gain",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineAudioSetGain),
-			// TODO(b/279670424): Promote to critical.
-			ExtraAttr: []string{"informational"},
-		}, {
 			Name: "bluetooth_power",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothPower),
 			// TODO(b/280388009): Promote to critical.
