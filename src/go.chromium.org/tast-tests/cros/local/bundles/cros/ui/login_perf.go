@@ -322,7 +322,12 @@ func loginPerfStartToLoginScreen(
 	}
 	defer func() {
 		if retErr != nil {
-			cr.Close(ctx)
+			if cr == nil {
+				s.Log("loginPerfStartToLoginScreen: Chrome is unexpectedly nil, will not close")
+			} else {
+				cr.Close(ctx)
+				cr = nil
+			}
 		}
 	}()
 
@@ -637,7 +642,15 @@ func initializeLoginPerfTest(ctx context.Context,
 	if err != nil {
 		return chrome.Creds{}, errors.Wrap(err, "chrome login failed")
 	}
-	defer cr.Close(ctx)
+	defer func() {
+		// cr is not valid after logout.
+		if cr == nil {
+			testing.ContextLog(ctx, "initializeLoginPerfTest: Chrome is nil, will not close")
+		} else {
+			cr.Close(ctx)
+			cr = nil
+		}
+	}()
 
 	creds := cr.Creds()
 
@@ -705,6 +718,7 @@ func initializeLoginPerfTest(ctx context.Context,
 	if err := logout(ctx, cr, l); err != nil {
 		return creds, errors.Wrap(err, "failed to log out")
 	}
+	cr = nil
 	return creds, nil
 }
 
@@ -1022,7 +1036,15 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 					if err != nil {
 						return err
 					}
-					defer cr.Close(closeCtx)
+					defer func() {
+						// cr is not valid after logout.
+						if cr == nil {
+							s.Log("create windows: Chrome is nil, will not close")
+						} else {
+							cr.Close(closeCtx)
+							cr = nil
+						}
+					}()
 
 					l, _, err := loginPerfDoLogin(ctx, cr, creds, param.bt)
 					if err != nil {
@@ -1054,6 +1076,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 					if err := logout(ctx, cr, l); err != nil {
 						return errors.Wrap(err, "failed to log out")
 					}
+					cr = nil
 					return nil
 				}()
 				if err != nil {
@@ -1154,7 +1177,15 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 						localCloseCtx := ctx
 						ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 						defer cancel()
-						defer cr.Close(localCloseCtx)
+						defer func() {
+							// cr is not valid after logout.
+							if cr == nil {
+								s.Log("subtest cleanup: Chrome is nil, will not close")
+							} else {
+								cr.Close(localCloseCtx)
+								cr = nil
+							}
+						}()
 
 						if err := storeHistograms(
 							ctx,
@@ -1171,6 +1202,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 						if err := logout(ctx, cr, l); err != nil {
 							return errors.Wrap(err, "failed to log out")
 						}
+						cr = nil
 						return nil
 					}); err != nil {
 					s.Fatalf("Failed to run test scenario %s: %s", testName, err)
@@ -1189,7 +1221,15 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				var tpsValues map[perf.Metric][]float64
 
 				cr, l, tracingHistograms, tpsValues, err = testFunction(ctx, s, fmt.Sprintf("%s-tracing", testName), testConfig, true)
-				defer cr.Close(closeCtx)
+				defer func() {
+					// cr is not valid after logout.
+					if cr == nil {
+						s.Log("tracing cleanup: Chrome is nil, will not close")
+					} else {
+						cr.Close(closeCtx)
+						cr = nil
+					}
+				}()
 
 				if err != nil {
 					s.Logf("WARNING: Failed to run tracing for the test scenario %s-tracing: %s", testName, err)
@@ -1219,6 +1259,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				if err := logout(ctx, cr, l); err != nil {
 					s.Logf("WARNING: Failed to sign out from the tracing session %s-tracing: %v", testName, err)
 				}
+				cr = nil
 			}
 		}
 	}
