@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"math"
 	"math/rand"
+	"net"
 	"net/http"
 	"path/filepath"
 	"regexp"
@@ -54,6 +55,9 @@ const (
 
 	// MMPerInch is the conversion factor from inches to mm.
 	MMPerInch = 25.4
+
+	// USBSuffix is a suffix found on the name of USB printers.
+	USBSuffix = " (USB)"
 )
 
 // HardwareTestMode controls how the hardware tests are run.
@@ -67,6 +71,16 @@ const (
 	// combinations necessary to test each color mode, page size and resolution
 	// at least once. Combinations will be randomized each run.
 	HardwareTestRunRandomizedCombinations
+)
+
+// ScannerBackend specifies how the software connects to the scanner.
+type ScannerBackend int
+
+const (
+	// ScannerUSBBackend specifies the scanner is connected via USB.
+	ScannerUSBBackend ScannerBackend = iota
+	// ScannerNetworkBackend specifies the scanner is connected over the network.
+	ScannerNetworkBackend
 )
 
 // identifyOutputRegex parses out the width, height and colorspace from the
@@ -277,15 +291,40 @@ func verifyScannedImage(ctx context.Context, scan string, pageSize scanapp.PageS
 	return nil
 }
 
-// getScannerURI runs `lorgnette_cli list` and parses the output to find the URI
+// scannerURI runs `lorgnette_cli list` and parses the output to find the URI
 // for the scanner with `name`. The function prefers HTTPS URIs over HTTP.
-func getScannerURI(ctx context.Context, name string) (string, error) {
+// `backend` is used to determine which protocol to look for in the output of
+// `lorgnette_cli`.  For `ScannerUSBBackend` scanners this will return the
+// vendorID_productID value whereas for `ScannerNetworkBackend` scanners this
+// will return the HTTP URI.
+func scannerURI(ctx context.Context, name string, backend ScannerBackend) (string, error) {
 	out, err := testexec.CommandContext(ctx, "lorgnette_cli", "list").Output()
 	if err != nil {
 		return "", err
 	}
 
-	r, err := regexp.Compile(fmt.Sprintf(`^airscan:escl:%s:(?P<uri>.*/eSCL/)$`, regexp.QuoteMeta(name)))
+	var protocol string
+	switch backend {
+	case ScannerUSBBackend:
+		protocol = "ippusb"
+		// Scanner names (as shown in the UI) differ slightly from the scanner names
+		// that show up in the output of lorgnette_cli.  The former may have a
+		// '(USB)' suffix while the latter does not.  Trim the '(USB)' suffix so the
+		// name will match the output from lorgnette_cli and set the correct
+		// protocol for USB.
+		name = strings.TrimSuffix(name, USBSuffix)
+	case ScannerNetworkBackend:
+		protocol = "airscan"
+	default:
+		return "", errors.Errorf("Un-handled ScannerBackend: %d", backend)
+	}
+
+	// Create a regexp that will look for both USB and non-USB scanners.  USB
+	// scanners will look something like this:
+	// ippusb:escl:HP DeskJet 2600 series:03f0_0053/eSCL/
+	// while airscan scanners will look something like this:
+	// airscan:escl:Brother HL-L2395DW series:http://x.x.x.x:80/eSCL/
+	r, err := regexp.Compile(fmt.Sprintf(`^%s:escl:%s:(?P<uri>.*/eSCL/)$`, protocol, regexp.QuoteMeta(name)))
 	if err != nil {
 		return "", err
 	}
@@ -316,18 +355,42 @@ Loop:
 	return uri, nil
 }
 
-// getScannerStatus queries the ScannerStatus endpoint for the scanner with eSCL
-// URI `uri` and returns the scanner's status.
-func getScannerStatus(uri string) (string, error) {
-	// Deliberately ignore certificate errors because printers normally
-	// have self-signed certificates.
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				MinVersion:         tls.VersionTLS12,
-				InsecureSkipVerify: true,
+// scannerStatus queries the ScannerStatus endpoint for the scanner with eSCL
+// URI `uri` and returns the scanner's status.  `backend` is used to determine
+// how to query that endpoint.
+func scannerStatus(uri string, backend ScannerBackend) (string, error) {
+	var client *http.Client
+
+	switch backend {
+	case ScannerUSBBackend:
+		// For USB scanners we connect via the ippusb unix socket.  The URI will be
+		// something like this: vendorID_productID/eSCL/.  Grab the vendorID and
+		// productID and create the unix socket using the ippusb path.
+		id, restOfPath, _ := strings.Cut(uri, "/")
+		// The ippusb socket uses a dash instead of an underscore.
+		id = strings.Replace(id, "_", "-", -1)
+		var d net.Dialer
+		client = &http.Client{
+			Transport: &http.Transport{
+				DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+					return d.DialContext(ctx, "unix", fmt.Sprintf("/run/ippusb/%s.sock", id))
+				},
 			},
-		},
+		}
+		uri = fmt.Sprintf("http://localhost/%s", restOfPath)
+	case ScannerNetworkBackend:
+		// Deliberately ignore certificate errors because printers normally
+		// have self-signed certificates.
+		client = &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					MinVersion:         tls.VersionTLS12,
+					InsecureSkipVerify: true,
+				},
+			},
+		}
+	default:
+		return "", errors.Errorf("Un-handled ScannerBackend: %d", backend)
 	}
 
 	response, err := client.Get(uri + "ScannerStatus")
@@ -355,10 +418,11 @@ func getScannerStatus(uri string) (string, error) {
 }
 
 // ensureScannerIdle ensures that the scanner with the given URI `uri` reports
-// Idle as its status.
-func ensureScannerIdle(ctx context.Context, uri string) error {
+// Idle as its status.  `backend` is used to determine the protocol used to
+// connect to the scanner.
+func ensureScannerIdle(ctx context.Context, uri string, backend ScannerBackend) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		status, err := getScannerStatus(uri)
+		status, err := scannerStatus(uri, backend)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to get scanner status"))
 		}
@@ -538,13 +602,20 @@ func RunHardwareTests(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	uri, err := getScannerURI(ctx, scanner.ScannerName)
+	// USB scanners are handled slightly differently when getting the URI and
+	// checking for idle.  Figure out if this is a USB scanner.
+	backend := ScannerNetworkBackend
+	if strings.HasSuffix(scanner.ScannerName, USBSuffix) {
+		backend = ScannerUSBBackend
+	}
+
+	uri, err := scannerURI(ctx, scanner.ScannerName, backend)
 	if err != nil {
 		s.Fatal("Failed to get scanner URI: ", err)
 	}
 
 	// Make sure the scanner is idle so enumeration will succeed.
-	if err := ensureScannerIdle(ctx, uri); err != nil {
+	if err := ensureScannerIdle(ctx, uri, backend); err != nil {
 		s.Fatal("Scanner not idle: ", err)
 	}
 
@@ -563,7 +634,7 @@ func RunHardwareTests(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 	if err := app.SelectScanner(scanner.ScannerName)(ctx); err != nil {
 		s.Fatalf("Failed to select scanner: %s: %v", scanner.ScannerName, err)
 	}
-	// Sleep to allow the supported sources to load and stabilize.
+	// GoBigSleepLint: Sleep to allow the supported sources to load and stabilize.
 	// TODO(b/211712633): Once there is a way to verify the selection of a
 	// listbox, add that logic to app.SelectSource() and remove this sleep.
 	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
@@ -585,7 +656,8 @@ func RunHardwareTests(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 		if err := app.SelectSource(source.SourceType)(ctx); err != nil {
 			s.Fatalf("Failed to select source: %s: %v", source.SourceType, err)
 		}
-		// Sleep to allow the source-specific options to load and stabilize.
+		// GoBigSleepLint: Sleep to allow the source-specific options to load and
+		// stabilize.
 		// TODO(b/211712633): Once there is a way to verify the selecion of a
 		// listbox, add that logic to app.SelectColorMode(),
 		// app.SelectPageSize(), app.SelectResolution() and remove this sleep.
@@ -645,7 +717,7 @@ func RunHardwareTests(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 				s.Fatal("Failed to close notifications: ", err)
 			}
 
-			if err := ensureScannerIdle(ctx, uri); err != nil {
+			if err := ensureScannerIdle(ctx, uri, backend); err != nil {
 				s.Fatal("Scanner not idle: ", err)
 			}
 
