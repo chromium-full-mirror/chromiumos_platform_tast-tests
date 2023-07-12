@@ -5,6 +5,17 @@
 // This test is similar to MonitorUploadedCrashEvent. If you make any changes,
 // please also apply the same change to MonitorUploadedCrashEvent if it's
 // applicable.
+//
+// /var/log/messages will contain the following error message:
+//
+//     ERR crash_sender[6350]: dryrun:ERROR crash_sender:
+//     [crash_sender_base.cc(152)] Error writing out crash-sender-done file:
+//     /run/crash_reporter/crash-sender-done: Read-only file system (30)
+//
+// This is because cros_healthd does not mount /run/crash_reporter and thus
+// crash_sender won't be able to write to that directory. This is not a problem
+// for production because crash_sender only writes to /run/crash_reporter in the
+// mock mode to indicate its state.
 
 package health
 
