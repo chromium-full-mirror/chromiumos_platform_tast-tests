@@ -15,6 +15,9 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// Minimum visible value in scaled percentages.
+const minVisibleNonlinearPercent = 10.0
+
 func noKeyboardBrightness(ctx context.Context) bool {
 	_, stderr, err := testexec.CommandContext(ctx, "backlight_tool", "--keyboard", "--get_brightness").SeparatedOutput()
 	return err != nil && strings.HasPrefix(string(stderr), "No backlight in")
@@ -83,7 +86,7 @@ func SetKbBrightnessHoverALSLux(ctx context.Context, lux uint) (CleanupCallback,
 		return nil, nil
 	}
 
-	prevBrightness, err := keyboardBrightnessLevel(ctx)
+	prevBrightnessLevel, err := keyboardBrightnessLevel(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -93,14 +96,32 @@ func SetKbBrightnessHoverALSLux(ctx context.Context, lux uint) (CleanupCallback,
 		return nil, errors.Wrap(err, "unable to determine keyboard backlight level for the test")
 	}
 
-	testing.ContextLogf(ctx, "Setting keyboard backlight brightness to level %d (%d lux) from previous level %d", levelToSet, lux, prevBrightness)
-	if err := setBacklightBrightness(ctx, levelToSet); err != nil {
+	minVisibleLevel, err := nonlinearToLevel(ctx, minVisibleNonlinearPercent)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get the min visible level")
+	}
+	// For most boards, nonlinear/UI percentage is scaled linearly with the
+	// full range of keyboard backlight pwm, usually from min valid level(0) to
+	// max valid level(100). And usually levelToSet is >= minVisibleLevel.
+	// However, when only part of the pwm range is used on some boards, such
+	// as kohaku and nightfury, levelToSet ends up smaller than minVisibleLevel.
+	// KB backlight will be totally off. This doesn't align with user behavior.
+	// Set KB backlight to minVisiblelevel to at least reflect some reasonable
+	// power consumption. We are not implementing a more complex solution as
+	// kohaku and nightfury are the only boards with this issue.
+	if levelToSet < minVisibleLevel {
+		testing.ContextLog(ctx, "Set KB nonlinear percentage to be min visible level as the target level is too low")
+		levelToSet = minVisibleNonlinearPercent
+	}
+
+	testing.ContextLogf(ctx, "Setting keyboard backlight brightness to level %d (%d lux) from level %d", levelToSet, lux, prevBrightnessLevel)
+	if err := setKeyboardBrightnessLevel(ctx, levelToSet); err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) error {
-		testing.ContextLogf(ctx, "Restoring keyboard backlight brightness to level %d", prevBrightness)
-		return setKeyboardBrightnessLevel(ctx, prevBrightness)
+		testing.ContextLogf(ctx, "Restoring keyboard backlight brightness to level %d", prevBrightnessLevel)
+		return setKeyboardBrightnessLevel(ctx, prevBrightnessLevel)
 	}, nil
 }
 
@@ -128,7 +149,7 @@ func keyboardBrightnessHoverALSLux(ctx context.Context, lux uint) (uint, error) 
 		return 0, errors.Wrap(err, "unable to get default Keyboard brightness level")
 	}
 
-	level := defaultLevel
+	levelToSet := defaultLevel
 
 	hasALS, err := hasALS(ctx)
 	if err != nil {
@@ -141,14 +162,14 @@ func keyboardBrightnessHoverALSLux(ctx context.Context, lux uint) (uint, error) 
 	}
 
 	if hasALS && hasHover {
-		level = (30 * defaultLevel) / 100
+		levelToSet = (30 * defaultLevel) / 100
 	} else if hasALS {
-		level = (40 * defaultLevel) / 100
+		levelToSet = (40 * defaultLevel) / 100
 	} else if hasHover {
 		return 0, errors.New("device with hover but no light sensor shouldn't exist")
 	}
 
-	return level, nil
+	return levelToSet, nil
 }
 
 // defaultKBBrightness returns the keyboard backlight at a given lux level.
@@ -169,6 +190,23 @@ func defaultKBBrightness(ctx context.Context, lux uint) (uint, error) {
 	return uint(brightness), nil
 }
 
+func nonlinearToLevel(ctx context.Context, percent float64) (uint, error) {
+	kbArg := "--keyboard"
+	percentArg := fmt.Sprintf("--nonlinear_to_level=%f", percent)
+
+	output, err := testexec.CommandContext(ctx, "backlight_tool", kbArg, percentArg).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to convert nonlinear to nonlinear percentage")
+	}
+
+	level, err := strconv.ParseUint(strings.TrimSpace(string(output)), 10, 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "unable to parse current nonlinear percentage from %q", output)
+	}
+
+	return uint(level), nil
+}
+
 // hasHover checks if hover is detected on the device.
 func hasHover(ctx context.Context) (bool, error) {
 	_, err := testexec.CommandContext(ctx, "check_powerd_config", "--hover_detection").CombinedOutput()
@@ -177,7 +215,6 @@ func hasHover(ctx context.Context) (bool, error) {
 	if !ok {
 		return false, errors.New("failed to extract exit code from hover checking command")
 	}
-
 	if exitCode != 0 {
 		testing.ContextLog(ctx, "Checking hover(for KB brightness setting): not present")
 		return false, nil
@@ -195,7 +232,6 @@ func hasALS(ctx context.Context) (bool, error) {
 	if !ok {
 		return false, errors.New("failed to extract exit code from light sensor checking command")
 	}
-
 	if exitCode != 0 {
 		testing.ContextLog(ctx, "Checking ALS(for KB brightness setting): not present")
 		return false, nil
