@@ -14,6 +14,7 @@ import (
 
 	"chromiumos/policy/chromium/policy/enterprise_management_proto"
 	lm "chromiumos/system_api/login_manager_proto"
+
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/procutil"
@@ -115,12 +116,12 @@ func (m *SessionManager) EnableChromeTestingAndWait(ctx context.Context, forceRe
 	}
 
 	// Wait for the current Chrome to shut down first.
-	if err := procutil.WaitForTerminated(ctx, old, 10*time.Second); err != nil {
+	if err := procutil.WaitForTerminated(ctx, old, 20*time.Second); err != nil {
 		return "", errors.Wrap(err, "browser process didn't terminate")
 	}
 
 	// Wait for a new browser to appear.
-	if _, err := ashproc.WaitForRoot(ctx, 10*time.Second); err != nil {
+	if _, err := ashproc.WaitForRoot(ctx, 20*time.Second); err != nil {
 		return "", errors.Wrap(err, "chrome is not restarted")
 	}
 

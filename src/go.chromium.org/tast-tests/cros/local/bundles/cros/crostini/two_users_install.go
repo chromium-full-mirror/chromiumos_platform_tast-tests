@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	cui "go.chromium.org/tast-tests/cros/local/crostini/ui"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
@@ -63,8 +62,6 @@ func init() {
 }
 
 func TwoUsersInstall(ctx context.Context, s *testing.State) {
-	stopRecording := uiauto.RecordVNCVideo(ctx, s, uiauto.RecordingFramerate(5))
-	defer stopRecording()
 	// Login options for the first user.
 	optsUser1 := []chrome.Option{chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 		chrome.ExtraArgs("--vmodule=crostini*=1"),
