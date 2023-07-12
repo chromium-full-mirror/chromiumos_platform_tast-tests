@@ -8,6 +8,8 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -79,6 +81,21 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Requiring config: ", err)
 	}
+
+	// Upload firmware log to Testhaus at the end of the test.
+	defer func() {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to ensure DUT booted: ", err)
+		}
+		output, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
+		if err != nil {
+			s.Fatal("Failed to read firmware log: ", err)
+		}
+		destPath := filepath.Join(s.OutDir(), "firmware.log")
+		if err := ioutil.WriteFile(destPath, []byte(output), 0666); err != nil {
+			s.Fatal("Failed to write firmware log: ", err)
+		}
+	}()
 
 	for _, tc := range []struct {
 		caseName          testCase

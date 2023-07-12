@@ -61,8 +61,11 @@ func DetachableUntrustedKeyboard(ctx context.Context, s *testing.State) {
 		s.Fatal("Requiring config: ", err)
 	}
 
-	// Save the firmware log file for upload to Stainless at the end of the test.
+	// Upload firmware log to Testhaus at the end of the test.
 	defer func() {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to ensure DUT booted: ", err)
+		}
 		output, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
 		if err != nil {
 			s.Fatal("Failed to read firmware log: ", err)
@@ -108,7 +111,7 @@ func DetachableUntrustedKeyboard(ctx context.Context, s *testing.State) {
 
 		if err := func() error {
 			s.Log("Waiting for DUT to boot")
-			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 8*time.Minute)
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 			defer cancelWaitConnect()
 			if err := h.WaitConnect(waitConnectCtx); err != nil {
 				return err

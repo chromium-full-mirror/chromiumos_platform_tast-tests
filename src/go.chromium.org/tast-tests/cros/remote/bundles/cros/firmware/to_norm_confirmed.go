@@ -62,8 +62,10 @@ func ToNormConfirmed(ctx context.Context, s *testing.State) {
 
 	// Upload firmware log to Testhaus at the end of the test.
 	defer func() {
-		logPath := "/sys/firmware/log"
-		output, err := h.Reporter.CatFile(ctx, logPath)
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to ensure DUT booted: ", err)
+		}
+		output, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
 		if err != nil {
 			s.Fatal("Failed to read firmware log: ", err)
 		}
