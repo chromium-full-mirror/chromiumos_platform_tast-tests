@@ -199,7 +199,26 @@ func videoTrackResolution(path string) (*cca.Resolution, error) {
 	return nil, errors.Errorf("no video track found in the file %v", path)
 }
 
-func clickOptionAndWaitConfiguration(ctx context.Context, app *cca.App, optionUIName cca.UIComponentName, index int) error {
+// selectOptionAndWaitConfiguration selects the |optionUIName| and waits for the
+// camera to be configured. To select the option, we need to open the |menu|
+// first and let the menu close either automatically (after choosing the option)
+// or manually close it if the option is already checked.
+func selectOptionAndWaitConfiguration(ctx context.Context, app *cca.App, subMenu cca.SettingMenu, optionUIName cca.UIComponentName, index int) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
+	defer cancel()
+
+	// Opens the setting menu.
+	if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
+		return err
+	}
+	defer app.CloseSettingMenuIfVisible(cleanupCtx, cca.MainMenu)
+	if err := app.OpenSettingMenu(ctx, subMenu); err != nil {
+		return err
+	}
+	defer app.CloseSettingMenuIfVisible(cleanupCtx, subMenu)
+
+	// Clicks options and wait for camera configuration.
 	testing.ContextLogf(ctx, "Switch to #%v of %v", index, optionUIName)
 	checked, err := app.IsCheckedWithIndex(ctx, optionUIName, index)
 	if err != nil {
@@ -260,20 +279,6 @@ func testPhotoResolutionAndAspectRatio(ctx context.Context, app *cca.App) error 
 			return errors.Wrap(err, "failed to switch to photo mode")
 		}
 
-		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-		defer cancel()
-
-		if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
-			return err
-		}
-		defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
-
-		if err := app.OpenSettingMenu(ctx, cca.PhotoAspectRatioMenu); err != nil {
-			return err
-		}
-		defer app.CloseSettingMenu(cleanupCtx, cca.PhotoAspectRatioMenu)
-
 		aspectRatioOptions := cca.FrontAspectRatioOptions
 		if facing == cca.FacingBack {
 			aspectRatioOptions = cca.BackAspectRatioOptions
@@ -290,7 +295,7 @@ func testPhotoResolutionAndAspectRatio(ctx context.Context, app *cca.App) error 
 		// Checks that when changing the aspect ratio preference of current
 		// running camera, the camera stream will be reconfigured.
 		for index := 0; index < numOptions; index++ {
-			if err := clickOptionAndWaitConfiguration(ctx, app, aspectRatioOptions, index); err != nil {
+			if err := selectOptionAndWaitConfiguration(ctx, app, cca.PhotoAspectRatioMenu, aspectRatioOptions, index); err != nil {
 				return errors.Wrap(err, "failed to click the aspect ratio option and wait for the configration done")
 			}
 
@@ -338,20 +343,6 @@ func checkResolutionAspectRatio(ctx context.Context, resolution *cca.Resolution,
 
 // clickThroughAllPhotoResolutionOptions tries out all the photo resolution options under current aspect ratio and ensures the configuration works successfully.
 func clickThroughAllPhotoResolutionOptions(ctx context.Context, app *cca.App, facing cca.Facing, checkAspectRatio bool, aspectRatio float64) error {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
-	if err := app.CloseSettingMenu(ctx, cca.PhotoAspectRatioMenu); err != nil {
-		return errors.Wrap(err, "failed to close the aspect ratio settings page")
-	}
-	defer app.OpenSettingMenu(cleanupCtx, cca.PhotoAspectRatioMenu)
-
-	if err := app.OpenSettingMenu(ctx, cca.PhotoResolutionMenu); err != nil {
-		return err
-	}
-	defer app.CloseSettingMenu(cleanupCtx, cca.PhotoResolutionMenu)
-
 	photoResolutionOptions := cca.FrontPhotoResolutionOptions
 	if facing == cca.FacingBack {
 		photoResolutionOptions = cca.BackPhotoResolutionOptions
@@ -363,7 +354,7 @@ func clickThroughAllPhotoResolutionOptions(ctx context.Context, app *cca.App, fa
 	}
 
 	for index := 0; index < numOptions; index++ {
-		if err := clickOptionAndWaitConfiguration(ctx, app, photoResolutionOptions, index); err != nil {
+		if err := selectOptionAndWaitConfiguration(ctx, app, cca.PhotoResolutionMenu, photoResolutionOptions, index); err != nil {
 			return errors.Wrap(err, "failed to click the aspect ratio option and wait for the configration done")
 		}
 
@@ -406,20 +397,6 @@ func testVideoResolutionAndFPS(ctx context.Context, app *cca.App) error {
 			return errors.Wrap(err, "failed to switch to video mode")
 		}
 
-		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-		defer cancel()
-
-		if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
-			return err
-		}
-		defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
-
-		if err := app.OpenSettingMenu(ctx, cca.VideoResolutionMenu); err != nil {
-			return err
-		}
-		defer app.CloseSettingMenu(cleanupCtx, cca.VideoResolutionMenu)
-
 		videoResolutionOptions := cca.FrontVideoResolutionOptions
 		if facing == cca.FacingBack {
 			videoResolutionOptions = cca.BackVideoResolutionOptions
@@ -430,7 +407,7 @@ func testVideoResolutionAndFPS(ctx context.Context, app *cca.App) error {
 		}
 
 		for index := 0; index < numOptions; index++ {
-			if err := clickOptionAndWaitConfiguration(ctx, app, videoResolutionOptions, index); err != nil {
+			if err := selectOptionAndWaitConfiguration(ctx, app, cca.VideoResolutionMenu, videoResolutionOptions, index); err != nil {
 				return errors.Wrap(err, "failed to click the aspect ratio option and wait for the configration done")
 			}
 

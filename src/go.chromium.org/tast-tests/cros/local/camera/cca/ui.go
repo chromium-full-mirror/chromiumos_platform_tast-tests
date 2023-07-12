@@ -406,6 +406,16 @@ func (a *App) CloseSettingMenu(ctx context.Context, menu SettingMenu) error {
 	return a.WaitForSettingMenuState(ctx, menu, false)
 }
 
+// CloseSettingMenuIfVisible closes the setting menu if it is opened and visible.
+func (a *App) CloseSettingMenuIfVisible(ctx context.Context, menu SettingMenu) error {
+	if visible, err := a.Visible(ctx, SettingsHeader); err != nil {
+		return errors.Wrap(err, "failed to detect if the setting menu is opened")
+	} else if visible {
+		return a.CloseSettingMenu(ctx, menu)
+	}
+	return nil
+}
+
 // OptionChecked returns the checked state of the state associated to |option|.
 func (a *App) OptionChecked(ctx context.Context, option Option) (bool, error) {
 	var result bool
