@@ -6,6 +6,7 @@ package assistant
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -68,8 +69,11 @@ func SetTimer(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating test API connection failed: ", err)
 	}
 
-	s.Log("Set a timer for three seconds")
-	queryStatus, err := assistant.SendTextQuery(ctx, tconn, "Set a timer for 3 seconds")
+	const duration = 10
+	queryString := fmt.Sprintf("Set a timer for %v seconds", duration)
+
+	s.Log(queryString)
+	queryStatus, err := assistant.SendTextQuery(ctx, tconn, queryString)
 	if err != nil {
 		s.Fatal("Failed to set a timer: ", err)
 	}
