@@ -70,7 +70,7 @@ func TestCases() []policyannotations.AnnotationTestParams {
 }
 
 // TriggerAndVerifyUkmApp - trigger and verify appearance of log in chrome://ukm.
-func TriggerAndVerifyUkmApp(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, _ *chrome.TestConn, paramIndex int) error {
+func TriggerAndVerifyUkmApp(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, _ *chrome.TestConn, paramIndex int) error {
 	tc := TestCases()[paramIndex]
 	ukmAppConn, err := navigateToPageAndLogElement(ctx, br,
 		"chrome://ukm", `document.getElementsByClassName("ukm-collection-status")[0]`)

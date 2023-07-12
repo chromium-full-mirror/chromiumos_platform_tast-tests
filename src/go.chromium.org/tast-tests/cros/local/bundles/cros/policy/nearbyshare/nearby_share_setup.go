@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // TestCase defines test expectations based on the value of policy
@@ -49,7 +48,7 @@ func GetTestCases() []TestCase {
 
 // VerifyNearbySharePermissions opens the 'Connected devices' page in OS
 // Settings and verifies that Nearby Share is disabled based on policy value.
-func VerifyNearbySharePermissions(ctx context.Context, _ *testing.State, cr *chrome.Chrome, _ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+func VerifyNearbySharePermissions(ctx context.Context, cr *chrome.Chrome, _ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
 	param := GetTestCases()[paramIndex]
 
 	const (

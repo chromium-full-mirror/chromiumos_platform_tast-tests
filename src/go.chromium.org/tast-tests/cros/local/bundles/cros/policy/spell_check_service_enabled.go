@@ -98,7 +98,7 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := spellcheck.TriggerSpellCheck(ctx, s, cr, br, server, tconn, index); err != nil {
+			if err := spellcheck.TriggerSpellCheck(ctx, cr, br, server, tconn, index); err != nil {
 				s.Fatal("Failed to trigger and verify spellcheck: ", err)
 			}
 

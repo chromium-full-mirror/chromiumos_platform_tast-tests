@@ -103,7 +103,7 @@ func QuickAnswersDefinitionEnabled(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			if err := policyquickanswers.TriggerQuickAnswersDefinition(ctx, s, cr, br, server, tconn, index); err != nil {
+			if err := policyquickanswers.TriggerQuickAnswersDefinition(ctx, cr, br, server, tconn, index); err != nil {
 				s.Fatal("Failed to trigger and verify quick answers definition: ", err)
 			}
 

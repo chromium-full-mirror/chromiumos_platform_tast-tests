@@ -91,7 +91,7 @@ func init() {
 	})
 }
 
-type triggerOptionalService func(ctx context.Context, s *testing.State, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) error
+type triggerOptionalService func(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) error
 
 type optionalService struct {
 	// name of the optional service.
@@ -101,7 +101,7 @@ type optionalService struct {
 	// policies associated with this service. Those policies will be set to the
 	// specified value before triggering the optional services.
 	policies []policy.Policy
-	// The function which triggers the optiona service.
+	// The function which triggers the optional service.
 	trigger triggerOptionalService
 	// Data files required to be copied to the dut before triggering the service.
 	dataFiles []string
@@ -347,7 +347,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	// Trigger the optional services one by one.
 	for _, service := range optionalServices() {
 		s.Run(ctx, service.name, func(ctx context.Context, s *testing.State) {
-			if err := service.trigger(ctx, s, cr, br, server, tconn, 0); err != nil {
+			if err := service.trigger(ctx, cr, br, server, tconn, 0); err != nil {
 				s.Fatalf("Failed to trigger %v: %v", service.name, err)
 			}
 			if service.delayedAnnotation {

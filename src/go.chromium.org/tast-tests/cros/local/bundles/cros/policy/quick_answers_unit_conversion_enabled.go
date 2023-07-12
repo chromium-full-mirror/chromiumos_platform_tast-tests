@@ -102,7 +102,7 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := policyquickanswers.TriggerQuickAnswersUnitConversion(ctx, s, cr, br, server, tconn, index); err != nil {
+			if err := policyquickanswers.TriggerQuickAnswersUnitConversion(ctx, cr, br, server, tconn, index); err != nil {
 				s.Fatal("Failed to trigger and verify quick answers unit conversion: ", err)
 			}
 

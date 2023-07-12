@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // UploadAnnotationHashCode is the hashcode of network annotation
@@ -67,7 +66,7 @@ func GetTestCases() []testCase {
 
 // TriggerUploadForScanning downloads a suspicious file and then uploads it for
 // scanning.
-func TriggerUploadForScanning(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+func TriggerUploadForScanning(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
 	// Open the browser and download the test suspicious file from the local file
 	// server.
 	conn, err := br.NewConn(ctx, "")

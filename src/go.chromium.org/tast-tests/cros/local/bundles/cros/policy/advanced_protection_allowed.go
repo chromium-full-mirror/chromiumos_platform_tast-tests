@@ -102,7 +102,7 @@ func AdvancedProtectionAllowed(ctx context.Context, s *testing.State) {
 			// Trigger file upload for scanning. This should trigger the
 			// safe_browsing_binary_upload_app annotation, if Advanced Protection is
 			// enabled.
-			if err := advancedprotection.TriggerUploadForScanning(ctx, nil, nil, br, server, tconn, index); err != nil {
+			if err := advancedprotection.TriggerUploadForScanning(ctx, nil, br, server, tconn, index); err != nil {
 				s.Fatal("Failed to trigger upload for scanning: ", err)
 			}
 

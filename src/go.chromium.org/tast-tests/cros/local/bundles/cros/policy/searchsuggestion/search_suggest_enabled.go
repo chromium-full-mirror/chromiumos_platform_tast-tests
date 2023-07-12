@@ -61,7 +61,7 @@ func GetTestCases() []TestCase {
 }
 
 // TriggerSearchSuggestion verifies suggestions are not shown when policy is off.
-func TriggerSearchSuggestion(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+func TriggerSearchSuggestion(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
 	param := GetTestCases()[paramIndex]
 
 	// Open a keyboard device.

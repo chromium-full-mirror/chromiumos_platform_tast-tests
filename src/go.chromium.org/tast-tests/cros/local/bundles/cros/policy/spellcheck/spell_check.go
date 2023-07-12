@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // AnnotationHashCode is the hashcode of network annotation tag
@@ -83,7 +82,7 @@ func GetDataFiles() []string {
 }
 
 // TriggerSpellCheck attempts to trigger spellcheck and verifies if the policy works as defined in the TestCase param.
-func TriggerSpellCheck(ctx context.Context, _ *testing.State, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+func TriggerSpellCheck(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
 	param := GetTestCases()[paramIndex]
 
 	// Inside ChromeOS settings, check that the button is restricted and set to the correct value.

@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/crd"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -66,7 +65,7 @@ func TestCases() []testCase {
 
 // TriggerRemoteSupportRegistration verifies that launching chrome remote
 // desktop works as expected.
-func TriggerRemoteSupportRegistration(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+func TriggerRemoteSupportRegistration(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
 	param := TestCases()[paramIndex]
 
 	didCRDLaunchSucceed := true

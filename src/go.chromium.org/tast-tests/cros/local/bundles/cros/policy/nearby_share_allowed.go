@@ -74,7 +74,7 @@ func NearbyShareAllowed(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			if err := nearbyshare.VerifyNearbySharePermissions(ctx, s, cr, nil, nil, tconn, index); err != nil {
+			if err := nearbyshare.VerifyNearbySharePermissions(ctx, cr, nil, nil, tconn, index); err != nil {
 				s.Fatal("Failed to verify Nearby Share permissions: ", err)
 			}
 		})

@@ -147,7 +147,7 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			if err := remotedesktop.TriggerRemoteSupportRegistration(ctx, nil, nil, br, nil, tconn, index); err != nil {
+			if err := remotedesktop.TriggerRemoteSupportRegistration(ctx, nil, br, nil, tconn, index); err != nil {
 				s.Fatal("Failure during CRD launch: ", err)
 			}
 

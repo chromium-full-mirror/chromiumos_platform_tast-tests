@@ -103,7 +103,7 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			if err := userfeedback.TriggerUserFeedback(ctx, s, cr, br, nil, tconn, index); err != nil {
+			if err := userfeedback.TriggerUserFeedback(ctx, cr, br, nil, tconn, index); err != nil {
 				s.Fatal("Failed to trigger user feedback: ", err)
 			}
 

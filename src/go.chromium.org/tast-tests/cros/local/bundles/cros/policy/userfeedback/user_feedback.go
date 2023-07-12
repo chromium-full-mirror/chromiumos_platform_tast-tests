@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // TestCase defines test expectations based on the policy value.
@@ -64,7 +63,7 @@ func GetTestCases() []TestCase {
 
 // TriggerUserFeedback verifies feedback app doesnt send reports when policy is
 // off.
-func TriggerUserFeedback(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+func TriggerUserFeedback(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
 	param := GetTestCases()[paramIndex]
 
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)

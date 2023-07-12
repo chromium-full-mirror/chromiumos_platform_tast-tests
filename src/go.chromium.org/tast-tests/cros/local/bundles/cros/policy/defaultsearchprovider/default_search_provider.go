@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // TestCase defines test expectations based on the policy value.
@@ -71,7 +70,7 @@ const (
 )
 
 // TriggerDefaultSearchProvider verifies the default search provider policy.
-func TriggerDefaultSearchProvider(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+func TriggerDefaultSearchProvider(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
 	param := GetTestCases()[paramIndex]
 
 	addressBarNode := browserui.AddressBarFinder

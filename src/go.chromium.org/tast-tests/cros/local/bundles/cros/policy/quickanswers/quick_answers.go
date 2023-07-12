@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -112,7 +111,7 @@ func GetDataFiles() []string {
 }
 
 // TriggerQuickAnswersDefinition attempts to trigger quick answers definition and checks if the policy works as defined in the DefinitionTestCase param.
-func TriggerQuickAnswersDefinition(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+func TriggerQuickAnswersDefinition(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
 	param := GetDefinitionTestCases()[paramIndex]
 
 	// Open page with the query word on it.
@@ -169,7 +168,7 @@ func TriggerQuickAnswersDefinition(ctx context.Context, _ *testing.State, _ *chr
 }
 
 // TriggerQuickAnswersUnitConversion attempts to trigger quick answers unit conversion and checks if the policy works as defined in the UnitConversionTestCase param.
-func TriggerQuickAnswersUnitConversion(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+func TriggerQuickAnswersUnitConversion(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
 	param := GetUnitConversionTestCases()[paramIndex]
 
 	// Open page with source units on it.

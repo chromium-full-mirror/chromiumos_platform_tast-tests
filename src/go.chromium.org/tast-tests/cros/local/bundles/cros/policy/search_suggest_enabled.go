@@ -92,7 +92,7 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := searchsuggestion.TriggerSearchSuggestion(ctx, s, cr, br, nil, tconn, index); err != nil {
+			if err := searchsuggestion.TriggerSearchSuggestion(ctx, cr, br, nil, tconn, index); err != nil {
 				s.Fatal("Failed to trigger search suggestion: ", err)
 			}
 

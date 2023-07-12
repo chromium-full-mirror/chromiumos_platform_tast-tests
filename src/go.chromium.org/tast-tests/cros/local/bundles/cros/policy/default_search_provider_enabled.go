@@ -88,7 +88,7 @@ func DefaultSearchProviderEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := defaultsearchprovider.TriggerDefaultSearchProvider(ctx, s, cr, br, nil, tconn, index); err != nil {
+			if err := defaultsearchprovider.TriggerDefaultSearchProvider(ctx, cr, br, nil, tconn, index); err != nil {
 				s.Fatal("Failed to trigger default search provider: ", err)
 			}
 

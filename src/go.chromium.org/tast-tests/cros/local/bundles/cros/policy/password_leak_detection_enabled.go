@@ -101,7 +101,7 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := passwordleakdetection.TriggerPasswordLeakDetection(ctx, s, cr, br, server, nil, 0); err != nil {
+			if err := passwordleakdetection.TriggerPasswordLeakDetection(ctx, cr, br, server, nil, 0); err != nil {
 				s.Fatal("Failed to trigger password leak detection: ", err)
 			}
 

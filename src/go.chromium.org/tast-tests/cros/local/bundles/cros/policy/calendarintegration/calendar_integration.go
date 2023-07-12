@@ -68,7 +68,7 @@ func GetTestCases() []TestCase {
 // TriggerCalendarIntegration verifies calendar integration process works as
 // expected. i.e. the existence of the managed icon and event list view
 // depending on the policy value.
-func TriggerCalendarIntegration(ctx context.Context, s *testing.State, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+func TriggerCalendarIntegration(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
 	param := GetTestCases()[paramIndex]
 
 	ui := uiauto.New(tconn)
@@ -140,7 +140,7 @@ func TriggerCalendarIntegration(ctx context.Context, s *testing.State, _ *chrome
 	eventCloseButtonViewContainer := nodewith.HasClass("View").Ancestor(eventListView).Nth(0)
 	eventCloseButtonView := nodewith.HasClass("IconButton").Ancestor(eventCloseButtonViewContainer).Nth(0)
 	for i := 0; i < findCellTimes; i++ {
-		s.Logf("Moving towards the first Monday cell (iteration %d of %d)", i+1, findCellTimes)
+		testing.ContextLogf(ctx, "Moving towards the first Monday cell (iteration %d of %d)", i+1, findCellTimes)
 		cellPositionY += 5
 		firstMondayDateCellPt := coords.NewPoint(firstMondayDateCellBounds.CenterX(), scrollViewBounds.Top+cellPositionY)
 		if err := mouse.Click(tconn, firstMondayDateCellPt, mouse.LeftButton)(ctx); err != nil {

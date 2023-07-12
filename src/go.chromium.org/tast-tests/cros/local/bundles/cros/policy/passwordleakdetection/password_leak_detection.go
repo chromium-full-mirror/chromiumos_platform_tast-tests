@@ -73,7 +73,7 @@ func GetDataFiles() []string {
 //
 // We currently use option #2 for this test as it only requires running some JS
 // on a test webpage we control.
-func TriggerPasswordLeakDetection(ctx context.Context, _ *testing.State, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, _ *chrome.TestConn, _ int) (err error) {
+func TriggerPasswordLeakDetection(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, _ *chrome.TestConn, _ int) (err error) {
 	// Open a webpage that will trigger password leak detection, when enabled.
 	conn, err := br.NewConn(ctx, server.URL+"/"+testFileName)
 	if err != nil {

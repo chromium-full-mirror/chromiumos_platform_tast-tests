@@ -93,7 +93,7 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			if err := calendarintegration.TriggerCalendarIntegration(ctx, s, cr, br, nil, tconn, index); err != nil {
+			if err := calendarintegration.TriggerCalendarIntegration(ctx, cr, br, nil, tconn, index); err != nil {
 				s.Fatal("Failed to trigger and verify calendar integration: ", err)
 			}
 
