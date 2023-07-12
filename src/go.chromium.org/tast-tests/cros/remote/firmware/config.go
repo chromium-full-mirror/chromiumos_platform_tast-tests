@@ -72,22 +72,23 @@ const defaultName = "DEFAULTS"
 // Config contains platform-specific attributes.
 // Fields are documented in autotest/server/cros/faft/configs/DEFAULTS.json.
 type Config struct {
-	Platform              string            `json:"platform"`
-	Parent                string            `json:"parent"`
-	ECCapability          []ECCapability    `json:"ec_capability"`
-	ModeSwitcherType      ModeSwitcherType  `json:"mode_switcher_type"`
-	IsDetachable          bool              `json:"is_detachable"`
-	ChromeEC              bool              `json:"chrome_ec"`
-	PowerButtonDevSwitch  bool              `json:"power_button_dev_switch"`
-	RecButtonDevSwitch    bool              `json:"rec_button_dev_switch"`
-	Hibernate             bool              `json:"hibernate"`
-	HasKeyboard           bool              `json:"has_keyboard"`
-	RawUSBEnablePins      []json.RawMessage `json:"custom_usb_enable_pins"`
-	USBAPortCount         *int              `json:"usb_a_port_count"`
-	SMMStore              bool              `json:"smm_store"`
-	GSCCanWakeECWithReset bool              `json:"gsc_can_wake_ec_with_reset"`
-	LidWakeFromPowerOff   bool              `json:"lid_wake_from_power_off"`
-	RecForceMRC           bool              `json:"rec_force_mrc"`
+	Platform                             string            `json:"platform"`
+	Parent                               string            `json:"parent"`
+	ECCapability                         []ECCapability    `json:"ec_capability"`
+	ModeSwitcherType                     ModeSwitcherType  `json:"mode_switcher_type"`
+	IsDetachable                         bool              `json:"is_detachable"`
+	ChromeEC                             bool              `json:"chrome_ec"`
+	PowerButtonDevSwitch                 bool              `json:"power_button_dev_switch"`
+	RecButtonDevSwitch                   bool              `json:"rec_button_dev_switch"`
+	Hibernate                            bool              `json:"hibernate"`
+	HasKeyboard                          bool              `json:"has_keyboard"`
+	RawUSBEnablePins                     []json.RawMessage `json:"custom_usb_enable_pins"`
+	USBAPortCount                        *int              `json:"usb_a_port_count"`
+	SMMStore                             bool              `json:"smm_store"`
+	GSCCanWakeECWithReset                bool              `json:"gsc_can_wake_ec_with_reset"`
+	LidWakeFromPowerOff                  bool              `json:"lid_wake_from_power_off"`
+	RecForceMRC                          bool              `json:"rec_force_mrc"`
+	BrokenFirmwareScreenRequiresRecovery bool              `json:"broken_firmware_screen_requires_recovery"`
 
 	// Raw duration fields represent a quantity of seconds.
 	// They are used during NewConfig to populate actual duration fields, which are defined below.

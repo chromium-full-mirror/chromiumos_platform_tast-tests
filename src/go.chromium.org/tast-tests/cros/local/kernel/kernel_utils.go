@@ -139,9 +139,9 @@ func readKernelConfigBytes(ctx context.Context) ([]byte, error) {
 
 // GetCgptTable returns structure containing metadata with CGPT partitions.
 func GetCgptTable(ctx context.Context, rootDevWithoutPart string) (map[string]*pb.CgptPartition, error) {
-	cgptOut, err := testexec.CommandContext(ctx, "cgpt", "show", rootDevWithoutPart).Output(testexec.DumpLogOnError)
+	cgptOut, err := testexec.CommandContext(ctx, "cgpt", "show", rootDevWithoutPart).CombinedOutput(testexec.DumpLogOnError)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to retrieve cgpt table")
+		return nil, errors.Wrapf(err, "failed to retrieve cgpt table, got output: %v", string(cgptOut))
 	}
 
 	cgptOutLines := strings.Split(string(cgptOut), "\n")
@@ -265,7 +265,14 @@ func BackupPartition(ctx context.Context, rootDevWithoutPart, label string) (*pb
 		return nil, "", errors.Wrap(err, "failed to save partition to file")
 	}
 
-	testing.ContextLogf(ctx, "Partition %q saved from %q to %q, size %v", label, table.PartitionPath, backupPath.Name(), table.Size)
+	// This is valuable to log in situations where the backups are saved on a different device (eg. a USB).
+	var currRootDev string
+	currRootDev, err = GetCurrentRootDevice(ctx, true)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get current root device while backing up partition")
+	}
+
+	testing.ContextLogf(ctx, "Partition %q saved from %q to %q on device %q, size %v", label, table.PartitionPath, backupPath.Name(), currRootDev, table.Size)
 	return table, backupPath.Name(), nil
 }
 

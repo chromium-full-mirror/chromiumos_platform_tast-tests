@@ -938,6 +938,97 @@ func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context, opts ...ModeSw
 	return nil
 }
 
+// WarmResetToRecovery boots to USB from recovery mode.
+// Include opts CopyTastFiles if grpc services are needed after booting to usb,
+// SkipModeCheckAfterReboot to skip verifying DUT is in recovery mode after boot,
+// SkipWaitConnect to skip waiting for ssh connection to DUT (this will also skip mode check).
+func (ms *ModeSwitcher) WarmResetToRecovery(ctx context.Context, forceRecovery bool, opts ...ModeSwitchOption) (errReturn error) {
+	h := ms.Helper
+	if err := h.RequireServo(ctx); err != nil {
+		return errors.Wrap(err, "requiring servo")
+	}
+	if err := h.RequireConfig(ctx); err != nil {
+		return errors.Wrap(err, "requiring config")
+	}
+
+	if !h.DoesServerHaveTastHostFiles() && msOptsContain(opts, CopyTastFiles) {
+		if err := h.CopyTastFilesFromDUT(ctx); err != nil {
+			return errors.Wrap(err, "copying Tast files from DUT to test server")
+		}
+	}
+
+	defer func() {
+		// Send Tast files back to DUT.
+		if errReturn == nil && msOptsContain(opts, CopyTastFiles) {
+			if err := h.SyncTastFilesToDUT(ctx); err != nil {
+				errReturn = errors.Wrap(err, "syncing Tast files to usb")
+				return
+			}
+			h.dutUsbHasTastFiles = true
+		}
+	}()
+
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+		return errors.Wrap(err, "disabling usb")
+	}
+	h.DisconnectDUT(ctx)
+
+	if !forceRecovery {
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+			return errors.Wrap(err, "setting power state to warm reset")
+		}
+
+		testing.ContextLogf(ctx, "Sleeping for %s waiting for no good screen", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Need to wait for firmware screen, there's nothing to poll for to see if it's there yet.
+		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+			return errors.Wrap(err, "waiting for firmware screen")
+		}
+	}
+
+	// Some older models will automatically boot from USB when inserted at the no good screen.
+	// For newer models, we need to go to recovery mode then insert usb to boot from it.
+	// On the older models, this process will result in the recovery reason being set to 2 (RO_MANUAL),
+	// in newer models rec reason will be preserved.
+	// forceRecovery flag forces this anyway at the cost of potentially losing the expected recovery reason in crossystem.
+	if forceRecovery || h.Config.BrokenFirmwareScreenRequiresRecovery {
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
+			return errors.Wrap(err, "going to rec mode")
+		}
+
+		testing.ContextLogf(ctx, "Sleeping for %s waiting for firmware screen", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Need to wait for firmware screen, there's nothing to poll for to see if it's there yet.
+		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+			return errors.Wrap(err, "waiting for firmware screen")
+		}
+	}
+
+	testing.ContextLog(ctx, "Setting usb mux to DUT")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+		return errors.Wrap(err, "setting usb to dut")
+	}
+
+	if !msOptsContain(opts, SkipWaitConnect) {
+		testing.ContextLog(ctx, "Reconnect to DUT")
+		connectCtx, cancel := context.WithTimeout(ctx, h.Config.USBImageBootTimeout)
+		defer cancel()
+		testing.ContextLogf(ctx, "Waiting upto %s for DUT to boot from usb", h.Config.USBImageBootTimeout)
+		if err := h.WaitConnect(connectCtx); err != nil {
+			return errors.Wrap(err, "failed to reconnect to DUT after booting to recovery mode")
+		}
+
+		if !forceRecovery {
+			testing.ContextLog(ctx, "Verifying boot mode is recovery")
+			if curr, err := h.Reporter.CurrentBootMode(ctx); err != nil {
+				return errors.Wrap(err, "checking boot mode after recovery boot")
+			} else if curr != fwCommon.BootModeRecovery && !msOptsContain(opts, SkipModeCheckAfterReboot) {
+				return errors.Errorf("incorrect boot mode after recovery boot got %s; want %s", curr, fwCommon.BootModeRecovery)
+			}
+		}
+	}
+
+	return nil
+}
+
 // EnableRecMode powers the DUT into the "rec" state, but does not wait to reconnect to the DUT.
 // If booting into rec mode, usbMux should point to the DUT, so that the DUT can finish booting into recovery mode.
 // Otherwise, usbMux should be off. This will prevent the DUT from transitioning to rec mode, so other operations can be performed (such as bypassing to dev mode).
