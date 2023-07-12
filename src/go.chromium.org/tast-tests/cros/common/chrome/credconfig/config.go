@@ -91,3 +91,19 @@ func PickRandomCreds(creds string) (Creds, error) {
 	result = cs[rand.Intn(len(cs))]
 	return result, nil
 }
+
+// PickNRandomCreds randomly picks n number of credentials from the passed string. For
+// the format details refer to the GAIALoginPool option documentation.
+func PickNRandomCreds(creds string, n int) ([]Creds, error) {
+	cs, err := ParseCreds(creds)
+	if err != nil {
+		return nil, err
+	}
+
+	if n > len(cs) {
+		return nil, errors.Errorf("attempted to pick %d creds when only %d were passed in", n, len(cs))
+	}
+
+	rand.Shuffle(len(cs), func(i, j int) { cs[i], cs[j] = cs[j], cs[i] })
+	return cs[0:n], nil
+}
