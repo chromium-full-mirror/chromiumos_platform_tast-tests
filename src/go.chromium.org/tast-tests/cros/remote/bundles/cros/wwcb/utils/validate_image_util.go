@@ -6,7 +6,11 @@
 package utils
 
 import (
+	"bytes"
 	"context"
+	"image"
+	"image/color"
+	"image/png"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -68,5 +72,37 @@ func ValidateVideoColor(ctx context.Context, localVideoPath, localDir string) er
 		}
 	}
 
+	return nil
+}
+
+// GenerateImage generates solid color within the given width and height image.
+func GenerateImage(width, height int, pixelColor color.RGBA) *image.RGBA {
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			img.Set(x, y, pixelColor)
+		}
+	}
+	return img
+}
+
+// WriteImageOnDUT writes image data to the named file on th DUT.
+func WriteImageOnDUT(ctx context.Context, fs *dutfs.Client, img image.Image, imgFile string) error {
+	buff := new(bytes.Buffer)
+	if err := png.Encode(buff, img); err != nil {
+		return errors.Wrap(err, "failed to encode PNG file")
+	}
+
+	if err := fs.WriteFile(ctx, imgFile, buff.Bytes(), 0644); err != nil {
+		return errors.Wrap(err, "failed to write image to file")
+	}
+
+	exists, err := fs.Exists(ctx, imgFile)
+	if err != nil {
+		return errors.Wrapf(err, "error checking that file exists: %q", imgFile)
+	}
+	if !exists {
+		return errors.Errorf("file does not exist: %q", imgFile)
+	}
 	return nil
 }
