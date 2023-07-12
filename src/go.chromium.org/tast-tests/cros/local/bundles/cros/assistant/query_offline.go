@@ -27,16 +27,7 @@ func init() {
 			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		Params: []testing.Param{
-			{
-				Name:              "libassistant_v2",
-				Fixture:           "assistantWithLibassistantV2",
-				ExtraSoftwareDeps: []string{"dlc"},
-			},
-			{
-				Fixture: "assistant",
-			},
-		},
+		Fixture:      "assistantWithGaia",
 	})
 }
 

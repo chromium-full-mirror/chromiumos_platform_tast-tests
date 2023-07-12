@@ -32,16 +32,7 @@ func init() {
 		},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{
-			{
-				Name:              "libassistant_v2",
-				Fixture:           "assistantWithLibassistantV2",
-				ExtraSoftwareDeps: []string{"dlc"},
-			},
-			{
-				Fixture: "assistant",
-			},
-		},
+		Fixture:      "assistantWithGaia",
 	})
 }
 

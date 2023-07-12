@@ -34,16 +34,6 @@ func init() {
 			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		Params: []testing.Param{
-			{
-				Name:              "libassistant_v2",
-				Val:               []chrome.Option{chrome.EnableFeatures("LibAssistantV2")},
-				ExtraSoftwareDeps: []string{"dlc"},
-			},
-			{
-				Val: []chrome.Option{},
-			},
-		},
 	})
 }
 
@@ -81,8 +71,7 @@ func hasCrashReporterInLog(ctx context.Context, file string) (bool, error) {
 }
 
 func CheckShutdownCrash(ctx context.Context, s *testing.State) {
-	opts := s.Param().([]chrome.Option)
-	cr, err := chrome.New(ctx, opts...)
+	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}

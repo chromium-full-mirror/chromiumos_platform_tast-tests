@@ -27,22 +27,11 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      8 * time.Minute,
-		Params: []testing.Param{
-			{
-				Name:              "libassistant_v2",
-				Val:               []chrome.Option{chrome.EnableFeatures("LibAssistantV2")},
-				ExtraSoftwareDeps: []string{"dlc"},
-			},
-			{
-				Val: []chrome.Option{},
-			},
-		},
 	})
 }
 
 func EnableAndDisableMultipleTimes(ctx context.Context, s *testing.State) {
-	opts := s.Param().([]chrome.Option)
-	cr, err := chrome.New(ctx, opts...)
+	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}

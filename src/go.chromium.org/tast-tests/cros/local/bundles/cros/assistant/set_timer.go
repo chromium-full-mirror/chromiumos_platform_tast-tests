@@ -29,16 +29,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      chrome.GAIALoginTimeout + time.Minute,
-		Params: []testing.Param{
-			{
-				Name:              "libassistant_v2",
-				Fixture:           "assistantWithLibassistantV2WithGaia",
-				ExtraSoftwareDeps: []string{"dlc"},
-			},
-			{
-				Fixture: "assistantWithGaia",
-			},
-		},
+		Fixture:      "assistantWithGaia",
 	})
 }
 
