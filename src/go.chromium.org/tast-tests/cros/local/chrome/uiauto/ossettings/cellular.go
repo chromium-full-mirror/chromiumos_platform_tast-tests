@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -184,6 +185,138 @@ func CheckAutomaticallyDetectedAPNDetailesDialog(ctx context.Context, tconn *chr
 		return errors.Wrap(err, "failed to verify attach checkbox disabled")
 	}
 
+	return nil
+}
+
+// ExpandPreRevampCellularNetworkDetails expands the "Network" section of a Cellular network's detail page.
+func ExpandPreRevampCellularNetworkDetails(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(CellularNetwork.Focusable())(ctx); err != nil {
+		return errors.Wrap(err, "failed to show Network button")
+	}
+
+	if err := ui.LeftClick(CellularNetwork)(ctx); err != nil {
+		return errors.Wrap(err, "failed to expand Network address settings")
+	}
+
+	return nil
+}
+
+// EnterPreRevampOtherAPNDetails enters the APN, username, password, and whether Attach APN is enabled in the old APN UI.
+func EnterPreRevampOtherAPNDetails(ctx context.Context, tconn *chrome.TestConn, apn, username, password string, attach bool) error {
+	ui := uiauto.New(tconn)
+
+	if err := ui.WaitUntilExists(AccessPointNameInput)(ctx); err != nil {
+		return errors.Wrap(err, "Access point name input doesn't exist")
+	}
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to open the keyboard")
+	}
+	defer kb.Close(ctx)
+
+	m, err := input.Mouse(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get mouse")
+	}
+	defer m.Close(ctx)
+
+	if err := ui.DoubleClick(AccessPointNameInput)(ctx); err != nil {
+		return errors.Wrap(err, "could not click APN input")
+	}
+
+	if err := kb.Type(ctx, apn); err != nil {
+		return errors.Wrap(err, "failed to type username")
+	}
+
+	// On some devices, the text field for the password might be hidden by the bottom bar.
+	if err := m.ScrollDown(); err != nil {
+		return errors.Wrap(err, "failed to scroll down")
+	}
+
+	// On some devices, the save button might be hidden by the bottom bar.
+	if err := m.ScrollDown(); err != nil {
+		return errors.Wrap(err, "failed to scroll down")
+	}
+
+	if err := ui.DoubleClick(UsernameInput)(ctx); err != nil {
+		return errors.Wrap(err, "could not click username input")
+	}
+
+	if err := kb.Type(ctx, username); err != nil {
+		return errors.Wrap(err, "failed to type username")
+	}
+
+	if err := ui.DoubleClick(PasswordInput)(ctx); err != nil {
+		return errors.Wrap(err, "could not click password input")
+	}
+
+	if err := kb.Type(ctx, password); err != nil {
+		return errors.Wrap(err, "failed to type password")
+	}
+
+	settings := New(tconn)
+	if toggleInfo, err := settings.Info(ctx, AttachAPNToggle); err != nil {
+		return errors.Wrap(err, "failed to get toggle button info")
+	} else if (toggleInfo.Checked == checked.True && attach == false) || (toggleInfo.Checked == checked.False && attach == true) {
+		if ui.LeftClick(AttachAPNToggle)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click attach APN toggle")
+		}
+	}
+
+	if err := ui.LeftClick(SaveButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click save button")
+	}
+
+	return nil
+}
+
+// SelectPreRevampOtherAPN selects the "Other" old APN dropdown.
+func SelectPreRevampOtherAPN(ctx context.Context, tconn *chrome.TestConn, apn string) error {
+	ui := uiauto.New(tconn)
+
+	if err := ExpandPreRevampCellularNetworkDetails(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to expand APN network details")
+	}
+
+	apnMenuItem := nodewith.NameContaining(apn).Role(role.ListBoxOption)
+
+	if err := uiauto.Combine("Select other menu item",
+		ui.WaitUntilExists(AccessPointDropdown.Focusable()),
+		ui.LeftClick(AccessPointDropdown),
+		ui.WaitUntilExists(apnMenuItem),
+		ui.LeftClick(apnMenuItem),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to select other menu item")
+	}
+
+	return nil
+}
+
+// VerifyAPNSubpageNotConnectedApnUI verifies the UI for APNs that are not in use in the revamped APN UI.
+func (s *OSSettings) VerifyAPNSubpageNotConnectedApnUI(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, apn string) error {
+	expr := `var nodes = shadowPiercingQueryAll(
+		'apn-list-item div#labelWrapper');
+		var notConnectedAPNs = [];
+		nodes.forEach(node => {
+			if (!node.innerText.includes("Connected")) {
+				notConnectedAPNs.push(node.querySelector('#apnName').innerText)
+			}
+		})
+		if (connectedNode == undefined) {
+			throw new Error("No connected APN node found.");
+		}
+		notConnectedAPNs.join(',');
+		`
+	var notConnectedAPNs string
+	if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, &notConnectedAPNs); err != nil {
+		return errors.Wrap(err, "failed to find not connected APN rows")
+	}
+	if !strings.Contains(notConnectedAPNs, apn) {
+		return errors.New("failed to find not connected APN in list")
+	}
 	return nil
 }
 

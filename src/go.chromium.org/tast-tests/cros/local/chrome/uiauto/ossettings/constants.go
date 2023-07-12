@@ -219,6 +219,24 @@ var (
 	// CellularNetwork is the finder for the button that collapses/expands the network section of cellular details page.
 	CellularNetwork = nodewith.Name("Show network address settings").Role(role.Button)
 
+	// AccessPointDropdown is the finder for the access point dropdown in the old APN UI item.
+	AccessPointDropdown = nodewith.HasClass("md-select").NameContaining("Access Point")
+
+	// AccessPointNameInput is the finder for the access point input in the old APN UI item.
+	AccessPointNameInput = nodewith.Role(role.TextField).First()
+
+	// UsernameInput is the finder for the username input in the old APN UI item.
+	UsernameInput = nodewith.Role(role.TextField).Nth(1)
+
+	// PasswordInput is the finder for the password input in the old APN UI item.
+	PasswordInput = nodewith.Role(role.TextField).Nth(2)
+
+	// SaveButton is the finder for the save button in the old APN UI item.
+	SaveButton = nodewith.Role(role.Button).HasClass("action-button").NameContaining("Save")
+
+	// AttachAPNToggle is the finder for the save button in the old APN UI item.
+	AttachAPNToggle = nodewith.NameContaining("Attach APN").Role(role.ToggleButton)
+
 	// CellularProxy is the finder for the button that collapses/expands the proxy section of cellular details page.
 	CellularProxy = nodewith.Name("Show proxy settings").Role(role.Button)
 
@@ -238,6 +256,7 @@ var (
 	NetworkAddedText = nodewith.NameContaining("Network added").Role(role.StaticText)
 )
 
+// Elements in "Access Point Name subpage"
 var (
 	// DetailsBtn is the finder for the APN details menu item in more actions menu for an APN.
 	DetailsBtn = nodewith.Name("Details").Role(role.MenuItem)
