@@ -103,6 +103,10 @@ const (
 	VideoMode = "video"
 	// PhotoMode is the mode used to take photo.
 	PhotoMode = "photo"
+	// CCAPlugged is cca plugged info
+	CCAPlugged = ".*is plugged in"
+	// CCAUnplugged is cca unplugged info
+	CCAUnplugged = ".*is unplugged"
 )
 
 var (
@@ -290,4 +294,18 @@ func waitForFileSaved(ctx context.Context, fs *dutfs.Client, dir string, pat *re
 		return nil, errors.Wrapf(err, "no matching output file found after %v", timeout)
 	}
 	return result, nil
+}
+
+// FindInfoOnCameraApp check the info of plug/unplug
+func FindInfoOnCameraApp(ctx context.Context, uiautoSvc ui.AutomationServiceClient, infoRegex string) error {
+	infoFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_NameRegex{NameRegex: infoRegex}},
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_STATIC_TEXT}},
+		},
+	}
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: infoFinder}); err != nil {
+		return errors.Wrap(err, "failed to wait for the info from context menu")
+	}
+	return nil
 }

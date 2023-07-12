@@ -22,6 +22,9 @@ import (
 // VideoFile is a file to play to use webcam to check.
 const VideoFile = "video.mp4"
 
+// PictureFile is a file to play to use webcam to check.
+const PictureFile = "red.jpg"
+
 // MyFilesPath is an absolute path on DUT.
 const MyFilesPath = "/home/chronos/user/MyFiles/"
 
