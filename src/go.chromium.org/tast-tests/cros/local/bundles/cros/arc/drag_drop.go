@@ -51,7 +51,7 @@ func init() {
 		Timeout: 4 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "chrome_to_android",
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val: &dragDropTestArgs{
 				extensionPrefix: "drag_source_",
 				androidSource:   false,
@@ -61,7 +61,7 @@ func init() {
 		}, {
 			Name:              "chrome_to_android_lacros",
 			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
+			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Val: &dragDropTestArgs{
 				extensionPrefix: "drag_source_",
 				androidSource:   false,
@@ -91,7 +91,7 @@ func init() {
 		}, {
 			Name:              "android_to_android",
 			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val: &dragDropTestArgs{
 				androidSource: true,
 				androidTarget: true,
@@ -109,7 +109,7 @@ func init() {
 		}, {
 			Name:              "android_to_chrome",
 			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val: &dragDropTestArgs{
 				extensionPrefix: "drag_target_",
 				androidSource:   true,
@@ -119,7 +119,7 @@ func init() {
 		}, {
 			Name:              "android_to_chrome_lacros",
 			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
+			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Val: &dragDropTestArgs{
 				extensionPrefix: "drag_target_",
 				androidSource:   true,
