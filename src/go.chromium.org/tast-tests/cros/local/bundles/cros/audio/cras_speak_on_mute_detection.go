@@ -96,7 +96,7 @@ func init() {
 					speechSource:      speaker,
 					expectedDetection: false,
 				},
-				ExtraAttr: []string{"informational", "group:criticalstaging"},
+				ExtraAttr: []string{"informational"},
 			},
 			{
 				Name: "rtc_stream_without_apm_at_speaker", // testplan#8
@@ -110,7 +110,7 @@ func init() {
 					speechSource:      speaker,
 					expectedDetection: false,
 				},
-				ExtraAttr: []string{"informational", "group:criticalstaging"},
+				ExtraAttr: []string{"informational"},
 			},
 			{
 				Name: "rtc_stream_with_apm_unmuted", // testplan#9
@@ -124,7 +124,7 @@ func init() {
 					speechSource:      mouth,
 					expectedDetection: false,
 				},
-				ExtraAttr: []string{"informational", "group:criticalstaging"},
+				ExtraAttr: []string{"informational"},
 			},
 			{
 				Name: "rtc_stream_with_apm_feature_disabled", // testplan#10
