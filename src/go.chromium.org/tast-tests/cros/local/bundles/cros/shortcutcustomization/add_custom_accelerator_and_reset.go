@@ -77,7 +77,7 @@ func AddCustomAcceleratorAndReset(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed pressing alt+shift+s : ", err)
 	}
 
-	widgetNode := nodewith.NameRegex(regexp.MustCompile("(?i)sign out")).Role(role.Button)
+	widgetNode := nodewith.NameRegex(regexp.MustCompile("(?i)Power Menu")).Role(role.Button)
 	if err := ui.WaitUntilExists(widgetNode)(ctx); err != nil {
 		s.Fatal("Failed to find the widget : ", err)
 	}
