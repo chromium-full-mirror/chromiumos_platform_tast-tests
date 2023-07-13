@@ -49,6 +49,10 @@ var FeatureTileDoNotDisturb = nodewith.HasClass("FeatureTile").NameContaining("D
 // It only exists with QsRevamp.
 var FeatureTileKeyboard = nodewith.HasClass("FeatureTile").NameContaining("keyboard")
 
+// FeatureTileNearbyShare is the finder for the "Nearby Share" feature tile.
+// It only exists with QsRevamp.
+var FeatureTileNearbyShare = nodewith.HasClass("FeatureTile").NameContaining("Nearby Share")
+
 // FeatureTileNetwork is the finder for the network feature tile. Its name
 // varies so find it by class.
 // This only exists with QsRevamp.

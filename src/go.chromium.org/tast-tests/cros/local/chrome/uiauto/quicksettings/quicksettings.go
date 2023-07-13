@@ -441,6 +441,74 @@ func SetDoNotDisturb(ctx context.Context, tconn *chrome.TestConn, enable bool) e
 	return nil
 }
 
+// NearbyShareEnabled returns whether the Nearby Share feature tile is
+// toggled in quick settings. In order to check the setting, quick settings will
+// be shown if it's not already, but the original state will be restored once
+// the check is complete.
+func NearbyShareEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get QsRevamp state")
+	}
+
+	if !qsRevampEnabled {
+		return false, errors.New("NearbyShareEnabled() requires QsRevamp enabled")
+	}
+
+	cleanup, err := ensureVisible(ctx, tconn)
+	if err != nil {
+		return false, err
+	}
+	defer cleanup(ctx)
+
+	ui := uiauto.New(tconn)
+	// FeatureTiles do not expose an explicit toggled state to the UI node tree
+	// so the best we can do is search for the subtitle string.
+	return ui.IsNodeFound(ctx, FeatureTileNearbyShare.NameContaining("On,"))
+}
+
+// SetNearbyShare enables or disables the Nearby Share feature using its
+// feature tile.
+func SetNearbyShare(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get QsRevamp state")
+	}
+
+	if !qsRevampEnabled {
+		// Use the legacy feature pod button.
+		if err := ToggleSetting(ctx, tconn, SettingPodNearbyShare, enable); err != nil {
+			return errors.Wrap(err, "failed to toggle Nearby Share")
+		}
+		return nil
+	}
+
+	// Open quick settings, since checking NearbyShareEnabled() needs it open.
+	// This avoids opening and closing quick settings twice.
+	cleanup, err := ensureVisible(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to ensure visible")
+	}
+	defer cleanup(ctx)
+
+	currentState, err := NearbyShareEnabled(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get Nearby Share state")
+	}
+
+	if currentState == enable {
+		// Nothing to do.
+		return nil
+	}
+
+	// Toggle the state using the feature tile.
+	ui := uiauto.New(tconn)
+	if err := ui.DoDefault(FeatureTileNearbyShare)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click Nearby Share tile")
+	}
+	return nil
+}
+
 // SettingEnabled checks if the specified quick setting is on or off.
 // In order to check the setting, Quick Settings will be shown if it's not already,
 // but the original state will be restored once the check is complete.
