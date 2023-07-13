@@ -303,6 +303,8 @@ type Recorder struct {
 	loginEventRecorder *perfSrc.LoginEventRecorder
 	powertopRecorder   *perfSrc.PowertopRecorder
 	profilerRecorder   *perfSrc.ProfilerRecorder
+	// Additional timelines registered by the test.
+	perfTimelines []*perf.Timeline
 
 	pv *perf.Values
 
@@ -391,6 +393,11 @@ func NewPerformanceCUJOptions() RecorderOptions {
 		DoNotChangeDPTF:    true,
 		DoNotChangeAudio:   true,
 	}
+}
+
+// AddPerfTimelines adds additional performance timelines to the recorder.
+func (r *Recorder) AddPerfTimelines(timelines ...*perf.Timeline) {
+	r.perfTimelines = append(r.perfTimelines, timelines...)
 }
 
 // AddCollectedMetrics adds |configs| to the collected metrics for browser |bt| using the |tconn|
@@ -993,6 +1000,15 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		if err := r.tpsTimeline.StartRecording(ctx); err != nil {
 			return nil, errors.Wrap(err, "failed to start recording TPS timeline data")
 		}
+
+		for i, tl := range r.perfTimelines {
+			if err := tl.Start(ctx); err != nil {
+				return nil, errors.Wrapf(err, "failed to start timeline %d", i)
+			}
+			if err := tl.StartRecording(ctx); err != nil {
+				return nil, errors.Wrapf(err, "failed to start recording timeline %d", i)
+			}
+		}
 	}
 
 	if r.options.Mode == CUJ {
@@ -1263,6 +1279,16 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 			}
 		} else {
 			r.pv.Merge(tpsData)
+		}
+	}
+	for i, tl := range r.perfTimelines {
+		if d, err := tl.StopRecording(ctx); err != nil {
+			testing.ContextLogf(ctx, "Failed to stop timeline %d: %v", i, err)
+			if stopErr == nil {
+				stopErr = errors.Wrap(err, "failed to stop timeline")
+			}
+		} else {
+			r.pv.Merge(d)
 		}
 	}
 

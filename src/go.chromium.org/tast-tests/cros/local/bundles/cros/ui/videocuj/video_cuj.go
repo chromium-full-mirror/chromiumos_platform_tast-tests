@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
@@ -30,6 +31,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -88,6 +90,17 @@ func Run(ctx context.Context, s *testing.State) {
 	// after every section of the test.
 	if err := recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {
 		s.Log("Failed to add screenshot recorder: ", err)
+	}
+
+	// TODO (b/277656113): Determine whether or not to generalize GPU usage
+	// collection to all TPS tests after comparing the performance.
+	if strings.Contains(s.TestName(), "gpuusage") {
+		gpuUsageTimeline, err := perf.NewTimeline(ctx, []perf.TimelineDatasource{
+			localPerf.NewGPUUsageDataSource()}, perf.Interval(5*time.Second))
+		if err != nil {
+			s.Fatal("Failed to create GPU usage timeline: ", err)
+		}
+		recorder.AddPerfTimelines(gpuUsageTimeline)
 	}
 
 	inTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
@@ -271,6 +284,8 @@ func Run(ctx context.Context, s *testing.State) {
 						return errors.Wrap(err, "failed to simulate mouse movement")
 					}
 				} else {
+					// GoBigSleepLint: Watch the video for 30 seconds to
+					// collect graphical metrics.
 					if err := testing.Sleep(ctx, initialSleepDuration); err != nil {
 						return errors.Wrap(err, "failed to sleep")
 					}
@@ -351,8 +366,9 @@ func Run(ctx context.Context, s *testing.State) {
 					}
 				}
 
-				// Sleep until we hit the total cycle length. This way, each video
-				// format plays for the exact same amount of time.
+				// GoBigSleepLint: Sleep until we hit the total cycle length.
+				// This way, each video format plays for the exact same amount
+				// of time.
 				if err := testing.Sleep(ctx, cycleTotalTime-time.Since(cycleTimeStart)); err != nil {
 					return errors.Wrap(err, "failed to sleep")
 				}
@@ -402,6 +418,7 @@ func Run(ctx context.Context, s *testing.State) {
 		timeLeft := totalTestDuration - time.Since(runStart)
 		if timeLeft > 0 {
 			s.Logf("Sleeping for %s to close out the test", timeLeft)
+			// GoBigSleepLint: Run until total test time has passed.
 			if err := testing.Sleep(ctx, timeLeft); err != nil {
 				return errors.Wrap(err, "failed to sleep to close out the test")
 			}

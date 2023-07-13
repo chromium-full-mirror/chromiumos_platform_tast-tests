@@ -237,9 +237,6 @@ func (ds *GPUUsageDataSource) Setup(ctx context.Context, prefix, intervalName st
 		testing.ContextLog(ctx, "The GPU usage metrics will not be collected due to unsupported kernel version: ", kernelVersion)
 		ds.skip = true
 	}
-	// TODO (b/277656113): Remove the following line after this serial of CLs
-	// are all merged and the feature is ready to be used by a TPS test.
-	ds.skip = true // Disable it temporarily until this feature is ready.
 	return nil
 }
 
