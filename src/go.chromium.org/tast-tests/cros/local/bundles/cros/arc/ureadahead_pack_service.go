@@ -140,6 +140,9 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		chromeArgs = append(chromeArgs, "--arcvm-ureadahead-mode=generate")
 	} else {
 		chromeArgs = append(chromeArgs, "--arc-host-ureadahead-generation")
+		if request.UseDevCaches {
+			chromeArgs = append(chromeArgs, "--arc-use-dev-caches")
+		}
 	}
 
 	opts := []chrome.Option{
