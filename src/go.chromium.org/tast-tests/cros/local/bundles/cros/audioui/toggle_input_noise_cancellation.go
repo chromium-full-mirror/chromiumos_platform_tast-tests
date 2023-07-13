@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	fixture "go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
@@ -35,6 +36,7 @@ func init() {
 			"zentaro@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      fixture.StereoAloopLoaded,
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone(),
 			// TODO(b/277583823): Replace model list when a hardware dependency that
@@ -94,7 +96,7 @@ func getQuickSettingsNoiseCancellationInfo(ctx context.Context, tconn *chrome.Te
 		return nil, errors.Wrap(err, "failed to open quick settings")
 	}
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
-	qsToggle := nodewith.ClassName("TrayToggleButton").Role(role.Switch).NameContaining("Noise cancellation").Ancestor(nodewith.ClassName("AudioDetailedView"))
+	qsToggle := nodewith.ClassName("HoverHighlightView").Role(role.CheckBox).NameContaining("Noise cancellation").Ancestor(nodewith.ClassName("AudioDetailedView"))
 	if err := ui.WaitUntilExists(qsToggle)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to focus on noise cancellation toggle")
 	}
@@ -122,12 +124,12 @@ func verifyNoiseCancellationChanged(ctx context.Context, tconn *chrome.TestConn)
 		// internalSpeakerLabel is the label used to select an INTERNAL_SPEAKER audio device.
 		internalSpeakerLabel string = "Speaker (internal)"
 
-		// headphonesLabel is the label used to select an HEADPHONES audio device.
-		headphonesLabel string = "Headphones"
+		// loopbackLabel is the label used to select an ALSA_LOOPBACK audio device.
+		loopbackLabel string = "Loopback Playback"
 	)
 
-	if err := quicksettings.SelectAudioOption(ctx, tconn, headphonesLabel); err != nil {
-		return errors.Wrapf(err, "failed to set %q as active audio option", headphonesLabel)
+	if err := quicksettings.SelectAudioOption(ctx, tconn, loopbackLabel); err != nil {
+		return errors.Wrapf(err, "failed to set %q as active audio option", loopbackLabel)
 	}
 	if err := ui.WaitUntilGone(ncToggle)(ctx); err != nil {
 		return errors.Wrap(err, "failed to hide noise cancellation when not supported")
