@@ -9,22 +9,37 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/shirou/gopsutil/v3/process"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/security/sandboxing"
 	"go.chromium.org/tast/core/errors"
 )
 
 // Process represents a running process with an SELinux context.
 type Process struct {
-	PID       int
+	Pid       int32
 	Cmdline   string
 	Exe       string
 	Comm      string
 	Euid      uint32 // effective UID
+	Ecaps     uint64 // effective capabilities
 	SEContext string
 }
+
+// ProcessFilter specifies which processes GetProcess() should return.
+type ProcessFilter int
+
+const (
+	// All returns all processes.
+	All ProcessFilter = iota
+	// PrivilegedOnly returns processes running as root or with CAP_SYS_ADMIN.
+	PrivilegedOnly
+)
+
+const capSysAdminMask = 1 << sandboxing.CapSysAdmin
 
 // String returns a human-readable string representation for struct Process.
 func (p Process) String() string {
@@ -35,14 +50,14 @@ func (p Process) String() string {
 }
 
 // GetProcesses returns currently-running processes.
-func GetProcesses() ([]Process, error) {
+func GetProcesses(filter ProcessFilter) ([]Process, error) {
 	ps, err := process.Processes()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list processes")
 	}
 	var processes []Process
 	for _, p := range ps {
-		proc := Process{PID: int(p.Pid)}
+		proc := Process{Pid: p.Pid}
 
 		// Ignore all errors returned by gopsutil while reading process data; these typically
 		// indicate that this is a kernel process (in the case of exe) or that the process
@@ -61,7 +76,7 @@ func GetProcesses() ([]Process, error) {
 			proc.Euid = uint32(uids[1])
 		}
 
-		if comm, err := ioutil.ReadFile(fmt.Sprintf("/proc/%d/comm", proc.PID)); os.IsNotExist(err) {
+		if comm, err := ioutil.ReadFile(fmt.Sprintf("/proc/%d/comm", proc.Pid)); os.IsNotExist(err) {
 			continue
 		} else if err != nil {
 			return nil, err
@@ -69,7 +84,22 @@ func GetProcesses() ([]Process, error) {
 			proc.Comm = string(comm)
 		}
 
-		if secontext, err := ioutil.ReadFile(fmt.Sprintf("/proc/%d/attr/current", proc.PID)); err != nil {
+		// Read additional info from /proc/<pid>/status.
+		if status, err := sandboxing.ReadProcStatus(proc.Pid); os.IsNotExist(err) {
+			continue
+		} else if err != nil {
+			return nil, errors.Wrap(err, "failed reading /proc/<pid>/status")
+		} else if proc.Ecaps, err = strconv.ParseUint(status["CapEff"], 16, 64); err != nil {
+			return nil, errors.Wrapf(err, "failed parsing effective caps %q", status["CapEff"])
+		}
+
+		// PrivilegedOnly retains processes running as root (i.e. proc.Euid == 0) or
+		// with CAP_SYS_ADMIN (i.e. proc.Ecaps&capSysAdminMask != 0).
+		if filter == PrivilegedOnly && (proc.Euid != 0 || proc.Ecaps&capSysAdminMask == 0) {
+			continue
+		}
+
+		if secontext, err := ioutil.ReadFile(fmt.Sprintf("/proc/%d/attr/current", proc.Pid)); err != nil {
 			// ESRCH 3 No such process is returned for syscall read, if process dies after open succeeds.
 			// TODO: check ESRCH instead of string when golang updates to have such builtin functions.
 			if os.IsNotExist(err) || strings.Contains(err.Error(), "no such process") {
