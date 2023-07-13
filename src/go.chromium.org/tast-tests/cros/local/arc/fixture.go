@@ -468,7 +468,7 @@ func init() {
 		Impl: NewArcBootedWithConfigAndTimeoutFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ARCEnabled(),
-				chrome.EnableFeatures("ArcVmmSwapPolicy:arc_silence_interval_sec/1"),
+				chrome.EnableFeatures("ArcVmmSwapPolicy:arc_silence_interval_sec/1/swapout_interval_sec/1"),
 				chrome.UnRestrictARCCPU(),
 				chrome.ExtraArgs(DisableSyncFlags()...),
 			}, nil
