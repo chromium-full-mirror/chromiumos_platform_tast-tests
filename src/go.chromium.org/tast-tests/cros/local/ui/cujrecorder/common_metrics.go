@@ -113,7 +113,7 @@ func BrowserCommonMetricConfigs() []MetricConfig {
 		NewCustomMetricConfig("Startup.FirstWebContents.NonEmptyPaint3", "ms", perf.SmallerIsBetter),
 
 		// Other metrics to monitor.
-		NewCustomMetricConfig("EventLatency.TotalLatency", "ms", perf.SmallerIsBetter),
+		NewCustomMetricConfig("EventLatency.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Media.Video.Roughness.60fps", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.AllInteractions", "percent", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.CompositorThread.Video", "percent", perf.SmallerIsBetter),
