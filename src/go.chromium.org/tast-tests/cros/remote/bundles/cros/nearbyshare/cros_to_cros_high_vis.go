@@ -39,7 +39,6 @@ func init() {
 			{
 				Name:              "dataoffline_allcontacts_png5kb",
 				Fixture:           "nearbyShareRemoteDataUsageOfflineNoOne",
-				ExtraAttr:         []string{"cross-device-remote_cq"},
 				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
 				ExtraData:         []string{"small_png.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
@@ -52,7 +51,6 @@ func init() {
 			{
 				Name:              "dataoffline_allcontacts_jpg11kb",
 				Fixture:           "nearbyShareRemoteDataUsageOfflineNoOne",
-				ExtraAttr:         []string{"cross-device-remote_cq"},
 				Val:               nearbycommon.TestData{Filename: "small_jpg.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
 				ExtraData:         []string{"small_jpg.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
