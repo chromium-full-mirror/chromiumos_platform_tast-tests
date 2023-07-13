@@ -36,6 +36,7 @@ type simpleConnectParamsVal struct {
 
 type simpleConnectParams struct {
 	Name                 string
+	Fixture              string
 	Doc                  []string
 	ExtraAttr            []string
 	ExtraSoftwareDeps    []string
@@ -51,6 +52,7 @@ func simpleConnectDocPref(text string) []string {
 }
 
 const simpleConnectCommonSecApOpts = "ap.Mode(ap.Mode80211g), ap.Channel(1)"
+const defaultFixture string = "wificellFixtWithCapture"
 
 var dfsChannels = []int{
 	52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144,
@@ -79,16 +81,19 @@ func simpleConnect80211abg() []simpleConnectParams {
 	}
 	return []simpleConnectParams{{
 		Name:              "80211a",
+		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("an open 802.11a network on channels 48, 64."),
 		Val:               mkOps("a", 48, 64),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy, tdreq.WiFiSecSupportOpen},
 	}, {
 		Name:              "80211b",
+		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("an open 802.11b network on channels 1, 6, 11."),
 		Val:               mkOps("b", 1, 6, 11),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}, {
 		Name:              "80211g",
+		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("an open 802.11g network on channels 1, 6, 11."),
 		Val:               mkOps("g", 1, 6, 11),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
@@ -105,21 +110,25 @@ func simpleConnect80211n() []simpleConnectParams {
 	}
 	return []simpleConnectParams{{
 		Name:              "80211n24ht20",
+		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("an open 802.11n network on 2.4GHz channels 1, 6, 11 with a channel width of 20MHz."),
 		Val:               mkOps("HT20", 1, 6, 11),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportLegacyBands},
 	}, {
 		Name:              "80211n24ht40",
+		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("an open 802.11n network on 2.4GHz channel 6 with a channel width of 40MHz."),
 		Val:               mkOps("HT40", 6),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportLegacyBands},
 	}, {
 		Name:              "80211n5ht20",
+		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("an open 802.11n network on 5GHz channel 48 with a channel width of 20MHz."),
 		Val:               mkOps("HT20", 48),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportLegacyBands},
 	}, {
-		Name: "80211n5ht40",
+		Name:    "80211n5ht40",
+		Fixture: defaultFixture,
 		Doc: append(simpleConnectDocPref("an open 802.11n network on 5GHz channel 48"),
 			"(40MHz channel with the second 20MHz chunk of the 40MHz channel on the channel below the center channel)."),
 		Val:               mkOps("HT40Minus", 48),
@@ -130,6 +139,7 @@ func simpleConnect80211n() []simpleConnectParams {
 func simpleConnect80211nsgi() simpleConnectParams {
 	return simpleConnectParams{
 		Name:      "80211nsgi",
+		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11n network on 5 GHz channel with short guard intervals enabled (both 20/40 Mhz)."),
 		ExtraAttr: []string{"wificell_cq"},
 		Val: []simpleConnectParamsVal{
@@ -142,31 +152,35 @@ func simpleConnect80211nsgi() simpleConnectParams {
 
 func simpleConnect80211ac() []simpleConnectParams {
 	return []simpleConnectParams{{
-		Name: "80211acvht20",
-		Doc:  simpleConnectDocPref("an open 802.11ac network on channel 60 with a channel width of 20MHz."),
+		Name:    "80211acvht20",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("an open 802.11ac network on channel 60 with a channel width of 20MHz."),
 		Val: []simpleConnectParamsVal{{APOpts: `
 			ap.Mode(ap.Mode80211acPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT20), ap.SpectrumManagement(),
 			ap.VHTChWidth(ap.VHTChWidth20Or40),
 		`}},
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}, {
-		Name: "80211acvht40",
-		Doc:  simpleConnectDocPref("an open 802.11ac network on channel 48 with a channel width of 40MHz."),
+		Name:    "80211acvht40",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("an open 802.11ac network on channel 48 with a channel width of 40MHz."),
 		Val: []simpleConnectParamsVal{{APOpts: `
 			ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40),
 			ap.VHTChWidth(ap.VHTChWidth20Or40),
 		`}},
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}, {
-		Name: "80211acvht80mixed",
-		Doc:  simpleConnectDocPref("an open 802.11ac network on 5GHz channel 36 with center channel of 42 and channel width of 80MHz."),
+		Name:    "80211acvht80mixed",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("an open 802.11ac network on 5GHz channel 36 with center channel of 42 and channel width of 80MHz."),
 		Val: []simpleConnectParamsVal{{APOpts: `
 			ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
 		`}},
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}, {
-		Name: "80211acvht80pure",
+		Name:    "80211acvht80pure",
+		Fixture: defaultFixture,
 		Doc: append(simpleConnectDocPref("an open 802.11ac network on channel 157 with center channel of 155 and channel width of 80MHz."),
 			"The router is forced to use 80 MHz wide rates only."),
 		Val: []simpleConnectParamsVal{{APOpts: `
@@ -180,6 +194,7 @@ func simpleConnect80211ac() []simpleConnectParams {
 func simpleConnect80211ax() []simpleConnectParams {
 	return []simpleConnectParams{{
 		Name:      "80211axhe20",
+		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11ax network on channel 60 with a channel width of 20MHz."),
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 		Val: []simpleConnectParamsVal{{APOpts: `
@@ -188,6 +203,7 @@ func simpleConnect80211ax() []simpleConnectParams {
 		`}},
 	}, {
 		Name:      "80211axhe40",
+		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11ax network on channel 60 with a channel width of 40MHz."),
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 		Val: []simpleConnectParamsVal{{APOpts: `
@@ -196,6 +212,7 @@ func simpleConnect80211ax() []simpleConnectParams {
 		`}},
 	}, {
 		Name:      "80211axhe80mixed",
+		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11ax network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz."),
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 		Val: []simpleConnectParamsVal{{APOpts: `
@@ -204,6 +221,7 @@ func simpleConnect80211ax() []simpleConnectParams {
 		`}},
 	}, {
 		Name:      "80211axhe80pure",
+		Fixture:   defaultFixture,
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 		Doc: append(simpleConnectDocPref("an open 802.11ax network on channel 157 with center channel of 155 and channel width of 80MHz."),
 			"The router is forced to use 80 MHz wide rates only."),
@@ -216,14 +234,16 @@ func simpleConnect80211ax() []simpleConnectParams {
 
 func simpleConnectHidden() []simpleConnectParams {
 	return []simpleConnectParams{{
-		Name: "hidden24g",
-		Doc:  simpleConnectDocPref("a hidden network on 2.4GHz channel."),
+		Name:    "hidden24g",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("a hidden network on 2.4GHz channel."),
 		Val: []simpleConnectParamsVal{
 			{APOpts: "ap.Mode(ap.Mode80211g), ap.Channel(6), ap.Hidden()"},
 		},
 	}, {
-		Name: "hidden5ht20",
-		Doc:  simpleConnectDocPref("a hidden network on 5GHz channels."),
+		Name:    "hidden5ht20",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("a hidden network on 5GHz channels."),
 		Val: []simpleConnectParamsVal{
 			{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.Hidden()"},
 			{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20), ap.Hidden()"},
@@ -237,6 +257,7 @@ func simpleConnectWEP() []simpleConnectParams {
 	mkP := func(keyLen int) simpleConnectParams {
 		ret := simpleConnectParams{
 			Name:              "wep" + strconv.Itoa(keyLen),
+			Fixture:           defaultFixture,
 			Doc:               simpleConnectDocPref(fmt.Sprintf("a WEP network with both open and shared system authentication and %d-bit pre-shared keys.", keyLen)),
 			ExtraHardwareDeps: `hwdep.D(hwdep.WifiWEP())`,
 			ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
@@ -268,6 +289,7 @@ func simpleConnectWEPHidden() simpleConnectParams {
 	}
 	return simpleConnectParams{
 		Name:              "wephidden",
+		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("a hidden WEP network with open/shared system authentication and 40/104-bit pre-shared keys."),
 		Val:               p,
 		ExtraHardwareDeps: `hwdep.D(hwdep.WifiWEP())`,
@@ -328,32 +350,38 @@ func simpleConnectWPA() []simpleConnectParams {
 		}}
 	}
 	return []simpleConnectParams{{
-		Name: "wpatkip",
-		Doc:  simpleConnectDocPref("a protected network supporting for pure WPA with TKIP."),
-		Val:  mkOps("", "PureWPA", tkip, 0),
+		Name:    "wpatkip",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("a protected network supporting for pure WPA with TKIP."),
+		Val:     mkOps("", "PureWPA", tkip, 0),
 	}, {
-		Name: "wpaccmp",
-		Doc:  simpleConnectDocPref("a protected network supporting for pure WPA with AES based CCMP."),
-		Val:  mkOps("", "PureWPA", ccmp, 0),
+		Name:    "wpaccmp",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("a protected network supporting for pure WPA with AES based CCMP."),
+		Val:     mkOps("", "PureWPA", ccmp, 0),
 	}, {
 		Name:      "wpamulti",
+		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("a protected network supporting for pure WPA with both AES based CCMP and TKIP."),
 		ExtraAttr: []string{"wificell_cq"},
 		Val:       mkOps("", "PureWPA", tkip|ccmp, 0),
 	}, {
 		Name:              "wpa2tkip",
+		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("a protected network supporting for WPA2 (aka RSN) with TKIP. Some AP still uses TKIP in WPA2."),
 		Val:               mkOps("", "PureWPA2", 0, tkip),
 		ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal},
 	}, {
-		Name: "wpa2pmf",
+		Name:    "wpa2pmf",
+		Fixture: defaultFixture,
 		Doc: append(simpleConnectDocPref("an AP broadcasting a WPA2 network using AES based CCMP."),
 			"In addition, the client must also support 802.11w protected management frames."),
 		ExtraAttr:         []string{"wificell_cq"},
 		Val:               mkOps("ap.PMF(ap.PMFRequired)", "PureWPA2", 0, ccmp),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA2Personal},
 	}, {
-		Name: "wpa2pmfsha256",
+		Name:    "wpa2pmfsha256",
+		Fixture: defaultFixture,
 		Doc: append(simpleConnectDocPref("an AP broadcasting a WPA2 network using AES based CCMP."),
 			"In addition, the client must also support 802.11w protected management frames.",
 			"And the client uses WPA-PSK-SHA256 for key management suite"),
@@ -374,20 +402,23 @@ func simpleConnectWPA() []simpleConnectParams {
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA2`),
 		}},
 	}, {
-		Name: "wpa2pmfoptional",
+		Name:    "wpa2pmfoptional",
+		Fixture: defaultFixture,
 		Doc: append(simpleConnectDocPref("an AP broadcasting a WPA2 network using AES based CCMP."),
 			"In addition, the client may also negotiate use of 802.11w protected management frames."),
 		Val:               mkOps("ap.PMF(ap.PMFOptional)", "PureWPA2", 0, ccmp),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA2Personal},
 	}, {
 		Name:              "wpa2",
+		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("a protected network supporting for WPA2 (aka RSN) and encrypted under AES."),
 		Val:               mkOps("", "PureWPA2", 0, ccmp),
 		ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal},
 	}, {
-		Name: "wpamixed",
-		Doc:  simpleConnectDocPref("a protected network supporting for both WPA and WPA2 with TKIP/AES supported for WPA and AES supported for WPA2."),
-		Val:  mkOps("", "Mixed", tkip|ccmp, ccmp),
+		Name:    "wpamixed",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("a protected network supporting for both WPA and WPA2 with TKIP/AES supported for WPA and AES supported for WPA2."),
+		Val:     mkOps("", "Mixed", tkip|ccmp, ccmp),
 	}}
 }
 
@@ -408,11 +439,13 @@ func simpleConnectWPA3() []simpleConnectParams {
 	}
 	return []simpleConnectParams{{
 		Name:              "wpa3mixed",
+		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("an AP in WPA2/WPA3 mixed mode. WiFi alliance suggests PMF in this mode."),
 		Val:               mkOps("Optional", "MixedWPA3"),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
 	}, {
 		Name:              "wpa3",
+		Fixture:           defaultFixture,
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		ExtraSoftwareDepsDoc: []string{
 			"Not all WiFi chips support SAE. We enable the feature as a Software dependency for now, but eventually",
@@ -426,8 +459,9 @@ func simpleConnectWPA3() []simpleConnectParams {
 
 func simpleConnectWPAVHT80() simpleConnectParams {
 	return simpleConnectParams{
-		Name: "wpavht80",
-		Doc:  simpleConnectDocPref("a protected 802.11ac network supporting for WPA."),
+		Name:    "wpavht80",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("a protected 802.11ac network supporting for WPA."),
 		Val: []simpleConnectParamsVal{{
 			APOpts: `
 				ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
@@ -460,9 +494,10 @@ func simpleConnectWPAOddPassphrase() simpleConnectParams {
 		})
 	}
 	return simpleConnectParams{
-		Name: "wpaoddpassphrase",
-		Doc:  simpleConnectDocPref("a protected network whose WPA passphrase can be pure unicode, mixed unicode and ASCII, and all the punctuations."),
-		Val:  p,
+		Name:    "wpaoddpassphrase",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("a protected network whose WPA passphrase can be pure unicode, mixed unicode and ASCII, and all the punctuations."),
+		Val:     p,
 	}
 }
 
@@ -484,16 +519,18 @@ func simpleConnectWPAHidden() simpleConnectParams {
 		})
 	}
 	return simpleConnectParams{
-		Name: "wpahidden",
-		Doc:  simpleConnectDocPref("a hidden network supporting for WPA with TKIP, WPA with TKIP/AES, WPA2 with AES, and mixed WPA with TKIP/AES and WPA2 with AES."),
-		Val:  p,
+		Name:    "wpahidden",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("a hidden network supporting for WPA with TKIP, WPA with TKIP/AES, WPA2 with AES, and mixed WPA with TKIP/AES and WPA2 with AES."),
+		Val:     p,
 	}
 }
 
 func simpleConnectRawPMK() simpleConnectParams {
 	return simpleConnectParams{
-		Name: "raw_pmk",
-		Doc:  simpleConnectDocPref("a WPA network using a raw PMK value instead of an ASCII passphrase."),
+		Name:    "raw_pmk",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("a WPA network using a raw PMK value instead of an ASCII passphrase."),
 		Val: []simpleConnectParamsVal{{
 			APOpts: simpleConnectCommonSecApOpts,
 			SecConfFac: `wpa.NewConfigFactory(
@@ -508,7 +545,8 @@ func simpleConnectRawPMK() simpleConnectParams {
 
 func simpleConnectDFS() []simpleConnectParams {
 	return []simpleConnectParams{{
-		Name: "dfs",
+		Name:    "dfs",
+		Fixture: defaultFixture,
 		Doc: append(simpleConnectDocPref("an open network on a DFS channel."),
 			"DFS (dynamic frequency selection) channels are channels that may be unavailable if radar interference is detected.",
 			"See: https://en.wikipedia.org/wiki/Dynamic_frequency_selection, https://en.wikipedia.org/wiki/List_of_WLAN_channels"),
@@ -523,6 +561,7 @@ func simpleConnectDFS() []simpleConnectParams {
 func simpleConnectSSIDLimits() simpleConnectParams {
 	return simpleConnectParams{
 		Name:      "ssid_limits",
+		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("a networks with the longest and shortest SSID."),
 		ExtraAttr: []string{"wificell_cq"},
 		Val: []simpleConnectParamsVal{
@@ -535,6 +574,7 @@ func simpleConnectSSIDLimits() simpleConnectParams {
 func simpleConnectNonASCIISSID() simpleConnectParams {
 	return simpleConnectParams{
 		Name:                 "non_ascii_ssid",
+		Fixture:              defaultFixture,
 		Doc:                  []string{"This test case verifies that the DUT accepts ascii and non-ascii type characters as the SSID."},
 		ExtraHardwareDepsDoc: []string{"TODO(b/158150763): Skip Marvell WiFi as there's a known issue to make the test always fail."},
 		ExtraHardwareDeps:    "hwdep.D(hwdep.WifiNotMarvell())",
@@ -571,8 +611,9 @@ func simpleConnectNonASCIISSID() simpleConnectParams {
 
 func simpleConnect8021xWEP() simpleConnectParams {
 	return simpleConnectParams{
-		Name: "8021xwep",
-		Doc:  simpleConnectDocPref("a protected network supporting for dynamic WEP encryption."),
+		Name:    "8021xwep",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("a protected network supporting for dynamic WEP encryption."),
 		ExtraHardwareDepsDoc: []string{"Skip on Marvell because of 8021xwep test failure post security fixes b/187853331, no plans to fix.",
 			"Skip on trogdor and strongbad board because of 8021xwep test regression post Qualcomm FW746 b/194644867,",
 			"Qualcomm looks at the security fixes in the FW.",
@@ -596,6 +637,7 @@ func simpleConnect8021xWEP() simpleConnectParams {
 func simpleConnect8021xWPA() simpleConnectParams {
 	return simpleConnectParams{
 		Name:                 "8021xwpa",
+		Fixture:              defaultFixture,
 		Doc:                  simpleConnectDocPref("a protected network supporting for WPA-EAP encryption."),
 		ExtraHardwareDepsDoc: []string{"TODO(b/189986748): Remove the skiplist once those flaky boards have reached AUE."},
 		ExtraHardwareDeps:    `hwdep.D(hwdep.SkipOnPlatform("banjo", "candy", "gnawty", "kip", "ninja", "sumo", "swanky", "winky"))`,
@@ -672,12 +714,14 @@ func simpleConnect8021xWPA3() []simpleConnectParams {
 	return []simpleConnectParams{
 		{
 			Name:              "8021xwpa3mixed",
+			Fixture:           defaultFixture,
 			Doc:               simpleConnectDocPref("an WPA3-Enterprise-transition AP"),
 			Val:               mkOps("Optional", "MixedWPA3"),
 			ExtraRequirements: []string{tdreq.WiFiSecSupportWPA3Enterprise},
 		},
 		{
 			Name:              "8021xwpa3",
+			Fixture:           defaultFixture,
 			Doc:               simpleConnectDocPref("an WPA3-Enterprise-only AP"),
 			Val:               mkOps("Required", "PureWPA3"),
 			ExtraRequirements: []string{tdreq.WiFiSecSupportWPA3Enterprise},
@@ -690,6 +734,7 @@ func simpleConnectTunneled1x() []simpleConnectParams {
 	mkP := func(outer, inner string, extraAttr []string) simpleConnectParams {
 		ret := simpleConnectParams{
 			Name:      "8021x" + strings.ToLower(outer) + "_" + strings.ToLower(inner),
+			Fixture:   defaultFixture,
 			Doc:       []string{fmt.Sprintf("Verifies that DUT can connect to a protected network supporting for %s authentication with tunneled %s.", outer, inner)},
 			ExtraAttr: extraAttr,
 		}
@@ -759,7 +804,8 @@ func simpleConnectTunneled1x() []simpleConnectParams {
 	}
 	mkPFail := func(outer, inner string, extraAttr []string) simpleConnectParams {
 		ret := simpleConnectParams{
-			Name: "8021x" + strings.ToLower(outer) + "_fail",
+			Name:    "8021x" + strings.ToLower(outer) + "_fail",
+			Fixture: defaultFixture,
 			Doc: []string{
 				fmt.Sprintf("Verifies that DUT CANNOT connect to a %s network with wrong settings.", outer),
 				"We do these tests for only one inner authentication protocol because we",
@@ -854,6 +900,9 @@ func TestSimpleConnect(t *testing.T) {
 	// {{ . }}
 	{{ end }}
 	Name: {{ .Name | fmt }},
+	{{ if .Fixture }}
+	Fixture: {{ .Fixture | fmt }},
+	{{ end }}
 	{{ if .ExtraAttr }}
 	ExtraAttr: {{ .ExtraAttr | fmt }},
 	{{ end }}
