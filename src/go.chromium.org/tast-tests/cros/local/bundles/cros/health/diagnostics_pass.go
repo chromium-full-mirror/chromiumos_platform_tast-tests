@@ -140,7 +140,7 @@ func init() {
 		}, {
 			Name:              "bluetooth_power",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothPower),
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
 			Name:              "bluetooth_discovery",
