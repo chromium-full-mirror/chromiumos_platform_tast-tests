@@ -39,7 +39,7 @@ func init() {
 			Val:       browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			ExtraAttr:         []string{"group:golden_tier", "group:hw_agnostic"},
+			ExtraAttr:         []string{"group:mainline", "group:golden_tier", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
