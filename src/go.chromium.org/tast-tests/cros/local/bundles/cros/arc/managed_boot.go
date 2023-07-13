@@ -62,7 +62,7 @@ func init() {
 				Name:              "enabled_vm",
 				Val:               arcEnabled,
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"informational"},
 			}},
 	})
 }
