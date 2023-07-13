@@ -29,7 +29,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens Audacity from launcher",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		Attr:         []string{"group:mainline", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host", "amd64"},
 		BugComponent: "b:1122570",
