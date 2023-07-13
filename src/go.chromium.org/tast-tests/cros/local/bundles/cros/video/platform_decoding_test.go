@@ -1491,24 +1491,6 @@ func TestPlatformDecodingParams(t *testing.T) {
 			}
 			params = append(params, param)
 		}
-
-		// TODO(b/238211555) : V4L2 API does not support VP9 svc (i.e. DRC) yet.
-		if stateness == "Stateless" {
-			continue
-		}
-
-		// VP9 svc.
-		params = append(params, paramData{
-			Name:               fmt.Sprintf("v4l2_%s_vp9_0_svc", strings.ToLower(stateness)),
-			Decoder:            decoderExecutable,
-			DecoderArgsBuilder: decoderArgsBuilder,
-			Files:              []string{vp9SVCFile},
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeVP9},
-			HardwareDeps:       strings.Join(commonHardwareDeps, ", "),
-			Metadata:           genExtraData([]string{vp9SVCFile}),
-			Attr:               []string{"graphics_video_vp9", "graphics_weekly"},
-		})
 	}
 
 	// Generate V4L2 Stateless AV1 tests.

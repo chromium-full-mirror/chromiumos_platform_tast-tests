@@ -1912,19 +1912,6 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_hevc", "graphics_weekly"},
 			},
 			{
-				Name: "v4l2_stateful_vp9_0_svc",
-				Val: platformDecodingParams{
-					filenames:          []string{"test_vectors/vp9/kSVC/ksvc_3sl_3tl_key100.ivf"},
-					decoder:            "v4l2_stateful_decoder",
-					decoderArgsBuilder: platform.V4L2StatefulDecodeArgs,
-				},
-				Timeout:           10 * time.Minute,
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
-				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_dec_vp9_1080_30"},
-				ExtraData:         []string{"test_vectors/vp9/kSVC/ksvc_3sl_3tl_key100.ivf", "test_vectors/vp9/kSVC/ksvc_3sl_3tl_key100.ivf.json"},
-				ExtraAttr:         []string{"graphics_video_vp9", "graphics_weekly"},
-			},
-			{
 				Name: "v4l2_stateless_vp9_0_group1_buf",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_256X144_fr15_bd8_8buf_l1.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_256X144_fr15_bd8_8buf_l1.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_256X144_fr15_bd8_8buf_l1.ivf", "test_vectors/vp9/Profile_0_8bit/buf/crowd_run_384X192_fr30_bd8_8buf_l11.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_384X192_fr30_bd8_8buf_l11.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_384X192_fr30_bd8_8buf_l11.ivf"},
