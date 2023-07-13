@@ -106,6 +106,9 @@ func init() {
 			// TODO(b/281464322): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
+			// Cannot be added to DiagnosticsPass.* since that requires the
+			// routine to be run in a good network environment. The
+			// DiagnosticsPass.* counterpart will be flaky in a normal lab.
 			Name: "https_latency",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSLatency),
 		}, {

@@ -103,10 +103,6 @@ func init() {
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name:      "https_latency",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSLatency),
-			ExtraAttr: []string{"informational"},
-		}, {
 			Name:      "memory",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
 			ExtraAttr: []string{"informational"},
