@@ -78,6 +78,16 @@ func init() {
 				},
 			},
 			{
+				Name:    "lacros_jetstream",
+				Timeout: defaultTimeout,
+				Fixture: "loggedInToCUJUserLacros",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeLacros,
+					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
+				},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			{
 				Name:    "kraken",
 				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUser",
@@ -87,6 +97,16 @@ func init() {
 				},
 			},
 			{
+				Name:    "lacros_kraken",
+				Timeout: defaultTimeout,
+				Fixture: "loggedInToCUJUserLacros",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeLacros,
+					BenchmarkInfo: benchmarkcuj.KrakenInfo,
+				},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			{
 				Name:    "octane",
 				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUser",
@@ -94,6 +114,16 @@ func init() {
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
 				},
+			},
+			{
+				Name:    "lacros_octane",
+				Timeout: defaultTimeout,
+				Fixture: "loggedInToCUJUserLacros",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeLacros,
+					BenchmarkInfo: benchmarkcuj.OctaneInfo,
+				},
+				ExtraSoftwareDeps: []string{"lacros"},
 			},
 		},
 	})
