@@ -38,7 +38,7 @@ main() {
   mount -t tmpfs run /run
 
   case "${kind}" in
-    block)
+    block | block_packed)
       [[ -b "${src}" ]] || die "${src} is not a block device"
       mkfs.ext4 "${src}"
       mount "${src}" "${mountpoint}"

@@ -51,6 +51,14 @@ func init() {
 				},
 			},
 			{
+				Name:      "block_packed_boot",
+				ExtraData: []string{"fio_boot.job"},
+				Val: param{
+					kind: "block_packed",
+					job:  "fio_boot.job",
+				},
+			},
+			{
 				Name:      "virtiofs_boot",
 				ExtraData: []string{"fio_boot.job"},
 				Val: param{
@@ -74,6 +82,14 @@ func init() {
 				ExtraData: []string{"fio_login.job"},
 				Val: param{
 					kind: "block",
+					job:  "fio_login.job",
+				},
+			},
+			{
+				Name:      "block_packed_login",
+				ExtraData: []string{"fio_login.job"},
+				Val: param{
+					kind: "block_packed",
 					job:  "fio_login.job",
 				},
 			},
@@ -105,6 +121,14 @@ func init() {
 				},
 			},
 			{
+				Name:      "block_packed_surfing",
+				ExtraData: []string{"fio_surfing.job"},
+				Val: param{
+					kind: "block_packed",
+					job:  "fio_surfing.job",
+				},
+			},
+			{
 				Name:      "virtiofs_surfing",
 				ExtraData: []string{"fio_surfing.job"},
 				Val: param{
@@ -128,6 +152,14 @@ func init() {
 				ExtraData: []string{"fio_randread.job"},
 				Val: param{
 					kind: "block",
+					job:  "fio_randread.job",
+				},
+			},
+			{
+				Name:      "block_packed_randread",
+				ExtraData: []string{"fio_randread.job"},
+				Val: param{
+					kind: "block_packed",
 					job:  "fio_randread.job",
 				},
 			},
@@ -159,6 +191,14 @@ func init() {
 				},
 			},
 			{
+				Name:      "block_packed_randwrite",
+				ExtraData: []string{"fio_randwrite.job"},
+				Val: param{
+					kind: "block_packed",
+					job:  "fio_randwrite.job",
+				},
+			},
+			{
 				Name:      "virtiofs_randwrite",
 				ExtraData: []string{"fio_randwrite.job"},
 				Val: param{
@@ -182,6 +222,14 @@ func init() {
 				ExtraData: []string{"fio_seqread.job"},
 				Val: param{
 					kind: "block",
+					job:  "fio_seqread.job",
+				},
+			},
+			{
+				Name:      "block_packed_seqread",
+				ExtraData: []string{"fio_seqread.job"},
+				Val: param{
+					kind: "block_packed",
 					job:  "fio_seqread.job",
 				},
 			},
@@ -213,6 +261,14 @@ func init() {
 				},
 			},
 			{
+				Name:      "block_packed_seqwrite",
+				ExtraData: []string{"fio_seqwrite.job"},
+				Val: param{
+					kind: "block_packed",
+					job:  "fio_seqwrite.job",
+				},
+			},
+			{
 				Name:      "virtiofs_seqwrite",
 				ExtraData: []string{"fio_seqwrite.job"},
 				Val: param{
@@ -236,6 +292,14 @@ func init() {
 				ExtraData: []string{"fio_stress_rw.job"},
 				Val: param{
 					kind: "block",
+					job:  "fio_stress_rw.job",
+				},
+			},
+			{
+				Name:      "block_packed_stress_rw",
+				ExtraData: []string{"fio_stress_rw.job"},
+				Val: param{
+					kind: "block_packed",
 					job:  "fio_stress_rw.job",
 				},
 			},

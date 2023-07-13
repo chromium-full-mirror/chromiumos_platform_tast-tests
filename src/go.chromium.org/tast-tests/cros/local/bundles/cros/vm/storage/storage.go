@@ -30,7 +30,7 @@ type Option struct {
 func NewOption(kind, cache string, caseFold bool) (Option, error) {
 	var opt Option
 	opt.Kind = kind
-	if kind == "block" {
+	if kind == "block" || kind == "block_packed" {
 		opt.Tag = "/dev/vda"
 	} else if kind == "virtiofs" || kind == "virtiofs_dax" || kind == "p9" {
 		opt.Tag = "shared"
@@ -67,8 +67,9 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, script string, opt Option,
 
 	var storageOpt vm.Option
 
-	if opt.Kind == "block" {
-		storageOpt = vm.RWDisks(block)
+	if opt.Kind == "block" || opt.Kind == "block_packed" {
+		blockOption := fmt.Sprintf("%s,packed-queue=%v", block, opt.Kind == "block_packed")
+		storageOpt = vm.RWDisks(blockOption)
 	} else if opt.Kind == "virtiofs" || opt.Kind == "virtiofs_dax" {
 		storageOpt = vm.SharedDir(vm.SharedDirParam{
 			Src: shared, Tag: opt.Tag, FsType: "fs", Cache: opt.cache, Timeout: VirtioFSCacheTimeoutSecond, Writeback: true, DAX: opt.Kind == "virtiofs_dax", CaseFold: opt.caseFold})
