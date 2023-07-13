@@ -10,6 +10,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/loopback/lifecycle"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -26,6 +27,7 @@ func init() {
 
 		Contacts:     []string{"aaronyu@google.com", "htcheong@google.com", "chromeos-audio-bugs@google.com"},
 		Fixture:      fixture.FloopEnabled,
+		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		BugComponent: "b:875484",
 		Attr:         []string{"group:mainline", "informational"},
 		// Param.Name encoding:
