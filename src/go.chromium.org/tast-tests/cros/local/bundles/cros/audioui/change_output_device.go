@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	fixture "go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -35,6 +36,7 @@ func init() {
 			"zentaro@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      fixture.StereoAloopLoaded,
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),
 		SearchFlags: []*testing.StringPair{
@@ -114,34 +116,34 @@ func verifyActiveOutputNodeChanged(ctx context.Context, tconn *chrome.TestConn) 
 		return errors.Wrap(err, "failed to confirm dropdown label")
 	}
 
-	// Change active node to headphones.
-	headphonesLabel := "Headphones"
+	// Change active node to loopback.
+	loopbackLabel := "Loopback Playback"
 	speakerOption := nodewith.NameContaining(speakerLabel).Ancestor(oss.OSAudioSettingsOutputDeviceDropdown)
-	headphonesOption := nodewith.NameContaining(headphonesLabel).Ancestor(oss.OSAudioSettingsOutputDeviceDropdown)
-	if err := uiauto.Combine("Select HEADPHONES output device",
+	loopbackOption := nodewith.NameContaining(loopbackLabel).Ancestor(oss.OSAudioSettingsOutputDeviceDropdown)
+	if err := uiauto.Combine("Select ALSA_LOOPBACK output device",
 		ui.EnsureFocused(oss.OSAudioSettingsOutputDeviceDropdown),
 		ui.DoDefault(oss.OSAudioSettingsOutputDeviceDropdown),
 		ui.WaitUntilExists(oss.OSAudioSettingsOutputDeviceDropdown.State(state.Collapsed, false)),
 		// Verify expected nodes listed in dropdown.
 		ui.WaitUntilExists(speakerOption),
-		ui.WaitUntilExists(headphonesOption),
-		// Select headphones.
-		ui.LeftClick(headphonesOption),
+		ui.WaitUntilExists(loopbackOption),
+		// Select loopback.
+		ui.LeftClick(loopbackOption),
 		ui.WaitUntilGone(oss.OSAudioSettingsOutputDeviceDropdown.State(state.Collapsed, false)),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed select internal speaker in dropdown")
 	}
 
-	// Confirm UI updated to show headphones as active node.
-	if err := dropdownLabelEquals(headphonesLabel); err != nil {
+	// Confirm UI updated to show loopback as active node.
+	if err := dropdownLabelEquals(loopbackLabel); err != nil {
 		return errors.Wrap(err, "failed to confirm dropdown label")
 	}
-	headphoneNode, err := cras.GetNodeByType(ctx, "HEADPHONE")
+	loopbackNode, err := cras.GetNodeByType(ctx, "ALSA_LOOPBACK")
 	if err != nil {
-		return errors.Wrap(err, "failed to get headphones")
-	} else if !headphoneNode.Active {
+		return errors.Wrap(err, "failed to get loopback")
+	} else if !loopbackNode.Active {
 		return errors.Wrap(err, "failed to verify selected node active in CRAS")
 	}
-	testing.ContextLogf(ctx, "Active output node set to: %q", headphoneNode.Type)
+	testing.ContextLogf(ctx, "Active output node set to: %q", loopbackNode.Type)
 	return nil
 }
