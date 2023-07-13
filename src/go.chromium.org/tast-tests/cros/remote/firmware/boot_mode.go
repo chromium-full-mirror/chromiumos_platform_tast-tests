@@ -106,13 +106,6 @@ const (
 	// but instead boot to the NOGOOD screen.
 	CheckToNoGoodScreen ModeSwitchOption = iota
 
-	// UseFwScreenToDevMode uses FwScreenToDevMode instead of
-	// devModeFWScreenBypass. When cold resetting the DUT in dev mode with
-	// ModeAwareReboot(), FwScreenToDevMode is less likely to leave the DUT
-	// stuck at a firmware screen. This would happen if dev mode is disabled,
-	// for example, by the FWMP.
-	UseFwScreenToDevMode ModeSwitchOption = iota
-
 	// RebootForGBBFlagsChanged indicates that a reboot is required
 	// if gbb flags were changed. This would be helpful in mode transition by
 	// canceling gbb flag restriction first.
@@ -610,14 +603,8 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 
 	// If in dev mode, bypass the TO_DEV screen.
 	if fromMode == fwCommon.BootModeDev {
-		if msOptsContain(opts, UseFwScreenToDevMode) {
-			if err := ms.FwScreenToDevMode(ctx); err != nil {
-				return errors.Wrap(err, "fw screen to developer mode")
-			}
-		} else {
-			if err := ms.devModeFWScreenBypass(ctx); err != nil {
-				return errors.Wrap(err, "bypassing fw screen")
-			}
+		if err := ms.FwScreenToDevMode(ctx); err != nil {
+			return errors.Wrap(err, "fw screen to developer mode")
 		}
 	} else if fromMode == fwCommon.BootModeUSBDev {
 		if err := ms.fwScreenToUSBDevMode(ctx); err != nil {
@@ -654,75 +641,6 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 		return errors.Wrapf(err, "checking boot mode after resetting from %s", fromMode)
 	} else if curr != expectMode && !msOptsContain(opts, SkipModeCheckAfterReboot) {
 		return errors.Errorf("incorrect boot mode after resetting DUT: got %s; want %s", curr, expectMode)
-	}
-	return nil
-}
-
-// devModeFWScreenBypass speeds up the reboot process in dev mode.
-func (ms *ModeSwitcher) devModeFWScreenBypass(ctx context.Context) error {
-	h := ms.Helper
-	if err := h.RequireServo(ctx); err != nil {
-		return errors.Wrap(err, "requiring servo")
-	}
-	connectTimeout := 2 * time.Second
-	waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// The sequence will be repeated on reconnect timeout.
-		switch h.Config.ModeSwitcherType {
-		case KeyboardDevSwitcher:
-			// Same as MenuSwitcher.
-			fallthrough
-		case MenuSwitcher:
-			// Press Ctrl+D every 2 seconds 4 times.
-			for i := 0; i < 4; i++ {
-				if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-					return errors.Wrapf(err, "sleeping for %s", 2*time.Second)
-				}
-				testing.ContextLog(ctx, "Pressing Ctrl-D")
-				if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
-					return errors.Wrap(err, "pressing Ctrl-D to bypass dev screen")
-				}
-			}
-		case TabletDetachableSwitcher:
-			// 1. Wait until the firmware screen appears.
-			// 2. Hold volume_up for 100ms 3 times to get to the first menu item.
-			// 3. Press power twice to select Developer Options -> Boot From Internal Disk.
-			testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
-			// GoBigSleepLint: Sleeping for model specific time.
-			if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-				return errors.Wrapf(err, "sleeping for %s (FirmwareScreen) to wait for INSERT screen", h.Config.FirmwareScreen)
-			}
-			for i := 0; i < 3; i++ {
-				if err := h.Servo.SetInt(ctx, servo.VolumeUpHold, 100); err != nil {
-					return errors.Wrap(err, "changing menu selection")
-				}
-				// GoBigSleepLint: The firmware screen can only handle keypresses at a model specific rate.
-				if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-					return errors.Wrapf(err, "sleeping for %s (KeypressDelay)", h.Config.KeypressDelay)
-				}
-			}
-			for i := 0; i < 2; i++ {
-				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
-					return errors.Wrap(err, "selecting menu item")
-				}
-				// GoBigSleepLint: The firmware screen can only handle keypresses at a model specific rate.
-				if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-					return errors.Wrapf(err, "sleeping for %s (KeypressDelay)", h.Config.KeypressDelay)
-				}
-			}
-		default:
-			return errors.Errorf("unsupported ModeSwitcherType %s for devModeFWScreenBypass", h.Config.ModeSwitcherType)
-		}
-		ctx, cancel := context.WithTimeout(ctx, connectTimeout)
-		defer cancel()
-		connectTimeout += time.Second
-		if err := h.WaitConnect(ctx, waitConnectOpt...); err != nil {
-			waitConnectOpt = nil
-			return err
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: h.Config.DelayRebootToPing}); err != nil {
-		return errors.Wrap(err, "failed to reconnect to DUT")
 	}
 	return nil
 }

@@ -67,6 +67,7 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 			The name org.chromium.UserDataAuth was not provided by any .service files)'
 		*/
 		s.Logf("Sleeping for %s", 5*time.Second)
+		// GoBigSleepLint: This is a temporary sleep until a better solution can be found.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep")
 		}
@@ -169,7 +170,7 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 	defer cancelRebootCtx()
 
 	var opts []firmware.ModeSwitchOption
-	opts = append(opts, firmware.SkipModeCheckAfterReboot, firmware.UseFwScreenToDevMode)
+	opts = append(opts, firmware.SkipModeCheckAfterReboot)
 	if err := ms.ModeAwareReboot(rebootCtx, firmware.ColdReset, opts...); err != nil {
 		// When dev mode got disabled by FWMP, pressing the ENTER key would be
 		// required on DUTs with RecButtonDevSwitch, for example chromeboxes,
