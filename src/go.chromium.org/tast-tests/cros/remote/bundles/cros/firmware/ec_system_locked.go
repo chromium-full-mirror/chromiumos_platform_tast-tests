@@ -56,14 +56,16 @@ func ECSystemLocked(ctx context.Context, s *testing.State) {
 }
 
 func setFWWriteProtectStateAndReboot(ctx context.Context, h *firmware.Helper, s *testing.State, newFWWriteProtectState bool) {
-	dut := s.DUT()
-
 	if err := setFWWriteProtectState(ctx, h, newFWWriteProtectState); err != nil {
 		s.Fatal("Failed to set FW write protect state: ", err)
 	}
 	s.Log("Rebooting the DUT")
-	if err := dut.Reboot(ctx); err != nil {
-		s.Fatal("Failed to reboot the DUT: ", err)
+	ms, err := firmware.NewModeSwitcher(ctx, h)
+	if err != nil {
+		s.Fatal("Creating mode switcher: ", err)
+	}
+	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+		s.Fatal("Failed to perform mode aware reboot: ", err)
 	}
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancelWaitConnect()
