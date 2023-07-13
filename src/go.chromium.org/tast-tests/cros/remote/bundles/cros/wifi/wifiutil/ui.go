@@ -191,8 +191,10 @@ func OpenJoinWiFiDialogFromQuickSettings(ctx context.Context, conn *grpc.ClientC
 		return cleanup, errors.Wrap(err, "could not enable Wi-Fi using Shill")
 	}
 
-	joinWiFiButton := ui.Node().Name("Join other Wi-Fi networks").Role(ui.Role_ROLE_BUTTON).Finder()
-	if _, err := uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: joinWiFiButton}); err != nil {
+	joinWiFiButton := ui.Node().Name("Join Wi-Fi network").Role(ui.Role_ROLE_BUTTON).Finder()
+	// DoDefault is a better choice, as the button is at the bottom of the network list,
+	// which the list change whenever the available network list change, makes the click action highly unstable.
+	if _, err := uiauto.DoDefault(ctx, &ui.DoDefaultRequest{Finder: joinWiFiButton}); err != nil {
 		return cleanup, errors.Wrap(err, "failed to click the join button")
 	}
 

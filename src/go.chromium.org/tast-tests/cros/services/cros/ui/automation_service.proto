@@ -81,6 +81,9 @@ service AutomationService {
 
   // SelectDropDownOption selects dropdown option with the option name.
   rpc SelectDropDownOption(SelectDropDownOptionRequest) returns (google.protobuf.Empty) {}
+
+  // DoDefault calls doDefault() JS method on the node found by the input finder.
+  rpc DoDefault(DoDefaultRequest) returns (google.protobuf.Empty) {}
 }
 
 message LeftClickRequest {
@@ -173,6 +176,10 @@ message GetUITreeResponse {
 message SelectDropDownOptionRequest {
   Finder finder = 1;
   string option_name = 2;
+}
+
+message DoDefaultRequest {
+  Finder finder = 1;
 }
 
 // NodeInfo is a wrapper around chrome.automation API AutomationNode.

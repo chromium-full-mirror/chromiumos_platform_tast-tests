@@ -538,6 +538,26 @@ func (svc *AutomationService) SelectDropDownOption(ctx context.Context, req *pb.
 	return &empty.Empty{}, nil
 }
 
+// DoDefault calls doDefault() JS method on the node found by the input finder.
+func (svc *AutomationService) DoDefault(ctx context.Context, req *pb.DoDefaultRequest) (*empty.Empty, error) {
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+
+	ui, err := getUIAutoContext(ctx, svc)
+	if err != nil {
+		return nil, err
+	}
+	finder, err := toFinder(req.Finder)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := ui.DoDefault(finder)(ctx); err != nil {
+		return nil, errors.Wrapf(err, "failed calling DoDefault with finder: %v", finder.Pretty())
+	}
+	return &empty.Empty{}, nil
+}
+
 func getUIAutoContext(ctx context.Context, svc *AutomationService) (*uiauto.Context, error) {
 	cr := svc.sharedObject.Chrome
 	if cr == nil {

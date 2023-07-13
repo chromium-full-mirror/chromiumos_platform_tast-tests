@@ -173,7 +173,7 @@ func newQuickSettingsViewTest(rpcClient *rpc.Client) *quickSettingsViewTest {
 	return &quickSettingsViewTest{
 		quickSettingsSvc: quicksettings.NewQuickSettingsServiceClient(rpcClient.Conn),
 		uiSvc:            ui.NewAutomationServiceClient(rpcClient.Conn),
-		rootFinder:       ui.Node().Ancestor(ui.Node().HasClass("UnifiedSystemTrayView").Finder()),
+		rootFinder:       ui.Node().Ancestor(ui.Node().HasClass("QuickSettingsView").Finder()),
 	}
 }
 
@@ -188,24 +188,24 @@ func (q *quickSettingsViewTest) closePage(ctx context.Context) error {
 }
 
 func (q *quickSettingsViewTest) toggleWifi(ctx context.Context) error {
-	networkDetailedViewRevamp := q.rootFinder.HasClass("NetworkDetailedNetworkViewImpl").Finder()
-	wifiToggleButton := ui.Node().HasClass("TrayToggleButton").NameContaining("Wi-Fi").Ancestor(networkDetailedViewRevamp).Finder()
-
-	_, err := q.uiSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: wifiToggleButton})
+	_, err := q.uiSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: q.wifiToggleButton(any /* wifiToggleState */)})
 	return err
 }
 
 func (q *quickSettingsViewTest) checkTextAndScanningIndicator(ctx context.Context, wifiTurnedOn bool) error {
+	toggleBtn := q.wifiToggleButton(boolToToggleState(wifiTurnedOn))
+
 	if !wifiTurnedOn {
-		wifiOffText := q.rootFinder.Name("Wi-Fi is turned off").Role(ui.Role_ROLE_STATIC_TEXT).Finder()
-		_, err := q.uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: wifiOffText})
+		_, err := q.uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: toggleBtn})
 		return err
 	}
 
-	// The following UI results will last for only a few seconds, longer timeout is redundant.
-	req := &ui.WaitUntilExistsRequest{Timeout: durationpb.New(3 * time.Second)}
+	req := &ui.WaitUntilExistsRequest{
+		Finder: toggleBtn,
+		// The following UI results will last for only a few seconds, longer timeout is redundant.
+		Timeout: durationpb.New(3 * time.Second),
+	}
 
-	req.Finder = q.rootFinder.Name("Wi-Fi is turned on").Role(ui.Role_ROLE_STATIC_TEXT).Finder()
 	if _, err := q.uiSvc.WaitUntilExists(ctx, req); err != nil {
 		return errors.Wrap(err, "failed to wait until 'Wi-Fi is turned on' label exists")
 	}
@@ -218,24 +218,19 @@ func (q *quickSettingsViewTest) checkTextAndScanningIndicator(ctx context.Contex
 }
 
 func (q *quickSettingsViewTest) checkToggleAndButtonState(ctx context.Context, wifiTurnedOn bool) error {
-	networkDetailedViewRevamp := q.rootFinder.HasClass("NetworkDetailedNetworkViewImpl").Finder()
-	wifiToggleButton := ui.Node().HasClass("TrayToggleButton").NameContaining("Wi-Fi").Ancestor(networkDetailedViewRevamp).Finder()
-	if _, err := q.uiSvc.WaitUntilCheckedState(ctx, &ui.WaitUntilCheckedStateRequest{
-		Finder:        wifiToggleButton,
-		ExpectedState: wifiTurnedOn,
+	if _, err := q.uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{
+		Finder: q.wifiToggleButton(boolToToggleState(wifiTurnedOn)),
 	}); err != nil {
 		return errors.Wrapf(err, "failed to wait until Wi-Fi toggle button state to be %t", wifiTurnedOn)
 	}
 
-	joinWifiButton := q.rootFinder.Name("Join other Wi-Fi networks").Role(ui.Role_ROLE_BUTTON).Finder()
-	joinWifiButtonInfo, err := wifiutil.StableNodeInfo(ctx, q.uiSvc, joinWifiButton)
+	joinWifiButton := q.rootFinder.Name("Join Wi-Fi network").Role(ui.Role_ROLE_BUTTON).Finder()
+	exists, err := wifiutil.StableCheckIsNodeFound(ctx, q.uiSvc, joinWifiButton)
 	if err != nil {
-		return errors.Wrap(err, "failed to check the join Wi-Fi button's information")
+		return errors.Wrap(err, `failed to check if "Join Wi-Fi" button exists`)
 	}
-
-	enabled := (joinWifiButtonInfo.NodeInfo.Restriction == ui.Restriction_RESTRICTION_NONE)
-	if enabled != wifiTurnedOn {
-		return errors.Errorf("the current 'Join Wi-Fi' button restriction: %s, got enabled: %t, expect enabled: %t", joinWifiButtonInfo.NodeInfo.Restriction, enabled, wifiTurnedOn)
+	if exists != wifiTurnedOn {
+		return errors.Errorf(`"Add Wi-Fi" button existing state: %t, expect: %t`, exists, wifiTurnedOn)
 	}
 	return nil
 }
@@ -244,6 +239,27 @@ func (q *quickSettingsViewTest) checkNetworkList(ctx context.Context, ssid strin
 	wifiItem := q.rootFinder.Name("Connect to " + ssid).HasClass("NetworkListNetworkItemView").Role(ui.Role_ROLE_BUTTON).Finder()
 	_, err := q.uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: wifiItem})
 	return err
+}
+
+type wifiToggleState string
+
+const (
+	turnedOn  wifiToggleState = "on"
+	turnedOff wifiToggleState = "off"
+	any       wifiToggleState = "(off|on)"
+)
+
+func boolToToggleState(val bool) wifiToggleState {
+	if val {
+		return turnedOn
+	}
+	return turnedOff
+}
+
+func (q *quickSettingsViewTest) wifiToggleButton(state wifiToggleState) *ui.Finder {
+	name := fmt.Sprintf(`^Toggle Wi-Fi. Wi-Fi is turned %s\.$`, string(state))
+	networkDetailedViewRevamp := q.rootFinder.HasClass("NetworkDetailedNetworkViewImpl").Finder()
+	return ui.Node().HasClass("HoverHighlightView").NameRegex(name).Ancestor(networkDetailedViewRevamp).Finder()
 }
 
 type osSettingsWifiPageTest struct {

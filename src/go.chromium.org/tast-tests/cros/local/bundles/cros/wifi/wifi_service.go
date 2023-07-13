@@ -99,8 +99,10 @@ func (s *Service) JoinWifiFromQuickSettings(ctx context.Context, req *wifi.JoinW
 	defer quicksettings.Hide(cleanupCtx, res.tconn)
 	defer s.dumpUITreeWithScreenshotOnError(cleanupCtx, func() bool { return retErr != nil }, "quick_settings_ui_dump")
 
-	joinWiFiButton := nodewith.Name("Join other Wi-Fi networks").Role(role.Button).Ancestor(quicksettings.LegacyRootFinder)
-	if err := res.ui.LeftClick(joinWiFiButton)(ctx); err != nil {
+	joinWiFiButton := nodewith.Name("Join Wi-Fi network").Role(role.Button).Ancestor(quicksettings.QsRootFinder)
+	// DoDefault is a better choice, as the button is at the bottom of the network list,
+	// which the list change whenever the available network list change, makes the click action highly unstable.
+	if err := res.ui.DoDefault(joinWiFiButton)(ctx); err != nil {
 		return &emptypb.Empty{}, errors.Wrap(err, "failed to click the join button")
 	}
 
