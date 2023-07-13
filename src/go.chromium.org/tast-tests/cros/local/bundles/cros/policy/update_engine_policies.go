@@ -40,9 +40,8 @@ type updateEngineTestParam struct {
 }
 
 const (
-	deviceTargetVersionSelectorVal = "0,1626155736-"
-	deviceTargetVersionPrefixVal   = "1000."
-	deviceReleaseLtsTagVal         = "lts"
+	deviceTargetVersionPrefixVal = "1000."
+	deviceReleaseLtsTagVal       = "lts"
 )
 
 func init() {
@@ -65,15 +64,6 @@ func init() {
 		Fixture:      fixture.ChromeUpdateEngineEnrolledLoggedIn,
 		Timeout:      1 * time.Minute,
 		Params: []testing.Param{{
-			Name: "device_target_version_selector",
-			Val: &updateEngineTestParam{
-				policyValues: []policy.Policy{&policy.DeviceTargetVersionSelector{Val: deviceTargetVersionSelectorVal}},
-				testValue:    deviceTargetVersionSelectorVal,
-				policyParam:  "targetversionselector",
-				checkParam:   true,
-				checkVal:     true,
-			},
-		}, {
 			Name: "device_target_version_prefix",
 			Val: &updateEngineTestParam{
 				policyValues: []policy.Policy{&policy.DeviceTargetVersionPrefix{Val: deviceTargetVersionPrefixVal}},
@@ -190,7 +180,6 @@ func init() {
 			},
 		}},
 		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.DeviceTargetVersionSelector{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceReleaseLtsTag{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceRollbackToTargetVersion{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceTargetVersionPrefix{}, pci.VerifiedFunctionalityOS),
