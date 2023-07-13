@@ -6,8 +6,6 @@ package cryptohome
 
 import (
 	"context"
-	"strconv"
-	"strings"
 
 	biod "chromiumos/system_api/biod_messages_proto"
 	uda "chromiumos/system_api/user_data_auth_proto"
@@ -125,7 +123,7 @@ func AddFingerprintFactor(ctx context.Context, s *testing.State) {
 			ExpectedErrorCode: uda.CryptohomeErrorCode_CRYPTOHOME_ADD_CREDENTIALS_FAILED,
 		},
 	} {
-		if s.Run(ctx, tc.Label, func(ctx context.Context, s *testing.State) {
+		ok := s.Run(ctx, tc.Label, func(ctx context.Context, s *testing.State) {
 			// Set up FakeAuthStackManager's behaviors.
 			fasm.SetCreateCredStatus(&tc.CreateCredStatus)
 			fasm.SetEnrollmentProgresses(tc.EnrollmentProgresses)
@@ -156,9 +154,7 @@ func AddFingerprintFactor(ctx context.Context, s *testing.State) {
 						return errors.Wrap(err, "cryptohome ListAuthFactors does not return expected auth factors")
 					}
 				} else {
-					if err == nil || !strings.Contains(err.Error(), strconv.Itoa(int(tc.ExpectedErrorCode))) {
-						return errors.Wrapf(err, "cryptohome cli does not return expected error code: %d, got: ", int(tc.ExpectedErrorCode))
-					}
+					return cryptohome.CheckCliErrorCode(err, int(tc.ExpectedErrorCode))
 				}
 				return nil
 			}); err != nil {
@@ -169,8 +165,9 @@ func AddFingerprintFactor(ctx context.Context, s *testing.State) {
 			if fasm.GetCreateCredStatus() != nil || fasm.GetEnrollmentProgresses() != nil {
 				s.Fatal("FakeAuthStackManager did not execute all predefined code paths")
 			}
-		}) {
-			// Don't continue to run upcoming subtests, as state has already gone wrong.
+		})
+		if !ok {
+			// Don't continue to run upcoming subtests, as the test state has already gone wrong.
 			return
 		}
 	}

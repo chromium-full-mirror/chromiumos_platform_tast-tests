@@ -14,6 +14,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
@@ -510,4 +512,17 @@ func TestPinCounterMechanism(ctx context.Context, userName, passwordLabel, userP
 	defer client.InvalidateAuthSession(ctx, authSessionID)
 
 	return TestPinCounterWithAuthSession(ctx, authSessionID, passwordLabel, userPassword, pinLabel, userPin, wrongPin, client)
+}
+
+// CheckCliErrorCode examines that the error from cryptohome cli invocation contains the desired error code.
+// Return an error explaining the mismatch.
+func CheckCliErrorCode(err error, expectedErrorCode int) error {
+	if expectedErrorCode == int(uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_NOT_SET) {
+		if err != nil {
+			return errors.Wrap(err, "cryptohome cli returns an error")
+		}
+	} else if err == nil || !strings.Contains(err.Error(), strconv.Itoa(expectedErrorCode)) {
+		return errors.Wrapf(err, "cryptohome cli does not return expected error code: %d, got: ", expectedErrorCode)
+	}
+	return nil
 }
