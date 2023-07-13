@@ -72,7 +72,7 @@ func init() {
 					"--enable-features=ArcEnableVirtioBlkForData",
 				},
 			},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           5 * time.Minute,
 		}, {
