@@ -57,8 +57,8 @@ const (
 	httpPflashPath    = "files/refvm_VARS.fd"
 )
 
-// BruschettaMinDiskSize prevents tests from running on devices without enough storage.
-var BruschettaMinDiskSize = hwdep.D(hwdep.MinStorage(16))
+// BruschettaHwDeps prevents tests from running on devices without enough storage or RAM.
+var BruschettaHwDeps = hwdep.D(hwdep.MinStorage(16), hwdep.MinMemory(7*1024))
 
 func init() {
 	testing.AddFixture(&testing.Fixture{

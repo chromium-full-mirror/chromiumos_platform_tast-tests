@@ -21,7 +21,7 @@ func init() {
 		Contacts:     []string{"jamesye@google.com", "clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
-		HardwareDeps: bruschetta.BruschettaMinDiskSize,
+		HardwareDeps: bruschetta.BruschettaHwDeps,
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
 		Fixture:      bruschetta.BruschettaFixture,
 	})

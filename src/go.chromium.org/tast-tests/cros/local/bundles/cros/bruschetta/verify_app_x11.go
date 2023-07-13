@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Runs an X11 bruschetta application from the terminal and verifies that it renders",
 		Contacts:     []string{"jamesye@google.com", "clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
-		HardwareDeps: bruschetta.BruschettaMinDiskSize,
+		HardwareDeps: bruschetta.BruschettaHwDeps,
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
 		Fixture:      bruschetta.BruschettaFixture,
