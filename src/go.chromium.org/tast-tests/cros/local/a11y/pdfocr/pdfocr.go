@@ -9,11 +9,17 @@ package pdfocr
 import (
 	"context"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -44,6 +50,15 @@ type DlcFailureSetUpData struct {
 	CTX        context.Context
 	CleanupCTX context.Context
 	TDown      *a11y.TearDownHelper
+}
+
+// SetUpData contains necessary objects for PDF OCR tests and is returned by
+// SetUp. TDown contains defer functions that clean up the testing environment.
+type SetUpData struct {
+	CR     *chrome.Chrome
+	Server *httptest.Server
+	TConn  *chrome.TestConn
+	TDown  *a11y.TearDownHelper
 }
 
 // SetUpDlcFailure executes common setup code that simulates the screen-ai DLC
@@ -92,6 +107,50 @@ func SetUpDlcFailure(ctx context.Context) (data DlcFailureSetUpData, e error) {
 	if err := upstart.StartJob(ctx, dlc.JobName); err != nil {
 		return setupData, errors.Wrap(err, "failed to start dlcservice")
 	}
+
+	return setupData, nil
+}
+
+// SetUp executes common setup code and returns a SetUpData. See the documentation
+// for SetUpData for more information.
+func SetUp(ctx, cleanupCtx context.Context, dataFS http.FileSystem, bt browser.Type) (SetUpData, error) {
+	setupData := SetUpData{nil, nil, nil, &a11y.TearDownHelper{}}
+
+	// Setup test HTTP server.
+	server := httptest.NewServer(http.FileServer(dataFS))
+	setupData.Server = server
+	setupData.TDown.Append(func() error {
+		server.Close()
+		return nil
+	})
+
+	// Launch browser with the PDF OCR feature flag for both Ash and Lacros Chrome.
+	opts := []chrome.Option{chrome.EnableFeatures("PdfOcr")}
+	lacrosConfig := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.LacrosEnableFeatures("PdfOcr")))
+	cr, err := browserfixt.NewChrome(ctx, bt, lacrosConfig, opts...)
+	if err != nil {
+		return SetUpData{}, errors.Wrap(err, "failed to start Chrome")
+	}
+	setupData.CR = cr
+	setupData.TDown.Append(func() error {
+		cr.Close(cleanupCtx)
+		return nil
+	})
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return SetUpData{}, errors.Wrap(err, "failed to create Test API connection")
+	}
+	setupData.TConn = tconn
+
+	// TODO(b:291094454): Add a variant of `chromevox.SetUp()` that takes a url as parameter.
+	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
+		return SetUpData{}, errors.Wrap(err, "failed to enable ChromeVox")
+	}
+	setupData.TDown.Append(func() error {
+		a11y.ClearFeature(cleanupCtx, tconn, a11y.SpokenFeedback)
+		return nil
+	})
 
 	return setupData, nil
 }

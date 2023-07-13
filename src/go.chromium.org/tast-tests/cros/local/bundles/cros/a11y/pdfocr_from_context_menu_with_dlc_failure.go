@@ -8,17 +8,12 @@ package a11y
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/pdfocr"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -68,31 +63,20 @@ func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) 
 
 	ctx = data.CTX
 	cleanupCtx := data.CleanupCTX
-
-	// Setup test HTTP server.
-	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer server.Close()
-
-	// Launch browser with the feature flag for PDF OCR.
 	bt := s.Param().(browser.Type)
-	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(),
-		chrome.EnableFeatures("PdfOcr"),
-	)
+	poData, err := pdfocr.SetUp(ctx, cleanupCtx, s.DataFileSystem(), bt)
 	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
+		s.Fatal("Failed to setup PDF OCR test: ", err)
 	}
-	defer cr.Close(cleanupCtx)
+	defer func() {
+		if err := poData.TDown.TearDown(); err != nil {
+			s.Fatal("Failed to tear down PDF OCR test: ", err)
+		}
+	}()
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
-	// TODO(b:291094454): Add a variant of `chromevox.SetUp()` that takes a url as parameter.
-	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
-		s.Fatal("Failed to enable Chromevox: ", err)
-	}
-	defer a11y.ClearFeature(cleanupCtx, tconn, a11y.SpokenFeedback)
+	cr := poData.CR
+	server := poData.Server
+	tconn := poData.TConn
 
 	// Get a speech monitor for the Google TTS engine.
 	ed := tts.GoogleTTSEngine()

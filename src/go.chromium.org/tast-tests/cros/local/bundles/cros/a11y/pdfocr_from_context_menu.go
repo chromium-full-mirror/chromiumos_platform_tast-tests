@@ -8,16 +8,12 @@ package a11y
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/pdfocr"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -59,29 +55,20 @@ func PDFOCRFromContextMenu(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	// Setup test HTTP server.
-	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer server.Close()
-
-	// Launch browser with the feature flag for PDF OCR.
 	bt := s.Param().(browser.Type)
-	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(),
-		chrome.EnableFeatures("PdfOcr"),
-	)
+	data, err := pdfocr.SetUp(ctx, cleanupCtx, s.DataFileSystem(), bt)
 	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
+		s.Fatal("Failed to setup PDF OCR test: ", err)
 	}
-	defer cr.Close(cleanupCtx)
+	defer func() {
+		if err := data.TDown.TearDown(); err != nil {
+			s.Fatal("Failed to tear down PDF OCR test: ", err)
+		}
+	}()
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
-	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
-		s.Fatal("Failed to enable Chromevox: ", err)
-	}
-	defer a11y.ClearFeature(cleanupCtx, tconn, a11y.SpokenFeedback)
+	cr := data.CR
+	server := data.Server
+	tconn := data.TConn
 
 	for _, pdfOCRContextMenu := range []struct {
 		name string
