@@ -292,8 +292,10 @@ func getCodecImplementation(ctx context.Context, conn *chrome.Conn, decode bool)
 			return errors.New("getStats() didn't fill in the codec implementation (yet)")
 		}
 		// "ExternalEncoder" is the default value for encoder implementations
-		// before filling the actual one, see b/162764016.
-		if impl == "ExternalEncoder" {
+		// before filling the actual one. We need to wait until the implementation name
+		// doesn't contain ExternalEncoder because in simulcast case it is like
+		// SimulcastEncoderAdapter (ExternalEncoder, ExternalEncoder, ExternalEncoder).
+		if strings.Contains(impl, "ExternalEncoder") {
 			return errors.New("getStats() didn't fill in the encoder implementation (yet)")
 		}
 		return nil
