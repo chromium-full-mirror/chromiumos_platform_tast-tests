@@ -40,6 +40,16 @@ var TypingMessageHello = typingMessage{
 		SubmitFromSuggestion: true,
 		ExpectedText:         "你好",
 	},
+	ime.EnglishIndia: {
+		CharacterKeySeq: strings.Split("abcdefghijklmnopqrstuvwxyz0123456789-=[]\\;',./", ""),
+		LocationKeySeq:  strings.Split("abcdefghijklmnopqrstuvwxyz0123456789-=[]\\;',./", ""),
+		ExpectedText:    "abcdefghijklmnopqrstuvwxyz0123456789-=[]\\;',./",
+	},
+	ime.EnglishPakistan: {
+		CharacterKeySeq: strings.Split("abcdefghijklmnopqrstuvwxyz0123456789-=[]\\;',./", ""),
+		LocationKeySeq:  strings.Split("abcdefghijklmnopqrstuvwxyz0123456789-=[]\\;',./", ""),
+		ExpectedText:    "abcdefghijklmnopqrstuvwxyz0123456789-=[]\\;',./",
+	},
 	ime.EnglishUSWithInternationalKeyboard: {
 		CharacterKeySeq: strings.Split("hello", ""),
 		LocationKeySeq:  strings.Split("hello", ""),
