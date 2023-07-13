@@ -442,3 +442,9 @@ func (c *cryptohomeBinary) prepareThenAddFpAuthFactor(ctx context.Context, authS
 	args := []string{"--action=prepare_and_add_auth_factor", "--fingerprint", "--auth_session_id=" + authSessionID, "--key_label=" + label}
 	return c.call(ctx, args...)
 }
+
+// prepareThenAuthFpAuthFactor returns the responses by calling "cryptohome --action=prepare_and_auth_auth_factor --fingerprint".
+func (c *cryptohomeBinary) prepareThenAuthFpAuthFactor(ctx context.Context, authSessionID string, labels []string) ([]byte, error) {
+	args := []string{"--action=prepare_and_authenticate_auth_factor", "--fingerprint", "--auth_session_id=" + authSessionID, "--key_labels=" + strings.Join(labels, ",")}
+	return c.call(ctx, args...)
+}

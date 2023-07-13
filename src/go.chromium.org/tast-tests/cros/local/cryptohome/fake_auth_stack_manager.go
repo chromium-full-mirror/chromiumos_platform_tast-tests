@@ -27,6 +27,7 @@ import (
 const (
 	dbusPath        = "/org/chromium/BiometricsDaemon/CrosFpAuthStackManager"
 	dbusIface       = "org.chromium.BiometricsDaemon.AuthStackManager"
+	dbusAuthIface   = "org.chromium.BiometricsDaemon.AuthSession"
 	dbusEnrollIface = "org.chromium.BiometricsDaemon.EnrollSession"
 )
 
@@ -44,20 +45,43 @@ type EnrollmentProgress struct {
 	ScanResult messages.ScanResult
 }
 
+// AuthScanResult represents one fingerprint authentication result.
+type AuthScanResult struct {
+	AuthCredStatus messages.AuthenticateCredentialReply_AuthenticateCredentialStatus
+	ScanResult     messages.ScanResult
+}
+
 // FakeAuthStackManager is a testing implementation of the
 // org.chromium.BiometricsDaemon.AuthStackManager D-Bus interface.
 type FakeAuthStackManager struct {
-	ctx                  context.Context
-	dbusConn             *dbus.Conn
-	dbusPath             string
-	dbusIface            string
-	sessionDBusPath      string
-	sessionState         sessionState
-	privateKey           *ecdh.PrivateKey
-	authSecret           []byte
-	createCredStatus     *messages.CreateCredentialReply_CreateCredentialStatus
+	ctx             context.Context
+	dbusConn        *dbus.Conn
+	dbusPath        string
+	dbusIface       string
+	sessionDBusPath string
+	sessionState    sessionState
+	// ECDH private key for establish encrypted session with cryptohome.
+	// Initialized once and never change.
+	privateKey *ecdh.PrivateKey
+	// Auth secret to be used by cryptohome for key derivation.
+	// Initialized once and never change.
+	authSecret []byte
+	// recordID identifies the fingerprint template being enrolled or authenticated.
+	// Should be set prior to enroll or auth session.
+	recordID string
+	// createCredStatus is returned as the status in CreateCredentialReply.
+	// Should be set prior to enroll session.
+	createCredStatus *messages.CreateCredentialReply_CreateCredentialStatus
+	// EnrollmentProgreses should be set prior to enroll session.
 	enrollmentProgresses []EnrollmentProgress
-	mutex                sync.Mutex
+	// Entries of authScanResults are consume one by one to be returned in AuthenticateCredentialReply.
+	// Should be set prior to auth session.
+	authScanResults []AuthScanResult
+
+	// mutex ensures only one thread is running at any given time.
+	// Also it ensures no concurrent DBus method call will be running
+	// in parallel to change the state of the auth stack.
+	mutex sync.Mutex
 }
 
 func fpPublicKeyToEcdhPublicKey(pub *messages.FpPublicKey) (*ecdh.PublicKey, error) {
@@ -104,11 +128,49 @@ func (m *FakeAuthStackManager) Cancel() *dbus.Error {
 	return nil
 }
 
+// StartAuthSession handles the incoming same name D-Bus call. It starts listening on a specific dbus
+// path for the auth session.
+func (m *FakeAuthStackManager) StartAuthSession(username string) (dbus.ObjectPath, *dbus.Error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	if m.sessionDBusPath != "" || m.sessionState != noSession {
+		return "", dbus.MakeFailedError(errors.New("cannot start concurrent auth session"))
+	}
+	m.sessionDBusPath = m.dbusPath + "/AuthSession"
+	if err := m.dbusConn.Export(m, dbus.ObjectPath(m.sessionDBusPath), dbusAuthIface); err != nil {
+		return "", dbus.MakeFailedError(errors.Wrap(err, "failed to listen on AuthSession path"))
+	}
+	m.sessionState = authSession
+
+	go m.emitAuthSignalAndTerminate()
+	return dbus.ObjectPath(m.sessionDBusPath), nil
+}
+
+// End handles the incoming same name D-Bus call. It stops the auth session.
+func (m *FakeAuthStackManager) End() *dbus.Error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	if err := m.terminateAuthSession(); err != nil {
+		return dbus.MakeFailedError(err)
+	}
+	return nil
+}
+
 func (m *FakeAuthStackManager) terminateEnrollSession() error {
 	defer m.resetSessionState()
 	if m.sessionDBusPath != "" && m.sessionState == enrollSession {
 		if err := m.dbusConn.Export(nil, dbus.ObjectPath(m.sessionDBusPath), dbusEnrollIface); err != nil {
 			return errors.Wrap(err, "failed to terminate enroll session interface")
+		}
+	}
+	return nil
+}
+
+func (m *FakeAuthStackManager) terminateAuthSession() error {
+	defer m.resetSessionState()
+	if m.sessionDBusPath != "" && m.sessionState == authSession {
+		if err := m.dbusConn.Export(nil, dbus.ObjectPath(m.sessionDBusPath), dbusAuthIface); err != nil {
+			return errors.Wrap(err, "failed to terminate auth session interface")
 		}
 	}
 	return nil
@@ -132,13 +194,14 @@ func (m *FakeAuthStackManager) CreateCredential(reqBytes []byte) ([]byte, *dbus.
 	}
 
 	// cryptohome's PublicKey comes from the request.
+	// Ignore UserId, GscNonce, and Iv from the request.
 	cpub, err := fpPublicKeyToEcdhPublicKey(request.Pub)
 	if err != nil {
 		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to convert public key from the request"))
 	}
 
 	var iv, encryptedSecret []byte
-	if *m.createCredStatus == messages.CreateCredentialReply_SUCCESS {
+	if m.createCredStatus != nil && *m.createCredStatus == messages.CreateCredentialReply_SUCCESS {
 		sharedSecret, err := m.privateKey.ECDH(cpub)
 		if err != nil {
 			return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to compute the shared secret"))
@@ -158,19 +221,89 @@ func (m *FakeAuthStackManager) CreateCredential(reqBytes []byte) ([]byte, *dbus.
 	}
 
 	fpPubKey := ecdhPublicKeyToFpPublicKey(m.privateKey.PublicKey())
-	recordID := "fake record id"
 	reply := messages.CreateCredentialReply{
 		Status:          m.createCredStatus,
 		EncryptedSecret: encryptedSecret,
 		Iv:              iv,
 		Pub:             fpPubKey,
-		RecordId:        &recordID,
+		RecordId:        &m.recordID,
 	}
 	marshaledReply, err := proto.Marshal(&reply)
 	if err != nil {
 		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to marshal the response"))
 	}
 	m.createCredStatus = nil
+	m.recordID = ""
+	return marshaledReply, nil
+}
+
+// AuthenticateCredential handles the incoming same name D-Bus call. It will consume entries in |authScanResults| one by one.
+func (m *FakeAuthStackManager) AuthenticateCredential(reqBytes []byte) ([]byte, *dbus.Error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	if m.sessionState != noSession {
+		return nil, dbus.MakeFailedError(errors.New("cannot respond to AuthenticateCredential with active sessions"))
+	}
+	var request messages.AuthenticateCredentialRequest
+	if err := proto.Unmarshal(reqBytes, &request); err != nil {
+		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to unmarshal request"))
+	}
+
+	// cryptohome's PublicKey comes from the request.
+	// Ignore UserId, GscNonce, and Iv from the request.
+	cpub, err := fpPublicKeyToEcdhPublicKey(request.Pub)
+	if err != nil {
+		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to convert public key from the request"))
+	}
+
+	var reply messages.AuthenticateCredentialReply
+	// When there is no pending auth scan result, set the status to report an incorrect state.
+	if len(m.authScanResults) == 0 {
+		authStatus := messages.AuthenticateCredentialReply_INCORRECT_STATE
+		reply.Status = &authStatus
+	} else {
+		result := m.authScanResults[0]
+		m.authScanResults = m.authScanResults[1:]
+		var iv, encryptedSecret []byte
+		var recordID string
+		if result.AuthCredStatus == messages.AuthenticateCredentialReply_SUCCESS &&
+			result.ScanResult == messages.ScanResult_SCAN_RESULT_SUCCESS {
+			sharedSecret, err := m.privateKey.ECDH(cpub)
+			if err != nil {
+				return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to compute the shared secret"))
+			}
+			aesKey := sha256.Sum256(sharedSecret)
+			block, err := aes.NewCipher(aesKey[:])
+			if err != nil {
+				return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to create aes block"))
+			}
+
+			// generate random iv, and encrypt |AuthSecret| into |encryptedSecret|
+			iv = make([]byte, aes.BlockSize)
+			encryptedSecret = make([]byte, 32)
+			rand.Read(iv)
+			stream := cipher.NewCTR(block, iv)
+			stream.XORKeyStream(encryptedSecret, m.authSecret)
+
+			// consume the record id
+			recordID = m.recordID
+			m.recordID = ""
+		}
+
+		fpPubKey := ecdhPublicKeyToFpPublicKey(m.privateKey.PublicKey())
+		reply = messages.AuthenticateCredentialReply{
+			Status:          &result.AuthCredStatus,
+			ScanResult:      &result.ScanResult,
+			EncryptedSecret: encryptedSecret,
+			Iv:              iv,
+			Pub:             fpPubKey,
+			RecordId:        &recordID,
+		}
+	}
+	marshaledReply, err := proto.Marshal(&reply)
+	if err != nil {
+		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to marshal the response"))
+	}
 	return marshaledReply, nil
 }
 
@@ -180,14 +313,37 @@ func (m *FakeAuthStackManager) Close() {
 	defer m.mutex.Unlock()
 
 	// Close the enroll session interface.
-	if err := m.terminateEnrollSession(); err != nil {
-		testing.ContextLog(m.ctx, "Failed to unregister the biod enroll session service: ", err)
+	if m.sessionState == enrollSession {
+		if err := m.terminateEnrollSession(); err != nil {
+			testing.ContextLog(m.ctx, "Failed to unregister the biod enroll session service: ", err)
+		}
+	}
+
+	// Close the auth session interface.
+	if m.sessionState == authSession {
+		if err := m.terminateAuthSession(); err != nil {
+			testing.ContextLog(m.ctx, "Failed to unregister the biod auth session service: ", err)
+		}
 	}
 
 	// Close the main interface.
 	if err := m.dbusConn.Export(nil, dbus.ObjectPath(m.dbusPath), m.dbusIface); err != nil {
 		testing.ContextLog(m.ctx, "Failed to unregister the biod service: ", err)
 	}
+}
+
+// SetRecordID sets |recordID|.
+func (m *FakeAuthStackManager) SetRecordID(id string) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	m.recordID = id
+}
+
+// GetRecordID returns |recordID|.
+func (m *FakeAuthStackManager) GetRecordID() string {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	return m.recordID
 }
 
 // SetCreateCredStatus sets |createCredStatus|.
@@ -202,6 +358,20 @@ func (m *FakeAuthStackManager) GetCreateCredStatus() *messages.CreateCredentialR
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	return m.createCredStatus
+}
+
+// SetAuthScanResults sets |authScanResults|.
+func (m *FakeAuthStackManager) SetAuthScanResults(r []AuthScanResult) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	m.authScanResults = r
+}
+
+// GetAuthScanResults returns |authScanResults|.
+func (m *FakeAuthStackManager) GetAuthScanResults() []AuthScanResult {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	return m.authScanResults
 }
 
 // SetEnrollmentProgresses sets pre-defined EnrollmentProgresses.
@@ -231,6 +401,31 @@ func (m *FakeAuthStackManager) emitEnrollmentSignals() {
 		m.emitEnrollment(p)
 	}
 	m.enrollmentProgresses = nil
+}
+
+// emitAuthSignalAndTerminate emits a auth signal and terminates the auth session afterwards
+// when there is at least one pending scan results.
+func (m *FakeAuthStackManager) emitAuthSignalAndTerminate() {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if len(m.authScanResults) > 0 {
+		nonce := make([]byte, 32)
+		rand.Read(nonce)
+		marshaledSignal, err := proto.Marshal(&messages.AuthScanDone{
+			AuthNonce: nonce,
+		})
+		if err != nil {
+			testing.ContextLog(m.ctx, "Failed to marshal AuthScanDone: ", err)
+		}
+		if err := m.dbusConn.Emit(dbus.ObjectPath(m.dbusPath), m.dbusIface+".AuthScanDone", marshaledSignal); err != nil {
+			testing.ContextLog(m.ctx, "Failed to emit signal: ", err)
+		}
+		if err := m.terminateAuthSession(); err != nil {
+			testing.ContextLog(m.ctx, "Failed to unregister the biod auth session service: ", err)
+		}
+		m.resetSessionState()
+	}
 }
 
 // emitEnrollment emits an EnrollScanDone signal.

@@ -1181,11 +1181,22 @@ func (u *CryptohomeClient) TerminateFpAuthFactor(ctx context.Context, authSessio
 
 // PrepareThenAddFpAuthFactor prepares and adds an fingerprint auth factor.
 // Since the CLI output contains all PrepareAuthFactor reply, progress signal, and AddAuthFactor
-// reply, just return the execution error and log the output.
+// reply, just return the execution error.
 func (u *CryptohomeClient) PrepareThenAddFpAuthFactor(ctx context.Context, authSessionID, label string) error {
 	binaryMsg, err := u.binary.prepareThenAddFpAuthFactor(ctx, authSessionID, label)
 	if err != nil {
 		testing.ContextLogf(ctx, "prepareAddFpAuthFactor returns with %q", binaryMsg)
+	}
+	return err
+}
+
+// PrepareThenAuthFpAuthFactor prepares and authenticate an fingerprint auth factor.
+// Since the CLI output contains all PrepareAuthFactor reply, scan signal, and AuthenticateAuthFactor
+// reply, just return the execution error.
+func (u *CryptohomeClient) PrepareThenAuthFpAuthFactor(ctx context.Context, authSessionID string, labels []string) error {
+	binaryMsg, err := u.binary.prepareThenAuthFpAuthFactor(ctx, authSessionID, labels)
+	if err != nil {
+		testing.ContextLogf(ctx, "prepareAuthFpAuthFactor returns with %q", binaryMsg)
 	}
 	return err
 }

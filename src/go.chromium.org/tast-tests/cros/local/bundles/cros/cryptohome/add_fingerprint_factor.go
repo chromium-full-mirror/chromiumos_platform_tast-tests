@@ -129,6 +129,7 @@ func AddFingerprintFactor(ctx context.Context, s *testing.State) {
 			// Set up FakeAuthStackManager's behaviors.
 			fasm.SetCreateCredStatus(&tc.CreateCredStatus)
 			fasm.SetEnrollmentProgresses(tc.EnrollmentProgresses)
+			fasm.SetRecordID(tc.Label)
 
 			if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 				if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
