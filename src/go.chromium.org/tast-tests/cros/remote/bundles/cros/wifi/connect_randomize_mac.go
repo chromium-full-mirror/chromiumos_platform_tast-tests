@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
+	"go.chromium.org/tast/core/testing/wlan"
 )
 
 func init() {
@@ -35,6 +36,20 @@ func init() {
 		Fixture:      "wificellFixt",
 		HardwareDeps: hwdep.D(hwdep.WifiMACAddrRandomize()),
 		Requirements: []string{tdreq.WiFiGenSupportMARConn},
+		Params: []testing.Param{
+			{
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnWifiDevice(wlan.Intel9260, wlan.Intel9000)),
+			},
+			// TODO(b/289148225): The chips {JfP2 and ThP2} send calibration frames with non-persistent MAC before scanning
+			// when wpa_supplicant P2P flag is enabled which causes the test to fail. Remove the subtest unstable once
+			// either the test is updated to ignore these frames or the Intel driver/fw stop sending them.
+			{
+				// This variant runs on unstable chipsets.
+				Name:              "unstable",
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiDevice(wlan.Intel9260, wlan.Intel9000)),
+			},
+		},
 	})
 }
 
