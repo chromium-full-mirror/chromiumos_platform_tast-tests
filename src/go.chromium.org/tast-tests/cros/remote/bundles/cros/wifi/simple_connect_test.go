@@ -871,6 +871,32 @@ func simpleConnectTunneled1x() []simpleConnectParams {
 	}
 }
 
+func simpleConnectPower() []simpleConnectParams {
+	return []simpleConnectParams{{
+		Name:      "powern",
+		Fixture:   "wificellFixtWithPower",
+		Doc:       simpleConnectDocPref("an open 802.11n network on 5 GHz channel and records power measurements."),
+		ExtraAttr: []string{"wificell_unstable"},
+		Val: []simpleConnectParamsVal{
+			{
+				APOpts:  "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20)",
+				PingOps: "ping.Count(100), ping.Interval(1)",
+			},
+		},
+	}, {
+		Name:      "powerac",
+		Fixture:   "wificellFixtWithPower",
+		Doc:       simpleConnectDocPref("an open 802.11ac network on channel 60 with a channel width of 20MHz and records power measurements."),
+		ExtraAttr: []string{"wificell_unstable"},
+		Val: []simpleConnectParamsVal{
+			{
+				APOpts:  `ap.Mode(ap.Mode80211acPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40),`,
+				PingOps: "ping.Count(100), ping.Interval(1)",
+			},
+		},
+	}}
+}
+
 func TestSimpleConnect(t *testing.T) {
 	var ps []simpleConnectParams
 	ps = append(ps, simpleConnect80211abg()...)
@@ -894,6 +920,7 @@ func TestSimpleConnect(t *testing.T) {
 	ps = append(ps, simpleConnect8021xWPA())
 	ps = append(ps, simpleConnect8021xWPA3()...)
 	ps = append(ps, simpleConnectTunneled1x()...)
+	ps = append(ps, simpleConnectPower()...)
 
 	genparams.Ensure(t, "simple_connect.go", genparams.Template(t, `{{ range . }}{
 	{{ range .Doc }}

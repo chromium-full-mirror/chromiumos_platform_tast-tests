@@ -1564,6 +1564,24 @@ func init() {
 					),
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}},
+			}, {
+				// Verifies that DUT can connect to an open 802.11n network on 5 GHz channel and records power measurements.
+				Name:      "powern",
+				Fixture:   "wificellFixtWithPower",
+				ExtraAttr: []string{"wificell_unstable"},
+				Val: []simpleConnectTestcase{{
+					apOpts:  []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20)},
+					pingOps: []ping.Option{ping.Count(100), ping.Interval(1)},
+				}},
+			}, {
+				// Verifies that DUT can connect to an open 802.11ac network on channel 60 with a channel width of 20MHz and records power measurements.
+				Name:      "powerac",
+				Fixture:   "wificellFixtWithPower",
+				ExtraAttr: []string{"wificell_unstable"},
+				Val: []simpleConnectTestcase{{
+					apOpts:  []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40)},
+					pingOps: []ping.Option{ping.Count(100), ping.Interval(1)},
+				}},
 			},
 		},
 	})
