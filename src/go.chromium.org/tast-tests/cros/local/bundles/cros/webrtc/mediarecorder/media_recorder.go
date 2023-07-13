@@ -59,7 +59,7 @@ func codecProfileMime(profile videotype.CodecProfile) (string, error) {
 	case videotype.VP9Prof:
 		return "vp9", nil
 	case videotype.AV1MainProf:
-		return "av1", nil
+		return "av01", nil
 	default:
 		return "", errors.Errorf("failed to codec meme type: %v", profile)
 
