@@ -21,7 +21,7 @@ func init() {
 			"aaronyu@google.com",
 		},
 		BugComponent: "b:776546", // ChromeOS > Platform > Technologies > Audio > Test
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Timeout:      time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
