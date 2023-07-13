@@ -44,9 +44,6 @@ func init() {
 		Fixture:      "arcBooted",
 		Timeout:      4 * time.Minute,
 
-		// TODO(b/225373614): Merge with BuildProperties once all SOCs
-		// can be detected, which will make this testcase
-		// non-informational and CQ-blocking.
 		Attr: []string{"group:mainline"},
 
 		Params: []testing.Param{{
