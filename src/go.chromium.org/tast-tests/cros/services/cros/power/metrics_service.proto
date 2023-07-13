@@ -21,7 +21,7 @@ service MetricsService {
   rpc Start (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // Finish collecting Metrics.
-  rpc Finish (google.protobuf.Empty) returns (tast.common.perf.perfpb.Values) {}
+  rpc Finish (FinishRequest) returns (tast.common.perf.perfpb.Values) {}
 
   rpc Cleanup (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
@@ -37,4 +37,10 @@ message SetupRequest {
     NO_UI_WIFI = 2;
     NO_UI_NO_WIFI_BT = 3;
   }
+}
+
+message FinishRequest {
+  bool upload = 1;
+  string test_name = 2;
+  string out_dir = 3;
 }

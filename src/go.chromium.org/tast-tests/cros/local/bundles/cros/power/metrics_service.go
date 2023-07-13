@@ -6,6 +6,9 @@ package power
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -128,6 +131,13 @@ func (m *MetricsService) Setup(ctx context.Context, req *power.SetupRequest) (*e
 }
 
 func (m *MetricsService) Start(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+
+	// Cooldown before each repeated measurement
+	err := cpu.Cooldown(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to cooldown: ", err)
+	}
+
 	if m.timeline == nil {
 		return nil, errors.New("no timeline")
 	}
@@ -141,7 +151,7 @@ func (m *MetricsService) Start(ctx context.Context, req *empty.Empty) (*empty.Em
 	return &empty.Empty{}, nil
 }
 
-func (m *MetricsService) Finish(ctx context.Context, req *empty.Empty) (*perfpb.Values, error) {
+func (m *MetricsService) Finish(ctx context.Context, req *power.FinishRequest) (*perfpb.Values, error) {
 	var err error
 
 	p, err := m.timeline.StopRecording(m.s.ServiceContext())
@@ -149,6 +159,28 @@ func (m *MetricsService) Finish(ctx context.Context, req *empty.Empty) (*perfpb.
 		return nil, err
 	}
 
+	outDir := req.GetOutDir()
+	if outDir != "" && filepath.IsAbs(outDir) {
+		if _, err := os.Stat(outDir); os.IsNotExist(err) {
+			dirs := strings.Split(outDir, "/")
+			if dirs[1] == "tmp" {
+				// The folder does not exist in local disk, create it in /tmp.
+				err = os.MkdirAll(outDir, 0755)
+				if err != nil {
+					testing.ContextLog(ctx, "Fail to create folder: ", err)
+				}
+			}
+		}
+		if err == nil {
+			err = pow.GeneratePowerLogAndSaveToCrosbolt(ctx,
+				outDir,
+				req.GetTestName(),
+				perf.NewValuesFromProto(p.Proto()))
+			if err != nil {
+				testing.ContextLog(ctx, "Failed to upload: ", err)
+			}
+		}
+	}
 	return p.Proto(), nil
 }
 
