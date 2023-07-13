@@ -209,43 +209,6 @@ func Hide(ctx context.Context, tconn *chrome.TestConn) error {
 	return nil
 }
 
-// Collapse will result in the Quick Settings being opened and in a collapsed
-// state. This is safe to call even when Quick Settings is already open.
-// TODO(b/252870625): Remove this function when all tests work with QsRevamp
-// and replace call sites with Show().
-func Collapse(ctx context.Context, tconn *chrome.TestConn) error {
-	if err := Hide(ctx, tconn); err != nil {
-		return err
-	}
-
-	if err := ShowWithRetry(ctx, tconn, 5*time.Second); err != nil {
-		return err
-	}
-
-	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get QsRevamp state")
-	}
-
-	if qsRevampEnabled {
-		// Quick settings with QsRevamp cannot be collapsed, so there is nothing to do.
-		return nil
-	}
-
-	exist, err := uiauto.New(tconn).IsNodeFound(ctx, expandButton)
-	if err != nil {
-		return errors.Wrap(err, "failed to check if the expand button already exists")
-	}
-	if exist {
-		return nil
-	}
-
-	if err := clickAndWaitForAnimation(ctx, tconn, collapseButton); err != nil {
-		return errors.Wrap(err, "the Quick Settings did not collapse")
-	}
-	return nil
-}
-
 // Expand will result in the Quick Settings being opened and in an expanded
 // state. This is safe to call even when Quick Settings is already open.
 // TODO(b/252870625): Remove this function when all tests work with QsRevamp

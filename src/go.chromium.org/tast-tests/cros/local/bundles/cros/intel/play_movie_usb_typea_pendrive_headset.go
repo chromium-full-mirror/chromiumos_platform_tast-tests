@@ -40,10 +40,8 @@ func init() {
 		Attr:         []string{"group:intel-usb-set2"},
 		Data:         []string{"bear-320x240.h264.mp4"},
 		Vars:         []string{"intel.usbDetectionName"},
-		// TODO(b/290826425): Update to work with QsRevamp and delete the
-		// function quicksettings.Collapse(). This test is the last caller.
-		Fixture: "chromeLoggedInQsRevampDisabled",
-		Timeout: 7 * time.Minute,
+		Fixture:      "chromeLoggedInQsRevampEnabled",
+		Timeout:      7 * time.Minute,
 	})
 }
 
@@ -156,9 +154,6 @@ func PlayMovieUsbTypeaPendriveHeadset(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to DecreaseSlider")
 		}
-		if err := quicksettings.Collapse(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to press escape key")
-		}
 		return nil
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to decrease slider: ", err)
@@ -173,13 +168,9 @@ func PlayMovieUsbTypeaPendriveHeadset(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to IncreaseSlider")
 
 		}
-		if err := quicksettings.Collapse(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to press escape key")
-		}
 		return nil
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to increase slider: ", err)
-
 	}
 	if decreasedSliderValue >= increaseSliderValue {
 		s.Fatalf("Failed to increase volume slider: got %d want greater than %d", increaseSliderValue, decreasedSliderValue)
