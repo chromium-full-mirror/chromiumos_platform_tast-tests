@@ -226,9 +226,8 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 	file := nodewith.Name(fileName).First()
 	if err := uiauto.Combine("open Passpoint credentials file",
 		ac.WaitUntilExists(downloads),
-		ac.DoDefault(downloads),
-		ac.WaitUntilExists(file),
-		ac.DoubleClick(file),
+		ac.DoDefaultUntil(downloads, ac.Exists(file)),
+		ac.RetryUntil(ac.DoubleClick(file), ac.Gone(file)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open Passpoint credentials file: ", err)
 	}
@@ -243,7 +242,7 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 	}
 	if err := uiauto.Combine("accept or reject the app's request",
 		ac.WaitUntilExists(button),
-		ac.DoDefault(button),
+		ac.DoDefaultUntil(button, ac.Gone(button)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to accept or reject app's request: ", err)
 	}
