@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	rep "chromiumos/reporting"
+
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -37,7 +38,7 @@ func init() {
 			"albertojuarez@google.com", // Test author
 		},
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
+		Attr:         []string{"group:mainline", "informational", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      5 * time.Minute,
