@@ -13,12 +13,15 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/network/iw"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
+	"go.chromium.org/tast-tests/cros/remote/wificell/wifiutil"
 	"go.chromium.org/tast-tests/cros/services/cros/policy"
+	"go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -37,6 +40,8 @@ const (
 	postTestTimeout      = 5 * time.Second
 	enrollmentRunTimeout = 4 * time.Minute
 	enrollRetry          = 3
+	idlePowerSleepTime   = 50 * time.Second
+	powerSetUpTimeout    = 2*idlePowerSleepTime + setUpTimeout
 )
 
 func init() {
@@ -157,6 +162,20 @@ func init() {
 		ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
 		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "wificellFixtWithPower",
+		Desc: "Default wificell setup with power diagnostics",
+		Contacts: []string{
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+		},
+		Impl:            newTastFixture(TFFeaturesPower),
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: tearDownTimeout,
+		ServiceDeps:     []string{ShillServiceName, BluetoothServiceName, PowerServiceName},
+		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
+	})
 }
 
 // TFFeatures is an enum type for extra features needed for Tast fixture.
@@ -178,6 +197,8 @@ const (
 	TFFeaturesEnroll
 	// TFFeaturesCompanionDUT is a feature that spawns companion DUT in TestFixture.
 	TFFeaturesCompanionDUT
+	// TFFeaturesPower is a feature that enables power measurements.
+	TFFeaturesPower
 )
 
 // String returns name component corresponding to enum value(s).
@@ -202,6 +223,10 @@ func (enum TFFeatures) String() string {
 	if enum&TFFeaturesRouterAsCapture != 0 {
 		ret = append(ret, "routerAsCapture")
 		enum ^= TFFeaturesRouterAsCapture
+	}
+	if enum&TFFeaturesPower != 0 {
+		ret = append(ret, "power")
+		enum ^= TFFeaturesPower
 	}
 	// Catch weird cases. Like when somebody extends enum, but forgets to extend this.
 	if enum != 0 {
@@ -287,6 +312,93 @@ func (f *tastFixtureImpl) recoverUnhealthyDUT(ctx context.Context, d *dut.DUT, s
 		if err := d.Reboot(ctx); err != nil {
 			return errors.Wrap(err, "reboot failed")
 		}
+	}
+	return nil
+}
+
+// takeIdleWiFiMeasurement deactivates all WiFi interfaces on the DUT and takes
+// power measurements to be used as a baseline of comparison for WiFi scenarios.
+func (f *tastFixtureImpl) takeIdleWiFiMeasurement(ctx context.Context, s *testing.FixtState) error {
+	if f.tf.powerClient == nil {
+		return errors.New("no power client available")
+	}
+	ctx, restore, err := f.tf.RemoveWiFiInterfaces(ctx, DefaultDUT)
+	if _, err := f.tf.powerClient.Start(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to start metrics")
+	}
+
+	defer func() {
+		if err := restore(); err != nil {
+			s.Error("Failed to restore WiFi interfaces: ", err)
+		}
+	}()
+
+	// GoBigSleepLint: We want to take a power measurement over |idlePowerSleepTime| of idle time.
+	if err := testing.Sleep(ctx, idlePowerSleepTime); err != nil {
+		return errors.Wrap(err, "failed to sleep")
+	}
+
+	request := power.FinishRequest{Upload: false}
+	values, err := f.tf.powerClient.Finish(ctx, &request)
+	if err != nil {
+		return errors.Wrap(err, "failed to stop metrics")
+	}
+	f.tf.idlePowerValues = perf.NewValuesFromProto(values)
+
+	return nil
+}
+
+// setUpPower sets up the RPC link and configuration to allow power measurements
+// during the test. It also initiates an idle power measurement to be used as a baseline.
+func (f *tastFixtureImpl) setUpPower(ctx context.Context, s *testing.FixtState) error {
+	cl := f.tf.duts[DefaultDUT].rpc
+	f.tf.powerClient = power.NewMetricsServiceClient(cl.Conn)
+	setupRequest := power.SetupRequest{Fixture: power.SetupRequest_NO_UI_WIFI, IntervalSecond: 5}
+	var err error = nil
+	if _, err = f.tf.powerClient.Setup(ctx, &setupRequest); err != nil {
+		return errors.Wrap(err, "failed to setup metrics")
+	}
+	cleanup := func(ctx context.Context) error {
+		if _, err = f.tf.powerClient.Cleanup(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to cleanup metrics")
+		}
+		return nil
+	}
+	defer func() {
+		if err != nil || s.HasError() {
+			cleanup(ctx)
+		}
+	}()
+	if err := f.takeIdleWiFiMeasurement(ctx, s); err != nil {
+		return errors.Wrap(err, "failed to take idle WiFi measurement")
+	}
+
+	f.tf.powerCleanup = cleanup
+	return nil
+}
+
+// savePowerResults calculates the average difference between |results| and the stored
+// idle values, and saves them to the output directory so they can be pushed to
+// Crosbolt.
+func (f *tastFixtureImpl) savePowerResults(ctx context.Context, s *testing.FixtTestState, results *perf.Values) error {
+	if f.tf.idlePowerValues == nil {
+		return errors.New("no idle power results avaliable")
+	}
+	metricDeltas := perf.NewValues()
+	for metric, values := range results.GetValues() {
+		average := wifiutil.Average(values)
+
+		idleValues := f.tf.idlePowerValues.GetValueByMetric(metric)
+		if idleValues == nil {
+			continue
+		}
+		idleAverage := wifiutil.Average(idleValues)
+
+		delta := average - idleAverage
+		metricDeltas.Set(metric, delta)
+	}
+	if err := metricDeltas.Save(s.OutDir()); err != nil {
+		return errors.Wrap(err, "failed to save perf values")
 	}
 	return nil
 }
@@ -453,6 +565,12 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}
 
+	if f.features&TFFeaturesPower != 0 {
+		if err := f.setUpPower(ctx, s); err != nil {
+			s.Fatal("Failed to set up power measurement: ", err)
+		}
+	}
+
 	return f.tf
 }
 
@@ -460,6 +578,14 @@ func (f *tastFixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 	if f.features&TFFeaturesCompanionDUT != 0 {
 		if err := f.tf.DeconfigSeedingAP(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to deconfig seeding AP: ", err) // Do nothing else, the primary error is more important.
+		}
+	}
+	if f.features&TFFeaturesPower != 0 {
+		if f.tf.powerCleanup == nil {
+			s.Error("No power cleanup function available")
+		}
+		if err := f.tf.powerCleanup(ctx); err != nil {
+			s.Error("Power cleanup failed: ", err)
 		}
 	}
 
@@ -502,10 +628,28 @@ func (f *tastFixtureImpl) Reset(ctx context.Context) error {
 }
 
 func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	// No-op.
+	if f.features&TFFeaturesPower == 0 {
+		return
+	}
+	if _, err := f.tf.powerClient.Start(s.TestContext(), &empty.Empty{}); err != nil {
+		s.Fatal("Failed to start power metrics: ", err)
+	}
+
 }
 
 func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	if f.features&TFFeaturesPower != 0 {
+		request := power.FinishRequest{Upload: false}
+		values, err := f.tf.powerClient.Finish(s.TestContext(), &request)
+		if err != nil {
+			s.Fatal("Failed to stop power metrics: ", err)
+		}
+		powerResults := perf.NewValuesFromProto(values)
+		if err = f.savePowerResults(ctx, s, powerResults); err != nil {
+			s.Fatal("Failed to save power results: ", err)
+		}
+	}
+
 	if err := f.tf.CollectLogs(ctx); err != nil {
 		s.Log("Error collecting logs, err: ", err)
 	}

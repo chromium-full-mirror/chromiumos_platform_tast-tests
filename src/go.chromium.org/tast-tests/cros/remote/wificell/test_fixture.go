@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/network/ping"
 	"go.chromium.org/tast-tests/cros/common/network/protoutil"
 	"go.chromium.org/tast-tests/cros/common/network/wpacli"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/pkcs11/netcertstore"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/utils"
@@ -51,6 +52,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/ubuntu"
 	"go.chromium.org/tast-tests/cros/remote/wificell/tethering"
 	"go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	"go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -202,6 +204,10 @@ const (
 	// TestFixture.
 	BluetoothServiceName = "tast.cros.bluetooth.BluetoothService"
 
+	// PowerServiceName is the name of the power measurement service needed by
+	// TestFixture.
+	PowerServiceName = "tast.cros.power.MetricsService"
+
 	// DefaultDUT is the default DUT index (0).
 	DefaultDUT = 0
 	// PeerDUT is the peer DUT index (1).
@@ -286,6 +292,11 @@ type TestFixture struct {
 
 	// aps is a set of APs useful for deconfiguring all APs, which some tests require.
 	aps map[*APIface]struct{}
+
+	// Power test parameters.
+	idlePowerValues *perf.Values
+	powerClient     power.MetricsServiceClient
+	powerCleanup    func(context.Context) error
 }
 
 // connectCompanion dials SSH connection to companion device with the auth key of DUT.
