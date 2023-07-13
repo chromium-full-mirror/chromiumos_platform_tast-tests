@@ -146,7 +146,7 @@ DEFAULT_BUCKET_NAME = "cros-performance-sheriff"
 THIS_FILE = Path(__file__).resolve()
 CHROMEOS_CHECKOUT_PATH = THIS_FILE.parent.parent.parent.parent.parent
 LATEST_TEST_DIR_PATH = (
-    CHROMEOS_CHECKOUT_PATH / "chroot/tmp/tast/results/latest"
+    CHROMEOS_CHECKOUT_PATH / "out/tmp/tast/results/latest"
 )
 DEFAULT_SSH_LOCAL_PORT = 2222
 
@@ -321,7 +321,8 @@ def upload_latest_tests_results(username: str, bucket_name: str) -> None:
     client = storage.Client(credentials=credentials, project=PROJECT_ID)
     bucket = client.get_bucket(bucket_name)
     local_directory_path = LATEST_TEST_DIR_PATH
-    test_run_id = f"{local_directory_path.name}-{username}"
+    local_directory_realpath = os.path.realpath(local_directory_path)
+    test_run_id = f"{os.path.basename(local_directory_realpath)}-{username}"
     today_date_string = datetime.datetime.today().strftime("%Y-%m-%d")
     gcs_folder_path = f"{today_date_string}/{test_run_id}"
     upload_local_directory_to_gcs(local_directory_path, bucket, gcs_folder_path)
