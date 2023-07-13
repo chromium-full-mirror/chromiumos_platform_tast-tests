@@ -25,7 +25,7 @@ func init() {
 		//   - has ended
 
 		Contacts:     []string{"aaronyu@google.com", "htcheong@google.com", "chromeos-audio-bugs@google.com"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline", "informational"},
 		// Param.Name encoding:
 		// - p: playback
