@@ -297,6 +297,12 @@ const (
 	// UfsInterface with The ChromeOS device MAY provide non-volatile storage via NVMe interface.
 	UfsInterface = "store-motherbrd-0004-v01"
 
+	// StorageEmmcCapacity with The ChromeOS device MAY use eMMC storage devices for a 128GB device or smaller.
+	StorageEmmcCapacity = "store-storagedev-0002-v01"
+
+	// StorageCapacityMin with The ChromeOS device MUST provide >=32GB of non-volatile storage.
+	StorageCapacityMin = "store-capacity-0001-v02"
+
 	// NvmeStorageSeqReadTp with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device MUST support >= 250 MB/second sequential read operations.
 	NvmeStorageSeqReadTp = "store-nvme-0007-v01"
 

@@ -8,6 +8,7 @@ package storage
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
 	"go.chromium.org/tast/core/testing"
@@ -16,14 +17,18 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: InternalDeviceTypeCheck,
-		Desc: "Checks if the internal storage is of the right type",
+		Desc: "Checks if the internal storage is of the right type and size",
 		Contacts: []string{
 			"chromeos-storage@google.com",
 			"dlunev@google.com", // Test author
 		},
 		BugComponent: "b:974567",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Requirements: []string{tdreq.InternalStorageInterface},
+		Requirements: []string{
+			tdreq.InternalStorageInterface,
+			tdreq.StorageEmmcCapacity,
+			tdreq.StorageCapacityMin,
+		},
 	})
 }
 
@@ -38,6 +43,32 @@ func InternalDeviceTypeCheck(ctx context.Context, s *testing.State) {
 		util.DiskTypeToString(util.EmmcDisk):         true,
 		util.DiskTypeToString(util.NvmeDisk):         true,
 		util.DiskTypeToString(util.EmmcOverNvmeDisk): true,
+	}
+
+	perfValues := perf.NewValues()
+
+	perfValues.Set(perf.Metric{
+		Name:      "_DiskSize",
+		Unit:      "bytes",
+		Direction: perf.BiggerIsBetter,
+	}, float64(disk.Size))
+
+	// We are to impose additional constraints on the eMMC devices,
+	// So record an additional metric to make PVS check upon.
+	// TODO(dlunev): Add higher capacity check.
+	emmcSize := 0
+	if disk.Type == util.EmmcDisk || disk.Type == util.EmmcOverNvmeDisk {
+		emmcSize = disk.Size
+	}
+
+	perfValues.Set(perf.Metric{
+		Name:      "_EmmcDiskSize",
+		Unit:      "bytes",
+		Direction: perf.BiggerIsBetter,
+	}, float64(emmcSize))
+
+	if err := perfValues.Save(s.OutDir()); err != nil {
+		s.Fatal("Can't save keyval results: ", err)
 	}
 
 	if _, ok := ifaces[util.DiskTypeToString(disk.Type)]; !ok {
