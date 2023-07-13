@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -10,11 +10,10 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/crostiniapps"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
+	"go.chromium.org/tast-tests/cros/local/terminalapp"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -22,11 +21,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppAudacity,
+		Func:         AppAudacityTerminal,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Opens Audacity from launcher",
+		Desc:         "Opens Audacity from terminal",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host", "amd64"},
 		BugComponent: "b:1122570",
@@ -90,7 +89,7 @@ func init() {
 		},
 	})
 }
-func AppAudacity(ctx context.Context, s *testing.State) {
+func AppAudacityTerminal(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	cr := s.FixtValue().(crostini.FixtureData).Chrome
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
@@ -108,10 +107,15 @@ func AppAudacity(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to write Audacity config: ", err)
 	}
 
-	if err := uiauto.Retry(3,
-		launcher.SearchAndLaunchWithQuery(tconn, keyboard, "au", "Audacity"),
-	)(ctx); err != nil {
-		s.Fatal("Failed to launch Aduacity: ", err)
+	// Open Terminal app.
+	terminalApp, err := terminalapp.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to open Terminal app: ", err)
+	}
+	defer terminalApp.Close()(cleanupCtx)
+
+	if err := terminalApp.RunCommand(keyboard, "audacity")(ctx); err != nil {
+		s.Fatal("Failed to launch Firefox from terminal: ", err)
 	}
 
 	if err := crostiniapps.VerifyAudacityLaunchAndClose(ctx, tconn, keyboard, d); err != nil {
