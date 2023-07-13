@@ -109,8 +109,9 @@ func bootTimeCalibration(ctx context.Context, soundCardID string) error {
 		return errors.Wrap(err, "cros_config /audio/main speaker-amp failed")
 	}
 
-	if err := testexec.CommandContext(
+	cmd, err := testexec.CommandContextUser(
 		runCtx,
+		"sound_card_init",
 		"/usr/bin/sound_card_init",
 		"boot_time_calibration",
 		"--id",
@@ -119,7 +120,13 @@ func bootTimeCalibration(ctx context.Context, soundCardID string) error {
 		config,
 		"--amp",
 		amp,
-	).Run(testexec.DumpLogOnError); err != nil {
+	)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to create command context with user")
+	}
+
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to run sound_card_init")
 	}
 
