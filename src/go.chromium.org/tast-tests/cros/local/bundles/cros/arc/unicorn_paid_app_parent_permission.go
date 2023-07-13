@@ -32,7 +32,7 @@ func init() {
 		Timeout:      4 * time.Minute,
 		Vars:         []string{"arc.parentUser"},
 		Params: []testing.Param{{
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",

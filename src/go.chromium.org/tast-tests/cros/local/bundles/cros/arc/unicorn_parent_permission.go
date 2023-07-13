@@ -38,7 +38,7 @@ func init() {
 		VarDeps:      []string{"arc.parentUser"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
