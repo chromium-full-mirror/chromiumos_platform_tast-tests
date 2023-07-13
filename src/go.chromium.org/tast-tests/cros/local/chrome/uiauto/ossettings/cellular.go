@@ -126,7 +126,8 @@ func GoToActiveNetworkApnSubpage(ctx context.Context, tconn *chrome.TestConn, is
 func ClickAPNMoreActionsButton(ctx context.Context, tconn *chrome.TestConn, apn string) error {
 	ui := uiauto.New(tconn)
 
-	apnMoreActionBtn := nodewith.Name("More actions for " + apn).Role(role.Button)
+	// Ensure case insensitivity. For example AT&T's APN is "broadband", but the UI shows "ATT Broadband"
+	apnMoreActionBtn := nodewith.NameRegex(regexp.MustCompile("(?i)\\b" + apn + "\\b")).Role(role.Button).HasClass("icon-more-vert").First()
 
 	// More actions button may be temporarily disabled if cellular is connecting or disconnecting.
 	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(apnMoreActionBtn.Focusable())(ctx); err != nil {
