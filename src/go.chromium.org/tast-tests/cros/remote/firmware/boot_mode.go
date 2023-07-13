@@ -329,7 +329,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			}
 			// Depending on how we got to to dev mode, we might end up in normal mode or the recovery
 			// menu, so navigate to dev mode, but it that fails, fall through to the next attempt below.
-			if err := ms.FwScreenToDevMode(ctx); err == nil {
+			if err := ms.FwScreenToDevMode(ctx, opts...); err == nil {
 				newMode, err := h.Reporter.CurrentBootMode(ctx)
 				if err != nil {
 					return errors.Wrap(err, "determining boot mode after simple reboot")
@@ -364,7 +364,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			}
 			// Depending on how we got to to rec mode, we might end up in normal mode or the recovery
 			// menu, so navigate to dev mode, but it that fails, fall through to the next attempt below.
-			if err := ms.FwScreenToDevMode(ctx); err == nil {
+			if err := ms.FwScreenToDevMode(ctx, opts...); err == nil {
 				newMode, err := h.Reporter.CurrentBootMode(ctx)
 				if err != nil {
 					return errors.Wrap(err, "determining boot mode after simple reboot")
@@ -387,7 +387,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			if err := ms.EnableRecMode(ctx, servo.USBMuxOff); err != nil {
 				return err
 			}
-			if err := ms.FwScreenToDevMode(ctx); err != nil {
+			if err := ms.FwScreenToDevMode(ctx, opts...); err != nil {
 				return errors.Wrap(err, "moving from firmware screen to dev mode")
 			}
 			newMode, err := h.Reporter.CurrentBootMode(ctx)
@@ -430,7 +430,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			if err := ms.Helper.DUT.WaitUnreachable(offCtx); err != nil {
 				return errors.Wrap(err, "waiting for DUT to be unreachable after reboot")
 			}
-			if err := ms.fwScreenToUSBDevMode(ctx); err != nil {
+			if err := ms.fwScreenToUSBDevMode(ctx, opts...); err != nil {
 				return errors.Wrap(err, "moving from firmware screen to usb dev mode")
 			}
 		}
@@ -544,6 +544,7 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 		if err := h.Servo.RunECCommand(ctx, "reboot ap-off"); err != nil {
 			return errors.Wrap(err, "failed to reboot EC")
 		}
+		// GoBigSleepLint: It takes a little time before the boot mode can be checked.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep")
 		}
@@ -589,31 +590,36 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 		}
 	}
 
-	if msOptsContain(opts, WaitSoftwareSync) {
-		testing.ContextLogf(ctx, "Sleeping %s (SoftwareSyncUpdate)", h.Config.SoftwareSyncUpdate)
-		if err := testing.Sleep(ctx, h.Config.SoftwareSyncUpdate); err != nil {
-			return errors.Wrapf(err, "sleeping for %s (SoftwareSyncUpdate)", h.Config.SoftwareSyncUpdate)
-		}
-	}
-
 	if msOptsContain(opts, SkipWaitConnect) {
+		if msOptsContain(opts, WaitSoftwareSync) {
+			testing.ContextLogf(ctx, "Sleeping %s (SoftwareSyncUpdate)", h.Config.SoftwareSyncUpdate)
+			// GoBigSleepLint: The caller expects that the software sync is done before returning.
+			if err := testing.Sleep(ctx, h.Config.SoftwareSyncUpdate); err != nil {
+				return errors.Wrapf(err, "sleeping for %s (SoftwareSyncUpdate)", h.Config.SoftwareSyncUpdate)
+			}
+		}
+
 		testing.ContextLog(ctx, "Skip waiting to establish connection to DUT")
 		return nil
 	}
 
 	// If in dev mode, bypass the TO_DEV screen.
 	if fromMode == fwCommon.BootModeDev {
-		if err := ms.FwScreenToDevMode(ctx); err != nil {
+		if err := ms.FwScreenToDevMode(ctx, opts...); err != nil {
 			return errors.Wrap(err, "fw screen to developer mode")
 		}
 	} else if fromMode == fwCommon.BootModeUSBDev {
-		if err := ms.fwScreenToUSBDevMode(ctx); err != nil {
+		if err := ms.fwScreenToUSBDevMode(ctx, opts...); err != nil {
 			return errors.Wrap(err, "bypassing fw screen")
 		}
 	} else {
 		waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
 		testing.ContextLog(ctx, "Reestablishing connection to DUT")
-		connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+		connectTime := h.Config.DelayRebootToPing
+		if msOptsContain(opts, WaitSoftwareSync) {
+			connectTime += h.Config.SoftwareSyncUpdate
+		}
+		connectCtx, cancel := context.WithTimeout(ctx, connectTime)
 		defer cancel()
 		if err := h.WaitConnect(connectCtx, waitConnectOpt...); err != nil {
 			return errors.Wrap(err, "failed to connect to DUT")
@@ -652,11 +658,6 @@ func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSw
 	h := ms.Helper
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "requiring servo")
-	}
-	testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
-	// GoBigSleepLint: Sleeping for model specific time.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		return errors.Wrapf(err, "sleeping for %s (FirmwareScreen) to wait for INSERT screen", h.Config.FirmwareScreen)
 	}
 	// Keep pressing the normal mode keys until connected, but wait a little longer for the connect each time.
 	connectTimeout := 2 * time.Second
@@ -741,7 +742,7 @@ func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSw
 			return err
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: h.Config.DelayRebootToPing}); err != nil {
+	}, &testing.PollOptions{Timeout: h.Config.DelayRebootToPing + h.Config.FirmwareScreen}); err != nil {
 		return errors.Wrap(err, "failed to reconnect to DUT")
 	}
 	return nil
@@ -756,13 +757,19 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 		return errors.Wrap(err, "requiring servo")
 	}
 
-	testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
-	// GoBigSleepLint: Sleeping for model specific time.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		return errors.Wrapf(err, "sleeping for %s (FirmwareScreen) to wait for INSERT screen", h.Config.FirmwareScreen)
+	preSleepTime := h.Config.FirmwareScreen
+	if msOptsContain(opts, WaitSoftwareSync) {
+		preSleepTime += h.Config.SoftwareSyncUpdate
 	}
 
 	if msOptsContain(opts, CheckToNoGoodScreen) {
+		testing.ContextLogf(ctx, "Sleeping %s (preSleepTime)", preSleepTime)
+		// GoBigSleepLint: Sleeping for model specific time.
+		if err := testing.Sleep(ctx, preSleepTime); err != nil {
+			return errors.Wrapf(err, "sleeping for %s (preSleepTime) to wait for INSERT screen", preSleepTime)
+		}
+		preSleepTime = 0
+
 		// Enable USB connection to DUT.
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 			return errors.Wrap(err, "failed to set 'usb3_mux_sel:dut_sees_usbkey'")
@@ -859,7 +866,7 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 				return err
 			}
 			return nil
-		}, &testing.PollOptions{Timeout: h.Config.DelayRebootToPing}); err != nil {
+		}, &testing.PollOptions{Timeout: h.Config.DelayRebootToPing + preSleepTime}); err != nil {
 			return errors.Wrap(err, "failed to reconnect to DUT")
 		}
 	case TabletDetachableSwitcher:
@@ -871,6 +878,12 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 		// 6. Press PowerKey to select menu item.
 		// 7. Wait [KeypressDelay] seconds to confirm keypress.
 		// 8. Wait [FirmwareScreen] seconds to transition screens.
+		testing.ContextLogf(ctx, "Sleeping %s (preSleepTime)", preSleepTime)
+		// GoBigSleepLint: Sleeping for model specific time.
+		if err := testing.Sleep(ctx, preSleepTime); err != nil {
+			return errors.Wrapf(err, "sleeping for %s (preSleepTime) to wait for INSERT screen", preSleepTime)
+		}
+
 		if err := h.Servo.SetInt(ctx, servo.VolumeUpDownHold, 100); err != nil {
 			return errors.Wrap(err, "triggering TO_DEV screen")
 		}
@@ -904,10 +917,15 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 // fwScreenToUSBDevMode moves the DUT from the firmware bootup screen to USB Dev mode.
 // This should be called immediately after powering on.
 // The actual behavior depends on the ModeSwitcherType.
-func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context) error {
+func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context, opts ...ModeSwitchOption) error {
 	h := ms.Helper
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "requiring servo")
+	}
+
+	preSleepTime := h.Config.FirmwareScreen
+	if msOptsContain(opts, WaitSoftwareSync) {
+		preSleepTime += h.Config.SoftwareSyncUpdate
 	}
 
 	switch h.Config.ModeSwitcherType {
@@ -939,7 +957,7 @@ func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context) error {
 				return err
 			}
 			return nil
-		}, &testing.PollOptions{Timeout: h.Config.USBImageBootTimeout}); err != nil {
+		}, &testing.PollOptions{Timeout: h.Config.USBImageBootTimeout + preSleepTime}); err != nil {
 			return errors.Wrap(err, "failed to reconnect to DUT")
 		}
 	default:
