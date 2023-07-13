@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	fixture "go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -35,6 +36,7 @@ func init() {
 			"zentaro@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      fixture.StereoAloopLoaded,
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),
 		SearchFlags: []*testing.StringPair{
@@ -116,37 +118,40 @@ func verifyActiveInputNodeChanged(ctx context.Context, tconn *chrome.TestConn) e
 		return errors.Wrap(err, "failed to confirm active input device")
 	}
 
-	// Change active node to headphones.
-	micjackLabel := "Mic jack"
+	// Change active node to loopback mic.
+	loopbackLabel := "Loopback Capture"
 	microphoneOption := nodewith.NameContaining(microphoneLabel).Ancestor(oss.OSAudioSettingsInputDeviceDropdown)
-	micjackOption := nodewith.NameContaining(micjackLabel).Ancestor(oss.OSAudioSettingsInputDeviceDropdown)
+	loopbackOption := nodewith.NameContaining(loopbackLabel).Ancestor(oss.OSAudioSettingsInputDeviceDropdown)
 
-	if err := uiauto.Combine("Select MIC input device",
+	if err := uiauto.Combine("Select ALSA_LOOPBACK input device",
 		ui.EnsureFocused(oss.OSAudioSettingsInputDeviceDropdown),
 		ui.DoDefault(oss.OSAudioSettingsInputDeviceDropdown),
 		ui.WaitUntilExists(oss.OSAudioSettingsInputDeviceDropdown.State(state.Collapsed, false)),
 		// Verify expected nodes listed in dropdown.
 		ui.WaitUntilExists(microphoneOption),
-		ui.WaitUntilExists(micjackOption),
-		// Select headphones.
-		ui.LeftClick(micjackOption),
+		ui.WaitUntilExists(loopbackOption),
+		// Select loopback.
+		ui.LeftClick(loopbackOption),
 		ui.WaitUntilGone(oss.OSAudioSettingsInputDeviceDropdown.State(state.Collapsed, false)),
 	)(ctx); err != nil {
-		return errors.Wrap(err, "failed select MIC in dropdown")
+		return errors.Wrap(err, "failed select ALSA_LOOPBACK in dropdown")
 	}
 
-	// Confirm UI updated to show headphones as active node.
-	if err := dropdownLabelEquals(micjackLabel); err != nil {
+	// Confirm UI updated to show loopback as active node.
+	if err := dropdownLabelEquals(loopbackLabel); err != nil {
 		return errors.Wrap(err, "failed to confirm active input device")
 	}
 
-	micjackNode, err := cras.GetNodeByType(ctx, "MIC")
+	loopbackNode, err := cras.GetNodeByMatcher(ctx, audio.MatchNodeTypeDirection{
+		Type:      "ALSA_LOOPBACK",
+		Direction: audio.InputStream,
+	})
 	if err != nil {
-		return errors.Wrap(err, "failed to get MIC node")
+		return errors.Wrap(err, "failed to get ALSA_LOOPBACK node")
 	}
-	if !micjackNode.Active {
+	if !loopbackNode.Active {
 		return errors.Wrap(err, "failed to verify selected node active in CRAS")
 	}
-	testing.ContextLogf(ctx, "Active input node set to: %q", micjackNode.Type)
+	testing.ContextLogf(ctx, "Active input node set to: %q", loopbackNode.Type)
 	return nil
 }
