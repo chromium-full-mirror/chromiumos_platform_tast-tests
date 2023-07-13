@@ -179,7 +179,8 @@ func hasHover(ctx context.Context) (bool, error) {
 	}
 
 	if exitCode != 0 {
-		return false, errors.New("hover checking command failed with non-zero status")
+		testing.ContextLog(ctx, "Checking hover(for KB brightness setting): not present")
+		return false, nil
 	}
 
 	testing.ContextLog(ctx, "Checking hover(for KB brightness setting): present")
@@ -196,7 +197,8 @@ func hasALS(ctx context.Context) (bool, error) {
 	}
 
 	if exitCode != 0 {
-		return false, errors.New("light sensor checking command failed with non-zero status")
+		testing.ContextLog(ctx, "Checking ALS(for KB brightness setting): not present")
+		return false, nil
 	}
 
 	alsNum, err := strconv.ParseUint(strings.TrimSpace(string(output)), 10, 64)
