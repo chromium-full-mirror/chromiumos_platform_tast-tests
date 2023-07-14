@@ -219,6 +219,9 @@ type BluetoothFacade interface {
 	// Note: This requires the chrome ui to have been loaded with the signin
 	// profile test extension key.
 	SetEnabledOnBoot(ctx context.Context, adapterEnabledOnBoot bool) error
+
+	// SetDebugLogLevels sets the level for verbose debug log.
+	SetDebugLogLevels(ctx context.Context, level uint32) error
 }
 
 // DiscoverDevice will start discovery, wait until a device is found, and then

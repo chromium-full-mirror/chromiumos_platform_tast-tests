@@ -511,3 +511,12 @@ func (b *BtService) SetEnabledOnBoot(ctx context.Context, request *pb.SetEnabled
 	}
 	return &emptypb.Empty{}, nil
 }
+
+// SetDebugLogLevels sets the debug log level.
+// Note: Setting log level is only supported for bluez at this time.
+func (b *BtService) SetDebugLogLevels(ctx context.Context, request *pb.SetDebugLogLevelsRequest) (*emptypb.Empty, error) {
+	if err := b.facade.SetDebugLogLevels(ctx, request.GetLevel()); err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}

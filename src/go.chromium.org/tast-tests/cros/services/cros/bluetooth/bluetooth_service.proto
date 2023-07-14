@@ -147,6 +147,11 @@ service BluetoothService {
   // Note: This requires the chrome ui to have been loaded with the signin
   // profile test extension key.
   rpc SetEnabledOnBoot(SetEnabledOnBootRequest) returns (google.protobuf.Empty) {}
+
+  // SetDebugLogLevels sets the debug log level.
+  // Note: Setting log level is only supported for bluez at this time.
+  rpc SetDebugLogLevels(SetDebugLogLevelsRequest)
+      returns (google.protobuf.Empty) {}
 }
 
 enum BluetoothStackType {
@@ -343,4 +348,8 @@ message EnabledOnBootResponse {
 
 message SetEnabledOnBootRequest {
   bool adapter_enabled_on_boot = 1;
+}
+
+message SetDebugLogLevelsRequest {
+  uint32 level = 1;
 }

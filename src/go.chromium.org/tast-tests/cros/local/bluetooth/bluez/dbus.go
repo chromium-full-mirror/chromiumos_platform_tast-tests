@@ -25,6 +25,7 @@ const (
 	bluezDeviceIface               = DBusBluezService + ".Device1"
 	bluezLEAdvertisingManagerIface = DBusBluezService + ".LEAdvertisingManager1"
 	bluezAdminPolicyStatusIface    = DBusBluezService + ".AdminPolicyStatus1"
+	bluezDebugIface                = "org.chromium.Bluetooth.Debug"
 )
 
 // NewBluezDBusObject creates a new dbusutil.DBusObject with the service

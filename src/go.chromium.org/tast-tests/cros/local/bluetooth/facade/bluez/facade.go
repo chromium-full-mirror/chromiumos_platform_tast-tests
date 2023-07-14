@@ -592,3 +592,25 @@ func (b *BluetoothBluezFacade) EnabledOnBoot(ctx context.Context) (bool, error) 
 func (b *BluetoothBluezFacade) SetEnabledOnBoot(ctx context.Context, adapterEnabledOnBoot bool) error {
 	return common.SetEnabledOnBoot(ctx, adapterEnabledOnBoot)
 }
+
+// SetDebugLogLevels sets the level for verbose debug log.
+// level 0 means bluez: false, floss: false
+// level 1 means bluez: true, floss: true
+func (b *BluetoothBluezFacade) SetDebugLogLevels(ctx context.Context, level uint32) error {
+	if level > 1 {
+		return errors.New("invalid log level")
+	}
+	bluezLevel := 0
+	kernelLevel := 0
+	if level == 1 {
+		bluezLevel = 1
+		kernelLevel = 1
+	}
+	debugDbus, err := bluez.NewDebug(ctx)
+	if err != nil {
+		errors.Wrap(err, "fails to generate bluez dbus debug interface")
+	}
+	debugDbus.SetLevels(ctx, bluezLevel, kernelLevel)
+
+	return nil
+}

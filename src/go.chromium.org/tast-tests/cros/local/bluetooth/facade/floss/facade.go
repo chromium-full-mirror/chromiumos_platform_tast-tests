@@ -762,3 +762,8 @@ func (b *BluetoothFlossFacade) EnabledOnBoot(ctx context.Context) (bool, error) 
 func (b *BluetoothFlossFacade) SetEnabledOnBoot(ctx context.Context, adapterEnabledOnBoot bool) error {
 	return common.SetEnabledOnBoot(ctx, adapterEnabledOnBoot)
 }
+
+// SetDebugLogLevels sets the level for verbose debug log. For Floss, this has not been implemented.
+func (b *BluetoothFlossFacade) SetDebugLogLevels(ctx context.Context, level uint32) error {
+	return errors.New("setting log level in floss is not supported")
+}

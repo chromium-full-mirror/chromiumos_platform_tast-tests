@@ -422,6 +422,7 @@ type fixture struct {
 	// Stateful vars which are initialized during SetUp.
 	fv                            *FixtValue
 	bluetoothServicesDBusMonitors []*log.DBusMonitorCollector
+	btsnoopCollectors             []*log.BtsnoopCollector
 }
 
 func newFixture(features *fixtureFeatures) *fixture {
@@ -446,6 +447,7 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	// Ensure any stateful fixture properties are set to initial state.
 	tf.fv = &FixtValue{}
 	tf.bluetoothServicesDBusMonitors = nil
+	tf.btsnoopCollectors = nil
 
 	// Determine desired bluetooth stack for DUTs.
 	var btStack bts.BluetoothStackType
@@ -530,11 +532,29 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		}
 		tf.bluetoothServicesDBusMonitors = append(tf.bluetoothServicesDBusMonitors, bluetoothServicesDBusMonitor)
 
+		btsnoopCollector, err := log.StartBtsnoopCollector(ctx, dutConfig.DUT.Conn())
+		if err != nil {
+			s.Fatal("Failed to start btsnoop log: ", err)
+		}
+		tf.btsnoopCollectors = append(tf.btsnoopCollectors, btsnoopCollector)
+
 		// Enable/Disable floss feature based on desired bluetooth stack.
 		if btStack == bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_FLOSS {
 			tf.features.EnableFeatures = append(tf.features.EnableFeatures, chromeFeatureFloss)
 		} else {
 			tf.features.DisableFeatures = append(tf.features.DisableFeatures, chromeFeatureFloss)
+		}
+
+		// Configure and enable desired DUT bluetooth stack.
+		s.Logf("Configuring DUT %s bluetooth stack to use %s", dutName, btStack.String())
+		if _, err := dutConfig.BluetoothService.SetBluetoothStack(ctx, &bts.SetBluetoothStackRequest{
+			StackType: btStack,
+		}); err != nil {
+			s.Fatalf("Failed to configure DUT %s bluetooth stack as %s: %v", dutName, btStack.String(), err)
+		}
+		s.Logf("Enabling bluetooth on DUT %s", dutName)
+		if _, err := dutConfig.BluetoothService.Enable(ctx, &emptypb.Empty{}); err != nil {
+			s.Fatalf("Failed to enable %s bluetooth stack on DUT %s: %v", btStack.String(), dutName, err)
 		}
 
 		if tf.features.EnableChromeUI {
@@ -601,17 +621,6 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			}
 		}
 
-		// Configure and enable desired DUT bluetooth stack.
-		s.Logf("Configuring DUT %s bluetooth stack to use %s", dutName, btStack.String())
-		if _, err := dutConfig.BluetoothService.SetBluetoothStack(ctx, &bts.SetBluetoothStackRequest{
-			StackType: btStack,
-		}); err != nil {
-			s.Fatalf("Failed to configure DUT %s bluetooth stack as %s: %v", dutName, btStack.String(), err)
-		}
-		s.Logf("Enabling bluetooth on DUT %s", dutName)
-		if _, err := dutConfig.BluetoothService.Enable(ctx, &emptypb.Empty{}); err != nil {
-			s.Fatalf("Failed to enable %s bluetooth stack on DUT %s: %v", btStack.String(), dutName, err)
-		}
 		if err := tf.resetDutBluetoothState(ctx, dutConfig, true); err != nil {
 			s.Errorf("Failed to reset state of DUT %s: %v", dutName, err)
 		}
@@ -642,6 +651,12 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			}(cleanupCtx)
 
 			s.Logf("Set up of power measurement for DUT %s completed", dutName)
+		}
+
+		if btStack == bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ {
+			if _, err = tf.fv.BluetoothService.SetDebugLogLevels(ctx, &bts.SetDebugLogLevelsRequest{Level: 1}); err != nil {
+				testing.ContextLog(ctx, "Failed to set log level: ", err)
+			}
 		}
 
 		s.Logf("Set up for DUT %s completed", dutName)
@@ -751,6 +766,11 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	for _, dbusMonitor := range tf.bluetoothServicesDBusMonitors {
 		if err := dbusMonitor.Close(); err != nil {
 			s.Error("Failed to close dbus-monitor: ", err)
+		}
+	}
+	for _, btsnoopCollector := range tf.btsnoopCollectors {
+		if err := btsnoopCollector.Close(); err != nil {
+			s.Error("Failed to close btsnoop log collectors: ", err)
 		}
 	}
 	for i, bTPeerCompanion := range tf.fv.bTPeerCompanions {
@@ -1047,6 +1067,14 @@ func (tf *fixture) dumpAllCollectedLogs(ctx context.Context, logName string) err
 			if err := log.DumpCollectedLogsToFile(ctx, btpeer.chameleondLogCollector, chameleondLogDir, logName); err != nil {
 				return errors.Wrapf(err, "failed to dump collected btpeer chameleond logs from btpeer %q", btpeerName)
 			}
+		}
+	}
+	for i, btmonLog := range tf.btsnoopCollectors {
+		testing.ContextLogf(ctx, "Dump logs for btsnoop dut %d", i)
+		dutName := fmt.Sprintf("dut%d", i)
+		logDir := filepath.Join("btsnoop", dutName)
+		if err := log.DumpCollectedLogsToFile(ctx, btmonLog, logDir, "btsnoop"); err != nil {
+			return errors.Wrapf(err, "failed to dump collected btsnoop log from %s", dutName)
 		}
 	}
 	return nil
