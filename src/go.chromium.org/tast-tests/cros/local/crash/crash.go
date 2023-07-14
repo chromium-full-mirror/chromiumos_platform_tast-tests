@@ -200,7 +200,18 @@ func GetCrashDir(ctx context.Context, username string) (string, error) {
 	return d[0], nil
 }
 
-// GetDaemonStoreCrashDirs gives the paths to the daemon store crash directories for the currently active sessions.
+// GetAllCrashDirs gives all crash dirs.
+func GetAllCrashDirs(ctx context.Context) []string {
+	ret, err := GetDaemonStoreCrashDirs(ctx)
+	if err != nil {
+		// Daemon store crash dir is unavailable. Simply log it as it is normal if there's no active session.
+		testing.ContextLogf(ctx, "Unable to get daemon store crash dir: %s", err)
+	}
+
+	return append(ret, LocalCrashDir, SystemCrashDir)
+}
+
+// GetDaemonStoreCrashDirs gives the paths to the daemon store crash directories for the currently active sessions. If an error occurs, the returned dir list would be empty.
 func GetDaemonStoreCrashDirs(ctx context.Context) ([]string, error) {
 	// Need to wait until the UI job is running and has stablized in order to ensure
 	// that daemon-store will be available.

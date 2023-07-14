@@ -132,6 +132,19 @@ func MonitorUploadedCrashEvent(ctx context.Context, s *testing.State) {
 	if !waitStatus.Signaled() || waitStatus.Signal() != unix.SIGSEGV {
 		s.Fatal("Failed to crash sleep: ", err)
 	}
+	// When a crash occurs, crash_reporter is responsible for writing crash
+	// meta files. However, occasionally `cros-health-tool` already has
+	// started subscribing while the *.meta file hasn't been created yet.
+	// Wait for crash files to be ready.
+	if crashFiles, err := crash.WaitForCrashFiles(ctx, crash.GetAllCrashDirs(ctx), []string{`coreutils\.[\d\.]+\.meta`}); err != nil {
+		s.Fatal("Failed to wait for crash files: ", err)
+	} else {
+		for _, files := range crashFiles {
+			for _, file := range files {
+				s.Log("Crash meta file used to create the test uploaded crash: ", file)
+			}
+		}
+	}
 
 	// Convert the unuploaded crash event to uploaded crash event.
 	s.Log("Starting crash_sender")
