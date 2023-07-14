@@ -156,8 +156,11 @@ func ExampleUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep: ", err)
 	}
 	// End of main test body.
-
 	if err := r.Finish(ctx); err != nil {
 		s.Error("Cannot finish collecting power metrics: ", err)
+	}
+
+	if err := power.SaveScreenshot(ctx); err != nil {
+		s.Error("Failed to take screenshot: ", err)
 	}
 }

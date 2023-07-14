@@ -6,12 +6,14 @@ package power
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 
+	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -212,4 +214,17 @@ func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName s
 		dataSources: TestMetrics(),
 		isRecording: false,
 	}
+}
+
+// SaveScreenshot takes a screenshot and saves to test output.
+func SaveScreenshot(ctx context.Context) error {
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok || dir == "" {
+		return errors.New("failed to get name of output directory")
+	}
+	path := filepath.Join(dir, "screenshot_power_test.png")
+	if err := screenshot.Capture(ctx, path); err != nil {
+		return errors.Wrap(err, "couldn't take a screenshot")
+	}
+	return nil
 }
