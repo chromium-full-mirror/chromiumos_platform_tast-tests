@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
@@ -276,8 +275,9 @@ func DetachableDevScreen(ctx context.Context, s *testing.State) {
 				// this is the case, check for the background screen, which would be the
 				// same screen as the one that the dut has just traversed to. In the firmware
 				// log, this screen would get recorded twice.
-				devWarningScrenen := "vboot_draw_ui: screen=0x20a.*selected_index=1"
-				if strings.Count(string(output), devWarningScrenen) != 2 {
+				re = regexp.MustCompile(`vboot_draw_ui: screen=0x20a.*selected_index=1`)
+				match := re.FindAllString(string(output), -1)
+				if len(match) != 2 {
 					s.Fatal("Did not find any records that debug info was printed")
 				}
 				s.Log("Found debug info floating on the dev warning screen")
