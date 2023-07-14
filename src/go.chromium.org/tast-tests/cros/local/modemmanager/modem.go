@@ -506,16 +506,19 @@ func EnsureDisabled(ctx context.Context, modem *Modem) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to fetch enabled state")
 		}
+		if isEnabled {
+			return errors.New("modem still enabled")
+		}
 		isDisabled, err := modem.IsDisabled(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to fetch disabled state")
 		}
-		if isEnabled || !isDisabled {
-			return errors.New("still modem not disabled")
+		if !isDisabled {
+			return errors.New("modem still not disabled")
 		}
 		return nil
 	}, &testing.PollOptions{
-		Timeout:  30 * time.Second,
+		Timeout:  120 * time.Second,
 		Interval: 1 * time.Second,
 	}); err != nil {
 		return errors.Wrap(err, "failed to verify modem disabled")
@@ -568,7 +571,7 @@ func EnsureRegistered(ctx context.Context, modem, simpleModem *Modem) error {
 		}
 		return nil
 	}, &testing.PollOptions{
-		Timeout:  40 * time.Second,
+		Timeout:  120 * time.Second,
 		Interval: 1 * time.Second,
 	}); err != nil {
 		return errors.Wrap(err, "failed to verify modem registration state")

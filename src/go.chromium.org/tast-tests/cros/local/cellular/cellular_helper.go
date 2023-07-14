@@ -385,7 +385,8 @@ func (h *Helper) FindServiceForDeviceWithProps(ctx context.Context, props map[st
 		props[k] = v
 	}
 
-	service, err := h.Manager.WaitForServiceProperties(ctx, props, defaultTimeout)
+	timeout := 120 * time.Second
+	service, err := h.Manager.WaitForServiceProperties(ctx, props, timeout)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Service not found for: %+v", props)
 	}
