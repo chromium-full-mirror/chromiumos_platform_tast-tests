@@ -133,7 +133,37 @@ func (svc *osInstallService) RunOsInstall(ctx context.Context, req *empty.Empty)
 }
 
 func (svc *osInstallService) ShutDown(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if err := svc.ui.LeftClick(nodewith.Name("Shut down").Role(role.Button))(ctx); err != nil {
+	ui := svc.ui
+	// Open the status tray.
+	statusTray := "ash/StatusAreaWidgetDelegate"
+	statusTrayNode := nodewith.HasClass(statusTray).Role(role.Pane)
+	if err := ui.WaitUntilExists(statusTrayNode)(ctx); err != nil {
+		svc.DumpUITree(ctx)
+		return nil, err
+	}
+	if err := ui.LeftClick(statusTrayNode)(ctx); err != nil {
+		svc.DumpUITree(ctx)
+		return nil, err
+	}
+
+	// Press the power menu button.
+	powerMenuNode := nodewith.Name("Power menu").Role(role.Button)
+	if err := ui.WaitUntilExists(powerMenuNode)(ctx); err != nil {
+		svc.DumpUITree(ctx)
+		return nil, err
+	}
+	if err := ui.LeftClick(powerMenuNode)(ctx); err != nil {
+		svc.DumpUITree(ctx)
+		return nil, err
+	}
+
+	// Press power off.
+	powerOffNode := nodewith.Name("Power off").Role(role.MenuItem)
+	if err := ui.WaitUntilExists(powerOffNode)(ctx); err != nil {
+		svc.DumpUITree(ctx)
+		return nil, err
+	}
+	if err := ui.LeftClick(powerOffNode)(ctx); err != nil {
 		svc.DumpUITree(ctx)
 		return nil, err
 	}
