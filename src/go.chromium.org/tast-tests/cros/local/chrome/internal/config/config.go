@@ -111,6 +111,9 @@ func (c *Config) LoginMode() LoginMode { return c.m.LoginMode }
 // TryReuseSession returns whether to try reusing a current user session.
 func (c *Config) TryReuseSession() bool { return c.m.TryReuseSession }
 
+// ForceReuseSession returns whether to force reusing a current user session.
+func (c *Config) ForceReuseSession() bool { return c.m.ForceReuseSession }
+
 // EnableLoginVerboseLogs returns whether to enable verbose logs on login.
 func (c *Config) EnableLoginVerboseLogs() bool { return c.m.EnableLoginVerboseLogs }
 
@@ -270,6 +273,7 @@ type MutableConfig struct {
 	EnableRestoreTabs               bool             `reuse_match:"false"`
 	LoginMode                       LoginMode        `reuse_match:"customized"`
 	TryReuseSession                 bool             `reuse_match:"false"`
+	ForceReuseSession               bool             `reuse_match:"false"`
 	EnableLoginVerboseLogs          bool             `reuse_match:"true"`
 	VKEnabled                       bool             `reuse_match:"true"`
 	SkipOOBEAfterLogin              bool             `reuse_match:"false"`

@@ -316,10 +316,17 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		return nil, errors.Wrap(err, "pre-flight check failed")
 	}
 
-	if cfg.TryReuseSession() {
+	tryReuse := cfg.TryReuseSession()
+	forceReuse := cfg.ForceReuseSession()
+	if tryReuse || forceReuse {
 		reuseCtx, reuseCancel := context.WithTimeout(ctx, tryReuseSessionTimeout)
 		defer reuseCancel()
-		cr, err := tryReuseSession(reuseCtx, cfg)
+
+		reuseSession := tryReuseSession
+		if forceReuse {
+			reuseSession = forceReuseSession
+		}
+		cr, err := reuseSession(reuseCtx, cfg)
 		if err == nil {
 			return cr, nil
 		}

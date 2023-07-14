@@ -22,9 +22,19 @@ import (
 	"go.chromium.org/tast/core/timing"
 )
 
-// tryReuseSession checks if the exiting chrome session can be reuse, and returns a
+// tryReuseSession checks if the exiting chrome session can be reused, and returns a
 // Chrome instance if reuse criteria is met.
-func tryReuseSession(ctx context.Context, cfg *config.Config) (cr *Chrome, retErr error) {
+func tryReuseSession(ctx context.Context, cfg *config.Config) (*Chrome, error) {
+	return reuseSession(ctx, cfg, false /*forceReuse*/)
+}
+
+// forceReuseSession will reuse the current session without checking for reuse
+// criteria.
+func forceReuseSession(ctx context.Context, cfg *config.Config) (*Chrome, error) {
+	return reuseSession(ctx, cfg, true /*forceReuse*/)
+}
+
+func reuseSession(ctx context.Context, cfg *config.Config, forceReuse bool) (cr *Chrome, retErr error) {
 	ctx, st := timing.Start(ctx, "try_reuse_session")
 	defer st.End()
 
@@ -46,16 +56,19 @@ func tryReuseSession(ctx context.Context, cfg *config.Config) (cr *Chrome, retEr
 		}
 	}()
 
-	if err := compareExtensions(cfg); err != nil {
-		return nil, err
-	}
+	if !forceReuse {
+		if err := compareExtensions(cfg); err != nil {
+			return nil, err
+		}
 
-	if err := compareConfig(ctx, sess, cfg); err != nil {
-		return nil, err
-	}
+		if err := compareConfig(ctx, sess, cfg); err != nil {
+			return nil, err
+		}
 
-	if err := compareUserLogin(ctx, sess, cfg.Creds().User); err != nil {
-		return nil, err
+		if err := compareUserLogin(ctx, sess, cfg.Creds().User); err != nil {
+			return nil, err
+		}
+
 	}
 
 	logFilename, err := CurrentLogFile()

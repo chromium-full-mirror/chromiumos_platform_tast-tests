@@ -501,6 +501,16 @@ func TryReuseSession() Option {
 	}
 }
 
+// ForceReuseSession is like TryReuseSession, except that the compatibility
+// between the current Chrome configurations and the DUT Chrome configurations
+// will not be verified.
+func ForceReuseSession() Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.ForceReuseSession = true
+		return nil
+	}
+}
+
 // RemoveNotification returns an Option that can be passed to New to make Chrome to
 // remove or keep the notifications after login.
 func RemoveNotification(remove bool) Option {
