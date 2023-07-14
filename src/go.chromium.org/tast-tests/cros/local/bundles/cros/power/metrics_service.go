@@ -159,6 +159,10 @@ func (m *MetricsService) Finish(ctx context.Context, req *power.FinishRequest) (
 		return nil, err
 	}
 
+	if !req.GetUpload() {
+		return p.Proto(), nil
+	}
+
 	outDir := req.GetOutDir()
 	if outDir != "" && filepath.IsAbs(outDir) {
 		if _, err := os.Stat(outDir); os.IsNotExist(err) {
