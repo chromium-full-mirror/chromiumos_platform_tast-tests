@@ -544,3 +544,40 @@ func GetScreenRefreshRate(ctx context.Context) int {
 	testing.ContextLog(ctx, "Failed to get screen refresh rate")
 	return 0
 }
+
+// GetBacklightLevel returns screen backlight brightness in non-linear (human
+// perception) and linear percent respectively.
+func GetBacklightLevel(ctx context.Context) (nonlinear, linear float64) {
+	const (
+		backlight     = "backlight_tool"
+		brightnessArg = "--get_brightness"
+		nonlinearArg  = "--level_to_nonlinear"
+		linearArg     = "--level_to_linear"
+	)
+
+	rawLevel, err := testexec.CommandContext(ctx, backlight, brightnessArg).Output()
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get backlight brightness")
+		return nonlinear, linear
+	}
+
+	readResult, err := testexec.CommandContext(ctx, backlight, nonlinearArg+"="+strings.TrimSpace(string(rawLevel))).Output()
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get non-linear backlight percentage")
+	}
+	nonlinear, err = strconv.ParseFloat(strings.TrimSpace(string(readResult)), 64)
+	if err != nil {
+		testing.ContextLogf(ctx, "Failed to parse backlight read %s to float", readResult)
+	}
+
+	readResult, err = testexec.CommandContext(ctx, backlight, linearArg+"="+strings.TrimSpace(string(rawLevel))).Output()
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get linear backlight percentage")
+	}
+	linear, err = strconv.ParseFloat(strings.TrimSpace(string(readResult)), 64)
+	if err != nil {
+		testing.ContextLogf(ctx, "Failed to parse backlight read %s to float", readResult)
+	}
+
+	return nonlinear, linear
+}

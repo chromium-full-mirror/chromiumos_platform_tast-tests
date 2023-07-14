@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/power/util"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -79,6 +80,7 @@ const (
 	cpuUsageMetricTypeUnit         = "percent"
 	fanMetricTypeUnit              = "rpm"
 	fpsMetricTypeUnit              = "fps"
+	generalPerfMetricTypeUnit      = "point"
 	gpuFreqMetricTypeUnit          = "megahertz"
 	gpuStateMetricTypeUnit         = "percent"
 	histogramLatencyMetricTypeUnit = "us"
@@ -288,6 +290,9 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 			Multiple: true,
 		}, innerDataMap["non_SoC"]...)
 	}
+
+	updatePowerLogPerf(ctx, innerDataMap, innerAverageMap, typeMap, unitMap)
+
 	powerDict["data"] = innerDataMap
 	powerDict["average"] = innerAverageMap
 	powerDict["type"] = typeMap
@@ -372,6 +377,26 @@ func getNonSocSubsystemPowerData(ctx context.Context,
 
 	nonSoCPowerAverage := innerAverageMap["system"] - innerAverageMap[package0]
 	return nonSoCPowerNumbers, nonSoCPowerAverage
+}
+
+// updatePowerLogPerf adds perf scalar to power log map.
+func updatePowerLogPerf(ctx context.Context, dataMap map[string][]float64, averageMap map[string]float64, typeMap, unitMap map[string]string) {
+	// Backlight scalars.
+	const (
+		nonlinearKey = "level_backlight_percent_nonlinear"
+		linearKey    = "level_backlight_percent_linear"
+	)
+	nonlinear, linear := util.GetBacklightLevel(ctx)
+
+	dataMap[nonlinearKey] = []float64{nonlinear}
+	averageMap[nonlinearKey] = nonlinear
+	typeMap[nonlinearKey] = "perf"
+	unitMap[nonlinearKey] = generalPerfMetricTypeUnit
+
+	dataMap[linearKey] = []float64{linear}
+	averageMap[linearKey] = linear
+	typeMap[linearKey] = "perf"
+	unitMap[linearKey] = generalPerfMetricTypeUnit
 }
 
 // CreatePowerLogDict creates the power log dictionary from power dict.
