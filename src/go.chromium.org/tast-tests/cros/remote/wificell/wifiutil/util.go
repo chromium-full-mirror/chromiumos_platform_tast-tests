@@ -5,6 +5,8 @@
 package wifiutil
 
 import (
+	"golang.org/x/exp/constraints"
+
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 )
 
@@ -21,4 +23,17 @@ func CommonAPOptions(extraOps ...hostapd.Option) []hostapd.Option {
 	}
 	// Append extra options.
 	return append(commonOps, extraOps...)
+}
+
+// Average computes the arithmetic mean of an array of numbers. An empty array
+// will return 0.
+func Average[T constraints.Float | constraints.Integer](data []T) float64 {
+	if len(data) == 0 {
+		return 0
+	}
+	var sum T = 0
+	for _, v := range data {
+		sum += v
+	}
+	return float64(sum) / float64(len(data))
 }
