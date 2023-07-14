@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type crasStreamMixVal struct {
@@ -29,11 +30,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasStreamMix,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Attr:         []string{"group:mainline", "group:audio", "informational"},
+		Attr:         []string{"group:mainline", "group:audio"},
 		Desc:         "Captures output audio via loopback and verifies that CRAS plays multiple streams correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"audio_stable", "chrome"},
+		// b/291180821: Skip betty-pi-arc before b/291180821 is fixed.
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty-pi-arc")),
 		Pre:          chrome.LoggedIn(),
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{
@@ -46,7 +49,8 @@ func init() {
 				},
 			},
 			{
-				Name: "blocksize",
+				Name:      "blocksize",
+				ExtraAttr: []string{"informational", "group:criticalstaging"},
 				Val: crasStreamMixVal{
 					rate:      48000,
 					channel:   2,
@@ -62,7 +66,8 @@ func init() {
 				},
 			},
 			{
-				Name: "all",
+				Name:      "all",
+				ExtraAttr: []string{"informational", "group:criticalstaging"},
 				Val: crasStreamMixVal{
 					rate:      44100,
 					channel:   1,
