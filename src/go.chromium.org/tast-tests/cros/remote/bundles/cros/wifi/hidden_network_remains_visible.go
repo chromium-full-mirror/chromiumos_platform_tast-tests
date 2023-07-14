@@ -54,15 +54,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.SkipOnWifiDevice(wlan.QualcommWCN3990, wlan.MediaTekMT7921PCIE)),
 		Fixture:      "wificellFixt",
 		Timeout:      7 * time.Minute, // It could take up to 4 minutes to reboot the DUT.
-		Params: []testing.Param{
-			{
-				Name: "hidden_network_migration_disabled",
-				Val:  false, // isHiddenNetworkMigrationEnabled
-			}, {
-				Name: "hidden_network_migration_enabled",
-				Val:  true, // isHiddenNetworkMigrationEnabled
-			},
-		},
 	})
 }
 
@@ -98,12 +89,6 @@ func HiddenNetworkRemainsVisible(ctx context.Context, s *testing.State) {
 
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
 	startChromeReq := &ui.NewRequest{}
-	isHiddenNetworkMigrationEnabled := s.Param().(bool)
-	if isHiddenNetworkMigrationEnabled {
-		startChromeReq.EnableFeatures = []string{"HiddenNetworkMigration"}
-	} else {
-		startChromeReq.DisableFeatures = []string{"HiddenNetworkMigration"}
-	}
 
 	defer tf.CleanDisconnectDUTFromWifi(cleanupCtx, wificell.DefaultDUT)
 	// Join a hidden network at logged-in state as preparation of upcoming logout test.
@@ -128,12 +113,10 @@ func HiddenNetworkRemainsVisible(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to join wifi: ", err)
 		}
 
-		// Manually turn on the "Hidden network" toggle button if the feature "HiddenNetworkMigration" is
-		// enabled so that the service will have the hidden-ssid property.
-		if isHiddenNetworkMigrationEnabled {
-			if err := toggleHiddenNetworkOn(ctx, rpcClient.Conn, hiddenAp.Config().SSID); err != nil {
-				s.Fatal("Failed to turn on 'Hidden network' toggle button: ", err)
-			}
+		// WiFi networks will only become hidden by default if they are configured during OOBE or when logged out
+		// and the network was not found in the list of WiFi networks found via scan. Explicitly mark this network as hidden. Explicitly mark this network as hidden.
+		if err := toggleHiddenNetworkOn(ctx, rpcClient.Conn, hiddenAp.Config().SSID); err != nil {
+			s.Fatal("Failed to turn on 'Hidden network' toggle button: ", err)
 		}
 
 		// Connect to another network to verify if the added hidden network
@@ -240,7 +223,7 @@ func toggleHiddenNetworkOn(ctx context.Context, conn *grpc.ClientConn, ssid stri
 	}(cleanupCtx)
 
 	uiSvc := ui.NewAutomationServiceClient(conn)
-	// The option "Hidden network" will be located on the expandable section when "HiddenNetworkMigration" flag is enabled.
+	// The "Hidden network" option is located within the expandable "Network" section.
 	if _, err := uiSvc.LeftClick(ctx, &ui.LeftClickRequest{
 		Finder: ui.Node().Name("Show network address settings").Role(ui.Role_ROLE_BUTTON).Finder(),
 	}); err != nil {

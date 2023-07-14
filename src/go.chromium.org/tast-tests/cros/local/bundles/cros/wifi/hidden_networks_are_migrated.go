@@ -38,7 +38,7 @@ func init() {
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "hiddenNetworkMigrationEnabled",
+		Fixture:      "hiddenNetworkMigration",
 		Params: []testing.Param{{
 			Name: "not_shared_and_not_hidden",
 			Val: &testConfig{

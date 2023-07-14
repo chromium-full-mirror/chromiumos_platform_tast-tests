@@ -14,8 +14,8 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: "hiddenNetworkMigrationEnabled",
-		Desc: "Logs into a user session with the hidden network migration enabled",
+		Name: "hiddenNetworkMigration",
+		Desc: "Logs into a user session where hidden networks are migrated at a more quick/test-friendly interval",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chadduffin@google.com",
@@ -60,7 +60,6 @@ func (*hiddenNetworkMigrationFixture) PostTest(ctx context.Context, s *testing.F
 func (f *hiddenNetworkMigrationFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	cr, err := chrome.New(
 		ctx,
-		chrome.EnableFeatures("HiddenNetworkMigration"),
 		chrome.ExtraArgs("--hidden-network-migration-age=0"),
 		chrome.ExtraArgs("--hidden-network-migration-interval=1"),
 		chrome.NoLogin())
