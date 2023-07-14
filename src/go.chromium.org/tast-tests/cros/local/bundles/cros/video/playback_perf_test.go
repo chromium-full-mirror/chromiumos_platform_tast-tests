@@ -29,7 +29,7 @@ var playbackPerfLongFile = map[string]string{
 // reused by other parameter generator code. Put the functions in common places.
 
 func genPlaybackPerfDataPath(codec string, resolution, fps int) string {
-	if fps != 30 && fps != 60 {
+	if fps != 30 && fps != 60 && fps != 120 {
 		panic("Unexpected fps")
 	}
 	numFrames := fps * 10
@@ -57,6 +57,10 @@ func genPlaybackPerfSwDeps(codec string, resolution, fps int, dec string) []stri
 
 	if dec != "hw" {
 		return swDeps
+	}
+
+	if fps == 120 {
+		fps = 60 // For SwDeps purposes (a.k.a. capabilities), 60 is good enough for 120fps.
 	}
 
 	if resolution < 1080 {
@@ -152,11 +156,18 @@ func TestPlaybackPerfParams(t *testing.T) {
 			if resolution >= 1080 {
 				fpss = append(fpss, 60)
 			}
+			if resolution == 1080 {
+				fpss = append(fpss, 120)
+			}
 			decs := []string{"hw"}
 			if codec != "hevc" && resolution <= 2160 {
 				decs = append(decs, "sw")
 			}
 			for _, fps := range fpss {
+				if fps == 120 && (codec == "vp8") {
+					// VP8 120fps streams aren't common in the wild.
+					continue
+				}
 				for _, dec := range decs {
 					param :=
 						genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),

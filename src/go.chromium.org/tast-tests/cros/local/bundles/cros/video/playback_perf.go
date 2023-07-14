@@ -118,6 +118,28 @@ func init() {
 				Fixture:           "chromeVideoWithSWDecoding",
 			},
 			{
+				Name: "h264_1080p_120fps_hw",
+				Val: playbackPerfParams{
+					fileName:    "perf/h264/1080p_120fps_1200frames.h264.mp4",
+					decoderType: 0,
+					browserType: browser.TypeAsh,
+				},
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_60"},
+				ExtraData:         []string{"perf/h264/1080p_120fps_1200frames.h264.mp4"},
+				Fixture:           "chromeVideo",
+			},
+			{
+				Name: "h264_1080p_120fps_sw",
+				Val: playbackPerfParams{
+					fileName:    "perf/h264/1080p_120fps_1200frames.h264.mp4",
+					decoderType: 1,
+					browserType: browser.TypeAsh,
+				},
+				ExtraSoftwareDeps: []string{"proprietary_codecs"},
+				ExtraData:         []string{"perf/h264/1080p_120fps_1200frames.h264.mp4"},
+				Fixture:           "chromeVideoWithSWDecoding",
+			},
+			{
 				Name: "h264_2160p_30fps_hw",
 				Val: playbackPerfParams{
 					fileName:    "perf/h264/2160p_30fps_300frames.h264.mp4",
@@ -330,6 +352,27 @@ func init() {
 				Fixture:   "chromeVideoWithSWDecoding",
 			},
 			{
+				Name: "vp9_1080p_120fps_hw",
+				Val: playbackPerfParams{
+					fileName:    "perf/vp9/1080p_120fps_1200frames.vp9.webm",
+					decoderType: 0,
+					browserType: browser.TypeAsh,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60"},
+				ExtraData:         []string{"perf/vp9/1080p_120fps_1200frames.vp9.webm"},
+				Fixture:           "chromeVideo",
+			},
+			{
+				Name: "vp9_1080p_120fps_sw",
+				Val: playbackPerfParams{
+					fileName:    "perf/vp9/1080p_120fps_1200frames.vp9.webm",
+					decoderType: 1,
+					browserType: browser.TypeAsh,
+				},
+				ExtraData: []string{"perf/vp9/1080p_120fps_1200frames.vp9.webm"},
+				Fixture:   "chromeVideoWithSWDecoding",
+			},
+			{
 				Name: "vp9_2160p_30fps_hw",
 				Val: playbackPerfParams{
 					fileName:    "perf/vp9/2160p_30fps_300frames.vp9.webm",
@@ -457,6 +500,27 @@ func init() {
 				Fixture:   "chromeVideoWithSWDecoding",
 			},
 			{
+				Name: "av1_1080p_120fps_hw",
+				Val: playbackPerfParams{
+					fileName:    "perf/av1/1080p_120fps_1200frames.av1.mp4",
+					decoderType: 0,
+					browserType: browser.TypeAsh,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60"},
+				ExtraData:         []string{"perf/av1/1080p_120fps_1200frames.av1.mp4"},
+				Fixture:           "chromeVideoWithHWAV1Decoding",
+			},
+			{
+				Name: "av1_1080p_120fps_sw",
+				Val: playbackPerfParams{
+					fileName:    "perf/av1/1080p_120fps_1200frames.av1.mp4",
+					decoderType: 1,
+					browserType: browser.TypeAsh,
+				},
+				ExtraData: []string{"perf/av1/1080p_120fps_1200frames.av1.mp4"},
+				Fixture:   "chromeVideoWithSWDecoding",
+			},
+			{
 				Name: "av1_2160p_30fps_hw",
 				Val: playbackPerfParams{
 					fileName:    "perf/av1/2160p_30fps_300frames.av1.mp4",
@@ -532,6 +596,18 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_60"},
 				ExtraData:         []string{"perf/hevc/1080p_60fps_600frames.hevc.mp4"},
+				Fixture:           "chromeVideo",
+			},
+			{
+				Name: "hevc_1080p_120fps_hw",
+				Val: playbackPerfParams{
+					fileName:    "perf/hevc/1080p_120fps_1200frames.hevc.mp4",
+					decoderType: 0,
+					browserType: browser.TypeAsh,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_60"},
+				ExtraData:         []string{"perf/hevc/1080p_120fps_1200frames.hevc.mp4"},
 				Fixture:           "chromeVideo",
 			},
 			{
