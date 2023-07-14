@@ -9,10 +9,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/camera/camerabox"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/camera/pre"
+	"go.chromium.org/tast-tests/cros/remote/camera/camerabox"
 	pb "go.chromium.org/tast-tests/cros/services/cros/camerabox"
-	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -25,9 +23,9 @@ func init() {
 		Attr:         []string{"group:camerabox"},
 		SoftwareDeps: []string{"arc", "arc_camera3", caps.BuiltinCamera},
 		ServiceDeps:  []string{"tast.cros.camerabox.HAL3Service"},
-		Data:         []string{pre.DataChartScene().DataPath()},
+		Data:         []string{"third_party/cts_portrait_scene.jpg"},
+		Fixture:      "cameraboxFixture",
 		Vars:         []string{"chart"},
-		Pre:          pre.DataChartScene(),
 		// For extra params, reference corresponding tests in:
 		// src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/camera/hal3_*.go
 		Params: []testing.Param{
@@ -110,17 +108,27 @@ func init() {
 func HAL3Remote(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 	runTestRequest := s.Param().(*pb.RunTestRequest)
+	fixt := s.FixtValue().(camerabox.FixtureData)
+	// Prepare the chart for testing.
+	var altHostname string
+	if hostname, ok := s.Var("chart"); ok {
+		altHostname = hostname
+	}
 
-	if err := camerabox.LogTestScene(ctx, d, runTestRequest.Facing, s.OutDir()); err != nil {
+	if err := fixt.PrepareChart(ctx, s.DUT(), s.OutDir(), altHostname, s.DataPath("third_party/cts_portrait_scene.jpg")); err != nil {
+		s.Error("Failed to prepare chart: ", err)
+	}
+
+	// Log current test scene.
+	if err := fixt.LogTestScene(ctx, d, runTestRequest.Facing, s.OutDir()); err != nil {
 		s.Error("Failed to take a photo of test scene: ", err)
 	}
 
 	// Connect to the gRPC server on the DUT.
-	cl, err := rpc.Dial(ctx, d, s.RPCHint())
+	cl, err := fixt.ConnectToDUT(ctx, d, s.RPCHint())
 	if err != nil {
-		s.Fatal("Failed to connect to the HAL3 service on the DUT: ", err)
+		s.Fatal("Fail to connect to the dut: ", err)
 	}
-	defer cl.Close(ctx)
 
 	// Run remote test on DUT.
 	hal3Client := pb.NewHAL3ServiceClient(cl.Conn)
