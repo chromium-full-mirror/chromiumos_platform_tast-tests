@@ -342,9 +342,8 @@ func init() {
 			Name:              "vm_t_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_t"},
-			// x86-64 ARC: kohaku(hatch-Intel), gimble(brya-Intel), morphius(zork-AMD)
-			// arm64 ARC: tomato(cherry), steelix(corsola), krane(kukui)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "gimble", "morphius", "steelix", "tomato", "krane")),
+			// x86-64 ARC: kohaku(hatch-Intel), jinlon(hatch-Intel)
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "jinlon")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-tm",
@@ -352,7 +351,7 @@ func init() {
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				dexOptCacheGen:                false,
-				requiredCPUAbisForBranchUprev: []string{"x86_64", "arm64"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
