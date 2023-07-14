@@ -36,10 +36,6 @@ func init() {
 }
 
 func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
 	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
@@ -48,6 +44,10 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
+	}
+
+	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
+		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
 	}
 
 	// Gather Shill Device sim properties.
@@ -60,6 +60,11 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 	helper, err := cellular.NewHelperWithLabels(ctx, labels)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper: ", err)
+	}
+
+	// Enable and get service to set autoconnect based on test parameters.
+	if _, err := helper.Enable(ctx); err != nil {
+		s.Fatal("Failed to enable modem")
 	}
 
 	app, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
@@ -77,6 +82,10 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 	currentPin, currentPuk, err := helper.GetPINAndPUKForICCID(ctx, iccid)
 	if err != nil {
 		s.Fatal("Could not get Pin and Puk: ", err)
+	}
+	if currentPin == "" {
+		// Do graceful exit, not to run tests on unknown pin duts.
+		s.Fatalf("Failed to find PIN code for ICCID : %s, skipping the test", iccid)
 	}
 	if currentPuk == "" {
 		// Do graceful exit, not to run tests on unknown puk duts.
