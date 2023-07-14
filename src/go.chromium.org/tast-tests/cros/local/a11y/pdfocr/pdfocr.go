@@ -64,11 +64,11 @@ type SetUpData struct {
 // SetUpDlcFailure executes common setup code that simulates the screen-ai DLC
 // failure and returns a DlcFailureSetUpData. See the documentation for
 // DlcFailureSetUpData for more information.
-func SetUpDlcFailure(ctx context.Context) (data DlcFailureSetUpData, e error) {
+func SetUpDlcFailure(ctx context.Context) (DlcFailureSetUpData, error) {
 	setupData := DlcFailureSetUpData{ctx, nil, &a11y.TearDownHelper{}}
 
 	if err := upstart.StopJob(ctx, dlc.JobName); err != nil {
-		return setupData, errors.Wrapf(err, "failed to stop %q", dlc.JobName)
+		return DlcFailureSetUpData{}, errors.Wrapf(err, "failed to stop %q", dlc.JobName)
 	}
 
 	cleanupCtx := ctx
@@ -89,7 +89,7 @@ func SetUpDlcFailure(ctx context.Context) (data DlcFailureSetUpData, e error) {
 	// Force a DLC Install failure by moving the PRELOAD directory to another place.
 	extDirBase, err := ioutil.TempDir("", "")
 	if err != nil {
-		return setupData, errors.Wrap(err, "failed to create a temp dir")
+		return DlcFailureSetUpData{}, errors.Wrap(err, "failed to create a temp dir")
 	}
 	screenAiDlcID := "screen-ai"
 	preloadPath := filepath.Join(dlc.PreloadDir, screenAiDlcID)
@@ -97,7 +97,7 @@ func SetUpDlcFailure(ctx context.Context) (data DlcFailureSetUpData, e error) {
 
 	err = fsutil.CopyDir(preloadPath, tempDlcPath)
 	if err != nil {
-		return setupData, errors.Wrap(err, "failed to move the screen-ai dlc to a temp directory")
+		return DlcFailureSetUpData{}, errors.Wrap(err, "failed to move the screen-ai dlc to a temp directory")
 	}
 	os.RemoveAll(preloadPath)
 	setupData.TDown.Append(func() error {
@@ -105,7 +105,7 @@ func SetUpDlcFailure(ctx context.Context) (data DlcFailureSetUpData, e error) {
 	})
 
 	if err := upstart.StartJob(ctx, dlc.JobName); err != nil {
-		return setupData, errors.Wrap(err, "failed to start dlcservice")
+		return DlcFailureSetUpData{}, errors.Wrap(err, "failed to start dlcservice")
 	}
 
 	return setupData, nil
