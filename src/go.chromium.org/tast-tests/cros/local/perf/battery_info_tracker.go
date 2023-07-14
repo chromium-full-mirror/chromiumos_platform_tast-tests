@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
@@ -148,7 +149,7 @@ func (t *BatteryInfoTracker) Start(ctx context.Context, timeZero time.Time) erro
 	t.chargeNow = append(t.chargeNow, chargeNow)
 	testing.ContextLogf(ctx, "charge_now value at start: %f, capacity value at start: %f", chargeNow, capacityNow)
 
-	go func() {
+	async.Run(ctx, func(ctx context.Context) {
 		ticker := time.NewTicker(batteryCheckInterval)
 		defer ticker.Stop()
 
@@ -182,7 +183,7 @@ func (t *BatteryInfoTracker) Start(ctx context.Context, timeZero time.Time) erro
 				return
 			}
 		}
-	}()
+	}, "BatteryInfoTracker")
 
 	return nil
 }

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/memory/metrics"
@@ -84,7 +85,7 @@ func (t *MemoryInfoTracker) Start(ctx context.Context) error {
 		return errors.Wrap(err, "unable to retrieve base memory stats")
 	}
 
-	go func() {
+	async.Run(ctx, func(ctx context.Context) {
 		var iteration uint32
 		testing.ContextLog(ctx, "mem_tracker: Background collection started, will sleep")
 		done := false
@@ -112,7 +113,7 @@ func (t *MemoryInfoTracker) Start(ctx context.Context) error {
 
 		// Let the foreground task know we are done.
 		close(t.stopackc)
-	}()
+	}, "MemTracker")
 
 	return nil
 }

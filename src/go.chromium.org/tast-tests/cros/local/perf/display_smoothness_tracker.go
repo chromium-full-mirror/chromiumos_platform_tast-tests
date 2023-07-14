@@ -70,16 +70,20 @@ func (t *DisplaySmoothnessTracker) Start(ctx context.Context, tconn *chrome.Test
 // since the relevant Start() call. Primary display is used if the given display
 // id is empty.
 func (t *DisplaySmoothnessTracker) Stop(ctx context.Context, tconn *chrome.TestConn, displayID string) (*DisplayFrameData, error) {
-	_, found := t.displayIDs[displayID]
-	if !found {
-		return nil, errors.Errorf("display smoothness not tracked for %q", displayIDString(displayID))
-	}
-
+	// If there is existing smoothness tracking for the display, we need to
+	// clear it even if |t| doesn't know about it. Thus, call the API first
+	// to clear whatever existing tracking is there, and then do the check
+	// if |t| knows about any display smoothness tracking for |displayID|.
 	var dsData DisplayFrameData
 	err := tconn.Call(ctx, &dsData,
 		`tast.promisify(chrome.autotestPrivate.stopSmoothnessTracking)`, displayID)
 	if err != nil {
 		return nil, err
+	}
+
+	_, found := t.displayIDs[displayID]
+	if !found {
+		return nil, errors.Errorf("display smoothness not tracked for %q", displayIDString(displayID))
 	}
 
 	delete(t.displayIDs, displayID)

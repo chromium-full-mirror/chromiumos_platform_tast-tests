@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/errors"
@@ -55,6 +56,15 @@ func (t *FrameDataTracker) Start(ctx context.Context, tconn *chrome.TestConn, ti
 		return errors.New("already started")
 	}
 
+	// Use a short 5s delay for stop.
+	stopCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	t.collecting = make(chan bool)
+	if err := t.forceStop(stopCtx, tconn); err != nil {
+		testing.ContextLog(ctx, "Failed to stop any existing frame data tracking: ", err)
+	}
+
 	if err := tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.startThroughputTrackerDataCollection)`); err != nil {
 		return errors.Wrap(err, "failed to start data collection")
 	}
@@ -71,10 +81,9 @@ func (t *FrameDataTracker) Start(ctx context.Context, tconn *chrome.TestConn, ti
 		return errors.Wrap(err, "failed to start display smoothness tracking")
 	}
 
-	t.collecting = make(chan bool)
 	t.collectingErr = make(chan error, 1)
 
-	go func() {
+	async.Run(ctx, func(ctx context.Context) {
 		testing.ContextLog(ctx, "FrameDataTracker: Collecting frame data in background")
 		for {
 			select {
@@ -93,7 +102,31 @@ func (t *FrameDataTracker) Start(ctx context.Context, tconn *chrome.TestConn, ti
 				return
 			}
 		}
-	}()
+	}, "FrameDataTracker")
+
+	return nil
+}
+
+// forceStop clears any existing frame data tracking, and ignores any potential
+// output from the trackers.
+func (t *FrameDataTracker) forceStop(ctx context.Context, tconn *chrome.TestConn) error {
+	if t.collecting == nil {
+		return errors.New("not started")
+	}
+
+	if _, err := t.dsTracker.Stop(ctx, tconn, ""); err != nil {
+		testing.ContextLog(ctx, errors.Wrap(err, "failed to stop display smoothness tracking"))
+	}
+
+	var data []DisplayFrameData
+	if err := tconn.Call(ctx, &data, `tast.promisify(chrome.autotestPrivate.stopThroughputTrackerDataCollection)`); err != nil {
+		testing.ContextLog(ctx, errors.Wrap(err, "failed to stop data collection"))
+	}
+
+	var frameCountData []FrameCountingPerSinkData
+	if err := tconn.Call(ctx, &frameCountData, `tast.promisify(chrome.autotestPrivate.stopFrameCounting)`); err != nil {
+		testing.ContextLog(ctx, errors.Wrap(err, "failed to stop frame counting per sink"))
+	}
 
 	return nil
 }

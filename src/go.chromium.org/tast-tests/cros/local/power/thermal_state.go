@@ -33,7 +33,7 @@ const (
 func ListingSysfsCoolingDevices(ctx context.Context) ([]*CoolingDevice, error) {
 	var devices []*CoolingDevice
 	const sysfsThermalPath = "/sys/class/thermal"
-	testing.ContextLog(ctx, "Listing colling devices in ", sysfsThermalPath)
+	testing.ContextLog(ctx, "Listing cooling devices in ", sysfsThermalPath)
 	files, err := ioutil.ReadDir(sysfsThermalPath)
 	if err != nil {
 		return devices, errors.Wrap(err, "failed to read sysfs dir")

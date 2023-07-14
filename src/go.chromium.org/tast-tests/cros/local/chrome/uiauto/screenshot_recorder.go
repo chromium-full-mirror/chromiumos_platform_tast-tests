@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -150,7 +151,7 @@ func (r *screenshotRecorderImpl) Start(ctx context.Context) error {
 
 	r.startTime = time.Now()
 
-	go func() {
+	async.Run(ctx, func(ctx context.Context) {
 		r.takingIntervalShots = true
 
 		// Don't take screenshots at fixed intervals if |maxImages| is
@@ -188,7 +189,7 @@ func (r *screenshotRecorderImpl) Start(ctx context.Context) error {
 		}
 		// Let the foreground task know we are done.
 		close(r.stopackc)
-	}()
+	}, "ScreenshotRecorder")
 	return nil
 }
 
@@ -227,6 +228,10 @@ func (r *screenshotRecorderImpl) Stop(ctx context.Context) error {
 			return errors.Wrap(err, "failed to take one last screenshot")
 		}
 	}
+
+	// Reset the channels in case we want to start the recorder again.
+	r.stopc = make(chan struct{})
+	r.stopackc = make(chan struct{})
 
 	return nil
 }

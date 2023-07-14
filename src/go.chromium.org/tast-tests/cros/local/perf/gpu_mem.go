@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -77,7 +78,7 @@ func (ds *GPUDataSource) Start(ctx context.Context) error {
 	// timeline data because the histogram fetching may take a long time
 	// (sometimes more than >300msecs).
 	const interval = time.Second
-	go func() {
+	async.Run(ctx, func(ctx context.Context) {
 		for {
 			nextTick := time.Now().Add(interval)
 			select {
@@ -120,7 +121,7 @@ func (ds *GPUDataSource) Start(ctx context.Context) error {
 				}
 			}
 		}
-	}()
+	}, "GPUMem")
 	return nil
 }
 
