@@ -23,7 +23,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PDFOCRFromContextMenuWithDlcFailure,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check the PDF OCR feature, being turned on from the Context Menu, with the screen-ai dlc install failure",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
@@ -37,15 +37,11 @@ func init() {
 		Params: []testing.Param{{
 			Name: "ash",
 			Val:  browser.TypeAsh,
-		},
-		// TODO(b:289009784): Enable this lacros test once b:289080314 is fixed.
-		// {
-		// 	Name:              "lacros",
-		// 	ExtraAttr:         []string{"informational"},
-		// 	ExtraSoftwareDeps: []string{"lacros"},
-		// 	Val:               browser.TypeLacros,
-		// }
-		},
+		}, {
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               browser.TypeLacros,
+		}},
 	})
 }
 
