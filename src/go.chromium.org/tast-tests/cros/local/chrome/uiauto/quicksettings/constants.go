@@ -41,6 +41,9 @@ var FeatureTileBluetoothToggle = nodewith.Role(role.Button).NameContaining("Togg
 // It only exists with QsRevamp.
 var FeatureTileCast = nodewith.HasClass("FeatureTile").NameContaining("cast")
 
+// FeatureTileHotspot is the finder for the "Hotspot" feature tile.
+var FeatureTileHotspot = nodewith.HasClass("FeatureTile").NameContaining("Hotspot")
+
 // FeatureTileDoNotDisturb is the finder for the "Do not disturb" feature tile.
 // It only exists with QsRevamp.
 var FeatureTileDoNotDisturb = nodewith.HasClass("FeatureTile").NameContaining("Do not disturb")

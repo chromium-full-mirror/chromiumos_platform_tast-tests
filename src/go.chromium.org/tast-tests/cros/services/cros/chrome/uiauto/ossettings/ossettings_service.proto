@@ -28,6 +28,11 @@ service OsSettingsService {
   // It does nothing if the option is already expected.
   rpc SetToggleOption(SetToggleOptionRequest) returns (google.protobuf.Empty) {}
 
+  // ToggleHotspot clicks toggle option to enable or disable hotspot.
+  // It also verifies the notification pops up after turning on hotspot.
+  // It does nothing if the option is already expected.
+  rpc ToggleHotspot(ToggleHotspotRequest) returns (google.protobuf.Empty) {}
+
   // WaitUntilToggleOption waits until the toggle option enabled or disabled.
   rpc WaitUntilToggleOption(WaitUntilToggleOptionRequest) returns (google.protobuf.Empty) {}
 
@@ -67,6 +72,10 @@ message SetToggleOptionRequest {
 
   // The expected value of the toggle option is on or off.
   bool enabled = 2;
+}
+
+message ToggleHotspotRequest {
+  bool enabled = 1;
 }
 
 message WaitUntilToggleOptionRequest {

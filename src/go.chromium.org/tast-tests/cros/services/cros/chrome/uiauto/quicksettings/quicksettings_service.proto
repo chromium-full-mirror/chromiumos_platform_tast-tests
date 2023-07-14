@@ -18,6 +18,13 @@ service QuickSettingsService {
   // are already open.
   rpc NavigateToNetworkDetailedView(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
+  // NavigateToHotspotDetailedView will navigate to the detailed Hotspot view within the Quick Settings.
+  // This is safe to call even when the Quick Settings are already open.
+  rpc NavigateToHotspotDetailedView(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // IsHotspotTileShown returns whether the Hotspot feature tile is shown in quick settings.
+  rpc IsHotspotTileShown(google.protobuf.Empty) returns (IsHotspotTileShownResponse) {}
+
   // Hide hides Quick Settings.
   rpc Hide(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
@@ -45,4 +52,8 @@ message ToggleOptionRequest {
 
 message AvailableWifiNetworksResponse {
   repeated string ssids = 1;
+}
+
+message IsHotspotTileShownResponse {
+  bool is_hotspot_tile_shown = 1;
 }

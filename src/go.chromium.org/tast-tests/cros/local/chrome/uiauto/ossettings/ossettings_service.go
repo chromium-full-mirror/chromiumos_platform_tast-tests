@@ -112,6 +112,23 @@ func (s *Service) SetToggleOption(ctx context.Context, req *pb.SetToggleOptionRe
 	})
 }
 
+// ToggleHotspot toggles on/off hotspot and verify its status changes to expected.
+// It does nothing if the hotspot status is already expected.
+func (s *Service) ToggleHotspot(ctx context.Context, req *pb.ToggleHotspotRequest) (*emptypb.Empty, error) {
+	cr := s.sharedObject.Chrome
+	if cr == nil {
+		return &emptypb.Empty{}, errors.New("Chrome has not been started")
+	}
+
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		osSettings := New(tconn)
+		if err := osSettings.ToggleHotspot(ctx, tconn, cr, req.Enabled); err != nil {
+			return &emptypb.Empty{}, errors.Wrapf(err, "failed to toggle hotspot to %t", req.Enabled)
+		}
+		return &emptypb.Empty{}, nil
+	})
+}
+
 // WaitUntilToggleOption waits until the toggle option enabled or disabled.
 func (s *Service) WaitUntilToggleOption(ctx context.Context, req *pb.WaitUntilToggleOptionRequest) (*emptypb.Empty, error) {
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {

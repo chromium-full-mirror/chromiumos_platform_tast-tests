@@ -45,6 +45,27 @@ func (s *Service) NavigateToNetworkDetailedView(ctx context.Context, e *empty.Em
 	})
 }
 
+// NavigateToHotspotDetailedView will navigate to the detailed Hotspot view within the Quick Settings.
+// This is safe to call even when the Quick Settings are already open.
+func (s *Service) NavigateToHotspotDetailedView(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		return &emptypb.Empty{}, NavigateToHotspotDetailedView(ctx, tconn)
+	})
+}
+
+// IsHotspotTileShown returns whether the Hotspot feature tile is shown in quick settings.
+func (s *Service) IsHotspotTileShown(ctx context.Context, e *empty.Empty) (*pb.IsHotspotTileShownResponse, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (_ *pb.IsHotspotTileShownResponse, retErr error) {
+		isHotspotTileShown, err := IsHotspotTileShown(ctx, tconn)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to open up quick settings")
+		}
+		return &pb.IsHotspotTileShownResponse{
+			IsHotspotTileShown: isHotspotTileShown,
+		}, nil
+	})
+}
+
 // Hide hides the Quick Settings.
 func (s *Service) Hide(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {

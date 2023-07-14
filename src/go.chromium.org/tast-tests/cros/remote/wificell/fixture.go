@@ -176,11 +176,29 @@ func init() {
 		ServiceDeps:     []string{ShillServiceName, BluetoothServiceName, PowerServiceName},
 		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "wificellFixtWithCellular",
+		Desc: "Wificell setup on a cellular capable device",
+		Contacts: []string{
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+		},
+		Impl:            newTastFixture(TFFeaturesCellular),
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: tearDownTimeout,
+		ServiceDeps: []string{
+			ShillServiceName,
+			BluetoothServiceName,
+			CellularServiceName,
+		},
+		Vars: []string{"router", "pcap", "routertype", "pcaptype"},
+	})
 }
 
 // TFFeatures is an enum type for extra features needed for Tast fixture.
 // Note that features can be combined using bitwise OR, e.g. TFFeaturesCapture | TFFeaturesRouters.
-type TFFeatures uint8
+type TFFeatures uint16
 
 const (
 	// TFFeaturesNone represents a default value.
@@ -199,6 +217,8 @@ const (
 	TFFeaturesCompanionDUT
 	// TFFeaturesPower is a feature that enables power measurements.
 	TFFeaturesPower
+	// TFFeaturesCellular set up cellular shill service on the DUT.
+	TFFeaturesCellular
 )
 
 // String returns name component corresponding to enum value(s).
@@ -227,6 +247,10 @@ func (enum TFFeatures) String() string {
 	if enum&TFFeaturesPower != 0 {
 		ret = append(ret, "power")
 		enum ^= TFFeaturesPower
+	}
+	if enum&TFFeaturesCellular != 0 {
+		ret = append(ret, "cellular")
+		enum ^= TFFeaturesCellular
 	}
 	// Catch weird cases. Like when somebody extends enum, but forgets to extend this.
 	if enum != 0 {
@@ -508,6 +532,10 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 		if err := f.recoverUnhealthyDUT(ctx, cd, s); err != nil {
 			s.Fatal("Failed to recover unhealthy DUT: ", err)
 		}
+	}
+
+	if f.features&TFFeaturesCellular != 0 {
+		ops = append(ops, TFCellular())
 	}
 
 	tf, err := NewTestFixture(ctx, s.FixtContext(), s.DUT(), s.RPCHint(), ops...)

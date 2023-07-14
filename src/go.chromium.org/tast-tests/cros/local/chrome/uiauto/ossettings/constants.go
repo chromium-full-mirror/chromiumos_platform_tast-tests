@@ -154,6 +154,15 @@ var mobileButton = nodewith.Name("Mobile data").Role(role.Button)
 // MobileDataToggle is the finder for the mobile data toggle UI in the Mobile data subpage.
 var MobileDataToggle = nodewith.NameStartingWith("Mobile data").Role(role.ToggleButton)
 
+// HotspotToggle is the finder for the hotspot toggle UI in both Network page and Hotspot subpage.
+var HotspotToggle = nodewith.Name("Hotspot enable").Role(role.ToggleButton)
+
+// HotspotOnSublabel is the finder for the enabled hotspot status label in both Network page and Hotspot subpage.
+var HotspotOnSublabel = nodewith.Name("On").Role(role.StaticText)
+
+// HotspotOffSublabel is the finder for the disabled hotspot status label in both Network page and Hotspot subpage.
+var HotspotOffSublabel = nodewith.Name("Off").Role(role.StaticText)
+
 // AddCellularButton is the finder for the Add Cellular button in cellular network list.
 var AddCellularButton = nodewith.NameStartingWith("Add Cellular").Role(role.Button)
 

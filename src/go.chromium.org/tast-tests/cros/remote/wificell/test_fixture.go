@@ -52,6 +52,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/ubuntu"
 	"go.chromium.org/tast-tests/cros/remote/wificell/tethering"
 	"go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	"go.chromium.org/tast-tests/cros/services/cros/cellular"
 	"go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
@@ -172,6 +173,13 @@ func TFRouterType(rtype support.RouterType) TFOption {
 	}
 }
 
+// TFCellular defines if the cellular is required for the test fixture.
+func TFCellular() TFOption {
+	return func(tf *TestFixture) {
+		tf.option.cellularRequired = true
+	}
+}
+
 // TFPcapType sets the router type of the pcap capturing device. The pcap device in our testbeds is a router.
 func TFPcapType(rtype support.RouterType) TFOption {
 	return func(tf *TestFixture) {
@@ -208,6 +216,24 @@ const (
 	// TestFixture.
 	PowerServiceName = "tast.cros.power.MetricsService"
 
+	// CellularServiceName is the name of the cellular service needed by TestFixture.
+	CellularServiceName = "tast.cros.cellular.RemoteCellularService"
+
+	// BrowserChromeServiceName is the name of the browser chrome service.
+	BrowserChromeServiceName = "tast.cros.browser.ChromeService"
+
+	// OsSettingsServiceName is the name of the os settings service.
+	OsSettingsServiceName = "tast.cros.chrome.uiauto.ossettings.OsSettingsService"
+
+	// QuickSettingsServiceName is the name of the quick settings service.
+	QuickSettingsServiceName = "tast.cros.chrome.uiauto.quicksettings.QuickSettingsService"
+
+	// ChromeUIServiceName is the name of the chrome ui service.
+	ChromeUIServiceName = "tast.cros.ui.ChromeUIService"
+
+	// ChromeFeatureHotspot is the name of the hotspot feature flag
+	ChromeFeatureHotspot = "Hotspot"
+
 	// DefaultDUT is the default DUT index (0).
 	DefaultDUT = 0
 	// PeerDUT is the peer DUT index (1).
@@ -228,6 +254,7 @@ type dutData struct {
 	rpc              *rpc.Client
 	wifiClient       *WifiClient
 	bluetoothClient  bluetooth.BluetoothServiceClient
+	cellularClient   cellular.RemoteCellularServiceClient
 	originalLogLevel int
 	originalLogTags  []string
 
@@ -279,10 +306,11 @@ type TestFixture struct {
 
 	// Group simple option flags here as they started to grow.
 	option struct {
-		packetCapture   bool
-		withUI          bool
-		routerAsCapture bool
-		routerRequired  bool
+		packetCapture    bool
+		withUI           bool
+		routerAsCapture  bool
+		routerRequired   bool
+		cellularRequired bool
 	}
 
 	apID              int
@@ -408,7 +436,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 	ctx, cancel := tf.ReserveForClose(fullCtx)
 	defer cancel()
 
-	for _, d := range tf.duts {
+	for idx, d := range tf.duts {
 		var err error
 		d.rpc, err = rpc.Dial(daemonCtx, d.dut, d.rpcHint)
 		if err != nil {
@@ -432,6 +460,10 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 		// TODO(crbug.com/728769): Make sure if we need to turn off powersave.
 		if _, err := d.wifiClient.InitDUT(ctx, &wifi.InitDUTRequest{WithUi: tf.option.withUI}); err != nil {
 			return nil, errors.Wrap(err, "failed to InitDUT")
+		}
+
+		if tf.option.cellularRequired && idx == DefaultDUT {
+			d.cellularClient = cellular.NewRemoteCellularServiceClient(d.rpc.Conn)
 		}
 
 		if tf.setLogging {
@@ -1385,6 +1417,11 @@ func (tf *TestFixture) WifiClient() *WifiClient {
 // DUTWifiClient returns the gRPC ShillServiceClient of the given DUT.
 func (tf *TestFixture) DUTWifiClient(dutIdx DutIdx) *WifiClient {
 	return tf.duts[dutIdx].wifiClient
+}
+
+// DUTCellularClient returns the gRPC ShillServiceClient of the given DUT.
+func (tf *TestFixture) DUTCellularClient(dutIdx DutIdx) cellular.RemoteCellularServiceClient {
+	return tf.duts[dutIdx].cellularClient
 }
 
 // RPC returns the gRPC connection of the default DUT. Deprecated.
