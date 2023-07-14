@@ -233,7 +233,6 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 		{Path: "/var/log", Context: "cros_var_log", Log: true},
 		{Path: "/var/log/arc.log", Context: "cros_arc_log", Log: true},
 		{Path: "/var/log/asan", Context: "cros_var_log_asan", Recursive: true, Log: true},
-		{Path: "/var/log/authpolicy.log", Context: "cros_authpolicy_log", Log: true},
 		{Path: "/var/log/boot.log", Context: "cros_boot_log", Log: true},
 		{Path: "/var/log/eventlog.txt", Context: "cros_var_log_eventlog", Log: true},
 		{Path: "/var/log/messages", Context: "cros_syslog", Log: true},

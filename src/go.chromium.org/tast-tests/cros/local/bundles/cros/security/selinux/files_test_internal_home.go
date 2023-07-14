@@ -50,7 +50,6 @@ func CheckHomeDirectory(ctx context.Context, s *testing.State) {
 		// It can be re-enabled once related processes creating into it (shill) is confined.
 		// TODO(fqj, b/130011394)
 		// {`/home/root/[0-9a-f]*/android-data(/.*)?`, skipTest},
-		// {`/home/root/[0-9a-f]*/authpolicyd(/.*)?`, `cros_home_shadow_uid_root_authpolicyd`},
 		// {`/home/root/[0-9a-f]*/chaps(/.*)?`, `cros_home_shadow_uid_root_chaps`},
 		// {`/home/root/[0-9a-f]*/session_manager(/.*)?`, `cros_home_shadow_uid_root_session_manager`},
 		// {`/home/root/[0-9a-f]*/shill(/.*)?`, `cros_home_shadow_uid_root_shill`},
@@ -70,7 +69,6 @@ func CheckHomeDirectory(ctx context.Context, s *testing.State) {
 		// Other unhandled files in .shadow should be cros_home_shadow.
 		{`/home/\.shadow/[^/]*`, `cros_home_shadow`},
 		{`/home/\.shadow/[0-9a-f]*/mount/root/(?:\.cache/)?android-data(/.*)?`, skipTest},
-		{`/home/\.shadow/[0-9a-f]*/mount/root/(?:\.cache/)?authpolicyd(/.*)?`, `cros_home_shadow_uid_root_authpolicyd`},
 		{`/home/\.shadow/[0-9a-f]*/mount/root/(?:\.cache/)?cdm-oemcrypto(/.*)?`, `cros_home_shadow_uid_root_cdm-oemcrypto`},
 		{`/home/\.shadow/[0-9a-f]*/mount/root/(?:\.cache/)?chaps(/.*)?`, `cros_home_shadow_uid_root_chaps`},
 		{`/home/\.shadow/[0-9a-f]*/mount/root/(?:\.cache/)?crash(/.*)?`, `cros_home_shadow_uid_root_crash`},
