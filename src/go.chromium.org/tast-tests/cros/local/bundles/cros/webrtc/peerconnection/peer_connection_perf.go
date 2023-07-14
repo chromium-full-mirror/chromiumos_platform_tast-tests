@@ -97,6 +97,7 @@ func waitForPeerConnectionStabilized(ctx context.Context, conn *chrome.Conn, str
 			return errors.Errorf("still waiting for tx width to reach %d or tx height to reach %d, current: %.0fx%.0f",
 				streamWidth, streamHeight, txm.FrameWidth, txm.FrameHeight)
 		}
+		testing.ContextLogf(ctx, "tx resolution: %.0fx%.0f", txm.FrameWidth, txm.FrameHeight)
 		return nil
 	}, &testing.PollOptions{Timeout: maxStreamWarmUp, Interval: time.Second}); err != nil {
 		return errors.Wrap(err, "timeout waiting for tx resolution to stabilize")
@@ -235,11 +236,11 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to test API")
 	}
-	// Maximize window size.
-	if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
-		return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
-	}); err != nil {
-		return errors.Wrap(err, "failed to maximize window")
+
+	if canCapture, err := setupCapture(ctx, conn, tconn, params.DisplayMediaType, params.StreamWidth, params.StreamHeight); err != nil {
+		return errors.Wrap(err, "failed to setup capture")
+	} else if !canCapture {
+		return nil
 	}
 
 	if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {

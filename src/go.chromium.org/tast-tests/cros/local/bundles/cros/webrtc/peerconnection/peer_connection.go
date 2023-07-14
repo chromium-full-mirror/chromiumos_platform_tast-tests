@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/media/logging"
 	"go.chromium.org/tast-tests/cros/local/media/oop"
+	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -141,6 +143,12 @@ func RunRTCPeerConnection(ctx context.Context, cs ash.ConnSource, cr *chrome.Chr
 	}
 	defer conn.Close()
 	defer conn.CloseTarget(ctx)
+
+	if canCapture, err := setupCapture(ctx, conn, tconn, params.DisplayMediaType, params.StreamWidth, params.StreamHeight); err != nil {
+		return errors.Wrap(err, "failed to setup capture")
+	} else if !canCapture {
+		return nil
+	}
 
 	if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 		return errors.Wrap(err, "timed out waiting for page loading")
@@ -349,6 +357,79 @@ func checkSimulcastEncImpl(implName string, isImplHWInAdapter []bool) error {
 		}
 	}
 	return nil
+}
+
+// setupCapture sets up the capture environment and returns whether streamWidth x streamHeight capture is possible.
+// TODO(b/292617867): Skip by using HardwareDeps.
+func setupCapture(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn, dm DisplayMediaType, streamWidth, streamHeight int) (bool, error) {
+	// Maximize window size so that the window size to be captured is maximized
+	// and also camera and display capturing is executed in the same situation.
+	if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
+		return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
+	}); err != nil {
+		return false, errors.Wrap(err, "failed to maximize window")
+	}
+
+	// We don't need to check window and monitor resolution in camera capture.
+	if dm == "" {
+		return true, nil
+	}
+
+	// We verify later if either width or height reaches streamWidth or streamHeight in screen capture.
+	// If it cannot be reached, we can skip the test.
+	var width, height int
+	var captureSource string
+	if dm == CaptureTab || dm == CaptureWindow {
+		captureSource = "tab"
+		widthStr := "window.innerWidth"
+		heightStr := "window.innerHeight"
+		if dm == CaptureWindow {
+			captureSource = "window"
+			widthStr = "window.outerWidth"
+			heightStr = "window.outerHeight"
+		}
+
+		if err := conn.Eval(ctx, widthStr, &width); err != nil {
+			return false, errors.Wrap(err, "failed to retrieve height")
+		}
+		if err := conn.Eval(ctx, heightStr, &height); err != nil {
+			return false, errors.Wrap(err, "failed to retrieve width")
+		}
+		var pixelRatio float32
+		if err := conn.Eval(ctx, "window.devicePixelRatio", &pixelRatio); err != nil {
+			return false, errors.Wrap(err, "failed to retrieve pixel ratio")
+		}
+		width = int(float32(width) * pixelRatio)
+		height = int(float32(height) * pixelRatio)
+		testing.ContextLogf(ctx, "%s resolution: %dx%d (pixel ratio=%.3f)", captureSource, width, height, pixelRatio)
+	} else if dm == CaptureMonitor {
+		captureSource = "monitor"
+		screenRes := util.GetScreenResolution(ctx)
+		testing.ContextLog(ctx, "Screen resolution: ", screenRes)
+		if screenRes == "" {
+			return false, errors.New("failed to get screen resolution")
+		}
+		screenWH := strings.Split(screenRes, "x")
+		if len(screenWH) != 2 {
+			return false, errors.Errorf("failed to split resolution by 'x': %v", screenRes)
+		}
+		var err error
+		width, err = strconv.Atoi(screenWH[0])
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to convert to int: %s", screenWH[0])
+		}
+		height, err = strconv.Atoi(screenWH[1])
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to convert to int: %s", screenWH[1])
+		}
+	}
+
+	if width < streamWidth && height < streamHeight {
+		testing.ContextLogf(ctx, "Skip the test because the both width and height of %s, %dx%d, are less than the capture resolution %dx%d", captureSource, width, height, streamWidth, streamHeight)
+		return false, nil
+	}
+
+	return true, nil
 }
 
 // DataFiles returns a list of required files that tests that use this package
