@@ -39,6 +39,14 @@ func Click(tconn *chrome.TestConn, location coords.Point, button Button) func(ct
 	}
 }
 
+// ClickInPlace returns a function that causes a mouse click event where the mouse
+// is currently located.
+func ClickInPlace(tconn *chrome.TestConn, button Button) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		return tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.mouseClick)", button)
+	}
+}
+
 // DoubleClick returns an func which causes 2 mouse click events with an given interval. The location is relative to the top-left of
 // the display.
 func DoubleClick(tconn *chrome.TestConn, location coords.Point, doubleClickInterval time.Duration) func(ctx context.Context) error {
