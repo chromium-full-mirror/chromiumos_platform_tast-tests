@@ -109,6 +109,12 @@ func ShutdownWithCommandBatteryCutoff(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 
+	// Disable battery sustainer - i.e. force charging
+	testing.ContextLog(ctx, "Disable battery sustainer")
+	if err := dut.Conn().CommandContext(ctx, "ectool", "chargecontrol", "normal").Run(); err != nil {
+		s.Fatal("Failed to issue `ectool chargecontrol normal`: ", err)
+	}
+
 	// Cut off the battery to simulate booting without a battery.
 	testing.ContextLog(ctx, "Cut off the battery")
 	if err := dut.Conn().CommandContext(ctx, "ectool", "batterycutoff").Run(); err != nil {
