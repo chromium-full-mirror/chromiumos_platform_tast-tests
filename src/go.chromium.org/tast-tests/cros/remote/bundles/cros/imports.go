@@ -23,6 +23,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/hardware"
+	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/hotspot"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/hps"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/hwsec"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/inputs"
