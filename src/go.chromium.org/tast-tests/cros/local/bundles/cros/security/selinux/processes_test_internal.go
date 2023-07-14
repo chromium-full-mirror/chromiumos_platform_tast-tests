@@ -13,20 +13,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// ProcessTestCaseSelector specifies what kind of test cases will be run.
-type ProcessTestCaseSelector int
-
-const (
-	// Stable to run test cases proven to be stable.
-	Stable ProcessTestCaseSelector = iota
-	// Unstable to run newly introduced test cases or flaky cases.
-	Unstable
-)
-
 const domainIsolationErrorMessage = "THIS IS A SECURITY BUG. Follow steps 1~3 of https://chromium.googlesource.com/chromiumos/docs/+/HEAD/security/selinux.md#Writing-SELinux-policy-for-a-daemon to create a permissive domain for the daemon."
 
-// ProcessesTestInternal runs the test suite for SELinuxProcesses(Experimental|Informational)?
-func ProcessesTestInternal(ctx context.Context, s *testing.State, testSelector []ProcessTestCaseSelector) {
+// ProcessesTestInternal runs the test suite for SELinuxProcesses.
+func ProcessesTestInternal(ctx context.Context, s *testing.State) {
 	type processSearchType int
 	const (
 		exe        processSearchType = iota // absolute executable path
@@ -85,42 +75,28 @@ func ProcessesTestInternal(ctx context.Context, s *testing.State, testSelector [
 		s.Fatal("Failed to get processes: ", err)
 	}
 
-	testCases := make([]testCaseType, 0)
-	for _, sel := range testSelector {
-		switch sel {
-		case Stable:
-			testCases = append(testCases, []testCaseType{
-				{exe, "/sbin/minijail0", matchRegexp, "(minijail|.*_minijail0|cros_.*_minijail)", ""},
+	testCases := []testCaseType{
+		{exe, "/sbin/minijail0", matchRegexp, "(minijail|.*_minijail0|cros_.*_minijail)", ""},
 
-				{exe, "/usr/bin/metrics_daemon", matchRegexp, "cros_metrics_daemon", ""},
+		{exe, "/usr/bin/metrics_daemon", matchRegexp, "cros_metrics_daemon", ""},
 
-				{exe, "/usr/sbin/cryptohomed", matchRegexp, "cros_cryptohomed", ""},
-				{exe, "/usr/sbin/chapsd", matchRegexp, "cros_chapsd", ""},
-				{exe, "/usr/sbin/hpsd", matchRegexp, "cros_hpsd", ""},
-				{exe, "/usr/sbin/tcsd", matchRegexp, "cros_tcsd", ""},
+		{exe, "/usr/sbin/cryptohomed", matchRegexp, "cros_cryptohomed", ""},
+		{exe, "/usr/sbin/chapsd", matchRegexp, "cros_chapsd", ""},
+		{exe, "/usr/sbin/hpsd", matchRegexp, "cros_hpsd", ""},
+		{exe, "/usr/sbin/tcsd", matchRegexp, "cros_tcsd", ""},
 
-				// moblab, autotest, devserver, rotatelogs, apache2, envoy, containerd are all required for
-				// normal operation of moblab devices.
-				// python3 is for crbug.com/1151463.
-				// mkdir is for crbug.com/1156295.
-				{notCmdline, ".*(frecon|agetty|ping|recover_dts|udevadm|update_rw_vpd|mosys|vpd|flashrom|moblab|autotest|devserver|rotatelogs|apache2|envoy|containerd|python3|mkdir).*", notString, "chromeos", domainIsolationErrorMessage},
-				{notCmdline, ".*(frecon|agetty|ping|recover_duts).*", notString, "unconfined_proc", domainIsolationErrorMessage},
-				// python3.6m is for nebraska.py (b/247248201).
-				{notExe, "(/sbin/init|/bin/bash|/usr/local/bin/python3.6m)", notString, "cros_init", domainIsolationErrorMessage},
-				// coreutils and ping are excluded for recover_duts scripts.
-				// logger is common to redirect output widely used from init conf scripts.
-				{notExe, "(/bin/([db]a)?sh|/usr/bin/coreutils|/usr/bin/logger|/bin/ping|brcm_patchram_plus)", notString, "cros_init_scripts", domainIsolationErrorMessage},
-				{notExe, "/sbin/minijail0", notString, "minijail", domainIsolationErrorMessage},
-			}...)
-		case Unstable:
-			testCases = append(testCases, []testCaseType{
-				{exe, "/sbin/minijail0", matchRegexp, "(minijail|.*_minijail0|cros_.*_minijail)", ""},
-				{notExe, "(/bin/([db]a)?sh|/usr/bin/coreutils|/usr/bin/logger)", notString, "cros_init_scripts", domainIsolationErrorMessage},
-				{notExe, "(/sbin/init|/bin/bash)", notString, "cros_init", domainIsolationErrorMessage},
-				{notCmdline, ".*(ping|frecon|agetty|recover_duts).*", notString, "chromeos", domainIsolationErrorMessage},
-				{cmdline, ".*", notString, "unconfined_proc", domainIsolationErrorMessage},
-			}...)
-		}
+		// moblab, autotest, devserver, rotatelogs, apache2, envoy, containerd are all required for
+		// normal operation of moblab devices.
+		// python3 is for crbug.com/1151463.
+		// mkdir is for crbug.com/1156295.
+		{notCmdline, ".*(frecon|agetty|ping|recover_dts|udevadm|update_rw_vpd|mosys|vpd|flashrom|moblab|autotest|devserver|rotatelogs|apache2|envoy|containerd|python3|mkdir).*", notString, "chromeos", domainIsolationErrorMessage},
+		{notCmdline, ".*(frecon|agetty|ping|recover_duts).*", notString, "unconfined_proc", domainIsolationErrorMessage},
+		// python3.6m is for nebraska.py (b/247248201).
+		{notExe, "(/sbin/init|/bin/bash|/usr/local/bin/python3.6m)", notString, "cros_init", domainIsolationErrorMessage},
+		// coreutils and ping are excluded for recover_duts scripts.
+		// logger is common to redirect output widely used from init conf scripts.
+		{notExe, "(/bin/([db]a)?sh|/usr/bin/coreutils|/usr/bin/logger|/bin/ping|brcm_patchram_plus)", notString, "cros_init_scripts", domainIsolationErrorMessage},
+		{notExe, "/sbin/minijail0", notString, "minijail", domainIsolationErrorMessage},
 	}
 
 	for _, testCase := range testCases {

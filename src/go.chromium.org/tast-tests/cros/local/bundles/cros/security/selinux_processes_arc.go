@@ -53,5 +53,5 @@ func SELinuxProcessesARC(ctx context.Context, s *testing.State) {
 	}
 
 	// Check everything else.
-	selinux.ProcessesTestInternal(ctx, s, []selinux.ProcessTestCaseSelector{selinux.Stable})
+	selinux.ProcessesTestInternal(ctx, s)
 }
