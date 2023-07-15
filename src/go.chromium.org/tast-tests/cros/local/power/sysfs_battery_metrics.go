@@ -7,7 +7,6 @@ package power
 import (
 	"context"
 	"io/ioutil"
-	"math"
 	"os"
 	"path"
 	"strconv"
@@ -225,24 +224,21 @@ func ReadSystemPower(ctx context.Context, devPath string) (float64, error) {
 // ReadBatteryDesignEnergySize returns the design size of battery in Wh.
 func ReadBatteryDesignEnergySize(ctx context.Context, devPath string) (float64, error) {
 	var result float64
-	if _, err := os.Stat(path.Join(devPath, "energy_full_design")); err == nil {
-		// Battery reports energy type data.
-		if readBattery, err := ReadBatteryProperty(ctx, devPath, "energy_full_design"); err == nil {
-			result = readBattery * 1e-6
-		}
-	} else {
+	if chargeFullDesign, err := ReadBatteryProperty(ctx, devPath, "charge_full_design"); err == nil {
 		// Battery reports charge type data.
-		chargeFullDesign, err := ReadBatteryProperty(ctx, devPath, "charge_full_design")
-		if err != nil {
-			// Return an invalid value.
-			return 0, err
-		}
 		voltageNominal, err := ReadBatteryProperty(ctx, devPath, "voltage_min_design")
 		if err != nil {
 			// Return an invalid value.
 			return 0, err
 		}
 		result = chargeFullDesign * voltageNominal * 1e-12
+	} else if _, err := os.Stat(path.Join(devPath, "energy_full_design")); err == nil {
+		// Battery reports energy type data.
+		if readBattery, err := ReadBatteryProperty(ctx, devPath, "energy_full_design"); err == nil {
+			result = readBattery * 1e-6
+		}
+	} else {
+		testing.ContextLogf(ctx, "Battery %v does not provide charge or energy readings", devPath)
 	}
 	return result, nil
 }
@@ -250,26 +246,23 @@ func ReadBatteryDesignEnergySize(ctx context.Context, devPath string) (float64, 
 // ReadBatteryEnergySize returns the size of battery in Wh.
 func ReadBatteryEnergySize(ctx context.Context, devPath string) (float64, error) {
 	var result float64
-	if _, err := os.Stat(path.Join(devPath, "energy_full")); err == nil {
-		// Battery reports energy type data.
-		if readBattery, err := ReadBatteryProperty(ctx, devPath, "energy_full"); err == nil {
-			result = readBattery * 1e-6
-		}
-	} else {
+	if chargeFullDesign, err := ReadBatteryProperty(ctx, devPath, "charge_full"); err == nil {
 		// Battery reports charge type data.
-		chargeFull, err := ReadBatteryProperty(ctx, devPath, "charge_full")
-		if err != nil {
-			// Return an invalid value.
-			return 0, err
-		}
 		voltageNominal, err := ReadBatteryProperty(ctx, devPath, "voltage_min_design")
 		if err != nil {
 			// Return an invalid value.
 			return 0, err
 		}
-		result = chargeFull * voltageNominal * 1e-12
+		result = chargeFullDesign * voltageNominal * 1e-12
+	} else if _, err := os.Stat(path.Join(devPath, "energy_full")); err == nil {
+		// Battery reports energy type data.
+		if readBattery, err := ReadBatteryProperty(ctx, devPath, "energy_full"); err == nil {
+			result = readBattery * 1e-6
+		}
+	} else {
+		testing.ContextLogf(ctx, "Battery %v does not provide charge or energy readings", devPath)
 	}
-	return math.Round(result), nil
+	return result, nil
 }
 
 // ReadBatteryChargeDesignSize returns the design size of battery in Ah.
