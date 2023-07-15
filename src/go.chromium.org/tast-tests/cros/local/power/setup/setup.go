@@ -201,6 +201,16 @@ func NewBatteryDischarge(discharge, ignoreErr bool, threshold float64) *BatteryD
 	return &BatteryDischarge{discharge: discharge, ignoreErr: ignoreErr, threshold: threshold}
 }
 
+// ChargeLimitMode indicates if Charge Limit should be disabled for a test.
+type ChargeLimitMode int
+
+const (
+	// DoNotChangeChargeLimit indicates that test should not disable Charge Limit.
+	DoNotChangeChargeLimit ChargeLimitMode = iota
+	// DisableChargeLimit indicates that Charge Limit should be disabled for the test.
+	DisableChargeLimit
+)
+
 // UpdateEngineMode indicates what update engine setup is needed for a test.
 type UpdateEngineMode int
 
@@ -358,11 +368,12 @@ const (
 // PowerTestOptions describes how to set up a power test.
 type PowerTestOptions struct {
 	// The default value of the following options is not to perform any changes.
-	Wifi       WifiInterfacesMode
-	NightLight NightLightMode
-	DarkTheme  DarkThemeMode
-	UI         UIMode
-	Ramfs      RamfsMode
+	Wifi        WifiInterfacesMode
+	NightLight  NightLightMode
+	DarkTheme   DarkThemeMode
+	UI          UIMode
+	Ramfs       RamfsMode
+	ChargeLimit ChargeLimitMode
 
 	// The default value of the following options is to perform the actions.
 	Powerd             PowerdMode
@@ -381,6 +392,16 @@ type PowerTestOptions struct {
 // noise, and consistently configuring components that change power draw.
 func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions, batteryDischarge *BatteryDischarge) (CleanupCallback, error) {
 	return Nested(ctx, "power test", func(s *Setup) error {
+		// Disable Charge Limit, if needed, before stopping powerd. This isn't
+		// required, but it avoids extraneous starting and stopping of powerd.
+		// The Charge Limit state (enabled or disabled) is maintained when
+		// powerd is stopped, but powerd must initialize it.
+		if options.ChargeLimit == DisableChargeLimit {
+			// TmpPrefs is separate to allow other options to use it if needed.
+			prefs := TmpPrefs{}
+			s.Add(prefs.InitTmpPrefs(ctx))
+			s.Add(StopChargeLimit(ctx, &prefs))
+		}
 		if options.Powerd == DisablePowerd {
 			s.Add(DisableService(ctx, "powerd"))
 		}
