@@ -111,9 +111,9 @@ func BatteryChargeDuringShutdown(ctx context.Context, s *testing.State) {
 	ecBatteryPercentBeforeShutdown := chargingInt(cs["batt.state_of_charge"], "%")
 
 	// Draining the battery charge percentage.
-	if ecBatteryPercentBeforeShutdown >= 95 {
+	if ecBatteryPercentBeforeShutdown >= 75 {
 		s.Log("Draining battery")
-		request := power.BatteryRequest{MaxPercentage: 90}
+		request := power.BatteryRequest{MaxPercentage: 70}
 		if _, err := client.DrainBattery(ctx, &request); err != nil {
 			s.Fatal("Failed to drain battery: ", err)
 		}
