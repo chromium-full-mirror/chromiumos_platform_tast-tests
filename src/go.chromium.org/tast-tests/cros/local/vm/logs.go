@@ -58,6 +58,7 @@ func TrySaveAllVMLogs(ctx context.Context, user, dir string) error {
 			return errors.Wrapf(err, "failed to start a new LineReader that reports log messages for %s", vmName)
 		}
 		logReader := &LogReader{vmName, ownerID, reader}
+		defer logReader.Close()
 		if err := logReader.TrySaveLogs(ctx, dir); err != nil {
 			return errors.Wrapf(err, "failed to save log for %s", vmName)
 		}
