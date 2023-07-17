@@ -6,79 +6,26 @@ package graphics
 
 import (
 	"context"
-	"encoding/hex"
-	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/chameleon"
 	"go.chromium.org/tast/core/errors"
 )
 
-// EdidType describes the types like DP or HDMI for Edids
-type EdidType int
-
-const (
-	// EdidDP type for Edids
-	EdidDP EdidType = iota
-	// EdidHDMI type for Edids
-	EdidHDMI
-)
-
 // EdidID describes ID for EDID record
 type EdidID int
 
-// Edid structure is used to describe the structure of Edid
-type Edid struct {
-	ID          EdidID   // Unique identifier for the EDID
-	Name        string   // Name of the display
-	Width       int      // Display width in pixels
-	Height      int      // Display height in pixels
-	RefreshRate int      // Display refresh rate in Hz
-	HDR         bool     // True if the display supports HDR, False otherwise
-	Edid        string   // Raw EDID string data
-	EdidBytes   []byte   // Raw EDID data as a byte slice
-	Type        EdidType // Enum representing the type of EDID (e.g., EdidDP, EdidHDMI)
-}
-
 // Enumerate all monitor constants
 const (
-	HPZR2440w = iota
+	HPZR2440w EdidID = iota
 	HPSpectre32
 	HPM27fd
 )
 
-func addEdid(edids map[EdidID]Edid, edid Edid) error {
-	edidString := removeWhiteSpacesFromEdid(edid.Edid)
-
-	// Decode the hex-encoded EDID string into bytes.
-	edidBytes, err := hex.DecodeString(edidString)
-	if err != nil {
-		return errors.Wrap(err, "failed to decode EDID string into bytes")
-	}
-
-	// Pad the EDID bytes to 256 bytes.
-	if len(edidBytes) < 256 {
-		padding := make([]byte, 256-len(edidBytes))
-		edidBytes = append(edidBytes, padding...)
-	}
-
-	edid.EdidBytes = edidBytes
-	edids[edid.ID] = edid
-
-	return nil
-}
-
-// ChameleonGetEdids will return a map of all EDIDs
-func ChameleonGetEdids() map[EdidID]Edid {
-	Edids := make(map[EdidID]Edid)
-
-	edid1 := Edid{
-		ID:          HPZR2440w,
-		Name:        "HP ZR2440w",
-		Width:       1920,
-		Height:      1080,
-		RefreshRate: 60,
-		HDR:         false,
-		Edid: `0ffffffffffff0022f0562901010101
+var edids = map[EdidID]string{
+	// HP ZR2440w, 1920x1080 @ 60Hz, HDMI, non-HDR.
+	// TODO(b:273965028): Invalid EDID due to odd length hex string.
+	HPZR2440w: `
+		0ffffffffffff0022f0562901010101
 		0b170103803420782afc81a4554d9d25
 		125054210800d1c081c0814081809500
 		a940b3000101283c80a070b023403020
@@ -94,17 +41,10 @@ func ChameleonGetEdids() map[EdidID]Edid {
 		442100001e011d00bc52d01e20b82855
 		4006442100001e8c0ad08a20e02d1010
 		3e9600064421000018000000000000c1`,
-		Type: EdidHDMI,
-	}
-
-	edid2 := Edid{
-		ID:          HPSpectre32,
-		Name:        "HP Spectre 32",
-		Width:       3840,
-		Height:      2160,
-		RefreshRate: 60,
-		HDR:         false,
-		Edid: `0FFFFFFFFFFFF0022F01A3200000000
+	// HP Spectre 32, 3840x2160 @ 60Hz, DP, non-HDR.
+	// TODO(b:273965028): Invalid EDID due to odd length hex string.
+	HPSpectre32: `
+		0FFFFFFFFFFFF0022F01A3200000000
 		2E180104B54728783A87D5A8554D9F25
 		0E5054210800D1C0A9C081C0D100B300
 		9500A94081804DD000A0F0703E803020
@@ -120,17 +60,9 @@ func ChameleonGetEdids() map[EdidID]Edid {
 		00A080381F4030203A00C48F2100001A
 		283C80A070B0234030203600C48F2100
 		001A00000000000000000000000000C4`,
-		Type: EdidDP,
-	}
-
-	edid3 := Edid{
-		ID:          HPM27fd,
-		Name:        "HP M27fd",
-		Width:       1920,
-		Height:      1080,
-		RefreshRate: 60,
-		HDR:         false,
-		Edid: `00ffffffffffff00220e123701010101
+	// HP M27fd, 1920x1080 @ 60Hz, HDMI, non-HDR.
+	HPM27fd: `
+		00ffffffffffff00220e123701010101
 		091f0103803d24782a4815a756529c27
 		0f5054a10800d1c0a9c081c0b3009500
 		810081800101023a801871382d40582c
@@ -145,38 +77,19 @@ func ChameleonGetEdids() map[EdidID]Edid {
 		1e011d007251d01e206e285500555021
 		00001e011d00bc52d01e20b828554055
 		502100001e2a4480a070382740302035`,
-		Type: EdidHDMI,
-	}
-
-	addEdid(Edids, edid1)
-	addEdid(Edids, edid2)
-	addEdid(Edids, edid3)
-
-	return Edids
-}
-
-func removeWhiteSpacesFromEdid(edidString string) string {
-	// Remove all whitespace characters from the EDID string.
-	edidString = strings.ReplaceAll(edidString, " ", "")
-	edidString = strings.ReplaceAll(edidString, "\n", "")
-	edidString = strings.ReplaceAll(edidString, "\t", "")
-
-	return edidString
 }
 
 // ChameleonSetEdid sets EDIDs for the Chameleon
 func ChameleonSetEdid(ctx context.Context, cham chameleon.Chameleond, port chameleon.PortID) error {
-	edids := ChameleonGetEdids()
-	//Todo(kenil): monitorname we can pass dynamic
-	edid, found := edids[HPM27fd]
-
-	if !found {
-		return errors.New("failed to retrive EDID by ID")
+	// TODO(b:273965028): EDID should be specified with EdidID parameter.
+	edid, err := EdidStringToBytes(edids[HPM27fd])
+	if err != nil {
+		return errors.Wrap(err, "failed to convert EDID string to bytes")
 	}
 
-	edidID, err := cham.CreateEdid(ctx, edid.EdidBytes)
+	edidID, err := cham.CreateEdid(ctx, edid)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create internal Edids for %s monitor", edid.Name)
+		return errors.Wrap(err, "failed to create internal EDID")
 	}
 
 	return cham.ApplyEdid(ctx, port, edidID)
