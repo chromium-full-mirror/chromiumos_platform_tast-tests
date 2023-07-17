@@ -2661,10 +2661,12 @@ func (s *ShillService) ResetTest(ctx context.Context, req *wifi.ResetTestRequest
 		return "", errors.New("not a wcn3990 device")
 	}
 	ath10kWCN3990Reset := func(ctx context.Context, resetPath string) error {
-		if err := ath10kReset(ctx, resetPath); err != nil {
-			return err
-		}
-		return nil
+		return assertIdleAndConnect(ctx, func(ctx context.Context) error {
+			if err := writeStringToFile(resetPath, "soft"); err != nil {
+				return errors.Wrapf(err, "failed to write to the reset path %q", resetPath)
+			}
+			return nil
+		})
 	}
 	iwlwifiResetPath := func(ctx context.Context, iface string) (string, error) {
 		par, err := network_iface.NewInterface(iface).ParentDeviceName(ctx)
