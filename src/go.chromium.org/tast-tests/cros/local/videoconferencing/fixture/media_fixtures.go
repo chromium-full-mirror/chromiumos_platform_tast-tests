@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -19,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -582,9 +584,12 @@ func (f *mediaFixtureImpl) setupCamera(ctx context.Context) error {
 		}
 		f.cleanup = append(f.cleanup, testutil.RemoveFakeHALConfig)
 	}
-
-	if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
+	const job = "cros-camera"
+	if err := upstart.RestartJob(ctx, job); err != nil {
 		return errors.Wrap(err, "failed to restart cros-camera after setup camera")
+	}
+	if err := upstart.WaitForJobStatus(ctx, job, upstartcommon.StartGoal, upstartcommon.RunningState, upstart.RejectWrongGoal, ctxutil.MaxTimeout); err != nil {
+		return errors.Wrapf(err, "failed to wait for %v to start running", job)
 	}
 	return nil
 }

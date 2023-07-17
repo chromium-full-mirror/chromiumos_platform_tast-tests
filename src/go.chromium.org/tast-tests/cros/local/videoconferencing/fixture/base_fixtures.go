@@ -13,15 +13,12 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/loginstatus"
-	"go.chromium.org/tast-tests/cros/local/upstart"
 
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -351,10 +348,6 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		if err != nil {
 			s.Fatal("Failed to get test API connection: ", err)
 		}
-	}
-	const job = "cros-camera"
-	if err := upstart.WaitForJobStatus(ctx, job, upstartcommon.StartGoal, upstartcommon.RunningState, upstart.RejectWrongGoal, ctxutil.MaxTimeout); err != nil {
-		s.Fatalf("Failed to wait for %v to start running: %v", job, err)
 	}
 
 	return &baseSetupFixtData{f.cr, f.browserType}
