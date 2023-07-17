@@ -69,7 +69,7 @@ func init() {
 			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name:              "detachable",
-			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable), hwdep.Keyboard(), hwdep.Touchpad()),
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable), hwdep.Keyboard()),
 			Val: &testArgs{
 				formFactor:    "detachable",
 				setLaptopMode: "basestate attach",
@@ -344,17 +344,16 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			vals.runtimeUsageAfter = out
 			s.Logf("Got runtime usage before: %d, and after: %d", vals.runtimeUsageBefore, vals.runtimeUsageAfter)
 		}
-		if args.formFactor != "detachable" || h.Config.ModeSwitcherType != firmware.TabletDetachableSwitcher ||
-			(h.Board == "kukui" && testCase == atSignin) {
+		if args.formFactor != "detachable" {
 			s.Log("Checking that display remains on")
 			if err := checkDisplay(ctx); err != nil {
-				s.Fatal("Error in verifying display on: ", err)
+				s.Fatalf("Failed to verify display on at %s: %v", testCase, err)
 			}
 		} else {
 			s.Log("Checking that display remains off")
 			err := checkDisplay(ctx)
 			if err == nil {
-				s.Fatal("Unexpectedly able to take screenshot after setting display power off")
+				s.Fatalf("Unexpectedly able to take screenshot after setting display power off at %s", testCase)
 			}
 			if !strings.Contains(err.Error(), "CRTC not found. Is the screen on?") {
 				s.Fatal("Unexpected error when taking screenshot: ", err)
