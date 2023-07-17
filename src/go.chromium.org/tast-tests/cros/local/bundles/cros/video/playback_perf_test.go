@@ -19,6 +19,7 @@ import (
 // codec
 var playbackPerfLongFile = map[string]string{
 	"h264": "crosvideo/1080.mp4",
+	"hevc": "crosvideo/1080-5-frag.mp4",
 	"vp8":  "crosvideo/1080_vp8.webm",
 	"vp9":  "crosvideo/1080.webm",
 	"av1":  "crosvideo/av1_1080p_30fps.mp4",
@@ -193,7 +194,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 		}
 	}
 	// long
-	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
+	for _, codec := range []string{"h264", "hevc", "vp8", "vp9", "av1"} {
 		for _, dec := range []string{"hw", "sw"} {
 			resolution, fps := 1080, 30
 			file := playbackPerfLongFile[codec]
@@ -220,7 +221,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 	}
 
 	// Long Out-of-process video decoding (ash-chrome)
-	for _, codec := range []string{"h264", "vp9", "av1"} {
+	for _, codec := range []string{"h264", "hevc", "vp9", "av1"} {
 		resolution, fps, dec := 1080, 30, "hw"
 		file := playbackPerfLongFile[codec]
 		param := genPlaybackParam(codec, file, resolution, fps, dec,
@@ -234,7 +235,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 
 	// grid
 	// TODO(b/234643665): Reduce these to 2x2 1080p (as many pixels as 4K).
-	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
+	for _, codec := range []string{"h264", "hevc", "vp8", "vp9", "av1"} {
 		resolution, fps, dec := 720, 30, "hw"
 		param := genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
 			resolution, fps, dec, "3x3", "", nil)
@@ -253,7 +254,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 	}
 
 	// Long lacros
-	for _, codec := range []string{"h264", "vp9", "av1"} {
+	for _, codec := range []string{"h264", "hevc", "vp9", "av1"} {
 		resolution, fps, dec := 1080, 30, "hw"
 		file := playbackPerfLongFile[codec]
 		param := genPlaybackParam(codec, file, resolution, fps, dec,

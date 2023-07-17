@@ -701,6 +701,32 @@ func init() {
 				Fixture:           "chromeVideoWithSWDecoding",
 			},
 			{
+				Name: "hevc_1080p_30fps_hw_long",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080-5-frag.mp4",
+					decoderType:      0,
+					browserType:      browser.TypeAsh,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily([]string{"rogue"}), hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_30", "drm_atomic"},
+				ExtraData:         []string{"crosvideo/1080-5-frag.mp4"},
+				Fixture:           "chromeVideo",
+			},
+			{
+				Name: "hevc_1080p_30fps_sw_long",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080-5-frag.mp4",
+					decoderType:      1,
+					browserType:      browser.TypeAsh,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily([]string{"rogue"}), hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "drm_atomic"},
+				ExtraData:         []string{"crosvideo/1080-5-frag.mp4"},
+				Fixture:           "chromeVideoWithSWDecoding",
+			},
+			{
 				Name: "vp8_1080p_30fps_hw_long",
 				Val: playbackPerfParams{
 					fileName:         "crosvideo/1080_vp8.webm",
@@ -847,6 +873,19 @@ func init() {
 				Fixture:           "chromeVideoOOPVD",
 			},
 			{
+				Name: "hevc_1080p_30fps_hw_long_oopvd",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080-5-frag.mp4",
+					decoderType:      0,
+					browserType:      browser.TypeAsh,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily([]string{"rogue"}), hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_30", "drm_atomic"},
+				ExtraData:         []string{"crosvideo/1080-5-frag.mp4"},
+				Fixture:           "chromeVideoOOPVD",
+			},
+			{
 				Name: "vp9_1080p_30fps_hw_long_oopvd",
 				Val: playbackPerfParams{
 					fileName:         "crosvideo/1080.webm",
@@ -883,6 +922,19 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
 				ExtraData:         []string{"perf/h264/720p_30fps_300frames.h264.mp4"},
+				Fixture:           "chromeVideo",
+			},
+			{
+				Name: "hevc_720p_30fps_hw_3x3",
+				Val: playbackPerfParams{
+					fileName:    "perf/hevc/720p_30fps_300frames.hevc.mp4",
+					decoderType: 0,
+					browserType: browser.TypeAsh,
+					gridWidth:   3,
+					gridHeight:  3,
+				},
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_30"},
+				ExtraData:         []string{"perf/hevc/720p_30fps_300frames.hevc.mp4"},
 				Fixture:           "chromeVideo",
 			},
 			{
@@ -957,6 +1009,19 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily([]string{"rogue"}), hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "drm_atomic", "lacros"},
 				ExtraData:         []string{"crosvideo/1080.mp4"},
+				Fixture:           "chromeVideoLacros",
+			},
+			{
+				Name: "hevc_1080p_30fps_hw_long_lacros",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080-5-frag.mp4",
+					decoderType:      0,
+					browserType:      browser.TypeLacros,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily([]string{"rogue"}), hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_30", "drm_atomic", "lacros"},
+				ExtraData:         []string{"crosvideo/1080-5-frag.mp4"},
 				Fixture:           "chromeVideoLacros",
 			},
 			{
