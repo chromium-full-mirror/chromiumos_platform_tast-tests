@@ -43,6 +43,9 @@ service QuickSettingsService {
 
   // IsNBSWarningShown returns whether the NBS warning message is present in the quick settings.
   rpc IsNBSWarningShown(google.protobuf.Empty) returns (IsNBSWarningShownResponse) {}
+
+  // SelectNetwork selects a network with specified SSID from QuickSettings network detailed view.
+  rpc SelectNetwork(SelectNetworkRequest) returns (google.protobuf.Empty) {}
 }
 
 message ToggleOptionRequest {
@@ -71,4 +74,8 @@ message SelectNthAudioOptionRequest {
 
 message IsNBSWarningShownResponse {
   bool is_nbs_warning_shown = 1;
+}
+
+message SelectNetworkRequest {
+  string ssid = 1;
 }

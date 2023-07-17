@@ -80,6 +80,12 @@ func (s *CrosNetworkConfigService) ConfigureNetwork(ctx context.Context, req *ne
 func parseNetConfigProperties(configProperties *network.NetworkTypeConfigProperties) (*netconfigtypes.ConfigProperties, error) {
 	result := &netconfigtypes.ConfigProperties{}
 
+	if configProperties.AutoConnect != nil {
+		result.AutoConnect = netconfigtypes.AutoConnectConfigProperties{
+			Value: configProperties.AutoConnect.Value,
+		}
+	}
+
 	// Currently only the WiFi network is supported.
 	// It can be further extended by adding other types of network: VPN/Ethernet, see: netconfig.NetworkTypeConfigProperties.
 	switch properties := configProperties.ConfigProperties.(type) {

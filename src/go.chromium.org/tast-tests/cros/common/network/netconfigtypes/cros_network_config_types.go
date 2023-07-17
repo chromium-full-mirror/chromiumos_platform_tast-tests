@@ -367,11 +367,17 @@ type NetworkTypeConfigProperties struct {
 	Wifi     *WiFiConfigProperties     `json:"wifi,omitempty"`
 }
 
+// AutoConnectConfigProperties is passed to ConfigProperties to set auto connect properties.
+type AutoConnectConfigProperties struct {
+	Value bool `json:"value"`
+}
+
 // ConfigProperties is passed to SetProperties or ConfigureNetwork to configure
 // a new network or augment an existing one.
 type ConfigProperties struct {
-	Name       string                      `json:"name"`
-	TypeConfig NetworkTypeConfigProperties `json:"typeConfig"`
+	Name        string                      `json:"name"`
+	TypeConfig  NetworkTypeConfigProperties `json:"typeConfig"`
+	AutoConnect AutoConnectConfigProperties `json:"autoConnect"`
 }
 
 // FilterType is used for requesting lists of network states.

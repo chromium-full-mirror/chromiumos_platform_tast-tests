@@ -7,6 +7,7 @@ syntax = "proto3";
 package tast.cros.network;
 
 import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
 
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/network";
 
@@ -37,6 +38,8 @@ message NetworkTypeConfigProperties {
   oneof config_properties {
     WiFiConfigProperties wifi_config_properties = 1;
   }
+
+  google.protobuf.BoolValue auto_connect = 2;
 }
 
 // WiFiConfigProperties describes properties of WiFi network.

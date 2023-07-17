@@ -49,7 +49,7 @@ func NavigateToNetworkDetailedView(ctx context.Context, tconn *chrome.TestConn) 
 		} else {
 			networkItem = nodewith.HasClass("FeaturePodLabelButton").NameContaining("network").Ancestor(LegacyRootFinder)
 		}
-		return uiauto.Combine("click the Network item in quick setttings",
+		return uiauto.Combine("click the Network item in quick settings",
 			ui.WithTimeout(5*time.Second).LeftClick(networkItem),
 			ui.WithTimeout(5*time.Second).WaitUntilExists(networkDetailedView),
 		)(ctx)
@@ -74,6 +74,31 @@ func OpenNetworkSettings(ctx context.Context, tconn *chrome.TestConn) error {
 		ui.LeftClick(networkSettingsButton),
 		ui.WaitUntilGone(networkDetailedView),
 	)(ctx)
+}
+
+// SelectNetwork selects a network with specified SSID from QuickSettings network detailed view.
+func SelectNetwork(ctx context.Context, tconn *chrome.TestConn, ssid string) error {
+	ui := uiauto.New(tconn)
+
+	if err := NavigateToNetworkDetailedView(ctx, tconn); err != nil {
+		return err
+	}
+	defer Hide(ctx, tconn)
+
+	networkDetailedView, err := NetworkDetailedView(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get network detailed view")
+	}
+
+	networkNameFinder := nodewith.NameContaining(ssid).Role(role.Button).Ancestor(networkDetailedView)
+	// Click the node by DoDefault since a UI click here is unstable.
+	// The target node could be offscreen, even if it is onscreen, its location could be keep changing as it'll
+	// change whenever the available network list change, which makes the click action highly unstable.
+	if err := ui.DoDefault(networkNameFinder)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the network from Quick Settings network detailed view")
+	}
+
+	return nil
 }
 
 // NetworkDetailedView returns the detailed Network view within Quick Settings.

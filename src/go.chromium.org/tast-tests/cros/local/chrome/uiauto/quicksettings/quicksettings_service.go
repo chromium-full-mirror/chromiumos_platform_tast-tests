@@ -38,6 +38,13 @@ type Service struct {
 	sharedObject *common.SharedObjectsForService
 }
 
+// SelectNetwork selects a network with specified SSID from QuickSettings network detailed view.
+func (s *Service) SelectNetwork(ctx context.Context, req *pb.SelectNetworkRequest) (*empty.Empty, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		return &emptypb.Empty{}, SelectNetwork(ctx, tconn, req.Ssid)
+	})
+}
+
 // NavigateToNetworkDetailedView will navigate to the detailed Network view
 // within the Quick Settings. This is safe to call even when the Quick Settings
 // are already open.
