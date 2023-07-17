@@ -39,9 +39,10 @@ func init() {
 		// ChromeOS > Security > ChromeOS Enterprise Security
 		BugComponent: "b:1208373",
 		Attr: []string{
-			"group:mainline",
-			"informational",
-			"group:criticalstaging",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
 			"group:enterprise-reporting",
 		},
 		Timeout:      3 * time.Minute,
