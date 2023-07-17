@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/bond"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/meetcuj"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
@@ -62,6 +63,8 @@ type meetTest struct {
 	layout            googlemeet.LayoutOption // Type of the layout in the meeting.
 	present           bool                    // Whether it is presenting the Google Docs/Jamboard window.
 	docs              bool                    // Whether it is running with a Google Docs window.
+	slides            bool                    // Whether it is running with a Google Slides window.
+	sheets            bool                    // Whether it is running with a Google Sheets window.
 	jamboard          bool                    // Whether it is running with a Jamboard window.
 	split             bool                    // Whether it is in split screen mode. It can not be true if docs is false.
 	cam               bool                    // Whether the camera is on or not.
@@ -73,11 +76,15 @@ type meetTest struct {
 	zoomOut           bool                    // Whether to zoom out on both the browser and display.
 	tabSwitchDocs     bool                    // Whether to switch between Docs and Meet. It cannot be true if docs is false.
 	duration          time.Duration           // Duration of the meet call. Must be less than test timeout.
+	typingDuration    time.Duration           // Duration of typing on Google Docs. Must be less than the duration of the meet call. If |typingDuration| is not given, it defaults to |meetTimeout|.
 	browserType       browser.Type            // Ash Chrome browser or Lacros.
 	botsOptions       []bond.AddBotsOption    // Customizes the meeting participant bots.
 }
 
-const defaultTestTimeout = 25 * time.Minute
+const (
+	defaultTestTimeout = 25 * time.Minute
+	defaultMeetTimeout = 10 * time.Minute
+)
 
 var platformEffectsModels = hwdep.Model("yaviks", "pujjoteen", "nirwen", "markarth", "frostflow", "dewatt", "omnigul", "anahera", "gimble", "marasov", "taeko")
 
@@ -115,6 +122,24 @@ func init() {
 					zoomOut:     true,
 					effects:     true,
 					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				Name:      "present",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj"},
+				Val: meetTest{
+					bots:           []int{15},
+					layout:         googlemeet.TiledLayout,
+					present:        true,
+					docs:           true,
+					slides:         true,
+					sheets:         true,
+					split:          true,
+					cam:            true,
+					zoomOut:        true,
+					typingDuration: defaultMeetTimeout / 3,
+					browserType:    browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
 			}, {
@@ -668,6 +693,8 @@ func init() {
 //   - Max out the number of the maximum tiles (if necessary).
 //   - Start to present (if necessary).
 //   - Input notes to Google Docs file or draw on Jamboard (if necessary).
+//   - Navigate to Google Slides and input notes to file (if necessary).
+//   - Navigate to Google Sheets and input notes to file (if necessary).
 //   - Wait for 30 seconds before ending the meeting.
 //
 // After recording:
@@ -699,7 +726,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 
 	// Determines the Meet call duration. Use the Meet duration specified in
 	// test param if there is one. Otherwise, default to 10 minutes.
-	meetTimeout := 10 * time.Minute
+	meetTimeout := defaultMeetTimeout
 	if meet.duration != 0 {
 		meetTimeout = meet.duration
 	}
@@ -1333,8 +1360,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		}
 
 		if meet.present {
-			// Presenting increases the number of participants by one.
-			expectedParticipantCount++
 			if !meet.docs && !meet.jamboard {
 				return errors.New("need a Google Docs or Jamboard tab to present")
 			}
@@ -1342,38 +1367,16 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			// Start an annotation section for opening the screen share window
 			// and screen sharing the collaboration window.
 			endPresentSection := recorder.AnnotateSection(ctx, "Screenshare")
-			if err := meetHelper.OpenPresentDialog(ctx); err != nil {
-				return errors.Wrap(err, "failed to start to present a tab")
-			}
-
-			if err := ui.WaitUntilExists(nodewith.Name("Chrome Tab").Role(role.ListGrid))(ctx); err != nil {
-				return errors.Wrap(err, "failed to find the screen-sharing popup")
-			}
 
 			presentTabTitle := "Untitled document"
 			if meet.jamboard {
 				presentTabTitle = "Untitled Jam"
 			}
-
-			// Select the tab to present. Avoid directly tapping on the screen
-			// due to miscalculated node bounds for Lacros tablet devices.
-			waitForPresentTabFocus := uiauto.New(tconn).WithTimeout(5 * time.Second).WaitUntilExists(nodewith.NameStartingWith(presentTabTitle).HasClass("AXVirtualView").Focused())
-			if err := action.Combine(
-				"select tab to screenshare",
-				ui.EnsureFocused(nodewith.Name("Chrome Tab").Role(role.ListGrid)),
-				// If the presenting tab is not focused, press the down
-				// arrow until it is.
-				uiauto.IfFailThen(
-					waitForPresentTabFocus,
-					ui.RetryUntil(
-						kw.AccelAction("Down"),
-						waitForPresentTabFocus,
-					),
-				),
-				kw.AccelAction("Enter"),
-			)(ctx); err != nil {
-				return errors.Wrap(err, "failed to select the tab to share")
+			if err := startPresenting(ctx, collaborationConn, ui, meetHelper, kw, presentTabTitle); err != nil {
+				return errors.Wrap(err, "failed to start screen sharing")
 			}
+			expectedParticipantCount++
+
 			endPresentSection(ctx)
 		}
 
@@ -1398,6 +1401,9 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 
 		var stopSnapshot func(ctx context.Context) error
 		numPhases := len(meet.bots)
+		// If there are multiple phases, collect a shortened list of UMA
+		// metrics for each phase.
+		ashMetrics, browserMetrics := cujrecorder.GetShortenedPerformanceMetrics()
 		async.Run(ctx, func(ctx context.Context) {
 			if numPhases == 1 {
 				return
@@ -1413,10 +1419,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			// The test is broken up into equal length phases with different
 			// bot counts.
 			phaseDuration := meetTimeout / time.Duration(numPhases)
-
-			// If there are multiple phases, collect a shortened list of UMA
-			// metrics for each phase.
-			ashMetrics, browserMetrics := cujrecorder.GetShortenedPerformanceMetrics()
 
 			addingMoreBots := true
 			for addingMoreBots {
@@ -1521,6 +1523,19 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		}
 
 		if meet.docs {
+			// Start an annotation section to interact with Google Docs.
+			endDocsInteractions := recorder.AnnotateSection(ctx, "Docs_interactions")
+
+			// Since adding bots also takes snapshots, to avoid collision, only start
+			// snapshot for Google Docs if the number of bots won't vary during
+			// meetTimeout.
+			if numPhases == 1 {
+				stopSnapshot, err = recorder.StartSnapshot(ctx, "Docs", ashMetrics, browserMetrics)
+				if err != nil {
+					return errors.Wrap(err, "failed to start snapshot for Google Docs")
+				}
+			}
+
 			if err := collaborationWindow.ActivateWindow(ctx, tconn); err != nil {
 				return errors.Wrap(err, "failed to activate the collaboration window")
 			}
@@ -1544,7 +1559,12 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			)(ctx); err != nil {
 				return errors.Wrap(err, "failed to select Google Docs")
 			}
-			end := time.Now().Add(meetTimeout)
+
+			typingDuration := meetTimeout
+			if meet.typingDuration != 0 {
+				typingDuration = meet.typingDuration
+			}
+			end := time.Now().Add(typingDuration)
 
 			// By default, type a bolded header and paragraph, then sleep
 			// for 5 seconds.
@@ -1591,31 +1611,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 
 			// Toggle the Google Docs File menu button for press and
 			// release metrics.
-			fileMenu := nodewith.Name("File").HasClass("menu-button")
-			menuContainer := nodewith.HasClass("goog-menu")
-			if !inTabletMode {
-				if err := ui.MouseMoveTo(fileMenu, 500*time.Millisecond)(ctx); err != nil {
-					return errors.Wrap(err, "failed to move mouse to Google Doc's File menu")
-				}
-			}
-
-			clickFileMenu := pc.Click(fileMenu)
-			uiForWaiting := ui.WithTimeout(10 * time.Second)
-			waitForFileMenu := uiForWaiting.WaitUntilExists(menuContainer)
-			waitForNoFileMenu := uiForWaiting.WaitUntilGone(menuContainer)
-			if err := uiauto.Combine("toggle the Google Doc's File menu",
-				clickFileMenu,
-				// If the File menu doesn't appear, maybe it's because the click
-				// only focused the page. Then we just need to click again.
-				uiauto.IfFailThen(
-					waitForFileMenu,
-					uiauto.Combine("click/tap File menu",
-						clickFileMenu,
-						waitForFileMenu)),
-				clickFileMenu,
-				waitForNoFileMenu,
-			)(ctx); err != nil {
-				return nil
+			if err := meetcuj.ToggleFileMenuButton(ctx, ui, pc, inTabletMode); err != nil {
+				return errors.Wrap(err, "failed to toggle file menu button")
 			}
 
 			// Get the Google Docs window again to properly retrieve
@@ -1662,10 +1659,28 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				}
 			}
 
+			// Enable docsBlocker extension again to restore Google Docs.
+			docsBlockerConn, err := cuj.GetDocsBlockerConn(ctx, br)
+			if err != nil {
+				return errors.Wrap(err, "failed to get docs blocker conn")
+			}
+			defer docsBlockerConn.Close()
+
+			if err := docsBlockerConn.Eval(ctx, "ForceDocsOffline(false)", nil); err != nil {
+				s.Log("Failed to call docs blocker to restore: ", err)
+			}
+
 			if err := kw.Accel(ctx, "Alt+Tab"); err != nil {
 				return errors.Wrap(err, "failed to hit alt-tab and focus back to Meet tab")
 			}
 			meetTimeout = end.Sub(time.Now())
+			endDocsInteractions(ctx)
+
+			if numPhases == 1 {
+				if err := stopSnapshot(ctx); err != nil {
+					return errors.Wrap(err, "failed to stop snapshot for Google Docs")
+				}
+			}
 		} else if meet.jamboard {
 			// Simulate mouse input on jamboard.
 			if err := ui.LeftClick(nodewith.Name("Pen").Role(role.ToggleButton))(ctx); err != nil {
@@ -1713,6 +1728,18 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to collect GPU counters")
 		}
 
+		// "Stop presenting" if the test wants to interact with
+		// Google Slides or Google Sheets later.
+		if meet.slides || meet.sheets {
+			if err := stopPresenting(ctx, ui); err != nil {
+				return errors.Wrap(err, "failed to stop presenting")
+			}
+			// When a participant share the screen, one more participant
+			// is added to the meeting. Therefore, when screen sharing stops,
+			// the number of participants should decrease by one.
+			expectedParticipantCount--
+		}
+
 		// If we have a collaboration window open, navigate away from the page
 		// to collect LCP metrics.
 		if collaborationConn != nil {
@@ -1741,6 +1768,102 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				}
 			}
 		}
+
+		if meet.slides {
+			// Start an annotation section to interact with Google Slides.
+			endSlidesInteractions := recorder.AnnotateSection(ctx, "Slides_interactions")
+
+			// Since adding bots also takes snapshots, to avoid collision, only start
+			// snapshot for Google Slides if the number of bots won't vary during
+			// meetTimeout.
+			if numPhases == 1 {
+				stopSnapshot, err = recorder.StartSnapshot(ctx, "Slides", ashMetrics, browserMetrics)
+				if err != nil {
+					return errors.Wrap(err, "failed to start snapshot for Google Slides")
+				}
+			}
+
+			slidesURL, err := cuj.GetTestSlidesURL(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to get Google Slides URL")
+			}
+			if err := navigate(ctx, collaborationConn, br, slidesURL); err != nil {
+				return errors.Wrap(err, "failed to navigate to Google Slides website")
+			}
+			// We stopped presenting before navigating to the Google Slides page.
+			// Start screen sharing again for the page.
+			if err := startPresenting(ctx, collaborationConn, ui, meetHelper, kw, "Google Slides"); err != nil {
+				return errors.Wrap(err, "failed to start screen sharing")
+			}
+
+			// Ensure the slides deck gets scrolled.
+			if err := scrollDownPage(ctx, collaborationConn, kw, "document.getElementsByClassName('punch-filmstrip-scroll')[0]"); err != nil {
+				return err
+			}
+			// Ensure MouseClick, LCP2 and ADF metrics are generated.
+			if err := generateMetrics(ctx, collaborationConn, tconn, ui, pc, inTabletMode); err != nil {
+				return err
+			}
+
+			// "Stop presenting" if the test wants to interact with
+			// Google Sheets later.
+			if err := stopPresenting(ctx, ui); err != nil {
+				return errors.Wrap(err, "failed to stop presenting")
+			}
+			endSlidesInteractions(ctx)
+
+			if numPhases == 1 {
+				if err := stopSnapshot(ctx); err != nil {
+					return errors.Wrap(err, "failed to stop snapshot for Google Slides")
+				}
+			}
+		}
+
+		if meet.sheets {
+			// Start an annotation section to interact with Google Sheets.
+			endSheetsInteractions := recorder.AnnotateSection(ctx, "Sheets_interactions")
+
+			// Since adding bots also takes snapshots, to avoid collision, only start
+			// snapshot for Google Sheets if the number of bots won't vary during
+			// meetTimeout.
+			if numPhases == 1 {
+				stopSnapshot, err = recorder.StartSnapshot(ctx, "Sheets", ashMetrics, browserMetrics)
+				if err != nil {
+					return errors.Wrap(err, "failed to start snapshot for Google Sheets")
+				}
+			}
+
+			sheetsURL, err := cuj.GetTestSheetsURL(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to get Google Sheets URL")
+			}
+			if err := navigate(ctx, collaborationConn, br, sheetsURL); err != nil {
+				return errors.Wrap(err, "failed to navigate to Google Sheets website")
+			}
+			// We stopped presenting before navigating to the Google Sheets page.
+			// Start screen sharing again for the page.
+			if err := startPresenting(ctx, collaborationConn, ui, meetHelper, kw, "Google Sheets"); err != nil {
+				return errors.Wrap(err, "failed to start screen sharing")
+			}
+			expectedParticipantCount++
+
+			// Ensure the sheets deck gets scrolled.
+			if err := scrollDownPage(ctx, collaborationConn, kw, "document.getElementsByClassName('native-scrollbar-y')[0]"); err != nil {
+				return err
+			}
+			// Ensure MouseClick, LCP2 and ADF metrics are generated.
+			if err := generateMetrics(ctx, collaborationConn, tconn, ui, pc, inTabletMode); err != nil {
+				return err
+			}
+			endSheetsInteractions(ctx)
+
+			if numPhases == 1 {
+				if err := stopSnapshot(ctx); err != nil {
+					return errors.Wrap(err, "failed to stop snapshot for Google Sheets")
+				}
+			}
+		}
+
 		if err := checkParticipantCount(ctx, expectedParticipantCount); err != nil {
 			return errors.Wrap(err, "the number of bots is unexpected, the bond server may have lost bots")
 		}
@@ -1872,6 +1995,104 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to save the perf data: ", err)
 	}
+}
+
+// navigate navigates to the url and waits for the page to quiesce,
+// and then focus on it.
+func navigate(ctx context.Context, conn *chrome.Conn, br *browser.Browser, url string) error {
+	if err := conn.Navigate(ctx, url); err != nil {
+		return errors.Wrapf(err, "failed to navigate to %s", url)
+	}
+
+	// Some DUTs need more time to wait for quiescence. Add log for debugging
+	// loading duration.
+	startTime := time.Now()
+	if err := webutil.WaitForQuiescence(ctx, conn, 2*time.Minute); err != nil {
+		return errors.Wrap(err, "failed to wait for quiescence")
+	}
+	testing.ContextLog(ctx, "Loading page took: ", time.Since(startTime))
+
+	targets, err := br.FindTargets(ctx, chrome.MatchTargetURLPrefix(url))
+	if err != nil || len(targets) == 0 {
+		return errors.Wrapf(err, "failed to find URL %s", url)
+	}
+	return conn.ActivateTarget(ctx)
+}
+
+// scrollDownPage scrolls down the page by pressing Down key, and checks
+// if the specified HTML element is scrolled.
+func scrollDownPage(ctx context.Context, conn *chrome.Conn, kw *input.KeyboardEventWriter, element string) error {
+	testing.ContextLog(ctx, "Going through the file")
+	if err := inputsimulations.RepeatKeyPress(ctx, kw, "Down", 50*time.Millisecond, 60); err != nil {
+		return errors.Wrap(err, `failed to repeatedly and rapidly press "Down" in between task switches`)
+	}
+	// Ensure the element gets scrolled.
+	return meetcuj.EnsureElementGetsScrolled(ctx, conn, element)
+}
+
+// startPresenting starts to present |presentTabTitle| tab in Google Meet.
+// It will only start present if there's nothing being shared now.
+func startPresenting(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context, meetHelper *googlemeet.HRTelemetryHelper, kw *input.KeyboardEventWriter, presentTabTitle string) error {
+	// Only start sharing if it's not presenting anything now.
+	stopSharing := nodewith.Name("Stop sharing").Role(role.Button).First()
+	if err := ui.Exists(stopSharing)(ctx); err == nil {
+		return nil
+	}
+
+	if err := meetHelper.OpenPresentDialog(ctx); err != nil {
+		return errors.Wrap(err, "failed to start to present a tab")
+	}
+
+	// Select the tab to present. Avoid directly tapping on the screen
+	// due to miscalculated node bounds for Lacros tablet devices.
+	waitForPresentTabFocus := ui.WithTimeout(5 * time.Second).WaitUntilExists(nodewith.NameContaining(presentTabTitle).HasClass("AXVirtualView").Focused())
+	if err := uiauto.NamedCombine(fmt.Sprintf("select tab %q to screenshare", presentTabTitle),
+		ui.EnsureFocused(nodewith.Name("Chrome Tab").Role(role.ListGrid)),
+		// If the presenting tab is not focused, press the down
+		// arrow until it is.
+		uiauto.IfFailThen(
+			waitForPresentTabFocus,
+			ui.RetryUntil(
+				kw.AccelAction("Down"),
+				waitForPresentTabFocus,
+			),
+		),
+		kw.AccelAction("Enter"),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to select the tab to share")
+	}
+
+	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+		return errors.Wrap(err, "failed to wait for quiescence")
+	}
+
+	return nil
+}
+
+// stopPresenting stops presenting in Google Meet.
+func stopPresenting(ctx context.Context, ui *uiauto.Context) error {
+	stopPresenting := nodewith.Name("Stop presenting").Role(role.Button)
+	return uiauto.NamedCombine("stop presenting",
+		ui.LeftClick(stopPresenting),
+		ui.WaitUntilGone(stopPresenting),
+	)(ctx)
+}
+
+// generateMetrics generates metrics by interacting with the page and the Ash UI.
+func generateMetrics(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn, ui *uiauto.Context, pc pointer.Context, inTabletMode bool) error {
+	// Collect mouse events by toggling "File" button.
+	if err := meetcuj.ToggleFileMenuButton(ctx, ui, pc, inTabletMode); err != nil {
+		return errors.Wrap(err, "failed to toggle the File menu button")
+	}
+	// Navigate away to record PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.
+	if err := conn.Navigate(ctx, chrome.VersionURL); err != nil {
+		return errors.Wrapf(err, "failed to navigate to %s", chrome.VersionURL)
+	}
+	// Perform Ash workflows to get ADF metrics.
+	if err := inputsimulations.DoAshWorkflows(ctx, tconn, pc); err != nil {
+		return errors.Wrap(err, "failed to do Ash workflows")
+	}
+	return nil
 }
 
 // reportWebRTCInternals reports info from a WebRTC internals dump to performance metrics.
