@@ -138,9 +138,10 @@ func init() {
 			Name: "audio_set_gain",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineAudioSetGain),
 		}, {
-			Name:              "bluetooth_power",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothPower),
-			ExtraAttr:         []string{"informational"},
+			Name: "bluetooth_power",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothPower),
+			// TODO(b/280388009): Promote to critical.
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
 			Name:              "bluetooth_discovery",
@@ -153,8 +154,9 @@ func init() {
 			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
-			Name:      "disk_read",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineDiskRead),
+			Name: "disk_read",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDiskRead),
+			// TODO(b/282664940): Promote to critical.
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:      "power_button",
