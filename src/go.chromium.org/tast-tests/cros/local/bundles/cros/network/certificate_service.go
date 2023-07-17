@@ -90,7 +90,7 @@ func (sv *CertService) Close(ctx context.Context, _ *emptypb.Empty) (*emptypb.Em
 	return &emptypb.Empty{}, nil
 }
 
-// ImportCert copies the certificate file from the specified path and imports the copied certificate through the Certificates Manager.
+// ImportCert imports the specified certificate through the Certificates Manager.
 func (sv *CertService) ImportCert(ctx context.Context, req *pb.ImportRequest) (*emptypb.Empty, error) {
 	cr := sv.sharedObject.Chrome
 	if cr == nil {
@@ -100,27 +100,30 @@ func (sv *CertService) ImportCert(ctx context.Context, req *pb.ImportRequest) (*
 		return &emptypb.Empty{}, errors.New("Certificates Manager hasn't been launched")
 	}
 
-	certFilePath := req.GetFilePath()
-	certFileName := filepath.Base(certFilePath)
-
 	downloadPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		return &emptypb.Empty{}, errors.Wrap(err, "failed to get the path to the 'Downloads' folder")
 	}
-	targetFilePath := filepath.Join(downloadPath, certFileName)
-	if err := fsutil.CopyFile(certFilePath, targetFilePath); err != nil {
-		return &emptypb.Empty{}, errors.Wrap(err, "failed to copy the certificate file to the 'Downloads' folder")
+
+	certFilePath := req.GetFilePath()
+	certFileName := filepath.Base(certFilePath)
+	// Ensure the file is located under 'Downloads' or the file is not accessible to user.
+	if filepath.Dir(certFilePath) != downloadPath {
+		targetFilePath := filepath.Join(downloadPath, certFileName)
+		if err := fsutil.CopyFile(certFilePath, targetFilePath); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to copy the certificate file to the 'Downloads' folder")
+		}
+		defer os.Remove(targetFilePath)
 	}
-	defer os.Remove(targetFilePath)
 
 	var importFunc uiauto.Action
 	switch val := req.ImportDetail.(type) {
 	case *pb.ImportRequest_Client:
-		password, org, importType, err := parseClientCertImportRequest(req.GetCertificate(), val.Client)
+		name, password, org, importType, err := parseClientCertImportRequest(req.GetCertificate(), val.Client)
 		if err != nil {
 			return &emptypb.Empty{}, errors.Wrap(err, "failed to parse the client certificate import request")
 		}
-		importFunc = sv.manager.ImportClientCert(certFileName, password, org, importType)
+		importFunc = sv.manager.ImportClientCert(certFileName, password, name, org, importType)
 	case *pb.ImportRequest_Ca:
 		org, trustSettings := parseCaCertImportRequest(req.GetCertificate(), val.Ca)
 		importFunc = sv.manager.ImportCACert(certFileName, org, trustSettings)
@@ -164,7 +167,7 @@ func (sv *CertService) IsCertImported(ctx context.Context, cert *pb.Certificate)
 }
 
 // parseClientCertImportRequest parses the import request of client certificate.
-func parseClientCertImportRequest(cert *pb.Certificate, detail *pb.ImportRequest_ClientImportDetail) (password string, org certificate.Organization, importType certificate.ImportType, retErr error) {
+func parseClientCertImportRequest(cert *pb.Certificate, detail *pb.ImportRequest_ClientImportDetail) (name, password string, org certificate.Organization, importType certificate.ImportType, retErr error) {
 	switch detail.ImportType {
 	case pb.ImportRequest_ClientImportDetail_IMPORT:
 		importType = certificate.TypeImport
@@ -173,7 +176,7 @@ func parseClientCertImportRequest(cert *pb.Certificate, detail *pb.ImportRequest
 	default:
 		retErr = errors.Errorf("unsupported client certificate import type %v", detail.ImportType)
 	}
-	return cert.GetPassword(), certificate.Organization{Name: cert.GetOrganization()}, importType, retErr
+	return cert.GetName(), cert.GetPassword(), certificate.Organization{Name: cert.GetOrganization()}, importType, retErr
 }
 
 // parseCaCertImportRequest parses the import request of ca certificate.

@@ -304,15 +304,16 @@ func importCerts(ctx context.Context, certSvc network.CertificateServiceClient, 
 	defer cancel()
 
 	incorrectTestCert := certificate.TestCert2()
-	fileName := "handle_incorrect_credential_root_cert"
-	caCertPath, cleanUpCaCert, err := certificate.WriteCACertToFile(ctx, incorrectTestCert, fileName, dutConn)
+
+	caCertDest := certificate.NewRemoteDestination(dutConn, "/tmp", "handle_incorrect_credential_root_cert.crt")
+	cleanUpCaCert, err := certificate.WriteCACert(ctx, caCertDest, incorrectTestCert)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create the CA certificate file")
 	}
 	defer cleanUpCaCert(cleanupCtx)
 
-	fileName = "handle_incorrect_credential_client_cert"
-	clientCertPath, cleanUpClientCert, err := certificate.WriteClientCertToFile(ctx, incorrectTestCert, "" /* password */, fileName, dutConn)
+	clientCertDest := certificate.NewRemoteDestination(dutConn, "/tmp", "handle_incorrect_credential_client_cert.p12")
+	cleanUpClientCert, err := certificate.WriteClientCertWithPassword(ctx, clientCertDest, incorrectTestCert, "" /* password */)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create the client certificate file")
 	}
@@ -328,7 +329,7 @@ func importCerts(ctx context.Context, certSvc network.CertificateServiceClient, 
 			// Organization info isn't available in this certs, ChromeOS will use its common name instead.
 			Organization: certificate.TestCert2().CACred.Info.CommonName,
 		},
-		FilePath: caCertPath,
+		FilePath: caCertDest.FullPath(),
 	}
 	if _, err := certSvc.ImportCert(ctx, caImportReq); err != nil {
 		return nil, errors.Wrapf(err, "failed to import the certificate %+v", caImportReq.GetCertificate())
@@ -351,7 +352,7 @@ func importCerts(ctx context.Context, certSvc network.CertificateServiceClient, 
 			// Organization info isn't available in this certs, ChromeOS will use its common name instead.
 			Organization: certificate.TestCert2().ClientCred.Info.CommonName,
 		},
-		FilePath: clientCertPath,
+		FilePath: clientCertDest.FullPath(),
 	}
 	if _, err := certSvc.ImportCert(ctx, clientImportReq); err != nil {
 		return nil, errors.Wrapf(err, "failed to import the certificate %+v", clientImportReq.GetCertificate())

@@ -58,19 +58,29 @@ const (
 	TrustForSoftwareMakers
 )
 
-// checkBoxFinder returns the corresponding finder of the check box of the trust settings.
-func (s CATrustSettings) checkBoxFinder() *nodewith.Finder {
-	name := []string{
-		"Trust this certificate for identifying websites",
-		"Trust this certificate for identifying email users",
-		"Trust this certificate for identifying software makers",
-	}[s]
-	return certFinder.Name(name).Role(role.CheckBox)
+var (
+	certFinder = nodewith.Ancestor(nodewith.Name("Settings - Manage certificates").Role(role.RootWebArea))
+
+	trustForWebsitesCheckBox       = certFinder.Name("Trust this certificate for identifying websites").Role(role.CheckBox)
+	trustForEmailUsersCheckBox     = certFinder.Name("Trust this certificate for identifying email users").Role(role.CheckBox)
+	trustForSoftwareMakersCheckBox = certFinder.Name("Trust this certificate for identifying software makers").Role(role.CheckBox)
+)
+
+func (s CATrustSettings) clickCheckBoxesAction(ui *uiauto.Context) uiauto.Action {
+	var actions []uiauto.Action
+	for trustSettings, checkbox := range map[CATrustSettings]*nodewith.Finder{
+		TrustForWebsites:       trustForWebsitesCheckBox,
+		TrustForEmailUsers:     trustForEmailUsersCheckBox,
+		TrustForSoftwareMakers: trustForSoftwareMakersCheckBox,
+	} {
+		if (s & trustSettings) != 0 {
+			actions = append(actions, ui.LeftClick(checkbox), ui.WaitUntilCheckedState(checkbox, true))
+		}
+	}
+	return uiauto.Combine("click trust settings check boxes", actions...)
 }
 
 const certManagerURL = "chrome://settings/certificates"
-
-var certFinder = nodewith.Ancestor(nodewith.Name("Settings - Manage certificates").Role(role.RootWebArea))
 
 // Launch launches the Certificates Manager and returns a Manager instance.
 // Close should be explicitly called to close the Certificates Manager.
@@ -127,7 +137,15 @@ func (o Organization) displayName() string { return fmt.Sprintf("org-%s", o.Name
 
 // ImportClientCert imports the client certificate from the "Downloads" folder with the specified import type in the Certificates Manager.
 // The certificate file has to be located in the "Downloads" folder before calling this method.
-func (m *Manager) ImportClientCert(fileName, password string, org Organization, importType ImportType) uiauto.Action {
+func (m *Manager) ImportClientCert(fileName, password, certName string, org Organization, importType ImportType) uiauto.Action {
+	organizationText := certFinder.Name(org.displayName()).Role(role.StaticText)
+	certificateText := certFinder.Name(certName).Role(role.StaticText)
+
+	if importType == TypeImportAndBind {
+		// There will be "hardware backed" next to the certificate if it is bound.
+		certificateText = certFinder.Name(fmt.Sprintf("%s (hardware-backed)", certName)).Role(role.StaticText)
+	}
+
 	return func(ctx context.Context) error {
 		kb, err := input.Keyboard(ctx)
 		if err != nil {
@@ -144,7 +162,10 @@ func (m *Manager) ImportClientCert(fileName, password string, org Organization, 
 			// The OK button might be covered by the virtual keyboard on tablet devices.
 			// Interact with the button through DoDefault to ensure the button is clicked.
 			m.ui.DoDefault(certFinder.Name("OK").Role(role.Button)),
-			m.ui.WaitUntilExists(certFinder.Name(org.displayName()).Role(role.StaticText)),
+			m.ui.WaitUntilExists(organizationText),
+			m.ui.MakeVisible(organizationText),
+			m.expandCertOrganizationBox(org.displayName(), certificateText),
+			m.ui.WaitUntilExists(certificateText),
 		)(ctx)
 	}
 }
@@ -153,29 +174,17 @@ func (m *Manager) ImportClientCert(fileName, password string, org Organization, 
 // The certificate file has to be located in the "Downloads" folder before calling this method.
 func (m *Manager) ImportCACert(fileName string, org Organization, trustSettings CATrustSettings) uiauto.Action {
 	importButton := certFinder.Name("Import").Role(role.Button)
-	importActions := []uiauto.Action{
+	okButton := certFinder.Name("OK").Role(role.Button)
+	organizationText := certFinder.Name(org.displayName()).Role(role.StaticText)
+
+	return uiauto.Combine(fmt.Sprintf("import CA certificate %q", org.Name),
 		m.switchToCertTab(TypeCA),
 		m.ui.LeftClick(importButton),
 		uploadFile(m.tconn, fileName),
-	}
-
-	if (trustSettings & TrustForWebsites) != 0 {
-		importActions = append(importActions, m.ui.LeftClick(TrustForWebsites.checkBoxFinder()))
-	}
-	if (trustSettings & TrustForEmailUsers) != 0 {
-		importActions = append(importActions, m.ui.LeftClick(TrustForEmailUsers.checkBoxFinder()))
-	}
-	if (trustSettings & TrustForSoftwareMakers) != 0 {
-		importActions = append(importActions, m.ui.LeftClick(TrustForSoftwareMakers.checkBoxFinder()))
-	}
-
-	okButton := certFinder.Name("OK").Role(role.Button)
-	organizationText := certFinder.Name(org.displayName()).Role(role.StaticText)
-	importActions = append(importActions,
+		trustSettings.clickCheckBoxesAction(m.ui),
 		m.ui.LeftClick(okButton),
 		m.ui.WaitUntilExists(organizationText),
 	)
-	return uiauto.Combine(fmt.Sprintf("import CA certificate %q", org.Name), importActions...)
 }
 
 // DeleteCert deletes the certificate from the Certificates Manager.
@@ -206,6 +215,9 @@ func (m *Manager) IsCertImported(ctx context.Context, name string, org Organizat
 
 	organizationText := certFinder.Name(org.displayName()).Role(role.StaticText)
 	if err := m.ui.WaitUntilExists(organizationText)(ctx); err != nil {
+		if nodewith.IsNodeNotFoundErr(err) {
+			return false, nil
+		}
 		return false, err
 	}
 

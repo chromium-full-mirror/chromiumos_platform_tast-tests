@@ -20,8 +20,7 @@ service CertificateService {
   // Close cleans up the resources created by the service.
   rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
-  // ImportCert copies the certificate file from the specified path and imports
-  // the copied certificate through the Certificates Manager.
+  // ImportCert imports the specified certificate through the Certificates Manager.
   rpc ImportCert(ImportRequest) returns (google.protobuf.Empty) {}
 
   // DeleteCert deletes the specified certificate from the Certificates Manager.

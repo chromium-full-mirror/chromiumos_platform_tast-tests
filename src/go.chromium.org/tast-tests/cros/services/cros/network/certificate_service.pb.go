@@ -242,6 +242,7 @@ type ImportRequest struct {
 	Certificate *Certificate `protobuf:"bytes,1,opt,name=certificate,proto3" json:"certificate,omitempty"`
 	FilePath    string       `protobuf:"bytes,2,opt,name=file_path,json=filePath,proto3" json:"file_path,omitempty"`
 	// Types that are assignable to ImportDetail:
+	//
 	//	*ImportRequest_Client
 	//	*ImportRequest_Ca
 	ImportDetail isImportRequest_ImportDetail `protobuf_oneof:"import_detail"`
@@ -840,8 +841,7 @@ type CertificateServiceClient interface {
 	Init(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Close cleans up the resources created by the service.
 	Close(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// ImportCert copies the certificate file from the specified path and imports
-	// the copied certificate through the Certificates Manager.
+	// ImportCert imports the specified certificate through the Certificates Manager.
 	ImportCert(ctx context.Context, in *ImportRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// DeleteCert deletes the specified certificate from the Certificates Manager.
 	DeleteCert(ctx context.Context, in *Certificate, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -910,8 +910,7 @@ type CertificateServiceServer interface {
 	Init(context.Context, *InitRequest) (*emptypb.Empty, error)
 	// Close cleans up the resources created by the service.
 	Close(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
-	// ImportCert copies the certificate file from the specified path and imports
-	// the copied certificate through the Certificates Manager.
+	// ImportCert imports the specified certificate through the Certificates Manager.
 	ImportCert(context.Context, *ImportRequest) (*emptypb.Empty, error)
 	// DeleteCert deletes the specified certificate from the Certificates Manager.
 	DeleteCert(context.Context, *Certificate) (*emptypb.Empty, error)

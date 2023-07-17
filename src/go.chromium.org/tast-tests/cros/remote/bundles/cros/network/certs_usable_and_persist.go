@@ -387,14 +387,16 @@ func importCert(ctx context.Context, dutConn *ssh.Conn, certSvc network.Certific
 	defer cancel()
 
 	req := &network.ImportRequest{Certificate: certDetail.Certificate}
+
 	switch certDetail.Type {
 	case network.Certificate_CLIENT:
-		dest, cleanUp, err := certificate.WriteClientCertToFile(ctx, certDetail.CertStore, certDetail.Password, "test_cert_client", dutConn)
+		dest := certificate.NewRemoteDestination(dutConn, "/tmp", "test_cert_client.p12")
+		cleanUp, err := certificate.WriteClientCertWithPassword(ctx, dest, certDetail.CertStore, certDetail.Password)
 		if err != nil {
 			return errors.Wrap(err, "failed to create the client certificate file")
 		}
 		defer cleanUp(cleanupCtx)
-		req.FilePath = dest
+		req.FilePath = dest.FullPath()
 
 		req.ImportDetail = &network.ImportRequest_Client{
 			Client: &network.ImportRequest_ClientImportDetail{
@@ -402,12 +404,13 @@ func importCert(ctx context.Context, dutConn *ssh.Conn, certSvc network.Certific
 			},
 		}
 	case network.Certificate_CA:
-		dest, cleanUp, err := certificate.WriteCACertToFile(ctx, certDetail.CertStore, "test_cert_root", dutConn)
+		dest := certificate.NewRemoteDestination(dutConn, "/tmp", "test_cert_root.crt")
+		cleanUp, err := certificate.WriteCACert(ctx, dest, certDetail.CertStore)
 		if err != nil {
 			return errors.Wrap(err, "failed to create the CA certificate file")
 		}
 		defer cleanUp(cleanupCtx)
-		req.FilePath = dest
+		req.FilePath = dest.FullPath()
 
 		req.ImportDetail = &network.ImportRequest_Ca{
 			Ca: &network.ImportRequest_CaImportDetail{},
