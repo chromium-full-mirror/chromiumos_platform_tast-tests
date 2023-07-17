@@ -23,7 +23,29 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/webrtcinternals"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
+
+const createDumpSectionName = "Create Dump"
+
+var (
+	createDumpSectionReg = regexp.MustCompile("(Create Dump)|(Create a WebRTC-Internals dump)")
+	createDumpSection    = nodewith.NameRegex(createDumpSectionReg).Role(role.DisclosureTriangle)
+	webRTCRootWebArea    = nodewith.Name("WebRTC Internals").Role(role.RootWebArea)
+	webRTCDownloadButton = nodewith.NameContaining("Download").Role(role.Button).Ancestor(webRTCRootWebArea)
+)
+
+// ExpandCreateDumpSection expands the Create Dump section of chrome://webrtc-internals.
+// We will not need it until after the meeting, but we can expand the section much faster now
+// while chrome://webrtc-internals does not have much data to show.
+func ExpandCreateDumpSection(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+	return uiauto.NamedCombine(fmt.Sprintf("expand %q section", createDumpSectionName),
+		ui.WaitUntilExists(createDumpSection.Collapsed()),
+		ui.DoDefaultUntil(createDumpSection, ui.WithTimeout(5*time.Second).WaitUntilExists(createDumpSection.Expanded())),
+		ui.WaitUntilExists(webRTCDownloadButton),
+	)(ctx)
+}
 
 // OpenWebRTCInternals opens chrome://webrtc-internals now so it will collect data on the meeting's streams.
 func OpenWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser) (*browser.Conn, error) {
@@ -32,39 +54,58 @@ func OpenWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, br *browse
 		return nil, errors.Wrapf(err, "failed to open %s", WebRTCInternalsURL)
 	}
 
-	// Expand the Create Dump section of chrome://webrtc-internals. We will not need it
-	// until after the meeting, but we can expand the section much faster now while
-	// chrome://webrtc-internals does not have much data to show.
-	ui := uiauto.New(tconn)
-	createDumpSectionReg := regexp.MustCompile("(Create Dump)|(Create a WebRTC-Internals dump)")
-	createDumpSection := nodewith.NameRegex(createDumpSectionReg).Role(role.DisclosureTriangle)
-	if err := uiauto.NamedCombine("expand \"Create Dump\" section",
-		ui.WaitUntilExists(createDumpSection.Collapsed()),
-		ui.DoDefaultUntil(createDumpSection, ui.WithTimeout(5*time.Second).WaitUntilExists(createDumpSection.Expanded())),
-	)(ctx); err != nil {
-		return nil, errors.Wrapf(err, "failed to expand \"Create Dump\" section in %s", WebRTCInternalsURL)
+	if err := ExpandCreateDumpSection(ctx, tconn); err != nil {
+		return nil, errors.Wrapf(err, "failed to expand %q section in %s", createDumpSectionName, WebRTCInternalsURL)
 	}
 
 	return conn, nil
 }
 
-// DumpWebRTCInternals downloads a dump from chrome://webrtc-internals and returns the file path and content.
+// DumpWebRTCInternals downloads a dump from chrome://webrtc-internals and
+// returns the file path. This function assumes that chrome://webrtc-internals
+// is already shown, with the Create Dump section expanded.
 func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, username string) (string, error) {
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, username)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get Downloads path")
 	}
-	downloadButton := nodewith.NameContaining("Download").Role(role.Button)
-	// Invoke the button for the dump download.
-	if err := ui.DoDefault(downloadButton)(ctx); err != nil {
+
+	waitForDownloadButton := ui.WithTimeout(5 * time.Second).WaitUntilExists(webRTCDownloadButton)
+	if err := uiauto.Combine("invoke the button for the dump download",
+		// Wait for |createDumpSection| node to appear to ensure
+		// the following UI operations can be successfully applied.
+		ui.WaitUntilExists(createDumpSection),
+		uiauto.IfFailThen(
+			waitForDownloadButton,
+			ui.DoDefaultUntil(createDumpSection, waitForDownloadButton),
+		),
+		ui.DoDefault(webRTCDownloadButton),
+	)(ctx); err != nil {
 		return "", err
 	}
 
-	notification, err := ash.WaitForNotification(ctx, tconn, 10*time.Second, ash.WaitTitle("Download complete"))
+	downloadStartTime := time.Now()
+	notificationPredicate := ash.WaitTitle("Download complete")
+	notificationIDs := make(map[string]struct{})
+	notification, err := ash.WaitForNotification(ctx, tconn, time.Minute, func(notification *ash.Notification) bool {
+		if notificationPredicate(notification) {
+			return true
+		}
+		// Log unrecognized notifications to help with investigation
+		// of b/255343902, but avoid logging the same notification
+		// repeatedly in a tight loop for ten minutes.
+		// TODO(b/255343902): Remove this when the bug is fixed.
+		if _, alreadyLogged := notificationIDs[notification.ID]; !alreadyLogged {
+			testing.ContextLog(ctx, "Found unrecognized notification while waiting for download notification: ", *notification)
+			notificationIDs[notification.ID] = struct{}{}
+		}
+		return false
+	})
 	if err != nil {
 		return "", errors.Wrap(err, "failed to wait for download notification")
 	}
 
+	testing.ContextLog(ctx, "Downloaded WebRTC dump file in ", time.Since(downloadStartTime))
 	return filepath.Join(downloadsPath, notification.Message), nil
 }
 
@@ -98,11 +139,11 @@ func ReportWebRTCInternals(pv *perf.Values, dump []byte, numBots int, present bo
 	numScreenshareConns := 0
 	for connID, peerConn := range webRTC.PeerConnections {
 		byType := peerConn.Stats.BuildIndex()
-		inTotalCount, inScreenshareCount, err := reportVideoStreams(pv, byType["inbound-rtp"], "framesReceived", ".Inbound", "bot%02d")
+		inTotalCount, inScreenshareCount, err := ReportVideoStreams(pv, byType["inbound-rtp"], "framesReceived", ".Inbound", "bot%02d")
 		if err != nil {
 			return errors.Wrapf(err, "failed to report inbound-rtp video streams in peer connection %v", connID)
 		}
-		outTotalCount, outScreenshareCount, err := reportVideoStreams(pv, byType["outbound-rtp"], "framesSent", ".Outbound", "stream%d")
+		outTotalCount, outScreenshareCount, err := ReportVideoStreams(pv, byType["outbound-rtp"], "framesSent", ".Outbound", "stream%d")
 		if err != nil {
 			return errors.Wrapf(err, "failed to report outbound-rtp video streams in peer connection %v", connID)
 		}
@@ -134,9 +175,9 @@ func ReportWebRTCInternals(pv *perf.Values, dump []byte, numBots int, present bo
 	return nil
 }
 
-// reportVideoStreams reports info from a webrtcinternals.StatsIndexByStatsID to performance
+// ReportVideoStreams reports info from a webrtcinternals.StatsIndexByStatsID to performance
 // metrics. Returns the number of active video streams, and how many of them are screenshares.
-func reportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsID, framesTransmittedAttribute, directionSuffix, variantFormat string) (int, int, error) {
+func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsID, framesTransmittedAttribute, directionSuffix, variantFormat string) (int, int, error) {
 	totalCount := 0
 	screenshareCount := 0
 	for id, byAttribute := range byID {

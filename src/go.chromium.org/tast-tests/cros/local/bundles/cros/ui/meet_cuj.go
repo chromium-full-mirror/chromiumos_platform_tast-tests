@@ -37,7 +37,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/coords"
-	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/loginstatus"
@@ -72,23 +71,7 @@ type meetTest struct {
 	botsOptions   []bond.AddBotsOption    // Customizes the meeting participant bots.
 }
 
-// videoCodecReport is used to report a video codec to a performance metric so that it is easy to find in places like TPS Dashboard.
-type videoCodecReport float64
-
-// Every metric must specify either perf.SmallerIsBetter or perf.BiggerIsBetter but it doesn't make sense here.
-const (
-	vp8 videoCodecReport = 0
-	vp9 videoCodecReport = 1
-)
-
 const defaultTestTimeout = 25 * time.Minute
-
-var (
-	createDumpSectionReg = regexp.MustCompile("(Create Dump)|(Create a WebRTC-Internals dump)")
-	createDumpSection    = nodewith.NameRegex(createDumpSectionReg).Role(role.DisclosureTriangle)
-	webRTCRootWebArea    = nodewith.Name("WebRTC Internals").Role(role.RootWebArea)
-	webRTCDownloadButton = nodewith.NameContaining("Download").Role(role.Button).Ancestor(webRTCRootWebArea)
-)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -778,7 +761,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	// Maximize the WebRTC Internals window now, in preparation to take
-	// a screenshot of it if dumpWebRTCInternals fails at the end of
+	// a screenshot of it if DumpWebRTCInternals fails at the end of
 	// the test. That screenshot is for investigation of b/255343902.
 	// TODO(b/255343902): Remove this when the bug is fixed.
 	if err := ash.SetWindowStateAndWait(ctx, tconn, webRTCInternalsWindow.ID, ash.WindowStateMaximized); err != nil {
@@ -832,14 +815,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	}
 	defer automationAutoRelease.Reset(ctx)
 
-	// Expand the Create Dump section of chrome://webrtc-internals. We will not need it
-	// until after the meeting, but we can expand the section much faster now while
-	// chrome://webrtc-internals does not have much data to show.
-	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("expand",
-		ui.DoDefault(createDumpSection.Collapsed()),
-		ui.WaitUntilExists(webRTCDownloadButton),
-	)(ctx); err != nil {
+	if err := cuj.ExpandCreateDumpSection(ctx, tconn); err != nil {
 		s.Fatal("Failed to expand Create Dump section of chrome://webrtc-internals: ", err)
 	}
 
@@ -977,6 +953,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		}
 		return nil
 	}
+
+	ui := uiauto.New(tconn)
 	uiLongWait := ui.WithTimeout(longUITimeout)
 	meetRootWebArea := nodewith.NameContaining("Meet").Role(role.RootWebArea)
 	participantText := nodewith.NameRegex(regexp.MustCompile(`^[\d]+$`)).Role(role.StaticText).Ancestor(meetRootWebArea)
@@ -1650,7 +1628,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 
 	// Report info from chrome://webrtc-internals.
 	webRTCUI := ui.WithTimeout(3 * time.Minute)
-	if path, err := dumpWebRTCInternals(ctx, tconn, webRTCUI, cr.NormalizedUser()); err != nil {
+	if path, err := cuj.DumpWebRTCInternals(ctx, tconn, webRTCUI, cr.NormalizedUser()); err != nil {
 		s.Error("Failed to download dump from chrome://webrtc-internals: ", err)
 		// Take a screenshot with the chrome://webrtc-internals tab in
 		// the foreground, to facilitate investigation of b/255343902.
@@ -1763,55 +1741,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	}
 }
 
-// dumpWebRTCInternals downloads a dump from chrome://webrtc-internals and
-// returns the file path. This function assumes that chrome://webrtc-internals
-// is already shown, with the Create Dump section expanded.
-func dumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, username string) (string, error) {
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, username)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to get Downloads path")
-	}
-
-	waitForDownloadButton := ui.WithTimeout(5 * time.Second).WaitUntilExists(webRTCDownloadButton)
-	if err := uiauto.Combine("invoke the button for the dump download",
-		// Wait for |createDumpSection| node to appear to ensure
-		// the following UI operations can be successfully applied.
-		ui.WaitUntilExists(createDumpSection),
-		uiauto.IfFailThen(
-			waitForDownloadButton,
-			ui.DoDefaultUntil(createDumpSection, waitForDownloadButton),
-		),
-		ui.DoDefault(webRTCDownloadButton),
-	)(ctx); err != nil {
-		return "", err
-	}
-
-	downloadStartTime := time.Now()
-
-	notificationPredicate := ash.WaitTitle("Download complete")
-	notificationIDs := make(map[string]struct{})
-	notification, err := ash.WaitForNotification(ctx, tconn, time.Minute, func(notification *ash.Notification) bool {
-		if notificationPredicate(notification) {
-			return true
-		}
-		// Log unrecognized notifications to help with investigation
-		// of b/255343902, but avoid logging the same notification
-		// repeatedly in a tight loop for ten minutes.
-		// TODO(b/255343902): Remove this when the bug is fixed.
-		if _, alreadyLogged := notificationIDs[notification.ID]; !alreadyLogged {
-			testing.ContextLog(ctx, "Found unrecognized notification while waiting for download notification: ", *notification)
-			notificationIDs[notification.ID] = struct{}{}
-		}
-		return false
-	})
-	if err != nil {
-		return "", errors.Wrap(err, "failed to wait for download notification")
-	}
-	testing.ContextLog(ctx, "Downloaded WebRTC dump file in ", time.Since(downloadStartTime))
-
-	return filepath.Join(downloadsPath, notification.Message), nil
-}
-
 // reportWebRTCInternals reports info from a WebRTC internals dump to performance metrics.
 func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string, numBots int, present bool) (*perf.Values, error) {
 	var webRTC webrtcinternals.Dump
@@ -1841,11 +1770,11 @@ func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string,
 		numPeerConns++
 
 		byType := peerConn.Stats.BuildIndex()
-		inTotalCount, inScreenshareCount, err := reportVideoStreams(pv, byType["inbound-rtp"], "framesReceived", ".Inbound", "bot%02d")
+		inTotalCount, inScreenshareCount, err := cuj.ReportVideoStreams(pv, byType["inbound-rtp"], "framesReceived", ".Inbound", "bot%02d")
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to report inbound-rtp video streams in peer connection %v", connID)
 		}
-		outTotalCount, outScreenshareCount, err := reportVideoStreams(pv, byType["outbound-rtp"], "framesSent", ".Outbound", "stream%d")
+		outTotalCount, outScreenshareCount, err := cuj.ReportVideoStreams(pv, byType["outbound-rtp"], "framesSent", ".Outbound", "stream%d")
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to report outbound-rtp video streams in peer connection %v", connID)
 		}
@@ -1892,109 +1821,4 @@ func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string,
 	}
 
 	return pv, nil
-}
-
-// reportVideoStreams reports info from a webrtcinternals.StatsIndexByStatsID to performance
-// metrics. Returns the number of active video streams, and how many of them are screenshares.
-func reportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsID, framesTransmittedAttribute, directionSuffix, variantFormat string) (int, int, error) {
-	totalCount := 0
-	screenshareCount := 0
-	for id, byAttribute := range byID {
-		kindTimeline, ok := byAttribute["kind"]
-		if !ok {
-			return 0, 0, errors.Errorf("no kind attribute for %q", id)
-		}
-		kind, err := kindTimeline.Collapse()
-		if err != nil {
-			return 0, 0, errors.Errorf("failed to collapse timeline of kind attribute for %q", id)
-		}
-		if kind != "video" {
-			continue
-		}
-
-		framesTransmittedTimeline, ok := byAttribute[framesTransmittedAttribute]
-		if !ok {
-			return 0, 0, errors.Errorf("no %s attribute for %q", framesTransmittedAttribute, id)
-		}
-		if len(framesTransmittedTimeline) == 0 {
-			return 0, 0, errors.Errorf("no values for %s attribute for %q", framesTransmittedAttribute, id)
-		}
-		if framesTransmittedTimeline[len(framesTransmittedTimeline)-1] == 0 {
-			continue
-		}
-
-		screenShareSuffix := ""
-		if contentTypeTimeline, ok := byAttribute["contentType"]; ok {
-			contentType, err := contentTypeTimeline.Collapse()
-			if err != nil {
-				return 0, 0, errors.Errorf("failed to collapse timeline of contentType attribute for %q", id)
-			}
-			if contentType == "screenshare" {
-				screenShareSuffix = ".Screenshare"
-				screenshareCount++
-			}
-		}
-
-		for _, config := range []struct {
-			attribute       string
-			reporter        func(interface{}) (float64, error)
-			attributeSuffix string
-			unit            string
-		}{
-			{"frameWidth", reportFloat64, ".frameWidth", "px"},
-			{"frameHeight", reportFloat64, ".frameHeight", "px"},
-			{"framesPerSecond", reportFloat64, ".framesPerSecond", "fps"},
-			{"[codec]", reportVideoCodec, ".codec", "unitless"},
-		} {
-			timeline, ok := byAttribute[config.attribute]
-			if !ok {
-				continue
-			}
-
-			var report []float64
-			for _, value := range timeline {
-				metric, err := config.reporter(value)
-				if err != nil {
-					return 0, 0, errors.Wrapf(err, "failed to represent %s attribute for %q as performance metric", config.attribute, id)
-				}
-				report = append(report, metric)
-			}
-
-			pv.Set(perf.Metric{
-				Name:      fmt.Sprintf("WebRTCInternals.Video%s%s%s", screenShareSuffix, directionSuffix, config.attributeSuffix),
-				Variant:   fmt.Sprintf(variantFormat, totalCount),
-				Unit:      config.unit,
-				Direction: perf.BiggerIsBetter,
-				Multiple:  true,
-			}, report...)
-		}
-		totalCount++
-	}
-	return totalCount, screenshareCount, nil
-}
-
-// reportFloat64 simply typecasts from interface{} to float64.
-func reportFloat64(value interface{}) (float64, error) {
-	report, ok := value.(float64)
-	if !ok {
-		return 0, errors.Errorf("%v is not of type float64", value)
-	}
-	return report, nil
-}
-
-// reportVideoCodec parses a video codec description from a WebRTC internals dump, and
-// represents the video codec as float64 so it can be reported to a performance metric.
-func reportVideoCodec(value interface{}) (float64, error) {
-	description, ok := value.(string)
-	if !ok {
-		return 0, errors.Errorf("%v is not of type string", value)
-	}
-
-	if strings.HasPrefix(description, "VP8") {
-		return float64(vp8), nil
-	}
-	if strings.HasPrefix(description, "VP9") {
-		return float64(vp9), nil
-	}
-	return 0, errors.Errorf("unrecognized video stream codec: %q", description)
 }
