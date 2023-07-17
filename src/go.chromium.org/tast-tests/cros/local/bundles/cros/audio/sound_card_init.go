@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: SoundCardInit,
-		Desc: "Verifies sound_card_init boot time calibration logic",
-		// b/221241958: Skip helios as it is an old project before sound_card_init.
-		HardwareDeps: hwdep.D(hwdep.SmartAmp(), hwdep.SkipOnModel("atlas", "nocturne", "volteer2", "helios")),
+		Func:         SoundCardInit,
+		Desc:         "Verifies sound_card_init boot time calibration logic",
+		HardwareDeps: hwdep.D(audio.SoundCardInitConditions()...),
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},

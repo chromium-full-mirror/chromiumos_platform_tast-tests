@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
+	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -62,7 +63,7 @@ func init() {
 				// TODO(b/254566972): hwdep.SmartAmp() is narrower than having /etc/init/sound_card_init.conf
 				// If we can have sound_card_init as a SoftwareDep, use that instead.
 				ExtraAttr:         []string{"group:mainline", "group:audio"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SmartAmp()),
+				ExtraHardwareDeps: hwdep.D(audio.SoundCardInitConditions()...),
 				ExtraSoftwareDeps: []string{"cras"},
 			},
 		},
