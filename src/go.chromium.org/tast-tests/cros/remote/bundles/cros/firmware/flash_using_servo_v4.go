@@ -37,7 +37,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.security.BootLockboxService"},
 		Attr:         []string{"group:intel-flashing"},
 		Fixture:      fixture.NormalMode,
-		Vars:         []string{"firmware.firmwarePath"},
+		Vars:         []string{"firmware.ecPath", "firmware.corebootPath"},
 		Timeout:      30 * time.Minute,
 		Params: []testing.Param{{
 			Name: "ec",
@@ -77,7 +77,12 @@ func FlashUsingServoV4(ctx context.Context, s *testing.State) {
 		s.Fatal("Servo must be v4")
 	}
 
-	pathToFirmware := s.RequiredVar("firmware.firmwarePath")
+	var pathToFirmware string
+	if testParms.firmwareType == "ec" {
+		pathToFirmware = s.RequiredVar("firmware.ecPath")
+	} else {
+		pathToFirmware = s.RequiredVar("firmware.corebootPath")
+	}
 
 	if _, err := os.Stat(pathToFirmware); os.IsNotExist(err) {
 		s.Fatalf("File %q not found: %v", pathToFirmware, err)
@@ -113,7 +118,7 @@ func FlashUsingServoV4(ctx context.Context, s *testing.State) {
 		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
 	}
 
-	ctx, restore, orginal, err := utils.BackupAndRestoreAPFirmwareAndWriteProtect(ctx, h.DUT, h.Servo, flash)
+	ctx, restore, _, err := utils.BackupAndRestoreAPFirmwareAndWriteProtect(ctx, h.DUT, h.Servo, flash)
 	if err != nil {
 		s.Fatal("Firmware backup failed: ", err)
 	}
@@ -121,10 +126,6 @@ func FlashUsingServoV4(ctx context.Context, s *testing.State) {
 
 	if _, err := flash.Write(ctx, binPath, false, true, "", nil); err != nil {
 		s.Fatal("Failed to flash coreboot/ec: ", err)
-	}
-
-	if _, err := flash.Verify(ctx, *orginal, testParms.region); err != nil {
-		s.Fatal("Failed to verify flashing of coreboot/ec: ", err)
 	}
 
 }

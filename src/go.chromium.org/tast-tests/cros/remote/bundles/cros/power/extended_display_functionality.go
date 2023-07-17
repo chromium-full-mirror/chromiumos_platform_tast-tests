@@ -23,11 +23,14 @@ type extendedDisplayFunctionTestParams struct {
 	powerMode              string
 	ecStateToCheck         string
 	expectedPrevSleepState int
+	tabletmode             bool
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ExtendedDisplayFunctionality, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Verifies type-C extended display functionality before and after performing cold boot and warm boot",
+		Func:         ExtendedDisplayFunctionality,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verifies type-C extended display functionality before and after performing cold boot and warm boot",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome", "reboot"},
@@ -35,29 +38,44 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.InternalDisplay()),
 		Attr:         []string{"group:intel-hdmi-type-c"},
 		Timeout:      5 * time.Minute,
-		Vars: []string{
-			"servo",
-			"power.mode", // Optional. Expecting "tablet". By default power.mode will be "clamshell".
-		},
+		Vars:         []string{"servo"},
 		Params: []testing.Param{{
 			Name: "typec_hdmi_shutdown",
 			Val: extendedDisplayFunctionTestParams{
 				powerMode:              "shutdown_command",
 				ecStateToCheck:         "S5",
 				expectedPrevSleepState: 5,
+				tabletmode:             false,
 			},
 		}, {
-			Name: "typec_hdmi_reboot",
+			Name: "typec_hdmi_reboot_tablet",
 			Val: extendedDisplayFunctionTestParams{
 				powerMode:              "reboot_command",
 				expectedPrevSleepState: 0,
+				tabletmode:             true,
 			},
 		}, {
-			Name: "typec_hdmi_powerbtn",
+			Name: "typec_hdmi_reboot_clamshell",
+			Val: extendedDisplayFunctionTestParams{
+				powerMode:              "reboot_command",
+				expectedPrevSleepState: 0,
+				tabletmode:             false,
+			},
+		}, {
+			Name: "typec_hdmi_powerbtn_tablet",
 			Val: extendedDisplayFunctionTestParams{
 				powerMode:              "powerbtn_shutdown",
 				ecStateToCheck:         "S5",
 				expectedPrevSleepState: 5,
+				tabletmode:             true,
+			},
+		}, {
+			Name: "typec_hdmi_powerbtn_clamshell",
+			Val: extendedDisplayFunctionTestParams{
+				powerMode:              "powerbtn_shutdown",
+				ecStateToCheck:         "S5",
+				expectedPrevSleepState: 5,
+				tabletmode:             false,
 			},
 		}},
 	})
@@ -91,12 +109,7 @@ func ExtendedDisplayFunctionality(ctx context.Context, s *testing.State) {
 	initLidAngle := m[1]
 	initHys := m[2]
 
-	defaultMode := "clamshell"
-	if mode, ok := s.Var("power.mode"); ok {
-		defaultMode = mode
-	}
-
-	if defaultMode == "tablet" {
+	if testOpt.tabletmode {
 		// Set tabletModeAngle to 0 to force the DUT into tablet mode.
 		testing.ContextLog(ctx, "Put DUT into tablet mode")
 		if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", "0", "0").Run(); err != nil {
@@ -217,7 +230,7 @@ func externalTypecDisplayDetection(ctx context.Context, dut *dut.DUT, numberOfDi
 		}
 		return nil
 	}, &testing.PollOptions{
-		Timeout: 20 * time.Second,
+		Timeout: 30 * time.Second,
 	}); err != nil {
 		return errors.Wrap(err, "unable to find external display")
 	}

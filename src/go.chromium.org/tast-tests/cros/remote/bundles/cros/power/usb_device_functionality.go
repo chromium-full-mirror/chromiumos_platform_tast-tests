@@ -26,6 +26,7 @@ type usbDeviceTestParam struct {
 	usbSpeed            string
 	noOfConnectedDevice int
 	usbDeviceClassName  string
+	pendriveVersion     string
 }
 
 func init() {
@@ -38,7 +39,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.ui.AudioService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		VarDeps:      []string{"servo"},
-		Vars:         []string{"power.usbDeviceName"},
+		Vars:         []string{"power.USB2", "power.USB3"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Params: []testing.Param{{
 			Name: "hid_coldboot",
@@ -67,6 +68,7 @@ func init() {
 				usbSpeed:            "480M",
 				noOfConnectedDevice: 1, // Test H/W tolopoly requires One USB Type-A 2.0 pendrive.
 				usbDeviceClassName:  "Mass Storage",
+				pendriveVersion:     "2.0",
 			},
 			ExtraAttr: []string{"group:intel-usb-set1"},
 			Timeout:   20 * time.Minute,
@@ -77,6 +79,7 @@ func init() {
 				usbSpeed:            "5000M",
 				noOfConnectedDevice: 1, // Test H/W tolopoly requires One USB Type-A 3.0 pendrive.
 				usbDeviceClassName:  "Mass Storage",
+				pendriveVersion:     "3.0",
 			},
 			ExtraAttr: []string{"group:intel-usb-set1"},
 			Timeout:   20 * time.Minute,
@@ -94,8 +97,10 @@ func USBDeviceFunctionality(ctx context.Context, s *testing.State) {
 
 	// power.usbDeviceName variable is required for USB storage related tests.
 	var usbStorageName string
-	if testParam.usbDeviceClassName == "Mass Storage" {
-		usbStorageName = s.RequiredVar("power.usbDeviceName")
+	if testParam.pendriveVersion == "2.0" {
+		usbStorageName = s.RequiredVar("power.USB2")
+	} else {
+		usbStorageName = s.RequiredVar("power.USB3")
 	}
 
 	servoSpec := s.RequiredVar("servo")
