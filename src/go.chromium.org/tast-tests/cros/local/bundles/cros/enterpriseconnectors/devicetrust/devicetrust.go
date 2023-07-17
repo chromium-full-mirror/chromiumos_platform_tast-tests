@@ -49,7 +49,7 @@ func StartAttestationFlowWithFakeIdP(ctx context.Context, ui *uiauto.Context) er
 }
 
 // CheckFakeIdPStatus checks if the result of the Device Trust attestation flow is as expected based on the text on the fake IdP.
-func CheckFakeIdPStatus(ctx context.Context, cr *chrome.Chrome, ui *uiauto.Context, isInSession, expected bool) error {
+func CheckFakeIdPStatus(ctx context.Context, cr *chrome.Chrome, ui *uiauto.Context, isInSession, expectedStatus, isDeviceManaged bool) error {
 	deviceTrustSuccessful, err := wasDeviceTrustAttestationSuccessful(ctx, ui)
 	if err != nil {
 		return errors.Wrap(err, "failed to check if Device Trust succeeded")
@@ -61,11 +61,11 @@ func CheckFakeIdPStatus(ctx context.Context, cr *chrome.Chrome, ui *uiauto.Conte
 	}
 
 	if deviceTrustSuccessful {
-		if expected != deviceTrustSuccessful {
+		if expectedStatus != deviceTrustSuccessful {
 			return errors.New("Device Trust succeeded unexpectedly")
 		}
 
-		if err := checkSignals(ctx, conn, isInSession); err != nil {
+		if err := checkSignals(ctx, conn, isInSession, isDeviceManaged); err != nil {
 			return errors.Wrap(err, "checking signals failed")
 		}
 	} else {
@@ -74,7 +74,7 @@ func CheckFakeIdPStatus(ctx context.Context, cr *chrome.Chrome, ui *uiauto.Conte
 			return errors.Wrap(err, "checking error message failed")
 		}
 
-		if expected != deviceTrustSuccessful {
+		if expectedStatus != deviceTrustSuccessful {
 			return errors.New("Device trust failed with error: " + errorMessage)
 		}
 
@@ -99,7 +99,7 @@ func getErrorMessage(ctx context.Context, conn *chrome.Conn) (string, error) {
 }
 
 // checkSignals checks the signals for completeness and validity in case of a successful Device Trust attestation flow.
-func checkSignals(ctx context.Context, conn *chrome.Conn, isInSession bool) error {
+func checkSignals(ctx context.Context, conn *chrome.Conn, isInSession, isDeviceManaged bool) error {
 	var serverSignalsString string
 	if err := conn.Call(ctx, &serverSignalsString, "() => { return document.getElementById('serverSignals').innerText; }"); err != nil {
 		return errors.Wrap(err, "failed reading server signals")
@@ -116,7 +116,7 @@ func checkSignals(ctx context.Context, conn *chrome.Conn, isInSession bool) erro
 		return errors.New("Client signals were empty")
 	}
 
-	return Verify([]byte(serverSignalsString), []byte(clientSignalsString), isInSession)
+	return Verify([]byte(serverSignalsString), []byte(clientSignalsString), isInSession, isDeviceManaged)
 }
 
 // wasDeviceTrustAttestationSuccessful analyzes the current content on the fake IdP site to decide whether the Device Trust attestation flow was successful or not.

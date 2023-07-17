@@ -167,7 +167,7 @@ func (service *DeviceTrustService) CheckFakeIdPStatus(ctx context.Context, req *
 		return nil, errors.New("device Trust service is not set up properly")
 	}
 
-	if err := devicetrust.CheckFakeIdPStatus(ctx, service.cr, service.ui, req.IsInSession, req.Expected); err != nil {
+	if err := devicetrust.CheckFakeIdPStatus(ctx, service.cr, service.ui, req.IsInSession, req.Expected /*isDeviceManaged=*/, true); err != nil {
 		return nil, err
 	}
 

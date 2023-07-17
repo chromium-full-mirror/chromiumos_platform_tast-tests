@@ -118,18 +118,8 @@ func verifyIsSettingEnum(value int) error {
 	return verifyIsInRange(value, 0, 2)
 }
 
-// verifySignalValues verifies that certain signals are in their value ranges or have pre-known values.
-// The function assumes that the signal structs have no fields with value null.
-func verifySignalValues(parsedServerSignals serverSignals, parsedClientSignals clientSignals, isInSession bool) error {
-	// Check if the server and client signals have a valid format.
-	if err := checkIfSignalsAreFilled(parsedServerSignals); err != nil {
-		return errors.Wrap(err, "invalid format for server signals")
-	}
-
-	if err := checkIfSignalsAreFilled(parsedClientSignals); err != nil {
-		return errors.Wrap(err, "invalid format for client signals")
-	}
-
+// verifyNonDeviceIdentifyingSignalValues verifies that non device identifying signals are in their value ranges or have pre-known values.
+func verifyNonDeviceIdentifyingSignalValues(parsedServerSignals serverSignals, parsedClientSignals clientSignals, isInSession bool) error {
 	// Checking value ranges for settings.
 	if err := verifyIsSettingEnum(*parsedClientSignals.DiskEncrypted); err != nil {
 		return errors.Wrap(err, "failed to verify clientSignals.diskEncrypted")
@@ -155,6 +145,53 @@ func verifySignalValues(parsedServerSignals serverSignals, parsedClientSignals c
 		return errors.Wrap(err, "failed to verify clientSignals.safeBrowsingProtectionLevel")
 	}
 
+	// Checking pre-known values.
+	if *parsedServerSignals.KeyTrustLevel != expectedKeyTrustLevelDev && *parsedServerSignals.KeyTrustLevel != expectedKeyTrustLevelVerified {
+		return errors.Errorf("unexpected value for serverSignals.keyTrustLevel: got %q, want %q or %q", *parsedServerSignals.KeyTrustLevel, expectedKeyTrustLevelDev, expectedKeyTrustLevelVerified)
+	}
+
+	if *parsedClientSignals.OS != expectedOS {
+		return errors.Errorf("unexpected value for clientSignals.os: got %q, want %q", *parsedClientSignals.OS, expectedOS)
+	}
+
+	// Checking the signal for the trigger which generated the device signals.
+	var expectedTrigger int
+	if isInSession {
+		expectedTrigger = 1
+	} else {
+		expectedTrigger = 2
+	}
+
+	if *parsedClientSignals.Trigger != expectedTrigger {
+		return errors.Errorf("unexpected value for clientSignals.trigger: got %q, want %q", *parsedClientSignals.Trigger, expectedTrigger)
+	}
+
+	// Checking profileAffiliationIDs.
+	if isInSession && len(*parsedClientSignals.ProfileAffiliationIds) != expectedAffiliationIDLength {
+		return errors.Errorf("unexpected value for len(clientSignals.profileAffiliationIds): got %v, want %v", len(*parsedClientSignals.ProfileAffiliationIds), expectedAffiliationIDLength)
+	}
+
+	if !isInSession && len(*parsedClientSignals.ProfileAffiliationIds) != 0 {
+		return errors.New("clientSignals.profileAffiliationIds should be empty")
+	}
+
+	return nil
+}
+
+// verifySignalValuesManagedDevice verifies that certain signals are in their value ranges or have pre-known values.
+// The function also verifies that the signal structs have no fields with a nil value.
+func verifySignalValuesManagedDevice(parsedServerSignals serverSignals, parsedClientSignals clientSignals, isInSession bool) error {
+	// Check if the server and client signals have a valid format.
+	if err := checkIfSignalsAreFilled(parsedServerSignals); err != nil {
+		return errors.Wrap(err, "invalid format for server signals")
+	}
+
+	if err := checkIfSignalsAreFilled(parsedClientSignals); err != nil {
+		return errors.Wrap(err, "invalid format for client signals")
+	}
+
+	verifyNonDeviceIdentifyingSignalValues(parsedServerSignals, parsedClientSignals, isInSession)
+
 	// Checking non empty values.
 	if *parsedServerSignals.DevicePermanentID == "" {
 		return errors.New("serverSignals.devicePermanentId should not be empty")
@@ -168,15 +205,7 @@ func verifySignalValues(parsedServerSignals serverSignals, parsedClientSignals c
 		return errors.New("clientSignals.serialNumber should not be empty")
 	}
 
-	// Checking pre-known values.
-	if *parsedServerSignals.KeyTrustLevel != expectedKeyTrustLevelDev && *parsedServerSignals.KeyTrustLevel != expectedKeyTrustLevelVerified {
-		return errors.Errorf("unexpected value for serverSignals.keyTrustLevel: got %q, want %q or %q", *parsedServerSignals.KeyTrustLevel, expectedKeyTrustLevelDev, expectedKeyTrustLevelVerified)
-	}
-
-	if *parsedClientSignals.OS != expectedOS {
-		return errors.Errorf("unexpected value for clientSignals.os: got %q, want %q", *parsedClientSignals.OS, expectedOS)
-	}
-
+	// Checking pre-known value DeviceEnrollmentDomain.
 	if *parsedClientSignals.DeviceEnrollmentDomain != expectedDeviceEnrollmentDomain {
 		return errors.Errorf("unexpected value for clientSignals.deviceEnrollmentDomain: got %q, want %q", *parsedClientSignals.DeviceEnrollmentDomain, expectedDeviceEnrollmentDomain)
 	}
@@ -197,23 +226,57 @@ func verifySignalValues(parsedServerSignals serverSignals, parsedClientSignals c
 		}
 	}
 
-	// Checking the signal for the trigger which generated the device signals.
-	var expectedTrigger int
-	if isInSession {
-		expectedTrigger = 1
-	} else {
-		expectedTrigger = 2
+	return nil
+}
+
+// verifySignalValuesUnmanagedDevice verifies that certain signals are in their value ranges or have pre-known values.
+// The function also verifies that device identifying signals are not part of the signal payload.
+func verifySignalValuesUnmanagedDevice(parsedServerSignals serverSignals, parsedClientSignals clientSignals, isInSession bool) error {
+	verifyNonDeviceIdentifyingSignalValues(parsedServerSignals, parsedClientSignals, isInSession)
+
+	// Checking if device identifying server signals don't exist.
+	if parsedServerSignals.DevicePermanentID != nil {
+		return errors.New("key serverSignals.devicePermanentId should not exist")
 	}
 
-	if *parsedClientSignals.Trigger != expectedTrigger {
-		return errors.Errorf("unexpected value for clientSignals.trigger: got %q, want %q", *parsedClientSignals.Trigger, expectedTrigger)
+	if parsedServerSignals.VirtualDeviceID != nil {
+		return errors.New("key serverSignals.virtualDeviceID should not exist")
+	}
+
+	// Checking if device identifying client signals don't exist.
+	if parsedClientSignals.DeviceHostName != nil {
+		return errors.New("key parsedClientSignals.deviceHostName should not exist")
+	}
+
+	if parsedClientSignals.DisplayName != nil {
+		return errors.New("key parsedClientSignals.displayName should not exist")
+	}
+
+	if parsedClientSignals.IMEI != nil {
+		return errors.New("key parsedClientSignals.imei should not exist")
+	}
+
+	if parsedClientSignals.MEID != nil {
+		return errors.New("key parsedClientSignals.meid should not exist")
+	}
+
+	if parsedClientSignals.MacAddresses != nil {
+		return errors.New("key parsedClientSignals.macAddresses should not exist")
+	}
+
+	if parsedClientSignals.SerialNumber != nil {
+		return errors.New("key parsedClientSignals.serialNumber should not exist")
+	}
+
+	if parsedClientSignals.SystemDNSServers != nil {
+		return errors.New("key parsedClientSignals.systemDNSServers should not exist")
 	}
 
 	return nil
 }
 
 // Verify tries to parse the signal strings to JSON and checks the signals for completeness and validity.
-func Verify(serverSignalsString, clientSignalsString []byte, isInSession bool) error {
+func Verify(serverSignalsString, clientSignalsString []byte, isInSession, isDeviceManaged bool) error {
 	parsedServerSignals, err := parseServerSignals(serverSignalsString)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse server signals")
@@ -224,8 +287,14 @@ func Verify(serverSignalsString, clientSignalsString []byte, isInSession bool) e
 		return errors.Wrap(err, "failed to parse client signals")
 	}
 
-	if err = verifySignalValues(*parsedServerSignals, *parsedClientSignals, isInSession); err != nil {
-		return errors.Wrap(err, "failed to verify signal values")
+	if isDeviceManaged {
+		if err = verifySignalValuesManagedDevice(*parsedServerSignals, *parsedClientSignals, isInSession); err != nil {
+			return errors.Wrap(err, "failed to verify signal values for a managed device")
+		}
+	} else {
+		if err = verifySignalValuesUnmanagedDevice(*parsedServerSignals, *parsedClientSignals, isInSession); err != nil {
+			return errors.Wrap(err, "failed to verify signal values for an unmanaged device")
+		}
 	}
 
 	return nil
