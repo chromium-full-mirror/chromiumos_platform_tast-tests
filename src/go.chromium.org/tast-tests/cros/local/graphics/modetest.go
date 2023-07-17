@@ -21,19 +21,26 @@ import (
 const (
 	minModeTestMatches = 11
 	numBits            = 16
+	connectorPattern   = `^(?P<id>\d+)\s+(?P<encoder>\d+)\s+(?P<status>connected|disconnected)\s+(?P<name>\S+)\s+(?P<width>\d+)x(?P<height>\d+)\s+(?P<countModes>\d+)\s+(?P<encoders>.+)$`
+	crtcPattern        = `^(?P<id>\d+)\s+(?P<fb>\d+)\s+\((?P<x>\d+),(?P<y>\d+)\)\s+\((?P<width>\d+)x(?P<height>\d+)\)$`
+	modePattern        = `^\s*#(?P<index>\d+)\s+(?P<name>\S+)\s+(?P<refresh>\d+\.?\d*)\s+(?P<hdisp>\d+)\s+(?P<hss>\d+)\s+(?P<hse>\d+)\s+(?P<htot>\d+)\s+(?P<vdisp>\d+)\s+(?P<vss>\d+)\s+(?P<vse>\d+)\s+(?P<vtot>\d+)\s+.*$`
+	blobPattern        = `(?:\s*[a-f0-9]{32}\n?)*`
+	propPattern        = `^\s*(?P<propID>\d+)(?:\s+(?P<name>.+))?:\n\s*flags:\s+(?P<flags>.*)\n\s*(?:(?:blobs:\n(?P<blobs>` +
+		blobPattern + `)\s*value:\n(?P<blobValue>` + blobPattern +
+		`)(?:\n.*decoded:.*)?)|(?:enums:\s+(?P<enums>.*)\n\s*value:\s+(?P<enumValue>.*))|(?:values:\s+(?P<values>.*)\n\s*value:\s+(?P<valueValue>.*)))`
 )
 
 var (
-	modesetConnectorPattern = regexp.MustCompile(
-		`^(\d+)\s+(\d+)\s+(connected|disconnected)\s+(\S+)\s+(\d+)x(\d+)\s+(\d+)\s+(.+)$`)
-	modesetCrtcPattern    = regexp.MustCompile(`^(\d+)\s+(\d+)\s+\((\d+),(\d+)\)\s+\((\d+)x(\d+)\)$`)
-	modesetEncoderPattern = regexp.MustCompile(
-		`^(\d+)\s+(\d+)\s+(\S+)\s+0x([0-9a-f]+)\s+0x([0-9a-f]+)$`)
-	modesetModePattern = regexp.MustCompile(
-		`^\s*#(\d+)\s+(\S+)\s+(\d+\.?\d*)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)?.*$`)
-	modetestPlanesPattern = regexp.MustCompile(
+	connectorRegexp = regexp.MustCompile(`(?m)` + connectorPattern + `\n(?:\s*modes:\n.*\n(?P<modes>(?:` +
+		modePattern + `\n?)*))?(?:\s*props:\n(?P<props>(?:` + propPattern + `\n?)*))?`)
+	crtcRegexp = regexp.MustCompile(`(?m)` + crtcPattern + `\n(?P<mode>` + modePattern +
+		`)\n(?:\s*props:\n(?P<props>(?:` + propPattern + `\n?)*))`)
+	encoderRegexp = regexp.MustCompile(`^(?P<id>\d+)\s+(?P<crtc>\d+)\s+(?P<type>\S+)\s+0x(?P<possibleCrtcs>[0-9a-f]+)\s+0x(?P<possibleClones>[0-9a-f]+)$`)
+	modeRegexp    = regexp.MustCompile(`(?m)` + modePattern)
+	propRegexp    = regexp.MustCompile(`(?m)` + propPattern)
+	planesRegexp  = regexp.MustCompile(
 		`^(\d+)\s+(\d+)\s+(\d+)\s+(\d+),(\d+)\s+(\d+),(\d+)\s+(\d+)\s+(0x)(?P<bit>([[:xdigit:]]+))`)
-	modetestPlanesStartPattern = regexp.MustCompile(
+	planesStartRegexp = regexp.MustCompile(
 		`^id\s+crtc\s+fb\s+CRTC\s+x,y\s+x,y\s+gamma\s+size\s+possible\s+crtcs`)
 )
 
@@ -57,6 +64,8 @@ type Connector struct {
 	CountModes  int
 	Encoders    []uint32
 	Modes       []*Mode
+	VrrCapable  bool
+	Edid        []byte
 }
 
 // Crtc attributes parsed from modetest.
@@ -68,6 +77,7 @@ type Crtc struct {
 	Width         uint32
 	Height        uint32
 	Mode          *Mode
+	VrrEnabled    bool
 }
 
 // Mode attributes parsed from modetest.
@@ -106,7 +116,7 @@ func GetModeTestPlanes(ctx context.Context) ([][]uint64, error) {
 	for _, line := range strings.Split(string(stdout), "\n") {
 		// Example of regex that will match:
 		// 31      91      340     0,0             0,0     0               0x00000001
-		if matches := modetestPlanesPattern.FindStringSubmatch(line); found && len(matches) >= minModeTestMatches {
+		if matches := planesRegexp.FindStringSubmatch(line); found && len(matches) >= minModeTestMatches {
 			binary, err := strconv.ParseUint(matches[10], 16, 64)
 			if err != nil {
 				return output, errors.Wrapf(err, "failed to parse %s as unsigned int ", matches[10])
@@ -116,7 +126,7 @@ func GetModeTestPlanes(ctx context.Context) ([][]uint64, error) {
 				return output, errors.Wrapf(err, "failed to convert %s to binary ", matches[10])
 			}
 		}
-		matches := modetestPlanesStartPattern.FindStringSubmatch(line)
+		matches := planesStartRegexp.FindStringSubmatch(line)
 		if matches != nil {
 			found = true
 		}
@@ -153,28 +163,34 @@ func ModetestEncoders(ctx context.Context) ([]*Encoder, error) {
 
 	var encoders []*Encoder
 	for _, line := range strings.Split(string(output), "\n") {
-		matches := modesetEncoderPattern.FindStringSubmatch(line)
+		matches := encoderRegexp.FindStringSubmatch(line)
 		if matches == nil {
 			continue
 		}
-		encoderID, err := strconv.ParseUint(matches[1], 10, 32)
+
+		idMatch := matches[encoderRegexp.SubexpIndex("id")]
+		crtcMatch := matches[encoderRegexp.SubexpIndex("crtc")]
+		encoderType := matches[encoderRegexp.SubexpIndex("type")]
+		possibleCrtcsMatch := matches[encoderRegexp.SubexpIndex("possibleCrtcs")]
+		possibleClonesMatch := matches[encoderRegexp.SubexpIndex("possibleClones")]
+
+		encoderID, err := strconv.ParseUint(idMatch, 10, 32)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse encoder id %s", matches[1])
+			return nil, errors.Wrapf(err, "failed to parse encoder id %s", idMatch)
 		}
-		crtcID, err := strconv.ParseUint(matches[2], 10, 32)
+		crtcID, err := strconv.ParseUint(crtcMatch, 10, 32)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse crtc id %s", matches[2])
+			return nil, errors.Wrapf(err, "failed to parse crtc id %s", crtcMatch)
 		}
-		encoderType := matches[3]
-		possibleCrtcs, err := strconv.ParseUint(matches[4], 16, 32)
+		possibleCrtcs, err := strconv.ParseUint(possibleCrtcsMatch, 16, 32)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to parse possible crtcs %s",
-				matches[4])
+				possibleCrtcsMatch)
 		}
-		possibleClones, err := strconv.ParseUint(matches[5], 16, 32)
+		possibleClones, err := strconv.ParseUint(possibleClonesMatch, 16, 32)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to parse possible clones %s",
-				matches[5])
+				possibleClonesMatch)
 		}
 		encoders = append(encoders, &Encoder{
 			EncoderID:      uint32(encoderID),
@@ -210,59 +226,90 @@ func ModetestConnectors(ctx context.Context) ([]*Connector, error) {
 	}
 
 	var connectors []*Connector
-	for _, line := range strings.Split(string(output), "\n") {
-		if matches := modesetConnectorPattern.FindStringSubmatch(line); matches != nil {
-			connectorID, err := strconv.ParseUint(matches[1], 10, 32)
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to parse connector id %s",
-					matches[1])
-			}
-			encoderID, err := strconv.ParseUint(matches[2], 10, 32)
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to parse encoder id %s",
-					matches[2])
-			}
-			connected := (matches[3] == "connected")
-			name := matches[4]
-			width, err := strconv.ParseUint(matches[5], 10, 32)
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to parse width %s",
-					matches[5])
-			}
-			height, err := strconv.ParseUint(matches[6], 10, 32)
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to parse height %s",
-					matches[6])
-			}
-			countModes, err := strconv.Atoi(matches[7])
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to parse countModes %s",
-					matches[7])
-			}
-			encoders, err := splitAndConvertInt(matches[8])
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to parse encoders %s",
-					matches[8])
-			}
-			connectors = append(connectors, &Connector{
-				ConnectorID: uint32(connectorID),
-				EncoderID:   uint32(encoderID),
-				Connected:   connected,
-				Name:        name,
-				Width:       uint32(width),
-				Height:      uint32(height),
-				CountModes:  countModes,
-				Encoders:    encoders,
-				Modes:       []*Mode{},
-			})
-		} else if matches := modesetModePattern.FindStringSubmatch(line); matches != nil {
-			mode, err := parseMode(matches)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to parse mode")
-			}
-			lastConnector := connectors[len(connectors)-1]
-			lastConnector.Modes = append(lastConnector.Modes, mode)
+	matches := connectorRegexp.FindAllStringSubmatch(string(output), -1)
+	if matches == nil {
+		return nil, errors.Wrap(err, "failed to match connectors in modetest output")
+	}
+	for _, match := range matches {
+		IDMatch := match[connectorRegexp.SubexpIndex("id")]
+		encoderMatch := match[connectorRegexp.SubexpIndex("encoder")]
+		statusMatch := match[connectorRegexp.SubexpIndex("status")]
+		name := match[connectorRegexp.SubexpIndex("name")]
+		widthMatch := match[connectorRegexp.SubexpIndex("width")]
+		heightMatch := match[connectorRegexp.SubexpIndex("height")]
+		countModesMatch := match[connectorRegexp.SubexpIndex("countModes")]
+		encodersMatch := match[connectorRegexp.SubexpIndex("encoders")]
+		modesMatch := match[connectorRegexp.SubexpIndex("modes")]
+		propsMatch := match[connectorRegexp.SubexpIndex("props")]
+
+		connectorID, err := strconv.ParseUint(IDMatch, 10, 32)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse connector id %s", IDMatch)
 		}
+		encoderID, err := strconv.ParseUint(encoderMatch, 10, 32)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse encoder id %s", encoderMatch)
+		}
+		connected := (statusMatch == "connected")
+		width, err := strconv.ParseUint(widthMatch, 10, 32)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse width %s", widthMatch)
+		}
+		height, err := strconv.ParseUint(heightMatch, 10, 32)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse height %s", heightMatch)
+		}
+		countModes, err := strconv.Atoi(countModesMatch)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse countModes %s", countModesMatch)
+		}
+		encoders, err := splitAndConvertInt(encodersMatch)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse encoders %s", encodersMatch)
+		}
+		var modes []*Mode
+		if modeMatches := modeRegexp.FindAllStringSubmatch(modesMatch, -1); modeMatches != nil {
+			for _, modeMatch := range modeMatches {
+				mode, err := parseMode(modeMatch)
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to parse mode")
+				}
+				modes = append(modes, mode)
+			}
+		}
+		vrrCapable := false
+		var edidBytes []byte
+		if propMatches := propRegexp.FindAllStringSubmatch(propsMatch, -1); propMatches != nil {
+			for _, propMatch := range propMatches {
+				propName := propMatch[propRegexp.SubexpIndex("name")]
+				blobValue := propMatch[propRegexp.SubexpIndex("blobValue")]
+				valueValue := propMatch[propRegexp.SubexpIndex("valueValue")]
+				if propName == "vrr_capable" {
+					vrrCapable = valueValue == "1"
+					continue
+				}
+				if propName == "EDID" {
+					edidBytes, err = EdidStringToBytes(blobValue)
+					if err != nil {
+						return nil, errors.Wrap(err, "failed to convert EDID string to bytes")
+					}
+					continue
+				}
+			}
+		}
+		connectors = append(connectors, &Connector{
+			ConnectorID: uint32(connectorID),
+			EncoderID:   uint32(encoderID),
+			Connected:   connected,
+			Name:        name,
+			Width:       uint32(width),
+			Height:      uint32(height),
+			CountModes:  countModes,
+			Encoders:    encoders,
+			Modes:       modes,
+			VrrCapable:  vrrCapable,
+			Edid:        edidBytes,
+		})
 	}
 	return connectors, nil
 }
@@ -290,54 +337,71 @@ func ModetestCrtcs(ctx context.Context) ([]*Crtc, error) {
 	}
 
 	var crtcs []*Crtc
-	for _, line := range strings.Split(string(output), "\n") {
-		if matches := modesetCrtcPattern.FindStringSubmatch(line); matches != nil {
-			crtcID, err := strconv.ParseUint(matches[1], 10, 32)
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to parse crtc id %s",
-					matches[1])
-			}
-			frameBufferID, err := strconv.ParseUint(matches[2], 10, 32)
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to parse fb id %s",
-					matches[2])
-			}
-			x, err := strconv.ParseUint(matches[3], 10, 32)
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to parse x-position %s",
-					matches[3])
-			}
-			y, err := strconv.ParseUint(matches[4], 10, 32)
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to parse y-position %s",
-					matches[4])
-			}
-			width, err := strconv.ParseUint(matches[5], 10, 32)
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to parse width %s",
-					matches[5])
-			}
-			height, err := strconv.ParseUint(matches[6], 10, 32)
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to parse height %s",
-					matches[6])
-			}
-			crtcs = append(crtcs, &Crtc{
-				CrtcID:        uint32(crtcID),
-				FrameBufferID: uint32(frameBufferID),
-				X:             uint32(x),
-				Y:             uint32(y),
-				Width:         uint32(width),
-				Height:        uint32(height),
-				Mode:          nil,
-			})
-		} else if matches := modesetModePattern.FindStringSubmatch(line); matches != nil {
-			mode, err := parseMode(matches)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to parse mode")
-			}
-			crtcs[len(crtcs)-1].Mode = mode
+	matches := crtcRegexp.FindAllStringSubmatch(string(output), -1)
+	if matches == nil {
+		return nil, errors.Wrap(err, "failed to match CRTCs in modetest output")
+	}
+	for _, match := range matches {
+		IDMatch := match[crtcRegexp.SubexpIndex("id")]
+		fbMatch := match[crtcRegexp.SubexpIndex("fb")]
+		xMatch := match[crtcRegexp.SubexpIndex("x")]
+		yMatch := match[crtcRegexp.SubexpIndex("y")]
+		widthMatch := match[crtcRegexp.SubexpIndex("width")]
+		heightMatch := match[crtcRegexp.SubexpIndex("height")]
+		modeMatchRangeStart := crtcRegexp.SubexpIndex("mode")
+		modeMatchRangeEnd := modeMatchRangeStart + modeRegexp.NumSubexp() + 1
+		modeMatches := match[modeMatchRangeStart:modeMatchRangeEnd]
+		propsMatch := match[crtcRegexp.SubexpIndex("props")]
+
+		crtcID, err := strconv.ParseUint(IDMatch, 10, 32)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse crtc id %s", IDMatch)
 		}
+		frameBufferID, err := strconv.ParseUint(fbMatch, 10, 32)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse fb id %s", fbMatch)
+		}
+		x, err := strconv.ParseUint(xMatch, 10, 32)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse x-position %s", xMatch)
+		}
+		y, err := strconv.ParseUint(yMatch, 10, 32)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse y-position %s", yMatch)
+		}
+		width, err := strconv.ParseUint(widthMatch, 10, 32)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse width %s", widthMatch)
+		}
+		height, err := strconv.ParseUint(heightMatch, 10, 32)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse height %s", heightMatch)
+		}
+		mode, err := parseMode(modeMatches)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse mode")
+		}
+		vrrEnabled := false
+		if propMatches := propRegexp.FindAllStringSubmatch(propsMatch, -1); propMatches != nil {
+			for _, propMatch := range propMatches {
+				propName := propMatch[propRegexp.SubexpIndex("name")]
+				valueValue := propMatch[propRegexp.SubexpIndex("valueValue")]
+				if propName == "VRR_ENABLED" {
+					vrrEnabled = valueValue == "1"
+					break
+				}
+			}
+		}
+		crtcs = append(crtcs, &Crtc{
+			CrtcID:        uint32(crtcID),
+			FrameBufferID: uint32(frameBufferID),
+			X:             uint32(x),
+			Y:             uint32(y),
+			Width:         uint32(width),
+			Height:        uint32(height),
+			Mode:          mode,
+			VrrEnabled:    vrrEnabled,
+		})
 	}
 	return crtcs, nil
 
@@ -345,46 +409,57 @@ func ModetestCrtcs(ctx context.Context) ([]*Crtc, error) {
 
 // parseMode returns the mode parsed from the provided array of regexp substring matches.
 func parseMode(matches []string) (*Mode, error) {
-	index, err := strconv.Atoi(matches[1])
+	indexMatch := matches[modeRegexp.SubexpIndex("index")]
+	name := matches[modeRegexp.SubexpIndex("name")]
+	refreshMatch := matches[modeRegexp.SubexpIndex("refresh")]
+	hdispMatch := matches[modeRegexp.SubexpIndex("hdisp")]
+	hssMatch := matches[modeRegexp.SubexpIndex("hss")]
+	hseMatch := matches[modeRegexp.SubexpIndex("hse")]
+	htotMatch := matches[modeRegexp.SubexpIndex("htot")]
+	vdispMatch := matches[modeRegexp.SubexpIndex("vdisp")]
+	vssMatch := matches[modeRegexp.SubexpIndex("vss")]
+	vseMatch := matches[modeRegexp.SubexpIndex("vse")]
+	vtotMatch := matches[modeRegexp.SubexpIndex("vtot")]
+
+	index, err := strconv.Atoi(indexMatch)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse mode index %s", matches[1])
+		return nil, errors.Wrapf(err, "failed to parse mode index %s", indexMatch)
 	}
-	name := matches[2]
-	refresh, err := strconv.ParseFloat(matches[3], 64)
+	refresh, err := strconv.ParseFloat(refreshMatch, 64)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse mode refresh rate %s", matches[3])
+		return nil, errors.Wrapf(err, "failed to parse mode refresh rate %s", refreshMatch)
 	}
-	hDisplay, err := strconv.ParseUint(matches[4], 10, 16)
+	hDisplay, err := strconv.ParseUint(hdispMatch, 10, 16)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse mode hDisplay %s", matches[4])
+		return nil, errors.Wrapf(err, "failed to parse mode hDisplay %s", hdispMatch)
 	}
-	hSyncStart, err := strconv.ParseUint(matches[5], 10, 16)
+	hSyncStart, err := strconv.ParseUint(hssMatch, 10, 16)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse mode hSyncStart %s", matches[5])
+		return nil, errors.Wrapf(err, "failed to parse mode hSyncStart %s", hssMatch)
 	}
-	hSyncEnd, err := strconv.ParseUint(matches[6], 10, 16)
+	hSyncEnd, err := strconv.ParseUint(hseMatch, 10, 16)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse mode hSyncEnd %s", matches[6])
+		return nil, errors.Wrapf(err, "failed to parse mode hSyncEnd %s", hseMatch)
 	}
-	hTotal, err := strconv.ParseUint(matches[7], 10, 16)
+	hTotal, err := strconv.ParseUint(htotMatch, 10, 16)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse mode hTotal %s", matches[7])
+		return nil, errors.Wrapf(err, "failed to parse mode hTotal %s", htotMatch)
 	}
-	vDisplay, err := strconv.ParseUint(matches[8], 10, 16)
+	vDisplay, err := strconv.ParseUint(vdispMatch, 10, 16)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse mode vDisplay %s", matches[8])
+		return nil, errors.Wrapf(err, "failed to parse mode vDisplay %s", vdispMatch)
 	}
-	vSyncStart, err := strconv.ParseUint(matches[9], 10, 16)
+	vSyncStart, err := strconv.ParseUint(vssMatch, 10, 16)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse mode vSyncStart %s", matches[9])
+		return nil, errors.Wrapf(err, "failed to parse mode vSyncStart %s", vssMatch)
 	}
-	vSyncEnd, err := strconv.ParseUint(matches[10], 10, 16)
+	vSyncEnd, err := strconv.ParseUint(vseMatch, 10, 16)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse mode vSyncEnd %s", matches[10])
+		return nil, errors.Wrapf(err, "failed to parse mode vSyncEnd %s", vseMatch)
 	}
-	vTotal, err := strconv.ParseUint(matches[11], 10, 16)
+	vTotal, err := strconv.ParseUint(vtotMatch, 10, 16)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse mode vTotal %s", matches[11])
+		return nil, errors.Wrapf(err, "failed to parse mode vTotal %s", vtotMatch)
 	}
 	return &Mode{
 		Index:      index,
