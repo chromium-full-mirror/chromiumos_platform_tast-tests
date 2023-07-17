@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/camera/hal3"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -19,10 +18,10 @@ func init() {
 		Func:         HAL3StillCapture,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies camera still capture function with HAL3 interface",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "hywu@chromium.org", "shik@chromium.org"},
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "shik@chromium.org", "xinggu@chromium.org"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera_dependent"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
-		Pre:          chrome.LoggedIn(),
+		Fixture:      "chromeLoggedIn",
 		// Krane needs 4 minutes and 30 seconds for whole dark environment(covering the camera lens).
 		// We also need rooms for preparation time.
 		Timeout:      6*time.Minute + hal3.AdditionalTimeout,

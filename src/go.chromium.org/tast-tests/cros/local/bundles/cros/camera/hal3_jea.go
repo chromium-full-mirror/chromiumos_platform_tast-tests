@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/camera/hal3"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -20,10 +19,10 @@ func init() {
 		Func:         HAL3JEA,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies JPEG encode accelerator works in USB HALv3",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "hywu@chromium.org", "shik@chromium.org"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "shik@chromium.org", "xinggu@chromium.org"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.HWEncodeJPEG},
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		Pre:          chrome.LoggedIn(),
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera_dependent"},
+		Fixture:      "chromeLoggedIn",
 		Timeout:      4*time.Minute + hal3.AdditionalTimeout,
 		Params: []testing.Param{{
 			Val:               "usb",

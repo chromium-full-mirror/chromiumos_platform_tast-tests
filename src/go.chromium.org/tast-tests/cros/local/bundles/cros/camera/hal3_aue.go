@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/camera/hal3"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -30,10 +29,10 @@ func init() {
 		Func:         HAL3AUE,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that camera HAL3 will still function after its device auto-update-expiration date",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "yerlandinata@chromium.org"},
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org", "yerlandinata@chromium.org"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera_dependent"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
-		Pre:          chrome.LoggedIn(),
+		Fixture:      "chromeLoggedIn",
 		Timeout:      4*time.Minute + hal3.AdditionalTimeout,
 		BugComponent: "b:167281",
 	})
