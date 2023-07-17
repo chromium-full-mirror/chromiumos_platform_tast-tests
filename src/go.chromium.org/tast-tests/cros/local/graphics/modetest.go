@@ -65,7 +65,7 @@ type Connector struct {
 	Encoders    []uint32
 	Modes       []*Mode
 	VrrCapable  bool
-	Edid        []byte
+	Edid        *Edid
 }
 
 // Crtc attributes parsed from modetest.
@@ -278,7 +278,7 @@ func ModetestConnectors(ctx context.Context) ([]*Connector, error) {
 			}
 		}
 		vrrCapable := false
-		var edidBytes []byte
+		var edid Edid
 		if propMatches := propRegexp.FindAllStringSubmatch(propsMatch, -1); propMatches != nil {
 			for _, propMatch := range propMatches {
 				propName := propMatch[propRegexp.SubexpIndex("name")]
@@ -289,10 +289,11 @@ func ModetestConnectors(ctx context.Context) ([]*Connector, error) {
 					continue
 				}
 				if propName == "EDID" {
-					edidBytes, err = EdidStringToBytes(blobValue)
+					edidBytes, err := EdidStringToBytes(blobValue)
 					if err != nil {
 						return nil, errors.Wrap(err, "failed to convert EDID string to bytes")
 					}
+					edid = ParseEdid(edidBytes)
 					continue
 				}
 			}
@@ -308,7 +309,7 @@ func ModetestConnectors(ctx context.Context) ([]*Connector, error) {
 			Encoders:    encoders,
 			Modes:       modes,
 			VrrCapable:  vrrCapable,
-			Edid:        edidBytes,
+			Edid:        &edid,
 		})
 	}
 	return connectors, nil
