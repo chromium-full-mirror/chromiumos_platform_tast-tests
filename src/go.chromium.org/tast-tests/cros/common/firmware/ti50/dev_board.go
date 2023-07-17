@@ -19,11 +19,21 @@ type GpioName string
 // GpioEdge represent either rising or falling
 type GpioEdge string
 
+// HoldReset represents whether to hold the GSC in reset
+type HoldReset bool
+
 const (
 	// GpioEdgeRising represents a rising edge
 	GpioEdgeRising GpioEdge = "Rising"
 	// GpioEdgeFalling represents a falling edge
 	GpioEdgeFalling GpioEdge = "Falling"
+
+	// HoldInReset says to hold the GSC in reset
+	HoldInReset HoldReset = true
+
+	// DoNotHoldInReset says to *not* hold the GSC in reset,
+	// and to ensure it is booted before finishing.
+	DoNotHoldInReset HoldReset = false
 )
 
 // UartName identifies one of the three UARTs forwarded through CCD
@@ -58,8 +68,10 @@ type DevBoard interface {
 	Close(ctx context.Context) error
 	// GSCToolCommand executes gsctool.
 	GSCToolCommand(ctx context.Context, image string, args ...string) (output []byte, err error)
-	// FetchApFlashInfo fetches the name and vendor of the SPI flash chip connected to the devboard.
-	FetchApFlashInfo(ctx context.Context) (output *ApFlashInfo, err error)
+	// WithApFlashAccess prepares the devboard for access to the SPI flash chip, then runs `f`.
+	// After `f` is run, the GSC is reset. If `holdReset` is true, it will be held in reset.
+	// If there's an error in establishing the connection, `f` will not be run.
+	WithApFlashAccess(ctx context.Context, holdReset HoldReset, f func(ApFlash)) error
 	// Executes TCG tests.
 	RunTcgTests(ctx context.Context, outdir, testSuite string) error
 	// PhysicalUart allows reading/writing data to a physical UART of the GSC under test.
@@ -84,6 +96,13 @@ type SerialChannel interface {
 	WriteSerial(ctx context.Context, bytes []byte) error
 	// ClearInput clears any pending input that hasn't been read yet.
 	ClearInput(ctx context.Context) error
+}
+
+// ApFlash provides access to the SPI flash chip connected to the devboard.
+// Constructed by `DevBoard.WithApFlashAccess`.
+type ApFlash interface {
+	// FetchApFlashInfo fetches the name and vendor of the SPI flash chip connected to the devboard.
+	FetchApFlashInfo(ctx context.Context) (output *ApFlashInfo, err error)
 }
 
 // ApFlashInfo contains info about the AP flash that the DUT would have access to.

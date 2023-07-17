@@ -18,6 +18,7 @@ import (
 
 	"google.golang.org/grpc"
 
+	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	common "go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/dutcontrol"
 	"go.chromium.org/tast/core/errors"
@@ -371,9 +372,49 @@ func (a *DUTControlAndreiboard) CcdSerialInterface(name common.UartName, readTim
 	return common.NewBufferedConsole("", 2048, uartOpener)
 }
 
+type andreiboardApFlash struct {
+	ab *DUTControlAndreiboard
+}
+
+// WithApFlashAccess runs `f` with the proper setup and teardown to access the SPI flash chip.
+// This function asserts the SuzyQ strapping and leaves it in that state, so `gsctool` should work immediately.
+func (a *DUTControlAndreiboard) WithApFlashAccess(ctx context.Context, holdReset ti50.HoldReset, f func(ti50.ApFlash)) error {
+	i, err := ti50.NewCrOSImage(ctx, a)
+	if err != nil {
+		return err
+	}
+	if _, err = a.PlainCommand(ctx, "gpio", "apply", string(ti50.CcdSuzyQ)); err != nil {
+		return err
+	}
+	if err := i.WaitUntilMatch(ctx, regexp.MustCompile(`USB:\s+Connected`), 20*time.Second); err != nil {
+		return errors.Wrap(err, "expected to see Ti50 connect CCD USB")
+	}
+	flash := &andreiboardApFlash{ab: a}
+	if _, err := flash.FetchApFlashInfo(ctx); err != nil {
+		return err
+	}
+	// TODO(kupiakos): consider warning/erroring if an unrecognized chip is seen
+	// on the andreishield, or pass this info to `f` so it can check itself.
+	f(flash)
+	// Reset the GSC
+	if _, err := a.PlainCommand(ctx, "gpio", "write", "RESET", "false"); err != nil {
+		return err
+	}
+	if !holdReset {
+		// Turn the GSC back on
+		if _, err := a.PlainCommand(ctx, "gpio", "write", "RESET", "true"); err != nil {
+			return err
+		}
+		if err := i.WaitUntilBooted(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // FetchApFlashInfo fetches the name and vendor of the SPI flash chip connected to the devboard.
-func (a *DUTControlAndreiboard) FetchApFlashInfo(ctx context.Context) (info *common.ApFlashInfo, err error) {
-	resp, err := a.client.GetApFlashInfo(ctx, &dutcontrol.GetApFlashInfoRequest{})
+func (a *andreiboardApFlash) FetchApFlashInfo(ctx context.Context) (info *common.ApFlashInfo, err error) {
+	resp, err := a.ab.client.GetApFlashInfo(ctx, &dutcontrol.GetApFlashInfoRequest{})
 	if err != nil {
 		return nil, errors.Wrap(err, "GetApFlashInfo request")
 	}
