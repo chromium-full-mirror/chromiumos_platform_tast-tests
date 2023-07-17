@@ -21,9 +21,10 @@ import (
 const (
 	driveFsCommandLineArgsFileName = "command_line_args"
 
-	driveFsXattrPinned      = "user.drive.pinned"
-	driveFsXattrUncommitted = "user.drive.uncommitted"
-	driveFsXattrID          = "user.drive.id"
+	driveFsXattrAvailableOffline = "user.drive.available_offline"
+	driveFsXattrID               = "user.drive.id"
+	driveFsXattrPinned           = "user.drive.pinned"
+	driveFsXattrUncommitted      = "user.drive.uncommitted"
 )
 
 // DriveFs is a helper object for working with `drivefs` instances run within
@@ -230,6 +231,13 @@ func (file *File) IsUncommitted() (bool, error) {
 	return uncommitted, err
 }
 
+// IsAvailableOffline returns `true` if the file has all its data available locally.
+func (file *File) IsAvailableOffline() (bool, error) {
+	availableOffline := false
+	err := filesystem.GetXattr(file.Name(), driveFsXattrAvailableOffline, &availableOffline)
+	return availableOffline, err
+}
+
 // ItemID returns the item ID of the file, if it has been created on the cloud.
 //
 // Note: Unuploaded files will have a `local-` prefixed ID. This ID will be
@@ -273,5 +281,35 @@ func (file *File) ExistsAction() action.Action {
 	return action.Named("await file existence", func(ctx context.Context) error {
 		_, err := os.Stat(file.Name())
 		return err
+	})
+}
+
+// PinnedAction returns an action that fails if the `file` does not have the
+// `expected` pinned xattr.
+func (file *File) PinnedAction(expected bool) action.Action {
+	return action.Named("await file to be pinned", func(ctx context.Context) error {
+		pinned, err := file.IsPinned()
+		if err != nil {
+			return err
+		}
+		if pinned != expected {
+			return errors.New("file is not in expected pinned state")
+		}
+		return nil
+	})
+}
+
+// AvailableOfflineAction returns an action that fails if the `file` does not
+// have the `expected` available_offline xattr.
+func (file *File) AvailableOfflineAction(expected bool) action.Action {
+	return action.Named("await file to be toggled available offline", func(ctx context.Context) error {
+		availableOffline, err := file.IsAvailableOffline()
+		if err != nil {
+			return err
+		}
+		if availableOffline != expected {
+			return errors.New("file is not in expected available offline state")
+		}
+		return nil
 	})
 }
