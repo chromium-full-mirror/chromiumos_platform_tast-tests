@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	rep "chromiumos/reporting"
+
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -207,7 +208,7 @@ func DisplayReportingDbus(ctx context.Context, s *testing.State) {
 			s.Fatal("No events found when policy enabled")
 		}
 		if len(enqueuedEvents) > 1 {
-			s.Fatal("More than one event reported when policy enabled")
+			s.Fatal("More than one event reported when policy enabled. Full data: ", enqueuedEvents)
 		}
 
 		if len(enqueuedEvents[0].Arguments) == 0 {
