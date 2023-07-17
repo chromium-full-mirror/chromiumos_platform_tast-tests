@@ -91,7 +91,6 @@ func init() {
 		Desc:         "Measures performance and UI smoothness of ChromeOS login",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"chromeos-wmp@google.com",
 			"alemate@google.com",
 			"oshima@google.com",
 		},
