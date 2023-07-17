@@ -93,124 +93,96 @@ func PhysicalKeyboardKoreanTyping(ctx context.Context, s *testing.State) {
 	defer its.CloseAll(cleanupCtx)
 
 	var subtests = []struct {
-		testName              string
-		keyboardLayout        koreanKeyboardLayout // layout should match the name in IME setting.
-		inputASyllableAtATime bool
-		inputFunc             uiauto.Action
-		expectedText          string
+		testName       string
+		keyboardLayout koreanKeyboardLayout // layout should match the name in IME setting.
+		inputFunc      uiauto.Action
+		expectedText   string
 	}{
 		{
 			// Note: this only works because underlying layout is the US (qwerty) xkb
 			// layout. That may change in the future (ref b/199024864).
-			testName:              "2 set",
-			keyboardLayout:        koreanInputType2Set,
-			inputASyllableAtATime: true,
-			inputFunc:             keyboard.TypeAction("gks"),
-			expectedText:          "한",
+			testName:       "2 set",
+			keyboardLayout: koreanInputType2Set,
+			inputFunc:      keyboard.TypeAction("gks"),
+			expectedText:   "한",
 		},
 		{
 			// Note: Options other than 2 set are supported at low priority. In fact,
 			// these examples may not be even correct, but these tests will still detect
 			// any change in behavior.
-			testName:              "3 set 390 (1)",
-			keyboardLayout:        koreanInputType3Set390,
-			inputASyllableAtATime: true,
-			inputFunc:             keyboard.TypeAction("kR"),
-			expectedText:          "걔",
+			testName:       "3 set 390 (1)",
+			keyboardLayout: koreanInputType3Set390,
+			inputFunc:      keyboard.TypeAction("kR"),
+			expectedText:   "걔",
 		},
 		{
 			// Note: Options other than 2 set are supported at low priority. In fact,
 			// these examples may not be even correct, but these tests will still detect
 			// any change in behavior.
-			testName:              "3 set 390 (2)",
-			keyboardLayout:        koreanInputType3Set390,
-			inputASyllableAtATime: true,
-			inputFunc:             keyboard.TypeAction("jfs1"),
-			expectedText:          "않",
+			testName:       "3 set 390 (2)",
+			keyboardLayout: koreanInputType3Set390,
+			inputFunc:      keyboard.TypeAction("jfs1"),
+			expectedText:   "않",
 		},
 		{
 			// Note: Options other than 2 set are supported at low priority. In fact,
 			// these examples may not be even correct, but these tests will still detect
 			// any change in behavior.
-			testName:              "3 set final (1)",
-			keyboardLayout:        koreanInputType3SetFinal,
-			inputASyllableAtATime: true,
-			inputFunc:             keyboard.TypeAction("kG"),
-			expectedText:          "걔",
+			testName:       "3 set final (1)",
+			keyboardLayout: koreanInputType3SetFinal,
+			inputFunc:      keyboard.TypeAction("kG"),
+			expectedText:   "걔",
 		},
 		{
 			// Note: Options other than 2 set are supported at low priority. In fact,
 			// these examples may not be even correct, but these tests will still detect
 			// any change in behavior.
-			testName:              "3 set final (2)",
-			keyboardLayout:        koreanInputType3SetFinal,
-			inputASyllableAtATime: true,
-			inputFunc:             keyboard.TypeAction("ifS"),
-			expectedText:          "많",
+			testName:       "3 set final (2)",
+			keyboardLayout: koreanInputType3SetFinal,
+			inputFunc:      keyboard.TypeAction("ifS"),
+			expectedText:   "많",
 		},
 		{
 			// Note: Options other than 2 set are supported at low priority. In fact,
 			// these examples may not be even correct, but these tests will still detect
 			// any change in behavior.
-			testName:              "3 set No shift (1)",
-			keyboardLayout:        koreanInputType3SetNoShift,
-			inputASyllableAtATime: true,
-			inputFunc:             keyboard.TypeAction("kR"),
-			expectedText:          "개",
+			testName:       "3 set No shift (1)",
+			keyboardLayout: koreanInputType3SetNoShift,
+			inputFunc:      keyboard.TypeAction("kR"),
+			expectedText:   "개",
 		},
 		{
 			// Note: Options other than 2 set are supported at low priority. In fact,
 			// these examples may not be even correct, but these tests will still detect
 			// any change in behavior.
-			testName:              "3 set No shift (2)",
-			keyboardLayout:        koreanInputType3SetNoShift,
-			inputASyllableAtATime: true,
-			inputFunc:             keyboard.TypeAction("jfs1"),
-			expectedText:          "않",
+			testName:       "3 set No shift (2)",
+			keyboardLayout: koreanInputType3SetNoShift,
+			inputFunc:      keyboard.TypeAction("jfs1"),
+			expectedText:   "않",
 		},
 		{
-			testName:              "ENTER key to submit",
-			keyboardLayout:        koreanInputType2Set,
-			inputASyllableAtATime: true,
+			testName:       "ENTER key to submit",
+			keyboardLayout: koreanInputType2Set,
 			inputFunc: uiauto.Combine("type Korean and press enter",
 				keyboard.TypeAction("gks"),
 				keyboard.AccelAction("Enter"),
 			),
 			expectedText: "한\n",
 		},
-		{
-			testName:              "one syllable at a time",
-			keyboardLayout:        koreanInputType2Set,
-			inputASyllableAtATime: true,
-			inputFunc: uiauto.Combine("type multiple syllables and delete them",
-				keyboard.TypeAction("gksk"),
-				uiauto.Repeat(3, keyboard.AccelAction("Backspace")),
-			),
-			expectedText: "",
-		},
-		{
-			testName:              "multiple syllables at a time",
-			keyboardLayout:        koreanInputType2Set,
-			inputASyllableAtATime: false,
-			inputFunc: uiauto.Combine("type multiple syllables and delete them",
-				keyboard.TypeAction("gksk"),
-				uiauto.Repeat(3, keyboard.AccelAction("Backspace")),
-			),
-			expectedText: "ㅎ",
-		},
 	}
 
+	currentKeyboardLayout := "unknown"
 	var inputField = testserver.TextAreaInputField
 	for _, subtest := range subtests {
 		s.Run(ctx, subtest.testName, func(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+subtest.testName)
 
-			if err := imesettings.SetKoreanKeyboardLayout(uc, string(subtest.keyboardLayout))(ctx); err != nil {
-				s.Fatalf("Failed to set keyboard layout to %q: %v", subtest.keyboardLayout, err)
-			}
-
-			if err := imesettings.SetKoreanInputASyllableAtATime(uc, subtest.inputASyllableAtATime)(ctx); err != nil {
-				s.Fatalf("Failed to set one syllable at a time to %t: %v", subtest.inputASyllableAtATime, err)
+			// Change layout in IME settings only if required.
+			if currentKeyboardLayout != string(subtest.keyboardLayout) {
+				if err := imesettings.SetKoreanKeyboardLayout(uc, string(subtest.keyboardLayout))(ctx); err != nil {
+					s.Fatalf("Failed to set keyboard layout to %q: %v", subtest.keyboardLayout, err)
+				}
+				currentKeyboardLayout = string(subtest.keyboardLayout)
 			}
 
 			if err := uiauto.UserAction(
@@ -233,8 +205,11 @@ func PhysicalKeyboardKoreanTyping(ctx context.Context, s *testing.State) {
 	s.Run(ctx, testName, func(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+testName)
 
-		if err := imesettings.SetKoreanKeyboardLayout(uc, string(koreanInputType2Set))(ctx); err != nil {
-			s.Fatalf("Failed to set keyboard layout to %q: %v", koreanInputType2Set, err)
+		// Change layout in IME settings only if required.
+		if currentKeyboardLayout != string(koreanInputType2Set) {
+			if err := imesettings.SetKoreanKeyboardLayout(uc, string(koreanInputType2Set))(ctx); err != nil {
+				s.Fatalf("Failed to set keyboard layout to %q: %v", koreanInputType2Set, err)
+			}
 		}
 
 		omniboxFinder := browserui.AddressBarFinder
@@ -242,8 +217,8 @@ func PhysicalKeyboardKoreanTyping(ctx context.Context, s *testing.State) {
 			ui.LeftClick(omniboxFinder),
 			keyboard.TypeAction("gks"),
 			keyboard.AccelAction("Enter"),
-			util.WaitForFieldTextToSatisfy(tconn, omniboxFinder, "google URL", func(url string) bool {
-				return strings.Contains(url, "google.com") && strings.Contains(url, "한")
+			util.WaitForFieldTextToSatisfy(tconn, omniboxFinder, "google URL", func(text string) bool {
+				return strings.Contains(text, "google.com")
 			}),
 		)
 

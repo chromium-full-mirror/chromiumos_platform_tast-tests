@@ -304,35 +304,6 @@ func SetKoreanKeyboardLayout(uc *useractions.UserContext, keyboardLayout string)
 	)
 }
 
-// SetKoreanInputASyllableAtATime returns a user action to change 'Input a syllable at a time' setting.
-func SetKoreanInputASyllableAtATime(uc *useractions.UserContext, value bool) uiauto.Action {
-	action := func(ctx context.Context) error {
-		setting, err := LaunchAtInputsSettingsPage(ctx, uc.TestAPIConn(), uc.Chrome())
-		if err != nil {
-			return errors.Wrap(err, "failed to launch input settings")
-		}
-
-		return uiauto.Combine("test input method settings change",
-			setting.OpenInputMethodSetting(uc.TestAPIConn(), ime.Korean),
-			setting.ChangeKoreanInputASyllableAtATime(uc.Chrome(), value),
-			setting.Close,
-		)(ctx)
-	}
-
-	return uiauto.UserAction(
-		"Change Korean input a syllable at a time",
-		action,
-		uc,
-		&useractions.UserActionCfg{
-			Attributes: map[string]string{
-				useractions.AttributeFeature:      useractions.FeatureIMESpecific,
-				useractions.AttributeTestScenario: fmt.Sprintf("Change input a syllable at a time to %t", value),
-			},
-			Tags: []useractions.ActionTag{useractions.ActionTagEssentialInputs},
-		},
-	)
-}
-
 func closeJapaneseSettings(uc *useractions.UserContext) uiauto.Action {
 	const url = "chrome-extension://jkghodnilhceideoidjikpgommlajknk/mozc_option.html"
 	return func(ctx context.Context) error {
