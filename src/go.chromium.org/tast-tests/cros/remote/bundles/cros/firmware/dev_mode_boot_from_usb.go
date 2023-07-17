@@ -68,11 +68,14 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 	}
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Minute)
 	defer cancel()
 
 	// Set dev_boot_usb back to 0 at the end of the test.
 	defer func(ctx context.Context) {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to reconnect to dut: ", err)
+		}
 		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=0").Run(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to set crossystem dev_boot_usb to 0: ", err)
 		}
@@ -109,22 +112,6 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		// time. 8 minutes appeared to help when the test was run on leased machines,
 		// though this duration might have also covered the time for remote connection.
 		reconnectTimeout = 8 * time.Minute
-	}
-
-	ms, err := firmware.NewModeSwitcher(ctx, h)
-	if err != nil {
-		s.Fatal("Failed to create mode switcher: ", err)
-	}
-
-	// Rebooting DUT would ensure previous records wiped in
-	// the firmware log, and start a new one.
-	if err := ms.PowerOff(ctx); err != nil {
-		s.Fatal("Failed to power off dut: ", err)
-	}
-	// GoBigSleepLint: On some machines, it takes time for the firmware log to
-	// be completely cleaned following power-off.
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		s.Fatal("Failed to sleep for 5 seconds: ", err)
 	}
 
 	h.CloseRPCConnection(ctx)
@@ -299,7 +286,7 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		"Invalid external disk in dev mode",
 	}
 
-	firmwareLog, err := h.DUT.Conn().CommandContext(ctx, "cat", "/sys/firmware/log").Output(ssh.DumpLogOnError)
+	firmwareLog, err := h.DUT.Conn().CommandContext(ctx, "cbmem", "-1").Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed to read firmware log: ", err)
 	}
