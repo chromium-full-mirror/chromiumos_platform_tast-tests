@@ -7,7 +7,6 @@ package cellular
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -34,7 +33,7 @@ func init() {
 		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim", "cellular_e2e"},
-		Fixture:      fixture.FakeDMSEnrolled,
+		Fixture:      "cellularWithFakeDMSEnrolledAndTestSIM",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
 		},

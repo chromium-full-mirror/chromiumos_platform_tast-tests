@@ -24,7 +24,7 @@ func init() {
 		Contacts:     []string{"chromeos-cellular-team@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
-		Fixture:      "cellular",
+		Fixture:      "cellularTestESIM",
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
 			Name: "hermes_only",

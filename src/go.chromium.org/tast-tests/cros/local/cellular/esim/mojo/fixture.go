@@ -27,7 +27,7 @@ func init() {
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Parent:          "cellular",
+		Parent:          "cellularTestESIM",
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "chromeLoggedInWithMojoEuicc",

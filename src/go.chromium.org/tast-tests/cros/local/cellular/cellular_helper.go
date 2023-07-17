@@ -39,7 +39,8 @@ import (
 	"go.chromium.org/tast/core/timing"
 )
 
-const defaultTimeout = shillconst.DefaultTimeout
+const defaultTimeout = 30 * time.Second
+const longTimeout = 120 * time.Second
 
 // ModemInfo Gets modem info from host_info_labels.
 type ModemInfo struct {
@@ -124,7 +125,7 @@ func NewHelper(ctx context.Context) (*Helper, error) {
 	}
 	helper := Helper{Manager: manager, Device: device}
 
-	if err := helper.EnsureDefaultService(ctx); err != nil {
+	if err := helper.EnsureEnabled(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to find default Cellular Service")
 	}
 
@@ -271,25 +272,31 @@ func (h *Helper) WaitForEnabledState(ctx context.Context, expected bool) error {
 	})
 }
 
-// EnsureDefaultService attempts to ensure that Cellular is enabled and that a
-// connectable default Service is available. If no Service is initially available,
-// the modem will be reset and a second check for a connectable service is performed.
-func (h *Helper) EnsureDefaultService(ctx context.Context) error {
+// EnsureEnabled attempts to ensure that Cellular is enabled.
+func (h *Helper) EnsureEnabled(ctx context.Context) error {
 	// Ensure Cellular is enabled.
-	manager, err := shill.NewManager(ctx)
+	enabled, err := h.Manager.IsEnabled(ctx, shill.TechnologyCellular)
 	if err != nil {
-		return errors.Wrap(err, "failed to create Manager object")
-	}
-	if enabled, err := manager.IsEnabled(ctx, shill.TechnologyCellular); err != nil {
 		return errors.Wrap(err, "error requesting enabled state")
-	} else if !enabled {
+	}
+	if !enabled {
 		if _, err := h.Enable(ctx); err != nil {
 			return errors.Wrap(err, "unable to enable Cellular")
 		}
 	}
+	return nil
+}
+
+// EnsureDefaultService attempts to ensure that Cellular is enabled and that a
+// connectable default Service is available. If no Service is initially available,
+// the modem will be reset and a second check for a connectable service is performed.
+func (h *Helper) EnsureDefaultService(ctx context.Context) error {
+	if err := h.EnsureEnabled(ctx); err != nil {
+		return errors.Wrap(err, "failed to ensure enabled state")
+	}
 
 	// Ensure a Cellular Service is available.
-	if _, err = h.FindServiceForDevice(ctx); err != nil {
+	if _, err := h.FindServiceForDevice(ctx); err != nil {
 		// If not available, try resetting the modem.
 		if _, err := h.ResetModem(ctx); err != nil {
 			return errors.Wrap(err, "failed to reset modem waiting for default cellular service")
@@ -385,8 +392,7 @@ func (h *Helper) FindServiceForDeviceWithProps(ctx context.Context, props map[st
 		props[k] = v
 	}
 
-	timeout := 120 * time.Second
-	service, err := h.Manager.WaitForServiceProperties(ctx, props, timeout)
+	service, err := h.Manager.WaitForServiceProperties(ctx, props, longTimeout)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Service not found for: %+v", props)
 	}
@@ -535,7 +541,7 @@ func (h *Helper) Connect(ctx context.Context) (*shill.Service, error) {
 	if isConnected, err := service.IsConnected(ctx); err != nil {
 		return nil, errors.Wrapf(err, "unable to get the connected state for %q", name)
 	} else if !isConnected {
-		if err := h.ConnectToServiceWithTimeout(ctx, service, 90*time.Second); err != nil {
+		if err := h.ConnectToServiceWithTimeout(ctx, service, longTimeout); err != nil {
 			return nil, errors.Wrapf(err, "unable to connect to the default service %q", name)
 		}
 	}
@@ -688,7 +694,7 @@ func (h *Helper) resetShill(ctx context.Context, path string) []error {
 	expectProps := map[string]interface{}{
 		shillconst.ServicePropertyIsConnected: true,
 	}
-	if _, err := manager.WaitForServiceProperties(ctx, expectProps, 30*time.Second); err != nil {
+	if _, err := manager.WaitForServiceProperties(ctx, expectProps, defaultTimeout); err != nil {
 		errs = append(errs, errors.Wrap(err, "failed to wait for connected service"))
 	}
 

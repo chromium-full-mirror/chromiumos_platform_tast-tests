@@ -42,6 +42,17 @@ func init() {
 		Impl:            &cellularFixture{},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularTestESIM",
+		Desc:            "Cellular tests are safe to run with a Test SIM",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		SetUpTimeout:    4 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            &cellularFixture{useTestESIM: true},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFakeDMSEnrolled",
 		Desc:            "Cellular tests are safe to run and a fake DMS (for managed eSIM profiles) is running",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jiajunzhang@google.com"},
@@ -54,7 +65,19 @@ func init() {
 		Parent:          fixture.FakeDMSEnrolled,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            "cellularWithFakeDMSEnrolledAndFunctioningSim",
+		Name:            "cellularWithFakeDMSEnrolledAndTestSIM",
+		Desc:            "Cellular tests are safe to run that require a Test SIM and a fake DMS (for managed eSIM profiles) is running",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jiajunzhang@google.com"},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            &cellularFixture{useFakeDMS: true, useTestESIM: true},
+		Parent:          fixture.FakeDMSEnrolled,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularWithFakeDMSEnrolledAndFunctioningSIM",
 		Desc:            "Cellular tests are safe to run that require a functioning SIM and a fake DMS (for managed eSIM profiles) is running",
 		Contacts:        []string{"cros-connectivity@google.com", "jiajunz@google.com"},
 		SetUpTimeout:    3 * time.Minute,
@@ -62,7 +85,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{useFakeDMS: true, checkSim: true},
+		Impl:            &cellularFixture{useFakeDMS: true, checkSIM: true},
 		Parent:          fixture.FakeDMSEnrolled,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -100,7 +123,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{useRoaming: true, checkSim: true},
+		Impl:            &cellularFixture{useRoaming: true, checkSIM: true},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFunctioningSim",
@@ -111,7 +134,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{useRoaming: false, checkSim: true},
+		Impl:            &cellularFixture{useRoaming: false, checkSIM: true},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularPower",
@@ -122,7 +145,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{checkSim: true},
+		Impl:            &cellularFixture{checkSIM: true},
 		Parent:          "powerMetricsNoUI",
 	})
 }
@@ -134,7 +157,8 @@ type cellularFixture struct {
 	restartMM                 bool
 	useFakeDMS                bool
 	useRoaming                bool
-	checkSim                  bool
+	useTestESIM               bool
+	checkSIM                  bool
 	hasArc                    bool
 	// Fixture variables
 	helper          *Helper
@@ -174,6 +198,12 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to create Helper: ", err)
 	}
 	f.helper = helper
+
+	if !f.useTestESIM {
+		if err := helper.EnsureDefaultService(ctx); err != nil {
+			s.Fatal("Failed to ensure default service: ", err)
+		}
+	}
 
 	sfish, err := starfish.NewStarfish(ctx)
 	if err != nil {
@@ -255,12 +285,12 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}
 
-	if f.checkSim {
+	if f.checkSIM {
 		if _, err := f.helper.Connect(ctx); err != nil {
-			s.Fatal("Failed to connect for checkSim: ", err)
+			s.Fatal("Failed to connect for checkSIM: ", err)
 		}
 		if _, err := f.helper.Disconnect(ctx); err != nil {
-			s.Fatal("Failed to disconnect for checkSim: ", err)
+			s.Fatal("Failed to disconnect for checkSIM: ", err)
 		}
 	}
 	return &FixtData{fdms, a}

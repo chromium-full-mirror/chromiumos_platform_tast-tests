@@ -41,9 +41,12 @@ func HostStressEnableDisable(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to disable modem")
 			}
 			s.Log("Enable")
-			// Enable and get service to set autoconnect based on test parameters.
 			if _, err := helper.Enable(ctx); err != nil {
 				return errors.Wrap(err, "failed to enable modem")
+			}
+			s.Log("Find Service")
+			if _, err := helper.FindServiceForDevice(ctx); err != nil {
+				return errors.Wrap(err, "failed to find default Service")
 			}
 			ipv4, ipv6, err := helper.GetNetworkProvisionedCellularIPTypes(ctx)
 			if err != nil {
