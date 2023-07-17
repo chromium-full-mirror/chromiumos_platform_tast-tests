@@ -616,9 +616,16 @@ func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 	// stays at the bottom of power_log.html page.
 	types = append(types, "perf")
 
-	for _, metrics := range typeToMetricsMap {
-		// Numerical order: cpu-C0, cpu-C1E, cpu-C6, cpu-C8, cpu-C10.
-		sortMetricsNumerically(ctx, metrics)
+	for metricType, metrics := range typeToMetricsMap {
+		// Sort the following types in numerical order: cpu-C0, cpu-C1E, cpu-C6, cpu-C8, cpu-C10.
+		if metricType == "cpuidle" || metricType == "gpuidle" || metricType == "cpupkg" {
+			sortMetricsNumerically(ctx, metrics)
+			continue
+		}
+		// Sort all other types in albetical order ignoring cases.
+		sort.Slice(metrics, func(i, j int) bool {
+			return strings.ToLower(metrics[i]) < strings.ToLower(metrics[j])
+		})
 	}
 
 	rowIndentation := strings.Repeat(" ", 12)
