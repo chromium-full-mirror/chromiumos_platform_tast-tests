@@ -67,5 +67,5 @@ var lenovoModelList = []string{
 
 // LenovoModels returns hardwareDeps condition with list of all Lenovo models.
 func LenovoModels() hwdep.Deps {
-	return hwdep.D(hwdep.Model(hpModelList...))
+	return hwdep.D(hwdep.Model(lenovoModelList...))
 }
