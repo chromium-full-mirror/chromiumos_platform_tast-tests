@@ -109,6 +109,19 @@ func Run(ctx context.Context, outDir string, fixtValue interface{}, config Confi
 	return
 }
 
+func convertUnitToDirection(unit string) perf.Direction {
+	switch strings.ToLower(unit) {
+	case "us":
+		return perf.SmallerIsBetter
+	case "mpixels_sec":
+		return perf.BiggerIsBetter
+	case "celsius":
+		return perf.SmallerIsBetter
+	default:
+		return perf.BiggerIsBetter
+	}
+}
+
 // analyzeSummary analyze the output of glbench and write the result to resultPath as well as saving the perf value to pv.
 // The function returns the list of failed tests if found.
 func analyzeSummary(summary, resultPath string, pv *perf.Values) ([]string, error) {
@@ -150,7 +163,7 @@ func analyzeSummary(summary, resultPath string, pv *perf.Values) ([]string, erro
 			pv.Set(perf.Metric{
 				Name:      testName,
 				Unit:      unit,
-				Direction: perf.BiggerIsBetter,
+				Direction: convertUnitToDirection(unit),
 			}, score)
 			continue
 		}
