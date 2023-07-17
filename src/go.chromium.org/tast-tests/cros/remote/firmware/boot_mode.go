@@ -264,11 +264,6 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 		if err := ms.PowerOff(ctx); err != nil {
 			return errors.Wrap(err, "powering off DUT")
 		}
-		testing.ContextLog(ctx, "Sleeping for 20 seconds")
-		// GoBigSleepLint: b/268492022 Ensure DUT fully off before setting it on.
-		if err := testing.Sleep(ctx, 20*time.Second); err != nil {
-			return errors.Wrap(err, "failed to sleep for 20 seconds")
-		}
 		if ok, err := h.Servo.HasControl(ctx, string(servo.ImageUSBKeyPwr)); err != nil {
 			return errors.Wrap(err, "failed checking control ImageUSBKeyPwr")
 		} else if ok {
@@ -998,11 +993,6 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 	if err := ms.PowerOff(ctx); err != nil {
 		return errors.Wrap(err, "powering off DUT")
 	}
-	testing.ContextLog(ctx, "Sleeping for 20 seconds")
-	// GoBigSleepLint: b/268492022 Ensure DUT fully off before setting it on.
-	if err := testing.Sleep(ctx, 20*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep for 20 seconds")
-	}
 	// Booting into recovery mode seems to work better if you don't enable the USB key until after the recovery power state.
 	if usbMux == servo.USBMuxDUT {
 		testing.ContextLog(ctx, "Powering off USB")
@@ -1113,30 +1103,33 @@ func (ms *ModeSwitcher) PowerOff(ctx context.Context) error {
 	if err := h.CloseRPCConnection(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to close rpc connection: ", err)
 	}
+	waitForPowerOff := func(ctx context.Context) error {
+		// If Chrome EC exists, check power state reaches G3,
+		// otherwise wait for DUT unreachable.
+		if h.Config.ChromeEC {
+			return h.WaitForPowerStates(ctx, PowerStateInterval, PowerStateTimeout, "G3")
+		}
+		return ms.waitUnreachable(ctx)
+	}
 	if h.DUT.Connected(ctx) {
 		// Since the DUT will power off, deadline exceeded is expected here.
 		if err := h.DUT.Conn().CommandContext(powerOffCtx, "poweroff").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
 			return errors.Wrap(err, "DUT poweroff")
 		}
-
-		// Try reading the power state from the EC.
-		err := h.WaitForPowerStates(ctx, PowerStateInterval, PowerStateTimeout, "G3", "S5")
+		err := waitForPowerOff(ctx)
 		if err == nil {
 			return nil
 		}
-		testing.ContextLogf(ctx, "Failed to get G3 or S5 power state: %s", err)
+		if !errors.Is(err, context.DeadlineExceeded) {
+			return errors.Wrap(err, "unexpected error in waiting for the dut to reach power-off")
+		}
+		testing.ContextLog(ctx, "Command poweroff failed to power off DUT: ", err)
 	}
-
-	// We didn't reach G3/S5 so try having servo power off instead.
+	// We didn't reach G3, or find DUT unreachable, so try having servo power off instead.
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateOff); err != nil {
 		return errors.Wrap(err, "set power_state:off")
 	}
-
-	// If the EC didn't return a power state, try wait unreachable instead.
-	if err := ms.waitUnreachable(ctx); err != nil {
-		return errors.Wrap(err, "waiting for DUT to be unreachable after sending poweroff command")
-	}
-	return nil
+	return waitForPowerOff(ctx)
 }
 
 func (ms *ModeSwitcher) waitUnreachable(ctx context.Context) error {

@@ -77,6 +77,7 @@ type Config struct {
 	ECCapability          []ECCapability    `json:"ec_capability"`
 	ModeSwitcherType      ModeSwitcherType  `json:"mode_switcher_type"`
 	IsDetachable          bool              `json:"is_detachable"`
+	ChromeEC              bool              `json:"chrome_ec"`
 	PowerButtonDevSwitch  bool              `json:"power_button_dev_switch"`
 	RecButtonDevSwitch    bool              `json:"rec_button_dev_switch"`
 	Hibernate             bool              `json:"hibernate"`
