@@ -48,9 +48,10 @@ var (
 	//     SIGN IN: User is not signed in yet.
 	//     Agree to the Terms of Service: User is in the registration flow.
 	//     Launch Meeting: Choose to "Join from Your Browser".
-	myAccountLink       = nodewith.NameRegex(regexp.MustCompile("(?i)My Account")).Role(role.Link).Ancestor(zoomMainWebArea)
-	myProfileImg        = nodewith.Name("Profile picture").Role(role.Image).Ancestor(zoomMainWebArea)
-	signInLink          = nodewith.NameRegex(regexp.MustCompile("(?i)sign in")).Role(role.Link).Ancestor(zoomMainWebArea)
+	myAccountLink = nodewith.NameRegex(regexp.MustCompile("(?i)My Account")).Role(role.Link).Ancestor(zoomMainWebArea)
+	myProfileImg  = nodewith.Name("Profile picture").Role(role.Image).Ancestor(zoomMainWebArea)
+	// There may be multiple "sign in" links, so add First() here.
+	signInLink          = nodewith.NameRegex(regexp.MustCompile("(?i)sign in")).Role(role.Link).Ancestor(zoomMainWebArea).First()
 	agreeToTermsArea    = nodewith.NameContaining("Agree to the Terms of Service").Role(role.RootWebArea)
 	launchMeetingWindow = nodewith.Name("Launch Meeting - Zoom").Role(role.Window)
 
