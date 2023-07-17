@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
@@ -33,7 +32,15 @@ func init() {
 		BugComponent: "b:1131776",
 		Attr:         []string{"group:bluetooth", "bluetooth_flaky"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      fixture.ChromeLoggedInQsRevampEnabled,
+		Params: []testing.Param{{
+			Name:      "floss_disabled",
+			Fixture:   "bluetoothEnabledWithBlueZ",
+			ExtraAttr: []string{"bluetooth_flaky"},
+		}, {
+			Name:      "floss_enabled",
+			Fixture:   "bluetoothEnabledWithFloss",
+			ExtraAttr: []string{"bluetooth_floss_flaky"},
+		}},
 	})
 }
 
