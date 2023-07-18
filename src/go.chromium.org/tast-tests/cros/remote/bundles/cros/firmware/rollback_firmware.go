@@ -8,12 +8,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"regexp"
 	"strings"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/flashrom"
+	"go.chromium.org/tast-tests/cros/common/servo"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -57,10 +59,6 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 	var cutoffEvent reporters.Event
 
 	func() {
-		if err := h.RequireBiosServiceClient(ctx); err != nil {
-			s.Fatal("Failed to require BiosServiceClient: ", err)
-		}
-
 		shouldRestoreFirmware := false
 
 		localTempDir, err := os.MkdirTemp("", "fwlocal*")
@@ -104,12 +102,15 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 						return
 					}
 					if out, err := flashromInstance.Write(ctx, "", true /*noVerifyAll=*/, false /*noverify=*/, "", []string{
-						fmt.Sprintf("%s:%s", bios.FWSignAImageSection, fmt.Sprintf("%s/vb.a", servoTempDir)),
-						fmt.Sprintf("%s:%s", bios.FWSignBImageSection, fmt.Sprintf("%s/vb.b", servoTempDir)),
+						fmt.Sprintf("%s:%s/%s.bin", bios.FWSignAImageSection, servoTempDir, bios.FWSignAImageSection),
+						fmt.Sprintf("%s:%s/%s.bin", bios.FWSignBImageSection, servoTempDir, bios.FWSignBImageSection),
 					}); err != nil {
 						s.Errorf("Failed to restore A/B signatures: %v output = %s", err, string(out))
 					}
 				}()
+				if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+					s.Error("Hard reset failed: ", err)
+				}
 				if err := h.WaitConnect(ctx); err != nil {
 					s.Error("Failed to connect to DUT: ", err)
 				}
@@ -131,7 +132,46 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 			}
 		}(cleanupContext)
 
+		activeFW, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
+		if err != nil {
+			s.Fatal("Failed to get active FW: ", err)
+		}
+		s.Log("Current FW is ", activeFW)
+
+		if activeFW == string(fwCommon.RWSectionA) {
+			if err := firmware.SetFWTries(ctx, h.DUT, fwCommon.RWSectionB, 3); err != nil {
+				s.Fatal("Failed to set FW tries to B: ", err)
+			}
+		} else {
+			if err := firmware.SetFWTries(ctx, h.DUT, fwCommon.RWSectionA, 3); err != nil {
+				s.Fatal("Failed to set FW tries to A: ", err)
+			}
+		}
+
+		ms, err := firmware.NewModeSwitcher(ctx, h)
+		if err != nil {
+			s.Fatal("Creating mode switcher: ", err)
+		}
+
+		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+			s.Fatal("Failed to reboot on alternate firmware: ", err)
+		}
+		newFW, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
+		if err != nil {
+			s.Error("Failed to get active FW: ", err)
+		}
+		s.Log("Current FW is ", newFW)
+		if activeFW == newFW {
+			s.Fatalf("Failed to boot to alternate firmware. Only %s is working. Run chromeos-firmwareupdate --mode=recovery", activeFW)
+		}
+		// Since we switched, the active is now different.
+		activeFW = newFW
+
 		s.Log("Backing up AP firmware")
+		if err := h.RequireBiosServiceClient(ctx); err != nil {
+			s.Fatal("Failed to require BiosServiceClient: ", err)
+		}
+
 		backupInfo, err := h.BiosServiceClient.BackupImageSection(ctx, &fwpb.FWSectionInfo{
 			Section:    fwpb.ImageSection_EmptyImageSection,
 			Programmer: fwpb.Programmer_BIOSProgrammer,
@@ -142,65 +182,29 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 		}
 		s.Log("Backup on DUT written to ", backupInfo.Path)
 
+		// Extract the full active firmware (APRW?ImageSection), as well as the signature block (FWSign?ImageSection).
+		activeFirmwareBody := bios.FWBodyAImageSection
+		inactiveFirmwareBody := bios.FWBodyBImageSection
+		activeSignSection := bios.FWSignAImageSection
+		inactiveSignSection := bios.FWSignBImageSection
+		if activeFW == string(fwCommon.RWSectionB) {
+			activeFirmwareBody = bios.FWBodyBImageSection
+			inactiveFirmwareBody = bios.FWBodyAImageSection
+			activeSignSection = bios.FWSignBImageSection
+			inactiveSignSection = bios.FWSignAImageSection
+		}
+		activeBodyFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, activeFirmwareBody)
+		inactiveBodyFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, inactiveFirmwareBody)
+		activeSignFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, activeSignSection)
+		inactiveSignFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, inactiveSignSection)
 		// TODO(b/276861597): Use futility library.
 		if err := h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", backupInfo.Path, "-x",
-			fmt.Sprintf("%s:%s/vb.a", bios.FWSignAImageSection, remoteTempDir), fmt.Sprintf("VBLOCK_B:%s/vb.b", remoteTempDir),
-			fmt.Sprintf("FW_MAIN_A:%s/fw.a", remoteTempDir), fmt.Sprintf("FW_MAIN_B:%s/fw.b", remoteTempDir),
+			fmt.Sprintf("%s:%s", activeFirmwareBody, activeBodyFile),
+			fmt.Sprintf("%s:%s", activeSignSection, activeSignFile),
+			fmt.Sprintf("%s:%s", inactiveFirmwareBody, inactiveBodyFile),
+			fmt.Sprintf("%s:%s", inactiveSignSection, inactiveSignFile),
 		).Run(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to extract sections: ", err)
-		}
-		s.Log("Downloading files to ", localTempDir)
-		if err := linuxssh.GetFile(ctx, h.DUT.Conn(), fmt.Sprintf("%s/vb.a", remoteTempDir), fmt.Sprintf("%s/vb.a", localTempDir), linuxssh.DereferenceSymlinks); err != nil {
-			s.Fatal("Failed to download vb.a: ", err)
-		}
-		if err := linuxssh.GetFile(ctx, h.DUT.Conn(), fmt.Sprintf("%s/vb.b", remoteTempDir), fmt.Sprintf("%s/vb.b", localTempDir), linuxssh.DereferenceSymlinks); err != nil {
-			s.Fatal("Failed to download vb.b: ", err)
-		}
-		s.Log("Copying files to servohost ", servoTempDir)
-		if err := h.ServoProxy.PutFiles(ctx, false, map[string]string{
-			fmt.Sprintf("%s/vb.a", localTempDir): fmt.Sprintf("%s/vb.a", servoTempDir),
-			fmt.Sprintf("%s/vb.b", localTempDir): fmt.Sprintf("%s/vb.b", servoTempDir),
-		}); err != nil {
-			s.Fatal("Failed to copy files to servo host: ", err)
-		}
-		// Change the firmware version to 0 and resign. The normal firmware version is 1 or more, so 0 will be a rollback.
-		resignedVBlockA := fmt.Sprintf("%s/resigned-vb.a", remoteTempDir)
-		resignedVBlockB := fmt.Sprintf("%s/resigned-vb.b", remoteTempDir)
-		// TODO(b/276861597): Use futility library.
-		if err := h.DUT.Conn().CommandContext(ctx, "futility", "vbutil_firmware", "--vblock", resignedVBlockA,
-			"--fv", fmt.Sprintf("%s/fw.a", remoteTempDir), "--version", "0",
-			"--keyblock", "/usr/share/vboot/devkeys/firmware.keyblock", "--signprivate", "/usr/share/vboot/devkeys/firmware_data_key.vbprivk",
-			"--kernelkey", "/usr/share/vboot/devkeys/kernel_subkey.vbpubk",
-		).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to sign vb.a: ", err)
-		}
-		// TODO(b/276861597): Use futility library.
-		if err := h.DUT.Conn().CommandContext(ctx, "futility", "vbutil_firmware", "--vblock", resignedVBlockB,
-			"--fv", fmt.Sprintf("%s/fw.b", remoteTempDir), "--version", "0",
-			"--keyblock", "/usr/share/vboot/devkeys/firmware.keyblock", "--signprivate", "/usr/share/vboot/devkeys/firmware_data_key.vbprivk",
-			"--kernelkey", "/usr/share/vboot/devkeys/kernel_subkey.vbpubk",
-		).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to sign vb.b: ", err)
-		}
-		if err := h.DUT.Conn().CommandContext(ctx, "truncate", "-r", fmt.Sprintf("%s/vb.a", remoteTempDir), resignedVBlockA).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to extend vb.a: ", err)
-		}
-		if err := h.DUT.Conn().CommandContext(ctx, "truncate", "-r", fmt.Sprintf("%s/vb.b", remoteTempDir), resignedVBlockB).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to extend vb.b: ", err)
-		}
-
-		activeFW, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
-		if err != nil {
-			s.Fatal("Failed to get active FW: ", err)
-		}
-		var flashOrder []bios.ImageSection
-		var flashPaths []string
-		if activeFW == string(fwCommon.RWSectionA) {
-			flashOrder = []bios.ImageSection{bios.FWSignAImageSection, bios.FWSignBImageSection}
-			flashPaths = []string{resignedVBlockA, resignedVBlockB}
-		} else {
-			flashOrder = []bios.ImageSection{bios.FWSignBImageSection, bios.FWSignAImageSection}
-			flashPaths = []string{resignedVBlockB, resignedVBlockA}
 		}
 
 		var flashromConfig flashrom.Config
@@ -218,21 +222,61 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 			s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
 		}
 
+		s.Log("Downloading files to ", localTempDir)
+		if err := linuxssh.GetFile(ctx, h.DUT.Conn(), activeSignFile, fmt.Sprintf("%s/%s", localTempDir, path.Base(activeSignFile)), linuxssh.DereferenceSymlinks); err != nil {
+			s.Fatal("Failed to download activeSig: ", err)
+		}
+		if err := linuxssh.GetFile(ctx, h.DUT.Conn(), inactiveSignFile, fmt.Sprintf("%s/%s", localTempDir, path.Base(inactiveSignFile)), linuxssh.DereferenceSymlinks); err != nil {
+			s.Fatal("Failed to download inactiveSig: ", err)
+		}
+		s.Log("Copying file to servohost ", servoTempDir)
+		if err := h.ServoProxy.PutFiles(ctx, false, map[string]string{
+			fmt.Sprintf("%s/%s.bin", localTempDir, bios.FWSignAImageSection): fmt.Sprintf("%s/%s.bin", servoTempDir, bios.FWSignAImageSection),
+			fmt.Sprintf("%s/%s.bin", localTempDir, bios.FWSignBImageSection): fmt.Sprintf("%s/%s.bin", servoTempDir, bios.FWSignBImageSection),
+		}); err != nil {
+			s.Fatal("Failed to copy files to servo host: ", err)
+		}
+		// Change the firmware version to 0 and resign. The normal firmware version is 1 or more, so 0 will be a rollback.
+		activeRollback := fmt.Sprintf("%s/activeRollback", remoteTempDir)
+		// TODO(b/276861597): Use futility library.
+		if err := h.DUT.Conn().CommandContext(ctx, "futility", "vbutil_firmware", "--vblock", activeRollback,
+			"--fv", activeBodyFile, "--version", "0",
+			"--keyblock", "/usr/share/vboot/devkeys/firmware.keyblock", "--signprivate", "/usr/share/vboot/devkeys/firmware_data_key.vbprivk",
+			"--kernelkey", "/usr/share/vboot/devkeys/kernel_subkey.vbpubk",
+		).Run(ssh.DumpLogOnError); err != nil {
+			s.Fatal("Failed to sign active vblock: ", err)
+		}
+		if err := h.DUT.Conn().CommandContext(ctx, "truncate", "-r", activeSignFile, activeRollback).Run(ssh.DumpLogOnError); err != nil {
+			s.Fatalf("Failed to extend %s: %v", activeRollback, err)
+		}
+		inactiveRollback := fmt.Sprintf("%s/inactiveRollback", remoteTempDir)
+		// TODO(b/276861597): Use futility library.
+		if err := h.DUT.Conn().CommandContext(ctx, "futility", "vbutil_firmware", "--vblock", inactiveRollback,
+			"--fv", inactiveBodyFile, "--version", "0",
+			"--keyblock", "/usr/share/vboot/devkeys/firmware.keyblock", "--signprivate", "/usr/share/vboot/devkeys/firmware_data_key.vbprivk",
+			"--kernelkey", "/usr/share/vboot/devkeys/kernel_subkey.vbpubk",
+		).Run(ssh.DumpLogOnError); err != nil {
+			s.Fatal("Failed to sign inactive vblock: ", err)
+		}
+		if err := h.DUT.Conn().CommandContext(ctx, "truncate", "-r", inactiveSignFile, inactiveRollback).Run(ssh.DumpLogOnError); err != nil {
+			s.Fatalf("Failed to extend %s: %v", inactiveRollback, err)
+		}
+
 		shouldRestoreFirmware = true
-		s.Log("Rolling back ", flashOrder[0])
+		s.Log("Rolling back ", activeSignSection)
 		if out, err := flashromInstance.Write(ctx, "", true /*noVerifyAll=*/, false /*noverify=*/, "", []string{
-			fmt.Sprintf("%s:%s", flashOrder[0], flashPaths[0]),
+			fmt.Sprintf("%s:%s", activeSignSection, activeRollback),
 		}); err != nil {
 			s.Errorf("Failed to flash: %v output = %s", err, string(out))
 		}
-		ms, err := firmware.NewModeSwitcher(ctx, h)
+		ms, err = firmware.NewModeSwitcher(ctx, h)
 		if err != nil {
 			s.Fatal("Creating mode switcher: ", err)
 		}
 		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
 			s.Fatal("Failed to reboot after rolling back 1 firmware: ", err)
 		}
-		newFW, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
+		newFW, err = h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
 		if err != nil {
 			s.Error("Failed to get active FW: ", err)
 		}
@@ -248,9 +292,9 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 			cutoffEvent = oldEvents[len(oldEvents)-1]
 		}
 
-		s.Log("Rolling back ", flashOrder[1])
+		s.Log("Rolling back ", inactiveSignSection)
 		if out, err := flashromInstance.Write(ctx, "", true /*noVerifyAll=*/, false /*noverify=*/, "", []string{
-			fmt.Sprintf("%s:%s", flashOrder[1], flashPaths[1]),
+			fmt.Sprintf("%s:%s", inactiveSignSection, inactiveRollback),
 		}); err != nil {
 			s.Errorf("Failed to flash: %v output = %s", err, string(out))
 		}
