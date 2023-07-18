@@ -40,6 +40,7 @@ const (
 	AutoCapitalization                     settingOption = "Auto-capitalization"
 	ShowInputOptionsInShelf                settingOption = "Show input options in the shelf"
 	KoreanKeyboardLayout                   settingOption = "Korean keyboard layout"
+	KoreanInputASyllableAtATime            settingOption = "Input a syllable at a time"
 	AutoCorrection                         settingOption = "Auto-correction"
 	SpellingGrammarCheck                   settingOption = "Spelling and grammar check"
 	SpellCheck                             settingOption = "Spell check"
@@ -200,6 +201,11 @@ func (i *IMESettings) ChangeKoreanKeyboardLayout(cr *chrome.Chrome, expected str
 		testing.ContextLogf(ctx, "Changing keyboard layout from %q to %q", currentLayout, expected)
 		return i.SetDropDownOption(cr, string(KoreanKeyboardLayout), expected)(ctx)
 	}
+}
+
+// ChangeKoreanInputASyllableAtATime sets the one syllable at a time setting to a specific value.
+func (i *IMESettings) ChangeKoreanInputASyllableAtATime(cr *chrome.Chrome, expected bool) uiauto.Action {
+	return i.SetToggleOption(cr, string(KoreanInputASyllableAtATime), expected)
 }
 
 // setPKAutoCorrection sets the 'Auto-correction' of PK setting to a specific
