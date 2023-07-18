@@ -46,7 +46,7 @@ var (
 	linuxLink           = nodewith.Name("penguin").Role(role.Link)
 	bruschettaLink      = nodewith.Name(bruconstants.BruschettaVMName).Role(role.Link)
 	linuxTab            = nodewith.NameContaining("@penguin: ").Role(role.Window).ClassName("BrowserFrame")
-	bruschettaTab       = nodewith.NameContaining("chronos@localhost: ").Role(role.Window).ClassName("BrowserFrame")
+	bruschettaTab       = nodewith.NameContaining("chronos@refvm: ").Role(role.Window).ClassName("BrowserFrame")
 	sshTab              = nodewith.NameContaining("chronos@localhost:").Role(role.Window).ClassName("BrowserFrame")
 	rootWindow          = nodewith.NameStartingWith("Terminal").Role(role.Window).ClassName("BrowserFrame")
 	homeTab             = nodewith.Name("Terminal").Role(role.Window).ClassName("BrowserFrame")
