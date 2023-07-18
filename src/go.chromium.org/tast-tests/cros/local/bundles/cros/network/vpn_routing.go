@@ -62,16 +62,14 @@ func init() {
 			Val: vpnRoutingTestCase{
 				vpnType: vpn.TypeL2TPIPsec,
 			},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
-			Fixture:   "vpnEnv",
+			Fixture: "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_evil",
 			Val: vpnRoutingTestCase{
 				vpnType:               vpn.TypeL2TPIPsec,
 				underlayIPIsOverlayIP: true,
 			},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
-			Fixture:   "vpnEnv",
+			Fixture: "vpnEnv",
 		}, {
 			Name: "openvpn_ipv4",
 			Val: vpnRoutingTestCase{
