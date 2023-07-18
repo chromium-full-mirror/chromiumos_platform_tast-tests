@@ -100,15 +100,17 @@ var (
 	// DxNarrowMenuButton export is used to find the navigation menu on narrow views.
 	DxNarrowMenuButton = nodewith.NameContaining("Diagnostics").Role(role.Button)
 
-	defaultTimeout = 20 * time.Second
+	// DefaultTimeout is the default timeout to use when waiting for diagnostics elements in tast.
+	DefaultTimeout = 20 * time.Second
 
-	defaultPolling = testing.PollOptions{Interval: time.Second, Timeout: defaultTimeout}
+	// DefaultPolling is the recommended polling to use when waiting for diagnostics elements in tast.
+	DefaultPolling = testing.PollOptions{Interval: time.Second, Timeout: DefaultTimeout}
 )
 
 // DiagnosticsRootNode returns the root ui node of Diagnotsics app.
 func DiagnosticsRootNode(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
 	ui := uiauto.New(tconn)
-	err := ui.WithTimeout(defaultTimeout).WaitUntilExists(DxRootNode)(ctx)
+	err := ui.WithTimeout(DefaultTimeout).WaitUntilExists(DxRootNode)(ctx)
 	return DxRootNode, err
 }
 
@@ -184,8 +186,8 @@ func ClickNavigationMenuButton(ctx context.Context, tconn *chrome.TestConn) erro
 
 	// Get menu node under Diagnostics app.
 	menuButton := DxNarrowMenuButton.Ancestor(dxRootNode)
-	if err := uiauto.IfSuccessThen(ui.WithTimeout(defaultTimeout).WaitUntilExists(menuButton),
-		ui.WithPollOpts(defaultPolling).LeftClick(menuButton))(ctx); err != nil {
+	if err := uiauto.IfSuccessThen(ui.WithTimeout(DefaultTimeout).WaitUntilExists(menuButton),
+		ui.WithPollOpts(DefaultPolling).LeftClick(menuButton))(ctx); err != nil {
 		return errors.Wrap(err, "menu click failed")
 	}
 	return nil
@@ -196,8 +198,8 @@ func OpenInputPage(ctx context.Context, tconn *chrome.TestConn) error {
 	ClickNavigationMenuButton(ctx, tconn)
 
 	ui := uiauto.New(tconn)
-	if err := uiauto.IfSuccessThen(ui.WithTimeout(defaultTimeout).WaitUntilExists(DxKeyboardTab),
-		ui.WithPollOpts(defaultPolling).LeftClick(DxKeyboardTab))(ctx); err != nil {
+	if err := uiauto.IfSuccessThen(ui.WithTimeout(DefaultTimeout).WaitUntilExists(DxKeyboardTab),
+		ui.WithPollOpts(DefaultPolling).LeftClick(DxKeyboardTab))(ctx); err != nil {
 		return errors.Wrap(err, "input tab click failed")
 	}
 
@@ -212,8 +214,8 @@ func OpenKeyboardTester(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 
 	ui := uiauto.New(tconn)
-	if err := uiauto.IfSuccessThen(ui.WithTimeout(defaultTimeout).WaitUntilExists(DxInternalKeyboardTestButton),
-		ui.WithPollOpts(defaultPolling).LeftClick(DxInternalKeyboardTestButton))(ctx); err != nil {
+	if err := uiauto.IfSuccessThen(ui.WithTimeout(DefaultTimeout).WaitUntilExists(DxInternalKeyboardTestButton),
+		ui.WithPollOpts(DefaultPolling).LeftClick(DxInternalKeyboardTestButton))(ctx); err != nil {
 		return errors.Wrap(err, "test keyboard button click failed")
 	}
 

@@ -9,7 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	da "go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -64,16 +66,26 @@ func InputCheckRegionalKey(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	dxRootNode, err := da.Launch(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to launch diagnostics app: ", err)
+	if err = apps.Launch(ctx, tconn, apps.Diagnostics.ID); err != nil {
+		s.Fatal("Failed to launch diagnostics app")
 	}
 	defer da.Close(cleanupCtx, tconn)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	// Open navigation if device is narrow view.
-	if err := da.ClickNavigationMenuButton(ctx, tconn); err != nil {
-		s.Fatal("Could not click the menu button: ", err)
+	if err = ash.WaitForApp(ctx, tconn, apps.Diagnostics.ID, time.Minute); err != nil {
+		s.Fatal("Diagnostics app did not appear in shelf after launch")
+	}
+
+	ui := uiauto.New(tconn)
+	dxRootNode := da.DxRootNodes[regionCode]
+	if err = ui.WithTimeout(da.DefaultTimeout).WaitUntilExists(dxRootNode)(ctx); err != nil {
+		s.Fatal("Failed to find diagnostics app")
+	}
+
+	menuButton := da.DxNarrowMenuButtons[regionCode].Ancestor(dxRootNode)
+	if err := uiauto.IfSuccessThen(ui.WithTimeout(da.DefaultTimeout).WaitUntilExists(menuButton),
+		ui.WithPollOpts(da.DefaultPolling).LeftClick(menuButton))(ctx); err != nil {
+		s.Fatal("Menu click failed")
 	}
 
 	kb, err := input.Keyboard(ctx)
@@ -91,7 +103,6 @@ func InputCheckRegionalKey(ctx context.Context, s *testing.State) {
 		s.Fatalf("Region code %v has not defined in input button map yet: ", regionCode)
 	}
 	inputTab = inputTab.Ancestor(dxRootNode)
-	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("checks regional keys for region "+regionCode+" keyboard layout",
 		ui.LeftClick(inputTab),
 		ui.LeftClick(internalKeyboardTestButton),
