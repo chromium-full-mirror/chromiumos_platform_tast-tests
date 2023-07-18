@@ -35,6 +35,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/graphics"
@@ -57,18 +58,22 @@ type meetTest struct {
 	// spotlight bot that is in every test.
 	bots []int
 
-	layout        googlemeet.LayoutOption // Type of the layout in the meeting.
-	present       bool                    // Whether it is presenting the Google Docs/Jamboard window.
-	docs          bool                    // Whether it is running with a Google Docs window.
-	jamboard      bool                    // Whether it is running with a Jamboard window.
-	split         bool                    // Whether it is in split screen mode. It can not be true if docs is false.
-	cam           bool                    // Whether the camera is on or not.
-	effects       bool                    // Whether to turn on visual effects.
-	zoomOut       bool                    // Whether to zoom out on both the browser and display.
-	tabSwitchDocs bool                    // Whether to switch between Docs and Meet. It cannot be true if docs is false.
-	duration      time.Duration           // Duration of the meet call. Must be less than test timeout.
-	browserType   browser.Type            // Ash Chrome browser or Lacros.
-	botsOptions   []bond.AddBotsOption    // Customizes the meeting participant bots.
+	layout            googlemeet.LayoutOption // Type of the layout in the meeting.
+	present           bool                    // Whether it is presenting the Google Docs/Jamboard window.
+	docs              bool                    // Whether it is running with a Google Docs window.
+	jamboard          bool                    // Whether it is running with a Jamboard window.
+	split             bool                    // Whether it is in split screen mode. It can not be true if docs is false.
+	cam               bool                    // Whether the camera is on or not.
+	effects           bool                    // Whether to turn on visual effects within Meet.
+	backgroundBlur    bool                    // Whether to turn on platform-level background blur.
+	adjustLighting    bool                    // Whether to turn on the platform-level adjust lighting feature.
+	liveCaptions      bool                    // Whether to turn on live captioning.
+	noiseCancellation bool                    // Whether to turn on noise cancellation.
+	zoomOut           bool                    // Whether to zoom out on both the browser and display.
+	tabSwitchDocs     bool                    // Whether to switch between Docs and Meet. It cannot be true if docs is false.
+	duration          time.Duration           // Duration of the meet call. Must be less than test timeout.
+	browserType       browser.Type            // Ash Chrome browser or Lacros.
+	botsOptions       []bond.AddBotsOption    // Customizes the meeting participant bots.
 }
 
 const defaultTestTimeout = 25 * time.Minute
@@ -143,6 +148,67 @@ func init() {
 				},
 				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
+			}, {
+				Name:              "docs_audio_effects",
+				Timeout:           defaultTestTimeout,
+				ExtraAttr:         []string{"group:cuj"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("yaviks", "pujjoteen", "nirwen", "markarth", "frostflow", "dewatt", "omnigul", "anahera", "gimble", "marasov")),
+				Val: meetTest{
+					bots:              []int{1, 3, 15},
+					layout:            googlemeet.TiledLayout,
+					present:           true,
+					docs:              true,
+					split:             true,
+					cam:               true,
+					zoomOut:           true,
+					liveCaptions:      true,
+					noiseCancellation: true,
+					tabSwitchDocs:     true,
+					browserType:       browser.TypeAsh,
+					botsOptions:       []bond.AddBotsOption{bond.WithAudio("what_color_is_cheese_32bit_48k_stereo.raw")},
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
+			}, {
+				Name:              "docs_video_effects",
+				Timeout:           defaultTestTimeout,
+				ExtraAttr:         []string{"group:cuj"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("yaviks", "pujjoteen", "nirwen", "markarth", "frostflow", "dewatt", "omnigul", "anahera", "gimble", "marasov")),
+				Val: meetTest{
+					bots:           []int{1, 3, 15},
+					layout:         googlemeet.TiledLayout,
+					present:        true,
+					docs:           true,
+					split:          true,
+					cam:            true,
+					zoomOut:        true,
+					backgroundBlur: true,
+					adjustLighting: true,
+					tabSwitchDocs:  true,
+					browserType:    browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
+			}, {
+				Name:              "docs_platform_effects",
+				Timeout:           defaultTestTimeout,
+				ExtraAttr:         []string{"group:cuj"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("yaviks", "pujjoteen", "nirwen", "markarth", "frostflow", "dewatt", "omnigul", "anahera", "gimble", "marasov")),
+				Val: meetTest{
+					bots:              []int{1, 3, 15},
+					layout:            googlemeet.TiledLayout,
+					present:           true,
+					docs:              true,
+					split:             true,
+					cam:               true,
+					zoomOut:           true,
+					backgroundBlur:    true,
+					adjustLighting:    true,
+					liveCaptions:      true,
+					noiseCancellation: true,
+					tabSwitchDocs:     true,
+					browserType:       browser.TypeAsh,
+					botsOptions:       []bond.AddBotsOption{bond.WithAudio("what_color_is_cheese_32bit_48k_stereo.raw")},
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
 			},
 			// 4p Meet variants.
 			{
@@ -1014,6 +1080,26 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	} else {
 		if err := setEffect(ctx, turnOffBlur); err != nil {
 			s.Fatal("Failed to turn off visual effects: ", err)
+		}
+	}
+
+	if meet.liveCaptions ||
+		meet.adjustLighting ||
+		meet.backgroundBlur ||
+		meet.noiseCancellation {
+		s.Log("Toggling platform VC effects")
+		vct := vctray.New(ctx, tconn)
+		blur := vctray.BackgroundBlurOff
+		if meet.backgroundBlur {
+			blur = vctray.BackgroundBlurFull
+		}
+		if err := vct.ChangeSettingsInPanel(
+			vct.SetLiveCaption(meet.liveCaptions),
+			vct.SetAdjustLighting(meet.adjustLighting),
+			vct.SetBackgroundBlur(blur),
+			vct.SetNoiseCancellation(meet.noiseCancellation),
+		)(ctx); err != nil {
+			s.Fatal("Failed to configure platform VC effects: ", err)
 		}
 	}
 

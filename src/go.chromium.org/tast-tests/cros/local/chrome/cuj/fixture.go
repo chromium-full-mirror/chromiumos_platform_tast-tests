@@ -590,6 +590,37 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
+		Desc: "CUJ test fixture with WebRTC event logging and VC platform effects enabled",
+		Contacts: []string{
+			"ramsaroop@chromium.org",
+			"sammc@chromium.org",
+			"cros-sw-perf@google.com",
+			"cros-pe-pnp@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+				chrome.EnableFeatures(
+					"CrOSLateBootAudioAPNoiseCancellation",
+					"CrOSLateBootAudioFlexibleLoopback",
+					"SystemLiveCaption",
+					"VideoConference",
+				),
+			},
+			bt:          browser.TypeAsh,
+			docsBlocker: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithFieldTrials",
 		Desc: "CUJ fixture with all field trials enabled",
 		Contacts: []string{

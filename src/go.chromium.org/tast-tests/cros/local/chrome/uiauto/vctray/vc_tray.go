@@ -33,8 +33,9 @@ var (
 	panelSection = nodewith.HasClass("RootView").Role(role.Dialog).First().Ancestor(
 		nodewith.HasClass("SettingBubbleContainer").Role(role.Window).First(),
 	)
-	adjustLightingButton = nodewith.NameStartingWith("Toggle Improve lighting").Role(role.ToggleButton).Ancestor(panelSection)
-	liveCaptionButton    = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton).Ancestor(panelSection)
+	adjustLightingButton    = nodewith.NameStartingWith("Toggle Improve lighting").Role(role.ToggleButton).Ancestor(panelSection)
+	liveCaptionButton       = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton).Ancestor(panelSection)
+	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton).Ancestor(panelSection)
 
 	bgBlurOffButton   = nodewith.NameContaining("Off").Role(role.Button).Ancestor(panelSection)
 	bgBlurLightButton = nodewith.NameContaining("Light").Role(role.Button).Ancestor(panelSection)
@@ -149,86 +150,60 @@ func (vcTray VCTray) SetBackgroundBlur(blurLevel BackgroundBlurLevel) action.Act
 	}
 }
 
-// adjustLightingEnabled returns whether adjustLighting is enabled.
+// featureEnabled returns whether the specified feature is enabled.
 // It assumes the vcTray panel is expanded already.
-func (vcTray VCTray) adjustLightingEnabled(ctx context.Context) (bool, error) {
-	nodeInfo, err := vcTray.ui.Info(ctx, adjustLightingButton)
+func (vcTray VCTray) featureEnabled(ctx context.Context, finder *nodewith.Finder) (bool, error) {
+	nodeInfo, err := vcTray.ui.Info(ctx, finder)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get node info")
 	}
 	// Current status can be identified by the node name.
-	// Off: "Adjust Lighting is off"; On: "Adjust Lighting is on".
+	// Off: "<Feature> is off"; On: "<Feature> is on".
 	return strings.HasSuffix(nodeInfo.Name, "on"), nil
+}
+
+// SetFeature toggles on/off the specified option.
+func (vcTray VCTray) SetFeature(finder *nodewith.Finder, expectedOn bool) action.Action {
+	return func(ctx context.Context) error {
+		currentlyOn, err := vcTray.featureEnabled(ctx, finder)
+		if err != nil {
+			return errors.Wrap(err, "failed to get current status")
+		}
+		if currentlyOn == expectedOn {
+			return nil
+		}
+
+		return vcTray.ui.DoDefaultUntil(
+			finder,
+			func(ctx context.Context) error {
+				return testing.Poll(ctx, func(ctx context.Context) error {
+					currentlyOn, err := vcTray.featureEnabled(ctx, finder)
+					if err != nil {
+						return errors.Wrap(err, "failed to get current status")
+					}
+					if currentlyOn != expectedOn {
+						return errors.New("failed to change feature status")
+					}
+					return nil
+				}, &testing.PollOptions{Timeout: 10 * time.Second})
+			},
+		)(ctx)
+	}
 }
 
 // SetAdjustLighting toggles on/off the "Adjust Lighting" option.
 func (vcTray VCTray) SetAdjustLighting(expectedOn bool) action.Action {
-	return func(ctx context.Context) error {
-		currentlyOn, err := vcTray.adjustLightingEnabled(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get current status")
-		}
-		if (currentlyOn && expectedOn) || (!currentlyOn && !expectedOn) {
-			return nil
-		}
-
-		return vcTray.ui.DoDefaultUntil(
-			adjustLightingButton,
-			func(ctx context.Context) error {
-				return testing.Poll(ctx, func(ctx context.Context) error {
-					currentlyOn, err := vcTray.adjustLightingEnabled(ctx)
-					if err != nil {
-						return errors.Wrap(err, "failed to get current status")
-					}
-					if (currentlyOn && !expectedOn) || (!currentlyOn && expectedOn) {
-						return errors.New("failed to change adjustlighting")
-					}
-					return nil
-				}, &testing.PollOptions{Timeout: 3 * time.Second})
-			},
-		)(ctx)
-	}
+	return vcTray.SetFeature(adjustLightingButton, expectedOn)
 }
 
-// liveCaptionEnabled returns whether live caption is enabled.
-// It assumes the vcTray panel is expanded already.
-func (vcTray VCTray) liveCaptionEnabled(ctx context.Context) (bool, error) {
-	nodeInfo, err := vcTray.ui.Info(ctx, liveCaptionButton)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to get node info")
-	}
-	// Current status can be identified by the node name.
-	// Off: "Live Caption is off"; On: "Live Caption is on".
-	return strings.HasSuffix(nodeInfo.Name, "on"), nil
+// SetNoiseCancellation toggles on/off the "Noise cancellation" option.
+func (vcTray VCTray) SetNoiseCancellation(expectedOn bool) action.Action {
+	return vcTray.SetFeature(noiseCancellationButton, expectedOn)
 }
 
 // SetLiveCaption toggles on/off the "Live Caption" option.
 func (vcTray VCTray) SetLiveCaption(expectedOn bool) action.Action {
-	return func(ctx context.Context) error {
-		currentlyOn, err := vcTray.liveCaptionEnabled(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get current status")
-		}
-		if (currentlyOn && expectedOn) || (!currentlyOn && !expectedOn) {
-			return nil
-		}
-
-		return vcTray.ui.DoDefaultUntil(
-			liveCaptionButton,
-			func(ctx context.Context) error {
-				return testing.Poll(ctx, func(ctx context.Context) error {
-					currentlyOn, err := vcTray.liveCaptionEnabled(ctx)
-					if err != nil {
-						return errors.Wrap(err, "failed to get current status")
-					}
-					if (currentlyOn && !expectedOn) || (!currentlyOn && expectedOn) {
-						return errors.New("failed to change live caption")
-					}
-					return nil
-				}, &testing.PollOptions{Timeout: 3 * time.Second})
-			},
-		)(ctx)
-	}
+	return vcTray.SetFeature(liveCaptionButton, expectedOn)
 }
 
 // ReturnToApp returns an action returning to the VC app.
