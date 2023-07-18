@@ -145,16 +145,16 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	// Connect to the RPC service on the DUT.
+	if err := h.RequireRPCClient(ctx); err != nil {
+		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+
 	// Get initial boot ID.
 	r := reporters.New(d)
 	origID, err := r.BootID(ctx)
 	if err != nil {
 		s.Fatal("Failed to read the original boot ID: ", err)
-	}
-
-	// Connect to the RPC service on the DUT.
-	if err := h.RequireRPCClient(ctx); err != nil {
-		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 
 	// The checkDisplay function checks whether display is on/off
