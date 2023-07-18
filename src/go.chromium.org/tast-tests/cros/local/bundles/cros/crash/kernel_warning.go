@@ -177,17 +177,22 @@ func KernelWarning(ctx context.Context, s *testing.State) {
 
 	if len(files[metaName]) == 1 {
 		metaFile := files[metaName][0]
+		metaFileParametersToTest := map[string]string{
+			"in_progress_integration_test": "crash.KernelWarning",
+			"weight":                       "10",
+			"client_computed_severity":     "WARNING",
+			"client_computed_product":      "Platform",
+		}
 		if contents, err := ioutil.ReadFile(metaFile); err != nil {
 			s.Errorf("Couldn't read meta file %s contents: %v", metaFile, err)
-		} else if !strings.Contains(string(contents), "upload_var_in_progress_integration_test=crash.KernelWarning") {
-			s.Error(".meta file did not contain expected in_progress_integration_test")
-			if err := crash.MoveFilesToOut(ctx, s.OutDir(), metaFile); err != nil {
-				s.Error("Failed to save the meta file: ", err)
-			}
-		} else if !strings.Contains(string(contents), "upload_var_weight=10") {
-			s.Error(".meta file did not contain expected weight")
-			if err := crash.MoveFilesToOut(ctx, s.OutDir(), metaFile); err != nil {
-				s.Error("Failed to save the meta file: ", err)
+		} else {
+			for key, value := range metaFileParametersToTest {
+				if !strings.Contains(string(contents), ("upload_var_" + key + "=" + value)) {
+					s.Error(".meta file did not contain expected " + key)
+					if err := crash.MoveFilesToOut(ctx, s.OutDir(), metaFile); err != nil {
+						s.Error("Failed to save the meta file: ", err)
+					}
+				}
 			}
 		}
 	} else {
