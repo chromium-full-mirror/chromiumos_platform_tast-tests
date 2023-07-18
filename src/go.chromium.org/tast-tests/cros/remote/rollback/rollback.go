@@ -282,6 +282,9 @@ func VerifyRollbackData(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCH
 	return nil
 }
 
+// ErrPowerwashFailed is returned if the fake powerwash failed.
+var ErrPowerwashFailed = errors.New("failed to simulate powerwash")
+
 // ClearRollbackAndSystemData stops every process related to rollback,
 // removes its flags and data created, and simulates powerwash.
 func ClearRollbackAndSystemData(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) error {
@@ -300,7 +303,8 @@ func ClearRollbackAndSystemData(ctx context.Context, dut *dut.DUT, rpcHint *test
 	}
 
 	if err := SimulatePowerwash(ctx, dut, rpcHint); err != nil {
-		return errors.Wrap(err, "failed to simulate powerwash")
+		testing.ContextLog(ctx, "Failed to powerwash, this may happen on previous images: ", err)
+		return ErrPowerwashFailed
 	}
 
 	return nil

@@ -146,7 +146,10 @@ func EnterpriseRollbackPreviousVersion(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Minute)
 	defer cancel()
 	defer func(ctx context.Context) {
-		if err := rollback.ClearRollbackAndSystemData(ctx, s.DUT(), s.RPCHint()); err != nil {
+		// Powerwash may fail on the old image if there are some shared library mismatches.
+		// Usually this is not a problem because we leave the system in a usable state.
+		// See also b/291088732.
+		if err := rollback.ClearRollbackAndSystemData(ctx, s.DUT(), s.RPCHint()); err != nil && err != rollback.ErrPowerwashFailed {
 			s.Error("Failed to clean rollback data after test: ", err)
 		}
 
