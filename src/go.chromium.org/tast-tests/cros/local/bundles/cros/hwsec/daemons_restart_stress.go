@@ -97,52 +97,27 @@ func DaemonsRestartStress(ctx context.Context, s *testing.State) {
 		}(ctxForResumeDaemons)
 	}
 
-	tpmVer, err := helper.GetTPMVersion(ctx)
-	if err != nil {
-		s.Fatal("Failed to get TPM version: ", err)
-	}
-
 	// Restart TPM related daemons multiple times.
 	for i := 0; i < 10; i++ {
 		func() {
-			if err := daemonController.Stop(ctx, hwsec.CryptohomeDaemon); err != nil {
-				s.Fatal("Failed to stop cryptohomed: ", err)
-			}
 			defer func() {
-				if err := daemonController.Start(ctx, hwsec.CryptohomeDaemon); err != nil {
-					s.Fatal("Failed to start cryptohomed: ", err)
+				if err := daemonController.EnsureDaemons(ctx, hwsec.HighLevelTPMDaemons); err != nil {
+					testing.ContextLog(ctx, "Failed to ensure high-level TPM daemons: ", err)
 				}
 			}()
 
-			if err := daemonController.Stop(ctx, hwsec.AttestationDaemon); err != nil {
-				s.Fatal("Failed to stop attestationd: ", err)
+			if err := daemonController.TryStopDaemons(ctx, hwsec.HighLevelTPMDaemons); err != nil {
+				s.Fatal("Failed to try to stop high-level TPM daemons: ", err)
 			}
+
 			defer func() {
-				if err := daemonController.Start(ctx, hwsec.AttestationDaemon); err != nil {
-					s.Fatal("Failed to start attestationd: ", err)
+				if err := daemonController.EnsureDaemons(ctx, hwsec.LowLevelTPMDaemons); err != nil {
+					testing.ContextLog(ctx, "Failed to ensure low-level TPM daemons: ", err)
 				}
 			}()
 
-			if err := daemonController.Stop(ctx, hwsec.TPMManagerDaemon); err != nil {
-				s.Fatal("Failed to stop tpm_managerd: ", err)
-			}
-			defer func() {
-				if err := daemonController.Start(ctx, hwsec.TPMManagerDaemon); err != nil {
-					s.Fatal("Failed to start tpm_managerd: ", err)
-				}
-			}()
-
-			switch tpmVer {
-			case "1.2":
-				if daemonController.Restart(ctx, hwsec.TcsdDaemon); err != nil {
-					s.Fatal("Failed to restart tcsd: ", err)
-				}
-			case "2.0":
-				if daemonController.Restart(ctx, hwsec.TrunksDaemon); err != nil {
-					s.Fatal("Failed to restart trunksd: ", err)
-				}
-			default:
-				s.Fatal("Unknown TPM version: ")
+			if err := daemonController.TryStopDaemons(ctx, hwsec.LowLevelTPMDaemons); err != nil {
+				s.Fatal("Failed to try to stop low-level TPM daemons: ", err)
 			}
 		}()
 	}
