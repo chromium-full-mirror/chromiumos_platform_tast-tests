@@ -25,7 +25,7 @@ func init() {
 		Desc:         "Checks that vm service processes don't crash during process shutdown",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "chibar@google.com"},
 		BugComponent: "b:1248538",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"vm_host", "chrome", "android_vm"},
 		// Timeout for reliable ARCVM boot + 15 secs for actual test execution
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout + 15*time.Second,
