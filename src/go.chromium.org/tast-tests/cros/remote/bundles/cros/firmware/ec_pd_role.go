@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -38,6 +39,11 @@ func init() {
 	})
 }
 
+type dutState struct {
+	lidOpen bool
+	suspend bool
+}
+
 func ECPDRole(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
@@ -60,22 +66,41 @@ func ECPDRole(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reconnect DUT: ", err)
 	}
 
-	// Stainless reported that some DUTs weren't able to reach S5 or G3 while
-	// lid closed. Adding some delay here, after a cold reset, helped make
-	// the test more stable.
-	s.Log("Sleeping for one minute")
-	if err := testing.Sleep(ctx, 1*time.Minute); err != nil {
-		s.Fatal("Failed to sleep: ", err)
-	}
-
 	// Parse the usb pd port list.
 	usbcPorts, err := listUSBPdPorts(ctx, h)
 	if err != nil {
 		s.Fatal("Failed to list USB-C ports: ", err)
 	}
 
+	currentDutState := dutState{
+		lidOpen: true,
+		suspend: false,
+	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		if !currentDutState.lidOpen {
+			if err := h.Servo.OpenLid(ctx); err != nil {
+				s.Fatal("Failed to open lid: ", err)
+			}
+		}
+		if currentDutState.suspend {
+			wakeupKey := servo.Enter
+			if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher {
+				wakeupKey = servo.PowerKey
+			}
+			testing.ContextLogf(ctx, "Waking DUT from suspend by %s", wakeupKey)
+			if err := h.Servo.KeypressWithDuration(ctx, wakeupKey, servo.DurPress); err != nil {
+				s.Fatal("Failed to wake DUT from suspend: ", err)
+			}
+		}
+	}(cleanupCtx)
+
 	for _, step := range []struct {
-		testAction   func(context.Context, *firmware.Helper) error
+		testAction   func(context.Context, *firmware.Helper, *dutState) error
 		expectStatus servo.USBPdDualRoleValue
 	}{
 		{
@@ -106,7 +131,7 @@ func ECPDRole(ctx context.Context, s *testing.State) {
 				step.expectStatus = servo.USBPdDualRoleOff
 			}
 		}
-		if err := step.testAction(ctx, h); err != nil {
+		if err := step.testAction(ctx, h, &currentDutState); err != nil {
 			s.Fatal("Action failed: ", err)
 		}
 		// Verify status of all usb-c port.
@@ -140,10 +165,11 @@ func listUSBPdPorts(ctx context.Context, h *firmware.Helper) ([]int, error) {
 	return usbPdPorts, nil
 }
 
-func usbPdCloseLid(ctx context.Context, h *firmware.Helper) error {
+func usbPdCloseLid(ctx context.Context, h *firmware.Helper, dut *dutState) error {
 	if err := h.Servo.CloseLid(ctx); err != nil {
 		return errors.Wrap(err, "failed to close lid")
 	}
+	dut.lidOpen = false
 	// Similar to ticket b:268492022, setting lid open while DUT at S5 failed
 	// on some machines. But, waiting for G3 before opening lid worked.
 	testing.ContextLog(ctx, "Checking for G3 powerstate")
@@ -178,10 +204,11 @@ func usbPdCloseLid(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-func usbPdOpenLid(ctx context.Context, h *firmware.Helper) error {
+func usbPdOpenLid(ctx context.Context, h *firmware.Helper, dut *dutState) error {
 	if err := h.Servo.OpenLid(ctx); err != nil {
 		return errors.Wrap(err, "failed to open lid")
 	}
+	dut.lidOpen = true
 	// During boot-up, dut would reach S0 first before getting reconnected.
 	testing.ContextLog(ctx, "Checking for S0 powerstate")
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
@@ -193,23 +220,18 @@ func usbPdOpenLid(ctx context.Context, h *firmware.Helper) error {
 	if err := h.WaitConnect(waitConnectCtx); err != nil {
 		return errors.Wrap(err, "failed to reconnect to DUT")
 	}
-	// Allowing some delay makes the test more stable.
-	testing.ContextLog(ctx, "Sleeping for one minute")
-	if err := testing.Sleep(ctx, 1*time.Minute); err != nil {
-		return errors.Wrap(err, "failed to sleep")
-	}
 	return nil
 }
 
-func usbPdSuspend(ctx context.Context, h *firmware.Helper) error {
+func usbPdSuspend(ctx context.Context, h *firmware.Helper, dut *dutState) error {
 	testing.ContextLog(ctx, "Suspending DUT")
 	if err := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend").Start(); err != nil {
 		return errors.Wrap(err, "failed to suspend DUT")
 	}
-
-	testing.ContextLog(ctx, "Checking for S0ix, S3, S5, or G3 powerstate")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0ix", "S3", "S5", "G3"); err != nil {
-		return errors.Wrap(err, "failed to get power state at S0ix, S3, S5, or G3")
+	dut.suspend = true
+	testing.ContextLog(ctx, "Checking for S0ix or S3 powerstate")
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0ix", "S3"); err != nil {
+		return errors.Wrap(err, "failed to get power state at S0ix or S3")
 	}
 	return nil
 }
