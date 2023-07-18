@@ -79,8 +79,8 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewBootAndShutdownCustomMetricConfig("Arc.Tast.UiAvailable.TimeDelta", "ms", perf.SmallerIsBetter),
 
 		// Event Latency Metrics.
-		NewCustomMetricConfig("Ash.EventLatency.TotalLatency", "microseconds", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Ash.EventLatency.Core.TotalLatency", "microseconds", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Ash.EventLatency.TotalLatency", "ms", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Ash.EventLatency.Core.TotalLatency", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.FirstGestureScrollUpdate.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.GestureDoubleTap.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.GestureLongPress.TotalLatency", "microseconds", perf.SmallerIsBetter),
