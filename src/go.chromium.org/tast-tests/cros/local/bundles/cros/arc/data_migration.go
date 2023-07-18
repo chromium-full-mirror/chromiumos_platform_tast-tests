@@ -95,7 +95,7 @@ func init() {
 				dataFileName: homeDataNamePiX86,
 				managed:      false,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
 			ExtraData: []string{homeDataNamePiX86},
 			ExtraSoftwareDeps: []string{
 				"android_r",
@@ -109,7 +109,7 @@ func init() {
 				dataFileName: homeDataNamePiArm,
 				managed:      false,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
 			ExtraData: []string{homeDataNamePiArm},
 			ExtraSoftwareDeps: []string{
 				"android_r",
@@ -123,7 +123,7 @@ func init() {
 				dataFileName: homeDataNameRvcX86Virtiofs,
 				managed:      false,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
 			ExtraData: []string{homeDataNameRvcX86Virtiofs},
 			ExtraSoftwareDeps: []string{
 				"android_vm_t",
