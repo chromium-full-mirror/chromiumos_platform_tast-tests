@@ -35,7 +35,7 @@ func init() {
 		Fixture:      "chromeLoggedInWithInputDeviceSettingsSplit",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.NoAssistantKey()),
+		HardwareDeps: hwdep.D(hwdep.NoAssistantKey(), hwdep.InternalKeyboard()),
 	})
 }
 
