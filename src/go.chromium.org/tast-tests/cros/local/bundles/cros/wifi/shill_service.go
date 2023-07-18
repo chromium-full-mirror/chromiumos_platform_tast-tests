@@ -44,7 +44,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast-tests/cros/local/wpasupplicant"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -3556,4 +3555,18 @@ func (s *ShillService) GetNetworksForGeolocation(ctx context.Context, _ *empty.E
 		response.Networks[technology] = &networks
 	}
 	return &response, nil
+}
+
+// RequestScan requests shill to trigger a wpa_supplicant scan on WiFi device
+func (s *ShillService) RequestScan(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create shill manager")
+	}
+	if err := m.RequestScan(ctx, shill.TechnologyWifi); err != nil {
+		return nil, err
+	}
+	return &empty.Empty{}, nil
 }

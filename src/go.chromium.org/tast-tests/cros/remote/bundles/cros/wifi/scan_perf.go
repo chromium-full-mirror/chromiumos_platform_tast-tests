@@ -10,14 +10,13 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"go.chromium.org/tast-tests/cros/common/network/iw"
+	"go.chromium.org/tast-tests/cros/common/network/wpacli"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
-	remoteiw "go.chromium.org/tast-tests/cros/remote/network/iw"
+	"go.chromium.org/tast-tests/cros/remote/network/cmd"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -29,7 +28,7 @@ import (
 type scanPerfTestCase struct {
 	// apOpts holds options to configure hostapd.
 	apOpts []ap.Option
-	// useRelaxedThreshold indicates whether to allow extra time for "iw scan".
+	// useRelaxedThreshold indicates whether to allow extra time for WiFi scan.
 	useRelaxedThreshold bool
 }
 
@@ -114,12 +113,11 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		Thresholds are applied to each single full scan test.
 		Here are the steps:
 		1- Configures the AP (e.g. specifies DTIM value).
-		2- Performs single channel foreground scan.
-		3- Performs full foreground scan multiple times.
-		4- Full background scan:
-		4-1- Connect DUT to AP
-		4-2- Performs multiple scans.
-		5- Deconfigures from defer() stack.
+		2- Performs full foreground scan multiple times.
+		3- Full background scan:
+		3-1- Connect DUT to AP
+		3-2- Performs multiple scans.
+		4- Deconfigures from defer() stack.
 	*/
 
 	const (
@@ -127,10 +125,9 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		scanTimes = 5
 
 		// Upper bounds for different scan methods.
-		fgSingleChannelScanTimeout = time.Second
-		fgFullScanTimeout          = 10 * time.Second
-		bgFullScanTimeout          = 15 * time.Second
-		pollTimeout                = 15 * time.Second
+		fgFullScanTimeout = 10 * time.Second
+		bgFullScanTimeout = 15 * time.Second
+		pollTimeout       = 15 * time.Second
 
 		// Thresholds for scan tests.
 		fgFullScanThreshold        = 4 * time.Second
@@ -208,15 +205,6 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	s.Log("AP setup done")
 
 	ssid := apIface.Config().SSID
-	freq, err := ap.ChannelToFrequency(apIface.Config().Channel)
-	if err != nil {
-		s.Fatalf("Failed to convert channel %d to frequency: %v", apIface.Config().Channel, err)
-	}
-	iface, err := tf.ClientInterface(ctx)
-	if err != nil {
-		s.Fatal("Failed to get DUT's interface: ", err)
-	}
-	iwr := remoteiw.NewRemoteRunner(s.DUT().Conn())
 
 	pv := perf.NewValues()
 	defer func() {
@@ -224,6 +212,14 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 			s.Error("Failed to save perf data: ", err)
 		}
 	}()
+
+	wpaMonitor, stop, ctx, err := tf.StartWPAMonitor(ctx, wificell.DefaultDUT)
+	if err != nil {
+		s.Fatal("Failed to start wpa monitor")
+	}
+	defer stop()
+
+	runner := wpacli.NewRunner(&cmd.RemoteCmdRunner{Host: s.DUT().Conn()})
 
 	logDuration := func(label string, duration time.Duration) {
 		pv.Set(perf.Metric{
@@ -234,43 +230,67 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		s.Logf("%s: %s", label, duration)
 	}
 
-	// pollTimedScan polls "iw scan" and returns scan duration.
+	// pollTimedScan polls RequestScan and returns scan duration.
 	// Each scan takes at most scanTimeout, and the polling takes at most pollTimeout.
-	pollTimedScan := func(ctx context.Context, freqs []int, scanTimeout, pollTimeout time.Duration, ssid, iface string, iwr *iw.Runner) (time.Duration, error) {
-		var scanResult *iw.TimedScanData
+	pollTimedScan := func(ctx context.Context, scanTimeout, pollTimeout time.Duration, ssid string) (time.Duration, error) {
+		var scanTime time.Duration
+		var startTime time.Time
 		if pollTimeout < scanTimeout {
 			pollTimeout = scanTimeout
 		}
-		err := testing.Poll(ctx, func(ctx context.Context) error {
-			ctx, cancel := context.WithTimeout(ctx, scanTimeout)
-			defer cancel()
 
-			// Declare err to avoid multivariable short redeclaration as we don't want scanResult being shadowed.
-			// We need to access scanResult after testing.Poll().
-			var err error
-			scanResult, err = iwr.TimedScan(ctx, iface, freqs, nil)
-			if err != nil {
+		ctx, cancel := context.WithTimeout(ctx, pollTimeout)
+		defer cancel()
+
+		err := testing.Poll(ctx, func(ctx context.Context) error {
+			wpaMonitor.ClearEvents(ctx)
+
+			if err := tf.WifiClient().RequestScan(ctx); err != nil {
+				return errors.Wrap(err, "failed to request scan")
+			}
+			if err := func(ctx context.Context) error {
+				scanStartCtx, cancel := context.WithTimeout(ctx, 200*time.Millisecond)
+				defer cancel()
+				for {
+					event, err := wpaMonitor.WaitForEvent(scanStartCtx)
+					if err != nil {
+						return errors.Wrap(err, "failed to wait for ScanStarted event")
+					}
+					if event == nil { // timeout
+						return errors.New("waiting for ScanStarted event timeout")
+					}
+					if _, ok := event.(*wpacli.ScanStartedEvent); ok {
+						startTime = time.Now()
+						return nil
+					}
+				}
+			}(ctx); err != nil {
 				return err
 			}
-			for _, bssList := range scanResult.BSSList {
-				if bssList.SSID == ssid {
-					return nil
-				}
-			}
-			return errors.Errorf("iw scan found no SSID %s", ssid)
-		}, &testing.PollOptions{Timeout: pollTimeout, Interval: 500 * time.Millisecond})
+			return nil
+		}, &testing.PollOptions{Timeout: pollTimeout})
 		if err != nil {
 			return 0, err
 		}
-		return scanResult.Time, nil
-	}
 
-	// Foreground single channel scan.
-	// Foreground scan means the scan is performed without any established connection.
-	if duration, err := pollTimedScan(ctx, []int{freq}, fgSingleChannelScanTimeout, pollTimeout, ssid, iface, iwr); err != nil {
-		s.Errorf("Failed to perform single channel scan at frequency %d: %v", freq, err)
-	} else {
-		logDuration("scan_time_foreground_single_scan", duration)
+		for {
+			event, err := wpaMonitor.WaitForEvent(ctx)
+			if err != nil {
+				return 0, errors.Wrap(err, "failed to wait for ScanResults event")
+			}
+			if event == nil { // timeout
+				return 0, errors.New("waiting for ScanResults event timeout")
+			}
+			if _, ok := event.(*wpacli.ScanResultsEvent); ok {
+				scanTime = time.Since(startTime)
+				break
+			}
+		}
+
+		if err := runner.CheckScanResults(ctx, ssid); err != nil {
+			return 0, errors.Wrap(err, "failed to discover AP")
+		}
+		return scanTime, nil
 	}
 
 	// Foreground full scan.
@@ -284,8 +304,8 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		}
 	}
 	for i := 1; i <= scanTimes; i++ {
-		if duration, err := pollTimedScan(ctx, nil, fgFullScanTimeout, pollTimeout, ssid, iface, iwr); err != nil {
-			s.Errorf("Failed to perform full channel scan at frequency %d: %v", freq, err)
+		if duration, err := pollTimedScan(ctx, fgFullScanTimeout, pollTimeout, ssid); err != nil {
+			s.Error("Failed to perform full channel scan: ", err)
 		} else {
 			if duration > threshold {
 				s.Errorf("Foreground scan #(%d/%d) duration: %s. Exceed threshold: %s", i, scanTimes, duration, threshold)
@@ -297,7 +317,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		}
 	}
 	if count == 0 {
-		s.Errorf("Failed to perform all full channel scans at frequency %d in foreground scan test", freq)
+		s.Error("Failed to perform all full channel scans in foreground scan test")
 	} else {
 		avg := time.Duration(int64(sum) / int64(count))
 		s.Logf("Foreground scan average duration: %s", avg)
@@ -341,8 +361,8 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		}
 	}
 	for i := 1; i <= scanTimes; i++ {
-		if duration, err := pollTimedScan(ctx, nil, bgFullScanTimeout, pollTimeout, ssid, iface, iwr); err != nil {
-			s.Errorf("Failed to perform full channel scan at frequency %d: %v", freq, err)
+		if duration, err := pollTimedScan(ctx, bgFullScanTimeout, pollTimeout, ssid); err != nil {
+			s.Error("Failed to perform full channel scan: ", err)
 		} else {
 			if duration > threshold {
 				s.Errorf("Background scan #(%d/%d) duration: %s. Exceed threshold: %s", i, scanTimes, duration, threshold)
@@ -354,7 +374,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		}
 	}
 	if count == 0 {
-		s.Errorf("Failed to perform all full channel scans at frequency %d in background scan test", freq)
+		s.Error("Failed to perform all full channel scans in background scan test")
 	} else {
 		avg := time.Duration(int64(sum) / int64(count))
 		s.Logf("Background scan average duration: %s", avg)

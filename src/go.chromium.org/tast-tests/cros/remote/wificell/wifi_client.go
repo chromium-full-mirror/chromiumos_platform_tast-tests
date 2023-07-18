@@ -554,3 +554,12 @@ func (cli *WifiClient) GetNetworksForGeolocation(ctx context.Context) (*wifi.Net
 	}
 	return wifiNetworks, err
 }
+
+// RequestScan requests shill to trigger a wpa_supplicant scan on WiFi device
+func (cli *WifiClient) RequestScan(ctx context.Context) error {
+	_, err := cli.ShillServiceClient.RequestScan(ctx, &empty.Empty{})
+	if err != nil {
+		return errors.Wrap(err, "failed to request wpa_supplicant scan")
+	}
+	return nil
+}

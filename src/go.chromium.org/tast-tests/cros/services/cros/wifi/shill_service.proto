@@ -66,6 +66,9 @@ service ShillService {
   // This is the main body of the EthernetFailoverToWifi test.
   rpc EthernetFailoverToWifiTest(EthernetFailoverToWifiTestRequest) returns (google.protobuf.Empty) {}
 
+  // RequestScan requests shill to trigger a wpa_supplicant scan on WiFi devices.
+  rpc RequestScan(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
   // RequestScans requests shill to trigger active scans on WiFi devices.
   rpc RequestScans(RequestScansRequest) returns (google.protobuf.Empty) {}
 

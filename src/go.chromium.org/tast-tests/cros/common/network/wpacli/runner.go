@@ -247,8 +247,8 @@ func (r *Runner) scanResults(ctx context.Context) ([]map[string]string, error) {
 	return networks, nil
 }
 
-// checkScanResults checks if the latest scan results has a network with ssid that match the passed ssid.
-func (r *Runner) checkScanResults(ctx context.Context, ssid string) error {
+// CheckScanResults checks if the latest scan results has a network with ssid that match the passed ssid.
+func (r *Runner) CheckScanResults(ctx context.Context, ssid string) error {
 	results, err := r.scanResults(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the scan results")
@@ -273,7 +273,7 @@ func (r *Runner) DiscoverNetwork(ctx context.Context, dutConn *ssh.Conn, ssid st
 	}
 	defer stop()
 
-	if err := r.checkScanResults(ctx, ssid); err == nil {
+	if err := r.CheckScanResults(ctx, ssid); err == nil {
 		return nil
 	}
 
@@ -303,7 +303,7 @@ func (r *Runner) DiscoverNetwork(ctx context.Context, dutConn *ssh.Conn, ssid st
 			return err
 		}
 
-		if err := r.checkScanResults(ctx, ssid); err != nil {
+		if err := r.CheckScanResults(ctx, ssid); err != nil {
 			return err
 		}
 

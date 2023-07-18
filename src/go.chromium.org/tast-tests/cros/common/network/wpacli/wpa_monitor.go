@@ -65,6 +65,10 @@ type P2PGroupStartedEvent struct {
 	IsPersistent bool
 }
 
+// ScanStartedEvent defines data of CTRL-EVENT-SCAN-STARTED event.
+type ScanStartedEvent struct {
+}
+
 // ScanResultsEvent defines data of CTRL-EVENT-SCAN-RESULTS event.
 type ScanResultsEvent struct {
 }
@@ -169,6 +173,12 @@ var eventDefs = []eventDef{
 		},
 	},
 	{
+		regexp.MustCompile("CTRL-EVENT-SCAN-STARTED"),
+		func(matches []string) (SupplicantEvent, error) {
+			return new(ScanStartedEvent), nil
+		},
+	},
+	{
 		regexp.MustCompile("CTRL-EVENT-SCAN-RESULTS"),
 		func(matches []string) (SupplicantEvent, error) {
 			return new(ScanResultsEvent), nil
@@ -189,6 +199,11 @@ var eventDefs = []eventDef{
 // ToLogString formats the event data to string suitable for logging.
 func (e *RoamEvent) ToLogString() string {
 	return fmt.Sprintf("%+v\n", e)
+}
+
+// ToLogString formats the event data to string suitable for logging.
+func (e *ScanStartedEvent) ToLogString() string {
+	return ""
 }
 
 // ToLogString formats the event data to string suitable for logging.
