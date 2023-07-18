@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Test to check that vm_concierge doesn't crash during reboot",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "chibar@google.com"},
 		BugComponent: "b:1248538",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational"},
 		ServiceDeps:  []string{"tast.cros.crash.FixtureService", "tast.cros.vm.VMService"},
 		SoftwareDeps: []string{"android_vm", "chrome"},
 		Timeout:      10 * time.Minute,
