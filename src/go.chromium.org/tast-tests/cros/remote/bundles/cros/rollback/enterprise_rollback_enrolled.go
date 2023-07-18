@@ -74,8 +74,8 @@ func EnterpriseRollbackEnrolled(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
 	defer cancel()
 
-	if err := rollback.SimulatePowerwash(ctx, s.DUT(), s.RPCHint()); err != nil {
-		s.Fatal("Failed to simulate powerwash before test: ", err)
+	if err := rollback.ClearRollbackAndSystemData(ctx, s.DUT(), s.RPCHint()); err != nil {
+		s.Error("Failed to clean rollback data before test: ", err)
 	}
 
 	rpcClient, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())

@@ -171,8 +171,8 @@ func EnterpriseRollbackPreviousVersion(ctx context.Context, s *testing.State) {
 	}
 
 	// There is an image available for the target milestone; testing rollback.
-	if err := rollback.SimulatePowerwash(ctx, s.DUT(), s.RPCHint()); err != nil {
-		s.Fatal("Failed to simulate powerwash before test: ", err)
+	if err := rollback.ClearRollbackAndSystemData(ctx, s.DUT(), s.RPCHint()); err != nil {
+		s.Error("Failed to clean rollback data before test: ", err)
 	}
 
 	networksInfo, err := rollback.ConfigureNetworks(ctx, s.DUT(), s.RPCHint())
