@@ -153,6 +153,20 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set printer details: ", err)
 	}
 
+	printManager, err := printmanagementapp.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to open Print Management app: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := printManager.ClearHistory()(ctx); err != nil {
+			s.Error("Failed to clear final printing history: ", err)
+		}
+	}(ctx)
+
+	if err := printManager.ClearHistory()(ctx); err != nil {
+		s.Fatal("Failed to clear initial printing history: ", err)
+	}
+
 	// Create a browser (either ash or lacros, based on browser type).
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
 	if err != nil {
@@ -192,11 +206,6 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 	sslErrorMessage := "Printer SSL certificate is expired. Restart printer and try again."
 	if _, err = ash.WaitForNotification(ctx, tconn, 5*time.Second, ash.WaitTitle(sslErrorMessage)); err != nil {
 		s.Fatal("Failed to find notification: ", err)
-	}
-
-	printManager, err := printmanagementapp.Launch(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to open Print Management app: ", err)
 	}
 
 	// Check print job history to make sure job is marked as failed.
