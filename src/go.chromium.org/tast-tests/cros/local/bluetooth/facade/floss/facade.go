@@ -138,7 +138,10 @@ func (b *BluetoothFlossFacade) Enable(ctx context.Context) error {
 		return err
 	}
 	if err := b.SetPowered(ctx, true); err != nil {
-		return errors.Wrap(err, "failed to enable floss adapter")
+		testing.ContextLog(ctx, "Failed to enable floss adapter on first attempt after enabling floss: ", err)
+		if err := b.SetPowered(ctx, true); err != nil {
+			return errors.Wrap(err, "failed to enable floss adapter on second attempt after enabling floss")
+		}
 	}
 	b.flossEnabled = true
 	return nil
@@ -222,12 +225,11 @@ func (b *BluetoothFlossFacade) Reset(ctx context.Context, powerOn bool) error {
 	// Make sure bluetooth is on, then remove all bonded devices.
 	powered, err := b.IsPoweredOn(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to check if bluetooth is powered on")
+		return errors.Wrap(err, "failed to check if floss adapter is enabled")
 	}
 	if !powered {
-		testing.ContextLog(ctx, "Powering on floss adapter")
 		if err := b.SetPowered(ctx, true); err != nil {
-			return errors.Wrap(err, "failed to turn on bluetooth")
+			return errors.Wrap(err, "failed to enable floss adapter")
 		}
 	}
 	if b.discoveryObserver != nil {
@@ -265,14 +267,12 @@ func (b *BluetoothFlossFacade) Reset(ctx context.Context, powerOn bool) error {
 	// Turn bluetooth off, then turn it back on if desired.
 	// An additional power cycle is added if devices were removed to validate
 	// their removal.
-	testing.ContextLog(ctx, "Powering off floss adapter")
 	if err := b.SetPowered(ctx, false); err != nil {
-		return errors.Wrap(err, "failed to turn off bluetooth")
+		return errors.Wrap(err, "failed to disable floss adapter")
 	}
 	if powerOn || removedDevices {
-		testing.ContextLog(ctx, "Powering on floss adapter")
 		if err := b.SetPowered(ctx, true); err != nil {
-			return errors.Wrap(err, "failed to turn on bluetooth")
+			return errors.Wrap(err, "failed to enable floss adapter")
 		}
 		testing.ContextLog(ctx, "Validating that floss adapter still does not have any known devices after power cycle")
 		deviceAddresses, err = b.Devices(ctx)
@@ -284,9 +284,8 @@ func (b *BluetoothFlossFacade) Reset(ctx context.Context, powerOn bool) error {
 		}
 		testing.ContextLog(ctx, "No known devices found")
 		if !powerOn {
-			testing.ContextLog(ctx, "Powering off floss adapter")
 			if err := b.SetPowered(ctx, false); err != nil {
-				return errors.Wrap(err, "failed to turn off bluetooth")
+				return errors.Wrap(err, "failed to disable floss adapter")
 			}
 		}
 	}
@@ -342,48 +341,49 @@ func (b *BluetoothFlossFacade) SetPowered(ctx context.Context, powered bool) err
 		return err
 	}
 	if powered {
+		testing.ContextLogf(ctx, "Starting floss adapter with HCI %d", b.adapterHCI)
 		if err := b.managerClient.Start(ctx, b.adapterHCI); err != nil {
 			return err
 		}
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			enabled, err := b.managerClient.GetAdapterEnabled(ctx, b.adapterHCI)
-			if err != nil {
-				return err
-			}
-			if !enabled {
-				return errors.Errorf("adapter with HCI %d not yet enabled", b.adapterHCI)
-			}
-			return nil
-		}, &testing.PollOptions{
-			Interval: 100 * time.Millisecond,
-			Timeout:  20 * time.Second,
-		}); err != nil {
-			return errors.Wrapf(err, "failed to wait for adapter with HCI %d to start", b.adapterHCI)
+		testing.ContextLogf(ctx, "Waiting for floss adapter with HCI %d to be enabled", b.adapterHCI)
+		if err := b.waitForAdapterEnabledState(ctx, true); err != nil {
+			return errors.Wrapf(err, "failed to wait for floss adapter with HCI %d to be enabled", b.adapterHCI)
 		}
 		if err := b.initializeAdapterSpecificDBusClients(ctx); err != nil {
 			return errors.Wrap(err, "failed to initialize dbus clients after starting adapter")
 		}
 		b.adapterEnabled = true
+		testing.ContextLogf(ctx, "Successfully started and enabled floss adapter with HCI %d", b.adapterHCI)
 	} else {
+		testing.ContextLogf(ctx, "Stopping floss adapter with HCI %d", b.adapterHCI)
 		if err := b.managerClient.Stop(ctx, b.adapterHCI); err != nil {
 			return err
 		}
-		b.adapterEnabled = false
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			enabled, err := b.managerClient.GetAdapterEnabled(ctx, b.adapterHCI)
-			if err != nil {
-				return err
-			}
-			if enabled {
-				return errors.Errorf("adapter with HCI %d still enabled", b.adapterHCI)
-			}
-			return nil
-		}, &testing.PollOptions{
-			Interval: 100 * time.Millisecond,
-			Timeout:  20 * time.Second,
-		}); err != nil {
-			return errors.Wrapf(err, "failed to wait for adapter with HCI %d to stop", b.adapterHCI)
+		testing.ContextLogf(ctx, "Waiting for floss adapter with HCI %d to be disabled", b.adapterHCI)
+		if err := b.waitForAdapterEnabledState(ctx, false); err != nil {
+			return errors.Wrapf(err, "failed to wait for floss adapter with HCI %d to be disabled", b.adapterHCI)
 		}
+		b.adapterEnabled = false
+		testing.ContextLogf(ctx, "Successfully stopped and disabled floss adapter with HCI %d", b.adapterHCI)
+	}
+	return nil
+}
+
+func (b *BluetoothFlossFacade) waitForAdapterEnabledState(ctx context.Context, desiredEnabledState bool) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		enabled, err := b.managerClient.GetAdapterEnabled(ctx, b.adapterHCI)
+		if err != nil {
+			return err
+		}
+		if enabled != desiredEnabledState {
+			return errors.Errorf("adapter with HCI %d enabled state is %t, want %t", b.adapterHCI, enabled, desiredEnabledState)
+		}
+		return nil
+	}, &testing.PollOptions{
+		Interval: 100 * time.Millisecond,
+		Timeout:  30 * time.Second,
+	}); err != nil {
+		return errors.Wrapf(err, "failed to wait for adapter with HCI %d enabled state to be %t", b.adapterHCI, desiredEnabledState)
 	}
 	return nil
 }
