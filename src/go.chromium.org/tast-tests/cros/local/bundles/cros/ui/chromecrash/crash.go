@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -466,7 +467,7 @@ func (ct *CrashTester) killNonBrowser(ctx context.Context, dirs []string) error 
 		}
 
 		// Sleep briefly after the Chrome process we want starts so it has time to set
-		// up breakpad.
+		// up crashpad.
 		const delay = 3 * time.Second
 		createTimeMS, err := toKill.CreateTime()
 		if err != nil {
@@ -476,6 +477,8 @@ func (ct *CrashTester) killNonBrowser(ctx context.Context, dirs []string) error 
 		timeToSleep := delay - time.Since(createTime)
 		if timeToSleep > 0 {
 			testing.ContextLogf(ctx, "Sleeping %v to wait for Chrome to stabilize", timeToSleep)
+			// GoBigSleepLint: Sleep briefly after the Chrome process we want starts so it has time to set
+			// up crashpad.
 			if err := testing.Sleep(ctx, timeToSleep); err != nil {
 				return testing.PollBreak(errors.Wrap(err, "timed out while waiting for Chrome startup"))
 			}
@@ -527,10 +530,12 @@ func (ct *CrashTester) killNonBrowser(ctx context.Context, dirs []string) error 
 // .meta file. We can't wait for a file to be created because ChromeCrashLoop
 // doesn't create files at all on one of its kills.
 func (ct *CrashTester) killBrowser(ctx context.Context) error {
-	// Sleep briefly after Chrome starts so it has time to set up breakpad or
-	// crashpad. (Also needed for https://crbug.com/906690)
+	// Sleep briefly after Chrome starts so it has time to set up crashpad.
+	// (Also needed for https://crbug.com/906690)
 	const delay = 3 * time.Second
 	testing.ContextLogf(ctx, "Sleeping %v to wait for Chrome to stabilize", delay)
+	// GoBigSleepLint: Sleep briefly after Chrome starts so it has time to set up
+	// crashpad. (Also needed for https://crbug.com/906690)
 	if err := testing.Sleep(ctx, delay); err != nil {
 		return errors.Wrap(err, "timed out while waiting for Chrome startup")
 	}
@@ -594,6 +599,53 @@ func (ct *CrashTester) killBrowser(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// MetaFileContains checks that each value in |expectedValues| appears in
+// |metaFile|. Return nil if each value is found.
+func MetaFileContains(ctx context.Context, metaFile string, expectedValues map[string]string) error {
+	b, err := ioutil.ReadFile(metaFile)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't read meta file %s contents", metaFile)
+	}
+
+	contents := string(b)
+	for key, value := range expectedValues {
+		expectedValue := "upload_var_client_" + key + "=" + value
+		if !strings.Contains(contents, expectedValue) {
+			return errors.New(".meta file did not contain expected " + key)
+		}
+	}
+	return nil
+}
+
+// ValidateComputedSeverity checks the computed_severity and computed_product
+// values in |metaFile|. Return nil if each value is found.
+func (ct *CrashTester) ValidateComputedSeverity(ctx context.Context, metaFile string) error {
+	expectedValues := map[string]string{"computed_product": "Ui"}
+	// TODO(crbug.com/1466932): Set computed_severity to "INFO" for Broker after
+	// Broker process crashes are reported with ptype=broker.
+	if ct.ptype == Browser {
+		expectedValues["computed_severity"] = "FATAL"
+	} else if ct.ptype == GPUProcess {
+		expectedValues["computed_severity"] = "ERROR"
+	}
+
+	return MetaFileContains(ctx, metaFile, expectedValues)
+}
+
+// GetMetaFilename returns the meta filename found in |matches|. Only one .meta file
+// should exist.
+func GetMetaFilename(matches map[string][]string, metaRegex string) (string, error) {
+	metaFiles := matches[metaRegex]
+	if len(metaFiles) == 0 {
+		return "", errors.New("expected a .meta file but found none")
+	}
+	if len(metaFiles) > 1 {
+		return "", errors.New("found more than one meta file")
+	}
+
+	return metaFiles[0], nil
 }
 
 // KillAndGetCrashFiles sends SIGSEGV to the given Chrome process, waits for it to
@@ -669,7 +721,24 @@ func (ct *CrashTester) KillAndGetCrashFiles(ctx context.Context) ([]string, erro
 	for _, fileList := range matches {
 		files = append(files, fileList...)
 	}
-	deleteFiles(ctx, files)
+	defer deleteFiles(ctx, files)
+
+	// Check that the .meta file has the correct computed_severity and computed_product values.
+	if ct.waitFor == MetaFile {
+		metaFile, fileErr := GetMetaFilename(matches, fmt.Sprintf(chromeCrashFilePatternWithPid+"meta", ct.killedPID))
+		if fileErr != nil {
+			return nil, errors.Wrap(fileErr, "failed to get meta file")
+		}
+
+		if validateErr := ct.ValidateComputedSeverity(ctx, metaFile); validateErr != nil {
+			if outDir, outDirExists := testing.ContextOutDir(ctx); outDirExists {
+				if moveErr := crash.MoveFilesToOut(ctx, outDir, metaFile); moveErr != nil {
+					testing.ContextLog(ctx, "Failed to save the meta file: ", moveErr)
+				}
+			}
+			return nil, errors.Wrap(validateErr, "failed to validate meta file severity")
+		}
+	}
 	return files, nil
 }
 
