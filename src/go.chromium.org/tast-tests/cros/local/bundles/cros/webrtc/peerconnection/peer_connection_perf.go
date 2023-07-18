@@ -307,7 +307,7 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		return errors.Wrap(batErr, "failed to measure system power consumption")
 	}
 	if traceErr != nil {
-		return errors.Wrap(gpuErr, "failed to measure decoding/encoding chrome trace events")
+		return errors.Wrap(traceErr, "failed to measure decoding/encoding chrome trace events")
 	}
 
 	testing.ContextLogf(ctx, "Metric: %+v", p)
