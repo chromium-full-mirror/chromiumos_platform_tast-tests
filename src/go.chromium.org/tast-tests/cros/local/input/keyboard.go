@@ -26,11 +26,12 @@ const (
 
 // KeyboardEventWriter supports injecting events into a keyboard device.
 type KeyboardEventWriter struct {
-	rw               *RawEventWriter
-	virt             *os.File         // if non-nil, used to hold a virtual device open
-	fast             bool             // if true, do not sleep after type; useful for unit tests
-	dev              string           // path to underlying device in /dev/input
-	topRowLayoutType TopRowLayoutType // layout type of the top row of the keyboard
+	rw                *RawEventWriter
+	virt              *os.File            // if non-nil, used to hold a virtual device open
+	fast              bool                // if true, do not sleep after type; useful for unit tests
+	dev               string              // path to underlying device in /dev/input
+	topRowLayoutType  TopRowLayoutType    // layout type of the top row of the keyboard
+	topRowScanCodeMap map[EventCode]int32 // map to map between EventCodes and the scan code for top row keys. only initializd when topRowLayoutType is LayoutCustom.
 }
 
 var nextVirtKbdNum = 1 // appended to virtual keyboard device name
@@ -203,7 +204,7 @@ func (kw *KeyboardEventWriter) sendKey(ec EventCode, val int32, firstErr *error)
 		// (eg. Brightness) to be processed correctly.
 		if kw.topRowLayoutType == LayoutCustom {
 			// Find correct scan code based on the event code
-			sc, prs := topRowScanCodeMap[ec]
+			sc, prs := kw.topRowScanCodeMap[ec]
 			if prs {
 				*firstErr = kw.rw.Event(EV_MSC, MSC_SCAN, sc)
 			}

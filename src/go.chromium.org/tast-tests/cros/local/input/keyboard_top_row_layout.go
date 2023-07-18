@@ -8,8 +8,11 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/hex"
+	"os"
 	"regexp"
 	"strings"
+	"unsafe"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
@@ -47,29 +50,6 @@ const (
 	LayoutDrallion
 	LayoutCustom
 )
-
-// Scan codes taken from chromeos keyboard spec:
-// https://chromeos.google.com/partner/dlm/docs/hardware-specs/keyboardspec.html
-var topRowScanCodeMap = map[EventCode]int32{
-	KEY_BACK:                  0xea,
-	KEY_REFRESH:               0xe7,
-	KEY_FULL_SCREEN:           0x91,
-	KEY_SCALE:                 0x92,
-	KEY_SYSRQ:                 0x93,
-	KEY_BRIGHTNESSDOWN:        0x94,
-	KEY_BRIGHTNESSUP:          0x95,
-	KEY_PRIVACY_SCREEN_TOGGLE: 0x96,
-	KEY_MUTE:                  0xa0,
-	KEY_VOLUMEDOWN:            0xae,
-	KEY_VOLUMEUP:              0xb0,
-	KEY_KBDILLUMDOWN:          0x97,
-	KEY_KBDILLUMUP:            0x98,
-	KEY_NEXTSONG:              0x99,
-	KEY_PREVIOUSSONG:          0x90,
-	KEY_PLAYPAUSE:             0x9a,
-	KEY_FORWARD:               0xe9,
-	KEY_SLEEP:                 0xaf,
-}
 
 // KeyboardTopRowLayout returns the layout of the top row (function keys) for a given keyboard.
 // This is because not all Chromebook keyboards have the same functionality associated to the functions keys.
@@ -195,7 +175,11 @@ func GetTopRowLayoutType(ctx context.Context, ew *KeyboardEventWriter) (TopRowLa
 
 		// Logic taken from here:
 		// https://source.chromium.org/chromium/chromium/src/+/HEAD:ui/chromeos/events/event_rewriter_chromeos.h;l=56;drc=3e2b7d89ce6261e00e6e723c13c52d0d41bcc69e
-		if _, ok := attrs["function_row_physmap"]; ok {
+		if val, ok := attrs["function_row_physmap"]; ok {
+			if err = parseCustomScanCodes(ctx, ew, val); err != nil {
+				return Layout1, err
+			}
+
 			return LayoutCustom, nil
 		}
 		if val, ok := props["CROS_KEYBOARD_TOP_ROW_LAYOUT"]; ok {
@@ -270,4 +254,57 @@ func parseUdev(r []byte, matchPattern string) (map[string]string, error) {
 		return nil, err
 	}
 	return kvs, nil
+}
+
+// evIOCGKeyCodeV2 is equivalent to EVIOCGKEYCODE_V2 defined in include/uapi/linux/input.h.
+func evIOCGKeyCodeV2() uint {
+	const sizeofInputKeymapEntry = 0x28
+	return ior('E', 0x04, sizeofInputKeymapEntry)
+}
+
+// inputKeyMapEntry is equivalent to input_keymap_entry in include/uapi/linux/input.h.
+type inputKeyMapEntry struct {
+	flags    uint8
+	len      uint8
+	index    uint16
+	keycode  uint32
+	scancode [32]byte
+}
+
+// parseCustomScanCodes converts the topRowScanCodesStr which is a string of hex values to the equivalent linux
+// keycodes for each scancode and stores them in a map within the KeyboardEventWriter.
+func parseCustomScanCodes(ctx context.Context, ew *KeyboardEventWriter, topRowScanCodesStr string) error {
+	scanCodeStrs := strings.Split(topRowScanCodesStr, " ")
+
+	f, err := os.Open(ew.Device())
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	ew.topRowScanCodeMap = make(map[EventCode]int32)
+	for _, scanCodeStr := range scanCodeStrs {
+		// Decode each scancode and convert it to a uint32.
+		scanCodeArray, err := hex.DecodeString(scanCodeStr)
+		if err != nil {
+			return err
+		}
+		var scanCodeUint32Array [unsafe.Sizeof(uint32(0))]byte
+		copy(scanCodeUint32Array[:], scanCodeArray)
+		scanCode := kernelByteOrder.Uint32(scanCodeUint32Array[:])
+
+		// Initialize inputKeyMapEntry struct with the scancode value and length.
+		inputKeymapEntry := inputKeyMapEntry{}
+		inputKeymapEntry.len = uint8(len(scanCodeArray))
+		copy(inputKeymapEntry.scancode[:], scanCodeArray)
+
+		// Make EVIOCGKEYCODE_V2 ioctl call to retrieve the equivalent keycode for the given scancode.
+		if err := ioctl(int(f.Fd()), evIOCGKeyCodeV2(), uintptr(unsafe.Pointer(&inputKeymapEntry))); err != nil {
+			return err
+		}
+
+		ew.topRowScanCodeMap[EventCode(inputKeymapEntry.keycode)] = int32(scanCode)
+	}
+
+	return nil
 }
