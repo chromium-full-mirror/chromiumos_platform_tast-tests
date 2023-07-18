@@ -9,17 +9,16 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"os"
 	"path/filepath"
-	"unsafe"
-
-	"golang.org/x/sys/unix"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/dlc"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/tap"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/vm"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -38,40 +37,6 @@ func init() {
 		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
 		Fixture:      "vmDLC",
 	})
-}
-
-type ifreq struct {
-	name  [unix.IFNAMSIZ]byte
-	flags int16
-}
-
-func openTapDevice(ifname string) (int, error) {
-	const path = "/dev/net/tun"
-
-	fd, err := unix.Open(path, unix.O_RDWR|unix.O_NONBLOCK, 0)
-	if err != nil {
-		return 0, errors.Wrapf(err, "failed to open Tap device: %v", ifname)
-	}
-
-	if len(ifname) > unix.IFNAMSIZ-1 {
-		unix.Close(fd)
-		return 0, errors.Wrapf(err, "too long Ifname: %s", ifname)
-	}
-
-	ifr := ifreq{}
-	copy(ifr.name[:], ifname)
-	ifr.flags = unix.IFF_TAP | unix.IFF_NO_PI | unix.IFF_VNET_HDR
-	if _, _, errno := unix.Syscall(
-		unix.SYS_IOCTL,
-		uintptr(fd),
-		unix.TUNSETIFF,
-		uintptr(unsafe.Pointer(&ifr)),
-	); errno != 0 {
-		unix.Close(fd)
-		return 0, errors.Errorf("failed to set network interface: %s", errno.Error())
-	}
-
-	return fd, nil
 }
 
 func getCrosvmCmd(ctx context.Context, kernel, serialLog, sock, script string, scriptArgs []string) *testexec.Cmd {
@@ -104,45 +69,6 @@ func getCrosvmCmd(ctx context.Context, kernel, serialLog, sock, script string, s
 	return testexec.CommandContext(ctx, "crosvm", args...)
 }
 
-type tapDevice struct {
-	fd      int
-	addr    net.IP
-	gateway net.IP
-}
-
-func getTap(ctx context.Context, pc *patchpanel.Client, cid uint32) (device tapDevice, cleanup func(), err error) {
-	resp, err := pc.NotifyTerminaVMStartup(ctx, cid)
-	if err != nil {
-		err = errors.Wrap(err, "failed to send NotifyTerminaVMStartup request to patchpanel")
-		return
-	}
-	shutdown := func() {
-		if err := pc.NotifyTerminaVMShutdown(ctx, cid); err != nil {
-			testing.ContextLog(ctx, "Failed to notify termina shutdown: ", err)
-		}
-	}
-
-	fd, err := openTapDevice(resp.TapDeviceIfname)
-	if err != nil {
-		shutdown()
-		err = errors.Wrap(err, "failed to open Tap device")
-		return
-	}
-
-	device = tapDevice{
-		fd:      fd,
-		addr:    resp.Ipv4Address,
-		gateway: resp.GatewayIpv4Address,
-	}
-
-	cleanup = func() {
-		shutdown()
-		unix.Close(fd)
-	}
-
-	return
-}
-
 func waitUntilFileAvailable(ctx context.Context, path string) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		if _, err := os.Stat(path); err != nil {
@@ -165,21 +91,26 @@ func VhostUserNet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create patchpanel client: ", err)
 	}
 
+	// Reserve 10 seconds for server and client clean up
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	// cid will be used by patchpanel to identify VMs.
 	// Use values larger than 8192 to guarantee no overlap with crostini/arcvm.
 	serverCid := uint32(8193)
-	serverTap, serverCleanup, err := getTap(ctx, pc, serverCid)
+	serverTap, serverCleanup, err := tap.GetTap(ctx, pc, serverCid)
 	if err != nil {
 		s.Fatal("Failed to get Tap FD for server: ", err)
 	}
-	defer serverCleanup()
+	defer serverCleanup(cleanupCtx)
 
 	clientCid := uint32(8194)
-	clientTap, clientCleanup, err := getTap(ctx, pc, clientCid)
+	clientTap, clientCleanup, err := tap.GetTap(ctx, pc, clientCid)
 	if err != nil {
 		s.Fatal("Failed to get Tap FD for client: ", err)
 	}
-	defer clientCleanup()
+	defer clientCleanup(cleanupCtx)
 
 	// Start vhost-user-net-device.
 	devlog, err := os.Create(filepath.Join(s.OutDir(), "device.log"))
@@ -194,8 +125,8 @@ func VhostUserNet(ctx context.Context, s *testing.State) {
 	cmdArgs := []string{
 		"device",
 		"net",
-		"--tap-fd", fmt.Sprintf("%s,%d", serverSock, serverTap.fd),
-		"--tap-fd", fmt.Sprintf("%s,%d", clientSock, clientTap.fd),
+		"--tap-fd", fmt.Sprintf("%s,%d", serverSock, serverTap.Fd),
+		"--tap-fd", fmt.Sprintf("%s,%d", clientSock, clientTap.Fd),
 	}
 	devCmd := testexec.CommandContext(ctx, "crosvm", cmdArgs...)
 	devCmd.Stdout = devlog
@@ -219,8 +150,8 @@ func VhostUserNet(ctx context.Context, s *testing.State) {
 	serverLog := filepath.Join(s.OutDir(), "serial-server.log")
 	serverArgs := []string{
 		"server",
-		serverTap.addr.String(),
-		serverTap.gateway.String(),
+		serverTap.Addr.String(),
+		serverTap.Gateway.String(),
 	}
 	serverCmd := getCrosvmCmd(ctx, data.Kernel, serverLog, serverSock, script, serverArgs)
 	serverOut, err := os.Create(filepath.Join(s.OutDir(), "crosvm-server.log"))
@@ -239,9 +170,9 @@ func VhostUserNet(ctx context.Context, s *testing.State) {
 	clientLog := filepath.Join(s.OutDir(), "serial-client.log")
 	clientArgs := []string{
 		"client",
-		clientTap.addr.String(),
-		clientTap.gateway.String(),
-		serverTap.addr.String(), // destination address
+		clientTap.Addr.String(),
+		clientTap.Gateway.String(),
+		serverTap.Addr.String(), // destination address
 	}
 	clientCmd := getCrosvmCmd(ctx, data.Kernel, clientLog, clientSock, script, clientArgs)
 	clientOut, err := os.Create(filepath.Join(s.OutDir(), "crosvm-client.log"))
