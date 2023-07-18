@@ -993,6 +993,9 @@ var chromeVideoArgs = []string{
 	"--arc-availability=none",
 	// Disable firmware update to stop chrome from executing fwupd that restarts powerd.
 	"--disable-features=FirmwareUpdaterApp",
+	// Ignore the list of blocked per-GPU functionality (e.g. VP8 accelerated
+	// decoding on Intel Jasper Lake).
+	"--disable-gpu-driver-bug-workarounds",
 }
 
 var chromeVideoArgsWithEnablingVaapiVEAMinResolution = []string{
@@ -1017,6 +1020,9 @@ var chromeVideoArgsWithEnablingVaapiVEAMinResolution = []string{
 	"--arc-availability=none",
 	// Disable firmware update to stop chrome from executing fwupd that restarts powerd.
 	"--disable-features=FirmwareUpdaterApp",
+	// Ignore the list of blocked per-GPU functionality (e.g. VP8 accelerated
+	// decoding on Intel Jasper Lake).
+	"--disable-gpu-driver-bug-workarounds",
 }
 
 var chromeBypassPermissionsArgs = []string{
