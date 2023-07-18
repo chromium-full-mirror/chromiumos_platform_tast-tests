@@ -90,6 +90,10 @@ func DaemonsRestartStress(ctx context.Context, s *testing.State) {
 			if err = restorePermCall(ctx); err != nil {
 				s.Log("Failed to restore lockout permission: ", err)
 			}
+			// Make sure the tpm_manager is in the stable state.
+			if _, err := tpmManager.GetDAInfo(ctx); err != nil {
+				s.Log("Failed to get DA info: ", err)
+			}
 		}(ctxForResumeDaemons)
 	}
 
