@@ -7,6 +7,7 @@ package bruschetta
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/bruschetta"
 	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
@@ -40,5 +41,9 @@ func CommandVim(ctx context.Context, s *testing.State) {
 
 	if err := guestos.CommandVim(ctx, terminal, keyboard, bru); err != nil {
 		s.Fatal("Vim test failed: ", err)
+	}
+
+	if err = apps.Close(ctx, tconn, apps.Terminal.ID); err != nil {
+		s.Fatal("Failed to close terminal app: ", err)
 	}
 }
