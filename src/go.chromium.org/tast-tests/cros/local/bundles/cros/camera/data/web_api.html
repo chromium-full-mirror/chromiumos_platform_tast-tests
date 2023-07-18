@@ -2,7 +2,6 @@
 <html>
 <head><title>GetUserMedia test</title></head>
 <body>
-  <script src="third_party/ssim.js"></script>
   <script src="third_party/blackframe.js"></script>
 <script>
 const resolutions = [[640, 480], [1280, 720]];
@@ -21,6 +20,7 @@ function addLog(msg) {
 async function testGetUserMedia(durationSec) {
   addLog('testGetUserMedia');
   try {
+    await loadScript("third_party/ssim.js");
     for (const resolution of resolutions) {
       const test = new CameraTest(resolution);
       test.checkVideoFrames();
@@ -36,6 +36,7 @@ async function testGetUserMedia(durationSec) {
 async function testImageCaptureAPI() {
   addLog('testImageCaptureAPI');
   try {
+    await loadScript("third_party/ssim.js");
     for (const resolution of resolutions) {
       const test = new CameraTest(resolution);
       test.checkVideoFrames();
@@ -46,6 +47,18 @@ async function testImageCaptureAPI() {
   } finally {
     reportTestDone();
   }
+}
+
+function loadScript(src) {
+  return new Promise(function(resolve, reject) {
+    let script = document.createElement('script');
+    script.src = src;
+
+    script.onload = () => resolve(script);
+    script.onerror = () => reject(new Error("Script load error: " + src));
+
+    document.body.append(script);
+  });
 }
 
 function reportTestDone() {

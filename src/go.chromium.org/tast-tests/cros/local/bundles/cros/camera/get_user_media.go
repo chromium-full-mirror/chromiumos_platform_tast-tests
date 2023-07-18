@@ -6,6 +6,7 @@ package camera
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
@@ -105,6 +106,12 @@ func GetUserMedia(ctx context.Context, s *testing.State) {
 	} else {
 		ci = s.PreValue().(*chrome.Chrome)
 	}
+
+	_, err := os.ReadFile(s.DataPath("third_party/ssim.js"))
+	if err != nil {
+		s.Fatal("Failed to read third_party/ssim.js: ", err)
+	}
+
 	// Run tests for 480p and 720p.
 	if _, err := getusermedia.RunGetUserMedia(ctx, s.DataFileSystem(), ci, duration, getusermedia.VerboseLogging); err != nil {
 		s.Fatal("Failed to call getUserMedia(): ", err)
