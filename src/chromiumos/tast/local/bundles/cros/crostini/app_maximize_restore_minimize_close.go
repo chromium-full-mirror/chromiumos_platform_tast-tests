@@ -118,9 +118,9 @@ func AppMaximizeRestoreMinimizeClose(ctx context.Context, s *testing.State) {
 				// Some apps (e.g, Firefox) may launch in maximized window by default on certain devices.
 				resetNormalWindowState,
 				crostini.Maximize(tconn, appWindow),
-				d.DiffWindow(ctx, fmt.Sprintf("%s_maximized", appParam.appName), screenshot.Retries(5), screenshot.SkipSetWindowState(true)),
+				screenshot.DiffWindow(ctx, d, fmt.Sprintf("%s_maximized", appParam.appName), screenshot.Retries(5), screenshot.SkipSetWindowState(true)),
 				crostini.RestoreFromMaximize(tconn, appWindow),
-				d.DiffWindow(ctx, fmt.Sprintf("%s_restored", appParam.appName), screenshot.Retries(5), screenshot.SkipSetWindowState(true)),
+				screenshot.DiffWindow(ctx, d, fmt.Sprintf("%s_restored", appParam.appName), screenshot.Retries(5), screenshot.SkipSetWindowState(true)),
 				crostini.Close(tconn, appWindow),
 				// Check the app disappears from the shelf.
 				ui.WithTimeout(5*time.Second).WaitUntilGone(nodewith.NameContaining(appParam.appName).Role(role.Button).Visible().Ancestor(shelf)),

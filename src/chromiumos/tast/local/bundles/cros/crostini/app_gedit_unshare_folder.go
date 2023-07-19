@@ -193,7 +193,7 @@ func AppGeditUnshareFolder(ctx context.Context, s *testing.State) {
 		crostini.TakeAppScreenshot("gedit"),
 		// Screendiff test. Retrying 10 times, every 600 millis as cursor blinks about
 		// once a second, and blinking causes diffs to fail.
-		d.Diff(ctx, "gedit", geditWindow, screenshot.Retries(10), screenshot.RetryInterval(time.Millisecond*600)),
+		screenshot.Diff(ctx, d, "gedit", geditWindow, screenshot.Retries(10), screenshot.RetryInterval(time.Millisecond*600)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to perform screendiff: ", err)
 	}

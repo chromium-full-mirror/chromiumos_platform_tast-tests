@@ -143,7 +143,7 @@ func testCreateFileWithGedit(ctx context.Context, terminalApp *terminalapp.Termi
 		crostini.TakeAppScreenshot("gedit"),
 		// Screendiff test. Retrying 10 times, every 600 millis as cursor blinks about
 		// once a second, and blinking causes diffs to fail.
-		d.DiffWindow(ctx, "gedit", screenshot.Retries(10), screenshot.RetryInterval(time.Millisecond*600)),
+		screenshot.DiffWindow(ctx, d, "gedit", screenshot.Retries(10), screenshot.RetryInterval(time.Millisecond*600)),
 		// Press ctrl+W twice to exit window.
 		keyboard.AccelAction("ctrl+W"),
 		keyboard.AccelAction("ctrl+W"),

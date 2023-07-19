@@ -158,18 +158,21 @@ func (f *crostiniAppsFixture) PreTest(ctx context.Context, s *testing.FixtTestSt
 			MaxDifferentPixels:  100,
 			PixelDeltaThreshold: 255 * 4,
 			RetryInterval:       2 * time.Second,
+			Retries:             5,
 		},
 		SkipDpiNormalization: true,
 	}
 	differ, err := screenshot.NewDifferFromChrome(ctx, f.screenDiffer.state, f.cr, screendiffConfig)
 	if err != nil {
-		s.Log("Failed to start screen differ: ", err)
+		s.Logf("Failed to start screen differ:%s (it is possible the authentication credentials are out of date)", err)
+		f.screenDiffer.differ = nil
+	} else {
+		f.screenDiffer.differ = &differ
 	}
-	f.screenDiffer.differ = &differ
 }
 
 func (f *crostiniAppsFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	if (*f.screenDiffer.differ) != nil {
+	if f.screenDiffer.differ != nil {
 		(*f.screenDiffer.differ).GetFailedDiffs()
 	}
 

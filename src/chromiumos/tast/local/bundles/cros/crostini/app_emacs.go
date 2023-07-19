@@ -149,7 +149,7 @@ func createFileWithEmacs(ctx context.Context, keyboard *input.KeyboardEventWrite
 		keyboard.AccelAction("ctrl+X"),
 		keyboard.AccelAction("ctrl+S"),
 		// After saving, wait for the "save" button to grey out.
-		d.DiffWindow(ctx, "emacs", screenshot.Retries(2)),
+		screenshot.DiffWindow(ctx, d, "emacs"),
 		// Press ctrl+x and ctrl+c to and quit.
 		keyboard.AccelAction("ctrl+X"),
 		keyboard.AccelAction("ctrl+C"),
