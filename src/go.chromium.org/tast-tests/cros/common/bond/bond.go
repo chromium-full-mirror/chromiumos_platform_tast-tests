@@ -200,7 +200,12 @@ func (c *Client) CreateConference(ctx context.Context) (string, error) {
 		},
 	}
 	resp := conferenceResponse{}
-	if err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/conferences:create", req, &resp, defaultSendTimeout); err != nil {
+	// createConferenceTimeout(100s) would allow 3 longerSendTimeout(30s)
+	// attempts to request the bond server to create conference.
+	const createConferenceTimeout = 100 * time.Second
+	sCtx, cancel := context.WithTimeout(ctx, createConferenceTimeout)
+	defer cancel()
+	if err := c.sendWithRetry(sCtx, http.MethodPost, c.endpoint+"/v1/conferences:create", req, &resp, longerSendTimeout); err != nil {
 		return "", err
 	}
 	return resp.Conference.ConferenceCode, nil

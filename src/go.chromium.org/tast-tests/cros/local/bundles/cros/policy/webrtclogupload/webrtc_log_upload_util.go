@@ -130,10 +130,7 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 
 // TriggerWebRTCLogUploads is used to create a Meet client and trigger feedback to create WebRTC logs.
 func TriggerWebRTCLogUploads(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, tconn *chrome.TestConn, creds string, connSource ash.ConnSource) (errr error) {
-	const (
-		createConfTimeout = 30 * time.Second
-		meetTimeout       = 10 * time.Minute
-	)
+	const meetTimeout = 10 * time.Minute
 	closeCtx := ctx
 
 	// Ensure that we close the Meet window at the end of the test in case
@@ -159,16 +156,11 @@ func TriggerWebRTCLogUploads(ctx context.Context, cr *chrome.Chrome, br *browser
 	}
 	defer bc.Close()
 
-	var meetingCode string
-	func() {
-		// Request the bond server to create conference.
-		meetCtx, cancel := context.WithTimeout(ctx, createConfTimeout)
-		defer cancel()
-		meetingCode, err = bc.CreateConference(meetCtx)
-		if err != nil {
-			errors.Wrap(err, "failed to create a conference room")
-		}
-	}()
+	// Request the bond server to create conference.
+	meetingCode, err := bc.CreateConference(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create a conference room")
+	}
 
 	defer func(ctx context.Context) {
 		bc.RemoveAllBots(ctx, meetingCode)

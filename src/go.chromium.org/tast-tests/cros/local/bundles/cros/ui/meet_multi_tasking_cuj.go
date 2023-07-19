@@ -79,7 +79,6 @@ func init() {
 //   - Record and save metrics.
 func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	const (
-		createConfTimeout   = 30 * time.Second
 		addBotTimeout       = 100 * time.Second
 		docsScrollTimeout   = 30 * time.Second
 		slidesScrollTimeout = 30 * time.Second
@@ -168,17 +167,10 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	}
 	defer bc.Close()
 
-	var meetingCode string
-	func() {
-		// createConfTimeout(30s) would allow 3 bond.defaultSendTimeout(8s)
-		// attempts to request the bond server to create conference.
-		sctx, cancel := context.WithTimeout(ctx, createConfTimeout)
-		defer cancel()
-		meetingCode, err = bc.CreateConference(sctx)
-		if err != nil {
-			s.Fatal("Failed to create a conference room: ", err)
-		}
-	}()
+	meetingCode, err := bc.CreateConference(ctx)
+	if err != nil {
+		s.Fatal("Failed to create a conference room: ", err)
+	}
 	s.Log("Created a room with the code ", meetingCode)
 
 	// addBotTimeout(100s) would allow 3 bond.longerSendTimeout(30s) attempts

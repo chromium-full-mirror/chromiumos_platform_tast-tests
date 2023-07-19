@@ -306,15 +306,10 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		}
 		defer bc.Close()
 
-		var meetingCode string
-		func() {
-			sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-			defer cancel()
-			meetingCode, err = bc.CreateConference(sctx)
-			if err != nil {
-				s.Fatal("Failed to create a conference room: ", err)
-			}
-		}()
+		meetingCode, err := bc.CreateConference(ctx)
+		if err != nil {
+			s.Fatal("Failed to create a conference room: ", err)
+		}
 
 		testing.ContextLog(ctx, "Meeting created with code: ", meetingCode)
 

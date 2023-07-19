@@ -93,10 +93,7 @@ func init() {
 }
 
 func MeetLiveCaption(ctx context.Context, s *testing.State) {
-	const (
-		createConfTimeout = 30 * time.Second
-		addBotTimeout     = 100 * time.Second
-	)
+	const addBotTimeout = 100 * time.Second
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -121,17 +118,10 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 	defer bondClient.Close()
 
 	// Create a meeting via bond API.
-	var meetingCode string
-	func(ctx context.Context) {
-		// createConfTimeout(30s) would allow 3 bond.defaultSendTimeout(8s)
-		// attempts to request the bond server to create conference.
-		sctx, cancel := context.WithTimeout(ctx, createConfTimeout)
-		defer cancel()
-		meetingCode, err = bondClient.CreateConference(sctx)
-		if err != nil {
-			s.Fatal("Failed to create conference: ", err)
-		}
-	}(ctx)
+	meetingCode, err := bondClient.CreateConference(ctx)
+	if err != nil {
+		s.Fatal("Failed to create conference: ", err)
+	}
 	s.Log("Created a room with the code: ", meetingCode)
 
 	// Register bots cleanup since the AddBots can partially fail.
