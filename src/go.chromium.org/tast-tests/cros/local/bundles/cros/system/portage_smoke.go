@@ -20,7 +20,7 @@ func init() {
 			"aaronyu@google.com", // test author
 		},
 		BugComponent: "b:1037860", // ChromeOS Public Tracker > Services > Infra > Build
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 	})
 }
 
