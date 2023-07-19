@@ -56,7 +56,7 @@ func init() {
 		Timeout:      5 * time.Minute,
 
 		// Note about Params array with tests:
-		// * The Test Strategy is to keep a ballance between scope and a risk of getting a flaky test.
+		// * The Test Strategy is to keep a balance between scope and a risk of getting a flaky test.
 		// * If the test name is xxxxxxxxxx_golden:
 		//    * it must pass on selected devices (to be non-flaky),
 		//    * shall cover all functionality for upcoming milestones.
@@ -86,7 +86,7 @@ func init() {
 					checkLocationControl:   true,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(goldenModels...)),
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "group:privacyhub-golden"},
 			},
 			// Legacy to be removed before V0 is removed from chromium.
 			{
@@ -109,7 +109,7 @@ func init() {
 					checkLocationControl:   false,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(goldenModels...)),
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "group:privacyhub-golden"},
 			},
 			{
 				Name: "feature_off",
@@ -130,7 +130,7 @@ func init() {
 					checkLocationControl:   false,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(goldenModels...)),
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "group:privacyhub-golden"},
 			},
 		},
 	})
