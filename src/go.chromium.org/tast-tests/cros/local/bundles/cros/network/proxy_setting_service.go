@@ -75,10 +75,10 @@ func (s *ProxySettingsService) ResetConnectionType(ctx context.Context, req *net
 	return &emptypb.Empty{}, ps.SetDirectConnection(ctx, uiauto.New(tconn))
 }
 
-// Setup sets up proxy values.
+// SetProxySettings sets up proxy values.
 // Not specifying the SameHost/SamePort will ensure the toggle button "Use the same proxy for all protocols" being disabled.
 // Note: It can not include other proxies when specifying the SameHost/SamePort.
-func (s *ProxySettingsService) Setup(ctx context.Context, req *network.ProxyConfigs) (_ *emptypb.Empty, retErr error) {
+func (s *ProxySettingsService) SetProxySettings(ctx context.Context, req *network.SetProxySettingsRequest) (_ *emptypb.Empty, retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -89,16 +89,17 @@ func (s *ProxySettingsService) Setup(ctx context.Context, req *network.ProxyConf
 	}
 	defer kb.Close(cleanupCtx)
 
-	_, tconn, ps, err := s.initRuntimeResources(ctx, req.GetNetworkInfo())
+	configs := req.GetConfigs()
+	_, tconn, ps, err := s.initRuntimeResources(ctx, configs.GetNetworkInfo())
 	if err != nil {
 		return nil, err
 	}
 	defer ps.Close(cleanupCtx, tconn, kb)
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_setup")
 
-	switch req.ProxyConnectionType {
+	switch configs.ProxyConnectionType {
 	case network.ProxyConnectionType_ManualProxyConfiguration:
-		if err := ps.SetManualConfig(ctx, tconn, kb, parseProxyConfigs(req)); err != nil {
+		if err := ps.SetManualConfig(ctx, tconn, kb, parseProxyConfigs(req.GetConfigs())); err != nil {
 			return &emptypb.Empty{}, errors.Wrap(err, "failed to setup the contents for proxy fields")
 		}
 	case network.ProxyConnectionType_DirectInternetConnection:
@@ -106,7 +107,7 @@ func (s *ProxySettingsService) Setup(ctx context.Context, req *network.ProxyConf
 			return &emptypb.Empty{}, errors.Wrap(err, "failed to set connection type")
 		}
 	default:
-		return &emptypb.Empty{}, errors.Errorf("unexpected proxy connection type %v", req.ProxyConnectionType)
+		return &emptypb.Empty{}, errors.Errorf("unexpected proxy connection type %v", configs.ProxyConnectionType)
 	}
 
 	return &emptypb.Empty{}, nil
@@ -509,6 +510,15 @@ func (s *ProxySettingsService) New(ctx context.Context, _ *network.NewRequest) (
 // Deprecated: this RPC is deprecated.
 func (s *ProxySettingsService) Close(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, errors.New("rpc: tast.cros.network.ProxySettingService/Close is deprecated")
+}
+
+// Setup sets up proxy values.
+// Not specifying the SameHost/SamePort will ensure the toggle button "Use the same proxy for all protocols" being disabled.
+// Note: It can not include other proxies when specifying the SameHost/SamePort.
+//
+// Deprecated: use SetProxySettings instead.
+func (s *ProxySettingsService) Setup(ctx context.Context, req *network.ProxyConfigs) (_ *emptypb.Empty, retErr error) {
+	return nil, errors.New("rpc: tast.cros.network.ProxySettingService/Setup is deprecated, use tast.cros.network.ProxySettingService/SetProxySettings instead")
 }
 
 // FetchConfigurations returns proxy hosts and ports.

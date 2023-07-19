@@ -18,10 +18,10 @@ service ProxySettingService {
   // ResetConnectionType resets the proxy setting connection type, can be used to cleanup the proxy settings.
   rpc ResetConnectionType(ResetConnectionTypeRequest) returns (google.protobuf.Empty) {}
 
-  // Setup sets up proxy values.
+  // SetProxySettings sets up proxy values.
   // Not specifying the SameHost/SamePort will ensure the toggle button "Use the same proxy for all protocols" being disabled.
   // Note: It can not include other proxies when specifying the SameHost/SamePort.
-  rpc Setup(ProxyConfigs) returns (google.protobuf.Empty) {}
+  rpc SetProxySettings(SetProxySettingsRequest) returns (google.protobuf.Empty) {}
 
   // FetchProxySettings returns proxy configurations. By default this method will retrieve proxy configurations using OS Settings.
   rpc FetchProxySettings(FetchProxySettingsRequest) returns (ProxyConfigs) {}
@@ -58,6 +58,12 @@ service ProxySettingService {
   // Close releases the resources obtained by New and closes the proxy-settings page.
   rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
+  // Deprecated: use SetupProxy instead.
+  // Setup sets up proxy values.
+  // Not specifying the SameHost/SamePort will ensure the toggle button "Use the same proxy for all protocols" being disabled.
+  // Note: It can not include other proxies when specifying the SameHost/SamePort.
+  rpc Setup(ProxyConfigs) returns (google.protobuf.Empty) {}
+
   // Deprecated: use FetchProxySettings instead.
   // FetchConfigurations returns proxy hosts and ports.
   rpc FetchConfigurations(google.protobuf.Empty) returns (ProxyConfigs) {}
@@ -70,6 +76,16 @@ message NewRequest {
 
 message ResetConnectionTypeRequest {
   NetworkInfo network_info = 1;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 2;
+}
+
+message SetProxySettingsRequest {
+  ProxyConfigs configs = 1;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 2;
 }
 
 message ProxyConfigs {
@@ -93,6 +109,9 @@ message SetExceptionRequest {
   NetworkInfo network_info = 1;
   string host = 2;
   Action action = 3;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 4;
 }
 
 message FetchProxySettingsRequest {
@@ -104,10 +123,16 @@ message FetchProxySettingsRequest {
   }
   NetworkInfo network_info = 1;
   FetchSource fetch_source = 2;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 3;
 }
 
 message FetchExceptionRequest {
   NetworkInfo network_info = 1;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 2;
 }
 
 message FetchExceptionResponse {
@@ -133,8 +158,20 @@ message AllowProxiesForSharedNetworkRequest {
   // shared networks.
   bool allow = 1;
   NetworkInfo network_info = 2;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 3;
 }
 
 message IsProxySettingsRestrictedRequest {
   NetworkInfo network_info = 1;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 2;
+}
+
+enum LoginMode {
+  OOBE = 0;
+  SignInScreen = 1;
+  LoggedIn = 2;
 }
