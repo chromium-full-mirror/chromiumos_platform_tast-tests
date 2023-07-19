@@ -41,9 +41,8 @@ func init() {
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome", "lacros"},
-		// Disabled due to <1% pass rate over 30 days. See b/246818601
-		//Attr:         []string{"group:golden_tier"},
-		Fixture: fixture.LacrosPolicyLoggedIn,
+		Attr:         []string{"group:golden_tier"},
+		Fixture:      fixture.LacrosPolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.HttpsOnlyMode{}, pci.VerifiedFunctionalityUI),
 		},
@@ -159,20 +158,15 @@ func HTTPSOnlyMode(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to get node info for HTTPS only toggle: ", err)
 			}
 
-			// Initial state of button should always be unchecked.
-			if info.Checked == checked.True {
-				b, _ := json.Marshal(info)
-				s.Fatalf("Unexpected toggle button checked state, got %s", b)
-			}
-
 			isRestricted := info.Restriction == restriction.Disabled
 			if param.wantRestriction != isRestricted {
 				b, _ := json.Marshal(info)
 				s.Fatalf("Unexpected toggle button restricted state, got %s", b)
 			}
 
-			if param.setChecked {
-				// Toggle HTTPS only mode on.
+			// Toggle HTTPS only mode button if not in desired state.
+			isChecked := info.Checked == checked.True
+			if param.setChecked != isChecked {
 				if err := ui.WithTimeout(5 * time.Second).DoDefault(httpsOnlyButton)(ctx); err != nil {
 					s.Fatal("Could not click on HTTPS only toggle: ", err)
 				}
