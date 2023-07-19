@@ -6,12 +6,13 @@ package webutil
 
 import (
 	"context"
+	"time"
+
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"time"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -84,6 +85,6 @@ func LoginGoogleAccount(ctx context.Context, cr *chrome.Chrome, account, passwor
 		ui.DoDefault(showPassword),
 		confirmInput(passwordField, password),
 		kb.AccelAction("Enter"),
-		ui.WaitUntilGone(passwordField),
+		ui.WithTimeout(time.Minute).WaitUntilGone(passwordField),
 	)(ctx)
 }
