@@ -7,6 +7,7 @@ package platform
 import (
 	"context"
 	"io/ioutil"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -44,7 +45,10 @@ func init() {
 	})
 }
 
-func checkSetGameMode(ctx context.Context, rm *resourced.Client, checkSwappinessTuning bool) (resErr error) {
+// checkSetGameMode tests SetGameMode functionality and also the tunings that come along with the change of game mode if specified.
+// We will check the tuning of swappiness along with the change of game mode if checkSwappinessTuning is true;
+// and we will check the tuning transparent huge pages along with the change of game mode if checkTHPTuning is true.
+func checkSetGameMode(ctx context.Context, rm *resourced.Client, checkSwappinessTuning, checkTHPTuning bool) (resErr error) {
 	// Get the original game mode.
 	origGameMode, err := rm.GameMode(ctx)
 	if err != nil {
@@ -79,6 +83,12 @@ func checkSetGameMode(ctx context.Context, rm *resourced.Client, checkSwappiness
 		}
 	}
 
+	if checkTHPTuning {
+		if err := validateTHP(ctx, newGameMode); err != nil {
+			return errors.Wrap(err, "validate THP failed")
+		}
+	}
+
 	// Check game mode is set to the new value.
 	gameMode, err := rm.GameMode(ctx)
 	if err != nil {
@@ -90,7 +100,10 @@ func checkSetGameMode(ctx context.Context, rm *resourced.Client, checkSwappiness
 	return nil
 }
 
-func checkSetGameModeWithTimeout(ctx context.Context, rm *resourced.Client, checkSwappinessTuning bool) (resErr error) {
+// checkSetGameModeWithTimeout tests SetGamSetGameModeWithTimeout functionality and also the tunings that come along with the change of game mode if specified.
+// We will check the tuning of swappiness along with the change of game mode if checkSwappinessTuning is true;
+// and we will check the tuning of transparent huge pages along with the change of game mode if checkTHPTuning is true.
+func checkSetGameModeWithTimeout(ctx context.Context, rm *resourced.Client, checkSwappinessTuning, checkTHPTuning bool) (resErr error) {
 	var newGameMode uint8 = resourced.GameModeBorealis
 	if err := rm.SetGameModeWithTimeout(ctx, newGameMode, 1); err != nil {
 		return errors.Wrap(err, "failed to set game mode state")
@@ -99,6 +112,12 @@ func checkSetGameModeWithTimeout(ctx context.Context, rm *resourced.Client, chec
 	if checkSwappinessTuning {
 		if err := validateSwappiness(ctx, newGameMode); err != nil {
 			return errors.Wrap(err, "validate swappiness failed")
+		}
+	}
+
+	if checkTHPTuning {
+		if err := validateTHP(ctx, newGameMode); err != nil {
+			return errors.Wrap(err, "validate THP failed")
 		}
 	}
 
@@ -131,6 +150,12 @@ func checkSetGameModeWithTimeout(ctx context.Context, rm *resourced.Client, chec
 			return errors.Wrap(err, "Reset swapiness failed")
 		}
 	}
+
+	if checkTHPTuning {
+		if err := validateTHP(ctx, resourced.GameModeOff); err != nil {
+			return errors.Wrap(err, "Reset THP failed")
+		}
+	}
 	return nil
 }
 
@@ -147,14 +172,26 @@ func readSwappiness(ctx context.Context) (int, error) {
 	return swappinessVal, nil
 }
 
+func readTHP(ctx context.Context) (string, error) {
+	thp, err := ioutil.ReadFile("/sys/kernel/mm/transparent_hugepage/enabled")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read TPH mode")
+	}
+	// The thp is of format like `[always] madvise never`, with the value
+	// inside [] as the mode that's currently used.
+	re := regexp.MustCompile(`.*\[(.+)\].*`)
+	match := re.FindStringSubmatch(string(thp))
+	return match[1], nil
+}
+
 // validateSwappiness checks swappiness is tuned correctly:
 //  1. for borealis game, tuned to 30;
 //  2. for others, not tuned.
 func validateSwappiness(ctx context.Context, newGameMode uint8) error {
 	const BorealisSwappiness = 30
 	const DefaultSwappiness = 60
-	// Add a sleep to avoid possbile flakiness that can be caused by
-	// the async modification of swappiness.
+	// GoBigSleepLint: add a sleep to avoid possible flakiness that can
+	// be caused by the async modification of swappiness.
 	testing.Sleep(ctx, 500*time.Millisecond)
 	swappinessVal, err := readSwappiness(ctx)
 	if err != nil {
@@ -172,6 +209,32 @@ func validateSwappiness(ctx context.Context, newGameMode uint8) error {
 		}
 	}
 	testing.ContextLog(ctx, "Swappiness validation succeed")
+	return nil
+}
+
+// validateTHP checks if transparent huage page is tuned correctly:
+//  1. for borealis game, tuned to always mode;
+//  2. for others, not tuned.
+func validateTHP(ctx context.Context, newGameMode uint8) error {
+	const BorealisTHP = "always"
+	const DefaultTHP = "madvise"
+
+	thp, err := readTHP(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to read THP mode")
+	}
+	if newGameMode == resourced.GameModeBorealis {
+		// For borealis Game, THP should be always mode.
+		if thp != BorealisTHP {
+			return errors.Errorf("THP mode should be always, but got %s", thp)
+		}
+	} else {
+		// For other cases, THP should be default madvise mode.
+		if thp != DefaultTHP {
+			return errors.Errorf("THP mode should be madvise, but got %s", thp)
+		}
+	}
+	testing.ContextLog(ctx, "THP validation succeed")
 	return nil
 }
 
@@ -355,7 +418,7 @@ func Resourced(ctx context.Context, s *testing.State) {
 
 	if s.Param().(resourcedTestParams).isBaseline {
 		// Baseline checks.
-		if err := checkSetGameMode(ctx, rm, false); err != nil {
+		if err := checkSetGameMode(ctx, rm, false, false); err != nil {
 			s.Fatal("Checking SetGameMode failed: ", err)
 		}
 
@@ -367,7 +430,7 @@ func Resourced(ctx context.Context, s *testing.State) {
 			s.Fatal("Checking memory pressure signal failed: ", err)
 		}
 
-		if err := checkSetGameModeWithTimeout(ctx, rm, false); err != nil {
+		if err := checkSetGameModeWithTimeout(ctx, rm, false, false); err != nil {
 			s.Fatal("Checking SetGameModeWithTimeout failed: ", err)
 		}
 
@@ -391,11 +454,11 @@ func Resourced(ctx context.Context, s *testing.State) {
 		s.Fatal("Setting memory margins failed: ", err)
 	}
 
-	if err := checkSetGameMode(ctx, rm, true); err != nil {
-		s.Fatal("Checking swappiness tuning with SetGameMode failed: ", err)
+	if err := checkSetGameMode(ctx, rm, true, true); err != nil {
+		s.Fatal("Checking swappiness/THP tuning with SetGameMode failed: ", err)
 	}
 
-	if err := checkSetGameModeWithTimeout(ctx, rm, true); err != nil {
-		s.Fatal("Checking swappiness tuning with SetGameModeWithTimeout failed: ", err)
+	if err := checkSetGameModeWithTimeout(ctx, rm, true, true); err != nil {
+		s.Fatal("Checking swappiness/THP tuning with SetGameModeWithTimeout failed: ", err)
 	}
 }
