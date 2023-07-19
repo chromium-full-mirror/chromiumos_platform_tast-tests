@@ -18,6 +18,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
+	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -673,8 +674,7 @@ func loadEnabledSyscalls(fpath, board string) (drivers, enabledSyscalls []string
 		return nil, nil, "", err
 	}
 
-	panicOnWarn := time.Now().Day() % 2
-	scriptContents = fmt.Sprintf(startupScriptContents, panicOnWarn)
+	scriptContents = fmt.Sprintf(startupScriptContents, panicOnWarn(board))
 	for _, config := range feconfig {
 		if len(config.Boards) > 0 && len(config.ExcludeBoards) > 0 {
 			return nil, nil, "", errors.Errorf("non-empty Boards and ExcludeBoards found for [%v]", config.Driver)
@@ -696,6 +696,17 @@ func loadEnabledSyscalls(fpath, board string) (drivers, enabledSyscalls []string
 	}
 
 	return drivers, enabledSyscalls, scriptContents, nil
+}
+
+func panicOnWarn(board string) int {
+	panicDisabledBoards := []string{
+		"strongbad",
+		"kukui",
+	}
+	if slices.Contains(panicDisabledBoards, board) {
+		return 0
+	}
+	return time.Now().Day() % 2
 }
 
 func loadPeriodic(fpath, board string) (*periodicConfig, error) {
