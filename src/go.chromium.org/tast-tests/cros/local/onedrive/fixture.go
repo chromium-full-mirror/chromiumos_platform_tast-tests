@@ -33,7 +33,7 @@ func init() {
 		SetUpTimeout: chrome.LoginTimeout,
 		ResetTimeout: chrome.ResetTimeout,
 		Parent:       "driveFsStartedWithOfficeEnabled", // TODO(b/291524698): Create more DriveFS accounts.
-		Data:         []string{"Sample DOCX file_20230704.docx", "Sample PPTX file_20230704.pptx", "Sample XLSX file_20230704.xlsx"},
+		Data:         []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230704.xlsx"},
 	})
 }
 
@@ -106,13 +106,13 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	}
 
 	var srcDocx, docx, srcPptx, pptx, srcXlsx, xlsx string
-	if srcDocx, docx, err = prepareOfficeFile(s.DataPath("Sample DOCX file_20230704.docx"), targetFolder); err != nil {
+	if srcDocx, docx, err = prepareOfficeFile(s.DataPath("Sample_DOCX_file_20230704.docx"), targetFolder); err != nil {
 		s.Fatal("Failed to prepare file: ", err)
 	}
-	if srcPptx, pptx, err = prepareOfficeFile(s.DataPath("Sample PPTX file_20230704.pptx"), targetFolder); err != nil {
+	if srcPptx, pptx, err = prepareOfficeFile(s.DataPath("Sample_PPTX_file_20230704.pptx"), targetFolder); err != nil {
 		s.Fatal("Failed to prepare file: ", err)
 	}
-	if srcXlsx, xlsx, err = prepareOfficeFile(s.DataPath("Sample XLSX file_20230704.xlsx"), targetFolder); err != nil {
+	if srcXlsx, xlsx, err = prepareOfficeFile(s.DataPath("Sample_XLSX_file_20230704.xlsx"), targetFolder); err != nil {
 		s.Fatal("Failed to prepare file: ", err)
 	}
 	f.cleanUpFiles = append(f.cleanUpFiles, docx, pptx, xlsx)

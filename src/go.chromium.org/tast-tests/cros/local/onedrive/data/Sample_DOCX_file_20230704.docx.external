@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/filemanager/Sample DOCX file_20230704.docx",
+  "url": "gs://chromiumos-test-assets-public/tast/cros/filemanager/Sample_DOCX_file_20230704.docx",
   "size": 129601,
   "sha256sum": "7208a4283b6f485520235c500b96507b0e352fd850c9292096f56e9da09754b5"
 }
