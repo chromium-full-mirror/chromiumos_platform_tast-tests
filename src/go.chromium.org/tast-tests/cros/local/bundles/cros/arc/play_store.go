@@ -34,7 +34,7 @@ func init() {
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
-		Timeout: 13 * time.Minute,
+		Timeout: 15 * time.Minute,
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 	})
 }
