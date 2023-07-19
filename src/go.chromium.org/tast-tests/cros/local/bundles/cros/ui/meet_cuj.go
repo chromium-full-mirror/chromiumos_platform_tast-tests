@@ -885,37 +885,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to expand Create Dump section of chrome://webrtc-internals: ", err)
 	}
 
-	webRTCMetricInfo := map[string]struct {
-		unit      string
-		direction perf.Direction
-	}{
-		"WebRTC.Video.BandwidthLimitedResolutionInPercent":             {"percent", perf.SmallerIsBetter},
-		"WebRTC.Video.BandwidthLimitedResolutionsDisabled":             {"count", perf.SmallerIsBetter},
-		"WebRTC.Video.CpuLimitedResolutionInPercent":                   {"percent", perf.SmallerIsBetter},
-		"WebRTC.Video.DecodedFramesPerSecond":                          {"fps", perf.BiggerIsBetter},
-		"WebRTC.Video.DroppedFrames.Capturer":                          {"count", perf.SmallerIsBetter},
-		"WebRTC.Video.DroppedFrames.Encoder":                           {"count", perf.SmallerIsBetter},
-		"WebRTC.Video.DroppedFrames.EncoderQueue":                      {"count", perf.SmallerIsBetter},
-		"WebRTC.Video.DroppedFrames.Ratelimiter":                       {"count", perf.SmallerIsBetter},
-		"WebRTC.Video.DroppedFrames.Receiver":                          {"count", perf.SmallerIsBetter},
-		"WebRTC.Video.InputFramesPerSecond":                            {"fps", perf.BiggerIsBetter},
-		"WebRTC.Video.NumberResolutionDownswitchesPerMinute":           {"count_per_minute", perf.SmallerIsBetter},
-		"WebRTC.Video.QualityLimitedResolutionDownscales":              {"count", perf.SmallerIsBetter},
-		"WebRTC.Video.QualityLimitedResolutionInPercent":               {"percent", perf.SmallerIsBetter},
-		"WebRTC.Video.RenderFramesPerSecond":                           {"fps", perf.BiggerIsBetter},
-		"WebRTC.Video.Screenshare.BandwidthLimitedResolutionInPercent": {"percent", perf.SmallerIsBetter},
-		"WebRTC.Video.Screenshare.BandwidthLimitedResolutionsDisabled": {"count", perf.SmallerIsBetter},
-		"WebRTC.Video.Screenshare.InputFramesPerSecond":                {"fps", perf.BiggerIsBetter},
-		"WebRTC.Video.Screenshare.QualityLimitedResolutionDownscales":  {"count", perf.SmallerIsBetter},
-		"WebRTC.Video.Screenshare.QualityLimitedResolutionInPercent":   {"percent", perf.SmallerIsBetter},
-		"WebRTC.Video.Screenshare.SentFramesPerSecond":                 {"fps", perf.BiggerIsBetter},
-		"WebRTC.Video.Screenshare.SentToInputFpsRatioPercent":          {"percent", perf.BiggerIsBetter},
-		"WebRTC.Video.SentFramesPerSecond":                             {"fps", perf.BiggerIsBetter},
-		"WebRTC.Video.SentToInputFpsRatioPercent":                      {"percent", perf.BiggerIsBetter},
-		"WebRTC.Video.TimeInHdPercentage":                              {"percent", perf.BiggerIsBetter},
-	}
 	var names []string
-	for name := range webRTCMetricInfo {
+	for name := range cujrecorder.WebRTCMetricInfo {
 		names = append(names, name)
 	}
 	webRTCMetricsRecorder, err := metrics.StartRecorder(ctx, tconn, names...)
@@ -1777,7 +1748,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				continue
 			}
 
-			info := webRTCMetricInfo[hist.Name]
+			info := cujrecorder.WebRTCMetricInfo[hist.Name]
 			var bucketMinima []float64
 			var bucketMaxima []float64
 			for _, bucket := range hist.Buckets {
@@ -1790,28 +1761,28 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			pv.Set(perf.Metric{
 				Name:      hist.Name,
 				Variant:   "bucket_minima",
-				Unit:      info.unit,
-				Direction: info.direction,
+				Unit:      info.Unit,
+				Direction: info.Direction,
 				Multiple:  true,
 			}, bucketMinima...)
 			pv.Set(perf.Metric{
 				Name:      hist.Name,
 				Variant:   "bucket_maxima",
-				Unit:      info.unit,
-				Direction: info.direction,
+				Unit:      info.Unit,
+				Direction: info.Direction,
 				Multiple:  true,
 			}, bucketMaxima...)
 			pv.Set(perf.Metric{
 				Name:      hist.Name,
 				Variant:   "total",
-				Unit:      info.unit,
-				Direction: info.direction,
+				Unit:      info.Unit,
+				Direction: info.Direction,
 			}, total)
 			pv.Set(perf.Metric{
 				Name:      hist.Name,
 				Variant:   "mean",
-				Unit:      info.unit,
-				Direction: info.direction,
+				Unit:      info.Unit,
+				Direction: info.Direction,
 			}, total/float64(count))
 		}
 	}
