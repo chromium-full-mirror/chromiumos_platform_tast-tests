@@ -289,53 +289,65 @@ func PollModem(ctx context.Context, oldModem string) (*Modem, error) {
 	return NewModem(ctx)
 }
 
-// NewModemWithSim returns a Modem where the primary SIM slot is not empty.
-// Useful on dual SIM DUTs where only one SIM is available, and we want to
-// select the slot with the active SIM.
+// NewModemWithSim returns a Modem and calls EnsureValidSIM.
 func NewModemWithSim(ctx context.Context) (*Modem, error) {
 	modem, err := NewModem(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create modem")
 	}
-	props, err := modem.GetProperties(ctx)
+	if err := modem.EnsureValidSIM(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to ensure SIM")
+	}
+	return modem, nil
+}
+
+// EnsureValidSIM ensures that the primary SIM slot is not empty.
+// Useful on dual SIM DUTs where only one SIM is available, and we want to
+// select the slot with the active SIM.
+func (m *Modem) EnsureValidSIM(ctx context.Context) error {
+	props, err := m.GetProperties(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to call GetProperties on modem")
+		return errors.Wrap(err, "failed to call GetProperties on modem")
 	}
 	simPath, err := props.GetObjectPath(mmconst.ModemPropertySim)
 	if err != nil {
-		return nil, errors.Wrap(err, "missing sim property")
+		return errors.Wrap(err, "missing sim property")
 	}
-	isValidSim, err := modem.isValidSim(ctx, simPath)
+	valid, err := m.isValidSIM(ctx, simPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to check if sim is valid")
+		return errors.Wrap(err, "failed to check if sim is valid")
 	}
-	if isValidSim {
-		return modem, nil
+	if valid {
+		return nil
 	}
 
 	simSlots, err := props.GetObjectPaths(mmconst.ModemPropertySimSlots)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get simslots property")
+		return errors.Wrap(err, "failed to get simslots property")
 	}
-	for slotIndex, path := range simSlots {
-		isValidSim, err := modem.isValidSim(ctx, path)
+	for s, path := range simSlots {
+		slotIndex := s + 1
+		valid, err := m.isValidSIM(ctx, path)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to check if sim is valid")
+			return errors.Wrap(err, "failed to check if sim is valid")
 		}
-		if !isValidSim {
+		if !valid {
 			continue
 		}
-		testing.ContextLogf(ctx, "Primary slot doesn't have a SIM, switching to slot %d", slotIndex+1)
-		if c := modem.Call(ctx, "SetPrimarySimSlot", uint32(slotIndex+1)); c.Err != nil {
-			return nil, errors.Wrap(c.Err, "failed to set primary SIM slot")
+		testing.ContextLogf(ctx, "Primary slot doesn't have a SIM, switching to slot %d", slotIndex)
+		if c := m.Call(ctx, "SetPrimarySimSlot", uint32(slotIndex)); c.Err != nil {
+			return errors.Wrap(c.Err, "failed to set primary SIM slot")
 		}
-		return PollModem(ctx, modem.String())
+		if _, err = PollModem(ctx, m.String()); err != nil {
+			return errors.Wrapf(err, "could not find modem after switching the primary slot to: %d", slotIndex)
+		}
+		return nil
 	}
-	return nil, errors.New("failed to create modem: modemmanager D-Bus object has no valid SIM's")
+	return errors.New("failed to create modem: modemmanager D-Bus object has no valid SIM's")
 }
 
-// isValidSim checks if a simPath has a connectable sim card.
-func (m *Modem) isValidSim(ctx context.Context, simPath dbus.ObjectPath) (bool, error) {
+// isValidSIM checks if a simPath has a connectable sim card.
+func (m *Modem) isValidSIM(ctx context.Context, simPath dbus.ObjectPath) (bool, error) {
 	if simPath == mmconst.EmptySlotPath {
 		return false, nil
 	}
@@ -460,11 +472,33 @@ func (m *Modem) IsConnected(ctx context.Context) (bool, error) {
 	return false, nil
 }
 
+// Enable sets the ModemEnable state to true and calls EnsureEnabled.
+func (m *Modem) Enable(ctx context.Context) error {
+	if err := m.Call(ctx, mmconst.ModemEnable, true).Err; err != nil {
+		return errors.Wrap(err, "modem enable failed")
+	}
+	if err := m.EnsureEnabled(ctx); err != nil {
+		return errors.Wrap(err, "modem not enabled")
+	}
+	return nil
+}
+
+// Disable sets the ModemEnable state to false and calls EnsureDisabled.
+func (m *Modem) Disable(ctx context.Context) error {
+	if err := m.Call(ctx, mmconst.ModemEnable, false).Err; err != nil {
+		return errors.Wrap(err, "modem disable failed")
+	}
+	if err := m.EnsureDisabled(ctx); err != nil {
+		return errors.Wrap(err, "modem not disabled")
+	}
+	return nil
+}
+
 // EnsureEnabled polls for modem state property to be enabled.
-func EnsureEnabled(ctx context.Context, modem *Modem) error {
-	// poll for expected power state as powered state change can take time
+func (m *Modem) EnsureEnabled(ctx context.Context) error {
+	// Poll for expected power state as powered state change can take time
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		isPowered, err := modem.IsPowered(ctx)
+		isPowered, err := m.IsPowered(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to read modem powered state")
 		}
@@ -479,9 +513,9 @@ func EnsureEnabled(ctx context.Context, modem *Modem) error {
 		return errors.Wrap(err, "failed to verify modem power state")
 	}
 
-	// poll for expected modem state
+	// Poll for expected modem state
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		isEnabled, err := modem.IsEnabled(ctx)
+		isEnabled, err := m.IsEnabled(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to fetch enabled state")
 		}
@@ -499,17 +533,17 @@ func EnsureEnabled(ctx context.Context, modem *Modem) error {
 }
 
 // EnsureDisabled polls for modem state property to be disabled.
-func EnsureDisabled(ctx context.Context, modem *Modem) error {
+func (m *Modem) EnsureDisabled(ctx context.Context) error {
 	// poll for expected modem state
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		isEnabled, err := modem.IsEnabled(ctx)
+		isEnabled, err := m.IsEnabled(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to fetch enabled state")
 		}
 		if isEnabled {
 			return errors.New("modem still enabled")
 		}
-		isDisabled, err := modem.IsDisabled(ctx)
+		isDisabled, err := m.IsDisabled(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to fetch disabled state")
 		}
@@ -530,7 +564,9 @@ func EnsureDisabled(ctx context.Context, modem *Modem) error {
 func EnsureConnectState(ctx context.Context, modem, simpleModem *Modem, expectedConnected bool) error {
 	// poll for expected modem state
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		EnsureEnabled(ctx, modem)
+		if err := modem.EnsureEnabled(ctx); err != nil {
+			return errors.Wrap(err, "modem not enabled")
+		}
 		isConnected, err := simpleModem.IsConnected(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to fetch connected state")

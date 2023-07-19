@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
-	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
@@ -70,12 +69,8 @@ func CarrierLockEndToEndExclude(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
 	}
 
-	if err := modem.Call(ctx, mmconst.ModemEnable, true).Err; err != nil {
+	if err := modem.Enable(ctx); err != nil {
 		s.Fatal("Modem enable failed with: ", err)
-	}
-
-	if err := modemmanager.EnsureEnabled(ctx, modem); err != nil {
-		s.Fatal("Modem not enabled: ", err)
 	}
 
 	cleanupCtx := ctx

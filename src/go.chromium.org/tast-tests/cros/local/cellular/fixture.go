@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -277,6 +276,10 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		if err := upstart.RestartJob(ctx, modemmanager.JobName); err != nil {
 			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", modemmanager.JobName, err)
 		}
+		// Wait for MM to export the modem after restart
+		if _, err = modemmanager.NewModem(ctx); err != nil {
+			return errors.Wrap(err, "failed to get modem after restart")
+		}
 	}
 	if f.useRoaming {
 		err := SetRoamingPolicy(ctx, true, false)
@@ -301,7 +304,8 @@ func (f *cellularFixture) Reset(ctx context.Context) error { return nil }
 func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	// If ModemManager isn't exporting a modem, it's possible that the modem has stopped responding due to
 	// b/247984538, attempt to force a restart of the modem on devices that support modemfwd-helpers.
-	if _, err := modemmanager.NewModem(ctx); err != nil && ModemHelperPathExists() {
+	modem, err := modemmanager.NewModem(ctx)
+	if err != nil && ModemHelperPathExists() {
 		testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
 		if err := RestartModemWithHelper(ctx); err != nil {
 			if s.TestName() != "cellular.IsModemUp" {
@@ -312,16 +316,12 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	}
 
 	if f.disableCellularTechnology && f.restartMM {
-		modem, err := modemmanager.NewModemWithSim(ctx)
+		err := modem.EnsureValidSIM(ctx)
 		if err != nil {
 			s.Fatal("Could not find MM dbus object with a valid sim (precondition): ", err)
 		}
-		if err := modem.Call(ctx, mmconst.ModemEnable, true).Err; err != nil {
+		if err := modem.Enable(ctx); err != nil {
 			s.Fatal("Modem enable failed with: ", err)
-		}
-
-		if err := modemmanager.EnsureEnabled(ctx, modem); err != nil {
-			s.Fatal("Modem not enabled: ", err)
 		}
 	}
 

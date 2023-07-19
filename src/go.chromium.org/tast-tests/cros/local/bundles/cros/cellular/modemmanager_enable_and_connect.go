@@ -60,7 +60,7 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer func(ctx context.Context) {
-		if err := modem.Call(ctx, mmconst.ModemEnable, true).Err; err != nil {
+		if err := modem.Enable(ctx); err != nil {
 			testing.ContextLog(ctx, "Modem enable failed with: ", err)
 		}
 		if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
@@ -77,22 +77,14 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 	for _, knownAPN := range knownAPNs {
 		// Test Disable / Enable / Connect / Disconnect.
 		s.Log("Disable")
-		if err := modem.Call(ctx, mmconst.ModemEnable, false).Err; err != nil {
+		if err := modem.Disable(ctx); err != nil {
 			s.Fatal("Modem disable failed with: ", err)
-		}
-		if err := modemmanager.EnsureDisabled(ctx, modem); err != nil {
-			s.Fatal("Modem not disabled: ", err)
 		}
 
 		s.Log("Enable")
-		if err := modem.Call(ctx, mmconst.ModemEnable, true).Err; err != nil {
+		if err := modem.Enable(ctx); err != nil {
 			s.Fatal("Modem enable failed with: ", err)
 		}
-
-		if err := modemmanager.EnsureEnabled(ctx, modem); err != nil {
-			s.Fatal("Modem not enabled: ", err)
-		}
-		s.Log("Modem disable-enable done")
 
 		if knownAPN.Optional {
 			optionalAPNExist = true

@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -35,12 +34,8 @@ func ModemmanagerSARInterfaceVerification(ctx context.Context, s *testing.State)
 		s.Fatal("Could not find MM dbus object with a valid sim (precondition): ", err)
 	}
 
-	if err := modem.Call(ctx, mmconst.ModemEnable, true).Err; err != nil {
+	if err := modem.Enable(ctx); err != nil {
 		s.Fatal("Modem enable failed with: ", err)
-	}
-
-	if err := modemmanager.EnsureEnabled(ctx, modem); err != nil {
-		s.Fatal("Modem not enabled: ", err)
 	}
 
 	sar, err := modem.GetSARInterface(ctx)
