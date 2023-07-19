@@ -133,7 +133,7 @@ func AppVLC(ctx context.Context, s *testing.State) {
 		ui.WithTimeout(10*time.Second).WaitUntilExists(popupWindowClose),
 		ui.LeftClick(popupWindowClose),
 		ui.WithTimeout(10*time.Second).WaitUntilGone(popupWindow),
-		d.DiffWindow(ctx, "VLC", screenshot.Retries(2)),
+		screenshot.DiffWindow(ctx, d, "VLC", screenshot.Retries(5)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to capture VLC window: ", err)
 	}
@@ -197,7 +197,7 @@ func AppVLC(ctx context.Context, s *testing.State) {
 		keyboard.TypeAction("000030"),
 		keyboard.AccelAction("Enter"),
 		ui.WithTimeout(10*time.Second).WaitUntilGone(timeWindow),
-		d.DiffWindow(ctx, "VLC with video", screenshot.Retries(5), screenshot.RetryInterval(500*time.Millisecond)),
+		screenshot.DiffWindow(ctx, d, "VLC with video", screenshot.Retries(5), screenshot.RetryInterval(500*time.Millisecond)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to capture VLC playing video: ", err)
 	}

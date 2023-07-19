@@ -157,7 +157,7 @@ func verifyLibreOfficeApp(ctx context.Context, ui *uiauto.Context, tconn *chrome
 		// In tablet mode, the on-screen keyboard warning may cause the
 		// screenshot testing to fail.
 		ui.WaitUntilGone(nodewith.Name("The on-screen keyboard doesn't work in Linux apps yet").First()),
-		d.DiffWindow(ctx, fullAppName, screenshot.Retries(3), screenshot.RetryInterval(600*time.Millisecond)),
+		screenshot.DiffWindow(ctx, d, fullAppName, screenshot.Retries(3), screenshot.RetryInterval(600*time.Millisecond)),
 	)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to capture %s window", fullAppName)
 	}

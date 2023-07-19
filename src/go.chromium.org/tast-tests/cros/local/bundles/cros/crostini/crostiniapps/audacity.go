@@ -38,7 +38,7 @@ func VerifyAudacityLaunchAndClose(ctx context.Context,
 		ui.WithTimeout(2*time.Minute).WaitUntilExists(audacityWindow),
 		ud.WaitUntilExists(uidetection.Word("File").WithinA11yNode(audacityWindow)),
 		ui.MouseClickAtLocation(0, coords.Point{X: 0, Y: 0}),
-		d.DiffWindow(ctx, "audacity", screenshot.Retries(5), screenshot.RetryInterval(5*time.Second)),
+		screenshot.DiffWindow(ctx, d, "audacity", screenshot.Retries(5), screenshot.RetryInterval(5*time.Second)),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find Audacity window")
 	}

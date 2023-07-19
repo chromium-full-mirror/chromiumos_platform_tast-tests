@@ -584,6 +584,7 @@ func (d *differ) capture(ctx context.Context, screenshotName string, finder *nod
 	}
 	var lastScreenshot *image.RGBA
 	if options.Retries > 1 {
+		// GoBigSleepLint: Sleep is the intended behavior.
 		if err := testing.Sleep(ctx, options.RetryInterval); err != nil {
 			return testArgs, err
 		}
@@ -694,4 +695,32 @@ func currentSubPixelAntialiasingMethod() string {
 		}
 	}
 	return "unknown"
+}
+
+// DiffWindow takes a screenshot of the active window and uploads the result
+// to gold. Collect all your diff results at the end with d.GetFailedDiffs()
+// or d.DieOnFailedDiffs().
+// It is a no-op if the differ is nil, this helps keep your functional tests
+// running even the differ initialization fails.
+// If you want to nil differ to be fatal, use d.DiffWindow instead.
+func DiffWindow(ctx context.Context, d Differ, name string, options ...Option) uiauto.Action {
+	if d == nil {
+		testing.ContextLog(ctx, "Differ is nil, proceeding without doing screenshot testing")
+		return func(ctx context.Context) error { return nil }
+	}
+	return d.Diff(ctx, name, nil, options...)
+}
+
+// Diff takes a screenshot of a ui element within the active window and uploads
+// the result to gold. Collect all your diff results at the end with
+// d.GetFailedDiffs() or d.DieOnFailedDiffs().
+// It is a no-op if the differ is nil, this helps keep your functional tests
+// running even the differ initialization fails.
+// If you want to nil differ to be fatal, use d.Diff instead.
+func Diff(ctx context.Context, d Differ, name string, finder *nodewith.Finder, options ...Option) uiauto.Action {
+	if d == nil {
+		testing.ContextLog(ctx, "Differ is nil, proceeding without doing screenshot testing")
+		return func(ctx context.Context) error { return nil }
+	}
+	return d.Diff(ctx, name, finder, options...)
 }
