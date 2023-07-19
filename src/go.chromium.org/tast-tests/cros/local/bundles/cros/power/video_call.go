@@ -42,10 +42,11 @@ func init() {
 			Val:     power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute},
 			Timeout: 3*time.Minute + timeoutBuffer + power.RecorderTimeout,
 		}, {
-			Name:    "25m_ash",
-			Fixture: "powerAsh",
-			Val:     power.TimeParams{Interval: 20 * time.Second, Total: 25 * time.Minute},
-			Timeout: 25*time.Minute + timeoutBuffer + power.RecorderTimeout,
+			Name:      "25m_ash",
+			Fixture:   "powerAsh",
+			Val:       power.TimeParams{Interval: 20 * time.Second, Total: 25 * time.Minute},
+			Timeout:   25*time.Minute + timeoutBuffer + power.RecorderTimeout,
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
 			Name:    "2hr_ash",
 			Fixture: "powerAsh",
@@ -63,6 +64,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               power.TimeParams{Interval: 20 * time.Second, Total: 25 * time.Minute},
 			Timeout:           25*time.Minute + timeoutBuffer + power.RecorderTimeout,
+			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
 			Name:              "2hr_lacros",
 			Fixture:           "powerLacros",
