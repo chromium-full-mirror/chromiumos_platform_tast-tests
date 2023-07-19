@@ -9,6 +9,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -26,6 +27,7 @@ func init() {
 			"informational",
 			"group:cq-medium",
 		},
+		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 	})
 }
 
