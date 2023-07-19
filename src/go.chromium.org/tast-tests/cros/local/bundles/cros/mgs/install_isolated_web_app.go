@@ -38,7 +38,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 		},
-		Data:    []string{"iwa/s7mlazhxvsqopg4kz6od3rpjl72s2xxihf5u6rswhbbog5gk27faaaic.swbn", "iwa/update_manifest.json"},
+		Data:    []string{"iwa/telnet.swbn", "iwa/update_manifest.json"},
 		Fixture: fixture.FakeDMSEnrolled,
 		Timeout: time.Minute,
 		SearchFlags: []*testing.StringPair{
@@ -50,7 +50,7 @@ func init() {
 // InstallIsolatedWebApp installs an Isolated Web App (IWA) in a Managed Guest Session.
 func InstallIsolatedWebApp(ctx context.Context, s *testing.State) {
 	const port = 8080
-	const updateManifestURLTemplate = "http://localhost:%v/iwa/update_manifest.json"
+	const updateManifestURLTemplate = "http://127.0.0.1:%v/iwa/update_manifest.json"
 	updateManifestURL := fmt.Sprintf(updateManifestURLTemplate, port)
 
 	// Start http server that will serve the update manifest and the .swbn file.
@@ -67,10 +67,10 @@ func InstallIsolatedWebApp(ctx context.Context, s *testing.State) {
 	defer server.Shutdown(ctx)
 
 	// The IWA name. It is specified in the manifest that is located in the signed bundle.
-	const iwaName = "IsolatedWebApp Example for Tast Tests"
+	const iwaName = "Telnet"
 
 	// Web Bundle ID is the identifier of the app. It is derived from the public key.
-	const webBundleID = "s7mlazhxvsqopg4kz6od3rpjl72s2xxihf5u6rswhbbog5gk27faaaic"
+	const webBundleID = "425tjo5yno5mk3ghxbvu5akxheq2sns5bnyehyyrqs7tuhibkaxqaaic"
 
 	policyValue := policy.IsolatedWebAppInstallForceList{
 		Val: []*policy.IsolatedWebAppInstallForceListValue{

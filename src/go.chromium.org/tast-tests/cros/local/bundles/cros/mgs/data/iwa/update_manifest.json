@@ -1,12 +1,8 @@
 {
   "versions": [
     {
-      "version": "6.1.13",
-      "src": "http://localhost:8080/iwa/this-does-not-exist.swbn"
-    },
-    {
-      "version": "7.0.6",
-      "src": "http://localhost:8080/iwa/s7mlazhxvsqopg4kz6od3rpjl72s2xxihf5u6rswhbbog5gk27faaaic.swbn"
+      "version": "0.1.0",
+      "src": "http://127.0.0.1:8080/iwa/telnet.swbn"
     }
   ]
 }
