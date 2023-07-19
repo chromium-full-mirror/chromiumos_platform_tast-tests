@@ -89,7 +89,10 @@ var (
 		{"kernel_to_startup", "pre-startup", metricRequired},
 		{"kernel_to_startup_done", "post-startup", metricRequired},
 		{"kernel_to_chrome_exec", "chrome-exec", metricRequired},
-		{"kernel_to_chrome_main", "chrome-main", metricRequired},
+		// TODO(b/180082486): Change to optional temporarily, because
+		// this file is written by Chrome, we have to wait for the fix
+		// in Chrome.
+		{"kernel_to_chrome_main", "chrome-main", metricOptional},
 		// These two events do not happen if device is in OOBE.
 		{"kernel_to_signin_start", "login-start-signin-screen", metricOptional},
 		{"kernel_to_signin_wait", "login-wait-for-signin-state-initialize", metricOptional},
