@@ -29,9 +29,8 @@ const (
 	uptimePrefix = "uptime-"
 	diskPrefix   = "disk-"
 
-	// Directory where the current statistics are stored
-	// TODO(b:182094511): Move the statistics to a subdirectory of /tmp
-	bootstatCurrentDir = "/tmp"
+	// Directory where the current statistics are stored.
+	bootstatCurrentDir = "/run/bootstat"
 
 	// The chromeos_shutdown script archives bootstat files under shutdown.TIMESTAMP directory. The timestamp is generated using `date '+%Y%m%d%H%M%S'`.
 	bootstatArchiveGlob = "/var/log/metrics/shutdown.[0-9]*"
