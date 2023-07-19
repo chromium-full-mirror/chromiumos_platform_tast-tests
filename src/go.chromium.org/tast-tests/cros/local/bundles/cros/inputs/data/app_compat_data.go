@@ -10,6 +10,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 )
 
+// LongestInputLength is used to clean the env between sub tests.
+const LongestInputLength = 10
+
 // AppCompatPhysicalKeyboardTestCases is common test cases for appcompat inputs testing.
 // Adding more test cases here if we need to cover more latin languages.
 var AppCompatPhysicalKeyboardTestCases = map[ime.InputMethod][]InputData{

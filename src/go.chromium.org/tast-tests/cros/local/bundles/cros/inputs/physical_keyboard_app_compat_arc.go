@@ -21,23 +21,17 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type citrixTestCase struct {
-	TestName             string
-	typingKeys           string
-	expectedTypingResult string
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PhysicalKeyboardCitrixTyping,
-		Desc:         "Checks that physical keyboard can perform typing in citrix",
+		Func:         PhysicalKeyboardAppCompatArc,
+		Desc:         "Checks that physical keyboard can perform typing in playstore search field",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:244259740",
-		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:criticalstaging", "informational"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		Timeout:      5 * time.Minute,
-		Fixture:      fixture.CitrixNotepad,
+		Fixture:      fixture.PlayStore,
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Params: []testing.Param{
 			{
@@ -54,10 +48,14 @@ func init() {
 	})
 }
 
-func PhysicalKeyboardCitrixTyping(ctx context.Context, s *testing.State) {
-	uidetector := s.FixtValue().(fixture.CitrixNotepadFixtData).UIDetector
-	uc := s.FixtValue().(fixture.CitrixNotepadFixtData).UserContext
-	kb := s.FixtValue().(fixture.CitrixNotepadFixtData).Keyboard
+func PhysicalKeyboardAppCompatArc(ctx context.Context, s *testing.State) {
+	uc := s.FixtValue().(fixture.ArcFixtData).UserContext
+	kb := s.FixtValue().(fixture.ArcFixtData).Keyboard
+	ui := s.FixtValue().(fixture.ArcFixtData).UIDetector
+
+	if err := ui.LeftClick(uidetection.Word("Search"))(ctx); err != nil {
+		s.Fatal("Failed to click on launched window: ", err)
+	}
 
 	inputMethod := s.Param().(ime.InputMethod)
 
@@ -67,10 +65,10 @@ func PhysicalKeyboardCitrixTyping(ctx context.Context, s *testing.State) {
 	uc.SetAttribute(useractions.AttributeInputMethod, inputMethod.Name)
 
 	for _, subtest := range data.AppCompatPhysicalKeyboardTestCases[inputMethod] {
-		validateAction := uiauto.Combine("validate dead keys typing",
+		validateAction := uiauto.Combine("validate pk typing in playstore",
 			util.ClearTextFieldViaClickingBackspace(kb, data.LongestInputLength),
 			kb.TypeSequenceAction(subtest.LocationKeySeq),
-			uidetector.WithScreenshotResizing().WaitUntilExists(uidetection.TextBlock(strings.Split(subtest.ExpectedText, " "))),
+			ui.WaitUntilExists(uidetection.TextBlock(strings.Split(subtest.ExpectedText, " "))),
 		)
 
 		s.Run(ctx, subtest.Description, func(ctx context.Context, s *testing.State) {
