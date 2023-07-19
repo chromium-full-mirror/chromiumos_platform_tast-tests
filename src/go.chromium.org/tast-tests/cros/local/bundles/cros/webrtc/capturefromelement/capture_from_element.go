@@ -106,6 +106,7 @@ func RunCaptureStream(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 func DataFiles() []string {
 	return []string{
 		htmlFile,
+		"canvas_animation.js",
 		"third_party/blackframe.js",
 		"third_party/three.js/three.module.js",
 	}

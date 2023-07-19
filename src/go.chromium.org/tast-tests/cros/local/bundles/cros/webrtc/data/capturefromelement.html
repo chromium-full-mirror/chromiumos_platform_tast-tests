@@ -4,35 +4,11 @@
   <canvas id='canvas' width=10 height=10></canvas>
   <video id='video' autoplay></video>
 <script src="third_party/blackframe.js"></script>
+<script src="canvas_animation.js"></script>
 <script type="module" src="third_party/three.js/three.module.js"></script>
 <script>
 const WIDTH = 1280;
 const HEIGHT = 720;
-
-function nextFrame(t) {
-  return new Promise(resolve => {
-    // We could use here requestAnimationFrame(resolve) but since the workload
-    // is relatively light, we'll get such frames quite fast (~60Hz).
-    setTimeout(resolve, t)
-  })
-}
-
-
-async function drawAlternatingColours(canvasId, framerate) {
-  const GREEN = [0, 1, 0, 1];
-  const BLUE = [0, 0, 1, 1];
-
-  var context = canvasId.getContext('webgl', {alpha : true});
-  context.clearColor(GREEN[0], GREEN[1], GREEN[2], GREEN[3]);
-  context.clear(context.COLOR_BUFFER_BIT);
-  await nextFrame(1000 / framerate);
-  context.clearColor(BLUE[0], BLUE[1], BLUE[2], BLUE[3]);
-  context.clear(context.COLOR_BUFFER_BIT);
-  await nextFrame(1000 / framerate);
-
-  drawAlternatingColours(canvasId, framerate);
-}
-
 
 async function renderGetUserMediaWithPerspective(canvas, width, height) {
   const constraints = {
@@ -147,11 +123,7 @@ async function captureFromCanvasAndInspect(validate) {
 }
 
 async function captureFromCanvasWithAlternatingColoursAndInspect(validate) {
-  const canvas = document.getElementById('canvas');
-  const FRAMERATE = 24;
-  canvas.width = WIDTH;
-  canvas.height = HEIGHT;
-  await drawAlternatingColours(canvas, FRAMERATE);
+  await drawCanvasAlternatingColours(WIDTH, HEIGHT, 24)
   await captureFromCanvasAndInspect(validate);
 }
 
