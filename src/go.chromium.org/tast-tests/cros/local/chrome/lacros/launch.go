@@ -1,6 +1,24 @@
 // Copyright 2021 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+//
+// The functions in this file assume that Ash-Chrome has been set up for Lacros
+// testing. The various Lacros fixtures, e.g. "lacros", take care of this, but
+// it can also be done manually by passing a computed list of options to
+// chrome.New():
+//
+//   opts, err := lacrosfixt.NewConfig().Opts()
+//   if err != nil {
+//      ...
+//   }
+//   cr, err := chrome.New(ctx, opts...)
+//
+// See the lacrosfixt package for how to tweak the configuration by passing
+// arguments to NewConfig.
+//
+// See also the browser and browserfixt packages, which provide abstractions for
+// writing tests in a browser-generic way so that they can work for both Ash and
+// Lacros.
 
 package lacros
 
