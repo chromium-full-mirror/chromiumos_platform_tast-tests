@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/mlservice"
 	"go.chromium.org/tast-tests/cros/local/power/charge"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -47,6 +48,7 @@ func init() {
 			hwdep.ECFeatureChargeControlV2(),
 			hwdep.ForceDischarge(),
 		),
+		Fixture: setup.PowerAshAdaptiveCharging,
 		Timeout: time.Hour, // We only need up to an hour if the battery is low. Otherwise, the test should finish in about 10 minutes.
 	})
 }
@@ -58,16 +60,7 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// After enabled the AdaptiveCharging feature flag, the setting to enable
-	// the feature should be enabled by default.
-	cr, err := chrome.New(ctx,
-		chrome.EnableFeatures("AdaptiveCharging"),
-		chrome.ARCDisabled(),
-		chrome.EnableFeatures("QsRevamp"))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
+	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 
 	// Putting battery within testable range where the Adaptive Charging
 	// notification will show.
@@ -79,7 +72,7 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 	if err := upstart.StopJob(ctx, "powerd"); err != nil {
 		s.Fatal("Failed to stop powerd: ", err)
 	}
-	defer upstart.RestartJob(ctx, "powerd")
+	defer upstart.RestartJob(cleanupCtx, "powerd")
 
 	// Create fake charge history to make sure the Adaptive Charging heuristic
 	// doesn't disable the feature.
@@ -134,7 +127,7 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 			if err := param.testFunc(ctx, cr, tconn); err != nil {
 				s.Fatalf("Failed subtest %s with error: %v", param.name, err)
 			}
-			defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+			defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 		})
 	}
 }

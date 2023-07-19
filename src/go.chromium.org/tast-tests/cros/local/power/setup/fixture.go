@@ -66,6 +66,9 @@ const (
 	PowerLacrosNightlight = "powerLacrosNightlight"
 
 	PowerAshPlatformAudio = "powerAshPlatformAudio"
+
+	// Without Charge Limit
+	PowerAshAdaptiveCharging = "powerAshAdaptiveCharging"
 )
 
 // PowerFixtureOptions describes options used by the fixture only.
@@ -515,6 +518,30 @@ func init() {
 		}),
 		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.GAIALoginTimeout + setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: PowerAshAdaptiveCharging,
+		Desc: "Fixture with Charge Limit disabled",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"dbasehore@google.com",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			ChargeLimit: DisableChargeLimit,
+			Powerd:      DoNotChangePowerd,
+		}, PowerFixtureOptions{
+			BrowserType: browser.TypeAsh,
+			BrowserExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("AdaptiveCharging"),
+				chrome.EnableFeatures("QsRevamp"),
+			},
+		}),
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
 		PreTestTimeout:  preTestTimeout,
