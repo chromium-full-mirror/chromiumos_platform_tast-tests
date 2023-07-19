@@ -22,16 +22,16 @@ import (
 // https://docs.google.com/document/d/1MW7lAk9RZ-6zxpObNwF0r80nu-N1sXo5f7ORG4usrJQ/edit
 func GetTestDocURL(ctx context.Context) (string, error) {
 	return getDriveURL(ctx, "document", []string{
-		"1Q4xCQd2aVxwpIugEuGdVmWoNbdxkhc-ENTW9-frBMnQ",
-		"169goDwL3s5nX-BxY0-qA2-DAtx9EKzQliaDa6dpKCV8",
-		"1NB5Wbv0PuxT8zo-GT_uIyJZCY7FEvbWxBUnAX_vHta4",
-		"1tE6oaSW875m2SMqMUEcnEcVcbt5cUCH75bfmeRGQ26o",
-		"1pBorP7vprR8n4_QYizTURzl8BgaubYPuwfK2FoouH60",
-		"1YprStoKZUweQ_zr0RuiAQKLOsf816p6j5mEPYokQUDU",
-		"1uYRh_HMB8EJuU54UJlG-pwVUeCMRG3IsNsPhNRMHyic",
-		"1_LeaFWWJQ4Y_6qETCESpRk_FeSbbLCWdyQ-LPaAkziw",
-		"1DNU22wEApL5QNTLc7Gmy9uix8JwsdGGvRlE58Pj2Opc",
-		"1IX0Nikx155xrY5vLIFbEME_BUrx-0cOWZWRLljbtmQc",
+		"1uumjjXN0cqHxApli0Vzd-vc8o7PiajdeSfJDmG8jpQs",
+		"1gVBEG2Kol2fMW0JQlqRFWXGCm38-QCZx3yvygOhYqK4",
+		"1zVpiJj0GA2YY6LOtS5rXf4EjTReXhd691TbA2r5ZnsY",
+		"13WzDOncJ5I87tl3Zy40YWjBXjFH_7TAooArybvihOtc",
+		"1JMBY6bq4mkOOu89ZGFTzYuCcFpLF-feGiElrb4tXv4A",
+		"1v-eN9l898RLiEjBHOVaVmaqRbiGiqMchctLTrQth4mQ",
+		"1dLZza0yyX4TiyOBZbpp6zJydrk-_kd4sOydRUW4BDN4",
+		"1cecnr4xcylpcMUS9NVgvcyfZbqya89GEtDHTpMbf5Uc",
+		"1kUHa73haiMM8Cl4EQs0sB5Lpavtrm0Edp4Sbh2-iZc0",
+		"1xGLLBWTg3y_Ypnb9c6Z2PRMj0957oz8dIOjRHBJCPH4",
 	})
 }
 
