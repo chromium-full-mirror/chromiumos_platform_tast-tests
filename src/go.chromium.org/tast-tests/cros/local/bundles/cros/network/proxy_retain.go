@@ -43,6 +43,9 @@ func init() {
 			"chromeos-connectivity-engprod@google.com",
 			"shijinabraham@google.com",
 			"chadduffin@chromium.org",
+			"cienet-development@googlegroups.com",
+			"chromeos-connectivity-cienet-external@google.com",
+			"alfredyu@cienet.com",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		Attr:         []string{"group:network", "network_e2e"},
@@ -154,18 +157,18 @@ func ProxyRetain(ctx context.Context, s *testing.State) {
 			defer cr.Close(cleanupCtx)
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "verify_proxy_ui_dump")
 
-			ps, err := proxysettings.CollectEthernet(ctx, resources.tconn, true /*isLoggedIn*/)
-			if err != nil {
+			proxyManager := proxysettings.NewProxySettingsManager(proxysettings.LoggedIn)
+			if err := proxyManager.LaunchAndPrepare(ctx, cr, resources.tconn, proxysettings.Ethernet()); err != nil {
 				s.Fatal("Failed to launch proxy settings instance: ", err)
 			}
-			defer ps.Close(cleanupCtx, resources.tconn, kb)
+			defer proxyManager.Close(cleanupCtx)
 
 			// Verify proxy values.
 			for _, pv := range proxyValues {
-				if resultPv, err := ps.ManualConfigContent(ctx, resources.tconn, pv.Protocol); err != nil {
-					s.Fatalf("Failed to get proxy value for %q: %v", pv.HostName(), err)
+				if resultPv, err := proxyManager.ManualConfigContent(ctx, resources.tconn, pv.Protocol); err != nil {
+					s.Fatalf("Failed to get proxy value for %q: %v", pv.Protocol.Name(), err)
 				} else if !reflect.DeepEqual(resultPv, pv) {
-					s.Fatalf("Failed to verify proxy value for %q: got %q, want %q", pv.HostName(), resultPv, pv)
+					s.Fatalf("Failed to verify proxy value for %q: got %q, want %q", pv.Protocol.Name(), resultPv, pv)
 				}
 			}
 		}()
@@ -239,13 +242,13 @@ func (t *retainAfterLoginTest) preparationAtLoginScreen(ctx context.Context, res
 	defer cr.Close(cleanupCtx)
 	defer faillog.DumpUITreeOnErrorToFile(cleanupCtx, res.outDir, func() bool { return retErr != nil }, res.tconn, "before_login_ui_dump")
 
-	ps, err := proxysettings.CollectEthernet(ctx, res.tconn, false /*isLoggedIn*/)
-	if err != nil {
-		return errors.Wrap(err, "failed to create proxy settings instance")
+	proxyManager := proxysettings.NewProxySettingsManager(proxysettings.SignInScreen)
+	if err := proxyManager.LaunchAndPrepare(ctx, cr, res.tconn, proxysettings.Ethernet()); err != nil {
+		return errors.Wrap(err, "failed to launch proxy settings instance")
 	}
-	defer ps.Close(cleanupCtx, res.tconn, res.kb)
+	defer proxyManager.Close(cleanupCtx)
 
-	if err := ps.SetManualConfig(ctx, res.tconn, res.kb, pvs); err != nil {
+	if err := proxyManager.SetManualConfig(ctx, res.tconn, res.kb, pvs); err != nil {
 		return errors.Wrap(err, "failed to set proxy fields")
 	}
 
@@ -277,13 +280,13 @@ func (t *retainAcrossUsersTest) preparationAfterLoggedIn(ctx context.Context, re
 	defer cr.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, res.outDir, func() bool { return retErr != nil }, cr, "after_login_ui_dump")
 
-	ps, err := proxysettings.CollectEthernet(ctx, res.tconn, true /*isLoggedIn*/)
-	if err != nil {
-		return errors.Wrap(err, "failed to create proxy settings instance")
+	proxyManager := proxysettings.NewProxySettingsManager(proxysettings.LoggedIn)
+	if err := proxyManager.LaunchAndPrepare(ctx, cr, res.tconn, proxysettings.Ethernet()); err != nil {
+		return errors.Wrap(err, "failed to launch proxy settings instance")
 	}
-	defer ps.Close(cleanupCtx, res.tconn, res.kb)
+	defer proxyManager.Close(cleanupCtx)
 
-	if err := ps.SetManualConfig(ctx, res.tconn, res.kb, pvs); err != nil {
+	if err := proxyManager.SetManualConfig(ctx, res.tconn, res.kb, pvs); err != nil {
 		return errors.Wrap(err, "failed to set proxy fields")
 	}
 

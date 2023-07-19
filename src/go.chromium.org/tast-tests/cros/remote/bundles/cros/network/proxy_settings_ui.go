@@ -47,54 +47,95 @@ func init() {
 			{
 				Name:    "set_exception_and_same_for_all_proxy_login_screen",
 				Fixture: wificell.ProxyFixtBootToLoginScreen,
-				Val:     setExceptionAndSetUseSameForAllProxy,
+				Val: &proxySettingsUITestParam{
+					testFunc:  setExceptionAndSetUseSameForAllProxy,
+					loginMode: network.LoginMode_SignInScreen,
+				},
 			}, {
 				Name:    "set_http_proxy_login_screen",
 				Fixture: wificell.ProxyFixtBootToLoginScreen,
-				Val:     setHTTPProxyOnly,
+				Val: &proxySettingsUITestParam{
+					testFunc:  setHTTPProxyOnly,
+					loginMode: network.LoginMode_SignInScreen,
+				},
 			}, {
 				Name:    "set_secure_http_proxy_login_screen",
 				Fixture: wificell.ProxyFixtBootToLoginScreen,
-				Val:     setSecureHTTPProxyOnly,
+				Val: &proxySettingsUITestParam{
+					testFunc:  setSecureHTTPProxyOnly,
+					loginMode: network.LoginMode_SignInScreen,
+				},
 			}, {
 				Name:    "forget_then_set_socks_proxy_login_screen",
 				Fixture: wificell.ProxyFixtBootToLoginScreen,
-				Val:     resetByForgettingNetwork,
+				Val: &proxySettingsUITestParam{
+					testFunc:  resetByForgettingNetwork,
+					loginMode: network.LoginMode_SignInScreen,
+				},
 			}, {
 				Name:    "persistent_after_reboot_login_screen",
 				Fixture: wificell.ProxyFixtBootToLoginScreen,
-				Val:     persistentAfterRebootLoginScreen,
+				Val: &proxySettingsUITestParam{
+					testFunc:  persistentAfterRebootLoginScreen,
+					loginMode: network.LoginMode_SignInScreen,
+				},
 			}, {
 				Name:    "persistent_after_suspend_login_screen",
 				Fixture: wificell.ProxyFixtBootToLoginScreen,
-				Val:     persistentAfterSuspendLoginScreen,
+				Val: &proxySettingsUITestParam{
+					testFunc:  persistentAfterSuspendLoginScreen,
+					loginMode: network.LoginMode_SignInScreen,
+				},
 			}, {
 				Name:    "set_exception_and_same_for_all_proxy_oobe",
 				Fixture: wificell.ProxyFixtBootToOOBEScreen,
-				Val:     setExceptionAndSetUseSameForAllProxy,
+				Val: &proxySettingsUITestParam{
+					testFunc:  setExceptionAndSetUseSameForAllProxy,
+					loginMode: network.LoginMode_OOBE,
+				},
 			}, {
 				Name:    "set_http_proxy_oobe",
 				Fixture: wificell.ProxyFixtBootToOOBEScreen,
-				Val:     setHTTPProxyOnly,
+				Val: &proxySettingsUITestParam{
+					testFunc:  setHTTPProxyOnly,
+					loginMode: network.LoginMode_OOBE,
+				},
 			}, {
 				Name:    "set_secure_http_proxy_oobe",
 				Fixture: wificell.ProxyFixtBootToOOBEScreen,
-				Val:     setSecureHTTPProxyOnly,
+				Val: &proxySettingsUITestParam{
+					testFunc:  setSecureHTTPProxyOnly,
+					loginMode: network.LoginMode_OOBE,
+				},
 			}, {
 				Name:    "forget_then_set_socks_proxy_oobe",
 				Fixture: wificell.ProxyFixtBootToOOBEScreen,
-				Val:     resetByForgettingNetwork,
+				Val: &proxySettingsUITestParam{
+					testFunc:  resetByForgettingNetwork,
+					loginMode: network.LoginMode_OOBE,
+				},
 			}, {
 				Name:    "persistent_after_reboot_oobe",
 				Fixture: wificell.ProxyFixtBootToOOBEScreen,
-				Val:     persistentAfterRebootOOBE,
+				Val: &proxySettingsUITestParam{
+					testFunc:  persistentAfterRebootOOBE,
+					loginMode: network.LoginMode_OOBE,
+				},
 			}, {
 				Name:    "persistent_after_suspend_oobe",
 				Fixture: wificell.ProxyFixtBootToOOBEScreen,
-				Val:     persistentAfterSuspendOOBE,
+				Val: &proxySettingsUITestParam{
+					testFunc:  persistentAfterSuspendOOBE,
+					loginMode: network.LoginMode_OOBE,
+				},
 			},
 		},
 	})
+}
+
+type proxySettingsUITestParam struct {
+	testFunc  func(context.Context, *proxySettingsUITestData) error
+	loginMode network.LoginMode
 }
 
 const (
@@ -109,20 +150,22 @@ type proxySettingsUITestData struct {
 	*wificell.ProxyFixtureData
 	networkInfo *network.NetworkInfo
 	manifestKey string
+	loginMode   network.LoginMode
 }
 
 // ProxySettingsUI verifies the UI for proxy settings.
 func ProxySettingsUI(ctx context.Context, s *testing.State) {
 	proxyFixtureData := s.FixtValue().(*wificell.ProxyFixtureData)
+	param := s.Param().(*proxySettingsUITestParam)
 
 	networkInfo := &network.NetworkInfo{Value: &network.NetworkInfo_WifiSsid{WifiSsid: proxyFixtureData.AP.Config().SSID}}
 	data := &proxySettingsUITestData{
 		ProxyFixtureData: proxyFixtureData,
 		networkInfo:      networkInfo,
 		manifestKey:      s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
+		loginMode:        param.loginMode,
 	}
-	testFunc := s.Param().(func(context.Context, *proxySettingsUITestData) error)
-	if err := testFunc(ctx, data); err != nil {
+	if err := param.testFunc(ctx, data); err != nil {
 		s.Fatal("Failed to run test: ", err)
 	}
 }
@@ -139,6 +182,7 @@ func setExceptionAndSetUseSameForAllProxy(ctx context.Context, data *proxySettin
 		NetworkInfo: data.networkInfo,
 		Host:        "www.example.com",
 		Action:      network.SetExceptionRequest_ADD,
+		LoginMode:   data.loginMode,
 	}
 	expectedProxy := &network.ProxyConfigs{
 		NetworkInfo:         data.networkInfo,
@@ -147,7 +191,10 @@ func setExceptionAndSetUseSameForAllProxy(ctx context.Context, data *proxySettin
 		SamePort:            defaultProxyPort,
 	}
 
-	if _, err := proxySettingsSvc.Setup(ctx, proxyToBeSet); err != nil {
+	if _, err := proxySettingsSvc.SetProxySettings(ctx, &network.SetProxySettingsRequest{
+		Configs:   proxyToBeSet,
+		LoginMode: data.loginMode,
+	}); err != nil {
 		return errors.Wrap(err, "failed to set proxy")
 	}
 
@@ -190,7 +237,10 @@ func setExceptionAndSetUseSameForAllProxy(ctx context.Context, data *proxySettin
 		SameHost:            testProxyHost,
 		SamePort:            testProxyPort,
 	}
-	if _, err := proxySettingsSvc.Setup(ctx, proxyToBeSet); err != nil {
+	if _, err := proxySettingsSvc.SetProxySettings(ctx, &network.SetProxySettingsRequest{
+		Configs:   proxyToBeSet,
+		LoginMode: data.loginMode,
+	}); err != nil {
 		return errors.Wrap(err, "failed to set proxy")
 	}
 	return reopenProxySettingsAndVerify(ctx, data, expectedProxy)
@@ -212,7 +262,10 @@ func setHTTPProxyOnly(ctx context.Context, data *proxySettingsUITestData) error 
 		SameHost:            testProxyHost,
 		SamePort:            testProxyPort,
 	}
-	if _, err := proxySettingsSvc.Setup(ctx, proxyToBeSet); err != nil {
+	if _, err := proxySettingsSvc.SetProxySettings(ctx, &network.SetProxySettingsRequest{
+		Configs:   proxyToBeSet,
+		LoginMode: data.loginMode,
+	}); err != nil {
 		return errors.Wrap(err, "failed to set proxy")
 	}
 
@@ -236,7 +289,10 @@ func setSecureHTTPProxyOnly(ctx context.Context, data *proxySettingsUITestData) 
 		HttpsPort:           testProxyPort,
 		SocksPort:           defaultSocketPort,
 	}
-	if _, err := proxySettingsSvc.Setup(ctx, proxyToBeSet); err != nil {
+	if _, err := proxySettingsSvc.SetProxySettings(ctx, &network.SetProxySettingsRequest{
+		Configs:   proxyToBeSet,
+		LoginMode: data.loginMode,
+	}); err != nil {
 		return errors.Wrap(err, "failed to set proxy")
 	}
 
@@ -292,7 +348,10 @@ func resetByForgettingNetwork(ctx context.Context, data *proxySettingsUITestData
 		SocksHost:           proxyToBeSet.SocksHost,
 		SocksPort:           defaultSocketPort,
 	}
-	if _, err := proxySettingsSvc.Setup(ctx, proxyToBeSet); err != nil {
+	if _, err := proxySettingsSvc.SetProxySettings(ctx, &network.SetProxySettingsRequest{
+		Configs:   proxyToBeSet,
+		LoginMode: data.loginMode,
+	}); err != nil {
 		return errors.Wrap(err, "failed to set proxy")
 	}
 	return reopenProxySettingsAndVerify(ctx, data, expectedProxy)
@@ -301,7 +360,10 @@ func resetByForgettingNetwork(ctx context.Context, data *proxySettingsUITestData
 // setProxyAndReboot sets the proxy settings and reboots the DUT.
 func setProxyAndReboot(ctx context.Context, data *proxySettingsUITestData) error {
 	proxySettingsSvc := data.ProxySettingsSvc
-	if _, err := proxySettingsSvc.Setup(ctx, wificell.DefaultProxyConfig(data.networkInfo.GetWifiSsid())); err != nil {
+	if _, err := proxySettingsSvc.SetProxySettings(ctx, &network.SetProxySettingsRequest{
+		Configs:   wificell.DefaultProxyConfig(data.networkInfo.GetWifiSsid()),
+		LoginMode: data.loginMode,
+	}); err != nil {
 		return err
 	}
 
@@ -336,7 +398,10 @@ func persistentAfterRebootOOBE(ctx context.Context, data *proxySettingsUITestDat
 // setProxyAndSuspend sets the proxy settings, suspends and resumes the DUT.
 func setProxyAndSuspend(ctx context.Context, data *proxySettingsUITestData) error {
 	proxySettingsSvc := data.ProxySettingsSvc
-	if _, err := proxySettingsSvc.Setup(ctx, wificell.DefaultProxyConfig(data.networkInfo.GetWifiSsid())); err != nil {
+	if _, err := proxySettingsSvc.SetProxySettings(ctx, &network.SetProxySettingsRequest{
+		Configs:   wificell.DefaultProxyConfig(data.networkInfo.GetWifiSsid()),
+		LoginMode: data.loginMode,
+	}); err != nil {
 		return errors.Wrap(err, "failed to set proxy")
 	}
 
@@ -374,8 +439,10 @@ func persistentAfterSuspendOOBE(ctx context.Context, data *proxySettingsUITestDa
 // reopenProxySettingsAndVerify reopens the proxy settings page and verifies the proxy settings is as expected.
 func reopenProxySettingsAndVerify(ctx context.Context, data *proxySettingsUITestData, expectedProxyValue *network.ProxyConfigs) error {
 	proxySettingsSvc := data.ProxySettingsSvc
-
-	resp, err := proxySettingsSvc.FetchProxySettings(ctx, &network.FetchProxySettingsRequest{NetworkInfo: data.networkInfo})
+	resp, err := proxySettingsSvc.FetchProxySettings(ctx, &network.FetchProxySettingsRequest{
+		NetworkInfo: data.networkInfo,
+		LoginMode:   data.loginMode,
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to fetch proxy settings")
 	}
@@ -389,8 +456,10 @@ func reopenProxySettingsAndVerify(ctx context.Context, data *proxySettingsUITest
 // reopenProxySettingsAndVerifyException reopens the proxy settings page and verifies the exception is as expected.
 func reopenProxySettingsAndVerifyException(ctx context.Context, data *proxySettingsUITestData, expectedException []string) error {
 	proxySettingsSvc := data.ProxySettingsSvc
-
-	resp, err := proxySettingsSvc.FetchException(ctx, &network.FetchExceptionRequest{NetworkInfo: data.networkInfo})
+	resp, err := proxySettingsSvc.FetchException(ctx, &network.FetchExceptionRequest{
+		NetworkInfo: data.networkInfo,
+		LoginMode:   data.loginMode,
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to fetch proxy settings")
 	}

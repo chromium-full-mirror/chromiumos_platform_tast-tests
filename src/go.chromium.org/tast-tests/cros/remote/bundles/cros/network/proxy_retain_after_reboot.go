@@ -92,7 +92,10 @@ func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 			}
 		}(cleanupCtx)
 
-		if _, err := proxySettingSvc.Setup(ctx, proxyConfigs); err != nil {
+		if _, err := proxySettingSvc.SetProxySettings(ctx, &network.SetProxySettingsRequest{
+			Configs:   proxyConfigs,
+			LoginMode: network.LoginMode_OOBE,
+		}); err != nil {
 			return errors.Wrap(err, "failed to setup proxy")
 		}
 		return nil
@@ -123,6 +126,7 @@ func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 
 	returnedConfigs, err := proxySettingSvc.FetchProxySettings(ctx, &network.FetchProxySettingsRequest{
 		NetworkInfo: &network.NetworkInfo{Value: &network.NetworkInfo_Ethernet{}},
+		LoginMode:   network.LoginMode_OOBE,
 	})
 	if err != nil {
 		s.Fatal("Failed to fetch proxy configurations: ", err)

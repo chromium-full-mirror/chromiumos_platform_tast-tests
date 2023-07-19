@@ -398,7 +398,7 @@ func (s *OSSettings) WaitUntilToggleOption(cr *chrome.Chrome, optionName string,
 	}
 }
 
-// OpenNetworkDetailPage navigates to the detail page for a particular Cellular or WiFi network.
+// OpenNetworkDetailPage navigates to the detail page for a particular Cellular, WiFi, or Ethernet network.
 func OpenNetworkDetailPage(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, networkName string, networkType netconfigtypes.NetworkType) (*OSSettings, error) {
 	ui := uiauto.New(tconn)
 
@@ -407,37 +407,36 @@ func OpenNetworkDetailPage(ctx context.Context, tconn *chrome.TestConn, cr *chro
 		return nil, errors.Wrap(err, "failed to launch settings page")
 	}
 
-	subpageArrowFinder := nodewith.Role(role.Button).HasClass("subpage-arrow")
-	subpageArrowFinderWithName, err := func() (*nodewith.Finder, error) {
-		var technology string
-		if networkType == netconfigtypes.Cellular {
-			technology = "Mobile data"
-		} else if networkType == netconfigtypes.WiFi {
-			technology = "Wi-Fi"
-		} else {
-			return nil, errors.New("Network technology must be Cellular or WiFi")
-		}
-		// We append " enable" here since SetToggleOption requires the exact toggle name.
-		if err := app.SetToggleOption(cr, technology+" enable", true)(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to enable network technology: "+technology)
-		}
-		return subpageArrowFinder.NameContaining(technology), nil
-	}()
+	arrowFinder := nodewith.Role(role.Button).HasClass("subpage-arrow")
 
+	var technologyName string
+	enableTechnology := func(name string) action.Action { return app.SetToggleOption(cr, name+" enable", true) }
+	selectNetwork := ui.LeftClick(arrowFinder.NameContaining(networkName).First())
+	switch networkType {
+	case netconfigtypes.Cellular:
+		technologyName = "Mobile data"
+	case netconfigtypes.WiFi:
+		technologyName = "Wi-Fi"
+	case netconfigtypes.Ethernet:
+		technologyName = "Ethernet"
+		// Ethernet does not have a toggle to turn on/off.
+		enableTechnology = func(name string) action.Action { return func(ctx context.Context) error { return nil } }
+		// There is no subentry for Ethernet.
+		selectNetwork = func(ctx context.Context) error { return nil }
+	default:
+		return nil, errors.New("network technology must be Cellular, WiFi, or Ethernet")
+	}
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to determine network subpage finder")
 	}
 
-	if err = ui.LeftClick(subpageArrowFinderWithName)(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to navigate to the network subpage")
-	}
+	err = uiauto.Combine("navigate to network detail page",
+		enableTechnology(technologyName),                         // Arrow button exists only if the technology is enabled.
+		ui.LeftClick(arrowFinder.NameContaining(technologyName)), // Clicking the arrow button of the specified technology.
+		selectNetwork,
+	)(ctx)
 
-	networkDetailPageFinder := subpageArrowFinder.NameContaining(networkName).First()
-	if err = ui.LeftClick(networkDetailPageFinder)(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to open detail page")
-	}
-
-	return &OSSettings{tconn: tconn, ui: ui}, nil
+	return &OSSettings{tconn: tconn, ui: ui}, err
 }
 
 // SearchWithKeyword searches the demand keyword by input text in the `SearchBox`.

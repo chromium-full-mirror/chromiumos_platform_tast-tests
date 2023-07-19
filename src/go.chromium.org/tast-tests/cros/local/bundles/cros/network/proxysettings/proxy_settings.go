@@ -13,20 +13,22 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
-	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
-
+	"go.chromium.org/tast-tests/cros/local/oobe"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // Protocol represents the type of proxy protocols.
@@ -48,6 +50,31 @@ func (p Protocol) Name() string {
 	return []string{"HTTP", "HTTPS", "Socks", "SameProxy"}[p]
 }
 
+func (p Protocol) hostFieldName() string {
+	return []string{"http host", "https host", "socks host", "proxy host"}[p]
+}
+func (p Protocol) portFieldName() string {
+	return []string{"http port", "https port", "socks port", "proxy port"}[p]
+}
+
+func (p Protocol) hostFieldNodeFinder() *nodewith.Finder {
+	return []*nodewith.Finder{
+		ossettings.HTTPHostTextField,
+		ossettings.HTTPSHostTextField,
+		ossettings.SocksHostTextField,
+		ossettings.SameProxyHostTextField,
+	}[p]
+}
+
+func (p Protocol) portFieldNodeFinder() *nodewith.Finder {
+	return []*nodewith.Finder{
+		ossettings.HTTPPortTextField,
+		ossettings.HTTPSPortTextField,
+		ossettings.SocksPortTextField,
+		ossettings.SameProxyPortTextField,
+	}[p]
+}
+
 // Config represents the proxy configuration.
 type Config struct {
 	// Protocol is the type of proxy protocol.
@@ -56,70 +83,6 @@ type Config struct {
 	Host string
 	// Port is the proxy port.
 	Port string
-}
-
-// HostNode returns the node for the proxy host.
-func (c *Config) HostNode() *nodewith.Finder {
-	switch c.Protocol {
-	case HTTP:
-		return ossettings.HTTPHostTextField
-	case HTTPS:
-		return ossettings.HTTPSHostTextField
-	case Socks:
-		return ossettings.SocksHostTextField
-	case SameProxy:
-		return ossettings.SameProxyHostTextField
-	default:
-		return nil
-	}
-}
-
-// HostName returns the name of the proxy host.
-func (c *Config) HostName() string {
-	switch c.Protocol {
-	case HTTP:
-		return "http host"
-	case HTTPS:
-		return "https host"
-	case Socks:
-		return "socks host"
-	case SameProxy:
-		return "proxy host"
-	default:
-		return ""
-	}
-}
-
-// PortNode returns the node for the proxy port.
-func (c *Config) PortNode() *nodewith.Finder {
-	switch c.Protocol {
-	case HTTP:
-		return ossettings.HTTPPortTextField
-	case HTTPS:
-		return ossettings.HTTPSPortTextField
-	case Socks:
-		return ossettings.SocksPortTextField
-	case SameProxy:
-		return ossettings.SameProxyPortTextField
-	default:
-		return nil
-	}
-}
-
-// PortName returns the name of the proxy port.
-func (c *Config) PortName() string {
-	switch c.Protocol {
-	case HTTP:
-		return "http port"
-	case HTTPS:
-		return "https port"
-	case Socks:
-		return "socks port"
-	case SameProxy:
-		return "proxy port"
-	default:
-		return ""
-	}
 }
 
 // ConnectionType represents the connection type of proxy settings.
@@ -131,120 +94,6 @@ const (
 	// ManualProxyConfiguration is the proxy connect type of manual proxy configuration.
 	ManualProxyConfiguration ConnectionType = "Manual proxy configuration"
 )
-
-// ProxySettings represents the proxy-setting page.
-// The page could be within the OSSettings window or within the dialog/window on sign-in screen.
-// Use 'CollectEthernet' for ethernet or 'CollectWifi' for a specified WiFi when DUT is logged in already.
-// Otherwise, use 'CollectEthernetFromSignInScreen' or 'CollectWifiFromSignInScreen' instead.
-// The caller is responsible for calling `Close` to close the OSSettings window or within the dialog/window on sign-in screen.
-type ProxySettings struct {
-	isLoggedIn bool
-}
-
-// CollectEthernet launches the network settings.
-// |isLoggedIn| should be true while DUT is logged in
-// TODO(b/244330490): Update this method to open the network settings by
-// clicking the network in the network list in the Quick Settings.
-func CollectEthernet(ctx context.Context, tconn *chrome.TestConn, isLoggedIn bool) (*ProxySettings, error) {
-	return collectFromQuickSettings(ctx, tconn, netconfigtypes.Ethernet, "", isLoggedIn)
-}
-
-// CollectWifi launches the network settings for a particular WiFi network.
-// Launch network detail page from OS settings when DUT is logged in. Otherwise, from quick settings.
-// The network must be a remembered or opened.
-func CollectWifi(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, wifiSsid string, isLoggedIn bool) (*ProxySettings, error) {
-	if isLoggedIn {
-		return collectFromOsSettings(ctx, cr, tconn, wifiSsid)
-	}
-	return collectFromQuickSettings(ctx, tconn, netconfigtypes.WiFi, wifiSsid, isLoggedIn)
-}
-
-// Close clears ProxySettings object and closes Settings app if applied.
-func (ps *ProxySettings) Close(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) {
-	if ps.isLoggedIn {
-		if err := apps.Close(ctx, tconn, apps.Settings.ID); err != nil {
-			testing.ContextLog(ctx, "Failed to close Settings app: ", err)
-		}
-	} else {
-		if err := kb.AccelAction("esc")(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to close Settings window: ", err)
-		}
-	}
-}
-
-// launchProxySettingsFromQuickSettings launches the proxy settings dialog for a specified network from quick settings.
-func launchProxySettingsFromQuickSettings(ctx context.Context, tconn *chrome.TestConn, networkType netconfigtypes.NetworkType, wifiSsid string) error {
-	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to navigate to network detailed view")
-	}
-	networkListItemView, err := quicksettings.NetworkListItemView(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get network list item view")
-	}
-	var networkList *nodewith.Finder
-	switch networkType {
-	case netconfigtypes.Ethernet:
-		networkList = networkListItemView.NameContaining("Ethernet")
-	case netconfigtypes.WiFi:
-		networkList = networkListItemView.NameContaining(wifiSsid)
-	default:
-		return errors.Errorf("unsupported network type: %d", networkType)
-	}
-
-	ui := uiauto.New(tconn)
-	return uiauto.Combine("open the target network proxy settings page",
-		ui.WaitUntilExists(nodewith.NameStartingWith("Connected").Role(role.StaticText).Ancestor(networkList)), // The target network has to be connected.
-		ui.LeftClick(networkList),
-	)(ctx)
-}
-
-// collectFromQuickSettings launches the proxy setting page of the specified network.
-// Note that the network has to be connected to further collect the proxy settings.
-func collectFromQuickSettings(ctx context.Context, tconn *chrome.TestConn, networkType netconfigtypes.NetworkType, wifiSsid string, isLoggedIn bool) (*ProxySettings, error) {
-	if err := launchProxySettingsFromQuickSettings(ctx, tconn, networkType, wifiSsid); err != nil {
-		return nil, errors.Wrap(err, "failed to launch proxy settings from QuickSettings")
-	}
-
-	if isLoggedIn {
-		if err := prepareProxySettingsSection(ctx, tconn); err != nil {
-			return nil, errors.Wrap(err, "failed to prepare proxy settings section")
-		}
-	}
-
-	return &ProxySettings{isLoggedIn: isLoggedIn}, nil
-}
-
-// launchProxySettingsFromOsSettings launches the proxy settings page for a specified network from os-settings.
-func launchProxySettingsFromOsSettings(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, wifiSsid string) error {
-	_, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, wifiSsid, netconfigtypes.WiFi)
-	return err
-}
-
-// collectFromOsSettings launches the proxy settings page for a specified network from os-settings, expand the proxy sections and
-// turn on the 'Allow proxies for shared network' toggle button.
-func collectFromOsSettings(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, wifiSsid string) (*ProxySettings, error) {
-	if err := launchProxySettingsFromOsSettings(ctx, cr, tconn, wifiSsid); err != nil {
-		return nil, errors.Wrap(err, "failed to launch proxy settings from QuickSettings")
-	}
-
-	if err := prepareProxySettingsSection(ctx, tconn); err != nil {
-		return nil, errors.Wrap(err, "failed to prepare proxy settings section")
-	}
-
-	// OSSettings can only be launched after DUT is logged in.
-	return &ProxySettings{isLoggedIn: true}, nil
-}
-
-// prepareProxySettingsSection prepare the proxy settings section to be able to setup proxies.
-func prepareProxySettingsSection(ctx context.Context, tconn *chrome.TestConn) error {
-	if err := ExpandProxySettingsSection(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to expand proxy option on settings")
-	}
-	if err := AllowProxiesForSharedNetwork(ctx, tconn, true /* allow */); err != nil {
-		return errors.Wrap(err, "failed to allows or disallows proxies for shared networks")
-	}
-	return nil
-}
 
 // ExpandProxySettingsSection ensures the proxy settings section of a network to be expanded.
 // This method should only be called from the network detail page of a network within OS Settings.
@@ -303,11 +152,215 @@ func AllowProxiesForSharedNetwork(ctx context.Context, tconn *chrome.TestConn, a
 	)(ctx)
 }
 
+// TargetNetwork describes a network to set the proxy configuration.
+type TargetNetwork interface {
+	Name() string
+	Type() netconfigtypes.NetworkType
+}
+
+type ethernet struct{}
+
+// Ethernet returns the Ethernet network.
+func Ethernet() TargetNetwork                        { return &ethernet{} }
+func (e *ethernet) Name() string                     { return "Ethernet" }
+func (e *ethernet) Type() netconfigtypes.NetworkType { return netconfigtypes.Ethernet }
+
+type wifi struct{ ssid string }
+
+// Wifi returns the WiFi network with the specified SSID.
+func Wifi(ssid string) TargetNetwork             { return &wifi{ssid: ssid} }
+func (w *wifi) Name() string                     { return w.ssid }
+func (w *wifi) Type() netconfigtypes.NetworkType { return netconfigtypes.WiFi }
+
+// LoginMode defines the login mode of the DUT.
+type LoginMode int
+
+// The supported login mode.
+const (
+	LoggedIn LoginMode = iota
+	OOBE
+	SignInScreen
+)
+
+// Manager manages all interaction with the proxy-settings page.
+// Use 'NewProxySettingsManager' to acquire an instance, 'Launch' to open the proxy-settings page and 'Close' to close the page.
+//
+//	manager := NewProxySettingsManager(LoggedIn)
+//	manager.Launch(ctx, cr, tconn, Ethernet())
+//	defer manager.Close(ctx)
+type Manager struct {
+	dialogConn *chrome.Conn
+	loginState LoginMode
+}
+
+// NewProxySettingsManager returns an instance of ProxySettingsManager.
+// |loginState| specifies the login mode of the DUT, which is very essential since different DUT state
+// requires different indicator for determinate that the DUT is ready for testing.
+func NewProxySettingsManager(loginState LoginMode) *Manager {
+	return &Manager{
+		loginState: loginState,
+	}
+}
+
+// LaunchAndPrepare opens the proxy-settings page and prepares the page to be ready for setup proxy.
+// Caller is responsible for calling 'Close' once the proxy-settings page is launched.
+func (m *Manager) LaunchAndPrepare(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, network TargetNetwork) (retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := m.Launch(ctx, cr, tconn, network); err != nil {
+		return nil
+	}
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			m.Close(ctx)
+		}
+	}(cleanupCtx)
+
+	switch m.loginState {
+	case LoggedIn:
+		if err := AllowProxiesForSharedNetwork(ctx, tconn, true /* allow */); err != nil {
+			return errors.Wrap(err, "failed to expand proxy option on settings")
+		}
+	}
+	return nil
+}
+
+// Launch opens the proxy-settings page.
+// Caller is responsible for calling 'Close' once the proxy-settings page is launched.
+func (m *Manager) Launch(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, network TargetNetwork) error {
+	switch m.loginState {
+	case OOBE:
+		// Launch the proxy-settings page from QuickSettings is unstable as the QuickSettings
+		// can be collapsed by various events, wait for the OOBE to be stable is essential.
+		oobeConn, err := cr.WaitForOOBEConnection(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to wait for OOBE to be ready for testing")
+		}
+		defer oobeConn.Close()
+
+		// Further wait for the welcome screen is visible to continue on launch the proxy-settings page.
+		if err := oobe.IsWelcomeScreenVisible(ctx, oobeConn); err != nil {
+			return errors.Wrap(err, "failed to wait for welcome screen to be visible")
+		}
+
+		if err := m.launchProxySettingsFromQuickSettings(ctx, cr, tconn, network); err != nil {
+			return errors.Wrap(err, "failed to launch proxy settings from QuickSettings")
+		}
+	case SignInScreen:
+		// Launch the proxy-settings page from QuickSettings is unstable as the QuickSettings
+		// can be collapsed by various events, wait for the lock-screen to be stable is essential.
+		if err := lockscreen.WaitForPasswordEntry(ctx, tconn, 30*time.Second); err != nil {
+			return errors.Wrap(err, "failed to wait for lockscreen to be ready for testing")
+		}
+
+		if err := m.launchProxySettingsFromQuickSettings(ctx, cr, tconn, network); err != nil {
+			return errors.Wrap(err, "failed to launch proxy settings from QuickSettings")
+		}
+	case LoggedIn:
+		// Launch the proxy-settings page from QuickSettings is unstable.
+		// Directly open the detail page of the network from OSSettings since OSSettings is available when device is logged in.
+		if err := m.launchProxySettingsFromOSSettings(ctx, cr, tconn, network); err != nil {
+			return errors.Wrap(err, "failed to launch proxy settings from OSSettings")
+		}
+
+		// The proxy-settings section will be collapsed when device is logged in.
+		if err := ExpandProxySettingsSection(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to expand proxy option on settings")
+		}
+	default:
+		return errors.Errorf("unrecognized network %+v", network)
+	}
+
+	return nil
+}
+
+// Close closes the proxy-settings page.
+func (m *Manager) Close(ctx context.Context) error {
+	if m.dialogConn != nil {
+		if err := m.dialogConn.CloseTarget(ctx); err != nil {
+			return errors.Wrap(err, "failed to close proxy settings dialog")
+		}
+		if err := m.dialogConn.Close(); err != nil {
+			return errors.Wrap(err, "failed to close proxy settings dialog connection")
+		}
+		m.dialogConn = nil
+	}
+	return nil
+}
+
+// launchProxySettingsFromQuickSettings launches the proxy settings dialog for a specified network from the QuickSettings.
+func (m *Manager) launchProxySettingsFromQuickSettings(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, network TargetNetwork) (retErr error) {
+	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to navigate to network detailed view")
+	}
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(ctx, func() bool { return retErr != nil }, tconn, "launch_proxy_settings")
+
+	ui := uiauto.New(tconn)
+
+	networkListItemView, err := quicksettings.NetworkListItemView(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get network list item view")
+	}
+	networkItem := networkListItemView.NameContaining(network.Name()).First()
+
+	return uiauto.Combine("open the target network proxy settings page",
+		ui.WaitUntilExists(nodewith.NameStartingWith("Connected").Role(role.StaticText).Ancestor(networkItem)), // The target network has to be connected.
+		ui.LeftClick(networkItem),
+		m.waitForProxySettingsOpened(cr, tconn),
+	)(ctx)
+}
+
+// launchProxySettingsFromOSSettings launches the proxy settings dialog for a specified network from the OSSettings.
+func (m *Manager) launchProxySettingsFromOSSettings(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, network TargetNetwork) (retErr error) {
+	if _, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, network.Name(), network.Type()); err != nil {
+		return errors.Wrap(err, "failed to open network detail page")
+	}
+
+	return m.waitForProxySettingsOpened(cr, tconn)(ctx)
+}
+
+func (m *Manager) waitForProxySettingsOpened(cr *chrome.Chrome, tconn *chrome.TestConn) action.Action {
+	var connectToPage func(ctx context.Context) (*chrome.Conn, error)
+	switch m.loginState {
+	case LoggedIn:
+		connectToPage = func(ctx context.Context) (*chrome.Conn, error) {
+			return ossettings.New(tconn).ChromeConn(ctx, cr)
+		}
+	case OOBE, SignInScreen:
+		connectToPage = func(ctx context.Context) (*chrome.Conn, error) {
+			return cr.NewConnForTarget(ctx, chrome.MatchTargetURL("chrome://internet-detail-dialog/"))
+		}
+	default:
+		return func(ctx context.Context) error {
+			return errors.New("unexpected login state")
+		}
+	}
+
+	return func(ctx context.Context) error {
+		waitCtx, cancelWait := context.WithTimeout(ctx, 30*time.Second)
+		defer cancelWait()
+
+		conn, err := connectToPage(waitCtx)
+		if err != nil {
+			return errors.Wrap(err, "failed to find proxy settings dialog")
+		}
+
+		if m.dialogConn != nil {
+			m.dialogConn.Close()
+		}
+		m.dialogConn = conn
+
+		return nil
+	}
+}
+
 // SetManualConfig sets up manual proxy values.
 // This function is safe to call with both the Network dialog during sign-in and
 // the detailed Network page within the OS Settings.
 // To do this, node ancestors are for better flexibility.
-func (ps *ProxySettings) SetManualConfig(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, configs []*Config) error {
+func (m *Manager) SetManualConfig(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, configs []*Config) error {
 	ui := uiauto.New(tconn)
 	if err := setConnectionType(ctx, ui, ManualProxyConfiguration); err != nil {
 		return err
@@ -333,14 +386,14 @@ func (ps *ProxySettings) SetManualConfig(ctx context.Context, tconn *chrome.Test
 
 	for _, config := range configs {
 		if err := uiauto.Combine(fmt.Sprintf("setup proxy, host: %q, port: %q", config.Host, config.Port),
-			ui.EnsureFocused(config.HostNode()),
+			ui.EnsureFocused(config.Protocol.hostFieldNodeFinder()),
 			kb.AccelAction("Ctrl+A"),
 			// Clear the content because the host could be blank. When the host is blank
 			// this will result in no keys being pressed, and thus the existing content
 			// will not be cleared.
 			kb.AccelAction("Backspace"),
 			kb.TypeAction(config.Host),
-			ui.EnsureFocused(config.PortNode()),
+			ui.EnsureFocused(config.Protocol.portFieldNodeFinder()),
 			kb.AccelAction("Ctrl+A"),
 			// Clear the content because the port could be blank. When the port is blank
 			// this will result in no keys being pressed, and thus the existing content
@@ -367,7 +420,7 @@ func (ps *ProxySettings) SetManualConfig(ctx context.Context, tconn *chrome.Test
 }
 
 // SetDirectConnection sets proxy connection type as 'Direct Internet Connection'.
-func (ps *ProxySettings) SetDirectConnection(ctx context.Context, ui *uiauto.Context) error {
+func (m *Manager) SetDirectConnection(ctx context.Context, ui *uiauto.Context) error {
 	return setConnectionType(ctx, ui, DirectInternetConnection)
 }
 
@@ -375,7 +428,7 @@ func (ps *ProxySettings) SetDirectConnection(ctx context.Context, ui *uiauto.Con
 // This function is safe to call when network setup page is launched on
 // both OS Settings or on-screen dialog when in login screen. To do this,
 // node ancestors are for better flexibility.
-func (ps *ProxySettings) ManualConfigContent(ctx context.Context, tconn *chrome.TestConn, protocol Protocol) (*Config, error) {
+func (m *Manager) ManualConfigContent(ctx context.Context, tconn *chrome.TestConn, protocol Protocol) (*Config, error) {
 	proxy := &Config{Protocol: protocol}
 
 	ui := uiauto.New(tconn)
@@ -393,23 +446,23 @@ func (ps *ProxySettings) ManualConfigContent(ctx context.Context, tconn *chrome.
 		return nil, errors.Errorf("unexpected proxy connection type, got: %q, want: %q", dropDownMenu.Value, ManualProxyConfiguration)
 	}
 
-	if err := ui.WaitUntilExists(proxy.HostNode())(ctx); err != nil {
-		return nil, errors.Wrapf(err, "failed to ensure node %q exists and is shown on the screen", proxy.HostName())
+	if err := ui.WaitUntilExists(proxy.Protocol.hostFieldNodeFinder())(ctx); err != nil {
+		return nil, errors.Wrapf(err, "failed to ensure node %q exists and is shown on the screen", proxy.Protocol.hostFieldName())
 	}
 
-	infoHostNode, err := ui.Info(ctx, proxy.HostNode())
+	infoHostNode, err := ui.Info(ctx, proxy.Protocol.hostFieldNodeFinder())
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get node info for field %q", proxy.HostName())
+		return nil, errors.Wrapf(err, "failed to get node info for field %q", proxy.Protocol.hostFieldName())
 	}
 	proxy.Host = infoHostNode.Value
 
-	if err := ui.WaitUntilExists(proxy.PortNode())(ctx); err != nil {
-		return nil, errors.Wrapf(err, "failed to ensure node %q exists and is shown on the screen", proxy.PortName())
+	if err := ui.WaitUntilExists(proxy.Protocol.portFieldNodeFinder())(ctx); err != nil {
+		return nil, errors.Wrapf(err, "failed to ensure node %q exists and is shown on the screen", proxy.Protocol.portFieldName())
 	}
 
-	infoPortNode, err := ui.Info(ctx, proxy.PortNode())
+	infoPortNode, err := ui.Info(ctx, proxy.Protocol.portFieldNodeFinder())
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get node info for field %q", proxy.PortName())
+		return nil, errors.Wrapf(err, "failed to get node info for field %q", proxy.Protocol.portFieldName())
 	}
 	proxy.Port = infoPortNode.Value
 
@@ -417,7 +470,7 @@ func (ps *ProxySettings) ManualConfigContent(ctx context.Context, tconn *chrome.
 }
 
 // IsUseSameProxyToggleOptionEnabled checks whether the toggle option 'Use the same proxy for all protocols' is enabled or not.
-func (ps *ProxySettings) IsUseSameProxyToggleOptionEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
+func (m *Manager) IsUseSameProxyToggleOptionEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
 	ui := uiauto.New(tconn)
 
 	useSameProxyToggle := nodewith.Name("Use the same proxy for all protocols").Role(role.ToggleButton)

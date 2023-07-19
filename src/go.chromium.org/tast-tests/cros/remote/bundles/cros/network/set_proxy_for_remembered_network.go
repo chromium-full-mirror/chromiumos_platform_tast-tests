@@ -174,6 +174,7 @@ func proxySettingsRestricted(ctx context.Context, rpcClient *rpc.Client, ssids [
 			NetworkInfo: &network.NetworkInfo{
 				Value: &network.NetworkInfo_WifiSsid{WifiSsid: ssid},
 			},
+			LoginMode: network.LoginMode_LoggedIn,
 		}); err != nil {
 			errors.Wrapf(err, "failed to check if proxy settings of network %q is restricted", ssid)
 		} else if !resp.Value {
@@ -196,10 +197,14 @@ func setProxyAndVerify(ctx context.Context, rpcClient *rpc.Client, helper *netwo
 		NetworkInfo: &network.NetworkInfo{
 			Value: &network.NetworkInfo_WifiSsid{WifiSsid: ssid},
 		},
+		LoginMode: network.LoginMode_LoggedIn,
 	})
 
 	proxyConfig.NetworkInfo.Value = &network.NetworkInfo_WifiSsid{WifiSsid: ssid}
-	if _, err := proxySvc.Setup(ctx, proxyConfig); err != nil {
+	if _, err := proxySvc.SetProxySettings(ctx, &network.SetProxySettingsRequest{
+		Configs:   proxyConfig,
+		LoginMode: network.LoginMode_LoggedIn,
+	}); err != nil {
 		return errors.Wrap(err, "failed to set up proxy settings")
 	}
 
@@ -214,6 +219,7 @@ func setProxyAndVerify(ctx context.Context, rpcClient *rpc.Client, helper *netwo
 			Value: &network.NetworkInfo_WifiSsid{WifiSsid: ssid},
 		},
 		FetchSource: network.FetchProxySettingsRequest_CrosNetworkConfig,
+		LoginMode:   network.LoginMode_LoggedIn,
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to fetch proxy settings")
@@ -319,6 +325,7 @@ func (helper *networksHelper) toggleAllowProxiesForSharedNetworks(ctx context.Co
 		NetworkInfo: &network.NetworkInfo{
 			Value: &network.NetworkInfo_WifiSsid{WifiSsid: ssid},
 		},
+		LoginMode: network.LoginMode_LoggedIn,
 	}); err != nil {
 		return errors.Wrap(err, `failed to toggle "Allow proxies for shared networks"`)
 	}
