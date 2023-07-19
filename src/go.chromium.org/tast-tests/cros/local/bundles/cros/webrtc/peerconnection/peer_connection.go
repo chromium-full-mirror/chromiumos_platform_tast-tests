@@ -355,6 +355,7 @@ func checkSimulcastEncImpl(implName string, isImplHWInAdapter []bool) error {
 // should include in their Data fields.
 func DataFiles() []string {
 	return []string{
+		"canvas_animation.js",
 		"loopback_peerconnection.js",
 		"third_party/blackframe.js",
 		"third_party/munge_sdp.js",

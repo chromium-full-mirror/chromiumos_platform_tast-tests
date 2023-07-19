@@ -2,12 +2,13 @@
 <html>
 <head><title>RTCPeerConnection Loopback test</title></head>
 <body>
+  <canvas id='canvas' width=10 height=10></canvas>
   <div id="container">
     <div>
       <video id="remoteVideo" autoplay muted style="max-width:100%;max-height:100%"></video>
     </div>
   </div>
-
+<script src="canvas_animation.js"></script>
 <script src="loopback_peerconnection.js"></script>
 <script src="third_party/blackframe.js"></script>
 <script src="third_party/munge_sdp.js"></script>

@@ -246,6 +246,21 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		return errors.Wrap(err, "timed out waiting for page loading")
 	}
 
+	if params.DisplayMediaType != "" {
+		// We would like to stabilize the display capture frequency to 30. We
+		// achieve this by changing the canvas content in the captured page by
+		// WebGL. The canvas change frequency needs to more than 30 so that the
+		// timing issue between display capture and canvas change is mitigated.
+		// 40 fps seems to be sufficient.
+		const (
+			canvasWidth     = 1280
+			canvasHeight    = 720
+			canvasChangeFPS = 40
+		)
+		if err := conn.Call(ctx, nil, "drawCanvasAlternatingColours", canvasWidth, canvasHeight, canvasChangeFPS); err != nil {
+			return errors.Wrap(err, "fail in drawCanvasAlternatingColours")
+		}
+	}
 	if err := conn.Call(ctx, nil, "start", params.Profile, params.StreamWidth, params.StreamHeight, params.Simulcasts, params.Svc, params.DisplayMediaType); err != nil {
 		return errors.Wrap(err, "establishing connection")
 	}
