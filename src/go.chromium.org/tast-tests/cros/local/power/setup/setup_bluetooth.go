@@ -7,6 +7,7 @@ package setup
 import (
 	"context"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/facade/floss"
@@ -40,7 +41,9 @@ func disableFlossAdapter(ctx context.Context) (CleanupCallback, error) {
 // If not, then bluez service is enabled, disable it instead.
 func DisableBluetooth(ctx context.Context) (CleanupCallback, error) {
 	return Nested(ctx, "disable bluetooth", func(s *Setup) error {
-		isFlossEnabled, err := floss.GetFlossEnabled(ctx)
+		shortCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		isFlossEnabled, err := floss.GetFlossEnabled(shortCtx)
 		if err != nil {
 			// If the floss manager cannot be found, it's equivalent to floss being disabled.
 			if !strings.Contains(err.Error(), `failed to connect to service "org.chromium.bluetooth.Manager"`) {
