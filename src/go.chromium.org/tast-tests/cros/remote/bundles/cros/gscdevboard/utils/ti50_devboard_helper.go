@@ -267,9 +267,17 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 	h.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
 	tpmHandle := h.Tpm(ctx, bus)
-	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
-	if !bytes.Equal(didVid, ti50.TpmDidVidValue) {
-		h.Fatalf("Unexpected TPM DID_VID: %v", didVid)
+
+	// Try reading DidVid a few times until Ti50 is ready.
+	const maxDidVidAttempts = 3
+	for r := 1; r <= maxDidVidAttempts; r++ {
+		didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
+		if bytes.Equal(didVid, ti50.TpmDidVidValue) {
+			break
+		}
+		if !bytes.Equal(didVid, []byte{0xff, 0xff, 0xff, 0xff}) || r == maxDidVidAttempts {
+			h.Fatalf("Unexpected TPM DID_VID: %v", didVid)
+		}
 	}
 
 	if err := tpm2.Startup(tpmHandle, tpm2.StartupClear); err != nil {
