@@ -117,7 +117,7 @@ func (p *Installer) checkErrorMessage(ctx context.Context) (string, error) {
 }
 
 // Install clicks the install button and waits for the Linux installation to complete.
-func (p *Installer) Install(ctx context.Context) error {
+func (p *Installer) Install(ctx context.Context, debianVersion vm.ContainerDebianVersion) error {
 	// Leave 10 seconds at the end of the context so that if the install times
 	// out the context, we can still check for error messages in the installer
 	// window.
@@ -140,6 +140,31 @@ func (p *Installer) Install(ctx context.Context) error {
 
 	installButton := nodewith.Name("Install").Role(role.Button)
 	installingMsg := nodewith.NameStartingWith("Installing Linux").Role(role.StaticText)
+
+	// TODO(b/283027529): Buster is being deprecated, so the upgrade modal
+	// could be shown. This happens during the container start step, so
+	// find and dismiss it in a goroutine. This is a temporary workaround
+	// before buster tests are removed.
+	if debianVersion == vm.DebianBuster {
+		modalCtx, cancel := context.WithCancel(ctx)
+		defer cancel()
+		go func(ctx context.Context) {
+			continueButton := nodewith.Name("Continue anyway").Role(role.Button).First()
+			if err := ui.WithTimeout(installationTimeout).WaitUntilExists(continueButton)(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to find the upgrade alert before timeout: ", err)
+				return
+			}
+
+			testing.ContextLog(ctx, "Found the Debian upgrade popup alert")
+
+			// Click on the alert and dismiss it before proceeding.
+			if err := ui.DoDefault(continueButton)(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to find or click the continue button on the alert: ", err)
+				return
+			}
+		}(modalCtx)
+	}
+
 	if err := uiauto.Combine("click install and wait it to finish",
 		ui.LeftClickUntil(installButton, ui.WithTimeout(3*time.Second).WaitUntilExists(installingMsg)),
 		// The installation message seems unstable, thus using WaitUntilGoneFor
@@ -218,7 +243,7 @@ func InstallCrostini(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chr
 			return 0, errors.Wrap(err, "failed to set disk size in installation dialog")
 		}
 	}
-	if err := installer.Install(ctx); err != nil {
+	if err := installer.Install(ctx, iOptions.DebianVersion); err != nil {
 		return 0, errors.Wrap(err, "failed to install Crostini from UI")
 	}
 
