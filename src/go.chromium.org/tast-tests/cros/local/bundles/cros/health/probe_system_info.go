@@ -78,28 +78,20 @@ func ProbeSystemInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get SystemInfo.DMIInfo(-expected + got): ", d)
 	}
 	if testParam.checkPsr {
-		out, err := testexec.CommandContext(ctx, "intel-psrtool", "-s").Output()
-		strOut := string(out)
-		if err != nil {
-			if g.PSRInfo == nil {
-				s.Log("PSR is not available: ", strOut)
-				return
-			}
-			s.Fatal("Failed to execute 'intel-psrtool -s' command: ", err)
-		}
-		if strings.Contains(strOut, "PSR log availability: Available") {
-			if g.PSRInfo == nil {
-				s.Fatal("PSR cros-healthd retrieval is not working")
-			}
-			psrOut, err := runAndParseIntelPsrTool(ctx)
-			if err != nil {
-				s.Fatal("Failed to get intel-psrtool output: ", err)
-			}
-			if err := verifyPSRInfo(psrOut, g.PSRInfo); err != nil {
-				s.Fatal("Failed to get expected system info: ", err)
+		if g.PSRInfo != nil {
+			if *g.PSRInfo.IsSupported {
+				psrOut, err := runAndParseIntelPsrTool(ctx)
+				if err != nil {
+					s.Fatal("Failed to get intel-psrtool output: ", err)
+				}
+				if err := verifyPSRInfo(psrOut, g.PSRInfo); err != nil {
+					s.Fatal("Failed to get expected system info: ", err)
+				}
+			} else {
+				s.Fatal("PSR is not supported on this device")
 			}
 		} else {
-			s.Log("PSR is not available: ", strOut)
+			s.Fatal("Failed to get SystemInfo.PSRInfo")
 		}
 	}
 }
@@ -153,6 +145,7 @@ type psrEvent struct {
 
 type psrInfo struct {
 	Events             []psrEvent        `json:"events"`
+	IsSupported        *bool             `json:"is_supported"`
 	LogStartDate       *jsontypes.Uint32 `json:"log_start_date"`
 	LogState           *string           `json:"log_state"`
 	ManufactureCountry *string           `json:"manufacture_country"`
