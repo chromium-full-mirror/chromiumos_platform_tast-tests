@@ -38,6 +38,7 @@ const fingerprintLoginFlagFile = "/var/lib/biod/force_fp_login"
 type CmdHelper struct {
 	cmdRunner        CmdRunner
 	cryptohome       *CryptohomeClient
+	devicemanagement *DeviceManagementClient
 	tpmManager       *TPMManagerClient
 	daemonController *DaemonController
 }
@@ -72,6 +73,7 @@ func NewCmdHelper(r CmdRunner) *CmdHelper {
 	return &CmdHelper{
 		cmdRunner:        r,
 		cryptohome:       NewCryptohomeClient(r),
+		devicemanagement: NewDeviceManagementClient(r),
 		tpmManager:       NewTPMManagerClient(r),
 		daemonController: NewDaemonController(r),
 	}
@@ -99,6 +101,9 @@ func (h *CmdHelper) CmdRunner() CmdRunner { return h.cmdRunner }
 
 // CryptohomeClient exposes the cryptohome of helper
 func (h *CmdHelper) CryptohomeClient() *CryptohomeClient { return h.cryptohome }
+
+// DeviceManagementClient exposes the devicemanagement of helper
+func (h *CmdHelper) DeviceManagementClient() *DeviceManagementClient { return h.devicemanagement }
 
 // TPMManagerClient exposes the tpmManager of helper
 func (h *CmdHelper) TPMManagerClient() *TPMManagerClient { return h.tpmManager }
