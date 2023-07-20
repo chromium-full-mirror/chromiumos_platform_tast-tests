@@ -58,6 +58,10 @@ func NewARCClient(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome
 		return nil, errors.Wrapf(err, "failed to install %s", apk)
 	}
 
+	if err := arc.EnsureNotificationPermission(ctx, a, pkg); err != nil {
+		return nil, errors.Wrap(err, "failed to ensure the permission")
+	}
+
 	// Launching the testing app
 	act, err := arc.NewActivity(a, pkg, cls)
 	if err != nil {

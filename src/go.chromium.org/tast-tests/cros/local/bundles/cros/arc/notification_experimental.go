@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/notification"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -310,7 +309,7 @@ func NotificationExperimental(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to install app: ", err)
 	}
 
-	if err := notification.EnsureNotificationPermission(ctx, a, arcNotificationTest2PackageName); err != nil {
+	if err := arc.EnsureNotificationPermission(ctx, a, arcNotificationTest2PackageName); err != nil {
 		s.Fatal("Failed to ensure the permission: ", err)
 	}
 

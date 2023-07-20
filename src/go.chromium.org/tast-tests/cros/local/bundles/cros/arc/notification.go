@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/notification"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast/core/testing"
 )
@@ -93,7 +92,7 @@ func Notification(ctx context.Context, s *testing.State) {
 	}
 
 	s.Logf("Ensuring the permission for %s", pkg)
-	if err := notification.EnsureNotificationPermission(ctx, a, pkg); err != nil {
+	if err := arc.EnsureNotificationPermission(ctx, a, pkg); err != nil {
 		s.Fatal("Failed to ensure the permission: ", err)
 	}
 
