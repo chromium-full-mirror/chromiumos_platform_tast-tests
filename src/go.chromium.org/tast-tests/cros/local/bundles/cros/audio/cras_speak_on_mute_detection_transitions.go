@@ -25,10 +25,13 @@ func init() {
 		Desc:         "Test CRAS detection of speaking while on mute with system state changes",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546", // ChromeOS > Platform > Technologies > Audio > Test > Tast
-		Attr:         []string{"group:mainline"},
-		Fixture:      fixture.StereoAloopLoadedWithoutUI,
-		Data:         []string{data.TheQuickBrownFoxWav},
-		Timeout:      3 * time.Minute,
+		Attr: []string{
+			"group:mainline",
+			"group:video_conference", "video_conference_per_build",
+		},
+		Fixture: fixture.StereoAloopLoadedWithoutUI,
+		Data:    []string{data.TheQuickBrownFoxWav},
+		Timeout: 3 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name: "mute",

@@ -28,7 +28,10 @@ func init() {
 		Desc:         "Check noise cancellation in CRAS using aloop",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline"},
+		Attr: []string{
+			"group:mainline",
+			"group:video_conference", "video_conference_per_build",
+		},
 		Fixture:      fixture.StereoAloopLoaded,
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
