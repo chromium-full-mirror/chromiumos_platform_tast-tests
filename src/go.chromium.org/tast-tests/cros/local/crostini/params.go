@@ -120,6 +120,12 @@ type Param struct {
 	// configuration.
 	MinimalSet bool
 
+	// MinimalSetIsBullseye - if true and MinimalSet is true, the fixture
+	// is bullseye. For incrementally migrating MinimalSet tests to
+	// bullseye.
+	// TODO(b/283027529): Remove when all tests are migrated.
+	MinimalSetIsBullseye bool
+
 	// Restart - if true, forces fixture restart after every test.
 	// Available only for fixtures.
 	// This could be useful for the tests, which pollute test
@@ -275,7 +281,12 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				return
 			}
 
-			if testCase.MinimalSet && i.debianVersion != vm.DebianBuster {
+			if testCase.MinimalSet && testCase.MinimalSetIsBullseye && i.debianVersion != vm.DebianBullseye {
+				// The minimal set is Bullseye, opted-in.
+				return
+			}
+
+			if testCase.MinimalSet && !testCase.MinimalSetIsBullseye && i.debianVersion != vm.DebianBuster {
 				// The minimal set is currently Buster.
 				return
 			}
