@@ -453,7 +453,7 @@ type VPNConfigProperties struct {
 	Host      string                     `json:"host"`
 	Type      VPNTypeConfig              `json:"type"`
 	IPsec     *IPsecConfigProperties     `json:"ipSec"`
-	L2TP      *L2TPConfigProperties      `json:"l2Tp"`
+	L2TP      *L2TPConfigProperties      `json:"l2tp"`
 	OpenVPN   *OpenVPNConfigProperties   `json:"openVpn"`
 	WireGuard *WireGuardConfigProperties `json:"wireguard"`
 }
