@@ -43,7 +43,7 @@ func init() {
 			"rzakarian@google.com",
 		},
 		BugComponent: "b:817866", // ChromeOS Server Projects > Enterprise Management > Reporting
-		Attr:         []string{"group:enterprise-reporting-daily", "group:enterprise-reporting"},
+		Attr:         []string{"group:mainline", "informational", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service", "tast.cros.graphics.ScreenshotService"},
 		Timeout:      memoryReportingTimeout,
