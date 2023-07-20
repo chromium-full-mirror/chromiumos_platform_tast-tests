@@ -42,7 +42,7 @@ func init() {
 		TearDownTimeout: 2 * time.Minute,
 		PreTestTimeout:  2 * time.Minute,
 		PostTestTimeout: 1 * time.Minute,
-		Vars:            []string{"pvs.git_cookies", "pvs.service_account", "pvs.shop_ref", "pvs.image_tag"},
+		Vars:            []string{"pvs.git_cookies", "pvs.service_account", "pvs.shop_ref", "pvs.image_tag", "pvs.chromeos_version"},
 	})
 
 }
@@ -103,6 +103,10 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 
 	// Run shop unpack
 	shopUnpack := fmt.Sprintf(`SHOP_REF=%s PVS_IMAGE_TAG=%s FORCE_DLM_SKU_ID=0 shop unpack --dut %v`, shopRef, pvsImageTag, dutHostname)
+	pvsChromeOSVersion, foundPVSChromeOSVersion := s.Var("pvs.chromeos_version")
+	if foundPVSChromeOSVersion {
+		shopUnpack += fmt.Sprintf(" --chromeos-version %s", pvsChromeOSVersion)
+	}
 	shopOutput, err := RunAsChronos(ctx, pvsHost, shopUnpack)
 	if err != nil {
 		s.Fatal("Error occured when running shop unpack: ", err)
