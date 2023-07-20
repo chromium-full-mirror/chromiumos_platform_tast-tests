@@ -117,9 +117,12 @@ func AssignToAllDesks(ctx context.Context, s *testing.State) {
 		if err := ash.WaitForApp(ctx, tconn, app.ID, time.Minute); err != nil {
 			s.Fatalf("%s did not appear in shelf after launch: %v", app.Name, err)
 		}
+		if _, err := ash.WaitForAppWindow(ctx, tconn, app.ID); err != nil {
+			s.Fatalf("%s did not produce a visible window after launch: %v", app.Name, err)
+		}
 	}
 
-	// Creat 4 desks.
+	// Create 4 desks.
 	const numNewDesks = 4
 	for i := 1; i <= numNewDesks; i++ {
 		if err := ash.CreateNewDesk(ctx, tconn); err != nil {
@@ -198,6 +201,9 @@ func AssignToAllDesks(ctx context.Context, s *testing.State) {
 		if err := ash.WaitForApp(ctx, tconn, app.ID, time.Minute); err != nil {
 			s.Fatalf("%s did not appear in shelf after launch: %v", app.Name, err)
 		}
+		if _, err := ash.WaitForAppWindow(ctx, tconn, app.ID); err != nil {
+			s.Fatalf("%s did not produce a visible window after launch: %v", app.Name, err)
+		}
 	}
 	ws, err = ash.GetAllWindows(ctx, tconn)
 	if err != nil {
@@ -272,6 +278,7 @@ func assignWindowsToDesks(ctx context.Context, tconn *chrome.TestConn, ac *uiaut
 		if err := uiauto.Combine(
 			"move cursor to menu and wait for submenu",
 			ac.MouseMoveTo(moveWindowToDeskMenuItem, 0),
+			ac.DoDefault(moveWindowToDeskMenuItem),
 			ac.WaitUntilExists(moveTarget),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to get window menu")
