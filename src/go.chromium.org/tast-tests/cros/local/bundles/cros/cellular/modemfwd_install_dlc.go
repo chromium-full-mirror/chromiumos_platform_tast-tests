@@ -9,6 +9,7 @@ import (
 	"time"
 
 	dlcp "chromiumos/system_api/dlcservice_proto"
+
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/modemfwd"
@@ -24,7 +25,7 @@ func init() {
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_unstable"},
 		Fixture:      "cellular",
-		SoftwareDeps: []string{"modemfwd", "cellular_variant_present"},
+		SoftwareDeps: []string{"modemfwd"},
 		Timeout:      20 * time.Second,
 	})
 }
