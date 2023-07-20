@@ -35,7 +35,6 @@ func init() {
 		Desc:         "Install ARC app and share to app via Sharesheet",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
-			"melzhang@chromium.org",
 		},
 		BugComponent: "crbug:Platform>Apps>Foundation>Sharesheet",
 		SoftwareDeps: []string{"chrome"},

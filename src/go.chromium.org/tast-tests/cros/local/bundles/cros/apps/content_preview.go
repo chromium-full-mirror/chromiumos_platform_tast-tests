@@ -39,7 +39,6 @@ func init() {
 		Desc:         "Test content preview while sharing a single file",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
-			"melzhang@google.com",
 		},
 		BugComponent: "crbug:Platform>Apps>Foundation>Sharesheet",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

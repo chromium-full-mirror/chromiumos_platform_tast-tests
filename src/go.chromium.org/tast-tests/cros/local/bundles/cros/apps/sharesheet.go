@@ -29,7 +29,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Sharesheet,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantNeeded, // TODO(crbug.com/1466353): Add lacros variant.
 		Desc:         "Verify sharing a file to PWA works",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
