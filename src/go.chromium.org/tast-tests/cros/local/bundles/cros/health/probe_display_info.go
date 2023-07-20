@@ -61,8 +61,8 @@ func ProbeDisplayInfo(ctx context.Context, s *testing.State) {
 }
 
 type displayInfo struct {
-	EDP embeddedDisplayInfo    `json:"edp"`
-	DP  *[]externalDisplayInfo `json:"dp"`
+	EDP embeddedDisplayInfo    `json:"embedded_display"`
+	DP  *[]externalDisplayInfo `json:"external_displays"`
 }
 
 type embeddedDisplayInfo struct {
