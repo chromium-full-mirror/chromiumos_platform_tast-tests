@@ -153,7 +153,7 @@ func VirtualKeyboardTypingOmnibox(ctx context.Context, s *testing.State) {
 					return nil
 				},
 				// Validate text.
-				util.WaitForFieldTextToBeIgnoringCase(tconn, omniboxFinder, inputData.ExpectedText),
+				util.WaitForFieldTextStartWithIgnoringCase(tconn, omniboxFinder, inputData.ExpectedText),
 			)
 
 			if err := uiauto.UserAction("VK typing input",

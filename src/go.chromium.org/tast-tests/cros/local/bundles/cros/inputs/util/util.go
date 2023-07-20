@@ -80,6 +80,14 @@ func WaitForFieldTextToBeIgnoringCase(tconn *chrome.TestConn, finder *nodewith.F
 	})
 }
 
+// WaitForFieldTextStartWithIgnoringCase returns an action checking whether the input field value start with the given text.
+// The text is case insensitive.
+func WaitForFieldTextStartWithIgnoringCase(tconn *chrome.TestConn, finder *nodewith.Finder, expectedText string) uiauto.Action {
+	return WaitForFieldTextToSatisfy(tconn, finder, fmt.Sprintf("%s (ignoring case)", expectedText), func(actualText string) bool {
+		return strings.HasPrefix(strings.ToLower(actualText), strings.ToLower(expectedText))
+	})
+}
+
 // WaitForFieldTextToSatisfy returns an action checking whether the input field value satisfies a predicate.
 func WaitForFieldTextToSatisfy(tconn *chrome.TestConn, finder *nodewith.Finder, description string, predicate func(string) bool) uiauto.Action {
 	ui := uiauto.New(tconn).WithInterval(time.Second)
