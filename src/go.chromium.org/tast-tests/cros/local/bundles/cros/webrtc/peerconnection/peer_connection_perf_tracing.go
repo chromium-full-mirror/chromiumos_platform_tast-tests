@@ -310,7 +310,9 @@ func recordDurationOfEvents(events []chromeEventInfo,
 		if argKey != "" {
 			value, found := event.strArgs[argKey]
 			if !found {
-				return errors.Errorf("%s is not found in %v", argKey, event)
+				// The key argument is not recorded when the tracing terminates
+				// between TRACE_EVENT_NESTABLE_ASYNC_BEGIN and TRACE_EVENT_NESTABLE_ASYNC_END.
+				continue
 			}
 			suffix = strings.ReplaceAll(strings.ReplaceAll(value, ",", "_"), " ", "")
 		}
