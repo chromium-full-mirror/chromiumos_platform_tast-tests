@@ -43,6 +43,9 @@ const (
 	// HasLidLightSensor is a bool property describing whether the DUT has an
 	// light sensor in its lid.
 	HasLidLightSensor HardwareProperty = "has-lid-light-sensor"
+	// HasCameraLightSensor is a bool property describing whether the DUT has an
+	// light sensor in its camera.
+	HasCameraLightSensor HardwareProperty = "has-camera-light-sensor"
 )
 
 // runGet is an injection point for testing.
