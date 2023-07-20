@@ -46,9 +46,9 @@ func init() {
 				duration: 3 * time.Second,
 			},
 		}, {
-			Name: "hdmi",
+			Name: "external_display",
 			Val: eventStartupParams{
-				category: "hdmi",
+				category: "external_display",
 				duration: 3 * time.Second,
 			},
 			// TODO(b/279849605): Promote to critical.
