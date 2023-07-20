@@ -18,6 +18,7 @@ const chronosHome = "/home/chronos/user"
 const installDir = "/usr/local/share/shop_install"
 const gcloudSymlinkPath = "/usr/local/bin/gcloud"
 const uploadConfigJSON = `{"bucket":"chromeos-moblab-pvs-dev","service_account":"/home/chronos/user/.pvs/upload_config/.service_account.json","boto_key":""}`
+const defaultTagAndRef = "prod"
 
 var pvsOutputDir = path.Join(chronosHome, ".pvs")
 var pvsResultsDir = path.Join(pvsOutputDir, "results")
@@ -41,7 +42,7 @@ func init() {
 		TearDownTimeout: 2 * time.Minute,
 		PreTestTimeout:  2 * time.Minute,
 		PostTestTimeout: 1 * time.Minute,
-		Vars:            []string{"pvs.git_cookies", "pvs.service_account"},
+		Vars:            []string{"pvs.git_cookies", "pvs.service_account", "pvs.shop_ref", "pvs.image_tag"},
 	})
 
 }
@@ -74,6 +75,16 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 		s.Fatal("Error occured when populating git cookies: ", err)
 	}
 
+	shopRef, ok := s.Var("pvs.shop_ref")
+	if !ok {
+		shopRef = defaultTagAndRef
+	}
+
+	pvsImageTag, ok := s.Var("pvs.image_tag")
+	if !ok {
+		pvsImageTag = defaultTagAndRef
+	}
+
 	// Populate service account and upload config
 	if _, err := removeAsRoot(ctx, pvsHost, pvsOutputDir); err != nil {
 		s.Fatal("Error occured when trying to cleanup pvs output dir: ", err)
@@ -91,7 +102,7 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 	}
 
 	// Run shop unpack
-	shopUnpack := fmt.Sprintf(`SHOP_REF=tast-test PVS_IMAGE_TAG=tast-test FORCE_DLM_SKU_ID=0 shop unpack --dut %v`, dutHostname)
+	shopUnpack := fmt.Sprintf(`SHOP_REF=%s PVS_IMAGE_TAG=%s FORCE_DLM_SKU_ID=0 shop unpack --dut %v`, shopRef, pvsImageTag, dutHostname)
 	shopOutput, err := RunAsChronos(ctx, pvsHost, shopUnpack)
 	if err != nil {
 		s.Fatal("Error occured when running shop unpack: ", err)
