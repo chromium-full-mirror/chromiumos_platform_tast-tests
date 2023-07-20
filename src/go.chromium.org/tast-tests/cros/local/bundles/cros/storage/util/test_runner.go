@@ -34,6 +34,8 @@ func runContinuousStorageStress(ctx context.Context, job, jobFile string, rw *Fi
 	}
 }
 
+const ignoredCounterStr = "EC s0ix counter"
+
 // runSuspendStressTest runs the suspend_stress_test executable for the number of
 // loops determined based on the duration, then parses the output for errors.
 func runSuspendStressTest(ctx context.Context, duration time.Duration) error {
@@ -49,6 +51,9 @@ func runSuspendStressTest(ctx context.Context, duration time.Duration) error {
 	for _, res := range resSlice {
 		if strings.Contains(res, ":") {
 			failStr := strings.Split(res, ": ")
+			if strings.Contains(failStr[0], ignoredCounterStr) {
+				continue
+			}
 			count, err := strconv.Atoi(failStr[1])
 			if err == nil && count > 0 {
 				testing.ContextLog(ctx, "Suspend Stress results: ", results)
