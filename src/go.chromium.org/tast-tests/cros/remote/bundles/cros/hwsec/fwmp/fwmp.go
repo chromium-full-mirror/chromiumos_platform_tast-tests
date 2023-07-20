@@ -15,7 +15,7 @@ import (
 // Error codes and constants used by fwmp tests.
 const (
 	// FWMPRemovedErrorCode is the error code returned by GetFirmwareManagementParameters when the FWMP is removed.
-	FWMPRemovedErrorCode = "CRYPTOHOME_ERROR_FIRMWARE_MANAGEMENT_PARAMETERS_INVALID"
+	FWMPRemovedErrorCode = "DEVICE_MANAGEMENT_ERROR_FIRMWARE_MANAGEMENT_PARAMETERS_INVALID"
 
 	TestFlags1   = "00000006" // FWMP_DEV_DISABLE_RECOVERY | FWMP_DEV_ENABLE_USB
 	TestFlags2   = "0000000c" // FWMP_DEV_ENABLE_USB | FWMP_DEV_ENABLE_LEGACY
@@ -27,8 +27,8 @@ const (
 )
 
 // CheckFWMPCleared checks that FWMP is cleared, and returns nil iff it is cleared.
-func CheckFWMPCleared(ctx context.Context, cryptohome *hwsec.CryptohomeClient) error {
-	flags, hash, err := cryptohome.GetFirmwareManagementParameters(ctx)
+func CheckFWMPCleared(ctx context.Context, utility *hwsec.DeviceManagementClient) error {
+	flags, hash, err := utility.GetFirmwareManagementParameters(ctx)
 
 	// There are 2 possible good results, depending on the coreboot and cryptohome implementation.
 	// Case 1: If the the FWMP index is owner-defined, invalid space is expected after the clear.
@@ -46,8 +46,8 @@ func CheckFWMPCleared(ctx context.Context, cryptohome *hwsec.CryptohomeClient) e
 }
 
 // ClearFWMPAndCheck clears FWMP and checks that it's cleared correctly. It return nil iff FWMP is successfully cleared.
-func ClearFWMPAndCheck(ctx context.Context, cryptohome *hwsec.CryptohomeClient) error {
-	if _, err := cryptohome.RemoveFirmwareManagementParameters(ctx); err != nil {
+func ClearFWMPAndCheck(ctx context.Context, utility *hwsec.DeviceManagementClient) error {
+	if _, err := utility.RemoveFirmwareManagementParameters(ctx); err != nil {
 		return errors.Wrap(err, "failed to clear fwmp")
 	}
 
@@ -56,7 +56,7 @@ func ClearFWMPAndCheck(ctx context.Context, cryptohome *hwsec.CryptohomeClient) 
 	// verify RemoveFirmwareManagementParameters actually does remove FWMP.
 	// i.e. We want to catch cases whereby RemoveFirmwareManagementParameters
 	// succeeded but it wasn't cleared.
-	if err := CheckFWMPCleared(ctx, cryptohome); err != nil {
+	if err := CheckFWMPCleared(ctx, utility); err != nil {
 		return errors.Wrap(err, "failed to check fwmp is cleared")
 	}
 
@@ -64,8 +64,8 @@ func ClearFWMPAndCheck(ctx context.Context, cryptohome *hwsec.CryptohomeClient) 
 }
 
 // CheckFWMPSet checks that FWMP is set to the expected values.
-func CheckFWMPSet(ctx context.Context, cryptohome *hwsec.CryptohomeClient, expectedFlags, expectedHash string) error {
-	flags, hash, err := cryptohome.GetFirmwareManagementParameters(ctx)
+func CheckFWMPSet(ctx context.Context, utility *hwsec.DeviceManagementClient, expectedFlags, expectedHash string) error {
+	flags, hash, err := utility.GetFirmwareManagementParameters(ctx)
 	if err != nil {
 		return errors.Wrap(err, "call to GetFirmwareManagementParameters failed when trying to check FWMP is set correctly")
 	}
@@ -82,8 +82,8 @@ func CheckFWMPSet(ctx context.Context, cryptohome *hwsec.CryptohomeClient, expec
 }
 
 // SetFWMPAndCheck sets the FWMP and checks that it's set correctly. It return nil iff FWMP is successfully set.
-func SetFWMPAndCheck(ctx context.Context, cryptohome *hwsec.CryptohomeClient, flags, hash string) error {
-	if _, err := cryptohome.SetFirmwareManagementParameters(ctx, flags, hash); err != nil {
+func SetFWMPAndCheck(ctx context.Context, utility *hwsec.DeviceManagementClient, flags, hash string) error {
+	if _, err := utility.SetFirmwareManagementParameters(ctx, flags, hash); err != nil {
 		return errors.Wrap(err, "failed to set FWMP")
 	}
 
@@ -92,7 +92,7 @@ func SetFWMPAndCheck(ctx context.Context, cryptohome *hwsec.CryptohomeClient, fl
 	// verify SetFirmwareManagementParameters actually does set FWMP.
 	// i.e. We want to catch cases whereby SetFirmwareManagementParameters
 	// succeeded but it wasn't set.
-	if err := CheckFWMPSet(ctx, cryptohome, flags, hash); err != nil {
+	if err := CheckFWMPSet(ctx, utility, flags, hash); err != nil {
 		return errors.Wrap(err, "failed to check fwmp is set correctly")
 	}
 

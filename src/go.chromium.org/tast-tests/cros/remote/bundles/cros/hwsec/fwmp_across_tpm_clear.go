@@ -37,7 +37,7 @@ func FWMPAcrossTPMClear(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
-	cryptohome := helper.CryptohomeClient()
+	utility := helper.DeviceManagementClient()
 
 	// Resets the TPM states before running the tests.
 	if err := helper.EnsureTPMAndSystemStateAreReset(ctx); err != nil {
@@ -48,22 +48,22 @@ func FWMPAcrossTPMClear(ctx context.Context, s *testing.State) {
 	}
 
 	// Clear FWMP before the start of the test.
-	if err := fwmp.ClearFWMPAndCheck(ctx, cryptohome); err != nil {
+	if err := fwmp.ClearFWMPAndCheck(ctx, utility); err != nil {
 		s.Fatal("Failed to clear FWMP at the start of the test: ", err)
 	}
 
 	// Now try to set it with the first value, then read it back to check.
-	if err := fwmp.SetFWMPAndCheck(ctx, cryptohome, fwmp.TestFlags1, fwmp.TestHash1); err != nil {
+	if err := fwmp.SetFWMPAndCheck(ctx, utility, fwmp.TestFlags1, fwmp.TestHash1); err != nil {
 		s.Fatal("Failed to set FWMP with test case 1: ", err)
 	}
 
 	// Clear the FWMP to make sure it can be cleared.
-	if err := fwmp.ClearFWMPAndCheck(ctx, cryptohome); err != nil {
+	if err := fwmp.ClearFWMPAndCheck(ctx, utility); err != nil {
 		s.Fatal("Failed to clear FWMP after setting the first test case: ", err)
 	}
 
 	// Test again with the second test case.
-	if err := fwmp.SetFWMPAndCheck(ctx, cryptohome, fwmp.TestFlags2, fwmp.TestHash2); err != nil {
+	if err := fwmp.SetFWMPAndCheck(ctx, utility, fwmp.TestFlags2, fwmp.TestHash2); err != nil {
 		s.Fatal("Failed to set FWMP with test case 2: ", err)
 	}
 
@@ -73,7 +73,7 @@ func FWMPAcrossTPMClear(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure the FWMP still there after reboot.
-	if err := fwmp.CheckFWMPSet(ctx, cryptohome, fwmp.TestFlags2, fwmp.TestHash2); err != nil {
+	if err := fwmp.CheckFWMPSet(ctx, utility, fwmp.TestFlags2, fwmp.TestHash2); err != nil {
 		s.Fatal("Failed to check the second FWMP after reboot the DUT: ", err)
 	}
 
@@ -83,7 +83,7 @@ func FWMPAcrossTPMClear(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure the FWMP still there after reset the TPM.
-	if err := fwmp.CheckFWMPSet(ctx, cryptohome, fwmp.TestFlags2, fwmp.TestHash2); err != nil {
+	if err := fwmp.CheckFWMPSet(ctx, utility, fwmp.TestFlags2, fwmp.TestHash2); err != nil {
 		s.Fatal("Failed to check the second FWMP after reset the TPM: ", err)
 	}
 
@@ -93,7 +93,7 @@ func FWMPAcrossTPMClear(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure the FWMP still there after TPM is ready.
-	if err := fwmp.CheckFWMPSet(ctx, cryptohome, fwmp.TestFlags2, fwmp.TestHash2); err != nil {
+	if err := fwmp.CheckFWMPSet(ctx, utility, fwmp.TestFlags2, fwmp.TestHash2); err != nil {
 		s.Fatal("Failed to check the second FWMP after TPM is ready: ", err)
 	}
 }

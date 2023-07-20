@@ -41,7 +41,7 @@ var testAttributes = [...]string{"Ibuprofen", "Acetaminophen", "Acetylsalicylic 
 var testValues = [...]string{"C13H18O2", "C8H9NO2", "C9H8O4"}
 
 // getInstallAttributesStates returns isReady, isInitialized, isInvalid, isFirstInstall, isSecure, count and any error encountered.
-func getInstallAttributesStates(ctx context.Context, utility *hwsec.CryptohomeClient) (isReady, isInitialized, isInvalid, isFirstInstall, isSecure bool, count int, returnError error) {
+func getInstallAttributesStates(ctx context.Context, utility *hwsec.DeviceManagementClient) (isReady, isInitialized, isInvalid, isFirstInstall, isSecure bool, count int, returnError error) {
 	// Default return values.
 	isReady = false
 	isInitialized = false
@@ -53,7 +53,7 @@ func getInstallAttributesStates(ctx context.Context, utility *hwsec.CryptohomeCl
 	// Get the values through InstallAttributesStatus().
 	status, err := utility.InstallAttributesStatus(ctx)
 	if err != nil {
-		returnError = errors.Wrap(err, "failed to get cryptohome install attributes status")
+		returnError = errors.Wrap(err, "failed to get install-attributes status")
 		return
 	}
 
@@ -91,7 +91,7 @@ func getInstallAttributesStates(ctx context.Context, utility *hwsec.CryptohomeCl
 }
 
 // waitForInstallAttributes waits for install attributes to be ready.
-func waitForInstallAttributes(ctx context.Context, utility *hwsec.CryptohomeClient) error {
+func waitForInstallAttributes(ctx context.Context, utility *hwsec.DeviceManagementClient) error {
 	// Wait for, and check TPM attributes after taking ownership.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		isReady, isInitialized, isInvalid, isFirstInstall, _, count, err := getInstallAttributesStates(ctx, utility)
@@ -111,7 +111,7 @@ func waitForInstallAttributes(ctx context.Context, utility *hwsec.CryptohomeClie
 }
 
 // takeOwnershipAndWaitForInstallAttributes takes ownership and wait for install attributes to be ready.
-func takeOwnershipAndWaitForInstallAttributes(ctx context.Context, utility *hwsec.CryptohomeClient, helper *hwsecremote.CmdHelperRemote) error {
+func takeOwnershipAndWaitForInstallAttributes(ctx context.Context, utility *hwsec.DeviceManagementClient, helper *hwsecremote.CmdHelperRemote) error {
 	if err := helper.EnsureTPMIsReady(ctx, hwsec.DefaultTakingOwnershipTimeout); err != nil {
 		return errors.Wrap(err, "time out waiting for TPM to be ready")
 	}
@@ -119,8 +119,8 @@ func takeOwnershipAndWaitForInstallAttributes(ctx context.Context, utility *hwse
 	return waitForInstallAttributes(ctx, utility)
 }
 
-// checkAllTestAttributes is a helper function that checks the install attributes retrieved through cryptohome's API is what we are expecting.
-func checkAllTestAttributes(ctx context.Context, utility *hwsec.CryptohomeClient) error {
+// checkAllTestAttributes is a helper function that checks the install attributes retrieved through device_management's API is what we are expecting.
+func checkAllTestAttributes(ctx context.Context, utility *hwsec.DeviceManagementClient) error {
 	for i, attributeName := range testAttributes {
 		attributeValue := testValues[i]
 		readbackValue, err := utility.InstallAttributesGet(ctx, attributeName)
@@ -136,7 +136,7 @@ func checkAllTestAttributes(ctx context.Context, utility *hwsec.CryptohomeClient
 }
 
 // attemptChangeAndCheckShouldSucceed checks that install attributes are settable when it should be, it also verifies the install attributes values.
-func attemptChangeAndCheckShouldSucceed(ctx context.Context, utility *hwsec.CryptohomeClient) error {
+func attemptChangeAndCheckShouldSucceed(ctx context.Context, utility *hwsec.DeviceManagementClient) error {
 	if err := utility.InstallAttributesSet(ctx, testAttributes[0], testValues[1]); err != nil {
 		return errors.Wrap(err, "failed to set install attributes when it should still be settable")
 	}
@@ -150,7 +150,7 @@ func attemptChangeAndCheckShouldSucceed(ctx context.Context, utility *hwsec.Cryp
 }
 
 // attemptChangeAndCheckShouldFail checks that install attributes are not settable, it also verifies the install attributes values.
-func attemptChangeAndCheckShouldFail(ctx context.Context, utility *hwsec.CryptohomeClient) error {
+func attemptChangeAndCheckShouldFail(ctx context.Context, utility *hwsec.DeviceManagementClient) error {
 	if err := utility.InstallAttributesSet(ctx, testAttributes[0], testValues[1]); err == nil {
 		return errors.New("setting install attributes to a different value succeeded when it shouldn't")
 	}
@@ -195,7 +195,7 @@ func InstallAttributes(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Helper creation error: ", err)
 	}
-	utility := helper.CryptohomeClient()
+	utility := helper.DeviceManagementClient()
 	s.Log("Start resetting TPM if needed")
 	if err := helper.EnsureTPMAndSystemStateAreReset(ctx); err != nil {
 		s.Fatal("Failed to ensure resetting TPM: ", err)
@@ -205,7 +205,7 @@ func InstallAttributes(ctx context.Context, s *testing.State) {
 	// Check install attributes is empty right after resetting the TPM.
 	_, _, _, _, _, count, err := getInstallAttributesStates(ctx, utility)
 	if err != nil {
-		s.Fatal("Failed to parse cryptohome status: ", err)
+		s.Fatal("Failed to parse install-attributes status: ", err)
 	}
 
 	if count != 0 {
@@ -258,7 +258,7 @@ func InstallAttributes(ctx context.Context, s *testing.State) {
 	// Check install attributes after reboot.
 	isReady, isInitialized, isInvalid, isFirstInstall, _, count, err = getInstallAttributesStates(ctx, utility)
 	if err != nil {
-		s.Fatal("Failed to parse cryptohome status: ", err)
+		s.Fatal("Failed to parse install-attributes status: ", err)
 	}
 
 	if !isReady || !isInitialized || isInvalid || isFirstInstall || count != 3 {
@@ -283,7 +283,7 @@ func InstallAttributes(ctx context.Context, s *testing.State) {
 	// Check install attributes after tampering with install attributes.
 	isReady, isInitialized, isInvalid, isFirstInstall, _, count, err = getInstallAttributesStates(ctx, utility)
 	if err != nil {
-		s.Fatal("Failed to parse cryptohome status: ", err)
+		s.Fatal("Failed to parse install-attributes status: ", err)
 	}
 	if !isReady || !isInitialized || isInvalid || !isFirstInstall || count != 0 {
 		s.Fatalf("Unexpected Install Attributes state after tampering with install attributes; ready=%t, initialized=%t, invalid=%t, firstInstall=%t, count=%d", isReady, isInitialized, isInvalid, isFirstInstall, count)
