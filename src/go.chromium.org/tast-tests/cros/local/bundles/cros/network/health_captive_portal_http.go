@@ -89,7 +89,9 @@ func init() {
 				proxyConfig:          "",
 				checkPortal:          true,
 				networkState:         health.NetworkStatePortal,
-				portalState:          health.PortalStatePortalSuspected,
+				// Chrome portal detection will override PortalSuspected with Portal
+				// in this cases. TODO(b/292141089): Fix the Chrome behavior.
+				portalState: health.PortalStatePortal,
 			},
 		}, {
 			Name: "online",
