@@ -96,9 +96,14 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 		return errors.Wrap(err, "failed to launch Meet client")
 	}
 
+	start := time.Now()
 	var errorCheckingLogs error
 	var foundAnnotation bool
 	testing.Poll(ctx, func(ctx context.Context) error {
+		if time.Since(start) >= runParam.Timeout {
+			return nil
+		}
+
 		foundAnnotation, errorCheckingLogs = annotations.CheckLogs(ctx, cr, runParam.AnnotationHashCode)
 
 		if foundAnnotation || errorCheckingLogs != nil {
@@ -108,7 +113,6 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 		// Annotation not found yet, keep polling.
 		return errors.New("annotation ID not found yet")
 	}, &testing.PollOptions{
-		Timeout:  runParam.Timeout,
 		Interval: runParam.Interval,
 	})
 
