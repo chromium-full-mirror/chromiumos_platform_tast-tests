@@ -83,7 +83,7 @@ func OdfsOpenFile(ctx context.Context, s *testing.State) {
 			// Close the Office 365 to avoid interfere with following tests and allow the file deletion in the fixture.
 			defer ash.CloseAllWindows(cleanupCtx, tconn)
 
-			cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fName)
+			cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fName, onedrive.OneDrive)
 			if err != nil {
 				s.Fatal("Failed to open office file: ", err)
 			}

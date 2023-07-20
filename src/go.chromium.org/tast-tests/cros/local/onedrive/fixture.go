@@ -26,10 +26,26 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:         "onedrive",
-		Desc:         "Sets up 3 office files docx, pptx and xlsx. At tear down tries to remove them from the remote service via ODFS",
-		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
-		Impl:         &fixture{bt: browser.TypeAsh},
+		Name:     "onedrive",
+		Desc:     "Sets up 3 office files docx, pptx and xlsx. At tear down tries to remove them from the remote service via ODFS",
+		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
+		Impl: &fixture{
+			bt:            browser.TypeAsh,
+			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud")},
+			provider:      OneDrive,
+		},
+		SetUpTimeout: chrome.LoginTimeout,
+		ResetTimeout: chrome.ResetTimeout,
+		Data:         []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230704.xlsx"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "onedriveAndGoogleDrive",
+		Desc:     "Sets up 3 office files docx, pptx and xlsx. At tear down tries to remove them from the remote service via ODFS",
+		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
+		Impl: &fixture{
+			bt:       browser.TypeAsh,
+			provider: DriveFs,
+		},
 		SetUpTimeout: chrome.LoginTimeout,
 		ResetTimeout: chrome.ResetTimeout,
 		Parent:       "driveFsStartedWithOfficeEnabled", // TODO(b/291524698): Create more DriveFS accounts.
@@ -54,13 +70,23 @@ type FixtureData struct {
 	XlsxName string
 }
 
+// Provider is either Google Drive or Microsoft OneDrive.
+type Provider string
+
+// Cloud Provider names.
+const (
+	OneDrive Provider = "onedrive"
+	DriveFs  Provider = "drivefs"
+)
+
 type fixture struct {
-	cr    *chrome.Chrome
-	tconn *chrome.TestConn
-	// chromeOptions []chrome.Option
+	cr             *chrome.Chrome
+	tconn          *chrome.TestConn
+	chromeOptions  []chrome.Option
 	bt             browser.Type
 	cleanUpFiles   []string
 	screenRecorder *uiauto.ScreenRecorder
+	provider       Provider
 }
 
 // generateTestFileName generates a unique-ish file name based on a provided
@@ -88,8 +114,27 @@ func prepareOfficeFile(srcPath, targetFolder string) (srcFilePath, finalName str
 }
 
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	cr := s.ParentValue().(*drivefs.FixtureData).Chrome
-	f.tconn = s.ParentValue().(*drivefs.FixtureData).TestAPIConn
+	var cr *chrome.Chrome
+	var err error
+	if f.provider == DriveFs {
+		cr = s.ParentValue().(*drivefs.FixtureData).Chrome
+		f.tconn = s.ParentValue().(*drivefs.FixtureData).TestAPIConn
+	} else if f.provider == OneDrive {
+		opts := f.chromeOptions
+		ctx, cancel := context.WithTimeout(ctx, chrome.LoginTimeout)
+		defer cancel()
+
+		cr, err = chrome.New(ctx, opts...)
+		if err != nil {
+			s.Fatal("Failed to start Chrome: ", err)
+		}
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed creating test API connection: ", err)
+		}
+		f.tconn = tconn
+	}
+	f.cr = cr
 
 	// Copy the docx, pptx and xlsx to MyFiles to be used in the tests.
 	targetBaseName := "odfs_files"

@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/onedrive"
 	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -272,9 +273,32 @@ func (f *FilesApp) FileExists(fileName string) uiauto.Action {
 	return f.ui.Exists(file(fileName))
 }
 
+// IsFileSelected returns an Action that returns `nil` when the file exists.
+// When it doesn't exist it returns an error. This is useful to use with some polling functions e.g.:
+// f.ui.LeftClikcUntil(aFinder, f.IsFileSelected("leFile"))
+func (f *FilesApp) IsFileSelected(fileName string) uiauto.Action {
+	return func(ctx context.Context) error {
+		// The ARIA label for the file row starts with the file name and is followed by " Size" and the content of the other colunmns.
+		nodeInfo, err := f.ui.Info(ctx, nodewith.Role(role.ListBoxOption).NameStartingWith(fileName+" Size"))
+		if err != nil {
+			return err
+		}
+
+		value, exists := nodeInfo.HTMLAttributes["aria-selected"]
+		if !exists || value == "false" {
+			return errors.New("file not selected yet")
+		}
+
+		return nil
+	}
+}
+
 // SelectFile returns a function that selects a file by clicking on it.
 func (f *FilesApp) SelectFile(fileName string) uiauto.Action {
-	return f.LeftClick(file(fileName))
+	return uiauto.Combine("select file",
+		f.WaitForFile(fileName),
+		f.ui.LeftClickUntil(file(fileName), f.IsFileSelected(fileName)),
+	)
 }
 
 // OpenFile returns a function that executes double click on a file to open it with default app.
@@ -596,14 +620,35 @@ func (f *FilesApp) EjectAll() uiauto.Action {
 }
 
 // OpenOfficeFile opens the office file passed in and returns a cloud upload instance for further setup.
-func (f *FilesApp) OpenOfficeFile(ctx context.Context, baseDir, fileName string) (*cloudupload.CloudUpload, error) {
-	if err := f.OpenDir(baseDir, FilesTitlePrefix+baseDir)(ctx); err != nil {
-		return nil, err
+func (f *FilesApp) OpenOfficeFile(ctx context.Context, baseDir, fileName string, provider onedrive.Provider) (*cloudupload.CloudUpload, error) {
+	var open uiauto.Action
+	menuItem := nodewith.Role(role.MenuItem).Visible()
+	if provider == "" {
+		// Open via double-click, using the default app/action.
+		open = f.OpenFile(fileName)
+
+	} else if provider == onedrive.DriveFs {
+		menuItem = menuItem.NameRegex(regexp.MustCompile(`Google (Docs|Sheets|Slides).*`))
+		open = uiauto.Combine("open via open with",
+			f.SelectFile(fileName),
+			f.ExpandOpenDropdown(),
+			f.WaitUntilExists(menuItem),
+			f.LeftClick(menuItem),
+		)
+	} else if provider == onedrive.OneDrive {
+		menuItem = menuItem.NameRegex(regexp.MustCompile(`Microsoft 365.*`))
+		open = uiauto.Combine("open via open with",
+			f.SelectFile(fileName),
+			f.ExpandOpenDropdown(),
+			f.WaitUntilExists(menuItem),
+			f.LeftClick(menuItem),
+		)
 	}
 
 	if err := uiauto.Combine("Open office file",
+		f.OpenDir(baseDir, FilesTitlePrefix+baseDir),
 		f.WaitForFile(fileName),
-		f.OpenFile(fileName))(ctx); err != nil {
+		open)(ctx); err != nil {
 		return nil, err
 	}
 	return cloudupload.App(f.tconn), nil
