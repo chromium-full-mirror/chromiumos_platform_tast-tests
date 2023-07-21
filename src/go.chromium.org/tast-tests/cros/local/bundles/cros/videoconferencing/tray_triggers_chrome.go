@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 	"go.chromium.org/tast/core/errors"
 
@@ -34,9 +35,15 @@ type triggerTestParam struct {
 	incognitoMode bool
 }
 
-const errMessageMeetingHasEnded = "This meeting has ended as someone has started a new meeting with this account"
+const (
+	errMessageMeetingHasEnded    = "This meeting has ended as someone has started a new meeting with this account"
+	errMessageSomethingWentWrong = "Something went wrong"
+)
 
-var errMeetingHasEnded = errors.New(errMessageMeetingHasEnded)
+var (
+	errMeetingHasEnded    = errors.New(errMessageMeetingHasEnded)
+	errSomethingWentWrong = errors.New(errMessageSomethingWentWrong)
+)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -202,13 +209,16 @@ func TrayTriggersChrome(ctx context.Context, s *testing.State) {
 
 	// If there are multiple DUTs that open zoom meeting at the same time with
 	// the same account, it is possible that a dialog "This meeting has ended
-	// as someone has started a new meeting with this account" will popup.
-	// Do retry if it encounters this issue.
+	// as someone has started a new meeting with this account" or "Something
+	// went wrong" will popup. Do retry if it encounters those issues.
 	const retryCount = 2
+	skipRetry := func(err error) bool {
+		return !(errors.Is(err, errMeetingHasEnded) || errors.Is(err, errSomethingWentWrong))
+	}
 	for i := 1; i <= retryCount; i++ {
 		if err := run(ctx, s, cr, testParams); err == nil {
 			break
-		} else if i == retryCount || !errors.Is(err, errMeetingHasEnded) {
+		} else if i == retryCount || skipRetry(err) {
 			s.Fatal("Failed to run Zoom: ", err)
 		}
 		s.Logf("Attempt #%d to run Zoom", i)
@@ -295,6 +305,13 @@ func run(ctx context.Context, s *testing.State, cr *chrome.Chrome, testParams tr
 		if uiauto.New(tconn).Exists(accountErrorText)(ctx) == nil {
 			s.Logf("The alert dialog %q pops up", errMessageMeetingHasEnded)
 			return errMeetingHasEnded
+		}
+		// "Something went wrong" dialog can't be detected by ui dump, use udetection instead.
+		ud := uidetection.NewDefault(tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
+		serverErrorSentence := uidetection.TextBlockFromSentence(errMessageSomethingWentWrong)
+		if ud.Exists(serverErrorSentence)(ctx) == nil {
+			s.Logf("The alert dialog %q pops up", errMessageSomethingWentWrong)
+			return errSomethingWentWrong
 		}
 		return err
 	}
