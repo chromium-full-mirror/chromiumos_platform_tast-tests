@@ -130,6 +130,37 @@ func init() {
 				media:       videoMedia,
 				title:       "Video playback",
 			},
+		}, {
+			Name:              "canvas_2d_vulkan",
+			Fixture:           "chromeGraphicsVulkan",
+			ExtraSoftwareDeps: []string{"vulkan_composite"},
+			ExtraData: []string{canvas2DFile},
+			Val: pageTestParams{
+				browserType: browser.TypeAsh,
+				file:        canvas2DFile,
+				title:       "Canvas 2D Low Latency",
+			},
+		}, {
+			Name:              "canvas_3d_vulkan",
+			Fixture:           "chromeGraphicsVulkan",
+			ExtraSoftwareDeps: []string{"vulkan_composite"},
+			ExtraData: []string{canvas3DFile},
+			Val: pageTestParams{
+				browserType: browser.TypeAsh,
+				file:        canvas3DFile,
+				title:       "Canvas 3D",
+			},
+		}, {
+			Name:              "video_vulkan",
+			Fixture:           "chromeGraphicsVulkan",
+			ExtraSoftwareDeps: []string{"vulkan_composite"},
+			ExtraData: []string{videoFile, videoMedia},
+			Val: pageTestParams{
+				browserType: browser.TypeAsh,
+				file:        videoFile,
+				media:       videoMedia,
+				title:       "Video playback",
+			},
 		}},
 	})
 }
