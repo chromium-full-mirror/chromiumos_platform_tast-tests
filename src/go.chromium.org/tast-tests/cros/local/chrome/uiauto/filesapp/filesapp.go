@@ -56,6 +56,7 @@ const (
 const (
 	Downloads   = "Downloads"
 	GoogleDrive = "Google Drive"
+	OneDrive    = "Microsoft OneDrive"
 	Linuxfiles  = "Linux files"
 	MyDrive     = "My Drive"
 	MyFiles     = "My files"
@@ -223,6 +224,12 @@ func (f *FilesApp) OpenPlayfiles() uiauto.Action {
 // An error is returned if Drive is not found or does not open.
 func (f *FilesApp) OpenDrive() uiauto.Action {
 	return f.OpenDir(GoogleDrive, FilesTitlePrefix+MyDrive)
+}
+
+// OpenOneDrive returns a function that opens the MS OneDrive folder in the Files App.
+// An error is returned if OneDrive is not found or does not open.
+func (f *FilesApp) OpenOneDrive() uiauto.Action {
+	return f.OpenDir(OneDrive, FilesTitlePrefix+OneDrive)
 }
 
 // OpenLinuxFiles returns a function that opens the Linux files folder in the Files App.
