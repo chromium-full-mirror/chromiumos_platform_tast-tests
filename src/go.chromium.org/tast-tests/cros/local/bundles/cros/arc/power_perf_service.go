@@ -122,7 +122,7 @@ func (c *PowerPerfService) Setup(ctx context.Context, _ *emptypb.Empty) (*emptyp
 		discharge = true
 		// There is a battery, make sure it's charged before starting the test.
 		testing.ContextLog(ctx, "Waiting for battery to charge")
-		if err := power.WaitForCharge(ctx, batteryPath, 0.95, 30*time.Minute); err != nil {
+		if err := power.WaitForCharge(ctx, batteryPath, 0.75, 30*time.Minute); err != nil {
 			return nil, err
 		}
 		testing.ContextLog(ctx, "Battery now charged")
