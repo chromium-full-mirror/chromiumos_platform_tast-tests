@@ -20,13 +20,14 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AddCustomAcceleratorAndReset,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Add Custom Accelerator to Unlocked actions",
+		Desc:         "Add Custom Accelerator to Unlocked actions and reset it",
 		Contacts: []string{
 			"cros-peripherals@google.com",
 			"jimmyxgong@google.com",
@@ -42,6 +43,7 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.InternalKeyboard()),
 	})
 
 }
@@ -54,7 +56,7 @@ func AddCustomAcceleratorAndReset(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer cr.Close(cleanupCtx)
+	defer cr.Close(ctx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -73,13 +75,14 @@ func AddCustomAcceleratorAndReset(ctx context.Context, s *testing.State) {
 	defer kb.Close(ctx)
 
 	// Verify default shortcut works and does the intended operation.
-	if err := kb.Accel(ctx, "alt+shift+s"); err != nil {
-		s.Fatal("Failed pressing alt+shift+s : ", err)
+	if err := kb.Accel(ctx, "Search+c"); err != nil {
+		s.Fatal("Failed pressing Search + c : ", err)
 	}
 
-	widgetNode := nodewith.NameRegex(regexp.MustCompile("(?i)Power Menu")).Role(role.Button)
+	// Verify the right widget was triggered.
+	widgetNode := nodewith.Name("Calendar").Role(role.StaticText)
 	if err := ui.WaitUntilExists(widgetNode)(ctx); err != nil {
-		s.Fatal("Failed to find the widget : ", err)
+		s.Fatal("Failed to find the widget: ", err)
 	}
 
 	// Verify the new shortcut to be input, does not trigger the action
@@ -94,7 +97,7 @@ func AddCustomAcceleratorAndReset(ctx context.Context, s *testing.State) {
 	}
 
 	// Closing widget with default shortcut.
-	if err := kb.Accel(ctx, "alt+shift+s"); err != nil {
+	if err := kb.Accel(ctx, "search+c"); err != nil {
 		s.Fatal("Failed pressing alt+shift+s : ", err)
 	}
 
@@ -109,26 +112,38 @@ func AddCustomAcceleratorAndReset(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify that the Shortcut Customization app is launched: ", err)
 	}
 
+	// Regex for possible default values for the action.
+	defaultShortcutRegex := regexp.MustCompile("meta (search|launcher) c")
+
+	// Capture the default shortcut node based on possible values.
+	defaultShortcut := nodewith.NameRegex(defaultShortcutRegex).Role(role.GenericContainer).First()
+
+	// Capture the name of the node for shortcut.
+	shortcutNodeInfo, err := ui.Info(ctx, defaultShortcut)
+	if err != nil {
+		s.Fatal("Failed to find the default shortcut keys")
+	}
+	shortcutName := shortcutNodeInfo.Name
+
 	// Verify default shortcut is present in the key shortcuts UI.
-	if err := sc.VerifyShortcuts(ctx, ui, "Open Quick Settings by selecting the time", sc.ShortcutKeys{Keys: "alt shift s", Role: role.GenericContainer}); err != nil {
+	if err := sc.VerifyShortcuts(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: shortcutName, Role: role.GenericContainer}); err != nil {
 		s.Fatal("Failed to find the Open Quick Settings shortcut: ", err)
 	}
 
 	// Click the edit button for the shortcut.
-	openWidget := nodewith.Name("alt shift s").Role(role.GenericContainer)
-	editButton := nodewith.ClassName("edit-button").Ancestor(openWidget)
+	editButton := nodewith.ClassName("edit-button").Ancestor(defaultShortcut)
 	if err := ui.LeftClick(editButton)(ctx); err != nil {
 		s.Fatal("Failed to find edit button: ", err)
 	}
 
 	// Verify the edit dialog is opened correctly.
-	editDialog := nodewith.NameContaining("Open Quick Settings").Role(role.Dialog)
+	editDialog := nodewith.Name("Open/close calendar").Role(role.Dialog)
 	if err := ui.WaitUntilExists(editDialog)(ctx); err != nil {
 		s.Fatal("Failed to find the Edit dialog: ", err)
 	}
 
 	// Verify the default shortcut is present.
-	defaultAccel := nodewith.Name("alt shift s").Role(role.GenericContainer)
+	defaultAccel := nodewith.NameRegex(defaultShortcutRegex).Role(role.GenericContainer)
 	if err := ui.WaitUntilExists(defaultAccel)(ctx); err != nil {
 		s.Fatal("Failed to find default accel for the action: ", err)
 	}
@@ -151,7 +166,7 @@ func AddCustomAcceleratorAndReset(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify the new accel is now available in the shortcut app.
-	if err := sc.VerifyShortcuts(ctx, ui, "Open Quick Settings by selecting the time", sc.ShortcutKeys{Keys: "ctrl alt m", Role: role.GenericContainer}); err != nil {
+	if err := sc.VerifyShortcuts(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "ctrl alt m", Role: role.GenericContainer}); err != nil {
 		s.Fatal("Failed to find the ctrl alt m for the shortcut: ", err)
 	}
 
@@ -183,12 +198,12 @@ func AddCustomAcceleratorAndReset(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify original shortcut available after reset.
-	if err := sc.VerifyShortcuts(ctx, ui, "Open Quick Settings by selecting the time", sc.ShortcutKeys{Keys: "alt shift s", Role: role.GenericContainer}); err != nil {
+	if err := sc.VerifyShortcuts(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: shortcutName, Role: role.GenericContainer}); err != nil {
 		s.Fatal("Failed to find the default shortcut alt shift s: ", err)
 	}
 
 	// Verify the edited accelator is not available anymore in UI.
-	if err := sc.VerifyShortcuts(ctx, ui, "Open Quick Settings by selecting the time", sc.ShortcutKeys{Keys: "ctrl alt m", Role: role.GenericContainer}); err == nil {
+	if err := sc.VerifyShortcuts(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "ctrl alt m", Role: role.GenericContainer}); err == nil {
 		s.Fatal("Failed to reset the shortcut: ", err)
 	}
 
