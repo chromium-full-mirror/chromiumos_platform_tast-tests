@@ -60,24 +60,24 @@ var bootedPre = &preImpl{
 }
 
 // NewPrecondition creates a new arc precondition for tests that need different args.
-func NewPrecondition(name string, gaia *GaiaVars, gaiaPool *GaiaLoginPoolVars, oDirect bool, extraArgs ...string) testing.Precondition {
-	return NewPreconditionWithBrowserType(name, browser.TypeAsh, gaia, gaiaPool, oDirect, extraArgs...)
+func NewPrecondition(name string, gaia *GaiaVars, gaiaPool *GaiaLoginPoolVars, rootfsODirect bool, extraArgs ...string) testing.Precondition {
+	return NewPreconditionWithBrowserType(name, browser.TypeAsh, gaia, gaiaPool, rootfsODirect, extraArgs...)
 }
 
 // NewPreconditionWithBrowserType creates a new arc precondition for tests that need different args and browser types.
-func NewPreconditionWithBrowserType(name string, browserType browser.Type, gaia *GaiaVars, gaiaPool *GaiaLoginPoolVars, oDirect bool, extraArgs ...string) testing.Precondition {
+func NewPreconditionWithBrowserType(name string, browserType browser.Type, gaia *GaiaVars, gaiaPool *GaiaLoginPoolVars, rootfsODirect bool, extraArgs ...string) testing.Precondition {
 	timeout := ResetTimeout + chrome.LoginTimeout + BootTimeout
 	if gaia != nil || gaiaPool != nil {
 		timeout = ResetTimeout + chrome.GAIALoginTimeout + BootTimeout + optin.OptinTimeout
 	}
 	pre := &preImpl{
-		name:        name,
-		browserType: browserType,
-		timeout:     timeout,
-		gaia:        gaia,
-		gaiaPool:    gaiaPool,
-		extraArgs:   extraArgs,
-		oDirect:     oDirect,
+		name:          name,
+		browserType:   browserType,
+		timeout:       timeout,
+		gaia:          gaia,
+		gaiaPool:      gaiaPool,
+		extraArgs:     extraArgs,
+		rootfsODirect: rootfsODirect,
 	}
 	return pre
 }
@@ -100,12 +100,12 @@ type preImpl struct {
 
 	timeout time.Duration // testing.Precondition.Timeout
 
-	extraArgs []string           // passed to Chrome on initialization
-	gaia      *GaiaVars          // a struct containing GAIA secret variables
-	gaiaPool  *GaiaLoginPoolVars // a struct containing GAIA login pool variable
-	oDirect   bool               // whether crosvm should use O_DIRECT.
-	cr        *chrome.Chrome
-	arc       *ARC
+	extraArgs     []string           // passed to Chrome on initialization
+	gaia          *GaiaVars          // a struct containing GAIA secret variables
+	gaiaPool      *GaiaLoginPoolVars // a struct containing GAIA login pool variable
+	rootfsODirect bool               // whether crosvm should use O_DIRECT for read-only system/vendor file systems.
+	cr            *chrome.Chrome
+	arc           *ARC
 
 	init *Snapshot
 }
@@ -163,8 +163,9 @@ func (p *preImpl) Prepare(ctx context.Context, s *testing.PreState) interface{} 
 		extraArgs := p.extraArgs
 		var err error
 
-		if p.oDirect {
-			if err := WriteArcvmDevConf(ctx, "O_DIRECT=true"); err != nil {
+		if p.rootfsODirect {
+			// Set up O_DIRECT for /dev/vda (system.img) and /dev/vdb (vendor.img).
+			if err := WriteArcvmDevConf(ctx, "O_DIRECT_N=0\nO_DIRECT_N=1\n"); err != nil {
 				s.Fatal("Failed to set arcvm_dev.conf: ", err)
 			}
 		} else {

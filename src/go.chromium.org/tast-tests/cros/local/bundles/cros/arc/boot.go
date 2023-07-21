@@ -17,8 +17,8 @@ import (
 type bootConfig struct {
 	// Run boot this many times
 	numTrials int
-	// Use O_DIRECT in disk access for ARCVM
-	oDirect bool
+	// Use O_DIRECT in read-only system/vendor disk access for ARCVM
+	rootfsODirect bool
 	// Use io_uring-enabled virtio-blk in crosvm.
 	ioUringBlock bool
 	// Extra Chrome command line options
@@ -96,8 +96,8 @@ func init() {
 		}, {
 			Name: "vm_o_direct",
 			Val: bootConfig{
-				numTrials: 1,
-				oDirect:   true,
+				numTrials:     1,
+				rootfsODirect: true,
 			},
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm"},
@@ -144,8 +144,9 @@ func Boot(ctx context.Context, s *testing.State) {
 
 func runBoot(ctx context.Context, s *testing.State) {
 	arcvmConf := ""
-	if s.Param().(bootConfig).oDirect {
-		arcvmConf += "O_DIRECT=true\n"
+	if s.Param().(bootConfig).rootfsODirect {
+		// Set up O_DIRECT for /dev/vda (system.img) and /dev/vdb (vendor.img).
+		arcvmConf += "O_DIRECT_N=0\nO_DIRECT_N=1\n"
 	}
 	if s.Param().(bootConfig).ioUringBlock {
 		arcvmConf += "BLOCK_ASYNC_EXECUTOR=uring\n"
