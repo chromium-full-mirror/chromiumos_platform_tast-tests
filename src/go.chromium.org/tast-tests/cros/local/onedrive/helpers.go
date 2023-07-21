@@ -26,8 +26,12 @@ func CheckODFSContent(ctx context.Context, srcFilePath, dstFileName string) erro
 	if err != nil {
 		return errors.Wrapf(err, "failed to list the file: %s", dstFileName)
 	}
-	odfsName := odfsNames[0]
+	if len(odfsNames) == 0 {
+		// No files found, nothing to compare against.
+		return errors.Errorf("couldn't find the file on ODFS: %s", dstFileName)
+	}
 
+	odfsName := odfsNames[0]
 	odfsContent, err := os.ReadFile(odfsName)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read the odfs file: %s", odfsName)

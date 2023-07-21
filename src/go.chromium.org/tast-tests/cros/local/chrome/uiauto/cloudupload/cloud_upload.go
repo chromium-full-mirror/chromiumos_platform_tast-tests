@@ -130,12 +130,20 @@ func (cu *CloudUpload) WaitSetupCompleteDialogAndClickDone() uiauto.Action {
 }
 
 // WaitUploadConfirmationDialogAndClickToUpload waits for the dialog confirming copy or move to the Cloud, and confirms the upload.
-func (cu *CloudUpload) WaitUploadConfirmationDialogAndClickToUpload() uiauto.Action {
+func (cu *CloudUpload) WaitUploadConfirmationDialogAndClickToUpload(alwaysMove bool) uiauto.Action {
 	dialog := nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("(Move|Copy) .* to .* OneDrive .*"))
 	moveButton := nodewith.Ancestor(dialog).Role(role.Button).NameRegex(regexp.MustCompile("(Move|Copy) and open"))
+	alwaysMoveCheckbox := nodewith.Ancestor(dialog).Role(role.CheckBox)
 
 	return uiauto.Combine("Move to cloud dialog: done",
 		cu.ui.WaitUntilExists(dialog),
+		func(ctx context.Context) error {
+			if alwaysMove {
+				return cu.ui.LeftClick(alwaysMoveCheckbox)(ctx)
+			}
+			// Default to no-op action.
+			return nil
+		},
 		cu.ui.LeftClick(moveButton),
 		cu.ui.WaitUntilGone(dialog),
 	)

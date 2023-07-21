@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -22,9 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OdfsOpenFile,
+		Func:         OdfsOpenFileAlwaysMove,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that docx, xlsx and pptx open in OneDrive",
+		Desc:         "Verifies that docx, xlsx and pptx open in OneDrive and we can see 'always move' checkbox for 2nd time",
 		BugComponent: "b:1199143",
 		Timeout:      5 * time.Minute,
 		Contacts: []string{
@@ -49,11 +48,11 @@ func init() {
 	})
 }
 
-// OdfsOpenFile tests user opening the 3 file types:
+// OdfsOpenFileAlwaysMove tests user opening the 3 file types:
 // 1. docx: First file, goes through the setup flow.
-// 2. pptx: Opens and goes through the "move file" confirmation dialog.
-// 3. xlsx: Same as pptx.
-func OdfsOpenFile(ctx context.Context, s *testing.State) {
+// 2. pptx: Opens and  checks the "Don't ask again" in the move file confirmation dialog.
+// 3. xlsx: Opens without the confirmation dialog.
+func OdfsOpenFileAlwaysMove(ctx context.Context, s *testing.State) {
 	accountPool := s.RequiredVar("onedrive.accountPool")
 	data := s.FixtValue().(*onedrive.FixtureData)
 	cr := data.Chrome
@@ -94,13 +93,23 @@ func OdfsOpenFile(ctx context.Context, s *testing.State) {
 			}
 
 			// Move/copy confirmation dialog.
-			if err := uiauto.Combine("Confirm upload and wait to open",
-				cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false),
-				ms365App.WaitForMicrosoft365Window(fileName),
-			)(ctx); err != nil {
-				s.Fatal("Failed to upload and open on MS365: ", fileName, err)
+			// 1st file: It doesn't show the "Don't ask again" option.
+			// 2nd file: We want to check the "Don't ask again".
+			// 3rd file: The dialog shouldn't show.
+			if i < 2 {
+				alwaysMove := false // 1st file.
+				if i == 1 {
+					alwaysMove = true // 2nd file.
+				}
+
+				if err := cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(alwaysMove)(ctx); err != nil {
+					s.Fatal("Failed confirming to upload to cloud: ", err)
+				}
 			}
 
+			if err := ms365App.WaitForMicrosoft365Window(fileName)(ctx); err != nil {
+				s.Fatal("Failed waiting file to open on MS365: ", fileName, err)
+			}
 			if err := onedrive.CheckODFSContent(ctx, subTest.SrcFile, fileName); err != nil {
 				s.Fatal("ODFS upload didn't match: ", err)
 			}
