@@ -50,12 +50,14 @@ func init() {
 		},
 		Timeout: 10 * time.Minute,
 		VarDeps: []string{
-			dlputil.RestrictionReportReportingEnabledUsername,
-			dlputil.RestrictionReportReportingEnabledPassword,
-			dlputil.RestrictionBlockReportingEnabledUsername,
-			dlputil.RestrictionBlockReportingEnabledPassword,
-			dlputil.RestrictionWarnReportingEnabledUsername,
-			dlputil.RestrictionWarnReportingEnabledPassword,
+			dlputil.RestrictionReportReportingEnabledUsernameAsh,
+			dlputil.RestrictionReportReportingEnabledPasswordAsh,
+			dlputil.RestrictionReportReportingEnabledUsernameLacros,
+			dlputil.RestrictionReportReportingEnabledPasswordLacros,
+			dlputil.RestrictionBlockReportingEnabledUsernameAsh,
+			dlputil.RestrictionBlockReportingEnabledPasswordAsh,
+			dlputil.RestrictionWarnReportingEnabledUsernameAsh,
+			dlputil.RestrictionWarnReportingEnabledPasswordAsh,
 			reportingutil.ManagedChromeCustomerIDPath,
 			reportingutil.EventsAPIKeyPath,
 			tape.ServiceAccountVar,
@@ -64,8 +66,8 @@ func init() {
 			{
 				Name: "ash_clipboard_copy_paste",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsername,
-					Password:    dlputil.RestrictionReportReportingEnabledPassword,
+					Username:    dlputil.RestrictionReportReportingEnabledUsernameAsh,
+					Password:    dlputil.RestrictionReportReportingEnabledPasswordAsh,
 					BrowserType: dlp.BrowserType_ASH,
 					Action:      dlputil.ClipboardCopyPaste,
 					Counts:      dlputil.EventsCounts{Report: 1},
@@ -74,8 +76,8 @@ func init() {
 			{
 				Name: "lacros_clipboard_copy_paste",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsername,
-					Password:    dlputil.RestrictionReportReportingEnabledPassword,
+					Username:    dlputil.RestrictionReportReportingEnabledUsernameLacros,
+					Password:    dlputil.RestrictionReportReportingEnabledPasswordLacros,
 					BrowserType: dlp.BrowserType_LACROS,
 					Action:      dlputil.ClipboardCopyPaste,
 					Counts:      dlputil.EventsCounts{Report: 1},
@@ -85,8 +87,8 @@ func init() {
 			{
 				Name: "ash_print",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsername,
-					Password:    dlputil.RestrictionReportReportingEnabledPassword,
+					Username:    dlputil.RestrictionReportReportingEnabledUsernameAsh,
+					Password:    dlputil.RestrictionReportReportingEnabledPasswordAsh,
 					BrowserType: dlp.BrowserType_ASH,
 					Action:      dlputil.Printing,
 					Counts:      dlputil.EventsCounts{Report: 1},
@@ -95,8 +97,8 @@ func init() {
 			{
 				Name: "lacros_print",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsername,
-					Password:    dlputil.RestrictionReportReportingEnabledPassword,
+					Username:    dlputil.RestrictionReportReportingEnabledUsernameLacros,
+					Password:    dlputil.RestrictionReportReportingEnabledPasswordLacros,
 					BrowserType: dlp.BrowserType_LACROS,
 					Action:      dlputil.Printing,
 					Counts:      dlputil.EventsCounts{Report: 1},
@@ -106,8 +108,8 @@ func init() {
 			{
 				Name: "ash_screenshot",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsername,
-					Password:    dlputil.RestrictionReportReportingEnabledPassword,
+					Username:    dlputil.RestrictionReportReportingEnabledUsernameAsh,
+					Password:    dlputil.RestrictionReportReportingEnabledPasswordAsh,
 					BrowserType: dlp.BrowserType_ASH,
 					Action:      dlputil.Screenshot,
 					Counts:      dlputil.EventsCounts{Report: 1},
@@ -116,8 +118,8 @@ func init() {
 			{
 				Name: "lacros_screenshot",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsername,
-					Password:    dlputil.RestrictionReportReportingEnabledPassword,
+					Username:    dlputil.RestrictionReportReportingEnabledUsernameLacros,
+					Password:    dlputil.RestrictionReportReportingEnabledPasswordLacros,
 					BrowserType: dlp.BrowserType_LACROS,
 					Action:      dlputil.Screenshot,
 					Counts:      dlputil.EventsCounts{Report: 1},
@@ -127,8 +129,8 @@ func init() {
 			{
 				Name: "ash_screenshare",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsername,
-					Password:    dlputil.RestrictionReportReportingEnabledPassword,
+					Username:    dlputil.RestrictionReportReportingEnabledUsernameAsh,
+					Password:    dlputil.RestrictionReportReportingEnabledPasswordAsh,
 					BrowserType: dlp.BrowserType_ASH,
 					Action:      dlputil.Screenshare,
 					Counts:      dlputil.EventsCounts{Report: 1},
@@ -137,8 +139,8 @@ func init() {
 			{
 				Name: "lacros_screenshare",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsername,
-					Password:    dlputil.RestrictionReportReportingEnabledPassword,
+					Username:    dlputil.RestrictionReportReportingEnabledUsernameLacros,
+					Password:    dlputil.RestrictionReportReportingEnabledPasswordLacros,
 					BrowserType: dlp.BrowserType_LACROS,
 					Action:      dlputil.Screenshare,
 					Counts:      dlputil.EventsCounts{Report: 1},
@@ -148,8 +150,8 @@ func init() {
 			{
 				Name: "ash_files",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsername,
-					Password:    dlputil.RestrictionReportReportingEnabledPassword,
+					Username:    dlputil.RestrictionReportReportingEnabledUsernameAsh,
+					Password:    dlputil.RestrictionReportReportingEnabledPasswordAsh,
 					BrowserType: dlp.BrowserType_ASH,
 					Action:      dlputil.Files,
 					Counts:      dlputil.EventsCounts{Report: 1},
@@ -158,8 +160,8 @@ func init() {
 			{
 				Name: "lacros_files",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsername,
-					Password:    dlputil.RestrictionReportReportingEnabledPassword,
+					Username:    dlputil.RestrictionReportReportingEnabledUsernameLacros,
+					Password:    dlputil.RestrictionReportReportingEnabledPasswordLacros,
 					BrowserType: dlp.BrowserType_LACROS,
 					Action:      dlputil.Files,
 					Counts:      dlputil.EventsCounts{Report: 1},
@@ -168,8 +170,8 @@ func init() {
 			{
 				Name: "ash_block_files",
 				Val: testParams{
-					Username:    dlputil.RestrictionBlockReportingEnabledUsername,
-					Password:    dlputil.RestrictionBlockReportingEnabledPassword,
+					Username:    dlputil.RestrictionBlockReportingEnabledUsernameAsh,
+					Password:    dlputil.RestrictionBlockReportingEnabledPasswordAsh,
 					BrowserType: dlp.BrowserType_ASH,
 					Action:      dlputil.Files,
 					Counts:      dlputil.EventsCounts{Block: 1},
@@ -178,8 +180,8 @@ func init() {
 			{
 				Name: "ash_warn_files",
 				Val: testParams{
-					Username:    dlputil.RestrictionWarnReportingEnabledUsername,
-					Password:    dlputil.RestrictionWarnReportingEnabledPassword,
+					Username:    dlputil.RestrictionWarnReportingEnabledUsernameAsh,
+					Password:    dlputil.RestrictionWarnReportingEnabledPasswordAsh,
 					BrowserType: dlp.BrowserType_ASH,
 					Action:      dlputil.Files,
 					Counts:      dlputil.EventsCounts{Warn: 1},

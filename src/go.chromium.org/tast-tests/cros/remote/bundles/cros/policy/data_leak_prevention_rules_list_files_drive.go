@@ -41,8 +41,8 @@ func init() {
 		},
 		Timeout: 7 * time.Minute,
 		VarDeps: []string{
-			dlputil.RestrictionWarnReportingEnabledUsername,
-			dlputil.RestrictionWarnReportingEnabledPassword,
+			dlputil.RestrictionWarnReportingEnabledUsernameAsh,
+			dlputil.RestrictionWarnReportingEnabledPasswordAsh,
 		},
 		Fixture: fixture.CleanOwnership,
 		Data: []string{
@@ -53,8 +53,8 @@ func init() {
 }
 
 func DataLeakPreventionRulesListFilesDrive(ctx context.Context, s *testing.State) {
-	username := s.RequiredVar(dlputil.RestrictionWarnReportingEnabledUsername)
-	password := s.RequiredVar(dlputil.RestrictionWarnReportingEnabledPassword)
+	username := s.RequiredVar(dlputil.RestrictionWarnReportingEnabledUsernameAsh)
+	password := s.RequiredVar(dlputil.RestrictionWarnReportingEnabledPasswordAsh)
 
 	// Establish RPC connection to the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
