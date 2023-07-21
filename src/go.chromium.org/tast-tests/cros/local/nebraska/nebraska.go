@@ -272,6 +272,11 @@ func (n *Nebraska) SetInvalidateLastUpdate(ctx context.Context, value bool) erro
 	return configureNebraska(ctx, n.Port, "invalidate_last_update", fmt.Sprint(value))
 }
 
+// SetCriticalUpdate configures Nebraska to serve the next update as critical update or not.
+func (n *Nebraska) SetCriticalUpdate(ctx context.Context, value bool) error {
+	return configureNebraska(ctx, n.Port, "critical_update", fmt.Sprint(value))
+}
+
 func configureNebraska(ctx context.Context, port int, key, value string) error {
 	command := fmt.Sprintf("curl -X POST -d '{%q: %v}' %s", key, value, configURL(port))
 
