@@ -27,6 +27,7 @@ import (
 	ukm "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/urlkeydatacollection"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/useravatar"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/userfeedback"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/wallpapergooglephotos"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -86,6 +87,7 @@ func init() {
 			pci.SearchFlag(&policy.UrlKeyedAnonymizedDataCollectionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.UserAvatarCustomizationSelectorsEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.UserFeedbackAllowed{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.WallpaperGooglePhotosIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
 		},
 		Timeout: 5 * time.Minute,
 	})
@@ -199,6 +201,17 @@ func optionalServices() []optionalService {
 			policies:              []policy.Policy{&policy.UserFeedbackAllowed{Val: false}},
 			trigger:               userfeedback.TriggerUserFeedback,
 			dataFiles:             []string{},
+		},
+		{
+			name: "wallpaper_google_photos",
+			associatedAnnotations: []string{
+				wallpapergooglephotos.EnabledHashCode,
+				wallpapergooglephotos.AlbumsHashCode,
+				wallpapergooglephotos.PhotosHashCode,
+			},
+			policies:  []policy.Policy{&policy.WallpaperGooglePhotosIntegrationEnabled{Val: false}},
+			trigger:   wallpapergooglephotos.TriggerWallpaperGooglePhotosIntegration,
+			dataFiles: []string{},
 		},
 		// Note: user_avatar_customization should be kept last in this list to avoid
 		// issues with other test cases.

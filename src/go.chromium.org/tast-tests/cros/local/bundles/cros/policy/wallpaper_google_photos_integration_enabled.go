@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -19,23 +18,11 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/annotations"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/wallpapergooglephotos"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/personalization"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
-	"go.chromium.org/tast-tests/cros/local/wallpaper"
-	"go.chromium.org/tast-tests/cros/local/wallpaper/constants"
-)
-
-const (
-	wallpaperGooglePhotosEnabledAnnotationID = "50590711"
-	wallpaperGooglePhotosAlbumsAnnotationID  = "81192642"
-	wallpaperGooglePhotosPhotosAnnotationID  = "93311068"
 )
 
 func init() {
@@ -108,39 +95,14 @@ func WallpaperGooglePhotosIntegrationEnabled(ctx context.Context, s *testing.Sta
 	}
 	defer kb.Close(ctx)
 
-	for _, param := range []struct {
-		name                                  string
-		shouldGooglePhotosCollectionBeEnabled bool
-		shouldFindGooglePhotosAnnotations     bool
-		policy                                *policy.WallpaperGooglePhotosIntegrationEnabled
-	}{
-		{
-			name:                                  "unset",
-			shouldGooglePhotosCollectionBeEnabled: true,
-			shouldFindGooglePhotosAnnotations:     true,
-			policy:                                &policy.WallpaperGooglePhotosIntegrationEnabled{Stat: policy.StatusUnset},
-		},
-		{
-			name:                                  "enabled",
-			shouldGooglePhotosCollectionBeEnabled: true,
-			shouldFindGooglePhotosAnnotations:     true,
-			policy:                                &policy.WallpaperGooglePhotosIntegrationEnabled{Val: true},
-		},
-		{
-			name:                                  "disabled",
-			shouldGooglePhotosCollectionBeEnabled: false,
-			shouldFindGooglePhotosAnnotations:     false,
-			policy:                                &policy.WallpaperGooglePhotosIntegrationEnabled{Val: false},
-		},
-	} {
-		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
-			// Perform cleanup.
+	for index, param := range wallpapergooglephotos.TestCases() {
+		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 				s.Fatal("Failed to clean up: ", err)
 			}
 
 			// Update policies.
-			policies := []policy.Policy{param.policy}
+			policies := []policy.Policy{param.Policy}
 			policyBlob := policy.NewBlob()
 			policyBlob.PolicyUser = gaiaCreds.User
 			policyBlob.AddPolicies(policies)
@@ -153,58 +115,15 @@ func WallpaperGooglePhotosIntegrationEnabled(ctx context.Context, s *testing.Sta
 
 			// Setup browser.
 			br := cr.Browser()
-			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
+			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
 			// Open the net-export page and start logging.
 			if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			windows, err := ash.GetAllWindows(ctx, tconn)
-			if err != nil {
-				s.Fatal("Failed to get windows: ", err)
-			}
-
-			// Verify there is only one window.
-			if wsCount := len(windows); wsCount != 1 {
-				s.Fatal("Expected 1 window; found ", wsCount)
-			}
-
-			// Minimize the browser window to allow the OpenPersonalizationHub
-			// method to right-click the desktop.
-			wID := windows[0].ID
-			if _, err := ash.SetWindowState(ctx, tconn, wID, ash.WMEventMinimize, false /* waitForStateChange */); err != nil {
-				s.Fatal("Failed to minimize browser window: ", err)
-			}
-
-			ui := uiauto.New(tconn)
-			if err := uiauto.Combine("open wallpaper page of personalization hub",
-				personalization.OpenPersonalizationHub(ui),
-				personalization.OpenWallpaperSubpage(ui),
-			)(ctx); err != nil {
-				s.Fatal("Failed to open wallpaper subpage of personalization hub: ", err)
-			}
-
-			// Loaded collections have names like name=20 Images.
-			loadedCollections := nodewith.NameRegex(regexp.MustCompile(`.*\d+\s[iI]mages`)).First()
-			googlePhotosCollection := loadedCollections.NameStartingWith(constants.GooglePhotosWallpaperCollection)
-			if err := ui.WaitUntilExists(googlePhotosCollection)(ctx); err != nil {
-				s.Fatal("Failed to wait for Google Photos wallpaper collection: ", err)
-			}
-
-			googlePhotosLink := nodewith.Name("Google Photos").Role(role.ListBoxOption)
-			info, err := ui.Info(ctx, googlePhotosLink)
-			if err != nil {
-				s.Fatal("Failed to get google photos collection link info: ", err)
-			}
-
-			isGooglePhotosCollectionEnabled := true
-			if info.HTMLAttributes["aria-disabled"] == "true" {
-				isGooglePhotosCollectionEnabled = false
-			}
-
-			if err := wallpaper.SelectCollection(ui, constants.GooglePhotosWallpaperCollection)(ctx); err != nil {
-				s.Fatal("Failed to select google photos item")
+			if err := wallpapergooglephotos.TriggerWallpaperGooglePhotosIntegration(ctx, nil, br, nil, tconn, index); err != nil {
+				s.Fatal("Failure while trigger google photos integration: ", err)
 			}
 
 			foundAnnotations, err := allAnnotationsFound(ctx, cr)
@@ -219,11 +138,7 @@ func WallpaperGooglePhotosIntegrationEnabled(ctx context.Context, s *testing.Sta
 				s.Fatal("Failed to stop logging and check logs: ", err)
 			}
 
-			if param.shouldGooglePhotosCollectionBeEnabled != isGooglePhotosCollectionEnabled {
-				s.Fatalf("Unexpected Google Photos collection enabled state: expected %t got %t", param.shouldGooglePhotosCollectionBeEnabled, isGooglePhotosCollectionEnabled)
-			}
-
-			if param.shouldFindGooglePhotosAnnotations {
+			if param.ShouldFindAnnotations {
 				for id, found := range foundAnnotations {
 					if found == false {
 						s.Fatalf("Annotation with ID %s expected and not found", id)
@@ -242,9 +157,9 @@ func WallpaperGooglePhotosIntegrationEnabled(ctx context.Context, s *testing.Sta
 
 func allAnnotationsFound(ctx context.Context, cr *chrome.Chrome) (foundAnnotations map[string]bool, err error) {
 	annotationFoundMap := map[string]bool{
-		wallpaperGooglePhotosEnabledAnnotationID: false,
-		wallpaperGooglePhotosAlbumsAnnotationID:  false,
-		wallpaperGooglePhotosPhotosAnnotationID:  false}
+		wallpapergooglephotos.EnabledHashCode: false,
+		wallpapergooglephotos.AlbumsHashCode:  false,
+		wallpapergooglephotos.PhotosHashCode:  false}
 	err = testing.Poll(ctx, func(ctx context.Context) error {
 		allFound := true
 		for annotationID, alreadyFound := range annotationFoundMap {
