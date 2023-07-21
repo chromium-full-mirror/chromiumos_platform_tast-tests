@@ -100,6 +100,12 @@ func MojoCellularGetDeviceStateListSimInfos(ctx context.Context, s *testing.Stat
 		if cellular.SimInfos[id].IsPrimary != primary {
 			s.Fatalf("Primary field mismatch, want: %v, got: %v", primary, cellular.SimInfos[id])
 		}
+		// Shill values are not populated for non-active slots. Chrome
+		// gets the values from Hermes directly so they will be
+		// populated.
+		if !cellular.SimInfos[id].IsPrimary {
+			continue
+		}
 		eid, err := netconfig.GetStringValue(slot, "EID")
 		if err != nil {
 			s.Fatal("Failed to get eid: ", err)
