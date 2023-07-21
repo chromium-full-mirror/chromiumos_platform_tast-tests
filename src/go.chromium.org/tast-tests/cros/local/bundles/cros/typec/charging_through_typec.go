@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
 	pow "go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -35,6 +36,7 @@ func init() {
 		Data:         []string{"test_config.json"},
 		Vars:         []string{"typec.dutTbtPort", "typec.cSwitchPort", "typec.domainIP"},
 		HardwareDeps: hwdep.D(hwdep.Model("volteer", "voxel", "redrix", "brya")),
+		Fixture:      setup.PowerNoChargeLimit,
 		Params: []testing.Param{{
 			Name: "usb4",
 			Val: chargeTypecTestParams{
