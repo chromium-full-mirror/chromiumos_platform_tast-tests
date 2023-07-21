@@ -57,7 +57,7 @@ func init() {
 	})
 }
 
-const installAttributesPath = "/home/.shadow/install_attributes.pb"
+const installAttributesPath = "/run/lockbox/install_attributes.pb"
 
 type enrolledFixt struct {
 	fdmsDir   string
