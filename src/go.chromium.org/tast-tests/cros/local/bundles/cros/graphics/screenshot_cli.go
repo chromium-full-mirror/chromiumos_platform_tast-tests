@@ -33,6 +33,11 @@ func init() {
 		}, {
 			Name:    "passthrough",
 			Fixture: "chromeGraphicsPassthrough",
+		}, {
+			Name:              "vulkan",
+			Fixture:           "chromeGraphicsVulkan",
+			ExtraSoftwareDeps: []string{"vulkan_composite"},
+			ExtraAttr:         []string{"informational"},
 		}},
 	})
 }

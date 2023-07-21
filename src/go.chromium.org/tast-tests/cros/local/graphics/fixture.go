@@ -29,6 +29,7 @@ import (
 var (
 	disableFirmwareUpdater = chrome.ExtraArgs("--disable-features=FirmwareUpdaterApp")
 	enablePassthrough      = chrome.ExtraArgs("--enable-features=DefaultPassthroughCommandDecoder")
+	enableVulkan           = chrome.ExtraArgs("--enable-features=Vulkan")
 )
 
 func init() {
@@ -141,6 +142,23 @@ func init() {
 		Parent:   "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{disableFirmwareUpdater, enablePassthrough}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeGraphicsVulkan",
+		Desc:     "Logged into a user session for graphics testing with Vulkan raster and composite",
+		Contacts: []string{"chromeos-gfx@google.com", "hob@chromium.org"},
+		Parent:   "gpuWatchDog",
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				disableFirmwareUpdater,
+				enableVulkan,
+				chrome.ExtraArgs("--ash-no-nudges"),
+			}, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
