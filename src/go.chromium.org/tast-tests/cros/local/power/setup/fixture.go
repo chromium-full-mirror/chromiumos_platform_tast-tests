@@ -69,6 +69,7 @@ const (
 
 	// Without Charge Limit
 	PowerAshAdaptiveCharging = "powerAshAdaptiveCharging"
+	PowerNoChargeLimit       = "powerNoChargeLimit"
 )
 
 // PowerFixtureOptions describes options used by the fixture only.
@@ -541,6 +542,24 @@ func init() {
 				chrome.EnableFeatures("AdaptiveCharging"),
 				chrome.EnableFeatures("QsRevamp"),
 			},
+		}),
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: PowerNoChargeLimit,
+		Desc: "Fixture with Charge Limit disabled",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"dbasehore@google.com",
+		},
+		Impl: NewPowerNoUIFixture(PowerTestOptions{
+			ChargeLimit: DisableChargeLimit,
+			Powerd:      DoNotChangePowerd,
 		}),
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
