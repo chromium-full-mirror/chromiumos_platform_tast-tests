@@ -453,7 +453,7 @@ var trueRegex = regexp.MustCompile(`(?m)^\s*[Tt]rue\s*$`)
 
 func checkEnterpriseOwned(ctx context.Context) {
 	isEnterpriseOwned := func(ctx context.Context) bool {
-		out, err := testexec.CommandContext(ctx, "cryptohome", "--action=install_attributes_get", "--name=enterprise.owned").Output()
+		out, err := testexec.CommandContext(ctx, "device_management_client", "--action=install_attributes_get", "--name=enterprise.owned").Output()
 		if err != nil {
 			// Don't fail as install attributes can be missing. Device is not
 			// enterprise owned in that case.
