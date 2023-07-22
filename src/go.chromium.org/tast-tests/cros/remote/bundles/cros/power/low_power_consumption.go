@@ -37,7 +37,7 @@ const (
 	varLPMDuration     = "duration"
 	varServoHostPort   = "servoHostPort"
 	defaultLPMDuration = 30 * time.Minute
-	chargeTarget       = 99.
+	chargeTarget       = 75.
 
 	// use [len-stableSamples:] to determine consumption
 	stableSamples = 60
