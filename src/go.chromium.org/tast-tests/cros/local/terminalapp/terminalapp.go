@@ -48,7 +48,6 @@ var (
 	linuxTab            = nodewith.NameContaining("@penguin: ").Role(role.Window).ClassName("BrowserFrame")
 	bruschettaTab       = nodewith.NameContaining("chronos@refvm: ").Role(role.Window).ClassName("BrowserFrame")
 	sshTab              = nodewith.NameContaining("chronos@localhost:").Role(role.Window).ClassName("BrowserFrame")
-	rootWindow          = nodewith.NameStartingWith("Terminal").Role(role.Window).ClassName("BrowserFrame")
 	homeTab             = nodewith.Name("Terminal").Role(role.Window).ClassName("BrowserFrame")
 	terminalLeaveButton = nodewith.Name("Leave").Role(role.Button).HasClass("MdTextButton")
 	terminalTextField   = nodewith.Name("Terminal input").Role(role.TextField)
@@ -61,6 +60,9 @@ var (
 	CmdPrompt = Row("chronos@localhost ~ $")
 	// TmuxModeMsg represents the controlling tab of Tmux.
 	TmuxModeMsg = AsRow(nodewith.NameStartingWith("Tmux integration mode activated"))
+
+	// RootWindow is the root window of Terminal.
+	RootWindow = nodewith.NameStartingWith("Terminal").Role(role.Window).ClassName("BrowserFrame")
 )
 
 // TerminalApp represents an instance of the Terminal App.
@@ -384,7 +386,7 @@ func (ta *TerminalApp) Close() uiauto.Action {
 	return uiauto.Combine("close Terminal window",
 		ta.ClickShelfMenuItem("Close"),
 		ta.dismissLeaveAppDialogIfShown(),
-		ta.ui.WithTimeout(time.Minute).WaitUntilGone(rootWindow))
+		ta.ui.WithTimeout(time.Minute).WaitUntilGone(RootWindow))
 }
 
 // CheckTabsCount returns an action to check the tabs count.
