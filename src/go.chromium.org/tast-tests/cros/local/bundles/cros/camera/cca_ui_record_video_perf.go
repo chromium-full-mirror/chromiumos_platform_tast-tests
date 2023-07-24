@@ -30,13 +30,8 @@ func init() {
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{{
-			Name:    "real",
-			Fixture: "ccaTestBridgeReady",
-			Val:     false,
-		}, {
 			Name:    "fake_hal",
 			Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
-			Val:     true,
 		}},
 		BugComponent: "b:978428",
 	})
@@ -47,7 +42,6 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 	startApp := s.FixtValue().(cca.FixtureData).StartApp
 	stopApp := s.FixtValue().(cca.FixtureData).StopApp
 	perfValues := perf.NewValues()
-	useFakeHAL := s.Param().(bool)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -63,51 +57,49 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait CPU idle: ", err)
 	}
 
-	if useFakeHAL {
-		// Simulates a 4K camera. Need to add other resolutions to satisfy the minimal requirement for camera3 API.
-		if err := testutil.WriteFakeHALConfig(ctx, testutil.FakeHALConfig{
-			Cameras: []testutil.FakeCameraConfig{
-				{ID: 1, Connected: true, SupportedFormats: []*testutil.FakeCameraFormatsConfig{
-					{
-						Width:      3840,
-						Height:     2160,
-						FrameRates: []int{30},
-					},
-					{
-						Width:      1920,
-						Height:     1080,
-						FrameRates: []int{30},
-					},
-					{
-						Width:      1280,
-						Height:     960,
-						FrameRates: []int{30},
-					},
-					{
-						Width:      1280,
-						Height:     720,
-						FrameRates: []int{30},
-					},
-					{
-						Width:      640,
-						Height:     480,
-						FrameRates: []int{30},
-					},
-					{
-						Width:      640,
-						Height:     360,
-						FrameRates: []int{30},
-					},
-					{
-						Width:      320,
-						Height:     240,
-						FrameRates: []int{30},
-					},
-				}},
-			},
-		}); err != nil {
-			s.Fatal("Failed to write fake HAL config: ", err)
-		}
+	// Simulates a 4K camera. Need to add other resolutions to satisfy the minimal requirement for camera3 API.
+	if err := testutil.WriteFakeHALConfig(ctx, testutil.FakeHALConfig{
+		Cameras: []testutil.FakeCameraConfig{
+			{ID: 1, Connected: true, SupportedFormats: []*testutil.FakeCameraFormatsConfig{
+				{
+					Width:      3840,
+					Height:     2160,
+					FrameRates: []int{60, 30},
+				},
+				{
+					Width:      1920,
+					Height:     1080,
+					FrameRates: []int{30},
+				},
+				{
+					Width:      1280,
+					Height:     960,
+					FrameRates: []int{30},
+				},
+				{
+					Width:      1280,
+					Height:     720,
+					FrameRates: []int{30},
+				},
+				{
+					Width:      640,
+					Height:     480,
+					FrameRates: []int{30},
+				},
+				{
+					Width:      640,
+					Height:     360,
+					FrameRates: []int{30},
+				},
+				{
+					Width:      320,
+					Height:     240,
+					FrameRates: []int{30},
+				},
+			}},
+		},
+	}); err != nil {
+		s.Fatal("Failed to write fake HAL config: ", err)
 	}
 
 	app, err := startApp(ctx)
@@ -124,6 +116,11 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to switch to video mode: ", err)
 	}
 
+	// Switch to the 60 FPS button for 4K resolution.
+	if err := switchTo60FPS(ctx, app); err != nil {
+		s.Fatal("Failed to switch to 60 fps: ", err)
+	}
+
 	baselineFPS := 0.0
 	baselineCPU := 0.0
 	baselinePower := 0.0
@@ -132,9 +129,9 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 		setupFunc func(context.Context, *cca.App) error
 		baseline  bool
 	}{
-		{"baseline", setupBaseline, true},
-		{"hal-multi-streams", setupHALMultiStreams, false},
-		{"chrome-multi-streams", setupChromeMultiStreams, false},
+		{"baseline-60fps", setupBaseline, true},
+		{"hal-multi-streams-60fps", setupHALMultiStreams, false},
+		{"chrome-multi-streams-60fps", setupChromeMultiStreams, false},
 	} {
 		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
 			if err := tc.setupFunc(ctx, app); err != nil {
@@ -267,6 +264,22 @@ func setupHALMultiStreams(ctx context.Context, app *cca.App) error {
 func setupChromeMultiStreams(ctx context.Context, app *cca.App) error {
 	if err := app.SetEnableMultiStreamRecordingChrome(ctx, true); err != nil {
 		return errors.Wrap(err, "failed to enable multi-stream-chrome recording")
+	}
+	return nil
+}
+
+func switchTo60FPS(ctx context.Context, app *cca.App) error {
+	if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
+		return err
+	}
+	if err := app.OpenSettingMenu(ctx, cca.VideoResolutionMenu); err != nil {
+		return err
+	}
+	if err := app.ClickWithIndex(ctx, cca.FPS60Buttons, 0); err != nil {
+		return err
+	}
+	if err := app.WaitForVisibleState(ctx, cca.SettingsButton, true); err != nil {
+		return err
 	}
 	return nil
 }

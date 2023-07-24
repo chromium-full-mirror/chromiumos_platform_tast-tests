@@ -84,6 +84,8 @@ const (
 	DocumentSaveAsPhotoButton UIComponentName = "documentSaveAsPhotoButton"
 	// FeedbackButton is the feedback button showing in the settings menu.
 	FeedbackButton UIComponentName = "feedbackButton"
+	// FPS60Buttons are the 60 FPS buttons in the video resolution menu.
+	FPS60Buttons UIComponentName = "fps60Buttons"
 	// FrontAspectRatioOptions are the buttons of aspect ratio options for the front camera.
 	FrontAspectRatioOptions UIComponentName = "frontAspectRatioOptions"
 	// FrontPhotoResolutionOptions are the buttons of photo resolution options for the front camera.
