@@ -29,6 +29,16 @@ func (bru *BruschettaVM) ReadFile(ctx context.Context, filePath string) (content
 	return readFile(ctx, bru, filePath)
 }
 
+// PushFile copies a local file to the container's filesystem.
+func (bru *BruschettaVM) PushFile(ctx context.Context, localPath, containerPath string) error {
+	return pushFile(ctx, fakeContainerName, bru.VM, localPath, containerPath)
+}
+
+// GetFile copies a remote file from the container's filesystem.
+func (bru *BruschettaVM) GetFile(ctx context.Context, containerPath, localPath string) error {
+	return getFile(ctx, fakeContainerName, bru.VM, containerPath, localPath)
+}
+
 // CheckFileContent checks that the content of the specified file equals to the given string.
 // Returns error if fail to read content or the contest does not equal to the given string.
 func (bru *BruschettaVM) CheckFileContent(ctx context.Context, filePath, testString string) error {

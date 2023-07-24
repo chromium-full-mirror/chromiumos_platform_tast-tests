@@ -8,8 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -375,83 +373,14 @@ func (c *Container) GetIPv4Address(ctx context.Context) (ip string, err error) {
 	return findIPv4(string(out))
 }
 
-func (c *Container) sftpVsockPort(ctx context.Context) (uint32, error) {
-	resp := &cpb.GetGarconSessionInfoResponse{}
-	if err := dbusutil.CallProtoMethod(ctx, c.VM.Concierge.ciceroneObj, ciceroneInterface+".GetGarconSessionInfo",
-		&cpb.GetGarconSessionInfoRequest{
-			VmName:        c.VM.name,
-			ContainerName: c.containerName,
-			OwnerId:       c.VM.Concierge.ownerID,
-		}, resp); err != nil {
-		return 0, err
-	}
-
-	return resp.SftpVsockPort, nil
-}
-
-// sftpCommand executes an SFTP command to perform a file transfer with the container.
-// sftpCmd is any sftp command to be batch executed by sftp "-b" option.
-func (c *Container) sftpCommand(ctx context.Context, sftpCmd string) error {
-	sftpVsockPort, err := c.sftpVsockPort(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get container sftp port")
-	}
-
-	// Create temp dir to store sftp command and vsock adapter script.
-	// The adapter script is required to use sftp over vsock.
-	// Though we can also pipe the commands to sftp via stdin, errors are not reflected on the
-	// exit code of the sftp process. The exit code of "sftp -b" honors errors.
-	dir, err := ioutil.TempDir("", "tast_vm_sftp_")
-	if err != nil {
-		return errors.Wrap(err, "failed to create temp dir for sftp")
-	}
-	defer os.RemoveAll(dir)
-
-	sftpAdapter := fmt.Sprintf(`#!/bin/sh
-exec socat stdio vsock-connect:%d:%d
-`, c.VM.ContextID, sftpVsockPort)
-
-	sftpAdapterFile := filepath.Join(dir, "sftp_adapter")
-	cmdFile := filepath.Join(dir, "cmd")
-	if err := ioutil.WriteFile(sftpAdapterFile, []byte(sftpAdapter), 0755); err != nil {
-		return errors.Wrap(err, "failed to write sftp adapter script")
-	}
-	if err := ioutil.WriteFile(cmdFile, []byte(sftpCmd), 0644); err != nil {
-		return errors.Wrap(err, "failed to write sftp command to temp file")
-	}
-
-	sftpArgs := []string{
-		"-b", cmdFile,
-		"-r",
-		"-S", sftpAdapterFile,
-		"container", // This is ignored by the sftp adapter script
-	}
-	cmd := testexec.CommandContext(ctx, "sftp", sftpArgs...)
-	if err := cmd.Run(); err != nil {
-		cmd.DumpLog(ctx)
-		return errors.Wrapf(err, "failed to execute %q with sftp command %q", strings.Join(cmd.Args, " "), sftpCmd)
-	}
-	return nil
-}
-
 // PushFile copies a local file to the container's filesystem.
 func (c *Container) PushFile(ctx context.Context, localPath, containerPath string) error {
-	testing.ContextLogf(ctx, "Copying local file %v to container %v", localPath, containerPath)
-	// Double quotes in sftp keeps spaces and invalidate special characters like * or ?.
-	// Golang %q escapes " and \ and sftp unescape them correctly.
-	// To handle a leading -, "--" is added after the command.
-	putCmd := fmt.Sprintf("put -- %q %q", localPath, containerPath)
-	return c.sftpCommand(ctx, putCmd)
+	return pushFile(ctx, c.containerName, c.VM, localPath, containerPath)
 }
 
 // GetFile copies a remote file from the container's filesystem.
 func (c *Container) GetFile(ctx context.Context, containerPath, localPath string) error {
-	testing.ContextLogf(ctx, "Copying file %v from container %v", localPath, containerPath)
-	// Double quotes in sftp keeps spaces and invalidate special characters like * or ?.
-	// Golang %q escapes " and \ and sftp unescape them correctly.
-	// To handle a leading -, "--" is added after the command.
-	getCmd := fmt.Sprintf("get -- %q %q", containerPath, localPath)
-	return c.sftpCommand(ctx, getCmd)
+	return getFile(ctx, c.containerName, c.VM, containerPath, localPath)
 }
 
 // CheckFilesExistInDir checks files exist in the given path in container.

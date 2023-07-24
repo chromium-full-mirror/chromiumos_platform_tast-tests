@@ -7,9 +7,16 @@ package vm
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 
+	cpb "chromiumos/system_api/vm_cicerone_proto"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Guest is an interface to a generic guest OS, be it a container or VM.
@@ -19,6 +26,8 @@ type Guest interface {
 	Command(ctx context.Context, vshArgs ...string) *testexec.Cmd
 	ReadFile(ctx context.Context, filePath string) (string, error)
 	CheckFileContent(ctx context.Context, filePath, testString string) error
+	PushFile(ctx context.Context, localPath, containerPath string) error
+	GetFile(ctx context.Context, containerPath, localPath string) error
 }
 
 // containerCommand returns a testexec.Cmd with a vsh command that will run in
@@ -58,4 +67,89 @@ func checkFileContent(ctx context.Context, guest Guest, filePath, testString str
 		return errors.Wrapf(err, "want %s, got %q", testString, content)
 	}
 	return nil
+}
+
+// sftpCommand executes an SFTP command to perform a file transfer with the guest.
+// sftpCmd is any sftp command to be batch executed by sftp "-b" option.
+func sftpCommand(ctx context.Context, contextID int64, sftpVsockPort uint32, sftpCmd string) error {
+	// Create temp dir to store sftp command and vsock adapter script.
+	// The adapter script is required to use sftp over vsock.
+	// Though we can also pipe the commands to sftp via stdin, errors are not reflected on the
+	// exit code of the sftp process. The exit code of "sftp -b" honors errors.
+	dir, err := os.MkdirTemp("", "tast_vm_sftp_")
+	if err != nil {
+		return errors.Wrap(err, "failed to create temp dir for sftp")
+	}
+	defer os.RemoveAll(dir)
+
+	sftpAdapter := fmt.Sprintf(`#!/bin/sh
+exec socat stdio vsock-connect:%d:%d
+`, contextID, sftpVsockPort)
+
+	sftpAdapterFile := filepath.Join(dir, "sftp_adapter")
+	cmdFile := filepath.Join(dir, "cmd")
+	if err := os.WriteFile(sftpAdapterFile, []byte(sftpAdapter), 0755); err != nil {
+		return errors.Wrap(err, "failed to write sftp adapter script")
+	}
+	if err := os.WriteFile(cmdFile, []byte(sftpCmd), 0644); err != nil {
+		return errors.Wrap(err, "failed to write sftp command to temp file")
+	}
+
+	sftpArgs := []string{
+		"-b", cmdFile,
+		"-r",
+		"-S", sftpAdapterFile,
+		"container", // This is ignored by the sftp adapter script
+	}
+	cmd := testexec.CommandContext(ctx, "sftp", sftpArgs...)
+	if err := cmd.Run(); err != nil {
+		cmd.DumpLog(ctx)
+		return errors.Wrapf(err, "failed to execute %q with sftp command %q", strings.Join(cmd.Args, " "), sftpCmd)
+	}
+	return nil
+}
+
+// sftpVsockPort gets the vsock port where openssh-sftp-server is running for a guest.
+func sftpVsockPort(ctx context.Context, containerName string, vm *VM) (uint32, error) {
+	resp := &cpb.GetGarconSessionInfoResponse{}
+	if err := dbusutil.CallProtoMethod(ctx, vm.Concierge.ciceroneObj, ciceroneInterface+".GetGarconSessionInfo",
+		&cpb.GetGarconSessionInfoRequest{
+			VmName:        vm.name,
+			ContainerName: containerName,
+			OwnerId:       vm.Concierge.ownerID,
+		}, resp); err != nil {
+		return 0, err
+	}
+
+	return resp.SftpVsockPort, nil
+}
+
+// pushFile copies a local file to the guest's filesystem.
+func pushFile(ctx context.Context, containerName string, vm *VM, localPath, containerPath string) error {
+	port, err := sftpVsockPort(ctx, containerName, vm)
+	if err != nil {
+		return errors.Wrap(err, "failed to get SFTP vsock port")
+	}
+
+	testing.ContextLogf(ctx, "Copying local file %v to guest %v", localPath, containerPath)
+	// Double quotes in sftp keeps spaces and invalidate special characters like * or ?.
+	// Golang %q escapes " and \ and sftp unescape them correctly.
+	// To handle a leading -, "--" is added after the command.
+	putCmd := fmt.Sprintf("put -- %q %q", localPath, containerPath)
+	return sftpCommand(ctx, vm.ContextID, port, putCmd)
+}
+
+// getFile copies a remote file from the guest's filesystem.
+func getFile(ctx context.Context, containerName string, vm *VM, containerPath, localPath string) error {
+	port, err := sftpVsockPort(ctx, containerName, vm)
+	if err != nil {
+		return errors.Wrap(err, "failed to get SFTP vsock port")
+	}
+
+	testing.ContextLogf(ctx, "Copying file %v from guest %v", localPath, containerPath)
+	// Double quotes in sftp keeps spaces and invalidate special characters like * or ?.
+	// Golang %q escapes " and \ and sftp unescape them correctly.
+	// To handle a leading -, "--" is added after the command.
+	getCmd := fmt.Sprintf("get -- %q %q", containerPath, localPath)
+	return sftpCommand(ctx, vm.ContextID, port, getCmd)
 }
