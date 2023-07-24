@@ -194,7 +194,8 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 	if _, err := user.Lookup("biod"); err == nil {
 		prependPatterns(
 			NewPattern(Tree("encrypted/var/log/bio_crypto_init"), Users("biod", "root"), Groups("biod", "root"), NotMode(022)),
-			NewPattern(Tree("encrypted/var/log/biod"), Users("biod", "root"), Groups("biod", "root"), NotMode(022)))
+			NewPattern(Tree("encrypted/var/log/biod"), Users("biod", "root"), Groups("biod", "root"), NotMode(022)),
+			NewPattern(Tree("encrypted/var/lib/biod"), Users("biod", "root"), Groups("biod", "root"), NotMode(022)))
 	}
 
 	if _, err := user.Lookup("buffet"); err == nil {
