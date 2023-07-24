@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -77,6 +78,7 @@ func LoginGoogleAccount(ctx context.Context, cr *chrome.Chrome, account, passwor
 	}
 
 	return uiauto.Combine("login to browser",
+		ime.EnglishUS.InstallAndActivate(tconn),
 		// Although the browser has been changed to English, the login page will still display another default language in low-end DUTs.
 		changeLanguage,
 		confirmInput(accountField, account),
