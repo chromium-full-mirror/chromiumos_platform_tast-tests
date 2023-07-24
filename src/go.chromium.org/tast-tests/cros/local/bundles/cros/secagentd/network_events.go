@@ -8,19 +8,23 @@ package secagentd
 import (
 	"context"
 	"fmt"
+	"net"
 	"strconv"
-	"strings"
 	"time"
 
 	rep "chromiumos/reporting"
 	xdr "chromiumos/xdr/secagentd"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdcommon"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdupstart"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
+	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/l4server"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -36,6 +40,16 @@ type networkProtocolDetails struct {
 }
 
 type networkType string
+
+type networkTypeParams struct {
+	protocol networkType
+	family   l4server.Family
+}
+
+type server struct {
+	port int
+	addr net.IP
+}
 
 const (
 	icmp  networkType = "ICMP"
@@ -62,30 +76,48 @@ func init() {
 		SoftwareDeps: []string{"bpf", "chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
-			Name:      "icmp",
-			Val:       icmp,
+			// TODO: According to jiejiang@, icmp can be tested by simply sending pings,
+			// hence it might not not necessary to separate as an individual test.
+			Name: "icmp",
+			Val: networkTypeParams{
+				protocol: icmp,
+				family:   l4server.TCP4,
+			},
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
-			Name:      "tcp",
-			Val:       tcp,
+			Name: "tcp",
+			Val: networkTypeParams{
+				protocol: tcp,
+				family:   l4server.TCP4,
+			},
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
-			Name:      "tcp_v6",
-			Val:       tcpV6,
+			Name: "tcp_v6",
+			Val: networkTypeParams{
+				protocol: tcpV6,
+				family:   l4server.TCP6,
+			},
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
-			Name:      "udp",
-			Val:       udp,
+			Name: "udp",
+			Val: networkTypeParams{
+				protocol: udp,
+				family:   l4server.UDP4,
+			},
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "udp_v6",
-			Val:  udpV6,
+			Val: networkTypeParams{
+				protocol: udpV6,
+				family:   l4server.UDP6,
+			},
 		}},
 	})
 }
 
 // NetworkEvents trigger network events,
 // and verifies it against the events emitted by secagentd over dbus.
+// Note that the receiver doesn't need to be reachable, it's more testing the outgoing packets.
 func NetworkEvents(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 15*time.Second)
@@ -119,7 +151,29 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	if err := secagentdprocfsscraper.WaitForBpfMaps(ctx, agentPid); err != nil {
 		s.Fatal("Failed to verify secagentd is ready to test: ", err)
 	}
-	details, err := getNetworkProtocolDetails(ctx, s.Param().(networkType))
+
+	netType := s.Param().(networkTypeParams).protocol
+	netFam := s.Param().(networkTypeParams).family
+	var svr *server
+	var testEnv *routing.SimpleNetworkEnv
+	var port = ""
+	var addrStr = ""
+
+	// Set up virtual network.
+	testEnv, svr, err = setupL4server(ctx, netType, netFam)
+	if err != nil {
+		s.Fatal("Failed to setup router: ", err)
+	}
+	addrStr = svr.addr.String()
+	port = strconv.Itoa(svr.port)
+	defer func(ctx context.Context) {
+		if err := testEnv.TearDown(ctx); err != nil {
+			s.Error("Failed to tear down routing test env: ", err)
+		}
+	}(cleanupCtx)
+
+	// Get details of sender.
+	details, err := getNetworkProtocolDetails(ctx, netType, addrStr, port)
 	if err != nil {
 		s.Fatal("Fail to get NetworkProtocolDetails: ", err)
 	}
@@ -168,7 +222,11 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to capture EnqueueRecord dbus calls to missived: ", err)
 	}
 	s.Logf("secagentd enqueued %d events", len(calledMethods))
+
+	foundPid := false
+	foundProtocol := false
 	for _, method := range calledMethods {
+
 		if len(method.Arguments) == 0 {
 			continue
 		}
@@ -202,8 +260,6 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			foundPid := false
-			foundProtocol := false
 			for _, flow := range bFlows {
 				if (flow.GetParentProcess() != nil && flow.GetParentProcess().GetCanonicalPid() == cmdPid) || (flow.GetProcess() != nil && flow.GetProcess().GetCanonicalPid() == cmdPid) {
 					foundPid = true
@@ -214,23 +270,93 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 					s.Log(flow.String())
 				}
 			}
-
-			if !foundPid {
-				s.Error("NetworkEvent is not captured")
-			}
-
-			if !foundProtocol {
-				s.Errorf("Protocol %s is not captured", details.protocol)
-			}
 		}
+		if foundPid && foundProtocol {
+			break
+		}
+	}
+	if !foundPid {
+		s.Error("NetworkEvent is not captured")
+	}
+
+	if !foundProtocol {
+		s.Errorf("Protocol %s is not captured", details.protocol)
 	}
 }
 
-func getNetworkProtocolDetails(ctx context.Context, network networkType) (networkProtocolDetails, error) {
+func setupL4server(ctx context.Context, network networkType, networkFam l4server.Family) (*routing.SimpleNetworkEnv, *server, error) {
+	testEnv := routing.NewSimpleNetworkEnv(true, true, true, true)
+	if err := testEnv.SetUp(ctx); err != nil {
+		return nil, nil, errors.Wrap(err, "failed to set up routing test env")
+	}
+
+	success := false
+	defer func(ctx context.Context) {
+		if success {
+			return
+		}
+		if err := testEnv.TearDown(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to tear down routing test env in setupL4server: ", err)
+		}
+	}(ctx)
+
+	// Wait for online and verify topology in host.
+	if err := testEnv.ShillService.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
+		return nil, nil, errors.Wrap(err, "failed to wait for service online")
+	}
+	routerAddrs, err := testEnv.Router.WaitForVethInAddrs(ctx, true, true)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to get inner addrs from router env")
+	}
+
+	var pingAddrsV4 string
+	var pingAddrsV6 []string
+
+	// Add IPV4 Addresses.
+	// Note: we can add DNS resolution too, but for MVP it's not necessary.
+	pingAddrsV4 = routerAddrs.IPv4Addr.String()
+
+	// Add IPV6 Addresses.
+	for _, ip := range routerAddrs.IPv6Addrs {
+		pingAddrsV6 = append(pingAddrsV6, ip.String())
+	}
+	pingAddrsV6 = append(pingAddrsV6, routing.TestDomainNameV6)
+
+	// Ping and make sure connection has been established.
+	for _, target := range pingAddrsV6 {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, target, "chronos", 10*time.Second); err != nil {
+			return nil, nil, errors.Wrapf(err, "network verification failed: %v is not reachable as user %s on host", target, "chronos")
+		}
+	}
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, pingAddrsV4, "chronos", 10*time.Second); err != nil {
+		return nil, nil, errors.Wrapf(err, "network verification failed: %v is not reachable as user %s on host", pingAddrsV4, "chronos")
+
+	}
+	var addr net.IP
+
+	if network == udpV6 || network == tcpV6 {
+		addr = routerAddrs.IPv6Addrs[0]
+	} else {
+		addr = routerAddrs.IPv4Addr
+	}
+	port := 65535
+	newServer := l4server.New(networkFam, port, l4server.WithAddr(addr.String()), l4server.WithMsgHandler(l4server.Reflector()))
+	if err := testEnv.Router.StartServer(ctx, networkFam.String(), newServer); err != nil {
+		return nil, nil, errors.Wrapf(err, "failed to start %s server, error", networkFam)
+	}
+	svr := &server{
+		port: port,
+		addr: addr,
+	}
+	success = true
+
+	return testEnv, svr, nil
+}
+
+func getNetworkProtocolDetails(ctx context.Context, network networkType, externIP, externPort string) (networkProtocolDetails, error) {
 	switch network {
 	case icmp:
-		// 8.8.8.8 is google DNS IPv4 address.
-		ipAddr := "8.8.8.8"
+		ipAddr := externIP
 		cmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("ping %s", ipAddr))
 
 		return networkProtocolDetails{
@@ -241,62 +367,40 @@ func getNetworkProtocolDetails(ctx context.Context, network networkType) (networ
 			ipAddr: "",
 		}, nil
 	case tcp:
-		out, err := testexec.CommandContext(ctx, "sh", "-c", "dig www.google.com +short | head -1").Output()
-		if err != nil {
-			return networkProtocolDetails{}, errors.Wrap(err, "fail to get IP address of www.google.com")
-		}
-
-		ipAddr := strings.TrimSuffix(string(out), "\n")
-		cmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("wget -P /tmp %s", ipAddr))
+		cmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, TCP\" | nc -v %s %s", externIP, externPort))
 
 		return networkProtocolDetails{
 			senderCmd:   cmd,
 			receiverCmd: nil,
 			protocol:    "TCP",
-			ipAddr:      ipAddr,
+			ipAddr:      externIP,
 		}, nil
 	case tcpV6:
-		// ::1 is localhost.
-		ipAddr := "::1"
-		senderCmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, TCP\" | nc -6 %s 8080", ipAddr))
-		receiverCmd := testexec.CommandContext(ctx, "sh", "-c", "nc -6 -l -p 8080")
+		senderCmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, TCP\" | nc -v -6 %s %s", externIP, externPort))
 
 		return networkProtocolDetails{
 			senderCmd:   senderCmd,
-			receiverCmd: receiverCmd,
+			receiverCmd: nil,
 			protocol:    "TCP",
-			ipAddr:      ipAddr,
+			ipAddr:      externIP,
 		}, nil
 	case udp:
-		// Choose the account to use based on the IP address of the chromebook.
-		cmdStr := `ifconfig eth0 | grep "inet " | awk '{print $2}'`
-		out, err := testexec.CommandContext(ctx, "sh", "-c", cmdStr).Output()
-		if err != nil {
-			return networkProtocolDetails{}, errors.Wrap(err, "fail to get IPv4 address")
-		}
-
-		ipAddr := strings.TrimSuffix(string(out), "\n")
-
-		senderCmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, UDP\" | nc -u %s 8080", ipAddr))
-		receiverCmd := testexec.CommandContext(ctx, "sh", "-c", "nc -u -l -p 8080")
+		senderCmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, UDP\" | nc -u %s %s", externIP, externPort))
 
 		return networkProtocolDetails{
 			senderCmd:   senderCmd,
-			receiverCmd: receiverCmd,
+			receiverCmd: nil,
 			protocol:    "UDP",
-			ipAddr:      ipAddr,
+			ipAddr:      externIP,
 		}, nil
 	case udpV6:
-		// ::1 is localhost.
-		ipAddr := "::1"
-		senderCmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, TCP\" | nc -6 -u %s 8080", ipAddr))
-		receiverCmd := testexec.CommandContext(ctx, "sh", "-c", "nc -6 -u -l -p 8080")
+		senderCmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, UDP\" | nc -6 -u %s %s", externIP, externPort))
 
 		return networkProtocolDetails{
 			senderCmd:   senderCmd,
-			receiverCmd: receiverCmd,
+			receiverCmd: nil,
 			protocol:    "UDP",
-			ipAddr:      ipAddr,
+			ipAddr:      externIP,
 		}, nil
 	}
 	return networkProtocolDetails{}, errors.Errorf("An unexpected network type is received: %s", network)
