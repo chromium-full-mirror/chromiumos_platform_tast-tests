@@ -85,20 +85,16 @@ func TransitionToTabletMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to left click search tab element: ", err)
 	}
 
-	const (
-		hideKeyboardName       = "hide keyboard"
-		switchEmojiName        = "switch to emoji"
-		backspaceElementName   = "backspace"
-		handwritingElementName = "switch to handwriting, not compatible with ChromeVox"
-	)
+	hideKeyboardName := nodewith.Name("hide keyboard").Role(role.Button)
+	switchEmojiName := nodewith.Name("emoji").Role(role.Tab)
+	backspaceElementName := nodewith.Name("backspace").Role(role.Button)
+	handwritingElementName := nodewith.Name("handwriting").Role(role.Tab)
 
-	onscreenKeyboardElements := []string{hideKeyboardName, switchEmojiName,
-		backspaceElementName, handwritingElementName}
+	onscreenKeyboardElements := []*nodewith.Finder{hideKeyboardName, backspaceElementName, switchEmojiName, handwritingElementName}
 
 	for _, element := range onscreenKeyboardElements {
-		nodeElement := nodewith.Name(element).Role(role.Button)
-		if err := cui.WaitUntilExists(nodeElement)(ctx); err != nil {
-			s.Fatalf("Failed to wait for %s element on on-screen keyboard: %v", element, err)
+		if err := cui.WaitUntilExists(element)(ctx); err != nil {
+			s.Fatalf("Failed to wait for %v element on on-screen keyboard: %v", element, err)
 		}
 	}
 
