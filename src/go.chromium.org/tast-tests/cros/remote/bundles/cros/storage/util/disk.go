@@ -167,7 +167,7 @@ func (d *Disk) detectType(ctx context.Context) error {
 			d.Type = NvmeDisk
 		}
 	} else if strings.HasPrefix(d.PhysicalDeviceName, "sd") {
-		removable, err := d.ReadSysfsInt64(ctx, "device/removable")
+		removable, err := d.ReadSysfsInt64(ctx, "removable")
 		if err != nil {
 			return errors.Wrap(err, "can't read `removable` value")
 		}
