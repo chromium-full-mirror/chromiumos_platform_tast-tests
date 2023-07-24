@@ -9,8 +9,10 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/launcher/fixture"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
+	"go.chromium.org/tast-tests/cros/local/input"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -30,6 +32,7 @@ type searchQualityTestCase struct {
 	useRegex       bool
 	expectedResult string
 	category       string
+	provider       string
 }
 
 func init() {
@@ -52,6 +55,7 @@ func init() {
 					useRegex:       false,
 					expectedResult: "= 90",
 					category:       "Answer Card",
+					provider:       "omnibox",
 				},
 			},
 			// See details in: https://bugs.chromium.org/p/chromium/issues/detail?id=1432692.
@@ -62,6 +66,7 @@ func init() {
 					useRegex:       false,
 					expectedResult: "= 6912",
 					category:       "Answer Card",
+					provider:       "omnibox",
 				},
 			},
 			{
@@ -89,6 +94,7 @@ func init() {
 					useRegex:       true,
 					expectedResult: weatherPattern,
 					category:       "Answer Card",
+					provider:       "omnibox",
 				},
 			},
 
@@ -226,6 +232,8 @@ func init() {
 func SearchQuality(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(fixture.LauncherSearchFixtData).TestAPIConn
 	kb := s.FixtValue().(fixture.LauncherSearchFixtData).Keyboard
+	cr := s.FixtValue().(fixture.LauncherSearchFixtData).Chrome
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -249,6 +257,23 @@ func SearchQuality(ctx context.Context, s *testing.State) {
 			Result:    testCase.expectedResult,
 		}),
 	))(ctx); err != nil {
+		// currently, we are aware of failed test case from omnibox.
+		// we will add more check steps if needed.
+		if testCase.provider == "omnibox" {
+			checkOmnibox(ctx, s, cr, kb, query)
+		}
+
 		s.Fatalf("Failed to search %s: %v", query, err)
+	}
+}
+
+// checkOmnibox check ominibox when the query search failed.
+func checkOmnibox(ctx context.Context, s *testing.State, cr *chrome.Chrome, kb *input.KeyboardEventWriter, query string) {
+	if _, err := cr.NewConn(ctx, "chrome://omnibox"); err != nil {
+		s.Log("Failed to open omnibox: ", err)
+	}
+
+	if err := kb.Type(ctx, query); err != nil {
+		s.Log("Failed to search in omnibox: ", err)
 	}
 }

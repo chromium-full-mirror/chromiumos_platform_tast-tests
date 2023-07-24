@@ -42,6 +42,7 @@ type launcherSearchFixtureImpl struct {
 
 // LauncherSearchFixtData is the data returned by SetUp and passed to tests.
 type LauncherSearchFixtData struct {
+	Chrome      *chrome.Chrome
 	TestAPIConn *chrome.TestConn
 	Keyboard    *input.KeyboardEventWriter
 }
@@ -134,7 +135,7 @@ func (f *launcherSearchFixtureImpl) SetUp(ctx context.Context, s *testing.FixtSt
 	}
 	f.kb = kb
 
-	return LauncherSearchFixtData{TestAPIConn: f.tconn, Keyboard: kb}
+	return LauncherSearchFixtData{Chrome: f.cr, TestAPIConn: f.tconn, Keyboard: kb}
 }
 
 func (f *launcherSearchFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
