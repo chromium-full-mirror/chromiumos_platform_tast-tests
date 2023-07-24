@@ -92,6 +92,12 @@
    {
       "board_name" : "brask",
       "branch_name" : "firmware-brya-14505.B",
+      "firmware_build_cros_version" : "14505.466.0",
+      "model_name" : "gladios"
+   },
+   {
+      "board_name" : "brask",
+      "branch_name" : "firmware-brya-14505.B",
       "firmware_build_cros_version" : "14505.229.0",
       "model_name" : "kinox"
    },
@@ -218,8 +224,20 @@
    {
       "board_name" : "brya",
       "branch_name" : "firmware-brya-14505.B",
+      "firmware_build_cros_version" : "14505.500.0",
+      "model_name" : "marasov"
+   },
+   {
+      "board_name" : "brya",
+      "branch_name" : "firmware-brya-14505.B",
       "firmware_build_cros_version" : "14505.262.0",
       "model_name" : "mithrax"
+   },
+   {
+      "board_name" : "brya",
+      "branch_name" : "firmware-brya-14505.B",
+      "firmware_build_cros_version" : "14505.502.0",
+      "model_name" : "omnigul"
    },
    {
       "board_name" : "brya",
@@ -646,6 +664,42 @@
       "branch_name" : "firmware-coral-10068.B",
       "firmware_build_cros_version" : "10068.71.0",
       "model_name" : "nasher"
+   },
+   {
+      "board_name" : "coral",
+      "branch_name" : "firmware-coral-10068.B",
+      "firmware_build_cros_version" : "10068.86.0",
+      "model_name" : "nasher"
+   },
+   {
+      "board_name" : "coral",
+      "branch_name" : "firmware-coral-10068.B",
+      "firmware_build_cros_version" : "10068.101.0",
+      "model_name" : "nasher360"
+   },
+   {
+      "board_name" : "coral",
+      "branch_name" : "firmware-coral-10068.B",
+      "firmware_build_cros_version" : "10068.34.0",
+      "model_name" : "nasher360"
+   },
+   {
+      "board_name" : "coral",
+      "branch_name" : "firmware-coral-10068.B",
+      "firmware_build_cros_version" : "10068.47.0",
+      "model_name" : "nasher360"
+   },
+   {
+      "board_name" : "coral",
+      "branch_name" : "firmware-coral-10068.B",
+      "firmware_build_cros_version" : "10068.63.0",
+      "model_name" : "nasher360"
+   },
+   {
+      "board_name" : "coral",
+      "branch_name" : "firmware-coral-10068.B",
+      "firmware_build_cros_version" : "10068.71.0",
+      "model_name" : "nasher360"
    },
    {
       "board_name" : "coral",
@@ -1262,6 +1316,12 @@
    {
       "board_name" : "dedede",
       "branch_name" : "firmware-dedede-13606.B",
+      "firmware_build_cros_version" : "13606.560.0",
+      "model_name" : "maglet"
+   },
+   {
+      "board_name" : "dedede",
+      "branch_name" : "firmware-dedede-13606.B",
       "firmware_build_cros_version" : "13606.336.0",
       "model_name" : "maglia"
    },
@@ -1269,6 +1329,12 @@
       "board_name" : "dedede",
       "branch_name" : "firmware-dedede-13606.B",
       "firmware_build_cros_version" : "13606.434.0",
+      "model_name" : "maglia"
+   },
+   {
+      "board_name" : "dedede",
+      "branch_name" : "firmware-dedede-13606.B",
+      "firmware_build_cros_version" : "13606.560.0",
       "model_name" : "maglia"
    },
    {
@@ -1281,6 +1347,12 @@
       "board_name" : "dedede",
       "branch_name" : "firmware-dedede-13606.B",
       "firmware_build_cros_version" : "13606.434.0",
+      "model_name" : "maglith"
+   },
+   {
+      "board_name" : "dedede",
+      "branch_name" : "firmware-dedede-13606.B",
+      "firmware_build_cros_version" : "13606.560.0",
       "model_name" : "maglith"
    },
    {
@@ -1298,7 +1370,19 @@
    {
       "board_name" : "dedede",
       "branch_name" : "firmware-dedede-13606.B",
+      "firmware_build_cros_version" : "13606.560.0",
+      "model_name" : "magma"
+   },
+   {
+      "board_name" : "dedede",
+      "branch_name" : "firmware-dedede-13606.B",
       "firmware_build_cros_version" : "13606.438.0",
+      "model_name" : "magneto"
+   },
+   {
+      "board_name" : "dedede",
+      "branch_name" : "firmware-dedede-13606.B",
+      "firmware_build_cros_version" : "13606.560.0",
       "model_name" : "magneto"
    },
    {
@@ -1323,6 +1407,12 @@
       "board_name" : "dedede",
       "branch_name" : "firmware-dedede-13606.B",
       "firmware_build_cros_version" : "13606.434.0",
+      "model_name" : "magolor"
+   },
+   {
+      "board_name" : "dedede",
+      "branch_name" : "firmware-dedede-13606.B",
+      "firmware_build_cros_version" : "13606.560.0",
       "model_name" : "magolor"
    },
    {
@@ -1353,6 +1443,12 @@
       "board_name" : "dedede",
       "branch_name" : "firmware-dedede-13606.B",
       "firmware_build_cros_version" : "13606.434.0",
+      "model_name" : "magpie"
+   },
+   {
+      "board_name" : "dedede",
+      "branch_name" : "firmware-dedede-13606.B",
+      "firmware_build_cros_version" : "13606.560.0",
       "model_name" : "magpie"
    },
    {
@@ -1922,6 +2018,12 @@
    {
       "board_name" : "jacuzzi",
       "branch_name" : "firmware-icarus-12574.B",
+      "firmware_build_cros_version" : "12574.121.0",
+      "model_name" : "cozmo"
+   },
+   {
+      "board_name" : "jacuzzi",
+      "branch_name" : "firmware-icarus-12574.B",
       "firmware_build_cros_version" : "12574.21.0",
       "model_name" : "cozmo"
    },
@@ -1990,6 +2092,18 @@
       "branch_name" : "firmware-kukui-12573.B",
       "firmware_build_cros_version" : "12573.260.0",
       "model_name" : "fennel"
+   },
+   {
+      "board_name" : "jacuzzi",
+      "branch_name" : "firmware-kukui-12573.B",
+      "firmware_build_cros_version" : "12573.191.0",
+      "model_name" : "fennel14"
+   },
+   {
+      "board_name" : "jacuzzi",
+      "branch_name" : "firmware-kukui-12573.B",
+      "firmware_build_cros_version" : "12573.260.0",
+      "model_name" : "fennel14"
    },
    {
       "board_name" : "jacuzzi",
@@ -2396,6 +2510,12 @@
    {
       "board_name" : "nissa",
       "branch_name" : "firmware-nissa-15217.B",
+      "firmware_build_cros_version" : "15217.258.0",
+      "model_name" : "craasneto"
+   },
+   {
+      "board_name" : "nissa",
+      "branch_name" : "firmware-nissa-15217.B",
       "firmware_build_cros_version" : "15217.91.0",
       "model_name" : "pujjo"
    },
@@ -2449,8 +2569,14 @@
    },
    {
       "board_name" : "nissa",
+      "branch_name" : "firmware-nissa-15217.126.B",
+      "firmware_build_cros_version" : "15217.126.3",
+      "model_name" : "yaviks"
+   },
+   {
+      "board_name" : "nissa",
       "branch_name" : "firmware-nissa-15217.B",
-      "firmware_build_cros_version" : "15217.126.0",
+      "firmware_build_cros_version" : "15217.179.0",
       "model_name" : "yaviks"
    },
    {
@@ -2810,6 +2936,12 @@
    {
       "board_name" : "octopus",
       "branch_name" : "firmware-octopus-11297.B",
+      "firmware_build_cros_version" : "11297.169.0",
+      "model_name" : "foob360"
+   },
+   {
+      "board_name" : "octopus",
+      "branch_name" : "firmware-octopus-11297.B",
       "firmware_build_cros_version" : "11297.189.0",
       "model_name" : "garfour"
    },
@@ -3020,7 +3152,55 @@
    {
       "board_name" : "octopus",
       "branch_name" : "firmware-octopus-11297.B",
+      "firmware_build_cros_version" : "11297.163.0",
+      "model_name" : "sparky360"
+   },
+   {
+      "board_name" : "octopus",
+      "branch_name" : "firmware-octopus-11297.B",
+      "firmware_build_cros_version" : "11297.178.0",
+      "model_name" : "sparky360"
+   },
+   {
+      "board_name" : "octopus",
+      "branch_name" : "firmware-octopus-11297.B",
+      "firmware_build_cros_version" : "11297.194.0",
+      "model_name" : "sparky360"
+   },
+   {
+      "board_name" : "octopus",
+      "branch_name" : "firmware-octopus-11297.B",
+      "firmware_build_cros_version" : "11297.234.0",
+      "model_name" : "sparky360"
+   },
+   {
+      "board_name" : "octopus",
+      "branch_name" : "firmware-octopus-11297.B",
+      "firmware_build_cros_version" : "11297.252.0",
+      "model_name" : "sparky360"
+   },
+   {
+      "board_name" : "octopus",
+      "branch_name" : "firmware-octopus-11297.B",
       "firmware_build_cros_version" : "11297.29.0",
+      "model_name" : "sparky360"
+   },
+   {
+      "board_name" : "octopus",
+      "branch_name" : "firmware-octopus-11297.B",
+      "firmware_build_cros_version" : "11297.56.0",
+      "model_name" : "sparky360"
+   },
+   {
+      "board_name" : "octopus",
+      "branch_name" : "firmware-octopus-11297.83.B",
+      "firmware_build_cros_version" : "11297.83.5",
+      "model_name" : "sparky360"
+   },
+   {
+      "board_name" : "octopus",
+      "branch_name" : "firmware-octopus-11297.B",
+      "firmware_build_cros_version" : "11297.96.0",
       "model_name" : "sparky360"
    },
    {
@@ -3639,6 +3819,12 @@
       "board_name" : "volteer",
       "branch_name" : "firmware-volteer-13672.B",
       "firmware_build_cros_version" : "13672.308.0",
+      "model_name" : "delbin"
+   },
+   {
+      "board_name" : "volteer",
+      "branch_name" : "firmware-volteer-13672.B",
+      "firmware_build_cros_version" : "13672.354.0",
       "model_name" : "delbin"
    },
    {

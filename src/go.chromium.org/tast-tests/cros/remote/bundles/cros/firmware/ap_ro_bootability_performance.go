@@ -107,7 +107,7 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		Data:         []string{"shipped-firmwares.json"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel("skolas")),
 		Params: []testing.Param{{
 			Val: &apROBootabilityPerformanceArgs{
 				targetProgrammer: fwpb.Programmer_BIOSProgrammer,
