@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
@@ -20,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -36,7 +34,6 @@ type bootModeTestParams struct {
 	resetAfterBoot      bool
 	resetType           firmware.ResetType
 	checkBootFromMain   bool
-	checkToNoGoodScreen bool
 	checkToBrokenScreen bool
 }
 
@@ -176,16 +173,6 @@ func init() {
 			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 			Timeout:           15 * time.Minute,
 		}, {
-			Name:    "nogood_screen",
-			Fixture: fixture.NormalMode,
-			Val: bootModeTestParams{
-				bootToMode:          fwCommon.BootModeDev,
-				checkToNoGoodScreen: true,
-			},
-			// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
-			Timeout:   30 * time.Minute,
-		}, {
 			Name:    "broken_screen",
 			Fixture: fixture.NormalMode,
 			Val: bootModeTestParams{
@@ -202,7 +189,6 @@ func init() {
 }
 
 func BootMode(ctx context.Context, s *testing.State) {
-	ctxCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
@@ -244,28 +230,6 @@ func BootMode(ctx context.Context, s *testing.State) {
 			s.Fatal("USBKey not working: ", err)
 		}
 	}
-	if tc.checkToNoGoodScreen {
-		usbdev, err := h.CheckUSBOnServoHost(ctx)
-		if err != nil {
-			s.Fatal("Failed to check the usb device on servo host: ", err)
-		}
-		// Previously, the dd commands used in corrupting usb devices had
-		// the side effect of creating plain files, until chromium:4564073.
-		// Delete those files if they exist.
-		// Switch the usb direction to the dut first, and if the kernel path
-		// is still visible on the servo host, this path most likely points
-		// to the unwanted file. To-do: remove when stable.
-		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-			s.Fatal("Failed to set dut_sees_usbkey: ", err)
-		}
-		// ChromeOS kernel is at /dev/sdx2.
-		kernelPart := usbdev + "2"
-		if _, stderr, err := h.ServoProxy.SeparatedOutputCommand(ctx, true, "rm", kernelPart); err != nil {
-			if !strings.Contains(string(stderr), "No such file or directory") {
-				s.Fatal("Failed to run rm command: ", err)
-			}
-		}
-	}
 
 	// Double-check that DUT starts in the right mode.
 	if curr, err := h.Reporter.CurrentBootMode(ctx); err != nil {
@@ -287,47 +251,6 @@ func BootMode(ctx context.Context, s *testing.State) {
 			opts = append(opts, firmware.AssumeGBBFlagsCorrect)
 		}
 
-		if tc.checkToBrokenScreen || tc.checkToNoGoodScreen {
-			var err error
-			usbdev, err := h.Servo.GetStringTimeout(ctx, servo.ImageUSBKeyDev, time.Second*90)
-			if err != nil {
-				s.Fatal("Servo call image_usbkey_dev failed: ", err)
-			}
-			if usbdev == "" {
-				s.Fatal("No USB key detected")
-			}
-			s.Log("USB path: ", usbdev)
-			if tc.checkToNoGoodScreen {
-				opts = append(opts, firmware.CheckToNoGoodScreen)
-				// ChromeOS kernel is at /dev/sdx2.
-				kernelPart := usbdev + "2"
-				err := testing.Poll(ctx, func(ctx context.Context) error {
-					_, stderr, err := h.ServoProxy.SeparatedOutputCommand(ctx, true, "fdisk", "-l", kernelPart)
-					if err != nil {
-						return errors.Errorf("validating usb kernel at %s: %v, got stderr: %q", kernelPart, err, stderr)
-					}
-					return nil
-				}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second})
-
-				switch err.(type) {
-				case nil:
-					// An invalid USB is required to check for the NOGOOD screen.
-					if err := h.CorruptUSBKey(ctx, usbdev); err != nil {
-						s.Fatal("Failed to corrupt the USB: ", err)
-					}
-					defer func(ctx context.Context) {
-						if err := h.RestoreUSBKey(ctx); err != nil {
-							s.Fatal("Failed to restore the USB: ", err)
-						}
-					}(ctxCleanUp)
-				default:
-					if !strings.Contains(err.Error(), "No such file or directory") {
-						s.Fatal("Failed to get fdisk output: ", err)
-					}
-					s.Logf("Kernel part %s does not exist, usb device already invalid", kernelPart)
-				}
-			}
-		}
 		s.Logf("Transitioning to %s mode with options %+v", tc.bootToMode, opts)
 		if err = ms.RebootToMode(ctx, tc.bootToMode, opts...); err != nil {
 			s.Fatalf("Error during transition from %s to %s: %v", pv.BootMode, tc.bootToMode, err)

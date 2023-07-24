@@ -5,6 +5,7 @@
 package firmware
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -163,6 +164,8 @@ These ids were found from the depthcharge repo:
 type FwScreenID int
 
 // Below are the ids representing different fw screens.
+// To-do: rearrange and rename these screens so that they
+// match with their counterparts defined in depthcharge.
 const (
 	Blank            FwScreenID = 0x0
 	DeveloperWarning FwScreenID = 0x101
@@ -184,6 +187,14 @@ const (
 	OptionScreen             FwScreenID = 0x20d
 	InsertScreenMenuSwitcher FwScreenID = 0x200
 	OptionScreenMenuSwitcher FwScreenID = 0x202
+
+	RecoverySelect   FwScreenID = 0x200
+	RecoveyDiskStep1 FwScreenID = 0x220
+	RecoveyDiskStep2 FwScreenID = 0x221
+	RecoveyDiskStep3 FwScreenID = 0x222
+
+	RecoveyInvalid FwScreenID = 0x201
+	RecoveyNoGood  FwScreenID = 0x203
 )
 
 // NewHelper creates a new Helper object with info from testing.State.
@@ -753,7 +764,7 @@ func (h *Helper) RestoreUSBKey(ctx context.Context) (retErr error) {
 	if usbdev == "" {
 		return errors.New("no USB key detected")
 	}
-	testing.ContextLogf(ctx, "Sleeping %s to let USB become visible to DUT", UsbVisibleTime)
+	testing.ContextLogf(ctx, "Sleeping %s to let USB become visible to servo host", UsbVisibleTime)
 	// GoBigSleepLint: It takes some time for usb mux state to take effect.
 	if err := testing.Sleep(ctx, UsbVisibleTime); err != nil {
 		return err
@@ -1541,19 +1552,17 @@ func (h *Helper) validateUSBConn(ctx context.Context) error {
 
 // WaitDUTConnectDuringBootFromUSB will check if the DUT boots from USB or not.
 // If expBoot is true, DUT is expected to boot from USB successfully.
-// If expBoot is false, DUT is expected to reach a specific firmware screen, e.g. NOGOOD Screen or Broken Screen.
-// Firmware screen string for NOGOOD Screen: The device you inserted does not contain ChromeOS.
-// Firmware screen string for Broken Screen: ChromeOS is missing or damaged. Please remove all connected devices and start recovery.
-// Reference for NOGOOD Screen and Broken Screen:
+// If expBoot is false, DUT is expected to reach a specific firmware screen,
+// as documented in the firmware test manual below:
 // https://chromium.googlesource.com/chromiumos/docs/+/HEAD/firmware_test_manual.md#firmware-screen-names
 func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bool) error {
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.USBImageBootTimeout)
 	defer cancelWaitConnect()
 
 	err := h.WaitConnect(waitConnectCtx)
-	if err == nil {
-		switch expBoot {
-		case true:
+	switch err.(type) {
+	case nil:
+		if expBoot {
 			testing.ContextLog(ctx, "Checking that DUT has booted from a removable device")
 			fromRemovableDevice, err := h.Reporter.BootedFromRemovableDevice(ctx)
 			if err != nil {
@@ -1562,13 +1571,18 @@ func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bo
 			if !fromRemovableDevice {
 				return errors.New("DUT did not boot from a removable device")
 			}
-		case false:
-			return errors.Wrap(err, "expected DUT at the firmware screen. But, DUT advanced to the welcome page")
+			return nil
 		}
-	} else if !strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
-		return errors.Wrap(err, "unexpected error")
+		return errors.Wrap(err, "expected DUT at the firmware screen. But, DUT booted to the welcome page")
+	default:
+		if !expBoot {
+			if !errors.Is(err, context.DeadlineExceeded) {
+				return errors.Wrap(err, "expected dut disconnected")
+			}
+			return nil
+		}
+		return errors.Wrapf(err, "expected dut reconnected: %t", expBoot)
 	}
-	return nil
 }
 
 // CheckBrokenScreen checks if the DUT reaches Broken Screen.
@@ -1688,4 +1702,40 @@ func (h *Helper) ResetServoEthernetDongle(ctx context.Context) error {
 	}
 	testing.ContextLog(ctx, "Resetting the ethernet adapter")
 	return h.Servo.ToggleOffOn(ctx, servo.DutEthPwrEn)
+}
+
+// ProcessLastBootFwLog stores instructions for processing a firmware log.
+type ProcessLastBootFwLog struct {
+	SaveLog       bool
+	SaveLogPath   string
+	VerifyScreens []string
+}
+
+// ScanLastBootFwLog scans the firmware log relevant to the dut's last boot-up.
+func (h *Helper) ScanLastBootFwLog(ctx context.Context, data ProcessLastBootFwLog) error {
+	out, err := h.DUT.Conn().CommandContext(ctx, "cbmem", "-1").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to run cbmem command")
+	}
+	if data.SaveLog {
+		if err := ioutil.WriteFile(data.SaveLogPath, out, 0666); err != nil {
+			return errors.Wrapf(err, "failed to write firmware log to %s", data.SaveLogPath)
+		}
+	}
+	scanner := bufio.NewScanner(strings.NewReader(string(out)))
+	for scanner.Scan() {
+		if len(data.VerifyScreens) > 0 {
+			if match := regexp.MustCompile(data.VerifyScreens[0]).FindStringSubmatch(scanner.Text()); match != nil {
+				testing.ContextLogf(ctx, "Found %q", match[0])
+				data.VerifyScreens = data.VerifyScreens[1:]
+			}
+		}
+	}
+	if len(data.VerifyScreens) != 0 {
+		return errors.Errorf("unable to find %q in firmware log", data.VerifyScreens[0])
+	}
+	if err := scanner.Err(); err != nil {
+		return errors.Wrap(err, "failed to scan firmware log")
+	}
+	return nil
 }

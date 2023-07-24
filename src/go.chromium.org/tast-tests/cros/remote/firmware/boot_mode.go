@@ -102,10 +102,6 @@ const (
 	// ExpectDevModeAfterReboot expect developer mode after reboot from recovery.
 	ExpectDevModeAfterReboot ModeSwitchOption = iota
 
-	// CheckToNoGoodScreen checks that DUT will not boot from an invalid USB,
-	// but instead boot to the NOGOOD screen.
-	CheckToNoGoodScreen ModeSwitchOption = iota
-
 	// RebootForGBBFlagsChanged indicates that a reboot is required
 	// if gbb flags were changed. This would be helpful in mode transition by
 	// canceling gbb flag restriction first.
@@ -755,33 +751,6 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 	preSleepTime := h.Config.FirmwareScreen
 	if msOptsContain(opts, WaitSoftwareSync) {
 		preSleepTime += h.Config.SoftwareSyncUpdate
-	}
-
-	if msOptsContain(opts, CheckToNoGoodScreen) {
-		testing.ContextLogf(ctx, "Sleeping %s (preSleepTime)", preSleepTime)
-		// GoBigSleepLint: Sleeping for model specific time.
-		if err := testing.Sleep(ctx, preSleepTime); err != nil {
-			return errors.Wrapf(err, "sleeping for %s (preSleepTime) to wait for INSERT screen", preSleepTime)
-		}
-		preSleepTime = 0
-
-		// Enable USB connection to DUT.
-		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-			return errors.Wrap(err, "failed to set 'usb3_mux_sel:dut_sees_usbkey'")
-		}
-		testing.ContextLog(ctx, "Checking if DUT reaches the NOGOOD screen")
-		if err := h.WaitDUTConnectDuringBootFromUSB(ctx, false); err != nil {
-			return errors.Wrap(err, "failed to check NOGOOD screen")
-		}
-		// Remove USB from DUT.
-		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
-			return errors.Wrap(err, "failed to power off usbkey")
-		}
-		// GoBigSleepLint: It takes some time for usb mux state to take effect.
-		if err := testing.Sleep(ctx, UsbDisableTime); err != nil {
-			return errors.Wrap(err, "failed to sleep after setting usb mux state disable")
-		}
-		testing.ContextLog(ctx, "Booting to the recovery screen with the bad USB powered off")
 	}
 
 	switch h.Config.ModeSwitcherType {
