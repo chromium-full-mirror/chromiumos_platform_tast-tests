@@ -83,6 +83,15 @@ func init() {
 				Fixture:           "loggedInToCUJUserLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
+			// TODO(b/292249282): Remove when Vulkan is launched on brya and volteer.
+			{
+				Name: "vulkan",
+				Val: windowarrangementcuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserVulkan",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit")),
+			},
 		},
 	})
 }

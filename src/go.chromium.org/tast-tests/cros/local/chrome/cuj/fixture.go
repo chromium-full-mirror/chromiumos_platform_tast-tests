@@ -749,6 +749,28 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	// TODO(b/292249282): Remove when Vulkan is launched on brya and volteer.
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserVulkan",
+		Desc: "CUJ fixture that enables Vulkan for raster/composite",
+		Contacts: []string{
+			"hob@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("Vulkan"),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {

@@ -55,6 +55,13 @@ func init() {
 				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithChromeVox",
 			},
+			// TODO(b/292249282): Remove when Vulkan is launched on brya and volteer.
+			{
+				Name:              "vulkan",
+				Val:               browser.TypeAsh,
+				Fixture:           "loggedInToCUJUserVulkan",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit")),
+			},
 		},
 	})
 }
