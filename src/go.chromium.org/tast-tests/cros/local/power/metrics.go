@@ -21,5 +21,6 @@ func TestMetrics() []perf.TimelineDatasource {
 		NewGPUStateMetrics(),
 		NewGPUFreqMetrics(),
 		NewZramIOMetrics(),
+		NewMemoryMetrics(),
 	}
 }

@@ -48,6 +48,7 @@ const (
 	webrtcTimeMetricType       = "webrtc_time."
 	webrtcQPMetricType         = "webrtc_qp."
 	zramMetricType             = "zram."
+	memoryMetricType           = "memory."
 )
 
 // Only keys inside validMetricTypeMap are accepted metric types.
@@ -71,6 +72,7 @@ var validMetricTypeMap = map[string]bool{
 	"webrtc_time":       true,
 	"webrtc_qp":         true,
 	"zram":              true,
+	"memory":            true,
 	"other":             true,
 }
 
@@ -94,6 +96,7 @@ const (
 	webrtcTimeMetricTypeUnit       = "ms"
 	webrtcQPMetricTypeUnit         = "point"
 	zramMetricTypeUnit             = "requests"
+	memoryMetricTypeUnit           = "kiB"
 )
 
 // Power log file name.

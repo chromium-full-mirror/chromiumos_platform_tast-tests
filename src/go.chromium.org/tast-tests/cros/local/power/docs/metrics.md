@@ -9,6 +9,13 @@ This document lists the metrics collected in power package through TestMetrics()
 | cpu_usage                   | %     | The percent of time all CPUs spent not in idle.                              |
 | cpu-${state name}           | %     | The percent of time all CPUs spend in a certain idle state.                  |
 | cpu[0-9]-${state name}      | %     | The percent of time a single CPU spends in a certain idle state.             |
+| **Memory Metrics**          |
+| Name                        | Unit  | Note                                                                         |
+| used                        | KiB   | Currently used RAM not including caches or reclaimable memory.               |
+| cached                      | KiB   | In-memory caches for disk reads including Slab-reclaimable memory            |
+| buffers                     | KiB   | Temporary storage buffers for block devices.                                 |
+| swap                        | KiB   | Currently used swap memory.                                                  |
+| page_tables                 | KiB   | Memory used for the lowest-level page tables.                                |
 | **RAPL Power Metrics**      |
 | Name                        | Unit  | Note                                                                         |
 | package-0                   | W     | Energy consumption across the entire SoC.                                    |
