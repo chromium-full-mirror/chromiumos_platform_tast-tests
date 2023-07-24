@@ -124,6 +124,7 @@ const (
 	ManagerPropertyDOHProviders           = "DNSProxyDOHProviders"
 	ManagerPropertyPortalHTTPSURL         = "PortalHttpsUrl"
 	ManagerPropertyDefaultService         = "DefaultService"
+	ManagerPropertyTetheringConfig        = "TetheringConfig"
 )
 
 // Service property names defined in dbus-constants.h .

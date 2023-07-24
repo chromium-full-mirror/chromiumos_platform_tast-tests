@@ -6,6 +6,7 @@ package shill
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -43,6 +44,17 @@ type Manager struct {
 
 // Technology is the type of a shill device's technology
 type Technology string
+
+// TetheringConfig wraps all the properties for a tethering configuration.
+type TetheringConfig struct {
+	Ssid               string
+	Passphrase         string
+	AutoDisable        bool
+	Security           string
+	UpstreamTechnology string
+	Band               string
+	MAR                bool
+}
 
 // Device technologies
 // Refer to Flimflam type options in
@@ -760,6 +772,58 @@ func (m *Manager) WaitForUserProfile(ctx context.Context) (dbus.ObjectPath, erro
 	return path, nil
 }
 
+// GetTetheringConfig returns the tethering configurations.
+func (m *Manager) GetTetheringConfig(ctx context.Context) (TetheringConfig, error) {
+	var tetheringConfig TetheringConfig
+	p, err := m.GetProperties(ctx)
+	if err != nil {
+		return tetheringConfig, err
+	}
+
+	p, err = p.GetMap(shillconst.ManagerPropertyTetheringConfig)
+	if err != nil {
+		return tetheringConfig, errors.Wrap(err, "failed to get tethering config")
+	}
+
+	for _, fn := range []struct {
+		field *string
+		name  string
+	}{{&tetheringConfig.Passphrase, shillconst.TetheringConfPassphrase},
+		{&tetheringConfig.Band, shillconst.TetheringConfBand},
+		{&tetheringConfig.Security, shillconst.TetheringConfSecurity},
+		{&tetheringConfig.UpstreamTechnology, shillconst.TetheringConfUpstreamTech},
+	} {
+		*fn.field, err = p.GetString(fn.name)
+		if err != nil {
+			return tetheringConfig, errors.Wrapf(err, "failed to get property %s", fn.name)
+		}
+	}
+
+	encodedSsid, err := p.GetString(shillconst.TetheringConfSSID)
+	if err != nil {
+		return tetheringConfig, errors.Wrapf(err, "failed to get property %s", shillconst.TetheringConfSSID)
+	}
+	decodedBytes, err := hex.DecodeString(encodedSsid)
+	if err != nil {
+		return tetheringConfig, errors.Wrapf(err, "failed to get decode ssid: %s", encodedSsid)
+	}
+	tetheringConfig.Ssid = string(decodedBytes[:])
+
+	for _, fn := range []struct {
+		field *bool
+		name  string
+	}{{&tetheringConfig.AutoDisable, shillconst.TetheringConfAutoDisable},
+		{&tetheringConfig.MAR, shillconst.TetheringConfMAR},
+	} {
+		*fn.field, err = p.GetBool(fn.name)
+		if err != nil {
+			return tetheringConfig, errors.Wrapf(err, "failed to get property %s", fn.name)
+		}
+	}
+
+	return tetheringConfig, nil
+}
+
 // GetTetheringCapabilities returns the tethering capabilities dict.
 func (m *Manager) GetTetheringCapabilities(ctx context.Context) (*dbusutil.Properties, error) {
 	p, err := m.GetProperties(ctx)
@@ -807,7 +871,7 @@ func (m *Manager) GetTetheringCapabilityDownstreamTechnologies(ctx context.Conte
 
 // ConfigureTethering is a wrapper for conveniently setting of tethering configuration.
 func (m *Manager) ConfigureTethering(ctx context.Context, props map[string]interface{}) error {
-	return m.SetProperty(ctx, "TetheringConfig", props)
+	return m.SetProperty(ctx, shillconst.ManagerPropertyTetheringConfig, props)
 }
 
 // EnableTethering enables tethering.

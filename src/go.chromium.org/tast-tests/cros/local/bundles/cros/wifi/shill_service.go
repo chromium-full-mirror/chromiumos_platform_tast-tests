@@ -3331,6 +3331,29 @@ func (s *ShillService) startDHCPServer(ctx context.Context) (ret error) {
 	return nil
 }
 
+// GetTetheringConfig returns tethering config from shill
+func (s *ShillService) GetTetheringConfig(ctx context.Context, _ *empty.Empty) (*wifi.GetTetheringConfigResponse, error) {
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create a manager object")
+	}
+
+	tetheringConfig, err := m.GetTetheringConfig(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get tethering config")
+	}
+
+	return &wifi.GetTetheringConfigResponse{
+		Ssid:               tetheringConfig.Ssid,
+		Passphrase:         tetheringConfig.Passphrase,
+		AutoDisable:        tetheringConfig.AutoDisable,
+		Security:           tetheringConfig.Security,
+		Band:               tetheringConfig.Band,
+		UpstreamTechnology: tetheringConfig.UpstreamTechnology,
+		Mar:                tetheringConfig.MAR,
+	}, nil
+}
+
 func (s *ShillService) stopDHCPServer(ctx context.Context) error {
 	var firstErr error
 	r := &cmd.LocalCmdRunner{}

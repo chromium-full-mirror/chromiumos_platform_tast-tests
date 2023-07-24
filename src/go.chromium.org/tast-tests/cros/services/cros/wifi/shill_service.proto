@@ -214,6 +214,9 @@ service ShillService {
   // StopTethering attempts to stop the tethering session.
   rpc StopTethering(StopTetheringRequest) returns (TetheringResponse) {}
 
+  // GetTetheringConfig returns tethering configuration.
+  rpc GetTetheringConfig(google.protobuf.Empty) returns (GetTetheringConfigResponse) {}
+
   // SetPortalDetectionEnabled persistently enables/disables PortalDection via shill.
   rpc SetPortalDetectionEnabled(SetPortalDetectionEnabledRequest) returns (google.protobuf.Empty) {}
 
@@ -649,4 +652,14 @@ message NetworksForGeolocation {
 
 message GetNetworksForGeolocationResponse {
   map<string, NetworksForGeolocation>  networks = 1;
+}
+
+message GetTetheringConfigResponse {
+  string ssid = 1;
+  string passphrase = 2;
+  bool autoDisable = 3;
+  string security = 4;
+  string upstream_technology = 5;
+  string band = 6;
+  bool mar = 7;
 }

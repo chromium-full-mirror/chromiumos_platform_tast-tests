@@ -95,6 +95,23 @@ func (s *Service) OpenNetworkDetailPage(ctx context.Context, req *pb.OpenNetwork
 	})
 }
 
+// OpenHotspotDetailPage will open the OS Settings application and navigate
+// to the Hotspot detail page.
+func (s *Service) OpenHotspotDetailPage(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
+	cr := s.sharedObject.Chrome
+	if cr == nil {
+		return &emptypb.Empty{}, errors.New("Chrome has not been started")
+	}
+
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		condition := uiauto.New(tconn).Exists(nodewith.Name("Hotspot subpage back button"))
+		if _, err := LaunchAtPageURL(ctx, tconn, cr, "hotspotDetail", condition); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to launch OS-Settings and navigate to Hotspot detail")
+		}
+		return &emptypb.Empty{}, nil
+	})
+}
+
 // SetToggleOption clicks toggle option to enable or disable an option.
 // It does nothing if the option is already expected.
 func (s *Service) SetToggleOption(ctx context.Context, req *pb.SetToggleOptionRequest) (*emptypb.Empty, error) {

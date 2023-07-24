@@ -219,6 +219,9 @@ const (
 	// CellularServiceName is the name of the cellular service needed by TestFixture.
 	CellularServiceName = "tast.cros.cellular.RemoteCellularService"
 
+	// AutomationServiceName is the name of the automation service.
+	AutomationServiceName = "tast.cros.ui.AutomationService"
+
 	// BrowserChromeServiceName is the name of the browser chrome service.
 	BrowserChromeServiceName = "tast.cros.browser.ChromeService"
 

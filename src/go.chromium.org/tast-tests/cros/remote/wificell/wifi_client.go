@@ -117,6 +117,16 @@ func (cli *WifiClient) QueryServiceWithPath(ctx context.Context, servicePath str
 	return resp, nil
 }
 
+// GetTetheringConfig returns the tethering configuration.
+func (cli *WifiClient) GetTetheringConfig(ctx context.Context) (*wifi.GetTetheringConfigResponse, error) {
+	resp, err := cli.ShillServiceClient.GetTetheringConfig(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get tethering config")
+	}
+
+	return resp, nil
+}
+
 // QueryService queries shill information of selected service.
 func (cli *WifiClient) QueryService(ctx context.Context) (*wifi.QueryServiceResponse, error) {
 	selectedSvcResp, err := cli.ShillServiceClient.SelectedService(ctx, &empty.Empty{})

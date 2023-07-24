@@ -24,6 +24,10 @@ service OsSettingsService {
   // to the detail page for the specified network.
   rpc OpenNetworkDetailPage(OpenNetworkDetailPageRequest) returns (google.protobuf.Empty) {}
 
+  // OpenHotspotDetailPage will open the OS Settings application and navigate
+  // to the Hotspot detail page.
+  rpc OpenHotspotDetailPage(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
   // SetToggleOption clicks toggle option to enable or disable an option.
   // It does nothing if the option is already expected.
   rpc SetToggleOption(SetToggleOptionRequest) returns (google.protobuf.Empty) {}

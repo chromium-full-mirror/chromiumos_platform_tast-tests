@@ -8,8 +8,11 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/hotspot/hotspotutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
+	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
 	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -19,8 +22,14 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+const (
+	networkPage = iota
+	hotspotSubpage
+)
+
 type enableHotspotTestParam struct {
 	enableWifi bool
+	launchPage int
 }
 
 func init() {
@@ -39,24 +48,41 @@ func init() {
 			wificell.OsSettingsServiceName,
 			wificell.QuickSettingsServiceName,
 			wificell.ChromeUIServiceName,
+			wificell.AutomationServiceName,
 			wificell.CellularServiceName,
 			wificell.ShillServiceName,
 		},
 		HardwareDeps: hwdep.D(hwdep.WifiSAP(), hwdep.Cellular(), hwdep.Model("crota")),
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "wificellFixtWithCellular",
-		Timeout:      5 * time.Minute,
+		Fixture:      "wificellFixtCompanionDutWithCellular",
+		Timeout:      7 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name: "with_wifi_enabled",
+				Name: "with_wifi_enabled_from_network_page",
 				Val: enableHotspotTestParam{
 					enableWifi: true,
+					launchPage: networkPage,
 				},
 			},
 			{
-				Name: "with_wifi_disabled",
+				Name: "with_wifi_enabled_from_hotspot_subpage",
+				Val: enableHotspotTestParam{
+					enableWifi: true,
+					launchPage: hotspotSubpage,
+				},
+			},
+			{
+				Name: "with_wifi_disabled_from_network_page",
 				Val: enableHotspotTestParam{
 					enableWifi: false,
+					launchPage: networkPage,
+				},
+			},
+			{
+				Name: "with_wifi_disabled_from_hotspot_subpage",
+				Val: enableHotspotTestParam{
+					enableWifi: false,
+					launchPage: hotspotSubpage,
 				},
 			},
 		},
@@ -68,7 +94,7 @@ func EnableHotspotWithOSSettings(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
@@ -114,8 +140,14 @@ func EnableHotspotWithOSSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Hotspot tile should not be shown in Quick Settings")
 	}
 
-	if _, err := ossettingsSvc.LaunchAtNetwork(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to launch OS-Settings at Network page: ", err)
+	if testOpts.launchPage == networkPage {
+		if _, err := ossettingsSvc.LaunchAtNetwork(ctx, &emptypb.Empty{}); err != nil {
+			s.Fatal("Failed to launch OS-Settings at Network page: ", err)
+		}
+	} else if testOpts.launchPage == hotspotSubpage {
+		if _, err := ossettingsSvc.OpenHotspotDetailPage(ctx, &emptypb.Empty{}); err != nil {
+			s.Fatal("Failed to launch hotspot subpage: ", err)
+		}
 	}
 	defer hotspotutil.DumpUITreeWithScreenshotToFile(cleanupCtx, rpcClient.Conn, s.HasError, "ui_dump")
 
@@ -131,6 +163,61 @@ func EnableHotspotWithOSSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("WiFi should be turned off after turning on hotspot")
 	}
 
+	tetheringConfig, err := wifiClient.GetTetheringConfig(ctx)
+	if err != nil {
+		s.Fatal("Failed to get hotspot config: ", err)
+	}
+	s.Logf("Using hotspot ssid: %s", tetheringConfig.Ssid)
+
+	if tetheringConfig.Security != shillconst.SecurityWPA2 {
+		s.Fatalf("Invalid tethering security: %s", tetheringConfig.Security)
+	}
+
+	fac := wpa.NewConfigFactory(
+		tetheringConfig.Passphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
+	)
+
+	secConf, err := fac.Gen()
+	if err != nil {
+		s.Fatal("Failed to generate security config: ", err)
+	}
+
+	cdIdx := wificell.DutIdx(wificell.PeerDUT)
+	_, err = tf.ConnectWifiFromDUT(ctx, cdIdx, tetheringConfig.Ssid, dutcfg.ConnSecurity(secConf))
+	if err != nil {
+		s.Fatal("Failed to connect to the hotspot, err: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := tf.DisconnectDUTFromWifi(ctx, cdIdx); err != nil {
+			s.Error("Failed to disconnect from hotspot, err: ", err)
+		}
+	}(cleanupCtx)
+	s.Log("Downstream DUT connected to the hotspot")
+
+	// Navigate to hotspot detail page if needed and verify client count.
+	if testOpts.launchPage == networkPage {
+		if _, err := ossettingsSvc.OpenHotspotDetailPage(ctx, &emptypb.Empty{}); err != nil {
+			s.Fatal("Failed to open hotspot detail page: ", err)
+		}
+	}
+
+	uiauto := ui.NewAutomationServiceClient(rpcClient.Conn)
+	clientCountNode := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Name{Name: "1"}},
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_STATIC_TEXT}},
+		},
+	}
+	if _, err := uiauto.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: clientCountNode}); err != nil {
+		s.Fatal("Failed to verify client count update to 1 in hotspot subpage: ", err)
+	}
+
+	// Navigate back to Network page and toggle off hotspot
+	if testOpts.launchPage == networkPage {
+		if _, err := ossettingsSvc.LaunchAtNetwork(ctx, &emptypb.Empty{}); err != nil {
+			s.Fatal("Failed to launch OS-Settings at Network page: ", err)
+		}
+	}
 	if _, err := ossettingsSvc.ToggleHotspot(ctx, &ossettings.ToggleHotspotRequest{Enabled: false}); err != nil {
 		s.Fatal("Failed to toggle off hotspot: ", err)
 	}
