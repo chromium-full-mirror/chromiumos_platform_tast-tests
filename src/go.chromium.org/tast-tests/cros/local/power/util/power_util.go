@@ -242,26 +242,88 @@ func HasHammer(ctx context.Context) bool {
 
 const memInfoPath = "/proc/meminfo"
 
-// GetMemTotalKB returns the float total memory available in kBytes.
-func GetMemTotalKB(ctx context.Context) float64 {
+// Memory metric identifier to use with GetMemInfoMetrics().
+const (
+	MemInfoMemTotal          = `MemTotal`
+	MemInfoMemFree           = `MemFree`
+	MemInfoMemAvailable      = `MemAvailable`
+	MemInfoBuffers           = `Buffers`
+	MemInfoCached            = `Cached`
+	MemInfoSwapCached        = `SwapCached`
+	MemInfoActive            = `Active`
+	MemInfoInactive          = `Inactive`
+	MemInfoHighTotal         = `HighTotal`
+	MemInfoHighFree          = `HighFree`
+	MemInfoLowTotal          = `LowTotal`
+	MemInfoLowFree           = `LowFree`
+	MemInfoSwapTotal         = `SwapTotal`
+	MemInfoSwapFree          = `SwapFree`
+	MemInfoDirty             = `Dirty`
+	MemInfoWriteback         = `Writeback`
+	MemInfoAnonPages         = `AnonPages`
+	MemInfoMapped            = `Mapped`
+	MemInfoShmem             = `Shmem`
+	MemInfoKReclaimable      = `KReclaimable`
+	MemInfoSlab              = `Slab`
+	MemInfoSReclaimable      = `SReclaimable`
+	MemInfoSUnreclaim        = `SUnreclaim`
+	MemInfoPageTables        = `PageTables`
+	MemInfoNFSUnstable       = `NFS_Unstable`
+	MemInfoBounce            = `Bounce`
+	MemInfoWritebackTmp      = `WritebackTmp`
+	MemInfoCommitLimit       = `CommitLimit`
+	MemInfoCommittedAS       = `Committed_AS`
+	MemInfoVmallocTotal      = `VmallocTotal`
+	MemInfoVmallocUsed       = `VmallocUsed`
+	MemInfoVmallocChunk      = `VmallocChunk`
+	MemInfoPercpu            = `Percpu`
+	MemInfoHardwareCorrupted = `HardwareCorrupted`
+	MemInfoAnonHugePages     = `AnonHugePages`
+	MemInfoShmemHugePages    = `ShmemHugePages`
+	MemInfoShmemPmdMapped    = `ShmemPmdMapped`
+)
+
+// GetMemInfoMetrics returns a map of integer metrics read from /proc/meminfo.
+// The returned map contains only metrics that could be found and parsed.
+// On error nil is returned.
+func GetMemInfoMetrics(ctx context.Context, metrics []string) map[string]int64 {
 	f, err := os.ReadFile(memInfoPath)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to read memory info file")
-		return 0
+		return nil
 	}
-	pattern := `MemTotal:(.*)kB`
+	// Match from an ASCII word boundary to prevent partial matches such
+	// as PageTables -> SecPageTables.
+	pattern := `\b(` + strings.Join(metrics, `|`) + `):\s*([0-9]+).*`
 	re := regexp.MustCompile(pattern)
-	submatchGroup := re.FindStringSubmatch(string(f))
-	// A legitimate submatchGroup would be ["MemTotal:result", "result"]
-	if len(submatchGroup) < 2 {
-		return 0
+	matches := re.FindAllStringSubmatch(string(f), len(metrics))
+	if matches == nil {
+		testing.ContextLogf(ctx, "Failed to find metrics %s in memory info file", strings.Join(metrics, `, `))
+		return nil
 	}
-	memInFloat, err := strconv.ParseFloat(strings.TrimSpace(submatchGroup[1]), 64)
-	if err != nil {
+	metricMap := map[string]int64{}
+
+	for _, match := range matches {
+		metric := match[1]
+		value, err := strconv.ParseInt(match[2], 10, 64)
+		if err != nil {
+			testing.ContextLogf(ctx, "Failed to parse %s from memory info file", metric)
+			continue
+		}
+		metricMap[metric] = value
+	}
+	return metricMap
+}
+
+// GetMemTotalKB returns the float total memory available in kBytes.
+func GetMemTotalKB(ctx context.Context) float64 {
+	value := GetMemInfoMetrics(ctx, []string{MemInfoMemTotal})
+	// On error value is nil, len(nil) evaluates to 0
+	if len(value) < 1 {
 		testing.ContextLog(ctx, "Failed to find total memory in memory info file")
 		return 0
 	}
-	return memInFloat
+	return float64(value[MemInfoMemTotal])
 }
 
 // GetMemTotalMB returns the int total memory available in MBytes.
