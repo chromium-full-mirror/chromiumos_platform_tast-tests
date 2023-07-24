@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -34,9 +35,12 @@ func init() {
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud")},
 			provider:      OneDrive,
 		},
-		SetUpTimeout: chrome.LoginTimeout,
-		ResetTimeout: chrome.ResetTimeout,
-		Data:         []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230704.xlsx"},
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: 30 * time.Second,
+		PreTestTimeout:  10 * time.Second,
+		PostTestTimeout: 10 * time.Second,
+		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:     "onedriveAndGoogleDrive",
@@ -46,10 +50,13 @@ func init() {
 			bt:       browser.TypeAsh,
 			provider: DriveFs,
 		},
-		SetUpTimeout: chrome.LoginTimeout,
-		ResetTimeout: chrome.ResetTimeout,
-		Parent:       "driveFsStartedWithOfficeEnabled", // TODO(b/291524698): Create more DriveFS accounts.
-		Data:         []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230704.xlsx"},
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: 30 * time.Second,
+		PreTestTimeout:  10 * time.Second,
+		PostTestTimeout: 10 * time.Second,
+		Parent:          "driveFsStartedWithOfficeEnabled", // TODO(b/291524698): Create more DriveFS accounts.
+		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
 	})
 }
 
@@ -164,7 +171,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	if pptx, err = prepareOfficeFile(s.DataPath("Sample_PPTX_file_20230704.pptx"), targetFolder); err != nil {
 		s.Fatal("Failed to prepare file: ", err)
 	}
-	if xlsx, err = prepareOfficeFile(s.DataPath("Sample_XLSX_file_20230704.xlsx"), targetFolder); err != nil {
+	if xlsx, err = prepareOfficeFile(s.DataPath("Sample_XLSX_file_20230724.xlsx"), targetFolder); err != nil {
 		s.Fatal("Failed to prepare file: ", err)
 	}
 
@@ -217,15 +224,21 @@ func (f *fixture) cleanUp(ctx context.Context, s *testing.FixtState) {
 		name := testFile.FileName
 		files, err := filepath.Glob("/media/fuse/fusebox/fsp.*/" + name)
 		if err != nil {
-			s.Log("Failed cleaning up file: ", name, " ", err)
+			s.Logf("Failed cleaning up file: %s. %v", name, err)
 		} else {
 			for _, file := range files {
 				s.Log("Deleting: ", file)
-				if err := os.Remove(file); err != nil {
-					s.Log("Failed deleting the file: ", file, err)
+				if err := deleteFileRetrying(ctx, file); err != nil {
+					s.Logf("Failed deleting the file: %s. %v", file, err)
 				}
 			}
 		}
 	}
 	f.cleanUpFiles = []TestFile{}
+}
+
+func deleteFileRetrying(ctx context.Context, file string) error {
+	return action.RetryWithExponentialBackoff(5, func(ctx context.Context) error {
+		return os.Remove(file)
+	}, 500*time.Millisecond, 2)(ctx)
 }

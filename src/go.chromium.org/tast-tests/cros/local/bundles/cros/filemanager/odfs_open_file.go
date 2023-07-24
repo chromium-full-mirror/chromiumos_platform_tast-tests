@@ -98,7 +98,7 @@ func OdfsOpenFile(ctx context.Context, s *testing.State) {
 				cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false),
 				ms365App.WaitForMicrosoft365Window(fileName),
 			)(ctx); err != nil {
-				s.Fatal("Failed to upload and open on MS365: ", fileName, err)
+				s.Fatalf("Failed to upload and open on MS365: %q: %v", fileName, err)
 			}
 
 			if err := onedrive.CheckODFSContent(ctx, subTest.SrcFile, fileName); err != nil {

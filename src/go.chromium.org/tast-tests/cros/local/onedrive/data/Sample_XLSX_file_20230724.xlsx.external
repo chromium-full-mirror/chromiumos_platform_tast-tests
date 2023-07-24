@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/filemanager/Sample_XLSX_file_20230724.xlsx",
+  "size": 188465,
+  "sha256sum": "c6ac799df2b1ebd88c039d19fbe16431bffa9574c242c7e5ee885987d3e09f66"
+}
