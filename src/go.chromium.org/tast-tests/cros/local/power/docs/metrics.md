@@ -2,7 +2,7 @@
 
 This document lists the metrics collected in power package through TestMetrics().
 
-|                             |       |                                                                              |
+| Name                        | Unit  | Note                                                                         |
 |---                          |---    |---                                                                           |
 | **CPU Idle State Metrics**  |
 | Name                        | Unit  | Note                                                                         |
