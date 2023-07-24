@@ -25,7 +25,7 @@ func init() {
 		Desc:         "Check if CRAS can successfully install DLC packages",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "hunghsienchen@google.com"},
 		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"chrome", "dlc"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("amd64-generic")),
