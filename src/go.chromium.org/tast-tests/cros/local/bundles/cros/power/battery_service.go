@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	pow "go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -33,8 +34,10 @@ func init() {
 
 // BatteryService implements tast.cros.power.BatteryService.
 type BatteryService struct {
-	s  *testing.ServiceState
-	cr *chrome.Chrome
+	s       *testing.ServiceState
+	cr      *chrome.Chrome
+	prefs   *setup.TmpPrefs
+	cleanup setup.CleanupCallback
 }
 
 // New logs into a Chrome session as a fake user. Close must be called later
@@ -49,6 +52,15 @@ func (b *BatteryService) New(ctx context.Context, req *empty.Empty) (*empty.Empt
 		return nil, err
 	}
 	b.cr = cr
+
+	prefs := &setup.TmpPrefs{}
+	cl, err := prefs.InitTmpPrefs(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	b.prefs = prefs
+	b.cleanup = cl
 	return &empty.Empty{}, nil
 }
 
@@ -56,9 +68,18 @@ func (b *BatteryService) New(ctx context.Context, req *empty.Empty) (*empty.Empt
 func (b *BatteryService) Close(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	var err error
 	if b.cr != nil {
-		err = b.cr.Close(ctx)
+		if err = b.cr.Close(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to close Chrome with error: ", err)
+		}
 	}
 	b.cr = nil
+	if b.cleanup != nil {
+		if err2 := b.cleanup(ctx); err2 != nil {
+			testing.ContextLog(ctx, "Failed to cleanup temporary prefs with error: ", err)
+			err = err2
+		}
+	}
+	b.cleanup = nil
 	return &empty.Empty{}, err
 }
 
@@ -112,6 +133,16 @@ func (b *BatteryService) DrainBattery(ctx context.Context, req *power.BatteryReq
 		Timeout:  45 * time.Minute,
 	}); err != nil {
 		return nil, errors.Wrapf(err, "failed to drain battery to %.2f%%", req.MaxPercentage)
+	}
+	return &empty.Empty{}, nil
+}
+
+func (b *BatteryService) StopChargeLimit(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if !setup.ChargeLimitEnabled(ctx) {
+		return &empty.Empty{}, nil
+	}
+	if _, err := setup.StopChargeLimit(ctx, b.prefs); err != nil {
+		return nil, errors.Wrap(err, "failed to stop Charge Limit")
 	}
 	return &empty.Empty{}, nil
 }
