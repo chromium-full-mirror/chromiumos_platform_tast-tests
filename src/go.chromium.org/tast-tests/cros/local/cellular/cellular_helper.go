@@ -298,6 +298,7 @@ func (h *Helper) EnsureDefaultService(ctx context.Context) error {
 	// Ensure a Cellular Service is available.
 	if _, err := h.FindServiceForDevice(ctx); err != nil {
 		// If not available, try resetting the modem.
+		testing.ContextLog(ctx, "Cellular Service not available, resetting modem")
 		if _, err := h.ResetModem(ctx); err != nil {
 			return errors.Wrap(err, "failed to reset modem waiting for default cellular service")
 		}

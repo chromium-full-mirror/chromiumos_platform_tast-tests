@@ -202,7 +202,10 @@ func tryCommand(ctx context.Context, command *testexec.Cmd) ([]byte, error) {
 			return outErr
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+	}, &testing.PollOptions{
+		Timeout:  30 * time.Second,
+		Interval: 10 * time.Second,
+	}); err != nil {
 		return nil, err
 	}
 	return output, nil

@@ -361,7 +361,9 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	}
 
 	// Ensure that Cellular is Enabled and has a default Service before each test.
-	f.helper.EnsureDefaultService(ctx)
+	if !f.useTestESIM {
+		f.helper.EnsureDefaultService(ctx)
+	}
 }
 
 func getUpstartArgsForVerboseLogging(job string) []upstart.Arg {
