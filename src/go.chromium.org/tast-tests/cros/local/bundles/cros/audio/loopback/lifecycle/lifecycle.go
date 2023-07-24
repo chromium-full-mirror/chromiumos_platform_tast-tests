@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -78,22 +79,16 @@ func (t *tester) Run(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to restart CRAS: ", err)
 	}
 
-	var node *audio.CrasNode
-	if err = testing.Poll(
-		ctx,
-		func(ctx context.Context) (err error) {
-			node, err = cras.SelectedOutputNode(ctx)
-			return err
-		},
-		&testing.PollOptions{
-			Timeout:  3 * time.Second,
-			Interval: 500 * time.Millisecond,
-		},
-	); err != nil {
+	if err := internal.SelectIODevices(ctx, cras, "INTERNAL_MIC", "INTERNAL_SPEAKER"); err != nil {
+		s.Fatal("Failed to set internal device as selected device: ", err)
+	}
+
+	node, err := cras.SelectedOutputNode(ctx)
+	if err != nil {
 		s.Fatal("SelectedOutputNode failed: ", err)
 	}
 
-	// Mute to avoid making noise during test
+	// Set volume to 0 to avoid making noise during test
 	if err = cras.SetOutputNodeVolume(ctx, *node, 0); err != nil {
 		s.Fatal("SetOutputNodeVolume failed: ", err)
 	}

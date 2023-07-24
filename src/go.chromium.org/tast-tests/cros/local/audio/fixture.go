@@ -29,7 +29,12 @@ func init() {
 		Desc:     "Enable Flexible loopback API usage and login to Chrome",
 		Contacts: []string{"chromeos-audio-bugs@google.com", "htcheong@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.EnableFeatures("CrOSLateBootAudioFlexibleLoopback")}, nil
+			return []chrome.Option{
+				// Prevent interference of audio preferences.
+				// See go/tast-fakecrasaudioclient.
+				chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
+				chrome.EnableFeatures("CrOSLateBootAudioFlexibleLoopback"),
+			}, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
