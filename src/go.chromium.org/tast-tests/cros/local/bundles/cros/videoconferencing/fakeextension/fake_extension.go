@@ -106,7 +106,8 @@ func (extUI *ExtensionUI) StopAudio(ctx context.Context) error {
 
 // StartScreenCapture clicks on "Start Screen Capturing" button to activate screen sharing.
 func (extUI *ExtensionUI) StartScreenCapture(ctx context.Context) error {
-	chooseWhatToShareWindow := nodewith.Role(role.Dialog).NameContaining("Choose what to share").HasClass("Widget")
+	// There may be multiple "Choose what to share" dialogs, so add First() here.
+	chooseWhatToShareWindow := nodewith.Role(role.Dialog).NameContaining("Choose what to share").HasClass("Widget").First()
 	entireScreenTab := nodewith.Role(role.Tab).Name("Entire Screen")
 	display := nodewith.Role(role.Button).HasClass("DesktopMediaSourceView").Ancestor(chooseWhatToShareWindow).First()
 	shareButton := nodewith.Name("Share").Role(role.Button).Ancestor(chooseWhatToShareWindow)
