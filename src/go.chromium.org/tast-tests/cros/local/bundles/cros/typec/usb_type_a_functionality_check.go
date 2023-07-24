@@ -86,7 +86,8 @@ func init() {
 				deviceType: "storage",
 				iter:       10,
 			},
-			Timeout: 15 * time.Minute,
+			Timeout:   15 * time.Minute,
+			ExtraAttr: []string{"group:intel-cswitch-set1"},
 		}, {
 			Name: "usb2_pendrive_silver",
 			Val: usbTestParams{
@@ -116,7 +117,8 @@ func init() {
 				deviceType: "storage",
 				iter:       1,
 			},
-			Timeout: 10 * time.Minute,
+			Timeout:   10 * time.Minute,
+			ExtraAttr: []string{"group:intel-cswitch-set1"},
 		}, {
 			Name: "typea_keyboard_quick",
 			Val: usbTestParams{
@@ -133,7 +135,8 @@ func init() {
 				iter:          10,
 				evtestPattern: typeAKeyboard,
 			},
-			Timeout: 5 * time.Minute,
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-cswitch-set2"},
 		}, {
 			Name: "typea_keyboard_silver",
 			Val: usbTestParams{
@@ -160,6 +163,7 @@ func init() {
 				iter:          1,
 				evtestPattern: `(?i)/dev/input/event([0-9]+):.*C-Type.*`,
 			},
+			ExtraAttr: []string{"group:intel-cswitch-set2"},
 		}, {
 			Name: "typea_keyboard_tablet",
 			Val: usbTestParams{
@@ -169,6 +173,7 @@ func init() {
 				tablet:        true,
 				evtestPattern: typeAKeyboard,
 			},
+			ExtraAttr: []string{"group:intel-cswitch-set2"},
 		}},
 	})
 }

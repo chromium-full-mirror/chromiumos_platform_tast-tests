@@ -47,6 +47,7 @@ func init() {
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.power.USBService"},
+		Attr:         []string{"group:intel-cswitch-set1"},
 		Vars:         []string{"servo", "intel.cSwitchPort", "intel.domainIP"},
 		Params: []testing.Param{{
 			Name:    "usb2_warmboot",

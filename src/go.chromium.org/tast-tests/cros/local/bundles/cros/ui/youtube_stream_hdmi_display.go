@@ -42,6 +42,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:intel-cswitch-set1"},
 		Data:         []string{"testcert.p12"},
 		Vars:         []string{"ui.cSwitchPort", "ui.domainIP"},
 		Fixture:      "chromeLoggedIn",

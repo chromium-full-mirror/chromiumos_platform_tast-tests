@@ -41,6 +41,7 @@ func init() {
 		},
 		// To skip on duffy(Chromebox) with no internal display.
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		Attr:         []string{"group:intel-cswitch-set1"},
 		Params: []testing.Param{{
 			Name:    "dp_clamshell_mode",
 			Fixture: "chromeLoggedIn",

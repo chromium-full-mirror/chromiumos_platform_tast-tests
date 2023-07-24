@@ -35,7 +35,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:typec"},
+		Attr:         []string{"group:typec", "group:intel-cswitch-set1"},
 		Data:         []string{"bear-320x240.h264.mp4", "video.html", "playback.js"},
 		Vars:         []string{"typec.cSwitchPort", "typec.domainIP"},
 		Fixture:      "chromeLoggedIn",

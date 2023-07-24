@@ -52,9 +52,10 @@ func init() {
 			Name: "quick",
 			Val:  1,
 		}, {
-			Name:    "bronze",
-			Val:     10,
-			Timeout: 6 * time.Minute,
+			Name:      "bronze",
+			Val:       10,
+			Timeout:   6 * time.Minute,
+			ExtraAttr: []string{"group:intel-cswitch-set1"},
 		}, {
 			Name:    "silver",
 			Val:     15,

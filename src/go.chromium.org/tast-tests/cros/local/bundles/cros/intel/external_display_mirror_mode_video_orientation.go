@@ -36,6 +36,7 @@ func init() {
 		Data:         []string{"1080p_60fps_600frames.vp8.webm", "video.html", "playback.js"},
 		Fixture:      "chromeLoggedIn",
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		Attr:         []string{"group:intel-cswitch-set1"},
 		Timeout:      5 * time.Minute,
 	})
 }

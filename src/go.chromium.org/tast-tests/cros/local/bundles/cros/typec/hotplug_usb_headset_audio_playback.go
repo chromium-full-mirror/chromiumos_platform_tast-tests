@@ -38,7 +38,7 @@ func init() {
 		Desc:         "Verifies audio playback with USB type-C headset hotplug",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
-		Attr:         []string{"group:typec"},
+		Attr:         []string{"group:typec", "group:intel-cswitch-set1"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"volumeDown.txt", "volumeUp.txt"},
 		Vars:         []string{"typec.cSwitchPort", "typec.domainIP"},
