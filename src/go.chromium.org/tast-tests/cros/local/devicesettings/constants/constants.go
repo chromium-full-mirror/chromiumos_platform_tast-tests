@@ -36,3 +36,11 @@ const (
 	Backspace = "backspace"
 	Assistant = "assistant"
 )
+
+// Delete six pack key constants.
+const (
+	DeleteSixPackKey     = "delete"
+	DeleteSearchShortcut = "search + backspace"
+	DeleteAltShortcut    = "alt + backspace"
+	Off                  = "Off"
+)
