@@ -179,7 +179,7 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 				fpsMetric := fmt.Sprintf("preview-fps-%v-facing-%s", tc.name, facing)
 				perfValues.Set(perf.Metric{
 					Name:      fpsMetric,
-					Unit:      "frame_per_sec",
+					Unit:      "fps",
 					Direction: perf.BiggerIsBetter,
 				}, fps)
 

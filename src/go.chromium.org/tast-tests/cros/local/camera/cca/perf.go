@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	mediacpu "go.chromium.org/tast-tests/cros/local/media/cpu"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -104,6 +105,10 @@ func measureStablizedUsage(ctx context.Context) (map[string]float64, error) {
 
 // MeasurePreviewPerformance measures the performance of preview with QR code detection on and off.
 func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	testing.ContextLog(ctx, "Switching to photo mode")
 	if err := app.SwitchMode(ctx, Photo); err != nil {
 		return errors.Wrap(err, "failed to switch to photo mode")
@@ -116,6 +121,12 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 	if scanBarcode {
 		return errors.New("QR code detection should be off by default")
 	}
+
+	fpsObserver, err := app.FPSObserver(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get FPS observer")
+	}
+	defer fpsObserver.Stop(cleanupCtx)
 
 	usage, err := measureStablizedUsage(ctx)
 	if err != nil {
@@ -148,10 +159,27 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 		testing.ContextLog(ctx, "Failed to measure preview power usage")
 	}
 
+	fps, err := fpsObserver.AverageFPS(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to measure average FPS")
+	}
+	testing.ContextLogf(ctx, "Measured preview FPS: %.1f", fps)
+	perfData.SetMetricValue(perf.Metric{
+		Name:      fmt.Sprintf("preview_fps-facing-%s", facing),
+		Unit:      "fps",
+		Direction: perf.BiggerIsBetter,
+	}, fps)
+
 	// Enable QR code detection and measure the performance again.
 	if err := app.OpenQRCodeScanMode(ctx); err != nil {
 		return errors.Wrap(err, "failed to open QR code scan mode")
 	}
+
+	fpsObserverQR, err := app.FPSObserver(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get FPS observer")
+	}
+	defer fpsObserverQR.Stop(cleanupCtx)
 
 	usageQR, err := measureStablizedUsage(ctx)
 	if err != nil {
@@ -199,6 +227,17 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 	} else {
 		testing.ContextLog(ctx, "Failed to measure preview power usage with QR code detection")
 	}
+
+	fpsQR, err := fpsObserverQR.AverageFPS(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to measure average FPS")
+	}
+	testing.ContextLogf(ctx, "Measured QR code detection preview FPS: %.1f", fpsQR)
+	perfData.SetMetricValue(perf.Metric{
+		Name:      fmt.Sprintf("preview_fps_qrcode-facing-%s", facing),
+		Unit:      "fps",
+		Direction: perf.BiggerIsBetter,
+	}, fpsQR)
 	return nil
 }
 
@@ -222,10 +261,20 @@ func MeasureTimeLapsePerformance(ctx context.Context, app *App, perfData *PerfDa
 
 // MeasureVideoRecordingPerformance measures the performance of video recording.
 func MeasureVideoRecordingPerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing, mode string) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	recordingStartTime, err := app.StartRecording(ctx, TimerOff)
 	if err != nil {
 		return errors.Wrap(err, "failed to start recording for performance measurement")
 	}
+
+	fpsObserver, err := app.FPSObserver(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get FPS observer")
+	}
+	defer fpsObserver.Stop(cleanupCtx)
 
 	usage, err := measureStablizedUsage(ctx)
 	if err != nil {
@@ -259,6 +308,17 @@ func MeasureVideoRecordingPerformance(ctx context.Context, app *App, perfData *P
 	} else {
 		testing.ContextLog(ctx, "Failed to measure recording power usage")
 	}
+
+	fps, err := fpsObserver.AverageFPS(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to measure average FPS")
+	}
+	testing.ContextLogf(ctx, "Measured recording preview FPS: %.1f", fps)
+	perfData.SetMetricValue(perf.Metric{
+		Name:      fmt.Sprintf("preview_fps_%s-facing-%s", mode, facing),
+		Unit:      "fps",
+		Direction: perf.BiggerIsBetter,
+	}, fps)
 	return nil
 }
 
