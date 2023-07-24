@@ -29,7 +29,7 @@ func init() {
 		Fixture:      fixture.FloopEnabled,
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		// Param.Name encoding:
 		// - r: request flexible loopback
 		// - p: playback
