@@ -11,12 +11,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/helpers"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cws"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -67,24 +66,6 @@ func init() {
 	})
 }
 
-func installRequiredExtensions(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) error {
-	// TODO(b/193595364): Figure out why these extensions aren't being installed by default in tast tests.
-	docsOfflineName := "Google Docs Offline"
-	docsOfflineURL := "https://chrome.google.com/webstore/detail/google-docs-offline/ghbmnnjooekpmoecnnnilnnbdlolhkhi"
-	docsOfflineExt := cws.App{Name: docsOfflineName, URL: docsOfflineURL}
-	if err := cws.InstallApp(ctx, br, tconn, docsOfflineExt); err != nil {
-		return errors.Wrap(err, "failed to install Google Docs Offline extension")
-	}
-
-	proxyExtName := "Application Launcher For Drive (by Google)"
-	proxyExtURL := "https://chrome.google.com/webstore/detail/application-launcher-for/lmjegmlicamnimmfhcmpkclmigmmcbeh"
-	proxyExt := cws.App{Name: proxyExtName, URL: proxyExtURL}
-	if err := cws.InstallApp(ctx, br, tconn, proxyExt); err != nil {
-		return errors.Wrap(err, "failed to install Application Launcher for Drive extension")
-	}
-	return nil
-}
-
 func DrivefsDssOffline(ctx context.Context, s *testing.State) {
 	APIClient := s.FixtValue().(*drivefs.FixtureData).APIClient
 	tconn := s.FixtValue().(*drivefs.FixtureData).TestAPIConn
@@ -121,7 +102,7 @@ func DrivefsDssOffline(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 	defer driveFsClient.SaveLogsOnError(cleanupCtx, s.HasError)
 
-	if err := installRequiredExtensions(ctx, br, tconn); err != nil {
+	if err := helpers.InstallRequiredExtensions(ctx, br, tconn); err != nil {
 		s.Fatal("Failed to install the required extensions: ", err)
 	}
 
