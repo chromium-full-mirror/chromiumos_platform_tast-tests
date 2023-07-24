@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 
 	"chromiumos/system_api/dlcservice_proto"
 )
@@ -26,7 +27,8 @@ func init() {
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      5 * time.Minute,
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "dlc"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("amd64-generic")),
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
