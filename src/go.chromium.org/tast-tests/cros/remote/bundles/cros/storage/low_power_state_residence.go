@@ -48,6 +48,14 @@ func LowPowerStateResidence(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get internal disk: ", err)
 	}
 
+	if disk.Type == util.EmmcOverNvmeDisk {
+		// BH799 doesn't have presently any way to detect power state
+		// transition. It seems to have been working and as long as
+		// we don't change its FW, it should be fine.
+		// TODO: figure how to check BH799 power state.
+		return
+	}
+
 	highCount := 0
 	lowCount := 0
 	errCount := 0
