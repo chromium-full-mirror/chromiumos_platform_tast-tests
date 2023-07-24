@@ -45,9 +45,10 @@ func init() {
 				Val:               browser.TypeAsh,
 			},
 			{
-				Name: "fake",
-				Pre:  pre.ChromeVideoWithFakeWebcam(),
-				Val:  browser.TypeAsh,
+				Name:      "fake",
+				Pre:       pre.ChromeVideoWithFakeWebcam(),
+				ExtraAttr: []string{"informational"},
+				Val:       browser.TypeAsh,
 			},
 			{
 				Name:              "lacros",
