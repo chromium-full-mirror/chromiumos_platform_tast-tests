@@ -51,14 +51,16 @@ func init() {
 				device:          "TBT",
 				verifyHeadphone: false,
 			},
-			Timeout: 15 * time.Minute,
+			Timeout:   15 * time.Minute,
+			ExtraAttr: []string{"group:intel-tbt3-bp-dock"},
 		}, {
 			Name: "usb4_dock",
 			Val: suspendResumeParams{
 				device:          "USB4",
 				verifyHeadphone: true,
 			},
-			Timeout: 15 * time.Minute,
+			Timeout:   15 * time.Minute,
+			ExtraAttr: []string{"group:intel-tbt4-dock"},
 		}},
 	})
 }

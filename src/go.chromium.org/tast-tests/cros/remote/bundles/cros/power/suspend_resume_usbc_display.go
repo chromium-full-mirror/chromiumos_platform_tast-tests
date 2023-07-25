@@ -32,6 +32,7 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
+		Attr:         []string{"group:intel-type-c-display"},
 		Vars:         []string{"servo"},
 		Timeout:      8 * time.Minute,
 	})

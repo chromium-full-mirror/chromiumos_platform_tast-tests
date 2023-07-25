@@ -26,7 +26,7 @@ func init() {
 		Desc:         "USB4 device enumeration check after hot plug-unplug",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
-		Attr:         []string{"group:typec"},
+		Attr:         []string{"group:typec", "group:intel-tbt4-dock"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"test_config.json"},
 		Vars:         []string{"typec.dutTbtPort", "typec.cSwitchPort", "typec.domainIP"},

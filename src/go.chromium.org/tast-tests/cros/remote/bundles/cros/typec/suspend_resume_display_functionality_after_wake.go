@@ -45,11 +45,13 @@ func init() {
 		HardwareDeps: hwdep.D(setup.ThunderboltSupportedDevices()),
 		Timeout:      8 * time.Minute,
 		Params: []testing.Param{{
-			Name: "typec_hdmi",
-			Val:  `.*DP branch device present.*yes\n.*Type.*HDMI`,
+			Name:      "typec_hdmi",
+			Val:       `.*DP branch device present.*yes\n.*Type.*HDMI`,
+			ExtraAttr: []string{"group:intel-tbt3-hdmi-dongle"},
 		}, {
-			Name: "typec_dp",
-			Val:  `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
+			Name:      "typec_dp",
+			Val:       `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
+			ExtraAttr: []string{"group:intel-tbt3-dp-dongle"},
 		}},
 	})
 }

@@ -34,7 +34,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:typec"},
+		Attr:         []string{"group:typec", "group:intel-tbt4-dock"},
 		Data:         []string{"test_config.json", "testcert.p12", "bear-320x240.h264.mp4", "video.html", "playback.js"},
 		Vars:         []string{"typec.dutTbtPort", "typec.cSwitchPort", "typec.domainIP", "typec.tbtDockPort", "ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      "chromeLoggedInThunderbolt",

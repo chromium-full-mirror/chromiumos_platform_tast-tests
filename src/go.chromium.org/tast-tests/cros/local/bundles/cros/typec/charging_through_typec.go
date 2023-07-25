@@ -40,11 +40,13 @@ func init() {
 			Val: chargeTypecTestParams{
 				connector: "USB4",
 			},
+			ExtraAttr: []string{"group:intel-tbt4-dock"},
 		}, {
 			Name: "tbt_dock",
 			Val: chargeTypecTestParams{
 				connector: "TBT",
 			},
+			ExtraAttr: []string{"group:intel-tbt3-dock"},
 		}},
 	})
 }

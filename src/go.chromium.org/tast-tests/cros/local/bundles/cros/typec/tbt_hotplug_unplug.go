@@ -31,8 +31,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "TBT device enumeration check after hot plug-unplug",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
-		// Disabled due to <1% pass rate over 30 days. See b/246820340
-		//Attr:         []string{"group:typec"},
+		Attr:         []string{"group:intel-tbt3-dock"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{testConfig, "testcert.p12"},
@@ -40,13 +39,9 @@ func init() {
 		HardwareDeps: hwdep.D(setup.ThunderboltSupportedDevices()),
 		Params: []testing.Param{{
 			Val: 1,
-			// Disabled due to <1% pass rate over 30 days. See b/241943435
-			// ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
-			Name: "stress",
-			Val:  500,
-			// Disabled due to <1% pass rate over 30 days. See b/246820340
-			//ExtraAttr: []string{"group:stress"},
+			Name:    "stress",
+			Val:     500,
 			Timeout: 3 * time.Hour,
 		}},
 	})

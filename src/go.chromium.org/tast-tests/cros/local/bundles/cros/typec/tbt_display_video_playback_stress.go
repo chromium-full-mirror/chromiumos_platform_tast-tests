@@ -51,9 +51,10 @@ func init() {
 			Val:     videoStressTestParams{minutes: 4},
 			Timeout: 15 * time.Minute,
 		}, {
-			Name:    "bronze",
-			Val:     videoStressTestParams{minutes: 2 * 60}, // 2 hours.
-			Timeout: 135 * time.Minute,
+			Name:      "bronze",
+			Val:       videoStressTestParams{minutes: 2 * 60}, // 2 hours.
+			Timeout:   135 * time.Minute,
+			ExtraAttr: []string{"group:intel-tbt4-display"},
 		}, {
 			Name:    "silver",
 			Val:     videoStressTestParams{minutes: 4 * 60}, // 4 hours.

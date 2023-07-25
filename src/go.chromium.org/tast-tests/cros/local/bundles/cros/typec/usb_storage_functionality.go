@@ -63,7 +63,8 @@ func init() {
 				usbType:    "3.0",
 			},
 			// Maximum timeout for data transfer in bidirectional and cleanup.
-			Timeout: 5 * time.Minute,
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-tbt3-dock-usb"},
 		}, {
 			Name: "usb2_pendrive_tbt_dock",
 			Val: usbFileInfo{
@@ -75,7 +76,8 @@ func init() {
 				usbType:    "2.0",
 			},
 			// Maximum timeout for data transfer in bidirectional and cleanup.
-			Timeout: 5 * time.Minute,
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-tbt3-dock-usb"},
 		}, {
 			Name: "usb3_pendrive_usb4gatkex",
 			Val: usbFileInfo{
@@ -87,7 +89,8 @@ func init() {
 				usbType:    "3.0",
 			},
 			// Maximum timeout for data transfer in bidirectional and cleanup.
-			Timeout: 5 * time.Minute,
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-tbt4-dock"},
 		}, {
 			Name: "typec_pendrive_tbt_dock",
 			Val: usbFileInfo{
@@ -99,7 +102,8 @@ func init() {
 				usbType:    "3.20",
 			},
 			// Maximum timeout for data transfer in bidirectional and cleanup.
-			Timeout: 10 * time.Minute,
+			Timeout:   10 * time.Minute,
+			ExtraAttr: []string{"group:intel-tbt3-dock"},
 		},
 		}})
 }

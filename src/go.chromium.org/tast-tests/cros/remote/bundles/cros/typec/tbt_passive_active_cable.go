@@ -51,18 +51,21 @@ func init() {
 				cableType: "Active",
 				connector: "TBT",
 			},
+			ExtraAttr: []string{"group:intel-tbt3-dock-cbr"},
 		}, {
 			Name: "tbt_passive",
 			Val: tbtCableTestParams{
 				cableType: "Passive",
 				connector: "TBT",
 			},
+			ExtraAttr: []string{"group:intel-tbt3-dock"},
 		}, {
 			Name: "usb4_active",
 			Val: tbtCableTestParams{
 				cableType: "Active",
 				connector: "USB4",
 			},
+			ExtraAttr: []string{"group:intel-tbt4-dock-cbr"},
 		}},
 	})
 }

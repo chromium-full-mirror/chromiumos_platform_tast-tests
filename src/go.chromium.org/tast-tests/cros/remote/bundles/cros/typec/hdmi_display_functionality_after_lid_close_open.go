@@ -56,7 +56,8 @@ func init() {
 				displayDetectionRe: `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
 				iterationValue:     1,
 			},
-			Timeout: 5 * time.Minute,
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-tbt3-dock-tbt-display"},
 		}, {
 			Name: "hdmi_lid_open_close",
 			Val: displayParams{
@@ -64,7 +65,8 @@ func init() {
 				displayDetectionRe: `.*DP branch device present.*yes\n.*Type.*HDMI`,
 				iterationValue:     5,
 			},
-			Timeout: 8 * time.Minute,
+			Timeout:   8 * time.Minute,
+			ExtraAttr: []string{"group:intel-tbt3-hdmi-dongle"},
 		}, {
 			Name: "dp_with_tbt_dongle",
 			Val: displayParams{
@@ -72,7 +74,8 @@ func init() {
 				displayDetectionRe: `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
 				iterationValue:     1,
 			},
-			Timeout: 5 * time.Minute,
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-tbt3-dp-dongle"},
 		}},
 	})
 }

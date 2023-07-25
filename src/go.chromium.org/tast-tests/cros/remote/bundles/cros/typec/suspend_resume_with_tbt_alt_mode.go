@@ -36,7 +36,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel.
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:typec"},
+		Attr:         []string{"group:typec", "group:intel-tbt3-dock"},
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
 		Data:         []string{"test_config.json", "testcert.p12"},
 		VarDeps:      []string{"servo", "typec.dutTbtPort", "typec.cSwitchPort", "typec.domainIP"},

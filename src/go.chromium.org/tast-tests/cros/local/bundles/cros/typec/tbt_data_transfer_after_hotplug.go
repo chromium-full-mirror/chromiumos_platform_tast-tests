@@ -35,7 +35,7 @@ func init() {
 		Desc:         "TBT data tarnsfer after hot plug",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
-		Attr:         []string{"group:typec"},
+		Attr:         []string{"group:typec", "group:intel-tbt3-dock-usb"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"test_config.json", "testcert.p12"},
 		Vars:         []string{"typec.dutTbtPort", "typec.cSwitchPort", "typec.domainIP", "ui.signinProfileTestExtensionManifestKey"},
