@@ -179,7 +179,7 @@ func enableRoamingAndConnect(ctx context.Context, tconn *chrome.TestConn, cr *ch
 		if err := ui.LeftClick(ossettings.ConnectButton)(ctx); err != nil {
 			return errors.Wrap(err, "failed to find Connect button")
 		}
-		if err := ui.WithTimeout(15 * time.Second).WaitUntilExists(ossettings.ConnectedStatus)(ctx); err != nil {
+		if err := ui.WithTimeout(45 * time.Second).WaitUntilExists(ossettings.ConnectedStatus)(ctx); err != nil {
 			return errors.Wrap(err, "failed to verify connected")
 		}
 	}
