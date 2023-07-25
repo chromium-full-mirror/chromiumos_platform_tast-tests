@@ -253,6 +253,13 @@ func MulticastForwarder(ctx context.Context, s *testing.State) {
 		ifname := ifname // https://golang.org/doc/faq#closures_and_goroutines
 		if expectPacketReceived {
 			g.Go(func() error {
+				tcpdumpCmd := []string{"/usr/local/sbin/tcpdump", "-Alni", ifname, "port", "5353", "or", "port", "1900", "-Q", "out", "--immediate-mode"}
+				if err := multicast.StreamCmd(ctx, tcpdumpCmd, expectOut); err != nil {
+					return errors.Wrap(err, "outbound test failed")
+				}
+				return nil
+			})
+			g.Go(func() error {
 				tcpdumpCmd := []string{"/usr/local/sbin/tcpdump", "-Alni", "arc_" + ifname, "port", "5353", "or", "port", "1900", "-Q", "out", "--immediate-mode"}
 				if err := multicast.StreamCmd(ctx, tcpdumpCmd, expectIn); err != nil {
 					return errors.Wrap(err, "inbound test failed")
@@ -260,6 +267,13 @@ func MulticastForwarder(ctx context.Context, s *testing.State) {
 				return nil
 			})
 		} else {
+			g.Go(func() error {
+				tcpdumpCmd := []string{"/usr/local/sbin/tcpdump", "-Alni", ifname, "port", "5353", "or", "port", "1900", "-Q", "out", "--immediate-mode"}
+				if err := multicast.StreamCmdExpectNotFound(ctx, tcpdumpCmd, expectOut); err != nil {
+					return errors.Wrap(err, "outbound test failed")
+				}
+				return nil
+			})
 			g.Go(func() error {
 				tcpdumpCmd := []string{"/usr/local/sbin/tcpdump", "-Alni", "arc_" + ifname, "port", "5353", "or", "port", "1900", "-Q", "out", "--immediate-mode"}
 				if err := multicast.StreamCmdExpectNotFound(ctx, tcpdumpCmd, expectIn); err != nil {
@@ -314,22 +328,17 @@ func MulticastForwarder(ctx context.Context, s *testing.State) {
 		s.Error("Failed to toggle IPv6: ", err)
 	}
 	// Send outbound multicast packets from ARC.
-	// Outbound IPv6 multicast should always be tested because there is a kernel provisioned address.
 	// Run IPv6 mDNS query.
-	// Send inbound multicast packets by sending multicast packet that loops back.
-	for _, ifname := range ifnames {
-		// Run mDNS query.
-		if err := multicast.SendMDNS(ctx, multicast.MdnsHostnameIn, ifname, multicast.MdnsPort, mdnsDst); err != nil {
-			s.Error("Failed starting inbound mDNS test: ", err)
-		}
-		// Run legacy mDNS query.
-		if err := multicast.SendMDNS(ctx, multicast.LegacyMDNSHostnameIn, ifname, multicast.LegacyMDNSPort, mdnsDst); err != nil {
-			s.Error("Failed starting inbound legacy mDNS test: ", err)
-		}
-		// Run SSDP query
-		if err := multicast.SendSSDP(ctx, multicast.SsdpUserAgentIn, ifname, multicast.SsdpPort, ssdpDst); err != nil {
-			s.Error("Failed starting inbound SSDP test: ", err)
-		}
+	if err := multicast.SetTextsAndClick(ctx, d, multicast.MdnsHostnameOutIPv6, multicast.MdnsButtonID, multicast.MdnsPort); err != nil {
+		s.Error("Failed starting outbound IPv6 mDNS test: ", err)
+	}
+	// Run IPv6 legacy mDNS query.
+	if err := multicast.SetTextsAndClick(ctx, d, multicast.LegacyMDNSHostnameOutIPv6, multicast.MdnsButtonID, multicast.LegacyMDNSPort); err != nil {
+		s.Error("Failed starting outbound IPv6 legacy mDNS test: ", err)
+	}
+	// Run IPv6 SSDP query
+	if err := multicast.SetTextsAndClick(ctx, d, multicast.SsdpUserAgentOutIPv6, multicast.SsdpButtonID, multicast.SsdpPort); err != nil {
+		s.Error("Failed starting outbound IPv6 SSDP test: ", err)
 	}
 
 	// Set up multicast destination addresses for IPv6 multicast.
