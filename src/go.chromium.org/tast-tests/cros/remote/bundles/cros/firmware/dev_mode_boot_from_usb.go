@@ -7,7 +7,6 @@ package firmware
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
 	"strconv"
@@ -107,11 +106,7 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		}
 		reconnectTimeout = h.Config.USBImageBootTimeout
 	} else {
-		// To-do: replace with DelayRebootToPing in the future, but monitor results from
-		// chromium: 4548855 first to find out how each machine varies in their boot-up
-		// time. 8 minutes appeared to help when the test was run on leased machines,
-		// though this duration might have also covered the time for remote connection.
-		reconnectTimeout = 8 * time.Minute
+		reconnectTimeout = h.Config.DelayRebootToPing
 	}
 
 	h.CloseRPCConnection(ctx)
@@ -242,7 +237,6 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 	}
 
 	waitConnectOpt := []firmware.WaitConnectOption{firmware.ResetEthernetDongle}
-	sshConnectionStart := time.Now()
 	// When there's no valid usb, pressing ctrl_d would help duts
 	// leave the firmware screen and continue booting to ChromeOS.
 	if !testOpt.validUSB {
@@ -269,10 +263,6 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		if err := h.WaitConnect(waitConnectCtx, waitConnectOpt...); err != nil {
 			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
-	}
-	waitConnectDuration := time.Since(sshConnectionStart).Seconds()
-	if err := recordWaitConnectDuration(ctx, h, s.OutDir(), waitConnectDuration); err != nil {
-		s.Log("Unexpected error while record ssh time duration: ", err)
 	}
 	// ctrlUFailMsgs contain possible strings found in the firmware log
 	// when pressing ctrl_u to boot from usb fails. When tested manually,
@@ -314,31 +304,4 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 	if testOpt.validUSB != bootedFromRemovableDevice {
 		s.Fatalf("Expected dut to boot from USB: %v, but got: %v", testOpt.validUSB, bootedFromRemovableDevice)
 	}
-}
-
-func recordWaitConnectDuration(ctx context.Context, h *firmware.Helper, outDir string, waitConnectDuration float64) error {
-	servoVersion, err := h.Servo.GetServoVersion(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get servo version")
-	}
-	data := struct {
-		Board       string  `json:"board"`
-		Model       string  `json:"model"`
-		Servo       string  `json:"servo"`
-		WaitConnect float64 `json:"waitconnect"`
-	}{
-		Board:       h.Board,
-		Model:       h.Model,
-		Servo:       servoVersion,
-		WaitConnect: waitConnectDuration,
-	}
-	content, err := json.MarshalIndent(data, "", " ")
-	if err != nil {
-		return errors.Wrap(err, "marshalling data about reconnect duration to JSON")
-	}
-	filename := filepath.Join(outDir, "waitConnect.json")
-	if err := ioutil.WriteFile(filename, content, 0666); err != nil {
-		return errors.Wrap(err, "failed to save waitConnect duration to file")
-	}
-	return nil
 }
