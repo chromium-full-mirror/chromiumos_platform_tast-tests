@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/advancedprotection"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/calendarintegration"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/defaultsearchprovider"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/domainreliability"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/nearbyshare"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/passwordleakdetection"
 	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
@@ -58,12 +59,12 @@ func init() {
 		VarDeps: []string{"policy.managedUserAccountPool",
 			"ui.bond_credentials"},
 		Params: []testing.Param{{
-			Fixture: fixture.FakeDMS,
+			Fixture: fixture.FakeDMSEnrolled,
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.PersistentLacros, // FakeDMS with lacros policy.
+			Fixture:           fixture.PersistentLacrosEnrolled, // FakeDMSEnrolled with lacros policy.
 			Val:               browser.TypeLacros,
 		}},
 		Data: concatDataFileLists(),
@@ -73,6 +74,7 @@ func init() {
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DefaultSearchProviderEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.DefaultSearchProviderEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.DomainReliabilityAllowed{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.NearbyShareAllowed{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.PasswordLeakDetectionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityUI),
@@ -89,7 +91,7 @@ func init() {
 			pci.SearchFlag(&policy.UserFeedbackAllowed{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.WallpaperGooglePhotosIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
 		},
-		Timeout: 5 * time.Minute,
+		Timeout: 6 * time.Minute,
 	})
 }
 
@@ -131,6 +133,13 @@ func optionalServices() []optionalService {
 			associatedAnnotations: []string{},
 			policies:              []policy.Policy{&policy.DefaultSearchProviderEnabled{Val: false}},
 			trigger:               defaultsearchprovider.TriggerDefaultSearchProvider,
+			dataFiles:             []string{},
+		},
+		{
+			name:                  "domain_reliability",
+			associatedAnnotations: []string{},
+			policies:              []policy.Policy{&policy.DomainReliabilityAllowed{Val: false}},
+			trigger:               domainreliability.TriggerDomainReliabilityAllowed,
 			dataFiles:             []string{},
 		},
 		{
@@ -274,6 +283,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		chrome.GAIALogin(gaiaCreds),                          // Some of the optional service tests need a real GAIA account.
 		chrome.ExtraArgs("--metrics-upload-interval=1"),      // Reduce upload interval for UKM.
 		chrome.ExtraArgs("--force-devtools-available"),       // Enable developer tools for extensions.
+		chrome.KeepEnrollment(),                              // Required when restarting Chrome for device policy tests.
 		chrome.LacrosExtraArgs("--force-devtools-available"), // Enable developer tools for extensions.
 	}
 	// Add args to start net export on startup.
@@ -324,6 +334,17 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 	if err := policyutil.Verify(ctx, tconn, policies); err != nil {
 		s.Fatal("Failed to verify updated policies: ", err)
+	}
+
+	// Restart Chrome to trigger domain reliability setup.
+	// Reset tconn for new Chrome.
+	cr, err = chrome.New(ctx, opts...)
+	if err != nil {
+		s.Fatal("Chrome login failed: ", err)
+	}
+	tconn, err = cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
 	// Setup the browser for lacros tests after the policy was set.

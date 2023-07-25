@@ -22,7 +22,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -64,7 +63,7 @@ func GetTestCases() []TestCase {
 // reporting when allowed by policy. It is triggered by preventing DNS resolution
 // for all hostnames including a test domain reliability URL and attempting to connect
 // to that URL.
-func TriggerDomainReliabilityAllowed(ctx context.Context, s *testing.State, cr *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, _ int) (err error) {
+func TriggerDomainReliabilityAllowed(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, _ int) (err error) {
 	// Reserve 10 seconds for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

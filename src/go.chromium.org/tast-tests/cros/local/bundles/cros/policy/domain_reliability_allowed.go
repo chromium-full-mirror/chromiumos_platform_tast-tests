@@ -37,7 +37,7 @@ func init() {
 		},
 		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:golden_tier"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -120,7 +120,7 @@ func DomainReliabilityAllowed(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			if err := domainreliability.TriggerDomainReliabilityAllowed(ctx, nil, cr, br, nil, tconn, index); err != nil {
+			if err := domainreliability.TriggerDomainReliabilityAllowed(ctx, cr, br, nil, tconn, index); err != nil {
 				s.Fatal("Failed to trigger and verify domain reliability: ", err)
 			}
 
