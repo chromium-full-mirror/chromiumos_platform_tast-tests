@@ -4,10 +4,11 @@ This document lists the metrics collected in power package through TestMetrics()
 
 | Name                        | Unit  | Note                                                                         |
 |---                          |---    |---                                                                           |
-| **CPU Idle State Metrics**  |
+| **CPU Metrics**  |
 | Name                        | Unit  | Note                                                                         |
-| cpu-${state name}           | %     | The percent of time all CPUs spend in a certain state.                       |
-| cpu[0-9]-${state name}      | %     | The percent of time a single CPU spends in a certain state.                  |
+| cpu_usage                   | %     | The percent of time all CPUs spent not in idle.                              |
+| cpu-${state name}           | %     | The percent of time all CPUs spend in a certain idle state.                  |
+| cpu[0-9]-${state name}      | %     | The percent of time a single CPU spends in a certain idle state.             |
 | **RAPL Power Metrics**      |
 | Name                        | Unit  | Note                                                                         |
 | package-0                   | W     | Energy consumption across the entire SoC.                                    |
