@@ -159,7 +159,8 @@ func login(ctx context.Context, s *testing.State, account *tape.OwnedTestAccount
 	// Start Chrome with the username and password.
 	cs := pb.NewChromeServiceClient(client.Conn)
 	if _, err := cs.New(ctx, &pb.NewRequest{
-		LoginMode: pb.LoginMode_LOGIN_MODE_GAIA_LOGIN,
+		EnableFeatures: []string{"CrOSSuspendToDisk", "CrOSSuspendToDiskAllowS4"},
+		LoginMode:      pb.LoginMode_LOGIN_MODE_GAIA_LOGIN,
 		Credentials: &pb.NewRequest_Credentials{
 			Username: account.Username,
 			Password: account.Password,
