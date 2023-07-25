@@ -6,25 +6,12 @@ package crostini
 
 import (
 	"context"
-	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/colorcmp"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/guestos"
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
 )
-
-type toolkitConfig struct {
-	data    string
-	command []string
-	appID   string
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -44,9 +31,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_gtk3_demo.py",
-					command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_gtk3_demo.py",
+					Command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
 				},
 			}, {
 				Name:              "gtk3_wayland_buster_unstable",
@@ -56,9 +43,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_gtk3_demo.py",
-					command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_gtk3_demo.py",
+					Command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
 				},
 			}, {
 				Name:              "gtk3_wayland_bullseye_stable",
@@ -67,9 +54,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_gtk3_demo.py",
-					command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_gtk3_demo.py",
+					Command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
 				},
 			}, {
 				Name:              "gtk3_wayland_bullseye_unstable",
@@ -79,9 +66,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_gtk3_demo.py",
-					command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_gtk3_demo.py",
+					Command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
 				},
 			}, {
 				Name:              "gtk3_x11_buster_stable",
@@ -90,9 +77,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_gtk3_demo.py",
-					command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_gtk3_demo.py",
+					Command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
 				},
 			}, {
 				Name:              "gtk3_x11_buster_unstable",
@@ -102,9 +89,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_gtk3_demo.py",
-					command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_gtk3_demo.py",
+					Command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
 				},
 			}, {
 				Name:              "gtk3_x11_bullseye_stable",
@@ -113,9 +100,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_gtk3_demo.py",
-					command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_gtk3_demo.py",
+					Command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
 				},
 			}, {
 				Name:              "gtk3_x11_bullseye_unstable",
@@ -125,9 +112,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_gtk3_demo.py",
-					command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_gtk3_demo.py",
+					Command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
 				},
 			}, {
 				Name:              "qt5_buster_stable",
@@ -136,9 +123,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_qt5_demo.py",
-					command: []string{"python3", "toolkit_qt5_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_qt5_demo.py",
+					Command: []string{"python3", "toolkit_qt5_demo.py"},
 				},
 			}, {
 				Name:              "qt5_buster_unstable",
@@ -148,9 +135,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_qt5_demo.py",
-					command: []string{"python3", "toolkit_qt5_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_qt5_demo.py",
+					Command: []string{"python3", "toolkit_qt5_demo.py"},
 				},
 			}, {
 				Name:              "qt5_bullseye_stable",
@@ -159,9 +146,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_qt5_demo.py",
-					command: []string{"python3", "toolkit_qt5_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_qt5_demo.py",
+					Command: []string{"python3", "toolkit_qt5_demo.py"},
 				},
 			}, {
 				Name:              "qt5_bullseye_unstable",
@@ -171,9 +158,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_qt5_demo.py",
-					command: []string{"python3", "toolkit_qt5_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_qt5_demo.py",
+					Command: []string{"python3", "toolkit_qt5_demo.py"},
 				},
 			}, {
 				Name:              "tkinter_buster_stable",
@@ -182,9 +169,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_tkinter_demo.py",
-					command: []string{"python3", "toolkit_tkinter_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_tkinter_demo.py",
+					Command: []string{"python3", "toolkit_tkinter_demo.py"},
 				},
 			}, {
 				Name:              "tkinter_buster_unstable",
@@ -194,9 +181,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_tkinter_demo.py",
-					command: []string{"python3", "toolkit_tkinter_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_tkinter_demo.py",
+					Command: []string{"python3", "toolkit_tkinter_demo.py"},
 				},
 			}, {
 				Name:              "tkinter_bullseye_stable",
@@ -205,9 +192,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_tkinter_demo.py",
-					command: []string{"python3", "toolkit_tkinter_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_tkinter_demo.py",
+					Command: []string{"python3", "toolkit_tkinter_demo.py"},
 				},
 			}, {
 				Name:              "tkinter_bullseye_unstable",
@@ -217,9 +204,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: toolkitConfig{
-					data:    "toolkit_tkinter_demo.py",
-					command: []string{"python3", "toolkit_tkinter_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_tkinter_demo.py",
+					Command: []string{"python3", "toolkit_tkinter_demo.py"},
 				},
 			},
 		},
@@ -227,44 +214,13 @@ func init() {
 }
 
 func Toolkit(ctx context.Context, s *testing.State) {
-	conf := s.Param().(toolkitConfig)
+	conf := s.Param().(guestos.ToolkitConfig)
 	pre := s.FixtValue().(crostini.FixtureData)
 	cr := pre.Chrome
 	tconn := pre.Tconn
 	cont := pre.Cont
 
-	// Use a shortened context for test operations to reserve time for cleanup.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
-	if err := cont.PushFile(ctx, s.DataPath(conf.data), conf.data); err != nil {
-		s.Fatalf("Failed to push %v to container: %v", conf.data, err)
-	}
-
-	s.Log("Running the demo")
-	cmd := cont.Command(ctx, conf.command...)
-	if err := cmd.Start(); err != nil {
-		s.Fatalf("Failed to start %q: %v", shutil.EscapeSlice(cmd.Args), err)
-	}
-
-	defer cmd.Wait(testexec.DumpLogOnError)
-	defer cmd.Kill()
-
-	defer func(ctx context.Context) {
-		ui := uiauto.New(tconn)
-		closeButton := nodewith.Name("Close").Onscreen()
-		appInShelf := nodewith.HasClass("ShelfAppButton::AppStatusIndicatorView").Ancestor(nodewith.HasClass("ShelfView"))
-		if err := uiauto.Combine("close app",
-			ui.RightClickUntil(appInShelf, ui.WithTimeout(time.Second).WaitUntilExists(closeButton)),
-			ui.LeftClickUntil(closeButton, ui.WithTimeout(time.Second).WaitUntilGone(closeButton)),
-		)(ctx); err != nil {
-			s.Log("Failed to close application: ", err)
-		}
-	}(cleanupCtx)
-
-	// The toolkit applications will render a magenta window.
-	if err := guestos.MatchScreenshotDominantColor(ctx, cr, colorcmp.RGB(255, 0, 255), filepath.Join(s.OutDir(), "screenshot.png")); err != nil {
-		s.Fatal("Failed during screenshot check: ", err)
+	if err := guestos.Toolkit(ctx, s.DataPath(conf.Data), s.OutDir(), &conf, cr, tconn, cont); err != nil {
+		s.Fatal("Toolkit test failed: ", err)
 	}
 }

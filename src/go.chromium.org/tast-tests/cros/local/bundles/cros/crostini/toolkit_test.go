@@ -21,33 +21,33 @@ func TestToolkitParams(t *testing.T) {
 		{
 			Name:      "gtk3_wayland",
 			ExtraData: []string{"toolkit_gtk3_demo.py"},
-			Val: `toolkitConfig{
-				data:    "toolkit_gtk3_demo.py",
-				command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
+			Val: `guestos.ToolkitConfig{
+				Data:    "toolkit_gtk3_demo.py",
+				Command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
 			}`,
 			UseFixture: true,
 		}, {
 			Name:      "gtk3_x11",
 			ExtraData: []string{"toolkit_gtk3_demo.py"},
-			Val: `toolkitConfig{
-				data:    "toolkit_gtk3_demo.py",
-				command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
+			Val: `guestos.ToolkitConfig{
+				Data:    "toolkit_gtk3_demo.py",
+				Command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
 			}`,
 			UseFixture: true,
 		}, {
 			Name:      "qt5",
 			ExtraData: []string{"toolkit_qt5_demo.py"},
-			Val: `toolkitConfig{
-				data:    "toolkit_qt5_demo.py",
-				command: []string{"python3", "toolkit_qt5_demo.py"},
+			Val: `guestos.ToolkitConfig{
+				Data:    "toolkit_qt5_demo.py",
+				Command: []string{"python3", "toolkit_qt5_demo.py"},
 			}`,
 			UseFixture: true,
 		}, {
 			Name:      "tkinter",
 			ExtraData: []string{"toolkit_tkinter_demo.py"},
-			Val: `toolkitConfig{
-				data:    "toolkit_tkinter_demo.py",
-				command: []string{"python3", "toolkit_tkinter_demo.py"},
+			Val: `guestos.ToolkitConfig{
+				Data:    "toolkit_tkinter_demo.py",
+				Command: []string{"python3", "toolkit_tkinter_demo.py"},
 			}`,
 			UseFixture: true,
 		}})
