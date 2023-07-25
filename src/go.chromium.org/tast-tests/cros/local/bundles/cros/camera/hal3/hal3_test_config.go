@@ -32,6 +32,8 @@ type TestConfig struct {
 	ConnectToCameraService bool
 	// Number of faces should be detected for face detection test.
 	ExpectedNumFaces string
+	// TestAUE is the flag to run the test after auto-update-expiration date,
+	TestAUE bool
 }
 
 // DeviceTestConfig returns test config for running HAL3Device test.
@@ -134,5 +136,6 @@ func AUETestConfig() TestConfig {
 		// It can be expanded to cover other functionalities.
 		// To cover multiple tests, separate the filters with semicolon.
 		GtestFilter: "Camera3PreviewTest/*",
+		TestAUE:     true,
 	}
 }

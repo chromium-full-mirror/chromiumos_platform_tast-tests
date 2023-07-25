@@ -29,6 +29,8 @@ enum HAL3CameraTest {
   STILL_CAPTURE_ZSL = 10;
   STREAM = 11;
   FACE_DETECTION = 12;
+  AUE = 13;
+  JEA_USB = 14;
   reserved 6;
 }
 

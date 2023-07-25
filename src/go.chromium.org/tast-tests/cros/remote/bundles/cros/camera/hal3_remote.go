@@ -19,7 +19,7 @@ func init() {
 		Func:         HAL3Remote,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies camera HAL3 interface function on remote DUT",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
 		Attr:         []string{"group:camerabox"},
 		SoftwareDeps: []string{"arc", "arc_camera3", caps.BuiltinCamera},
 		ServiceDeps:  []string{"tast.cros.camerabox.HAL3Service"},
@@ -28,6 +28,7 @@ func init() {
 		Vars:         []string{"chart"},
 		// For extra params, reference corresponding tests in:
 		// src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/camera/hal3_*.go
+		BugComponent: "b:167281",
 		Params: []testing.Param{
 			{
 				Name:      "frame_back",
@@ -100,8 +101,85 @@ func init() {
 				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_STILL_CAPTURE_ZSL, Facing: pb.Facing_FACING_FRONT},
 				Timeout:   6 * time.Minute,
 			},
+
+			{
+				Name:      "aue_back",
+				ExtraAttr: []string{"camerabox_facing_back"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_AUE, Facing: pb.Facing_FACING_BACK},
+				Timeout:   10 * time.Minute,
+			},
+			{
+				Name:      "aue_front",
+				ExtraAttr: []string{"camerabox_facing_front"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_AUE, Facing: pb.Facing_FACING_FRONT},
+				Timeout:   10 * time.Minute,
+			},
+
+			{
+				Name:      "device_back",
+				ExtraAttr: []string{"camerabox_facing_back"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_DEVICE, Facing: pb.Facing_FACING_BACK},
+				Timeout:   10 * time.Minute,
+			},
+			{
+				Name:      "device_front",
+				ExtraAttr: []string{"camerabox_facing_front"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_DEVICE, Facing: pb.Facing_FACING_FRONT},
+				Timeout:   10 * time.Minute,
+			},
+
+			{
+				Name:      "jda_back",
+				ExtraAttr: []string{"camerabox_facing_back"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_JDA, Facing: pb.Facing_FACING_BACK},
+				Timeout:   10 * time.Minute,
+			},
+			{
+				Name:      "jda_front",
+				ExtraAttr: []string{"camerabox_facing_front"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_JDA, Facing: pb.Facing_FACING_FRONT},
+				Timeout:   10 * time.Minute,
+			},
+
+			{
+				Name:      "jea_back",
+				ExtraAttr: []string{"camerabox_facing_back"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_JEA, Facing: pb.Facing_FACING_BACK},
+				Timeout:   10 * time.Minute,
+			},
+			{
+				Name:      "jea_front",
+				ExtraAttr: []string{"camerabox_facing_front"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_JEA, Facing: pb.Facing_FACING_FRONT},
+				Timeout:   10 * time.Minute,
+			},
+
+			{
+				Name:      "jea_usb_back",
+				ExtraAttr: []string{"camerabox_facing_back"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_JEA_USB, Facing: pb.Facing_FACING_BACK},
+				Timeout:   10 * time.Minute,
+			},
+			{
+				Name:      "jea_usb_front",
+				ExtraAttr: []string{"camerabox_facing_front"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_JEA_USB, Facing: pb.Facing_FACING_FRONT},
+				Timeout:   10 * time.Minute,
+			},
+
+			{
+				Name:      "module_back",
+				ExtraAttr: []string{"camerabox_facing_back"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_MODULE, Facing: pb.Facing_FACING_BACK},
+				Timeout:   10 * time.Minute,
+			},
+			{
+				Name:      "module_front",
+				ExtraAttr: []string{"camerabox_facing_front"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_MODULE, Facing: pb.Facing_FACING_FRONT},
+				Timeout:   10 * time.Minute,
+			},
 		},
-		BugComponent: "b:167281",
 	})
 }
 

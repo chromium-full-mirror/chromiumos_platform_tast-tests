@@ -52,4 +52,6 @@ var ServiceTestConfigGenerators = map[cameraboxpb.HAL3CameraTest]ServiceTestConf
 	cameraboxpb.HAL3CameraTest_STILL_CAPTURE_ZSL: defaultServiceCfgGenerator{StillCaptureZSLTestConfig},
 	cameraboxpb.HAL3CameraTest_STREAM:            defaultServiceCfgGenerator{StreamTestConfig},
 	cameraboxpb.HAL3CameraTest_FACE_DETECTION:    faceDetectionServiceCfgGenerator{},
+	cameraboxpb.HAL3CameraTest_AUE:               defaultServiceCfgGenerator{AUETestConfig},
+	cameraboxpb.HAL3CameraTest_JEA_USB:           defaultServiceCfgGenerator{JEAUSBTestConfig},
 }

@@ -403,6 +403,27 @@ func parsePerfLog(ctx context.Context, path string, p *perf.Values) error {
 // RunTest runs cros_camera_test with proper environment setup and arguments
 // according to the given config.
 func RunTest(ctx context.Context, cfg TestConfig) (retErr error) {
+
+	if cfg.TestAUE {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
+		if err := CheckLibfakedatetime(ctx); err != nil {
+			return errors.Wrap(err, "libfake_date_time tests failed")
+		}
+
+		cleanup, err := SetupAUE(ctx)
+		if err != nil {
+			return errors.Wrap(err, "Test failed on setupAUE")
+		}
+
+		defer func(ctx context.Context) {
+			if err := cleanup(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to clean up: ", err)
+			}
+		}(cleanupCtx)
+	}
+
 	if len(cfg.CameraHALs) > 0 && len(cfg.CameraFacing) > 0 {
 		return errors.New("cannot specify both CameraHALs and CameraFacing")
 	}
