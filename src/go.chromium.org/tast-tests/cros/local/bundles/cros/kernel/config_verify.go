@@ -198,6 +198,8 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		"OVERLAY_FS",
 		// EFIVAR_FS is needed in reven images.
 		"EFIVAR_FS",
+		// HIBERNATION is enabled for brya devices and will be enabled on more later.
+		"HIBERNATION",
 	}
 	missing := []string{
 		// Never going to optimize to this CPU.
@@ -214,8 +216,6 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		"DYNAMIC_DEBUG",
 		// Dangerous; allows replacement of running kernel.
 		"KEXEC",
-		// Dangerous; allows replacement of running kernel.
-		"HIBERNATION",
 		// We don't need to provide access to *all* symbols in /proc/kallsyms.
 		"KALLSYMS_ALL",
 		// This callback can be subverted to point to arbitrary programs.  We
