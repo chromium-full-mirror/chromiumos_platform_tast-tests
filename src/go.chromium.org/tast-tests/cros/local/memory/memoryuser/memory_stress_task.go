@@ -22,7 +22,9 @@ import (
 type MemoryStressUnit struct {
 	url      string
 	conn     *chrome.Conn
+	tconn    *browser.TestConn
 	cooldown time.Duration
+	tabID    int // ID of new tab, so we can query for liveness later
 }
 
 // Run creates a Chrome tab that allocates memory, then waits for the provided
@@ -33,6 +35,25 @@ func (st *MemoryStressUnit) Run(ctx context.Context, br *browser.Browser) error 
 		return errors.New("failed to open MemoryStressUnit page")
 	}
 	st.conn = conn
+
+	// Because chrome.tabs is not available on the conn, query active tabs
+	// assuming there's only one window so only one active tab, and the active tab is
+	// the newly created tab, in order to get its TabID.
+	tconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the connection to the test extension")
+	}
+	st.tconn = tconn
+
+	if err := tconn.Call(ctx, &st.tabID, `async () => {
+	  const tabs = await tast.promisify(chrome.tabs.query)({active: true});
+	  if (tabs.length !== 1) {
+	    throw new Error("unexpected number of active tabs: got " + tabs.length)
+	  }
+	  return tabs[0].id;
+	}`); err != nil {
+		return errors.Wrap(err, "cannot get tab id for the new tab")
+	}
 
 	// Wait for allocation to complete.
 	const expr = "document.hasOwnProperty('out') == true"
@@ -53,11 +74,7 @@ func (st *MemoryStressUnit) Close(ctx context.Context, br *browser.Browser) erro
 		return nil
 	}
 	st.conn.Close()
-	tconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get TestAPIConn to close %q", st.url)
-	}
-	if err := tconn.Call(ctx, nil, `async (url) => {
+	if err := st.tconn.Call(ctx, nil, `async (url) => {
 		const query = tast.promisify(chrome.tabs.query);
 		const remove = tast.promisify(chrome.tabs.remove);
 		const tabs = await query({ url });
@@ -69,11 +86,24 @@ func (st *MemoryStressUnit) Close(ctx context.Context, br *browser.Browser) erro
 	return nil
 }
 
-// StillAlive uses Chrome's debug tools to determine if a tab has been killed.
-// It has not been killed if it is still a target for debugging.
+// StillAlive checks if a tab is still present and undiscarded.
 func (st *MemoryStressUnit) StillAlive(ctx context.Context, br *browser.Browser) bool {
-	available, err := br.IsTargetAvailable(ctx, chrome.MatchTargetURL(st.url))
-	return err == nil && available
+	// Discarded tab may be reported by "No tab with id" error by JS, or
+	// "discarded" property.
+	var discarded bool
+	if err := st.tconn.Call(ctx, &discarded, `async (id) => {
+	  try {
+	    const tab = await tast.promisify(chrome.tabs.get)(id);
+	    return tab.discarded;
+	  } catch (e) {
+	    if (e.message.startsWith("No tab with id: "))
+	      return true;
+	    throw e;
+	  }
+	}`, st.tabID); err != nil {
+		return false
+	}
+	return !discarded
 }
 
 // FillChromeOSMemory launches memory stress tabs until one is killed, filling
