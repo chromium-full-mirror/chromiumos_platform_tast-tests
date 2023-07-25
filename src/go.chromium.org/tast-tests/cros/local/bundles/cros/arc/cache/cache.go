@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -354,11 +353,8 @@ func CopyDexOptCache(ctx context.Context, outputDir string) error {
 		return errors.Wrap(err, "failed to get android-data path")
 	}
 
-	testing.ContextLog(ctx, "Waiting for CPU idle")
-	idleConfig := cpu.DefaultIdleConfig()
-	idleConfig.Timeout = 5 * time.Minute
-	if err := cpu.WaitUntilIdleWithConfig(ctx, idleConfig); err != nil {
-		return errors.Wrap(err, "failed to wait CPU is idle")
+	if err := arc.WaitForDexOptOnBoot(ctx, 5*time.Minute); err != nil {
+		return errors.Wrap(err, "failed to wait for dexopt on boot to finish")
 	}
 
 	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, chrome.DefaultUser)

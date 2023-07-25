@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -36,8 +35,12 @@ func init() {
 }
 
 func Preopt(ctx context.Context, s *testing.State) {
-	if err := performBootAndWaitForIdle(ctx, s.OutDir()); err != nil {
+	if err := performBoot(ctx, s.OutDir()); err != nil {
 		s.Fatal("Failed to boot ARC: ", err)
+	}
+
+	if err := arc.WaitForDexOptOnBoot(ctx, 2*time.Minute); err != nil {
+		s.Fatal("Failed to wait for dexopt on boot to finish: ", err)
 	}
 
 	if err := arc.CheckNoDex2Oat(s.OutDir()); err != nil {
@@ -45,9 +48,10 @@ func Preopt(ctx context.Context, s *testing.State) {
 	}
 }
 
-func performBootAndWaitForIdle(ctx context.Context, outDir string) error {
+func performBoot(ctx context.Context, outDir string) error {
+	args := append(arc.DisableSyncFlags(), "--arc-force-post-boot-dex-opt")
 	cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...))
+		chrome.ExtraArgs(args...))
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to Chrome browser process")
 	}
@@ -58,13 +62,6 @@ func performBootAndWaitForIdle(ctx context.Context, outDir string) error {
 		return errors.Wrap(err, "failed to connect to ARC")
 	}
 	defer a.Close(ctx)
-
-	// Wait for CPU is idle once dex2oat is heavy operation and idle CPU would
-	// indicate that heavy boot operations are done.
-	testing.ContextLog(ctx, "Waiting for CPU idle")
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait CPU is idle")
-	}
 
 	return nil
 }

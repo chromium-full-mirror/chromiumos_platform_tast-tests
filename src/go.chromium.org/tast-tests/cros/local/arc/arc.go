@@ -21,6 +21,7 @@ import (
 	localadb "go.chromium.org/tast-tests/cros/local/android/adb"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
+	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/procutil"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 
@@ -1028,6 +1029,33 @@ func RestoreArcvmDevConf(ctx context.Context) error {
 			return err
 		}
 	}
+	return nil
+}
+
+// WaitForDexOptOnBoot waits for the dexopt on boot to finish.
+func WaitForDexOptOnBoot(ctx context.Context, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	sdkVersion, err := SDKVersion()
+	if err != nil {
+		return errors.Wrap(err, "failed to get SDK version")
+	}
+	if sdkVersion >= SDKR {
+		testing.ContextLog(ctx, "Waiting for dexopt on boot to finish")
+		const prop = "dev.arc.boot_dexopt_complete"
+		if err := waitProp(ctx, prop, "1", reportTiming); err != nil {
+			return errors.Wrapf(err, "property %s not set", prop)
+		}
+	} else {
+		// TODO(b/293899461): remove the dependency on CPU idle wait once the dex opt on boot complete
+		// property exists in P.
+		testing.ContextLog(ctx, "Waiting for CPU idle")
+		if err := cpu.WaitUntilIdle(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait CPU is idle")
+		}
+	}
+
 	return nil
 }
 
