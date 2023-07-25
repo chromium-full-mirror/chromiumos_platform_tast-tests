@@ -225,6 +225,9 @@ func IsAnyAppInCatalog(ctx context.Context, d *ui.Device) bool {
 		{ui.DescriptionStartsWith("Image of app or game"), ui.ClassName("android.view.View")},
 		{ui.ResourceID("com.android.vending:id/mini_blurb"), ui.ClassName("android.widget.FrameLayout")},
 		{ui.ResourceID("com.android.vending:id/play_card"), ui.ClassName("android.view.ViewGroup")},
+		{ui.DescriptionStartsWith("Install"), ui.ClassName("android.view.View")}, // 36.7.21-21
+		{ui.Text("Games"), ui.ClassName("android.widget.TextView")},              // 36.7.21-21
+		{ui.Text("Apps"), ui.ClassName("android.widget.TextView")},               // 36.7.21-21
 	}
 
 	for _, selector := range selectors {
