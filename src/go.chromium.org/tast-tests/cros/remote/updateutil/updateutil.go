@@ -441,7 +441,7 @@ func VerifyUpdateInvalidationPostReboot(ctx context.Context, dut *dut.DUT, rpcHi
 	}
 	defer cl.Close(ctx)
 
-	const installAttributesPath = "/home/.shadow/install_attributes.pb"
+	const installAttributesPath = "/run/lockbox/install_attributes.pb"
 	fs := baserpc.NewFileSystemClient(cl.Conn)
 	if _, err := fs.Stat(ctx, &baserpc.StatRequest{Name: installAttributesPath}); err != nil {
 		return errors.Wrap(err, "failed to read install attribute file")
