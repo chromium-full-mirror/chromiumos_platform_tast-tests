@@ -158,6 +158,6 @@ func settingsWindowMatch(ctx context.Context, bt browser.Type, titlePrefix strin
 func osURLHandlerWindowMatch(ctx context.Context, titlePrefix string) func(w *ash.Window) bool {
 	titlePrefix = "ChromeOS-URLs - " + titlePrefix
 	return func(w *ash.Window) bool {
-		return w.WindowType == ash.WindowTypeExtension && strings.HasPrefix(w.Title, titlePrefix)
+		return w.WindowType == ash.WindowTypeSystem && strings.HasPrefix(w.Title, titlePrefix)
 	}
 }
