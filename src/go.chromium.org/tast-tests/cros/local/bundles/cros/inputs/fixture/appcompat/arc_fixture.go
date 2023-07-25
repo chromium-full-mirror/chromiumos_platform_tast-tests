@@ -6,12 +6,14 @@ package appcompat
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/inputactions"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
@@ -29,6 +31,7 @@ type arcFixtureImpl struct {
 	kb         *input.KeyboardEventWriter
 	uc         *useractions.UserContext
 	uidetector *uidetection.Context
+	recorder   *uiauto.ScreenRecorder
 }
 
 // ArcFixtData is the data returned by SetUp and passed to tests.
@@ -50,7 +53,7 @@ func init() {
 		},
 		Impl:            &arcFixtureImpl{},
 		SetUpTimeout:    2 * time.Minute,
-		PreTestTimeout:  2 * time.Minute,
+		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 2 * time.Minute,
 		Vars:            []string{"ui.gaiaPoolDefault"},
 	})
@@ -101,6 +104,8 @@ func (f *arcFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) 
 	if err := optin.LaunchAndWaitForPlayStore(ctx, f.tconn, f.cr, time.Minute); err != nil {
 		s.Fatal("Failed to launch Play Store: ", err)
 	}
+
+	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
 }
 
 func (f *arcFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
@@ -108,6 +113,10 @@ func (f *arcFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState)
 		s.Fatal("Failed to close Play Store: ", err)
 	}
 
+	// Do nothing if the recorder is not initialized.
+	if f.recorder != nil {
+		f.recorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+	}
 }
 
 func (f *arcFixtureImpl) Reset(ctx context.Context) error {
