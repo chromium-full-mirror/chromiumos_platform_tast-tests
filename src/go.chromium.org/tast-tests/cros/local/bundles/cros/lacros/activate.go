@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Tests browser activation via shelf controller and via accelerator shortcuts",
 		Contacts:     []string{"lacros-team@google.com", "neis@google.com"},
 		BugComponent: "crbug:OS>LaCrOS",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Params: []testing.Param{{
 			Name:      "no_keep_alive",

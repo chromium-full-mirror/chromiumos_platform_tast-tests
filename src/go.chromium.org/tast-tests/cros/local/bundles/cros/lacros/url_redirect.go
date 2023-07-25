@@ -61,7 +61,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "lacros",
 		Timeout:      15 * time.Minute,
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 	})
 }
 
