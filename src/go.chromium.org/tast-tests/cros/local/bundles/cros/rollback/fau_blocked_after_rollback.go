@@ -7,8 +7,8 @@ package rollback
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -19,6 +19,11 @@ import (
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+)
+
+const (
+	preservedFolderName       = "/mnt/stateful_partition/unencrypted/preserve/update_engine/prefs"
+	prefsFileRollbackHappened = "rollback-happened"
 )
 
 func init() {
@@ -49,13 +54,24 @@ func triggerUpdate(ctx context.Context, url string) error {
 	return nil
 }
 
+// createRollbackHappenedFile sets the rollback-happened flag. This should block any forced update.
+func createRollbackHappenedFile() error {
+	if err := os.MkdirAll(preservedFolderName, 0777); err != nil && !os.IsExist(err) {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(preservedFolderName, prefsFileRollbackHappened), []byte("true"), 0644); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // FauBlockedAfterRollback tests that no FAU happens if rollback-happened flag is set.
 func FauBlockedAfterRollback(ctx context.Context, s *testing.State) {
 	const (
 		localUpdateEngineLog = "/var/log/update_engine.log"
 		// This log is displayed if rollback-happened is set or if it's a non-critical update in the response.
 		blockedByRollbackHappenedLogEntry = "Ignoring a non-critical Omaha update before OOBE completion."
-		prefsFileRollbackHappened         = "/mnt/stateful_partition/unencrypted/preserve/update_engine/prefs/rollback-happened"
 	)
 
 	updateServer, err := nebraska.New(ctx, nebraska.ConfigureUpdateEngine())
@@ -68,8 +84,7 @@ func FauBlockedAfterRollback(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure Nebraska with faked update metadata: ", err)
 	}
 
-	// Set the rollback-happened flag. This should block any future update.
-	if err := ioutil.WriteFile(prefsFileRollbackHappened, []byte("true"), 0644); err != nil {
+	if err := createRollbackHappenedFile(); err != nil {
 		s.Fatal("Failed to set the rollback-happened pref file: ", err)
 	}
 
@@ -87,7 +102,7 @@ func FauBlockedAfterRollback(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to find update_engine.log on device")
 		}
 
-		realLog, err := ioutil.ReadFile(linkToLog)
+		realLog, err := os.ReadFile(linkToLog)
 		if err != nil {
 			return errors.Wrap(err, "failed to find on device")
 		}
