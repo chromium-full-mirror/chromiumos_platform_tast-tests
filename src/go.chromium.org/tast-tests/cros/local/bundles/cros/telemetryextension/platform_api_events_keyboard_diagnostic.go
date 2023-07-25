@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -32,13 +33,30 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
-				Name:    "ash",
-				Fixture: fixture.TelemetryExtensionSkipOEMNameCheck,
+				Name:              "ash_keyboard",
+				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
+				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard()),
+				Val:               true, // has keyboard
 			},
 			{
-				Name:              "lacros",
+				Name:              "ash_no_keyboard",
+				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
+				ExtraHardwareDeps: hwdep.D(hwdep.NoInternalKeyboard()),
+				Val:               false, // has keyboard
+			},
+			{
+				Name:              "lacros_keyboard",
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheckLacros,
+				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard()),
+				Val:               true, // has keyboard
+			},
+			{
+				Name:              "lacros_no_keyboard",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheckLacros,
+				ExtraHardwareDeps: hwdep.D(hwdep.NoInternalKeyboard()),
+				Val:               false, // has keyboard
 			},
 		},
 	})
@@ -61,10 +79,17 @@ func PlatformAPIEventsKeyboardDiagnostic(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to load diagnostics app: ", err)
 	}
 
-	// Check that the keyboard page is shown.
-	keyboardHeading := nodewith.NameContaining("Keyboard").Role(role.Heading)
-	if err := uiauto.New(v.TConn).WaitUntilExists(keyboardHeading)(ctx); err != nil {
-		s.Fatal("Failed to open on keyboard tab: ", err)
+	hasKeyboard, ok := s.Param().(bool)
+	if !ok {
+		s.Fatal("Unable to convert param")
+	}
+
+	if hasKeyboard {
+		// Check that the keyboard page is shown.
+		keyboardHeading := nodewith.NameContaining("Keyboard").Role(role.Heading)
+		if err := uiauto.New(v.TConn).WaitUntilExists(keyboardHeading)(ctx); err != nil {
+			s.Fatal("Failed to open on keyboard tab: ", err)
+		}
 	}
 
 	// Stop observing to reset state.
