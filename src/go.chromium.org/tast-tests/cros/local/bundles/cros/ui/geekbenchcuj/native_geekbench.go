@@ -53,6 +53,11 @@ func pushNativeGBFiles(ctx context.Context, cont *vm.Container, gbFiles geekbenc
 	if err := fsutil.CopyFile(gbFiles.plarSrc, gbFiles.plarDest); err != nil {
 		return errors.Wrap(err, "failed to push geekbench plar file")
 	}
+	if gbFiles.workloadSrc != "" {
+		if err := fsutil.CopyFile(gbFiles.workloadSrc, gbFiles.workloadDest); err != nil {
+			return errors.Wrap(err, "failed to push geekbench workload file")
+		}
+	}
 	if err := os.Chmod(gbFiles.binaryDest, 0755); err != nil {
 		return errors.Wrap(err, "failed to change execute permission")
 	}

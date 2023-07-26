@@ -52,6 +52,11 @@ func pushCrostiniGBFiles(ctx context.Context, cont *vm.Container, gbFiles geekbe
 	if err := cont.PushFile(ctx, gbFiles.plarSrc, gbFiles.plarDest); err != nil {
 		return errors.Wrap(err, "failed to push geekbench plar file")
 	}
+	if gbFiles.workloadSrc != "" {
+		if err := cont.PushFile(ctx, gbFiles.workloadSrc, gbFiles.workloadDest); err != nil {
+			return errors.Wrap(err, "failed to push geekbench workload file")
+		}
+	}
 	if err := cont.Command(ctx, "chmod", "0755", gbFiles.binaryDest).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to change execute permission")
 	}

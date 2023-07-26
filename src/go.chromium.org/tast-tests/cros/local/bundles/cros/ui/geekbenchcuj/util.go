@@ -41,9 +41,9 @@ type geekbenchFiles struct {
 	plarSrc    string
 	plarDest   string
 	// For Geekbench 6 only.
-	workFlowSrc string
+	workloadSrc string
 	// For Gekebench 6 only.
-	workFlowDest string
+	workloadDest string
 }
 
 // workload is either a single-core or multi-core subtest.

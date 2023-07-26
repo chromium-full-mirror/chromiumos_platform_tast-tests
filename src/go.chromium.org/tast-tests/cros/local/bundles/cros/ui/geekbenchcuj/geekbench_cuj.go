@@ -70,8 +70,9 @@ func Run(ctx context.Context, s *testing.State) {
 	}
 
 	const (
-		resultFileName = "geekbench_result.txt"
-		geekbenchPlar  = "geekbench.plar"
+		resultFileName    = "geekbench_result.txt"
+		geekbenchPlar     = "geekbench.plar"
+		geekbenchWorkload = "geekbench-workload.plar"
 	)
 	geekbenchPlarSource := fmt.Sprintf("geekbench%d.plar", gbInfo.version)
 	geekbenchLicense := fmt.Sprintf("Geekbench %d.preferences", gbInfo.version)
@@ -101,6 +102,12 @@ func Run(ctx context.Context, s *testing.State) {
 		binaryDest: execFilePath,
 		plarSrc:    s.DataPath(geekbenchPlarSource),
 		plarDest:   filepath.Join(gbDir.path, geekbenchPlar),
+	}
+
+	// Additional file for Geekbench6.
+	if gbInfo.version == 6 {
+		gbFiles.workloadSrc = s.DataPath("geekbench6-workload.plar")
+		gbFiles.workloadDest = filepath.Join(gbDir.path, geekbenchWorkload)
 	}
 
 	err = gbInfo.pushGBFiles(ctx, cont, gbFiles)
