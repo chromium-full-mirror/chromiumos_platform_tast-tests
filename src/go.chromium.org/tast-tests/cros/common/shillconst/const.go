@@ -438,13 +438,15 @@ const (
 // Tethering-related constants, as defined in dbus-constants.h
 const (
 	// Manager TetheringConfig dictionary key names.
-	TetheringConfAutoDisable  = "auto_disable"
-	TetheringConfBand         = "band"
-	TetheringConfMAR          = "randomize_mac_address"
-	TetheringConfPassphrase   = "passphrase"
-	TetheringConfSecurity     = "security"
-	TetheringConfSSID         = "ssid"
-	TetheringConfUpstreamTech = "upstream_technology"
+	TetheringConfAutoDisable               = "auto_disable"
+	TetheringConfBand                      = "band"
+	TetheringConfMAR                       = "randomize_mac_address"
+	TetheringConfPassphrase                = "passphrase"
+	TetheringConfSecurity                  = "security"
+	TetheringConfSSID                      = "ssid"
+	TetheringConfUpstreamTech              = "upstream_technology"
+	TetheringConfDownstreamDeviceForTest   = "downstream_device_for_test"
+	TetheringConfDownstreamPhyIndexForTest = "downstream_phy_index_for_test"
 
 	// Manager TetheringCapabilities dictionary key names.
 	TetheringCapDownstream = "downstream_technologies"

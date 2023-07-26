@@ -26,6 +26,7 @@ const (
 	dbusPath                            = "/org/chromium/PatchPanel"
 	connectNamespaceMethod              = "org.chromium.PatchPanel.ConnectNamespace"
 	getDevicesMethod                    = "org.chromium.PatchPanel.GetDevices"
+	getDownstreamNetworkInfoMethod      = "org.chromium.PatchPanel.GetDownstreamNetworkInfo"
 	getTrafficCountersMethod            = "org.chromium.PatchPanel.GetTrafficCounters"
 	terminaVMStartupMethod              = "org.chromium.PatchPanel.TerminaVmStartup"
 	terminaVMShutdownMethod             = "org.chromium.PatchPanel.TerminaVmShutdown"
@@ -157,6 +158,28 @@ func (c *Client) GetDevices(ctx context.Context) (*pp.GetDevicesResponse, error)
 	response := &pp.GetDevicesResponse{}
 	if err = proto.Unmarshal(result, response); err != nil {
 		return nil, errors.Wrapf(err, "failed unmarshaling %s response", getDevicesMethod)
+	}
+	return response, nil
+}
+
+// GetDownstreamNetworkInfo gets all patchpanel managed devices information.
+func (c *Client) GetDownstreamNetworkInfo(ctx context.Context, downstreamIfname string) (*pp.GetDownstreamNetworkInfoResponse, error) {
+	request := &pp.GetDownstreamNetworkInfoRequest{
+		DownstreamIfname: downstreamIfname,
+	}
+	buf, err := proto.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed marshaling %s request", getDownstreamNetworkInfoMethod)
+	}
+
+	var result []uint8
+	if err = c.obj.CallWithContext(ctx, getDownstreamNetworkInfoMethod, 0, buf).Store(&result); err != nil {
+		return nil, errors.Wrapf(err, "failed reading %s response", getDownstreamNetworkInfoMethod)
+	}
+
+	response := &pp.GetDownstreamNetworkInfoResponse{}
+	if err = proto.Unmarshal(result, response); err != nil {
+		return nil, errors.Wrapf(err, "failed unmarshaling %s response", getDownstreamNetworkInfoMethod)
 	}
 	return response, nil
 }

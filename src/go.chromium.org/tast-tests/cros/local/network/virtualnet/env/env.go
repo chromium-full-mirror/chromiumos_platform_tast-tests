@@ -502,12 +502,18 @@ func (e *Env) ChrootPath(path string) string {
 // chroot. Combined output will be wrapped in the error on failure. This is
 // helpful when running command like `ip` and `sysctl`.
 func (e *Env) RunWithoutChroot(ctx context.Context, args ...string) error {
-	netnsArgs := []string{"netns", "exec", e.NetNSName}
-	args = append(netnsArgs, args...)
-	if o, err := testexec.CommandContext(ctx, "ip", args...).CombinedOutput(); err != nil {
+	if o, err := e.CreateCommandWithoutChroot(ctx, args...).CombinedOutput(); err != nil {
 		return errors.Wrapf(err, "failed to run cmd in netns %s with output %s", e.NetNSName, string(o))
 	}
 	return nil
+}
+
+// CreateCommandWithoutChroot creates a Cmd object which has the netns and chroot params
+// configured. The caller should control the lifetime of this object.
+func (e *Env) CreateCommandWithoutChroot(ctx context.Context, args ...string) *testexec.Cmd {
+	ipArgs := []string{"netns", "exec", e.NetNSName}
+	ipArgs = append(ipArgs, args...)
+	return testexec.CommandContext(ctx, "ip", ipArgs...)
 }
 
 // CreateCommand creates a Cmd object which has the netns and chroot params
