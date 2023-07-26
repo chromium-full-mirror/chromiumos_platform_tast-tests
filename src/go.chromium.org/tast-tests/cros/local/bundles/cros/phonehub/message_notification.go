@@ -88,11 +88,10 @@ func MessageNotification(ctx context.Context, s *testing.State) {
 		s.Fatalf("Notification text does not match: wanted %v, got %v", text, n.Message)
 	}
 
-	// Open Quick Settings to make sure the notification is visible.
-	if err := quicksettings.Show(ctx, tconn); err != nil {
-		s.Fatal("Failed to open Quick Settings to check notifications: ", err)
+	// Open Notification Center to make sure the notification is visible.
+	if err := quicksettings.ShowNotificationCenter(ctx, tconn); err != nil {
+		s.Fatal("Failed to open Notification Center to check notifications: ", err)
 	}
-	defer quicksettings.Hide(cleanupCtx, tconn)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	// Reply using the notification's inline reply field.
@@ -100,13 +99,17 @@ func MessageNotification(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to set up virtual keyboard: ", err)
 	}
+	defer kb.Close(ctx)
 	replyText := "Goodbye!"
 	ui := uiauto.New(tconn)
 	if err := ui.LeftClick(nodewith.Role(role.Button).NameRegex(regexp.MustCompile("(?i)reply")))(ctx); err != nil {
 		s.Fatal("Failed to click notification's reply button: ", err)
 	}
-	if err := kb.Type(ctx, replyText+"\n"); err != nil {
+	if err := kb.Type(ctx, replyText); err != nil {
 		s.Fatal("Failed to type a reply in the notification: ", err)
+	}
+	if err := kb.AccelAction("Enter")(ctx); err != nil {
+		s.Fatal("Failed to send reply by hitting Enter: ", err)
 	}
 
 	// Wait for the Android device to receive the reply and verify the text matches.

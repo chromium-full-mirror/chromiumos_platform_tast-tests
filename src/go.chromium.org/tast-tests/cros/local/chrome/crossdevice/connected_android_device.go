@@ -284,7 +284,7 @@ func (c *AndroidDevice) TurnOnRecentPhotosFeature(ctx context.Context) error {
 	}
 	defer uiDevice.Close(ctx)
 
-	turnOnButton := uiDevice.Object(ui.ResourceIDMatches(".+?(/turn_on_feature_button)$"))
+	turnOnButton := uiDevice.Object(ui.TextMatches("Allow"), ui.Clickable(true))
 	if err := turnOnButton.WaitForExists(ctx, 30*time.Second); err != nil {
 		return errors.Wrap(err, "setup dialog did not appear")
 	}
@@ -439,7 +439,7 @@ func (c *AndroidDevice) ClearChromeAppDataAndLaunchChrome(ctx context.Context) e
 		if err = c.LaunchChrome(ctx); err != nil {
 			return err
 		}
-		// Wait a second in case the process gets killed shortly after launch.
+		// GoBigSleepLint: Wait a second in case the process gets killed shortly after launch.
 		testing.Sleep(ctx, 1*time.Second)
 		if err = c.WaitForChromeRunning(ctx, 2*time.Second); err == nil {
 			return nil

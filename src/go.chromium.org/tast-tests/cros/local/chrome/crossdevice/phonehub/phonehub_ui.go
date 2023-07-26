@@ -215,7 +215,7 @@ func OptInRecentPhotos(ctx context.Context, tconn *chrome.TestConn, cr *chrome.C
 		return errors.Wrap(err, "failed to click on the Recent Photos opt-in button")
 	}
 
-	setupDialogConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(setupDialogURL))
+	setupDialogConn, err := crossdevicesettings.OSSettingsWithShadowPiercer(ctx, tconn, cr, setupDialogURL, false)
 	if err != nil {
 		return errors.Wrap(err, "permissions set up dialog did not launch")
 	}
