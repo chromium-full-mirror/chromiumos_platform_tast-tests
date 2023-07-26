@@ -54,7 +54,7 @@ var audioOptionsFinder = uidetection.TextBlock(strings.Split("Audio Options", " 
 // expandAudioOption expands audio option menu.
 func (zm *Zoom) expandAudioOption(ctx context.Context) error {
 	ui := zm.ui
-	ud := uidetection.NewDefault(zm.tconn)
+	ud := uidetection.NewDefault(zm.tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
 	moreAudioControlsButton := nodewith.Name("More audio controls").Role(role.Button)
 
 	return uiauto.NamedAction("expand audio option",
@@ -66,7 +66,7 @@ func (zm *Zoom) expandAudioOption(ctx context.Context) error {
 
 // leaveComputerAudio leaves computer audio from audio option menu.
 func (zm *Zoom) leaveComputerAudio(ctx context.Context) error {
-	ud := uidetection.NewDefault(zm.tconn)
+	ud := uidetection.NewDefault(zm.tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
 	leaveComputerAudioFinder := uidetection.TextBlock(strings.Split("Leave Computer Audio", " "))
 	return uiauto.NamedCombine("leave computer audio",
 		zm.expandAudioOption,
