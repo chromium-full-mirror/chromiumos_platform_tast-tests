@@ -53,7 +53,6 @@ func SWA(ctx context.Context, s *testing.State) {
 			chrome.NoLogin(),
 			chrome.ARCSupported(),
 			chrome.KeepEnrollment(),
-			chrome.EnableFeatures("DemoModeSWA"),
 			// --force-devtools-available forces devtools on regardless of policy (devtools is
 			// disabled in Demo Mode policy) to support connecting to the test API extension.
 			//

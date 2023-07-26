@@ -20,9 +20,6 @@ import (
 
 // BreakSWAAttractLoop waits until the Demo Session has started, and then exits
 // out of the auto-launched Attract Loop screensaver by moving the mouse.
-//
-// This method assumes the System Web App version of the demo apps is running
-// (i.e the "DemoModeSWA" feature is enabled).
 func BreakSWAAttractLoop(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn).WithTimeout(50 * time.Second)
 

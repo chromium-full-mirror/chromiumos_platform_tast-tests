@@ -53,7 +53,7 @@ func CloudGaming(ctx context.Context, s *testing.State) {
 		chrome.NoLogin(),
 		chrome.ARCSupported(),
 		chrome.KeepEnrollment(),
-		chrome.EnableFeatures("DemoModeSWA", "CloudGamingDevice"),
+		chrome.EnableFeatures("CloudGamingDevice"),
 		// --force-devtools-available forces devtools on regardless of policy (devtools is
 		// disabled in Demo Mode policy) to support connecting to the test API extension.
 		//

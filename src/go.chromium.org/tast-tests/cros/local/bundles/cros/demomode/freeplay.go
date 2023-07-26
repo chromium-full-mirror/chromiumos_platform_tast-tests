@@ -47,9 +47,6 @@ func Freeplay(ctx context.Context, s *testing.State) {
 		// --force-devtools-available forces devtools on regardless of policy (devtools is
 		// disabled in Demo Mode policy) to support connecting to the test API extension.
 		chrome.ExtraArgs("--force-devtools-available"),
-		// Force DemoModeSWA here as the new SWA launches much quicker and more reliably,
-		// meaning we can exit the AttractLoop screensaver and continue with freeplay testing.
-		chrome.EnableFeatures("DemoModeSWA"),
 	)
 	if err != nil {
 		s.Fatal("Failed to restart Chrome: ", err)
@@ -93,7 +90,8 @@ func Freeplay(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Sleep for 15 seconds to give ARC a bit of extra time to boot up (b/263517131).
+	// GoBigSleepLint: Sleep for 15 seconds to give ARC a bit of extra time to boot up
+	// before trying to launch Google Photos (b/263517131).
 	if err := testing.Sleep(ctx, 15*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

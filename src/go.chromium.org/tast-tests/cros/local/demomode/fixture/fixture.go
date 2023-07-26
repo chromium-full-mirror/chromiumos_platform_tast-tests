@@ -84,15 +84,10 @@ var _ testing.FixtureImpl = &fixtureImpl{}
 func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	resetTPMAndSystemState(ctx, s)
 
-	// Along with the fixture-specific features, we enable the DemoModeSWA feature so that
-	// SWA component is downloaded during setup. Chrome Apps behavior can still be tested
-	// by explicitly disabling the feature in tests that use this fixture.
-	enabledFeatures := append(f.enabledFeatures, "DemoModeSWA")
-
 	cr, err := chrome.New(ctx,
 		chrome.NoLogin(),
 		chrome.ARCSupported(),
-		chrome.EnableFeatures(enabledFeatures...),
+		chrome.EnableFeatures(f.enabledFeatures...),
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.ExtraArgs("--demo-mode-enrolling-username="+f.enrollmentUser),
 		chrome.ExtraArgs("--arc-start-mode=always-start"),
