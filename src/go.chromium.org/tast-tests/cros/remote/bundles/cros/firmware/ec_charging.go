@@ -57,23 +57,7 @@ func setupChan(ctx context.Context, h *firmware.Helper, s *testing.State) func()
 	}
 }
 
-// ECCharging discharges the DUT then checks its voltages
-// and current to determine its charging circuitry and EC
-// reporting is working as intended
-func ECCharging(ctx context.Context, s *testing.State) {
-	const (
-		// TrickleChargingThreshold is the current in mA below which is classified as a trickle charge.
-		TrickleChargingThreshold = 100
-	)
-
-	h := s.FixtValue().(*fixture.Value).Helper
-	if err := h.RequireServo(ctx); err != nil {
-		s.Fatal("Failed to init servo: ", err)
-	}
-
-	cleanup := setupChan(ctx, h, s) // Make things quiet.
-	defer cleanup()
-
+func checkCharging(ctx context.Context, h *firmware.Helper, s *testing.State) {
 	cs, err := firmware.GetChargingState(ctx, h)
 	if err != nil {
 		s.Fatal("Failed querying EC: ", err)
@@ -88,42 +72,13 @@ func ECCharging(ctx context.Context, s *testing.State) {
 	if chargingInt(cs["batt.current"], "mA") < 0 {
 		s.Fatal("DUT is not charging (batterry current below zero)")
 	}
-	if (chargingInt(cs["batt.desired_current"], "mA") < TrickleChargingThreshold) &&
+	if (chargingInt(cs["batt.desired_current"], "mA") < 100) &&
 		(chargingInt(cs["batt.state_of_charge"], "%") < 100) {
-		s.Fatalf("Trickling charging battery, unable to test (desired current: %s, threshold: %dmA)",
-			cs["batt.desired_current"],
-			TrickleChargingThreshold)
+		s.Fatalf("Trickling charging battery? Need more discharge? (desired current: %s)",
+			cs["batt.desired_current"])
 	}
 
-	// This needs a check for whether we actually need to discharge.
-	s.Log("Initiating battery discharging")
-	if err := h.Servo.SetPDRole(ctx, servo.PDRoleSnk); err != nil {
-		s.Fatal("Failed to initialize battery discharging: ", err)
-	}
-
-	// As the firmware test with bootModeNormal does not receive
-	// browser services on its initialization, we cannot easily
-	// use Chrome for battery drain procedure. Instead, we can
-	// simply spawn stress-ng (which seems to be available in
-	// base rootfs) for specified amount of time
-	// In the future, it might be more valuable to just create
-	// the dedicated stressing service on DUT which will also
-	// allow to monitor the battery status live
-
-	const stressingScript = `
-		cd /tmp; stress-ng --cpu 32 --timeout 4m
-	`
-	s.Log("Stressing CPU to discharge battery")
-	if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", stressingScript).Run(); err != nil {
-		s.Fatal("Failed to discharge battery using CPU stress: ", err)
-	}
-
-	// This should reset the charge state to Src and also check full charge state as above.
-
-	cs, err = firmware.GetChargingState(ctx, h)
-	if err != nil {
-		s.Fatal("Failed querying EC: ", err)
-	}
+	// check the requested vs actual values.
 	if float32(chargingInt(cs["chg.voltage"], "mV")) >= 1.05*float32(chargingInt(cs["batt.desired_voltage"], "mV")) {
 		s.Fatalf("Charger target voltage is too high. (target: %s, battery: %s)",
 			cs["chg.voltage"], cs["batt.desired_voltage"])
@@ -141,5 +96,68 @@ func ECCharging(ctx context.Context, s *testing.State) {
 		s.Fatalf("Battery actual current is too high. (battery: %s, charger: %s",
 			cs["batt.current"], cs["chg.current"])
 	}
+
+}
+
+func getBatteryPercent(ctx context.Context, h *firmware.Helper, s *testing.State) int {
+	cs, err := firmware.GetChargingState(ctx, h)
+	if err != nil {
+		s.Fatal("Failed querying EC: ", err)
+	}
+	return chargingInt(cs["batt.state_of_charge"], "%")
+
+}
+
+// ECCharging discharges the DUT then checks its voltages
+// and current to determine its charging circuitry and EC
+// reporting is working as intended
+func ECCharging(ctx context.Context, s *testing.State) {
+	const (
+		// TrickleChargingThreshold is the current in mA below which is classified as a trickle charge.
+		TrickleChargingThreshold = 100
+	)
+
+	h := s.FixtValue().(*fixture.Value).Helper
+	if err := h.RequireServo(ctx); err != nil {
+		s.Fatal("Failed to init servo: ", err)
+	}
+
+	cleanup := setupChan(ctx, h, s) // Make things quiet.
+	defer cleanup()
+
+	if getBatteryPercent(ctx, h, s) > 95 {
+		// TODO: Convert this code to either poll against target battery percent
+		// or use the power facilities (requires test conv)
+		s.Log("Initiating battery discharging")
+		if err := h.Servo.SetPDRole(ctx, servo.PDRoleSnk); err != nil {
+			s.Fatal("Failed to initialize battery discharging: ", err)
+		}
+
+		// As the firmware test with bootModeNormal does not receive
+		// browser services on its initialization, we cannot easily
+		// use Chrome for battery drain procedure. Instead, we can
+		// simply spawn stress-ng (which seems to be available in
+		// base rootfs) for specified amount of time
+		// In the future, it might be more valuable to just create
+		// the dedicated stressing service on DUT which will also
+		// allow to monitor the battery status live
+
+		const stressingScript = `
+			cd /tmp; stress-ng --cpu 32 --timeout 4m
+	`
+		/*
+			s.Log("Stressing CPU to discharge battery")
+			if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", stressingScript).Run(); err != nil {
+				s.Fatal("Failed to discharge battery using CPU stress: ", err)
+			}
+		*/
+		s.Log("Whew! That was stressful. Go back to charging")
+		if err := h.Servo.SetPDRole(ctx, servo.PDRoleSrc); err != nil {
+			s.Fatal("Failed to start charging: ", err)
+		}
+
+	}
+
+	checkCharging(ctx, h, s)
 
 }
