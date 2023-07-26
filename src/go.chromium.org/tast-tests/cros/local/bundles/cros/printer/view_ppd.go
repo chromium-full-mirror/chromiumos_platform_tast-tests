@@ -118,7 +118,7 @@ func createPrinter(ctx context.Context, s *testing.State, cr *chrome.Chrome, tco
 	modelButton := uitools.ModelFinder.Ancestor(advancedConfigDialog)
 	modelSelection := nodewith.Role(role.Button).Name(printerModel).Ancestor(advancedConfigDialog)
 	advancedConfigAddButton := uitools.AddFinder.Ancestor(advancedConfigDialog)
-	printerButton := nodewith.Role(role.Button).Name(printerName).Ancestor(ossettings.WindowFinder)
+	printerEntry := nodewith.HasClass("list-item").NameContaining(printerName).Ancestor(ossettings.WindowFinder)
 	if err := uiauto.Combine("input advanced printer parameters",
 		ui.WithTimeout(10*time.Second).WaitUntilExists(manufacturerButton),
 		ui.EnsureFocused(manufacturerButton),
@@ -132,7 +132,7 @@ func createPrinter(ctx context.Context, s *testing.State, cr *chrome.Chrome, tco
 		ui.DoDefault(modelSelection),
 		ui.WithTimeout(10*time.Second).WaitUntilGone(modelSelection),
 		ui.DoDefault(advancedConfigAddButton),
-		ui.WithTimeout(time.Minute).WaitUntilExists(printerButton),
+		ui.WithTimeout(time.Minute).WaitUntilExists(printerEntry),
 	)(ctx); err != nil {
 		s.Fatal("Failed to input advanced printer parameters: ", err)
 	}
@@ -145,7 +145,8 @@ func createPrinter(ctx context.Context, s *testing.State, cr *chrome.Chrome, tco
 func checkPpd(ctx context.Context, s *testing.State, ui *uiauto.Context,
 	printerName, eula string, cr *chrome.Chrome) {
 	// Edit the printer and select the View PPD button.
-	printerButton := nodewith.Role(role.Button).Name(printerName).Ancestor(ossettings.WindowFinder)
+	printerEntry := nodewith.HasClass("list-item").NameContaining(printerName).Ancestor(ossettings.WindowFinder)
+	printerButton := nodewith.Role(role.Button).Name("More actions").Ancestor(printerEntry)
 	editText := uitools.EditFinder.Ancestor(ossettings.WindowFinder)
 	editPrinterDialog := uitools.EditPrinterFinder.Ancestor(ossettings.WindowFinder)
 	viewPpdButton := uitools.ViewPpdFinder.Ancestor(editPrinterDialog)
