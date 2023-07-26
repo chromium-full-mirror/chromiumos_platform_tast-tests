@@ -7,6 +7,7 @@ package hwsec
 import (
 	"context"
 	"encoding/base64"
+	"encoding/hex"
 	"strings"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
@@ -242,13 +243,13 @@ func (c *cryptohomeBinary) removeAuthFactor(ctx context.Context, authSessionID, 
 }
 
 // authenticatePinAuthFactorWithStatusUpdate calls "cryptohome --action=authenticate_with_status_update --pin=<pin>".
-func (c *cryptohomeBinary) authenticatePinAuthFactorWithStatusUpdate(ctx context.Context, authSessionID, label, pin string) ([]byte, error) {
-	args := []string{"--action=authenticate_with_status_update", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--pin=" + pin}
+func (c *cryptohomeBinary) authenticatePinAuthFactorWithStatusUpdate(ctx context.Context, authSessionID string, broadcastID []byte, label, pin string) ([]byte, error) {
+	args := []string{"--action=authenticate_with_status_update", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--broadcast_id=" + hex.EncodeToString(broadcastID), "--key_label=" + label, "--pin=" + pin}
 	return c.call(ctx, args...)
 }
 
-func (c *cryptohomeBinary) fetchStatusUpdateSignal(ctx context.Context, authSessionID string) ([]byte, error) {
-	args := []string{"--action=fetch_status_update", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID}
+func (c *cryptohomeBinary) fetchStatusUpdateSignal(ctx context.Context, broadcastID []byte) ([]byte, error) {
+	args := []string{"--action=fetch_status_update", "--output-format=binary-protobuf", "--broadcast_id=" + hex.EncodeToString(broadcastID)}
 	return c.call(ctx, args...)
 }
 

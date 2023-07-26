@@ -864,8 +864,8 @@ func (u *CryptohomeClient) RemoveAuthFactor(ctx context.Context, authSessionID, 
 }
 
 // FetchStatusUpdateSignal fetches the status update signal that gets sent priodically after a user is locked out of an auth factor.
-func (u *CryptohomeClient) FetchStatusUpdateSignal(ctx context.Context, authSessionID string, broadcastID []byte) (*uda.AuthFactorStatusUpdate, error) {
-	binaryMsg, err := u.binary.fetchStatusUpdateSignal(ctx, authSessionID)
+func (u *CryptohomeClient) FetchStatusUpdateSignal(ctx context.Context, broadcastID []byte) (*uda.AuthFactorStatusUpdate, error) {
+	binaryMsg, err := u.binary.fetchStatusUpdateSignal(ctx, broadcastID)
 	// Unmarshall the reply even if there was an error.
 	reply := &uda.AuthFactorStatusUpdate{}
 	if unmarshErr := proto.Unmarshal(binaryMsg, reply); unmarshErr != nil {
@@ -882,7 +882,7 @@ func (u *CryptohomeClient) FetchStatusUpdateSignal(ctx context.Context, authSess
 
 // AuthenticatePinAuthFactorWithStatusUpdate authenticates an AuthSession with a given authSessionID via pin and intercepts the AuthFactorStatusUpdate signal.
 func (u *CryptohomeClient) AuthenticatePinAuthFactorWithStatusUpdate(ctx context.Context, authSessionID, label, pin string, broadcastID []byte) (*uda.AuthFactorStatusUpdate, error) {
-	binaryMsg, err := u.binary.authenticatePinAuthFactorWithStatusUpdate(ctx, authSessionID, label, pin)
+	binaryMsg, err := u.binary.authenticatePinAuthFactorWithStatusUpdate(ctx, authSessionID, broadcastID, label, pin)
 	// Unmarshal proto first, even if there was an error.
 	authenticateReply := &uda.AuthenticateAuthFactorReply{}
 	if unmarshErr := proto.Unmarshal(binaryMsg, authenticateReply); unmarshErr != nil {

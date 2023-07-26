@@ -376,7 +376,7 @@ func fetchStatusUpdateUponNewAuthSession(ctx, ctxForCleanUp context.Context, tes
 	defer cryptohomeHelper.InvalidateAuthSession(ctxForCleanUp, authSessionID)
 
 	var reply *uda.AuthFactorStatusUpdate
-	reply, err = cryptohomeHelper.FetchStatusUpdateSignal(ctx, authSessionID, authSession.BroadcastId)
+	reply, err = cryptohomeHelper.FetchStatusUpdateSignal(ctx, authSession.BroadcastId)
 	if err != nil {
 		return nil, errors.Wrap(err, "StatusUpdateSignal was not fetched or its BroadcastID did not match that of the AuthSession")
 	}
