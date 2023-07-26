@@ -32,7 +32,7 @@ func init() {
 		BugComponent: "b:1045832",
 		SoftwareDeps: []string{"chrome", "arc"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
-		Fixture:      "loggedInToCUJUser",
+		Fixture:      "loggedInToCUJUserARCSupported",
 		Timeout:      20 * time.Minute,
 	})
 }

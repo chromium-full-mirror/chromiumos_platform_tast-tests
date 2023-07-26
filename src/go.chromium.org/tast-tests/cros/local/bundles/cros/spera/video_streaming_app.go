@@ -49,7 +49,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "essential",
-				Fixture: "loggedInAndKeepState",
+				Fixture: "loggedInAndKeepStateARCSupported",
 				Timeout: videoStreamingAppTimeout,
 				Val: videoStreamingAppParam{
 					tier: cuj.Essential,
@@ -57,7 +57,7 @@ func init() {
 				},
 			}, {
 				Name:              "essential_lacros",
-				Fixture:           "loggedInAndKeepStateLacros",
+				Fixture:           "loggedInAndKeepStateARCSupportedLacros",
 				Timeout:           videoStreamingAppTimeout,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: videoStreamingAppParam{
@@ -67,7 +67,7 @@ func init() {
 				},
 			}, {
 				Name:    "advanced",
-				Fixture: "loggedInAndKeepState",
+				Fixture: "loggedInAndKeepStateARCSupported",
 				Timeout: videoStreamingAppTimeout,
 				Val: videoStreamingAppParam{
 					tier: cuj.Advanced,
@@ -75,7 +75,7 @@ func init() {
 				},
 			}, {
 				Name:              "advanced_lacros",
-				Fixture:           "loggedInAndKeepStateLacros",
+				Fixture:           "loggedInAndKeepStateARCSupportedLacros",
 				Timeout:           videoStreamingAppTimeout,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: videoStreamingAppParam{

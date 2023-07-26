@@ -36,21 +36,21 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Fixture: "loggedInToCUJUser",
+				Fixture: "loggedInToCUJUserARCSupported",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeAsh,
 				},
 			}, {
 				Name:              "lacros",
 				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "loggedInToCUJUserLacros",
+				Fixture:           "loggedInToCUJUserARCSupportedLacros",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeLacros,
 				},
 			}, {
 				Name:              "tablet",
 				ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen()),
-				Fixture:           "loggedInToCUJUser",
+				Fixture:           "loggedInToCUJUserARCSupported",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeAsh,
 					Tablet:      true,
@@ -59,7 +59,7 @@ func init() {
 				Name:              "lacros_tablet",
 				ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen()),
 				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "loggedInToCUJUserLacros",
+				Fixture:           "loggedInToCUJUserARCSupportedLacros",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeLacros,
 					Tablet:      true,
@@ -73,7 +73,7 @@ func init() {
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture: "loggedInToCUJUserWithBackupRefPtr",
+				Fixture: "loggedInToCUJUserARCSupportedWithBackupRefPtr",
 			},
 			{
 				Name:      "field_trials",
@@ -81,12 +81,12 @@ func init() {
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture: "loggedInToCUJUserWithFieldTrials",
+				Fixture: "loggedInToCUJUserARCSupportedWithFieldTrials",
 			},
 			{
 				Name:      "battery_saver",
 				ExtraAttr: []string{"cuj_experimental"},
-				Fixture:   "loggedInToCUJUserWithBatterySaver",
+				Fixture:   "loggedInToCUJUserARCSupportedWithBatterySaver",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeAsh,
 				},

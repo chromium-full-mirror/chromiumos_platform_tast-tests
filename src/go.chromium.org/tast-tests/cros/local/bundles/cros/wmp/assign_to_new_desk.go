@@ -43,11 +43,11 @@ func init() {
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
-			Fixture: "loggedInToCUJUser",
+			Fixture: "loggedInToCUJUserARCSupported",
 		}, {
 			Name:              "lacros",
 			Val:               browser.TypeLacros,
-			Fixture:           "loggedInToCUJUserLacros",
+			Fixture:           "loggedInToCUJUserARCSupportedLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})

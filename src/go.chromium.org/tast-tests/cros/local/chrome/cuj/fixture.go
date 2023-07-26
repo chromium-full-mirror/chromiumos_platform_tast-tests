@@ -69,8 +69,9 @@ const (
 	postTestTimeout = webRTCLogsGatherTimeout + arcLogsGatherTimeout
 
 	// setUpTimeout is the time to set up chrome and arc.
-	setUpTimeout = chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute
-	resetTimeout = 30 * time.Second
+	setUpTimeout          = chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute
+	setUpWithOptinTimeout = setUpTimeout + optin.OptinTimeout
+	resetTimeout          = 30 * time.Second
 
 	// batterySaverTimeout is the time to enable or disable battery saver.
 	batterySaverTimeout = 10 * time.Second
@@ -211,6 +212,31 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	// loggedInToCUJUserARCSupported fixture is similar to loggedInToCUJUser
+	// but uses "chrome.ARCSupported" flag instead of "chrome.ARCEnabled". When
+	// a test needs to open any ARC windows or use the Play Store, this fixture
+	// should be used so that ARC Play Store optin procedure can be performed.
+	// This is the same case for all other fixtures with "ARCSupported" in
+	// their names.
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserARCSupported",
+		Desc: "The main fixture used for UI CUJ tests with ARC supported",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:           browser.TypeAsh,
+			arcSupported: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpWithOptinTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
 		Desc: "The main fixture used for UI CUJ tests using an enterprise account, with WebRTC event logging",
@@ -248,6 +274,28 @@ func init() {
 		},
 		Parent:          "prepareForCUJWithCharge",
 		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInAndKeepStateARCSupported",
+		Desc: "The CUJ test fixture which keeps login state with ARC supported",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			keepState:    true,
+			bt:           browser.TypeAsh,
+			arcSupported: true,
+			// Some tests will connect to websites hosted locally with HTTPs and this flag allows invalid certificates for resources loaded from localhost.
+			chromeExtraOpts: []chrome.Option{chrome.ExtraArgs("--allow-insecure-localhost")},
+		},
+		Parent:          "prepareForCUJWithCharge",
+		SetUpTimeout:    setUpWithOptinTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -350,6 +398,25 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserARCSupportedLacros",
+		Desc: "Fixture used for lacros variation of UI CUJ tests with ARC supported",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:           browser.TypeLacros,
+			arcSupported: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpWithOptinTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInAndKeepStateLacros",
 		Desc: "Fixture keeping login status and used for lacros variation of CUJ tests",
 		Contacts: []string{
@@ -364,6 +431,28 @@ func init() {
 		},
 		Parent:          "prepareForCUJWithCharge",
 		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInAndKeepStateARCSupportedLacros",
+		Desc: "Fixture keeping login status and used for lacros variation of CUJ tests with ARC supported",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			keepState:    true,
+			arcSupported: true,
+			bt:           browser.TypeLacros,
+			// Some tests will connect to websites hosted locally with HTTPs and this flag allows invalid certificates for resources loaded from localhost.
+			chromeExtraOpts: []chrome.Option{chrome.LacrosExtraArgs("--allow-insecure-localhost")},
+		},
+		Parent:          "prepareForCUJWithCharge",
+		SetUpTimeout:    setUpWithOptinTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -600,7 +689,29 @@ func init() {
 			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserARCSupportedWithBackupRefPtr",
+		Desc: "CUJ fixture with ARC supported and BackupRefPtr",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PartitionAllocBackupRefPtr:enabled-processes/browser-only"),
+			},
+			bt:           browser.TypeAsh,
+			arcSupported: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpWithOptinTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -624,7 +735,7 @@ func init() {
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -676,7 +787,29 @@ func init() {
 			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserARCSupportedWithFieldTrials",
+		Desc: "CUJ fixture with ARC supported and all field trials",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs("--enable-field-trial-config"),
+			},
+			bt:           browser.TypeAsh,
+			arcSupported: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpWithOptinTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -700,7 +833,7 @@ func init() {
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -740,7 +873,7 @@ func init() {
 			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -770,6 +903,29 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserARCSupportedWithBatterySaverParent",
+		Desc: "CUJ test fixture with ARC supported and battery saver without Android",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"cros-vm-technology@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:           browser.TypeAsh,
+			arcSupported: true,
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
+			},
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpWithOptinTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBatterySaver",
 		Desc: "CUJ test fixture with battery saver",
 		Contacts: []string{
@@ -779,6 +935,20 @@ func init() {
 		},
 		Impl:            &androidBatterySaverFixture{},
 		Parent:          "loggedInToCUJUserWithBatterySaverParent",
+		SetUpTimeout:    batterySaverTimeout,
+		TearDownTimeout: batterySaverTimeout,
+		PreTestTimeout:  batterySaverTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserARCSupportedWithBatterySaver",
+		Desc: "CUJ test fixture with ARC supported and battery saver",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"cros-vm-technology@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl:            &androidBatterySaverFixture{},
+		Parent:          "loggedInToCUJUserARCSupportedWithBatterySaverParent",
 		SetUpTimeout:    batterySaverTimeout,
 		TearDownTimeout: batterySaverTimeout,
 		PreTestTimeout:  batterySaverTimeout,
@@ -820,7 +990,7 @@ func init() {
 			enableChromeVox: true,
 		},
 		Parent:          "prepareForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -1161,6 +1331,7 @@ type loggedInToCUJUserFixture struct {
 	fakeCameraFileName string
 	docsBlocker        bool
 	disableARC         bool
+	arcSupported       bool // Use ARCSupported flag instead of ARCEnabled.
 	enableChromeVox    bool
 	cleanupTheme       func(ctx context.Context) error
 }
@@ -1196,9 +1367,19 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			opts = append(opts, chrome.KeepState())
 		}
 		if !f.disableARC {
-			opts = append(opts,
-				chrome.ARCSupported(),
-				chrome.ExtraArgs(arc.DisableSyncFlags()...))
+			// When arcSupported is set, use the chrome.ARCSupported flag to
+			// enable the real Play Store optin procedure, so that the tests
+			// can install ARC Apps and open ARC windows to do the test.
+			// On the other hand, ARCEnabled flag will just bring up ARC
+			// environment but ignore the PlayStore optin procedure and
+			// avoid the ARC login overhead. It is used for tests involving
+			// no ARC Apps.
+			if f.arcSupported {
+				opts = append(opts, chrome.ARCSupported())
+			} else {
+				opts = append(opts, chrome.ARCEnabled())
+			}
+			opts = append(opts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
 			if f.useEnterprisePool {
 				fdms, err := startFakeDMSWithARCEnabled(ctx, s.OutDir(), creds.User)
 				if err != nil {
@@ -1334,7 +1515,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 	// Do Play Store optin if needed.
 	// ARC policy for Enterprise accounts is controlled by managed policies and
 	// optin procedure should be skipped.
-	if enablePlayStore && !f.disableARC && !f.useEnterprisePool {
+	if enablePlayStore && !f.disableARC && f.arcSupported && !f.useEnterprisePool {
 		func() {
 			const playStorePackageName = "com.android.vending"
 			ctx, cancel := context.WithTimeout(ctx, optin.OptinTimeout+time.Minute)

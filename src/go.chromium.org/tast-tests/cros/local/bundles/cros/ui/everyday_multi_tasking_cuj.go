@@ -50,7 +50,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "basic_ytmusic",
-				Fixture: "loggedInAndKeepState",
+				Fixture: "loggedInAndKeepStateARCSupported",
 				Timeout: 20 * time.Minute,
 				Val: multiTaskingParam{
 					tier:     cuj.Basic,
@@ -59,7 +59,7 @@ func init() {
 				},
 			}, {
 				Name:              "basic_lacros_ytmusic",
-				Fixture:           "loggedInAndKeepStateLacros",
+				Fixture:           "loggedInAndKeepStateARCSupportedLacros",
 				Timeout:           20 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: multiTaskingParam{
@@ -70,7 +70,7 @@ func init() {
 				},
 			}, {
 				Name:              "basic_ytmusic_crosbolt",
-				Fixture:           "loggedInAndKeepState",
+				Fixture:           "loggedInAndKeepStateARCSupported",
 				Timeout:           20 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
 				Val: multiTaskingParam{
@@ -80,7 +80,7 @@ func init() {
 				},
 			}, {
 				Name:    "basic_ytmusic_bluetooth",
-				Fixture: "loggedInAndKeepState",
+				Fixture: "loggedInAndKeepStateARCSupported",
 				Timeout: 20 * time.Minute,
 				Val: multiTaskingParam{
 					tier:     cuj.Basic,
@@ -89,7 +89,7 @@ func init() {
 				},
 			}, {
 				Name:              "basic_lacros_ytmusic_bluetooth",
-				Fixture:           "loggedInAndKeepStateLacros",
+				Fixture:           "loggedInAndKeepStateARCSupportedLacros",
 				Timeout:           20 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: multiTaskingParam{
@@ -100,7 +100,7 @@ func init() {
 				},
 			}, {
 				Name:    "basic_spotify_bluetooth",
-				Fixture: "loggedInAndKeepState",
+				Fixture: "loggedInAndKeepStateARCSupported",
 				Timeout: 20 * time.Minute,
 				Val: multiTaskingParam{
 					tier:     cuj.Basic,
@@ -109,7 +109,7 @@ func init() {
 				},
 			}, {
 				Name:              "basic_lacros_spotify_bluetooth",
-				Fixture:           "loggedInAndKeepStateLacros",
+				Fixture:           "loggedInAndKeepStateARCSupportedLacros",
 				Timeout:           20 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: multiTaskingParam{
@@ -120,7 +120,7 @@ func init() {
 				},
 			}, {
 				Name:              "plus_helloworld",
-				Fixture:           "loggedInAndKeepState",
+				Fixture:           "loggedInAndKeepStateARCSupported",
 				Timeout:           15 * time.Minute,
 				ExtraSoftwareDeps: []string{"android_p"},
 				Val: multiTaskingParam{
@@ -130,7 +130,7 @@ func init() {
 				},
 			}, {
 				Name:              "plus_helloworld_vm",
-				Fixture:           "loggedInAndKeepState",
+				Fixture:           "loggedInAndKeepStateARCSupported",
 				Timeout:           15 * time.Minute,
 				ExtraSoftwareDeps: []string{"android_vm"},
 				Val: multiTaskingParam{
@@ -140,7 +140,7 @@ func init() {
 				},
 			}, {
 				Name:    "plus_ytmusic",
-				Fixture: "loggedInAndKeepState",
+				Fixture: "loggedInAndKeepStateARCSupported",
 				Timeout: 30 * time.Minute,
 				Val: multiTaskingParam{
 					tier:     cuj.Plus,
@@ -149,7 +149,7 @@ func init() {
 				},
 			}, {
 				Name:              "plus_lacros_ytmusic",
-				Fixture:           "loggedInAndKeepStateLacros",
+				Fixture:           "loggedInAndKeepStateARCSupportedLacros",
 				Timeout:           30 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: multiTaskingParam{
@@ -160,7 +160,7 @@ func init() {
 				},
 			}, {
 				Name:              "plus_ytmusic_crosbolt",
-				Fixture:           "loggedInAndKeepState",
+				Fixture:           "loggedInAndKeepStateARCSupported",
 				Timeout:           30 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
 				Val: multiTaskingParam{
@@ -170,7 +170,7 @@ func init() {
 				},
 			}, {
 				Name:    "plus_ytmusic_bluetooth",
-				Fixture: "loggedInAndKeepState",
+				Fixture: "loggedInAndKeepStateARCSupported",
 				Timeout: 30 * time.Minute,
 				Val: multiTaskingParam{
 					tier:     cuj.Plus,
@@ -179,7 +179,7 @@ func init() {
 				},
 			}, {
 				Name:              "plus_lacros_ytmusic_bluetooth",
-				Fixture:           "loggedInAndKeepStateLacros",
+				Fixture:           "loggedInAndKeepStateARCSupportedLacros",
 				Timeout:           30 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: multiTaskingParam{
@@ -190,7 +190,7 @@ func init() {
 				},
 			}, {
 				Name:    "plus_spotify_bluetooth",
-				Fixture: "loggedInAndKeepState",
+				Fixture: "loggedInAndKeepStateARCSupported",
 				Timeout: 30 * time.Minute,
 				Val: multiTaskingParam{
 					tier:     cuj.Plus,
@@ -199,7 +199,7 @@ func init() {
 				},
 			}, {
 				Name:              "plus_lacros_spotify_bluetooth",
-				Fixture:           "loggedInAndKeepStateLacros",
+				Fixture:           "loggedInAndKeepStateARCSupportedLacros",
 				Timeout:           30 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: multiTaskingParam{
@@ -210,7 +210,7 @@ func init() {
 				},
 			}, {
 				Name:    "plus_spotify_quickcheck",
-				Fixture: "loggedInAndKeepState",
+				Fixture: "loggedInAndKeepStateARCSupported",
 				Timeout: 15 * time.Minute,
 				Val: multiTaskingParam{
 					tier:     cuj.Plus,

@@ -105,7 +105,7 @@ func init() {
 				},
 			}, {
 				Name:    "basic_youtube_app",
-				Fixture: "loggedInAndKeepState",
+				Fixture: "loggedInAndKeepStateARCSupported",
 				Timeout: 10 * time.Minute,
 				Val: videoCUJParam{
 					tier: cuj.Basic,
@@ -113,7 +113,7 @@ func init() {
 				},
 			}, {
 				Name:              "basic_lacros_youtube_app",
-				Fixture:           "loggedInAndKeepStateLacros",
+				Fixture:           "loggedInAndKeepStateARCSupportedLacros",
 				Timeout:           12 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: videoCUJParam{
@@ -123,7 +123,7 @@ func init() {
 				},
 			}, {
 				Name:              "basic_youtube_app_crosbolt",
-				Fixture:           "loggedInAndKeepState",
+				Fixture:           "loggedInAndKeepStateARCSupported",
 				Timeout:           10 * time.Minute,
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
@@ -133,7 +133,7 @@ func init() {
 				},
 			}, {
 				Name:    "premium_youtube_app",
-				Fixture: "loggedInAndKeepState",
+				Fixture: "loggedInAndKeepStateARCSupported",
 				Timeout: 10 * time.Minute,
 				Val: videoCUJParam{
 					tier: cuj.Premium,
@@ -141,7 +141,7 @@ func init() {
 				},
 			}, {
 				Name:              "premium_lacros_youtube_app",
-				Fixture:           "loggedInAndKeepStateLacros",
+				Fixture:           "loggedInAndKeepStateARCSupportedLacros",
 				Timeout:           12 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: videoCUJParam{
@@ -151,7 +151,7 @@ func init() {
 				},
 			}, {
 				Name:              "plus_youtube_app_crosbolt",
-				Fixture:           "loggedInAndKeepState",
+				Fixture:           "loggedInAndKeepStateARCSupported",
 				Timeout:           10 * time.Minute,
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
