@@ -12,6 +12,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -59,4 +61,24 @@ func (s *OSSettings) ToggleHotspot(ctx context.Context, tconn *chrome.TestConn, 
 	}
 
 	return nil
+}
+
+// RenameHotspotSsid renames the hotspot ssid to newSsid in hotspot config dialog
+func (s *OSSettings) RenameHotspotSsid(ctx context.Context, oldSsid, newSsid string) uiauto.Action {
+	return func(ctx context.Context) error {
+		kb, err := input.Keyboard(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to open keyboard")
+		}
+		defer kb.Close(ctx)
+
+		return uiauto.Combine("Rename hotspot ssid in config dialog",
+			s.ui.LeftClick(HotspotConfigureButton),
+			s.ui.LeftClick(nodewith.Name(oldSsid).Role(role.InlineTextBox)),
+			kb.AccelAction("Ctrl+A"),
+			kb.AccelAction("Backspace"),
+			kb.TypeAction(newSsid),
+			s.ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
+		)(ctx)
+	}
 }

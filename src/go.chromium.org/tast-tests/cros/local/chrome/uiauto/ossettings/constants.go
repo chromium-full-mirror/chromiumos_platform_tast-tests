@@ -160,8 +160,14 @@ var HotspotToggle = nodewith.Name("Hotspot enable").Role(role.ToggleButton)
 // HotspotOnSublabel is the finder for the enabled hotspot status label in both Network page and Hotspot subpage.
 var HotspotOnSublabel = nodewith.Name("On").Role(role.StaticText)
 
+// HotspotTurningOnSublabel is the finder for the enabling hotspot status label in both Network page and Hotspot subpage.
+var HotspotTurningOnSublabel = nodewith.Name("Turning On…").Role(role.StaticText)
+
 // HotspotOffSublabel is the finder for the disabled hotspot status label in both Network page and Hotspot subpage.
 var HotspotOffSublabel = nodewith.Name("Off").Role(role.StaticText)
+
+// HotspotConfigureButton is the finder for the button to open up hotspot configuration dialog.
+var HotspotConfigureButton = nodewith.Name("Configure").Role(role.Button)
 
 // AddCellularButton is the finder for the Add Cellular button in cellular network list.
 var AddCellularButton = nodewith.NameStartingWith("Add Cellular").Role(role.Button)
