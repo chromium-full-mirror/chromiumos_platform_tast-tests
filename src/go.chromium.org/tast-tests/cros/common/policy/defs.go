@@ -25973,30 +25973,29 @@ func (p *EmojiPickerGifSupportEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1123. ChargingSoundsEnabled
-// This policy has a default value of False.
+// 1123. DeviceChargingSoundsEnabled
 // This policy can be modified without rebooting.
 // ****************************************************************************
-type ChargingSoundsEnabled struct {
+type DeviceChargingSoundsEnabled struct {
 	Stat Status
 	Val  bool
 }
 
-func (p *ChargingSoundsEnabled) Name() string          { return "ChargingSoundsEnabled" }
-func (p *ChargingSoundsEnabled) Scope() Scope          { return ScopeUser }
-func (p *ChargingSoundsEnabled) Status() Status        { return p.Stat }
-func (p *ChargingSoundsEnabled) UntypedV() interface{} { return p.Val }
-func (p *ChargingSoundsEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+func (p *DeviceChargingSoundsEnabled) Name() string          { return "DeviceChargingSoundsEnabled" }
+func (p *DeviceChargingSoundsEnabled) Scope() Scope          { return ScopeDevice }
+func (p *DeviceChargingSoundsEnabled) Status() Status        { return p.Stat }
+func (p *DeviceChargingSoundsEnabled) UntypedV() interface{} { return p.Val }
+func (p *DeviceChargingSoundsEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
 	var v bool
 	if err := json.Unmarshal(m, &v); err != nil {
 		return nil, errors.Wrapf(err, "could not read %s as bool", m)
 	}
 	return v, nil
 }
-func (p *ChargingSoundsEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
+func (p *DeviceChargingSoundsEnabled) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "device_charging_sounds", "enabled", p.Val)
 }
-func (p *ChargingSoundsEnabled) Equal(iface interface{}) bool {
+func (p *DeviceChargingSoundsEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
 	if !ok {
 		return ok
@@ -26005,30 +26004,29 @@ func (p *ChargingSoundsEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1124. LowBatterySoundEnabled
-// This policy has a default value of False.
+// 1124. DeviceLowBatterySoundEnabled
 // This policy can be modified without rebooting.
 // ****************************************************************************
-type LowBatterySoundEnabled struct {
+type DeviceLowBatterySoundEnabled struct {
 	Stat Status
 	Val  bool
 }
 
-func (p *LowBatterySoundEnabled) Name() string          { return "LowBatterySoundEnabled" }
-func (p *LowBatterySoundEnabled) Scope() Scope          { return ScopeUser }
-func (p *LowBatterySoundEnabled) Status() Status        { return p.Stat }
-func (p *LowBatterySoundEnabled) UntypedV() interface{} { return p.Val }
-func (p *LowBatterySoundEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+func (p *DeviceLowBatterySoundEnabled) Name() string          { return "DeviceLowBatterySoundEnabled" }
+func (p *DeviceLowBatterySoundEnabled) Scope() Scope          { return ScopeDevice }
+func (p *DeviceLowBatterySoundEnabled) Status() Status        { return p.Stat }
+func (p *DeviceLowBatterySoundEnabled) UntypedV() interface{} { return p.Val }
+func (p *DeviceLowBatterySoundEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
 	var v bool
 	if err := json.Unmarshal(m, &v); err != nil {
 		return nil, errors.Wrapf(err, "could not read %s as bool", m)
 	}
 	return v, nil
 }
-func (p *LowBatterySoundEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
+func (p *DeviceLowBatterySoundEnabled) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "device_low_battery_sound", "enabled", p.Val)
 }
-func (p *LowBatterySoundEnabled) Equal(iface interface{}) bool {
+func (p *DeviceLowBatterySoundEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
 	if !ok {
 		return ok
@@ -26188,6 +26186,103 @@ func (p *MidiBlockedForUrls) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
 func (p *MidiBlockedForUrls) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1131. GlanceablesEnabled
+// This policy has a default value of False.
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type GlanceablesEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *GlanceablesEnabled) Name() string          { return "GlanceablesEnabled" }
+func (p *GlanceablesEnabled) Scope() Scope          { return ScopeUser }
+func (p *GlanceablesEnabled) Status() Status        { return p.Stat }
+func (p *GlanceablesEnabled) UntypedV() interface{} { return p.Val }
+func (p *GlanceablesEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *GlanceablesEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GlanceablesEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1132. DeviceAuthenticationURLBlocklist
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DeviceAuthenticationURLBlocklist struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *DeviceAuthenticationURLBlocklist) Name() string          { return "DeviceAuthenticationURLBlocklist" }
+func (p *DeviceAuthenticationURLBlocklist) Scope() Scope          { return ScopeDevice }
+func (p *DeviceAuthenticationURLBlocklist) Status() Status        { return p.Stat }
+func (p *DeviceAuthenticationURLBlocklist) UntypedV() interface{} { return p.Val }
+func (p *DeviceAuthenticationURLBlocklist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *DeviceAuthenticationURLBlocklist) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "device_authentication_url_blocklist", "value", p.Val)
+}
+func (p *DeviceAuthenticationURLBlocklist) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1133. DeviceAuthenticationURLAllowlist
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DeviceAuthenticationURLAllowlist struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *DeviceAuthenticationURLAllowlist) Name() string          { return "DeviceAuthenticationURLAllowlist" }
+func (p *DeviceAuthenticationURLAllowlist) Scope() Scope          { return ScopeDevice }
+func (p *DeviceAuthenticationURLAllowlist) Status() Status        { return p.Stat }
+func (p *DeviceAuthenticationURLAllowlist) UntypedV() interface{} { return p.Val }
+func (p *DeviceAuthenticationURLAllowlist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *DeviceAuthenticationURLAllowlist) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "device_authentication_url_allowlist", "value", p.Val)
+}
+func (p *DeviceAuthenticationURLAllowlist) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
 	if !ok {
 		return ok
@@ -27798,10 +27893,10 @@ func newByName(name string) (Policy, error) {
 		return &NativeClientForceAllowed{}, nil
 	case "EmojiPickerGifSupportEnabled":
 		return &EmojiPickerGifSupportEnabled{}, nil
-	case "ChargingSoundsEnabled":
-		return &ChargingSoundsEnabled{}, nil
-	case "LowBatterySoundEnabled":
-		return &LowBatterySoundEnabled{}, nil
+	case "DeviceChargingSoundsEnabled":
+		return &DeviceChargingSoundsEnabled{}, nil
+	case "DeviceLowBatterySoundEnabled":
+		return &DeviceLowBatterySoundEnabled{}, nil
 	case "ArcVmDataMigrationStrategy":
 		return &ArcVmDataMigrationStrategy{}, nil
 	case "RemoteAccessHostAllowEnterpriseFileTransfer":
@@ -27812,6 +27907,12 @@ func newByName(name string) (Policy, error) {
 		return &MidiAllowedForUrls{}, nil
 	case "MidiBlockedForUrls":
 		return &MidiBlockedForUrls{}, nil
+	case "GlanceablesEnabled":
+		return &GlanceablesEnabled{}, nil
+	case "DeviceAuthenticationURLBlocklist":
+		return &DeviceAuthenticationURLBlocklist{}, nil
+	case "DeviceAuthenticationURLAllowlist":
+		return &DeviceAuthenticationURLAllowlist{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
@@ -27821,20 +27922,15 @@ func newByName(name string) (Policy, error) {
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
 
-type RefTimeUsageLimitEntry struct {
-	LastUpdatedMillis string `json:"last_updated_millis"`
-	UsageQuotaMins    int    `json:"usage_quota_mins"`
+type RefDayPercentagePair struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
 }
 
-type RefTime struct {
-	Hour   int `json:"hour"`
-	Minute int `json:"minute"`
-}
-
-type RefConfig struct {
-	AccessCodeTtl       int    `json:"access_code_ttl"`
-	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
-	SharedSecret        string `json:"shared_secret"`
+type RefDisallowedTimeInterval struct {
+	DayOfWeek string `json:"day_of_week"`
+	Hours     int    `json:"hours"`
+	Minutes   int    `json:"minutes"`
 }
 
 type RefDeviceLoginScreenPowerSettings struct {
@@ -27846,6 +27942,23 @@ type RefDeviceLoginScreenPowerSettingsDelays struct {
 	Idle      int `json:"Idle"`
 	ScreenDim int `json:"ScreenDim"`
 	ScreenOff int `json:"ScreenOff"`
+}
+
+type RefBookmarkType struct {
+	Children     []*RefBookmarkType `json:"children,omitempty"`
+	Name         string             `json:"name"`
+	ToplevelName string             `json:"toplevel_name"`
+	Url          string             `json:"url"`
+}
+
+type RefUsbDeviceIdInclusive struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
+}
+
+type RefUsbDeviceId struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
 }
 
 type Reffile_transfer_enable_disable_schema struct {
@@ -27866,23 +27979,6 @@ type Reffile_transfer_source_destination_schema struct {
 	FileSystemType string `json:"file_system_type"`
 }
 
-type RefUsbDeviceIdInclusive struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
-}
-
-type RefBookmarkType struct {
-	Children     []*RefBookmarkType `json:"children,omitempty"`
-	Name         string             `json:"name"`
-	ToplevelName string             `json:"toplevel_name"`
-	Url          string             `json:"url"`
-}
-
-type RefDomainFiletypePair struct {
-	Domains       []string `json:"domains,omitempty"`
-	FileExtension string   `json:"file_extension"`
-}
-
 type RefWeeklyTimeIntervals struct {
 	End   *RefWeeklyTime               `json:"end"`
 	Start *RefWeeklyTimeIntervalsStart `json:"start"`
@@ -27898,9 +27994,9 @@ type RefWeeklyTime struct {
 	Time      int    `json:"time"`
 }
 
-type RefUsbDeviceId struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
+type RefDomainFiletypePair struct {
+	Domains       []string `json:"domains,omitempty"`
+	FileExtension string   `json:"file_extension"`
 }
 
 type RefPowerManagementDelays struct {
@@ -27915,15 +28011,20 @@ type RefPowerManagementDelaysDelays struct {
 	ScreenOff   int `json:"ScreenOff"`
 }
 
-type RefDisallowedTimeInterval struct {
-	DayOfWeek string `json:"day_of_week"`
-	Hours     int    `json:"hours"`
-	Minutes   int    `json:"minutes"`
+type RefTimeUsageLimitEntry struct {
+	LastUpdatedMillis string `json:"last_updated_millis"`
+	UsageQuotaMins    int    `json:"usage_quota_mins"`
 }
 
-type RefDayPercentagePair struct {
-	Days       int `json:"days"`
-	Percentage int `json:"percentage"`
+type RefTime struct {
+	Hour   int `json:"hour"`
+	Minute int `json:"minute"`
+}
+
+type RefConfig struct {
+	AccessCodeTtl       int    `json:"access_code_ttl"`
+	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
+	SharedSecret        string `json:"shared_secret"`
 }
 
 // ****************************************************************************
