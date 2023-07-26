@@ -334,7 +334,8 @@ func (zm *Zoom) CloseChatPanel() action.Action {
 func (zm *Zoom) ShareScreen(tabName string) action.Action {
 	ui := zm.ui
 	shareScreenButton := nodewith.Name("Share Screen").Role(role.Button)
-	presentMode := nodewith.Name("Chrome Tab").Role(role.Tab)
+	// There may be multiple "Chrome Tab" tabs, so add First() here.
+	presentMode := nodewith.Name("Chrome Tab").Role(role.Tab).First()
 	presentTab := nodewith.ClassName("AXVirtualView").Role(role.Cell).NameContaining(tabName)
 	shareButton := nodewith.Name("Share").Role(role.Button)
 
