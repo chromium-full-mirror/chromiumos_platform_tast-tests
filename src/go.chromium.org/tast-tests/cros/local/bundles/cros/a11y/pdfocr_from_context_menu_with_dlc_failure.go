@@ -10,6 +10,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/pdfocr"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -17,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -33,7 +35,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{pdfocr.TestPDFName}, // Testing PDF containing inaccessible text
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      5 * time.Minute,
+		Timeout:      6 * time.Minute,
 		Params: []testing.Param{{
 			Name: "ash",
 			Val:  browser.TypeAsh,
@@ -45,20 +47,38 @@ func init() {
 	})
 }
 
+// PDFOCRFromContextMenuWithDlcFailure tests PDF OCR as follows:
+// 1. Simulate the screen-ai dlc download failure.
+// 2. Turn on PDF OCR from the context menu.
+// 3. Check if ChromeVox successfully notifies of this download failure.
+// 4.1. 	In the "secondDownloadFailure" scenario:
+// 4.1.1. Turn on PDF OCR from the context menu.
+// 4.1.2. Check if ChromeVox successfully notifies of this download failure.
+// 4.2. 	In the "secondDownloadSuccess" scenario:
+// 4.2.1. Refresh DLC by moving the screen-ai dlc to the correct location.
+// 4.2.2. Turn on PDF OCR from the context menu.
+// 4.2.3. Check if the screen-ai dlc is correctly installed.
+// 4.2.4. Check if PDF OCR successfully extracts text from the inaccessible PDF.
 func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	// Setup the dlc failure testing environment for PDF OCR.
 	data, err := pdfocr.SetUpDlcFailure(ctx)
 	if err != nil {
 		s.Fatal("Failed to set up dlc failure environment for PDF OCR: ", err)
 	}
+	var skipDeferForDlcFailure bool
 	defer func() {
+		if skipDeferForDlcFailure {
+			return
+		}
 		if err := data.TDown.TearDown(); err != nil {
 			s.Fatal("Failed to tear down PDF OCR dlc failure test: ", err)
 		}
 	}()
 
-	ctx = data.CTX
-	cleanupCtx := data.CleanupCTX
 	bt := s.Param().(browser.Type)
 	poData, err := pdfocr.SetUp(ctx, cleanupCtx, s.DataFileSystem(), bt)
 	if err != nil {
@@ -74,50 +94,100 @@ func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) 
 	server := poData.Server
 	tconn := poData.TConn
 
-	// Get a speech monitor for the Google TTS engine.
-	ed := tts.GoogleTTSEngine()
-	sm, err := tts.RelevantSpeechMonitor(ctx, cr, tconn, ed)
-	if err != nil {
-		s.Fatal("Failed to connect to the TTS background page: ", err)
-	}
-	defer sm.Close()
+	for _, subtest := range []struct {
+		scenario              string
+		secondDownloadSuccess bool
+	}{{
+		scenario:              "secondDownloadFailure",
+		secondDownloadSuccess: false,
+	}, {
+		scenario:              "secondDownloadSuccess",
+		secondDownloadSuccess: true,
+	}} {
+		s.Run(ctx, subtest.scenario, func(ctx context.Context, s *testing.State) {
+			// Get a speech monitor for the Google TTS engine.
+			ed := tts.GoogleTTSEngine()
+			sm, err := tts.RelevantSpeechMonitor(ctx, cr, tconn, ed)
+			if err != nil {
+				s.Fatal("Failed to connect to the TTS background page: ", err)
+			}
+			defer sm.Close()
 
-	ui := uiauto.New(tconn)
-	// Open the test PDF.
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/"+pdfocr.TestPDFName)
-	if err != nil {
-		s.Fatal("Failed to open test PDF: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
+			ui := uiauto.New(tconn)
+			// Open the test PDF.
+			conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/"+pdfocr.TestPDFName)
+			if err != nil {
+				s.Fatal("Failed to open test PDF: ", err)
+			}
+			defer closeBrowser(cleanupCtx)
+			defer conn.Close()
 
-	pdfRoot := nodewith.Role(role.PdfRoot)
-	if err := ui.WaitUntilExists(pdfRoot)(ctx); err != nil {
-		s.Fatal("Failed to wait for the PDF ROOT node to be created in accessibility tree: ", err)
-	}
+			pdfRoot := nodewith.Role(role.PdfRoot)
+			if err := ui.WaitUntilExists(pdfRoot)(ctx); err != nil {
+				s.Fatal("Failed to wait for the PDF ROOT node to be created in accessibility tree: ", err)
+			}
 
-	pdfOCRMenuEntry := nodewith.Name("Convert image to text").Role(role.MenuItem)
-	pdfOCRAlwaysOption := nodewith.Name("Always").Role(role.MenuItem)
-	if err := uiauto.Combine("Turn on PDF OCR from the Context Menu",
-		ui.WithTimeout(5*time.Second).RightClick(pdfRoot),
-		ui.WithTimeout(5*time.Second).LeftClick(pdfOCRMenuEntry),
-		ui.WithTimeout(5*time.Second).LeftClick(pdfOCRAlwaysOption),
-	)(ctx); err != nil {
-		s.Fatal("Failed to turn on PDF OCR from the Context Menu: ", err)
-	}
+			if err := pdfocr.TurnOnFromContextMenu(ctx, ui, pdfRoot, pdfocr.ContextMenuAlways); err != nil {
+				s.Fatal("Failed to turn on PDF OCR from the Context Menu")
+			}
 
-	if err := sm.Consume(ctx, []tts.SpeechExpectation{
-		tts.NewStringExpectation("Downloading text recognition files"),
-		tts.NewRegexExpectation("Can't download text recognition files*"),
-	}); err != nil {
-		s.Fatal("Failed to check the ChromeVox announcement for PDF OCR dlc failure: ", err)
-	}
+			if err := pdfocr.ExpectDownloadFailureUtterance(ctx, sm); err != nil {
+				s.Fatal("Failed to check the ChromeVox announcement for PDF OCR dlc failure: ", err)
+			}
 
-	// Failure of screen-ai dlc download makes the PDF OCR menu entry unchecked.
-	if err := uiauto.Combine("Check the PDF OCR menu entry from the Context Menu",
-		ui.WithTimeout(5*time.Second).RightClick(pdfRoot),
-		ui.WithTimeout(5*time.Second).WaitUntilCheckedState(pdfOCRMenuEntry, false),
-	)(ctx); err != nil {
-		s.Fatal("Failed to wait for the PDF OCR menu entry to be unchecked: ", err)
+			// Failure of screen-ai dlc download makes the PDF OCR menu entry unchecked.
+			pdfOCRMenuEntry := nodewith.Name(pdfocr.ContextMenuName).Role(role.MenuItem)
+			if err := uiauto.Combine("Check the PDF OCR menu entry from the Context Menu",
+				ui.WithTimeout(5*time.Second).RightClick(pdfRoot),
+				ui.WithTimeout(5*time.Second).WaitUntilCheckedState(pdfOCRMenuEntry, false),
+				ui.WithTimeout(5*time.Second).LeftClick(pdfRoot),
+			)(ctx); err != nil {
+				s.Fatal("Failed to wait for the PDF OCR menu entry to be unchecked: ", err)
+			}
+
+			if subtest.secondDownloadSuccess {
+				// Restore the screen-ai dlc failure.
+				if err := pdfocr.RefreshDlc(ctx, data.TempDlcPath); err != nil {
+					s.Fatal("Failed to restore the screen-ai dlc: ", err)
+				}
+				skipDeferForDlcFailure = true
+			}
+
+			// Turn on PDF OCR always again.
+			if err := pdfocr.TurnOnFromContextMenu(ctx, ui, pdfRoot, pdfocr.ContextMenuAlways); err != nil {
+				s.Fatal("Failed to turn on PDF OCR from the Context Menu")
+			}
+
+			if subtest.secondDownloadSuccess {
+				// Wait until screen-ai dlc is installed.
+				if err := testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
+					s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
+				}
+
+				// Check if PDF OCR successfully extracts text from the inaccessible PDF.
+				status := nodewith.Name(pdfocr.StatusReadyMessage).Role(role.Status)
+				ocredText := nodewith.Name(pdfocr.TextInPDFImage).Role(role.StaticText)
+				if err := uiauto.Combine("Check OCR result",
+					ui.WithTimeout(30*time.Second).WaitUntilExists(status),
+					ui.WithTimeout(30*time.Second).WaitUntilExists(ocredText),
+				)(ctx); err != nil {
+					s.Fatal("Failed to verify text extracted by PDF OCR")
+				}
+			} else {
+				if err := pdfocr.ExpectDownloadFailureUtterance(ctx, sm); err != nil {
+					s.Fatal("Failed to check the ChromeVox announcement for PDF OCR dlc failure: ", err)
+				}
+
+				// Failure of screen-ai dlc download makes the PDF OCR menu entry unchecked.
+				pdfOCRMenuEntry := nodewith.Name(pdfocr.ContextMenuName).Role(role.MenuItem)
+				if err := uiauto.Combine("Check the PDF OCR menu entry from the Context Menu",
+					ui.WithTimeout(5*time.Second).RightClick(pdfRoot),
+					ui.WithTimeout(5*time.Second).WaitUntilCheckedState(pdfOCRMenuEntry, false),
+					ui.WithTimeout(5*time.Second).LeftClick(pdfRoot),
+				)(ctx); err != nil {
+					s.Fatal("Failed to wait for the PDF OCR menu entry to be unchecked: ", err)
+				}
+			}
+		})
 	}
 }

@@ -66,14 +66,17 @@ func PDFOCRFromContextMenu(ctx context.Context, s *testing.State) {
 	server := data.Server
 	tconn := data.TConn
 
-	for _, pdfOCRContextMenu := range []struct {
-		name string
+	for _, subtest := range []struct {
+		name       string
+		menuOption pdfocr.ContextMenuOption
 	}{{
-		name: "Just once",
+		name:       "Just once",
+		menuOption: pdfocr.ContextMenuOnce,
 	}, {
-		name: "Always",
+		name:       "Always",
+		menuOption: pdfocr.ContextMenuAlways,
 	}} {
-		s.Run(ctx, pdfOCRContextMenu.name, func(ctx context.Context, s *testing.State) {
+		s.Run(ctx, subtest.name, func(ctx context.Context, s *testing.State) {
 			// Open the test PDF.
 			conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/"+pdfocr.TestPDFName)
 			if err != nil {
@@ -88,13 +91,7 @@ func PDFOCRFromContextMenu(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to wait for the PDF ROOT node to be created in the accessibility tree: ", err)
 			}
 
-			pdfOCRMenuEntry := nodewith.Name("Convert image to text").Role(role.MenuItem)
-			pdfOCROption := nodewith.Name(pdfOCRContextMenu.name).Role(role.MenuItem)
-			if err := uiauto.Combine("Turn on PDF OCR from the Context Menu",
-				ui.WithTimeout(5*time.Second).RightClick(pdfRoot),
-				ui.WithTimeout(5*time.Second).LeftClick(pdfOCRMenuEntry),
-				ui.WithTimeout(5*time.Second).LeftClick(pdfOCROption),
-			)(ctx); err != nil {
+			if err := pdfocr.TurnOnFromContextMenu(ctx, ui, pdfRoot, subtest.menuOption); err != nil {
 				s.Fatal("Failed to turn on PDF OCR from the Context Menu")
 			}
 
