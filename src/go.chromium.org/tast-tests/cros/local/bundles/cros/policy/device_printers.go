@@ -44,6 +44,7 @@ func init() {
 			pci.SearchFlag(&policy.DevicePrintersAllowlist{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.DevicePrintersBlocklist{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.DevicePrinters{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.UserPrintersAllowed{}, pci.VerifiedFunctionalityJS),
 			{
 				Key: "feature_id",
 				// Test printer configuration device policies (COM_FOUND_CUJ7_TASK3_WF1).
@@ -77,6 +78,8 @@ func DevicePrinters(ctx context.Context, s *testing.State) {
 			Url:  "https://storage.googleapis.com/chromiumos-test-assets-public/enterprise/printers.json",
 			Hash: "7a052c5e4f23c159668148df2a3c202bed4d65749cab5ecd0fa7db211c12a3b8",
 		}},
+		// UserPrintersAllowed is set to mitigate against finding other printers in the lab network (see b/284300892).
+		&policy.UserPrintersAllowed{Val: false},
 	}
 
 	for _, param := range []struct {
