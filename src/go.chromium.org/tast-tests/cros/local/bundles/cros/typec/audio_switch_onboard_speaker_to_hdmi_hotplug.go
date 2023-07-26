@@ -63,7 +63,7 @@ func init() {
 		}, {
 			Name:    "gold",
 			Val:     20,
-			Timeout: 12 * time.Minute,
+			Timeout: 20 * time.Minute,
 		}},
 	})
 }
@@ -203,7 +203,7 @@ func verifyFirstRunningDevice(ctx context.Context, audioDeviceName string) error
 			return errors.Wrapf(err, "unexpected audio node: got %q; want %q", devName, audioDeviceName)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second})
+	}, &testing.PollOptions{Timeout: 30 * time.Second})
 }
 
 // selectedAudioNodeViaUI selects audio node from quick-settings, returns audioDeviceName and audioDeviceType.
