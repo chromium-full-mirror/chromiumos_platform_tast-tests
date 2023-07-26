@@ -78,10 +78,7 @@ func ShillEntitlementCheck(ctx context.Context, s *testing.State) {
 	expectedEntitlementCheckResult := params.ExpectedEntitlementCheckResult
 	sendImsi := params.SendImsi
 
-	helper, _, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)

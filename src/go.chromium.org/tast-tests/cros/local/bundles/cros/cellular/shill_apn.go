@@ -109,12 +109,9 @@ func ShillApn(ctx context.Context, s *testing.State) {
 		s.Fatalf("Fail early to avoid wasting DUT time: %s", err)
 	}
 
-	helper, _, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
-	if _, err = helper.Disable(ctx); err != nil {
+	if _, err := helper.Disable(ctx); err != nil {
 		s.Fatal("Failed to disable cellular: ", err)
 	}
 	cleanupCtx := ctx

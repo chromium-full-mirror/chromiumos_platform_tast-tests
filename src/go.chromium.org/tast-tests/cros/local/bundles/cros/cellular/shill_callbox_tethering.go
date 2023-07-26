@@ -160,10 +160,7 @@ func ShillCallboxTethering(ctx context.Context, s *testing.State) {
 		shillconst.TetheringConfAutoDisable:  false,
 	}
 
-	helper, _, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)

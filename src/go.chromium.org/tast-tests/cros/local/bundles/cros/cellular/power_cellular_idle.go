@@ -28,10 +28,7 @@ const modemEnableTime = 3 * time.Minute
 const modemDisableTime = 1 * time.Minute
 
 func PowerCellularIdle(ctx context.Context, s *testing.State) {
-	helper, _, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	// Test Disable / Enable .
 	for i := 0; i < 2; i++ {
@@ -51,7 +48,7 @@ func PowerCellularIdle(ctx context.Context, s *testing.State) {
 		}
 
 		s.Logf("Cellular Enable %d", i+1)
-		if _, err = helper.Enable(ctx); err != nil {
+		if _, err := helper.Enable(ctx); err != nil {
 			s.Fatalf("Enable failed on attempt %d: %s", i+1, err)
 		}
 

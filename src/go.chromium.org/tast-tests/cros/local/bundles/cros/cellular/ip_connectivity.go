@@ -60,12 +60,9 @@ func IPConnectivity(ctx context.Context, s *testing.State) {
 	ipv4Expected := params.ipv4
 	ipv6Expected := params.ipv6
 
-	helper, _, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
-	if _, err = helper.Disable(ctx); err != nil {
+	if _, err := helper.Disable(ctx); err != nil {
 		s.Fatal("Failed to disable cellular: ", err)
 	}
 	cleanupCtx := ctx

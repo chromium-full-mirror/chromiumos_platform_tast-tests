@@ -38,10 +38,8 @@ func init() {
 }
 
 func CellularRoamingPerProfileOrSim(ctx context.Context, s *testing.State) {
-	helper, _, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+
 	ctxForCleanUp := ctx
 
 	cleanup, err := helper.InitDeviceProperty(ctx, shillconst.DevicePropertyCellularPolicyAllowRoaming, false)

@@ -167,8 +167,9 @@ type cellularFixture struct {
 
 // FixtData holds information made available to tests that specify this fixture.
 type FixtData struct {
-	fdms *fakedms.FakeDMS
-	ARC  *arc.ARC
+	Helper *Helper
+	fdms   *fakedms.FakeDMS
+	ARC    *arc.ARC
 }
 
 // FakeDMS implements the HasFakeDMS interface.
@@ -183,10 +184,21 @@ const uptimeBeforeTest = 2 * time.Minute
 
 func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	// Check if the modem is exported by ModemManager before calling NewHelper().
-	if _, err := modemmanager.NewModem(ctx); err != nil && ModemHelperPathExists() {
+	modem, err := modemmanager.NewModem(ctx)
+	if err != nil {
 		testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
+		if !ModemHelperPathExists() {
+			s.Fatal("Failed to get modem and no ModemHelper: ", err)
+		}
 		if err := RestartModemWithHelper(ctx); err != nil {
 			s.Fatal("Failed to restart modem: ", err)
+		}
+	}
+
+	// Ensure that the primary SIM slot has a valid SIM.
+	if !(f.useTestESIM || f.restartMM) {
+		if err := modem.EnsureValidSIM(ctx); err != nil {
+			s.Fatal("Failed to ensure valid SIM: ", err)
 		}
 	}
 
@@ -209,7 +221,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	if sfish != nil {
 		// ResetModem needed to detect SIM.
-		if _, err := f.helper.ResetModem(ctx); err != nil {
+		if _, err := helper.ResetModem(ctx); err != nil {
 			s.Log("Failed to reset modem for Starfish: ", err)
 		}
 	}
@@ -286,14 +298,14 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	if f.checkSIM {
-		if _, err := f.helper.Connect(ctx); err != nil {
+		if _, err := helper.Connect(ctx); err != nil {
 			s.Fatal("Failed to connect for checkSIM: ", err)
 		}
-		if _, err := f.helper.Disconnect(ctx); err != nil {
+		if _, err := helper.Disconnect(ctx); err != nil {
 			s.Fatal("Failed to disconnect for checkSIM: ", err)
 		}
 	}
-	return &FixtData{fdms, a}
+	return &FixtData{helper, fdms, a}
 }
 
 func (f *cellularFixture) Reset(ctx context.Context) error { return nil }

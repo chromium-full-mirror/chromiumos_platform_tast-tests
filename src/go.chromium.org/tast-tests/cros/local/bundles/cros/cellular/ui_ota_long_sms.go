@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -40,9 +41,9 @@ func init() {
 
 // UIOtaLongSms validates MT Long SMS, uses google voice to send SMS.
 func UIOtaLongSms(ctx context.Context, s *testing.State) {
-	_, modem, err := cellular.NewHelperWithSim(ctx)
+	modem, err := modemmanager.NewModemWithSim(ctx)
 	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
+		s.Fatal("Could not find mm dbus object with a valid sim: ", err)
 	}
 
 	/* a) Check cellular connection and get mobile number on dut

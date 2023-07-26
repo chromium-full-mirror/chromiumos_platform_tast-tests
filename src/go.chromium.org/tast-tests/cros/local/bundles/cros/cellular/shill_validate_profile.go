@@ -48,25 +48,21 @@ func ShillValidateProfile(ctx context.Context, s *testing.State) {
 	// Call ResetShill With Profile a placeholder profile path to sideload test_profile created from default profile and added APN
 	// Should able to connect default.profile
 
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+
 	// Check cellular connection for default profile.
-	connected, err := checkCellularConnection(ctx, true)
-	if err != nil || !connected {
+	if connected, err := checkCellularConnection(ctx, helper, true); err != nil || !connected {
 		s.Fatal("Supposed to connect with the given good apn proto configuration: ", err)
 	}
 	s.Log("Connected with default profile - Step1 Done")
 
-	printShillInfo(ctx)
+	printShillInfo(ctx, helper)
 
 	cleanup, err := cellular.SetServiceProvidersExclusiveOverride(ctx, s.DataPath(incorrectAPNProto))
 	if err != nil {
 		s.Fatal("Failed to set service providers override: ", err)
 	}
 	defer cleanup()
-
-	helper, err := cellular.NewHelper(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
-	}
 
 	s.Log("Reset Shill after loading incorrect apn textproto")
 	errs := helper.ResetShill(ctx)
@@ -76,16 +72,15 @@ func ShillValidateProfile(ctx context.Context, s *testing.State) {
 
 	// Check profile properties after modification.
 	s.Log("Loaded incorrect apn textproto and after resetshill")
-	printShillInfo(ctx)
+	printShillInfo(ctx, helper)
 
 	// Check cellular connection, should fail to connect with incorrect apn(ipv4 incorrect one), and do not try to connect to default profile(false).
-	connected, err = checkCellularConnection(ctx, false)
-	if connected {
-		s.Fatal("Supposed to fail in connecting as incorrect apn loaded")
+	if connected, err := checkCellularConnection(ctx, helper, false); err != nil || connected {
+		s.Fatal("Supposed to fail in connecting as incorrect apn loaded: ", err)
 	}
 	s.Log("Should not connect as its incorrect profile - Step2 Done")
 
-	printShillInfo(ctx)
+	printShillInfo(ctx, helper)
 	s.Log("Reset shill with test default profile side load")
 
 	modem, err := modemmanager.NewModemWithSim(ctx)
@@ -111,8 +106,7 @@ func ShillValidateProfile(ctx context.Context, s *testing.State) {
 	newProfile = strings.Replace(string(newProfile), "imsinumber", imsi, -1)
 
 	s.Log("After update: ", newProfile)
-	err = ioutil.WriteFile(tempFilePath, []byte(newProfile), 0)
-	if err != nil {
+	if err := ioutil.WriteFile(tempFilePath, []byte(newProfile), 0); err != nil {
 		s.Fatal("Could not write updated test profile to path: ", err)
 	}
 	cleanupCtx := ctx
@@ -132,22 +126,17 @@ func ShillValidateProfile(ctx context.Context, s *testing.State) {
 	}
 
 	// Check cellular connection, should connect with default profile after shill reset.
-	connected, err = checkCellularConnection(ctx, true)
-	if err != nil || !connected {
+	if connected, err := checkCellularConnection(ctx, helper, true); err != nil || !connected {
 		s.Fatal("Supposed to connect with the given good apn proto configuration: ", err)
 	}
 	s.Log("Successfully connected with side loaded default profile - Step3 Done")
-	printShillInfo(ctx)
+	printShillInfo(ctx, helper)
 }
 
 // checkCellularConnection checks for cellular connection and tries to connect if connect is 'True'.
-func checkCellularConnection(ctx context.Context, connect bool) (bool, error) {
+func checkCellularConnection(ctx context.Context, helper *cellular.Helper, connect bool) (bool, error) {
 	// Check cellular connection, should able to connect with default apn(ipv4 one).
-	helper, err := cellular.NewHelper(ctx)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to create cellular.Helper")
-	}
-	if _, err = helper.Enable(ctx); err != nil {
+	if _, err := helper.Enable(ctx); err != nil {
 		return false, errors.Wrap(err, "failed to enable cellular")
 	}
 
@@ -157,12 +146,11 @@ func checkCellularConnection(ctx context.Context, connect bool) (bool, error) {
 		return false, errors.Wrap(err, "unable to find cellular service for device")
 	}
 
-	if err = helper.WaitForEnabledState(ctx, true); err != nil {
+	if err := helper.WaitForEnabledState(ctx, true); err != nil {
 		return false, errors.Wrap(err, "cellular service did not reach enabled state")
 	}
 
 	testing.ContextLog(ctx, "Connecting")
-	isConnected := false
 
 	modem, err := modemmanager.NewModemWithSim(ctx)
 	if err != nil {
@@ -177,11 +165,12 @@ func checkCellularConnection(ctx context.Context, connect bool) (bool, error) {
 		return false, errors.Wrap(err, "modem not registered")
 	}
 
-	if isConnected, err = service.IsConnected(ctx); err != nil {
+	isConnected, err := service.IsConnected(ctx)
+	if err != nil {
 		return false, errors.Wrap(err, "unable to get isConnected for service")
 	}
 	if !isConnected && connect {
-		if _, err = helper.ConnectToDefault(ctx); err != nil {
+		if _, err := helper.ConnectToDefault(ctx); err != nil {
 			return false, errors.Wrap(err, "unable to connect to service")
 		}
 		isConnected, _ = service.IsConnected(ctx)
@@ -191,10 +180,10 @@ func checkCellularConnection(ctx context.Context, connect bool) (bool, error) {
 }
 
 // printShillInfo prints shill apns used to connect.
-func printShillInfo(ctx context.Context) error {
-	helper, modem, err := cellular.NewHelperWithSim(ctx)
+func printShillInfo(ctx context.Context, helper *cellular.Helper) error {
+	modem, err := modemmanager.NewModemWithSim(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to create cellular.Helper")
+		return errors.Wrap(err, "could not find mm dbus object with a valid sim")
 	}
 	modemAttachApn, err := modem.GetInitialEpsBearerSettings(ctx, modem)
 	if err != nil {

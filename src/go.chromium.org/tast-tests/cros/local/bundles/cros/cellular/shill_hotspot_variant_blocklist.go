@@ -27,10 +27,7 @@ func init() {
 }
 
 func ShillHotspotVariantBlocklist(ctx context.Context, s *testing.State) {
-	helper, _, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	technologies, err := helper.Manager.GetTetheringCapabilityUpstreamTechnologies(ctx)
 	if err != nil {

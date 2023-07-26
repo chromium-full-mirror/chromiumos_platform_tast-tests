@@ -30,10 +30,7 @@ func init() {
 }
 
 func ShillCellularStressSuspendResume(ctx context.Context, s *testing.State) {
-	helper, _, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	cr, err := chrome.New(ctx)
 	if err != nil {

@@ -50,9 +50,11 @@ func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	setInitialAttachAPNValue := params.SetInitialAttachAPNValue
 	apnToConnect := params.ApnToConnect
 
-	helper, modem, err := cellular.NewHelperWithSim(ctx)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+
+	modem, err := modemmanager.NewModemWithSim(ctx)
 	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
+		s.Fatal("Could not find mm dbus object with a valid sim: ", err)
 	}
 
 	modem3gpp, err := modem.GetModem3gpp(ctx)
@@ -65,7 +67,7 @@ func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if _, err = helper.Disable(ctx); err != nil {
+	if _, err := helper.Disable(ctx); err != nil {
 		s.Fatal("Failed to disable cellular: ", err)
 	}
 	cleanupCtx := ctx
@@ -89,7 +91,7 @@ func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reset shill: ", errs)
 	}
 
-	if _, err = helper.Enable(ctx); err != nil {
+	if _, err := helper.Enable(ctx); err != nil {
 		s.Fatal("Failed to enable cellular: ", err)
 	}
 
@@ -124,16 +126,13 @@ func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "modemAttachApn:", modemAttachApn)
 	testing.ContextLog(ctx, "connectApn", bearer)
 
-	apnName := modemAttachApn["apn"]
-	if apnName != expectedLastAttachAPN {
+	if apnName := modemAttachApn["apn"]; apnName != expectedLastAttachAPN {
 		s.Fatalf("Last Attach APN doesn't match: got %q, want %q", apnName, expectedLastAttachAPN)
 	}
 
-	apnName, err = bearer.GetAPN()
-	if err != nil {
+	if apnName, err := bearer.GetAPN(); err != nil {
 		s.Fatal("Error getting APN name: ", err)
-	}
-	if apnName != expectedLastGoodAPN {
+	} else if apnName != expectedLastGoodAPN {
 		s.Fatalf("Last good APN doesn't match: got %q, want %q", apnName, expectedLastGoodAPN)
 	}
 }

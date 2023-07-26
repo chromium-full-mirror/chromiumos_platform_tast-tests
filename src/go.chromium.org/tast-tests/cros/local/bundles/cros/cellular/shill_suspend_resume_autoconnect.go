@@ -57,10 +57,7 @@ func ShillSuspendResumeAutoconnect(ctx context.Context, s *testing.State) {
 	expectedStates := map[bool]string{true: shillconst.ServiceStateOnline,
 		false: shillconst.ServiceStateIdle}
 
-	helper, _, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	// Disable Ethernet and/or WiFi if present and defer re-enabling.
 	// Shill documentation shows that autoconnect will only be used if there

@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
+	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -28,9 +29,11 @@ func init() {
 }
 
 func ShillRoaming(ctx context.Context, s *testing.State) {
-	helper, modem, err := cellular.NewHelperWithSim(ctx)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+
+	modem, err := modemmanager.NewModemWithSim(ctx)
 	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
+		s.Fatal("Could not find mm dbus object with a valid sim: ", err)
 	}
 
 	ctxForCleanUp := ctx

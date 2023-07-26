@@ -30,10 +30,7 @@ func init() {
 }
 
 func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
-	helper, _, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
@@ -47,15 +44,16 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	// TODO(b/267804414): Set tethering Allowed is only needed during fishfooding and can be removed later.
-	err = helper.Manager.SetTetheringAllowed(ctx, true)
+	if err := helper.Manager.SetTetheringAllowed(ctx, true); err != nil {
+		s.Log("Unable to set Tethering allowed: ", err)
+	}
 
 	// GoBigSleepLint: TODO(b/267804414): A 5 second delay is enough to ensure that the service is destroyed when a Reattach is triggered.
 	testing.Sleep(ctx, 5*time.Second)
 
 	// TODO(b/267804414): SetTetheringAllowed will trigger a Reattach, so we need to reconnect.
-	helper, err = cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper for hotspot: ", err)
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to Cellular for hotspot: ", err)
 	}
 
 	status, err := helper.Manager.CheckTetheringReadiness(ctx)

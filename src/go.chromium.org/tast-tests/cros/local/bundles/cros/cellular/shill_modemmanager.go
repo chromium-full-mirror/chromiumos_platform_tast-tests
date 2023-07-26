@@ -26,14 +26,12 @@ func init() {
 }
 
 func ShillModemmanager(ctx context.Context, s *testing.State) {
-	helper, modem1, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
-	if _, err := helper.FindService(ctx); err != nil {
-		s.Fatal("Unable to find Cellular Service before modemmanager restart: ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
+	modem1, err := modemmanager.NewModemWithSim(ctx)
+	if err != nil {
+		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
+	}
 	deviceProps, err := helper.Device.GetProperties(ctx)
 	if err != nil {
 		s.Fatal("Failed to get Device properties: ", err)
@@ -42,7 +40,6 @@ func ShillModemmanager(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get Device.DBusObject property: ", err)
 	}
-
 	if modemPath != modem1.String() {
 		s.Fatalf("Path mismatch, got: %q, want: %q", modemPath, modem1.String())
 	}

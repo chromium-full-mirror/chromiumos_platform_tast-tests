@@ -31,10 +31,7 @@ func init() {
 }
 
 func ShillEnableAndConnect(ctx context.Context, s *testing.State) {
-	helper, _, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	// Disable AutoConnect so that enable does not connect.
 	ctxForAutoConnectCleanUp := ctx

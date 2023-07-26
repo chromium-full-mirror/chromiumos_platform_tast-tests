@@ -47,20 +47,17 @@ func init() {
 func ShillSuspendResumePersistEnabled(ctx context.Context, s *testing.State) {
 	params := s.Param().(persistEnabledTestParams)
 
-	helper, _, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	// Apply required enabled state
 	if params.enabledState {
-		_, err = helper.Enable(ctx)
+		if _, err := helper.Enable(ctx); err != nil {
+			s.Fatal("Unable to enable Cellular: ", err)
+		}
 	} else {
-		_, err = helper.Disable(ctx)
-	}
-
-	if err != nil {
-		s.Fatal("Failed to set initial enabled setting to ", params.enabledState, ": ", err)
+		if _, err := helper.Disable(ctx); err != nil {
+			s.Fatal("Unable to disable Cellular: ", err)
+		}
 	}
 
 	// Request suspend for 10 seconds

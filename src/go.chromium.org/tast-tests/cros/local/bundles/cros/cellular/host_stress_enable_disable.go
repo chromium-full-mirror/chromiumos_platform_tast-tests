@@ -28,10 +28,7 @@ func init() {
 }
 
 func HostStressEnableDisable(ctx context.Context, s *testing.State) {
-	helper, _, err := cellular.NewHelperWithSim(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	stressTestHostIPConnectivity := func(ctx context.Context) error {
 		for i := 1; i < 5; i++ {
