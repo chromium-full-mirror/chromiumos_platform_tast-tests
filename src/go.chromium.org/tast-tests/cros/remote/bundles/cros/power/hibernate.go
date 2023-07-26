@@ -35,7 +35,10 @@ func init() {
 		BugComponent: "b:167191",
 		Contacts:     []string{"chromeos-platform-power@google.com", "vovoy@google.com"},
 		SoftwareDeps: []string{"reboot", "no_qemu"},
-		Vars:         []string{hibernateCyclesVars, tape.ServiceAccountVar},
+		// Allow for a larger number of cycles for stress testing. In case of a hang the
+		// test will time out on one of the shorter context specific timeouts.
+		Timeout: 24 * time.Hour,
+		Vars:    []string{hibernateCyclesVars, tape.ServiceAccountVar},
 	})
 }
 
@@ -135,12 +138,16 @@ func readNumberFromHibernateConfirmation(ctx context.Context, s *testing.State) 
 
 // hibernateResume hibernate and resume the DUT.
 func hibernateResume(ctx context.Context, s *testing.State) error {
+	commandCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
+
 	command := "hiberman hibernate -r"
 	dut := s.DUT()
-	out, err := dut.Conn().CommandContext(ctx, "bash", "-c", command).CombinedOutput()
+	out, err := dut.Conn().CommandContext(commandCtx, "bash", "-c", command).CombinedOutput()
 	s.Logf("hiberman output: %s", out)
 	if err != nil {
-		if err.Error() == "wait: remote command exited without exit status or exit signal" {
+		if strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
+			// The command is expected to time out if hibernate was successful.
 			return nil
 		}
 		return errors.Wrap(err, "failed to hibernate")
@@ -383,7 +390,10 @@ func Hibernate(ctx context.Context, s *testing.State) {
 	defer accManager.CleanUp(ctx)
 
 	for i := 1; i <= cycles; i++ {
-		hibernateIteration(ctx, s, account)
+		hibernateCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+		defer cancel()
+
+		hibernateIteration(hibernateCtx, s, account)
 		s.Logf("Hibernate attempt %d complete", i)
 	}
 }
