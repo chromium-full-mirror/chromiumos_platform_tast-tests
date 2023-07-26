@@ -1246,6 +1246,14 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		s.Fatal("Failed to set the shelf behavior to 'never auto-hide' for display ID ", info.ID)
 	}
 
+	// Create a NewScopedAutoRelease to ensure that loading the ui tree in
+	// setup.TurnOnLightTheme does not interfere wih the rest of the test.
+	automationAutoRelease, err := uiauto.NewScopedAutoRelease(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to create automation ScopedAutoRelease: ", err)
+	}
+	defer automationAutoRelease.Reset(ctx)
+
 	// Set the theme to light mode to ensure power usage consistency
 	// between each test.
 	f.cleanupTheme, err = setup.TurnOnLightTheme(ctx, tconn)
