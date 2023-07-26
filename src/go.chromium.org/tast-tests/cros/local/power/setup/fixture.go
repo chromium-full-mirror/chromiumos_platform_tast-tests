@@ -514,6 +514,7 @@ func init() {
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("CrosPrivacyHub"),
 				chrome.EnableFeatures("VideoConference"),
+				chrome.EnableFeatures("FeatureManagementVideoConference"),
 			},
 		}),
 		Parent:          fixture.StereoAloopLoaded,

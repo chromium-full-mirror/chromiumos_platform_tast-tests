@@ -34,6 +34,7 @@ func init() {
 				chrome.EnableFeatures("VideoConference"),
 				chrome.EnableFeatures("CrOSLateBootAudioFlexibleLoopback"),
 				chrome.EnableFeatures("SystemLiveCaption"),
+				chrome.EnableFeatures("FeatureManagementVideoConference"),
 				chrome.ExtraArgs("--disable-sync"),
 				chrome.ExtraArgs(arc.DisableSyncFlags()...),
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil

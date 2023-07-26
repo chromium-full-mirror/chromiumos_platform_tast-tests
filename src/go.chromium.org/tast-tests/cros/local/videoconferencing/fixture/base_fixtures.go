@@ -300,6 +300,7 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		chrome.EnableFeatures("VideoConference"),
 		chrome.EnableFeatures("CrOSLateBootAudioFlexibleLoopback"),
 		chrome.EnableFeatures("SystemLiveCaption"),
+		chrome.EnableFeatures("FeatureManagementVideoConference"),
 		chrome.ExtraArgs("--disable-sync"),
 	}
 
