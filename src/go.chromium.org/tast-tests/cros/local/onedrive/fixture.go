@@ -219,6 +219,12 @@ func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 
 // cleanUp makes a best effort attempt to restore the state to where it was pretest.
 func (f *fixture) cleanUp(ctx context.Context, s *testing.FixtState) {
+
+	// The deletion in the loop below often fails, here we delete files from previous runs.
+	if len(f.cleanUpFiles) > 0 {
+		DeleteOldFiles(ctx, f.cleanUpFiles[0].FileName)
+	}
+
 	// NOTE: The deletion below fails if the files are open in the UI (Office 365 PWA).
 	for _, testFile := range f.cleanUpFiles {
 		name := testFile.FileName

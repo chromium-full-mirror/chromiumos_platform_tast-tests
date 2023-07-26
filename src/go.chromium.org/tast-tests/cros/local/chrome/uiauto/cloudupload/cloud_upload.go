@@ -52,6 +52,7 @@ func (cu *CloudUpload) WaitFileHandlerAndChoose(provider onedrive.Provider) uiau
 	}
 
 	return uiauto.Combine("File handlers dialog: choose Google Drive",
+		log("Starting File Handlers step"),
 		cu.ui.WaitUntilExists(fileHandlerDialog),
 		cu.ui.LeftClick(option),
 		cu.ui.LeftClick(fileHandlerOpenButton),
@@ -64,10 +65,18 @@ func (cu *CloudUpload) WaitGetStartedDialogAndClickNext() uiauto.Action {
 	dialog := nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("Set up Microsoft 365 *"))
 	getStartedButton := nodewith.Ancestor(dialog).Role(role.Button).Name("Get started")
 	return uiauto.Combine("Setup OneDrive dialog: get started",
+		log("Starting Get Started step"),
 		cu.ui.WaitUntilExists(dialog),
 		cu.ui.LeftClick(getStartedButton),
 		cu.ui.WaitUntilGone(dialog),
 	)
+}
+
+func log(msg string) uiauto.Action {
+	return func(ctx context.Context) error {
+		testing.ContextLog(ctx, msg)
+		return nil
+	}
 }
 
 // WaitInstallPWADialogAndClickInstall waits for the Install PWA dialog and clicks "Install".
@@ -75,24 +84,23 @@ func (cu *CloudUpload) WaitInstallPWADialogAndClickInstall() uiauto.Action {
 	installPWADialog := nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile(`Install.* Microsoft 365`))
 	installButton := nodewith.Ancestor(installPWADialog).Role(role.Button).Name("Install")
 	return uiauto.Combine("Install PWA dialog: install",
+		log("Starting Install PWA step"),
 		cu.ui.WaitUntilExists(installPWADialog),
 		cu.ui.WaitUntilExists(installButton),
 		cu.ui.LeftClick(installButton),
-		cu.ui.WithTimeout(2*time.Minute).WaitUntilAnyExists(
-			installButton, // it will appear again if it fails to install.
-
-			// The next page is either one of those dialogs.
-			connectToOneDriveDialog,
-			SetupCompleteDialog,
-		),
+		cu.ui.WaitUntilGone(installButton),
 		func(ctx context.Context) error {
+			found, err := cu.ui.WithTimeout(2*time.Minute).FindAnyExists(ctx,
+				installButton, // it will appear again if it fails to install.
 
-			found, err := cu.ui.FindAnyExists(ctx, installButton, connectToOneDriveDialog, SetupCompleteDialog)
+				// The next page is either one of those dialogs.
+				connectToOneDriveDialog,
+				SetupCompleteDialog,
+			)
 			if err != nil {
 				return errors.Wrap(err, "failed to find the next step after Install PWA dialog")
 			}
 			if found == installButton {
-				testing.ContextLog(ctx, "Trying again to install PWA")
 				if err := cu.WaitInstallPWADialogAndClickInstall()(ctx); err != nil {
 					return err
 				}
@@ -110,6 +118,7 @@ func (cu *CloudUpload) WaitConnectToOneDriveDialogAndClickConnect() uiauto.Actio
 	connectToOneDriveDialog := connectToOneDriveDialog
 	connectButton := nodewith.Ancestor(connectToOneDriveDialog).Role(role.Button).Name("Connect to OneDrive")
 	return uiauto.Combine("Connect to OneDrive dialog: connect",
+		log("Starting Connect to OneDrive step"),
 		cu.ui.WaitUntilExists(connectToOneDriveDialog),
 		cu.ui.LeftClick(connectButton),
 		cu.ui.WaitUntilGone(connectToOneDriveDialog),
@@ -123,6 +132,7 @@ var SetupCompleteDialog = nodewith.Role(role.Dialog).Name("Microsoft 365 setup c
 func (cu *CloudUpload) WaitSetupCompleteDialogAndClickDone() uiauto.Action {
 	doneButton := nodewith.Ancestor(SetupCompleteDialog).Role(role.Button).Name("Done")
 	return uiauto.Combine("Setup Complete dialog: done",
+		log("Starting Setup Complete step"),
 		cu.ui.WaitUntilExists(SetupCompleteDialog),
 		cu.ui.LeftClick(doneButton),
 		cu.ui.WaitUntilGone(SetupCompleteDialog),
@@ -135,7 +145,8 @@ func (cu *CloudUpload) WaitUploadConfirmationDialogAndClickToUpload(alwaysMove b
 	moveButton := nodewith.Ancestor(dialog).Role(role.Button).NameRegex(regexp.MustCompile("(Move|Copy) and open"))
 	alwaysMoveCheckbox := nodewith.Ancestor(dialog).Role(role.CheckBox)
 
-	return uiauto.Combine("Move to cloud dialog: done",
+	return uiauto.Combine("Move/copy to cloud dialog: done",
+		log("Starting Move/Copy confirmation dialog step"),
 		cu.ui.WaitUntilExists(dialog),
 		func(ctx context.Context) error {
 			if alwaysMove {
