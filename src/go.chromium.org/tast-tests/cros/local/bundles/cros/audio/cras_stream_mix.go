@@ -34,9 +34,10 @@ func init() {
 		Desc:         "Captures output audio via loopback and verifies that CRAS plays multiple streams correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},
 		BugComponent: "b:776546",
-		SoftwareDeps: []string{"audio_stable", "chrome"},
-		// b/291180821: Skip betty-pi-arc before b/291180821 is fixed.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty-pi-arc")),
+		// b/291180821: Remove no_qemu after making the test pass on betty.
+		SoftwareDeps: []string{"audio_stable", "chrome", "no_qemu"},
+		// b/291180821: Skip "kevin", "wormdingler", "quackingstick", "homestar", "pazquel", "limozeen", "pompom", "kingoftown", "pazquel360" until b/291180821 is fixed.
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kevin", "wormdingler", "quackingstick", "homestar", "pazquel", "limozeen", "pompom", "kingoftown", "pazquel360")),
 		Pre:          chrome.LoggedIn(),
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{
