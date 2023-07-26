@@ -177,3 +177,69 @@ func VirtualTrackpad(ctx context.Context) (*TrackpadEventWriter, error) {
 func (tew *TrackpadEventWriter) MaxPressure() int {
 	return tew.maxPressure
 }
+
+// PressButton creates all of the events needed to simulate a click event on a
+// touchpad.
+func (tew *TrackpadEventWriter) PressButton(btn EventCode) error {
+	if err := tew.rw.Event(EV_ABS, ABS_MT_TRACKING_ID, 5); err != nil {
+		return err
+	}
+
+	if err := tew.rw.Event(EV_ABS, ABS_MT_POSITION_X, 5); err != nil {
+		return err
+	}
+
+	if err := tew.rw.Event(EV_ABS, ABS_MT_POSITION_Y, 4); err != nil {
+		return err
+	}
+
+	if err := tew.rw.Event(EV_ABS, ABS_MT_PRESSURE, 20); err != nil {
+		return err
+	}
+
+	if err := tew.rw.Event(EV_ABS, ABS_MT_TOUCH_MAJOR, 3); err != nil {
+		return err
+	}
+
+	if err := tew.rw.Event(EV_ABS, ABS_MT_TOUCH_MINOR, 6); err != nil {
+		return err
+	}
+
+	if err := tew.rw.Event(EV_ABS, ABS_PRESSURE, 32); err != nil {
+		return err
+	}
+
+	if err := tew.rw.Event(EV_ABS, ABS_X, 7); err != nil {
+		return err
+	}
+
+	if err := tew.rw.Event(EV_ABS, ABS_Y, 8); err != nil {
+		return err
+	}
+
+	if err := tew.rw.Sync(); err != nil {
+		return errors.Wrap(err, "writing first sync failed")
+	}
+
+	if err := tew.rw.Event(EV_KEY, BTN_TOUCH, 1); err != nil {
+		return err
+	}
+
+	if err := tew.rw.Event(EV_KEY, BTN_TOOL_FINGER, 1); err != nil {
+		return err
+	}
+
+	if err := tew.rw.Event(EV_KEY, btn, 1); err != nil {
+		return err
+	}
+
+	if err := tew.rw.Sync(); err != nil {
+		return errors.Wrap(err, "writing second sync failed")
+	}
+
+	if err := tew.rw.Event(EV_KEY, btn, 0); err != nil {
+		return err
+	}
+
+	return tew.rw.Sync()
+}
