@@ -99,7 +99,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{disableCellularTechnology: true, restartMM: true},
+		Impl:            &cellularFixture{restartMM: true},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularArcBooted",
@@ -152,13 +152,12 @@ func init() {
 // cellularFixture implements testing.FixtureImpl.
 type cellularFixture struct {
 	// Fixture control flags
-	disableCellularTechnology bool
-	restartMM                 bool
-	useFakeDMS                bool
-	useRoaming                bool
-	useTestESIM               bool
-	checkSIM                  bool
-	hasArc                    bool
+	restartMM   bool
+	useFakeDMS  bool
+	useRoaming  bool
+	useTestESIM bool
+	checkSIM    bool
+	hasArc      bool
 	// Fixture variables
 	helper          *Helper
 	modemfwdStopped bool
@@ -265,14 +264,12 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}
 
-	if f.disableCellularTechnology {
-		// Disabling cellular in shill, prevents shill from re-enabling cellular
-		// after Modem disable called.
-		if _, err := f.helper.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyCellular); err != nil {
+	if f.restartMM {
+		// Disable cellular in shill to prevents re-enabling cellular after Modem
+		// disable called.
+		if _, err := helper.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyCellular); err != nil {
 			s.Fatal("Unable to disable Cellular: ", err)
 		}
-	}
-	if f.restartMM {
 		if err := upstart.RestartJob(ctx, modemmanager.JobName); err != nil {
 			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", modemmanager.JobName, err)
 		}
@@ -315,7 +312,7 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 		}
 	}
 
-	if f.disableCellularTechnology && f.restartMM {
+	if f.restartMM {
 		err := modem.EnsureValidSIM(ctx)
 		if err != nil {
 			s.Fatal("Could not find MM dbus object with a valid sim (precondition): ", err)
@@ -404,7 +401,7 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 }
 
 func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if f.disableCellularTechnology {
+	if f.restartMM {
 		if err := f.helper.Manager.EnableTechnology(ctx, shill.TechnologyCellular); err != nil {
 			s.Fatal("Unable to enable Cellular: ", err)
 		}

@@ -95,22 +95,22 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 		if knownAPN.IsAttachAPN() {
 			attachApn = mmApnInfo
 		}
-		testing.ContextLog(ctx, "Attaching with ", attachApn)
+		s.Log("Attaching with: ", attachApn)
 		if err := modemmanager.SetInitialEpsBearerSettings(ctx, modem3gpp, attachApn); err != nil {
-			testing.ContextLog(ctx, "Failed to set initial EPS bearer settings: ", err)
+			s.Log("Failed to set initial EPS bearer settings: ", err)
 		}
 		if err := modemmanager.EnsureRegistered(ctx, modem, simpleModem); err != nil {
 			if knownAPN.Optional {
-				testing.ContextLog(ctx, "Failed to register")
+				s.Log(ctx, "Failed to register")
 				continue
 			}
 			s.Fatal("Modem not registered: ", err)
 		}
-		testing.ContextLog(ctx, "Connecting with ", mmApnInfo)
+		s.Log("Connecting with ", mmApnInfo)
 
 		if _, err = modemmanager.Connect(ctx, simpleModem, mmApnInfo); err != nil {
 			if knownAPN.Optional {
-				testing.ContextLog(ctx, "Failed to connect")
+				s.Log("Failed to connect")
 				continue
 			}
 			s.Fatal("Modem connect failed with error: ", err)
