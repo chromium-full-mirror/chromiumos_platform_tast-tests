@@ -58,8 +58,8 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 	// also be checked if listed. Other non-root processes, and entries listed here that aren't running,
 	// will be ignored. A single process name may be listed multiple times with different users.
 	baseline := []*procReqs{
-		{"udevd", "root", "root", 0},  // needs root to create device nodes and change owners/perms
-		{"frecon", "root", "root", 0}, // needs root and no namespacing to launch shells
+		{"udevd", "root", "root", 0},    // needs root to create device nodes and change owners/perms
+		{"frecon", "root", "frecon", 0}, // needs root and no namespacing to launch shells
 		{"session_manager", "root", "root", 0},
 		{"rsyslogd", "syslog", "syslog", mntNS | restrictCaps},
 		{"systemd-journal", "syslog", "syslog", mntNS | restrictCaps},
@@ -164,6 +164,7 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		{"chromeos-trim", "root", "root", 0},
 		{"crx-import.sh", "root", "root", 0},
 		{"dump_vpd_log", "root", "root", 0},
+		{"frecon-pre-start.sh", "root", "root", 0},
 		{"lockbox-cache.sh", "root", "root", 0},
 		{"powerd-pre-start.sh", "root", "root", 0},
 		{"update_rw_vpd", "root", "root", 0},
