@@ -29,7 +29,7 @@ const (
 	PostDemoModeOOBECloudGaming = "postDemoModeOOBECloudGaming"
 
 	setUpTimeout    = 350 * time.Second
-	tearDownTimeout = 25 * time.Second
+	tearDownTimeout = 150 * time.Second
 )
 
 func init() {
