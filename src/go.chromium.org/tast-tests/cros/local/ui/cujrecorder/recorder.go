@@ -28,7 +28,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/cpu"
-	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	perfSrc "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
@@ -73,9 +72,6 @@ const CooldownTimeout = 10 * time.Minute
 // Annotation.<annotation count> prefix. Additionally, periods are not allowed
 // to avoid confusion between the three sections of this metric name.
 var annotationRe = regexp.MustCompile("^[a-zA-Z0-9_-]{1,240}$")
-
-// powertopModels defines the models that auto run `powertopRecorder`.
-var powertopModels = []string{"redrix"}
 
 // metricRecordMethod determines how the collected metrics are recorded.
 type metricRecordMethod int
@@ -364,23 +360,6 @@ type RecorderOptions struct {
 }
 
 var performanceCUJDischargeThreshold = 25.0
-
-func contains(list []string, s string) bool {
-	for _, line := range list {
-		if line == s {
-			return true
-		}
-	}
-	return false
-}
-
-func getModelName(ctx context.Context) string {
-	model, err := crosconfig.Get(ctx, "/", "name")
-	if err != nil {
-		return ""
-	}
-	return model
-}
 
 // NewPerformanceCUJOptions indicates the power test settings for performance CUJs run by partners.
 func NewPerformanceCUJOptions() RecorderOptions {
@@ -673,8 +652,7 @@ func (r *Recorder) Reset(ctx context.Context) error {
 
 	// Only run powertop on models in |powertopModels|, and only on CUJ tests.
 	forcePowertopOn := strings.ToLower(runPowertop.Value()) == "true"
-	forcePowertopOff := strings.ToLower(runPowertop.Value()) == "false"
-	if r.options.Mode == CUJ && !forcePowertopOff && (forcePowertopOn || contains(powertopModels, getModelName(ctx))) {
+	if r.options.Mode == CUJ && forcePowertopOn {
 		r.powertopRecorder, err = perfSrc.NewPowertopRecorder(ctx,
 			&perfSrc.PowertopRecorderOptions{
 				Interval:       5 * time.Second,
