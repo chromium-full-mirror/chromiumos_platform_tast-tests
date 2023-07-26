@@ -87,6 +87,7 @@ var (
 	}{
 		{"kernel_to_startup", "pre-startup", metricRequired},
 		{"kernel_to_startup_done", "post-startup", metricRequired},
+		{"kernel_to_splash_screen_visible", "splash-screen-visible", metricOptional},
 		{"kernel_to_chrome_exec", "chrome-exec", metricRequired},
 		// TODO(b/180082486): Change to optional temporarily, because
 		// this file is written by Chrome, we have to wait for the fix
