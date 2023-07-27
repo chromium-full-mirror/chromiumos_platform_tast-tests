@@ -39,14 +39,19 @@ func init() {
 			testing.Param{
 				Name:              "probe_by_default",
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(storageNotProbable...)),
-				Val:               extraCmdParams{},
+				Val: extraCmdParams{
+					extraBuildParams: []string{
+						"--add-firmware-components",
+					},
+				},
 			},
 			testing.Param{
 				Name:              "allow_probe_no_storage",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(storageNotProbable...)),
 				Val: extraCmdParams{
 					extraBuildParams: []string{
-						"--auto-decline-essential-prompt",
+						"--add-firmware-components",
+						"--auto-accept-essential-prompt",
 						"storage",
 					},
 				},
