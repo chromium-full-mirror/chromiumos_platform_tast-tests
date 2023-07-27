@@ -84,6 +84,17 @@ const (
 	BearerPropertyIPMtu     = "mtu"
 )
 
+// BearerIPMethod IP method types from ModemManager-enums.h
+type BearerIPMethod uint32
+
+// All the bearer IP method types
+const (
+	BearerIPMethodNone   BearerIPMethod = 0
+	BearerIPMethodPPP    BearerIPMethod = 1
+	BearerIPMethodStatic BearerIPMethod = 2
+	BearerIPMethodDHCP   BearerIPMethod = 3
+)
+
 // BearerAllowedAuth Allowed authentication types from Modemmanager-enums.h
 type BearerAllowedAuth uint32
 
