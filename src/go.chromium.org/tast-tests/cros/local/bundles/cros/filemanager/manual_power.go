@@ -84,5 +84,8 @@ func ManualPower(ctx context.Context, s *testing.State) {
 	if err := r.Finish(cleanupCtx); err != nil {
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}
+	if err := os.Remove("/tmp/stop_power_test"); err != nil {
+		s.Log("Failed to remove stop file: ", err)
+	}
 	testing.ContextLog(cleanupCtx, "Done")
 }
