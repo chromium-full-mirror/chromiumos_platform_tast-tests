@@ -1323,3 +1323,14 @@ func (ac *Context) ResetScrollOffset(finder *nodewith.Finder) Action {
 func (ac *Context) LeftClickUntilFocused(finder *nodewith.Finder) Action {
 	return ac.LeftClickUntil(finder, ac.WithTimeout(time.Second).WaitUntilExists(finder.Focused()))
 }
+
+// IsFeatureEnabled returns true if a feature is enabled in Chrome and false otherwise.
+// NOTE: Feature name must be in the allowlist for AutotestPrivateIsFeatureEnabledFunction.
+func (ac *Context) IsFeatureEnabled(ctx context.Context, featureName string) (bool, error) {
+	var featureEnabled bool
+	if err := ac.tconn.Call(ctx, &featureEnabled,
+		"tast.promisify(chrome.autotestPrivate.isFeatureEnabled)", featureName); err != nil {
+		return false, errors.Wrapf(err, "failed to get feature state for %q", featureName)
+	}
+	return featureEnabled, nil
+}
