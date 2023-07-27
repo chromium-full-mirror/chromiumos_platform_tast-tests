@@ -47,7 +47,6 @@ func init() {
 			"ui.collectTrace",  // Optional. Expecting "enable" or "disable", default is "disable".
 		},
 		Data: []string{cujrecorder.SystemTraceConfigFile},
-		Attr: []string{"group:camera_dependent"},
 		Params: []testing.Param{
 			{
 				Name:    "basic_ytmusic",
@@ -73,7 +72,6 @@ func init() {
 				Name:              "basic_ytmusic_crosbolt",
 				Fixture:           "loggedInAndKeepState",
 				Timeout:           20 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
 				Val: multiTaskingParam{
 					tier:     cuj.Basic,
@@ -124,7 +122,6 @@ func init() {
 				Name:              "plus_helloworld",
 				Fixture:           "loggedInAndKeepState",
 				Timeout:           15 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 				ExtraSoftwareDeps: []string{"android_p"},
 				Val: multiTaskingParam{
 					tier:     cuj.Plus,
@@ -135,7 +132,6 @@ func init() {
 				Name:              "plus_helloworld_vm",
 				Fixture:           "loggedInAndKeepState",
 				Timeout:           15 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				Val: multiTaskingParam{
 					tier:     cuj.Plus,
@@ -166,7 +162,6 @@ func init() {
 				Name:              "plus_ytmusic_crosbolt",
 				Fixture:           "loggedInAndKeepState",
 				Timeout:           30 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
 				Val: multiTaskingParam{
 					tier:     cuj.Plus,
