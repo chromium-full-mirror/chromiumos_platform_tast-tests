@@ -123,6 +123,7 @@ func ExampleUI(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 	defer conn.Close()
+	defer conn.CloseTarget(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
