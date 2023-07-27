@@ -1,0 +1,253 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package vm
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"runtime"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/dlc"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/tap"
+	"go.chromium.org/tast-tests/cros/local/disk"
+	"go.chromium.org/tast-tests/cros/local/media/cpu"
+	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
+	"go.chromium.org/tast-tests/cros/local/vm"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+)
+
+const runIperfTest string = "run-iperf-test.sh"
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         Iperf,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Tests crosvm's virtio-net performance with iperf3 command",
+		Contacts:     []string{"cros-virt-devices-guests@google.com", "yuanyaogoog@google.com"},
+		BugComponent: "b:291681008",
+		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
+		Data:         []string{runIperfTest},
+		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
+		Fixture:      "vmDLC",
+	})
+}
+
+func getClientIperfCmd(ctx context.Context, clientArgs []string) *testexec.Cmd {
+	var args = []string{
+		"--json",
+		"--client", clientArgs[0],
+		"--port", "1234",
+		"--connect-timeout", "3000",
+		"--logfile", clientArgs[1],
+		"--bidir",
+		"--time", "10",
+		"--omit", "1",
+	}
+	return testexec.CommandContext(ctx, "iperf3", args...)
+}
+
+func getCrosvmNetCmd(ctx context.Context, kernel, serialLog string, tapFd uint, script string, scriptArgs []string) *testexec.Cmd {
+	kernParams := []string{
+		"root=/dev/root",
+		"rootfstype=virtiofs",
+		"rw",
+		fmt.Sprintf("init=%s", script),
+		"--",
+	}
+	kernParams = append(kernParams, scriptArgs...)
+
+	ps := vm.NewCrosvmParams(
+		kernel,
+		vm.NumCpus(uint(runtime.NumCPU())),
+		vm.MemSize(1024),
+		vm.SharedDir(
+			vm.SharedDirParam{
+				Src:       "/",
+				Tag:       "/dev/root",
+				FsType:    "fs",
+				Cache:     "always",
+				Timeout:   5,
+				Writeback: false,
+				DAX:       false,
+			}),
+		vm.Net(tapFd),
+		vm.KernelArgs(kernParams...),
+		vm.SerialOutput(serialLog),
+	)
+	args := ps.ToArgs()
+	return testexec.CommandContext(ctx, "crosvm", args...)
+}
+
+func Iperf(ctx context.Context, s *testing.State) {
+	td, err := ioutil.TempDir("", "tast.vm.Iperf.")
+	if err != nil {
+		s.Fatal("Failed to create temporary directory: ", err)
+	}
+	defer os.RemoveAll(td)
+
+	// Reserve 10 seconds for clean up
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	// Network benchmark is sensitive to CPU
+	// Disables CPU frequency scaling and thermal throttling
+	// to have more stable results
+	cleanup, err := cpu.SetUpBenchmark(ctx)
+	if err != nil {
+		s.Fatal("Failed to perform setUpBenchmark")
+	}
+	defer cleanup(cleanupCtx)
+
+	// Drop caches before starting test
+	if err := disk.DropCaches(ctx); err != nil {
+		s.Fatal("Failed to drop caches: ", err)
+	}
+
+	// Get Tap Fds
+	pc, err := patchpanel.New(ctx)
+	if err != nil {
+		s.Fatal("Failed to create patchpanel client: ", err)
+	}
+
+	// cid will be used by patchpanel to identify VMs.
+	// Use values larger than 8192 to guarantee no overlap with crostini/arcvm.
+	serverCid := uint32(8193)
+	serverTap, serverCleanup, err := tap.GetTap(ctx, pc, serverCid)
+	if err != nil {
+		s.Fatal("Failed to get Tap FD for server: ", err)
+	}
+	defer serverCleanup(cleanupCtx)
+
+	data := s.FixtValue().(dlc.FixtData)
+	script := s.DataPath(runIperfTest)
+
+	// Start server VM
+	serverLog := filepath.Join(s.OutDir(), "serial-server.log")
+	serverArgs := []string{
+		serverTap.Addr.String(),
+		serverTap.Gateway.String(),
+	}
+	CrosVMCmd := getCrosvmNetCmd(ctx, data.Kernel, serverLog, uint(serverTap.Fd), script, serverArgs)
+	CrosVMOut, err := os.Create(filepath.Join(s.OutDir(), "crosvm-server.log"))
+	if err != nil {
+		s.Fatal("Failed to create crosvm server log file: ", err)
+	}
+	defer CrosVMOut.Close()
+	CrosVMCmd.Stdout = CrosVMOut
+	CrosVMCmd.Stderr = CrosVMOut
+
+	if err := CrosVMCmd.Start(); err != nil {
+		s.Fatal("Failed to run server crosvm: ", err)
+	}
+
+	// Config client log
+	clientLog := filepath.Join(s.OutDir(), "client.log")
+	iperfLog := filepath.Join(s.OutDir(), "iperf-out.json")
+
+	clientOut, err := os.Create(clientLog)
+	if err != nil {
+		s.Fatal("Failed to create iperf-out.json: ", err)
+	}
+	defer clientOut.Close()
+
+	iperfOut, err := os.Create(iperfLog)
+	if err != nil {
+		s.Fatal("Failed to create iperf-out.json: ", err)
+	}
+	defer iperfOut.Close()
+
+	// Config client commands
+	clientArgs := []string{
+		serverTap.Addr.String(), // destination address
+		iperfLog,                // iperf3 output file
+	}
+
+	clientPingCmd := testexec.CommandContext(ctx, "ping", "-c", "5", clientArgs[0])
+	clientIperfCmd := getClientIperfCmd(ctx, clientArgs)
+
+	clientPingCmd.Stdout = clientOut
+	clientPingCmd.Stderr = clientOut
+	clientIperfCmd.Stdout = clientOut
+	clientIperfCmd.Stderr = clientOut
+
+	// // Run client ping to ensure the connection is alive
+	if err := clientPingCmd.Start(); err != nil {
+		s.Fatal("Failed to run ping command: ", err)
+	}
+	if err := clientPingCmd.Wait(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to complete ping: ", err)
+	}
+
+	// Run client iperf command
+	if err := clientIperfCmd.Start(); err != nil {
+		s.Fatal("Failed to run client iperf command: ", err)
+	}
+
+	// Wait for client iperf completed
+	if err := clientIperfCmd.Wait(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to complete client: ", err)
+	}
+
+	// Wait for server VM being completed.
+	if err := CrosVMCmd.Wait(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to complete server VM: ", err)
+	}
+
+	// Check iperf3 output
+	buf, err := ioutil.ReadFile(iperfLog)
+	if err != nil {
+		s.Fatalf("Failed to read %s: %v", iperfLog, err)
+	}
+
+	results := make(map[string]interface{})
+	if err := json.Unmarshal(buf, &results); err != nil {
+		s.Fatal("Failed to unmarshal fio results: ", err)
+	}
+
+	// Parse iperf3 result json, extract throughput and Rtt data
+	perfValues := perf.NewValues()
+	ends := results["end"].(map[string]interface{})
+	streams := ends["streams"].([]interface{})
+	for _, i := range streams {
+		j := i.(map[string]interface{})
+		sender := j["sender"].(map[string]interface{})
+
+		senderMbps := sender["bits_per_second"].(float64) / (1024 * 1024)
+
+		// true if it's host send packets to vm, else it's vm send packets to host
+		hostSender := sender["sender"].(bool)
+		name := "host_to_guest"
+		if !hostSender {
+			name = "guest_to_host"
+		}
+
+		perfValues.Append(perf.Metric{
+			Name:      name,
+			Variant:   "throughput",
+			Unit:      "Mbps",
+			Direction: perf.BiggerIsBetter,
+			Multiple:  true,
+		}, senderMbps)
+
+		senderRtt := sender["mean_rtt"].(float64)
+		perfValues.Append(perf.Metric{
+			Name:      name,
+			Variant:   "rtt",
+			Unit:      "Usec",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  true,
+		}, senderRtt)
+	}
+	perfValues.Save(s.OutDir())
+}

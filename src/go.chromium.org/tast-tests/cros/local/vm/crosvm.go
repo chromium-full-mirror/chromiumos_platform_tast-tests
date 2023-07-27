@@ -65,6 +65,7 @@ type CrosvmParams struct {
 	serialIO       []SerialIOPath   // paths to files used for serial input and output
 	vhostUserNet   []string         // paths to sockets that vhost-user-net devices will use
 	disableSandbox bool             // whether or not the sandbox is disabled
+	tapFds         []uint           // file descriptors for configured tap device
 }
 
 // Option configures a CrosvmParams
@@ -149,6 +150,13 @@ func NumCpus(numbercpus uint) Option {
 func MemSize(memsize uint) Option {
 	return func(p *CrosvmParams) {
 		p.memSize = memsize
+	}
+}
+
+// Net sets virtio device by tap device file descriptor
+func Net(tapFd uint) Option {
+	return func(p *CrosvmParams) {
+		p.tapFds = append(p.tapFds, tapFd)
 	}
 }
 
@@ -241,6 +249,10 @@ func (p *CrosvmParams) ToArgs() []string {
 		args = append(args, "-p", strings.Join(p.kernelArgs, " "))
 		// The kernel path must come at the end.
 		args = append(args, p.vmKernel)
+	}
+
+	for _, tapFd := range p.tapFds {
+		args = append(args, "--net", fmt.Sprintf("tap-fd=%d", tapFd))
 	}
 
 	return args
