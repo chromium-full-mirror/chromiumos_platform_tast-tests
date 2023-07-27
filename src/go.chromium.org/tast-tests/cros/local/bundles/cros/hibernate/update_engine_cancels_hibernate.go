@@ -22,7 +22,6 @@ func init() {
 			"chromeos-hibernate@google.com", "dvjimenez@google.com",
 		},
 		BugComponent: "b:167191",
-		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      3 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      fixture.UpdateEngine, // Ensures update engine is ready and resets its status.
