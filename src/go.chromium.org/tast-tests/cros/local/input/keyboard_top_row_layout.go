@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"os"
 	"regexp"
@@ -284,19 +285,33 @@ func parseCustomScanCodes(ctx context.Context, ew *KeyboardEventWriter, topRowSc
 
 	ew.topRowScanCodeMap = make(map[EventCode]int32)
 	for _, scanCodeStr := range scanCodeStrs {
+		// Skip empty string values which can happen if the top row scan code string has extra spaces.
+		if scanCodeStr == "" {
+			continue
+		}
+
+		// If the length is odd, we need to prepend a 0. hex.DecodeString only works on inputs of full bytes.
+		if len(scanCodeStr)%2 != 0 {
+			scanCodeStr = "0" + scanCodeStr
+		}
+
 		// Decode each scancode and convert it to a uint32.
 		scanCodeArray, err := hex.DecodeString(scanCodeStr)
 		if err != nil {
 			return err
 		}
+
+		// Copy to decoded hexcode into a 4 byte array with empty bytes at the start of the scancode to convert the hexstring to a 32bit int.
 		var scanCodeUint32Array [unsafe.Sizeof(uint32(0))]byte
-		copy(scanCodeUint32Array[:], scanCodeArray)
-		scanCode := kernelByteOrder.Uint32(scanCodeUint32Array[:])
+		copy(scanCodeUint32Array[len(scanCodeUint32Array)-len(scanCodeArray):], scanCodeArray)
+
+		// scanCodeUint32Array contains the scancode in big endian order.
+		scanCode := binary.BigEndian.Uint32(scanCodeUint32Array[:])
 
 		// Initialize inputKeyMapEntry struct with the scancode value and length.
 		inputKeymapEntry := inputKeyMapEntry{}
-		inputKeymapEntry.len = uint8(len(scanCodeArray))
-		copy(inputKeymapEntry.scancode[:], scanCodeArray)
+		inputKeymapEntry.len = uint8(len(scanCodeUint32Array))
+		kernelByteOrder.PutUint32(inputKeymapEntry.scancode[:], scanCode)
 
 		// Make EVIOCGKEYCODE_V2 ioctl call to retrieve the equivalent keycode for the given scancode.
 		if err := ioctl(int(f.Fd()), evIOCGKeyCodeV2(), uintptr(unsafe.Pointer(&inputKeymapEntry))); err != nil {
