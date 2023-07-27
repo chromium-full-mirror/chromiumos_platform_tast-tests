@@ -59,7 +59,7 @@ func init() {
 				Name:      "motionmark",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUser",
+				Fixture:   "loggedInToCUJUserWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
@@ -69,7 +69,7 @@ func init() {
 				Name:      "lacros_motionmark",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacros",
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
@@ -80,7 +80,7 @@ func init() {
 				Name:      "jetstream",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUser",
+				Fixture:   "loggedInToCUJUserWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
@@ -90,7 +90,7 @@ func init() {
 				Name:      "lacros_jetstream",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacros",
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
@@ -101,7 +101,7 @@ func init() {
 				Name:      "kraken",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUser",
+				Fixture:   "loggedInToCUJUserWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
@@ -111,7 +111,7 @@ func init() {
 				Name:      "lacros_kraken",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacros",
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
@@ -122,7 +122,7 @@ func init() {
 				Name:      "octane",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUser",
+				Fixture:   "loggedInToCUJUserWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
@@ -132,7 +132,7 @@ func init() {
 				Name:      "lacros_octane",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacros",
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
@@ -152,7 +152,7 @@ func init() {
 			{
 				Name:    "battery_saver_motionmark",
 				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserWithBatterySaver",
+				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
@@ -161,7 +161,7 @@ func init() {
 			{
 				Name:    "battery_saver_jetstream",
 				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserWithBatterySaver",
+				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
@@ -170,7 +170,7 @@ func init() {
 			{
 				Name:    "battery_saver_kraken",
 				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserWithBatterySaver",
+				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
@@ -179,7 +179,7 @@ func init() {
 			{
 				Name:    "battery_saver_octane",
 				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserWithBatterySaver",
+				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
