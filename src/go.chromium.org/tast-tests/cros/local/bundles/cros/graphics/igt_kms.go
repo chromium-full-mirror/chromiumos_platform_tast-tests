@@ -271,9 +271,13 @@ func init() {
 				Val: graphics.IgtTest{
 					Exe: "kms_panel_fitting",
 				},
-				Timeout:           5 * time.Minute,
-				ExtraAttr:         []string{"graphics_nightly"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(append(graphics.IgtGpuMtk, "zork", "grunt")...)),
+				Timeout:   5 * time.Minute,
+				ExtraAttr: []string{"graphics_nightly"},
+				ExtraHardwareDeps: hwdep.D(
+					hwdep.SkipOnPlatform(graphics.IgtGpuQcom...),
+					hwdep.SkipOnPlatform(graphics.IgtGpuMtk...),
+					hwdep.SkipOnPlatform("zork", "grunt"),
+				),
 			}, {
 				Name: "kms_pipe_crc_basic",
 				Val: graphics.IgtTest{
