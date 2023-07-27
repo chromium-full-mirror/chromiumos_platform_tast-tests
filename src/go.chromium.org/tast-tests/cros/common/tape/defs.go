@@ -8360,7 +8360,6 @@ type AutoUpdateSettingsDevices struct {
 	AutoUpdateHttpDownloadsEnabled    bool                         `json:"autoUpdateHttpDownloadsEnabled"`
 	ReleaseChannelWithLts             ReleaseChannelWithLtsEnum    `json:"releaseChannelWithLts"`
 	DeviceAutoUpdatePeerToPeerEnabled bool                         `json:"deviceAutoUpdatePeerToPeerEnabled"`
-	AutoUpdateTargetSelector          string                       `json:"autoUpdateTargetSelector"`
 }
 
 type AutoUpdateRolloutPlan struct {
@@ -8458,7 +8457,7 @@ const (
 
 func (p *AutoUpdateSettingsDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"updateDisabled", "rebootAfterUpdate", "autoUpdateAllowedConnectionType", "deviceRollbackToTargetVersion", "autoUpdateRolloutPlan", "autoUpdateTimeRestrictions", "autoUpdateTargetVersionLts", "deviceMinimumVersionAueMessage", "deviceMinimumVersion", "autoUpdateHttpDownloadsEnabled", "releaseChannelWithLts", "deviceAutoUpdatePeerToPeerEnabled", "autoUpdateTargetSelector"}
+		updateMask = []string{"updateDisabled", "rebootAfterUpdate", "autoUpdateAllowedConnectionType", "deviceRollbackToTargetVersion", "autoUpdateRolloutPlan", "autoUpdateTimeRestrictions", "autoUpdateTargetVersionLts", "deviceMinimumVersionAueMessage", "deviceMinimumVersion", "autoUpdateHttpDownloadsEnabled", "releaseChannelWithLts", "deviceAutoUpdatePeerToPeerEnabled"}
 	}
 	return marshalJSON("chrome.devices.AutoUpdateSettings", p, updateMask, additionalTargetKeys)
 }
