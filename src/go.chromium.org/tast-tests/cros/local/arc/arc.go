@@ -801,17 +801,18 @@ func (a *ARC) SaveLogFiles(ctx context.Context) error {
 		return nil
 	}
 
-	if err := saveARCVMConsole(ctx, filepath.Join(a.outDir, arcvmConsoleName)); err != nil {
-		return errors.Wrap(err, "failed to save the messages-arcvm")
+	var retErr error = nil
+	if err := fsutil.CopyFile(arcLogPath, filepath.Join(a.outDir, "arc.log")); err != nil {
+		retErr = errors.Join(retErr, errors.Wrap(err, "failed to save arc.log"))
 	}
 
-	if err := fsutil.CopyFile(arcLogPath, filepath.Join(a.outDir, "arc.log")); err != nil {
-		return errors.Wrap(err, "failed to save arc.log")
+	if err := saveARCVMConsole(ctx, filepath.Join(a.outDir, arcvmConsoleName)); err != nil {
+		retErr = errors.Join(retErr, errors.Wrap(err, "failed to save the messages-arcvm"))
 	}
 
 	// Reset outDir to avoid saving the same files twice at ARC.Close().
 	a.outDir = ""
-	return nil
+	return retErr
 }
 
 // saveARCVMConsole saves the console output of ARCVM Kernel to the given path using vm_pstore_dump command.
