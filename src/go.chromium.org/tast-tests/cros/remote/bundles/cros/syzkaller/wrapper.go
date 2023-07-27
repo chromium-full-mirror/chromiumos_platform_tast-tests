@@ -449,6 +449,16 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		); err != nil {
 			s.Fatal("Failed to upload coverage info: ", err)
 		}
+		if !runLocal {
+			if err := saveCorpus(
+				ctx,
+				s.RequiredVar("syzkaller.Wrapper.botoCredSection"),
+				board,
+				filepath.Join(syzkallerWorkdir, "corpus.db"),
+			); err != nil {
+				s.Fatal("Failed to save corpus: ", err)
+			}
+		}
 	}()
 
 	if pCmd != nil {
@@ -457,17 +467,6 @@ func Wrapper(ctx context.Context, s *testing.State) {
 
 	if err := logValidity(logFile.Name()); err != nil {
 		s.Fatal("Error found in logfile: ", err)
-	}
-
-	if !runLocal {
-		if err := saveCorpus(
-			ctx,
-			s.RequiredVar("syzkaller.Wrapper.botoCredSection"),
-			board,
-			filepath.Join(syzkallerWorkdir, "corpus.db"),
-		); err != nil {
-			s.Fatal("Failed to save corpus: ", err)
-		}
 	}
 
 	s.Log("Done fuzzing, exiting")
