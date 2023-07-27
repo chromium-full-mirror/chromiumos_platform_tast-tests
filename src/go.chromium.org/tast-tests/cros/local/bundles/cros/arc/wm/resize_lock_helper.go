@@ -72,11 +72,12 @@ const (
 	// CenterButtonClassName is the class name of the caption center button.
 	CenterButtonClassName = "FrameCenterButton"
 	// BubbleDialogClassName is the class name of the bubble dialog.
-	BubbleDialogClassName  = "BubbleDialogDelegateView"
-	checkBoxClassName      = "Checkbox"
-	overlayDialogClassName = "OverlayDialog"
-	shelfIconClassName     = "ash/ShelfAppButton"
-	menuItemViewClassName  = "MenuItemView"
+	BubbleDialogClassName = "BubbleDialogDelegateView"
+	checkBoxClassName     = "Checkbox"
+	// ResizeConfirmationDialogClassName is the class name of resize confirmation dialog.
+	resizeConfirmationDialogClassName = "ResizeConfirmationDialogView"
+	shelfIconClassName                = "ash/ShelfAppButton"
+	menuItemViewClassName             = "MenuItemView"
 
 	// AppManagementSettingToggleName is the a11y name of the app-management setting toggle.
 	AppManagementSettingToggleName = "Preset window sizes"
@@ -539,7 +540,7 @@ func ToggleResizeLockMode(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 			return errors.Wrapf(err, "failed to wait for the compat-mode menu of %s to disappear", activity.ActivityName())
 		}
 
-		confirmationDialog := nodewith.HasClass(overlayDialogClassName)
+		confirmationDialog := nodewith.HasClass(resizeConfirmationDialogClassName).First()
 		if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(confirmationDialog)(ctx); err != nil {
 			return errors.Wrap(err, "failed to find the resizability confirmation dialog")
 		}
