@@ -41,11 +41,46 @@ func init() {
 					Command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
 				},
 			}, {
+				Name:      "gtk4_wayland",
+				ExtraData: []string{"toolkit_gtk4_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_gtk4_demo.py",
+					Command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk4_demo.py"},
+				},
+			}, {
+				Name:      "gtk4_x11",
+				ExtraData: []string{"toolkit_gtk4_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_gtk4_demo.py",
+					Command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk4_demo.py"},
+				},
+			}, {
 				Name:      "qt5_x11",
 				ExtraData: []string{"toolkit_qt5_demo.py"},
 				Val: guestos.ToolkitConfig{
 					Data:    "toolkit_qt5_demo.py",
 					Command: []string{"env", "QT_QPA_PLATFORM=xcb", "python3", "toolkit_qt5_demo.py"},
+				},
+			}, {
+				Name:      "qt5_wayland",
+				ExtraData: []string{"toolkit_qt5_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_qt5_demo.py",
+					Command: []string{"env", "QT_QPA_PLATFORM=wayland", "python3", "toolkit_qt5_demo.py"},
+				},
+			}, {
+				Name:      "qt6_wayland",
+				ExtraData: []string{"toolkit_qt6_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_qt6_demo.py",
+					Command: []string{"env", "QT_QPA_PLATFORM=wayland", "python3", "toolkit_qt6_demo.py"},
+				},
+			}, {
+				Name:      "qt6_x11",
+				ExtraData: []string{"toolkit_qt6_demo.py"},
+				Val: guestos.ToolkitConfig{
+					Data:    "toolkit_qt6_demo.py",
+					Command: []string{"env", "QT_QPA_PLATFORM=xcb", "python3", "toolkit_qt6_demo.py"},
 				},
 			}, {
 				Name:      "tkinter",
