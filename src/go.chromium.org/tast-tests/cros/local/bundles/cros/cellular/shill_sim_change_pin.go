@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
-	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -22,27 +21,14 @@ func init() {
 		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_pinlock"},
-		Fixture:      "cellular",
+		Fixture:      "cellularSIMLockCleared",
 		Timeout:      5 * time.Minute,
-		Vars:         []string{"autotest_host_info_labels"},
 	})
 }
 
 // ShillSimChangePin tests successfully changing SIM pin.
 func ShillSimChangePin(ctx context.Context, s *testing.State) {
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
-	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
-	if err != nil {
-		s.Fatal("Failed to read autotest_host_info_labels: ", err)
-	}
-
-	helper, err := cellular.NewHelperWithLabels(ctx, labels)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	iccid, err := helper.GetCurrentICCID(ctx)
 	if err != nil {

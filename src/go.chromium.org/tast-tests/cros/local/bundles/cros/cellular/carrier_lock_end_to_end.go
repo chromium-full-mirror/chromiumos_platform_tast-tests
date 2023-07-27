@@ -24,28 +24,19 @@ func init() {
 		Contacts:     []string{"ujjwalpande@google.com", "chromeos-cellular-team@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
-		Fixture:      "cellular",
+		Fixture:      "cellularSIMLockCleared",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      20 * time.Minute,
 		VarDeps:      []string{"cellular.gaiaAccountPool"},
-		Vars:         []string{"autotest_host_info_labels"},
 	})
 }
 
 // CarrierLockEndToEnd validates that carrier lock restrictions are enforced by modem.
 func CarrierLockEndToEnd(ctx context.Context, s *testing.State) {
-	// Gather Shill Device sim properties.
-	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
-	if err != nil {
-		s.Fatal("Failed to read autotest_host_info_labels: ", err)
-	}
-
-	helper, err := cellular.NewHelperWithLabels(ctx, labels)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	helper.PrintSIMInfo(ctx)
+
 	iccid, err := helper.GetCurrentICCID(ctx)
 	if err != nil {
 		s.Fatal("Could not get current ICCID")

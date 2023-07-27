@@ -64,10 +64,11 @@ func UIOtaBasicSms(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read autotest_host_info_labels: ", err)
 	}
 
-	helper, err := cellular.NewHelperWithLabels(ctx, labels)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+	if err := helper.GetHostInfoLabels(ctx, labels); err != nil {
+		s.Fatal("Unable to read labels: ", err)
 	}
+
 	iccid, err := helper.GetCurrentICCID(ctx)
 	if err != nil {
 		s.Fatal("Could not get current ICCID: ", err)

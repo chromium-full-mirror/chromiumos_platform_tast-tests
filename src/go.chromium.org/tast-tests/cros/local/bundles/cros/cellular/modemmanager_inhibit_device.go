@@ -25,7 +25,6 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_ota_avl"},
 		Fixture:      "cellularModemManager",
 		Timeout:      5 * time.Minute,
-		Vars:         []string{"autotest_host_info_labels"},
 	})
 }
 

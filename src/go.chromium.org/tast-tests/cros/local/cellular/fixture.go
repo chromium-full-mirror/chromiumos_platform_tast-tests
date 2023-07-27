@@ -88,6 +88,19 @@ func init() {
 		Parent:          fixture.FakeDMSEnrolled,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularWithFakeDMSEnrolledAndSIMLockCleared",
+		Desc:            "Cellular tests are safe to run that require a functioning SIM and a fake DMS (for managed eSIM profiles) is running",
+		Contacts:        []string{"cros-connectivity@google.com", "jiajunz@google.com"},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            &cellularFixture{useFakeDMS: true, clearSIMLock: true},
+		Parent:          fixture.FakeDMSEnrolled,
+		Vars:            []string{"autotest_host_info_labels"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "cellularModemManager",
 		Desc: "ModemManager tests are safe to run without shill running",
 		Contacts: []string{
@@ -147,17 +160,30 @@ func init() {
 		Impl:            &cellularFixture{checkSIM: true},
 		Parent:          "powerMetricsNoUI",
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularSIMLockCleared",
+		Desc:            "Cellular tests that may affect SIM lock",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		SetUpTimeout:    4 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            &cellularFixture{clearSIMLock: true},
+		Vars:            []string{"autotest_host_info_labels"},
+	})
 }
 
 // cellularFixture implements testing.FixtureImpl.
 type cellularFixture struct {
 	// Fixture control flags
-	restartMM   bool
-	useFakeDMS  bool
-	useRoaming  bool
-	useTestESIM bool
-	checkSIM    bool
-	hasArc      bool
+	restartMM    bool
+	useFakeDMS   bool
+	useRoaming   bool
+	useTestESIM  bool
+	checkSIM     bool
+	clearSIMLock bool
+	hasArc       bool
 	// Fixture variables
 	helper          *Helper
 	modemfwdStopped bool
@@ -216,6 +242,22 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to create Helper: ", err)
 	}
 	f.helper = helper
+
+	if f.clearSIMLock {
+		// Clear the SIM lock in SetUp and TearDown to attempt to recover any
+		// DUT left in a SIM locked state. Since not all tests run on a SIM that
+		// supports SIM lock, only do this in fixtures that require SIM locking.
+		labels, err := GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
+		if err != nil {
+			s.Fatal("Failed to read autotest_host_info_labels: ", err)
+		}
+		if err := helper.GetHostInfoLabels(ctx, labels); err != nil {
+			s.Fatal("Failed to read host info labels: ", err)
+		}
+		if err := helper.ClearSIMLockFromHostInfo(ctx); err != nil {
+			s.Fatal("Failed to clear SIM lock: ", err)
+		}
+	}
 
 	if sfish != nil {
 		// ResetModem needed to detect SIM.
@@ -421,6 +463,12 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 
 	if f.netUnlock != nil {
 		f.netUnlock()
+	}
+	if f.clearSIMLock {
+		// Helper labels will already be stored.
+		if err := f.helper.ClearSIMLockFromHostInfo(ctx); err != nil {
+			s.Fatal("Failed to clear SIM lock: ", err)
+		}
 	}
 }
 

@@ -138,33 +138,30 @@ func NewHelper(ctx context.Context) (*Helper, error) {
 	return &helper, nil
 }
 
-// NewHelperWithLabels creates a Helper object and populates label info from host_info_labels, ensuring that a Cellular Device is present.
-func NewHelperWithLabels(ctx context.Context, labels []string) (*Helper, error) {
-	helper, err := NewHelper(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := helper.GetHostInfoLabels(ctx, labels); err != nil {
-		return nil, errors.Wrap(err, "unable to read labels")
+// ClearSIMLockFromHostInfo uses PIN and PUK values from the host info labels
+// to clear any SIM lock.
+func (h *Helper) ClearSIMLockFromHostInfo(ctx context.Context) error {
+	// Ensure that the host info has been parsed.
+	if len(h.Labels) == 0 {
+		return errors.New("ClearSIMLockFromHostInfo called before GetHostInfoLabels")
 	}
 
 	// Get ICCID and PIN/PUK codes
-	iccid, err := helper.GetCurrentICCID(ctx)
+	iccid, err := h.GetCurrentICCID(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not get current ICCID")
+		return errors.Wrap(err, "could not get current ICCID")
 	}
-	currentPin, currentPuk, err := helper.GetPINAndPUKForICCID(ctx, iccid)
+	currentPin, currentPuk, err := h.GetPINAndPUKForICCID(ctx, iccid)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not get Pin and Puk")
+		return errors.Wrap(err, "could not get Pin and Puk")
 	}
 
 	// Disable pin lock with default pin and puk with dut puk if locked.
-	if err := helper.ClearSIMLock(ctx, currentPin, currentPuk); err != nil {
-		return nil, errors.Wrap(err, "failed to unlock dut with default pin")
+	if err := h.ClearSIMLock(ctx, currentPin, currentPuk); err != nil {
+		return errors.Wrap(err, "failed to unlock dut with default pin")
 	}
 
-	return helper, nil
+	return nil
 }
 
 // CheckIfVilbozVerizonAndFixAttachAPN checks if the device is a vilboz with a verizon SIM card,
@@ -1468,7 +1465,7 @@ func (h *Helper) GetPINAndPUKForICCID(ctx context.Context, iccid string) (string
 			}
 		}
 	}
-	return "", "", nil
+	return "", "", errors.Errorf("labels for ICCID %q not found", iccid)
 }
 
 // GetCarrierNameForICCID returns carrier name for the given iccid from host_info_label
@@ -1480,7 +1477,7 @@ func (h *Helper) GetCarrierNameForICCID(ctx context.Context, iccid string) (stri
 			}
 		}
 	}
-	return "", nil
+	return "", errors.Errorf("carrier name for ICCID %q not found", iccid)
 }
 
 // GetLabelCarrierName return the current carrier name

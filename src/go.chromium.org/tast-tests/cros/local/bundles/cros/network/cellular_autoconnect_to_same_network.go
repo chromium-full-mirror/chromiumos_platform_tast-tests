@@ -29,7 +29,6 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e"},
 		Fixture:      "cellular",
-		Vars:         []string{"autotest_host_info_labels"},
 	})
 }
 

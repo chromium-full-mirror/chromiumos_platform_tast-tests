@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -21,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast/core/testing"
@@ -39,20 +37,15 @@ func init() {
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_sim_pinlock", "cellular_e2e"},
-		Fixture:      fixture.FakeDMSEnrolled,
+		Fixture:      "cellularWithFakeDMSEnrolledAndSIMLockCleared",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
 		},
 		Timeout: 9 * time.Minute,
-		Vars:    []string{"autotest_host_info_labels"},
 	})
 }
 
 func SimLockPolicyLockSettingOff(ctx context.Context, s *testing.State) {
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	// Start a Chrome instance that will fetch policies from the FakeDMS.
 	cr, err := chrome.New(ctx,
@@ -70,16 +63,7 @@ func SimLockPolicyLockSettingOff(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clean up: ", err)
 	}
 
-	// Gather Shill Device sim properties.
-	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
-	if err != nil {
-		s.Fatal("Failed to read autotest_host_info_labels: ", err)
-	}
-
-	helper, err := cellular.NewHelperWithLabels(ctx, labels)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	// Enable and get service to set autoconnect based on test parameters.
 	if _, err := helper.Enable(ctx); err != nil {

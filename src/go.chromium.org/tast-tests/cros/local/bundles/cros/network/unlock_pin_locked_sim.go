@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -35,28 +34,13 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		// Run test only on cellular capable devices that only have one active SIM.
 		Attr:    []string{"group:cellular", "cellular_unstable", "cellular_sim_pinlock", "cellular_e2e"},
-		Fixture: "cellular",
+		Fixture: "cellularSIMLockCleared",
 		Timeout: 8 * time.Minute,
-		Vars:    []string{"autotest_host_info_labels"},
 	})
 }
 
 func UnlockPinLockedSim(ctx context.Context, s *testing.State) {
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
-	// Gather Shill Device SIM properties.
-	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
-	if err != nil {
-		s.Fatal("Failed to read autotest_host_info_labels: ", err)
-	}
-
-	// Get cellular helper, used to determine if SIM is actually PIN locked/unlocked.
-	helper, err := cellular.NewHelperWithLabels(ctx, labels)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	iccid, err := helper.GetCurrentICCID(ctx)
 	if err != nil {
