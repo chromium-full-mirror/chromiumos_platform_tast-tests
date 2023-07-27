@@ -439,8 +439,10 @@ func Wrapper(ctx context.Context, s *testing.State) {
 
 		// Fetch coverage and modules info from syz-manager before stopping syz-manager.
 		// Upload coverage only if the test is not running locally.
+		timestamp := time.Now().Format("2006-01-02-15:04:05")
 		if err := saveCoverage(
 			ctx,
+			timestamp,
 			s.RequiredVar("syzkaller.Wrapper.botoCredSection"),
 			s.OutDir(),
 			board,
@@ -452,6 +454,7 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		if !runLocal {
 			if err := saveCorpus(
 				ctx,
+				timestamp,
 				s.RequiredVar("syzkaller.Wrapper.botoCredSection"),
 				board,
 				filepath.Join(syzkallerWorkdir, "corpus.db"),
@@ -506,8 +509,7 @@ func loadCorpus(ctx context.Context, cred, board, syzkallerWorkdir string) error
 }
 
 // saveCorpus should only be used when running the test as scheduled in the lab.
-func saveCorpus(ctx context.Context, cred, board, corpusPath string) error {
-	timestamp := time.Now().Format("2006-01-02-15:04:05")
+func saveCorpus(ctx context.Context, timestamp, cred, board, corpusPath string) error {
 	url := fmt.Sprintf("%s/corpus-%v-%v.db", gsURL, board, timestamp)
 	testing.ContextLog(ctx, "Uploading ", url)
 	// Note: No corpus is uploaded when running this test locally.
@@ -519,8 +521,7 @@ func saveCorpus(ctx context.Context, cred, board, corpusPath string) error {
 }
 
 // saveCoverage should only be used when running the test as scheduled in the lab.
-func saveCoverage(ctx context.Context, cred, outDir, board, kernelCommit string, uploadCover bool) error {
-	timestamp := time.Now().Format("2006-01-02-15:04:05")
+func saveCoverage(ctx context.Context, timestamp, cred, outDir, board, kernelCommit string, uploadCover bool) error {
 	artifacts := []struct {
 		name string
 		url  string
