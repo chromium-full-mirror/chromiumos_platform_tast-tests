@@ -1154,7 +1154,10 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		enablePlayStore = !st.Provisioned
 	}
 
-	if enablePlayStore && !f.disableARC {
+	// Do Play Store optin if needed.
+	// ARC policy for Enterprise accounts is controlled by managed policies and
+	// optin procedure should be skipped.
+	if enablePlayStore && !f.disableARC && !f.useEnterprisePool {
 		func() {
 			const playStorePackageName = "com.android.vending"
 			ctx, cancel := context.WithTimeout(ctx, optin.OptinTimeout+time.Minute)
