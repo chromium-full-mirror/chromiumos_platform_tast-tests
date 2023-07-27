@@ -45,6 +45,10 @@ const (
 	TestPDFName = "inaccessible-text.pdf"
 	// Inaccessible text embedded in an image in the testing PDF file
 	TextInPDFImage = "Hello, world!"
+	// Eight-page document PDF including inaccessible text
+	MultiPagePDFName = "building_chromium.pdf"
+	// JSON file that contains expected texts from `RealPDFName`
+	MultiPagePDFExpectedTextJSONName = "building_chromium_expected.json"
 )
 
 // ContextMenuOption is a string value that indicates a context menu option for PDF OCR.
@@ -72,6 +76,28 @@ type SetUpData struct {
 	Server *httptest.Server
 	TConn  *chrome.TestConn
 	TDown  *a11y.TearDownHelper
+}
+
+// Pages represents a top dictionary object in a JSON file used in
+// `PDFOCRMultiPage`.
+type Pages struct {
+	Pages []Page `json:"pages"`
+}
+
+// Page represents a dictionary object within the Pages object in a JSON file
+// used in `PDFOCRMultiPage`.
+type Page struct {
+	Number   int      `json:"number"`
+	Expected []string `json:"expected"`
+}
+
+// TestStep represents a test step of testing PDF OCR outputs using ChromeVox.
+// It consists of a string representing a key command for ChromeVox and a
+// tts.SpeechExpectation representing utterances from ChromeVox.
+// used in `PDFOCRMultiPage`.
+type TestStep struct {
+	KeyCommands  []string
+	Expectations []tts.SpeechExpectation
 }
 
 // SetUpDlcFailure executes common setup code that simulates the screen-ai DLC

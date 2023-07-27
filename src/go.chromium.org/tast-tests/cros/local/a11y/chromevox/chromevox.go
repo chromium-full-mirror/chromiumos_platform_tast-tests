@@ -29,6 +29,7 @@ const (
 	Find             = "Ctrl+F"
 	JumpToLauncher   = "Alt+Shift+L"
 	JumpToStatusTray = "Alt+Shift+S"
+	NextLandmark     = "Search+;"
 	NextObject       = "Search+Right"
 	PreviousObject   = "Search+Left"
 	CloseWindow      = "Ctrl+W"
