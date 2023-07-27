@@ -27,6 +27,7 @@ const (
 	ROTATION_ROTATE_90  = 1
 	ROTATION_ROTATE_180 = 2
 	ROTATION_ROTATE_270 = 3
+	ROTATION_UNSET      = 4
 )
 
 func (p *AutoLaunchAppDevicesKioskAppsconfig) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
@@ -170,21 +171,6 @@ func (p *ChromeWebStoreHomepageUsersAppsconfig) Schema2JSON(updateMask []string,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// ChromeAppsEnabledUsersAppsconfig
-///////////////////////////////////////////////////////////////////////////////
-
-type ChromeAppsEnabledUsersAppsconfig struct {
-	ChromeAppsEnabled bool `json:"chromeAppsEnabled"`
-}
-
-func (p *ChromeAppsEnabledUsersAppsconfig) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
-	if len(updateMask) == 0 {
-		updateMask = []string{"chromeAppsEnabled"}
-	}
-	return marshalJSON("chrome.users.appsconfig.ChromeAppsEnabled", p, updateMask, additionalTargetKeys)
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // ChromeWebStorePermissionsUsersAppsconfig
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -198,6 +184,43 @@ func (p *ChromeWebStorePermissionsUsersAppsconfig) Schema2JSON(updateMask []stri
 		updateMask = []string{"allowWebstorePublish", "allowWebstorePublishUnverified"}
 	}
 	return marshalJSON("chrome.users.appsconfig.ChromeWebStorePermissions", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ExtensionUnpublishedAvailabilityUsersAppsconfig
+///////////////////////////////////////////////////////////////////////////////
+
+type ExtensionUnpublishedAvailabilityUsersAppsconfig struct {
+	ExtensionUnpublishedAvailability ExtensionUnpublishedAvailabilityEnum `json:"extensionUnpublishedAvailability"`
+}
+
+type ExtensionUnpublishedAvailabilityEnum int
+
+const (
+	EXTENSIONUNPUBLISHEDAVAILABILITYENUM_EXTENSION_UNPUBLISHED_AVAILABILITY_ENUM_ALLOW_UNPUBLISHED   = 1
+	EXTENSIONUNPUBLISHEDAVAILABILITYENUM_EXTENSION_UNPUBLISHED_AVAILABILITY_ENUM_DISABLE_UNPUBLISHED = 2
+)
+
+func (p *ExtensionUnpublishedAvailabilityUsersAppsconfig) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"extensionUnpublishedAvailability"}
+	}
+	return marshalJSON("chrome.users.appsconfig.ExtensionUnpublishedAvailability", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ChromeAppsEnabledUsersAppsconfig
+///////////////////////////////////////////////////////////////////////////////
+
+type ChromeAppsEnabledUsersAppsconfig struct {
+	ChromeAppsEnabled bool `json:"chromeAppsEnabled"`
+}
+
+func (p *ChromeAppsEnabledUsersAppsconfig) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"chromeAppsEnabled"}
+	}
+	return marshalJSON("chrome.users.appsconfig.ChromeAppsEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -425,6 +448,57 @@ func (p *InstallationUrlDevicesKioskApps) Schema2JSON(updateMask []string, addit
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// InstallationUrlV2DevicesKioskApps
+///////////////////////////////////////////////////////////////////////////////
+
+type InstallationUrlV2DevicesKioskApps struct {
+	InstallationUrl string `json:"installationUrl"`
+}
+
+func (p *InstallationUrlV2DevicesKioskApps) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"installationUrl"}
+	}
+	return marshalJSON("chrome.devices.kiosk.apps.InstallationUrlV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// CustomWebAppNameAndIconDevicesKioskApps
+///////////////////////////////////////////////////////////////////////////////
+
+type CustomWebAppNameAndIconDevicesKioskApps struct {
+	OverrideNameAndIcon bool         `json:"overrideNameAndIcon"`
+	CustomName          string       `json:"customName"`
+	CustomIcon          UploadedFile `json:"customIcon"`
+}
+
+type UploadedFile struct {
+	DownloadUri string `json:"downloadUri"`
+}
+
+func (p *CustomWebAppNameAndIconDevicesKioskApps) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"overrideNameAndIcon", "customName", "customIcon"}
+	}
+	return marshalJSON("chrome.devices.kiosk.apps.CustomWebAppNameAndIcon", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// InstallAsShortcutDevicesKioskApps
+///////////////////////////////////////////////////////////////////////////////
+
+type InstallAsShortcutDevicesKioskApps struct {
+	InstallAsShortcut bool `json:"installAsShortcut"`
+}
+
+func (p *InstallAsShortcutDevicesKioskApps) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"installAsShortcut"}
+	}
+	return marshalJSON("chrome.devices.kiosk.apps.InstallAsShortcut", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // AllowForUsersPrintservers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -467,6 +541,56 @@ func (p *AllowForManagedGuestPrintservers) Schema2JSON(updateMask []string, addi
 		updateMask = []string{"allowForManagedGuest"}
 	}
 	return marshalJSON("chrome.printservers.AllowForManagedGuest", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DetailsNetworksCellular
+///////////////////////////////////////////////////////////////////////////////
+
+type DetailsNetworksCellular struct {
+	Details NetworkDetailsCellular `json:"details"`
+}
+
+type NetworkDetailsCellular struct {
+	SmdpAddress string `json:"smdpAddress"`
+	SmdsAddress string `json:"smdsAddress"`
+}
+
+func (p *DetailsNetworksCellular) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"details"}
+	}
+	return marshalJSON("chrome.networks.cellular.Details", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DetailsV2NetworksCellular
+///////////////////////////////////////////////////////////////////////////////
+
+type DetailsV2NetworksCellular struct {
+	Details NetworkDetailsCellular `json:"details"`
+}
+
+func (p *DetailsV2NetworksCellular) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"details"}
+	}
+	return marshalJSON("chrome.networks.cellular.DetailsV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AllowForChromeDevicesNetworksCellular
+///////////////////////////////////////////////////////////////////////////////
+
+type AllowForChromeDevicesNetworksCellular struct {
+	AllowForChromeDevices bool `json:"allowForChromeDevices"`
+}
+
+func (p *AllowForChromeDevicesNetworksCellular) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"allowForChromeDevices"}
+	}
+	return marshalJSON("chrome.networks.cellular.AllowForChromeDevices", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -521,6 +645,36 @@ func (p *CertificateManagementDevicesManagedguestApps) Schema2JSON(updateMask []
 		updateMask = []string{"allowAccessToKeys", "allowEnterpriseChallenge"}
 	}
 	return marshalJSON("chrome.devices.managedguest.apps.CertificateManagement", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AccessToKeysDevicesManagedguestApps
+///////////////////////////////////////////////////////////////////////////////
+
+type AccessToKeysDevicesManagedguestApps struct {
+	AllowAccessToKeys bool `json:"allowAccessToKeys"`
+}
+
+func (p *AccessToKeysDevicesManagedguestApps) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"allowAccessToKeys"}
+	}
+	return marshalJSON("chrome.devices.managedguest.apps.AccessToKeys", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// EnterpriseChallengeDevicesManagedguestApps
+///////////////////////////////////////////////////////////////////////////////
+
+type EnterpriseChallengeDevicesManagedguestApps struct {
+	AllowEnterpriseChallenge bool `json:"allowEnterpriseChallenge"`
+}
+
+func (p *EnterpriseChallengeDevicesManagedguestApps) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"allowEnterpriseChallenge"}
+	}
+	return marshalJSON("chrome.devices.managedguest.apps.EnterpriseChallenge", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -610,6 +764,68 @@ func (p *InstallationUrlDevicesManagedguestApps) Schema2JSON(updateMask []string
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// AppInstallationUrlDevicesManagedguestApps
+///////////////////////////////////////////////////////////////////////////////
+
+type AppInstallationUrlDevicesManagedguestApps struct {
+	InstallationUrl string `json:"installationUrl"`
+}
+
+func (p *AppInstallationUrlDevicesManagedguestApps) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"installationUrl"}
+	}
+	return marshalJSON("chrome.devices.managedguest.apps.AppInstallationUrl", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// OverrideInstallationUrlDevicesManagedguestApps
+///////////////////////////////////////////////////////////////////////////////
+
+type OverrideInstallationUrlDevicesManagedguestApps struct {
+	OverrideInstallationUrl bool `json:"overrideInstallationUrl"`
+}
+
+func (p *OverrideInstallationUrlDevicesManagedguestApps) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"overrideInstallationUrl"}
+	}
+	return marshalJSON("chrome.devices.managedguest.apps.OverrideInstallationUrl", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// CustomWebAppNameAndIconDevicesManagedguestApps
+///////////////////////////////////////////////////////////////////////////////
+
+type CustomWebAppNameAndIconDevicesManagedguestApps struct {
+	OverrideNameAndIcon bool         `json:"overrideNameAndIcon"`
+	CustomName          string       `json:"customName"`
+	CustomIcon          UploadedFile `json:"customIcon"`
+}
+
+func (p *CustomWebAppNameAndIconDevicesManagedguestApps) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"overrideNameAndIcon", "customName", "customIcon"}
+	}
+	return marshalJSON("chrome.devices.managedguest.apps.CustomWebAppNameAndIcon", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// InstallAsShortcutDevicesManagedguestApps
+///////////////////////////////////////////////////////////////////////////////
+
+type InstallAsShortcutDevicesManagedguestApps struct {
+	InstallAsShortcut bool `json:"installAsShortcut"`
+}
+
+func (p *InstallAsShortcutDevicesManagedguestApps) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"installAsShortcut"}
+	}
+	return marshalJSON("chrome.devices.managedguest.apps.InstallAsShortcut", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // AutoConnectNetworksGlobalsettings
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -668,6 +884,21 @@ func (p *AllowedNetworkInterfacesNetworksGlobalsettings) Schema2JSON(updateMask 
 		updateMask = []string{"allowedNetworkInterfaces"}
 	}
 	return marshalJSON("chrome.networks.globalsettings.AllowedNetworkInterfaces", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AllowedNetworkInterfacesV2NetworksGlobalsettings
+///////////////////////////////////////////////////////////////////////////////
+
+type AllowedNetworkInterfacesV2NetworksGlobalsettings struct {
+	AllowedNetworkInterfaces DisabledNetworkTypes `json:"allowedNetworkInterfaces"`
+}
+
+func (p *AllowedNetworkInterfacesV2NetworksGlobalsettings) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"allowedNetworkInterfaces"}
+	}
+	return marshalJSON("chrome.networks.globalsettings.AllowedNetworkInterfacesV2", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1134,6 +1365,38 @@ func (p *OverrideInstallationUrlUsersApps) Schema2JSON(updateMask []string, addi
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// CustomWebAppNameAndIconUsersApps
+///////////////////////////////////////////////////////////////////////////////
+
+type CustomWebAppNameAndIconUsersApps struct {
+	OverrideNameAndIcon bool         `json:"overrideNameAndIcon"`
+	CustomName          string       `json:"customName"`
+	CustomIcon          UploadedFile `json:"customIcon"`
+}
+
+func (p *CustomWebAppNameAndIconUsersApps) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"overrideNameAndIcon", "customName", "customIcon"}
+	}
+	return marshalJSON("chrome.users.apps.CustomWebAppNameAndIcon", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// InstallAsShortcutUsersApps
+///////////////////////////////////////////////////////////////////////////////
+
+type InstallAsShortcutUsersApps struct {
+	InstallAsShortcut bool `json:"installAsShortcut"`
+}
+
+func (p *InstallAsShortcutUsersApps) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"installAsShortcut"}
+	}
+	return marshalJSON("chrome.users.apps.InstallAsShortcut", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // DetailsNetworksWifi
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1212,15 +1475,26 @@ func (p *SessionLengthUsers) Schema2JSON(updateMask []string, additionalTargetKe
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// SessionLengthV2Users
+///////////////////////////////////////////////////////////////////////////////
+
+type SessionLengthV2Users struct {
+	SessionDurationLimit NullableDuration `json:"sessionDurationLimit"`
+}
+
+func (p *SessionLengthV2Users) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"sessionDurationLimit"}
+	}
+	return marshalJSON("chrome.users.SessionLengthV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // AvatarUsers
 ///////////////////////////////////////////////////////////////////////////////
 
 type AvatarUsers struct {
 	UserAvatarImage UploadedFile `json:"userAvatarImage"`
-}
-
-type UploadedFile struct {
-	DownloadUri string `json:"downloadUri"`
 }
 
 func (p *AvatarUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
@@ -1354,6 +1628,137 @@ func (p *LoginDisplayPasswordButtonEnabledUsers) Schema2JSON(updateMask []string
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// CloudApAuthEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type CloudApAuthEnabledUsers struct {
+	CloudApAuthEnabled CloudAPAuthEnabledEnum `json:"cloudApAuthEnabled"`
+}
+
+type CloudAPAuthEnabledEnum int
+
+const (
+	CLOUDAPAUTHENABLEDENUM_CLOUD_AP_AUTH_ENABLED_ENUM_DISABLED = 1
+	CLOUDAPAUTHENABLEDENUM_CLOUD_AP_AUTH_ENABLED_ENUM_ENABLED  = 2
+)
+
+func (p *CloudApAuthEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"cloudApAuthEnabled"}
+	}
+	return marshalJSON("chrome.users.CloudApAuthEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// WallpaperGooglePhotosIntegrationEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type WallpaperGooglePhotosIntegrationEnabledUsers struct {
+	WallpaperGooglePhotosIntegrationEnabled bool `json:"wallpaperGooglePhotosIntegrationEnabled"`
+}
+
+func (p *WallpaperGooglePhotosIntegrationEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"wallpaperGooglePhotosIntegrationEnabled"}
+	}
+	return marshalJSON("chrome.users.WallpaperGooglePhotosIntegrationEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ShowTouchpadScrollScreenEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ShowTouchpadScrollScreenEnabledUsers struct {
+	ShowTouchpadScrollScreenEnabled bool `json:"showTouchpadScrollScreenEnabled"`
+}
+
+func (p *ShowTouchpadScrollScreenEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"showTouchpadScrollScreenEnabled"}
+	}
+	return marshalJSON("chrome.users.ShowTouchpadScrollScreenEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// UserAvatarCustomizationSelectorsEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type UserAvatarCustomizationSelectorsEnabledUsers struct {
+	UserAvatarCustomizationSelectorsEnabled bool `json:"userAvatarCustomizationSelectorsEnabled"`
+}
+
+func (p *UserAvatarCustomizationSelectorsEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"userAvatarCustomizationSelectorsEnabled"}
+	}
+	return marshalJSON("chrome.users.UserAvatarCustomizationSelectorsEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ShowDisplaySizeScreenEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ShowDisplaySizeScreenEnabledUsers struct {
+	ShowDisplaySizeScreenEnabled NullableBoolean `json:"showDisplaySizeScreenEnabled"`
+}
+
+type NullableBoolean int
+
+const (
+	NULLABLEBOOLEAN_UNSET = 1
+	NULLABLEBOOLEAN_FALSE = 2
+	NULLABLEBOOLEAN_TRUE  = 3
+)
+
+func (p *ShowDisplaySizeScreenEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"showDisplaySizeScreenEnabled"}
+	}
+	return marshalJSON("chrome.users.ShowDisplaySizeScreenEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AppLaunchAutomationUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type AppLaunchAutomationUsers struct {
+	AppLaunchAutomation AppLaunchAutomationType `json:"appLaunchAutomation"`
+}
+
+type AppLaunchAutomationType struct {
+	Entries []AppLaunchAutomationTypeEntry `json:"entries"`
+}
+
+type AppLaunchAutomationTypeEntry struct {
+	Uuid                string                  `json:"uuid"`
+	Name                string                  `json:"name"`
+	CreatedTimeUsec     int64                   `json:"createdTimeUsec"`
+	UpdatedTimeUsec     int64                   `json:"updatedTimeUsec"`
+	AutoLaunchOnStartup bool                    `json:"autoLaunchOnStartup"`
+	Desk                AppLaunchAutomationDesk `json:"desk"`
+}
+
+type AppLaunchAutomationDesk struct {
+	Apps []AppLaunchAutomationApp `json:"apps"`
+}
+
+type AppLaunchAutomationApp struct {
+	BrowserTabs []AppLaunchAutomationBrowserTab `json:"browserTabs"`
+	WindowId    int                             `json:"windowId"`
+}
+
+type AppLaunchAutomationBrowserTab struct {
+	Url string `json:"url"`
+}
+
+func (p *AppLaunchAutomationUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"appLaunchAutomation"}
+	}
+	return marshalJSON("chrome.users.AppLaunchAutomation", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // MobileManagementUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1366,6 +1771,28 @@ func (p *MobileManagementUsers) Schema2JSON(updateMask []string, additionalTarge
 		updateMask = []string{"enableMobileChromePolicies"}
 	}
 	return marshalJSON("chrome.users.MobileManagement", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ManagementModeUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ManagementModeUsers struct {
+	DeviceManagementMode DeviceManagementModeEnum `json:"deviceManagementMode"`
+}
+
+type DeviceManagementModeEnum int
+
+const (
+	DEVICEMANAGEMENTMODEENUM_DEVICE_MANAGEMENT_MODE_ENUM_GOOGLE_CLOUD     = 1
+	DEVICEMANAGEMENTMODEENUM_DEVICE_MANAGEMENT_MODE_ENUM_ACTIVE_DIRECTORY = 2
+)
+
+func (p *ManagementModeUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"deviceManagementMode"}
+	}
+	return marshalJSON("chrome.users.ManagementMode", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1437,6 +1864,45 @@ func (p *TaskManagerUsers) Schema2JSON(updateMask []string, additionalTargetKeys
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// ExtensionManifestVTwoAvailabilityUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ExtensionManifestVTwoAvailabilityUsers struct {
+	ExtensionManifestVTwoAvailability ExtensionManifestV2AvailabilityEnum `json:"extensionManifestVTwoAvailability"`
+}
+
+type ExtensionManifestV2AvailabilityEnum int
+
+const (
+	EXTENSIONMANIFESTV2AVAILABILITYENUM_EXTENSION_MANIFEST_V2_AVAILABILITY_ENUM_DEFAULT                      = 1
+	EXTENSIONMANIFESTV2AVAILABILITYENUM_EXTENSION_MANIFEST_V2_AVAILABILITY_ENUM_DISABLE                      = 2
+	EXTENSIONMANIFESTV2AVAILABILITYENUM_EXTENSION_MANIFEST_V2_AVAILABILITY_ENUM_ENABLE                       = 3
+	EXTENSIONMANIFESTV2AVAILABILITYENUM_EXTENSION_MANIFEST_V2_AVAILABILITY_ENUM_ENABLE_FOR_FORCED_EXTENSIONS = 4
+)
+
+func (p *ExtensionManifestVTwoAvailabilityUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"extensionManifestVTwoAvailability"}
+	}
+	return marshalJSON("chrome.users.ExtensionManifestVTwoAvailability", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ExtensionExtendedBackgroundLifetimeForPortConnectionsToUrlsUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ExtensionExtendedBackgroundLifetimeForPortConnectionsToUrlsUsers struct {
+	ExtensionExtendedBackgroundLifetimeForPortConnectionsToUrls []string `json:"extensionExtendedBackgroundLifetimeForPortConnectionsToUrls"`
+}
+
+func (p *ExtensionExtendedBackgroundLifetimeForPortConnectionsToUrlsUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"extensionExtendedBackgroundLifetimeForPortConnectionsToUrls"}
+	}
+	return marshalJSON("chrome.users.ExtensionExtendedBackgroundLifetimeForPortConnectionsToUrls", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // SiteIsolationBrowserUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1461,14 +1927,6 @@ type SiteIsolationAndroidUsers struct {
 	IsolateOriginsAndroid []string        `json:"isolateOriginsAndroid"`
 }
 
-type NullableBoolean int
-
-const (
-	NULLABLEBOOLEAN_UNSET = 1
-	NULLABLEBOOLEAN_FALSE = 2
-	NULLABLEBOOLEAN_TRUE  = 3
-)
-
 func (p *SiteIsolationAndroidUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
 		updateMask = []string{"sitePerProcessAndroid", "isolateOriginsAndroid"}
@@ -1489,6 +1947,30 @@ func (p *PasswordManagerUsers) Schema2JSON(updateMask []string, additionalTarget
 		updateMask = []string{"passwordManagerEnabled"}
 	}
 	return marshalJSON("chrome.users.PasswordManager", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// RecoveryFactorBehaviorUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type RecoveryFactorBehaviorUsers struct {
+	RecoveryFactorBehavior RecoveryFactorBehaviorEnum `json:"recoveryFactorBehavior"`
+}
+
+type RecoveryFactorBehaviorEnum int
+
+const (
+	RECOVERYFACTORBEHAVIORENUM_RECOVERY_FACTOR_BEHAVIOR_ENUM_UNSET                                 = 1
+	RECOVERYFACTORBEHAVIORENUM_RECOVERY_FACTOR_BEHAVIOR_ENUM_ACTIVATE_ACCOUNT_RECOVERY             = 2
+	RECOVERYFACTORBEHAVIORENUM_RECOVERY_FACTOR_BEHAVIOR_ENUM_ACTIVATE_ACCOUNT_RECOVERY_RECOMMENDED = 3
+	RECOVERYFACTORBEHAVIORENUM_RECOVERY_FACTOR_BEHAVIOR_ENUM_DEACTIVATE_ACCOUNT_RECOVERY           = 4
+)
+
+func (p *RecoveryFactorBehaviorUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"recoveryFactorBehavior"}
+	}
+	return marshalJSON("chrome.users.RecoveryFactorBehavior", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1534,6 +2016,51 @@ func (p *WebAuthnFactorsUsers) Schema2JSON(updateMask []string, additionalTarget
 		updateMask = []string{"webAuthnFactors"}
 	}
 	return marshalJSON("chrome.users.WebAuthnFactors", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AllowWebAuthnWithBrokenTlsCertsUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type AllowWebAuthnWithBrokenTlsCertsUsers struct {
+	AllowWebAuthnWithBrokenTlsCerts bool `json:"allowWebAuthnWithBrokenTlsCerts"`
+}
+
+func (p *AllowWebAuthnWithBrokenTlsCertsUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"allowWebAuthnWithBrokenTlsCerts"}
+	}
+	return marshalJSON("chrome.users.AllowWebAuthnWithBrokenTlsCerts", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// InsecureHashesInTlsHandshakesEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type InsecureHashesInTlsHandshakesEnabledUsers struct {
+	InsecureHashesInTlsHandshakesEnabled NullableBoolean `json:"insecureHashesInTlsHandshakesEnabled"`
+}
+
+func (p *InsecureHashesInTlsHandshakesEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"insecureHashesInTlsHandshakesEnabled"}
+	}
+	return marshalJSON("chrome.users.InsecureHashesInTlsHandshakesEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PostQuantumKeyAgreementEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type PostQuantumKeyAgreementEnabledUsers struct {
+	PostQuantumKeyAgreementEnabled NullableBoolean `json:"postQuantumKeyAgreementEnabled"`
+}
+
+func (p *PostQuantumKeyAgreementEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"postQuantumKeyAgreementEnabled"}
+	}
+	return marshalJSON("chrome.users.PostQuantumKeyAgreementEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1729,6 +2256,28 @@ func (p *BrowsingDataLifetimeUsers) Schema2JSON(updateMask []string, additionalT
 		updateMask = []string{"browsingHistoryTtl", "downloadHistoryTtl", "cookiesAndOtherSiteDataTtl", "cachedImagesAndFilesTtl", "passwordSigninTtl", "autofillTtl", "siteSettingsTtl", "hostedAppDataTtl"}
 	}
 	return marshalJSON("chrome.users.BrowsingDataLifetime", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// BrowsingDataLifetimeV2Users
+///////////////////////////////////////////////////////////////////////////////
+
+type BrowsingDataLifetimeV2Users struct {
+	BrowsingHistoryTtl         NullableDuration `json:"browsingHistoryTtl"`
+	DownloadHistoryTtl         NullableDuration `json:"downloadHistoryTtl"`
+	CookiesAndOtherSiteDataTtl NullableDuration `json:"cookiesAndOtherSiteDataTtl"`
+	CachedImagesAndFilesTtl    NullableDuration `json:"cachedImagesAndFilesTtl"`
+	PasswordSigninTtl          NullableDuration `json:"passwordSigninTtl"`
+	AutofillTtl                NullableDuration `json:"autofillTtl"`
+	SiteSettingsTtl            NullableDuration `json:"siteSettingsTtl"`
+	HostedAppDataTtl           NullableDuration `json:"hostedAppDataTtl"`
+}
+
+func (p *BrowsingDataLifetimeV2Users) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"browsingHistoryTtl", "downloadHistoryTtl", "cookiesAndOtherSiteDataTtl", "cachedImagesAndFilesTtl", "passwordSigninTtl", "autofillTtl", "siteSettingsTtl", "hostedAppDataTtl"}
+	}
+	return marshalJSON("chrome.users.BrowsingDataLifetimeV2", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2238,6 +2787,22 @@ func (p *SecurityTokenSessionSettingsUsers) Schema2JSON(updateMask []string, add
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// SecurityTokenSessionSettingsV2Users
+///////////////////////////////////////////////////////////////////////////////
+
+type SecurityTokenSessionSettingsV2Users struct {
+	SecurityTokenSessionBehavior            SecurityTokenSessionBehaviorEnum `json:"securityTokenSessionBehavior"`
+	SecurityTokenSessionNotificationSeconds NullableDuration                 `json:"securityTokenSessionNotificationSeconds"`
+}
+
+func (p *SecurityTokenSessionSettingsV2Users) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"securityTokenSessionBehavior", "securityTokenSessionNotificationSeconds"}
+	}
+	return marshalJSON("chrome.users.SecurityTokenSessionSettingsV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // AllowSystemNotificationsUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2345,6 +2910,21 @@ func (p *WebSqlNonSecureContextEnabledUsers) Schema2JSON(updateMask []string, ad
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// WebSqlAccessUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type WebSqlAccessUsers struct {
+	WebSqlAccess bool `json:"webSqlAccess"`
+}
+
+func (p *WebSqlAccessUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"webSqlAccess"}
+	}
+	return marshalJSON("chrome.users.WebSqlAccess", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // UTwoFSecurityKeyApiEnabledUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2357,6 +2937,21 @@ func (p *UTwoFSecurityKeyApiEnabledUsers) Schema2JSON(updateMask []string, addit
 		updateMask = []string{"uTwoFSecurityKeyApiEnabled"}
 	}
 	return marshalJSON("chrome.users.UTwoFSecurityKeyApiEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// BrowserLegacyExtensionPointsBlockedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type BrowserLegacyExtensionPointsBlockedUsers struct {
+	BrowserLegacyExtensionPointsBlocked bool `json:"browserLegacyExtensionPointsBlocked"`
+}
+
+func (p *BrowserLegacyExtensionPointsBlockedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"browserLegacyExtensionPointsBlocked"}
+	}
+	return marshalJSON("chrome.users.BrowserLegacyExtensionPointsBlocked", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2390,6 +2985,21 @@ func (p *GetDisplayMediaSetSelectAllScreensAllowedForUrlsUsers) Schema2JSON(upda
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// NewBaseUrlInheritanceBehaviorAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type NewBaseUrlInheritanceBehaviorAllowedUsers struct {
+	NewBaseUrlInheritanceBehaviorAllowed bool `json:"newBaseUrlInheritanceBehaviorAllowed"`
+}
+
+func (p *NewBaseUrlInheritanceBehaviorAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"newBaseUrlInheritanceBehaviorAllowed"}
+	}
+	return marshalJSON("chrome.users.NewBaseUrlInheritanceBehaviorAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // EncryptedClientHelloEnabledUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2402,6 +3012,129 @@ func (p *EncryptedClientHelloEnabledUsers) Schema2JSON(updateMask []string, addi
 		updateMask = []string{"encryptedClientHelloEnabled"}
 	}
 	return marshalJSON("chrome.users.EncryptedClientHelloEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// StrictMimetypeCheckForWorkerScriptsEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type StrictMimetypeCheckForWorkerScriptsEnabledUsers struct {
+	StrictMimetypeCheckForWorkerScriptsEnabled bool `json:"strictMimetypeCheckForWorkerScriptsEnabled"`
+}
+
+func (p *StrictMimetypeCheckForWorkerScriptsEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"strictMimetypeCheckForWorkerScriptsEnabled"}
+	}
+	return marshalJSON("chrome.users.StrictMimetypeCheckForWorkerScriptsEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PrivacySandboxPromptEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type PrivacySandboxPromptEnabledUsers struct {
+	PrivacySandboxPromptEnabled         bool `json:"privacySandboxPromptEnabled"`
+	PrivacySandboxAdTopicsEnabled       bool `json:"privacySandboxAdTopicsEnabled"`
+	PrivacySandboxSiteEnabledAdsEnabled bool `json:"privacySandboxSiteEnabledAdsEnabled"`
+	PrivacySandboxAdMeasurementEnabled  bool `json:"privacySandboxAdMeasurementEnabled"`
+}
+
+func (p *PrivacySandboxPromptEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"privacySandboxPromptEnabled", "privacySandboxAdTopicsEnabled", "privacySandboxSiteEnabledAdsEnabled", "privacySandboxAdMeasurementEnabled"}
+	}
+	return marshalJSON("chrome.users.PrivacySandboxPromptEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// EnforceLocalAnchorConstraintsEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type EnforceLocalAnchorConstraintsEnabledUsers struct {
+	EnforceLocalAnchorConstraintsEnabled bool `json:"enforceLocalAnchorConstraintsEnabled"`
+}
+
+func (p *EnforceLocalAnchorConstraintsEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"enforceLocalAnchorConstraintsEnabled"}
+	}
+	return marshalJSON("chrome.users.EnforceLocalAnchorConstraintsEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// CredentialProviderPromoEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type CredentialProviderPromoEnabledUsers struct {
+	CredentialProviderPromoEnabled bool `json:"credentialProviderPromoEnabled"`
+}
+
+func (p *CredentialProviderPromoEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"credentialProviderPromoEnabled"}
+	}
+	return marshalJSON("chrome.users.CredentialProviderPromoEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// OriginAgentClusterDefaultEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type OriginAgentClusterDefaultEnabledUsers struct {
+	OriginAgentClusterDefaultEnabled bool `json:"originAgentClusterDefaultEnabled"`
+}
+
+func (p *OriginAgentClusterDefaultEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"originAgentClusterDefaultEnabled"}
+	}
+	return marshalJSON("chrome.users.OriginAgentClusterDefaultEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FileOrDirectoryPickerWithoutGestureAllowedForOriginsUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type FileOrDirectoryPickerWithoutGestureAllowedForOriginsUsers struct {
+	FileOrDirectoryPickerWithoutGestureAllowedForOrigins []string `json:"fileOrDirectoryPickerWithoutGestureAllowedForOrigins"`
+}
+
+func (p *FileOrDirectoryPickerWithoutGestureAllowedForOriginsUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"fileOrDirectoryPickerWithoutGestureAllowedForOrigins"}
+	}
+	return marshalJSON("chrome.users.FileOrDirectoryPickerWithoutGestureAllowedForOrigins", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ScreenCaptureWithoutGestureAllowedForOriginsUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ScreenCaptureWithoutGestureAllowedForOriginsUsers struct {
+	ScreenCaptureWithoutGestureAllowedForOrigins []string `json:"screenCaptureWithoutGestureAllowedForOrigins"`
+}
+
+func (p *ScreenCaptureWithoutGestureAllowedForOriginsUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"screenCaptureWithoutGestureAllowedForOrigins"}
+	}
+	return marshalJSON("chrome.users.ScreenCaptureWithoutGestureAllowedForOrigins", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AllowBackForwardCacheForCacheControlNoStorePageEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type AllowBackForwardCacheForCacheControlNoStorePageEnabledUsers struct {
+	AllowBackForwardCacheForCacheControlNoStorePageEnabled bool `json:"allowBackForwardCacheForCacheControlNoStorePageEnabled"`
+}
+
+func (p *AllowBackForwardCacheForCacheControlNoStorePageEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"allowBackForwardCacheForCacheControlNoStorePageEnabled"}
+	}
+	return marshalJSON("chrome.users.AllowBackForwardCacheForCacheControlNoStorePageEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2449,6 +3182,51 @@ func (p *RemoteAccessHostFirewallTraversalUsers) Schema2JSON(updateMask []string
 		updateMask = []string{"remoteAccessHostFirewallTraversal", "remoteAccessHostAllowRelayedConnection", "remoteAccessHostUdpPortRange"}
 	}
 	return marshalJSON("chrome.users.RemoteAccessHostFirewallTraversal", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// RemoteAccessHostAllowRemoteSupportConnectionsUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type RemoteAccessHostAllowRemoteSupportConnectionsUsers struct {
+	RemoteAccessHostAllowRemoteSupportConnections bool `json:"remoteAccessHostAllowRemoteSupportConnections"`
+}
+
+func (p *RemoteAccessHostAllowRemoteSupportConnectionsUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"remoteAccessHostAllowRemoteSupportConnections"}
+	}
+	return marshalJSON("chrome.users.RemoteAccessHostAllowRemoteSupportConnections", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// RemoteAccessHostClipboardSizeBytesUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type RemoteAccessHostClipboardSizeBytesUsers struct {
+	RemoteAccessHostClipboardSizeBytes NullableLong `json:"remoteAccessHostClipboardSizeBytes"`
+}
+
+func (p *RemoteAccessHostClipboardSizeBytesUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"remoteAccessHostClipboardSizeBytes"}
+	}
+	return marshalJSON("chrome.users.RemoteAccessHostClipboardSizeBytes", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// RemoteAccessHostAllowEnterpriseRemoteSupportConnectionsUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type RemoteAccessHostAllowEnterpriseRemoteSupportConnectionsUsers struct {
+	RemoteAccessHostAllowEnterpriseRemoteSupportConnections bool `json:"remoteAccessHostAllowEnterpriseRemoteSupportConnections"`
+}
+
+func (p *RemoteAccessHostAllowEnterpriseRemoteSupportConnectionsUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"remoteAccessHostAllowEnterpriseRemoteSupportConnections"}
+	}
+	return marshalJSON("chrome.users.RemoteAccessHostAllowEnterpriseRemoteSupportConnections", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2513,6 +3291,37 @@ func (p *KerberosAddAccountsAllowedUsers) Schema2JSON(updateMask []string, addit
 		updateMask = []string{"kerberosAddAccountsAllowed"}
 	}
 	return marshalJSON("chrome.users.KerberosAddAccountsAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// KerberosDomainAutocompleteUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type KerberosDomainAutocompleteUsers struct {
+	KerberosDomainAutocomplete string `json:"kerberosDomainAutocomplete"`
+}
+
+func (p *KerberosDomainAutocompleteUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"kerberosDomainAutocomplete"}
+	}
+	return marshalJSON("chrome.users.KerberosDomainAutocomplete", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// KerberosCustomPrefilledConfigSettingGroupUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type KerberosCustomPrefilledConfigSettingGroupUsers struct {
+	KerberosCustomPrefilledConfig    string `json:"kerberosCustomPrefilledConfig"`
+	KerberosUseCustomPrefilledConfig bool   `json:"kerberosUseCustomPrefilledConfig"`
+}
+
+func (p *KerberosCustomPrefilledConfigSettingGroupUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"kerberosCustomPrefilledConfig", "kerberosUseCustomPrefilledConfig"}
+	}
+	return marshalJSON("chrome.users.KerberosCustomPrefilledConfigSettingGroup", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2769,6 +3578,22 @@ func (p *DnsOverHttpsUsers) Schema2JSON(updateMask []string, additionalTargetKey
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// DnsOverHttpsTemplatesWithIdentifiersUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type DnsOverHttpsTemplatesWithIdentifiersUsers struct {
+	DnsOverHttpsSalt                     string   `json:"dnsOverHttpsSalt"`
+	DnsOverHttpsTemplatesWithIdentifiers []string `json:"dnsOverHttpsTemplatesWithIdentifiers"`
+}
+
+func (p *DnsOverHttpsTemplatesWithIdentifiersUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"dnsOverHttpsSalt", "dnsOverHttpsTemplatesWithIdentifiers"}
+	}
+	return marshalJSON("chrome.users.DnsOverHttpsTemplatesWithIdentifiers", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // BuiltInDnsClientEnabledUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2781,6 +3606,21 @@ func (p *BuiltInDnsClientEnabledUsers) Schema2JSON(updateMask []string, addition
 		updateMask = []string{"builtInDnsClientEnabled"}
 	}
 	return marshalJSON("chrome.users.BuiltInDnsClientEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AccessControlAllowMethodsInCorsPreflightSpecConformantUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type AccessControlAllowMethodsInCorsPreflightSpecConformantUsers struct {
+	AccessControlAllowMethodsInCorsPreflightSpecConformant bool `json:"accessControlAllowMethodsInCorsPreflightSpecConformant"`
+}
+
+func (p *AccessControlAllowMethodsInCorsPreflightSpecConformantUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"accessControlAllowMethodsInCorsPreflightSpecConformant"}
+	}
+	return marshalJSON("chrome.users.AccessControlAllowMethodsInCorsPreflightSpecConformant", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3245,6 +4085,51 @@ func (p *ForceMajorVersionToMinorPositionInUserAgentUsers) Schema2JSON(updateMas
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// OutOfProcessSystemDnsResolutionEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type OutOfProcessSystemDnsResolutionEnabledUsers struct {
+	OutOfProcessSystemDnsResolutionEnabled NullableBoolean `json:"outOfProcessSystemDnsResolutionEnabled"`
+}
+
+func (p *OutOfProcessSystemDnsResolutionEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"outOfProcessSystemDnsResolutionEnabled"}
+	}
+	return marshalJSON("chrome.users.OutOfProcessSystemDnsResolutionEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// HttpAllowlistUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type HttpAllowlistUsers struct {
+	HttpAllowlist []string `json:"httpAllowlist"`
+}
+
+func (p *HttpAllowlistUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"httpAllowlist"}
+	}
+	return marshalJSON("chrome.users.HttpAllowlist", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// HttpsUpgradesEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type HttpsUpgradesEnabledUsers struct {
+	HttpsUpgradesEnabled bool `json:"httpsUpgradesEnabled"`
+}
+
+func (p *HttpsUpgradesEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"httpsUpgradesEnabled"}
+	}
+	return marshalJSON("chrome.users.HttpsUpgradesEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // AndroidBackupRestoreServiceEnabledUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -3326,6 +4211,28 @@ func (p *ArcAppToWebAppSharingEnabledUsers) Schema2JSON(updateMask []string, add
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// ArcVmDataMigrationStrategyUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ArcVmDataMigrationStrategyUsers struct {
+	ArcVmDataMigrationStrategy ArcVmDataMigrationStrategyEnum `json:"arcVmDataMigrationStrategy"`
+}
+
+type ArcVmDataMigrationStrategyEnum int
+
+const (
+	ARCVMDATAMIGRATIONSTRATEGYENUM_ARC_VM_DATA_MIGRATION_STRATEGY_ENUM_DO_NOT_PROMPT = 1
+	ARCVMDATAMIGRATIONSTRATEGYENUM_ARC_VM_DATA_MIGRATION_STRATEGY_ENUM_PROMPT        = 2
+)
+
+func (p *ArcVmDataMigrationStrategyUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"arcVmDataMigrationStrategy"}
+	}
+	return marshalJSON("chrome.users.ArcVmDataMigrationStrategy", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // HomeButtonUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -3402,6 +4309,21 @@ func (p *NtpCustomBackgroundEnabledUsers) Schema2JSON(updateMask []string, addit
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// LensDesktopNtpSearchEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type LensDesktopNtpSearchEnabledUsers struct {
+	LensDesktopNtpSearchEnabled bool `json:"lensDesktopNtpSearchEnabled"`
+}
+
+func (p *LensDesktopNtpSearchEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lensDesktopNtpSearchEnabled"}
+	}
+	return marshalJSON("chrome.users.LensDesktopNtpSearchEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // StartupPagesUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -3462,6 +4384,36 @@ func (p *ProfilePickerOnStartupAvailabilityUsers) Schema2JSON(updateMask []strin
 		updateMask = []string{"profilePickerOnStartupAvailability"}
 	}
 	return marshalJSON("chrome.users.ProfilePickerOnStartupAvailability", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FloatingWorkspaceEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type FloatingWorkspaceEnabledUsers struct {
+	FloatingWorkspaceEnabled bool `json:"floatingWorkspaceEnabled"`
+}
+
+func (p *FloatingWorkspaceEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"floatingWorkspaceEnabled"}
+	}
+	return marshalJSON("chrome.users.FloatingWorkspaceEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FloatingWorkspaceVersionTwoEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type FloatingWorkspaceVersionTwoEnabledUsers struct {
+	FloatingWorkspaceVersionTwoEnabled bool `json:"floatingWorkspaceVersionTwoEnabled"`
+}
+
+func (p *FloatingWorkspaceVersionTwoEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"floatingWorkspaceVersionTwoEnabled"}
+	}
+	return marshalJSON("chrome.users.FloatingWorkspaceVersionTwoEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3642,6 +4594,36 @@ func (p *ScreenCaptureAllowedUsers) Schema2JSON(updateMask []string, additionalT
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// UseMojoVideoDecoderForPepperAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type UseMojoVideoDecoderForPepperAllowedUsers struct {
+	UseMojoVideoDecoderForPepperAllowed bool `json:"useMojoVideoDecoderForPepperAllowed"`
+}
+
+func (p *UseMojoVideoDecoderForPepperAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"useMojoVideoDecoderForPepperAllowed"}
+	}
+	return marshalJSON("chrome.users.UseMojoVideoDecoderForPepperAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PpApiSharedImagesSwapChainAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type PpApiSharedImagesSwapChainAllowedUsers struct {
+	PpApiSharedImagesSwapChainAllowed bool `json:"ppApiSharedImagesSwapChainAllowed"`
+}
+
+func (p *PpApiSharedImagesSwapChainAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"ppApiSharedImagesSwapChainAllowed"}
+	}
+	return marshalJSON("chrome.users.PpApiSharedImagesSwapChainAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // DesktopSharingHubEnabledUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -3741,6 +4723,21 @@ func (p *ThirdPartyCookieBlockingUsers) Schema2JSON(updateMask []string, additio
 		updateMask = []string{"blockThirdPartyCookies"}
 	}
 	return marshalJSON("chrome.users.ThirdPartyCookieBlocking", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FirstPartySetsEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type FirstPartySetsEnabledUsers struct {
+	FirstPartySetsEnabled bool `json:"firstPartySetsEnabled"`
+}
+
+func (p *FirstPartySetsEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"firstPartySetsEnabled"}
+	}
+	return marshalJSON("chrome.users.FirstPartySetsEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3883,6 +4880,21 @@ func (p *JavaScriptJitSettingsUsers) Schema2JSON(updateMask []string, additional
 		updateMask = []string{"defaultJavaScriptJitSetting", "javaScriptJitAllowedForSites", "javaScriptJitBlockedForSites"}
 	}
 	return marshalJSON("chrome.users.JavaScriptJitSettings", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SetTimeoutWithoutOneMsClampEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type SetTimeoutWithoutOneMsClampEnabledUsers struct {
+	SetTimeoutWithoutOneMsClampEnabled NullableBoolean `json:"setTimeoutWithoutOneMsClampEnabled"`
+}
+
+func (p *SetTimeoutWithoutOneMsClampEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"setTimeoutWithoutOneMsClampEnabled"}
+	}
+	return marshalJSON("chrome.users.SetTimeoutWithoutOneMsClampEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4047,6 +5059,21 @@ func (p *SuppressCrossOriginIframeDialogsUsers) Schema2JSON(updateMask []string,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// ThrottleNonVisibleCrossOriginIframesAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ThrottleNonVisibleCrossOriginIframesAllowedUsers struct {
+	ThrottleNonVisibleCrossOriginIframesAllowed bool `json:"throttleNonVisibleCrossOriginIframesAllowed"`
+}
+
+func (p *ThrottleNonVisibleCrossOriginIframesAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"throttleNonVisibleCrossOriginIframesAllowed"}
+	}
+	return marshalJSON("chrome.users.ThrottleNonVisibleCrossOriginIframesAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // SandboxExternalProtocolBlockedUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -4112,15 +5139,57 @@ func (p *GoogleDriveSyncingOverCellularUsers) Schema2JSON(updateMask []string, a
 ///////////////////////////////////////////////////////////////////////////////
 
 type GoogleCastUsers struct {
-	ShowCastIconInToolbar bool `json:"showCastIconInToolbar"`
-	EnableMediaRouter     bool `json:"enableMediaRouter"`
+	ShowCastIconInToolbar      bool            `json:"showCastIconInToolbar"`
+	EnableMediaRouter          bool            `json:"enableMediaRouter"`
+	MediaRouterCastAllowAllIps NullableBoolean `json:"mediaRouterCastAllowAllIps"`
 }
 
 func (p *GoogleCastUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"showCastIconInToolbar", "enableMediaRouter"}
+		updateMask = []string{"showCastIconInToolbar", "enableMediaRouter", "mediaRouterCastAllowAllIps"}
 	}
 	return marshalJSON("chrome.users.GoogleCast", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AccessCodeCastUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type AccessCodeCastUsers struct {
+	AccessCodeCastEnabled        bool                             `json:"accessCodeCastEnabled"`
+	AccessCodeCastDeviceDuration AccessCodeCastDeviceDurationEnum `json:"accessCodeCastDeviceDuration"`
+}
+
+type AccessCodeCastDeviceDurationEnum int
+
+const (
+	ACCESSCODECASTDEVICEDURATIONENUM_ACCESS_CODE_CAST_DEVICE_DURATION_ENUM_INSTANT   = 1
+	ACCESSCODECASTDEVICEDURATIONENUM_ACCESS_CODE_CAST_DEVICE_DURATION_ENUM_ONE_HOUR  = 4
+	ACCESSCODECASTDEVICEDURATIONENUM_ACCESS_CODE_CAST_DEVICE_DURATION_ENUM_ONE_DAY   = 6
+	ACCESSCODECASTDEVICEDURATIONENUM_ACCESS_CODE_CAST_DEVICE_DURATION_ENUM_ONE_MONTH = 8
+	ACCESSCODECASTDEVICEDURATIONENUM_ACCESS_CODE_CAST_DEVICE_DURATION_ENUM_ONE_YEAR  = 10
+)
+
+func (p *AccessCodeCastUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"accessCodeCastEnabled", "accessCodeCastDeviceDuration"}
+	}
+	return marshalJSON("chrome.users.AccessCodeCast", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ShowCastSessionsStartedByOtherDevicesUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ShowCastSessionsStartedByOtherDevicesUsers struct {
+	ShowCastSessionsStartedByOtherDevices NullableBoolean `json:"showCastSessionsStartedByOtherDevices"`
+}
+
+func (p *ShowCastSessionsStartedByOtherDevicesUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"showCastSessionsStartedByOtherDevices"}
+	}
+	return marshalJSON("chrome.users.ShowCastSessionsStartedByOtherDevices", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4429,6 +5498,59 @@ func (p *PdfAnnotationsEnabledUsers) Schema2JSON(updateMask []string, additional
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// PdfLocalFileAccessAllowedForDomainsUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type PdfLocalFileAccessAllowedForDomainsUsers struct {
+	PdfLocalFileAccessAllowedForDomains []string `json:"pdfLocalFileAccessAllowedForDomains"`
+}
+
+func (p *PdfLocalFileAccessAllowedForDomainsUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"pdfLocalFileAccessAllowedForDomains"}
+	}
+	return marshalJSON("chrome.users.PdfLocalFileAccessAllowedForDomains", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// TrashEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type TrashEnabledUsers struct {
+	TrashEnabled bool `json:"trashEnabled"`
+}
+
+func (p *TrashEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"trashEnabled"}
+	}
+	return marshalJSON("chrome.users.TrashEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// HttpsOnlyModeUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type HttpsOnlyModeUsers struct {
+	HttpsOnlyMode HttpsOnlyModeEnum `json:"httpsOnlyMode"`
+}
+
+type HttpsOnlyModeEnum int
+
+const (
+	HTTPSONLYMODEENUM_HTTPS_ONLY_MODE_ENUM_USER_CHOICE   = 1
+	HTTPSONLYMODEENUM_HTTPS_ONLY_MODE_ENUM_DISALLOWED    = 2
+	HTTPSONLYMODEENUM_HTTPS_ONLY_MODE_ENUM_FORCE_ENABLED = 3
+)
+
+func (p *HttpsOnlyModeUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"httpsOnlyMode"}
+	}
+	return marshalJSON("chrome.users.HttpsOnlyMode", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // CrossOriginWebAssemblyModuleSharingEnabledUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -4444,6 +5566,51 @@ func (p *CrossOriginWebAssemblyModuleSharingEnabledUsers) Schema2JSON(updateMask
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// NativeClientForceAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type NativeClientForceAllowedUsers struct {
+	NativeClientForceAllowed bool `json:"nativeClientForceAllowed"`
+}
+
+func (p *NativeClientForceAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"nativeClientForceAllowed"}
+	}
+	return marshalJSON("chrome.users.NativeClientForceAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ScreenTimeEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ScreenTimeEnabledUsers struct {
+	ScreenTimeEnabled bool `json:"screenTimeEnabled"`
+}
+
+func (p *ScreenTimeEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"screenTimeEnabled"}
+	}
+	return marshalJSON("chrome.users.ScreenTimeEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ShoppingListEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ShoppingListEnabledUsers struct {
+	ShoppingListEnabled bool `json:"shoppingListEnabled"`
+}
+
+func (p *ShoppingListEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"shoppingListEnabled"}
+	}
+	return marshalJSON("chrome.users.ShoppingListEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // CalendarIntegrationEnabledUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -4456,6 +5623,74 @@ func (p *CalendarIntegrationEnabledUsers) Schema2JSON(updateMask []string, addit
 		updateMask = []string{"calendarIntegrationEnabled"}
 	}
 	return marshalJSON("chrome.users.CalendarIntegrationEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ForceEnablePepperVideoDecoderDevApiUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ForceEnablePepperVideoDecoderDevApiUsers struct {
+	ForceEnablePepperVideoDecoderDevApi bool `json:"forceEnablePepperVideoDecoderDevApi"`
+}
+
+func (p *ForceEnablePepperVideoDecoderDevApiUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"forceEnablePepperVideoDecoderDevApi"}
+	}
+	return marshalJSON("chrome.users.ForceEnablePepperVideoDecoderDevApi", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// MixedContentAutoupgradeEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type MixedContentAutoupgradeEnabledUsers struct {
+	MixedContentAutoupgradeEnabled bool `json:"mixedContentAutoupgradeEnabled"`
+}
+
+func (p *MixedContentAutoupgradeEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"mixedContentAutoupgradeEnabled"}
+	}
+	return marshalJSON("chrome.users.MixedContentAutoupgradeEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ThirdPartyStoragePartitioningSettingsUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ThirdPartyStoragePartitioningSettingsUsers struct {
+	DefaultThirdPartyStoragePartitioningSetting    DefaultThirdPartyStoragePartitioningSettingEnum `json:"defaultThirdPartyStoragePartitioningSetting"`
+	ThirdPartyStoragePartitioningBlockedForOrigins []string                                        `json:"thirdPartyStoragePartitioningBlockedForOrigins"`
+}
+
+type DefaultThirdPartyStoragePartitioningSettingEnum int
+
+const (
+	DEFAULTTHIRDPARTYSTORAGEPARTITIONINGSETTINGENUM_DEFAULT_THIRD_PARTY_STORAGE_PARTITIONING_SETTING_ENUM_ALLOW_PARTITIONING = 1
+	DEFAULTTHIRDPARTYSTORAGEPARTITIONINGSETTINGENUM_DEFAULT_THIRD_PARTY_STORAGE_PARTITIONING_SETTING_ENUM_BLOCK_PARTITIONING = 2
+)
+
+func (p *ThirdPartyStoragePartitioningSettingsUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"defaultThirdPartyStoragePartitioningSetting", "thirdPartyStoragePartitioningBlockedForOrigins"}
+	}
+	return marshalJSON("chrome.users.ThirdPartyStoragePartitioningSettings", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PdfUseSkiaRendererEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type PdfUseSkiaRendererEnabledUsers struct {
+	PdfUseSkiaRendererEnabled NullableBoolean `json:"pdfUseSkiaRendererEnabled"`
+}
+
+func (p *PdfUseSkiaRendererEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"pdfUseSkiaRendererEnabled"}
+	}
+	return marshalJSON("chrome.users.PdfUseSkiaRendererEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4718,6 +5953,21 @@ func (p *PrintJobHistoryExpirationPeriodNewUsers) Schema2JSON(updateMask []strin
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// PrintJobHistoryExpirationPeriodNewV2Users
+///////////////////////////////////////////////////////////////////////////////
+
+type PrintJobHistoryExpirationPeriodNewV2Users struct {
+	PrintJobHistoryExpirationPeriodDaysNew NullableDuration `json:"printJobHistoryExpirationPeriodDaysNew"`
+}
+
+func (p *PrintJobHistoryExpirationPeriodNewV2Users) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"printJobHistoryExpirationPeriodDaysNew"}
+	}
+	return marshalJSON("chrome.users.PrintJobHistoryExpirationPeriodNewV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // DeletePrintJobHistoryAllowedUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -4878,12 +6128,20 @@ func (p *PrintRasterizationModeUsers) Schema2JSON(updateMask []string, additiona
 ///////////////////////////////////////////////////////////////////////////////
 
 type PrintPreviewUseSystemDefaultPrinterUsers struct {
-	PrintPreviewUseSystemDefaultPrinter bool `json:"printPreviewUseSystemDefaultPrinter"`
+	PrintPreviewUseSystemDefaultPrinter                       bool       `json:"printPreviewUseSystemDefaultPrinter"`
+	PrintPreviewUseSystemDefaultPrinterCategoryItemPolicyMode PolicyMode `json:"printPreviewUseSystemDefaultPrinterCategoryItemPolicyMode"`
 }
+
+type PolicyMode int
+
+const (
+	POLICYMODE_POLICY_MODE_MANDATORY   = 1
+	POLICYMODE_POLICY_MODE_RECOMMENDED = 2
+)
 
 func (p *PrintPreviewUseSystemDefaultPrinterUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"printPreviewUseSystemDefaultPrinter"}
+		updateMask = []string{"printPreviewUseSystemDefaultPrinter", "printPreviewUseSystemDefaultPrinterCategoryItemPolicyMode"}
 	}
 	return marshalJSON("chrome.users.PrintPreviewUseSystemDefaultPrinter", p, updateMask, additionalTargetKeys)
 }
@@ -5144,12 +6402,13 @@ func (p *SpellCheckServiceUsers) Schema2JSON(updateMask []string, additionalTarg
 ///////////////////////////////////////////////////////////////////////////////
 
 type ApplicationLocaleValueUsers struct {
-	ApplicationLocaleValue string `json:"applicationLocaleValue"`
+	ApplicationLocaleValue                       string     `json:"applicationLocaleValue"`
+	ApplicationLocaleValueSettingGroupPolicyMode PolicyMode `json:"applicationLocaleValueSettingGroupPolicyMode"`
 }
 
 func (p *ApplicationLocaleValueUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"applicationLocaleValue"}
+		updateMask = []string{"applicationLocaleValue", "applicationLocaleValueSettingGroupPolicyMode"}
 	}
 	return marshalJSON("chrome.users.ApplicationLocaleValue", p, updateMask, additionalTargetKeys)
 }
@@ -5253,6 +6512,51 @@ func (p *DeveloperToolsUsers) Schema2JSON(updateMask []string, additionalTargetK
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormAutoFillUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type FormAutoFillUsers struct {
+	AutoFillEnabled bool `json:"autoFillEnabled"`
+}
+
+func (p *FormAutoFillUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"autoFillEnabled"}
+	}
+	return marshalJSON("chrome.users.FormAutoFill", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AutofillAddressEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type AutofillAddressEnabledUsers struct {
+	AutofillAddressEnabled bool `json:"autofillAddressEnabled"`
+}
+
+func (p *AutofillAddressEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"autofillAddressEnabled"}
+	}
+	return marshalJSON("chrome.users.AutofillAddressEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AutofillCreditCardEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type AutofillCreditCardEnabledUsers struct {
+	AutofillCreditCardEnabled bool `json:"autofillCreditCardEnabled"`
+}
+
+func (p *AutofillCreditCardEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"autofillCreditCardEnabled"}
+	}
+	return marshalJSON("chrome.users.AutofillCreditCardEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // PaymentMethodQueryEnabledUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -5265,6 +6569,51 @@ func (p *PaymentMethodQueryEnabledUsers) Schema2JSON(updateMask []string, additi
 		updateMask = []string{"paymentMethodQueryEnabled"}
 	}
 	return marshalJSON("chrome.users.PaymentMethodQueryEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// VirtualKeyboardResizesLayoutByDefaultUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type VirtualKeyboardResizesLayoutByDefaultUsers struct {
+	VirtualKeyboardResizesLayoutByDefault bool `json:"virtualKeyboardResizesLayoutByDefault"`
+}
+
+func (p *VirtualKeyboardResizesLayoutByDefaultUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"virtualKeyboardResizesLayoutByDefault"}
+	}
+	return marshalJSON("chrome.users.VirtualKeyboardResizesLayoutByDefault", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PhysicalKeyboardPredictiveWritingUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type PhysicalKeyboardPredictiveWritingUsers struct {
+	PhysicalKeyboardPredictiveWriting bool `json:"physicalKeyboardPredictiveWriting"`
+}
+
+func (p *PhysicalKeyboardPredictiveWritingUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"physicalKeyboardPredictiveWriting"}
+	}
+	return marshalJSON("chrome.users.PhysicalKeyboardPredictiveWriting", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PhysicalKeyboardAutocorrectUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type PhysicalKeyboardAutocorrectUsers struct {
+	PhysicalKeyboardAutocorrect bool `json:"physicalKeyboardAutocorrect"`
+}
+
+func (p *PhysicalKeyboardAutocorrectUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"physicalKeyboardAutocorrect"}
+	}
+	return marshalJSON("chrome.users.PhysicalKeyboardAutocorrect", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5398,6 +6747,21 @@ func (p *WebrtcEventLogCollectionAllowedUsers) Schema2JSON(updateMask []string, 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// WebRtcTextLogCollectionAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type WebRtcTextLogCollectionAllowedUsers struct {
+	WebRtcTextLogCollectionAllowed bool `json:"webRtcTextLogCollectionAllowed"`
+}
+
+func (p *WebRtcTextLogCollectionAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"webRtcTextLogCollectionAllowed"}
+	}
+	return marshalJSON("chrome.users.WebRtcTextLogCollectionAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // AssistantHotwordUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -5410,6 +6774,21 @@ func (p *AssistantHotwordUsers) Schema2JSON(updateMask []string, additionalTarge
 		updateMask = []string{"assistantHotwordEnabled"}
 	}
 	return marshalJSON("chrome.users.AssistantHotword", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AssistantWebEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type AssistantWebEnabledUsers struct {
+	AssistantWebEnabled NullableBoolean `json:"assistantWebEnabled"`
+}
+
+func (p *AssistantWebEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"assistantWebEnabled"}
+	}
+	return marshalJSON("chrome.users.AssistantWebEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5473,6 +6852,21 @@ func (p *AllowDinosaurEasterEggUsers) Schema2JSON(updateMask []string, additiona
 		updateMask = []string{"allowDinosaurEasterEgg"}
 	}
 	return marshalJSON("chrome.users.AllowDinosaurEasterEgg", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// UserBorealisAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type UserBorealisAllowedUsers struct {
+	UserBorealisAllowed bool `json:"userBorealisAllowed"`
+}
+
+func (p *UserBorealisAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"userBorealisAllowed"}
+	}
+	return marshalJSON("chrome.users.UserBorealisAllowed", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5791,6 +7185,21 @@ func (p *LockIconInAddressBarEnabledUsers) Schema2JSON(updateMask []string, addi
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// EnhancedNetworkVoicesInSelectToSpeakAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type EnhancedNetworkVoicesInSelectToSpeakAllowedUsers struct {
+	EnhancedNetworkVoicesInSelectToSpeakAllowed bool `json:"enhancedNetworkVoicesInSelectToSpeakAllowed"`
+}
+
+func (p *EnhancedNetworkVoicesInSelectToSpeakAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"enhancedNetworkVoicesInSelectToSpeakAllowed"}
+	}
+	return marshalJSON("chrome.users.EnhancedNetworkVoicesInSelectToSpeakAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // NtpMiddleSlotAnnouncementVisibleUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -5810,12 +7219,13 @@ func (p *NtpMiddleSlotAnnouncementVisibleUsers) Schema2JSON(updateMask []string,
 ///////////////////////////////////////////////////////////////////////////////
 
 type WarnBeforeQuittingEnabledUsers struct {
-	WarnBeforeQuittingEnabled bool `json:"warnBeforeQuittingEnabled"`
+	WarnBeforeQuittingEnabled                       bool       `json:"warnBeforeQuittingEnabled"`
+	WarnBeforeQuittingEnabledCategoryItemPolicyMode PolicyMode `json:"warnBeforeQuittingEnabledCategoryItemPolicyMode"`
 }
 
 func (p *WarnBeforeQuittingEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"warnBeforeQuittingEnabled"}
+		updateMask = []string{"warnBeforeQuittingEnabled", "warnBeforeQuittingEnabledCategoryItemPolicyMode"}
 	}
 	return marshalJSON("chrome.users.WarnBeforeQuittingEnabled", p, updateMask, additionalTargetKeys)
 }
@@ -5863,12 +7273,13 @@ func (p *OsColorModeUsers) Schema2JSON(updateMask []string, additionalTargetKeys
 ///////////////////////////////////////////////////////////////////////////////
 
 type SmartLockAllowedUsers struct {
-	SmartLockAllowed bool `json:"smartLockAllowed"`
+	SmartLockAllowed       bool `json:"smartLockAllowed"`
+	SmartLockSigninAllowed bool `json:"smartLockSigninAllowed"`
 }
 
 func (p *SmartLockAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"smartLockAllowed"}
+		updateMask = []string{"smartLockAllowed", "smartLockSigninAllowed"}
 	}
 	return marshalJSON("chrome.users.SmartLockAllowed", p, updateMask, additionalTargetKeys)
 }
@@ -5918,6 +7329,36 @@ func (p *PhoneHubUsers) Schema2JSON(updateMask []string, additionalTargetKeys in
 		updateMask = []string{"phoneHubAllowed", "phoneHubNotificationsAllowed", "phoneHubTaskContinuationAllowed"}
 	}
 	return marshalJSON("chrome.users.PhoneHub", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// EcheAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type EcheAllowedUsers struct {
+	EcheAllowed bool `json:"echeAllowed"`
+}
+
+func (p *EcheAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"echeAllowed"}
+	}
+	return marshalJSON("chrome.users.EcheAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PhoneHubCameraRollAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type PhoneHubCameraRollAllowedUsers struct {
+	PhoneHubCameraRollAllowed bool `json:"phoneHubCameraRollAllowed"`
+}
+
+func (p *PhoneHubCameraRollAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"phoneHubCameraRollAllowed"}
+	}
+	return marshalJSON("chrome.users.PhoneHubCameraRollAllowed", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6200,6 +7641,31 @@ func (p *AccessibilityImageLabelsEnabledUsers) Schema2JSON(updateMask []string, 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// BatterySaverModeAvailabilityUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type BatterySaverModeAvailabilityUsers struct {
+	BatterySaverModeAvailability                       BatterySaverModeAvailabilityEnum `json:"batterySaverModeAvailability"`
+	BatterySaverModeAvailabilitySettingGroupPolicyMode PolicyMode                       `json:"batterySaverModeAvailabilitySettingGroupPolicyMode"`
+}
+
+type BatterySaverModeAvailabilityEnum int
+
+const (
+	BATTERYSAVERMODEAVAILABILITYENUM_BATTERY_SAVER_MODE_AVAILABILITY_ENUM_DISABLED                = 1
+	BATTERYSAVERMODEAVAILABILITYENUM_BATTERY_SAVER_MODE_AVAILABILITY_ENUM_ENABLED_BELOW_THRESHOLD = 2
+	BATTERYSAVERMODEAVAILABILITYENUM_BATTERY_SAVER_MODE_AVAILABILITY_ENUM_ENABLED_ON_BATTERY      = 3
+	BATTERYSAVERMODEAVAILABILITYENUM_BATTERY_SAVER_MODE_AVAILABILITY_ENUM_UNSET                   = 4
+)
+
+func (p *BatterySaverModeAvailabilityUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"batterySaverModeAvailability", "batterySaverModeAvailabilitySettingGroupPolicyMode"}
+	}
+	return marshalJSON("chrome.users.BatterySaverModeAvailability", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // AllowWakeLocksUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -6231,6 +7697,21 @@ func (p *FetchKeepaliveDurationSecondsOnShutdownUsers) Schema2JSON(updateMask []
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FetchKeepaliveDurationSecondsOnShutdownV2Users
+///////////////////////////////////////////////////////////////////////////////
+
+type FetchKeepaliveDurationSecondsOnShutdownV2Users struct {
+	FetchKeepaliveDurationSecondsOnShutdown NullableDuration `json:"fetchKeepaliveDurationSecondsOnShutdown"`
+}
+
+func (p *FetchKeepaliveDurationSecondsOnShutdownV2Users) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"fetchKeepaliveDurationSecondsOnShutdown"}
+	}
+	return marshalJSON("chrome.users.FetchKeepaliveDurationSecondsOnShutdownV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // DevicePowerAdaptiveChargingEnabledUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -6246,6 +7727,125 @@ func (p *DevicePowerAdaptiveChargingEnabledUsers) Schema2JSON(updateMask []strin
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// IdleSettingsExtendedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type IdleSettingsExtendedUsers struct {
+	LidCloseAction          LidCloseActionEnum    `json:"lidCloseAction"`
+	IdleDelayAc             NullableDuration      `json:"idleDelayAc"`
+	IdleWarningDelayAc      NullableDuration      `json:"idleWarningDelayAc"`
+	IdleActionAc            IdleActionAcEnum      `json:"idleActionAc"`
+	ScreenDimDelayAc        NullableDuration      `json:"screenDimDelayAc"`
+	ScreenOffDelayAc        NullableDuration      `json:"screenOffDelayAc"`
+	ScreenLockDelayAc       NullableDuration      `json:"screenLockDelayAc"`
+	IdleDelayBattery        NullableDuration      `json:"idleDelayBattery"`
+	IdleWarningDelayBattery NullableDuration      `json:"idleWarningDelayBattery"`
+	IdleActionBattery       IdleActionBatteryEnum `json:"idleActionBattery"`
+	ScreenDimDelayBattery   NullableDuration      `json:"screenDimDelayBattery"`
+	ScreenOffDelayBattery   NullableDuration      `json:"screenOffDelayBattery"`
+	ScreenLockDelayBattery  NullableDuration      `json:"screenLockDelayBattery"`
+	LockOnSleepOrLidClose   NullableBoolean       `json:"lockOnSleepOrLidClose"`
+}
+
+type LidCloseActionEnum int
+
+const (
+	LIDCLOSEACTIONENUM_LID_CLOSE_ACTION_ENUM_SLEEP      = 1
+	LIDCLOSEACTIONENUM_LID_CLOSE_ACTION_ENUM_LOGOUT     = 2
+	LIDCLOSEACTIONENUM_LID_CLOSE_ACTION_ENUM_SHUTDOWN   = 3
+	LIDCLOSEACTIONENUM_LID_CLOSE_ACTION_ENUM_DO_NOTHING = 4
+)
+
+type IdleActionAcEnum int
+
+const (
+	IDLEACTIONACENUM_IDLE_ACTION_AC_ENUM_SLEEP      = 1
+	IDLEACTIONACENUM_IDLE_ACTION_AC_ENUM_LOGOUT     = 2
+	IDLEACTIONACENUM_IDLE_ACTION_AC_ENUM_SHUTDOWN   = 3
+	IDLEACTIONACENUM_IDLE_ACTION_AC_ENUM_DO_NOTHING = 4
+)
+
+type IdleActionBatteryEnum int
+
+const (
+	IDLEACTIONBATTERYENUM_IDLE_ACTION_BATTERY_ENUM_SLEEP      = 1
+	IDLEACTIONBATTERYENUM_IDLE_ACTION_BATTERY_ENUM_LOGOUT     = 2
+	IDLEACTIONBATTERYENUM_IDLE_ACTION_BATTERY_ENUM_SHUTDOWN   = 3
+	IDLEACTIONBATTERYENUM_IDLE_ACTION_BATTERY_ENUM_DO_NOTHING = 4
+)
+
+func (p *IdleSettingsExtendedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lidCloseAction", "idleDelayAc", "idleWarningDelayAc", "idleActionAc", "screenDimDelayAc", "screenOffDelayAc", "screenLockDelayAc", "idleDelayBattery", "idleWarningDelayBattery", "idleActionBattery", "screenDimDelayBattery", "screenOffDelayBattery", "screenLockDelayBattery", "lockOnSleepOrLidClose"}
+	}
+	return marshalJSON("chrome.users.IdleSettingsExtended", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// IdleSettingsExtendedV2Users
+///////////////////////////////////////////////////////////////////////////////
+
+type IdleSettingsExtendedV2Users struct {
+	LidCloseAction          LidCloseActionEnum    `json:"lidCloseAction"`
+	IdleDelayAc             NullableDuration      `json:"idleDelayAc"`
+	IdleWarningDelayAc      NullableDuration      `json:"idleWarningDelayAc"`
+	IdleActionAc            IdleActionAcEnum      `json:"idleActionAc"`
+	ScreenDimDelayAc        NullableDuration      `json:"screenDimDelayAc"`
+	ScreenOffDelayAc        NullableDuration      `json:"screenOffDelayAc"`
+	ScreenLockDelayAc       NullableDuration      `json:"screenLockDelayAc"`
+	IdleDelayBattery        NullableDuration      `json:"idleDelayBattery"`
+	IdleWarningDelayBattery NullableDuration      `json:"idleWarningDelayBattery"`
+	IdleActionBattery       IdleActionBatteryEnum `json:"idleActionBattery"`
+	ScreenDimDelayBattery   NullableDuration      `json:"screenDimDelayBattery"`
+	ScreenOffDelayBattery   NullableDuration      `json:"screenOffDelayBattery"`
+	ScreenLockDelayBattery  NullableDuration      `json:"screenLockDelayBattery"`
+	LockOnSleepOrLidClose   NullableBoolean       `json:"lockOnSleepOrLidClose"`
+}
+
+func (p *IdleSettingsExtendedV2Users) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lidCloseAction", "idleDelayAc", "idleWarningDelayAc", "idleActionAc", "screenDimDelayAc", "screenOffDelayAc", "screenLockDelayAc", "idleDelayBattery", "idleWarningDelayBattery", "idleActionBattery", "screenDimDelayBattery", "screenOffDelayBattery", "screenLockDelayBattery", "lockOnSleepOrLidClose"}
+	}
+	return marshalJSON("chrome.users.IdleSettingsExtendedV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ScreensaverLockScreenEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ScreensaverLockScreenEnabledUsers struct {
+	ScreensaverLockScreenEnabled                     bool             `json:"screensaverLockScreenEnabled"`
+	ScreensaverLockScreenIdleTimeoutSeconds          NullableDuration `json:"screensaverLockScreenIdleTimeoutSeconds"`
+	ScreensaverLockScreenImageDisplayIntervalSeconds NullableDuration `json:"screensaverLockScreenImageDisplayIntervalSeconds"`
+	ScreensaverLockScreenImages                      []string         `json:"screensaverLockScreenImages"`
+}
+
+func (p *ScreensaverLockScreenEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"screensaverLockScreenEnabled", "screensaverLockScreenIdleTimeoutSeconds", "screensaverLockScreenImageDisplayIntervalSeconds", "screensaverLockScreenImages"}
+	}
+	return marshalJSON("chrome.users.ScreensaverLockScreenEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ScreensaverLockScreenEnabledV2Users
+///////////////////////////////////////////////////////////////////////////////
+
+type ScreensaverLockScreenEnabledV2Users struct {
+	ScreensaverLockScreenEnabled                     bool             `json:"screensaverLockScreenEnabled"`
+	ScreensaverLockScreenIdleTimeoutSeconds          NullableDuration `json:"screensaverLockScreenIdleTimeoutSeconds"`
+	ScreensaverLockScreenImageDisplayIntervalSeconds NullableDuration `json:"screensaverLockScreenImageDisplayIntervalSeconds"`
+	ScreensaverLockScreenImages                      []string         `json:"screensaverLockScreenImages"`
+}
+
+func (p *ScreensaverLockScreenEnabledV2Users) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"screensaverLockScreenEnabled", "screensaverLockScreenIdleTimeoutSeconds", "screensaverLockScreenImageDisplayIntervalSeconds", "screensaverLockScreenImages"}
+	}
+	return marshalJSON("chrome.users.ScreensaverLockScreenEnabledV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // SearchSuggestUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -6258,6 +7858,21 @@ func (p *SearchSuggestUsers) Schema2JSON(updateMask []string, additionalTargetKe
 		updateMask = []string{"searchSuggestEnabled"}
 	}
 	return marshalJSON("chrome.users.SearchSuggest", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// GoogleSearchSidePanelEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type GoogleSearchSidePanelEnabledUsers struct {
+	GoogleSearchSidePanelEnabled bool `json:"googleSearchSidePanelEnabled"`
+}
+
+func (p *GoogleSearchSidePanelEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"googleSearchSidePanelEnabled"}
+	}
+	return marshalJSON("chrome.users.GoogleSearchSidePanelEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6493,6 +8108,30 @@ func (p *WebSerialPortAccessUsers) Schema2JSON(updateMask []string, additionalTa
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// SerialAllowUsbDevicesForUrlsUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type SerialAllowUsbDevicesForUrlsUsers struct {
+	SerialAllowUsbDevicesForUrls DevicesForUrls `json:"serialAllowUsbDevicesForUrls"`
+}
+
+type DevicesForUrls struct {
+	WebOrigin []WebOrigin `json:"webOrigin"`
+}
+
+type WebOrigin struct {
+	Url    string   `json:"url"`
+	Device []string `json:"device"`
+}
+
+func (p *SerialAllowUsbDevicesForUrlsUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"serialAllowUsbDevicesForUrls"}
+	}
+	return marshalJSON("chrome.users.SerialAllowUsbDevicesForUrls", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // PrivacyScreenEnabledUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -6558,6 +8197,21 @@ func (p *FileSystemWriteUsers) Schema2JSON(updateMask []string, additionalTarget
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FileSystemSyncAccessHandleAsyncInterfaceEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type FileSystemSyncAccessHandleAsyncInterfaceEnabledUsers struct {
+	FileSystemSyncAccessHandleAsyncInterfaceEnabled bool `json:"fileSystemSyncAccessHandleAsyncInterfaceEnabled"`
+}
+
+func (p *FileSystemSyncAccessHandleAsyncInterfaceEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"fileSystemSyncAccessHandleAsyncInterfaceEnabled"}
+	}
+	return marshalJSON("chrome.users.FileSystemSyncAccessHandleAsyncInterfaceEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // DefaultSensorsSettingUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -6598,6 +8252,96 @@ func (p *EnterpriseHardwarePlatformApiEnabledUsers) Schema2JSON(updateMask []str
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// UsbDetectorNotificationEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type UsbDetectorNotificationEnabledUsers struct {
+	UsbDetectorNotificationEnabled bool `json:"usbDetectorNotificationEnabled"`
+}
+
+func (p *UsbDetectorNotificationEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"usbDetectorNotificationEnabled"}
+	}
+	return marshalJSON("chrome.users.UsbDetectorNotificationEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SendMouseEventsDisabledFormControlsEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type SendMouseEventsDisabledFormControlsEnabledUsers struct {
+	SendMouseEventsDisabledFormControlsEnabled bool `json:"sendMouseEventsDisabledFormControlsEnabled"`
+}
+
+func (p *SendMouseEventsDisabledFormControlsEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"sendMouseEventsDisabledFormControlsEnabled"}
+	}
+	return marshalJSON("chrome.users.SendMouseEventsDisabledFormControlsEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// OffsetParentNewSpecBehaviorEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type OffsetParentNewSpecBehaviorEnabledUsers struct {
+	OffsetParentNewSpecBehaviorEnabled bool `json:"offsetParentNewSpecBehaviorEnabled"`
+}
+
+func (p *OffsetParentNewSpecBehaviorEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"offsetParentNewSpecBehaviorEnabled"}
+	}
+	return marshalJSON("chrome.users.OffsetParentNewSpecBehaviorEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ChromeAppsWebViewPermissiveBehaviorAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ChromeAppsWebViewPermissiveBehaviorAllowedUsers struct {
+	ChromeAppsWebViewPermissiveBehaviorAllowed bool `json:"chromeAppsWebViewPermissiveBehaviorAllowed"`
+}
+
+func (p *ChromeAppsWebViewPermissiveBehaviorAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"chromeAppsWebViewPermissiveBehaviorAllowed"}
+	}
+	return marshalJSON("chrome.users.ChromeAppsWebViewPermissiveBehaviorAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// RsaKeyUsageForLocalAnchorsEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type RsaKeyUsageForLocalAnchorsEnabledUsers struct {
+	RsaKeyUsageForLocalAnchorsEnabled NullableBoolean `json:"rsaKeyUsageForLocalAnchorsEnabled"`
+}
+
+func (p *RsaKeyUsageForLocalAnchorsEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"rsaKeyUsageForLocalAnchorsEnabled"}
+	}
+	return marshalJSON("chrome.users.RsaKeyUsageForLocalAnchorsEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// BeforeunloadEventCancelByPreventDefaultEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type BeforeunloadEventCancelByPreventDefaultEnabledUsers struct {
+	BeforeunloadEventCancelByPreventDefaultEnabled NullableBoolean `json:"beforeunloadEventCancelByPreventDefaultEnabled"`
+}
+
+func (p *BeforeunloadEventCancelByPreventDefaultEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"beforeunloadEventCancelByPreventDefaultEnabled"}
+	}
+	return marshalJSON("chrome.users.BeforeunloadEventCancelByPreventDefaultEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // VerifiedModeUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -6627,6 +8371,36 @@ func (p *CloudReportingUploadFrequencyUsers) Schema2JSON(updateMask []string, ad
 		updateMask = []string{"cloudReportingUploadFrequency"}
 	}
 	return marshalJSON("chrome.users.CloudReportingUploadFrequency", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// CloudReportingUploadFrequencyV2Users
+///////////////////////////////////////////////////////////////////////////////
+
+type CloudReportingUploadFrequencyV2Users struct {
+	CloudReportingUploadFrequency NullableDuration `json:"cloudReportingUploadFrequency"`
+}
+
+func (p *CloudReportingUploadFrequencyV2Users) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"cloudReportingUploadFrequency"}
+	}
+	return marshalJSON("chrome.users.CloudReportingUploadFrequencyV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// InsightsExtensionEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type InsightsExtensionEnabledUsers struct {
+	InsightsExtensionEnabled bool `json:"insightsExtensionEnabled"`
+}
+
+func (p *InsightsExtensionEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"insightsExtensionEnabled"}
+	}
+	return marshalJSON("chrome.users.InsightsExtensionEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6838,6 +8612,21 @@ func (p *AbusiveExperienceInterventionEnforceUsers) Schema2JSON(updateMask []str
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// ConnectorsEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type ConnectorsEnabledUsers struct {
+	ConnectorsEnabled bool `json:"connectorsEnabled"`
+}
+
+func (p *ConnectorsEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"connectorsEnabled"}
+	}
+	return marshalJSON("chrome.users.ConnectorsEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // CopyPreventionUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -6908,6 +8697,25 @@ func (p *RelaunchNotificationWithDurationUsers) Schema2JSON(updateMask []string,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// RelaunchNotificationWithDurationV2Users
+///////////////////////////////////////////////////////////////////////////////
+
+type RelaunchNotificationWithDurationV2Users struct {
+	RelaunchNotificationEnum           RelaunchNotificationEnum `json:"relaunchNotificationEnum"`
+	RelaunchNotificationPeriodDuration NullableDuration         `json:"relaunchNotificationPeriodDuration"`
+	RelaunchInitialQuietPeriodDuration NullableDuration         `json:"relaunchInitialQuietPeriodDuration"`
+	RelaunchWindowStartTime            NullableTimeOfDay        `json:"relaunchWindowStartTime"`
+	RelaunchWindowDurationMin          NullableDuration         `json:"relaunchWindowDurationMin"`
+}
+
+func (p *RelaunchNotificationWithDurationV2Users) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"relaunchNotificationEnum", "relaunchNotificationPeriodDuration", "relaunchInitialQuietPeriodDuration", "relaunchWindowStartTime", "relaunchWindowDurationMin"}
+	}
+	return marshalJSON("chrome.users.RelaunchNotificationWithDurationV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // UpdatesSuppressedUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -6936,6 +8744,21 @@ func (p *AutoUpdateCheckPeriodNewUsers) Schema2JSON(updateMask []string, additio
 		updateMask = []string{"autoUpdateCheckPeriodMinutesNew"}
 	}
 	return marshalJSON("chrome.users.AutoUpdateCheckPeriodNew", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AutoUpdateCheckPeriodNewV2Users
+///////////////////////////////////////////////////////////////////////////////
+
+type AutoUpdateCheckPeriodNewV2Users struct {
+	AutoUpdateCheckPeriodMinutesNew NullableDuration `json:"autoUpdateCheckPeriodMinutesNew"`
+}
+
+func (p *AutoUpdateCheckPeriodNewV2Users) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"autoUpdateCheckPeriodMinutesNew"}
+	}
+	return marshalJSON("chrome.users.AutoUpdateCheckPeriodNewV2", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -7069,6 +8892,21 @@ func (p *BrowserSwitcherDelayDurationUsers) Schema2JSON(updateMask []string, add
 		updateMask = []string{"browserSwitcherDelayDuration"}
 	}
 	return marshalJSON("chrome.users.BrowserSwitcherDelayDuration", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// BrowserSwitcherDelayDurationV2Users
+///////////////////////////////////////////////////////////////////////////////
+
+type BrowserSwitcherDelayDurationV2Users struct {
+	BrowserSwitcherDelayDuration NullableDuration `json:"browserSwitcherDelayDuration"`
+}
+
+func (p *BrowserSwitcherDelayDurationV2Users) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"browserSwitcherDelayDuration"}
+	}
+	return marshalJSON("chrome.users.BrowserSwitcherDelayDurationV2", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -7274,6 +9112,36 @@ func (p *VirtualMachinesAllowedUsers) Schema2JSON(updateMask []string, additiona
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// VirtualMachinesPlaybookUploadUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type VirtualMachinesPlaybookUploadUsers struct {
+	VirtualMachinesAnsiblePlaybook UploadedFile `json:"virtualMachinesAnsiblePlaybook"`
+}
+
+func (p *VirtualMachinesPlaybookUploadUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"virtualMachinesAnsiblePlaybook"}
+	}
+	return marshalJSON("chrome.users.VirtualMachinesPlaybookUpload", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// VirtualMachinesBackupRestoreUiAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type VirtualMachinesBackupRestoreUiAllowedUsers struct {
+	VirtualMachinesBackupRestoreUiAllowed bool `json:"virtualMachinesBackupRestoreUiAllowed"`
+}
+
+func (p *VirtualMachinesBackupRestoreUiAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"virtualMachinesBackupRestoreUiAllowed"}
+	}
+	return marshalJSON("chrome.users.VirtualMachinesBackupRestoreUiAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // VirtualMachinesPortForwardingAllowedUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -7471,6 +9339,36 @@ func (p *TotalMemoryLimitMbUsers) Schema2JSON(updateMask []string, additionalTar
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// HighEfficiencyModeEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type HighEfficiencyModeEnabledUsers struct {
+	HighEfficiencyModeEnabled NullableBoolean `json:"highEfficiencyModeEnabled"`
+}
+
+func (p *HighEfficiencyModeEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"highEfficiencyModeEnabled"}
+	}
+	return marshalJSON("chrome.users.HighEfficiencyModeEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// TabDiscardingExceptionsUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type TabDiscardingExceptionsUsers struct {
+	TabDiscardingExceptions []string `json:"tabDiscardingExceptions"`
+}
+
+func (p *TabDiscardingExceptionsUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"tabDiscardingExceptions"}
+	}
+	return marshalJSON("chrome.users.TabDiscardingExceptions", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // DiskCacheDirUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -7543,6 +9441,103 @@ func (p *MaxInvalidationFetchDelayUsers) Schema2JSON(updateMask []string, additi
 		updateMask = []string{"maxInvalidationFetchDelay"}
 	}
 	return marshalJSON("chrome.users.MaxInvalidationFetchDelay", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// MaxInvalidationFetchDelayV2Users
+///////////////////////////////////////////////////////////////////////////////
+
+type MaxInvalidationFetchDelayV2Users struct {
+	MaxInvalidationFetchDelay NullableDuration `json:"maxInvalidationFetchDelay"`
+}
+
+func (p *MaxInvalidationFetchDelayV2Users) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"maxInvalidationFetchDelay"}
+	}
+	return marshalJSON("chrome.users.MaxInvalidationFetchDelayV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// LacrosAvailabilityUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type LacrosAvailabilityUsers struct {
+	LacrosAvailability LacrosAvailabilityEnum `json:"lacrosAvailability"`
+}
+
+type LacrosAvailabilityEnum int
+
+const (
+	LACROSAVAILABILITYENUM_LACROS_AVAILABILITY_ENUM_LACROS_ONLY       = 5
+	LACROSAVAILABILITYENUM_LACROS_AVAILABILITY_ENUM_UNSET             = 6
+	LACROSAVAILABILITYENUM_LACROS_AVAILABILITY_ENUM_LACROS_DISALLOWED = 2
+)
+
+func (p *LacrosAvailabilityUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lacrosAvailability"}
+	}
+	return marshalJSON("chrome.users.LacrosAvailability", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// LacrosSecondaryProfilesAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type LacrosSecondaryProfilesAllowedUsers struct {
+	LacrosSecondaryProfilesAllowed bool `json:"lacrosSecondaryProfilesAllowed"`
+}
+
+func (p *LacrosSecondaryProfilesAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lacrosSecondaryProfilesAllowed"}
+	}
+	return marshalJSON("chrome.users.LacrosSecondaryProfilesAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// LacrosDataBackwardMigrationModeUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type LacrosDataBackwardMigrationModeUsers struct {
+	LacrosDataBackwardMigrationMode LacrosDataBackwardMigrationModeEnum `json:"lacrosDataBackwardMigrationMode"`
+}
+
+type LacrosDataBackwardMigrationModeEnum int
+
+const (
+	LACROSDATABACKWARDMIGRATIONMODEENUM_LACROS_DATA_BACKWARD_MIGRATION_MODE_ENUM_NONE     = 1
+	LACROSDATABACKWARDMIGRATIONMODEENUM_LACROS_DATA_BACKWARD_MIGRATION_MODE_ENUM_KEEP_ALL = 4
+)
+
+func (p *LacrosDataBackwardMigrationModeUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lacrosDataBackwardMigrationMode"}
+	}
+	return marshalJSON("chrome.users.LacrosDataBackwardMigrationMode", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// LacrosSelectionUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type LacrosSelectionUsers struct {
+	LacrosSelection LacrosSelectionEnum `json:"lacrosSelection"`
+}
+
+type LacrosSelectionEnum int
+
+const (
+	LACROSSELECTIONENUM_LACROS_SELECTION_ENUM_USER_CHOICE = 1
+	LACROSSELECTIONENUM_LACROS_SELECTION_ENUM_ROOTFS      = 2
+)
+
+func (p *LacrosSelectionUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lacrosSelection"}
+	}
+	return marshalJSON("chrome.users.LacrosSelection", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -7634,6 +9629,21 @@ func (p *WifiSyncAndroidAllowedUsers) Schema2JSON(updateMask []string, additiona
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// InactiveBrowserRemovalUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type InactiveBrowserRemovalUsers struct {
+	InactiveBrowserTtlDays int64 `json:"inactiveBrowserTtlDays"`
+}
+
+func (p *InactiveBrowserRemovalUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"inactiveBrowserTtlDays"}
+	}
+	return marshalJSON("chrome.users.InactiveBrowserRemoval", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // FastPairEnabledUsers
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -7679,11 +9689,105 @@ func (p *PersistentQuotaEnabledUsers) Schema2JSON(updateMask []string, additiona
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// DomainReliabilityAllowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type DomainReliabilityAllowedUsers struct {
+	DomainReliabilityAllowed                       bool       `json:"domainReliabilityAllowed"`
+	DomainReliabilityAllowedSettingGroupPolicyMode PolicyMode `json:"domainReliabilityAllowedSettingGroupPolicyMode"`
+}
+
+func (p *DomainReliabilityAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"domainReliabilityAllowed", "domainReliabilityAllowedSettingGroupPolicyMode"}
+	}
+	return marshalJSON("chrome.users.DomainReliabilityAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AppStoreRatingEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type AppStoreRatingEnabledUsers struct {
+	AppStoreRatingEnabled bool `json:"appStoreRatingEnabled"`
+}
+
+func (p *AppStoreRatingEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"appStoreRatingEnabled"}
+	}
+	return marshalJSON("chrome.users.AppStoreRatingEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DeskTemplatesEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type DeskTemplatesEnabledUsers struct {
+	PreconfiguredDeskTemplates UploadedFile `json:"preconfiguredDeskTemplates"`
+	DeskTemplatesEnabled       bool         `json:"deskTemplatesEnabled"`
+}
+
+func (p *DeskTemplatesEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"preconfiguredDeskTemplates", "deskTemplatesEnabled"}
+	}
+	return marshalJSON("chrome.users.DeskTemplatesEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DeskApiUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type DeskApiUsers struct {
+	DeskApiThirdPartyAccessEnabled bool     `json:"deskApiThirdPartyAccessEnabled"`
+	DeskApiThirdPartyAllowlist     []string `json:"deskApiThirdPartyAllowlist"`
+}
+
+func (p *DeskApiUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"deskApiThirdPartyAccessEnabled", "deskApiThirdPartyAllowlist"}
+	}
+	return marshalJSON("chrome.users.DeskApi", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DataLeakPreventionReportingEnabledUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type DataLeakPreventionReportingEnabledUsers struct {
+	DataLeakPreventionReportingEnabled bool `json:"dataLeakPreventionReportingEnabled"`
+}
+
+func (p *DataLeakPreventionReportingEnabledUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"dataLeakPreventionReportingEnabled"}
+	}
+	return marshalJSON("chrome.users.DataLeakPreventionReportingEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// UserOptionalServicesDisallowedUsers
+///////////////////////////////////////////////////////////////////////////////
+
+type UserOptionalServicesDisallowedUsers struct {
+	UserOptionalServicesDisallowed bool `json:"userOptionalServicesDisallowed"`
+}
+
+func (p *UserOptionalServicesDisallowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"userOptionalServicesDisallowed"}
+	}
+	return marshalJSON("chrome.users.UserOptionalServicesDisallowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // ForcedReenrollmentDevices
 ///////////////////////////////////////////////////////////////////////////////
 
 type ForcedReenrollmentDevices struct {
-	ReenrollmentMode ReenrollmentModeEnum `json:"reenrollmentMode"`
+	ReenrollmentMode            ReenrollmentModeEnum            `json:"reenrollmentMode"`
+	RsuDeprovisioningPermission RsuDeprovisioningPermissionEnum `json:"rsuDeprovisioningPermission"`
 }
 
 type ReenrollmentModeEnum int
@@ -7694,11 +9798,33 @@ const (
 	REENROLLMENTMODEENUM_REENROLLMENT_MODE_ENUM_NO_REENROLLMENT     = 3
 )
 
+type RsuDeprovisioningPermissionEnum int
+
+const (
+	RSUDEPROVISIONINGPERMISSIONENUM_RSU_DEPROVISIONING_PERMISSION_ENUM_DISALLOW_DEPROVISIONING = 1
+	RSUDEPROVISIONINGPERMISSIONENUM_RSU_DEPROVISIONING_PERMISSION_ENUM_ALLOW_DEPROVISIONING    = 2
+)
+
 func (p *ForcedReenrollmentDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"reenrollmentMode"}
+		updateMask = []string{"reenrollmentMode", "rsuDeprovisioningPermission"}
 	}
 	return marshalJSON("chrome.devices.ForcedReenrollment", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DeviceUpdateDeviceAttributesDevices
+///////////////////////////////////////////////////////////////////////////////
+
+type DeviceUpdateDeviceAttributesDevices struct {
+	AllowToUpdateDeviceAttributes bool `json:"allowToUpdateDeviceAttributes"`
+}
+
+func (p *DeviceUpdateDeviceAttributesDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"allowToUpdateDeviceAttributes"}
+	}
+	return marshalJSON("chrome.devices.DeviceUpdateDeviceAttributes", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -7784,6 +9910,21 @@ func (p *DeviceSecondFactorAuthenticationDevices) Schema2JSON(updateMask []strin
 		updateMask = []string{"secondFactorAuthentication"}
 	}
 	return marshalJSON("chrome.devices.DeviceSecondFactorAuthentication", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DeviceLoginScreenContextAwareAccessSignalsAllowlistDevices
+///////////////////////////////////////////////////////////////////////////////
+
+type DeviceLoginScreenContextAwareAccessSignalsAllowlistDevices struct {
+	DeviceLoginScreenContextAwareAccessSignalsAllowlist []string `json:"deviceLoginScreenContextAwareAccessSignalsAllowlist"`
+}
+
+func (p *DeviceLoginScreenContextAwareAccessSignalsAllowlistDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"deviceLoginScreenContextAwareAccessSignalsAllowlist"}
+	}
+	return marshalJSON("chrome.devices.DeviceLoginScreenContextAwareAccessSignalsAllowlist", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -8107,6 +10248,52 @@ func (p *DeviceShowNumericKeyboardForPasswordDevices) Schema2JSON(updateMask []s
 		updateMask = []string{"deviceShowNumericKeyboardForPassword"}
 	}
 	return marshalJSON("chrome.devices.DeviceShowNumericKeyboardForPassword", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DeviceLoginScreenExtensionManifestVTwoAvailabilityDevices
+///////////////////////////////////////////////////////////////////////////////
+
+type DeviceLoginScreenExtensionManifestVTwoAvailabilityDevices struct {
+	DeviceLoginScreenExtensionManifestVTwoAvailability DeviceLoginScreenExtensionManifestV2AvailabilityEnum `json:"deviceLoginScreenExtensionManifestVTwoAvailability"`
+}
+
+type DeviceLoginScreenExtensionManifestV2AvailabilityEnum int
+
+const (
+	DEVICELOGINSCREENEXTENSIONMANIFESTV2AVAILABILITYENUM_DEVICE_LOGIN_SCREEN_EXTENSION_MANIFEST_V2_AVAILABILITY_ENUM_DEFAULT                      = 1
+	DEVICELOGINSCREENEXTENSIONMANIFESTV2AVAILABILITYENUM_DEVICE_LOGIN_SCREEN_EXTENSION_MANIFEST_V2_AVAILABILITY_ENUM_DISABLE                      = 2
+	DEVICELOGINSCREENEXTENSIONMANIFESTV2AVAILABILITYENUM_DEVICE_LOGIN_SCREEN_EXTENSION_MANIFEST_V2_AVAILABILITY_ENUM_ENABLE                       = 3
+	DEVICELOGINSCREENEXTENSIONMANIFESTV2AVAILABILITYENUM_DEVICE_LOGIN_SCREEN_EXTENSION_MANIFEST_V2_AVAILABILITY_ENUM_ENABLE_FOR_FORCED_EXTENSIONS = 4
+)
+
+func (p *DeviceLoginScreenExtensionManifestVTwoAvailabilityDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"deviceLoginScreenExtensionManifestVTwoAvailability"}
+	}
+	return marshalJSON("chrome.devices.DeviceLoginScreenExtensionManifestVTwoAvailability", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DeviceLoginScreenGeolocationAccessLevelDevices
+///////////////////////////////////////////////////////////////////////////////
+
+type DeviceLoginScreenGeolocationAccessLevelDevices struct {
+	DeviceLoginScreenGeolocationAccessLevel DeviceLoginScreenGeolocationAccessLevelEnum `json:"deviceLoginScreenGeolocationAccessLevel"`
+}
+
+type DeviceLoginScreenGeolocationAccessLevelEnum int
+
+const (
+	DEVICELOGINSCREENGEOLOCATIONACCESSLEVELENUM_DEVICE_LOGIN_SCREEN_GEOLOCATION_ACCESS_LEVEL_ENUM_DISALLOW = 1
+	DEVICELOGINSCREENGEOLOCATIONACCESSLEVELENUM_DEVICE_LOGIN_SCREEN_GEOLOCATION_ACCESS_LEVEL_ENUM_ALLOW    = 2
+)
+
+func (p *DeviceLoginScreenGeolocationAccessLevelDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"deviceLoginScreenGeolocationAccessLevel"}
+	}
+	return marshalJSON("chrome.devices.DeviceLoginScreenGeolocationAccessLevel", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -8654,6 +10841,66 @@ func (p *KioskVirtualKeyboardFeaturesDevicesKiosk) Schema2JSON(updateMask []stri
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// LacrosAvailabilityDevicesKiosk
+///////////////////////////////////////////////////////////////////////////////
+
+type LacrosAvailabilityDevicesKiosk struct {
+	LacrosAvailability LacrosAvailabilityEnum `json:"lacrosAvailability"`
+}
+
+func (p *LacrosAvailabilityDevicesKiosk) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lacrosAvailability"}
+	}
+	return marshalJSON("chrome.devices.kiosk.LacrosAvailability", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// KioskAllowedInputMethodsDevicesKiosk
+///////////////////////////////////////////////////////////////////////////////
+
+type KioskAllowedInputMethodsDevicesKiosk struct {
+	AllowedInputMethods []string `json:"allowedInputMethods"`
+}
+
+func (p *KioskAllowedInputMethodsDevicesKiosk) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"allowedInputMethods"}
+	}
+	return marshalJSON("chrome.devices.kiosk.KioskAllowedInputMethods", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// KioskTroubleshootingToolsEnabledDevicesKiosk
+///////////////////////////////////////////////////////////////////////////////
+
+type KioskTroubleshootingToolsEnabledDevicesKiosk struct {
+	KioskTroubleshootingToolsEnabled bool `json:"kioskTroubleshootingToolsEnabled"`
+}
+
+func (p *KioskTroubleshootingToolsEnabledDevicesKiosk) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"kioskTroubleshootingToolsEnabled"}
+	}
+	return marshalJSON("chrome.devices.kiosk.KioskTroubleshootingToolsEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// WebUsbAllowDevicesForUrlsDevicesKiosk
+///////////////////////////////////////////////////////////////////////////////
+
+type WebUsbAllowDevicesForUrlsDevicesKiosk struct {
+	WebUsbAllowDevicesForUrls WebUsbAllowDevicesForUrlsType `json:"webUsbAllowDevicesForUrls"`
+}
+
+func (p *WebUsbAllowDevicesForUrlsDevicesKiosk) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"webUsbAllowDevicesForUrls"}
+	}
+	return marshalJSON("chrome.devices.kiosk.WebUsbAllowDevicesForUrls", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // LidCloseActionDevicesKiosk
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -8665,6 +10912,7 @@ type KioskActionOnLidCloseEnum int
 
 const (
 	KIOSKACTIONONLIDCLOSEENUM_KIOSK_ACTION_ON_LID_CLOSE_ENUM_SUSPEND    = 1
+	KIOSKACTIONONLIDCLOSEENUM_KIOSK_ACTION_ON_LID_CLOSE_ENUM_LOGOUT     = 2
 	KIOSKACTIONONLIDCLOSEENUM_KIOSK_ACTION_ON_LID_CLOSE_ENUM_SHUTDOWN   = 3
 	KIOSKACTIONONLIDCLOSEENUM_KIOSK_ACTION_ON_LID_CLOSE_ENUM_DO_NOTHING = 4
 )
@@ -8705,6 +10953,25 @@ func (p *AcPowerSettingsDevicesKiosk) Schema2JSON(updateMask []string, additiona
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// AcPowerSettingsV2DevicesKiosk
+///////////////////////////////////////////////////////////////////////////////
+
+type AcPowerSettingsV2DevicesKiosk struct {
+	AcIdleTimeout      NullableDuration      `json:"acIdleTimeout"`
+	AcWarningTimeout   NullableDuration      `json:"acWarningTimeout"`
+	AcIdleAction       KioskActionIdleAcEnum `json:"acIdleAction"`
+	AcDimTimeout       NullableDuration      `json:"acDimTimeout"`
+	AcScreenOffTimeout NullableDuration      `json:"acScreenOffTimeout"`
+}
+
+func (p *AcPowerSettingsV2DevicesKiosk) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"acIdleTimeout", "acWarningTimeout", "acIdleAction", "acDimTimeout", "acScreenOffTimeout"}
+	}
+	return marshalJSON("chrome.devices.kiosk.AcPowerSettingsV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // BatteryPowerSettingsDevicesKiosk
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -8730,6 +10997,25 @@ func (p *BatteryPowerSettingsDevicesKiosk) Schema2JSON(updateMask []string, addi
 		updateMask = []string{"batteryIdleTimeout", "batteryWarningTimeout", "batteryIdleAction", "batteryDimTimeout", "batteryScreenOffTimeout"}
 	}
 	return marshalJSON("chrome.devices.kiosk.BatteryPowerSettings", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// BatteryPowerSettingsV2DevicesKiosk
+///////////////////////////////////////////////////////////////////////////////
+
+type BatteryPowerSettingsV2DevicesKiosk struct {
+	BatteryIdleTimeout      NullableDuration           `json:"batteryIdleTimeout"`
+	BatteryWarningTimeout   NullableDuration           `json:"batteryWarningTimeout"`
+	BatteryIdleAction       KioskActionIdleBatteryEnum `json:"batteryIdleAction"`
+	BatteryDimTimeout       NullableDuration           `json:"batteryDimTimeout"`
+	BatteryScreenOffTimeout NullableDuration           `json:"batteryScreenOffTimeout"`
+}
+
+func (p *BatteryPowerSettingsV2DevicesKiosk) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"batteryIdleTimeout", "batteryWarningTimeout", "batteryIdleAction", "batteryDimTimeout", "batteryScreenOffTimeout"}
+	}
+	return marshalJSON("chrome.devices.kiosk.BatteryPowerSettingsV2", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -9232,6 +11518,21 @@ func (p *EnableReportUploadFrequencyDevices) Schema2JSON(updateMask []string, ad
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// EnableReportUploadFrequencyV2Devices
+///////////////////////////////////////////////////////////////////////////////
+
+type EnableReportUploadFrequencyV2Devices struct {
+	ReportDeviceUploadFrequency NullableDuration `json:"reportDeviceUploadFrequency"`
+}
+
+func (p *EnableReportUploadFrequencyV2Devices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"reportDeviceUploadFrequency"}
+	}
+	return marshalJSON("chrome.devices.EnableReportUploadFrequencyV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // InactiveDeviceNotificationsDevices
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -9277,6 +11578,36 @@ func (p *LogUploadEnabledDevices) Schema2JSON(updateMask []string, additionalTar
 		updateMask = []string{"logUploadEnabled"}
 	}
 	return marshalJSON("chrome.devices.LogUploadEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DeviceSystemWideTracingEnabledDevices
+///////////////////////////////////////////////////////////////////////////////
+
+type DeviceSystemWideTracingEnabledDevices struct {
+	DeviceSystemWideTracingEnabled bool `json:"deviceSystemWideTracingEnabled"`
+}
+
+func (p *DeviceSystemWideTracingEnabledDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"deviceSystemWideTracingEnabled"}
+	}
+	return marshalJSON("chrome.devices.DeviceSystemWideTracingEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DeviceReportXdrEventsDevices
+///////////////////////////////////////////////////////////////////////////////
+
+type DeviceReportXdrEventsDevices struct {
+	DeviceReportXdrEvents bool `json:"deviceReportXdrEvents"`
+}
+
+func (p *DeviceReportXdrEventsDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"deviceReportXdrEvents"}
+	}
+	return marshalJSON("chrome.devices.DeviceReportXdrEvents", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -9381,6 +11712,21 @@ func (p *ScheduledRebootDurationDevices) Schema2JSON(updateMask []string, additi
 		updateMask = []string{"uptimeLimitDuration"}
 	}
 	return marshalJSON("chrome.devices.ScheduledRebootDuration", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ScheduledRebootDurationV2Devices
+///////////////////////////////////////////////////////////////////////////////
+
+type ScheduledRebootDurationV2Devices struct {
+	UptimeLimitDuration NullableDuration `json:"uptimeLimitDuration"`
+}
+
+func (p *ScheduledRebootDurationV2Devices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"uptimeLimitDuration"}
+	}
+	return marshalJSON("chrome.devices.ScheduledRebootDurationV2", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -9581,6 +11927,42 @@ func (p *DeviceScheduledRebootDevices) Schema2JSON(updateMask []string, addition
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// DeviceScreensaverLoginScreenEnabledDevices
+///////////////////////////////////////////////////////////////////////////////
+
+type DeviceScreensaverLoginScreenEnabledDevices struct {
+	DeviceScreensaverLoginScreenEnabled                     bool             `json:"deviceScreensaverLoginScreenEnabled"`
+	DeviceScreensaverLoginScreenImages                      []string         `json:"deviceScreensaverLoginScreenImages"`
+	DeviceScreensaverLoginScreenIdleTimeoutSeconds          NullableDuration `json:"deviceScreensaverLoginScreenIdleTimeoutSeconds"`
+	DeviceScreensaverLoginScreenImageDisplayIntervalSeconds NullableDuration `json:"deviceScreensaverLoginScreenImageDisplayIntervalSeconds"`
+}
+
+func (p *DeviceScreensaverLoginScreenEnabledDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"deviceScreensaverLoginScreenEnabled", "deviceScreensaverLoginScreenImages", "deviceScreensaverLoginScreenIdleTimeoutSeconds", "deviceScreensaverLoginScreenImageDisplayIntervalSeconds"}
+	}
+	return marshalJSON("chrome.devices.DeviceScreensaverLoginScreenEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DeviceScreensaverLoginScreenEnabledV2Devices
+///////////////////////////////////////////////////////////////////////////////
+
+type DeviceScreensaverLoginScreenEnabledV2Devices struct {
+	DeviceScreensaverLoginScreenEnabled                     bool             `json:"deviceScreensaverLoginScreenEnabled"`
+	DeviceScreensaverLoginScreenImages                      []string         `json:"deviceScreensaverLoginScreenImages"`
+	DeviceScreensaverLoginScreenIdleTimeoutSeconds          NullableDuration `json:"deviceScreensaverLoginScreenIdleTimeoutSeconds"`
+	DeviceScreensaverLoginScreenImageDisplayIntervalSeconds NullableDuration `json:"deviceScreensaverLoginScreenImageDisplayIntervalSeconds"`
+}
+
+func (p *DeviceScreensaverLoginScreenEnabledV2Devices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"deviceScreensaverLoginScreenEnabled", "deviceScreensaverLoginScreenImages", "deviceScreensaverLoginScreenIdleTimeoutSeconds", "deviceScreensaverLoginScreenImageDisplayIntervalSeconds"}
+	}
+	return marshalJSON("chrome.devices.DeviceScreensaverLoginScreenEnabledV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // VirtualMachinesAllowedUnaffiliatedUserDevices
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -9623,6 +12005,21 @@ func (p *HostnameTemplateDevices) Schema2JSON(updateMask []string, additionalTar
 		updateMask = []string{"deviceHostnameTemplate"}
 	}
 	return marshalJSON("chrome.devices.HostnameTemplate", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DevicePrintingClientNameTemplateDevices
+///////////////////////////////////////////////////////////////////////////////
+
+type DevicePrintingClientNameTemplateDevices struct {
+	DevicePrintingClientNameTemplate string `json:"devicePrintingClientNameTemplate"`
+}
+
+func (p *DevicePrintingClientNameTemplateDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"devicePrintingClientNameTemplate"}
+	}
+	return marshalJSON("chrome.devices.DevicePrintingClientNameTemplate", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -9925,6 +12322,36 @@ func (p *DeviceLoginScreenPromptOnMultipleMatchingCertificatesDevices) Schema2JS
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// DeviceHostnameUserConfigurableDevices
+///////////////////////////////////////////////////////////////////////////////
+
+type DeviceHostnameUserConfigurableDevices struct {
+	DeviceHostnameUserConfigurable bool `json:"deviceHostnameUserConfigurable"`
+}
+
+func (p *DeviceHostnameUserConfigurableDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"deviceHostnameUserConfigurable"}
+	}
+	return marshalJSON("chrome.devices.DeviceHostnameUserConfigurable", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DeviceKeylockerForStorageEncryptionEnabledDevices
+///////////////////////////////////////////////////////////////////////////////
+
+type DeviceKeylockerForStorageEncryptionEnabledDevices struct {
+	KeylockerForStorageEncryptionEnabled bool `json:"keylockerForStorageEncryptionEnabled"`
+}
+
+func (p *DeviceKeylockerForStorageEncryptionEnabledDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"keylockerForStorageEncryptionEnabled"}
+	}
+	return marshalJSON("chrome.devices.DeviceKeylockerForStorageEncryptionEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // DeviceInternationalizationShortcutsEnabledDevices
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -9952,6 +12379,35 @@ func (p *UnaffiliatedArcAllowedDevices) Schema2JSON(updateMask []string, additio
 		updateMask = []string{"unaffiliatedArcAllowed"}
 	}
 	return marshalJSON("chrome.devices.UnaffiliatedArcAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DeviceKeyboardBacklightColorDevices
+///////////////////////////////////////////////////////////////////////////////
+
+type DeviceKeyboardBacklightColorDevices struct {
+	DeviceKeyboardBacklightColor DeviceKeyboardBacklightColorEnum `json:"deviceKeyboardBacklightColor"`
+}
+
+type DeviceKeyboardBacklightColorEnum int
+
+const (
+	DEVICEKEYBOARDBACKLIGHTCOLORENUM_DEVICE_KEYBOARD_BACKLIGHT_COLOR_ENUM_BACKLIGHT_UNSPECIFIED = 1
+	DEVICEKEYBOARDBACKLIGHTCOLORENUM_DEVICE_KEYBOARD_BACKLIGHT_COLOR_ENUM_BACKLIGHT_WHITE       = 2
+	DEVICEKEYBOARDBACKLIGHTCOLORENUM_DEVICE_KEYBOARD_BACKLIGHT_COLOR_ENUM_BACKLIGHT_RED         = 3
+	DEVICEKEYBOARDBACKLIGHTCOLORENUM_DEVICE_KEYBOARD_BACKLIGHT_COLOR_ENUM_BACKLIGHT_YELLOW      = 4
+	DEVICEKEYBOARDBACKLIGHTCOLORENUM_DEVICE_KEYBOARD_BACKLIGHT_COLOR_ENUM_BACKLIGHT_GREEN       = 5
+	DEVICEKEYBOARDBACKLIGHTCOLORENUM_DEVICE_KEYBOARD_BACKLIGHT_COLOR_ENUM_BACKLIGHT_BLUE        = 6
+	DEVICEKEYBOARDBACKLIGHTCOLORENUM_DEVICE_KEYBOARD_BACKLIGHT_COLOR_ENUM_BACKLIGHT_INDIGO      = 7
+	DEVICEKEYBOARDBACKLIGHTCOLORENUM_DEVICE_KEYBOARD_BACKLIGHT_COLOR_ENUM_BACKLIGHT_PURPLE      = 8
+	DEVICEKEYBOARDBACKLIGHTCOLORENUM_DEVICE_KEYBOARD_BACKLIGHT_COLOR_ENUM_BACKLIGHT_RAINBOW     = 9
+)
+
+func (p *DeviceKeyboardBacklightColorDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"deviceKeyboardBacklightColor"}
+	}
+	return marshalJSON("chrome.devices.DeviceKeyboardBacklightColor", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -10011,6 +12467,21 @@ func (p *RestrictedManagedGuestSessionExtensionCleanupExemptListDevices) Schema2
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// DeviceOptionalServicesDisallowedDevices
+///////////////////////////////////////////////////////////////////////////////
+
+type DeviceOptionalServicesDisallowedDevices struct {
+	DeviceOptionalServicesDisallowed bool `json:"deviceOptionalServicesDisallowed"`
+}
+
+func (p *DeviceOptionalServicesDisallowedDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"deviceOptionalServicesDisallowed"}
+	}
+	return marshalJSON("chrome.devices.DeviceOptionalServicesDisallowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // ManagedGuestSessionDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -10043,6 +12514,21 @@ func (p *SessionLengthDevicesManagedguest) Schema2JSON(updateMask []string, addi
 		updateMask = []string{"sessionDurationLimit"}
 	}
 	return marshalJSON("chrome.devices.managedguest.SessionLength", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SessionLengthV2DevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type SessionLengthV2DevicesManagedguest struct {
+	SessionDurationLimit NullableDuration `json:"sessionDurationLimit"`
+}
+
+func (p *SessionLengthV2DevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"sessionDurationLimit"}
+	}
+	return marshalJSON("chrome.devices.managedguest.SessionLengthV2", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -10103,6 +12589,81 @@ func (p *TaskManagerDevicesManagedguest) Schema2JSON(updateMask []string, additi
 		updateMask = []string{"taskManagerEndProcessEnabled"}
 	}
 	return marshalJSON("chrome.devices.managedguest.TaskManager", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ExtensionManifestVTwoAvailabilityDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type ExtensionManifestVTwoAvailabilityDevicesManagedguest struct {
+	ExtensionManifestVTwoAvailability ExtensionManifestV2AvailabilityEnum `json:"extensionManifestVTwoAvailability"`
+}
+
+func (p *ExtensionManifestVTwoAvailabilityDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"extensionManifestVTwoAvailability"}
+	}
+	return marshalJSON("chrome.devices.managedguest.ExtensionManifestVTwoAvailability", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ExtensionExtendedBackgroundLifetimeForPortConnectionsToUrlsDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type ExtensionExtendedBackgroundLifetimeForPortConnectionsToUrlsDevicesManagedguest struct {
+	ExtensionExtendedBackgroundLifetimeForPortConnectionsToUrls []string `json:"extensionExtendedBackgroundLifetimeForPortConnectionsToUrls"`
+}
+
+func (p *ExtensionExtendedBackgroundLifetimeForPortConnectionsToUrlsDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"extensionExtendedBackgroundLifetimeForPortConnectionsToUrls"}
+	}
+	return marshalJSON("chrome.devices.managedguest.ExtensionExtendedBackgroundLifetimeForPortConnectionsToUrls", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AllowWebAuthnWithBrokenTlsCertsDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type AllowWebAuthnWithBrokenTlsCertsDevicesManagedguest struct {
+	AllowWebAuthnWithBrokenTlsCerts bool `json:"allowWebAuthnWithBrokenTlsCerts"`
+}
+
+func (p *AllowWebAuthnWithBrokenTlsCertsDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"allowWebAuthnWithBrokenTlsCerts"}
+	}
+	return marshalJSON("chrome.devices.managedguest.AllowWebAuthnWithBrokenTlsCerts", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// InsecureHashesInTlsHandshakesEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type InsecureHashesInTlsHandshakesEnabledDevicesManagedguest struct {
+	InsecureHashesInTlsHandshakesEnabled NullableBoolean `json:"insecureHashesInTlsHandshakesEnabled"`
+}
+
+func (p *InsecureHashesInTlsHandshakesEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"insecureHashesInTlsHandshakesEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.InsecureHashesInTlsHandshakesEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PostQuantumKeyAgreementEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type PostQuantumKeyAgreementEnabledDevicesManagedguest struct {
+	PostQuantumKeyAgreementEnabled NullableBoolean `json:"postQuantumKeyAgreementEnabled"`
+}
+
+func (p *PostQuantumKeyAgreementEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"postQuantumKeyAgreementEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.PostQuantumKeyAgreementEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -10172,6 +12733,28 @@ func (p *BrowsingDataLifetimeDevicesManagedguest) Schema2JSON(updateMask []strin
 		updateMask = []string{"browsingHistoryTtl", "downloadHistoryTtl", "cookiesAndOtherSiteDataTtl", "cachedImagesAndFilesTtl", "passwordSigninTtl", "autofillTtl", "siteSettingsTtl", "hostedAppDataTtl"}
 	}
 	return marshalJSON("chrome.devices.managedguest.BrowsingDataLifetime", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// BrowsingDataLifetimeV2DevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type BrowsingDataLifetimeV2DevicesManagedguest struct {
+	BrowsingHistoryTtl         NullableDuration `json:"browsingHistoryTtl"`
+	DownloadHistoryTtl         NullableDuration `json:"downloadHistoryTtl"`
+	CookiesAndOtherSiteDataTtl NullableDuration `json:"cookiesAndOtherSiteDataTtl"`
+	CachedImagesAndFilesTtl    NullableDuration `json:"cachedImagesAndFilesTtl"`
+	PasswordSigninTtl          NullableDuration `json:"passwordSigninTtl"`
+	AutofillTtl                NullableDuration `json:"autofillTtl"`
+	SiteSettingsTtl            NullableDuration `json:"siteSettingsTtl"`
+	HostedAppDataTtl           NullableDuration `json:"hostedAppDataTtl"`
+}
+
+func (p *BrowsingDataLifetimeV2DevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"browsingHistoryTtl", "downloadHistoryTtl", "cookiesAndOtherSiteDataTtl", "cachedImagesAndFilesTtl", "passwordSigninTtl", "autofillTtl", "siteSettingsTtl", "hostedAppDataTtl"}
+	}
+	return marshalJSON("chrome.devices.managedguest.BrowsingDataLifetimeV2", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -10248,6 +12831,22 @@ func (p *SecurityTokenSessionSettingsDevicesManagedguest) Schema2JSON(updateMask
 		updateMask = []string{"securityTokenSessionBehavior", "securityTokenSessionNotificationSeconds"}
 	}
 	return marshalJSON("chrome.devices.managedguest.SecurityTokenSessionSettings", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SecurityTokenSessionSettingsV2DevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type SecurityTokenSessionSettingsV2DevicesManagedguest struct {
+	SecurityTokenSessionBehavior            SecurityTokenSessionBehaviorEnum `json:"securityTokenSessionBehavior"`
+	SecurityTokenSessionNotificationSeconds NullableDuration                 `json:"securityTokenSessionNotificationSeconds"`
+}
+
+func (p *SecurityTokenSessionSettingsV2DevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"securityTokenSessionBehavior", "securityTokenSessionNotificationSeconds"}
+	}
+	return marshalJSON("chrome.devices.managedguest.SecurityTokenSessionSettingsV2", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -10328,6 +12927,21 @@ func (p *WebSqlNonSecureContextEnabledDevicesManagedguest) Schema2JSON(updateMas
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// WebSqlAccessDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type WebSqlAccessDevicesManagedguest struct {
+	WebSqlAccess bool `json:"webSqlAccess"`
+}
+
+func (p *WebSqlAccessDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"webSqlAccess"}
+	}
+	return marshalJSON("chrome.devices.managedguest.WebSqlAccess", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // GetDisplayMediaSetSelectAllScreensAllowedForUrlsDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -10343,6 +12957,21 @@ func (p *GetDisplayMediaSetSelectAllScreensAllowedForUrlsDevicesManagedguest) Sc
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// NewBaseUrlInheritanceBehaviorAllowedDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type NewBaseUrlInheritanceBehaviorAllowedDevicesManagedguest struct {
+	NewBaseUrlInheritanceBehaviorAllowed bool `json:"newBaseUrlInheritanceBehaviorAllowed"`
+}
+
+func (p *NewBaseUrlInheritanceBehaviorAllowedDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"newBaseUrlInheritanceBehaviorAllowed"}
+	}
+	return marshalJSON("chrome.devices.managedguest.NewBaseUrlInheritanceBehaviorAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // EncryptedClientHelloEnabledDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -10355,6 +12984,81 @@ func (p *EncryptedClientHelloEnabledDevicesManagedguest) Schema2JSON(updateMask 
 		updateMask = []string{"encryptedClientHelloEnabled"}
 	}
 	return marshalJSON("chrome.devices.managedguest.EncryptedClientHelloEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// StrictMimetypeCheckForWorkerScriptsEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type StrictMimetypeCheckForWorkerScriptsEnabledDevicesManagedguest struct {
+	StrictMimetypeCheckForWorkerScriptsEnabled bool `json:"strictMimetypeCheckForWorkerScriptsEnabled"`
+}
+
+func (p *StrictMimetypeCheckForWorkerScriptsEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"strictMimetypeCheckForWorkerScriptsEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.StrictMimetypeCheckForWorkerScriptsEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// OriginAgentClusterDefaultEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type OriginAgentClusterDefaultEnabledDevicesManagedguest struct {
+	OriginAgentClusterDefaultEnabled bool `json:"originAgentClusterDefaultEnabled"`
+}
+
+func (p *OriginAgentClusterDefaultEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"originAgentClusterDefaultEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.OriginAgentClusterDefaultEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FileOrDirectoryPickerWithoutGestureAllowedForOriginsDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type FileOrDirectoryPickerWithoutGestureAllowedForOriginsDevicesManagedguest struct {
+	FileOrDirectoryPickerWithoutGestureAllowedForOrigins []string `json:"fileOrDirectoryPickerWithoutGestureAllowedForOrigins"`
+}
+
+func (p *FileOrDirectoryPickerWithoutGestureAllowedForOriginsDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"fileOrDirectoryPickerWithoutGestureAllowedForOrigins"}
+	}
+	return marshalJSON("chrome.devices.managedguest.FileOrDirectoryPickerWithoutGestureAllowedForOrigins", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ScreenCaptureWithoutGestureAllowedForOriginsDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type ScreenCaptureWithoutGestureAllowedForOriginsDevicesManagedguest struct {
+	ScreenCaptureWithoutGestureAllowedForOrigins []string `json:"screenCaptureWithoutGestureAllowedForOrigins"`
+}
+
+func (p *ScreenCaptureWithoutGestureAllowedForOriginsDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"screenCaptureWithoutGestureAllowedForOrigins"}
+	}
+	return marshalJSON("chrome.devices.managedguest.ScreenCaptureWithoutGestureAllowedForOrigins", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AllowBackForwardCacheForCacheControlNoStorePageEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type AllowBackForwardCacheForCacheControlNoStorePageEnabledDevicesManagedguest struct {
+	AllowBackForwardCacheForCacheControlNoStorePageEnabled bool `json:"allowBackForwardCacheForCacheControlNoStorePageEnabled"`
+}
+
+func (p *AllowBackForwardCacheForCacheControlNoStorePageEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"allowBackForwardCacheForCacheControlNoStorePageEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.AllowBackForwardCacheForCacheControlNoStorePageEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -10405,6 +13109,51 @@ func (p *RemoteAccessHostFirewallTraversalDevicesManagedguest) Schema2JSON(updat
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// RemoteAccessHostAllowRemoteSupportConnectionsDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type RemoteAccessHostAllowRemoteSupportConnectionsDevicesManagedguest struct {
+	RemoteAccessHostAllowRemoteSupportConnections bool `json:"remoteAccessHostAllowRemoteSupportConnections"`
+}
+
+func (p *RemoteAccessHostAllowRemoteSupportConnectionsDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"remoteAccessHostAllowRemoteSupportConnections"}
+	}
+	return marshalJSON("chrome.devices.managedguest.RemoteAccessHostAllowRemoteSupportConnections", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// RemoteAccessHostClipboardSizeBytesDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type RemoteAccessHostClipboardSizeBytesDevicesManagedguest struct {
+	RemoteAccessHostClipboardSizeBytes NullableLong `json:"remoteAccessHostClipboardSizeBytes"`
+}
+
+func (p *RemoteAccessHostClipboardSizeBytesDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"remoteAccessHostClipboardSizeBytes"}
+	}
+	return marshalJSON("chrome.devices.managedguest.RemoteAccessHostClipboardSizeBytes", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// RemoteAccessHostAllowEnterpriseRemoteSupportConnectionsDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type RemoteAccessHostAllowEnterpriseRemoteSupportConnectionsDevicesManagedguest struct {
+	RemoteAccessHostAllowEnterpriseRemoteSupportConnections bool `json:"remoteAccessHostAllowEnterpriseRemoteSupportConnections"`
+}
+
+func (p *RemoteAccessHostAllowEnterpriseRemoteSupportConnectionsDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"remoteAccessHostAllowEnterpriseRemoteSupportConnections"}
+	}
+	return marshalJSON("chrome.devices.managedguest.RemoteAccessHostAllowEnterpriseRemoteSupportConnections", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // ShowLogoutButtonDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -10447,6 +13196,37 @@ func (p *KerberosTicketsDevicesManagedguest) Schema2JSON(updateMask []string, ad
 		updateMask = []string{"kerberosEnabled"}
 	}
 	return marshalJSON("chrome.devices.managedguest.KerberosTickets", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// KerberosDomainAutocompleteDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type KerberosDomainAutocompleteDevicesManagedguest struct {
+	KerberosDomainAutocomplete string `json:"kerberosDomainAutocomplete"`
+}
+
+func (p *KerberosDomainAutocompleteDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"kerberosDomainAutocomplete"}
+	}
+	return marshalJSON("chrome.devices.managedguest.KerberosDomainAutocomplete", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// KerberosCustomPrefilledConfigSettingGroupDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type KerberosCustomPrefilledConfigSettingGroupDevicesManagedguest struct {
+	KerberosCustomPrefilledConfig    string `json:"kerberosCustomPrefilledConfig"`
+	KerberosUseCustomPrefilledConfig bool   `json:"kerberosUseCustomPrefilledConfig"`
+}
+
+func (p *KerberosCustomPrefilledConfigSettingGroupDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"kerberosCustomPrefilledConfig", "kerberosUseCustomPrefilledConfig"}
+	}
+	return marshalJSON("chrome.devices.managedguest.KerberosCustomPrefilledConfigSettingGroup", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -10574,6 +13354,22 @@ func (p *DnsOverHttpsDevicesManagedguest) Schema2JSON(updateMask []string, addit
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// DnsOverHttpsTemplatesWithIdentifiersDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type DnsOverHttpsTemplatesWithIdentifiersDevicesManagedguest struct {
+	DnsOverHttpsSalt                     string   `json:"dnsOverHttpsSalt"`
+	DnsOverHttpsTemplatesWithIdentifiers []string `json:"dnsOverHttpsTemplatesWithIdentifiers"`
+}
+
+func (p *DnsOverHttpsTemplatesWithIdentifiersDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"dnsOverHttpsSalt", "dnsOverHttpsTemplatesWithIdentifiers"}
+	}
+	return marshalJSON("chrome.devices.managedguest.DnsOverHttpsTemplatesWithIdentifiers", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // BuiltInDnsClientEnabledDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -10586,6 +13382,21 @@ func (p *BuiltInDnsClientEnabledDevicesManagedguest) Schema2JSON(updateMask []st
 		updateMask = []string{"builtInDnsClientEnabled"}
 	}
 	return marshalJSON("chrome.devices.managedguest.BuiltInDnsClientEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AccessControlAllowMethodsInCorsPreflightSpecConformantDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type AccessControlAllowMethodsInCorsPreflightSpecConformantDevicesManagedguest struct {
+	AccessControlAllowMethodsInCorsPreflightSpecConformant bool `json:"accessControlAllowMethodsInCorsPreflightSpecConformant"`
+}
+
+func (p *AccessControlAllowMethodsInCorsPreflightSpecConformantDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"accessControlAllowMethodsInCorsPreflightSpecConformant"}
+	}
+	return marshalJSON("chrome.devices.managedguest.AccessControlAllowMethodsInCorsPreflightSpecConformant", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -10891,6 +13702,21 @@ func (p *NewTabPageLocationDevicesManagedguest) Schema2JSON(updateMask []string,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// LensDesktopNtpSearchEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type LensDesktopNtpSearchEnabledDevicesManagedguest struct {
+	LensDesktopNtpSearchEnabled bool `json:"lensDesktopNtpSearchEnabled"`
+}
+
+func (p *LensDesktopNtpSearchEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lensDesktopNtpSearchEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.LensDesktopNtpSearchEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // StartupPagesDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -10971,6 +13797,51 @@ func (p *EnableCaptureAllowedSettingsDevicesManagedguest) Schema2JSON(updateMask
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// ScreenCaptureAllowedDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type ScreenCaptureAllowedDevicesManagedguest struct {
+	ScreenCaptureAllowed bool `json:"screenCaptureAllowed"`
+}
+
+func (p *ScreenCaptureAllowedDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"screenCaptureAllowed"}
+	}
+	return marshalJSON("chrome.devices.managedguest.ScreenCaptureAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// UseMojoVideoDecoderForPepperAllowedDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type UseMojoVideoDecoderForPepperAllowedDevicesManagedguest struct {
+	UseMojoVideoDecoderForPepperAllowed bool `json:"useMojoVideoDecoderForPepperAllowed"`
+}
+
+func (p *UseMojoVideoDecoderForPepperAllowedDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"useMojoVideoDecoderForPepperAllowed"}
+	}
+	return marshalJSON("chrome.devices.managedguest.UseMojoVideoDecoderForPepperAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PpApiSharedImagesSwapChainAllowedDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type PpApiSharedImagesSwapChainAllowedDevicesManagedguest struct {
+	PpApiSharedImagesSwapChainAllowed bool `json:"ppApiSharedImagesSwapChainAllowed"`
+}
+
+func (p *PpApiSharedImagesSwapChainAllowedDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"ppApiSharedImagesSwapChainAllowed"}
+	}
+	return marshalJSON("chrome.devices.managedguest.PpApiSharedImagesSwapChainAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // IntensiveWakeUpThrottlingEnabledDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -11015,6 +13886,21 @@ func (p *JavaScriptJitSettingsDevicesManagedguest) Schema2JSON(updateMask []stri
 		updateMask = []string{"defaultJavaScriptJitSetting", "javaScriptJitAllowedForSites", "javaScriptJitBlockedForSites"}
 	}
 	return marshalJSON("chrome.devices.managedguest.JavaScriptJitSettings", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SetTimeoutWithoutOneMsClampEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type SetTimeoutWithoutOneMsClampEnabledDevicesManagedguest struct {
+	SetTimeoutWithoutOneMsClampEnabled NullableBoolean `json:"setTimeoutWithoutOneMsClampEnabled"`
+}
+
+func (p *SetTimeoutWithoutOneMsClampEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"setTimeoutWithoutOneMsClampEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.SetTimeoutWithoutOneMsClampEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -11115,6 +14001,21 @@ func (p *SuppressCrossOriginIframeDialogsDevicesManagedguest) Schema2JSON(update
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// ThrottleNonVisibleCrossOriginIframesAllowedDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type ThrottleNonVisibleCrossOriginIframesAllowedDevicesManagedguest struct {
+	ThrottleNonVisibleCrossOriginIframesAllowed bool `json:"throttleNonVisibleCrossOriginIframesAllowed"`
+}
+
+func (p *ThrottleNonVisibleCrossOriginIframesAllowedDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"throttleNonVisibleCrossOriginIframesAllowed"}
+	}
+	return marshalJSON("chrome.devices.managedguest.ThrottleNonVisibleCrossOriginIframesAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // SandboxExternalProtocolBlockedDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -11150,15 +14051,31 @@ func (p *UrlBlockingDevicesManagedguest) Schema2JSON(updateMask []string, additi
 ///////////////////////////////////////////////////////////////////////////////
 
 type GoogleCastDevicesManagedguest struct {
-	ShowCastIconInToolbar bool `json:"showCastIconInToolbar"`
-	EnableMediaRouter     bool `json:"enableMediaRouter"`
+	ShowCastIconInToolbar      bool            `json:"showCastIconInToolbar"`
+	EnableMediaRouter          bool            `json:"enableMediaRouter"`
+	MediaRouterCastAllowAllIps NullableBoolean `json:"mediaRouterCastAllowAllIps"`
 }
 
 func (p *GoogleCastDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"showCastIconInToolbar", "enableMediaRouter"}
+		updateMask = []string{"showCastIconInToolbar", "enableMediaRouter", "mediaRouterCastAllowAllIps"}
 	}
 	return marshalJSON("chrome.devices.managedguest.GoogleCast", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ShowCastSessionsStartedByOtherDevicesDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type ShowCastSessionsStartedByOtherDevicesDevicesManagedguest struct {
+	ShowCastSessionsStartedByOtherDevices NullableBoolean `json:"showCastSessionsStartedByOtherDevices"`
+}
+
+func (p *ShowCastSessionsStartedByOtherDevicesDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"showCastSessionsStartedByOtherDevices"}
+	}
+	return marshalJSON("chrome.devices.managedguest.ShowCastSessionsStartedByOtherDevices", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -11346,6 +14263,112 @@ func (p *AppCacheForceEnabledDevicesManagedguest) Schema2JSON(updateMask []strin
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// PdfLocalFileAccessAllowedForDomainsDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type PdfLocalFileAccessAllowedForDomainsDevicesManagedguest struct {
+	PdfLocalFileAccessAllowedForDomains []string `json:"pdfLocalFileAccessAllowedForDomains"`
+}
+
+func (p *PdfLocalFileAccessAllowedForDomainsDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"pdfLocalFileAccessAllowedForDomains"}
+	}
+	return marshalJSON("chrome.devices.managedguest.PdfLocalFileAccessAllowedForDomains", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// TrashEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type TrashEnabledDevicesManagedguest struct {
+	TrashEnabled bool `json:"trashEnabled"`
+}
+
+func (p *TrashEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"trashEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.TrashEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// NativeClientForceAllowedDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type NativeClientForceAllowedDevicesManagedguest struct {
+	NativeClientForceAllowed bool `json:"nativeClientForceAllowed"`
+}
+
+func (p *NativeClientForceAllowedDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"nativeClientForceAllowed"}
+	}
+	return marshalJSON("chrome.devices.managedguest.NativeClientForceAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ShoppingListEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type ShoppingListEnabledDevicesManagedguest struct {
+	ShoppingListEnabled bool `json:"shoppingListEnabled"`
+}
+
+func (p *ShoppingListEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"shoppingListEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.ShoppingListEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ForceEnablePepperVideoDecoderDevApiDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type ForceEnablePepperVideoDecoderDevApiDevicesManagedguest struct {
+	ForceEnablePepperVideoDecoderDevApi bool `json:"forceEnablePepperVideoDecoderDevApi"`
+}
+
+func (p *ForceEnablePepperVideoDecoderDevApiDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"forceEnablePepperVideoDecoderDevApi"}
+	}
+	return marshalJSON("chrome.devices.managedguest.ForceEnablePepperVideoDecoderDevApi", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ThirdPartyStoragePartitioningSettingsDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type ThirdPartyStoragePartitioningSettingsDevicesManagedguest struct {
+	DefaultThirdPartyStoragePartitioningSetting    DefaultThirdPartyStoragePartitioningSettingEnum `json:"defaultThirdPartyStoragePartitioningSetting"`
+	ThirdPartyStoragePartitioningBlockedForOrigins []string                                        `json:"thirdPartyStoragePartitioningBlockedForOrigins"`
+}
+
+func (p *ThirdPartyStoragePartitioningSettingsDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"defaultThirdPartyStoragePartitioningSetting", "thirdPartyStoragePartitioningBlockedForOrigins"}
+	}
+	return marshalJSON("chrome.devices.managedguest.ThirdPartyStoragePartitioningSettings", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PdfUseSkiaRendererEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type PdfUseSkiaRendererEnabledDevicesManagedguest struct {
+	PdfUseSkiaRendererEnabled NullableBoolean `json:"pdfUseSkiaRendererEnabled"`
+}
+
+func (p *PdfUseSkiaRendererEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"pdfUseSkiaRendererEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.PdfUseSkiaRendererEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // AllowPrintingDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -11511,6 +14534,21 @@ func (p *PrintJobHistoryExpirationPeriodNewDevicesManagedguest) Schema2JSON(upda
 		updateMask = []string{"printJobHistoryExpirationPeriodDaysNew"}
 	}
 	return marshalJSON("chrome.devices.managedguest.PrintJobHistoryExpirationPeriodNew", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PrintJobHistoryExpirationPeriodNewV2DevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type PrintJobHistoryExpirationPeriodNewV2DevicesManagedguest struct {
+	PrintJobHistoryExpirationPeriodDaysNew NullableDuration `json:"printJobHistoryExpirationPeriodDaysNew"`
+}
+
+func (p *PrintJobHistoryExpirationPeriodNewV2DevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"printJobHistoryExpirationPeriodDaysNew"}
+	}
+	return marshalJSON("chrome.devices.managedguest.PrintJobHistoryExpirationPeriodNewV2", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -11813,6 +14851,51 @@ func (p *DeveloperToolsDevicesManagedguest) Schema2JSON(updateMask []string, add
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormAutoFillDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type FormAutoFillDevicesManagedguest struct {
+	AutoFillEnabled bool `json:"autoFillEnabled"`
+}
+
+func (p *FormAutoFillDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"autoFillEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.FormAutoFill", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AutofillAddressEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type AutofillAddressEnabledDevicesManagedguest struct {
+	AutofillAddressEnabled bool `json:"autofillAddressEnabled"`
+}
+
+func (p *AutofillAddressEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"autofillAddressEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.AutofillAddressEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AutofillCreditCardEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type AutofillCreditCardEnabledDevicesManagedguest struct {
+	AutofillCreditCardEnabled bool `json:"autofillCreditCardEnabled"`
+}
+
+func (p *AutofillCreditCardEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"autofillCreditCardEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.AutofillCreditCardEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // PaymentMethodQueryEnabledDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -11825,6 +14908,36 @@ func (p *PaymentMethodQueryEnabledDevicesManagedguest) Schema2JSON(updateMask []
 		updateMask = []string{"paymentMethodQueryEnabled"}
 	}
 	return marshalJSON("chrome.devices.managedguest.PaymentMethodQueryEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PhysicalKeyboardPredictiveWritingDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type PhysicalKeyboardPredictiveWritingDevicesManagedguest struct {
+	PhysicalKeyboardPredictiveWriting bool `json:"physicalKeyboardPredictiveWriting"`
+}
+
+func (p *PhysicalKeyboardPredictiveWritingDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"physicalKeyboardPredictiveWriting"}
+	}
+	return marshalJSON("chrome.devices.managedguest.PhysicalKeyboardPredictiveWriting", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PhysicalKeyboardAutocorrectDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type PhysicalKeyboardAutocorrectDevicesManagedguest struct {
+	PhysicalKeyboardAutocorrect bool `json:"physicalKeyboardAutocorrect"`
+}
+
+func (p *PhysicalKeyboardAutocorrectDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"physicalKeyboardAutocorrect"}
+	}
+	return marshalJSON("chrome.devices.managedguest.PhysicalKeyboardAutocorrect", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -11870,6 +14983,21 @@ func (p *UnifiedDesktopDevicesManagedguest) Schema2JSON(updateMask []string, add
 		updateMask = []string{"unifiedDesktopEnabledByDefault"}
 	}
 	return marshalJSON("chrome.devices.managedguest.UnifiedDesktop", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// AssistantWebEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type AssistantWebEnabledDevicesManagedguest struct {
+	AssistantWebEnabled NullableBoolean `json:"assistantWebEnabled"`
+}
+
+func (p *AssistantWebEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"assistantWebEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.AssistantWebEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -11940,6 +15068,21 @@ func (p *AllowDinosaurEasterEggDevicesManagedguest) Schema2JSON(updateMask []str
 		updateMask = []string{"allowDinosaurEasterEgg"}
 	}
 	return marshalJSON("chrome.devices.managedguest.AllowDinosaurEasterEgg", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// UserBorealisAllowedDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type UserBorealisAllowedDevicesManagedguest struct {
+	UserBorealisAllowed bool `json:"userBorealisAllowed"`
+}
+
+func (p *UserBorealisAllowedDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"userBorealisAllowed"}
+	}
+	return marshalJSON("chrome.devices.managedguest.UserBorealisAllowed", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -12424,6 +15567,98 @@ func (p *AllowWakeLocksDevicesManagedguest) Schema2JSON(updateMask []string, add
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// IdleSettingsExtendedDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type IdleSettingsExtendedDevicesManagedguest struct {
+	LidCloseAction          LidCloseActionEnum    `json:"lidCloseAction"`
+	IdleDelayAc             NullableDuration      `json:"idleDelayAc"`
+	IdleWarningDelayAc      NullableDuration      `json:"idleWarningDelayAc"`
+	IdleActionAc            IdleActionAcEnum      `json:"idleActionAc"`
+	ScreenDimDelayAc        NullableDuration      `json:"screenDimDelayAc"`
+	ScreenOffDelayAc        NullableDuration      `json:"screenOffDelayAc"`
+	ScreenLockDelayAc       NullableDuration      `json:"screenLockDelayAc"`
+	IdleDelayBattery        NullableDuration      `json:"idleDelayBattery"`
+	IdleWarningDelayBattery NullableDuration      `json:"idleWarningDelayBattery"`
+	IdleActionBattery       IdleActionBatteryEnum `json:"idleActionBattery"`
+	ScreenDimDelayBattery   NullableDuration      `json:"screenDimDelayBattery"`
+	ScreenOffDelayBattery   NullableDuration      `json:"screenOffDelayBattery"`
+	ScreenLockDelayBattery  NullableDuration      `json:"screenLockDelayBattery"`
+	LockOnSleepOrLidClose   NullableBoolean       `json:"lockOnSleepOrLidClose"`
+}
+
+func (p *IdleSettingsExtendedDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lidCloseAction", "idleDelayAc", "idleWarningDelayAc", "idleActionAc", "screenDimDelayAc", "screenOffDelayAc", "screenLockDelayAc", "idleDelayBattery", "idleWarningDelayBattery", "idleActionBattery", "screenDimDelayBattery", "screenOffDelayBattery", "screenLockDelayBattery", "lockOnSleepOrLidClose"}
+	}
+	return marshalJSON("chrome.devices.managedguest.IdleSettingsExtended", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// IdleSettingsExtendedV2DevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type IdleSettingsExtendedV2DevicesManagedguest struct {
+	LidCloseAction          LidCloseActionEnum    `json:"lidCloseAction"`
+	IdleDelayAc             NullableDuration      `json:"idleDelayAc"`
+	IdleWarningDelayAc      NullableDuration      `json:"idleWarningDelayAc"`
+	IdleActionAc            IdleActionAcEnum      `json:"idleActionAc"`
+	ScreenDimDelayAc        NullableDuration      `json:"screenDimDelayAc"`
+	ScreenOffDelayAc        NullableDuration      `json:"screenOffDelayAc"`
+	ScreenLockDelayAc       NullableDuration      `json:"screenLockDelayAc"`
+	IdleDelayBattery        NullableDuration      `json:"idleDelayBattery"`
+	IdleWarningDelayBattery NullableDuration      `json:"idleWarningDelayBattery"`
+	IdleActionBattery       IdleActionBatteryEnum `json:"idleActionBattery"`
+	ScreenDimDelayBattery   NullableDuration      `json:"screenDimDelayBattery"`
+	ScreenOffDelayBattery   NullableDuration      `json:"screenOffDelayBattery"`
+	ScreenLockDelayBattery  NullableDuration      `json:"screenLockDelayBattery"`
+	LockOnSleepOrLidClose   NullableBoolean       `json:"lockOnSleepOrLidClose"`
+}
+
+func (p *IdleSettingsExtendedV2DevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lidCloseAction", "idleDelayAc", "idleWarningDelayAc", "idleActionAc", "screenDimDelayAc", "screenOffDelayAc", "screenLockDelayAc", "idleDelayBattery", "idleWarningDelayBattery", "idleActionBattery", "screenDimDelayBattery", "screenOffDelayBattery", "screenLockDelayBattery", "lockOnSleepOrLidClose"}
+	}
+	return marshalJSON("chrome.devices.managedguest.IdleSettingsExtendedV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ScreensaverLockScreenEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type ScreensaverLockScreenEnabledDevicesManagedguest struct {
+	ScreensaverLockScreenEnabled                     bool             `json:"screensaverLockScreenEnabled"`
+	ScreensaverLockScreenIdleTimeoutSeconds          NullableDuration `json:"screensaverLockScreenIdleTimeoutSeconds"`
+	ScreensaverLockScreenImageDisplayIntervalSeconds NullableDuration `json:"screensaverLockScreenImageDisplayIntervalSeconds"`
+	ScreensaverLockScreenImages                      []string         `json:"screensaverLockScreenImages"`
+}
+
+func (p *ScreensaverLockScreenEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"screensaverLockScreenEnabled", "screensaverLockScreenIdleTimeoutSeconds", "screensaverLockScreenImageDisplayIntervalSeconds", "screensaverLockScreenImages"}
+	}
+	return marshalJSON("chrome.devices.managedguest.ScreensaverLockScreenEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ScreensaverLockScreenEnabledV2DevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type ScreensaverLockScreenEnabledV2DevicesManagedguest struct {
+	ScreensaverLockScreenEnabled                     bool             `json:"screensaverLockScreenEnabled"`
+	ScreensaverLockScreenIdleTimeoutSeconds          NullableDuration `json:"screensaverLockScreenIdleTimeoutSeconds"`
+	ScreensaverLockScreenImageDisplayIntervalSeconds NullableDuration `json:"screensaverLockScreenImageDisplayIntervalSeconds"`
+	ScreensaverLockScreenImages                      []string         `json:"screensaverLockScreenImages"`
+}
+
+func (p *ScreensaverLockScreenEnabledV2DevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"screensaverLockScreenEnabled", "screensaverLockScreenIdleTimeoutSeconds", "screensaverLockScreenImageDisplayIntervalSeconds", "screensaverLockScreenImages"}
+	}
+	return marshalJSON("chrome.devices.managedguest.ScreensaverLockScreenEnabledV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // SearchSuggestDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -12436,6 +15671,21 @@ func (p *SearchSuggestDevicesManagedguest) Schema2JSON(updateMask []string, addi
 		updateMask = []string{"searchSuggestEnabled"}
 	}
 	return marshalJSON("chrome.devices.managedguest.SearchSuggest", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// GoogleSearchSidePanelEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type GoogleSearchSidePanelEnabledDevicesManagedguest struct {
+	GoogleSearchSidePanelEnabled bool `json:"googleSearchSidePanelEnabled"`
+}
+
+func (p *GoogleSearchSidePanelEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"googleSearchSidePanelEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.GoogleSearchSidePanelEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -12593,6 +15843,21 @@ func (p *WebSerialPortAccessDevicesManagedguest) Schema2JSON(updateMask []string
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// SerialAllowUsbDevicesForUrlsDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type SerialAllowUsbDevicesForUrlsDevicesManagedguest struct {
+	SerialAllowUsbDevicesForUrls DevicesForUrls `json:"serialAllowUsbDevicesForUrls"`
+}
+
+func (p *SerialAllowUsbDevicesForUrlsDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"serialAllowUsbDevicesForUrls"}
+	}
+	return marshalJSON("chrome.devices.managedguest.SerialAllowUsbDevicesForUrls", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // PrivacyScreenEnabledDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -12642,6 +15907,21 @@ func (p *FileSystemWriteDevicesManagedguest) Schema2JSON(updateMask []string, ad
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FileSystemSyncAccessHandleAsyncInterfaceEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type FileSystemSyncAccessHandleAsyncInterfaceEnabledDevicesManagedguest struct {
+	FileSystemSyncAccessHandleAsyncInterfaceEnabled bool `json:"fileSystemSyncAccessHandleAsyncInterfaceEnabled"`
+}
+
+func (p *FileSystemSyncAccessHandleAsyncInterfaceEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"fileSystemSyncAccessHandleAsyncInterfaceEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.FileSystemSyncAccessHandleAsyncInterfaceEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // DefaultSensorsSettingDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -12671,6 +15951,81 @@ func (p *EnterpriseHardwarePlatformApiEnabledDevicesManagedguest) Schema2JSON(up
 		updateMask = []string{"enterpriseHardwarePlatformApiEnabled"}
 	}
 	return marshalJSON("chrome.devices.managedguest.EnterpriseHardwarePlatformApiEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// UsbDetectorNotificationEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type UsbDetectorNotificationEnabledDevicesManagedguest struct {
+	UsbDetectorNotificationEnabled bool `json:"usbDetectorNotificationEnabled"`
+}
+
+func (p *UsbDetectorNotificationEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"usbDetectorNotificationEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.UsbDetectorNotificationEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SendMouseEventsDisabledFormControlsEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type SendMouseEventsDisabledFormControlsEnabledDevicesManagedguest struct {
+	SendMouseEventsDisabledFormControlsEnabled bool `json:"sendMouseEventsDisabledFormControlsEnabled"`
+}
+
+func (p *SendMouseEventsDisabledFormControlsEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"sendMouseEventsDisabledFormControlsEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.SendMouseEventsDisabledFormControlsEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ChromeAppsWebViewPermissiveBehaviorAllowedDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type ChromeAppsWebViewPermissiveBehaviorAllowedDevicesManagedguest struct {
+	ChromeAppsWebViewPermissiveBehaviorAllowed bool `json:"chromeAppsWebViewPermissiveBehaviorAllowed"`
+}
+
+func (p *ChromeAppsWebViewPermissiveBehaviorAllowedDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"chromeAppsWebViewPermissiveBehaviorAllowed"}
+	}
+	return marshalJSON("chrome.devices.managedguest.ChromeAppsWebViewPermissiveBehaviorAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// RsaKeyUsageForLocalAnchorsEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type RsaKeyUsageForLocalAnchorsEnabledDevicesManagedguest struct {
+	RsaKeyUsageForLocalAnchorsEnabled NullableBoolean `json:"rsaKeyUsageForLocalAnchorsEnabled"`
+}
+
+func (p *RsaKeyUsageForLocalAnchorsEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"rsaKeyUsageForLocalAnchorsEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.RsaKeyUsageForLocalAnchorsEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// BeforeunloadEventCancelByPreventDefaultEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type BeforeunloadEventCancelByPreventDefaultEnabledDevicesManagedguest struct {
+	BeforeunloadEventCancelByPreventDefaultEnabled NullableBoolean `json:"beforeunloadEventCancelByPreventDefaultEnabled"`
+}
+
+func (p *BeforeunloadEventCancelByPreventDefaultEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"beforeunloadEventCancelByPreventDefaultEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.BeforeunloadEventCancelByPreventDefaultEnabled", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -12779,6 +16134,36 @@ func (p *AbusiveExperienceInterventionEnforceDevicesManagedguest) Schema2JSON(up
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// HighEfficiencyModeEnabledDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type HighEfficiencyModeEnabledDevicesManagedguest struct {
+	HighEfficiencyModeEnabled NullableBoolean `json:"highEfficiencyModeEnabled"`
+}
+
+func (p *HighEfficiencyModeEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"highEfficiencyModeEnabled"}
+	}
+	return marshalJSON("chrome.devices.managedguest.HighEfficiencyModeEnabled", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// TabDiscardingExceptionsDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type TabDiscardingExceptionsDevicesManagedguest struct {
+	TabDiscardingExceptions []string `json:"tabDiscardingExceptions"`
+}
+
+func (p *TabDiscardingExceptionsDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"tabDiscardingExceptions"}
+	}
+	return marshalJSON("chrome.devices.managedguest.TabDiscardingExceptions", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // MaxInvalidationFetchDelayDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -12791,6 +16176,81 @@ func (p *MaxInvalidationFetchDelayDevicesManagedguest) Schema2JSON(updateMask []
 		updateMask = []string{"maxInvalidationFetchDelay"}
 	}
 	return marshalJSON("chrome.devices.managedguest.MaxInvalidationFetchDelay", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// MaxInvalidationFetchDelayV2DevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type MaxInvalidationFetchDelayV2DevicesManagedguest struct {
+	MaxInvalidationFetchDelay NullableDuration `json:"maxInvalidationFetchDelay"`
+}
+
+func (p *MaxInvalidationFetchDelayV2DevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"maxInvalidationFetchDelay"}
+	}
+	return marshalJSON("chrome.devices.managedguest.MaxInvalidationFetchDelayV2", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// LacrosAvailabilityDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type LacrosAvailabilityDevicesManagedguest struct {
+	LacrosAvailability LacrosAvailabilityEnum `json:"lacrosAvailability"`
+}
+
+func (p *LacrosAvailabilityDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lacrosAvailability"}
+	}
+	return marshalJSON("chrome.devices.managedguest.LacrosAvailability", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// LacrosSecondaryProfilesAllowedDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type LacrosSecondaryProfilesAllowedDevicesManagedguest struct {
+	LacrosSecondaryProfilesAllowed bool `json:"lacrosSecondaryProfilesAllowed"`
+}
+
+func (p *LacrosSecondaryProfilesAllowedDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lacrosSecondaryProfilesAllowed"}
+	}
+	return marshalJSON("chrome.devices.managedguest.LacrosSecondaryProfilesAllowed", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// LacrosDataBackwardMigrationModeDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type LacrosDataBackwardMigrationModeDevicesManagedguest struct {
+	LacrosDataBackwardMigrationMode LacrosDataBackwardMigrationModeEnum `json:"lacrosDataBackwardMigrationMode"`
+}
+
+func (p *LacrosDataBackwardMigrationModeDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lacrosDataBackwardMigrationMode"}
+	}
+	return marshalJSON("chrome.devices.managedguest.LacrosDataBackwardMigrationMode", p, updateMask, additionalTargetKeys)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// LacrosSelectionDevicesManagedguest
+///////////////////////////////////////////////////////////////////////////////
+
+type LacrosSelectionDevicesManagedguest struct {
+	LacrosSelection LacrosSelectionEnum `json:"lacrosSelection"`
+}
+
+func (p *LacrosSelectionDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"lacrosSelection"}
+	}
+	return marshalJSON("chrome.devices.managedguest.LacrosSelection", p, updateMask, additionalTargetKeys)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -12809,32 +16269,16 @@ func (p *FastPairEnabledDevicesManagedguest) Schema2JSON(updateMask []string, ad
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// DeviceReportXdrEventsDevices
+// DataLeakPreventionReportingEnabledDevicesManagedguest
 ///////////////////////////////////////////////////////////////////////////////
 
-type DeviceReportXdrEventsDevices struct {
-	DeviceReportXdrEvents bool `json:"deviceReportXdrEvents"`
+type DataLeakPreventionReportingEnabledDevicesManagedguest struct {
+	DataLeakPreventionReportingEnabled bool `json:"dataLeakPreventionReportingEnabled"`
 }
 
-func (p *DeviceReportXdrEventsDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
+func (p *DataLeakPreventionReportingEnabledDevicesManagedguest) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"deviceReportXdrEvents"}
+		updateMask = []string{"dataLeakPreventionReportingEnabled"}
 	}
-	return marshalJSON("chrome.devices.DeviceReportXdrEvents", p, updateMask, additionalTargetKeys)
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// DeskApiUsers
-///////////////////////////////////////////////////////////////////////////////
-
-type DeskApiUsers struct {
-	DeskApiThirdPartyAccessEnabled bool     `json:"deskApiThirdPartyAccessEnabled"`
-	DeskApiThirdPartyAllowlist     []string `json:"deskApiThirdPartyAllowlist"`
-}
-
-func (p *DeskApiUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
-	if len(updateMask) == 0 {
-		updateMask = []string{"deskApiThirdPartyAccessEnabled", "deskApiThirdPartyAllowlist"}
-	}
-	return marshalJSON("chrome.users.DeskApi", p, updateMask, additionalTargetKeys)
+	return marshalJSON("chrome.devices.managedguest.DataLeakPreventionReportingEnabled", p, updateMask, additionalTargetKeys)
 }

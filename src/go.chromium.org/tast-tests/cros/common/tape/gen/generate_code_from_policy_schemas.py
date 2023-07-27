@@ -45,15 +45,15 @@ package tape
 # Template for a single policy. Is formatted using a PolicySchema object.
 POLICY_SCHEMA_TEMPLATE = """
 ///////////////////////////////////////////////////////////////////////////////
-// {self.name}
+// {self.name}{no_check_name}
 ///////////////////////////////////////////////////////////////////////////////
 
 {additional_structs_string}
-func (p *{self.name}) Schema2JSON(updateMask []string, additionalTargetKeys interface{{}}) ([]byte, error) {{
+func (p *{self.name}) Schema2JSON(updateMask []string, additionalTargetKeys interface{{}}) ([]byte, error) {{{no_check_name}
 \tif len(updateMask) == 0 {{
-\t\tupdateMask = []string{{{path_str}}}
+\t\tupdateMask = []string{{{path_str}}}{no_check_path}
 \t}}
-\treturn marshalJSON("{self.uri}", p, updateMask, additionalTargetKeys)
+\treturn marshalJSON("{self.uri}", p, updateMask, additionalTargetKeys){no_check_uri}
 }}
 """
 
@@ -64,6 +64,11 @@ TYPES_SCHEMA_TO_GO = {
     'TYPE_INT64': 'int64',
     'TYPE_BOOL': 'bool'
 }
+
+BANNED_KEYWORDS = [
+  'greylist', # nocheck
+]
+NO_CHECK_STR = ' // nocheck'
 
 class PolicySchema:
   """Class representing a single policy schema, used with
@@ -86,8 +91,18 @@ class PolicySchema:
   def generate_code(self):
     additional_structs_string = ''.join(self.additional_structs)
     path_str = ', '.join([f'"{type}"' for type in self.types])
+
+    no_check_name = get_no_check_if_needed(self.name)
+    no_check_uri = get_no_check_if_needed(self.uri)
+    no_check_path = get_no_check_if_needed(path_str)
+
     self.code = POLICY_SCHEMA_TEMPLATE.format(self=self, path_str=path_str,
-      additional_structs_string=additional_structs_string)
+      additional_structs_string=additional_structs_string, no_check_name=no_check_name, no_check_uri=no_check_uri, no_check_path=no_check_path)
+
+def get_no_check_if_needed(str):
+  if any(banned_keyword in str.casefold() for banned_keyword in BANNED_KEYWORDS):
+    return NO_CHECK_STR
+  return ''
 
 def raise_schema_error(key, schema):
   """Raise an error that a given key was not found in a response."""
@@ -150,7 +165,8 @@ def parse_values(definition, messages, suffix, duplication_set):
       continue
     duplication_set.add(message['name'])
 
-    struct_str = f'type {message["name"]} struct {{\n'
+    no_check_message_name = get_no_check_if_needed(message["name"])
+    struct_str = f'type {message["name"]} struct {{{no_check_message_name}\n'
     # The fields of the message are also the fields of the struct.
     for field in message['field']:
       if 'type' not in field:
@@ -184,7 +200,8 @@ def parse_values(definition, messages, suffix, duplication_set):
           type_name = type_name + suffix.removeprefix("Networks")
       else:
         type_name = TYPES_SCHEMA_TO_GO[field['type']]
-      struct_str += f'{type_name} `json:"{field["name"]}"`\n'
+      no_check_type = get_no_check_if_needed(field["name"]+'_'+type_name)
+      struct_str += f'{type_name} `json:"{field["name"]}"`{no_check_type}\n'
     first_message = False
     struct_str += '}\n\n'
     additional_structs.append(struct_str)
