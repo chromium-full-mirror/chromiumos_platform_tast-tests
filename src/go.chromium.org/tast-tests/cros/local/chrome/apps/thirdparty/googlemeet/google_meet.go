@@ -446,7 +446,10 @@ func InstallPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) err
 	}
 
 	// Install Meet PWA.
-	if err := apps.InstallPWAForURL(ctx, tconn, br, homePageURL, 30*time.Second); err != nil {
+	// Sometimes it navigates to a blank page, so retry 3 times here.
+	if err := uiauto.Retry(3, func(ctx context.Context) error {
+		return apps.InstallPWAForURL(ctx, tconn, br, homePageURL, 30*time.Second)
+	})(ctx); err != nil {
 		return errors.Wrap(err, "failed to install Meet PWA")
 	}
 	return ash.WaitForChromeAppInstalled(ctx, tconn, apps.Meet.ID, time.Minute)

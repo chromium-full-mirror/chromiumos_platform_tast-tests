@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -542,7 +543,9 @@ func PrimaryBrowser(ctx context.Context, tconn *chrome.TestConn) (App, error) {
 // InstallPWAForURL navigates to a PWA and attempts to install it.
 // The given TestConn must be a connection to Ash.
 func InstallPWAForURL(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, pwaURL string, timeout time.Duration) error {
-	conn, err := br.NewConn(ctx, pwaURL)
+	sctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+	conn, err := br.NewConn(sctx, pwaURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open URL %q", pwaURL)
 	}
