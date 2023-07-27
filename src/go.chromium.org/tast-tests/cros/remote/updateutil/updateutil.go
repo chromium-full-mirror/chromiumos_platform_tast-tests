@@ -50,11 +50,6 @@ func ImageVersion(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) (
 	return EntryFromLSBRelease(ctx, dut, rpcHint, lsbrelease.Version)
 }
 
-// ImageBuilderPath gets the DUT image builder path from the parsed /etc/lsb-realse file.
-func ImageBuilderPath(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) (string, error) {
-	return EntryFromLSBRelease(ctx, dut, rpcHint, lsbrelease.BuilderPath)
-}
-
 // EntryFromLSBRelease is a wrapper for FillFromLSBRelease to get a single entry
 // from the /etc/lsb-realse file with a simpler call.
 func EntryFromLSBRelease(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, key string) (string, error) {
