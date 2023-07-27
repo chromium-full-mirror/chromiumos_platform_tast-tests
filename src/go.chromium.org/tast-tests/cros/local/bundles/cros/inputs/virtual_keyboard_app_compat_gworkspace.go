@@ -21,16 +21,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/touch"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
+	"go.chromium.org/tast-tests/cros/local/uidetection"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
-
-var uiDetectionOptions = util.UIDetectionOptions{
-	ApproxMatch: true,
-	UseRegex:    true,
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -96,7 +92,7 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 				Description: "user to glide typing to input word Bonjour",
 				Steps: uiauto.Combine("test",
 					vkbCtx.GlideTyping(strings.Split("bonjour", ""),
-						util.VerifyTextWithUIDetection(tconn, nil, "[Bb]onjour", uiDetectionOptions)),
+						util.VerifyTextWithUIDetection(tconn, nil, "[Bb]onjour", uidetection.RegexMode(true))),
 				),
 			},
 			{
@@ -107,7 +103,7 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 					vkbCtx.TapAccentKey("e", "é"),
 					vkbCtx.TapKeys(strings.Split("llo", "")),
 					vkbCtx.TapHideVitrualKeyboardButton(),
-					util.VerifyTextWithUIDetection(tconn, nil, "[Hh]éllo", uiDetectionOptions),
+					util.VerifyTextWithUIDetection(tconn, nil, "[Hh]éllo", uidetection.RegexMode(true)),
 				),
 			},
 		},
@@ -119,7 +115,7 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 					vkbCtx.TapKeyIgnoringCase("e"),
 					vkbCtx.TapKeys(strings.Split("nglish", "")),
 					vkbCtx.TapHideVitrualKeyboardButton(),
-					util.VerifyTextWithUIDetection(tconn, nil, "[Ee]nglish", uiDetectionOptions),
+					util.VerifyTextWithUIDetection(tconn, nil, "[Ee]nglish", uidetection.RegexMode(true)),
 				),
 			},
 		},

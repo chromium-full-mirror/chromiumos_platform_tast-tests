@@ -20,8 +20,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// PlayStore is a fixture for open the playstore.
-const PlayStore = "playstore"
+// Fixture for optin playstore.
+const (
+	PlayStore       = "playStore"
+	PlayStoreWithVK = "playStoreWithVK"
+)
 
 // arcFixtureImpl implements testing.FixtureImpl.
 type arcFixtureImpl struct {
@@ -32,6 +35,7 @@ type arcFixtureImpl struct {
 	uc         *useractions.UserContext
 	uidetector *uidetection.Context
 	recorder   *uiauto.ScreenRecorder
+	vkEnabled  bool // Whether virtual keyboard is force enabled
 }
 
 // ArcFixtData is the data returned by SetUp and passed to tests.
@@ -45,7 +49,7 @@ type ArcFixtData struct {
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: "playstore",
+		Name: PlayStore,
 		Desc: "Optin playstore",
 		Contacts: []string{
 			"xiuwen@google.com",
@@ -57,15 +61,33 @@ func init() {
 		PostTestTimeout: 2 * time.Minute,
 		Vars:            []string{"ui.gaiaPoolDefault"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: PlayStoreWithVK,
+		Desc: "Optin playstore with vk on",
+		Contacts: []string{
+			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
+		},
+		Impl:            &arcFixtureImpl{vkEnabled: true},
+		SetUpTimeout:    2 * time.Minute,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 2 * time.Minute,
+		Vars:            []string{"ui.gaiaPoolDefault"},
+	})
 }
 
 func (f *arcFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-		chrome.ARCSupported(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...),
-	)
+	var chromeOpts []chrome.Option
 
+	chromeOpts = append(chromeOpts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+	chromeOpts = append(chromeOpts, chrome.ARCSupported())
+	chromeOpts = append(chromeOpts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
+
+	if f.vkEnabled {
+		chromeOpts = append(chromeOpts, chrome.VKEnabled())
+	}
+
+	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -101,11 +123,11 @@ func (f *arcFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interf
 }
 
 func (f *arcFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	if err := optin.LaunchAndWaitForPlayStore(ctx, f.tconn, f.cr, time.Minute); err != nil {
+	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
+
+	if err := optin.LaunchAndWaitForPlayStore(ctx, f.tconn, f.cr, 2*time.Minute); err != nil {
 		s.Fatal("Failed to launch Play Store: ", err)
 	}
-
-	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
 }
 
 func (f *arcFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {

@@ -51,9 +51,9 @@ func init() {
 func PhysicalKeyboardAppCompatArc(ctx context.Context, s *testing.State) {
 	uc := s.FixtValue().(fixture.ArcFixtData).UserContext
 	kb := s.FixtValue().(fixture.ArcFixtData).Keyboard
-	ui := s.FixtValue().(fixture.ArcFixtData).UIDetector
+	ud := s.FixtValue().(fixture.ArcFixtData).UIDetector
 
-	if err := ui.LeftClick(uidetection.Word("Search"))(ctx); err != nil {
+	if err := ud.LeftClick(uidetection.Word("Search"))(ctx); err != nil {
 		s.Fatal("Failed to click on launched window: ", err)
 	}
 
@@ -68,7 +68,7 @@ func PhysicalKeyboardAppCompatArc(ctx context.Context, s *testing.State) {
 		validateAction := uiauto.Combine("validate pk typing in playstore",
 			util.ClearTextFieldViaClickingBackspace(kb, data.LongestInputLength),
 			kb.TypeSequenceAction(subtest.LocationKeySeq),
-			ui.WaitUntilExists(uidetection.TextBlock(strings.Split(subtest.ExpectedText, " "))),
+			ud.WaitUntilExists(uidetection.TextBlock(strings.Split(subtest.ExpectedText, " "))),
 		)
 
 		s.Run(ctx, subtest.Description, func(ctx context.Context, s *testing.State) {

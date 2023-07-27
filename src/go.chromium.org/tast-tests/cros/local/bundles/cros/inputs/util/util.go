@@ -58,12 +58,6 @@ type AppCompatTestCase struct {
 	Steps       uiauto.Action
 }
 
-// UIDetectionOptions is a data structure to define options for UIDetection.
-type UIDetectionOptions struct {
-	ApproxMatch bool
-	UseRegex    bool
-}
-
 // WaitForFieldTextToBe returns an action checking whether the input field value equals given text.
 // The text is case sensitive.
 func WaitForFieldTextToBe(tconn *chrome.TestConn, finder *nodewith.Finder, expectedText string) uiauto.Action {
@@ -316,9 +310,9 @@ func IMESearchFlags(imes []ime.InputMethod) []*testing.StringPair {
 }
 
 // VerifyTextWithUIDetection returns an action checking the given text is shown on screen using ACUITI.
-func VerifyTextWithUIDetection(tconn *chrome.TestConn, finder *nodewith.Finder, expectedText string, opts UIDetectionOptions) uiauto.Action {
+func VerifyTextWithUIDetection(tconn *chrome.TestConn, finder *nodewith.Finder, expectedText string, opts ...uidetection.TextParam) uiauto.Action {
 	ud := uidetection.NewDefault(tconn).WithTimeout(time.Minute).WithScreenshotStrategy(uidetection.ImmediateScreenshot).WithScreenshotResizing()
-	text := uidetection.Word(expectedText, uidetection.DisableApproxMatch(opts.ApproxMatch), uidetection.RegexMode(opts.UseRegex))
+	text := uidetection.Word(expectedText, opts...)
 	if finder != nil {
 		return ud.WaitUntilExists(text.WithinA11yNode(finder))
 	}

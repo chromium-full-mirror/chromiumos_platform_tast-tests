@@ -102,10 +102,7 @@ func PhysicalKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) 
 					subtest.Description,
 					uiauto.Combine(subtest.Description,
 						kb.TypeSequenceAction(subtest.LocationKeySeq),
-						util.VerifyTextWithUIDetection(tconn, nil, subtest.ExpectedText, util.UIDetectionOptions{
-							ApproxMatch: true,
-							UseRegex:    false,
-						}),
+						util.VerifyTextWithUIDetection(tconn, nil, subtest.ExpectedText),
 					),
 					uc, &useractions.UserActionCfg{
 						Attributes: map[string]string{

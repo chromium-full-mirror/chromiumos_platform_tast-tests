@@ -69,8 +69,8 @@ func init() {
 		Name: GoogleDocsWithVK,
 		Desc: "Open google docs for testing with VK enabled",
 		Contacts: []string{
-			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            &workSpaceFixtureImpl{appName: googleDocs},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
@@ -82,8 +82,8 @@ func init() {
 		Name: GoogleDocsNonVK,
 		Desc: "Open google docs for testing in any mode with VK disabled",
 		Contacts: []string{
-			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            &workSpaceFixtureImpl{appName: googleDocs},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
@@ -95,8 +95,8 @@ func init() {
 		Name: GoogleSlidesWithVK,
 		Desc: "Open google slides for testing in any mode with VK enabled",
 		Contacts: []string{
-			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            &workSpaceFixtureImpl{appName: googleSlides},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
@@ -108,8 +108,8 @@ func init() {
 		Name: GoogleSlidesNonVK,
 		Desc: "Open google slides for testing in any mode with VK disabled",
 		Contacts: []string{
-			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            &workSpaceFixtureImpl{appName: googleSlides},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
@@ -121,8 +121,8 @@ func init() {
 		Name: GoogleSheetsWithVK,
 		Desc: "Open google sheet for testing in any mode with VK enabled",
 		Contacts: []string{
-			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            &workSpaceFixtureImpl{appName: googleSheets},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
@@ -134,8 +134,8 @@ func init() {
 		Name: GoogleSheetsNonVK,
 		Desc: "Open google sheet for testing in any mode with VK disabled",
 		Contacts: []string{
-			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            &workSpaceFixtureImpl{appName: googleSheets},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
@@ -149,8 +149,8 @@ func init() {
 		Name: LacrosGoogleDocsWithVK,
 		Desc: "Lacros variant: Open google docs for testing in any mode with VK enabled",
 		Contacts: []string{
-			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            &workSpaceFixtureImpl{appName: googleDocs},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
@@ -162,8 +162,8 @@ func init() {
 		Name: LacrosGoogleDocsNonVK,
 		Desc: "Lacros variant: Open google docs for testing in Clamshell mode with VK disabled",
 		Contacts: []string{
-			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            &workSpaceFixtureImpl{appName: googleDocs},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
@@ -175,8 +175,8 @@ func init() {
 		Name: LacrosGoogleSlidesWithVK,
 		Desc: "Lacros variant: Open google slides for testing in any mode with VK enabled",
 		Contacts: []string{
-			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            &workSpaceFixtureImpl{appName: googleSlides},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
@@ -188,8 +188,8 @@ func init() {
 		Name: LacrosGoogleSlidesNonVK,
 		Desc: "Lacros variant: Open google slides for testing in Clamshell mode with VK disabled",
 		Contacts: []string{
-			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            &workSpaceFixtureImpl{appName: googleSlides},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
@@ -201,8 +201,8 @@ func init() {
 		Name: LacrosGoogleSheetsWithVK,
 		Desc: "Lacros variant: Open google sheet for testing in any mode with VK enabled",
 		Contacts: []string{
-			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            &workSpaceFixtureImpl{appName: googleSheets},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
@@ -214,8 +214,8 @@ func init() {
 		Name: LacrosGoogleSheetsNonVK,
 		Desc: "Lacros variant: Open google sheet for testing in Clamshell mode with VK disabled",
 		Contacts: []string{
-			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            &workSpaceFixtureImpl{appName: googleSheets},
 		SetUpTimeout:    workspaceSetUpTestTimeout,

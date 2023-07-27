@@ -64,8 +64,8 @@ func init() {
 		Name: CitrixNotepad,
 		Desc: "Open notepad app in cirtirx",
 		Contacts: []string{
-			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            &citrixNotepadFixtureImpl{},
 		SetUpTimeout:    citrixNotepadSetUpTestTimeout,
