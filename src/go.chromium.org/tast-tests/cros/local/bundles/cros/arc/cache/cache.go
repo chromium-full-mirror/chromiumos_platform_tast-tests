@@ -355,7 +355,9 @@ func CopyDexOptCache(ctx context.Context, a *arc.ARC, outputDir string) error {
 	}
 
 	testing.ContextLog(ctx, "Waiting for CPU idle")
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
+	idleConfig := cpu.DefaultIdleConfig()
+	idleConfig.Timeout = 5 * time.Minute
+	if err := cpu.WaitUntilIdleWithConfig(ctx, idleConfig); err != nil {
 		return errors.Wrap(err, "failed to wait CPU is idle")
 	}
 

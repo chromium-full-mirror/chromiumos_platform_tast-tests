@@ -152,7 +152,7 @@ func init() {
 		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome", "chrome_internal"},
 		ServiceDeps: []string{"tast.cros.arc.UreadaheadPackService",
 			"tast.cros.arc.GmsCoreCacheService", "tast.cros.arc.TTSCacheService", "tast.cros.arc.DexOptCacheService"},
-		Timeout: 40 * time.Minute,
+		Timeout: 50 * time.Minute,
 		// Note that arc.DataCollector is not a simple test. It collects data used to
 		// produce test and release images. Not collecting this data leads to performance
 		// regression and failure of other tests. Please consider fixing the issue rather
