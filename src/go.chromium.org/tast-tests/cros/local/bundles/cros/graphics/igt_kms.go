@@ -273,7 +273,7 @@ func init() {
 				},
 				Timeout:           5 * time.Minute,
 				ExtraAttr:         []string{"graphics_nightly"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("zork", "grunt")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(append(graphics.IgtGpuMtk, "zork", "grunt")...)),
 			}, {
 				Name: "kms_pipe_crc_basic",
 				Val: graphics.IgtTest{
