@@ -32,9 +32,10 @@ func init() {
 
 func ESimNetworkName(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx)
-	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
 	networkName, err := helper.GetCurrentNetworkName(ctx)

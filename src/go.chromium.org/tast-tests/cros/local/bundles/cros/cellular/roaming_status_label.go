@@ -71,9 +71,14 @@ func RoamingStatusLabel(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set roaming property: ", err)
 	}
 
-	networkName, err := cellular.GetCellularNetwork(ctx)
-	if err != nil {
-		s.Fatal("Failed to get a cellular network: ", err)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
+	}
+
+	networkName, err := helper.GetCurrentNetworkName(ctx)
+	if err != nil || networkName == "" {
+		s.Fatal("Failed to fetch network name by iccid, err: ", err)
 	}
 
 	app, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)

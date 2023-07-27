@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -35,7 +34,7 @@ func init() {
 		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_prod_esim"},
-		Fixture:      fixture.FakeDMSEnrolled,
+		Fixture:      "cellularWithFakeDMSEnrolled",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
 		},
@@ -85,9 +84,14 @@ func AllowRoamingPolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ServeAndRefresh ONC policy: ", err)
 	}
 
-	networkName, err := cellular.GetCellularNetwork(ctx)
-	if err != nil {
-		s.Fatal("Failed to get a cellular network: ", err)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
+	}
+
+	networkName, err := helper.GetCurrentNetworkName(ctx)
+	if err != nil || networkName == "" {
+		s.Fatal("Failed to fetch network name by iccid, err: ", err)
 	}
 
 	app, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)

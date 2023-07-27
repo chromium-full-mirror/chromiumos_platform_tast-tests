@@ -28,9 +28,9 @@ func init() {
 
 // CheckSignalQuality needs to be run to verify that the DUT has sufficient signal coverage to execute other network related test cases
 func CheckSignalQuality(ctx context.Context, s *testing.State) {
-	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		s.Fatal("Failed to create connected cellular.Helper (precondition): ", err)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
 	if err := helper.ConnectAndCheckSignalQuality(ctx); err != nil {

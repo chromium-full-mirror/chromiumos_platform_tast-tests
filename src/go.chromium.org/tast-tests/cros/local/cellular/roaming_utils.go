@@ -48,19 +48,3 @@ func SetRoamingPolicy(ctx context.Context, allowRoaming, autoConnect bool) error
 
 	return nil
 }
-
-// GetCellularNetwork returns the nick name of the current active network
-func GetCellularNetwork(ctx context.Context) (string, error) {
-	var networkName string
-	helper, err := NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		return networkName, errors.Wrap(err, "failed to create cellular.Helper")
-	}
-
-	networkName, err = helper.GetCurrentNetworkName(ctx)
-	if networkName == "" {
-		return networkName, errors.Wrap(err, "failed to fetch network name by iccid")
-	}
-
-	return networkName, nil
-}

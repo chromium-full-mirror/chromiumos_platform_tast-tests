@@ -96,9 +96,9 @@ func init() {
 }
 
 func Smoke(ctx context.Context, s *testing.State) {
-	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		s.Fatal("Failed to create connected cellular.Helper (precondition): ", err)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
 	verifyNetworkConnectivity := func(ctx context.Context) error {

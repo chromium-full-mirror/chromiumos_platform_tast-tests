@@ -47,9 +47,9 @@ func CellularConnectDisconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}
 
-	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
 	networkName, err := helper.GetCurrentNetworkName(ctx)

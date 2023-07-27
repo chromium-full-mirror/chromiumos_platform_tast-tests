@@ -54,9 +54,9 @@ func CellularSuspendResumeConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
 	}
 
-	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
 	// Set up the device to autoconnect.
@@ -81,7 +81,7 @@ func CellularSuspendResumeConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	profileName, err := getConnectedProfileNickname(ctx)
+	profileName, err := getConnectedProfileNickname(ctx, helper)
 	if err != nil {
 		s.Fatal("Could not get connected profile Nickname: ", err)
 	}
@@ -164,7 +164,7 @@ func CellularSuspendResumeConnect(ctx context.Context, s *testing.State) {
 	}
 }
 
-func getConnectedProfileNickname(ctx context.Context) (string, error) {
+func getConnectedProfileNickname(ctx context.Context, helper *cellular.Helper) (string, error) {
 	euicc, _, err := hermes.GetEUICC(ctx, false)
 	if err != nil {
 		return "", errors.Wrap(err, "could not get Hermes euicc")
@@ -188,9 +188,8 @@ func getConnectedProfileNickname(ctx context.Context) (string, error) {
 		return "", errors.Wrap(err, "could not find MM dbus object with a valid sim")
 	}
 
-	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to create cellular.Helper")
+	if _, err := helper.Connect(ctx); err != nil {
+		return "", errors.Wrap(err, "failed to connect to cellular service")
 	}
 
 	connectedIccid, err := helper.GetCurrentICCID(ctx)

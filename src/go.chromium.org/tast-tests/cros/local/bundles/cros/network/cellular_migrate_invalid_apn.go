@@ -39,9 +39,9 @@ func CellularMigrateInvalidApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set roaming policy: ", err)
 	}
 
-	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
 	serviceLastGoodAPN, err := helper.GetCellularLastGoodAPN(ctx)

@@ -101,9 +101,8 @@ func ShillEntitlementCheck(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reset shill: ", errs)
 	}
 
-	helper, err = cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 	imsi, err := helper.GetIMSIFromShill(ctx)
 	if err != nil {
@@ -136,9 +135,8 @@ func ShillEntitlementCheck(ctx context.Context, s *testing.State) {
 	testing.Sleep(ctx, 5*time.Second)
 
 	// TODO(b/267804414): SetTetheringAllowed will trigger a Reattach, so we need to reconnect.
-	helper, err = cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
 	status, err := helper.Manager.CheckTetheringReadiness(ctx)

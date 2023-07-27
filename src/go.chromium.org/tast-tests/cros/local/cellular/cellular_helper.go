@@ -167,22 +167,6 @@ func NewHelperWithLabels(ctx context.Context, labels []string) (*Helper, error) 
 	return helper, nil
 }
 
-// NewHelperWithConnectedCellular creates a Helper object with label info and ensures that Cellular is connected.
-func NewHelperWithConnectedCellular(ctx context.Context) (*Helper, error) {
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		return nil, errors.Wrap(err, "could not find MM dbus object with a valid sim")
-	}
-	h, err := NewHelper(ctx)
-	if err != nil {
-		return nil, err
-	}
-	_, err = h.Connect(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to connect to cellular service")
-	}
-	return h, nil
-}
-
 // CheckIfVilbozVerizonAndFixAttachAPN checks if the device is a vilboz with a verizon SIM card,
 // and tries to fix the attach APN if that's the case. This is needed because there are 2 bugs
 // in the modem FW that prevent clearing the attach APN(b/253685780).

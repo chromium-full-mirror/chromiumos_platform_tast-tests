@@ -28,10 +28,11 @@ func init() {
 }
 
 func ArcNetworkConnectivity(ctx context.Context, s *testing.State) {
-	a := s.FixtValue().(*cellular.FixtData).ARC
-	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		s.Fatal("Failed to create connected cellular.Helper (precondition): ", err)
+	arc := s.FixtValue().(*cellular.FixtData).ARC
+
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
 	ipv4, ipv6, err := helper.GetNetworkProvisionedCellularIPTypes(ctx)
@@ -41,7 +42,7 @@ func ArcNetworkConnectivity(ctx context.Context, s *testing.State) {
 	s.Log("ipv4: ", ipv4, " ipv6: ", ipv6)
 
 	verifyIPConnectivity := func(ctx context.Context) error {
-		if err := cellular.VerifyArcIPConnectivity(ctx, ipv4, ipv6, a); err != nil {
+		if err := cellular.VerifyArcIPConnectivity(ctx, ipv4, ipv6, arc); err != nil {
 			return errors.Wrap(err, "failed connectivity test")
 		}
 		return nil

@@ -90,9 +90,9 @@ func CellularPolicyConnect(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Minute)
 	defer cancel()
 
-	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
 	// Set the device to autoconnect to false.

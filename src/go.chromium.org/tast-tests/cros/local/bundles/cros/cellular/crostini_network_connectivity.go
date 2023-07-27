@@ -50,9 +50,12 @@ func CrostiniNetworkConnectivity(ctx context.Context, s *testing.State) {
 
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 
-	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
+	helper, err := cellular.NewHelper(ctx)
 	if err != nil {
-		s.Fatal("Failed to create connected cellular.Helper (precondition): ", err)
+		s.Fatal("Failed to create cellular.Helper: ", err)
+	}
+	if _, err = helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
 	ipv4, ipv6, err := helper.GetNetworkProvisionedCellularIPTypes(ctx)

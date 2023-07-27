@@ -104,8 +104,9 @@ func ModemfwdRecovery(ctx context.Context, s *testing.State) {
 	devPort := "/dev/" + primaryPort
 
 	// Ensure initial connectivity
-	if _, err = cellular.NewHelperWithConnectedCellular(ctx); err != nil {
-		s.Fatal("Failed to connect to a cellular network (precondition): ", err)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
 	for i := 0; i < params.iterations; i++ {
@@ -137,8 +138,8 @@ func ModemfwdRecovery(ctx context.Context, s *testing.State) {
 		}
 
 		// Ensure connectivity after recovery
-		if _, err = cellular.NewHelperWithConnectedCellular(ctx); err != nil {
-			s.Fatal("Failed to connect to a cellular network: ", err)
+		if _, err := helper.Connect(ctx); err != nil {
+			s.Fatal("Failed to connect to cellular service: ", err)
 		}
 
 		perfValues.Append(perf.Metric{

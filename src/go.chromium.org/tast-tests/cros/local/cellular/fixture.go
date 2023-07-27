@@ -133,7 +133,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{useRoaming: false, checkSIM: true},
+		Impl:            &cellularFixture{checkSIM: true},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularPower",

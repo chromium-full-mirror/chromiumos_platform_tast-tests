@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/cellular"
-	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -92,13 +91,7 @@ func init() {
 }
 
 func IsConnected(ctx context.Context, s *testing.State) {
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 	if _, err := helper.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to cellular service: ", err)
 	}
