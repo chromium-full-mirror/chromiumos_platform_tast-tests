@@ -21,7 +21,6 @@ func init() {
 			"chromeos-hibernate@google.com", // Test owners
 		},
 		BugComponent: "b:167191",
-		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 
