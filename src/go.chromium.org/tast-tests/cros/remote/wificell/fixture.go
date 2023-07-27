@@ -44,173 +44,69 @@ const (
 )
 
 func init() {
-	testing.AddFixture(&testing.Fixture{
-		Name: "wificellFixt",
-		Desc: "Default wificell setup with router and pcap object. Note that pcap and router can point to the same Access Point. Also, unlike wificellFixtWithCapture, the fixture won't spawn Capturer. Users may spawn Capturer with customize configuration when needed",
-		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-		},
-		Impl:            newTastFixture(TFFeaturesNone),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
-		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "wificellFixtWithCapture",
-		Desc: "Wificell setup with Capturer on pcap for each configured AP",
-		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-		},
-		Impl:            newTastFixture(TFFeaturesCapture),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
-		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "wificellFixtRouterAsPcap",
-		Desc: "Wificell setup with default capturer on router instead of pcap",
-		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-		},
-		Impl:            newTastFixture(TFFeaturesCapture | TFFeaturesRouterAsCapture),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
-		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "wificellFixtRouters",
-		Desc: "Wificell setup with multiple routers",
-		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-		},
-		Impl:            newTastFixture(TFFeaturesRouters),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
-		Vars:            []string{"routers", "pcap", "routertype", "pcaptype"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "wificellFixtRoaming",
-		Desc: "WiFi romaing setup with multiple routers and attenuators",
-		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-		},
-		Impl:            newTastFixture(TFFeaturesRouters | TFFeaturesAttenuator),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
-		Vars:            []string{"routers", "pcap", "routertype", "pcaptype", "attenuator"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "wificellFixtEnrolled",
-		Desc: "Wificell setup with router and pcap object and chrome enrolled",
-		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-		},
-		Impl:            newTastFixture(TFFeaturesEnroll),
-		SetUpTimeout:    10 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: 8 * time.Minute,
-		ServiceDeps: []string{
-			ShillServiceName,
-			BluetoothServiceName,
-			"tast.cros.hwsec.OwnershipService",
-			"tast.cros.policy.PolicyService",
-		},
-		Vars: []string{"router", "pcap", "routertype", "pcaptype"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "wificellFixtCompanionDut",
-		Desc: "Wificell setup with companion Chromebook DUT",
-		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-		},
-		Impl:            newTastFixture(TFFeaturesCompanionDUT),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
-		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "wificellFixtCompanionDutWithCapture",
-		Desc: "Wificell setup with companion Chromebook DUT and packet capture from the pcap device",
-		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-		},
-		Impl:            newTastFixture(TFFeaturesCompanionDUT | TFFeaturesCapture),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
-		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "wificellFixtWithPower",
-		Desc: "Default wificell setup with power diagnostics",
-		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-		},
-		Impl:            newTastFixture(TFFeaturesPower),
-		SetUpTimeout:    powerSetUpTimeout,
-		ResetTimeout:    resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{ShillServiceName, BluetoothServiceName, PowerServiceName},
-		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "wificellFixtWithCellular",
-		Desc: "Wificell setup on a cellular capable device",
-		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-		},
-		Impl:            newTastFixture(TFFeaturesCellular),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: tearDownTimeout,
-		ServiceDeps: []string{
-			ShillServiceName,
-			BluetoothServiceName,
-			CellularServiceName,
-		},
-		Vars: []string{"router", "pcap", "routertype", "pcaptype"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "wificellFixtCompanionDutWithCellular",
-		Desc: "Wificell setup on a cellular capable device with companion chromebook DUT",
-		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-		},
-		Impl:            newTastFixture(TFFeaturesCompanionDUT | TFFeaturesCellular),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: tearDownTimeout,
-		ServiceDeps: []string{
-			ShillServiceName,
-			BluetoothServiceName,
-			CellularServiceName,
-		},
-		Vars: []string{"router", "pcap", "routertype", "pcaptype"},
-	})
+	// Most of the fixture variants are based on some default values. Let's generate common data in a loop,
+	// then adjust non-standard values and register fixtures in another loop.
+
+	// ID and Description is the most individual part of the fixture, prepare their map first.
+	params := make(map[TFFeatures]string)
+	params[TFFeaturesNone] = "Default wificell setup with router and pcap object. Note that pcap and router can point to the same Access Point. Also, unlike wificellFixtWithCapture, the fixture won't spawn Capturer. Users may spawn Capturer with customized configuration when needed"
+	params[TFFeaturesCapture] = "Wificell setup with Capturer on pcap for each configured AP"
+	params[TFFeaturesCapture|TFFeaturesRouterAsCapture] = "Wificell setup with default capturer on router instead of pcap"
+	params[TFFeaturesRouters] = "Wificell setup with multiple routers"
+	params[TFFeaturesRouters|TFFeaturesAttenuator] = "WiFi romaing setup with multiple routers and attenuators"
+	params[TFFeaturesEnroll] = "Wificell setup with router and pcap object and chrome enrolled"
+	params[TFFeaturesCompanionDUT] = "Wificell setup with companion Chromebook DUT"
+	params[TFFeaturesCompanionDUT|TFFeaturesCapture] = "Wificell setup with companion Chromebook DUT and packet capture from the pcap device"
+	params[TFFeaturesPower] = "Default wificell setup with power diagnostics"
+	params[TFFeaturesCellular] = "Wificell setup on a cellular capable device"
+	params[TFFeaturesCompanionDUT|TFFeaturesCellular] = "Wificell setup on a cellular capable device with companion chromebook DUT"
+
+	fixtures := make(map[TFFeatures]*testing.Fixture)
+	for f, desc := range params {
+		fixtures[f] = &testing.Fixture{
+			Name: f.String(),
+			Desc: desc,
+			// Default fixture configuration.
+			Contacts: []string{
+				"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			},
+			Impl:            newTastFixture(f),
+			SetUpTimeout:    setUpTimeout,
+			ResetTimeout:    resetTimeout,
+			PostTestTimeout: postTestTimeout,
+			TearDownTimeout: tearDownTimeout,
+			ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
+			Vars:            []string{"router", "routertype"},
+		}
+
+		// Typical fixture extensions.
+		if f&TFFeaturesCapture != 0 {
+			fixtures[f].Vars = append(fixtures[f].Vars, "pcap", "pcaptype")
+		}
+		if f&TFFeaturesAttenuator != 0 {
+			fixtures[f].Vars = append(fixtures[f].Vars, "attenuator")
+		}
+		if f&TFFeaturesPower != 0 {
+			fixtures[f].ServiceDeps = append(fixtures[f].ServiceDeps, PowerServiceName)
+		}
+		if f&TFFeaturesCellular != 0 {
+			fixtures[f].ServiceDeps = append(fixtures[f].ServiceDeps, CellularServiceName)
+		}
+	}
+
+	// Non-default values.
+	fixtures[TFFeaturesEnroll].ServiceDeps = append(
+		fixtures[TFFeaturesEnroll].ServiceDeps,
+		"tast.cros.hwsec.OwnershipService",
+		"tast.cros.policy.PolicyService",
+	)
+	fixtures[TFFeaturesEnroll].SetUpTimeout = 10 * time.Minute
+	fixtures[TFFeaturesEnroll].TearDownTimeout = 8 * time.Minute
+
+	// Register prepared fixtures.
+	for _, f := range fixtures {
+		testing.AddFixture(f)
+	}
 }
 
 // TFFeatures is an enum type for extra features needed for Tast fixture.
@@ -241,32 +137,40 @@ const (
 // String returns name component corresponding to enum value(s).
 func (enum TFFeatures) String() string {
 	if enum == 0 {
-		return "default"
+		return "wificellFixt"
 	}
-	var ret []string
+	ret := []string{"wificellFixt"}
 	if enum&TFFeaturesCapture != 0 {
-		ret = append(ret, "capture")
+		ret = append(ret, "WithCapture")
 		// Punch out the bit to check for weird values later.
 		enum ^= TFFeaturesCapture
 	}
 	if enum&TFFeaturesRouters != 0 {
-		ret = append(ret, "routers")
+		ret = append(ret, "Routers")
 		enum ^= TFFeaturesRouters
 	}
 	if enum&TFFeaturesAttenuator != 0 {
-		ret = append(ret, "attenuator")
+		ret = append(ret, "Attenuator")
 		enum ^= TFFeaturesAttenuator
 	}
 	if enum&TFFeaturesRouterAsCapture != 0 {
-		ret = append(ret, "routerAsCapture")
+		ret = append(ret, "RouterAsPcap")
 		enum ^= TFFeaturesRouterAsCapture
 	}
+	if enum&TFFeaturesEnroll != 0 {
+		ret = append(ret, "Enrolled")
+		enum ^= TFFeaturesEnroll
+	}
+	if enum&TFFeaturesCompanionDUT != 0 {
+		ret = append(ret, "CompanionDut")
+		enum ^= TFFeaturesCompanionDUT
+	}
 	if enum&TFFeaturesPower != 0 {
-		ret = append(ret, "power")
+		ret = append(ret, "WithPower")
 		enum ^= TFFeaturesPower
 	}
 	if enum&TFFeaturesCellular != 0 {
-		ret = append(ret, "cellular")
+		ret = append(ret, "WithCellular")
 		enum ^= TFFeaturesCellular
 	}
 	// Catch weird cases. Like when somebody extends enum, but forgets to extend this.
@@ -274,7 +178,12 @@ func (enum TFFeatures) String() string {
 		panic(fmt.Sprintf("Invalid TFFeatures enum, residual bits :%d", enum))
 	}
 
-	return strings.Join(ret, "&")
+	return strings.Join(ret, "")
+}
+
+// FixtureID is a convenience function to be used in the test registration.
+func FixtureID(enum TFFeatures) string {
+	return enum.String()
 }
 
 // tastFixtureImpl is the Tast implementation of the Wificell fixture.

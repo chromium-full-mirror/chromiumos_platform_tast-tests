@@ -32,7 +32,7 @@ func init() {
 		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.network.NetDiagService"},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:wificell_roam", "wificell_roam_perf"},
-		Fixture:      "wificellFixtRoaming",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters | wificell.TFFeaturesAttenuator),
 		Timeout:      time.Minute * 2,
 	})
 }

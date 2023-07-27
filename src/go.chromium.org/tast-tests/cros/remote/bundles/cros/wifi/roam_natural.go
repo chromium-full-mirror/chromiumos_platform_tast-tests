@@ -86,7 +86,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_roam", "wificell_roam_perf"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      "wificellFixtRoaming",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters | wificell.TFFeaturesAttenuator),
 		Timeout:      time.Minute * 60,
 		Params: []testing.Param{
 			{
@@ -135,6 +135,7 @@ func simulateDUTMove(ctx context.Context, s *testing.State, offsetRange rangeDef
 		setAttenuation(2, atten1, freq1)
 		setAttenuation(3, atten1, freq1)
 
+		// GoBigSleepLint this just dictates rhythm for power changes.
 		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 			s.Fatal("Failed to sleep: ", err)
 		}
