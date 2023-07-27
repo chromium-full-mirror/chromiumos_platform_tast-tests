@@ -399,7 +399,9 @@ func waitForPath(ctx context.Context, a *arc.ARC, path string, c pathCondition) 
 
 		_, err = os.Stat(path)
 		if err != nil && !os.IsNotExist(err) {
-			return testing.PollBreak(errors.Wrapf(err, "failed to stat %s", path))
+			// TODO(b/293511835): Stop the poll instead of keep trying, once the transient error
+			// is fixed.
+			return errors.Wrapf(err, "failed to stat %s", path)
 		}
 		exists := err == nil
 		if c == pathMustExist {
