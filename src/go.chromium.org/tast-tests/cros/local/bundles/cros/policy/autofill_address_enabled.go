@@ -14,10 +14,10 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -25,14 +25,17 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
-	autofillQueryAnnotationHash = "88863520"
+	autofillQueryAnnotationHash  = "88863520"  // autofill_query
+	autofillUploadAnnotationHash = "104798869" // autofill_upload
 )
 
 func init() {
@@ -47,12 +50,12 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:hw_agnostic"},
 		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Fixture: fixture.FakeDMS,
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
+			Fixture:           fixture.PersistentLacros, // FakeDMS with lacros policy.
 			Val:               browser.TypeLacros,
 		}},
 		Data: []string{"autofill_address_enabled.html"},
@@ -63,7 +66,6 @@ func init() {
 }
 
 func AutofillAddressEnabled(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	// Reserve 10 seconds for cleanup.
@@ -74,9 +76,16 @@ func AutofillAddressEnabled(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
+	opts := []chrome.Option{
+		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
+		chrome.DMSPolicy(fdms.URL)}
+	// Add lacros opts for lacros runs.
+	if s.Param().(browser.Type) == browser.TypeLacros {
+		lacrosOpts, err := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
+		if err != nil {
+			s.Fatal("Failed to compute lacros chrome options: ", err)
+		}
+		opts = lacrosOpts
 	}
 
 	addressValues := []struct {
@@ -149,6 +158,20 @@ func AutofillAddressEnabled(ctx context.Context, s *testing.State) {
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+			// Login to chrome. We create a new Chrome session for each policy value
+			// in order to reliably trigger autofill upload/upvote. Otherwise, upload
+			// may not occur every time due to caching.
+			cr, err := chrome.New(ctx, opts...)
+			if err != nil {
+				s.Fatal("Chrome login failed: ", err)
+			}
+			defer cr.Close(ctx)
+
+			tconn, err := cr.TestAPIConn(ctx)
+			if err != nil {
+				s.Fatal("Failed to create Test API connection: ", err)
+			}
+
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 				s.Fatal("Failed to clean up: ", err)
@@ -169,9 +192,11 @@ func AutofillAddressEnabled(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			// Open the net-export page and start logging.
-			if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
-				s.Fatal("Failed to start logging: ", err)
+			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			if err != nil {
+				s.Fatal("Failed to start net export: ", err)
 			}
+			defer netExport.Cleanup(cleanupCtx)
 
 			if err := policyutil.SettingsPage(ctx, cr, br, "addresses").
 				SelectNode(ctx, nodewith.
@@ -246,14 +271,25 @@ func AutofillAddressEnabled(ctx context.Context, s *testing.State) {
 						s.Fatal("Address was not set properly. Actual value " + valueFromHTML + " doesnt match with expected " + address.fieldValue)
 					}
 				}
-			}
-			foundAnnotation := false
-			if foundAnnotation, err = annotations.StopLoggingCheckLogs(ctx, cr, br, autofillQueryAnnotationHash); err != nil {
-				s.Fatal("Failed to stop logging and check logs: ", err)
+
+				// Submit the form to trigger autofill upload/upvote.
+				submitButton := nodewith.Name("OK").Role(role.Button)
+				if err := ui.DoDefault(submitButton)(ctx); err != nil {
+					s.Fatal("Failed to submit form: ", err)
+				}
 			}
 
-			if foundAnnotation != param.shouldFindAnnotation {
-				s.Fatalf("Unexpected autofill annotation result: got %t expected %t", foundAnnotation, param.shouldFindAnnotation)
+			hashCodes := []string{autofillQueryAnnotationHash, autofillUploadAnnotationHash}
+			foundAnnotations, err := netExport.FindMultipleAnnotationsUntil(ctx, hashCodes,
+				&testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second})
+			if err != nil {
+				s.Fatal("Failed to poll hashcode in log: ", err)
+			}
+
+			for _, annotationID := range hashCodes {
+				if _, exists := foundAnnotations[annotationID]; exists != param.shouldFindAnnotation {
+					s.Errorf("Unexpected status of annotation = %s, got %t, want %t", annotationID, exists, param.shouldFindAnnotation)
+				}
 			}
 		})
 	}

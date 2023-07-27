@@ -14,7 +14,7 @@ There are two key parts to implementing this in a tast test:
 *Option 1: Browser (recommended)*
 ```go
 // Start network logging using chrome://net-export and os://net-export.
-netExport := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
 if err != nil {
   s.Fatal("Failed to start net export: ", err)
 }
@@ -98,8 +98,8 @@ if err != nil {
 }
 
 for _, annotationID := range hashCodes {
-  if _, exists := foundAnnotations[annotationID]; exists {
-    s.Error("Found unexpected annotation = ", foundAnnotations)
+  if _, exists := foundAnnotations[annotationID]; exists != tc.ShouldFindAnnotation {
+    s.Errorf("Unexpected status of annotation = %s, got %t, want %t", annotationID, exists, tc.ShouldFindAnnotation)
   }
 }
 ```
