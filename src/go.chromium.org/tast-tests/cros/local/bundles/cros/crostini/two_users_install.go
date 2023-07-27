@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	cui "go.chromium.org/tast-tests/cros/local/crostini/ui"
@@ -164,6 +165,12 @@ func installAndShutDown(ctx context.Context, tconn *chrome.TestConn, cr *chrome.
 	// Install Crostini.
 	if _, err := cui.InstallCrostini(ctx, tconn, cr, iOptions); err != nil {
 		return errors.Wrapf(err, "failed to install Crostini for user %s", iOptions.UserName)
+	}
+
+	// TerminalApp always automatically launches after the installation.
+	// Close it before proceeding to ensure a clean env.
+	if err := apps.Close(ctx, tconn, apps.Terminal.ID); err != nil {
+		return errors.Wrap(err, "failed to close Terminal app after installing Linux")
 	}
 
 	terminalApp, err := terminalapp.Launch(ctx, tconn)
