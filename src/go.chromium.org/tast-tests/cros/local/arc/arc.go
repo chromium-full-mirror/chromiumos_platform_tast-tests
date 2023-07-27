@@ -140,6 +140,13 @@ type ARC struct {
 	logcatCmd    *testexec.Cmd // process saving Android logs
 	logcatWriter dynamicWriter // writes output from logcatCmd to logcatFile
 	logcatFile   *os.File      // file currently being written to
+
+	chromeUsername string // username used to login Chrome, might be empty if not provided by a caller.
+
+	// A set of filepaths Already copied to any faillog.
+	// Android "/data" may be available as read-only. In order to avoid copying the same file multiple times,
+	// we keep record of copied files here.
+	savedANRFiles map[string]struct{}
 }
 
 // Close releases testing-related resources associated with ARC.
@@ -224,7 +231,7 @@ func New(ctx context.Context, outDir string) (*ARC, error) {
 	}
 	defer reader.Close()
 
-	return NewWithSyslogReader(ctx, outDir, reader)
+	return NewWithSyslogReader(ctx, outDir, reader, "")
 }
 
 // NewWithTimeout waits for Android to finish booting until timeout expires.
@@ -239,6 +246,21 @@ func New(ctx context.Context, outDir string) (*ARC, error) {
 //
 // The returned ARC instance must be closed when the test is finished.
 func NewWithTimeout(ctx context.Context, outDir string, timeout time.Duration) (*ARC, error) {
+	return NewWithTimeoutAndChrome(ctx, outDir, timeout, "")
+}
+
+// NewWithTimeoutAndChrome waits for Android to finish booting until timeout expires.
+//
+// ARC must be enabled in advance by passing chrome.ARCEnabled or chrome.ARCSupported with
+// real user gaia login to chrome.New, and the Chrome instance can be passed as the parameter.
+//
+// After this function returns successfully, you can assume BOOT_COMPLETED
+// intent has been broadcast from Android system, and ADB connection is ready.
+// Note that this does not necessarily mean all ARC mojo services are up; call
+// WaitIntentHelper() to wait for ArcIntentHelper to be ready, for example.
+//
+// The returned ARC instance must be closed when the test is finished.
+func NewWithTimeoutAndChrome(ctx context.Context, outDir string, timeout time.Duration, chromeUsername string) (*ARC, error) {
 	// Start a syslog reader so we can give more useful debug information
 	// waiting for boot. This is too late in the boot to
 	// catch crosvm startup crashes.
@@ -248,13 +270,13 @@ func NewWithTimeout(ctx context.Context, outDir string, timeout time.Duration) (
 	}
 	defer reader.Close()
 
-	return newWithSyslogReaderAndTimeout(ctx, outDir, reader, timeout)
+	return newWithSyslogReaderAndTimeout(ctx, outDir, reader, timeout, chromeUsername)
 }
 
 // newWithSyslogReaderAndTimeout waits for Android to finish booting until timeout expires.
 //
 // Give a syslog.Reader instantiated before chrome.New to allow diagnosing init failure.
-func newWithSyslogReaderAndTimeout(ctx context.Context, outDir string, reader *syslog.Reader, timeout time.Duration) (a *ARC, retErr error) {
+func newWithSyslogReaderAndTimeout(ctx context.Context, outDir string, reader *syslog.Reader, timeout time.Duration, chromeUsername string) (a *ARC, retErr error) {
 	defer func() {
 		if retErr == nil {
 			return
@@ -323,8 +345,11 @@ func newWithSyslogReaderAndTimeout(ctx context.Context, outDir string, reader *s
 	}
 
 	arc := &ARC{
-		outDir: outDir,
+		outDir:         outDir,
+		savedANRFiles:  make(map[string]struct{}),
+		chromeUsername: chromeUsername,
 	}
+
 	toClose := arc
 	defer func() {
 		if toClose != nil {
@@ -415,8 +440,8 @@ func newWithSyslogReaderAndTimeout(ctx context.Context, outDir string, reader *s
 // NewWithSyslogReader waits for Android to finish booting.
 //
 // Give a syslog.Reader instantiated before chrome.New to allow diagnosing init failure.
-func NewWithSyslogReader(ctx context.Context, outDir string, reader *syslog.Reader) (*ARC, error) {
-	return newWithSyslogReaderAndTimeout(ctx, outDir, reader, BootTimeout)
+func NewWithSyslogReader(ctx context.Context, outDir string, reader *syslog.Reader, chromeUsername string) (*ARC, error) {
+	return newWithSyslogReaderAndTimeout(ctx, outDir, reader, BootTimeout, chromeUsername)
 }
 
 // WaitIntentHelper waits for ArcIntentHelper to get ready.
@@ -812,6 +837,10 @@ func (a *ARC) SaveLogFiles(ctx context.Context) error {
 		retErr = errors.Join(retErr, errors.Wrap(err, "failed to save the messages-arcvm"))
 	}
 
+	if err := a.saveANRIfExists(ctx); err != nil {
+		retErr = errors.Join(retErr, errors.Wrap(err, "failed to save /data/anr"))
+	}
+
 	// Reset outDir to avoid saving the same files twice at ARC.Close().
 	a.outDir = ""
 	return retErr
@@ -847,6 +876,63 @@ func saveARCVMConsole(ctx context.Context, path string) error {
 			return errors.Wrapf(err, "vm_pstore_dump command failed with an unexpected reason: %#v", errmsg)
 		}
 	}
+	return nil
+}
+
+func (a *ARC) saveANRIfExists(ctx context.Context) error {
+	if len(a.chromeUsername) == 0 {
+		return nil
+	}
+
+	cleanupFunc, err := MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, a.chromeUsername)
+	if err != nil {
+		return err
+	}
+	defer cleanupFunc(ctx)
+
+	androidDataDir, err := AndroidDataDir(ctx, a.chromeUsername)
+	if err != nil {
+		return err
+	}
+
+	androidANRDir := filepath.Join(androidDataDir, "/data/anr")
+
+	if _, err := os.Stat(androidANRDir); os.IsNotExist(err) {
+		// No ANR directory, do nothing.
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	targetDir := filepath.Join(a.outDir, "anr")
+	if err := filepath.Walk(androidANRDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+
+		relpath, err := filepath.Rel(androidANRDir, path)
+		if err != nil {
+			return err
+		}
+
+		if _, ok := a.savedANRFiles[relpath]; ok {
+			// Already copied this file in other session.
+			return nil
+		}
+		a.savedANRFiles[relpath] = struct{}{}
+
+		testing.ContextLogf(ctx, "Saving ANR file %q", relpath)
+		if err := os.MkdirAll(targetDir, 0755); err != nil {
+			return err
+		}
+		return fsutil.CopyFile(path, filepath.Join(targetDir, relpath))
+	}); err != nil {
+		return err
+	}
+
 	return nil
 }
 

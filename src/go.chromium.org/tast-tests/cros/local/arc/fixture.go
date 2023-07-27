@@ -636,7 +636,7 @@ func (f *bootedFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 	if bootTimeout == 0 {
 		bootTimeout = BootTimeout
 	}
-	arc, err := NewWithTimeout(ctx, s.OutDir(), bootTimeout)
+	arc, err := NewWithTimeoutAndChrome(ctx, s.OutDir(), bootTimeout, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}

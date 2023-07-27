@@ -192,7 +192,7 @@ func runBoot(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	a, err := arc.NewWithSyslogReader(ctx, s.OutDir(), reader)
+	a, err := arc.NewWithSyslogReader(ctx, s.OutDir(), reader, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}
