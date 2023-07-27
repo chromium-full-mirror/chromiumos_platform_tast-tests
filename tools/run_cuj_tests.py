@@ -126,9 +126,12 @@ Before running this script:
 import argparse
 import datetime
 import getpass
+import json
 import logging
+import math
 import os
 from pathlib import Path
+import re
 import signal
 import subprocess
 import sys
@@ -145,9 +148,7 @@ PROJECT_ID = "cros-perfmetrics-cuj"
 DEFAULT_BUCKET_NAME = "cros-performance-sheriff"
 THIS_FILE = Path(__file__).resolve()
 CHROMEOS_CHECKOUT_PATH = THIS_FILE.parent.parent.parent.parent.parent
-LATEST_TEST_DIR_PATH = (
-    CHROMEOS_CHECKOUT_PATH / "out/tmp/tast/results/latest"
-)
+LATEST_TEST_DIR_PATH = CHROMEOS_CHECKOUT_PATH / "out/tmp/tast/results/latest"
 DEFAULT_SSH_LOCAL_PORT = 2222
 
 
@@ -315,6 +316,92 @@ def run_tast_tests(local_port: int, tests: list) -> None:
     )
 
 
+def write_local_dut_info() -> None:
+    """Write DUT information to a json file"""
+    #  Get the number of days since the Unix epoch.
+    days_since_epoch = int(time.time() / 86400)
+
+    with open(
+        LATEST_TEST_DIR_PATH / "dut-info.txt", "r", encoding="utf-8"
+    ) as dutinfo:
+        dutinfo_text = dutinfo.read()
+
+    product = re.findall('model: "(.*)"', dutinfo_text)[0].strip().lower()
+    board = re.findall('platform: "(.*)"', dutinfo_text)[0].strip().lower()
+    brand = re.findall('brand: "(.*)"', dutinfo_text)[0].strip()
+    os_version = re.findall('os_version: "(.*)"', dutinfo_text)[0].strip()
+    memory_gb = math.ceil(
+        int(re.findall("size_megabytes:(.*)", dutinfo_text)[0]) / 1000
+    )
+
+    with open(
+        LATEST_TEST_DIR_PATH / "system_logs/lscpu.txt", "r", encoding="utf-8"
+    ) as lscpu:
+        lspu_text = lscpu.read()
+
+    cpu_model = re.sub(
+        "[^a-zA-Z0-9 \n\.]",
+        "",
+        re.findall("Model name:(.*)", lspu_text)[0].strip(),
+    )
+    sku = "_".join(cpu_model.split() + [f"{memory_gb}GB"])
+
+    with open(
+        LATEST_TEST_DIR_PATH / "system_logs/lsb-release", "r", encoding="utf-8"
+    ) as lsb_release:
+        lsb_release_text = lsb_release.read()
+
+    milestone = int(
+        re.findall("CHROMEOS_RELEASE_CHROME_MILESTONE=(.*)", lsb_release_text)[
+            0
+        ].strip()
+    )
+    build_number = re.findall(
+        "CHROMEOS_RELEASE_BUILD_NUMBER=(.*)", lsb_release_text
+    )[0].strip()
+    branch_number = re.findall(
+        "CHROMEOS_RELEASE_BRANCH_NUMBER=(.*)", lsb_release_text
+    )[0].strip()
+    patch_number = re.findall(
+        "CHROMEOS_RELEASE_PATCH_NUMBER=(.*)", lsb_release_text
+    )[0].strip()
+    cros_version = f"{milestone}.{build_number}.{branch_number}.{patch_number}"
+    cros_version_int = int(
+        (
+            f"{milestone}{build_number.zfill(6)}{branch_number.zfill(3)}"
+            f"{patch_number.zfill(3)}"
+        )
+    )
+
+    with open(
+        LATEST_TEST_DIR_PATH / "system_logs/hostname.txt", "r", encoding="utf-8"
+    ) as hostname:
+        hostname_text = hostname.readlines()[-1]
+
+    dut_hostname = hostname_text.strip()
+
+    local_dut_info = {
+        "event_date": days_since_epoch,
+        "sku": sku,
+        "product": product,
+        "board": board,
+        "milestone": milestone,
+        "cros_version": cros_version,
+        "cros_version_int": cros_version_int,
+        "variant": os_version,
+        # It's not really a hwid, it's made of model name, board name and brand.
+        "hwid": f"{product}-{board}-{brand}",
+        # Likely to be `localhost`.
+        "dut_hostname": dut_hostname,
+    }
+
+    local_dut_info_json = json.dumps(local_dut_info, indent=4)
+    with open(
+        LATEST_TEST_DIR_PATH / "local_dut_info.txt", "w", encoding="utf-8"
+    ) as local_dut_info_file:
+        local_dut_info_file.write(local_dut_info_json)
+
+
 def upload_latest_tests_results(username: str, bucket_name: str) -> None:
     """Upload the latest tests results to Google Cloud bucket `bucket_name`"""
     credentials, _ = google.auth.default()
@@ -413,6 +500,8 @@ def main(argv) -> Optional[int]:
             logging.info("[Flash] Not flashing image")
 
         run_tast_tests(opts.local_port, opts.patterns)
+
+        write_local_dut_info()
 
         if not opts.upload:
             while True:
