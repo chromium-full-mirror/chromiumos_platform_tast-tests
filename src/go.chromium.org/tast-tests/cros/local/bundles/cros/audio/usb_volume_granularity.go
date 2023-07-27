@@ -178,7 +178,7 @@ func USBVolumeGranularity(ctx context.Context, s *testing.State) {
 	for numberOfVolumeSteps := 0; numberOfVolumeSteps <= 9; numberOfVolumeSteps++ {
 		err := verifyNumberOfVolumeChanges(ctx, cr, kb, numberOfVolumeSteps, expectNumberOfVolumeChanges)
 		if err != nil {
-			s.Errorf("Fail to verify numberOfVolumeSteps[%d] expectNumberOfVolumeChanges[%d]: %v", numberOfVolumeSteps, expectNumberOfVolumeChanges, err)
+			s.Fatalf("Fail to verify numberOfVolumeSteps[%d] expectNumberOfVolumeChanges[%d]: %v", numberOfVolumeSteps, expectNumberOfVolumeChanges, err)
 		}
 	}
 	// For case 10-25 steps, numberOfVolumeSteps == expectNumberOfVolumeChanges
@@ -186,7 +186,7 @@ func USBVolumeGranularity(ctx context.Context, s *testing.State) {
 		expectNumberOfVolumeChanges := numberOfVolumeSteps
 		err := verifyNumberOfVolumeChanges(ctx, cr, kb, numberOfVolumeSteps, expectNumberOfVolumeChanges)
 		if err != nil {
-			s.Errorf("Fail to verify numberOfVolumeSteps[%d] expectNumberOfVolumeChanges[%d]: %v", numberOfVolumeSteps, expectNumberOfVolumeChanges, err)
+			s.Fatalf("Fail to verify numberOfVolumeSteps[%d] expectNumberOfVolumeChanges[%d]: %v", numberOfVolumeSteps, expectNumberOfVolumeChanges, err)
 		}
 	}
 	// For case > 25 steps, expectNumberOfVolumeChanges is 25
@@ -194,6 +194,6 @@ func USBVolumeGranularity(ctx context.Context, s *testing.State) {
 	expectNumberOfVolumeChanges = 25
 	err = verifyNumberOfVolumeChanges(ctx, cr, kb, numberOfVolumeSteps, expectNumberOfVolumeChanges)
 	if err != nil {
-		s.Errorf("Fail to verify numberOfVolumeSteps[%d] expectNumberOfVolumeChanges[%d]: %v", numberOfVolumeSteps, expectNumberOfVolumeChanges, err)
+		s.Fatalf("Fail to verify numberOfVolumeSteps[%d] expectNumberOfVolumeChanges[%d]: %v", numberOfVolumeSteps, expectNumberOfVolumeChanges, err)
 	}
 }
