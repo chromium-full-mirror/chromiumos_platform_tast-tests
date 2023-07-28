@@ -21,9 +21,22 @@ func RunCmdWithOutput(ctx context.Context, dut *dut.DUT, bin string, args ...str
 	return cmd.Output(testexec.DumpLogOnError)
 }
 
+// RunCmdWithOutputSilent runs a command on the DUT and produces its output or error without logging.
+func RunCmdWithOutputSilent(ctx context.Context, dut *dut.DUT, bin string, args ...string) ([]byte, error) {
+	cmd := dut.Conn().CommandContext(ctx, bin, args...)
+	return cmd.Output(testexec.DumpLogOnError)
+}
+
 // RunCmdWithStringOutput is a wrapper to RunCmdWithOutput which converts the
 // output to a string.
 func RunCmdWithStringOutput(ctx context.Context, dut *dut.DUT, bin string, args ...string) (string, error) {
 	out, err := RunCmdWithOutput(ctx, dut, bin, args...)
 	return strings.TrimSuffix(string(out), "\n"), err
+}
+
+// RunCmdWithStringOutputSilent is a wrapper to RunCmdWithOutput which converts the
+// output to a string without logging.
+func RunCmdWithStringOutputSilent(ctx context.Context, dut *dut.DUT, bin string, args ...string) (string, error) {
+	out, err := RunCmdWithOutputSilent(ctx, dut, bin, args...)
+	return strings.TrimSpace(string(out)), err
 }
