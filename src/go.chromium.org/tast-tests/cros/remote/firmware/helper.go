@@ -932,7 +932,7 @@ func (h *Helper) SetDUTPower(ctx context.Context, powerOn bool) error {
 		return errors.Wrap(err, "checking for control")
 	}
 	if hasControl {
-		connectionType, err = h.Servo.GetString(ctx, "root.dut_connection_type")
+		connectionType, err = h.Servo.GetString(ctx, servo.DUTConnectionType)
 		if err != nil {
 			return errors.Wrap(err, "getting connection type")
 		}

@@ -526,7 +526,7 @@ func checkInformation(ctx context.Context, h *firmware.Helper, info *debugInform
 		case "servoType":
 			info.servoType, err = h.Servo.GetServoType(ctx)
 		case "servoConnectionType":
-			info.servoConnectionType, err = h.Servo.GetString(ctx, "root.dut_connection_type")
+			info.servoConnectionType, err = h.Servo.GetString(ctx, servo.DUTConnectionType)
 		}
 		if err != nil {
 			return errors.Wrapf(err, "failed to check for %s", val)
