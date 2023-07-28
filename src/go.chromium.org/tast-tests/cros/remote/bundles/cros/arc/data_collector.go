@@ -299,7 +299,7 @@ func init() {
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				dexOptCacheGen:                false,
-				requiredCPUAbisForBranchUprev: []string{"x86_64", "arm64"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "x86_64-ndk", "arm64-native"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
@@ -316,7 +316,7 @@ func init() {
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				dexOptCacheGen:                false,
-				requiredCPUAbisForBranchUprev: []string{"x86_64"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-ndk"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
@@ -335,7 +335,7 @@ func init() {
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				dexOptCacheGen:                false,
-				requiredCPUAbisForBranchUprev: []string{"x86_64", "arm64"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "x86_64-ndk", "arm64-native"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
@@ -352,7 +352,7 @@ func init() {
 				uploadPackagesReference:       true,
 				uprevBranch:                   true,
 				dexOptCacheGen:                true,
-				requiredCPUAbisForBranchUprev: []string{"x86_64"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
@@ -849,13 +849,32 @@ func maybeUprevBranch(ctx context.Context, desc *dututils.BuildDescriptor, andro
 	}
 
 	// Make sure all caches are available for uprev.
+	set := make(map[string]bool)
 	for _, abi := range requiredCPUAbis {
-		gmsCoreURL := fmt.Sprintf("%s/%s/gms_core_cache_%s_user_%d.tar", runtimeArtifactsRoot, androidPackage, abi, desc.BuildVersion)
-		if err := exec.Command(gsUtil, "stat", gmsCoreURL).Run(); err != nil {
-			testing.ContextLogf(ctx, "Required cache %q does not exist. Branch is not yet ready for uprev", gmsCoreURL)
+		// Parse special token `-` to split arch (i.e. arm64) vs. binary translation type (i.e. ndk).
+		s := strings.Split(abi, "-")
+		if len(s) != 2 {
+			return errors.Errorf("invalid ABI string: %s", abi)
+		}
+		arch := s[0]
+		binaryTranslationType := s[1]
+		// Only check for GMS Core cache if arch was not previously processed.
+		if !set[arch] {
+			gmsCoreURL := fmt.Sprintf("%s/%s/gms_core_cache_%s_user_%d.tar", runtimeArtifactsRoot, androidPackage, arch, desc.BuildVersion)
+			if err := exec.Command(gsUtil, "stat", gmsCoreURL).Run(); err != nil {
+				testing.ContextLogf(ctx, "Required GMS Core cache %q does not exist. Branch is not yet ready for uprev", gmsCoreURL)
+				return nil
+			}
+			testing.ContextLogf(ctx, "Required GMS Core cache %q exists", gmsCoreURL)
+		}
+		set[arch] = true
+
+		ureadaheadURL := fmt.Sprintf("%s/%s/host_%s_%s_%s_%s.tar", runtimeArtifactsRoot, androidPackage, arch, binaryTranslationType, desc.BuildType, desc.BuildID)
+		if err := exec.Command(gsUtil, "stat", ureadaheadURL).Run(); err != nil {
+			testing.ContextLogf(ctx, "Required ureadahead pack %q does not exist. Branch is not yet ready for uprev", ureadaheadURL)
 			return nil
 		}
-		testing.ContextLogf(ctx, "Required cache %q exists", gmsCoreURL)
+		testing.ContextLogf(ctx, "Required ureadahead pack %q exists", ureadaheadURL)
 	}
 
 	// Create local copy of pin.
