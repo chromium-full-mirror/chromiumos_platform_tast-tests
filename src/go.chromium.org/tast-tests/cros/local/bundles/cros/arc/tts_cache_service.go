@@ -64,7 +64,7 @@ func (c *TTSCacheService) Generate(ctx context.Context, request *arcpb.TTSCacheR
 	defer cr.Close(ctx)
 	defer a.Close(ctx)
 
-	if err := cache.CopyTTSCache(ctx, a, targetDir); err != nil {
+	if err := cache.CopyTTSCache(ctx, targetDir); err != nil {
 		os.RemoveAll(targetDir)
 		return nil, errors.Wrap(err, "failed to generate TTS cache")
 	}

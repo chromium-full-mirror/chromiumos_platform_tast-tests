@@ -556,12 +556,13 @@ func isPlayStoreEnabled(ctx context.Context) (bool, error) {
 }
 
 // IsVirtioBlkDataEnabled returns whether ARCVM virtio-blk /data is enabled on the device.
-func (a *ARC) IsVirtioBlkDataEnabled(ctx context.Context) (bool, error) {
-	out, err := a.GetProp(ctx, virtioBlkDataPropName)
+func IsVirtioBlkDataEnabled(ctx context.Context) (bool, error) {
+	// Not using ARC.GetProp here, because this can be called when arc.device is not available.
+	out, err := BootstrapCommand(ctx, "/system/bin/getprop", virtioBlkDataPropName).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get prop for arcvm_virtio_blk_data")
 	}
-	return out == "1", nil
+	return strings.TrimSpace(string(out)) == "1", nil
 }
 
 // chromeArgs returns command line arguments of the Chrome browser process.

@@ -279,7 +279,7 @@ func MediaScanPerf(ctx context.Context, s *testing.State) {
 	// manually expose it to the host using SSHFS.
 	useSSHFS := false
 	if param.useSDCardPartition {
-		useSSHFS, err = a.IsVirtioBlkDataEnabled(ctx)
+		useSSHFS, err = arc.IsVirtioBlkDataEnabled(ctx)
 		if err != nil {
 			s.Fatal("Failed to check if virtio-blk /data is enabled: ", err)
 		}

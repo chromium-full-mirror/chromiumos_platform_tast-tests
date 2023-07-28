@@ -289,8 +289,8 @@ func fileSizeInDCIM(ctx context.Context, user, filename string) (int64, error) {
 }
 
 // PrepareSDCardAccess prepares host-side access to Android's SDCard partition, which should store the generated photo/video files.
-func PrepareSDCardAccess(ctx context.Context, a *arc.ARC, cr *chrome.Chrome) (func(context.Context), error) {
-	cleanupFunc, err := arc.MountSDCardPartitionOnHostWithSSHFSIfVirtioBlkDataEnabled(ctx, a, cr.NormalizedUser())
+func PrepareSDCardAccess(ctx context.Context, cr *chrome.Chrome) (func(context.Context), error) {
+	cleanupFunc, err := arc.MountSDCardPartitionOnHostWithSSHFSIfVirtioBlkDataEnabled(ctx, cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to make Android's SDCard partition available on host")
 	}

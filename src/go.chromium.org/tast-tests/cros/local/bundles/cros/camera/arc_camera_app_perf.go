@@ -85,7 +85,7 @@ func ARCCameraAppPerf(ctx context.Context, s *testing.State) {
 	}
 	defer cleanupAppFunc(cleanupCtx, tconn)
 
-	cleanupFunc, err := arcapp.PrepareSDCardAccess(ctx, a, cr)
+	cleanupFunc, err := arcapp.PrepareSDCardAccess(ctx, cr)
 	if err != nil {
 		s.Fatal("Failed to prepare SD card access: ", err)
 	}

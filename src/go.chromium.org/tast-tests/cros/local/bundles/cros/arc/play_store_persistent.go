@@ -79,7 +79,7 @@ func getPlayStorePid(ctx context.Context, a *arc.ARC) (uint, error) {
 }
 
 // readFinskyPrefs reads content of Finsky shared prefs file.
-func readFinskyPrefs(ctx context.Context, a *arc.ARC, user string) ([]byte, error) {
+func readFinskyPrefs(ctx context.Context, user string) ([]byte, error) {
 	const finskyPrefsPath = "/data/data/com.android.vending/shared_prefs/finsky.xml"
 
 	cleanupCtx := ctx
@@ -92,7 +92,7 @@ func readFinskyPrefs(ctx context.Context, a *arc.ARC, user string) ([]byte, erro
 		return nil, errors.Wrap(err, "failed to get the cryptohome directory for the user")
 	}
 
-	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, a, user)
+	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, user)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to mount Android /data virtio-blk disk image on host")
 	}
@@ -110,7 +110,7 @@ func readFinskyPrefs(ctx context.Context, a *arc.ARC, user string) ([]byte, erro
 // daily hygiene fails internally. This is not ARC fault and we detect this as a signal that
 // daily hygiene ends. Next potentially successful attempt should happen in 20 min which is
 // problematic to wait in test.
-func waitForDailyHygieneDone(ctx context.Context, a *arc.ARC, user string) (bool, error) {
+func waitForDailyHygieneDone(ctx context.Context, user string) (bool, error) {
 	reOk := regexp.MustCompile(`<int name="dailyhygiene-last-version" value="\d+"`)
 	reFail := regexp.MustCompile(`<int name="dailyhygiene-failed" value="1" />`)
 	var ok bool
@@ -118,7 +118,7 @@ func waitForDailyHygieneDone(ctx context.Context, a *arc.ARC, user string) (bool
 		// On ARCVM virtio-blk /data enabled devices, we mount and unmount the disk image on
 		// every iteration of testing.Poll to ensure that the Android-side changes are
 		// reflected on the host side.
-		out, err := readFinskyPrefs(ctx, a, user)
+		out, err := readFinskyPrefs(ctx, user)
 		if err != nil {
 			// It is OK if it does not exist yet
 			return err
@@ -176,9 +176,9 @@ func PlayStorePersistent(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Waiting for daily hygiene done")
-	ok, err := waitForDailyHygieneDone(ctx, a, cr.NormalizedUser())
+	ok, err := waitForDailyHygieneDone(ctx, cr.NormalizedUser())
 	if err != nil {
-		if out, rerr := readFinskyPrefs(ctx, a, cr.NormalizedUser()); rerr != nil {
+		if out, rerr := readFinskyPrefs(ctx, cr.NormalizedUser()); rerr != nil {
 			s.Error("Failed to read Finsky prefs: ", rerr)
 		} else if rerr := ioutil.WriteFile(filepath.Join(s.OutDir(), "finsky.xml"), out, 0644); rerr != nil {
 			s.Error("Failed to write Finsky prefs: ", rerr)

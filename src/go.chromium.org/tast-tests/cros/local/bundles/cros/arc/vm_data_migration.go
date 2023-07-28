@@ -231,7 +231,7 @@ func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds,
 	defer a.Close(cleanupCtx)
 
 	// Make sure that virtio-blk /data is disabled.
-	isVirtioBlk, err := a.IsVirtioBlkDataEnabled(ctx)
+	isVirtioBlk, err := arc.IsVirtioBlkDataEnabled(ctx)
 	if err != nil {
 		s.Fatal("Failed to check if virtio-blk /data is disabled: ", err)
 	}
@@ -373,7 +373,7 @@ func reSignInAndVerifyMigration(ctx context.Context, s *testing.State, creds chr
 	}
 
 	// Check that virtio-blk /data is enabled.
-	isVirtioBlk, err := a.IsVirtioBlkDataEnabled(ctx)
+	isVirtioBlk, err := arc.IsVirtioBlkDataEnabled(ctx)
 	if err != nil {
 		s.Fatal("Failed to check if virtio-blk /data is enabled: ", err)
 	}

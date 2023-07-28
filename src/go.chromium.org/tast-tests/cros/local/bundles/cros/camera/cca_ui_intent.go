@@ -152,7 +152,7 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 	downloadsFolder := filepath.Join(userPath, "MyFiles", "Downloads")
 
 	// Ensure that the test can access arcCameraFolderPathOnChromeOS, which is in Android's SDCard partition.
-	cleanupFunc, err := arc.MountSDCardPartitionOnHostWithSSHFSIfVirtioBlkDataEnabled(ctx, a, cr.NormalizedUser())
+	cleanupFunc, err := arc.MountSDCardPartitionOnHostWithSSHFSIfVirtioBlkDataEnabled(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to make Android's SDCard partition available on host: ", err)
 	}

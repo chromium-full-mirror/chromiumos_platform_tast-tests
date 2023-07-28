@@ -161,7 +161,7 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 		{"current_modules_init.pb", pathMustNotExist},
 		{"pending_modules_init.pb", pathMustNotExist},
 	} {
-		if err := waitForPath(ctx, a, filepath.Join(chimeraPath, e.filename), e.cond); err != nil {
+		if err := waitForPath(ctx, filepath.Join(chimeraPath, e.filename), e.cond); err != nil {
 			return err
 		}
 	}
@@ -171,7 +171,7 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 		return errors.Wrap(err, "failed to get SDK version")
 	}
 
-	if err := waitForApksOptimized(ctx, a, chimeraPath, version); err != nil {
+	if err := waitForApksOptimized(ctx, chimeraPath, version); err != nil {
 		return err
 	}
 
@@ -179,7 +179,7 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 
 	testing.ContextLogf(ctx, "Compressing GMS Core caches to %q", targetTar)
 
-	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, a, chrome.DefaultUser)
+	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, chrome.DefaultUser)
 	if err != nil {
 		return errors.Wrap(err, "failed to make Android /data directory available on host")
 	}
@@ -302,7 +302,7 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 }
 
 // CopyTTSCache waits for the TTS cache to be ready and copies them to the specified output directory.
-func CopyTTSCache(ctx context.Context, a *arc.ARC, outputDir string) error {
+func CopyTTSCache(ctx context.Context, outputDir string) error {
 	const (
 		ttsCacheAndroidPath = "/data/data/org.chromium.arc.intent_helper/files/tts_state.dat"
 	)
@@ -318,11 +318,11 @@ func CopyTTSCache(ctx context.Context, a *arc.ARC, outputDir string) error {
 	}
 
 	ttsCachePath := filepath.Join(androidDataDir, ttsCacheAndroidPath)
-	if err := waitForPath(ctx, a, ttsCachePath, pathMustExist); err != nil {
+	if err := waitForPath(ctx, ttsCachePath, pathMustExist); err != nil {
 		return err
 	}
 
-	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, a, chrome.DefaultUser)
+	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, chrome.DefaultUser)
 	if err != nil {
 		return errors.Wrap(err, "failed to make Android /data directory available on host")
 	}
@@ -338,7 +338,7 @@ func CopyTTSCache(ctx context.Context, a *arc.ARC, outputDir string) error {
 
 // CopyDexOptCache waits for the CPU to be idle and compress the DEX code
 // compilation artifacts into a tar file in the specified output directory.
-func CopyDexOptCache(ctx context.Context, a *arc.ARC, outputDir string) error {
+func CopyDexOptCache(ctx context.Context, outputDir string) error {
 	const (
 		androidDataPath      = "/data"
 		dexOptCacheDirectory = "dalvik-cache"
@@ -361,7 +361,7 @@ func CopyDexOptCache(ctx context.Context, a *arc.ARC, outputDir string) error {
 		return errors.Wrap(err, "failed to wait CPU is idle")
 	}
 
-	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, a, chrome.DefaultUser)
+	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, chrome.DefaultUser)
 	if err != nil {
 		return errors.Wrap(err, "failed to make Android /data directory available on host")
 	}
@@ -381,7 +381,7 @@ func CopyDexOptCache(ctx context.Context, a *arc.ARC, outputDir string) error {
 
 // waitForPath waits up to 1 minute or ctx deadline for the specified path to exist or not
 // exist depending on pathCondition c.
-func waitForPath(ctx context.Context, a *arc.ARC, path string, c pathCondition) error {
+func waitForPath(ctx context.Context, path string, c pathCondition) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
@@ -391,7 +391,7 @@ func waitForPath(ctx context.Context, a *arc.ARC, path string, c pathCondition) 
 		// On ARCVM virtio-blk /data enabled devices, we mount and unmount the disk image on
 		// every iteration of testing.Poll to ensure that the Android-side changes are
 		// reflected on the host side.
-		cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, a, chrome.DefaultUser)
+		cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, chrome.DefaultUser)
 		if err != nil {
 			return errors.Wrap(err, "failed to make Android /data directory available on host")
 		}
@@ -423,7 +423,7 @@ func waitForPath(ctx context.Context, a *arc.ARC, path string, c pathCondition) 
 // waitForApksOptimized waits up to 1 minute or ctx deadline for all APKs in given root path are
 // optimized, which means no *.flock locks and *.odex/*.vdex exist and matches actual APK count
 // on PI and below.
-func waitForApksOptimized(ctx context.Context, a *arc.ARC, root string, sdkVersion int) error {
+func waitForApksOptimized(ctx context.Context, root string, sdkVersion int) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
@@ -433,7 +433,7 @@ func waitForApksOptimized(ctx context.Context, a *arc.ARC, root string, sdkVersi
 		// On ARCVM virtio-blk /data enabled devices, we mount and unmount the disk image on
 		// every iteration of testing.Poll to ensure that the Android-side changes are
 		// reflected on the host side.
-		cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, a, chrome.DefaultUser)
+		cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, chrome.DefaultUser)
 		if err != nil {
 			return errors.Wrap(err, "failed to make Android /data directory available on host")
 		}

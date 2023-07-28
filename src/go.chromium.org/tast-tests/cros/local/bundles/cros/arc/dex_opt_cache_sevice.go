@@ -55,7 +55,7 @@ func (c *DexOptCacheService) Generate(ctx context.Context, request *empty.Empty)
 	defer cr.Close(ctx)
 	defer a.Close(ctx)
 
-	if err := cache.CopyDexOptCache(ctx, a, targetDir); err != nil {
+	if err := cache.CopyDexOptCache(ctx, targetDir); err != nil {
 		os.RemoveAll(targetDir)
 		return nil, errors.Wrap(err, "failed to generate DexOpt cache")
 	}

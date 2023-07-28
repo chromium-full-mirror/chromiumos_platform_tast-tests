@@ -365,9 +365,10 @@ func testFixupPlayStore(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to wait for ARC boot: ", err)
 	}
+	defer a.Close(cleanupCtx)
 
 	s.Log("Preparing to trigger fixup on next sign in")
-	cleanupFunc, err := prepareFixup(ctx, a, cr.NormalizedUser())
+	cleanupFunc, err := prepareFixup(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to prepare fixup: ", err)
 	}
@@ -516,7 +517,7 @@ func clickRestoreButtonCrashedStatus(ctx context.Context, cr *chrome.Chrome, tco
 }
 
 func waitForWindowInfoSaved(ctx context.Context) {
-	// According to the PRD of Full Restore go/chrome-os-full-restore-dd,
+	// GoBigSleepLint: According to the PRD of Full Restore go/chrome-os-full-restore-dd,
 	// it uses a throttle of 2.5s to save the app launching and window status
 	// information to the backend. Therefore, sleep 5 seconds here.
 	testing.Sleep(ctx, 5*time.Second)
@@ -620,7 +621,7 @@ func createDirectoryWithMediaRWUGID(path string) error {
 
 // prepareFixup sets up the package data in the SDCard partition so that a long fixup happens for
 // Play Store after the user re-login.
-func prepareFixup(ctx context.Context, a *arc.ARC, user string) (func(context.Context) error, error) {
+func prepareFixup(ctx context.Context, user string) (func(context.Context) error, error) {
 	const (
 		// The name of the extended attribute to mark the completion of the fixup.
 		fixupXAttr = "arc.fixed"
@@ -633,7 +634,7 @@ func prepareFixup(ctx context.Context, a *arc.ARC, user string) (func(context.Co
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
 
-	cleanup, err := arc.MountSDCardPartitionOnHostWithSSHFSIfVirtioBlkDataEnabled(ctx, a, user)
+	cleanup, err := arc.MountSDCardPartitionOnHostWithSSHFSIfVirtioBlkDataEnabled(ctx, user)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to make Android's SDCard partition available on host")
 	}
@@ -660,7 +661,7 @@ func prepareFixup(ctx context.Context, a *arc.ARC, user string) (func(context.Co
 		return nil, errors.Wrapf(err, "failed to set up the target dir %s", targetDir)
 	}
 	cleanupFunc := func(ctx context.Context) error {
-		cleanup, err := arc.MountSDCardPartitionOnHostWithSSHFSIfVirtioBlkDataEnabled(ctx, a, user)
+		cleanup, err := arc.MountSDCardPartitionOnHostWithSSHFSIfVirtioBlkDataEnabled(ctx, user)
 		if err != nil {
 			return errors.Wrap(err, "failed to make Android's SDCard partition available on host for cleanup")
 		}

@@ -168,8 +168,8 @@ func UnmountSDCardPartitionFromHost(ctx context.Context, user string) error {
 // MountVirtioBlkDataDiskImageReadOnlyIfUsed first checks if ARCVM virtio-blk /data is used
 // on the device, and if that is the case, finds the path to the virtio-blk disk image
 // and mounts the disk on the host's /home/root/<hash>/android-data/data as read-only.
-func MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx context.Context, a *ARC, user string) (func(context.Context), error) {
-	virtioBlkDataEnabled, err := a.IsVirtioBlkDataEnabled(ctx)
+func MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx context.Context, user string) (func(context.Context), error) {
+	virtioBlkDataEnabled, err := IsVirtioBlkDataEnabled(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to check if virtio-blk /data is enabled")
 	}
@@ -181,7 +181,7 @@ func MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx context.Context, a *ARC, user
 
 	// Before mounting the virtio-blk disk image, run sync on the Android side to ensure that
 	// the disk image up-to-date.
-	if err := a.Command(ctx, "sync").Run(testexec.DumpLogOnError); err != nil {
+	if err := BootstrapCommand(ctx, "/system/bin/sync").Run(testexec.DumpLogOnError); err != nil {
 		return nil, errors.Wrap(err, "failed to call sync on guest")
 	}
 	return MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx, user)
@@ -234,8 +234,8 @@ func MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx context.Context, user st
 // MountSDCardPartitionOnHostWithSSHFSIfVirtioBlkDataEnabled first checks if virtio-blk /data is
 // used on the device, and if that is the case, mounts Android's SDCard partition
 // /storage/emulated/0 on the host's /home/root/<hash>/android-data/data/media/0 using SSHFS.
-func MountSDCardPartitionOnHostWithSSHFSIfVirtioBlkDataEnabled(ctx context.Context, a *ARC, user string) (func(context.Context), error) {
-	virtioBlkDataEnabled, err := a.IsVirtioBlkDataEnabled(ctx)
+func MountSDCardPartitionOnHostWithSSHFSIfVirtioBlkDataEnabled(ctx context.Context, user string) (func(context.Context), error) {
+	virtioBlkDataEnabled, err := IsVirtioBlkDataEnabled(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to check if virtio-blk /data is enabled")
 	}

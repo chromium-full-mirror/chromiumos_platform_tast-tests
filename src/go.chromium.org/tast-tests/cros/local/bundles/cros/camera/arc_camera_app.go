@@ -55,7 +55,7 @@ func ARCCameraApp(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Prepare host-side access to Android's SDCard partition, which should store the generated photo and video files.
-	cleanupFunc, err := arc.MountSDCardPartitionOnHostWithSSHFSIfVirtioBlkDataEnabled(ctx, a, cr.NormalizedUser())
+	cleanupFunc, err := arc.MountSDCardPartitionOnHostWithSSHFSIfVirtioBlkDataEnabled(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to make Android's SDCard partition available on host: ", err)
 	}

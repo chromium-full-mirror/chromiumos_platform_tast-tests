@@ -148,7 +148,7 @@ func CxxCrash(ctx context.Context, s *testing.State) {
 			// On ARCVM virtio-blk /data enabled devices, we mount and unmount the disk
 			// image on every iteration of testing.Poll to ensure that the Android-side
 			// changes are reflected on the host side.
-			cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, a, cr.NormalizedUser())
+			cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, cr.NormalizedUser())
 			if err != nil {
 				return testing.PollBreak(errors.Wrap(err, "failed to mount Android /data virtio-blk disk image on host"))
 			}

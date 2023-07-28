@@ -49,7 +49,7 @@ func QuotaProjectID(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	a := s.FixtValue().(*arc.PreData).ARC
-	virtioBlkDataEnabled, err := a.IsVirtioBlkDataEnabled(ctx)
+	virtioBlkDataEnabled, err := arc.IsVirtioBlkDataEnabled(ctx)
 	if err != nil {
 		s.Fatal("Failed to check if virtio-blk /data is enabled: ", err)
 	}
@@ -85,7 +85,7 @@ func QuotaProjectID(ctx context.Context, s *testing.State) {
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed to start MainActivity: ", err)
 	}
-	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, a, cr.NormalizedUser())
+	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to make Android /data directory available on host: ", err)
 	}
