@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/coords"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -259,11 +260,15 @@ type NodeInfo struct {
 
 // Info returns the information for the node found by the input finder.
 func (ac *Context) Info(ctx context.Context, finder *nodewith.Finder) (*NodeInfo, error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+	defer cancel()
+
 	q, err := ac.createQuery(ctx, finder)
 	if err != nil {
 		return nil, err
 	}
-	defer q.release(ctx)
+	defer q.release(cleanupCtx)
 	expr := fmt.Sprintf(`
 		async function() {
 			await this.execute();
@@ -281,11 +286,15 @@ func (ac *Context) Info(ctx context.Context, finder *nodewith.Finder) (*NodeInfo
 // NodesInfo returns an array of the information for the nodes found by the input finder.
 // Note that the returning array might not contain any node.
 func (ac *Context) NodesInfo(ctx context.Context, finder *nodewith.Finder) ([]NodeInfo, error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+	defer cancel()
+
 	q, err := ac.createQueryForMultipleNodes(ctx, finder)
 	if err != nil {
 		return nil, err
 	}
-	defer q.release(ctx)
+	defer q.release(cleanupCtx)
 	expr := fmt.Sprintf(`
 		async function() {
 			await this.execute();
@@ -318,11 +327,15 @@ func (ac *Context) Matches(ctx context.Context, finder *nodewith.Finder, actual 
 // Location returns the location of the node found by the input finder.
 // It will wait until the location is the same for a two iterations of polling.
 func (ac *Context) Location(ctx context.Context, finder *nodewith.Finder) (*coords.Rect, error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+	defer cancel()
+
 	q, err := ac.createQuery(ctx, finder)
 	if err != nil {
 		return nil, err
 	}
-	defer q.release(ctx)
+	defer q.release(cleanupCtx)
 	expr := `
 		async function() {
 			await this.execute();
@@ -353,11 +366,15 @@ func (ac *Context) Location(ctx context.Context, finder *nodewith.Finder) (*coor
 // ImmediateLocation returns the location of the node found by the input finder.
 // It will not wait for the location to be stable.
 func (ac *Context) ImmediateLocation(ctx context.Context, finder *nodewith.Finder) (*coords.Rect, error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+	defer cancel()
+
 	q, err := ac.createQuery(ctx, finder)
 	if err != nil {
 		return nil, err
 	}
-	defer q.release(ctx)
+	defer q.release(cleanupCtx)
 	expr := `
 		async function() {
 			await this.execute();
@@ -388,11 +405,15 @@ func (ac *Context) WaitForLocation(finder *nodewith.Finder) Action {
 // it needs to clean up the allocated resources for the watcher afterwards.
 func (ac *Context) WaitForEvent(finder *nodewith.Finder, ev event.Event, act Action) Action {
 	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+		defer cancel()
+
 		watcher, err := ac.setupWatcher(ctx, finder, ev)
 		if err != nil {
 			return err
 		}
-		defer watcher.release(ctx)
+		defer watcher.release(cleanupCtx)
 
 		if err := act(ctx); err != nil {
 			return errors.Wrap(err, "failed to run the main action")
@@ -414,11 +435,15 @@ func (ac *Context) WaitForEvent(finder *nodewith.Finder, ev event.Event, act Act
 // to appear for the specified node.
 func (ac *Context) WaitUntilNoEvent(finder *nodewith.Finder, ev event.Event) Action {
 	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+		defer cancel()
+
 		watcher, err := ac.setupWatcher(ctx, finder, ev)
 		if err != nil {
 			return err
 		}
-		defer watcher.release(ctx)
+		defer watcher.release(cleanupCtx)
 
 		previousEventCount := -1
 		var currentEventCount int
@@ -489,6 +514,10 @@ func (w *watcher) release(ctx context.Context) {
 // Select sets the document selection to include everything between the two nodes at the offsets.
 func (ac *Context) Select(startNodeFinder *nodewith.Finder, startOffset int, endNodeFinder *nodewith.Finder, endOffset int) Action {
 	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+		defer cancel()
+
 		qStart, err := startNodeFinder.GenerateQuery()
 		if err != nil {
 			return err
@@ -526,7 +555,7 @@ func (ac *Context) Select(startNodeFinder *nodewith.Finder, startOffset int, end
 		if err != nil {
 			return err
 		}
-		defer q.release(ctx)
+		defer q.release(cleanupCtx)
 
 		return q.Call(ctx, nil, `function() { this.execute(); }`)
 	}
@@ -536,11 +565,15 @@ func (ac *Context) Select(startNodeFinder *nodewith.Finder, startOffset int, end
 // If any node in the chain is not found, it will return an error.
 func (ac *Context) Exists(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+		defer cancel()
+
 		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
 			return err
 		}
-		defer q.release(ctx)
+		defer q.release(cleanupCtx)
 
 		expr := `
 		async function() {
@@ -592,6 +625,10 @@ func (ac *Context) IsNodeFound(ctx context.Context, finder *nodewith.Finder) (bo
 // Note: This function only works on node with role "inlineTextBox" according to the API implementation.
 // http://cs/eureka_internal/chromium/src/extensions/renderer/api/automation/automation_internal_custom_bindings.cc?l=995
 func (ac *Context) BoundsForRange(ctx context.Context, finder *nodewith.Finder, startIndex, endIndex int) (*coords.Rect, error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+	defer cancel()
+
 	if err := ac.WaitForLocation(finder)(ctx); err != nil {
 		return nil, err
 	}
@@ -600,7 +637,7 @@ func (ac *Context) BoundsForRange(ctx context.Context, finder *nodewith.Finder, 
 	if err != nil {
 		return nil, err
 	}
-	defer q.release(ctx)
+	defer q.release(cleanupCtx)
 	expr := fmt.Sprintf(`
 		async function() {
 			await this.execute();
@@ -834,11 +871,15 @@ func (ac *Context) EnsureGoneFor(finder *nodewith.Finder, duration time.Duration
 // If any node in the chain is not found, it will return nil.
 func (ac *Context) Gone(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+		defer cancel()
+
 		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
 			return err
 		}
-		defer q.release(ctx)
+		defer q.release(cleanupCtx)
 
 		expr := `
 		async function() {
@@ -1112,11 +1153,15 @@ func (ac *Context) DoDefaultUntil(finder *nodewith.Finder, condition func(contex
 // The EventWatcher waits the duration of timeout for the event to occur.
 func (ac *Context) FocusAndWait(finder *nodewith.Finder) Action {
 	return ac.WaitForEvent(nodewith.Root(), event.Focus, func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+		defer cancel()
+
 		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
 			return err
 		}
-		defer q.release(ctx)
+		defer q.release(cleanupCtx)
 		expr := `
 			async function() {
 				await this.execute();
@@ -1179,11 +1224,15 @@ func Sleep(d time.Duration) Action {
 // MakeVisible returns a function that calls makeVisible() JS method to make found node visible.
 func (ac *Context) MakeVisible(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+		defer cancel()
+
 		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
 			return err
 		}
-		defer q.release(ctx)
+		defer q.release(cleanupCtx)
 		expr := `
 		async function() {
 			await this.execute();
@@ -1271,11 +1320,15 @@ func (ac *Context) CheckRestriction(finder *nodewith.Finder, restriction restric
 // of a node thus mouse.LeftClick() fails consequently.
 func (ac *Context) DoDefault(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+		defer cancel()
+
 		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
 			return err
 		}
-		defer q.release(ctx)
+		defer q.release(cleanupCtx)
 		expr := `
 		async function() {
 			await this.execute();
@@ -1296,11 +1349,15 @@ func (ac *Context) DoDefault(finder *nodewith.Finder) Action {
 // scroll offset on a node to scroll it to its default scroll position.
 func (ac *Context) ResetScrollOffset(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
+		defer cancel()
+
 		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
 			return err
 		}
-		defer q.release(ctx)
+		defer q.release(cleanupCtx)
 		expr := `
 		async function() {
 			await this.execute();
