@@ -310,6 +310,7 @@ func newWithSyslogReaderAndTimeout(ctx context.Context, outDir string, reader *s
 		panic("Cannot create ARC instance while precondition is being used")
 	}
 
+	cleanupCtx := ctx
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
@@ -327,7 +328,7 @@ func newWithSyslogReaderAndTimeout(ctx context.Context, outDir string, reader *s
 	toClose := arc
 	defer func() {
 		if toClose != nil {
-			toClose.Close(ctx)
+			toClose.Close(cleanupCtx)
 		}
 	}()
 
