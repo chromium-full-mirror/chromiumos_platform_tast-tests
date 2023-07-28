@@ -18,10 +18,10 @@ func init() {
 		Func:         Basic,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests startup for the bruschetta VM",
-		Contacts:     []string{"sidereal@google.com", "clumptini+oncall@google.com"},
+		Contacts:     []string{"clumptini+oncall@google.com", "sidereal@google.com", "jamesye@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
 		Fixture:      bruschetta.BruschettaFixture,
 	})
