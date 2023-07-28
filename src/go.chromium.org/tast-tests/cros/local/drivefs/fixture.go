@@ -110,11 +110,29 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name:     "driveFsStartedWithNativeMessagingLacros",
-		Desc:     "Lacros variant of driveFsStartedWithNativeMessagingLacros",
+		Desc:     "Lacros variant of driveFsStartedWithNativeMessaging",
 		Contacts: []string{"austinct@chromium.org", "chromeos-files-syd@chromium.org"},
 		Impl: &fixture{drivefsOptions: map[string]string{
 			"switchblade_dss": "true",
 		}, bt: browser.TypeLacros},
+		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
+		ResetTimeout:    driveFsSetupAndTearDownTimeout,
+		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
+		Vars: []string{
+			"drivefs.accountPool",
+			"drivefs.extensionClientID",
+		},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "driveFsStartedWithNativeMessagingAndBulkPinningEnabledLacros",
+		Desc:     "Lacros variant of driveFsStartedWithNativeMessagingLacros",
+		Contacts: []string{"msalomao@chromium.org", "chromeos-files-syd@chromium.org"},
+		Impl: &fixture{
+			chromeOptions: []chrome.Option{chrome.EnableFeatures("FeatureManagementDriveFsBulkPinning")},
+			drivefsOptions: map[string]string{
+				"switchblade_dss": "true",
+			}, bt: browser.TypeLacros},
 		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
 		ResetTimeout:    driveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
