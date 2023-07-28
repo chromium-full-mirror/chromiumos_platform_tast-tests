@@ -126,7 +126,7 @@ func CheckRecReason(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSw
 
 	// Recovery mode requires the DUT to boot the image on the USB.
 	// Thus, the servo must show the USB to the DUT.
-	if err := ms.EnableRecMode(ctx, servo.USBMuxDUT); err != nil {
+	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxDUT); err != nil {
 		return errors.Wrap(err, "failed to enable recovery mode")
 	}
 

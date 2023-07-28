@@ -94,7 +94,7 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
 	}
-	if err := ms.EnableRecMode(ctx, servo.USBMuxOff); err != nil {
+	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 		return err
 	}
 	testing.ContextLogf(ctx, "Sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)

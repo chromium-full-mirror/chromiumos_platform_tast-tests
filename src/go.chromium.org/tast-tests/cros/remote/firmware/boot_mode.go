@@ -106,6 +106,9 @@ const (
 	// if gbb flags were changed. This would be helpful in mode transition by
 	// canceling gbb flag restriction first.
 	RebootForGBBFlagsChanged ModeSwitchOption = iota
+
+	// RecoveryForceMRCBoot specifies rec_force_mrc instead of rec for booting to recovery mode.
+	RecoveryForceMRCBoot ModeSwitchOption = iota
 )
 
 // msOptsContain determines whether a slice of ModeSwitchOptions contains a specific Option.
@@ -286,7 +289,11 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 	case fwCommon.BootModeRecovery:
 		// Recovery mode requires the DUT to boot the image on the USB.
 		// Thus, the servo must show the USB to the DUT.
-		if err := ms.EnableRecMode(ctx, servo.USBMuxDUT); err != nil {
+		recType := servo.PowerStateRec
+		if msOptsContain(opts, RecoveryForceMRCBoot) {
+			recType = servo.PowerStateRecForceMRC
+		}
+		if err := ms.EnableRecMode(ctx, recType, servo.USBMuxDUT); err != nil {
 			return err
 		}
 		// Reconnect to the DUT.
@@ -333,7 +340,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			// 1. Set power_state to 'rec', but don't show the DUT a USB image to boot from.
 			// 2. From the firmware screen that appears, press keys to transition to dev mode.
 			//    The specific keypresses will depend on the DUT's ModeSwitcherType.
-			if err := ms.EnableRecMode(ctx, servo.USBMuxOff); err != nil {
+			if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 				return err
 			}
 			if err := ms.FwScreenToDevMode(ctx, opts...); err != nil {
@@ -375,7 +382,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			// 2. From the firmware screen that appears, press keys to transition to dev mode.
 			//    The specific keypresses will depend on the DUT's ModeSwitcherType.
 			testing.ContextLog(ctx, "Rebooting to enter dev mode first")
-			if err := ms.EnableRecMode(ctx, servo.USBMuxOff); err != nil {
+			if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 				return err
 			}
 			if err := ms.FwScreenToDevMode(ctx, opts...); err != nil {
@@ -934,7 +941,7 @@ func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context, opts ...ModeSw
 // EnableRecMode powers the DUT into the "rec" state, but does not wait to reconnect to the DUT.
 // If booting into rec mode, usbMux should point to the DUT, so that the DUT can finish booting into recovery mode.
 // Otherwise, usbMux should be off. This will prevent the DUT from transitioning to rec mode, so other operations can be performed (such as bypassing to dev mode).
-func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxState) error {
+func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerStateValue, usbMux servo.USBMuxState) error {
 	h := ms.Helper
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "requiring servo")
@@ -1002,9 +1009,9 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 				testing.ContextLog(ctx, "Failed to disable ec_uart_capture: ", err)
 			}
 			// Sometimes capturing thermal shutdown fails because of
-			// noise data, for example, "thermal SHU[TDOWN". Setting
+			// noise data, for example, "thermal SHUTDOWN". Setting
 			// the 'chan' command before to hear from a particular channel
-			// would not work because sending servo.PowerStateRec later
+			// would not work because sending servo rec command later
 			// reverses this setting, and enables all channels back.
 			// Save and upload the uart log to Stainless for debugging purposes.
 			outDir, ok := testing.ContextOutDir(ctx)
@@ -1019,8 +1026,8 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 
 		}()
 
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
-			return errors.Wrapf(err, "setting power state to %s", servo.PowerStateRec)
+		if err := h.Servo.SetPowerState(ctx, recType); err != nil {
+			return errors.Wrapf(err, "setting power state to %s", recType)
 		}
 		out, err := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
 		if err != nil {

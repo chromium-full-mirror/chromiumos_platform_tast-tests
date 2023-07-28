@@ -186,7 +186,7 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 		},
 	} {
 
-		if err := ms.EnableRecMode(ctx, servo.USBMuxOff); err != nil {
+		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 			s.Fatal("Failed to enable recovery mode: ", err)
 		}
 

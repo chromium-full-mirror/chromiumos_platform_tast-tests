@@ -87,6 +87,7 @@ type Config struct {
 	SMMStore              bool              `json:"smm_store"`
 	GSCCanWakeECWithReset bool              `json:"gsc_can_wake_ec_with_reset"`
 	LidWakeFromPowerOff   bool              `json:"lid_wake_from_power_off"`
+	RecForceMRC           bool              `json:"rec_force_mrc"`
 
 	// Raw duration fields represent a quantity of seconds.
 	// They are used during NewConfig to populate actual duration fields, which are defined below.

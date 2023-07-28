@@ -89,7 +89,7 @@ func DetachableUntrustedKeyboard(ctx context.Context, s *testing.State) {
 		// Expect to_dev screen menu selection at default.
 		{keyboardF9F10, []string{"volumeUpDown", "keyBoardF9", "keyboardF10", "enter"}},
 	} {
-		if err := ms.EnableRecMode(ctx, servo.USBMuxOff); err != nil {
+		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 			s.Fatal("Failed to enable recovery mode: ", err)
 		}
 
