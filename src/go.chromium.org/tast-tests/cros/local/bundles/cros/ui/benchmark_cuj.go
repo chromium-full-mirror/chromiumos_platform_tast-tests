@@ -149,6 +149,27 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
+			{
+				Name:    "webxprt4",
+				Timeout: 30*time.Minute + cujrecorder.CooldownTimeout,
+				Fixture: "loggedInToCUJUserWithoutCooldown",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
+			{
+				Name:    "lacros_webxprt4",
+				Timeout: 30*time.Minute + cujrecorder.CooldownTimeout,
+				Fixture: "loggedInToCUJUserLacrosWithoutCooldown",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeLacros,
+					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
 			// Battery saver tests only run manually
 			{
 				Name:    "battery_saver_speedometer",
@@ -197,6 +218,16 @@ func init() {
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
+			{
+				Name:    "battery_saver_webxprt4",
+				Timeout: 30*time.Minute + cujrecorder.CooldownTimeout,
+				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
 			},
