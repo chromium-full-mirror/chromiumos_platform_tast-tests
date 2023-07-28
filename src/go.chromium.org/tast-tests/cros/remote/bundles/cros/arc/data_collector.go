@@ -286,9 +286,10 @@ func init() {
 			Name:              "branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_p"},
-			// x86-64 ARC: babytiger(coral-Intel), babymega (coral-Intel), basking(reef-Intel)
+			// x86-64 ARC: babytiger(coral-Intel), babymega(coral-Intel), basking(reef-Intel), careena(grunt-AMD), treeya(grunt-AMD)
 			// arm64 ARC: elm(elm) - 1 model exception with all other devices either reached AUE or migrated to R.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("babytiger", "babymega", "basking", "elm")),
+			// TODO(b/293160140): Remove grunt models once they fully migrate to R-Container.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("babytiger", "babymega", "basking", "elm", "careena", "treeya")),
 			Val: testParam{
 				vmEnabled:                     false,
 				androidPackage:                "android-container-pi",
@@ -304,7 +305,7 @@ func init() {
 			Name:              "container_r_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_container_r"},
-			// x86-64 ARC: careena(grunt-Intel), treeya(grunt-Intel)
+			// x86-64 ARC: careena(grunt-AMD), treeya(grunt-AMD)
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("treeya", "careena")),
 			Val: testParam{
 				vmEnabled:                     false,
@@ -321,9 +322,10 @@ func init() {
 			Name:              "vm_r_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_r"},
-			// x86-64 ARC: kohaku(hatch-Intel), eve(eve-Intel), gimble(brya-Intel), morphius(zork-AMD)
+			// x86-64 ARC: kohaku(hatch-Intel), eve(eve-Intel), gimble(brya-Intel), dewatt(guybrush-AMD), nipperkin(guybrush-AMD)
 			// arm64 ARC: hoglin(herobrine), steelix(corsola), krane(kukui)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "eve", "gimble", "morphius", "steelix", "hoglin", "krane")),
+			// TODO(b/293665738): Update ARM models since hoglin is no longer scheduled and krane is scarcely scheduled.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "eve", "gimble", "dewatt", "nipperkin", "steelix", "hoglin", "krane")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-rvc",
