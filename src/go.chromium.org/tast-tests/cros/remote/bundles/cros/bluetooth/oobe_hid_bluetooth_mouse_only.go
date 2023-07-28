@@ -53,7 +53,7 @@ func init() {
 				ExtraAttr:         []string{"bluetooth_floss_flaky"},
 			},
 		},
-		Timeout: time.Minute * 2,
+		Timeout: time.Minute * 5,
 	})
 }
 
@@ -89,7 +89,9 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find node: ", err)
 	}
 
-	// Discover btPeer as a mouse.
+	testing.ContextLog(ctx, "Discovering btpeer as a mouse")
+
+	// Discover btpeer as a mouse.
 	mouseDevice, err := bluetooth.NewEmulatedBTPeerDevice(ctx, fv.BTPeers[0], &bluetooth.EmulatedBTPeerDeviceConfig{
 		DeviceType: cbt.DeviceTypeMouse,
 	})
@@ -97,33 +99,48 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to configure btpeer as a %s device: %s", mouseDevice.DeviceType(), err)
 	}
 
-	if result, err := mouseDevice.RPC().AdapterPowerOn(ctx); err != nil || !result {
-		s.Fatal("Failed to power on btPeer adapter: ", err)
-	}
+	testing.ContextLog(ctx, "Checking that pointer was found")
 
 	// Verify pointer device is found.
 	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.FoundPointerNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
+	testing.ContextLog(ctx, "Turning btpeer adapter off")
+
 	// Turn off mouse device and check that DUT is searching for mouse.
 	if result, err := mouseDevice.RPC().AdapterPowerOff(ctx); err != nil || !result {
-		s.Fatal("Failed to turn of btPeer adapter: ", err)
+		s.Fatal("Failed to turn of btpeer adapter: ", err)
 	}
+
+	testing.ContextLog(ctx, "Checking that we are searching for pointer")
 
 	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForPointerNodeName, defaultTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
+	testing.ContextLog(ctx, "Turning btpeer adapter on")
+
 	// Turn on mouse device and check that mouse device is paired to.
 	if result, err := mouseDevice.RPC().AdapterPowerOn(ctx); err != nil || !result {
-		s.Fatal("Failed to power on btPeer adapter: ", err)
+		s.Fatal("Failed to power on btpeer adapter: ", err)
 	}
+
+	testing.ContextLog(ctx, "Checking that pointer was found")
 
 	// Verify pointer device is found.
 	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.FoundPointerNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
+
+	if res, err := uiautoSvc.Info(
+		ctx, &ui.InfoRequest{Finder: oobeui.ContinueButtonFinder}); err != nil {
+		s.Fatal("Failed to get restriction of continue button: ", err)
+	} else {
+		testing.ContextLog(ctx, "Continue button has restriction: ", res.NodeInfo.Restriction)
+	}
+
+	testing.ContextLog(ctx, "Clicking the continue button")
 
 	// Navigate to welcome screen.
 	if _, err := uiautoSvc.LeftClick(
@@ -131,7 +148,9 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click continue button: ", err)
 	}
 
+	testing.ContextLog(ctx, "Waiting for welcome screen")
+
 	if _, err := crUISvc.WaitForWelcomeScreen(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to enter welcome page")
+		s.Fatal("Failed to enter welcome page: ", err)
 	}
 }

@@ -6,6 +6,7 @@ package bluetooth
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -55,7 +56,7 @@ func init() {
 				ExtraAttr:         []string{"bluetooth_floss_flaky"},
 			},
 		},
-		Timeout: time.Minute * 2,
+		Timeout: time.Minute * 5,
 	})
 }
 
@@ -92,7 +93,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find node: ", err)
 	}
 
-	// Discover btPeer as a keyboard.
+	// Discover btpeer as a keyboard.
 	keyboardDevice, err := bluetooth.NewEmulatedBTPeerDevice(ctx, fv.BTPeers[0], &bluetooth.EmulatedBTPeerDeviceConfig{
 		DeviceType: cbt.DeviceTypeKeyboard,
 	})
@@ -100,14 +101,16 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to configure btpeer as a %s device: %s", keyboardDevice.DeviceType(), err)
 	}
 
+	pairedNodeName := fmt.Sprintf("\"%s Keyboard\" paired", keyboardDevice.AdvertisedName())
+
 	// Verify keyboard device is pairing.
 	// TODO(b/254524000): use approraite authentication method.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.PairingKeyboardNodeName, searchingTimeout); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, pairedNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
 	if _, err := keyboardDevice.RPC().AdapterPowerOff(ctx); err != nil {
-		s.Fatal("Failed to turn of btPeer adapter: ", err)
+		s.Fatal("Failed to turn of btpeer adapter: ", err)
 	}
 
 	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForKeyboardNodeName, defaultTimeout); err != nil {
@@ -116,13 +119,32 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 
 	// Turn on keyboard device and check that keyboard device is paired to.
 	if _, err := keyboardDevice.RPC().AdapterPowerOn(ctx); err != nil {
-		s.Fatal("Failed to power on btPeer adapter: ", err)
+		s.Fatal("Failed to power on btpeer adapter: ", err)
 	}
 
 	// Verify keyboard device is pairing.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.PairingKeyboardNodeName, searchingTimeout); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, pairedNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
-	// TODO(b/254524000): Navigate to welcome screen.
+	if res, err := uiautoSvc.Info(
+		ctx, &ui.InfoRequest{Finder: oobeui.ContinueButtonFinder}); err != nil {
+		s.Fatal("Failed to get restriction of continue button: ", err)
+	} else {
+		testing.ContextLog(ctx, "Continue button has restriction: ", res.NodeInfo.Restriction)
+	}
+
+	testing.ContextLog(ctx, "Clicking the continue button")
+
+	// Navigate to welcome screen.
+	if _, err := uiautoSvc.LeftClick(
+		ctx, &ui.LeftClickRequest{Finder: oobeui.ContinueButtonFinder}); err != nil {
+		s.Fatal("Failed to click continue button: ", err)
+	}
+
+	testing.ContextLog(ctx, "Waiting for welcome screen")
+
+	if _, err := crUISvc.WaitForWelcomeScreen(ctx, &emptypb.Empty{}); err != nil {
+		s.Fatal("Failed to enter welcome page: ", err)
+	}
 }
