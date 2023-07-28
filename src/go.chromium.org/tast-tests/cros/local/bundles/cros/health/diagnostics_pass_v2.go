@@ -50,10 +50,8 @@ func init() {
 			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 		}, {
-			Name:      "prime_search_v2",
-			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutinePrimeSearchV2},
-			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name: "prime_search_v2",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutinePrimeSearchV2},
 		}, {
 			Name:      "volume_button",
 			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},

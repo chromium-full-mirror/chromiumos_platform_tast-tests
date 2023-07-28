@@ -50,12 +50,6 @@ func init() {
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 		}, {
-			Name:    "prime_search_v2",
-			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutinePrimeSearchV2},
-			Timeout: 5 * time.Minute,
-			// TODO(b/285065218): Promote tast to critical
-			ExtraAttr: []string{"informational"},
-		}, {
 			Name: "volume_button",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
 		}}})
