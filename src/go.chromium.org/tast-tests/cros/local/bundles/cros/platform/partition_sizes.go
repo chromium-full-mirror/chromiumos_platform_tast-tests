@@ -19,11 +19,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type partitionTestParams struct {
-	// Expected rootfs partition size in mebibytes.
-	expectedRootfsSizes []int
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PartitionSizes,
@@ -31,20 +26,9 @@ func init() {
 		Contacts:     []string{"chromeos-storage@google.com"},
 		BugComponent: "b:974567",
 		Attr:         []string{"group:mainline"},
-		Params: []testing.Param{{
-			Val: partitionTestParams{
-				expectedRootfsSizes: []int{2048, 4096},
-			},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("reven")),
-		}, {
-			// Reven devices may have 4032 MB rootfs partitions.
-			// See go/reven-embiggen-kernel-partitions-dd-v2.
-			Name: "reven",
-			Val: partitionTestParams{
-				expectedRootfsSizes: []int{4032, 4096},
-			},
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("reven")),
-		}},
+		// b/265023645: The ChromeOS Flex installer performs internal disk discovery
+		// and there is no way to get the disk's path without performing the install.
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("reven")),
 	})
 }
 
@@ -74,7 +58,6 @@ func devIsPresent(devname string) bool {
 }
 
 func PartitionSizes(ctx context.Context, s *testing.State) {
-	testParam := s.Param().(partitionTestParams)
 	// Try getting the internal disk device name using write_gpt.sh.
 	//
 	// Note that this will return an empty string in the case where
@@ -102,13 +85,13 @@ func PartitionSizes(ctx context.Context, s *testing.State) {
 	if unicode.IsDigit(rune(baseDev[len(baseDev)-1])) {
 		partPrefix += "p"
 	}
-	// Convert mebibytes to bytes.
-	var mib int
-	var validSizes []int64
-	for i := 0; i < len(testParam.expectedRootfsSizes); i++ {
-		mib = testParam.expectedRootfsSizes[i]
-		validSizes = append(validSizes, int64(mib)*1024*1024)
+
+	const gb = 1024 * 1024 * 1024
+	validSizes := []int64{
+		2 * gb,
+		4 * gb,
 	}
+
 	for _, partNum := range []int{3, 5} {
 		partDev := partPrefix + strconv.Itoa(partNum)
 
