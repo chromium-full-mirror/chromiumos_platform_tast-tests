@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/colorcmp"
+	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -58,6 +59,14 @@ func Toolkit(ctx context.Context, scriptPath, outDir string, conf *ToolkitConfig
 			testing.ContextLog(ctx, "Failed to close application: ", err)
 		}
 	}(cleanupCtx)
+
+	ud := uidetection.NewDefault(tconn)
+	if err := uiauto.IfSuccessThen(
+		ud.Exists(uidetection.TextBlockFromSentence("Google Play Store isn't responding")),
+		ud.LeftClick(uidetection.TextBlockFromSentence("Close App")),
+	)(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to check or close \"Google Play Store isn't responding\" dialog: ", err)
+	}
 
 	// The toolkit applications will render a magenta window.
 	if err := MatchScreenshotDominantColor(ctx, cr, colorcmp.RGB(255, 0, 255), filepath.Join(outDir, "screenshot.png")); err != nil {
