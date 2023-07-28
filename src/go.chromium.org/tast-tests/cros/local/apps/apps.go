@@ -387,6 +387,12 @@ var SuperTuxKart = App{
 	Name: "SuperTuxKart",
 }
 
+// Microsoft365 has details about the Office PWA app.
+var Microsoft365 = App{
+	ID:   "onhfoihkhodaeblmangmjjgfpfehnlkm",
+	Name: "Microsoft 365",
+}
+
 // Launch launches an app specified by appID.
 func Launch(ctx context.Context, tconn *chrome.TestConn, appID string) error {
 	_, err := getInstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool { return app.AppID == appID }, nil)

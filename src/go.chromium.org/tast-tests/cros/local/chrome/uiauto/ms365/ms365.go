@@ -10,23 +10,35 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+)
+
+const (
+	officePWAInstallURL = "https://www.microsoft365.com/?from=Homescreen"
 )
 
 // Ms365 represents an instance of the Microsoft 365 app UI.
 type Ms365 struct {
-	ui    *uiauto.Context
-	kb    *input.KeyboardEventWriter
-	tconn *chrome.TestConn
+	ui       *uiauto.Context
+	kb       *input.KeyboardEventWriter
+	tconn    *chrome.TestConn
+	UserName string
+	Password string
 }
 
 // App returns an instance of the Cloud Upload.
-func App(ctx context.Context, tconn *chrome.TestConn) (*Ms365, error) {
+func App(ctx context.Context, tconn *chrome.TestConn, accountPool string) (*Ms365, error) {
 	// Create a uiauto.Context with default timeout.
 	ui := uiauto.New(tconn).WithInterval(500 * time.Millisecond)
 
@@ -35,7 +47,12 @@ func App(ctx context.Context, tconn *chrome.TestConn) (*Ms365, error) {
 		return nil, err
 	}
 
-	return &Ms365{ui: ui, kb: kb, tconn: tconn}, nil
+	msCreds, err := credconfig.PickRandomCreds(accountPool)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get the user/passwd for Microsoft 365")
+	}
+
+	return &Ms365{ui: ui, kb: kb, tconn: tconn, UserName: msCreds.User, Password: msCreds.Pass}, nil
 }
 
 // InputUserName waits for the Microsoft sign in window and input the username.
@@ -65,8 +82,7 @@ func (ms *Ms365) InputPassword(password string) uiauto.Action {
 	)
 }
 
-// StaySignedIn waits for the Microsoft "Styed Signed in?" screen and clicks
-// YES.
+// StaySignedIn waits for the Microsoft "Stayed Signed in?" screen and clicks YES.
 func (ms *Ms365) StaySignedIn() uiauto.Action {
 	msStaySignedInWindow := nodewith.Role(role.RootWebArea).Name("Microsoft account")
 	msStaySignedInButton := nodewith.Ancestor(msStaySignedInWindow).Role(role.Button).Name("Yes")
@@ -103,13 +119,20 @@ func (ms *Ms365) AcceptPermissionIfNeeded(setupCompleteDialogFinder *nodewith.Fi
 	}
 }
 
-// LoginToMicrosoft365 logs into the Microsoft 365 app with the provided
-// username and password.
-func (ms *Ms365) LoginToMicrosoft365(userName, password string, setupCompleteDialogFinder *nodewith.Finder) uiauto.Action {
+// LoginToMicrosoft365 logs into the Microsoft 365 app with the username and password in the instance.
+// If the account is logged in before, the auth flow will skip password screen, "skipPassword" flag is used to control that.
+func (ms *Ms365) LoginToMicrosoft365(setupCompleteDialogFinder *nodewith.Finder, skipPassword bool) uiauto.Action {
 	return uiauto.Combine("Login to Microsoft 365",
-		ms.InputUserName(userName),
-		ms.InputPassword(password),
-		ms.StaySignedIn(),
+		ms.InputUserName(ms.UserName),
+		func(ctx context.Context) error {
+			if skipPassword {
+				return nil
+			}
+			return uiauto.Combine("Input password and stay signed in",
+				ms.InputPassword(ms.Password),
+				ms.StaySignedIn(),
+			)(ctx)
+		},
 		ms.AcceptPermissionIfNeeded(setupCompleteDialogFinder),
 	)
 }
@@ -125,4 +148,44 @@ func Microsoft365WindowFinder(fileName string) *nodewith.Finder {
 func (ms *Ms365) WaitForMicrosoft365Window(fileName string) uiauto.Action {
 	ms365App := Microsoft365WindowFinder(fileName)
 	return ms.ui.WaitUntilExists(ms365App)
+}
+
+// InstallPWA installs Office PWA.
+func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome, browserType browser.Type) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	_, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, officePWAInstallURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to launch browser")
+	}
+	defer cleanup(cleanupCtx)
+
+	// Installing Office PWA requires a valid login.
+	signInButton := nodewith.Role(role.Button).Name("Sign in")
+	if err := uiauto.Combine("Login to Office site",
+		ms.ui.WaitUntilExists(signInButton),
+		ms.ui.LeftClick(signInButton),
+		ms.InputUserName(ms.UserName),
+		ms.InputPassword(ms.Password),
+		ms.StaySignedIn(),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to login to Office site")
+	}
+
+	windowAfterSignIn := nodewith.Role(role.RootWebArea).Name("Home | Microsoft 365")
+	installIcon := nodewith.ClassName("PwaInstallView").Role(role.Button)
+	installButton := nodewith.Name("Install").Role(role.Button)
+
+	if err := uiauto.Combine("Install Office PWA through omnibox",
+		ms.ui.WaitUntilExists(windowAfterSignIn),
+		ms.ui.WithTimeout(30*time.Second).WaitUntilExists(installIcon),
+		ms.ui.LeftClick(installIcon),
+		// The popup containing Install button takes time to appear sometimes.
+		ms.ui.WithTimeout(time.Minute).WaitUntilExists(installButton),
+		ms.ui.LeftClick(installButton))(ctx); err != nil {
+		return errors.Wrap(err, "failed to install Office PWA")
+	}
+	return ash.WaitForChromeAppInstalled(ctx, ms.tconn, apps.Microsoft365.ID, time.Minute)
 }

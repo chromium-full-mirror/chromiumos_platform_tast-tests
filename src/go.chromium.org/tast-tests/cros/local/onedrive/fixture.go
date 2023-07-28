@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
@@ -42,6 +43,24 @@ func init() {
 		PostTestTimeout: 10 * time.Second,
 		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "onedriveLacros",
+		Desc:     "Lacros variant of onedrive",
+		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
+		Impl: &fixture{
+			bt:            browser.TypeLacros,
+			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud")},
+			provider:      OneDrive,
+		},
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: 30 * time.Second,
+		PreTestTimeout:  10 * time.Second,
+		PostTestTimeout: 10 * time.Second,
+		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
+	})
+
 	testing.AddFixture(&testing.Fixture{
 		Name:     "onedriveAndGoogleDrive",
 		Desc:     "Sets up 3 office files docx, pptx and xlsx. At tear down tries to remove them from the remote service via ODFS",
@@ -142,6 +161,15 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		f.tconn = s.ParentValue().(*drivefs.FixtureData).TestAPIConn
 	} else if f.provider == OneDrive {
 		opts := f.chromeOptions
+
+		if f.bt == browser.TypeLacros {
+			var err error
+			opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
+			if err != nil {
+				s.Fatal("Failed to get lacros options: ", err)
+			}
+		}
+
 		ctx, cancel := context.WithTimeout(ctx, chrome.LoginTimeout)
 		defer cancel()
 

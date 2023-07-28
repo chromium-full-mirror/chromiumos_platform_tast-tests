@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
@@ -185,32 +184,42 @@ func (cu *CloudUpload) MaybeConfirmUploadOr365Window(ms365App *ms365.Ms365, file
 	}
 }
 
+// OneDriveSetupFlowOptions contains the options required for running OneDrive setup flow.
+type OneDriveSetupFlowOptions struct {
+	CloudUpload  *CloudUpload
+	Ms365App     *ms365.Ms365
+	PWAInstalled bool
+}
+
 // RunOneDriveSetupFlow runs the step to test the setup flow.
-func RunOneDriveSetupFlow(ctx context.Context, accountPool string, cloudUpload *CloudUpload, ms365App *ms365.Ms365) error {
-	msCreds, err := credconfig.PickRandomCreds(accountPool)
-	if err != nil {
-		errors.Wrap(err, "failed to get the user/passwd for Office 365")
-	}
+func RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) uiauto.Action {
+	return func(ctx context.Context) error {
+		testing.ContextLog(ctx, "MS user:", options.Ms365App.UserName)
 
-	testing.ContextLog(ctx, "MS user:", msCreds.User)
-	user := msCreds.User
-	passwd := msCreds.Pass
-
-	if err := uiauto.Combine("Setup dialog steps",
-		// Dialog setting up the File Handler, configuring the file type to open with Office 365.
-		cloudUpload.WaitFileHandlerAndChoose(onedrive.OneDrive),
-		// Fist setup dialog.
-		cloudUpload.WaitGetStartedDialogAndClickNext(),
-		// This step is quite slow because it downloads from the internet.
-		cloudUpload.WaitInstallPWADialogAndClickInstall(),
-		// Connect/mount the ODFS.
-		cloudUpload.WaitConnectToOneDriveDialogAndClickConnect(),
-		// Authenticate to OneDrive to mount ODFS.
-		ms365App.LoginToMicrosoft365(user, passwd, SetupCompleteDialog),
-		// Last step of the setup flow.
-		cloudUpload.WaitSetupCompleteDialogAndClickDone(),
-	)(ctx); err != nil {
-		errors.Wrap(err, "failed to complete the setup dialog steps")
+		if err := uiauto.Combine("Setup dialog steps",
+			// Dialog setting up the File Handler, configuring the file type to open with Office 365.
+			options.CloudUpload.WaitFileHandlerAndChoose(onedrive.OneDrive),
+			// Fist setup dialog.
+			options.CloudUpload.WaitGetStartedDialogAndClickNext(),
+			func(ctx context.Context) error {
+				// Skip PWA install step if it's already installed.
+				if options.PWAInstalled {
+					return log("Skipping install PWA step")(ctx)
+				}
+				// Otherwise expect PWA install screen.
+				// This step is quite slow because it downloads from the internet.
+				return options.CloudUpload.WaitInstallPWADialogAndClickInstall()(ctx)
+			},
+			// Connect/mount the ODFS.
+			options.CloudUpload.WaitConnectToOneDriveDialogAndClickConnect(),
+			// Authenticate to OneDrive to mount ODFS.
+			// Skip password screen if PWA is already installed.
+			options.Ms365App.LoginToMicrosoft365(SetupCompleteDialog, options.PWAInstalled /*=skipPassword*/),
+			// Last step of the setup flow.
+			options.CloudUpload.WaitSetupCompleteDialogAndClickDone(),
+		)(ctx); err != nil {
+			errors.Wrap(err, "failed to complete the setup dialog steps")
+		}
+		return nil
 	}
-	return nil
 }

@@ -80,11 +80,13 @@ func OdfsReopenFile(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open office file: ", err)
 		}
-		ms365App, err := ms365.App(ctx, tconn)
+		ms365App, err := ms365.App(ctx, tconn, accountPool)
 		if err != nil {
 			s.Fatal("Failed to get instance of Ms365: ", err)
 		}
-		if err := cloudupload.RunOneDriveSetupFlow(ctx, accountPool, cloudUpload, ms365App); err != nil {
+		options := &cloudupload.OneDriveSetupFlowOptions{
+			CloudUpload: cloudUpload, Ms365App: ms365App, PWAInstalled: false}
+		if err := cloudupload.RunOneDriveSetupFlow(options)(ctx); err != nil {
 			s.Fatal("Failed to run the setup dialog steps: ", err)
 		}
 
