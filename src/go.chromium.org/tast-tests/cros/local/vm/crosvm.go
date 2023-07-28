@@ -49,6 +49,12 @@ type SerialIOPath struct {
 	ToHost  string
 }
 
+// NetOption contains option for set up virtio net
+type NetOption struct {
+	TapFd       uint
+	PackedQueue bool
+}
+
 // CrosvmParams - Parameters for starting a crosvm instance.
 type CrosvmParams struct {
 	vmKernel       string           // path to the VM kernel image
@@ -65,7 +71,7 @@ type CrosvmParams struct {
 	serialIO       []SerialIOPath   // paths to files used for serial input and output
 	vhostUserNet   []string         // paths to sockets that vhost-user-net devices will use
 	disableSandbox bool             // whether or not the sandbox is disabled
-	tapFds         []uint           // file descriptors for configured tap device
+	netOptions     []NetOption      // net option for virtio-net
 }
 
 // Option configures a CrosvmParams
@@ -154,9 +160,9 @@ func MemSize(memsize uint) Option {
 }
 
 // Net sets virtio device by tap device file descriptor
-func Net(tapFd uint) Option {
+func Net(netOption NetOption) Option {
 	return func(p *CrosvmParams) {
-		p.tapFds = append(p.tapFds, tapFd)
+		p.netOptions = append(p.netOptions, netOption)
 	}
 }
 
@@ -251,8 +257,8 @@ func (p *CrosvmParams) ToArgs() []string {
 		args = append(args, p.vmKernel)
 	}
 
-	for _, tapFd := range p.tapFds {
-		args = append(args, "--net", fmt.Sprintf("tap-fd=%d", tapFd))
+	for _, netOption := range p.netOptions {
+		args = append(args, "--net", fmt.Sprintf("tap-fd=%d,packed-queue=%t", netOption.TapFd, netOption.PackedQueue))
 	}
 
 	return args
