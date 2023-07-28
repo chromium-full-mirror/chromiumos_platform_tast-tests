@@ -24,6 +24,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	dutpkg "go.chromium.org/tast-tests/cros/remote/dut"
 	aupb "go.chromium.org/tast-tests/cros/services/cros/autoupdate"
 	"go.chromium.org/tast-tests/cros/services/cros/baserpc"
 	"go.chromium.org/tast-tests/cros/services/cros/nebraska"
@@ -44,18 +45,9 @@ var tlwAddress = testing.RegisterVarString(
 	"The address {host:port} of the TLW service",
 )
 
-// ReadBootID reads back the current boot_id from the DUT.
-func ReadBootID(ctx context.Context, dut *dut.DUT) (string, error) {
-	out, err := dut.Conn().CommandContext(ctx, "cat", "/proc/sys/kernel/random/boot_id").Output(testexec.DumpLogOnError)
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(out)), nil
-}
-
 // ApplyDeferredUpdate applies the deferred update, reboot, and wait for the DUT becomes reachable again.
 func ApplyDeferredUpdate(ctx context.Context, dut *dut.DUT) error {
-	bootID, err := ReadBootID(ctx, dut)
+	bootID, err := dutpkg.ReadBootID(ctx, dut.Conn())
 	if err != nil {
 		return errors.Wrap(err, "failed to read the boot_id before applying the update")
 	}
@@ -73,7 +65,7 @@ func ApplyDeferredUpdate(ctx context.Context, dut *dut.DUT) error {
 		if err := dut.WaitConnect(ctx); err != nil {
 			return errors.Wrap(err, "failed to connect to DUT")
 		}
-		id, err := ReadBootID(ctx, dut)
+		id, err := dutpkg.ReadBootID(ctx, dut.Conn())
 		if err != nil {
 			return errors.Wrap(err, "failed to read boot_id")
 		}

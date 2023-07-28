@@ -7,13 +7,12 @@ package hwsec
 import (
 	"context"
 	"strconv"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/dut"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -117,7 +116,7 @@ func CCDCapabilitiesRebootECAP(ctx context.Context, s *testing.State) {
 
 func verifyGscEcrstCommand(ctx context.Context, s *testing.State, expectSuccess bool) error {
 	h := s.FixtValue().(*fixture.Value).Helper
-	oldID, err := readBootID(ctx, h.DUT.Conn())
+	oldID, err := dut.ReadBootID(ctx, h.DUT.Conn())
 	if err != nil {
 		return errors.Wrap(err, "failed to read boot id")
 	}
@@ -137,7 +136,7 @@ func verifyGscEcrstCommand(ctx context.Context, s *testing.State, expectSuccess 
 		// TODO(mvertescher): We need to make sure that the EC actually rebooted
 		// here, but for now we can just check that the AP rebooted because this
 		// also occurs when running `ecrst pulse`.
-		newID, err := readBootID(ctx, h.DUT.Conn())
+		newID, err := dut.ReadBootID(ctx, h.DUT.Conn())
 		if err != nil {
 			return errors.Wrap(err, "failed to read boot id")
 		}
@@ -153,7 +152,7 @@ func verifyGscEcrstCommand(ctx context.Context, s *testing.State, expectSuccess 
 // verifies that the reset occurred by checking the boot ID of the AP.
 func verifyGscSysrstCommand(ctx context.Context, s *testing.State, expectSuccess bool) error {
 	h := s.FixtValue().(*fixture.Value).Helper
-	oldID, err := readBootID(ctx, h.DUT.Conn())
+	oldID, err := dut.ReadBootID(ctx, h.DUT.Conn())
 	if err != nil {
 		return errors.Wrap(err, "failed to read boot id")
 	}
@@ -170,7 +169,7 @@ func verifyGscSysrstCommand(ctx context.Context, s *testing.State, expectSuccess
 	testing.ContextLog(ctx, "DUT booted successfully")
 
 	if expectSuccess {
-		newID, err := readBootID(ctx, h.DUT.Conn())
+		newID, err := dut.ReadBootID(ctx, h.DUT.Conn())
 		if err != nil {
 			return errors.Wrap(err, "failed to read boot id")
 		}
@@ -216,14 +215,4 @@ func runGscSysrstPulseCommand(ctx context.Context, s *testing.State, expectSucce
 		return errors.Wrap(err, "failed to match GSC command output, expected command `"+command+"` to succeed = "+strconv.FormatBool(expectSuccess))
 	}
 	return nil
-}
-
-// readBootID reads the current boot_id from the host AP.
-// TODO(mvertescher): Find the correct common location to move this to.
-func readBootID(ctx context.Context, hst *ssh.Conn) (string, error) {
-	out, err := hst.CommandContext(ctx, "cat", "/proc/sys/kernel/random/boot_id").Output()
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(out)), nil
 }

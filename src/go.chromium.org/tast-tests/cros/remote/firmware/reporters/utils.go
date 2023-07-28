@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"go.chromium.org/tast-tests/cros/remote/dut"
 )
 
 // Now reports the output of the `date` command as a Go Time.
@@ -38,7 +40,7 @@ func (r *Reporter) DoAllPathsExist(ctx context.Context, paths []string) (bool, e
 
 // BootID reports the device's Boot ID, which changes upon reboot.
 func (r *Reporter) BootID(ctx context.Context) (string, error) {
-	return r.CatFile(ctx, "/proc/sys/kernel/random/boot_id")
+	return dut.ReadBootID(ctx, r.d.Conn())
 }
 
 // BatteryStatus reports the device's battery status.

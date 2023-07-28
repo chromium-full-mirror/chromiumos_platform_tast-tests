@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/remote/dut"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	"go.chromium.org/tast-tests/cros/remote/updateutil"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
@@ -148,7 +149,7 @@ func RebootAfterUpdate(ctx context.Context, s *testing.State) {
 			builderPath := lsbContent[lsbrelease.BuilderPath]
 
 			// Retrieve a current boot ID to check if the reboot happens.
-			bootID, err := updateutil.ReadBootID(ctx, s.DUT())
+			bootID, err := dut.ReadBootID(ctx, s.DUT().Conn())
 			if err != nil {
 				s.Fatal("Failed to read current boot ID: ", err)
 			}
@@ -170,7 +171,7 @@ func RebootAfterUpdate(ctx context.Context, s *testing.State) {
 					return errors.Wrap(err, "failed to connect to DUT")
 				}
 
-				id, err := updateutil.ReadBootID(ctx, s.DUT())
+				id, err := dut.ReadBootID(ctx, s.DUT().Conn())
 				if err != nil {
 					return errors.Wrap(err, "failed to read boot_id")
 				}
