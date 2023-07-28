@@ -49,6 +49,44 @@ type DesksInfo struct {
 	DeskContainers  []string `json:"deskContainers"`
 }
 
+func isJellyEnabled(ctx context.Context, ac *uiauto.Context) bool {
+	jellyEnabled, err := ac.IsFeatureEnabled(ctx, "Jelly")
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to check if Jelly is enabled, assuming false")
+		return false
+	}
+	return jellyEnabled
+}
+
+func deskButton(ctx context.Context, ac *uiauto.Context) *nodewith.Finder {
+	if isJellyEnabled(ctx, ac) {
+		return nodewith.HasClass("CrOSNextDeskIconButton")
+	}
+
+	return nodewith.HasClass("ZeroStateIconButton")
+}
+
+// NewDeskButton returns a `Finder` for the new desk button.
+func NewDeskButton(ctx context.Context, ac *uiauto.Context) *nodewith.Finder {
+	return deskButton(ctx, ac).Name("New Desk")
+}
+
+// DeskLibraryButton returns the library button from the desks bar.
+func DeskLibraryButton(ctx context.Context, ac *uiauto.Context) *nodewith.Finder {
+	return deskButton(ctx, ac).Name("Library")
+}
+
+// DeskDialog returns a `Finder` for the saved desk dialog where the title
+// starts with `name`.
+func DeskDialog(ctx context.Context, ac *uiauto.Context, name string) *nodewith.Finder {
+	if isJellyEnabled(ctx, ac) {
+		finder := nodewith.HasClass("Label").NameStartingWith(name)
+		return finder.Ancestor(nodewith.HasClass("SystemDialogDelegateView").First())
+	}
+
+	return nodewith.ClassName("SavedDeskDialog")
+}
+
 // CreateNewDesk requests Ash to create a new Virtual Desk which would fail if
 // the maximum number of desks have been reached.
 func CreateNewDesk(ctx context.Context, tconn *chrome.TestConn) error {
@@ -263,7 +301,7 @@ func IsLibraryButtonVisible(ctx context.Context, ac *uiauto.Context) (bool, erro
 // This assumes overview grid is live now.
 // TODO(yongshun): Check if in overview mode and error out early if not.
 func EnterLibraryPage(ctx context.Context, ac *uiauto.Context) error {
-	libraryButton := nodewith.ClassName("ZeroStateIconButton").Name("Library")
+	libraryButton := DeskLibraryButton(ctx, ac)
 	savedDeskGridView := nodewith.ClassName("SavedDeskGridView").Nth(0)
 
 	var visible bool
@@ -365,7 +403,7 @@ func VerifySavedDesk(ctx context.Context, ac *uiauto.Context, savedDeskNames []s
 func DeleteAllSavedDesks(ctx context.Context, ac *uiauto.Context, tconn *chrome.TestConn) error {
 	savedDesk := nodewith.ClassName("SavedDeskItemView")
 	closeButton := nodewith.ClassName("IconButton").Name("Delete")
-	deleteDialog := nodewith.ClassName("SavedDeskDialog")
+	deleteDialog := DeskDialog(ctx, ac, "Delete")
 
 	// Define keyboard.
 	kb, err := input.Keyboard(ctx)
@@ -420,7 +458,7 @@ func DeleteDeskTemplateByName(ctx context.Context, ac *uiauto.Context, tconn *ch
 
 	savedDesk := nodewith.ClassName("SavedDeskNameView").Name(savedDeskName)
 	closeButton := nodewith.ClassName("IconButton").Name("Delete").Nth(savedDeskIndex)
-	deleteDialog := nodewith.ClassName("SavedDeskDialog")
+	deleteDialog := DeskDialog(ctx, ac, "Delete")
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
