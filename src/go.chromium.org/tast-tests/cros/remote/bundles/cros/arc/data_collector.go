@@ -470,10 +470,11 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		shortCtx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancel()
 
-		// Limit running in PFQ for VM devices to 8GB+ RAM spec only for x86_64. On
-		// arm64, we have very few devices in Uprev with >4GB so won't restrict.
-		// No restrictions for local test configs (upload=false && vmEnabled=false).
-		if param.vmEnabled && param.upload && strings.HasPrefix(desc.CPUAbi, "x86") {
+		// Limit running in PFQ for VM devices to 8GB+ RAM spec only for x86_64-Intel (houdini)
+		// devices to prevent possible dropping caches due to high memory pressure. On arm64 and
+		// x86_64-AMD (ndk), we have very few devices in Uprev with >4GB so don't restrict.
+		// No restrictions for local test configs (upload=false) and non-VM devices (vmEnabled=false).
+		if param.vmEnabled && param.upload && desc.BinaryTranslationType == "houdini" {
 			response, err := service.CheckMinMemory(shortCtx, &empty.Empty{})
 			if err != nil {
 				return errors.Wrap(err, "ureadaheadPackService.CheckMinMemory returned an error")
