@@ -12,9 +12,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -22,8 +25,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: USBResumeFromSuspend,
-		Desc: "Verify if all usb ports come back from suspend",
+		Func:         USBResumeFromSuspend,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify if all usb ports come back from suspend",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",
@@ -31,6 +35,8 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
+		SoftwareDeps: []string{"chrome"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
 		Timeout:      8 * time.Minute,
@@ -45,6 +51,19 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to create config: ", err)
 	}
+
+	if err := h.RequireRPCClient(ctx); err != nil {
+		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+
+	s.Log("Starting a new Chrome")
+	chromeService := pb.NewChromeServiceClient(h.RPCClient.Conn)
+	if _, err := chromeService.New(ctx, &pb.NewRequest{
+		LoginMode: pb.LoginMode_LOGIN_MODE_GUEST_LOGIN,
+	}); err != nil {
+		s.Fatal("Failed to create new Chrome at login: ", err)
+	}
+	defer chromeService.Close(ctx, &empty.Empty{})
 
 	logPath := "/var/log/messages"
 	s.Logf("Cleaning %s", logPath)

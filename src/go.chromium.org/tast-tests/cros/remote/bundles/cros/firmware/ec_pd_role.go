@@ -10,10 +10,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -34,6 +36,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"chrome"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Lid()),
 		Timeout:      20 * time.Minute,
 	})
@@ -99,23 +102,42 @@ func ECPDRole(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	var chromeService pb.ChromeServiceClient
 	for _, step := range []struct {
+		needLogin    bool
 		testAction   func(context.Context, *firmware.Helper, *dutState) error
 		expectStatus servo.USBPdDualRoleValue
 	}{
 		{
+			needLogin:    false,
 			testAction:   usbPdCloseLid,
 			expectStatus: servo.USBPdDualRoleSink,
 		},
 		{
+			needLogin:    false,
 			testAction:   usbPdOpenLid,
 			expectStatus: servo.USBPdDualRoleOn,
 		},
 		{
+			needLogin:    true,
 			testAction:   usbPdSuspend,
 			expectStatus: servo.USBPdDualRoleOff,
 		},
 	} {
+		if step.needLogin {
+			if err := h.RequireRPCClient(ctx); err != nil {
+				s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+			}
+			s.Log("Starting a new Chrome")
+			chromeService = pb.NewChromeServiceClient(h.RPCClient.Conn)
+			if _, err := chromeService.New(ctx, &pb.NewRequest{
+				LoginMode: pb.LoginMode_LOGIN_MODE_GUEST_LOGIN,
+			}); err != nil {
+				s.Fatal("Failed to create new Chrome at login: ", err)
+			}
+			defer chromeService.Close(ctx, &empty.Empty{})
+		}
+
 		if step.expectStatus == servo.USBPdDualRoleSink {
 			// When powered off, we found two duts on Stainless with their pd dual-role status
 			// reported as "off", rather than "force sink".
