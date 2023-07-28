@@ -45,6 +45,33 @@ var tlwAddress = testing.RegisterVarString(
 	"The address {host:port} of the TLW service",
 )
 
+// WaitForUpdateReboot waits for the test device to reboot and the boot id to change,
+// which means the device booted into the update image.
+// This function does not read the boot id by itself because it must be ok to call it
+// when the device is already rebooting.
+func WaitForUpdateReboot(ctx context.Context, dut *dut.DUT, oldBootID string) error {
+	const rebootTimeout = time.Minute * 4
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		defer cancel()
+		if err := dut.WaitConnect(ctx); err != nil {
+			return errors.Wrap(err, "failed to connect to DUT")
+		}
+		id, err := dutpkg.ReadBootID(ctx, dut.Conn())
+		if err != nil {
+			return errors.Wrap(err, "failed to read boot_id")
+		}
+		if id == oldBootID {
+			return errors.New("boot_id did not change")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: rebootTimeout, Interval: time.Second}); err != nil {
+		return errors.Wrap(err, "failed to wait for DUT to reboot")
+	}
+	return nil
+}
+
 // ApplyDeferredUpdate applies the deferred update, reboot, and wait for the DUT becomes reachable again.
 func ApplyDeferredUpdate(ctx context.Context, dut *dut.DUT) error {
 	bootID, err := dutpkg.ReadBootID(ctx, dut.Conn())
@@ -59,24 +86,7 @@ func ApplyDeferredUpdate(ctx context.Context, dut *dut.DUT) error {
 	}
 
 	// Wait for reboot and boot_id change.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-		defer cancel()
-		if err := dut.WaitConnect(ctx); err != nil {
-			return errors.Wrap(err, "failed to connect to DUT")
-		}
-		id, err := dutpkg.ReadBootID(ctx, dut.Conn())
-		if err != nil {
-			return errors.Wrap(err, "failed to read boot_id")
-		}
-		if id == bootID {
-			return errors.New("boot_id did not change")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: time.Minute * 2, Interval: time.Second}); err != nil {
-		return errors.Wrap(err, "failed to wait for DUT to reboot")
-	}
-	return nil
+	return WaitForUpdateReboot(ctx, dut, bootID)
 }
 
 // EnsureUpdateStatusIdle ensures update engine is running and its status is
