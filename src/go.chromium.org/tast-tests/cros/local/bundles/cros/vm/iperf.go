@@ -29,10 +29,17 @@ import (
 const runIperfTest string = "run-iperf-test.sh"
 
 type virtqueueType int
+type netProtocol int
 
 const (
 	split virtqueueType = iota
 	packed
+)
+
+const (
+	tcp netProtocol = iota
+	udp
+	udpReverse
 )
 
 func (vt virtqueueType) String() string {
@@ -45,8 +52,21 @@ func (vt virtqueueType) String() string {
 	return "unknown"
 }
 
+func (np netProtocol) String() string {
+	switch np {
+	case tcp:
+		return "tcp"
+	case udp:
+		return "udp"
+	case udpReverse:
+		return "udpReverse"
+	}
+	return "unknown"
+}
+
 type iperfParam struct {
-	vqType virtqueueType
+	vqType   virtqueueType
+	protocol netProtocol
 }
 
 func init() {
@@ -65,31 +85,148 @@ func init() {
 			{
 				Name: "tcp_split",
 				Val: iperfParam{
-					vqType: split,
+					vqType:   split,
+					protocol: tcp,
+				},
+			},
+			{
+				Name: "udp_split",
+				Val: iperfParam{
+					vqType:   split,
+					protocol: udp,
+				},
+			},
+			{
+				Name: "udp_reverse_split",
+				Val: iperfParam{
+					vqType:   split,
+					protocol: udpReverse,
 				},
 			},
 			{
 				Name: "tcp_packed",
 				Val: iperfParam{
-					vqType: packed,
+					vqType:   packed,
+					protocol: tcp,
+				},
+			},
+			{
+				Name: "udp_packed",
+				Val: iperfParam{
+					vqType:   packed,
+					protocol: udp,
+				},
+			},
+			{
+				Name: "udp_reverse_packed",
+				Val: iperfParam{
+					vqType:   packed,
+					protocol: udpReverse,
 				},
 			},
 		},
 	})
 }
 
-func getClientIperfCmd(ctx context.Context, clientArgs []string) *testexec.Cmd {
+func getClientIperfCmd(ctx context.Context, serverAddress, logPath string, protocol netProtocol) *testexec.Cmd {
+
 	var args = []string{
 		"--json",
-		"--client", clientArgs[0],
+		"--client", serverAddress,
 		"--port", "1234",
 		"--connect-timeout", "3000",
-		"--logfile", clientArgs[1],
-		"--bidir",
+		"--logfile", logPath,
 		"--time", "10",
 		"--omit", "1",
 	}
+
+	if protocol == tcp {
+		args = append(args, "--bidir")
+	} else if protocol == udpReverse {
+		args = append(args, "--reverse")
+	}
+
+	if protocol == udp || protocol == udpReverse {
+		args = append(args, "-u", "-b", "1G")
+	}
+
 	return testexec.CommandContext(ctx, "iperf3", args...)
+}
+
+func processResult(metric string, json map[string]interface{}) (name string, value float64) {
+	hostSender := json["sender"].(bool)
+	name = "host_to_guest"
+	if !hostSender {
+		name = "guest_to_host"
+	}
+	value = json[metric].(float64)
+
+	return name, value
+}
+
+func parseTCPResult(results map[string]interface{}) *perf.Values {
+	perfValues := perf.NewValues()
+	ends := results["end"].(map[string]interface{})
+	streams := ends["streams"].([]interface{})
+	for _, i := range streams {
+		j := i.(map[string]interface{})
+		stats := j["sender"].(map[string]interface{})
+
+		name, senderMbps := processResult("bits_per_second", stats)
+		senderMbps /= 1024 * 1024
+
+		perfValues.Set(perf.Metric{
+			Name:      name + "_throughput",
+			Unit:      "Mbps",
+			Direction: perf.BiggerIsBetter,
+			Multiple:  true,
+		}, senderMbps)
+
+		name, senderRtt := processResult("mean_rtt", stats)
+		perfValues.Set(perf.Metric{
+			Name:      name + "_rtt",
+			Unit:      "Usec",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  true,
+		}, senderRtt)
+	}
+	return perfValues
+}
+
+func parseUDPResult(results map[string]interface{}) *perf.Values {
+	perfValues := perf.NewValues()
+	ends := results["end"].(map[string]interface{})
+	streams := ends["streams"].([]interface{})
+	for _, i := range streams {
+		j := i.(map[string]interface{})
+		stats := j["udp"].(map[string]interface{})
+
+		name, udpJitter := processResult("jitter_ms", stats)
+		perfValues.Set(perf.Metric{
+			Name:      name + "_jitter",
+			Unit:      "ms",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  true,
+		}, udpJitter)
+
+		name, udpLossPercent := processResult("lost_percent", stats)
+		perfValues.Set(perf.Metric{
+			Name:      name + "_lost_percent",
+			Unit:      "percent",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  true,
+		}, udpLossPercent)
+
+		name, udpMbps := processResult("bits_per_second", stats)
+		udpMbps /= 1024 * 1024
+		perfValues.Set(perf.Metric{
+			Name:      name + "_throughput",
+			Unit:      "Mbps",
+			Direction: perf.BiggerIsBetter,
+			Multiple:  true,
+		}, udpMbps*(1-(udpLossPercent/100)))
+	}
+	return perfValues
 }
 
 func getCrosvmNetCmd(ctx context.Context, kernel, serialLog string, netOption vm.NetOption, script string, scriptArgs []string) *testexec.Cmd {
@@ -164,6 +301,7 @@ func Iperf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get Tap FD for server: ", err)
 	}
 	defer serverCleanup(cleanupCtx)
+	serverAddress := serverTap.Addr.String()
 
 	data := s.FixtValue().(dlc.FixtData)
 	script := s.DataPath(runIperfTest)
@@ -213,14 +351,8 @@ func Iperf(ctx context.Context, s *testing.State) {
 	}
 	defer iperfOut.Close()
 
-	// Config client commands
-	clientArgs := []string{
-		serverTap.Addr.String(), // destination address
-		iperfLog,                // iperf3 output file
-	}
-
-	clientPingCmd := testexec.CommandContext(ctx, "ping", "-c", "5", clientArgs[0])
-	clientIperfCmd := getClientIperfCmd(ctx, clientArgs)
+	clientPingCmd := testexec.CommandContext(ctx, "ping", "-c", "5", serverAddress)
+	clientIperfCmd := getClientIperfCmd(ctx, serverAddress, iperfLog, params.protocol)
 
 	clientPingCmd.Stdout = clientOut
 	clientPingCmd.Stderr = clientOut
@@ -261,37 +393,11 @@ func Iperf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to unmarshal fio results: ", err)
 	}
 
-	// Parse iperf3 result json, extract throughput and Rtt data
-	perfValues := perf.NewValues()
-	ends := results["end"].(map[string]interface{})
-	streams := ends["streams"].([]interface{})
-	for _, i := range streams {
-		j := i.(map[string]interface{})
-		sender := j["sender"].(map[string]interface{})
-
-		senderMbps := sender["bits_per_second"].(float64) / (1024 * 1024)
-
-		// true if it's host send packets to vm, else it's vm send packets to host
-		hostSender := sender["sender"].(bool)
-		name := "host_to_guest"
-		if !hostSender {
-			name = "guest_to_host"
-		}
-
-		perfValues.Set(perf.Metric{
-			Name:      name + "_throughput",
-			Unit:      "Mbps",
-			Direction: perf.BiggerIsBetter,
-			Multiple:  true,
-		}, senderMbps)
-
-		senderRtt := sender["mean_rtt"].(float64)
-		perfValues.Set(perf.Metric{
-			Name:      name + "_rtt",
-			Unit:      "Usec",
-			Direction: perf.SmallerIsBetter,
-			Multiple:  true,
-		}, senderRtt)
+	if params.protocol == tcp {
+		perfValues := parseTCPResult(results)
+		perfValues.Save(s.OutDir())
+	} else {
+		perfValues := parseUDPResult(results)
+		perfValues.Save(s.OutDir())
 	}
-	perfValues.Save(s.OutDir())
 }

@@ -15,18 +15,27 @@ import (
 
 func TestIperf(t *testing.T) {
 	type paramData struct {
-		Name   string
-		VqType virtqueueType
+		Name     string
+		VqType   virtqueueType
+		Protocol netProtocol
 	}
 
 	vqTypes := []virtqueueType{split, packed}
+	protocols := []netProtocol{tcp, udp, udpReverse}
 
 	var params []paramData
 	for _, vt := range vqTypes {
-		params = append(params, paramData{
-			Name:   fmt.Sprintf("tcp_%s", vt),
-			VqType: vt,
-		})
+		for _, protocol := range protocols {
+			protocolName := fmt.Sprintf("%s", protocol)
+			if protocol == udpReverse {
+				protocolName = "udp_reverse"
+			}
+			params = append(params, paramData{
+				Name:     fmt.Sprintf("%s_%s", protocolName, vt),
+				VqType:   vt,
+				Protocol: protocol,
+			})
+		}
 	}
 
 	code := genparams.Template(t,
@@ -34,6 +43,7 @@ func TestIperf(t *testing.T) {
 			Name: {{ .Name | fmt }},
 			Val: iperfParam{
 				vqType: {{ .VqType }},
+				protocol: {{ .Protocol }},
 			},
 		},
 		{{ end }}`,
