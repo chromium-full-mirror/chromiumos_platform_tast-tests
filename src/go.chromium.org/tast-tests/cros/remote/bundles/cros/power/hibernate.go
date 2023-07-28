@@ -32,7 +32,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Hibernate,
 		Desc:         "Verifies that system comes back after hibernation",
-		BugComponent: "b:167191",
+		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-platform-power@google.com", "vovoy@google.com"},
 		SoftwareDeps: []string{"reboot", "no_qemu"},
 		// Allow for a larger number of cycles for stress testing. In case of a hang the

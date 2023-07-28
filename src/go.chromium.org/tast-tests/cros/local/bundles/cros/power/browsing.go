@@ -35,7 +35,7 @@ func init() {
 		Func:         Browsing,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power metrics when browsing",
-		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
+		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{

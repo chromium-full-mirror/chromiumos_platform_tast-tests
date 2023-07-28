@@ -20,7 +20,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
 		},
-		BugComponent: "b:167191",
+		BugComponent: "b:1361410",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      2 * time.Minute,
 	})

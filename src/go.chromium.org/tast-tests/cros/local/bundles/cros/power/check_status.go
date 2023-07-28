@@ -18,7 +18,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CheckStatus,
 		Desc:         "Checks that dump_power_status can read power supply info from the kernel",
-		BugComponent: "b:167191",
+		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		Attr:         []string{"group:mainline", "group:labqual"},
 	})

@@ -35,7 +35,7 @@ func init() {
 		Func:         AdaptiveCharging,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that Adaptive Charging functionality works correctly",
-		BugComponent: "b:167191",
+		BugComponent: "b:1361410",
 		Contacts: []string{
 			"chromeos-platform-power@google.com", // CrOS platform power developers
 			"dbasehore@google.com",               // test author

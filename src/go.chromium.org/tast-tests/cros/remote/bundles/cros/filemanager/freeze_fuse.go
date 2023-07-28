@@ -22,7 +22,7 @@ func init() {
 		Func:         FreezeFUSE,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that freeze on suspend works with FUSE",
-		BugComponent: "b:167191",
+		BugComponent: "b:1361410",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
 			"dbasehore@google.com",

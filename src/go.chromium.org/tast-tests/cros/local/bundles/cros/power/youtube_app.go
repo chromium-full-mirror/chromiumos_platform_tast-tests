@@ -40,7 +40,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics of playing YouTube video of different video formats in full screen",
 		Contacts:     []string{"chromeos-platform-power@google.com", "cienet-development@googlegroups.com", "vivian.chen@cienet.com"},
-		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
+		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		SoftwareDeps: []string{"chrome", "arc"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "powerAshARC",

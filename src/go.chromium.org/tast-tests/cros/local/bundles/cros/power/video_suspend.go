@@ -30,7 +30,7 @@ func init() {
 		Func:         VideoSuspend,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Suspend while video is playing",
-		BugComponent: "b:167191",
+		BugComponent: "b:1361410",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
 			"dml@chromium.org",

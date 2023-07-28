@@ -16,7 +16,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DptfOverrideScript,
 		Desc:         "Check that dptf loads correct thermal profile from override script",
-		BugComponent: "b:167191",
+		BugComponent: "b:1361410",
 		Contacts: []string{
 			"chromeos-platform-power@google.com", // CrOS platform power developers
 			"puthik@chromium.org",                // test author

@@ -30,7 +30,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Allow manual power test to be performed and the test results to be collected to evaluate power metrics",
 		Contacts:     []string{"chromeos-platform-power@google.com"},
-		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
+		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
 			// How many minutes to capture metrics.

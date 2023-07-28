@@ -41,7 +41,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power related data when device do multi tasking with several apps",
 		Contacts:     []string{"chromeos-platform-power@google.com"},
-		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
+		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "arc"},
 		Vars:         socialapp.ElementApkURLVars, // Optional. The URL of the APK file of Element app.

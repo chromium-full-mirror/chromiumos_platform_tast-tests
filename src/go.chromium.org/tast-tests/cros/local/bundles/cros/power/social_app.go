@@ -39,7 +39,7 @@ func init() {
 			"cienet-development@googlegroups.com",
 			"jason.hsiao@cienet.com",
 		},
-		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
+		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		SoftwareDeps: []string{"chrome", "arc"},
 		Vars:         socialapp.ElementApkURLVars, // Optional. The URL of the APK file of Element app.
 		Timeout:      socialAppTimeout,

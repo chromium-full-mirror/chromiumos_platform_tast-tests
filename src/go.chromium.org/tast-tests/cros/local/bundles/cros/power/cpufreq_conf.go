@@ -25,7 +25,7 @@ func init() {
 			"chromeos-platform-power@google.com",
 			"briannorris@chromium.org",
 		},
-		BugComponent: "b:167191",
+		BugComponent: "b:1361410",
 		Attr:         []string{"group:mainline"},
 	})
 }

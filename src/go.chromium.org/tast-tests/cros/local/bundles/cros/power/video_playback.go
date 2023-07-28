@@ -24,7 +24,7 @@ func init() {
 		Func:         VideoPlayback,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power metrics playing offline video",
-		BugComponent: "b:167191",
+		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5*time.Minute + power.RecorderTimeout,

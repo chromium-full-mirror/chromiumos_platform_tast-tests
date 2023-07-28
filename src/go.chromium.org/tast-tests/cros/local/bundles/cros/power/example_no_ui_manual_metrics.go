@@ -19,7 +19,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExampleNoUIManualMetrics,
 		Desc:         "Collect power metrics when device is in idle with no UI",
-		BugComponent: "b:167191",
+		BugComponent: "b:1361410",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
 			"mqg@chromium.org",

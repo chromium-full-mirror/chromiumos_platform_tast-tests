@@ -39,7 +39,7 @@ func init() {
 			"cienet-development@googlegroups.com",
 			"chicheny@google.com",
 		},
-		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
+		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		// TODO(b/289855454): Add Attr after using uidetection.
 		// Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "arc"},
