@@ -52,7 +52,7 @@ func init() {
 				duration: 3 * time.Second,
 			},
 			// TODO(b/279849605): Promote to critical.
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "sd_card",
 			Val: eventStartupParams{
@@ -60,7 +60,7 @@ func init() {
 				duration: 3 * time.Second,
 			},
 			// TODO(b/279849703): Promote to critical.
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "touchscreen",
 			Val: eventStartupParams{
