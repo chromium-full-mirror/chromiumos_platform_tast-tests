@@ -36,7 +36,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures energy and power usage of ARC++ PIP",
 		Contacts:     []string{"chromeos-perf@google.com", "petermcneeley@chromium.org", "amusbach@chromium.org"},
-		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
+		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"180p_60fps_600frames.h264.mp4"},
