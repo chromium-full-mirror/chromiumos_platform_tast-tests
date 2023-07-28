@@ -119,11 +119,16 @@ func openCycleWindowAndPressTabNTimes(ctx context.Context, ac *uiauto.Context, d
 }
 
 // VerifyWindowsForCycleMenu opens Alt+Tab window and Press Tab to cycle all windows.
+// If there are no windows, this does nothing.
 func VerifyWindowsForCycleMenu(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, windows []*ash.Window) error {
 	// Get the number of windows.
 	numWindows := len(windows)
 	// Index of the window we'll cycle to.
 	var target int
+
+	if numWindows == 0 {
+		return nil
+	}
 
 	// Cycle forwards (Alt + Tab) and backwards (Alt + Shift + Tab).
 	for _, direction := range []string{"forward", "backward"} {
