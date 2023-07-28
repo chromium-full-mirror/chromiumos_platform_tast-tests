@@ -116,6 +116,21 @@ func VerifyShortcuts(ctx context.Context, ui *uiauto.Context, description string
 	return nil
 }
 
+// VerifyShortcutsRegex checks that the shortcut descriptions and the shortcut keys input as regular expression, exists.
+func VerifyShortcutsRegex(ctx context.Context, ui *uiauto.Context, description string, shortcutKeys ShortcutKeys) error {
+	descriptionNode := nodewith.NameRegex(regexp.MustCompile(description)).Role(role.RowHeader)
+	shortcutKeysNode := nodewith.NameRegex(regexp.MustCompile(shortcutKeys.Keys)).Role(shortcutKeys.Role)
+
+	if err := uiauto.Combine("Verify shortcut description and shortcut keys exist",
+		ui.WaitUntilExists(descriptionNode),
+		ui.WaitUntilExists(shortcutKeysNode),
+	)(ctx); err != nil {
+		return errors.Wrapf(err, "failed to verify shortcut description %s and shortcut keys %s exist", description, shortcutKeys)
+	}
+
+	return nil
+}
+
 // SearchAndCheck searches for the given query in the Shortcuts `SearchBox`.
 // Then, it verifies if any of the results match the given regex, and also
 // whether the existence of search results or not matches expectations.
