@@ -16,8 +16,10 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/services/cros/power"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -35,7 +37,10 @@ func init() {
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
+		ServiceDeps: []string{
+			"tast.cros.browser.ChromeService",
+			"tast.cros.power.BatteryService",
+		},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Timeout:      10 * time.Minute,
@@ -90,6 +95,23 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find dut connection type: ", err)
 	}
 	s.Logf("DUT connection type: %s", dutConnType)
+
+	cl, err := rpc.Dial(ctx, h.DUT, s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to connect ot the RPC service on the DUT: ", err)
+	}
+	defer cl.Close(ctx)
+
+	// Disable Charge Limit for this test, since it messes with detecting if the
+	// battery is correctly charging while plugged in.
+	client := power.NewBatteryServiceClient(cl.Conn)
+	if _, err := client.New(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer client.Close(ctx, &empty.Empty{})
+	if _, err := client.StopChargeLimit(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to stop Charge Limit: ", err)
+	}
 
 	for _, tc := range []struct {
 		plugAC     bool
