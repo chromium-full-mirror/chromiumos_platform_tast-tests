@@ -14,6 +14,9 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -954,7 +957,7 @@ func GetDocsBlockerConn(ctx context.Context, br *browser.Browser) (*browser.Conn
 	return conn, nil
 }
 
-func loginOption(s *testing.FixtState, useEnterprisePool bool) chrome.Option {
+func loginCreds(s *testing.FixtState, useEnterprisePool bool) (credconfig.Creds, error) {
 	var variableName string
 
 	if useEnterprisePool {
@@ -963,7 +966,34 @@ func loginOption(s *testing.FixtState, useEnterprisePool bool) chrome.Option {
 		variableName = "ui.cujAccountPool"
 	}
 
-	return chrome.GAIALoginPool(s.RequiredVar(variableName))
+	return credconfig.PickRandomCreds(s.RequiredVar(variableName))
+}
+
+func startFakeDMSWithARCEnabled(ctx context.Context, outdir, user string) (fdms *fakedms.FakeDMS, retErr error) {
+	blob := policy.NewBlob()
+	blob.PolicyUser = user
+	// Set UniversalSigningKeys flag to disable the user domain
+	// verification, so that test accounts associated with non
+	// "managedchrome.com" domains can be used for the test.
+	blob.UseUniversalSigningKeys = true
+	// Provision the policy with ARCEnabled.
+	if err := blob.AddPolicies([]policy.Policy{&policy.ArcEnabled{Val: true}}); err != nil {
+		return nil, errors.Wrap(err, "failed to add policy to policy blob")
+	}
+
+	fdms, err := fakedms.New(ctx, outdir)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start fake policy server")
+	}
+	defer func() {
+		if retErr != nil {
+			fdms.Stop(ctx)
+		}
+	}()
+	if err := fdms.WritePolicyBlob(blob); err != nil {
+		return nil, errors.Wrap(err, "failed to write policy blob to fdms")
+	}
+	return fdms, nil
 }
 
 func runningPackages(ctx context.Context, a *arc.ARC) (map[string]struct{}, error) {
@@ -1126,6 +1156,7 @@ type loggedInToCUJUserFixture struct {
 	// bt describes what type of browser this fixture should use
 	bt                 browser.Type
 	useEnterprisePool  bool
+	fdms               *fakedms.FakeDMS
 	fakeCamera         bool
 	fakeCameraFileName string
 	docsBlocker        bool
@@ -1136,6 +1167,7 @@ type loggedInToCUJUserFixture struct {
 
 func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var cr *chrome.Chrome
+	var setupCompleted bool // Whether the SetUp function is successfully completed.
 
 	func() {
 		ctx, cancel := context.WithTimeout(ctx, chrome.LoginTimeout)
@@ -1143,6 +1175,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 
 		var docsBlockerExtDir string
 		var err error
+		var funcCompleted bool
 
 		if f.docsBlocker {
 			docsBlockerExtDir, err = prepareDocsBlockerExtension(s)
@@ -1151,8 +1184,12 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			}
 		}
 
+		creds, err := loginCreds(s, f.useEnterprisePool)
+		if err != nil {
+			s.Fatal("Failed to obtain login credentials: ", err)
+		}
 		opts := []chrome.Option{
-			loginOption(s, f.useEnterprisePool),
+			chrome.GAIALogin(creds),
 			chrome.ExtraArgs("--disable-sync"),
 		}
 		if f.keepState {
@@ -1162,6 +1199,24 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			opts = append(opts,
 				chrome.ARCSupported(),
 				chrome.ExtraArgs(arc.DisableSyncFlags()...))
+			if f.useEnterprisePool {
+				fdms, err := startFakeDMSWithARCEnabled(ctx, s.OutDir(), creds.User)
+				if err != nil {
+					s.Fatal("Failed to start fake DMS to enable ARC: ", err)
+				}
+				f.fdms = fdms
+				defer func() {
+					if !funcCompleted {
+						fdms.Stop(ctx)
+						f.fdms = nil
+					}
+				}()
+				opts = append(opts,
+					chrome.DMSPolicy(fdms.URL),
+					// Allow accounts with any domains to be used for the test.
+					chrome.DisablePolicyKeyVerification(),
+				)
+			}
 		}
 		opts = append(opts, f.chromeExtraOpts...)
 		// Delay for logging memory metrics is set to 6 minutes. Considering most of CUJ tests
@@ -1221,8 +1276,13 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			s.Fatal("Failed to start Chrome: ", err)
 		}
 		chrome.Lock()
+		funcCompleted = true
 	}()
 	defer func() {
+		if !setupCompleted && f.fdms != nil {
+			f.fdms.Stop(ctx)
+			f.fdms = nil
+		}
 		if cr != nil {
 			chrome.Unlock()
 			if err := cr.Close(ctx); err != nil {
@@ -1381,6 +1441,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 	f.cr = cr
 	f.arc = a
 	cr = nil
+	setupCompleted = true
 
 	return FixtureData{chrome: f.cr, ARC: f.arc}
 }
@@ -1428,6 +1489,11 @@ func (f *loggedInToCUJUserFixture) TearDown(ctx context.Context, s *testing.Fixt
 
 	if err := f.cr.Close(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to close Chrome connection: ", err)
+	}
+
+	if f.fdms != nil {
+		f.fdms.Stop(ctx)
+		f.fdms = nil
 	}
 }
 
