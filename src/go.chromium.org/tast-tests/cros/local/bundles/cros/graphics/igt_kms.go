@@ -200,9 +200,12 @@ func init() {
 					Exe:              "kms_flip",
 					DisableHangCheck: true,
 				},
-				Timeout:           30 * time.Minute,
-				ExtraAttr:         []string{"graphics_weekly"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(append(graphics.IgtGpuQcom, graphics.IgtGpuMtk...)...)),
+				Timeout:   30 * time.Minute,
+				ExtraAttr: []string{"graphics_weekly"},
+				ExtraHardwareDeps: hwdep.D(
+					hwdep.SkipOnPlatform(graphics.IgtGpuQcom...),
+					hwdep.SkipOnPlatform(graphics.IgtGpuMtk...),
+				),
 			}, {
 				Name: "kms_flip_unstable",
 				Val: graphics.IgtTest{
@@ -309,9 +312,12 @@ func init() {
 				Val: graphics.IgtTest{
 					Exe: "kms_plane_alpha_blend",
 				},
-				Timeout:           5 * time.Minute,
-				ExtraAttr:         []string{"graphics_nightly"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(append(graphics.IgtGpuQcom, "grunt")...)),
+				Timeout:   5 * time.Minute,
+				ExtraAttr: []string{"graphics_nightly"},
+				ExtraHardwareDeps: hwdep.D(
+					hwdep.SkipOnPlatform(graphics.IgtGpuQcom...),
+					hwdep.SkipOnPlatform("grunt"),
+				),
 			}, {
 				Name: "kms_plane_alpha_blend_unstable",
 				Val: graphics.IgtTest{
