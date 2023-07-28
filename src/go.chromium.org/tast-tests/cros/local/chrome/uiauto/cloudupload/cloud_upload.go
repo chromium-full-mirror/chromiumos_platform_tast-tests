@@ -141,6 +141,20 @@ func (cu *CloudUpload) WaitSetupCompleteDialogAndClickDone() uiauto.Action {
 // ConfirmUploadDialog is a finder for the confirmation dialog.
 var ConfirmUploadDialog = nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("(Move|Copy) .* to .* OneDrive .*"))
 
+// OneDriveConnectedDialog to find the OneDrive Connected dialog.
+var OneDriveConnectedDialog = nodewith.Role(role.Dialog).Name("Microsoft OneDrive connected")
+
+// WaitOneDriveConnectedDialogAndClickClose waits for the OneDrive Connected dialog and clicks Close.
+func (cu *CloudUpload) WaitOneDriveConnectedDialogAndClickClose() uiauto.Action {
+	closeButton := nodewith.Ancestor(OneDriveConnectedDialog).Role(role.Button).Name("Close")
+	return uiauto.Combine("OneDrive Connected dialog: close",
+		log("Starting OneDrive connected step"),
+		cu.ui.WaitUntilExists(OneDriveConnectedDialog),
+		cu.ui.LeftClick(closeButton),
+		cu.ui.WaitUntilGone(OneDriveConnectedDialog),
+	)
+}
+
 // WaitUploadConfirmationDialogAndClickToUpload waits for the dialog confirming copy or move to the Cloud, and confirms the upload.
 func (cu *CloudUpload) WaitUploadConfirmationDialogAndClickToUpload(alwaysMove bool) uiauto.Action {
 	dialog := ConfirmUploadDialog
@@ -186,9 +200,10 @@ func (cu *CloudUpload) MaybeConfirmUploadOr365Window(ms365App *ms365.Ms365, file
 
 // OneDriveSetupFlowOptions contains the options required for running OneDrive setup flow.
 type OneDriveSetupFlowOptions struct {
-	CloudUpload  *CloudUpload
-	Ms365App     *ms365.Ms365
-	PWAInstalled bool
+	CloudUpload       *CloudUpload
+	Ms365App          *ms365.Ms365
+	PWAInstalled      bool
+	OneDriveConnected bool
 }
 
 // RunOneDriveSetupFlow runs the step to test the setup flow.
@@ -210,11 +225,20 @@ func RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) uiauto.Action {
 				// This step is quite slow because it downloads from the internet.
 				return options.CloudUpload.WaitInstallPWADialogAndClickInstall()(ctx)
 			},
-			// Connect/mount the ODFS.
-			options.CloudUpload.WaitConnectToOneDriveDialogAndClickConnect(),
-			// Authenticate to OneDrive to mount ODFS.
-			// Skip password screen if PWA is already installed.
-			options.Ms365App.LoginToMicrosoft365(SetupCompleteDialog, options.PWAInstalled /*=skipPassword*/),
+			func(ctx context.Context) error {
+				// Skip Connect OneDrive step if it's already connected.
+				if options.OneDriveConnected {
+					return log("Skipping Connect to OneDrive step")(ctx)
+				}
+				// Otherwise expect Connect OneDrive screen.
+				return uiauto.Combine("Connect to OneDrive",
+					// Connect/mount the ODFS.
+					options.CloudUpload.WaitConnectToOneDriveDialogAndClickConnect(),
+					// Authenticate to OneDrive to mount ODFS.
+					// Skip password screen if PWA is already installed.
+					options.Ms365App.LoginToMicrosoft365(SetupCompleteDialog, options.PWAInstalled /*=skipPassword*/),
+				)(ctx)
+			},
 			// Last step of the setup flow.
 			options.CloudUpload.WaitSetupCompleteDialogAndClickDone(),
 		)(ctx); err != nil {

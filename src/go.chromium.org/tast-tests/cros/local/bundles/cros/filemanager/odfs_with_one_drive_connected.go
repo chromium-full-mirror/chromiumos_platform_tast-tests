@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -23,10 +22,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OdfsWithPWAInstalled,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Verifies office PWA can be installed separately before opening office files",
-		BugComponent: "b:288018282",
+		Func:         OdfsWithOneDriveConnected,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verifies OneDrive can be connected separately before opening office files",
+		BugComponent: "b:288018298",
 		Timeout:      5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
@@ -46,38 +45,17 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedrive",
-			Val:     browser.TypeAsh,
-		},
-		// TODO(b/293795743): enable Lacros variant
-		// {
-		// 	Name:              "lacros",
-		// 	Fixture:           "onedriveLacros",
-		// 	ExtraSoftwareDeps: []string{"lacros"},
-		// 	Val:               browser.TypeLacros,
-		// },
-		},
+		Fixture: "onedrive",
 	})
 }
 
-// OdfsWithPWAInstalled tests that Setup flow can recognize that MS365 is installed and just installs OneDrive and begins the move process with a file from Downloads.
-func OdfsWithPWAInstalled(ctx context.Context, s *testing.State) {
+// OdfsWithOneDriveConnected tests that Setup flow can recognize that ODFS is installed and just installs MS365 and begins the move process with a file from Downloads
+func OdfsWithOneDriveConnected(ctx context.Context, s *testing.State) {
 	accountPool := s.RequiredVar("onedrive.accountPool")
 	data := s.FixtValue().(*onedrive.FixtureData)
 	cr := data.Chrome
-	bt := s.Param().(browser.Type)
 	tconn := data.TestAPIConn
 	targetBaseName := filepath.Base(data.TargetFolder)
-
-	// Install Office PWA.
-	ms365App, err := ms365.App(ctx, tconn, accountPool)
-	if err != nil {
-		s.Fatal("Failed to get instance of Ms365: ", err)
-	}
-	if err := ms365App.InstallPWA(ctx, cr, bt); err != nil {
-		s.Fatal("Failed to install Office PWA: ", err)
-	}
 
 	// Pick one file from the generated files.
 	fileName := data.GeneratedFiles[0].FileName
@@ -94,15 +72,31 @@ func OdfsWithPWAInstalled(ctx context.Context, s *testing.State) {
 	defer files.Close(cleanupCtx)
 	// Close the Office 365 to avoid interfere with following tests and allow the file deletion in the fixture.
 	defer ash.CloseAllWindows(cleanupCtx, tconn)
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "odfs_with_pwa_installed")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "odfs_with_one_drive_installed")
 
-	cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fileName, onedrive.OneDrive)
+	ms365App, err := ms365.App(ctx, tconn, accountPool)
+	if err != nil {
+		s.Fatal("Failed to get instance of Ms365: ", err)
+	}
+
+	// Connect to OneDrive via Files gear menu.
+	cloudUpload := cloudupload.App(tconn)
+	if err := uiauto.Combine("Connect to OneDrive via Files context menu",
+		files.ClickMoreMenuItem("Services", "Connect OneDrive"),
+		cloudUpload.WaitConnectToOneDriveDialogAndClickConnect(),
+		ms365App.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog, false /*=skipPassword*/),
+		cloudUpload.WaitOneDriveConnectedDialogAndClickClose(),
+	)(ctx); err != nil {
+		s.Fatal("Failed to click Connect OneDrive: ", err)
+	}
+
+	_, err = files.OpenOfficeFile(ctx, targetBaseName, fileName, onedrive.OneDrive)
 	if err != nil {
 		s.Fatal("Failed to open office file: ", err)
 	}
 
 	options := &cloudupload.OneDriveSetupFlowOptions{
-		CloudUpload: cloudUpload, Ms365App: ms365App, PWAInstalled: true, OneDriveConnected: false}
+		CloudUpload: cloudUpload, Ms365App: ms365App, PWAInstalled: false, OneDriveConnected: true}
 	if err := cloudupload.RunOneDriveSetupFlow(options)(ctx); err != nil {
 		s.Fatal("Failed to run the setup dialog steps: ", err)
 	}
