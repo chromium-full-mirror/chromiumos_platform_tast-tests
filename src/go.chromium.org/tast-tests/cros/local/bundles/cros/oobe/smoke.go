@@ -42,7 +42,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
 		chrome.FieldTrialConfig(s.Param().(string)),
 		chrome.NoLogin(),
-		chrome.ExtraArgs("--enable-features=OobeGaiaInfoScreen"))
+		chrome.ExtraArgs("--enable-features=OobeGaiaInfoScreen,OobeSoftwareUpdate"))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -81,6 +81,11 @@ func Smoke(ctx context.Context, s *testing.State) {
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.UserCreationScreen.isVisible()"); err != nil {
 		s.Fatal("Failed to wait for the user creation screen to be visible: ", err)
 	}
+
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.UserCreationScreen.selectPersonalUser()", nil); err != nil {
+		s.Fatal("Failed to select for personal user cr-button: ", err)
+	}
+
 	if err := oobeConn.Eval(ctx, "OobeAPI.screens.UserCreationScreen.clickNext()", nil); err != nil {
 		s.Fatal("Failed to click user creation screen next button: ", err)
 	}
