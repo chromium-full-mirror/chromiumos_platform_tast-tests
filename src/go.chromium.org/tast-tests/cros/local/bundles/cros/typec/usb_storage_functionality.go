@@ -35,7 +35,7 @@ type usbFileInfo struct {
 	fileName string
 	// deviceType is test_config key name like TBT, USB4.
 	deviceType string
-	// usbType is type of USB device connected like 2.0, 3.0, 3.10, 3.20.
+	// usbType is type of USB device connected like 2.00, 3.00, 3.10, 3.20.
 	usbType string
 }
 
@@ -60,7 +60,7 @@ func init() {
 				fileSize:   1024 * 1024 * 1024 * 2,
 				usbSpeed:   "5000M",
 				deviceType: "TBT",
-				usbType:    "3.0",
+				usbType:    "3.00",
 			},
 			// Maximum timeout for data transfer in bidirectional and cleanup.
 			Timeout:   5 * time.Minute,
@@ -73,7 +73,7 @@ func init() {
 				fileSize:   1024 * 1024 * 1024,
 				usbSpeed:   "480M",
 				deviceType: "TBT",
-				usbType:    "2.0",
+				usbType:    "2.00",
 			},
 			// Maximum timeout for data transfer in bidirectional and cleanup.
 			Timeout:   5 * time.Minute,
@@ -86,7 +86,7 @@ func init() {
 				fileSize:   1024 * 1024 * 1024 * 2,
 				usbSpeed:   "5000M",
 				deviceType: "USB4",
-				usbType:    "3.0",
+				usbType:    "3.00",
 			},
 			// Maximum timeout for data transfer in bidirectional and cleanup.
 			Timeout:   5 * time.Minute,
