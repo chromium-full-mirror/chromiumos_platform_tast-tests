@@ -23,8 +23,6 @@ var MotionMarkInfo = benchmarkInfo{
 	benchmarkURL:   "https://browserbench.org/MotionMark1.2/",
 	benchmarkRun:   RunMotionMark,
 	benchmarkScore: RetrieveMotionMarkScore,
-	unit:           "score",
-	direction:      perf.BiggerIsBetter,
 }
 
 // RunMotionMark runs the MotionMark test.
@@ -43,7 +41,7 @@ func RunMotionMark(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.C
 }
 
 // RetrieveMotionMarkScore retrieves the score after MotionMark finished.
-func RetrieveMotionMarkScore(ctx context.Context, benchmarkConn *chrome.Conn, scores map[string][]float64) error {
+func RetrieveMotionMarkScore(ctx context.Context, benchmarkConn *chrome.Conn, scores map[string]Score) error {
 	benchmarkScores := make(map[string]float64)
 	if err := benchmarkConn.Eval(ctx, `
 	new Promise(resolve => {
@@ -73,7 +71,7 @@ func RetrieveMotionMarkScore(ctx context.Context, benchmarkConn *chrome.Conn, sc
 		if value < 10 {
 			return errors.Errorf("MotionMark %s subtest failed; got a score of %f", metric, value)
 		}
-		scores[motionMarkPrefix+metric] = []float64{value}
+		scores[motionMarkPrefix+metric] = Score{"score", perf.BiggerIsBetter, []float64{value}}
 	}
 	return nil
 }

@@ -27,8 +27,6 @@ var JetStreamInfo = benchmarkInfo{
 	benchmarkSetUp: SetUpJetStream,
 	benchmarkRun:   RunJetStream,
 	benchmarkScore: RetrieveJetStreamScore,
-	unit:           "score",
-	direction:      perf.BiggerIsBetter,
 }
 
 // SetUpJetStream prepares the start state for Jetstream to run.
@@ -83,7 +81,7 @@ func RunJetStream(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Co
 }
 
 // RetrieveJetStreamScore retrieves the score after JetStream finished.
-func RetrieveJetStreamScore(ctx context.Context, benchmarkConn *chrome.Conn, scores map[string][]float64) error {
+func RetrieveJetStreamScore(ctx context.Context, benchmarkConn *chrome.Conn, scores map[string]Score) error {
 	benchmarkScores := make(map[string]float64)
 	if err := benchmarkConn.Eval(ctx, `
 	new Promise(resolve => {
@@ -107,7 +105,7 @@ func RetrieveJetStreamScore(ctx context.Context, benchmarkConn *chrome.Conn, sco
 		return errors.New("JetStream crashed during the test")
 	}
 	for metric, value := range benchmarkScores {
-		scores[jetStreamPrefix+metric] = []float64{value}
+		scores[jetStreamPrefix+metric] = Score{"score", perf.BiggerIsBetter, []float64{value}}
 	}
 	return nil
 }

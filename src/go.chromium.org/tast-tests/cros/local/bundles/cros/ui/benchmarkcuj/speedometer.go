@@ -29,8 +29,6 @@ var SpeedometerInfo = benchmarkInfo{
 	benchmarkURL:   "https://browserbench.org/Speedometer2.1/",
 	benchmarkRun:   RunSpeedometer,
 	benchmarkScore: RetrieveSpeedometerScore,
-	unit:           "runs-per-min",
-	direction:      perf.BiggerIsBetter,
 	params:         []string{iterationsVar},
 }
 
@@ -65,7 +63,7 @@ func RunSpeedometer(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.
 }
 
 // RetrieveSpeedometerScore retrieves the score after Speedometer finished.
-func RetrieveSpeedometerScore(ctx context.Context, benchmarkConn *chrome.Conn, scores map[string][]float64) error {
+func RetrieveSpeedometerScore(ctx context.Context, benchmarkConn *chrome.Conn, scores map[string]Score) error {
 	benchmarkScores := make(map[string][]float64)
 	if err := benchmarkConn.Eval(ctx, `
 	new Promise(resolve => {
@@ -93,7 +91,7 @@ func RetrieveSpeedometerScore(ctx context.Context, benchmarkConn *chrome.Conn, s
 	}
 
 	for metric, value := range benchmarkScores {
-		scores[speedometerPrefix+metric] = value
+		scores[speedometerPrefix+metric] = Score{"runs-per-min", perf.BiggerIsBetter, value}
 	}
 
 	mean, sd, delta, err := getDelta(benchmarkScores["Runs_Scores"])
@@ -101,8 +99,8 @@ func RetrieveSpeedometerScore(ctx context.Context, benchmarkConn *chrome.Conn, s
 		return errors.Wrap(err, "failed to calculate confidence interval")
 	}
 
-	scores[speedometerPrefix+"sd"] = []float64{sd}
-	scores[speedometerPrefix+"95_percent_ci"] = []float64{mean - delta, mean + delta}
+	scores[speedometerPrefix+"sd"] = Score{"runs-per-min", perf.SmallerIsBetter, []float64{sd}}
+	scores[speedometerPrefix+"95_percent_ci"] = Score{"runs-per-min", perf.BiggerIsBetter, []float64{mean - delta, mean + delta}}
 
 	testing.ContextLogf(ctx, "Speedometer Mean: %.2f", mean)
 	testing.ContextLogf(ctx, "Speedometer Standard Deviation: %.2f", sd)
