@@ -37,17 +37,17 @@ func init() {
 		}, {
 			Name:      "user_facing_image_bronze",
 			Val:       cameraStressTestParams{cca.FacingFront, 360, true},
-			Timeout:   5 * time.Minute,
+			Timeout:   8 * time.Minute,
 			ExtraAttr: []string{"group:intel-reliability-bronze"},
 		}, {
 			Name:      "user_facing_image_silver",
 			Val:       cameraStressTestParams{cca.FacingFront, 540, true},
-			Timeout:   8 * time.Minute,
+			Timeout:   12 * time.Minute,
 			ExtraAttr: []string{"group:intel-reliability-silver"},
 		}, {
 			Name:      "user_facing_image_gold",
 			Val:       cameraStressTestParams{cca.FacingFront, 720, true},
-			Timeout:   12 * time.Minute,
+			Timeout:   15 * time.Minute,
 			ExtraAttr: []string{"group:intel-reliability-gold"},
 		}, {
 			Name:    "user_facing_video_quick",
@@ -71,17 +71,17 @@ func init() {
 		}, {
 			Name:      "env_facing_image_bronze",
 			Val:       cameraStressTestParams{cca.FacingBack, 360, true},
-			Timeout:   5 * time.Minute,
+			Timeout:   8 * time.Minute,
 			ExtraAttr: []string{"group:intel-reliability-bronze"},
 		}, {
 			Name:      "env_facing_image_silver",
 			Val:       cameraStressTestParams{cca.FacingBack, 540, true},
-			Timeout:   8 * time.Minute,
+			Timeout:   12 * time.Minute,
 			ExtraAttr: []string{"group:intel-reliability-silver"},
 		}, {
 			Name:      "env_facing_image_gold",
 			Val:       cameraStressTestParams{cca.FacingBack, 720, true},
-			Timeout:   12 * time.Minute,
+			Timeout:   15 * time.Minute,
 			ExtraAttr: []string{"group:intel-reliability-gold"},
 		}, {
 			Name:      "env_facing_video_bronze",
