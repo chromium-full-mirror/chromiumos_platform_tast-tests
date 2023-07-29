@@ -34,7 +34,7 @@ func HdmiSuspendResume(ctx context.Context, s *testing.State) {
 	var (
 		C10PkgPattern         = regexp.MustCompile(`C10 : ([A-Za-z0-9]+)`)
 		connectorInfoPtrns    = regexp.MustCompile(`.*: connectors:\n.\s+\[CONNECTOR:\d+:[HDMI]+.*`)
-		connectedPtrns        = regexp.MustCompile(`.*DP branch device present.*yes\n.*Type.*HDMI`)
+		connectedPtrns        = regexp.MustCompile(`\[CONNECTOR:\d+:HDMI.*status: connected`)
 		modesPtrns            = regexp.MustCompile(`modes:\n.*"\d+x\d+":.60`)
 		SuspndFailurePattern  = regexp.MustCompile("Suspend failures: 0")
 		FrmwreLogErrorPattern = regexp.MustCompile("Firmware log errors: 0")
