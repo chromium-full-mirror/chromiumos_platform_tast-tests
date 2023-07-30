@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Minimalistic Camera App</title>
+  </head>
+
+  <style>
+    .overlay {
+      inset: 0;
+      position: fixed;
+      background: #222;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .spinner {
+      width: 75px;
+      height: 75px;
+      animation: spin 1s infinite linear;
+      border: 2px solid rgba(255, 255, 255, 0.05);
+      border-top-color: #fff;
+      border-radius: 100%;
+    }
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+
+  <body>
+    <div id="control-panel">
+      <video id="camera-image" autoplay width="500" height="500"></video>
+      <br />
+      <button id="take-picture-button">Take picture</button>
+      <button id="start-button">Start recording</button>
+      <button id="stop-button">Stop recording</button>
+      <select id="change-camera-selection"></select>
+      <span id="frame-rate-text">Frame rate:</span>
+      <input
+        id="frame-rate-input"
+        type="range"
+        min="1"
+        max="60"
+        step="1"
+      />
+      <output id="frame-rate-value">30</output>
+      <select id="camera-resoluiton">
+        <option value="640 360">640x360</option>
+        <option value="640 480">640x480</option>
+        <option value="1280 720">1280x720</option>
+        <option value="1920 1080">1920x1080</option>
+        <option value="2560 1440">2560x1440</option>
+        <option value="2048 1080">2048x1080</option>
+        <!--https://typito.com/blog/video-resolutions/-->
+      </select>
+    </div>
+
+    <canvas id="photo-output" width="500" height="500"></canvas>
+    <video id="video-output" controls="controls" width="500" height="500"></video>
+
+    <div class="overlay" id="web-loader">
+      <div class="spinner"></div>
+    </div>
+    <script src="web_camera_app.js"></script>
+    <script src="web_camera_app_test.js"></script>
+    <!-- TODO(b/297150233): Import `web_camera_app_test.js` in Tast. -->
+  </body>
+</html>

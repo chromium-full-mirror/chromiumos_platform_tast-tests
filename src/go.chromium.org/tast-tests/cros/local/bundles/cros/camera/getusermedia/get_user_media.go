@@ -235,3 +235,29 @@ func RunImageCaptureAPI(ctx context.Context, fileSystem http.FileSystem, cr Chro
 
 	return nil
 }
+
+// RunWebCameraApp run a test in /data/web_camera_app.html.
+func RunWebCameraApp(ctx context.Context, fileSystem http.FileSystem, cr ChromeInterface,
+	duration time.Duration, verbose VerboseLoggingMode) error {
+	if verbose == VerboseLogging {
+		vl, err := logging.NewVideoLogger()
+		if err != nil {
+			return errors.New("failed to set values for verbose logging")
+		}
+		defer vl.Close()
+	}
+
+	var results cameraResults
+	var logs []string
+	err := RunTest(ctx, fileSystem, cr, "web_camera_app.html", fmt.Sprintf("testWebCameraApp(%d)", int(duration.Seconds())), &results, &logs)
+
+	if err != nil {
+		testing.ContextLog(ctx, "Logs collected from JS:")
+		for _, log := range logs {
+			testing.ContextLog(ctx, log)
+		}
+		return err
+	}
+
+	return nil
+}
