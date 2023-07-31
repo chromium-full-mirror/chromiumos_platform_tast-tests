@@ -47,11 +47,6 @@ func init() {
 					run: func(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {
 						return testUIChangeWithDifferentPageCount(ctx, app)
 					},
-				}, {
-					name: "testPreviewShowsDocCorner",
-					run: func(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {
-						return testPreviewShowsDocCorner(ctx, app)
-					},
 				},
 			},
 		}, {
@@ -61,6 +56,17 @@ func init() {
 					name: "testFixCropArea",
 					run: func(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {
 						return testFixCropArea(ctx, app, cr)
+					},
+				},
+			},
+		}, {
+			Name:              "corner_indicator",
+			ExtraSoftwareDeps: []string{"camera_doc_corner_indicator"},
+			Val: []documentScanSubTest{
+				{
+					name: "testPreviewShowsDocCorner",
+					run: func(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {
+						return testPreviewShowsDocCorner(ctx, app)
 					},
 				},
 			},
