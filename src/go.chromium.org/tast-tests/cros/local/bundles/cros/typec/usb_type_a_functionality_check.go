@@ -44,6 +44,8 @@ type usbTestParams struct {
 	tablet bool
 	// evtestPattern is an regex string for evtest event.
 	evtestPattern string
+	// cswitchPort is an port number string for cswitch events.
+	cswitchPort string
 }
 
 const (
@@ -65,7 +67,7 @@ func init() {
 		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"c.txt", "h.txt", "r.txt", "o.txt", "m.txt", "e.txt"},
-		VarDeps:      []string{"typec.cSwitchPort", "typec.domainIP"},
+		Vars:         []string{"typec.cSwitchPort", "typec.domainIP"},
 		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
 			Name: "usb2_pendrive_quick",
@@ -75,8 +77,11 @@ func init() {
 				usbSpeed:   "480M",
 				deviceType: "storage",
 				iter:       1,
+				// The USB2.0 pendrive is connected to C-Switch in P4 as per the intel_cswitch_set1 suite setup.
+				cswitchPort: "4",
 			},
-			Timeout: 10 * time.Minute,
+			Timeout:   10 * time.Minute,
+			ExtraAttr: []string{"group:intel-cswitch-set1"},
 		}, {
 			Name: "usb2_pendrive_bronze",
 			Val: usbTestParams{
@@ -85,6 +90,8 @@ func init() {
 				usbSpeed:   "480M",
 				deviceType: "storage",
 				iter:       10,
+				// The USB2.0 pendrive is connected to C-Switch in P4 as per the intel_cswitch_set1 suite setup.
+				cswitchPort: "4",
 			},
 			Timeout:   15 * time.Minute,
 			ExtraAttr: []string{"group:intel-cswitch-set1"},
@@ -96,8 +103,11 @@ func init() {
 				usbSpeed:   "480M",
 				deviceType: "storage",
 				iter:       15,
+				// The USB2.0 pendrive is connected to C-Switch in P4 as per the intel_cswitch_set1 suite setup.
+				cswitchPort: "4",
 			},
-			Timeout: 20 * time.Minute,
+			Timeout:   20 * time.Minute,
+			ExtraAttr: []string{"group:intel-cswitch-set1"},
 		}, {
 			Name: "usb2_pendrive_gold",
 			Val: usbTestParams{
@@ -106,8 +116,11 @@ func init() {
 				usbSpeed:   "480M",
 				deviceType: "storage",
 				iter:       20,
+				// The USB2.0 pendrive is connected to C-Switch in P4 as per the intel_cswitch_set1 suite setup.
+				cswitchPort: "4",
 			},
-			Timeout: 30 * time.Minute,
+			Timeout:   30 * time.Minute,
+			ExtraAttr: []string{"group:intel-cswitch-set1"},
 		}, {
 			Name: "usb3_pendrive",
 			Val: usbTestParams{
@@ -116,6 +129,8 @@ func init() {
 				usbSpeed:   "5000M",
 				deviceType: "storage",
 				iter:       1,
+				// The USB3.0 pendrive is connected to C-Switch in P4 as per the intel_cswitch_set1 suite setup.
+				cswitchPort: "4",
 			},
 			Timeout:   10 * time.Minute,
 			ExtraAttr: []string{"group:intel-cswitch-set1"},
@@ -126,7 +141,10 @@ func init() {
 				deviceType:    "Keyboard",
 				iter:          1,
 				evtestPattern: typeAKeyboard,
+				// The USB typea keyboard is connected to C-Switch in P2 as per the intel_cswitch_set2 suite setup.
+				cswitchPort: "2",
 			},
+			ExtraAttr: []string{"group:intel-cswitch-set2"},
 		}, {
 			Name: "typea_keyboard_bronze",
 			Val: usbTestParams{
@@ -134,6 +152,8 @@ func init() {
 				deviceType:    "Keyboard",
 				iter:          10,
 				evtestPattern: typeAKeyboard,
+				// The USB typea keyboard is connected to C-Switch in P2 as per the intel_cswitch_set2 suite setup.
+				cswitchPort: "2",
 			},
 			Timeout:   5 * time.Minute,
 			ExtraAttr: []string{"group:intel-cswitch-set2"},
@@ -144,8 +164,11 @@ func init() {
 				deviceType:    "Keyboard",
 				iter:          15,
 				evtestPattern: typeAKeyboard,
+				// The USB typea keyboard is connected to C-Switch in P2 as per the intel_cswitch_set2 suite setup.
+				cswitchPort: "2",
 			},
-			Timeout: 10 * time.Minute,
+			Timeout:   10 * time.Minute,
+			ExtraAttr: []string{"group:intel-cswitch-set2"},
 		}, {
 			Name: "typea_keyboard_gold",
 			Val: usbTestParams{
@@ -153,8 +176,11 @@ func init() {
 				deviceType:    "Keyboard",
 				iter:          20,
 				evtestPattern: typeAKeyboard,
+				// The USB typea keyboard is connected to C-Switch in P2 as per the intel_cswitch_set2 suite setup.
+				cswitchPort: "2",
 			},
-			Timeout: 15 * time.Minute,
+			Timeout:   15 * time.Minute,
+			ExtraAttr: []string{"group:intel-cswitch-set2"},
 		}, {
 			Name: "typec_keyboard_quick",
 			Val: usbTestParams{
@@ -162,6 +188,8 @@ func init() {
 				deviceType:    "Keyboard",
 				iter:          1,
 				evtestPattern: `(?i)/dev/input/event([0-9]+):.*C-Type.*`,
+				// The typec keyboard is connected to C-Switch in P3 as per the intel_cswitch_set2 suite setup.
+				cswitchPort: "3",
 			},
 			ExtraAttr: []string{"group:intel-cswitch-set2"},
 		}, {
@@ -172,6 +200,8 @@ func init() {
 				iter:          1,
 				tablet:        true,
 				evtestPattern: typeAKeyboard,
+				// The USB typea keyboard is connected to C-Switch in P2 as per the intel_cswitch_set2 suite setup.
+				cswitchPort: "2",
 			},
 			ExtraAttr: []string{"group:intel-cswitch-set2"},
 		}},
@@ -188,8 +218,6 @@ func USBTypeAFunctionalityCheck(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*chrome.Chrome)
 
 	testParms := s.Param().(usbTestParams)
-	// cswitch port ID.
-	cSwitchON := s.RequiredVar("typec.cSwitchPort")
 	// IP address of Tqc server hosting device.
 	domainIP := s.RequiredVar("typec.domainIP")
 
@@ -208,6 +236,11 @@ func USBTypeAFunctionalityCheck(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to ensure in tablet mode: ", err)
 		}
 		defer cleanup(cleanupCtx)
+	}
+
+	cswitchVar := testParms.cswitchPort
+	if cswitchON, ok := s.Var("typec.cSwitchPort"); ok {
+		cswitchVar = cswitchON
 	}
 
 	// Create C-Switch session that performs hot plug-unplug on TBT/USB4 device.
@@ -238,7 +271,7 @@ func USBTypeAFunctionalityCheck(ctx context.Context, s *testing.State) {
 	iter := testParms.iter
 	for i := 1; i <= iter; i++ {
 		s.Logf("Hotplug - unplug iteration: %d/%d", i, iter)
-		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cswitchVar, domainIP); err != nil {
 			s.Fatal("Failed to enable c-switch port: ", err)
 		}
 
@@ -291,7 +324,7 @@ func USBTypeAFunctionalityCheck(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get removable devices: ", err)
 		}
 
-		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cswitchVar, domainIP); err != nil {
 			s.Fatal("Failed to enable c-switch port: ", err)
 		}
 
