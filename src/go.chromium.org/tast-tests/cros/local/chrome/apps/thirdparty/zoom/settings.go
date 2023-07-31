@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
@@ -49,7 +48,7 @@ func (zm *Zoom) ChangeSettings(actions ...action.Action) action.Action {
 	)
 }
 
-var audioOptionsFinder = uidetection.TextBlock(strings.Split("Audio Options", " "))
+var audioOptionsFinder = uidetection.TextBlockFromSentence("Audio Options")
 
 // expandAudioOption expands audio option menu.
 func (zm *Zoom) expandAudioOption(ctx context.Context) error {
@@ -67,7 +66,7 @@ func (zm *Zoom) expandAudioOption(ctx context.Context) error {
 // leaveComputerAudio leaves computer audio from audio option menu.
 func (zm *Zoom) leaveComputerAudio(ctx context.Context) error {
 	ud := uidetection.NewDefault(zm.tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
-	leaveComputerAudioFinder := uidetection.TextBlock(strings.Split("Leave Computer Audio", " "))
+	leaveComputerAudioFinder := uidetection.TextBlockFromSentence("Leave Computer Audio").Above(audioOptionsFinder)
 	return uiauto.NamedCombine("leave computer audio",
 		zm.expandAudioOption,
 		ud.LeftClick(leaveComputerAudioFinder),
