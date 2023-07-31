@@ -957,6 +957,22 @@ func (u *CryptohomeClient) AuthenticateSmartCardAuthFactor(ctx context.Context, 
 	return reply, nil
 }
 
+// AuthenticateFingerprintAuthFactor authenticates an AuthSession with a given authSessionID via fingerprint.
+func (u *CryptohomeClient) AuthenticateFingerprintAuthFactor(ctx context.Context, authSessionID string, labels []string) (*uda.AuthenticateAuthFactorReply, error) {
+	binaryMsg, err := u.binary.authenticateFingerprintAuthFactor(ctx, authSessionID, labels)
+
+	// Unmarshal proto first, even if there was an error.
+	reply := &uda.AuthenticateAuthFactorReply{}
+	if unmarshErr := proto.Unmarshal(binaryMsg, reply); unmarshErr != nil {
+		return nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthenticateAuthFactor reply")
+	}
+	if err != nil {
+		return reply, errors.Wrap(err, "AuthenticateAuthFactor failed")
+	}
+
+	return reply, nil
+}
+
 // AddAuthFactor creates an auth factor for the user with given password.
 func (u *CryptohomeClient) AddAuthFactor(ctx context.Context, authSessionID, label, password string) error {
 	_, err := u.binary.addAuthFactor(ctx, authSessionID, label, password)
@@ -1113,6 +1129,51 @@ func (u *CryptohomeClient) ListAuthFactors(ctx context.Context, user string) (*u
 	}
 	if err := proto.Unmarshal(binaryMsg, reply); err != nil {
 		return reply, errors.Wrap(err, "failed to unmarshal ListAuthFactors reply")
+	}
+
+	return reply, nil
+}
+
+// PrepareAddFpAuthFactor prepares adding the fingerprint auth factor.
+func (u *CryptohomeClient) PrepareAddFpAuthFactor(ctx context.Context, authSessionID string) (*uda.PrepareAuthFactorReply, error) {
+	reply := &uda.PrepareAuthFactorReply{}
+
+	binaryMsg, err := u.binary.prepareAddFpAuthFactor(ctx, authSessionID)
+	if err != nil {
+		return reply, errors.Wrap(err, "PrepareAuthFactor failed")
+	}
+	if err := proto.Unmarshal(binaryMsg, reply); err != nil {
+		return reply, errors.Wrap(err, "failed to unmarshal PrepareAuthFactor reply")
+	}
+
+	return reply, nil
+}
+
+// PrepareAuthFpAuthFactor prepares authenticating the fingerprint auth factor.
+func (u *CryptohomeClient) PrepareAuthFpAuthFactor(ctx context.Context, authSessionID string) (*uda.PrepareAuthFactorReply, error) {
+	reply := &uda.PrepareAuthFactorReply{}
+
+	binaryMsg, err := u.binary.prepareAuthFpAuthFactor(ctx, authSessionID)
+	if err != nil {
+		return reply, errors.Wrap(err, "PrepareAuthFactor failed")
+	}
+	if err := proto.Unmarshal(binaryMsg, reply); err != nil {
+		return reply, errors.Wrap(err, "failed to unmarshal PrepareAuthFactor reply")
+	}
+
+	return reply, nil
+}
+
+// TerminateFpAuthFactor terminates the fingerprint auth factor.
+func (u *CryptohomeClient) TerminateFpAuthFactor(ctx context.Context, authSessionID string) (*uda.TerminateAuthFactorReply, error) {
+	reply := &uda.TerminateAuthFactorReply{}
+
+	binaryMsg, err := u.binary.terminateFpAuthFactor(ctx, authSessionID)
+	if err != nil {
+		return reply, errors.Wrap(err, "TerminateAuthFactor failed")
+	}
+	if err := proto.Unmarshal(binaryMsg, reply); err != nil {
+		return reply, errors.Wrap(err, "failed to unmarshal TerminateAuthFactor reply")
 	}
 
 	return reply, nil

@@ -285,6 +285,12 @@ func (c *cryptohomeBinary) authenticateSmartCardAuthFactor(ctx context.Context, 
 	return c.call(ctx, args...)
 }
 
+// authenticateFingerprintAuthFactor calls "cryptohome --action=authenticate_auth_factor --fingerprint --key_labels=<labels>".
+func (c *cryptohomeBinary) authenticateFingerprintAuthFactor(ctx context.Context, authSessionID string, labels []string) ([]byte, error) {
+	args := []string{"--action=authenticate_auth_factor", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--key_labels=" + strings.Join(labels, ","), "--fingerprint"}
+	return c.call(ctx, args...)
+}
+
 // addAuthFactor calls "cryptohome --action=add_auth_factor".
 func (c *cryptohomeBinary) addAuthFactor(ctx context.Context, authSessionID, label, password string) ([]byte, error) {
 	args := []string{"--action=add_auth_factor", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--password=" + password}
@@ -410,6 +416,24 @@ func (c *cryptohomeBinary) fetchRecoveryRequest(ctx context.Context, authSession
 // listAuthFactors returns auth factors by calling "cryptohome --action=list_auth_factors".
 func (c *cryptohomeBinary) listAuthFactors(ctx context.Context, username string) ([]byte, error) {
 	args := []string{"--output-format=binary-protobuf", "--action=list_auth_factors", "--user=" + username}
+	return c.call(ctx, args...)
+}
+
+// prepareAddFpAuthFactor returns the responses by calling "cryptohome --action=prepare_auth_factor --add --fingerprint".
+func (c *cryptohomeBinary) prepareAddFpAuthFactor(ctx context.Context, authSessionID string) ([]byte, error) {
+	args := []string{"--output-format=binary-protobuf", "--action=prepare_auth_factor", "--add", "--fingerprint", "--auth_session_id=" + authSessionID}
+	return c.call(ctx, args...)
+}
+
+// prepareAuthFpAuthFactor returns the responses by calling "cryptohome --action=prepare_auth_factor --auth --fingerprint".
+func (c *cryptohomeBinary) prepareAuthFpAuthFactor(ctx context.Context, authSessionID string) ([]byte, error) {
+	args := []string{"--output-format=binary-protobuf", "--action=prepare_auth_factor", "--auth", "--fingerprint", "--auth_session_id=" + authSessionID}
+	return c.call(ctx, args...)
+}
+
+// terminateFpAuthFactor returns the responses by calling "cryptohome --action=terminate_auth_factor --fingerprint".
+func (c *cryptohomeBinary) terminateFpAuthFactor(ctx context.Context, authSessionID string) ([]byte, error) {
+	args := []string{"--output-format=binary-protobuf", "--action=terminate_auth_factor", "--fingerprint", "--auth_session_id=" + authSessionID}
 	return c.call(ctx, args...)
 }
 
