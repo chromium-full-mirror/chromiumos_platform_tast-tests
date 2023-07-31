@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
+	"go.chromium.org/tast-tests/cros/local/filesconsts"
 	"go.chromium.org/tast-tests/cros/local/onedrive"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -76,7 +77,7 @@ func OdfsReopenFile(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_"+fileType)
 
 		// Opening the docx file from Downloads.
-		cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fileName, onedrive.OneDrive)
+		cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fileName, filesconsts.OneDrive)
 		if err != nil {
 			s.Fatal("Failed to open office file: ", err)
 		}
@@ -110,7 +111,7 @@ func OdfsReopenFile(ctx context.Context, s *testing.State) {
 		}
 
 		// Open the file again from OneDrive.
-		if _, err := files.OpenOfficeFile(ctx, filesapp.OneDrive, fileName, onedrive.OneDrive); err != nil {
+		if _, err := files.OpenOfficeFile(ctx, filesapp.OneDrive, fileName, filesconsts.OneDrive); err != nil {
 			s.Fatal("Failed to open OneDrive: ", err)
 		}
 		if err := ms365App.WaitForMicrosoft365Window(fileName)(ctx); err != nil {

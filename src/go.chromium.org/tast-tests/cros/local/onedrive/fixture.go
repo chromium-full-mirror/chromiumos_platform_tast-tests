@@ -15,11 +15,14 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesinternals"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
+	"go.chromium.org/tast-tests/cros/local/filesconsts"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -34,7 +37,7 @@ func init() {
 		Impl: &fixture{
 			bt:            browser.TypeAsh,
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud")},
-			provider:      OneDrive,
+			provider:      filesconsts.OneDrive,
 		},
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -51,7 +54,7 @@ func init() {
 		Impl: &fixture{
 			bt:            browser.TypeLacros,
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud")},
-			provider:      OneDrive,
+			provider:      filesconsts.OneDrive,
 		},
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -67,7 +70,7 @@ func init() {
 		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
 		Impl: &fixture{
 			bt:       browser.TypeAsh,
-			provider: DriveFs,
+			provider: filesconsts.DriveFs,
 		},
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -101,15 +104,6 @@ type FixtureData struct {
 	GeneratedFiles []TestFile
 }
 
-// Provider is either Google Drive or Microsoft OneDrive.
-type Provider string
-
-// Cloud Provider names.
-const (
-	OneDrive Provider = "onedrive"
-	DriveFs  Provider = "drivefs"
-)
-
 type fixture struct {
 	cr            *chrome.Chrome
 	tconn         *chrome.TestConn
@@ -119,7 +113,7 @@ type fixture struct {
 	// Full path to the new folder created in Downloads to host the office files used by the test.
 	downloadSubFolder string
 	screenRecorder    *uiauto.ScreenRecorder
-	provider          Provider
+	provider          filesconsts.Provider
 	// Holds a pointer to the FixtureData so the PreTest() can push new files to the test.
 	data *FixtureData
 	// Maps the keys docx, xlsx and pptx to the full local path in the  Data directory.
@@ -156,10 +150,10 @@ func prepareOfficeFile(srcPath, targetFolder string) (testFile TestFile, err err
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var cr *chrome.Chrome
 	var err error
-	if f.provider == DriveFs {
+	if f.provider == filesconsts.DriveFs {
 		cr = s.ParentValue().(*drivefs.FixtureData).Chrome
 		f.tconn = s.ParentValue().(*drivefs.FixtureData).TestAPIConn
-	} else if f.provider == OneDrive {
+	} else if f.provider == filesconsts.OneDrive {
 		opts := f.chromeOptions
 
 		if f.bt == browser.TypeLacros {
@@ -210,14 +204,35 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		Chrome:       cr,
 		TestAPIConn:  f.tconn,
 		TargetFolder: targetBaseName,
-		// GeneratedFiles: generatedFiles,
 	}
 	return f.data
 }
 
 func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	// The deletion in the loop below often fails, here we delete files from previous runs.
+	if len(f.cleanUpFiles) > 0 {
+		DeleteOldRemoteFiles(ctx, f.cleanUpFiles[0].FileName)
+	}
+
+	// NOTE: The deletion below fails if the files are still open in the UI (Office 365 PWA).
+	for _, testFile := range f.cleanUpFiles {
+		name := testFile.FileName
+		files, err := filepath.Glob("/media/fuse/fusebox/fsp.*/" + name)
+		if err != nil {
+			s.Logf("Failed cleaning up file: %s. %v", name, err)
+		} else {
+			for _, file := range files {
+				s.Log("Deleting: ", file)
+				if err := deleteFileRetrying(ctx, file); err != nil {
+					s.Logf("Failed deleting the remote file: %s. %v", file, err)
+				}
+			}
+		}
+	}
+
+	f.cleanUpFiles = []TestFile{}
 	// For DriveFS the parent fixture takes care of closing it.
-	if f.provider == OneDrive {
+	if f.provider == filesconsts.OneDrive {
 		if err := f.cr.Close(ctx); err != nil {
 			s.Log("Failed closing chrome: ", err)
 		}
@@ -254,24 +269,34 @@ func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if xlsx, err = prepareOfficeFile(f.srcFiles["xlsx"], f.downloadSubFolder); err != nil {
 		s.Fatal("Failed to prepare file: ", err)
 	}
-	f.data.GeneratedFiles = []TestFile{
+	generatedFiles = []TestFile{
 		docx,
 		pptx,
 		xlsx,
 	}
-	f.cleanUpFiles = generatedFiles
-}
+	f.data.GeneratedFiles = generatedFiles
+	f.cleanUpFiles = append(f.cleanUpFiles, generatedFiles...)
 
-func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	f.cleanUp(ctx, s)
+	fi, err := filesinternals.Start(ctx, f.tconn, f.cr)
+	if err != nil {
+		s.Fatal("Failed to start chrome://files-internals: ", err)
+	}
 
-	if f.screenRecorder != nil {
-		f.screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+	if err := action.Combine("Clear prefs on chrome://files-internals",
+		fi.ClearOfficeFileHandlers(),
+		fi.ClearAlwaysMoveOneDrive(),
+		fi.ClearAlwaysMoveGoogleDrive(),
+	)(ctx); err != nil {
+		s.Fatal("Failed to clear prefs on chrome://files-internals: ", err)
+	}
+
+	if err := ash.CloseAllWindows(ctx, f.tconn); err != nil {
+		s.Fatal("Failed to close all windows in the fixture: ", err)
 	}
 }
 
-// cleanUp makes a best effort attempt to restore the state to where it was pretest.
-func (f *fixture) cleanUp(ctx context.Context, s *testing.FixtTestState) {
+// PostTests makes a best effort attempt to restore the state to where it was pretest.
+func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	// Local Files.
 	dirEntries, err := os.ReadDir(f.downloadSubFolder)
 	if err != nil {
@@ -287,27 +312,9 @@ func (f *fixture) cleanUp(ctx context.Context, s *testing.FixtTestState) {
 		}
 	}
 
-	// The deletion in the loop below often fails, here we delete files from previous runs.
-	if len(f.cleanUpFiles) > 0 {
-		DeleteOldRemoteFiles(ctx, f.cleanUpFiles[0].FileName)
+	if f.screenRecorder != nil {
+		f.screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
 	}
-
-	// NOTE: The deletion below fails if the files are still open in the UI (Office 365 PWA).
-	for _, testFile := range f.cleanUpFiles {
-		name := testFile.FileName
-		files, err := filepath.Glob("/media/fuse/fusebox/fsp.*/" + name)
-		if err != nil {
-			s.Logf("Failed cleaning up file: %s. %v", name, err)
-		} else {
-			for _, file := range files {
-				s.Log("Deleting: ", file)
-				if err := deleteFileRetrying(ctx, file); err != nil {
-					s.Logf("Failed deleting the remote file: %s. %v", file, err)
-				}
-			}
-		}
-	}
-	f.cleanUpFiles = []TestFile{}
 }
 
 func deleteFileRetrying(ctx context.Context, file string) error {

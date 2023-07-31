@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
+	"go.chromium.org/tast-tests/cros/local/filesconsts"
 	"go.chromium.org/tast-tests/cros/local/onedrive"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -76,7 +77,7 @@ func OdfsOpenFileAlwaysMove(ctx context.Context, s *testing.State) {
 			defer ash.CloseAllWindows(cleanupCtx, tconn)
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_"+fileType)
 
-			cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fileName, onedrive.OneDrive)
+			cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fileName, filesconsts.OneDrive)
 			if err != nil {
 				s.Fatal("Failed to open office file: ", err)
 			}

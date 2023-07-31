@@ -16,7 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/onedrive"
+	"go.chromium.org/tast-tests/cros/local/filesconsts"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -41,12 +41,12 @@ var fileHandlerDialog = nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile(
 var fileHandlerOpenButton = nodewith.Ancestor(fileHandlerDialog).Role(role.Button).Name("Open")
 
 // WaitFileHandlerAndChoose waits for the File Handlers dialog and chooses the target cloud to open office files.
-func (cu *CloudUpload) WaitFileHandlerAndChoose(provider onedrive.Provider) uiauto.Action {
+func (cu *CloudUpload) WaitFileHandlerAndChoose(provider filesconsts.Provider) uiauto.Action {
 
 	var option *nodewith.Finder
-	if provider == onedrive.DriveFs {
+	if provider == filesconsts.DriveFs {
 		option = nodewith.Ancestor(fileHandlerDialog).Role(role.ListBoxOption).NameRegex(regexp.MustCompile("Google * Uses Google Drive*"))
-	} else if provider == onedrive.OneDrive {
+	} else if provider == filesconsts.OneDrive {
 		option = nodewith.Ancestor(fileHandlerDialog).Role(role.ListBoxOption).NameRegex(regexp.MustCompile("Microsoft 365*"))
 	}
 
@@ -213,7 +213,7 @@ func RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) uiauto.Action {
 
 		if err := uiauto.Combine("Setup dialog steps",
 			// Dialog setting up the File Handler, configuring the file type to open with Office 365.
-			options.CloudUpload.WaitFileHandlerAndChoose(onedrive.OneDrive),
+			options.CloudUpload.WaitFileHandlerAndChoose(filesconsts.OneDrive),
 			// Fist setup dialog.
 			options.CloudUpload.WaitGetStartedDialogAndClickNext(),
 			func(ctx context.Context) error {

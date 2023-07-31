@@ -24,8 +24,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/coords"
+	"go.chromium.org/tast-tests/cros/local/filesconsts"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/onedrive"
 	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -627,14 +627,14 @@ func (f *FilesApp) EjectAll() uiauto.Action {
 }
 
 // OpenOfficeFile opens the office file passed in and returns a cloud upload instance for further setup.
-func (f *FilesApp) OpenOfficeFile(ctx context.Context, baseDir, fileName string, provider onedrive.Provider) (*cloudupload.CloudUpload, error) {
+func (f *FilesApp) OpenOfficeFile(ctx context.Context, baseDir, fileName string, provider filesconsts.Provider) (*cloudupload.CloudUpload, error) {
 	var open uiauto.Action
 	menuItem := nodewith.Role(role.MenuItem).Visible()
 	if provider == "" {
 		// Open via double-click, using the default app/action.
 		open = f.OpenFile(fileName)
 
-	} else if provider == onedrive.DriveFs {
+	} else if provider == filesconsts.DriveFs {
 		menuItem = menuItem.NameRegex(regexp.MustCompile(`Google (Docs|Sheets|Slides).*`))
 		open = uiauto.Combine("open via open with",
 			f.SelectFile(fileName),
@@ -642,7 +642,7 @@ func (f *FilesApp) OpenOfficeFile(ctx context.Context, baseDir, fileName string,
 			f.WaitUntilExists(menuItem),
 			f.LeftClick(menuItem),
 		)
-	} else if provider == onedrive.OneDrive {
+	} else if provider == filesconsts.OneDrive {
 		menuItem = menuItem.NameRegex(regexp.MustCompile(`Microsoft 365.*`))
 		open = uiauto.Combine("open via open with",
 			f.SelectFile(fileName),
