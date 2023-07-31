@@ -115,8 +115,8 @@ func waitForFieldTextToBe(ui *uiauto.Context, inputField *nodewith.Finder,
 				return err
 			}
 
-			if !strings.Contains(nodeInfo.Value, expectedText) {
-				return errors.Errorf("failed to validate input value: got: %s; want: %s", nodeInfo.Value, expectedText)
+			if !strings.Contains(strings.TrimSpace(nodeInfo.Value), expectedText) {
+				return errors.Errorf("failed to validate input value: got: %q; want: %q", nodeInfo.Value, expectedText)
 			}
 
 			return nil
@@ -144,10 +144,11 @@ func performPaste(ui *uiauto.Context, kb *input.KeyboardEventWriter,
 				ui.WaitUntilGone(nodewith.HasClass(contextMenuItemViewClassName)),
 			)(ctx)
 		case ClipboardHistoryMenuFromContextMenuSubmenu:
+			fallthrough
 		case ClipboardHistorySubmenu:
-			err = uiauto.Combine("opening the clipboard history submenu by mouse hovering",
+			err = uiauto.Combine("opening the clipboard history submenu",
 				ui.RightClick(inputField),
-				ui.MouseMoveTo(nodewith.NameStartingWith(clipboardHistorySubmenuItemName).Role(role.MenuItem), 0 /*duration*/),
+				ui.LeftClick(nodewith.NameStartingWith(clipboardHistorySubmenuItemName).Role(role.MenuItem)),
 			)(ctx)
 			if err != nil {
 				return err

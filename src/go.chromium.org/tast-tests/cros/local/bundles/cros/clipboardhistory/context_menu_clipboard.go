@@ -42,6 +42,9 @@ type clipboardHistoryTestParam struct {
 
 	// source indicates the source of the pasted clipboard history data.
 	source clipboardhistory.PasteSource
+
+	// tabletMode indicates whether the test should run under the tablet mode.
+	tabletMode bool
 }
 
 func init() {
@@ -60,26 +63,60 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name: "ash",
-			Val:  clipboardHistoryTestParam{browser.TypeAsh, clipboardhistory.ClipboardHistoryMenuFromContextMenu},
+			Val: clipboardHistoryTestParam{browser.TypeAsh,
+				clipboardhistory.ClipboardHistoryMenuFromContextMenu, false /*tabletMode=*/},
 		}, {
-			Name:              "lacros",
-			Val:               clipboardHistoryTestParam{browser.TypeLacros, clipboardhistory.ClipboardHistoryMenuFromContextMenu},
+			Name: "lacros",
+			Val: clipboardHistoryTestParam{browser.TypeLacros,
+				clipboardhistory.ClipboardHistoryMenuFromContextMenu, false /*tabletMode=*/},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name: "ash_from_submenu",
-			Val:  clipboardHistoryTestParam{browser.TypeAsh, clipboardhistory.ClipboardHistorySubmenu},
+			Val: clipboardHistoryTestParam{browser.TypeAsh,
+				clipboardhistory.ClipboardHistorySubmenu, false /*tabletMode=*/},
 		}, {
-			Name:              "lacros_from_submenu",
-			Val:               clipboardHistoryTestParam{browser.TypeLacros, clipboardhistory.ClipboardHistorySubmenu},
+			Name: "lacros_from_submenu",
+			Val: clipboardHistoryTestParam{browser.TypeLacros,
+				clipboardhistory.ClipboardHistorySubmenu, false /*tabletMode=*/},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name: "ash_from_submenu_standalone_menu",
-			Val:  clipboardHistoryTestParam{browser.TypeAsh, clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu},
+			Val: clipboardHistoryTestParam{browser.TypeAsh,
+				clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu, false /*tabletMode=*/},
 		}, {
-			Name:              "lacros_from_submenu_standalone_menu",
-			Val:               clipboardHistoryTestParam{browser.TypeLacros, clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu},
+			Name: "lacros_from_submenu_standalone_menu",
+			Val: clipboardHistoryTestParam{browser.TypeLacros,
+				clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu, false /*tabletMode=*/},
 			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		}, {
+			Name: "ash_tablet",
+			Val: clipboardHistoryTestParam{browser.TypeAsh,
+				clipboardhistory.ClipboardHistoryMenuFromContextMenu, true /*tabletMode=*/},
+		},
+			{
+				Name: "lacros_tablet",
+				Val: clipboardHistoryTestParam{browser.TypeLacros,
+					clipboardhistory.ClipboardHistoryMenuFromContextMenu, true /*tabletMode=*/},
+				ExtraSoftwareDeps: []string{"lacros"},
+			}, {
+				Name: "ash_from_submenu_tablet",
+				Val: clipboardHistoryTestParam{browser.TypeAsh,
+					clipboardhistory.ClipboardHistorySubmenu, true /*tabletMode=*/},
+			}, {
+				Name: "lacros_from_submenu_tablet",
+				Val: clipboardHistoryTestParam{browser.TypeLacros,
+					clipboardhistory.ClipboardHistorySubmenu, true /*tabletMode=*/},
+				ExtraSoftwareDeps: []string{"lacros"},
+			}, {
+				Name: "ash_from_submenu_standalone_menu_tablet",
+				Val: clipboardHistoryTestParam{browser.TypeAsh,
+					clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu, true /*tabletMode=*/},
+			}, {
+				Name: "lacros_from_submenu_standalone_menu_tablet",
+				Val: clipboardHistoryTestParam{browser.TypeLacros,
+					clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu, true /*tabletMode=*/},
+				ExtraSoftwareDeps: []string{"lacros"},
+			}},
 	})
 }
 
@@ -109,6 +146,12 @@ func ContextMenuClipboard(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, testParam.tabletMode)
+	if err != nil {
+		s.Fatalf("Failed to set tablet mode to be %v: %v", testParam.tabletMode, err)
+	}
+	defer cleanup(ctx)
+
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
@@ -135,7 +178,7 @@ func ContextMenuClipboard(ctx context.Context, s *testing.State) {
 		verifySettings(ctx, s, res, testParam.source)
 	})
 	s.Run(cleanupCtx, "verify Launcher", func(ctx context.Context, s *testing.State) {
-		verifyLauncher(ctx, res.tconn, s, res, testParam.source)
+		verifyLauncher(ctx, res.tconn, s, testParam.tabletMode, res, testParam.source)
 	})
 }
 
@@ -176,11 +219,12 @@ func verifySettings(ctx context.Context, s *testing.State, res *clipboardResourc
 	}
 }
 
-func verifyLauncher(ctx context.Context, tconn *chrome.TestConn, s *testing.State, res *clipboardResource, source clipboardhistory.PasteSource) {
-	if err := launcher.OpenBubbleLauncher(res.tconn)(ctx); err != nil {
+func verifyLauncher(ctx context.Context, tconn *chrome.TestConn, s *testing.State, tabletMode bool,
+	res *clipboardResource, source clipboardhistory.PasteSource) {
+	if err := launcher.ShowLauncher(res.tconn, !tabletMode)(ctx); err != nil {
 		s.Fatal("Failed to connect to open Launcher: ", err)
 	}
-	defer launcher.CloseBubbleLauncher(res.tconn)(ctx)
+	defer launcher.HideLauncher(res.tconn, !tabletMode)(ctx)
 	defer faillog.DumpUITreeWithScreenshotOnError(
 		ctx, s.OutDir(), s.HasError, res.cr, fmt.Sprintf("%s_dump", s.TestName()))
 
