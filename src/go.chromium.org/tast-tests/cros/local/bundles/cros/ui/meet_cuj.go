@@ -78,6 +78,8 @@ type meetTest struct {
 
 const defaultTestTimeout = 25 * time.Minute
 
+var platformEffectsModels = hwdep.Model("yaviks", "pujjoteen", "nirwen", "markarth", "frostflow", "dewatt", "omnigul", "anahera", "gimble", "marasov")
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MeetCUJ,
@@ -149,10 +151,27 @@ func init() {
 				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 			}, {
+				Name:              "docs_no_effects",
+				Timeout:           defaultTestTimeout,
+				ExtraAttr:         []string{"group:cuj"},
+				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				Val: meetTest{
+					bots:        []int{1, 3, 15},
+					layout:      googlemeet.TiledLayout,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					zoomOut:     true,
+					browserType: browser.TypeAsh,
+					botsOptions: []bond.AddBotsOption{bond.WithAudio("what_color_is_cheese_32bit_48k_stereo.raw")},
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
 				Name:              "docs_audio_effects",
 				Timeout:           defaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("yaviks", "pujjoteen", "nirwen", "markarth", "frostflow", "dewatt", "omnigul", "anahera", "gimble", "marasov")),
+				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
 				Val: meetTest{
 					bots:              []int{1, 3, 15},
 					layout:            googlemeet.TiledLayout,
@@ -163,7 +182,6 @@ func init() {
 					zoomOut:           true,
 					liveCaptions:      true,
 					noiseCancellation: true,
-					tabSwitchDocs:     true,
 					browserType:       browser.TypeAsh,
 					botsOptions:       []bond.AddBotsOption{bond.WithAudio("what_color_is_cheese_32bit_48k_stereo.raw")},
 				},
@@ -172,7 +190,7 @@ func init() {
 				Name:              "docs_video_effects",
 				Timeout:           defaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("yaviks", "pujjoteen", "nirwen", "markarth", "frostflow", "dewatt", "omnigul", "anahera", "gimble", "marasov")),
+				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
 				Val: meetTest{
 					bots:           []int{1, 3, 15},
 					layout:         googlemeet.TiledLayout,
@@ -183,7 +201,6 @@ func init() {
 					zoomOut:        true,
 					backgroundBlur: true,
 					adjustLighting: true,
-					tabSwitchDocs:  true,
 					browserType:    browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
@@ -191,7 +208,7 @@ func init() {
 				Name:              "docs_platform_effects",
 				Timeout:           defaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("yaviks", "pujjoteen", "nirwen", "markarth", "frostflow", "dewatt", "omnigul", "anahera", "gimble", "marasov")),
+				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
 				Val: meetTest{
 					bots:              []int{1, 3, 15},
 					layout:            googlemeet.TiledLayout,
@@ -204,7 +221,6 @@ func init() {
 					adjustLighting:    true,
 					liveCaptions:      true,
 					noiseCancellation: true,
-					tabSwitchDocs:     true,
 					browserType:       browser.TypeAsh,
 					botsOptions:       []bond.AddBotsOption{bond.WithAudio("what_color_is_cheese_32bit_48k_stereo.raw")},
 				},
