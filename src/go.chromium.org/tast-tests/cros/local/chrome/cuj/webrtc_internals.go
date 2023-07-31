@@ -8,14 +8,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -64,7 +63,7 @@ func OpenWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, br *browse
 // DumpWebRTCInternals downloads a dump from chrome://webrtc-internals and
 // returns the file path. This function assumes that chrome://webrtc-internals
 // is already shown, with the Create Dump section expanded.
-func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, username string) (string, error) {
+func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, username string) (dumpFilePath string, err error) {
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, username)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get Downloads path")
@@ -85,28 +84,27 @@ func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 	}
 
 	downloadStartTime := time.Now()
-	notificationPredicate := ash.WaitTitle("Download complete")
-	notificationIDs := make(map[string]struct{})
-	notification, err := ash.WaitForNotification(ctx, tconn, time.Minute, func(notification *ash.Notification) bool {
-		if notificationPredicate(notification) {
-			return true
+	downloadStartTimeStr := downloadStartTime.Format("2006-01-02 15:04:05")
+	// Assume WebRTC dump file name should start with "webrtc".
+	const webRTCFileNamePrefix = "webrtc"
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		findFileCmd := fmt.Sprintf("find %s -name '%s*.txt' -newermt '%s'", downloadsPath, webRTCFileNamePrefix, downloadStartTimeStr)
+		out, err := testexec.CommandContext(ctx, "bash", "-c", findFileCmd).Output()
+		if err != nil {
+			return errors.Wrapf(err, "find command %s failed", findFileCmd)
 		}
-		// Log unrecognized notifications to help with investigation
-		// of b/255343902, but avoid logging the same notification
-		// repeatedly in a tight loop for ten minutes.
-		// TODO(b/255343902): Remove this when the bug is fixed.
-		if _, alreadyLogged := notificationIDs[notification.ID]; !alreadyLogged {
-			testing.ContextLog(ctx, "Found unrecognized notification while waiting for download notification: ", *notification)
-			notificationIDs[notification.ID] = struct{}{}
+		filePath := strings.TrimSpace(string(out))
+		if len(filePath) == 0 {
+			return errors.New("file not found")
 		}
-		return false
-	})
-	if err != nil {
-		return "", errors.Wrap(err, "failed to wait for download notification")
+		dumpFilePath = filePath
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute, Interval: 3 * time.Second}); err != nil {
+		return "", errors.Wrap(err, "failed to find webrtc dump file in Downloads folder")
 	}
-
 	testing.ContextLog(ctx, "Downloaded WebRTC dump file in ", time.Since(downloadStartTime))
-	return filepath.Join(downloadsPath, notification.Message), nil
+
+	return dumpFilePath, nil
 }
 
 type videoCodec float64
