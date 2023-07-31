@@ -116,7 +116,7 @@ var ARCQueryRCodeRE = regexp.MustCompile(`rcode: .* \(([0-9]+)\)`)
 // The output is taken from ARC's `dumpsys wifi tools dns`:
 // ARC P: "... DnsAddresses: [100.115.92.138,/2a00:79e1:abc:f605:7078:8fff:fed5:f010,] ... "
 // ARC R+: "... DnsAddresses: [ /100.115.92.138,/2a00:79e1:abc:f605:7078:8fff:fed5:f010 ] ..."
-var ARCNameserversRE = regexp.MustCompile(`MojoLinkProperties:.*DnsAddresses: \[ ?(?:(?:[a-zA-Z0-9\-\.]*\/)?([0-9a-f\.\:]+))?(?:,(?:[a-zA-Z0-9\-\.]*\/)?([0-9a-f\.\:]+))*,? ?\]`)
+var ARCNameserversRE = regexp.MustCompile(`Combined LinkProperties:.*DnsAddresses: \[ ?(?:(?:[a-zA-Z0-9\-\.]*\/)?([0-9a-f\.\:]+))?(?:,(?:[a-zA-Z0-9\-\.]*\/)?([0-9a-f\.\:]+))*,? ?\]`)
 
 // DNS proxy run path, contains resolv.conf.
 const proxyRunPath = "/run/dns-proxy"
