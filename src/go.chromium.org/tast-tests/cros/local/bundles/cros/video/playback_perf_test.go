@@ -207,6 +207,10 @@ func TestPlaybackPerfParams(t *testing.T) {
 	// long
 	for _, codec := range []string{"h264", "hevc", "vp8", "vp9", "av1"} {
 		for _, dec := range []string{"hw", "sw"} {
+			if codec == "hevc" && dec == "sw" {
+				// There is no support for HEVC SW decoding in Chrome-on-ChromeOS.
+				continue
+			}
 			resolution, fps := 1080, 30
 			file := playbackPerfLongFile[codec]
 			param := genPlaybackParam(codec, file, resolution, fps, dec,

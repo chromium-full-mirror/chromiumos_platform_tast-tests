@@ -790,19 +790,6 @@ func init() {
 				Fixture:           "chromeVideo",
 			},
 			{
-				Name: "hevc_1080p_30fps_sw_long",
-				Val: playbackPerfParams{
-					fileName:         "crosvideo/1080-5-frag.mp4",
-					decoderType:      1,
-					browserType:      browser.TypeAsh,
-					measureRoughness: true,
-				},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily([]string{"rogue"}), hwdep.InternalDisplay()),
-				ExtraSoftwareDeps: []string{"proprietary_codecs", "drm_atomic"},
-				ExtraData:         []string{"crosvideo/1080-5-frag.mp4"},
-				Fixture:           "chromeVideoWithSWDecoding",
-			},
-			{
 				Name: "vp8_1080p_30fps_hw_long",
 				Val: playbackPerfParams{
 					fileName:         "crosvideo/1080_vp8.webm",
