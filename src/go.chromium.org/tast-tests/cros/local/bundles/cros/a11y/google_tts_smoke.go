@@ -34,7 +34,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Params: []testing.Param{{
 			Name: "with_audio_verification",
 			Val:  true,
@@ -50,8 +50,13 @@ func GoogleTtsSmoke(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	tconn, err := cr.TestAPIConn(ctx)
+	cr, err := chrome.New(ctx, chrome.NoLogin(), chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")))
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer cr.Close(ctxCleanup)
+
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
@@ -61,6 +66,17 @@ func GoogleTtsSmoke(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to mute device: ", err)
 	}
 	defer crastestclient.Unmute(ctxCleanup)
+
+	oobeConn, err := cr.WaitForOOBEConnection(ctx)
+	if err != nil {
+		s.Fatal("Failed to create OOBE connection: ", err)
+	}
+	defer oobeConn.Close()
+
+	// Wait for the welcome screen to be shown.
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.WelcomeScreen.isVisible()"); err != nil {
+		s.Fatal("Failed to wait for the welcome screen to be visible: ", err)
+	}
 
 	ed := tts.GoogleTTSEngine()
 	sm, err := tts.RelevantSpeechMonitor(ctx, cr, tconn, ed)
