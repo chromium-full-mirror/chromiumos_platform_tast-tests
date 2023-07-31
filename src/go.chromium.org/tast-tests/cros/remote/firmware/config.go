@@ -89,6 +89,8 @@ type Config struct {
 	LidWakeFromPowerOff                  bool              `json:"lid_wake_from_power_off"`
 	RecForceMRC                          bool              `json:"rec_force_mrc"`
 	BrokenFirmwareScreenRequiresRecovery bool              `json:"broken_firmware_screen_requires_recovery"`
+	MiniDiagEnabled                      bool              `json:"minidiag_enabled"`
+	MiniOSEnabled                        bool              `json:"minios_enabled"`
 
 	// Raw duration fields represent a quantity of seconds.
 	// They are used during NewConfig to populate actual duration fields, which are defined below.
@@ -107,6 +109,7 @@ type Config struct {
 	RawShutdownTimeout               float64 `json:"shutdown_timeout"`
 	RawSoftwareSyncUpdate            float64 `json:"software_sync_update"`
 	RawUSBPlug                       float64 `json:"usb_plug"`
+	RawMiniOSScreen                  float64 `json:"minios_screen"`
 
 	// Actual duration fields are populated during NewConfig based on raw JSON duration values, defined above.
 	DelayRebootToPing             time.Duration
@@ -118,6 +121,7 @@ type Config struct {
 	HoldPwrButtonPowerOn          time.Duration
 	KeypressDelay                 time.Duration
 	SerialFirmwareBootDelay       time.Duration
+	MiniOSScreen                  time.Duration
 	// Shutdown is supposed to be the time the DUT takes to power off.
 	//
 	// Deprecated: Do not use this, just wait for G3/S5 power states instead.
@@ -231,6 +235,7 @@ func NewConfig(cfgFilepath, board, model string) (*Config, error) {
 	cfg.ShutdownTimeout = toSeconds(cfg.RawShutdownTimeout)
 	cfg.SoftwareSyncUpdate = toSeconds(cfg.RawSoftwareSyncUpdate)
 	cfg.USBPlug = toSeconds(cfg.RawUSBPlug)
+	cfg.MiniOSScreen = toSeconds(cfg.RawMiniOSScreen)
 
 	// Parse list of raw json objects into go structs
 	cfg.USBEnablePins = parseRawUSBEnablePins(cfg.RawUSBEnablePins)
