@@ -356,6 +356,19 @@ func init() {
 			},
 		}},
 		VarDeps: []string{"arc.perfAccountPool"},
+		// Runtime variables that could be useful for debugging issues with a specific type of
+		// data being collected. For example, to debug a consistent failure in DexOpt cache in T,
+		// the test can be run with DexOpt cache generation only with no retry: 'tast run
+		// -var=arc.DataCollector.skipUreadahead=true -var=arc.DataCollector.skipGmscore=true
+		// -var=arc.DataCollector.skipTts=true -var=arc.DataCollector.retryCount=0 $DUT
+		// arc.DataCollector.vm_t_local'
+		Vars: []string{
+			"arc.DataCollector.skipUreadahead",
+			"arc.DataCollector.skipGmscore",
+			"arc.DataCollector.skipTts",
+			"arc.DataCollector.skipDexopt",
+			"arc.DataCollector.retryCount",
+		},
 	})
 }
 
@@ -388,7 +401,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		// Please see b/167697547, b/181832600 for more information. Retries are
 		// needed for occasional OptIn instability on ARC development builds. Only
 		// lower count if for sure OptIn is completely stable.
-		retryCount = 2
+		defaultRetryCount = 2
 	)
 
 	d := s.DUT()
@@ -696,8 +709,24 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	retryCount := defaultRetryCount
+	if val, ok := s.Var("arc.DataCollector.retryCount"); ok {
+		if retryCount, err = strconv.Atoi(val); err != nil {
+			s.Fatal("Cannot parse argument 'arc.DataCollector.retryCount' of type int: ", err)
+		}
+	}
+
 	attempts := 0
 	for {
+		if val, ok := s.Var("arc.DataCollector.skipGmscore"); ok {
+			skipGmsCore := false
+			if skipGmsCore, err = strconv.ParseBool(val); err != nil {
+				s.Fatal("Cannot parse argument 'arc.DataCollector.skipGmscore' of type bool: ", err)
+			}
+			if skipGmsCore {
+				break
+			}
+		}
 		err := genPackagesReferenceAndGmsCoreCache()
 		if err == nil {
 			break
@@ -712,6 +741,15 @@ func DataCollector(ctx context.Context, s *testing.State) {
 
 	attempts = 0
 	for {
+		if val, ok := s.Var("arc.DataCollector.skipTts"); ok {
+			skipTts := false
+			if skipTts, err = strconv.ParseBool(val); err != nil {
+				s.Fatal("Cannot parse argument 'arc.DataCollector.skipTts' of type bool: ", err)
+			}
+			if skipTts {
+				break
+			}
+		}
 		err := genTTSCache(ctx, s, cl, filepath.Join(dataDir, ttsCache), v, &du)
 		if err == nil {
 			break
@@ -727,6 +765,15 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	if param.dexOptCacheGen {
 		attempts = 0
 		for {
+			if val, ok := s.Var("arc.DataCollector.skipDexopt"); ok {
+				skipDexOpt := false
+				if skipDexOpt, err = strconv.ParseBool(val); err != nil {
+					s.Fatal("Cannot parse argument 'arc.DataCollector.skipDexopt' of type bool: ", err)
+				}
+				if skipDexOpt {
+					break
+				}
+			}
 			err = genDexOptCache(ctx, s, cl, filepath.Join(dataDir, dexOptCache), v, &du)
 			if err == nil {
 				break
@@ -745,6 +792,15 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	// collected since it depends on other caches being pre-installed in the system.
 	attempts = 0
 	for {
+		if val, ok := s.Var("arc.DataCollector.skipUreadahead"); ok {
+			skipUreadahead := false
+			if skipUreadahead, err = strconv.ParseBool(val); err != nil {
+				s.Fatal("Cannot parse argument 'arc.DataCollector.skipUreadahead' of type bool: ", err)
+			}
+			if skipUreadahead {
+				break
+			}
+		}
 		err := genUreadaheadPack()
 		if err == nil {
 			break
