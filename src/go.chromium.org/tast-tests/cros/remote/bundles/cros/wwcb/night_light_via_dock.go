@@ -6,6 +6,8 @@ package wwcb
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -19,6 +21,68 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
+)
+
+var (
+	// settingsWindowFinder is the finder of settings window.
+	settingsWindowFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
+			{Value: &ui.NodeWith_HasClass{HasClass: "BrowserFrame"}},
+			{Value: &ui.NodeWith_NameContaining{NameContaining: "Settings"}},
+		},
+	}
+
+	// settingsDeviceLinkFinder is the finder of the device link.
+	settingsDeviceLinkFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_LINK}},
+			{Value: &ui.NodeWith_Name{Name: "Device"}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: settingsWindowFinder}},
+		},
+	}
+
+	// settingsDisplayLinkFinder is the finder of the displays link.
+	settingsDisplayLinkFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_LINK}},
+			{Value: &ui.NodeWith_Name{Name: "Displays"}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: settingsWindowFinder}},
+		},
+	}
+
+	// settingsDisplayFinder is the finder of the night light toggle button.
+	settingsNightLightToggleFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_TOGGLE_BUTTON}},
+			{Value: &ui.NodeWith_Name{Name: "Night Light"}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: settingsWindowFinder}},
+		},
+	}
+
+	// settingsColorTemperatureContainerFinder is the finder of the color temperature container.
+	settingsColorTemperatureContainerFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_GENERIC_CONTAINER}},
+			{Value: &ui.NodeWith_Name{Name: "Color temperature"}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: settingsWindowFinder}},
+		},
+	}
+
+	// settingsColorTemperatureSliderFinder is the finder of the color temperature slider.
+	settingsColorTemperatureSliderFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_SLIDER}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: settingsColorTemperatureContainerFinder}},
+		},
+	}
+
+	// notificationViewFinder is the finder of the pop-up notification view.
+	notificationViewFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_HasClass{HasClass: "AshNotificationView"}},
+		},
+	}
 )
 
 func init() {
@@ -105,164 +169,108 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 	// GoBigSleepLint: Wait for external display to show the screen.
 	testing.Sleep(ctx, 30*time.Second)
 
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			uiTreeResponse, err := uiautoSvc.GetUITree(ctx, &ui.GetUITreeRequest{})
+			if err != nil {
+				s.Log("Unable to get UI tree: ", err)
+			}
+
+			if err := os.WriteFile(filepath.Join(s.OutDir(), "ui_tree.txt"), []byte(uiTreeResponse.UiTree), 0644); err != nil {
+				s.Log("Unable to save UI tree on the host: ", err)
+			}
+		}
+	}(cleanupCtx)
+
+	// Prevent peripherals connection notification to affect UI automation.
+	if _, err := uiautoSvc.WaitUntilGone(ctx, &ui.WaitUntilGoneRequest{Finder: notificationViewFinder}); err != nil {
+		s.Fatal("Failed to wait for notification view gone from context menu: ", err)
+	}
+
 	if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Settings", TimeoutSecs: 60}); err != nil {
 		s.Fatal("Failed to launch setting: ", err)
 	}
 
-	settingsDeviceFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_LINK}},
-			{Value: &ui.NodeWith_Name{Name: "Device"}},
-		},
-	}
+	dutHCVs := make(map[string]int)
+	extDispHCVs := make(map[string]int)
 
-	settingsDisplayFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_LINK}},
-			{Value: &ui.NodeWith_Name{Name: "Displays"}},
-		},
-	}
+	nightLightOff := "off"
 
-	settingsNightLightToggleFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_TOGGLE_BUTTON}},
-			{Value: &ui.NodeWith_Name{Name: "Night Light"}},
-		},
-	}
-
-	settingsColorTemperatureContainerFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_GENERIC_CONTAINER}},
-			{Value: &ui.NodeWith_Name{Name: "Color temperature"}},
-		},
-	}
-
-	settingsColorTemperatureSliderFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_SLIDER}},
-			{Value: &ui.NodeWith_Ancestor{Ancestor: settingsColorTemperatureContainerFinder}},
-		},
-	}
-
-	notificationView := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_HasClass{HasClass: "AshNotificationView"}},
-		},
-	}
-
-	// Prevent peripherals connection notification to affect UI automation.
-	if _, err := uiautoSvc.WaitUntilGone(ctx, &ui.WaitUntilGoneRequest{Finder: notificationView}); err != nil {
-		s.Fatal("Failed to wait for notification view gone from context menu: ", err)
-	}
-
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: settingsDeviceFinder}); err != nil {
-		s.Fatal("Failed to wait for Settings - Device from context menu: ", err)
-	}
-
-	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: settingsDeviceFinder}); err != nil {
-		s.Fatal("Failed to click Settings - Device from context menu: ", err)
-	}
-
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: settingsDisplayFinder}); err != nil {
-		s.Fatal("Failed to wait for Settings - Display from context menu: ", err)
-	}
-
-	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: settingsDisplayFinder}); err != nil {
-		s.Fatal("Failed to click Settings - Display from context menu: ", err)
-	}
-
-	// Scroll down to make night light toggle visible.
-	if _, err := keyboardSvc.Accel(ctx, &inputspb.AccelRequest{Key: "Search+Down"}); err != nil {
-		s.Fatal("Failed to type Search+Down: ", err)
-	}
-
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: settingsNightLightToggleFinder}); err != nil {
-		s.Fatal("Failed to wait for night light toggle from context menu: ", err)
-	}
-
-	nightLightInfo, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: settingsNightLightToggleFinder})
+	extDispHCVs[nightLightOff], err = utils.GetGamHotColdValue(ctx, s, extDispID)
 	if err != nil {
-		s.Fatal("Failed to get node info for night light toggle: ", err)
+		s.Fatal("Failed to get the external display HCV during night light is off: ", err)
 	}
+	s.Logf("External display HCV during night light is off: %d", extDispHCVs[nightLightOff])
 
-	// Enable night light mode.
-	if nightLightInfo.NodeInfo.Checked == ui.Checked_CHECKED_FALSE {
-		if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: settingsNightLightToggleFinder}); err != nil {
-			s.Fatal("Failed to click night light toggle from context menu: ", err)
+	dutHCVs[nightLightOff], err = utils.GetGamHotColdValue(ctx, s, utils.DUTMonitor)
+	if err != nil {
+		s.Fatal("Failed to get the DUT HCV during night light is off: ", err)
+	}
+	s.Logf("DUT HCV during night light is off: %d", dutHCVs[nightLightOff])
+
+	// Enable night light.
+	for _, finder := range []*ui.Finder{
+		settingsDeviceLinkFinder,
+		settingsDisplayLinkFinder,
+		settingsNightLightToggleFinder,
+		settingsColorTemperatureSliderFinder,
+	} {
+		if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: finder}); err != nil {
+			s.Fatalf("Failed to wait for %q from context menu: %v", finder, err)
+		}
+
+		if _, err := uiautoSvc.EnsureFocused(ctx, &ui.EnsureFocusedRequest{Finder: finder}); err != nil {
+			s.Fatalf("Failed to focus on %q from context menu: %v", finder, err)
+		}
+
+		if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: finder}); err != nil {
+			s.Fatalf("Failed to click %q from context menu: %v", finder, err)
 		}
 	}
 
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: settingsColorTemperatureSliderFinder}); err != nil {
-		s.Fatal("Failed to wait for color temperature slider from context menu: ", err)
+	nightLightCooler := "cooler"
+	nightLightWarmer := "warmer"
+
+	// Adjust color temperature.
+	for _, test := range []struct {
+		name                  string
+		hotkey                string
+		colorTemperatureValue string
+	}{
+		{nightLightWarmer, "Search+Right", "100"},
+		{nightLightCooler, "Search+Left", "0"},
+	} {
+		if _, err := keyboardSvc.Accel(ctx, &inputspb.AccelRequest{Key: test.hotkey}); err != nil {
+			s.Fatalf("Failed to type %s: %v", test.hotkey, err)
+		}
+
+		clrTmpSilderInfo, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: settingsColorTemperatureSliderFinder})
+		if err != nil {
+			s.Fatal("Failed to get node info of color temperature slider: ", err)
+		}
+
+		if clrTmpSilderInfo.NodeInfo.Value != test.colorTemperatureValue {
+			s.Fatalf("Failed to set color temperature; got %s, want %s", clrTmpSilderInfo.NodeInfo.Value, test.colorTemperatureValue)
+		}
+
+		extDispHCVs[test.name], err = utils.GetGamHotColdValue(ctx, s, extDispID)
+		if err != nil {
+			s.Fatalf("Failed to get the external display HCV during night light is %s: %v", test.name, err)
+		}
+		s.Logf("External display HCV during night light is %s: %d", test.name, extDispHCVs[test.name])
+
+		dutHCVs[test.name], err = utils.GetGamHotColdValue(ctx, s, utils.DUTMonitor)
+		if err != nil {
+			s.Fatalf("Failed to get the DUT HCV during night light is %s: %v", test.name, err)
+		}
+		s.Logf("DUT HCV during night light is %s: %d", test.name, dutHCVs[test.name])
 	}
 
-	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: settingsColorTemperatureSliderFinder}); err != nil {
-		s.Fatal("Failed to click color temperature slider from context menu: ", err)
+	if extDispHCVs[nightLightOff] > extDispHCVs[nightLightWarmer] || extDispHCVs[nightLightCooler] > extDispHCVs[nightLightWarmer] {
+		s.Fatalf("Unexpect the external display HCV; off: %d, warmer: %d, cooler: %d", extDispHCVs[nightLightOff], extDispHCVs[nightLightWarmer], extDispHCVs[nightLightCooler])
 	}
 
-	extDisplayDefaultHV, err := utils.GetGamHotColdValue(ctx, s, extDispID)
-	if err != nil {
-		s.Fatal("Failed to get color value from camera on the external display: ", err)
-	}
-
-	dutDefaultHCV, err := utils.GetGamHotColdValue(ctx, s, utils.DUTMonitor)
-	if err != nil {
-		s.Fatal("Failed to get color value from camera on DUT monitor: ", err)
-	}
-
-	// Set color temperature to warmer.
-	if _, err := keyboardSvc.Accel(ctx, &inputspb.AccelRequest{Key: "Search+Right"}); err != nil {
-		s.Fatal("Failed to type Search+Right: ", err)
-	}
-
-	sliderInfoWarmer, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: settingsColorTemperatureSliderFinder})
-	if err != nil {
-		s.Fatal("Failed to get node info for color temperature slider: ", err)
-	}
-
-	if sliderInfoWarmer.NodeInfo.Value != "100" {
-		s.Fatalf("Failed to set color temperature value to 100; got %s, want 100", sliderInfoWarmer.NodeInfo.Value)
-	}
-
-	extDisplayWarmerHCV, err := utils.GetGamHotColdValue(ctx, s, extDispID)
-	if err != nil {
-		s.Fatal("Failed to get color value from camera on the external display: ", err)
-	}
-
-	dutWarmerHCV, err := utils.GetGamHotColdValue(ctx, s, utils.DUTMonitor)
-	if err != nil {
-		s.Fatal("Failed to get color value from camera on DUT monitor: ", err)
-	}
-
-	// Set color temperature to cooler.
-	if _, err := keyboardSvc.Accel(ctx, &inputspb.AccelRequest{Key: "Search+Left"}); err != nil {
-		s.Fatal("Failed to type Search+Left: ", err)
-	}
-
-	sliderInfoCooler, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: settingsColorTemperatureSliderFinder})
-	if err != nil {
-		s.Fatal("Failed to get node info for color temperature slider: ", err)
-	}
-
-	if sliderInfoCooler.NodeInfo.Value != "0" {
-		s.Fatalf("Failed to set color temperature to cooler; got %s, want 0", sliderInfoCooler.NodeInfo.Value)
-	}
-
-	extDiplayCoolerHCV, err := utils.GetGamHotColdValue(ctx, s, extDispID)
-	if err != nil {
-		s.Fatal("Failed to get color value from camera on the external display: ", err)
-	}
-
-	dutCoolerHCV, err := utils.GetGamHotColdValue(ctx, s, utils.DUTMonitor)
-	if err != nil {
-		s.Fatal("Failed to get color value from camera on DUT monitor: ", err)
-	}
-
-	if extDiplayCoolerHCV > extDisplayDefaultHV || extDisplayDefaultHV > extDisplayWarmerHCV {
-		s.Fatalf("Unexpect color value detected on external display; cooler: %d, default: %d, warmer: %d", extDiplayCoolerHCV, extDisplayDefaultHV, extDisplayWarmerHCV)
-	}
-
-	if dutCoolerHCV > dutDefaultHCV || dutDefaultHCV > dutWarmerHCV {
-		s.Fatalf("Unexpect color value detected on DUT monitor; cooler: %d, default: %d, warmer: %d", dutCoolerHCV, dutDefaultHCV, dutWarmerHCV)
+	if dutHCVs[nightLightOff] > dutHCVs[nightLightWarmer] || dutHCVs[nightLightCooler] > dutHCVs[nightLightWarmer] {
+		s.Fatalf("Unexpect the DUT HCV; off: %d, warmer: %d, cooler: %d", dutHCVs[nightLightOff], dutHCVs[nightLightWarmer], dutHCVs[nightLightCooler])
 	}
 }
