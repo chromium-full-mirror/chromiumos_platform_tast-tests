@@ -45,6 +45,7 @@ const (
 	handwritingLegacyRecognition
 	qsRevampEnabled
 	emojiPickerGifSupport
+	firstPartyVietnameseInput
 )
 
 // List of fixture names for inputs.
@@ -55,6 +56,7 @@ const (
 	ClamshellVK                                   = "clamshellVK"
 	ClamshellVKRestart                            = "clamshellVKRestart"
 	ClamshellNonVKWithDiacriticsOnPKLongpress     = "clamshellWithDiacriticsOnPKLongpress"
+	ClamshellNonVKWithFirstPartyVietnamese        = "clamshellNonVKWithFirstPartyVietnamese"
 	ClamshellNonVK                                = "clamshellNonVK"
 	ClamshellNonVKGifSupport                      = "clamshellNonVKGifSupport"
 	ClamshellNonVKStereoAloopLoaded               = "clamshellNonVKStereoAloopLoaded"
@@ -82,6 +84,7 @@ const (
 	LacrosClamshellNonVKRestart                         = "lacrosClamshellNonVKRestart"
 	LacrosClamshellNonVKWithMultiwordSuggest            = "lacrosClamshellNonVKWithMultiwordSuggest"
 	LacrosClamshellNonVKWithDiacriticsOnPKLongpress     = "lacrosClamshellWithDiacriticsOnPKLongpress"
+	LacrosClamshellNonVKWithFirstPartyVietnamese        = "lacrosClamshellNonVKWithFirstPartyVietnamese"
 	LacrosTabletVK                                      = "lacrosTabletVK"
 	LacrosTabletVKWithHandWritingLegacyRecognitionOn    = "lacrostabletVKWithHandWritingLegacyRecognitionOn"
 	LacrosTabletVKStereoAloopLoaded                     = "lacrosTabletVKStereoAloopLoaded"
@@ -266,6 +269,20 @@ func init() {
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, diacriticsOnPhysicalKeyboardLongpress),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: ClamshellNonVKWithFirstPartyVietnamese,
+		Desc: "Clamshell mode with First Party Vietnamese Input",
+		Contacts: []string{
+			"jhtin@chromium.org",
+			"essential-inputs-team@google.com",
+		},
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, firstPartyVietnameseInput),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -517,6 +534,20 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: LacrosClamshellNonVKWithFirstPartyVietnamese,
+		Desc: "Lacros variant: clamshell mode with VK disabled and first party Vietnamese input enabled",
+		Contacts: []string{
+			"jhtin@google.com",
+			"essential-inputs-team@google.com",
+		},
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, firstPartyVietnameseInput),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: LacrosClamshellNonVKInGuest,
 		Desc: "Lacros variant: clamshell mode in guest login with VK disabled",
 		Contacts: []string{
@@ -717,6 +748,8 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs("--enable-features=AssistMultiWord"))
 		case diacriticsOnPhysicalKeyboardLongpress:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=DiacriticsOnPhysicalKeyboardLongpress,DiacriticsOnPhysicalKeyboardLongpressDefaultOn"))
+		case firstPartyVietnameseInput:
+			opts = append(opts, chrome.ExtraArgs("--enable-features=FirstPartyVietnameseInput"))
 		case virtualKeyboardMultitouch:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=VirtualKeyboardMultitouch"))
 		case handwritingLegacyRecognition:

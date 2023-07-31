@@ -653,6 +653,22 @@ var Urdu = InputMethod{
 	VoiceLanguage:       LanguageUr,
 }
 
+// VietnameseTelex represents the input method of Telex.
+var VietnameseTelex = InputMethod{
+	Name:                "Vietnamese Telex",
+	ID:                  "vkd_vi_telex",
+	HandwritingLanguage: LanguageVi,
+	VoiceLanguage:       LanguageVi,
+}
+
+// VietnameseVNI represents the input method of VNI.
+var VietnameseVNI = InputMethod{
+	Name:                "Vietnamese VNI",
+	ID:                  "vkd_vi_vni",
+	HandwritingLanguage: LanguageVi,
+	VoiceLanguage:       LanguageVi,
+}
+
 // inputMethods represents in-use (available) IMEs in ChromeOS.
 // Any IMEs displayed in OS settings can be added to this list.
 var inputMethods = []InputMethod{
@@ -728,6 +744,8 @@ var inputMethods = []InputMethod{
 	ThaiTis,
 	Turkish,
 	Urdu,
+	VietnameseTelex,
+	VietnameseVNI,
 }
 
 // ErrInputNotDefined indicates that the input method has not been defined.

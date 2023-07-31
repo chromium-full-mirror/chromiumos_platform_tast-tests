@@ -67,6 +67,7 @@ const (
 	LanguageTh      Language = "Thai"
 	LanguageTr      Language = "Turkish"
 	LanguageUr      Language = "Urdu"
+	LanguageVi      Language = "Vietnamese"
 	LanguageYueHant Language = "Traditional Cantonese"
 	LanguageZhHans  Language = "Simplified Chinese"
 	LanguageZhHant  Language = "Traditional Chinese"

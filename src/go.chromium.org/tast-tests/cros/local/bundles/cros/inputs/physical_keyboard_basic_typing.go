@@ -63,19 +63,34 @@ func init() {
 			{
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Fixture:           fixture.ClamshellNonVK,
+				Val:               pkTypingTestIMEs,
 				ExtraAttr:         []string{"group:input-tools-upstream", "group:criticalstaging"},
 			},
 			{
 				Name:              "informational",
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
 				Fixture:           fixture.ClamshellNonVK,
+				Val:               pkTypingTestIMEs,
 				ExtraSearchFlags:  util.IMESearchFlags(pkTypingTestIMEs),
 			},
 			{
 				Name:              "lacros",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Fixture:           fixture.LacrosClamshellNonVK,
+				Val:               pkTypingTestIMEs,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
+			},
+			{
+				Name:              "first_party_vietnamese",
+				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
+				Fixture:           fixture.ClamshellNonVKWithFirstPartyVietnamese,
+				Val:               []ime.InputMethod{ime.VietnameseTelex, ime.VietnameseVNI},
+			},
+			{
+				Name:              "lacros_first_party_vietnamese",
+				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
+				Fixture:           fixture.LacrosClamshellNonVKWithFirstPartyVietnamese,
+				Val:               []ime.InputMethod{ime.VietnameseTelex, ime.VietnameseVNI},
 			},
 		},
 	})
@@ -118,5 +133,5 @@ func PhysicalKeyboardBasicTyping(ctx context.Context, s *testing.State) {
 		}
 	}
 	// Run defined subtest per input method and message combination.
-	util.RunSubtestsPerInputMethodAndMessage(ctx, uc, s, pkTypingTestIMEs, pkTypingTestMessages, subtest)
+	util.RunSubtestsPerInputMethodAndMessage(ctx, uc, s, s.Param().([]ime.InputMethod), pkTypingTestMessages, subtest)
 }
