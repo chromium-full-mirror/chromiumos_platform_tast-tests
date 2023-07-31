@@ -78,7 +78,7 @@ func Keyboard(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	c, err := a11y.NewTabWithHTML(ctx, br, html)
+	c, err := a11y.NewTabWithURL(ctx, br, a11y.URLFromHTML(html))
 	if err != nil {
 		s.Fatal("Failed to open a new tab with HTML: ", err)
 	}

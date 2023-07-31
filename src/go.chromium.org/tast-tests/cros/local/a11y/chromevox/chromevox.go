@@ -129,13 +129,42 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, vd tts.VoiceData, ed tts.Engi
 		}
 	}()
 
-	inputs := a11y.TTSFeatureInputs{CTX: ctx, CR: cr, ED: ed, BT: bt, HTML: html, Feature: a11y.SpokenFeedback}
+	inputs := a11y.TTSFeatureInputs{CTX: ctx, CR: cr, ED: ed, BT: bt, URL: a11y.URLFromHTML(html), Feature: a11y.SpokenFeedback}
+	sud, err := setUpHelper(inputs, vd)
+
+	// Wait for ChromeVox to focus the root web area.
+	rootWebArea := nodewith.Role(role.RootWebArea).First()
+	if err = sud.CVConn.WaitForFocusedNode(ctx, sud.TTSData.TConn, rootWebArea); err != nil {
+		return SetUpData{nil, sud.TTSData}, errors.Wrap(err, "failed to wait for initial ChromeVox focus")
+	}
+
+	return sud, nil
+}
+
+// SetUpWithURLWithoutFocusWaiter executes common ChromeVox setup code and loads a URL, but
+// does not wait for initial focus as that depends on the URL (focus might not always be
+// the root web area if something within the loaded HTML requests focus). Returns a
+// SetUpData - see the documentation for SetUpData for information on proper cleanup.
+func SetUpWithURLWithoutFocusWaiter(ctx context.Context, cr *chrome.Chrome, vd tts.VoiceData, ed tts.EngineData, bt browser.Type, url string) (setUpData SetUpData, e error) {
+	inputs := a11y.TTSFeatureInputs{CTX: ctx, CR: cr, ED: ed, BT: bt, URL: url, Feature: a11y.SpokenFeedback}
+	return setUpHelper(inputs, vd)
+}
+
+// setUpHelper is a helper to execute common ChromeVox setup code.
+func setUpHelper(inputs a11y.TTSFeatureInputs, vd tts.VoiceData) (setUpData SetUpData, e error) {
+	// Tears down ChromeVox if setUpHelper encountered an error.
+	defer func() {
+		if e != nil {
+			setUpData.TearDown()
+		}
+	}()
+
 	ttsData, err := a11y.SetUpTTSFeature(inputs)
 	if err != nil {
 		return SetUpData{nil, ttsData}, errors.Wrap(err, "failed to setup common TTS feature state")
 	}
 
-	cvconn, err := NewConn(ctx, cr)
+	cvconn, err := NewConn(inputs.CTX, inputs.CR)
 	if err != nil {
 		return SetUpData{nil, ttsData}, errors.Wrap(err, "failed to connect to the ChromeVox background page")
 	}
@@ -144,14 +173,8 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, vd tts.VoiceData, ed tts.Engi
 		return nil
 	})
 
-	if err := cvconn.SetVoice(ctx, vd); err != nil {
+	if err := cvconn.SetVoice(inputs.CTX, vd); err != nil {
 		return SetUpData{nil, ttsData}, errors.Wrap(err, "failed to set the ChromeVox voice")
-	}
-
-	// Wait for ChromeVox to focus the root web area.
-	rootWebArea := nodewith.Role(role.RootWebArea).First()
-	if err = cvconn.WaitForFocusedNode(ctx, ttsData.TConn, rootWebArea); err != nil {
-		return SetUpData{nil, ttsData}, errors.Wrap(err, "failed to wait for initial ChromeVox focus")
 	}
 
 	return SetUpData{cvconn, ttsData}, nil

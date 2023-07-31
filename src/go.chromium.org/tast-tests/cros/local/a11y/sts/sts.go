@@ -85,7 +85,7 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, ed tts.EngineData, bt browser
 		}
 	}()
 
-	inputs := a11y.TTSFeatureInputs{CTX: ctx, CR: cr, ED: ed, BT: bt, HTML: html, Feature: a11y.SelectToSpeak}
+	inputs := a11y.TTSFeatureInputs{CTX: ctx, CR: cr, ED: ed, BT: bt, URL: a11y.URLFromHTML(html), Feature: a11y.SelectToSpeak}
 	ttsData, err := a11y.SetUpTTSFeature(inputs)
 	if err != nil {
 		return ttsData, errors.Wrap(err, "failed to setup common TTS feature state")

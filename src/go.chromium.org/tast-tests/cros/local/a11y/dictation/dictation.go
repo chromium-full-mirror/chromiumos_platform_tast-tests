@@ -119,7 +119,7 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, html, className string, bt br
 		return closeBrowser(cleanUpCtx)
 	})
 
-	brConn, err := a11y.NewTabWithHTML(ctx, br, html)
+	brConn, err := a11y.NewTabWithURL(ctx, br, a11y.URLFromHTML(html))
 	if err != nil {
 		return newNoOpDriver(tdh), errors.Wrapf(err, "failed to open a new tab with HTML: %q", html)
 	}

@@ -67,11 +67,15 @@ func ClearFeature(ctx context.Context, tconn *chrome.TestConn, feature Feature) 
 	return nil
 }
 
-// NewTabWithHTML creates a new tab with the specified HTML, waits for it to
+// URLFromHTML converts html in to a data:/text/html URL.
+func URLFromHTML(html string) string {
+	return fmt.Sprintf("data:text/html, %s", html)
+}
+
+// NewTabWithURL creates a new tab with the specified URL, waits for it to
 // load, and returns a connection to the page.
 // This works with either ash-chrome or lacros-chrome browser.
-func NewTabWithHTML(ctx context.Context, br *browser.Browser, html string) (*browser.Conn, error) {
-	url := fmt.Sprintf("data:text/html, %s", html)
+func NewTabWithURL(ctx context.Context, br *browser.Browser, url string) (*browser.Conn, error) {
 	c, err := br.NewConn(ctx, url, browser.WithNewWindow())
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open new tab with url: %s", url)
@@ -112,14 +116,14 @@ func VerifyScreenAIInstalled(ctx context.Context) error {
 }
 
 // TTSFeatureInputs represents data used for setting up an accessibility
-// feature that uses TTS e.g. ChromeVox or Select-to-Speak. HTML specifies the
-// web content to load and run a test on.
+// feature that uses TTS e.g. ChromeVox or Select-to-Speak. URL specifies
+// the URL to run the test on.
 type TTSFeatureInputs struct {
 	CTX     context.Context
 	CR      *chrome.Chrome
 	ED      tts.EngineData
 	BT      browser.Type
-	HTML    string
+	URL     string
 	Feature Feature
 }
 
@@ -187,7 +191,7 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 	cr := tfi.CR
 	ed := tfi.ED
 	bt := tfi.BT
-	html := tfi.HTML
+	url := tfi.URL
 	feature := tfi.Feature
 
 	tdown := &TearDownHelper{}
@@ -222,9 +226,9 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 		return closeBrowser(cleanupCtx)
 	})
 
-	brConn, err := NewTabWithHTML(ctx, br, html)
+	brConn, err := NewTabWithURL(ctx, br, url)
 	if err != nil {
-		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to open a new tab with HTML")
+		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to open a new tab with URL")
 	}
 	tdown.Append(func() error {
 		return brConn.Close()
