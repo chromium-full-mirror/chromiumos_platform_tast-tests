@@ -150,7 +150,7 @@ func init() {
 		Contacts: []string{"clumptini+oncall@google.com"},
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{chrome.EnableFeatures("Bruschetta", "BruschettaAlphaMigrate")}, nil
+				return []chrome.Option{chrome.EnableFeatures("Bruschetta")}, nil
 			},
 		},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
