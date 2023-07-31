@@ -38,6 +38,10 @@ var PrintManagementDeleteHistoryButton = nodewith.Name("Clear all history").Role
 // history.
 var printManagementDeleteConfirmButton = nodewith.Name("Clear").HasClass("action-button").Role(role.Button)
 
+// printManagementLaunchSettingsButton is used to launch Printer settings from
+// Print Management SWA.
+var printManagementLaunchSettingsButton = nodewith.Name("Manage printers").Role(role.Button)
+
 // printManagementWindow is the main window for the print management dialog.
 var printManagementWindow = nodewith.Name("Print jobs").Role(role.Window).First()
 
@@ -74,6 +78,15 @@ func (p *PrintManagementApp) Focus() uiauto.Action {
 	return p.ui.EnsureFocused(printManagementWindow)
 }
 
+// LaunchPrinterSettings returns an action that opens Printer settings.
+func (p *PrintManagementApp) LaunchPrinterSettings() uiauto.Action {
+	printerSettingsWindow := nodewith.Name("Settings - Printers").Role(role.Window).First()
+	return uiauto.IfSuccessThen(p.verifyLaunchSettingsButton(),
+		uiauto.Combine("press manage printers and confirm settings opens",
+			p.ui.DoDefault(printManagementLaunchSettingsButton),
+			p.ui.WaitUntilExists(printerSettingsWindow)))
+}
+
 // VerifyHistoryLabel returns an action that verifies the History section of the
 // Print Management app is visible.
 func (p *PrintManagementApp) VerifyHistoryLabel() uiauto.Action {
@@ -84,4 +97,10 @@ func (p *PrintManagementApp) VerifyHistoryLabel() uiauto.Action {
 // visible in the Print Management app.
 func (p *PrintManagementApp) VerifyPrintJob() uiauto.Action {
 	return p.ui.WithTimeout(20 * time.Second).WaitUntilExists(printManagementPrintJobEntry)
+}
+
+// verifyLaunchSettingsButton returns an action that verifies the
+// button to launch Printer settings is visible.
+func (p *PrintManagementApp) verifyLaunchSettingsButton() uiauto.Action {
+	return p.ui.WithTimeout(5 * time.Second).WaitUntilExists(printManagementLaunchSettingsButton)
 }
