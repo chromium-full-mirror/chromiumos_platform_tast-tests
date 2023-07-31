@@ -392,3 +392,26 @@ func CloseAdvancedSettings(ctx context.Context, tconn *chrome.TestConn) error {
 
 	return nil
 }
+
+// OpenDestinationDialogCros opens the destination-dialog-cros from the main
+// print-preview screen.
+func OpenDestinationDialogCros(ctx context.Context, tconn *chrome.TestConn) error {
+	// Find and click the See more... menu item.
+	dataList := nodewith.NameStartingWith("Destination ").Role(role.PopUpButton)
+	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
+	if err := uiauto.Combine("find and click destination list",
+		ui.WaitUntilExists(dataList),
+		ui.LeftClick(dataList),
+	)(ctx); err != nil {
+		return err
+	}
+
+	seeMore := nodewith.Name("See more destinations").Role(role.MenuItem)
+	if err := uiauto.Combine("find and click See more... menu item",
+		ui.WaitUntilExists(seeMore),
+		ui.LeftClick(seeMore),
+	)(ctx); err != nil {
+		return err
+	}
+	return nil
+}
