@@ -187,7 +187,7 @@ func verifyGscSysrstCommand(ctx context.Context, s *testing.State, expectSuccess
 func runGscEcrstPulseCommand(ctx context.Context, s *testing.State, expectSuccess bool) error {
 	h := s.FixtValue().(*fixture.Value).Helper
 	command := "ecrst pulse 1000"
-	regex := "Pulsing EC reset"
+	regex := "Pulsing EC reset|"
 	failureRegex := "Access Denied"
 	if !expectSuccess {
 		regex = failureRegex
@@ -205,7 +205,7 @@ func runGscEcrstPulseCommand(ctx context.Context, s *testing.State, expectSucces
 func runGscSysrstPulseCommand(ctx context.Context, s *testing.State, expectSuccess bool) error {
 	h := s.FixtValue().(*fixture.Value).Helper
 	command := "sysrst pulse 1000"
-	regex := "Pulsing AP reset"
+	regex := "Pulsing AP reset|"
 	failureRegex := "Access Denied"
 	if !expectSuccess {
 		regex = failureRegex
