@@ -121,24 +121,26 @@ func ClickAddAccountInSettings(ctx context.Context, arcDevice *androidui.Device,
 		scrollClassName   = "android.widget.ScrollView"
 		textViewClassName = "android.widget.TextView"
 	)
-
-	// Scroll until Accounts is visible.
-	scrollLayout := arcDevice.Object(androidui.ClassName(scrollClassName),
-		androidui.Scrollable(true))
-	accounts := arcDevice.Object(androidui.ClassName("android.widget.TextView"),
-		androidui.TextMatches("(?i).*Accounts"), androidui.Enabled(true))
-	if err := scrollLayout.WaitForExists(ctx, 10*time.Second); err == nil {
-		scrollLayout.ScrollTo(ctx, accounts)
-	}
-	if err := accounts.Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click on Accounts")
-	}
-
 	addAccount := arcDevice.Object(androidui.ClassName("android.widget.TextView"),
 		androidui.TextMatches("(?i)Add account"), androidui.Enabled(true))
-	if err := addAccount.WaitForExists(ctx, 10*time.Second); err != nil {
-		return errors.Wrap(err, "failed finding Add account")
+
+	if err := addAccount.Exists(ctx); err != nil {
+		// Scroll until Accounts is visible.
+		scrollLayout := arcDevice.Object(androidui.ClassName(scrollClassName),
+			androidui.Scrollable(true))
+		accounts := arcDevice.Object(androidui.ClassName("android.widget.TextView"),
+			androidui.TextMatches("(?i).*Accounts"), androidui.Enabled(true))
+		if err := scrollLayout.WaitForExists(ctx, 10*time.Second); err == nil {
+			scrollLayout.ScrollTo(ctx, accounts)
+		}
+		if err := accounts.Click(ctx); err != nil {
+			return errors.Wrap(err, "failed to click on Accounts")
+		}
+		if err := addAccount.WaitForExists(ctx, 10*time.Second); err != nil {
+			return errors.Wrap(err, "failed finding Add account")
+		}
 	}
+
 	if err := addAccount.Click(ctx); err != nil {
 		return errors.Wrap(err, "failed to click Add account")
 	}
