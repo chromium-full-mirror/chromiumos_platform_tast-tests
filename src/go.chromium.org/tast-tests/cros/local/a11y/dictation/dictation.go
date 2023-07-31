@@ -10,9 +10,12 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
+	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -20,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input/voice"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // driver contains useful objects for driving Dictation tests and is
@@ -50,7 +54,7 @@ func (d driver) waitForBubbleVisible() error {
 	ui := d.ui
 	bubble := d.bubble
 
-	if err := ui.WaitUntilExists(bubble)(ctx); err != nil {
+	if err := ui.EnsureExistsFor(bubble, 2*time.Second)(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for the Dictation bubble UI")
 	}
 
@@ -64,7 +68,7 @@ func (d driver) waitForBubbleGone() error {
 	ui := d.ui
 	bubble := d.bubble
 
-	if err := ui.WaitUntilGone(bubble)(ctx); err != nil {
+	if err := ui.EnsureGoneFor(bubble, 2*time.Second)(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for the Dictation bubble UI")
 	}
 
@@ -87,7 +91,7 @@ func (d driver) waitForEditableValue(expectedValue string) error {
 
 // SetUp executes common Dictation setup code and returns a driver that can be
 // used to easily drive Dictation tests.
-func SetUp(ctx context.Context, cr *chrome.Chrome, html, className string, bt browser.Type) (d driver, e error) {
+func SetUp(ctx context.Context, html, className string, bt browser.Type) (d driver, e error) {
 	// Tears down Dictation if SetUp encountered an error.
 	defer func() {
 		if e != nil {
@@ -103,6 +107,46 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, html, className string, bt br
 	tdh.Append(func() error {
 		cancel()
 		return nil
+	})
+
+	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(),
+		// Enforce on-device speech recognition.
+		chrome.EnableFeatures("OnDeviceSpeechRecognition"),
+	)
+	if err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to start chrome")
+	}
+	tdh.Append(func() error {
+		return cr.Close(cleanUpCtx)
+	})
+
+	// Ensure the device is unmuted and that the volume is loud enough so that
+	// Dictation can recognize speech.
+	if err := crastestclient.Unmute(cleanUpCtx); err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to unmute the device")
+	}
+
+	cras, err := audio.NewCras(ctx)
+	if err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to create new cras")
+	}
+
+	if err := audio.WaitForDevice(ctx, audio.OutputStream); err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to wait for output stream")
+	}
+
+	node, err := activeCrasNode(ctx, cras)
+	if err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to get initial active cras node")
+	}
+
+	originalVolume := int(node.NodeVolume)
+	if err := cras.SetOutputNodeVolume(ctx, *node, 100); err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to set volume")
+	}
+
+	tdh.Append(func() error {
+		return cras.SetOutputNodeVolume(ctx, *node, originalVolume)
 	})
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -144,6 +188,11 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, html, className string, bt br
 		return nil
 	})
 
+	// Wait until dlc libsoda and libsoda-model-en-us are installed.
+	if err := testing.Poll(ctx, a11y.VerifySodaInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to wait for libsoda dlc to be installed")
+	}
+
 	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
 	if err := maybeClosePrivacyDialog(ctx, ui); err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to close the Dictation privacy dialog")
@@ -158,7 +207,7 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, html, className string, bt br
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to focus the editable field")
 	}
 
-	bubble := nodewith.Role(role.GenericContainer).HasClass("DictationBubbleView").First()
+	bubble := nodewith.Role(role.GenericContainer).HasClass("DictationBubbleView").Onscreen().First()
 	return driver{ctx, ui, bubble, editable, tdh}, nil
 }
 
@@ -183,6 +232,21 @@ func maybeClosePrivacyDialog(ctx context.Context, ui *uiauto.Context) error {
 	}
 
 	return nil
+}
+
+// activeCrasNode finds the currently active audio node.
+func activeCrasNode(ctx context.Context, cras *audio.Cras) (*audio.CrasNode, error) {
+	nodes, err := cras.GetNodes(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get nodes from cras")
+	}
+
+	for _, n := range nodes {
+		if n.Active && !n.IsInput {
+			return &n, nil
+		}
+	}
+	return nil, errors.New("failed to find active node")
 }
 
 // ToggleOn uses the keyboard to activate Dictation and waits for the bubble UI

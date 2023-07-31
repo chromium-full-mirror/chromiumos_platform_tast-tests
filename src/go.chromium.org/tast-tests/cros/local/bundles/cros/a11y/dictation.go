@@ -8,9 +8,9 @@ package a11y
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y/dictation"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -31,51 +31,46 @@ func init() {
 			"akihiroota@chromium.org",      // Test author
 		},
 		BugComponent: "b:1272896",
+		Timeout:      3 * time.Minute,
 		Attr:         []string{"group:mainline", "informational"},
 		// Load audio file used for Dictation.
 		Data:         []string{"voice_en_hello.wav"},
-		HardwareDeps: hwdep.D(hwdep.Speaker()),
-		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone(), hwdep.Keyboard()),
+		SoftwareDeps: []string{"chrome", "ondevice_speech"},
 		Params: []testing.Param{{
-			Name:    "textarea",
-			Fixture: "chromeLoggedIn",
+			Name: "ash_textarea",
 			Val: dictationTestParam{
 				browserType: browser.TypeAsh,
 				html:        "<textarea class='myEditable'></textarea>",
 			},
 		}, {
 			Name:              "lacros_textarea",
-			Fixture:           "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val: dictationTestParam{
 				browserType: browser.TypeLacros,
 				html:        "<textarea class='myEditable'></textarea>",
 			},
 		}, {
-			Name:    "input",
-			Fixture: "chromeLoggedIn",
+			Name: "ash_input",
 			Val: dictationTestParam{
 				browserType: browser.TypeAsh,
 				html:        "<input class='myEditable'></input>",
 			},
 		}, {
 			Name:              "lacros_input",
-			Fixture:           "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val: dictationTestParam{
 				browserType: browser.TypeLacros,
 				html:        "<input class='myEditable'></input>",
 			},
 		}, {
-			Name:    "contenteditable",
-			Fixture: "chromeLoggedIn",
+			Name: "ash_contenteditable",
 			Val: dictationTestParam{
 				browserType: browser.TypeAsh,
 				html:        "<div class='myEditable' contenteditable></div>",
 			},
 		}, {
 			Name:              "lacros_contenteditable",
-			Fixture:           "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val: dictationTestParam{
 				browserType: browser.TypeLacros,
@@ -86,11 +81,10 @@ func init() {
 }
 
 func Dictation(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	bt := s.Param().(dictationTestParam).browserType
 	html := s.Param().(dictationTestParam).html
 	const className = "myEditable"
-	driver, err := dictation.SetUp(ctx, cr, html, className, bt)
+	driver, err := dictation.SetUp(ctx, html, className, bt)
 	if err != nil {
 		s.Fatal("Failed to set up Dictation: ", err)
 	}
