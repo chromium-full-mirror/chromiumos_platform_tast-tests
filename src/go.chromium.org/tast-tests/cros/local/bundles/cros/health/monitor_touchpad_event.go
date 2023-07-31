@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/jsontypes"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type touchpadConnectedEvent struct {
@@ -46,6 +47,7 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
+		HardwareDeps: hwdep.D(hwdep.Touchpad()),
 		Fixture:      "crosHealthdRunning",
 	})
 }
