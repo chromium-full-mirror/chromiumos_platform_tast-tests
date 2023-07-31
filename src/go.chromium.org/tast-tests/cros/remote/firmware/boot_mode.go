@@ -48,6 +48,7 @@ const (
 // ModeSwitcher enables booting the DUT into different firmware boot modes (normal, dev, rec).
 type ModeSwitcher struct {
 	Helper *Helper
+	bypasser
 }
 
 // NewModeSwitcher creates a new ModeSwitcher. It relies on a firmware Helper to track dependent objects, such as servo and RPC client.
@@ -55,8 +56,13 @@ func NewModeSwitcher(ctx context.Context, h *Helper) (*ModeSwitcher, error) {
 	if err := h.RequireConfig(ctx); err != nil {
 		return nil, errors.Wrap(err, "requiring firmware config")
 	}
+	newbp, err := NewBypasser(ctx, h)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating a new bypasser")
+	}
 	return &ModeSwitcher{
-		Helper: h,
+		Helper:   h,
+		bypasser: newbp,
 	}, nil
 }
 
@@ -124,7 +130,7 @@ func msOptsContain(opts []ModeSwitchOption, want ModeSwitchOption) bool {
 // RebootToMode reboots the DUT into the specified boot mode.
 // This has the side-effect of disconnecting the RPC client.
 // Requires `SoftwareDeps: []string{"crossystem", "flashrom"},`.
-func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMode, opts ...ModeSwitchOption) (errReturn error) {
+func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMode, opts ...ModeSwitchOption) (errReturn error) {
 	h := ms.Helper
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "requiring servo")
@@ -273,18 +279,12 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
 			return err
 		}
-		if fromMode != fwCommon.BootModeNormal {
-			if err := ms.FwScreenToNormalMode(ctx, opts...); err != nil {
-				return errors.Wrap(err, "moving from firmware screen to normal mode")
-			}
-		} else {
-			// Reconnect to the DUT.
-			testing.ContextLog(ctx, "Reestablishing connection to DUT")
-			connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-			defer cancel()
-			if err := h.WaitConnect(connectCtx, waitConnectOpt...); err != nil {
-				return errors.Wrapf(err, "failed to reconnect to DUT after booting to %s", toMode)
-			}
+		// Reconnect to the DUT.
+		testing.ContextLog(ctx, "Reestablishing connection to DUT")
+		connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+		defer cancel()
+		if err := h.WaitConnect(connectCtx, waitConnectOpt...); err != nil {
+			return errors.Wrapf(err, "failed to reconnect to DUT after booting to %s", toMode)
 		}
 	case fwCommon.BootModeRecovery:
 		// Recovery mode requires the DUT to boot the image on the USB.
@@ -654,96 +654,23 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 // The actual behavior depends on the ModeSwitcherType.
 func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSwitchOption) error {
 	h := ms.Helper
-	if err := h.RequireServo(ctx); err != nil {
-		return errors.Wrap(err, "requiring servo")
+	testing.ContextLog(ctx, "Set DFP mode")
+	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %s", err)
 	}
-	// Keep pressing the normal mode keys until connected, but wait a little longer for the connect each time.
-	connectTimeout := 2 * time.Second
-	waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		switch h.Config.ModeSwitcherType {
-		case KeyboardDevSwitcher:
-			// Press both SPACE and ENTER so that we can handle both with and without ENTER_TRIGGERS_TONORM, and the menu UI which doesn't use SPACE.
-			testing.ContextLog(ctx, "Pressing SPACE")
-			if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
-				return errors.Wrap(err, "pressing SPACE on firmware screen while disabling dev mode")
-			}
-			testing.ContextLogf(ctx, "Sleeping %s (KeypressDelay)", h.Config.KeypressDelay)
-			// GoBigSleepLint: Sleeping for model specific time.
-			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-				return errors.Wrapf(err, "sleeping for %s (KeypressDelay) while disabling dev mode", h.Config.KeypressDelay)
-			}
-			testing.ContextLog(ctx, "Pressing ENTER")
-			if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurTab); err != nil {
-				return errors.Wrap(err, "pressing Enter on firmware screen while disabling dev mode")
-			}
-			testing.ContextLogf(ctx, "Sleeping %s (KeypressDelay)", h.Config.KeypressDelay)
-			// GoBigSleepLint: Sleeping for model specific time.
-			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-				return errors.Wrapf(err, "sleeping for %s (KeypressDelay) while disabling dev mode", h.Config.KeypressDelay)
-			}
-			testing.ContextLog(ctx, "Pressing ENTER")
-			if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurTab); err != nil {
-				return errors.Wrap(err, "pressing Enter on confirm screen while disabling dev mode")
-			}
-		case MenuSwitcher:
-			// 1. Sleep for [FirmwareScreen] seconds.
-			// 2. Press Ctrl+S.
-			// 3. Sleep for [KeypressDelay] seconds.
-			// 4. Press enter.
-			testing.ContextLog(ctx, "Pressing Ctrl-S")
-			if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlS, servo.DurTab); err != nil {
-				return errors.Wrap(err, "pressing Ctrl-S on firmware screen while disabling dev mode")
-			}
-			testing.ContextLogf(ctx, "Sleeping %s (KeypressDelay)", h.Config.KeypressDelay)
-			// GoBigSleepLint: Sleeping for model specific time.
-			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-				return errors.Wrapf(err, "sleeping for %s (KeypressDelay) while disabling dev mode", h.Config.KeypressDelay)
-			}
-			testing.ContextLog(ctx, "Pressing ENTER")
-			if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurTab); err != nil {
-				return errors.Wrap(err, "pressing Enter on confirm screen while disabling dev mode")
-			}
-		case TabletDetachableSwitcher:
-			// 1. Wait until the firmware screen appears.
-			// 2. Hold volume_up for 100ms to highlight the previous menu item (Enable Root Verification).
-			// 3. Sleep for [KeypressDelay] seconds to confirm keypress.
-			// 4. Press power to select Enable Root Verification.
-			// 5. Sleep for [KeypressDelay] seconds to confirm keypress.
-			// 6. Wait until the TO_NORM screen appears.
-			// 7. Press power to select Confirm Enabling Verified Boot.
-			if err := h.Servo.SetInt(ctx, servo.VolumeUpHold, 100); err != nil {
-				return errors.Wrap(err, "changing menu selection to 'Enable Root Verification'")
-			}
-			// GoBigSleepLint: Sleeping for model specific time.
-			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-				return errors.Wrapf(err, "sleeping for %s (KeypressDelay) while disabling dev mode", h.Config.KeypressDelay)
-			}
-			if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
-				return errors.Wrap(err, "selecting menu option 'Enable Root Verification'")
-			}
-			// GoBigSleepLint: Sleeping for model specific time.
-			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-				return errors.Wrapf(err, "sleeping for %s (KeypressDelay) while disabling dev mode", h.Config.KeypressDelay)
-			}
-			if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
-				return errors.Wrap(err, "selecting menu option 'Confirm Enabling Verified Boot'")
-			}
-		default:
-			return errors.Errorf("unsupported ModeSwitcherType %s for FwScreenToNormalMode", h.Config.ModeSwitcherType)
-		}
-		ctx, cancel := context.WithTimeout(ctx, connectTimeout)
-		defer cancel()
-		connectTimeout += time.Second
-		if err := h.WaitConnect(ctx, waitConnectOpt...); err != nil {
-			waitConnectOpt = nil
-			return err
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: h.Config.DelayRebootToPing + h.Config.FirmwareScreen}); err != nil {
-		return errors.Wrap(err, "failed to reconnect to DUT")
+	totalTimeout := h.Config.DelayRebootToPing + h.Config.FirmwareScreen
+	if msOptsContain(opts, WaitSoftwareSync) {
+		totalTimeout += h.Config.SoftwareSyncUpdate
 	}
-	return nil
+	// Repeating bypasser's sequence of presses has side effect on machines
+	// running MenuSwitcher and TabletDetachableSwitcher. Specifically, they
+	// might end up booting from the internal disk, or power off, if the first
+	// effective press lands at the wrong location.
+	params := RunBypasser{BypasserMethod: ms.bypasser.TriggerDevToNormal, RepeatBypasser: false, WaitUntilDUTConnected: totalTimeout}
+	if h.Config.ModeSwitcherType == KeyboardDevSwitcher {
+		params.RepeatBypasser = true
+	}
+	return ms.RunBypasserUntilDUTConnected(ctx, params)
 }
 
 // FwScreenToDevMode moves the DUT from the firmware bootup screen to Dev mode.
@@ -751,138 +678,22 @@ func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSw
 // The actual behavior depends on the ModeSwitcherType.
 func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitchOption) error {
 	h := ms.Helper
-	if err := h.RequireServo(ctx); err != nil {
-		return errors.Wrap(err, "requiring servo")
+	testing.ContextLog(ctx, "Set DFP mode")
+	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %s", err)
 	}
-
-	preSleepTime := h.Config.FirmwareScreen
+	totalTimeout := h.Config.DelayRebootToPing + h.Config.FirmwareScreen
 	if msOptsContain(opts, WaitSoftwareSync) {
-		preSleepTime += h.Config.SoftwareSyncUpdate
+		totalTimeout += h.Config.SoftwareSyncUpdate
 	}
-
-	switch h.Config.ModeSwitcherType {
-	case MenuSwitcher:
-		// Same as KeyboardDevSwitcher.
-		fallthrough
-	case KeyboardDevSwitcher:
-		// 1. Wait until the firmware screen appears.
-		// 2. Press Ctrl-D to move to the confirm screen.
-		// 3. Wait until the confirm screen appears.
-		// 4. Push some button depending on the DUT's config: toggle the rec button, press power, or press enter.
-		connectTimeout := 2 * time.Second
-		waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			testing.ContextLog(ctx, "Pressing CTRL-D")
-			if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
-				return err
-			}
-			testing.ContextLogf(ctx, "Sleeping %s (KeypressDelay)", h.Config.KeypressDelay)
-			// GoBigSleepLint: Sleeping for model specific time.
-			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-				return err
-			}
-			if h.Config.RecButtonDevSwitch {
-				testing.ContextLog(ctx, "Toggling RecMode")
-				if err := h.Servo.ToggleOnOff(ctx, servo.RecMode); err != nil {
-					return err
-				}
-			} else if h.Config.PowerButtonDevSwitch {
-				testing.ContextLog(ctx, "Sleeping for 5 seconds")
-				// GoBigSleepLint: Frequent presses of the power key might power off the dut accidentally.
-				// Add a short delay to ensure that it doesn't get enforced at the wrong time, for example,
-				// on the "OS verification is OFF" screen, or when the dut is already past the firmware
-				// screens, and on the way to ChromeOS.
-				if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-					return err
-				}
-				testing.ContextLog(ctx, "Pressing power key")
-				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
-					return err
-				}
-				testing.ContextLog(ctx, "Sleeping for 5 seconds")
-				// GoBigSleepLint: On drallion devices, servo.PowerKey press takes times to become effective.
-				// Add a short delay here to avoid pressing the esc key too early, and bringing the DUT back
-				// to the insert screen, where pressing servo.PowerKey would power off the machine.
-				if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-					return err
-				}
-				// For wilco devices, pressing the power button twice on the welcome page will power-off the DUT.
-				// Press esc key to cancel the power menu so that the dut won't get powered off accidentally.
-				testing.ContextLog(ctx, "Pressing esc key")
-				if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
-					return errors.Wrap(err, "failed to press the esc key")
-				}
-			} else if h.Config.IsDetachable {
-				// When transitioning from normal mode to dev mode, TO_DEV screen allows only truested input to
-				// press `Confirm`. For the detachable with menu UI, the power key is the only trusted input.
-				testing.ContextLog(ctx, "Pressing power key")
-				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
-					return err
-				}
-			} else {
-				testing.ContextLog(ctx, "Pressing enter key")
-				if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurTab); err != nil {
-					return err
-				}
-			}
-			testing.ContextLog(ctx, "Set DFP mode")
-			if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
-				testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %s", err)
-			}
-			ctx, cancel := context.WithTimeout(ctx, connectTimeout)
-			defer cancel()
-			connectTimeout += time.Second
-			if err := h.WaitConnect(ctx, waitConnectOpt...); err != nil {
-				waitConnectOpt = nil
-				return err
-			}
-			return nil
-		}, &testing.PollOptions{Timeout: h.Config.DelayRebootToPing + preSleepTime}); err != nil {
-			return errors.Wrap(err, "failed to reconnect to DUT")
-		}
-	case TabletDetachableSwitcher:
-		// 1. Wait [FirmwareScreen] seconds for the INSERT screen to appear.
-		// 2. Hold both VolumeUp and VolumeDown for 100ms to trigger TO_DEV screen.
-		// 3. Wait [KeypressDelay] seconds to confirm keypress.
-		// 4. Hold VolumeUp for 100ms to change menu selection to 'Confirm enabling developer mode'.
-		// 5. Wait [KeypressDelay] seconds to confirm keypress.
-		// 6. Press PowerKey to select menu item.
-		// 7. Wait [KeypressDelay] seconds to confirm keypress.
-		// 8. Wait [FirmwareScreen] seconds to transition screens.
-		testing.ContextLogf(ctx, "Sleeping %s (preSleepTime)", preSleepTime)
-		// GoBigSleepLint: Sleeping for model specific time.
-		if err := testing.Sleep(ctx, preSleepTime); err != nil {
-			return errors.Wrapf(err, "sleeping for %s (preSleepTime) to wait for INSERT screen", preSleepTime)
-		}
-
-		if err := h.Servo.SetInt(ctx, servo.VolumeUpDownHold, 100); err != nil {
-			return errors.Wrap(err, "triggering TO_DEV screen")
-		}
-		// GoBigSleepLint: Sleeping for model specific time.
-		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-			return errors.Wrapf(err, "sleeping for %s (KeypressDelay) to confirm triggering TO_DEV screen", h.Config.KeypressDelay)
-		}
-		if err := h.Servo.SetInt(ctx, servo.VolumeUpHold, 100); err != nil {
-			return errors.Wrap(err, "changing menu selection to 'Confirm enabling developer mode' on TO_DEV screen")
-		}
-		// GoBigSleepLint: Sleeping for model specific time.
-		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-			return errors.Wrapf(err, "sleeping for %s (KeypressDelay) to confirm changing menu selection on TO_DEV screen", h.Config.KeypressDelay)
-		}
-		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
-			return errors.Wrap(err, "selecting menu item 'Confirm enabling developer mode' on TO_DEV screen")
-		}
-		// Reconnect to the DUT.
-		waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
-		connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-		defer cancel()
-		if err := h.WaitConnect(connectCtx, waitConnectOpt...); err != nil {
-			return errors.Wrap(err, "failed to reconnect to DUT")
-		}
-	default:
-		return errors.Errorf("booting to dev mode: unsupported ModeSwitcherType: %s", h.Config.ModeSwitcherType)
+	params := RunBypasser{BypasserMethod: ms.bypasser.TriggerRecToDev, RepeatBypasser: true, WaitUntilDUTConnected: totalTimeout}
+	// Repeating bypasser's sequence of presses might unintentionally
+	// power off Wilco devices, and devices running TabletDetachableSwitcher
+	// because the first effective press might land at the wrong location.
+	if h.Config.PowerButtonDevSwitch || h.Config.ModeSwitcherType == TabletDetachableSwitcher {
+		params.RepeatBypasser = false
 	}
-	return nil
+	return ms.RunBypasserUntilDUTConnected(ctx, params)
 }
 
 // fwScreenToUSBDevMode moves the DUT from the firmware bootup screen to USB Dev mode.
@@ -890,52 +701,16 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 // The actual behavior depends on the ModeSwitcherType.
 func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context, opts ...ModeSwitchOption) error {
 	h := ms.Helper
-	if err := h.RequireServo(ctx); err != nil {
-		return errors.Wrap(err, "requiring servo")
+	testing.ContextLog(ctx, "Set DFP mode")
+	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %s", err)
 	}
-
-	preSleepTime := h.Config.FirmwareScreen
+	totalTimeout := h.Config.DelayRebootToPing + h.Config.FirmwareScreen
 	if msOptsContain(opts, WaitSoftwareSync) {
-		preSleepTime += h.Config.SoftwareSyncUpdate
+		totalTimeout += h.Config.SoftwareSyncUpdate
 	}
-
-	switch h.Config.ModeSwitcherType {
-	case MenuSwitcher:
-		// Same as KeyboardDevSwitcher.
-		fallthrough
-	case KeyboardDevSwitcher:
-		// 1. Wait until the firmware screen appears.
-		// 2. Press Ctrl-U to move to the confirm screen.
-		// 3. Wait until the confirm screen appears.
-		// 4. Push some button depending on the DUT's config: toggle the rec button, press power, or press enter.
-		testing.ContextLog(ctx, "Set DFP mode")
-		if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
-			testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %s", err)
-		}
-		// Keep pressing CTRL-U until connected, but wait a little longer for the connect each time.
-		connectTimeout := 2 * time.Second
-		waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			testing.ContextLog(ctx, "Pressing CTRL-U")
-			if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlU, servo.DurTab); err != nil {
-				return err
-			}
-			ctx, cancel := context.WithTimeout(ctx, connectTimeout)
-			defer cancel()
-			connectTimeout += time.Second
-			if err := h.WaitConnect(ctx, waitConnectOpt...); err != nil {
-				waitConnectOpt = nil
-				return err
-			}
-			return nil
-		}, &testing.PollOptions{Timeout: h.Config.USBImageBootTimeout + preSleepTime}); err != nil {
-			return errors.Wrap(err, "failed to reconnect to DUT")
-		}
-	default:
-		return errors.Errorf("booting to dev mode: unsupported ModeSwitcherType: %s", h.Config.ModeSwitcherType)
-	}
-
-	return nil
+	params := RunBypasser{BypasserMethod: ms.bypasser.BypassDevBootUSB, RepeatBypasser: true, WaitUntilDUTConnected: totalTimeout}
+	return ms.RunBypasserUntilDUTConnected(ctx, params)
 }
 
 // WarmResetToRecovery boots to USB from recovery mode.
@@ -1204,6 +979,59 @@ func (ms *ModeSwitcher) waitUnreachable(ctx context.Context) error {
 	defer cancel()
 	if err := ms.Helper.DUT.WaitUnreachable(offCtx); err != nil {
 		return errors.Wrap(err, "waiting for DUT to be unreachable after powering off")
+	}
+	return nil
+}
+
+// RunBypasser contains information about how to run a bypasser
+// for RunBypasserUntilDUTConnected.
+type RunBypasser struct {
+	BypasserMethod        func(ctx context.Context) error
+	RepeatBypasser        bool
+	WaitUntilDUTConnected time.Duration
+}
+
+// RunBypasserUntilDUTConnected either repeats a bypasser, or calls it only
+// once to boot up the DUT, based on the specified controls in runBypasser.
+func (ms *ModeSwitcher) RunBypasserUntilDUTConnected(ctx context.Context, params RunBypasser) error {
+	h := ms.Helper
+	waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
+	switch params.RepeatBypasser {
+	case true:
+		connectTimeout := 2 * time.Second
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err := params.BypasserMethod(ctx); err != nil {
+				return err
+			}
+			ctx, cancel := context.WithTimeout(ctx, connectTimeout)
+			defer cancel()
+			connectTimeout += time.Second
+			if err := h.WaitConnect(ctx, waitConnectOpt...); err != nil {
+				// Only reset the Ethernet dongle if waiting for DUT to reconnect
+				// fails during the first try.
+				waitConnectOpt = nil
+				return err
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: params.WaitUntilDUTConnected}); err != nil {
+			return errors.Wrap(err, "failed to reconnect to DUT")
+		}
+	default:
+		testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Wait for firmware screen.
+		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+			return errors.Wrapf(err, "failed to sleep for %s (FirmwareScreen)", h.Config.FirmwareScreen)
+		}
+		if err := params.BypasserMethod(ctx); err != nil {
+			return err
+		}
+		// Reconnect to the DUT.
+		waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
+		connectCtx, cancel := context.WithTimeout(ctx, params.WaitUntilDUTConnected)
+		defer cancel()
+		if err := h.WaitConnect(connectCtx, waitConnectOpt...); err != nil {
+			return errors.Wrap(err, "failed to reconnect to DUT")
+		}
 	}
 	return nil
 }
