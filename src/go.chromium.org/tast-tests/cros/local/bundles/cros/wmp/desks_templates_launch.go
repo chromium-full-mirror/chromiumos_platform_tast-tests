@@ -286,4 +286,9 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	if err := ash.VerifySavedDesk(ctx, ac, []string{"Template 1"}); err != nil {
 		s.Fatal("Failed to verify saved desk: ", err)
 	}
+
+	// Exit overview mode.
+	if err := ash.SetOverviewModeAndWait(ctx, tconn, false); err != nil {
+		s.Fatal("Failed to exit overview mode: ", err)
+	}
 }
