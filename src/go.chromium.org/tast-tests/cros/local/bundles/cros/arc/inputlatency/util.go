@@ -160,6 +160,19 @@ func WaitForEvents(ctx context.Context, d *ui.Device, count int, pkgName string)
 
 // WaitForClearUI clears the event data in ArcInputLatencyTest.apk to get ready for next event tracing.
 func WaitForClearUI(ctx context.Context, d *ui.Device, pkgNamePtr *string) error {
+	return WaitForClearUIWithWaitTime(ctx, d, pkgNamePtr, 0*time.Second)
+}
+
+// WaitForClearUIWithWaitTime waits for events from previous action to be received, and then
+// clears the event data in ArcInputLatencyTest.apk to get ready for next event tracing.
+func WaitForClearUIWithWaitTime(ctx context.Context, d *ui.Device, pkgNamePtr *string, ms time.Duration) error {
+	// GoBigSleepLint: Wait for previous events to be received. Currently there's no good way to
+	// detect if all events generated from the previous action are received. Waiting briefly seems
+	// to be the best solution at the moment, which is also being used in WaitForNextEventTime.
+	if err := testing.Sleep(ctx, ms*time.Millisecond); err != nil {
+		return errors.Wrap(err, "timeout while waiting to generate next event time")
+	}
+
 	var pkgName string
 	// Use default package name if nil.
 	if pkgNamePtr != nil {
