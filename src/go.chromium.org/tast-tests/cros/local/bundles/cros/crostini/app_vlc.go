@@ -6,6 +6,8 @@ package crostini
 
 import (
 	"context"
+	"fmt"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -112,6 +114,11 @@ func AppVLC(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to push file to container: ", err)
 	}
 
+	homeDir, err := cont.GetHomeDir(ctx)
+	if err != nil {
+		s.Fatal("Failed to find user home directory in container: ", err)
+	}
+
 	s.Log("Launching VLC")
 
 	if err := uiauto.Retry(3,
@@ -125,9 +132,6 @@ func AppVLC(ctx context.Context, s *testing.State) {
 	popupWindow := nodewith.Name("Privacy and Network Access Policy").Role(role.Window).HasClass("RootView")
 	popupWindowClose := nodewith.Ancestor(popupWindow).Name("Close").Focusable()
 
-	timeWindow := nodewith.Name("Go to Time").Role(role.Window).HasClass("RootView")
-	focusedTimeWindow := nodewith.Ancestor(timeWindow).Focused()
-
 	if err := uiauto.Combine("verify VLC",
 		ui.WithTimeout(2*time.Minute).WaitUntilExists(mainWindow),
 		ui.WithTimeout(10*time.Second).WaitUntilExists(popupWindowClose),
@@ -140,7 +144,8 @@ func AppVLC(ctx context.Context, s *testing.State) {
 
 	s.Log("Starting test file playback")
 
-	if err := cont.Command(ctx, "vlc", "--one-instance", testVideo).Run(testexec.DumpLogOnError); err != nil {
+	if err := cont.Command(ctx, "dbus-send", "--print-reply", "--session", "--dest=org.mpris.MediaPlayer2.vlc", "/org/mpris/MediaPlayer2",
+		"org.mpris.MediaPlayer2.Player.OpenUri", fmt.Sprintf("string:file://%s", path.Join(homeDir, testVideo))).Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to start video: ", err)
 	}
 
@@ -189,14 +194,32 @@ func AppVLC(ctx context.Context, s *testing.State) {
 
 	s.Log("Capturing video playback")
 
+	// Pause playback and move to a fixed timestamp so the screenshots are consistent.
+	if err := cont.Command(ctx, "dbus-send", "--print-reply", "--session", "--dest=org.mpris.MediaPlayer2.vlc", "/org/mpris/MediaPlayer2",
+		"org.mpris.MediaPlayer2.Player.Pause").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to pause playback: ", err)
+	}
+
+	metadata, err := cont.Command(ctx, "dbus-send", "--print-reply", "--session", "--dest=org.mpris.MediaPlayer2.vlc", "/org/mpris/MediaPlayer2",
+		"org.freedesktop.DBus.Properties.Get", "string:org.mpris.MediaPlayer2.Player", "string:Metadata").Output(testexec.DumpLogOnError)
+	if err != nil {
+		s.Fatal("Failed to get video player metadata: ", err)
+	}
+
+	matches := regexp.MustCompile(`object path "([a-zA-Z0-9/]+)"`).FindAllStringSubmatch(string(metadata), -1)
+	if len(matches) != 1 || len(matches[0]) != 2 {
+		s.Fatal("Failed to parse metadata output: ", metadata)
+	}
+
+	objpath := matches[0][1]
+
+	if err := cont.Command(ctx, "dbus-send", "--print-reply", "--session", "--dest=org.mpris.MediaPlayer2.vlc", "/org/mpris/MediaPlayer2",
+		"org.mpris.MediaPlayer2.Player.SetPosition", fmt.Sprintf("objpath:%s", objpath), "int64:30000000").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to set video timestamp: ", err)
+	}
+
 	if err := uiauto.Combine("VLC capture video",
-		// Pause playback and move to a fixed timestamp so the screenshots are consistent.
-		keyboard.AccelAction("Space"),
-		keyboard.AccelAction("Ctrl+T"),
-		ui.WithTimeout(10*time.Second).WaitUntilExists(focusedTimeWindow),
-		keyboard.TypeAction("000030"),
-		keyboard.AccelAction("Enter"),
-		ui.WithTimeout(10*time.Second).WaitUntilGone(timeWindow),
+		crostini.Maximize(tconn, mainWindow),
 		screenshot.DiffWindow(ctx, d, "VLC with video", screenshot.Retries(5), screenshot.RetryInterval(500*time.Millisecond)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to capture VLC playing video: ", err)
@@ -204,10 +227,12 @@ func AppVLC(ctx context.Context, s *testing.State) {
 
 	s.Log("Closing VLC")
 
-	if err := uiauto.Combine("quit VLC",
-		keyboard.AccelAction("ctrl+Q"),
-		ui.WithTimeout(10*time.Second).WaitUntilGone(mainWindow),
-	)(ctx); err != nil {
-		s.Fatal("Failed to quit VLC window: ", err)
+	if err := cont.Command(ctx, "dbus-send", "--print-reply", "--session", "--dest=org.mpris.MediaPlayer2.vlc", "/org/mpris/MediaPlayer2",
+		"org.mpris.MediaPlayer2.Quit").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to close VLC: ", err)
+	}
+
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilGone(mainWindow)(ctx); err != nil {
+		s.Fatal("VLC window still present: ", err)
 	}
 }

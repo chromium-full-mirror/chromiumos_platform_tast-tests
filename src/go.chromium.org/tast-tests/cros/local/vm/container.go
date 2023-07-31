@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	cpb "chromiumos/system_api/vm_cicerone_proto" // protobufs for container management
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/caller"
@@ -339,6 +341,15 @@ func (c *Container) GetUsername(ctx context.Context) (string, error) {
 	}
 
 	return resp.GetUsername(), nil
+}
+
+// GetHomeDir returns the home directory of the default user as an absolute path.
+func (c *Container) GetHomeDir(ctx context.Context) (string, error) {
+	username, err := c.GetUsername(ctx)
+	if err != nil {
+		return "", err
+	}
+	return path.Join("/home", username), nil
 }
 
 // SetUpUser sets up the default user in a container.
