@@ -34,8 +34,8 @@ func FindFilesOlderThanOneDay(dir string) (infos []os.FileInfo, err error) {
 	return infos, nil
 }
 
-// DeleteOldFiles deletes test files older than 1 day that are siblings of dstFileName.
-func DeleteOldFiles(ctx context.Context, dstFileName string) {
+// DeleteOldRemoteFiles deletes test files older than 1 day that are siblings of dstFileName.
+func DeleteOldRemoteFiles(ctx context.Context, dstFileName string) {
 	// We don't know the fsp.?? directory name, so we use the `dstFileName` to find the file and find its parent.
 	dstFile, err := filepath.Glob("/media/fuse/fusebox/fsp.*/" + dstFileName)
 	if err != nil || len(dstFile) < 1 {

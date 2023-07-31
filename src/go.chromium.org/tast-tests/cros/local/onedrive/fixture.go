@@ -92,13 +92,20 @@ const (
 )
 
 type fixture struct {
-	cr             *chrome.Chrome
-	tconn          *chrome.TestConn
-	chromeOptions  []chrome.Option
-	bt             browser.Type
-	cleanUpFiles   []TestFile
-	screenRecorder *uiauto.ScreenRecorder
-	provider       Provider
+	cr            *chrome.Chrome
+	tconn         *chrome.TestConn
+	chromeOptions []chrome.Option
+	bt            browser.Type
+	cleanUpFiles  []TestFile
+	// Full path to the new folder created in Downloads to host the office files used by the test.
+	downloadSubFolder string
+	screenRecorder    *uiauto.ScreenRecorder
+	provider          Provider
+	// Holds a pointer to the FixtureData so the PreTest() can push new files to the test.
+	data *FixtureData
+	// Maps the keys docx, xlsx and pptx to the full local path in the  Data directory.
+	// Used to share the path between SetUp() and PreTest().
+	srcFiles map[string]string
 }
 
 // generateTestFileName generates a unique-ish file name based on a provided
@@ -109,6 +116,7 @@ func generateTestFileName(fName string) string {
 	return fmt.Sprintf("%s-%d-%d%s", baseName, time.Now().UnixNano(), rand.Intn(10000), ext)
 }
 
+// prepareOfficeFile copies the test file to a sub-folder of downloads with a unique name.
 func prepareOfficeFile(srcPath, targetFolder string) (testFile TestFile, err error) {
 	testFile.FileName = generateTestFileName(filepath.Base(srcPath))
 	testFile.SrcFile = srcPath
@@ -149,7 +157,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	}
 	f.cr = cr
 
-	// Copy the docx, pptx and xlsx to MyFiles to be used in the tests.
+	// Prepare folder to receive files for tests.
 	targetBaseName := "odfs_files"
 	myFilesPath, err := cryptohome.MyFilesPath(ctx, cr.NormalizedUser())
 	if err != nil {
@@ -162,36 +170,31 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	if err := os.Chown(targetFolder, int(sysutil.ChronosUID), int(sysutil.ChronosGID)); err != nil {
 		s.Fatal("Failed to chown the test folder: ", err, targetFolder)
 	}
+	f.downloadSubFolder = targetFolder
 
-	var docx, pptx, xlsx TestFile
-	var generatedFiles []TestFile
-	if docx, err = prepareOfficeFile(s.DataPath("Sample_DOCX_file_20230704.docx"), targetFolder); err != nil {
-		s.Fatal("Failed to prepare file: ", err)
-	}
-	if pptx, err = prepareOfficeFile(s.DataPath("Sample_PPTX_file_20230704.pptx"), targetFolder); err != nil {
-		s.Fatal("Failed to prepare file: ", err)
-	}
-	if xlsx, err = prepareOfficeFile(s.DataPath("Sample_XLSX_file_20230724.xlsx"), targetFolder); err != nil {
-		s.Fatal("Failed to prepare file: ", err)
-	}
+	f.srcFiles = make(map[string]string)
 
-	generatedFiles = []TestFile{
-		docx,
-		pptx,
-		xlsx,
-	}
-	f.cleanUpFiles = generatedFiles
+	f.srcFiles["docx"] = s.DataPath("Sample_DOCX_file_20230704.docx")
+	f.srcFiles["pptx"] = s.DataPath("Sample_PPTX_file_20230704.pptx")
+	f.srcFiles["xlsx"] = s.DataPath("Sample_XLSX_file_20230724.xlsx")
 
-	return &FixtureData{
-		Chrome:         cr,
-		TestAPIConn:    f.tconn,
-		TargetFolder:   targetBaseName,
-		GeneratedFiles: generatedFiles,
+	f.data = &FixtureData{
+		Chrome:       cr,
+		TestAPIConn:  f.tconn,
+		TargetFolder: targetBaseName,
+		// GeneratedFiles: generatedFiles,
 	}
+	return f.data
 }
 
 func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	f.cleanUp(ctx, s)
+	// For DriveFS the parent fixture takes care of closing it.
+	if f.provider == OneDrive {
+		if err := f.cr.Close(ctx); err != nil {
+			s.Log("Failed closing chrome: ", err)
+		}
+		f.cr = nil
+	}
 }
 
 func (f *fixture) Reset(ctx context.Context) error {
@@ -209,23 +212,59 @@ func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		}
 		f.screenRecorder = recorder
 	}
+
+	// Copy the docx, pptx and xlsx to MyFiles to be used in the tests.
+	var docx, pptx, xlsx TestFile
+	var generatedFiles []TestFile
+
+	if docx, err = prepareOfficeFile(f.srcFiles["docx"], f.downloadSubFolder); err != nil {
+		s.Fatal("Failed to prepare file: ", err)
+	}
+	if pptx, err = prepareOfficeFile(f.srcFiles["pptx"], f.downloadSubFolder); err != nil {
+		s.Fatal("Failed to prepare file: ", err)
+	}
+	if xlsx, err = prepareOfficeFile(f.srcFiles["xlsx"], f.downloadSubFolder); err != nil {
+		s.Fatal("Failed to prepare file: ", err)
+	}
+	f.data.GeneratedFiles = []TestFile{
+		docx,
+		pptx,
+		xlsx,
+	}
+	f.cleanUpFiles = generatedFiles
 }
 
 func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	f.cleanUp(ctx, s)
+
 	if f.screenRecorder != nil {
 		f.screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
 	}
 }
 
 // cleanUp makes a best effort attempt to restore the state to where it was pretest.
-func (f *fixture) cleanUp(ctx context.Context, s *testing.FixtState) {
+func (f *fixture) cleanUp(ctx context.Context, s *testing.FixtTestState) {
+	// Local Files.
+	dirEntries, err := os.ReadDir(f.downloadSubFolder)
+	if err != nil {
+		s.Logf("Failed to list local directory: %q - %v", f.downloadSubFolder, err)
+	} else {
+		for _, e := range dirEntries {
+			info, err := e.Info()
+			if (err == nil) && info.Mode().IsRegular() {
+				if err := os.Remove(filepath.Join(f.downloadSubFolder, info.Name())); err != nil {
+					s.Logf("Failed to remove local file: %q - %v", info.Name(), err)
+				}
+			}
+		}
+	}
 
 	// The deletion in the loop below often fails, here we delete files from previous runs.
 	if len(f.cleanUpFiles) > 0 {
-		DeleteOldFiles(ctx, f.cleanUpFiles[0].FileName)
+		DeleteOldRemoteFiles(ctx, f.cleanUpFiles[0].FileName)
 	}
 
-	// NOTE: The deletion below fails if the files are open in the UI (Office 365 PWA).
+	// NOTE: The deletion below fails if the files are still open in the UI (Office 365 PWA).
 	for _, testFile := range f.cleanUpFiles {
 		name := testFile.FileName
 		files, err := filepath.Glob("/media/fuse/fusebox/fsp.*/" + name)
@@ -235,7 +274,7 @@ func (f *fixture) cleanUp(ctx context.Context, s *testing.FixtState) {
 			for _, file := range files {
 				s.Log("Deleting: ", file)
 				if err := deleteFileRetrying(ctx, file); err != nil {
-					s.Logf("Failed deleting the file: %s. %v", file, err)
+					s.Logf("Failed deleting the remote file: %s. %v", file, err)
 				}
 			}
 		}

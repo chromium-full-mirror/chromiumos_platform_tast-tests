@@ -114,10 +114,15 @@ func (ms *Ms365) LoginToMicrosoft365(userName, password string, setupCompleteDia
 	)
 }
 
+// Microsoft365WindowFinder is a finder for a window of Microsoft 365 (Word, Excel or PowerPoint)
+// opened for the given fileName.
+func Microsoft365WindowFinder(fileName string) *nodewith.Finder {
+	return nodewith.Role(role.Window).NameContaining(fileName).HasClass("BrowserRootView")
+}
+
 // WaitForMicrosoft365Window wait for the Microsoft 365 window with the
 // specified file name/type in the title to open.
 func (ms *Ms365) WaitForMicrosoft365Window(fileName string) uiauto.Action {
-	ms365App := nodewith.Role(role.Window).NameContaining(fileName).HasClass("BrowserRootView")
-	// TODO: Increase timeout here? It failed once.
+	ms365App := Microsoft365WindowFinder(fileName)
 	return ms.ui.WaitUntilExists(ms365App)
 }

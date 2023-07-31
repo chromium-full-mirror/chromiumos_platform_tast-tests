@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -90,11 +89,8 @@ func OdfsReopenFile(ctx context.Context, s *testing.State) {
 		}
 
 		// Move/copy confirmation dialog.
-		if err := uiauto.Combine("Confirm upload and wait to open",
-			cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false),
-			ms365App.WaitForMicrosoft365Window(fileName),
-		)(ctx); err != nil {
-			s.Fatal("Failed to upload and open on MS365: ", fileName, err)
+		if err := cloudUpload.MaybeConfirmUploadOr365Window(ms365App, fileName)(ctx); err != nil {
+			s.Fatalf("Failed to upload and open on MS365: %q - %v", fileName, err)
 		}
 
 		// Close the MS365 window.

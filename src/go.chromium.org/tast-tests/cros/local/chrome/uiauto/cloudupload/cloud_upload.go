@@ -139,9 +139,12 @@ func (cu *CloudUpload) WaitSetupCompleteDialogAndClickDone() uiauto.Action {
 	)
 }
 
+// ConfirmUploadDialog is a finder for the confirmation dialog.
+var ConfirmUploadDialog = nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("(Move|Copy) .* to .* OneDrive .*"))
+
 // WaitUploadConfirmationDialogAndClickToUpload waits for the dialog confirming copy or move to the Cloud, and confirms the upload.
 func (cu *CloudUpload) WaitUploadConfirmationDialogAndClickToUpload(alwaysMove bool) uiauto.Action {
-	dialog := nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("(Move|Copy) .* to .* OneDrive .*"))
+	dialog := ConfirmUploadDialog
 	moveButton := nodewith.Ancestor(dialog).Role(role.Button).NameRegex(regexp.MustCompile("(Move|Copy) and open"))
 	alwaysMoveCheckbox := nodewith.Ancestor(dialog).Role(role.CheckBox)
 
@@ -158,6 +161,28 @@ func (cu *CloudUpload) WaitUploadConfirmationDialogAndClickToUpload(alwaysMove b
 		cu.ui.LeftClick(moveButton),
 		cu.ui.WaitUntilGone(dialog),
 	)
+}
+
+// MaybeConfirmUploadOr365Window waits for either the confirmation dialog and confirms it;
+// or waits for the Microsoft 365 window.
+// This should be used when the confirmation dialog isn't relevant for the test.
+func (cu *CloudUpload) MaybeConfirmUploadOr365Window(ms365App *ms365.Ms365, fileName string) uiauto.Action {
+	return func(ctx context.Context) error {
+		found, err := cu.ui.WithTimeout(2*time.Minute).FindAnyExists(ctx,
+			ConfirmUploadDialog,
+			ms365.Microsoft365WindowFinder(fileName),
+		)
+		if err != nil {
+			return errors.Wrap(err, "failed to find the next step after Install PWA dialog")
+		}
+		if found == ConfirmUploadDialog {
+			return uiauto.Combine("Confirm upload and wait to open",
+				cu.WaitUploadConfirmationDialogAndClickToUpload(false),
+				ms365App.WaitForMicrosoft365Window(fileName),
+			)(ctx)
+		}
+		return nil
+	}
 }
 
 // RunOneDriveSetupFlow runs the step to test the setup flow.
