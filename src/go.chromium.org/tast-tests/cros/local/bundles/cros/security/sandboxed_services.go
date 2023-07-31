@@ -137,6 +137,7 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		{"rmad", "root", "root", mntNS},                                       // rmad's root-level executor
 		{"rmad", "rmad", "rmad", mntNS | restrictCaps | noNewPrivs | seccomp}, // main RMA daemon
 		{"lvmd", "root", "root", 0},                                           // TODO(b/278480982): reduce privileges allowed for lvmd.
+		{"hiberman", "root", "root", 0},                                       // TODO(b/293361061): Sandbox hiberman.
 
 		// Processes running with CAP_SYS_ADMIN.
 		{"spaced", "spaced", "spaced", restrictCaps},
