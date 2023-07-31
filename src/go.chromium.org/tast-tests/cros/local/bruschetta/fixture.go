@@ -58,7 +58,7 @@ const (
 )
 
 // BruschettaHwDeps prevents tests from running on devices without enough storage or RAM.
-var BruschettaHwDeps = hwdep.D(hwdep.MinStorage(16), hwdep.MinMemory(7*1024))
+var BruschettaHwDeps = hwdep.D(hwdep.MinStorage(40), hwdep.MinMemory(7*1024))
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
