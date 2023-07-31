@@ -189,7 +189,7 @@ func (uiHelper *UIHelper) WipeDevicePageOperation(ctx context.Context) error {
 // WriteProtectDisabledPageOperation handles all operations on Write Protect Disabled Page.
 func (uiHelper *UIHelper) WriteProtectDisabledPageOperation(ctx context.Context) error {
 	return action.Combine("write Protect Disabled page operation",
-		uiHelper.waitForPageToLoad("Write Protect is turned off", timeInSecondToLoadPage),
+		uiHelper.WaitForHWWPDisableCompletePage,
 		uiHelper.clickButton("Next"),
 	)(ctx)
 }
@@ -455,6 +455,11 @@ func (uiHelper *UIHelper) SetupInitStatus(ctx context.Context, enroll bool) erro
 		uiHelper.changeWriteProtectStatus(servo.FWWPStateOn),
 		uiHelper.changeEnrollment(enroll),
 	)(ctx)
+}
+
+// WaitForHWWPDisableCompletePage waits the HWWP disable complete page to be loaded.
+func (uiHelper *UIHelper) WaitForHWWPDisableCompletePage(ctx context.Context) error {
+	return uiHelper.waitForPageToLoad("Write Protect is turned off", timeInSecondToLoadPage)(ctx)
 }
 
 // OverrideStateFile overrides state file content.

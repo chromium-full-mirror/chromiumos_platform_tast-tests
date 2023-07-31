@@ -99,12 +99,13 @@ func Calibration(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to navigate to Disable Write Protect page and turn off write protect: ", err)
 	}
 
-	// Wait for reboot to enable the factory mode, so that we don't need to enable HWWP ourselves later.
+	// GoBigSleepLint: Wait for reboot to enable the factory mode, so that we don't need to enable
+	// HWWP ourselves later. The device should shutdown in |WaitForRebootStart| seconds.
 	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
 		s.Fatal("Fail to sleep to wait for reboot to enter factory mode: ", err)
 	}
 
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, false)
+	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
@@ -118,13 +119,13 @@ func Calibration(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Fail to read state file on host: ", err)
 	}
-
 	stateFileContent := string(b)
-	if err := uiHelper.OverrideStateFile(ctx, stateFileContent); err != nil {
+
+	if err := generateActionCombinedToGetToCalibration(uiHelper, stateFileContent)(ctx); err != nil {
 		s.Fatal("Fail to override state file: ", err)
 	}
 
-	// Wait for reboot start.
+	// GoBigSleepLint: Wait for reboot start.
 	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
 		s.Fatal("Fail to sleep to wait for reboot start: ", err)
 	}
@@ -157,5 +158,14 @@ func generateActionCombinedToDisableWPManual(uiHelper *rmaweb.UIHelper) action.A
 		uiHelper.OwnerPageOperation(rmaweb.SameUser),
 		uiHelper.WipeDevicePageOperation,
 		uiHelper.WriteProtectPageChooseManual,
+	)
+}
+
+func generateActionCombinedToGetToCalibration(uiHelper *rmaweb.UIHelper, content string) action.Action {
+	return action.Combine("wait for HWWP disabled and get to calibration page",
+		uiHelper.WaitForHWWPDisableCompletePage,
+		func(ctx context.Context) error {
+			return uiHelper.OverrideStateFile(ctx, content)
+		},
 	)
 }
