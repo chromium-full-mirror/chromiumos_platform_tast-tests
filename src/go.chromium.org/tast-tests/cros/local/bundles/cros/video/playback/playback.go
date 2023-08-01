@@ -46,8 +46,12 @@ const (
 	// Time to sleep while collecting data.
 	// The time to wait just after stating to play video so that CPU usage gets stable.
 	stabilizationDuration = 5 * time.Second
-	// The time to wait after CPU is stable so as to measure solid metric values.
-	measurementDuration = 25 * time.Second
+	// The time to wait after CPU is stable so as to measure solid metric values for
+	// short video tests.
+	measurementDurationShort = 25 * time.Second
+	// The time to wait after CPU is stable so as to measure solid metric values for
+	// long video tests.
+	measurementDurationLong = 100 * time.Second
 
 	// TraceConfigFile is the perfetto config file to profile the scheduler events.
 	TraceConfigFile = "perfetto_tbm_traced_probes.pbtxt"
@@ -186,6 +190,13 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	minPromotedOverlayValue := 2
 	maxPromotedOverlayValue := 5
 
+	var measurementDuration time.Duration
+	if measureRoughness {
+		measurementDuration = measurementDurationLong
+	} else {
+		measurementDuration = measurementDurationShort
+	}
+
 	var roughness float64
 	var gpuCSStat, gpuMainCSStat contextSwitchStat
 	var gpuErr, cStateErr, cpuErr, fdErr, wakeupErr, dramErr, batErr, roughnessErr, traceErr error
@@ -233,7 +244,7 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			gpuCSStat, gpuMainCSStat, traceErr = measureContextSwitch(ctx, s)
+			gpuCSStat, gpuMainCSStat, traceErr = measureContextSwitch(ctx, s, measurementDuration)
 		}()
 	}
 
@@ -355,7 +366,7 @@ func sampleDroppedFrames(ctx context.Context, conn *chrome.Conn, p *perf.Values)
 // measureContextSwitch measure the number of context switches in GPU process and its average waiting duration.
 // gpu represents the values of all the threads in GPU process.
 // gpuMain represents the values of the GPU main thread.
-func measureContextSwitch(ctx context.Context, s *testing.State) (gpu, gpuMain contextSwitchStat, err error) {
+func measureContextSwitch(ctx context.Context, s *testing.State, measurementDuration time.Duration) (gpu, gpuMain contextSwitchStat, err error) {
 	ctxForCleanup := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
 	defer cancel()
