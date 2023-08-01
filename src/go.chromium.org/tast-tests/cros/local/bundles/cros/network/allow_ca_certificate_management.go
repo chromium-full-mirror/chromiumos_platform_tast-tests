@@ -405,11 +405,13 @@ func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
 				expectDeleteUserCACertNotPossible(ctx, s, ui)
 			}
 
-			if param.canEditTrustForProvidedCACert {
-				expectEditTrustProvidedCACertSuccess(ctx, s, ui)
-			} else {
-				expectManageCACertNotPossible(ctx, s, ui, providedCaOrg, providedCaCertName)
-			}
+			// TODO(b/291182593): Re-enable this when the new UI for modifying
+			// trust on root certificates is implemented.
+			// if param.canEditTrustForProvidedCACert {
+			// 	expectEditTrustProvidedCACertSuccess(ctx, s, ui)
+			// } else {
+			// 	expectManageCACertNotPossible(ctx, s, ui, providedCaOrg, providedCaCertName)
+			// }
 
 			// Reset policy and delete cert if cert deletion was forbidden by policy during test.
 			if isCleanupCertRequired {
