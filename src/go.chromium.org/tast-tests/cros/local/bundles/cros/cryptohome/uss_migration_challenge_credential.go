@@ -13,10 +13,10 @@ import (
 
 	cpb "chromiumos/system_api/cryptohome_proto"
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
@@ -156,7 +156,7 @@ func UssMigrationChallengeCredential(ctx context.Context, s *testing.State) {
 
 	// 1. Create a new smartcard (challenge credential) user with VaultKeysets. Disable USS
 	// and USS migration for this initial setup.
-	if err := cryptochrome.WithUssMigration(ctx, false /*enabled*/, func() error {
+	if err := func() error {
 		cleanupUSSDisabled, err := helper.DisableUserSecretStash(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to disable UserSecretStash")
@@ -189,7 +189,7 @@ func UssMigrationChallengeCredential(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to create and set up smartcard with uss and migration disabled")
 		}
 		return nil
-	}); err != nil {
+	}(); err != nil {
 		s.Fatal("Setup while USS migration was disabled failed: ", err)
 	}
 	// Cleanup user vault before UssMigrationChallengeCredential exits.
@@ -197,7 +197,7 @@ func UssMigrationChallengeCredential(ctx context.Context, s *testing.State) {
 
 	// 2. Enable USS and USS migration for the second phase of the test. Test
 	// that only successful authentication migrates the smartcard factor.
-	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
+	if err := func() error {
 		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to enable the UserSecretStash experiment")
@@ -248,7 +248,7 @@ func UssMigrationChallengeCredential(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to test smartcard migration")
 		}
 		return nil
-	}); err != nil {
+	}(); err != nil {
 		s.Fatal("Setup while USS migration was enabled failed: ", err)
 	}
 }

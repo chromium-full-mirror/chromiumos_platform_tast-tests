@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -89,7 +88,7 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 	}
 
 	// Set up an auth factor with USS migration disabled.
-	if err := cryptochrome.WithUssMigration(ctx, false /*enabled*/, func() error {
+	if err := func() error {
 		// Put the system into USS disabled mode, to ensure we get VK credentials.
 		disableUssCleanup, err := helper.DisableUserSecretStash(ctx)
 		if err != nil {
@@ -140,7 +139,7 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 			return errors.New("Password auth factor file was created before migration should have happened")
 		}
 		return nil
-	}); err != nil {
+	}(); err != nil {
 		s.Fatal("Setup while USS migration was disabled failed: ", err)
 	}
 	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
@@ -153,7 +152,7 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 	defer enableUssCleanup(ctxForCleanUp)
 
 	// Enable migration to verify the migration process.
-	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
+	if err := func() error {
 
 		authenticateAndMount := func(authSessionID string) error {
 			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
@@ -204,12 +203,12 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to unmount vault after migration mount")
 		}
 		return nil
-	}); err != nil {
+	}(); err != nil {
 		s.Fatal("Validation during USS migration failed: ", err)
 	}
 
 	// Use Recovery and update password.
-	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
+	if err := func() error {
 		performRecoveryAndUpdatePassword := func(authSessionID string) error {
 			epoch, err := testTool.FetchFakeEpochResponseHex(ctx)
 			if err != nil {
@@ -257,11 +256,11 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to recover the user and update password")
 		}
 		return nil
-	}); err != nil {
+	}(); err != nil {
 		s.Fatal("Validation during USS migration failed: ", err)
 	}
 
-	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
+	if err := func() error {
 		// Check that pin factor has not been migrated.
 		if err := cryptohome.CheckKeyBackingStoreExists(ctx, pinFactorFile, userName); err == nil {
 			return errors.New("Pin auth factor file was created before migration should have happened")
@@ -281,7 +280,7 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 		}
 
 		return nil
-	}); err != nil {
+	}(); err != nil {
 		s.Fatal("Validation of inmigrated pin lockout failed post recovery: ", err)
 	}
 

@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -81,7 +80,7 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 
 	// 1. Create a new user with VaultKeysets. Disable USS and USS migration for this initial
 	// setup.
-	if err := cryptochrome.WithUssMigration(ctx, false /*enabled*/, func() error {
+	if err := func() error {
 		// Disable UserSecretStash.
 		cleanupUSSDisabled, err := helper.DisableUserSecretStash(ctx)
 		if err != nil {
@@ -126,7 +125,7 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to create and set up the user password and PIN with uss and migration disabled")
 		}
 		return nil
-	}); err != nil {
+	}(); err != nil {
 		s.Fatal("Setup while USS migration was disabled failed: ", err)
 	}
 	// Cleanup user vault before UssMigrationUpdateAuthFactor exits.
@@ -140,61 +139,56 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 	defer cleanupUSSExperiment(ctxForCleanup)
 
 	// 2. Test that updating a PIN migrates the PIN factor to USS.
-	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
 
-		// Authenticate with password to migrate password to USS.
-		if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
-				return errors.Wrap(err, "failed to authenticate with password AuthFactor")
-			}
-			return nil
-		}); err != nil {
-			return errors.Wrap(err, "failed to test authenticate before PIN AuthFactor migration")
-		}
-
-		// Test PIN migration during UpdateAuthFactor.
-		if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-
-			// Authenticate with password as a prerequisite to update PIN.
-			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
-				return errors.Wrap(err, "failed to authenticate with password AuthFactor")
-			}
-
-			// UpdateAuthFactor should migrate PIN to USS.
-			if err := client.UpdatePinAuthFactor(ctx, authSessionID, pinLabel, userPinNew); err != nil {
-				return errors.Wrap(err, "failed to update PIN AuthFactor")
-			}
-
-			// Check that the PIN AuthFactor file is created.
-			if err := cryptohome.CheckKeyBackingStoreExists(ctx, pinAuthFactorFile, userName); err != nil {
-				return errors.Wrap(err, "failed to check PIN AuthFactor file")
-			}
-
-			// Check that UserSecretStash file exists.
-			if err := cryptohome.CheckKeyBackingStoreExists(ctx, ussFile, userName); err != nil {
-				return errors.Wrap(err, "failed to stat UserSecretStash file")
-			}
-
-			// Authenticate with old PIN should fail.
-			if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin); err == nil {
-				return errors.Wrap(err, "authenticating with the old PIN succeeded but should have failed")
-			}
-
-			// Authenticate with updated PIN should succeed.
-			if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPinNew); err != nil {
-				return errors.Wrap(err, "authenticating with the updated PIN failed")
-			}
-
-			// Test that PIN reset with correct password works after the update.
-			if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userPassword, pinLabel, userPinNew, wrongPin, client); err != nil {
-				return errors.Wrap(err, "failed in testing PIN lockout and reset mechanism after PIN update")
-			}
-			return nil
-		}); err != nil {
-			return errors.Wrap(err, "failed to test update PIN AuthFactor after migration")
+	// Authenticate with password to migrate password to USS.
+	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
+			return errors.Wrap(err, "failed to authenticate with password AuthFactor")
 		}
 		return nil
 	}); err != nil {
-		s.Fatal("Setup while USS migration was enabled failed: ", err)
+		s.Fatal("Failed to test authenticate before PIN AuthFactor migration: ", err)
+	}
+
+	// Test PIN migration during UpdateAuthFactor.
+	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+
+		// Authenticate with password as a prerequisite to update PIN.
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
+			return errors.Wrap(err, "failed to authenticate with password AuthFactor")
+		}
+
+		// UpdateAuthFactor should migrate PIN to USS.
+		if err := client.UpdatePinAuthFactor(ctx, authSessionID, pinLabel, userPinNew); err != nil {
+			return errors.Wrap(err, "failed to update PIN AuthFactor")
+		}
+
+		// Check that the PIN AuthFactor file is created.
+		if err := cryptohome.CheckKeyBackingStoreExists(ctx, pinAuthFactorFile, userName); err != nil {
+			return errors.Wrap(err, "failed to check PIN AuthFactor file")
+		}
+
+		// Check that UserSecretStash file exists.
+		if err := cryptohome.CheckKeyBackingStoreExists(ctx, ussFile, userName); err != nil {
+			return errors.Wrap(err, "failed to stat UserSecretStash file")
+		}
+
+		// Authenticate with old PIN should fail.
+		if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin); err == nil {
+			return errors.Wrap(err, "authenticating with the old PIN succeeded but should have failed")
+		}
+
+		// Authenticate with updated PIN should succeed.
+		if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPinNew); err != nil {
+			return errors.Wrap(err, "authenticating with the updated PIN failed")
+		}
+
+		// Test that PIN reset with correct password works after the update.
+		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userPassword, pinLabel, userPinNew, wrongPin, client); err != nil {
+			return errors.Wrap(err, "failed in testing PIN lockout and reset mechanism after PIN update")
+		}
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to test update PIN AuthFactor after migration: ", err)
 	}
 }

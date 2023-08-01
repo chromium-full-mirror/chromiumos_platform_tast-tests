@@ -9,12 +9,12 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/pkcs11"
 	"go.chromium.org/tast-tests/cros/common/pkcs11/pkcs11test"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/hwsec/util"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -147,42 +147,36 @@ func UssMigrationChapsRemount(ctx context.Context, s *testing.State) {
 	}
 	defer cleanupUSSExperiment(ctxForCleanup)
 
-	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
-		if err := client.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+	if err := client.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		// Authenticate with correct password and migrate backing store to USS.
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, util.PasswordLabel, util.FirstPassword); err != nil {
+			return errors.Wrap(err, "USS migration test failed at authentication step with password keyset")
+		}
+		// Check that the migration completed by checking USS file.
+		if err := cryptohome.CheckKeyBackingStoreExists(ctx, ussFile, util.FirstUsername); err != nil {
+			return errors.Wrap(err, "failed to check USS file after migration")
+		}
 
-			// Authenticate with correct password and migrate backing store to USS.
-			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, util.PasswordLabel, util.FirstPassword); err != nil {
-				return errors.Wrap(err, "USS migration test failed at authentication step with password keyset")
-			}
-			// Check that the migration completed by checking USS file.
-			if err := cryptohome.CheckKeyBackingStoreExists(ctx, ussFile, util.FirstUsername); err != nil {
-				return errors.Wrap(err, "failed to check USS file after migration")
-			}
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+			return errors.Wrap(err, "failed to mount user vault after password migration")
+		}
+		defer client.Unmount(ctxForCleanup, util.FirstUsername)
 
-			if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
-				return errors.Wrap(err, "failed to mount user vault after password migration")
-			}
-			defer client.Unmount(ctxForCleanup, util.FirstUsername)
-
-			// Authenticate with correct password factor should succeed after migration.
-			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, util.PasswordLabel, util.FirstPassword); err != nil {
-				return errors.Wrap(err, "USS migration test failed at authentication step after the migration of password")
-			}
-			// Test the various keys after the migration.
-			for _, key := range keys {
-				// Test the various mechanisms.
-				for _, m := range []pkcs11.MechanismInfo{pkcs11.SHA1RSAPKCS, pkcs11.SHA256RSAPKCS} {
-					if err := pkcs11test.SignAndVerify(shortenedCtx, pkcs11Util, key, f1, f2, &m); err != nil {
-						s.Error("SignAndVerify failed: ", err)
-					}
+		// Authenticate with correct password factor should succeed after migration.
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, util.PasswordLabel, util.FirstPassword); err != nil {
+			return errors.Wrap(err, "USS migration test failed at authentication step after the migration of password")
+		}
+		// Test the various keys after the migration.
+		for _, key := range keys {
+			// Test the various mechanisms.
+			for _, m := range []pkcs11.MechanismInfo{pkcs11.SHA1RSAPKCS, pkcs11.SHA256RSAPKCS} {
+				if err := pkcs11test.SignAndVerify(shortenedCtx, pkcs11Util, key, f1, f2, &m); err != nil {
+					s.Error("SignAndVerify failed: ", err)
 				}
 			}
-			return nil
-		}); err != nil {
-			return errors.Wrap(err, "failed to test password migration")
 		}
 		return nil
 	}); err != nil {
-		s.Fatal("Setup while USS migration was enabled failed: ", err)
+		s.Fatal("Failed to test password migration: ", err)
 	}
 }

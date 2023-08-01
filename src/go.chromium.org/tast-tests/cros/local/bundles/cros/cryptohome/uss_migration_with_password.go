@@ -112,7 +112,6 @@ func UssMigrationWithPassword(ctx context.Context, s *testing.State) {
 
 		cr, err := chrome.New(ctx,
 			chrome.FakeLogin(chrome.Creds{User: userName, Pass: userPassword}),
-			chrome.DisableFeatures("CrOSLateBootMigrateToUserSecretStash"),
 			chrome.KeepState())
 		if err != nil {
 			s.Fatal("Failed to start Chrome at login screen: ", err)
@@ -138,7 +137,6 @@ func UssMigrationWithPassword(ctx context.Context, s *testing.State) {
 	func() {
 		cr, err := chrome.New(ctx,
 			chrome.FakeLogin(chrome.Creds{User: userName, Pass: userPassword}),
-			chrome.EnableFeatures("CrOSLateBootMigrateToUserSecretStash"),
 			chrome.KeepState())
 
 		if err != nil {
@@ -159,7 +157,6 @@ func UssMigrationWithPassword(ctx context.Context, s *testing.State) {
 	func() {
 		cr, err := chrome.New(ctx,
 			chrome.FakeLogin(chrome.Creds{User: userName, Pass: userPassword}),
-			chrome.EnableFeatures("CrOSLateBootMigrateToUserSecretStash"),
 			chrome.KeepState())
 		if err != nil {
 			s.Fatal("Failed to start Chrome at login screen: ", err)
