@@ -78,7 +78,7 @@ func clickButtonsOnYTMusic(ui *uiauto.Context, kb *input.KeyboardEventWriter) ui
 	// The YouTube Music window changes the name after the ad finishes, specifying the
 	// nodes with the root web area to avoid errors caused by the window name change.
 	youtubeMusicRootWebArea := nodewith.NameContaining("YouTube Music").Role(role.RootWebArea)
-	searchField := nodewith.Name("Search").Role(role.TextFieldWithComboBox).Ancestor(youtubeMusicRootWebArea)
+	searchField := nodewith.NameStartingWith("Search").Role(role.TextFieldWithComboBox).Ancestor(youtubeMusicRootWebArea)
 	searchButton := nodewith.Name("Initiate search").Role(role.Button).Ancestor(youtubeMusicRootWebArea)
 	backButton := nodewith.Name("Back").Role(role.Button).Ancestor(youtubeMusicRootWebArea)
 	return uiauto.NamedCombine("click search, back buttons and the search field",
