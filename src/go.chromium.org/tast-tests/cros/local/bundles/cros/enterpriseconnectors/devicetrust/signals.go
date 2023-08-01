@@ -58,6 +58,8 @@ const (
 	expectedOS                     = "ChromeOS"
 	expectedDeviceEnrollmentDomain = "managedchrome.com"
 	expectedAffiliationIDLength    = 1
+	expectedDiskEncryption         = 2
+	expectedScreenLockSecured      = 2
 )
 
 // checkIfSignalsAreFilled checks if all signals were transmitted by checking for nil values at the struct fields.
@@ -152,6 +154,28 @@ func verifyNonDeviceIdentifyingSignalValues(parsedServerSignals serverSignals, p
 
 	if *parsedClientSignals.OS != expectedOS {
 		return errors.Errorf("unexpected value for clientSignals.os: got %q, want %q", *parsedClientSignals.OS, expectedOS)
+	}
+
+	if *parsedClientSignals.DiskEncrypted != expectedDiskEncryption {
+		return errors.Errorf("unexpected value for clientSignals.diskEncrypted: got %q, want %q", *parsedClientSignals.DiskEncrypted, expectedDiskEncryption)
+	}
+
+	if *parsedClientSignals.ScreenLockSecured != expectedScreenLockSecured {
+		return errors.Errorf("unexpected value for clientSignals.screenLockSecured: got %q, want %q", *parsedClientSignals.ScreenLockSecured, expectedScreenLockSecured)
+	}
+
+	// Checking the expected os firewall which depends on the key trust level.
+	var expectedOSFirewall int
+	if *parsedServerSignals.KeyTrustLevel == expectedKeyTrustLevelDev {
+		expectedOSFirewall = 1
+	} else if *parsedServerSignals.KeyTrustLevel == expectedKeyTrustLevelVerified {
+		expectedOSFirewall = 2
+	} else {
+		expectedOSFirewall = -1
+	}
+
+	if *parsedClientSignals.OSFirewall != expectedOSFirewall {
+		return errors.Errorf("unexpected value for clientSignals.osFirewall: got %q, want %q", *parsedClientSignals.OSFirewall, expectedOSFirewall)
 	}
 
 	// Checking the signal for the trigger which generated the device signals.
