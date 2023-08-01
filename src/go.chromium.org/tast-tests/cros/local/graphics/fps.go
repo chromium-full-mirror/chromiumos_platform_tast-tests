@@ -25,6 +25,13 @@ const (
 	tracingPath = "/sys/kernel/tracing"
 )
 
+var (
+	vblankEventEnable = filepath.Join(tracingPath,
+		"events/drm/drm_vblank_event/enable")
+	tracingOn = filepath.Join(tracingPath, "tracing_on")
+	traceFile = filepath.Join(tracingPath, "trace")
+)
+
 // ParseFPSTrace parses the trace file in tracePath.
 func ParseFPSTrace(tracePath string) ([][]float64, error) {
 	// Line format:
@@ -76,42 +83,56 @@ func ParseFPSTrace(tracePath string) ([][]float64, error) {
 
 // ClearTraceBuffer clears the tracefs buffer.
 func ClearTraceBuffer() error {
-	tracePath := filepath.Join(tracingPath, "trace")
-	if err := ioutil.WriteFile(tracePath, nil, 0644); err != nil {
+	if err := ioutil.WriteFile(traceFile, nil, 0644); err != nil {
 		return errors.Wrap(err, "cannot clear trace buffer")
+	}
+	return nil
+}
+
+// EnableFPSTrace enables vblank event tracing and turns on tracing.
+func EnableFPSTrace(ctx context.Context) error {
+	// Enable vblank event tracing.
+	if err := ioutil.WriteFile(vblankEventEnable, []byte("1"), 0644); err != nil {
+		return errors.Wrap(err, "cannot enable drm vblank event tracing")
+	}
+
+	// Turn on tracing.
+	if err := ioutil.WriteFile(tracingOn, []byte("1"), 0644); err != nil {
+		return errors.Wrap(err, "cannot enable tracing")
+	}
+	return nil
+}
+
+// DisableFPSTrace disables vblank event tracing and turns off tracing.
+func DisableFPSTrace() {
+	ioutil.WriteFile(vblankEventEnable, []byte("0"), 0644)
+	ioutil.WriteFile(tracingOn, []byte("0"), 0644)
+}
+
+// CopyFPSTrace copies the tracefs buffer to the specified output location.
+func CopyFPSTrace(ctx context.Context, outputPath string) error {
+	if err := fsutil.CopyFile(traceFile, outputPath); err != nil {
+		return errors.Wrap(err, "failed to copy trace file")
 	}
 	return nil
 }
 
 // CollectFPSTrace uses tracefs to collect FPS data over a duration, and save the resulting trace file for later analysis.
 func CollectFPSTrace(ctx context.Context, collectTime time.Duration, outputPath string) error {
-	// Enable vblank events.
-	vblankPath := filepath.Join(tracingPath,
-		"events/drm/drm_vblank_event/enable")
-	if err := ioutil.WriteFile(vblankPath, []byte("1"), 0644); err != nil {
-		return errors.Wrap(err, "cannot enable drm vblank event tracing")
+	if err := EnableFPSTrace(ctx); err != nil {
+		return errors.Wrap(err, "failed to enabled FPS tracing")
 	}
-	defer ioutil.WriteFile(vblankPath, []byte("0"), 0644)
-
-	// Collect trace data.
-	tracingOnPath := filepath.Join(tracingPath, "tracing_on")
-	if err := ioutil.WriteFile(tracingOnPath, []byte("1"), 0644); err != nil {
-		return errors.Wrap(err, "cannot enable tracing")
-	}
-	defer ioutil.WriteFile(tracingOnPath, []byte("0"), 0644)
+	defer DisableFPSTrace()
 
 	testing.ContextLog(ctx, "Collecting vblank event samples")
+	// GoBigSleepLint: Wait for tracing samples.
 	if err := testing.Sleep(ctx, collectTime); err != nil {
 		return errors.Wrap(err, "cannot sleep")
 	}
 
-	ioutil.WriteFile(tracingOnPath, []byte("0"), 0644)
-
-	tracePath := filepath.Join(tracingPath, "trace")
-
-	// Save trace file in output directory.
-	if err := fsutil.CopyFile(tracePath, outputPath); err != nil {
-		return errors.Wrap(err, "failed to copy trace file")
+	DisableFPSTrace()
+	if err := CopyFPSTrace(ctx, outputPath); err != nil {
+		return err
 	}
 	return nil
 }
