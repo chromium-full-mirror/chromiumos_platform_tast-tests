@@ -118,7 +118,9 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
+
 	androidWindow := nodewith.Name("Import Android Studio Settings From...").Role(role.Window).First()
 	if err := uiauto.Combine("Open android studio",
 		terminalApp.RunCommand(keyboard, "/android-studio/bin/studio.sh &"),
