@@ -41,8 +41,9 @@ func init() {
 			Fixture:           "ccaTestBridgeReady",
 			ExtraAttr:         []string{"group:intel-nda"},
 		}, {
-			Name:    "fake_hal",
-			Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
+			Name:      "fake_hal",
+			Fixture:   "ccaTestBridgeReadyWithFakeHALCamera",
+			ExtraAttr: []string{"group:criticalstaging"},
 		}},
 	})
 }

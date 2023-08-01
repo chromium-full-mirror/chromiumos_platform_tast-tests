@@ -19,7 +19,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and verifies photo taking related use cases",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:intel-gating", "group:intel-nda"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:intel-gating", "group:intel-nda", "group:criticalstaging"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
 		BugComponent: "b:978428",

@@ -22,7 +22,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests if Chrome Camera App sends metrics correctly",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:criticalstaging"},
 		SoftwareDeps: []string{"camera_app", "chrome", "metrics_consent"},
 		Fixture:      "ccaLaunchedWithFakeHALCamera",
 		BugComponent: "b:978428",
