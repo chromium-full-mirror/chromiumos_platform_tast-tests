@@ -1,0 +1,26 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.inputs;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/inputs";
+
+// StylusEvtestCaptureService provides an interface to collect Input from a DUT
+// whilst a HMR Job is running.
+service StylusEvtestCaptureService {
+
+  rpc StartStylusDataCapture(google.protobuf.Empty)
+      returns (StylusEvtestCaptureResponse) {}
+
+  rpc StopStylusDataCapture(google.protobuf.Empty) returns (google.protobuf.Empty) {
+  }
+
+  rpc CleanUp(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+message StylusEvtestCaptureResponse { string StylusLogPath = 1; }

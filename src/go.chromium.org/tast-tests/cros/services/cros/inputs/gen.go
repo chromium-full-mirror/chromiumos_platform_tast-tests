@@ -6,6 +6,7 @@
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. touch_pad_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. keyboard_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. touch_service.proto
+//go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. stylus_evtest_capture_service.proto
 
 // Package inputs provides all inputs related types compiled from protobuf.
 package inputs
