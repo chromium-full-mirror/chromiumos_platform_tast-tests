@@ -43,7 +43,7 @@ func init() {
 		}, {
 			Name:      "usb_speaker",
 			Val:       "USB",
-			ExtraAttr: []string{"group:intel-usb-set1"},
+			ExtraAttr: []string{"group:intel-usb-set2"},
 		}},
 	})
 }

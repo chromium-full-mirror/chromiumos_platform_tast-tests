@@ -37,7 +37,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:intel-usb-set2"},
+		Attr:         []string{"group:intel-usb-set1"},
 		Data:         []string{"bear-320x240.h264.mp4"},
 		Vars:         []string{"intel.usbDetectionName"},
 		Fixture:      "chromeLoggedInQsRevampEnabled",
