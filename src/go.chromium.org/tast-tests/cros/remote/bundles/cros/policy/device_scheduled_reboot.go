@@ -7,6 +7,8 @@ package policy
 import (
 	"context"
 	"encoding/json"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -15,8 +17,9 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	kspb "go.chromium.org/tast-tests/cros/services/cros/kiosk"
-	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
@@ -28,13 +31,13 @@ func init() {
 		Desc:         "Behavior of DeviceScheduledReboot policy for kiosk",
 		BugComponent: "b:1263917", // ChromeOS > Software > Commercial (Enterprise) > Testing
 		Contacts: []string{
-			"cros-policy-muc-eng@google.com",
-			"sanjaperisic@google.com", // Test author
+			"chromeos-commercial-remote-management@google.com",
+			"artyomchen@google.com", // Test author
 		},
 		Attr:         []string{"group:enrollment"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps: []string{
-			"tast.cros.kiosk.KioskService", "tast.cros.hwsec.OwnershipService", "tast.cros.policy.PolicyService",
+			"tast.cros.kiosk.KioskService", "tast.cros.hwsec.OwnershipService",
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceScheduledReboot{}, pci.VerifiedFunctionalityJS),
@@ -43,15 +46,37 @@ func init() {
 	})
 }
 
-// futureTime adds 2 minutes to the given time.
-func futureTime(hour, minute int32) (int, int) {
-	h := int(hour)
-	m := int(minute)
-	if m > 58 {
-		h = (h + 1) % 24
+// currentTimeDUT uses `date` utility on a DUT to get current time in DUT's local timezone.
+func currentTimeDUT(ctx context.Context, dut *dut.DUT) (hour, minute int, err error) {
+	hourBytes, err := dut.Conn().CommandContext(ctx, "date", "+%-H").Output()
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "failed to get DUT's current time")
 	}
-	m = (m + 2) % 60
-	return h, m
+	minuteBytes, err := dut.Conn().CommandContext(ctx, "date", "+%-M").Output()
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "failed to get DUT's current time")
+	}
+
+	hour, err = strconv.Atoi(strings.TrimSpace(string(hourBytes)))
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "failed to convert current time to int")
+	}
+	minute, err = strconv.Atoi(strings.TrimSpace(string(minuteBytes)))
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "failed to convert current time to int")
+	}
+
+	return hour, minute, nil
+}
+
+// futureTime adds 2 minutes to the given time.
+func futureTime(hour, minute int) (int, int) {
+	if minute > 58 {
+		hour = (hour + 1) % 24
+	}
+	minute = (minute + 2) % 60
+
+	return hour, minute
 }
 
 func DeviceScheduledReboot(ctx context.Context, s *testing.State) {
@@ -74,7 +99,6 @@ func DeviceScheduledReboot(ctx context.Context, s *testing.State) {
 	}
 	defer cl.Close(ctx)
 
-	policyClient := pspb.NewPolicyServiceClient(cl.Conn)
 	kioskClient := kspb.NewKioskServiceClient(cl.Conn)
 
 	if _, err := kioskClient.StartKiosk(ctx, &empty.Empty{}); err != nil {
@@ -93,11 +117,11 @@ func DeviceScheduledReboot(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	// Fetch current time and fast-forward 2 minutes.
-	currTime, err := policyClient.GetTimeOfDay(ctx, &empty.Empty{})
+	hour, minute, err := currentTimeDUT(ctx, s.DUT())
 	if err != nil {
 		s.Fatal(err, " failed to get current time")
 	}
-	hour, minute := futureTime(currTime.Hour, currTime.Minute)
+	hour, minute = futureTime(hour, minute)
 
 	deviceScheduledRebootPb := policy.NewBlob()
 	deviceScheduledRebootPb.AddPolicy(&policy.DeviceScheduledReboot{Val: &policy.DeviceScheduledRebootValue{

@@ -56,9 +56,6 @@ service PolicyService {
   // Grabs DirectoryAPIID of the managed session.
   rpc DirectoryAPIID(google.protobuf.Empty) returns (DirectoryAPIIDResponse) {}
 
-  // Gets the local time.
-  rpc GetTimeOfDay(google.protobuf.Empty) returns (GetTimeOfDayResponse) {}
-
   // Locks the device.
   rpc LockDevice(google.protobuf.Empty)
       returns (google.protobuf.Empty) {}
@@ -181,11 +178,6 @@ message ClientIdResponse {
 
 message DirectoryAPIIDResponse {
   string directoryAPIID = 1;
-}
-
-message GetTimeOfDayResponse{
-  int32 hour = 1;
-  int32 minute = 2;
 }
 
 message UnlockDeviceWithPasswordRequest{

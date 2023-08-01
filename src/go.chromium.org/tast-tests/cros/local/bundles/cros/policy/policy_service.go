@@ -734,11 +734,6 @@ func (c *PolicyService) DirectoryAPIID(ctx context.Context, req *empty.Empty) (*
 	return &ppb.DirectoryAPIIDResponse{DirectoryAPIID: *p.DirectoryApiId}, nil
 }
 
-func (c *PolicyService) GetTimeOfDay(ctx context.Context, req *empty.Empty) (*ppb.GetTimeOfDayResponse, error) {
-	now := time.Now()
-	return &ppb.GetTimeOfDayResponse{Hour: int32(now.Hour()), Minute: int32(now.Minute())}, nil
-}
-
 // LockDevice locks the device's screen.
 func (c *PolicyService) LockDevice(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	tconn, err := c.sharedObject.Chrome.TestAPIConn(ctx)
