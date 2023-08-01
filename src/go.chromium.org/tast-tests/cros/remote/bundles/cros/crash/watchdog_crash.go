@@ -35,7 +35,17 @@ func init() {
 			// See https://crbug.com/1069618 for discussion of bob, scarlet, kevin issues.
 			"bob",
 			"scarlet",
-			"kevin")),
+			"kevin"),
+			hwdep.SkipOnModel(
+				"crystaldrift", /* TODO(b/282821025): Watchdog broken on Skyrim */
+				"frostflow",    /* TODO(b/282821025): Watchdog broken on Skyrim */
+				"markarth",     /* TODO(b/282821025): Watchdog broken on Skyrim */
+				"skyrim15w",    /* TODO(b/282821025): Watchdog broken on Skyrim */
+				"skyrim15w360", /* TODO(b/282821025): Watchdog broken on Skyrim */
+				"skyrim6w",     /* TODO(b/282821025): Watchdog broken on Skyrim */
+				"skyrim6w360",  /* TODO(b/282821025): Watchdog broken on Skyrim */
+				"whiterun",     /* TODO(b/282821025): Watchdog broken on Skyrim */
+			)),
 		Timeout: 10 * time.Minute,
 	})
 }
