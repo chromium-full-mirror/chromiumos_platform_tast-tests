@@ -39,6 +39,7 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.LacrosDataBackwardMigrationMode{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.DeveloperToolsAvailability{}, pci.Served),
 		},
 		Data:    []string{"migrate/indexeddb_check.js", "migrate/indexeddb_set.js"},
 		Timeout: 3 * time.Minute,
@@ -75,8 +76,9 @@ func BackwardMigratePolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set up profile data: ", err)
 	}
 
-	// Chrome uses many profile data stores that we do not own and that
-	// are not flushed to disk immediately, but only periodically persisted.
+	// GoBigSleepLint: Chrome uses many profile data stores that we do not own
+	// and that are not flushed to disk immediately, but only
+	// periodically persisted.
 	// Since we cannot flush directly from the tast, sleep to wait for the data
 	// to be synced.
 	if err := testing.Sleep(ctx, 15*time.Second); err != nil {
@@ -121,6 +123,10 @@ func forwardMigratePolicy(ctx context.Context, fdms *fakedms.FakeDMS, s *testing
 	blob.AddPolicies([]policy.Policy{
 		&policy.LacrosDataBackwardMigrationMode{Val: "keep_all"},
 		&policy.LacrosAvailability{Val: "lacros_only"},
+		// Configuring the DeveloperToolsAvailability explicitly,
+		// otherwise extension installation does not work for now.
+		// TODO(b/292493121): Remove once the bug is fixed.
+		&policy.DeveloperToolsAvailability{Val: 1},
 	})
 
 	if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, blob); err != nil {
