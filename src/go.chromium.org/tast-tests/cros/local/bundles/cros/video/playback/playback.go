@@ -88,11 +88,6 @@ func RunTest(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bT
 // either SW or HW decoder.
 func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, videoName string,
 	decoderType DecoderType, gridWidth, gridHeight int, perfTracing, measureRoughness bool, outDir string) error {
-	// Wait until CPU is idle enough. CPU usage can be high immediately after login for various reasons (e.g. animated images on the lock screen).
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		return err
-	}
-
 	server := httptest.NewServer(http.FileServer(fileSystem))
 	defer server.Close()
 
@@ -121,6 +116,24 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	exprn := fmt.Sprintf("document.getElementsByTagName('video').length == %d", int(math.Max(1.0, float64(gridWidth*gridHeight))))
 	if err := conn.WaitForExpr(ctx, exprn); err != nil {
 		return errors.Wrap(err, "failed to wait for video element loading")
+	}
+
+	// For consistency across test runs, let's try to put the UI in a known state:
+	// rotate the display to landscape-primary and maximize the browser window.
+	if err = graphics.RotateDisplayToLandscapePrimary(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to set display to landscape-primary orientation")
+	}
+	w, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, "ChromeOS Video Test")
+	if err != nil {
+		s.Fatal("Failed to find the window that contains the video: ", err)
+	}
+	if err := ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized); err != nil {
+		s.Fatal("Failed to maximize the window that contains the video: ", err)
+	}
+
+	// Wait until CPU is idle enough before playing the video.
+	if err := cpu.WaitUntilIdle(ctx); err != nil {
+		return err
 	}
 
 	// TODO(b/183044442): before playing and measuring, we should probably ensure
