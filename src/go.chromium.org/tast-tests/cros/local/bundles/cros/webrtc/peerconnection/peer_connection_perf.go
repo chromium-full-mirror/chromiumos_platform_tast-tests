@@ -222,8 +222,13 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 	}
 
 	// Set the battery to discharge mode in order to be able to collect system power usage numbers.
+	// TODO(b/292150613): move this setup to before starting LaCrOS so that it doesn't get confused
+	// about multiple windows. Then, uncomment the DarkTheme line.
 	cleanup, err := setup.PowerTest(ctx, tconn, setup.PowerTestOptions{
+		Wifi:       setup.DisableWifiInterfaces,
 		NightLight: setup.DisableNightLight,
+		// DarkTheme:          setup.EnableLightTheme,
+		KeyboardBrightness: setup.SetKbBrightnessToZero,
 	}, setup.NewBatteryDischarge(true /*discharge*/, false /*ignoreErr*/, setup.DefaultDischargeThreshold))
 	if err != nil {
 		// This is not really an error: sometimes powerd is down or lost and setting
