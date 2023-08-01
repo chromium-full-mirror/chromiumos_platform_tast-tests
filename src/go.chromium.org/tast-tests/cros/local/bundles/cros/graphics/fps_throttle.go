@@ -6,6 +6,7 @@ package graphics
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -86,6 +87,9 @@ func FPSThrottle(ctx context.Context, s *testing.State) {
 
 		// Two refresh rates within this threshold are close enough to be considered the same.
 		sameRateThreshold = 0.9
+
+		// Battery percent at or under which the refresh rate is expected to be throttled when on battery power.
+		lowBatteryLevel = 10
 	)
 	// Open web page with constantly changing content to defeat PSR.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
@@ -134,7 +138,7 @@ func FPSThrottle(ctx context.Context, s *testing.State) {
 		s.Logf("Plugged-in refresh rate: %f", pluggedInRefreshRate)
 
 		// Send D-Bus signal indicating AC is unplugged, and wait for downstream clients to react to it.
-		if err := testexec.CommandContext(ctx, "sudo", "-u", "power", "send_debug_power_status", "--external_power=2").Run(); err != nil {
+		if err := testexec.CommandContext(ctx, "sudo", "-u", "power", "send_debug_power_status", "--external_power=2", fmt.Sprintf("--battery_percent=%d", lowBatteryLevel)).Run(); err != nil {
 			s.Fatal("Failed to send power status: ", err)
 		}
 		if err := testing.Sleep(ctx, powerStatePropagationDelay); err != nil {
@@ -155,7 +159,7 @@ func FPSThrottle(ctx context.Context, s *testing.State) {
 		}
 
 		// Re-plug and verify the transition back to high framerate.
-		if err := testexec.CommandContext(ctx, "sudo", "-u", "power", "send_debug_power_status", "--external_power=0").Run(); err != nil {
+		if err := testexec.CommandContext(ctx, "sudo", "-u", "power", "send_debug_power_status", "--external_power=0", "--battery_percent=100").Run(); err != nil {
 			s.Fatal("Failed to send power status: ", err)
 		}
 		if err := testing.Sleep(ctx, powerStatePropagationDelay); err != nil {
