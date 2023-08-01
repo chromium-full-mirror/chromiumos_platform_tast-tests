@@ -23,17 +23,14 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-// TODO(b/238591444) : remove "soraka" when b/238591444 is fixed.
-// TODO(b/238718764) : remove "karma" when b/238718764 is fixed.
 // TODO(b/239385484) : remove "beetley" when b/239385484 is fixed.
 // TODO(b/272410497) : remove "redrix" when b/239385850 is fixed.
 // TODO(b/272410497) : remove "gimble" when b/239409160 is fixed.
 // TODO(b/272410497) : remove "anahera" when b/239412769 is fixed.
 // TODO(b/245058202) : remove "bob" when b/245058202 is fixed.
-// TODO(b/244254621) : remove "sasukette" when b/244254621 is fixed.
 // TODO(b/272410497) : remove "yaviks", "yavikso" when b/244418775 is fixed.
 // TODO(b/285830729) : remove "geralt" when b/285830729 is fixed.
-var alsaConformanceUnstableModels = []string{"soraka", "karma", "beetley", "redrix", "gimble", "anahera", "bob", "sasukette", "yaviks", "yavikso", "geralt"}
+var alsaConformanceUnstableModels = []string{"beetley", "redrix", "gimble", "anahera", "bob", "yaviks", "yavikso", "geralt"}
 
 // TODO(b/136614687): Relex the criteria for grunt devices, the audio still sounds fine as CRAS can compensate the rate, if the rate error is not huge.
 var relexedCriteriaModels = []string{"aleena", "barla", "careena", "kasumi", "kasumi360", "liara", "treeya360", "treeya"}
