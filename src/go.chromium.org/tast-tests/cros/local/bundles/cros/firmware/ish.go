@@ -65,15 +65,15 @@ type ishManifest struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ISH,
-		Desc: "Verify CSE is running the lastes ISH firmware provided",
+		Desc: "Verify CSE is running the latest ISH firmware provided",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"khwon@chromium.org", // Test Author
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
 		HardwareDeps: hwdep.D(hwdep.X86()),
-		Requirements: []string{"sys-fw-0021-v01"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 	})
 }
 
