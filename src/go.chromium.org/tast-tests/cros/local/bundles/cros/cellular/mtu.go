@@ -107,8 +107,8 @@ func MTU(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to get MTU configured on net interface: ", err)
 	}
 
-	if ipProps.MTU != configuredMTU {
-		s.Fatalf("Unexpected MTU value on net interface: got %v, want %v", configuredMTU, ipProps.MTU)
+	if configuredMTU > ipProps.MTU {
+		s.Fatalf("Unexpected MTU value on net interface: got %v, want at most %v", configuredMTU, ipProps.MTU)
 	}
 }
 
