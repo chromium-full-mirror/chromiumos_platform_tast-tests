@@ -135,8 +135,8 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 		s.Fatal("Failed to maximize the window that contains the video: ", err)
 	}
 
-	// Wait until CPU is idle enough before playing the video.
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
+	// Wait for CPU to cool down before playing the video and recording metrics.
+	if err := cpu.Cooldown(ctx); err != nil {
 		return err
 	}
 
