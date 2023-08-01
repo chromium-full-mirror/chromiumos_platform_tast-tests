@@ -160,6 +160,14 @@ func Run(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
+	// The battery saver alert would inactivate the current window.
+	// Dismiss the alert if it pops up.
+	if strings.Contains(s.TestName(), "battery_saver") {
+		if err := cuj.DismissBatterySaverPrompt(tconn)(ctx); err != nil {
+			s.Fatal("Failed to dismiss battery saver prompt: ", err)
+		}
+	}
+
 	videoWindow, err := ash.GetActiveWindow(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get active window: ", err)

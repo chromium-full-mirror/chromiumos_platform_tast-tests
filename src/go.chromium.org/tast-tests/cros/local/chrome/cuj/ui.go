@@ -33,6 +33,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const promptTimeout = 5 * time.Second
+
 // CloseAllWindows closes all currently open windows by iterating over
 // the shelf icons and calling apps.closeApp on each one.
 func CloseAllWindows(ctx context.Context, tconn *chrome.TestConn) error {
@@ -326,7 +328,7 @@ func DismissMobilePrompt(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
 
 	prompt := nodewith.Name("This app is designed for mobile").Role(role.Window)
-	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(prompt)(ctx); err == nil {
+	if err := ui.WithTimeout(promptTimeout).WaitUntilExists(prompt)(ctx); err == nil {
 		testing.ContextLog(ctx, "Dismiss the app prompt")
 		gotIt := nodewith.Name("Got it").Role(role.Button).Ancestor(prompt)
 		if err := ui.LeftClickUntil(gotIt, ui.WithTimeout(time.Second).WaitUntilGone(gotIt))(ctx); err != nil {
@@ -334,6 +336,18 @@ func DismissMobilePrompt(ctx context.Context, tconn *chrome.TestConn) error {
 		}
 	}
 	return nil
+}
+
+// DismissBatterySaverPrompt returns an action to dismiss the prompt of "Energy Saver turned on".
+func DismissBatterySaverPrompt(tconn *chrome.TestConn) uiauto.Action {
+	energySaverAlert := nodewith.NameContaining("Energy Saver").Role(role.Alert).HasClass("Widget")
+	energySaverPrompt := prompts.Prompt{
+		Name:              "Energy Saver",
+		PromptFinder:      energySaverAlert,
+		ClearButtonFinder: prompts.GotItButtonFinder.Ancestor(energySaverAlert),
+	}
+
+	return prompts.ClearPotentialPrompts(tconn, promptTimeout, energySaverPrompt)
 }
 
 // ExpandMenu returns a function that clicks the button and waits for the menu to expand to the given height.
@@ -456,19 +470,18 @@ func EnableTabletMode(ctx context.Context, tconn *chrome.TestConn, testCaseVar f
 // alert is found on screen. If clicking action fails, it will remove the
 // alert dialog HTML element with javascript directly.
 func DismissCriticalSecurityAlert(ctx context.Context, tconn *chrome.TestConn, conn *chrome.Conn) error {
-	const uiWaitTime = 5 * time.Second
 	ui := uiauto.New(tconn)
 	alertContainer := nodewith.NameStartingWith("Critical security alert").Role(role.Dialog)
 	close := nodewith.NameStartingWith("Close").Ancestor(alertContainer)
 	if err := uiauto.IfSuccessThen(ui.Exists(alertContainer),
-		uiauto.NamedAction("close security alert", ui.DoDefaultUntil(close, ui.WithTimeout(uiWaitTime).WaitUntilGone(close))),
+		uiauto.NamedAction("close security alert", ui.DoDefaultUntil(close, ui.WithTimeout(promptTimeout).WaitUntilGone(close))),
 	)(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to close critical security alert by clicking, use javascript to delete the HTML element instead")
 		const alertDivElement = `document.querySelector("iframe[role='presentation'][name='callout']").parentElement`
 		if err := conn.Eval(ctx, fmt.Sprintf("%s.remove()", alertDivElement), nil); err != nil {
 			return errors.Wrap(err, "failed to remove critical security alert HTML element")
 		}
-		if err := ui.WithTimeout(uiWaitTime).WaitUntilGone(alertContainer)(ctx); err != nil {
+		if err := ui.WithTimeout(promptTimeout).WaitUntilGone(alertContainer)(ctx); err != nil {
 			return errors.Wrap(err, "failed to wait until critical security alert gone")
 		}
 	}
