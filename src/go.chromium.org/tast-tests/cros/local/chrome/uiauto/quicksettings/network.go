@@ -129,7 +129,7 @@ func NetworkDetailedViewWifiToggleButton(ctx context.Context, tconn *chrome.Test
 		return nodewith.HasClass("TrayToggleButton").NameContaining("Wi-Fi").Ancestor(networkDetailedView), nil
 	}
 	// QsRevamp uses an ordinary button.
-	return nodewith.Role(role.Button).NameContaining("Toggle Wi-Fi").Ancestor(networkDetailedView), nil
+	return nodewith.HasClass("Switch").NameContaining("Wi-Fi").Ancestor(networkDetailedView), nil
 }
 
 // NetworkDetailedViewMobileDataToggle returns the switch to enable/disable Mobile data within network quick settings.
