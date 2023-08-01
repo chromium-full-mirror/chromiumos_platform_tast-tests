@@ -28,7 +28,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -41,7 +40,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      "chromeLoggedInQsRevampEnabled",
-		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"audio_stable"},
