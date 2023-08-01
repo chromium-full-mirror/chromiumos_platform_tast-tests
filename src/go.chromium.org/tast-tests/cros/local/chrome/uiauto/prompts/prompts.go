@@ -99,7 +99,7 @@ func ClearPotentialPrompts(tconn *chrome.TestConn, idleDuration time.Duration, p
 		foundPromptFinder, err := ui.WithTimeout(idleDuration).FindAnyExists(ctx, promptFinders...)
 		if err != nil {
 			// Return if no prompt found.
-			if strings.Contains(err.Error(), nodewith.ErrNotFound) {
+			if strings.Contains(err.Error(), nodewith.ErrNotFound) || strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
 				return -1, nil
 			}
 			return -1, err
