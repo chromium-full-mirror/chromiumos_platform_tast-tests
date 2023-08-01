@@ -280,12 +280,12 @@ func presentPlayingAudioFile(ctx context.Context, ui *uiauto.Context, audioFileN
 // exerciseAudioControls exercises various audio player controls using UI and
 // keyboard.
 func exerciseAudioControls(ctx context.Context, ui *uiauto.Context, kb *input.KeyboardEventWriter, wavFileName1, wavFileName2 string) error {
-	stepForwardButton := nodewith.Name("Step forward").Role(role.Button)
+	stepForwardButton := nodewith.NameStartingWith("Step forward").Role(role.Button)
 	if err := audioPlayerControls(ctx, ui, stepForwardButton); err != nil {
 		return errors.Wrap(err, "failed to step forward audio playback")
 	}
 
-	stepBackwardButton := nodewith.Name("Step backward").Role(role.Button)
+	stepBackwardButton := nodewith.NameStartingWith("Step backward").Role(role.Button)
 	if err := audioPlayerControls(ctx, ui, stepBackwardButton); err != nil {
 		return errors.Wrap(err, "failed to step backward audio playback")
 	}
