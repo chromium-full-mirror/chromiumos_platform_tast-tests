@@ -26,7 +26,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/media/cpu"
 	"go.chromium.org/tast-tests/cros/local/power"
-	"go.chromium.org/tast-tests/cros/local/power/setup"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -575,20 +574,16 @@ func MeasurePackageCStateCounters(ctx context.Context, t time.Duration, p *perf.
 // MeasureSystemPowerConsumption samples the battery power consumption every so
 // often during an interval t using sysfs [1], and reports its average over
 // that time. To provide accurate readings, the battery needs to be configured
-// to discharge, if that fails (perhaps due to low battery charge), this
-// function returns nil (i.e.no error).
+// to discharge (callers need to ensure this).
 // [1] https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-power
 func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t time.Duration, p *perf.Values) error {
-	cleanup, err := setup.PowerTest(ctx, c, setup.PowerTestOptions{
-		NightLight: setup.DisableNightLight,
-	}, setup.NewBatteryDischarge(true /*discharge*/, false /*ignoreErr*/, setup.DefaultDischargeThreshold))
+	status, err := power.GetStatus(ctx)
 	if err != nil {
-		// This is not really an error: sometimes powerd is down or lost and setting
-		// up the power test fails. Just don't provide any metric.
-		testing.ContextLog(ctx, "Skipping measurement, something went wrong during test set up: ", err)
-		return nil
+		return errors.Wrap(err, "failed to get the battery status")
 	}
-	defer cleanup(ctx)
+	if !status.BatteryDischarging {
+		return errors.New("the battery is not set to discharge")
+	}
 
 	// We don't use power.SysfsBatteryMetrics because we want to reject zero
 	// readings below.

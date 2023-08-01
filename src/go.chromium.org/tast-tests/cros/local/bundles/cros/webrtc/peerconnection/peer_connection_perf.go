@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	mediacpu "go.chromium.org/tast-tests/cros/local/media/cpu"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -215,6 +216,23 @@ func measureRTCStats(ctx context.Context, conn *chrome.Conn, streamWidth, stream
 // of videoURL being played, similar to a mosaic video call.
 func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
 	s *testing.State, loopbackURL, videoURL string, params RTCTestParams, p *perf.Values) error {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to test API")
+	}
+
+	// Set the battery to discharge mode in order to be able to collect system power usage numbers.
+	cleanup, err := setup.PowerTest(ctx, tconn, setup.PowerTestOptions{
+		NightLight: setup.DisableNightLight,
+	}, setup.NewBatteryDischarge(true /*discharge*/, false /*ignoreErr*/, setup.DefaultDischargeThreshold))
+	if err != nil {
+		// This is not really an error: sometimes powerd is down or lost and setting
+		// up the power test fails. Just don't provide any metric.
+		testing.ContextLog(ctx, "Skipping measurement, something went wrong during test set up: ", err)
+		return nil
+	}
+	defer cleanup(ctx)
+
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for CPU to become idle")
 	}
@@ -231,11 +249,6 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 	}
 	defer conn.Close()
 	defer conn.CloseTarget(ctx)
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to test API")
-	}
 
 	if canCapture, err := setupCapture(ctx, conn, tconn, params.DisplayMediaType, params.StreamWidth, params.StreamHeight); err != nil {
 		return errors.Wrap(err, "failed to setup capture")

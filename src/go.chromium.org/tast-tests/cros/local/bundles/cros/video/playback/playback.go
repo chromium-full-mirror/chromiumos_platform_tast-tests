@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/media/devtools"
 	"go.chromium.org/tast-tests/cros/local/media/logging"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -88,6 +89,18 @@ func RunTest(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bT
 // either SW or HW decoder.
 func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, videoName string,
 	decoderType DecoderType, gridWidth, gridHeight int, perfTracing, measureRoughness bool, outDir string) error {
+	// Set the battery to discharge mode in order to be able to collect system power usage numbers.
+	cleanup, err := setup.PowerTest(ctx, tconn, setup.PowerTestOptions{
+		NightLight: setup.DisableNightLight,
+	}, setup.NewBatteryDischarge(true /*discharge*/, false /*ignoreErr*/, setup.DefaultDischargeThreshold))
+	if err != nil {
+		// This is not really an error: sometimes powerd is down or lost and setting
+		// up the power test fails. Just don't provide any metric.
+		testing.ContextLog(ctx, "Skipping measurement, something went wrong during test set up: ", err)
+		return nil
+	}
+	defer cleanup(ctx)
+
 	// Wait until CPU is idle enough. CPU usage can be high immediately after login for various reasons (e.g. animated images on the lock screen).
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
 		return err
@@ -188,7 +201,7 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	}()
 	go func() {
 		defer wg.Done()
-		cpuErr = graphics.MeasureCPUUsageAndPower(ctx, stabilizationDuration, measurementDuration, p)
+		cpuErr = graphics.MeasureCPUUsageAndPower(ctx, 0 /*stabilizationDuration*/, measurementDuration, p)
 	}()
 	go func() {
 		defer wg.Done()
