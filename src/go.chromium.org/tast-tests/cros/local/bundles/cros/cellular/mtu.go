@@ -123,7 +123,7 @@ func getConfiguredMTU(ctx context.Context, service *shill.Service) (int32, error
 		return 0, errors.Wrap(err, "could not fetch device properties")
 	}
 
-	iface, err := p.GetString(shillconst.DevicePropertyInterface)
+	iface, err := p.GetString(shillconst.DevicePropertyCellularPrimaryMultiplexedInterface)
 	if err != nil {
 		return 0, errors.Wrap(err, "could not fetch device interface name")
 	}
