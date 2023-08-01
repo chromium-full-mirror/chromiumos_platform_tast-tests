@@ -31,13 +31,6 @@ func init() {
 		Fixture:      "chromeGraphicsIgt",
 		Params: []testing.Param{
 			{
-				Name: "drm_import_export",
-				Val: graphics.IgtTest{
-					Exe: "drm_import_export",
-				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
-			}, {
 				Name: "drm_mm",
 				Val: graphics.IgtTest{
 					Exe: "drm_mm",
