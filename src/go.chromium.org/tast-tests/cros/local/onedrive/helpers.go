@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -95,4 +97,31 @@ func CheckODFSContent(ctx context.Context, srcFilePath, dstFileName string) erro
 	}
 
 	return action.RetryWithExponentialBackoff(10, checkerFunc, 500*time.Millisecond, 2)(ctx)
+}
+
+// MaybeUnmountOdfs unmounts ODFS if it's mounted.
+func MaybeUnmountOdfs(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
+	filesApp, err := filesapp.Launch(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to launch Files app to unmount ODFS")
+	}
+	volumeID, err := filesApp.GetVolumeID(ctx, cr, "Microsoft OneDrive")
+	if err != nil {
+		return errors.Wrap(err, "failed to get the volume ID for ODFS")
+	}
+	if volumeID == "" {
+		testing.ContextLog(ctx, "Unmounting ODFS not needed")
+		return nil
+	}
+
+	testing.ContextLog(ctx, "Unmounting ODFS")
+	if err := filesApp.Unmount(cr, volumeID)(ctx); err != nil {
+		return errors.Wrap(err, "failed to unmount ODFS")
+	}
+
+	if err := filesApp.Close(ctx); err != nil {
+		return errors.Wrap(err, "failed to close Files app when unmounting ODFS")
+	}
+
+	return nil
 }

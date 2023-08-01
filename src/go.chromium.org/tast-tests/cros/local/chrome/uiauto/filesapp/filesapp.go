@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mafredri/cdp/protocol/target"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -36,6 +37,9 @@ const FilesTitlePrefix = "Files - "
 
 // FileSaverPseudoAppID represents the file saver app ID.
 const FileSaverPseudoAppID = "SaverPseudoAppID"
+
+// FilesAppURL is the base URL for Files app and file dialogs (Save As or File Picker).
+const FilesAppURL = "chrome://file-manager/"
 
 // Context menu items for a file, values are the a11y name.
 const (
@@ -103,7 +107,7 @@ func LaunchChromeApp(ctx context.Context, tconn *chrome.TestConn) (*FilesApp, er
 // An error is returned if the app fails to launch.
 func Launch(ctx context.Context, tconn *chrome.TestConn) (*FilesApp, error) {
 	// Launch the Files App.
-	if err := apps.LaunchSystemWebApp(ctx, tconn, "File Manager", "chrome://file-manager"); err != nil {
+	if err := apps.LaunchSystemWebApp(ctx, tconn, "File Manager", FilesAppURL); err != nil {
 		return nil, err
 	}
 
@@ -659,4 +663,45 @@ func (f *FilesApp) OpenOfficeFile(ctx context.Context, baseDir, fileName string,
 		return nil, err
 	}
 	return cloudupload.App(f.tconn), nil
+}
+
+// GetVolumeID executes JS directly in the JS to get the volume id from the volume manager list.
+func (f *FilesApp) GetVolumeID(ctx context.Context, cr *chrome.Chrome, volumeLabel string) (string, error) {
+	conn, err := cr.NewConnForTarget(ctx, func(t *target.Info) bool { return t.URL == FilesAppURL })
+	if err != nil {
+		return "", err
+	}
+
+	getVolumeID := `(label) => {
+		const volume = fileManager.volumeManager.list_.array_.find(v => v.label === label)
+		return volume ? volume.volumeId : "";
+	}	`
+	var id string
+	if err := conn.Call(ctx, &id, getVolumeID, volumeLabel); err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
+// Unmount executes JS directly in the Files app to unmount the volume.
+func (f *FilesApp) Unmount(cr *chrome.Chrome, volumeID string) uiauto.Action {
+	return func(ctx context.Context) error {
+		conn, err := cr.NewConnForTarget(ctx, func(t *target.Info) bool { return t.URL == FilesAppURL })
+		if err != nil {
+			return err
+		}
+		unmountJs := `(volumeId) => new Promise((resolve, reject) =>
+		     chrome.fileManagerPrivate.removeMount(volumeId, () => {
+				if (chrome.runtime.lastError) {
+					reject(chrome.runtime.lastError);
+				} else {
+					resolve();
+				}
+			}))`
+		if err := conn.Call(ctx, nil, unmountJs, volumeID); err != nil {
+			return err
+		}
+
+		return nil
+	}
 }

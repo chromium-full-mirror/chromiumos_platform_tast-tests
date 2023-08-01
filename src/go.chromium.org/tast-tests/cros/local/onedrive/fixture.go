@@ -291,6 +291,14 @@ func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Fatal("Failed to clear prefs on chrome://files-internals: ", err)
 	}
 
+	if err := MaybeUnmountOdfs(ctx, f.tconn, f.cr); err != nil {
+		s.Fatal("Failed to unmount ODFS: ", err)
+	}
+
+	if err := ms365.MaybeUninstallPwa(ctx, f.cr, f.tconn); err != nil {
+		s.Fatal("Failed to uninstall MS365 PWA: ", err)
+	}
+
 	if err := ash.CloseAllWindows(ctx, f.tconn); err != nil {
 		s.Fatal("Failed to close all windows in the fixture: ", err)
 	}

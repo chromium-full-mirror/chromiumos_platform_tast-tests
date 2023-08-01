@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
@@ -197,6 +198,25 @@ func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome, browserType 
 		return errors.Wrap(err, "failed to install Office PWA")
 	}
 	return ash.WaitForChromeAppInstalled(ctx, ms.tconn, apps.Microsoft365.ID, time.Minute)
+}
+
+// MaybeUninstallPwa uninstalls the MS 365 PWA.
+func MaybeUninstallPwa(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
+	appName := apps.Microsoft365.Name
+	installed, err := ash.ChromeAppInstalled(ctx, tconn, apps.Microsoft365.ID)
+	if err != nil {
+		return errors.Wrap(err, "failed to check for Microsoft 365 PWA")
+	}
+	if !installed {
+		return nil
+	}
+
+	testing.ContextLogf(ctx, "Uninstalling PWA: %s", appName)
+	if err := ossettings.UninstallApp(ctx, tconn, cr, appName, apps.Microsoft365.ID); err != nil {
+		return errors.Wrapf(err, "failed to uninstall the PWA %q", appName)
+	}
+
+	return nil
 }
 
 // ClearBrowserCookiesForOffice will clear all browser cookies for the Office website.
