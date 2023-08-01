@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
@@ -192,4 +193,17 @@ func (as *AudioService) SetActiveNodeByType(ctx context.Context, req *ui.AudioSe
 		return nil, errors.Wrapf(err, "failed to select active device %s", req.Expr)
 	}
 	return &empty.Empty{}, nil
+}
+
+// DownloadsPath returns the path to the Downloads folder of the current user.
+func (as *AudioService) DownloadsPath(ctx context.Context, req *empty.Empty) (*ui.AudioServiceResponse, error) {
+	if as.cr == nil {
+		return nil, errors.New("chrome not available")
+	}
+
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, as.cr.NormalizedUser())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to retrieve users Downloads path")
+	}
+	return &ui.AudioServiceResponse{DownloadsPath: downloadsPath}, nil
 }

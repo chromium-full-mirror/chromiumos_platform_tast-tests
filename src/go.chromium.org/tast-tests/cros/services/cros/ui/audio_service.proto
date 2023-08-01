@@ -34,7 +34,7 @@ service AudioService {
   // key press with Accel().
   rpc KeyboardAccel (AudioServiceRequest) returns (google.protobuf.Empty) {}
 
-  // AudioCrasSelectedOutputDevice will return selected audio device name 
+  // AudioCrasSelectedOutputDevice will return selected audio device name
   // and audio device type.
   rpc AudioCrasSelectedOutputDevice (google.protobuf.Empty) returns (AudioServiceResponse) {}
 
@@ -43,6 +43,9 @@ service AudioService {
 
   // SetActiveNodeByType will set the provided audio node as Active audio node.
   rpc SetActiveNodeByType(AudioServiceRequest) returns (google.protobuf.Empty) {}
+
+  // DownloadsPath returns the path to the Downloads folder of the current user.
+  rpc DownloadsPath(google.protobuf.Empty) returns (AudioServiceResponse) {}
 }
 
 message AudioServiceRequest {
@@ -56,5 +59,6 @@ message AudioServiceRequest {
 message AudioServiceResponse {
   string DeviceName=1;
   string DeviceType=2;
+  string DownloadsPath = 3;
 }
 

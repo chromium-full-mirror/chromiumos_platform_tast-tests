@@ -84,7 +84,13 @@ func PlayAudioWithDisplayOff(ctx context.Context, s *testing.State) {
 	performTest := func() {
 		// Generate sine raw input file that lasts 60 seconds.
 		const rawFileName = "AudioFile.raw"
-		const downloadsPath = "/home/chronos/user/Downloads/"
+
+		res, err := audioService.DownloadsPath(ctx, &empty.Empty{})
+		if err != nil {
+			s.Fatal(s, "Failed to return download path: ", err)
+		}
+
+		downloadsPath := res.DownloadsPath
 		rawFilePath := filepath.Join(downloadsPath, rawFileName)
 		rawDataFields := &ui.AudioServiceRequest{FilePath: rawFilePath, DurationInSecs: 60}
 		if _, err := audioService.GenerateTestRawData(ctx, rawDataFields); err != nil {
