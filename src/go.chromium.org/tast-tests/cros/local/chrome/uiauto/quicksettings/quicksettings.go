@@ -538,6 +538,22 @@ func IsToggleOptionEnabled(ctx context.Context, tconn *chrome.TestConn, toggleBu
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get the toggle option info")
 	}
+
+	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get QsRevamp state")
+	}
+
+	if qsRevampEnabled {
+		if strings.Contains(info.Name, "turned on") {
+			return true, nil
+		}
+		if strings.Contains(info.Name, "turned off") {
+			return false, nil
+		}
+		return false, errors.New("failed to fetch available state information for toggle option")
+	}
+
 	switch status := info.Checked; status {
 	case checked.True:
 		return true, nil
