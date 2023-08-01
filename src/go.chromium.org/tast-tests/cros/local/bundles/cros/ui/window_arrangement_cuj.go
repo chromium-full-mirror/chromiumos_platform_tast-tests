@@ -59,7 +59,8 @@ func init() {
 				Fixture: "loggedInToCUJUser",
 			},
 			{
-				Name: "tablet_mode",
+				Name:              "tablet_mode",
+				ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen()),
 				Val: windowarrangementcuj.TestParam{
 					BrowserType: browser.TypeAsh,
 					Tablet:      true,
@@ -75,7 +76,8 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
-				Name: "tablet_mode_lacros",
+				Name:              "tablet_mode_lacros",
+				ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen()),
 				Val: windowarrangementcuj.TestParam{
 					BrowserType: browser.TypeLacros,
 					Tablet:      true,
@@ -89,7 +91,7 @@ func init() {
 				Val: windowarrangementcuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture: "loggedInToCUJUserVulkan",
+				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit")),
 			},
 		},

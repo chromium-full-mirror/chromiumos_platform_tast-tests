@@ -27,6 +27,7 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome", "arc"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      25 * time.Minute,
@@ -35,14 +36,12 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				Fixture:           "loggedInToCUJUser",
+				Fixture: "loggedInToCUJUser",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeAsh,
 				},
 			}, {
 				Name:              "lacros",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           "loggedInToCUJUserLacros",
 				Val: taskswitchcuj.TaskSwitchTest{
@@ -50,7 +49,7 @@ func init() {
 				},
 			}, {
 				Name:              "tablet",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+				ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen()),
 				Fixture:           "loggedInToCUJUser",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeAsh,
@@ -58,7 +57,7 @@ func init() {
 				},
 			}, {
 				Name:              "lacros_tablet",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+				ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen()),
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           "loggedInToCUJUserLacros",
 				Val: taskswitchcuj.TaskSwitchTest{
@@ -85,10 +84,9 @@ func init() {
 				Fixture: "loggedInToCUJUserWithFieldTrials",
 			},
 			{
-				Name:              "battery_saver",
-				ExtraAttr:         []string{"cuj_experimental"},
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				Fixture:           "loggedInToCUJUserWithBatterySaver",
+				Name:      "battery_saver",
+				ExtraAttr: []string{"cuj_experimental"},
+				Fixture:   "loggedInToCUJUserWithBatterySaver",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeAsh,
 				},
