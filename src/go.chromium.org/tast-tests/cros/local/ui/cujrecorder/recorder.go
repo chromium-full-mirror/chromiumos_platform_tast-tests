@@ -272,7 +272,7 @@ type Recorder struct {
 	cleanup func(ctx context.Context) error
 
 	// powerSetupCleanup cleans up power setup.
-	powerSetupCleanup setup.CleanupCallback
+	powerSetupCleanup func(ctx context.Context) error
 
 	// batteryDischarge is true if battery discharge was successfully induced.
 	batteryDischarge bool
@@ -916,9 +916,14 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		return nil, errors.Wrap(err, "failed to set up the power test")
 	}
 	defer func(ctx context.Context) {
+		// If the recorder setup fails, and there are cleanup actions that are
+		// still left over, run the cleanup here. Otherwise, save the cleanup
+		// actions to r.powerSetupCleanup.
 		if !success && powerTestCleanup != nil {
 			powerTestCleanup(ctx)
+			return
 		}
+		r.powerSetupCleanup = powerTestCleanup
 	}(ctx)
 
 	if r.options.TurnOffDisplay {
@@ -1077,7 +1082,7 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 // setUpPowerTest sets up the power test based on the options provided to the
 // recorder. This function returns a cleanup function that is only non-nil
 // when there is no error.
-func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context), error) {
+func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context) error, error) {
 	if strings.ToLower(skipPowerTest.Value()) == "true" {
 		testing.ContextLog(ctx, "Skipping power test because cujrecorder.skipPowerTest is set")
 		return nil, nil
@@ -1116,9 +1121,21 @@ func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context
 	// Don't change Powerd or DPTF for Benchmark tests, because in order to get
 	// as high a score as possible, we want to make sure we are properly
 	// cooling the CPU.
+	powerStateCleanup := func(ctx context.Context) error { return nil }
 	if r.options.DoNotChangePowerd || r.options.Mode == Benchmark {
 		testing.ContextLog(ctx, "Not changing Powerd")
 		powerTestOptions.Powerd = setup.DoNotChangePowerd
+
+		// Since we are not changing Powerd, the display might turn off. Request
+		// that the display stays on.
+		cleanupWithTconn, err := power.RequestKeepAwake(ctx, r.tconn, power.Display)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to request to keep the system awake")
+		}
+		powerStateCleanup = func(ctx context.Context) error {
+			testing.ContextLog(ctx, "Resetting power state")
+			return cleanupWithTconn(ctx, r.tconn)
+		}
 	}
 	if r.options.DoNotChangeDPTF || r.options.Mode == Benchmark {
 		testing.ContextLog(ctx, "Not changing DPTF")
@@ -1131,7 +1148,7 @@ func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context
 	batteryDischarge := setup.NewBatteryDischarge(r.options.Mode == CUJ, true, dischargeThreshold)
 
 	var err error
-	r.powerSetupCleanup, err = setup.PowerTest(ctx, r.tconn, powerTestOptions, batteryDischarge)
+	setupCleanup, err := setup.PowerTest(ctx, r.tconn, powerTestOptions, batteryDischarge)
 
 	batteryDischargeErr := batteryDischarge.Err()
 
@@ -1144,16 +1161,30 @@ func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context
 		return nil, errors.Wrap(err, "power setup failed")
 	}
 
-	cleanup := func(ctx context.Context) {
-		if err := r.powerSetupCleanup(ctx); err != nil {
+	// cleanup cleans up both the normal power setup, as well as any changes to
+	// the power state (display always on or off).
+	cleanup := func(ctx context.Context) error {
+		testing.ContextLog(ctx, "Cleaning up power test")
+		var firstErr error
+		if err := setupCleanup(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to clean up power setup: ", err)
+			firstErr = errors.Wrap(err, "failed to clean up power setup")
 		}
+		if err := powerStateCleanup(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to reset power state: ", err)
+			if firstErr == nil {
+				firstErr = errors.Wrap(err, "failed to reset power state")
+			}
+		}
+		return firstErr
 	}
 
 	// Check options.FailOnDischargeErr after the deferred function is set.
 	if batteryDischargeErr != nil && r.options.FailOnDischargeErr &&
 		!errors.Is(batteryDischargeErr, power.ErrNoBattery) {
-		cleanup(ctx)
+		if err := cleanup(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to clean up power test: ", err)
+		}
 		return nil, errors.Wrap(batteryDischargeErr, "battery discharge failed")
 	}
 
