@@ -91,7 +91,13 @@ func AdminTemplatesLaunch(ctx context.Context, s *testing.State) {
 
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+	s.AttachErrorHandlers(
+		func(errMsg string) {
+			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
+		},
+		func(errMsg string) {
+			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_fatal")
+		})
 
 	if _, err := apps.PrimaryBrowser(ctx, tconn); err != nil {
 		s.Fatal("Could not find the primary browser app info: ", err)

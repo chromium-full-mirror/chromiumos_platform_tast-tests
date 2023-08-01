@@ -83,9 +83,15 @@ func DesksTemplatesBasic(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure clamshell mode: ", err)
 	}
 	defer cleanup(cleanupCtx)
-
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	s.AttachErrorHandlers(
+		func(errMsg string) {
+			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
+		},
+		func(errMsg string) {
+			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_fatal")
+		})
+
 	// Close all existing windows.
 	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
 		s.Fatal("Failed to close all windows: ", err)
