@@ -28,7 +28,7 @@ const DeviceTrustFeature = "DeviceTrustConnectorEnabled"
 
 // FakeIdPURL is the URL of the fake IdP, which is hosted and maintained by cbe-device-trust-eng@google.com.
 // It provides and endpoint for testing the Device Trust attestation flow.
-const FakeIdPURL = "https://cbe-integrationtesting-sandbox.uc.r.appspot.com"
+const FakeIdPURL = "https://staging-idp-dot-cbe-integrationtesting-sandbox.uc.r.appspot.com"
 
 // Expected error message for Device Trust attestation flows, where the host is not allowed.
 const errorMessageHostNotAllowed = "Missing X-Device-Trust header in the first request"

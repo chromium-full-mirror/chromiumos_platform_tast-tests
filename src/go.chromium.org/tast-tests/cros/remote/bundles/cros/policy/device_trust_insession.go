@@ -59,7 +59,7 @@ func init() {
 			Name: "host_allowed",
 			Val: userParamInsession{
 				poolID:         tape.DeviceTrustEnabled,
-				expectedIdPURL: "https://cbe-integrationtesting-sandbox.uc.r.appspot.com",
+				expectedIdPURL: "https://staging-idp-dot-cbe-integrationtesting-sandbox.uc.r.appspot.com",
 				loginPossible:  true,
 			},
 		}, {
