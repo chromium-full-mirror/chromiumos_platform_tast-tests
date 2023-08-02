@@ -26,7 +26,12 @@ func init() {
 		Func:         CCAUISmoke,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Smoke test for Chrome Camera App",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org", "shik@chromium.org"},
+		Contacts: []string{
+			"chromeos-camera-eng@google.com",
+			"pihsun@chromium.org",
+			"shik@chromium.org",
+			"cros-exp-wg+testresults@google.com", // for finch
+		},
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Params: []testing.Param{{
@@ -43,13 +48,15 @@ func init() {
 			ExtraAttr: []string{"group:camera-postsubmit", "informational", "group:criticalstaging"},
 			Val:       none,
 		}, {
-			Name:    "fake_vcd_finch_on",
-			Fixture: "ccaLaunchedWithFakeVCDCameraFinchOn",
-			Val:     none,
+			Name:      "fake_vcd_finch_on",
+			Fixture:   "ccaLaunchedWithFakeVCDCameraFinchOn",
+			ExtraAttr: []string{"group:cq-medium"},
+			Val:       none,
 		}, {
-			Name:    "fake_vcd_finch_off",
-			Fixture: "ccaLaunchedWithFakeVCDCameraFinchOff",
-			Val:     none,
+			Name:      "fake_vcd_finch_off",
+			Fixture:   "ccaLaunchedWithFakeVCDCameraFinchOff",
+			ExtraAttr: []string{"group:cq-medium"},
+			Val:       none,
 		}, {
 			Name:    "photo_fake_vcd",
 			Fixture: "ccaLaunchedWithFakeVCDCamera",

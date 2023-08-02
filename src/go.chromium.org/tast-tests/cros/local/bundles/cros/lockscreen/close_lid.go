@@ -27,11 +27,12 @@ func init() {
 			"cros-lurs@google.com",
 			"anastasiian@chromium.org",
 			"chromeos-sw-engprod@google.com",
+			"cros-exp-wg+testresults@google.com", // for finch
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:cq-medium"},
 		Params: []testing.Param{{
 			Name: "finch_on",
 			Val:  "enable",
@@ -97,6 +98,7 @@ func CloseLid(ctx context.Context, s *testing.State) {
 	if err := emitter.EmitInputEvent(ctx, &pmpb.InputEvent{Type: &eventType}); err != nil {
 		s.Fatal("Send LID_CLOSED failed: ", err)
 	}
+	// GoBigSleepLint: sleep 2s for event.
 	testing.Sleep(ctx, 2*time.Second)
 	if _, err := lockscreen.WaitState(ctx, conn, func(st lockscreen.State) bool { return !st.Locked }, goodAuthTimeout); err != nil {
 		s.Fatal("Screen locked unexpectedly: ", err)

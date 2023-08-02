@@ -38,13 +38,15 @@ func init() {
 			"yulunwu@chromium.org",
 			"tbarzic@chromium.org",
 			"chromeos-sw-engprod@google.com",
+			"cros-exp-wg+testresults@google.com", // for finch
 		},
 		// ChromeOS > Software > System UI Surfaces > Shelf
 		BugComponent: "b:1288352",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Name: "clamshell_mode_finch_on",
+			Name:      "clamshell_mode_finch_on",
+			ExtraAttr: []string{"group:cq-medium"},
 			Val: autoHideTestType{
 				tabletMode:       false,
 				underRTL:         false,
@@ -52,7 +54,8 @@ func init() {
 				fieldTrialConfig: "enable",
 			},
 		}, {
-			Name: "clamshell_mode_finch_off",
+			Name:      "clamshell_mode_finch_off",
+			ExtraAttr: []string{"group:cq-medium"},
 			Val: autoHideTestType{
 				tabletMode:       false,
 				underRTL:         false,
