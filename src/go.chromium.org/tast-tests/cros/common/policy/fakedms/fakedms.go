@@ -17,11 +17,14 @@ import (
 	"regexp"
 	"time"
 
+	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
+
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"google.golang.org/grpc"
 )
 
 // LogFile is the name of the log file for FakeDMS.
@@ -32,6 +35,9 @@ const PolicyFile = "policy.json"
 
 // StateFile is the name of the state file for FakeDMS.
 const StateFile = "state.json"
+
+// GRPCUnixSocketURI is the path of the unix socket to communicate with the gRPC server in the FakeDMS.
+const GRPCUnixSocketURI = "fake_dmserver_grpc.sock"
 
 // EnrollmentFakeDMSDir is the directory where FakeDMS stores state during enrollment.
 // Used to share state between the enrolled fixture and the fakeDMSEnrolled fixtures.
@@ -47,14 +53,18 @@ var selectorSanitizeRE = regexp.MustCompile("[^A-Za-z0-9.@-]")
 
 // A FakeDMS struct contains information about a running policy_testserver instance.
 type FakeDMS struct {
-	cmd        *testexec.Cmd // fakedms process
-	URL        string        // fakedms url; needs to be passed to Chrome; set in start()
-	done       chan struct{} // channel that is closed when Wait() completes
-	policyPath string        // where policies are written for server to read
+	cmd              *testexec.Cmd // fakedms process
+	URL              string        // fakedms url; needs to be passed to Chrome; set in start()
+	done             chan struct{} // channel that is closed when Wait() completes
+	policyPath       string        // where policies are written for server to read
+	grpcServerSocket string        // the unix socket to connect the client in tests with the grpc server in fake_dmserver
 
-	persistentPolicies              []policy.Policy            // policies that are always set
-	persistentPublicAccountPolicies map[string][]policy.Policy // public account policies that are always set
-	persistentPolicyUser            *string                    // policyUser that is always set, nil if not used
+	remoteCommandsServiceClient     empb.RemoteCommandsServiceClient // the grpc client for remote commands
+	clientConn                      *grpc.ClientConn                 // the connection to the grpc server
+	internalRemoteCommandID         int64                            // internal incremental id to for remote commands sent to the fake_dmserver.
+	persistentPolicies              []policy.Policy                  // policies that are always set
+	persistentPublicAccountPolicies map[string][]policy.Policy       // public account policies that are always set
+	persistentPolicyUser            *string                          // policyUser that is always set, nil if not used
 	// persistentDisableDomainVerification, when set to true, allows the server to
 	// return a valid signature for any domain in field
 	// policy_response.responses.new_public_key_verification_signature_deprecated;
@@ -81,6 +91,7 @@ func New(ctx context.Context, outDir string) (*FakeDMS, error) {
 	policyPath := filepath.Join(outDir, PolicyFile)
 	logPath := filepath.Join(outDir, LogFile)
 	statePath := filepath.Join(outDir, StateFile)
+	grpcUnixSocketURI := "unix://" + filepath.Join(outDir, GRPCUnixSocketURI)
 
 	fr, fw, err := os.Pipe()
 	if err != nil {
@@ -99,6 +110,7 @@ func New(ctx context.Context, outDir string) (*FakeDMS, error) {
 		fmt.Sprintf("--policy-blob-path=%s", policyPath),
 		fmt.Sprintf("--log-path=%s", logPath),
 		fmt.Sprintf("--client-state-path=%s", statePath),
+		fmt.Sprintf("--grpc-unix-socket-uri=%s", grpcUnixSocketURI),
 		// cmd.ExtraFiles (set below) assigns element i to file descriptor 3+i.
 		// See exec.Cmd for more info.
 		"--startup-pipe=3",
@@ -110,14 +122,25 @@ func New(ctx context.Context, outDir string) (*FakeDMS, error) {
 	cmd.ExtraFiles = []*os.File{fw}
 
 	fdms := &FakeDMS{
-		cmd:        cmd,
-		done:       make(chan struct{}, 1),
-		policyPath: policyPath,
+		cmd:              cmd,
+		done:             make(chan struct{}, 1),
+		policyPath:       policyPath,
+		grpcServerSocket: grpcUnixSocketURI,
 	}
 
 	if err = fdms.start(ctx, fr); err != nil {
 		return nil, err
 	}
+
+	// Create a connection to the gRPC server in the fake_dmserver.
+	conn, err := grpc.Dial(fdms.grpcServerSocket, grpc.WithInsecure())
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't dial the gRPC server in the fake_dmserver")
+	}
+	fdms.clientConn = conn
+	// Create a gRPC remoteCommandsServiceClient to communicate directly with the fake_dmserver.
+	fdms.remoteCommandsServiceClient = empb.NewRemoteCommandsServiceClient(conn)
+	fdms.internalRemoteCommandID = 1
 	return fdms, nil
 }
 
@@ -276,6 +299,7 @@ func (fdms *FakeDMS) kill(ctx context.Context) {
 
 // Stop will stop the FakeDMS and return once the command has exited.
 func (fdms *FakeDMS) Stop(ctx context.Context) {
+	fdms.clientConn.Close()
 	resp, err := http.Get(fdms.URL + "/test/exit")
 	if err == nil {
 		resp.Body.Close()
@@ -295,4 +319,21 @@ func (fdms *FakeDMS) Stop(ctx context.Context) {
 
 	// FakeDMS will not exit on its own.
 	fdms.kill(ctx)
+}
+
+// SendRemoteCommand sends a remote command request to the fake_dmserver.
+func (fdms *FakeDMS) SendRemoteCommand(ctx context.Context, req *empb.SendRemoteCommandRequest) (*empb.SendRemoteCommandResponse, error) {
+	if req.RemoteCommand.CommandId == nil {
+		tmpID := fdms.internalRemoteCommandID
+		req.RemoteCommand.CommandId = &tmpID
+		fdms.internalRemoteCommandID++
+	}
+	return fdms.remoteCommandsServiceClient.SendRemoteCommand(ctx, req)
+}
+
+// WaitRemoteCommandResult waits for the result of the given remote command from the fake_dmserver.
+func (fdms *FakeDMS) WaitRemoteCommandResult(ctx context.Context, commandID *int64) (*empb.WaitRemoteCommandResultResponse, error) {
+	return fdms.remoteCommandsServiceClient.WaitRemoteCommandResult(ctx, &empb.WaitRemoteCommandResultRequest{
+		CommandId: commandID,
+	})
 }

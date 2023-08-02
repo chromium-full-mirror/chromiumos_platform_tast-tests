@@ -225,6 +225,14 @@ func Refresh(ctx context.Context, tconn *chrome.TestConn) error {
 	return tconn.Eval(ctx, `tast.promisify(chrome.autotestPrivate.refreshEnterprisePolicies)()`, nil)
 }
 
+// RefreshRemoteCommands takes a running Chrome API connection and refreshes remote commands.
+func RefreshRemoteCommands(ctx context.Context, tconn *chrome.TestConn) error {
+	ctx, st := timing.Start(ctx, "refresh_remote_commands")
+	defer st.End()
+
+	return tconn.Eval(ctx, `tast.promisify(chrome.autotestPrivate.refreshRemoteCommands)()`, nil)
+}
+
 // SetUpFakePolicyServer creates a FakeDMS that enforces the provided policies.
 func SetUpFakePolicyServer(ctx context.Context, outdir, policyUser string, policies []policy.Policy) (fdms *fakedms.FakeDMS, retErr error) {
 	fdms, err := fakedms.New(ctx, outdir)
