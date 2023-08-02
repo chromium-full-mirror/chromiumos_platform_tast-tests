@@ -30,8 +30,6 @@ const (
 	// be smaller than the one expected.
 	maxStreamWarmUp = 60 * time.Second
 
-	// Max time to wait before measuring CPU usage.
-	cpuStabilization = 10 * time.Second
 	// Time to measure CPU usage.
 	cpuMeasuring = 30 * time.Second
 
@@ -296,7 +294,7 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 	}()
 	go func() {
 		defer wg.Done()
-		cpuErr = graphics.MeasureCPUUsageAndPower(ctx, cpuStabilization, cpuMeasuring, p)
+		cpuErr = graphics.MeasureCPUUsageAndPower(ctx, 0 /*stabilization*/, cpuMeasuring, p)
 	}()
 	go func() {
 		defer wg.Done()
