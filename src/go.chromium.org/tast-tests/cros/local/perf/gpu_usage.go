@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"math"
 	"os"
 	"path"
@@ -119,6 +118,8 @@ const (
 	logStatFileErr   = "Cannot get file stat"
 	logNoLongerExist = "File is no longer existent"
 	logFdNotExist    = "Corresponding FD file does not exist"
+	logFileScan      = "Failed to scan file"
+	logStatProcDir   = "Failed to get stat of process dir"
 
 	// Log patterns for utilization adjustment.
 	logUtilSampleAdjustment = "Adjust utilization for values greater than one"
@@ -520,7 +521,8 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 }
 
 const (
-	procDirPath = "/proc"
+	procDirPath  = "/proc"
+	driDebugPath = "/sys/kernel/debug/dri"
 	// Device number major part for DRM GPU devices. 226 indicates a DRM device.
 	drmMajor uint32 = 226
 )
@@ -626,11 +628,39 @@ func (ds *GPUUsageDataSource) getGPUInfo(ctx context.Context) (map[uint32]*drmUs
 // gpuClientProcesses returns all the processes that use the GPU.
 // A list of gpuInfo for each process will be returned.
 func (ds *GPUUsageDataSource) gpuClientProcesses(ctx context.Context) (map[string][]*gpuInfo, error) {
-	procDir, err := ioutil.ReadDir(procDirPath)
+	// Read the "/sys/kernel/debug/dri/*/clients" file to get the processes
+	// that are using GPU.
+	driDebugDir, err := os.ReadDir(driDebugPath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to read %s directory", procDirPath)
+		return nil, errors.Wrapf(err, "failed to read %s directory", driDebugPath)
 	}
-
+	// A map keyed by the process id with value to be the process name.
+	clients := make(map[string]string)
+	for _, d := range driDebugDir {
+		// Each DRM has its own directory under the driDebugPath.
+		if !d.IsDir() {
+			continue
+		}
+		match, _ := regexp.MatchString(`\d+`, d.Name())
+		if !match {
+			continue
+		}
+		// Read the "clients" file under each DRM's directory.
+		if gpuDriClients(path.Join(driDebugPath, d.Name(), "clients"), clients) != nil {
+			return nil, errors.Wrapf(err, "failed to get dri clients for %s", d.Name())
+		}
+	}
+	// Read the corresponding "proc/<proc id>" directories for further fdinfo
+	// file processing.
+	var procDir []fs.FileInfo
+	for pid := range clients {
+		fi, err := os.Stat(path.Join(procDirPath, pid))
+		if err != nil {
+			addLog(ds.logs, logStatProcDir, &log{1, fmt.Sprintf("%s for %s: %v", logStatProcDir, pid, err)})
+			continue
+		}
+		procDir = append(procDir, fi)
+	}
 	procNum := len(procDir)
 	// Maximum number of goroutines for concurrent processing. The number
 	// balances the snapshot time and potential goroutine overhead.
@@ -708,7 +738,7 @@ func analyzeProc(procs []fs.FileInfo, results chan *procInfo, errs chan error, w
 		pidDirPath := path.Join(procDirPath, pid)
 
 		// Read "stat" file to get the process name.
-		content, err := ioutil.ReadFile(path.Join(pidDirPath, "stat"))
+		content, err := os.ReadFile(path.Join(pidDirPath, "stat"))
 		if err != nil {
 			continue
 		}
@@ -742,7 +772,7 @@ func analyzeProc(procs []fs.FileInfo, results chan *procInfo, errs chan error, w
 			continue
 		}
 		// Get all files under <pid>/fdinfo/.
-		fdinfoDir, err := ioutil.ReadDir(fdinfoDirPath)
+		fdinfoDir, err := os.ReadDir(fdinfoDirPath)
 		if err != nil {
 			errs <- errors.Wrapf(err, "failed to read dir of %s", fdinfoDirPath)
 			return
@@ -771,14 +801,14 @@ func analyzeProc(procs []fs.FileInfo, results chan *procInfo, errs chan error, w
 
 // analyzeFile analyzes the fdinfo file and its corresponding fd file, and get
 // the GPU usage from the fdinfo file.
-func analyzeFile(pidDirPath string, f fs.FileInfo) (*gpuInfo, error) {
+func analyzeFile(pidDirPath string, f fs.DirEntry) (*gpuInfo, error) {
 	result := &gpuInfo{
 		utilization: make(gpuUtilization),
 		memory:      make(gpuMemory),
 		logs:        make(logs),
 	}
 
-	if !f.Mode().IsRegular() {
+	if !f.Type().IsRegular() {
 		return result, nil
 	}
 	// Check corresponding fd file to see if it is a DRM client.
@@ -913,6 +943,11 @@ func gpuFdinfo(result *gpuInfo) error {
 			clientID = clientIDMatches[1]
 		}
 	}
+	if err := scanner.Err(); err != nil {
+		addLog(result.logs, logFileScan,
+			&log{1, fmt.Sprintf("%s %s: %v", logFileScan, path, err)})
+		return nil
+	}
 
 	if clientID == "" {
 		// Found missing client ID in certain models, such as steelix/corsola.
@@ -923,5 +958,41 @@ func gpuFdinfo(result *gpuInfo) error {
 	result.drmClient = clientID
 	result.samplingTime = time.Now()
 
+	return nil
+}
+
+// gpuDriClients reads the DRI clients file to get the DRI client ids and names.
+func gpuDriClients(path string, clients map[string]string) error {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read dri clients file %s", path)
+	}
+	// Example of "clients" file content:
+	//
+	// kohaku-rev6 /sys/kernel/debug/dri/128 # cat clients
+	// command  tgid dev maste a   uid      magic
+	// frecon   523   0   n    y     0          0
+	// chrome  6028   0   y    y  1000          1
+	// chrome  6065 128   n    n  1000          0
+	// chrome  6080 128   n    n  1000          0
+	// ...
+	lines := strings.Split(string(content), "\n")
+	for i, line := range lines {
+		if i != 0 && strings.TrimSpace(line) == "" {
+			// Ignore empty lines.
+			continue
+		}
+		words := strings.Fields(line)
+		if len(words) < 2 {
+			return errors.Errorf("dri clients file %s contains malformed line %s", path, line)
+		}
+		if i == 0 {
+			if words[1] != "tgid" {
+				return errors.Errorf("dri clients file %s doesn't have tgid in column 2", path)
+			}
+			continue
+		}
+		clients[words[1]] = words[0]
+	}
 	return nil
 }
