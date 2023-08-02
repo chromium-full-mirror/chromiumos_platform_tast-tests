@@ -1358,14 +1358,21 @@ func (a *App) EnsureTabletModeEnabled(ctx context.Context, enabled bool) (func(c
 	return cleanupAll, nil
 }
 
+// CheckFocusedElementVisited checks if the focused element is already visited by checking a set.
+func (a *App) CheckFocusedElementVisited(ctx context.Context) (bool, error) {
+	var visited bool
+	if err := a.conn.Eval(ctx, "CCATest.checkFocusedElementVisited()", &visited); err != nil {
+		return false, err
+	}
+	return visited, nil
+}
+
 // ReturnFocusedElementAriaLabel returns the aria-label of the focused element.
 func (a *App) ReturnFocusedElementAriaLabel(ctx context.Context) (string, error) {
 	var arialabel string
-
-	if err := a.conn.Eval(ctx, "document.activeElement.ariaLabel", &arialabel); err != nil {
-		return "", err
+	if err := a.conn.Eval(ctx, "CCATest.getFocusedElementAriaLabel()", &arialabel); err != nil {
+		return arialabel, err
 	}
-
 	return arialabel, nil
 }
 
