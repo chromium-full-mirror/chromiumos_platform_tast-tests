@@ -283,9 +283,14 @@ func (s *RemoteCellularService) QueryInterface(ctx context.Context, _ *empty.Emp
 		return nil, errors.Wrap(err, "failed to get device properties")
 	}
 
+	// TODO: (b/294564933) Remove explicit dependency on interface name.
 	iface, err := props.GetString(shillconst.DevicePropertyCellularPrimaryMultiplexedInterface)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get device interface from properties")
+	if err != nil || iface == "" {
+		testing.ContextLog(ctx, "Failed to get primary multiplexed interface from properties, falling back to default")
+		// If no multiplexed interface, default to regular device interface.
+		if iface, err = props.GetString(shillconst.DevicePropertyInterface); err != nil {
+			return nil, errors.Wrap(err, "failed to get device interface from properties")
+		}
 	}
 
 	return &cellular_pb.QueryInterfaceResponse{

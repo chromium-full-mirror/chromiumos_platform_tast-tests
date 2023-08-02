@@ -150,7 +150,7 @@ func (tf *TestFixture) ConnectToCallbox(ctx context.Context, dutConn *ssh.Conn, 
 			errCh <- errors.Wrap(err, "failed to begin callbox simulation")
 		}
 	}()
-	// TODO(b/229419538): Add functionality to callbox libraries to pull state
+	// GoBigSleepLint (b/229419538): Wait for callbox simulation to start before turning on cellular.
 	testing.Sleep(ctx, time.Second*10)
 	if _, err := tf.RemoteCellularClient.Enable(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to enable DUT cellular")
@@ -167,6 +167,15 @@ func (tf *TestFixture) ConnectToCallbox(ctx context.Context, dutConn *ssh.Conn, 
 	if err := tf.ToggleConnection(ctx); err != nil {
 		return errors.Wrap(err, "failed to toggle cellular connection")
 	}
+
+	// Now that we're connected, update the interface name.
+	resp, err := tf.RemoteCellularClient.QueryInterface(ctx, &empty.Empty{})
+	if err != nil {
+		return errors.Wrap(err, "failed to query cellular interface")
+	}
+
+	testing.ContextLogf(ctx, "Using cellular interface %q", resp.Name)
+	tf.InterfaceName = resp.Name
 
 	// verify cellular connection by curling a website
 	curlArgs := []string{"-m", "5", "--interface", tf.InterfaceName, testURL}
