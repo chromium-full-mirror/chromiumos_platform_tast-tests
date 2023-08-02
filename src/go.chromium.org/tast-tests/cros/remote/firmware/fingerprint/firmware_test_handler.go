@@ -228,15 +228,25 @@ func (t *FirmwareTest) Close(ctx context.Context) error {
 		firstErr = err
 	}
 	if err := ReimageFPMCU(ctx, t.dut, t.servo, firmwareFile.FilePath, t.needsRebootAfterFlashing); err != nil {
-		// ReimageFPMCU reboots the DUT at least once. Sometimes after
-		// reboot, the connection to the DUT is broken. In this case
-		// we should return error now, because further executing will
-		// result in nil pointer dereference, because RPC connection is
-		// not available.
-		if !t.dut.RPCConnected(ctx) {
-			return errors.Wrap(err, "lost connection to the DUT")
-		}
 		firstErr = err
+	}
+
+	// ReimageFPMCU reboots the DUT at least once. Sometimes after a reboot,
+	// the connection to the DUT is broken. In this case we should try to
+	// reconnect to the DUT, because we need to enable daemons.
+	if !t.dut.RPCConnected(ctx) {
+		testing.ContextLog(ctx, "Lost connection to the DUT during ReimageFPMCU. Trying to reconnect")
+		if err := t.dut.Connect(ctx); err != nil {
+			// The story ends here. Remaining part of this function
+			// depends on healthy connection to the DUT. If we are
+			// not able to connect, we will return firstErr or
+			// connecting error if firstErr is nil.
+			if firstErr != nil {
+				testing.ContextLog(ctx, "Failed to connect to DUT: ", err)
+				return firstErr
+			}
+			return errors.Wrap(err, "failed to connect to DUT")
+		}
 	}
 
 	// Get upstart service client instance.
