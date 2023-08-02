@@ -29,8 +29,8 @@ func init() {
 		Desc:         "Servo based both A and B signed AMDFW corruption test. This test requires a USB disk with ChromeOS test image plugged-in. This test corrupts both A and B SIGNED_AMDFW FMAP section. On next reboot, the firmware verification fails and enters recovery mode. This test then checks the success of the recovery boot",
 		Contacts:     []string{"chromeos-faft@google.com", "kramasub@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      50 * time.Minute,
 		Vars:         []string{"firmware.skipFlashUSB"},

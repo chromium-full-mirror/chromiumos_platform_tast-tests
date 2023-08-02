@@ -26,8 +26,8 @@ func init() {
 		Desc:         "Servo based Signed AMDFW section corruption test",
 		Contacts:     []string{"chromeos-faft@google.com", "kramasub@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		Timeout:      20 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		SoftwareDeps: []string{"crossystem", "flashrom", "amd_cpu"},
