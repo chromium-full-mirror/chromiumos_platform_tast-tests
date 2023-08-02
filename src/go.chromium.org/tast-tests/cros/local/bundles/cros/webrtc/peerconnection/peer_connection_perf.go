@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	mediacpu "go.chromium.org/tast-tests/cros/local/media/cpu"
-	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -220,23 +219,6 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to test API")
 	}
-
-	// Set the battery to discharge mode in order to be able to collect system power usage numbers.
-	// TODO(b/292150613): move this setup to before starting LaCrOS so that it doesn't get confused
-	// about multiple windows. Then, uncomment the DarkTheme line.
-	cleanup, err := setup.PowerTest(ctx, tconn, setup.PowerTestOptions{
-		Wifi:       setup.DisableWifiInterfaces,
-		NightLight: setup.DisableNightLight,
-		// DarkTheme:          setup.EnableLightTheme,
-		KeyboardBrightness: setup.SetKbBrightnessToZero,
-	}, setup.NewBatteryDischarge(true /*discharge*/, false /*ignoreErr*/, setup.DefaultDischargeThreshold))
-	if err != nil {
-		// This is not really an error: sometimes powerd is down or lost and setting
-		// up the power test fails. Just don't provide any metric.
-		testing.ContextLog(ctx, "Skipping measurement, something went wrong during test set up: ", err)
-		return nil
-	}
-	defer cleanup(ctx)
 
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for CPU to become idle")
