@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/colorcmp"
@@ -49,6 +50,13 @@ func Toolkit(ctx context.Context, scriptPath, outDir string, conf *ToolkitConfig
 	defer cmd.Kill()
 
 	defer func(ctx context.Context) {
+		revert, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+		if err != nil {
+			testing.ContextLog(ctx, "Failed to ensure clamshell mode")
+			return
+		}
+		defer revert(ctx)
+
 		ui := uiauto.New(tconn)
 		closeButton := nodewith.Name("Close").Onscreen()
 		appInShelf := nodewith.HasClass("ShelfAppButton::AppStatusIndicatorView").Ancestor(nodewith.HasClass("ShelfView"))
