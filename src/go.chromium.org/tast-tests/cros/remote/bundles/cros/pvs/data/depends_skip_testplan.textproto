@@ -1,0 +1,117 @@
+requirements {
+	id: "test-pass-0001-v01"
+	description: "There is 1 pass test"
+	level: "MAY"
+}
+requirements {
+	id: "test-pass-0002-v01"
+	description: "There is 1 pass test"
+	level: "MUST"
+	depends_on: ["test-pass-0001-v01"]
+}
+requirements {
+	id: "test-fail-0001-v01"
+	description: "There is 1 fail test"
+	level: "MAY"
+}
+requirements {
+	id: "test-fail-0002-v01"
+	description: "There is 1 fail test"
+	level: "MUST"
+	depends_on: ["test-fail-0001-v01"]
+}
+requirements {
+	id: "test-skip-0001-v01"
+	description: "There is 1 skip test"
+	level: "MAY"
+}
+requirements {
+	id: "test-passskip-0001-v01"
+	description: "There are 2 tests for this other requirement: pass and skip"
+	level: "MUST"
+	depends_on: ["test-skip-0001-v01"]
+}
+requirements {
+	id: "test-skip-0002-v01"
+	description: "There is 1 skip test"
+	level: "MUST"
+	depends_on: ["test-skip-0001-v01"]
+}
+requirements {
+	id: "test-err-0001-v01"
+	description: "There is 1 err test"
+	level: "MAY"
+}
+requirements {
+	id: "test-err-0002-v01"
+	description: "There is 1 fail test"
+	level: "MUST"
+	depends_on: ["test-err-0001-v01"]
+}
+mappings {
+	requirement_id: "test-passskip-0001-v01"
+	tests {
+          source: "tauto"
+          name: "SHOULD_NOT_RUN_2"
+        }
+	tests {
+          source: "tauto"
+          name: "stub_Skip"
+        }
+}
+mappings {
+	requirement_id: "test-pass-0001-v01"
+	tests {
+          source: "tauto"
+          name: "stub_PassServer"
+        }
+}
+mappings {
+	requirement_id: "test-pass-0002-v01"
+	tests {
+          source: "tauto"
+          name: "stub_PassServer"
+        }
+}
+mappings {
+	requirement_id: "test-fail-0001-v01"
+	tests {
+          source: "tauto"
+          name: "stub_FailServer"
+        }
+}
+mappings {
+	requirement_id: "test-fail-0002-v01"
+	tests {
+          source: "tauto"
+          name: "SHOULD_NOT_RUN"
+        }
+}
+mappings {
+	requirement_id: "test-skip-0001-v01"
+	tests {
+          source: "tauto"
+          name: "stub_Skip"
+        }
+}
+mappings {
+	requirement_id: "test-skip-0002-v01"
+	tests {
+          source: "tauto"
+          name: "stub_Skip"
+        }
+}
+mappings {
+	requirement_id: "test-err-0001-v01"
+	tests {
+          source: "tauto"
+          name: "stub_Error"
+        }
+}
+mappings {
+	requirement_id: "test-err-0002-v01"
+	tests {
+          source: "tauto"
+          name: "SHOULD_NOT_RUN_3"
+        }
+}

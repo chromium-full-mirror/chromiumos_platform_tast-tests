@@ -72,6 +72,8 @@ type PVSRuntimeEnv struct {
 	SimulatedDut        bool
 	SimulatedTestRunner bool
 	SimulatedDutInfo    string
+	SimulatedTestsSkip  string
+	SimulatedTestsError string
 }
 
 // EnsurePass runs the given subtest and fatally errors if it fails.
@@ -128,6 +130,12 @@ func (p PVSRuntimeEnv) generateEnvMap() map[string]string {
 	}
 	if p.SimulatedDutInfo != "" {
 		env["SIMULATED_DUT_INFO"] = p.SimulatedDutInfo
+	}
+	if p.SimulatedTestsSkip != "" {
+		env["SIMULATED_TESTS_SKIP"] = p.SimulatedTestsSkip
+	}
+	if p.SimulatedTestsError != "" {
+		env["SIMULATED_TESTS_ERROR"] = p.SimulatedTestsError
 	}
 	return env
 }
