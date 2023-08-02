@@ -6,7 +6,6 @@ package camera
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
@@ -44,37 +43,40 @@ func CCAUIA11y(ctx context.Context, s *testing.State) {
 	}
 	defer ew.Close(ctx)
 
-	visited := make(map[string]bool)
 	tab := "Tab"
+	tookPhoto := false
 
-	for true {
-		arialabel, err := app.ReturnFocusedElementAriaLabel(ctx)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		visited, err := app.CheckFocusedElementVisited(ctx)
 		if err != nil {
-			s.Error("Failed to get a focused node: ", err)
+			return testing.PollBreak(errors.Wrap(err, "failed to get a focused node"))
 		}
-		if arialabel == "" {
-			s.Error("Focus is now on an empty arialabel element")
+		if visited {
+			return testing.PollBreak(errors.New("traversed all elements, no element with 'Take photo' aria-label found"))
 		}
 
-		if visited[arialabel] {
-			break
+		ariaLabel, err := app.ReturnFocusedElementAriaLabel(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get an ariaLabel of the current focused node"))
 		}
-		visited[arialabel] = true
 
-		// There is a case of speaking "+" as "plus" like below.
-		// expected: Document scanning now available. Search + Left arrow to access.
-		// spoken: Document scanning now available. Search plus Left arrow to access.
-		arialabel = strings.Replace(arialabel, "+", "plus", -1)
-
-		if arialabel == "Take photo" {
+		if ariaLabel == "Take photo" {
 			if err := takePictureByKeyboard(ctx, ew, app); err != nil {
-				s.Fatal("Failed to take a picture: ", err)
+				return testing.PollBreak(errors.Wrap(err, "failed to take a picture"))
 			}
+			tookPhoto = true
 		}
 
 		if err = ew.Accel(ctx, tab); err != nil {
-			s.Fatal("Failed to press tab key")
+			return testing.PollBreak(errors.Wrap(err, "failed to press tab key"))
 		}
+		return nil
+	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: time.Minute}); err != nil {
+		s.Error("Failed to check all the elements: ", err)
+	}
+
+	if !tookPhoto {
+		s.Fatal("The loop finished without taking a photo")
 	}
 }
 
