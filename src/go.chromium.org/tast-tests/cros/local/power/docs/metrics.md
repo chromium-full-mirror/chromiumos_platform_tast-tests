@@ -16,6 +16,8 @@ This document lists the metrics collected in power package through TestMetrics()
 | buffers                     | KiB   | Temporary storage buffers for block devices.                                 |
 | swap                        | KiB   | Currently used swap memory.                                                  |
 | page_tables                 | KiB   | Memory used for the lowest-level page tables.                                |
+| free                        | KiB   | Amount of free memory.                                                       |
+| available                   | KiB   | Amount of available memory without swapping.                                 |
 | **RAPL Power Metrics**      |
 | Name                        | Unit  | Note                                                                         |
 | package-0                   | W     | Energy consumption across the entire SoC.                                    |

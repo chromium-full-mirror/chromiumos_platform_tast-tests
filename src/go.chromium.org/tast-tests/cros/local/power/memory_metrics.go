@@ -19,6 +19,8 @@ type MemoryMetrics struct {
 	memUsed       perf.Metric
 	memPageTables perf.Metric
 	swapUsed      perf.Metric
+	memFree       perf.Metric
+	memAvailable  perf.Metric
 	memSize       int64
 	swapSize      int64
 }
@@ -75,6 +77,20 @@ func (m *MemoryMetrics) Setup(ctx context.Context, prefix, intervalName string) 
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName}
+	// Amount of free memory
+	m.memFree = perf.Metric{
+		Name:      prefix + memoryMetricType + "free",
+		Unit:      memoryMetricTypeUnit,
+		Direction: perf.BiggerIsBetter,
+		Multiple:  true,
+		Interval:  intervalName}
+	// Amount of available memory without swapping
+	m.memAvailable = perf.Metric{
+		Name:      prefix + memoryMetricType + "available",
+		Unit:      memoryMetricTypeUnit,
+		Direction: perf.BiggerIsBetter,
+		Multiple:  true,
+		Interval:  intervalName}
 	return nil
 }
 
@@ -87,7 +103,7 @@ func (m *MemoryMetrics) Start(ctx context.Context) error {
 var requiredMetrics = []string{
 	// Data for RAM metrics.
 	util.MemInfoMemFree, util.MemInfoBuffers, util.MemInfoCached,
-	util.MemInfoSReclaimable, util.MemInfoPageTables,
+	util.MemInfoSReclaimable, util.MemInfoPageTables, util.MemInfoMemAvailable,
 	// Data for swap metrics.
 	util.MemInfoSwapFree}
 
@@ -105,12 +121,15 @@ func (m *MemoryMetrics) Snapshot(ctx context.Context, values *perf.Values) error
 	pageTables := metrics[util.MemInfoPageTables]
 	swapFree := metrics[util.MemInfoSwapFree]
 	swapUsed := m.swapSize - swapFree
+	available := metrics[util.MemInfoMemAvailable]
 
 	values.Append(m.memBuffers, float64(buffers))
 	values.Append(m.memCached, float64(cached))
 	values.Append(m.memUsed, float64(m.memSize-free-cached-buffers))
 	values.Append(m.memPageTables, float64(pageTables))
 	values.Append(m.swapUsed, float64(swapUsed))
+	values.Append(m.memFree, float64(free))
+	values.Append(m.memAvailable, float64(available))
 
 	return nil
 }
