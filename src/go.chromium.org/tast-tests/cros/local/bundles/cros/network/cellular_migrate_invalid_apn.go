@@ -45,7 +45,7 @@ func CellularMigrateInvalidApn(ctx context.Context, s *testing.State) {
 	}
 
 	serviceLastGoodAPN, err := helper.GetCellularLastGoodAPN(ctx)
-	serviceLastGoodAPNInfoApnName := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
+	serviceLastGoodAPNInfoApnName := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]
 	serviceLastGoodAPNInfoApnSource := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnSource]
 
 	cleanupCtx := ctx

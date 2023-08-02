@@ -165,14 +165,15 @@ const (
 	ServicePropertyCellularActivationState   = "Cellular.ActivationState"
 
 	// Keys into the dictionaries exposed as properties for LastAttachAPN and LastGoodAPN
-	DevicePropertyCellularAPNInfoApnName           = "apn"
-	DevicePropertyCellularAPNInfoApnSource         = "apn_source"
-	DevicePropertyCellularAPNInfoApnTypes          = "apn_types"
-	DevicePropertyCellularAPNInfoApnAttach         = "attach"
-	DevicePropertyCellularAPNInfoApnIPType         = "ip_type"
-	DevicePropertyCellularAPNInfoApnAuthentication = "authentication"
-	DevicePropertyCellularAPNInfoApnUsername       = "username"
-	DevicePropertyCellularAPNInfoApnPassword       = "password"
+	DevicePropertyCellularAPNInfoApnName             = "apn"
+	DevicePropertyCellularAPNInfoApnSource           = "apn_source"
+	DevicePropertyCellularAPNInfoApnTypes            = "apn_types"
+	DevicePropertyCellularAPNInfoApnAttach           = "attach"
+	DevicePropertyCellularAPNInfoApnIPType           = "ip_type"
+	DevicePropertyCellularAPNInfoApnAuthentication   = "authentication"
+	DevicePropertyCellularAPNInfoApnUsername         = "username"
+	DevicePropertyCellularAPNInfoApnPassword         = "password"
+	DevicePropertyCellularAPNInfoUserFriendlyApnName = "name"
 
 	// APN related enums
 	DevicePropertyCellularAPNInfoApnIPTypeIPv4         = "ipv4"
