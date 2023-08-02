@@ -8,10 +8,12 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"go.chromium.org/chromiumos/config/go/test/lab/api"
 	"go.chromium.org/tast-tests/cros/common/network/iw"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/log"
@@ -29,9 +31,13 @@ import (
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
-const readyStatusFile = "/tmp/cros/status/ready"
+const (
+	readyStatusFile = "/tmp/cros/status/ready"
+	buildInfoFile   = "/etc/cros/cros_openwrt_image_build_info.json"
+)
 
 // Router controls an OpenWrt router and stores the router state.
 type Router struct {
@@ -93,6 +99,12 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (rou
 	})()
 	ctx, cancel := ctxutil.Shorten(ctx, common.RouterCloseContextDuration)
 	defer cancel()
+
+	testing.ContextLog(ctx, "Collecting router build info")
+	if err := r.logBuildInfo(ctx); err != nil {
+		// Just log the error and move on, as the router still may be usable.
+		testing.ContextLog(ctx, "Failed to log OpenWrt build info file from host: ", err)
+	}
 
 	testing.ContextLog(ctx, "Waiting for router to be ready for testing")
 	if err := r.waitForReady(ctx); err != nil {
@@ -268,6 +280,49 @@ func (r *Router) RouterName() string {
 // fully rebooted.
 func (r *Router) StartReboot(ctx context.Context) error {
 	_ = r.host.CommandContext(ctx, "reboot").Run()
+	return nil
+}
+
+// logBuildInfo retrieves the build info file present on all ChromeOS OpenWrt
+// test routers, saves a copy of it to the logs, and logs the key info.
+func (r *Router) logBuildInfo(ctx context.Context) error {
+	// Get the build info from the router.
+	if err := r.host.CommandContext(ctx, "test", "-f", buildInfoFile).Run(); err != nil {
+		return errors.Wrapf(err, "build info file file %q` not present", buildInfoFile)
+	}
+	buildInfoJSON, err := r.host.CommandContext(ctx, "cat", buildInfoFile).Output()
+	if err != nil {
+		return errors.Wrapf(err, "failed to cat build info file %q", buildInfoFile)
+	}
+
+	// Save a copy of the build info to the tast logs for reference while debugging.
+	if err := common.LogRouterFile(ctx, r, filepath.Base(buildInfoFile), buildInfoJSON); err != nil {
+		return errors.Wrapf(err, "failed to log build info file %q from router %q", buildInfoFile, string(buildInfoJSON))
+	}
+
+	// Parse and log key build info data to the context log for easy reference.
+	buildInfo := &api.CrosOpenWrtImageBuildInfo{}
+	if err := protojson.Unmarshal(buildInfoJSON, buildInfo); err != nil {
+		return errors.Wrap(err, "failed to unmarshal build info file from router")
+	}
+	minimalBuildInfo := &api.CrosOpenWrtImageBuildInfo{
+		StandardBuildConfig: &api.CrosOpenWrtImageBuildInfo_StandardBuildConfig{
+			BuildProfile: buildInfo.GetStandardBuildConfig().GetBuildProfile(),
+			DeviceName:   buildInfo.GetStandardBuildConfig().GetDeviceName(),
+		},
+		ImageUuid:       buildInfo.GetImageUuid(),
+		BuildTime:       buildInfo.GetBuildTime(),
+		CustomImageName: buildInfo.GetCustomImageName(),
+		OsRelease: &api.CrosOpenWrtImageBuildInfo_OSRelease{
+			OpenwrtRelease: buildInfo.GetOsRelease().GetOpenwrtRelease(),
+		},
+		RouterFeatures: buildInfo.GetRouterFeatures(),
+	}
+	minimalBuildInfoJSON, err := protojson.Marshal(minimalBuildInfo)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal minimal build info")
+	}
+	testing.ContextLogf(ctx, "CrosOpenWrtImageBuildInfo: %s", string(minimalBuildInfoJSON))
 	return nil
 }
 

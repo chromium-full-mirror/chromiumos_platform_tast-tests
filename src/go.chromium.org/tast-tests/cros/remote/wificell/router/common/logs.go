@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/log"
+	"go.chromium.org/tast-tests/cros/remote/wificell/fileutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -42,13 +43,13 @@ func StopTailLogCollectors(ctx context.Context, logCollectors map[string]*log.Ta
 }
 
 // CollectRouterFileLogs dumps collected logs from files on the router to
-// "$OutDir/debug/router/filename" with a suffix appended to the filenames and
-// a timestamp prepended to the filename.
+// "$contextDir/routers/$router/$filename" with a suffix appended to the
+// filenames and a timestamp prepended to the filename.
 func CollectRouterFileLogs(ctx context.Context, r support.Router, logCollectors map[string]*log.TailCollector, logsToCollect []string, suffix string) error {
 	ctx, st := timing.Start(ctx, "CollectRouterFileLogs")
 	defer st.End()
 
-	logDir := filepath.Join("debug", r.RouterName())
+	logDir := BuildRouterLogDirName(r)
 
 	var firstErr error
 	for _, src := range logsToCollect {
@@ -72,6 +73,26 @@ func CollectRouterFileLogs(ctx context.Context, r support.Router, logCollectors 
 func CollectRouterLogs(ctx context.Context, r support.Router, logCollector log.Collector, logName string) error {
 	ctx, st := timing.Start(ctx, "CollectRouterLogs")
 	defer st.End()
-	logDir := filepath.Join("debug", r.RouterName())
+	logDir := BuildRouterLogDirName(r)
 	return log.DumpCollectedLogsToFile(ctx, logCollector, logDir, logName)
+}
+
+// BuildRouterLogDirName builds the contextual log dir path meant to store all
+// log files related to the router.
+func BuildRouterLogDirName(r support.Router) string {
+	return filepath.Join("routers", r.RouterName())
+}
+
+// LogRouterFile writes a file to under the contextual log dir for the router.
+func LogRouterFile(ctx context.Context, r support.Router, dstLogFilename string, fileContents []byte) error {
+	contextualOutputDirPath := BuildRouterLogDirName(r)
+	dstFilePath := filepath.Join(contextualOutputDirPath, dstLogFilename)
+	f, err := fileutil.PrepareOutDirFile(ctx, dstFilePath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to prepare output dir file %q", dstFilePath)
+	}
+	if _, err := f.Write(fileContents); err != nil {
+		return errors.Wrapf(err, "failed to write log file to output dir file %q", dstFilePath)
+	}
+	return nil
 }
