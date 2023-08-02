@@ -39,7 +39,7 @@ func init() {
 		// ChromeOS > Software > System Services > Connectivity > Bluetooth
 		BugComponent: "b:1131776",
 		Attr:         []string{"group:bluetooth"},
-		SoftwareDeps: []string{"chrome", "arc"},
+		SoftwareDeps: []string{"chrome", "arc", "android_vm_t"},
 		Params: []testing.Param{{
 			Name:      "bluez",
 			Fixture:   "arcBootedWithPlayStoreAndBluetoothBlueZ",
@@ -124,6 +124,8 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 	}
 
 	turnOnBluetoothObj := d.Object(ui.ResourceID(bluetoothSwitchID), ui.Checked(false))
+	turnOffBluetoothObj := d.Object(ui.ResourceID(bluetoothSwitchID), ui.Checked(true))
+	denyNotificationObj := d.Object(ui.TextMatches("Don’t allow"))
 	// This text is different across architectures, "ALLOW" in ARC and "Allow" in ARCVM.
 	allowBluetoothObj := d.Object(ui.TextMatches("(?i)Allow"))
 	// This text is different across architectures, "DENY" in ARC, "Deny" in ARCVM or "Don’t allow".
@@ -131,6 +133,12 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 
 	// Turning Bluetooth on from ARC++ app.
 	if err := uiauto.Combine("turn Bluetooth on",
+		// Check for potential notification permission popup and deny it as notifications are not needed
+		// for upcoming test.
+		apputil.ClickIfExist(denyNotificationObj, defaultUITimeout),
+		// This switch does not sync with the Bluetooth state on DUT when the app is just launched,
+		// ensuring it is "OFF" to proceed since we have turned the Bluetooth off earlier.
+		apputil.ClickIfExist(turnOffBluetoothObj, defaultUITimeout),
 		apputil.FindAndClick(turnOnBluetoothObj, defaultUITimeout),
 		apputil.FindAndClick(allowBluetoothObj, defaultUITimeout),
 		// Deny location permission as scanning for nearby devices feature is not relevant for upcoming test.
@@ -147,7 +155,6 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 	}
 
 	// Turning Bluetooth off from ARC++ app.
-	turnOffBluetoothObj := d.Object(ui.ResourceID(bluetoothSwitchID), ui.Checked(true))
 	if err := apputil.FindAndClick(turnOffBluetoothObj, defaultUITimeout)(ctx); err != nil {
 		s.Fatal("Failed to click the Bluetooth toggle: ", err)
 	}
