@@ -1,5 +1,6 @@
 {
   "url": "gs://chromiumos-test-assets-public/tast/cros/policy/mitmdump_v9_0_1_20230801.bin",
   "size": 37776632,
-  "sha256sum": "e9ead79502437ef27f38a174b3d117fc307965b8db95973771bb3e26a9096d6c"
+  "sha256sum": "e9ead79502437ef27f38a174b3d117fc307965b8db95973771bb3e26a9096d6c",
+  "executable": true,
 }

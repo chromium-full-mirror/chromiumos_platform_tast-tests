@@ -7,7 +7,6 @@ package policy
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -45,11 +44,6 @@ func NetworkMonitor(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
-	mitmdumpBin := s.DataPath(mitmdumpBinFile)
-	if err := os.Chmod(mitmdumpBin, 0755); err != nil {
-		s.Fatalf("Failed to chmod %v: %v", mitmdumpBin, err)
-	}
 
 	mp := mitmproxy.New()
 	cleanupFunc, certPath, err := mp.SetBinaryPath(s.DataPath(mitmdumpBinFile)).

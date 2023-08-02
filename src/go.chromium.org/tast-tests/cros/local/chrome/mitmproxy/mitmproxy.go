@@ -126,7 +126,6 @@ func (mp *MitmProxy) Start(ctx context.Context) (action.Action, string, error) {
 		// Compress dump file.
 		if mp.compressDump {
 			targetTar := dumpFilePath + ".tar.gz"
-			testing.ContextLog(ctx, "Compressing mitmproxy dump to ", targetTar)
 			if err := testexec.CommandContext(ctx, "tar", "-czf", targetTar, "-C", mp.dumpDir, dumpFileName, "--remove-files").Run(testexec.DumpLogOnError); err != nil {
 				cleanupErrs = append(cleanupErrs, errors.Wrap(err, "failed to compress mitmproxy dump"))
 			}
