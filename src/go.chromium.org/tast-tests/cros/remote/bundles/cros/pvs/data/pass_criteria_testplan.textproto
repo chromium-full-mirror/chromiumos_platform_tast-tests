@@ -1,0 +1,33 @@
+requirements {
+	id: "boot-perf-0008-v01"
+	description: "Filler"
+	level: "MUST"
+}
+requirements {
+	id: "boot-perf-0009-v01"
+	description: "Filler"
+	level: "MUST"
+}
+mappings {
+	requirement_id: "boot-perf-0008-v01"
+	tests {
+          source: "tauto"
+          name: "power_Resume.freeze"
+        }
+	tests {
+          source: "tauto"
+          name: "stub_FailServer"
+        }
+}
+mappings {
+	requirement_id: "boot-perf-0009-v01"
+	tests {
+          source: "tauto"
+          name: "power_Resume.freeze"
+        }
+	tests {
+          source: "tauto"
+          name: "stub_PassServer"
+        }
+}
+

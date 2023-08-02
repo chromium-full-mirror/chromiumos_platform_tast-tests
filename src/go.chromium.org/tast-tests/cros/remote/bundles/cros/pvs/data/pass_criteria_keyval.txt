@@ -1,0 +1,9 @@
+seconds_system_resume_firmware_cpu{perf}=0
+seconds_system_resume_firmware_ec{perf}=0.048329067591112107
+seconds_system_resume_firmware{perf}=0.048329067591112107
+seconds_system_resume_kernel_cpu{perf}=0.0
+seconds_system_resume_kernel_dev{perf}=0.33886700000000003
+seconds_system_resume_kernel{perf}=0.50867299997480586
+seconds_system_resume{perf}=0.55700206756591797
+seconds_system_suspend{perf}=0.24713400000473484
+
