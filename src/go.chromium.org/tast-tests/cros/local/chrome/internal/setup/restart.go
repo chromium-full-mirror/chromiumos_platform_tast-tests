@@ -396,6 +396,11 @@ func clearUserData(ctx context.Context, cfg *config.Config) error {
 
 	const chronosDir = "/home/chronos"
 	const shadowDir = "/home/.shadow"
+	// To support login feature, biod also keeps per-user data in this directory. They're
+	// removed by cryptohome with a dbus call to biod upon user removal, but in tast where
+	// user data isn't cleared using standard cryptohome APIs, we need to delete those files
+	// manually.
+	const biodDir = "/var/lib/biod"
 
 	if !cfg.KeepOwnership() {
 		// This always fails because /home/chronos is a mount point, but all files
@@ -437,6 +442,30 @@ func clearUserData(ctx context.Context, cfg *config.Config) error {
 			if err := testexec.CommandContext(ctx, "bash", "-c", "vgchange -ay && lvremove -ff /dev/*/cryptohome-"+file.Name()[0:8]+"-*").Run(testexec.DumpLogOnError); err != nil {
 				// Ignore errors on failure, it is possible that the device doesn't support LVM or doesn't have any dm-crypt user crpytohomes.
 				testing.ContextLog(ctx, "Failed to remove user logical volumes (this might be expected if the device doesn't support LVM): ", err)
+			}
+		}
+	}
+
+	// Delete user dirs from biod directory.
+	biodFiles, err := os.ReadDir(biodDir)
+	if os.IsNotExist(err) {
+		// Biod directory doesn't exist. Don't need further actions.
+	} else if err != nil {
+		return errors.Wrapf(err, "failed to read directory %q", biodDir)
+	} else {
+		for _, file := range biodFiles {
+			// Should not remove folders other than the user profiles.
+			if !file.IsDir() || !obfuscatedUsernameRegexp.MatchString(file.Name()) {
+				continue
+			}
+			// Only look for chronos file with names matching u-*.
+			chronosName := filepath.Join(chronosDir, "u-"+file.Name())
+			biodName := filepath.Join(biodDir, file.Name())
+			// Remove the biod directory if it does not have a corresponding chronos directory.
+			if _, err := os.Stat(chronosName); err != nil && os.IsNotExist(err) {
+				if err := os.RemoveAll(biodName); err != nil {
+					testing.ContextLogf(ctx, "Failed to remove %q: %v", biodName, err)
+				}
 			}
 		}
 	}

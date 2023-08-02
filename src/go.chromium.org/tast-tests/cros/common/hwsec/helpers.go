@@ -22,6 +22,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	tmpb "chromiumos/system_api/tpm_manager_proto"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
@@ -29,6 +30,8 @@ import (
 
 const ussFlagFile = "/var/lib/cryptohome/uss_enabled"
 const ussDisabledFlagFile = "/var/lib/cryptohome/uss_disabled"
+const fingerprintDecryptFlagFile = "/var/lib/cryptohome/fingerprint_decrypt_enable"
+const fingerprintLoginFlagFile = "/var/lib/biod/force_fp_login"
 
 // CmdHelper provides various helper functions that could be shared across all
 // hwsec integration test base on CmdRunner.
@@ -58,6 +61,11 @@ type FullHelper struct {
 	CmdTPMClearHelper
 	AttestationHelper
 }
+
+// CleanupFunc is the function signature of cleanup functions returned by this package. When
+// a function's return values include a CleanupFunc, it means that it should be run in the
+// cleanup step if the function returns successfully.
+type CleanupFunc func(context.Context) error
 
 // NewCmdHelper creates a new CmdHelper, with r responsible for CmdRunner.
 func NewCmdHelper(r CmdRunner) *CmdHelper {
@@ -445,7 +453,7 @@ func (h *CmdTPMClearHelper) EnsureTPMAndSystemStateAreReset(ctx context.Context)
 
 // EnableUserSecretStash enables the UserSecretStash experiment by removing the
 // disable flag file and creating a flag file that's checked by cryptohomed.
-func (h *CmdTPMClearHelper) EnableUserSecretStash(ctx context.Context) (func(context.Context) error, error) {
+func (h *CmdTPMClearHelper) EnableUserSecretStash(ctx context.Context) (CleanupFunc, error) {
 	if _, err := h.cmdRunner.Run(ctx, "rm", "-f", ussDisabledFlagFile); err != nil {
 		return nil, errors.Wrap(err, "failed to remove the UserSecretStash disable flag file")
 	}
@@ -467,7 +475,7 @@ func (h *CmdTPMClearHelper) EnableUserSecretStash(ctx context.Context) (func(con
 
 // DisableUserSecretStash disables the UserSecretStash experiment by making sure
 // that the disable flag file checked by cryptohomed exists.
-func (h *CmdTPMClearHelper) DisableUserSecretStash(ctx context.Context) (func(context.Context) error, error) {
+func (h *CmdTPMClearHelper) DisableUserSecretStash(ctx context.Context) (CleanupFunc, error) {
 	if _, err := h.cmdRunner.Run(ctx, "rm", "-f", ussFlagFile); err != nil {
 		return nil, errors.Wrap(err, "failed to remove the UserSecretStash flag file")
 	}
@@ -482,6 +490,54 @@ func (h *CmdTPMClearHelper) DisableUserSecretStash(ctx context.Context) (func(co
 	return (func(ctx context.Context) error {
 		if _, err := h.cmdRunner.Run(ctx, "rm", ussDisabledFlagFile); err != nil {
 			return errors.Wrap(err, "failed to remove the UserSecretStash disable flag file")
+		}
+		return nil
+	}), nil
+}
+
+// EnableFingerprintDecrypt enables the fingerprint decrypt feature by creating a flag file
+// that's checked by cryptohomed.
+func (h *CmdTPMClearHelper) EnableFingerprintDecrypt(ctx context.Context) (CleanupFunc, error) {
+	if _, err := h.cmdRunner.RunWithCombinedOutput(ctx, "mkdir", "-p", path.Dir(fingerprintDecryptFlagFile)); err != nil {
+		return nil, errors.Wrap(err, "failed to create the FingerprintDecrypt flag file directory")
+	}
+	if _, err := h.cmdRunner.RunWithCombinedOutput(ctx, "touch", fingerprintDecryptFlagFile); err != nil {
+		return nil, errors.Wrap(err, "failed to write the FingerprintDecrypt flag file")
+	}
+	return (func(ctx context.Context) error {
+		if _, err := h.cmdRunner.Run(ctx, "rm", fingerprintDecryptFlagFile); err != nil {
+			return errors.Wrap(err, "failed to remove the FingerprintDecrypt flag file")
+		}
+		return nil
+	}), nil
+}
+
+// EnableFingerprintLogin enables the fingerprint login service by creating a flag file
+// that's checked by biod.
+func (h *CmdTPMClearHelper) EnableFingerprintLogin(ctx context.Context) (CleanupFunc, error) {
+	if _, err := h.cmdRunner.RunWithCombinedOutput(ctx, "mkdir", "-p", path.Dir(fingerprintLoginFlagFile)); err != nil {
+		return nil, errors.Wrap(err, "failed to create the FingerprintLogin flag file directory")
+	}
+	if _, err := h.cmdRunner.RunWithCombinedOutput(ctx, "touch", fingerprintLoginFlagFile); err != nil {
+		return nil, errors.Wrap(err, "failed to write the FingerprintLogin flag file")
+	}
+	cleanupFlag := func(ctx context.Context) error {
+		if _, err := h.cmdRunner.Run(ctx, "rm", fingerprintLoginFlagFile); err != nil {
+			return errors.Wrap(err, "failed to remove the FingerprintLogin flag file")
+		}
+		return nil
+	}
+	// The fingerprint login feature needs a biod restart to take effect.
+	if err := h.daemonController.Restart(ctx, BiometricsDaemon); err != nil {
+		cleanupFlag(ctx)
+		return nil, errors.Wrap(err, "failed to restart biod")
+	}
+	return (func(ctx context.Context) error {
+		if err := cleanupFlag(ctx); err != nil {
+			return err
+		}
+		if err := h.daemonController.Restart(ctx, BiometricsDaemon); err != nil {
+			return errors.Wrap(err, "failed to restart biod")
 		}
 		return nil
 	}), nil

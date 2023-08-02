@@ -36,11 +36,9 @@ func init() {
 	})
 }
 
-type cleanupFunc func(context.Context) error
-
 type fixtureImpl struct {
-	ussFlagCleanup        cleanupFunc
-	ussDisableFlagCleanup cleanupFunc
+	ussFlagCleanup        hwsec.CleanupFunc
+	ussDisableFlagCleanup hwsec.CleanupFunc
 }
 
 // AuthSessionFixture provides data on how the session has been configured by the fixture.
