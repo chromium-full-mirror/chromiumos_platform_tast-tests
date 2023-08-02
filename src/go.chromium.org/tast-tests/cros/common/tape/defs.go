@@ -12,12 +12,13 @@ package tape
 ///////////////////////////////////////////////////////////////////////////////
 
 type AutoLaunchAppDevicesKioskAppsconfig struct {
-	AppId                       string   `json:"appId"`
-	EnableHealthMonitoring      bool     `json:"enableHealthMonitoring"`
-	ScreenRotation              Rotation `json:"screenRotation"`
-	EnableSystemLogUpload       bool     `json:"enableSystemLogUpload"`
-	EnableAutoLoginBailout      bool     `json:"enableAutoLoginBailout"`
-	PromptForNetworkWhenOffline bool     `json:"promptForNetworkWhenOffline"`
+	AppId                                      string   `json:"appId"`
+	EnableHealthMonitoring                     bool     `json:"enableHealthMonitoring"`
+	ScreenRotation                             Rotation `json:"screenRotation"`
+	EnableSystemLogUpload                      bool     `json:"enableSystemLogUpload"`
+	AckNoticeForEnableSystemLogUploadSetToTrue bool     `json:"ackNoticeForEnableSystemLogUploadSetToTrue"`
+	EnableAutoLoginBailout                     bool     `json:"enableAutoLoginBailout"`
+	PromptForNetworkWhenOffline                bool     `json:"promptForNetworkWhenOffline"`
 }
 
 type Rotation int
@@ -32,7 +33,7 @@ const (
 
 func (p *AutoLaunchAppDevicesKioskAppsconfig) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"appId", "enableHealthMonitoring", "screenRotation", "enableSystemLogUpload", "enableAutoLoginBailout", "promptForNetworkWhenOffline"}
+		updateMask = []string{"appId", "enableHealthMonitoring", "screenRotation", "enableSystemLogUpload", "ackNoticeForEnableSystemLogUploadSetToTrue", "enableAutoLoginBailout", "promptForNetworkWhenOffline"}
 	}
 	return marshalJSON("chrome.devices.kiosk.appsconfig.AutoLaunchApp", p, updateMask, additionalTargetKeys)
 }
@@ -42,12 +43,13 @@ func (p *AutoLaunchAppDevicesKioskAppsconfig) Schema2JSON(updateMask []string, a
 ///////////////////////////////////////////////////////////////////////////////
 
 type AndroidAppsEnabledUsersAppsconfig struct {
-	ArcEnabled bool `json:"arcEnabled"`
+	ArcEnabled                      bool `json:"arcEnabled"`
+	AckNoticeForArcEnabledSetToTrue bool `json:"ackNoticeForArcEnabledSetToTrue"`
 }
 
 func (p *AndroidAppsEnabledUsersAppsconfig) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"arcEnabled"}
+		updateMask = []string{"arcEnabled", "ackNoticeForArcEnabledSetToTrue"}
 	}
 	return marshalJSON("chrome.users.appsconfig.AndroidAppsEnabled", p, updateMask, additionalTargetKeys)
 }
@@ -9198,12 +9200,13 @@ func (p *SystemTerminalSshAllowedUsers) Schema2JSON(updateMask []string, additio
 ///////////////////////////////////////////////////////////////////////////////
 
 type PluginVmAllowedUsers struct {
-	PluginVmAllowed bool `json:"pluginVmAllowed"`
+	PluginVmAllowed                      bool `json:"pluginVmAllowed"`
+	AckNoticeForPluginVmAllowedSetToTrue bool `json:"ackNoticeForPluginVmAllowedSetToTrue"`
 }
 
 func (p *PluginVmAllowedUsers) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"pluginVmAllowed"}
+		updateMask = []string{"pluginVmAllowed", "ackNoticeForPluginVmAllowedSetToTrue"}
 	}
 	return marshalJSON("chrome.users.PluginVmAllowed", p, updateMask, additionalTargetKeys)
 }
@@ -12187,14 +12190,15 @@ func (p *DockMacAddressDevices) Schema2JSON(updateMask []string, additionalTarge
 ///////////////////////////////////////////////////////////////////////////////
 
 type DeviceWilcoDtcDevices struct {
-	DeviceWilcoDtcAllowed       bool         `json:"deviceWilcoDtcAllowed"`
-	DeviceWilcoDtcConfiguration UploadedFile `json:"deviceWilcoDtcConfiguration"`
-	InstallSupportAssistApp     bool         `json:"installSupportAssistApp"`
+	DeviceWilcoDtcAllowed                      bool         `json:"deviceWilcoDtcAllowed"`
+	AckNoticeForDeviceWilcoDtcAllowedSetToTrue bool         `json:"ackNoticeForDeviceWilcoDtcAllowedSetToTrue"`
+	DeviceWilcoDtcConfiguration                UploadedFile `json:"deviceWilcoDtcConfiguration"`
+	InstallSupportAssistApp                    bool         `json:"installSupportAssistApp"`
 }
 
 func (p *DeviceWilcoDtcDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"deviceWilcoDtcAllowed", "deviceWilcoDtcConfiguration", "installSupportAssistApp"}
+		updateMask = []string{"deviceWilcoDtcAllowed", "ackNoticeForDeviceWilcoDtcAllowedSetToTrue", "deviceWilcoDtcConfiguration", "installSupportAssistApp"}
 	}
 	return marshalJSON("chrome.devices.DeviceWilcoDtc", p, updateMask, additionalTargetKeys)
 }
@@ -12415,9 +12419,10 @@ func (p *DeviceKeyboardBacklightColorDevices) Schema2JSON(updateMask []string, a
 ///////////////////////////////////////////////////////////////////////////////
 
 type ImprivataDevices struct {
-	ImprivataIntegrationEnabled     bool                       `json:"imprivataIntegrationEnabled"`
-	ImprivataExtensionConfiguration UploadedFile               `json:"imprivataExtensionConfiguration"`
-	ImprivataVersion                ImprivataPinnedVersionEnum `json:"imprivataVersion"`
+	ImprivataIntegrationEnabled                      bool                       `json:"imprivataIntegrationEnabled"`
+	AckNoticeForImprivataIntegrationEnabledSetToTrue bool                       `json:"ackNoticeForImprivataIntegrationEnabledSetToTrue"`
+	ImprivataExtensionConfiguration                  UploadedFile               `json:"imprivataExtensionConfiguration"`
+	ImprivataVersion                                 ImprivataPinnedVersionEnum `json:"imprivataVersion"`
 }
 
 type ImprivataPinnedVersionEnum int
@@ -12431,7 +12436,7 @@ const (
 
 func (p *ImprivataDevices) Schema2JSON(updateMask []string, additionalTargetKeys interface{}) ([]byte, error) {
 	if len(updateMask) == 0 {
-		updateMask = []string{"imprivataIntegrationEnabled", "imprivataExtensionConfiguration", "imprivataVersion"}
+		updateMask = []string{"imprivataIntegrationEnabled", "ackNoticeForImprivataIntegrationEnabledSetToTrue", "imprivataExtensionConfiguration", "imprivataVersion"}
 	}
 	return marshalJSON("chrome.devices.Imprivata", p, updateMask, additionalTargetKeys)
 }

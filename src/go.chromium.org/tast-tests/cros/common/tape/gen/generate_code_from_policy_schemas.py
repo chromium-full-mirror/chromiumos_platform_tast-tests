@@ -137,7 +137,7 @@ def parse_enum(field, enums):
     enum_str += ')\n\n'
   return enum_str
 
-def parse_values(definition, messages, suffix, duplication_set):
+def parse_values(definition, messages, suffix, notices, duplication_set):
   """Parse the definition of a policy schema for all used types, structs and
   enums.
 
@@ -179,7 +179,8 @@ def parse_values(definition, messages, suffix, duplication_set):
       if first_message:
         types.append(field['name'])
       # Add the field to our struct with a capital letter so it gets exported.
-      struct_str += f'\t{field["name"][:1].upper()}{field["name"][1:]} '
+      field_name = f'{field["name"][:1].upper()}{field["name"][1:]}'
+      struct_str += f'\t{field_name} '
       # If the message has the label LABEL_REPEATED it is an array.
       if field['label'] == 'LABEL_REPEATED':
         struct_str += '[]'
@@ -202,6 +203,14 @@ def parse_values(definition, messages, suffix, duplication_set):
         type_name = TYPES_SCHEMA_TO_GO[field['type']]
       no_check_type = get_no_check_if_needed(field["name"]+'_'+type_name)
       struct_str += f'{type_name} `json:"{field["name"]}"`{no_check_type}\n'
+      # If we have notices add the acknowledge field to the struct and types.
+      if field['name'] in notices:
+        struct_str += (
+            f'\tAckNoticeFor{field_name}SetTo{notices[field["name"]]} bool'
+            f' `json:"ackNoticeFor{field_name}SetTo{notices[field["name"]]}"'
+            f'`{no_check_type}\n'
+        )
+        types.append(f'ackNoticeFor{field_name}SetTo{notices[field["name"]]}')
     first_message = False
     struct_str += '}\n\n'
     additional_structs.append(struct_str)
@@ -231,8 +240,15 @@ def parse_schema(policy_schema, duplication_set):
   for uri_middle_part in uri_middle_parts:
     suffix = suffix + uri_middle_part.capitalize()
 
+  # Get notices that need to be acknowledged.
+  notices = {}
+  if 'notices' in policy_schema:
+    for notice in policy_schema['notices']:
+      if notice.get('acknowledgementRequired', False):
+        notices[notice['field']] = f'{notice["noticeValue"][:1].upper()}{notice["noticeValue"][1:]}'
+
   name = messages[0]['name'] + suffix  # The fist message struct holds the policy itself.
-  types, additional_structs = parse_values(definition, messages, suffix, duplication_set)
+  types, additional_structs = parse_values(definition, messages, suffix, notices, duplication_set)
 
   # Fill the PolicySchema and return it.
   ret = PolicySchema(name)

@@ -348,6 +348,11 @@ type setPolicyRequest struct {
 // for the policy, e.g. for modifying networks the network_id of the network
 // that will be modified has to be provided in the additionalTargetKeys in the
 // form of {network_id: "myNetworkID"}.
+// If the policy contains acknowledgement fields that are named
+// "AckNoticeFor<field_name>SetTo<value>" then setting <field_name> to <value>
+// requires an acknowledgement which is given by setting the corresponding to
+// acknowledgement field to true. The acknowledgement field has also to be
+// added in the updateMask.
 func (c *client) SetPolicy(ctx context.Context, policySchema PolicySchema, updateMask []string, additionalTargetKeys interface{}, requestID string) error {
 	schemaJSONString, err := policySchema.Schema2JSON(updateMask, additionalTargetKeys)
 	if err != nil {
