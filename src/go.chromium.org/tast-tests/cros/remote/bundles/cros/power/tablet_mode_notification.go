@@ -30,9 +30,9 @@ func init() {
 		Contacts:     []string{"chromeos-platform-power@google.com", "timvp@google.com", "cros-fw-engprod@google.com"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome"},
-		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:    []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
-		Timeout: 5 * time.Minute,
+		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec"},
+		Requirements: []string{"sys-fw-0022-v02"},
+		Timeout:      5 * time.Minute,
 		// Restrict boards that don't support any method in the tabletmode package for forcing tabletmode.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel("nautilus", "nautiluslte", "soraka", "pantheon", "nocturne", "kodama")),
 		Params: []testing.Param{{
