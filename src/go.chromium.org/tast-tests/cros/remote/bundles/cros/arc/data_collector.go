@@ -463,8 +463,8 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	// Create temp caches directory before starting generation.
 	tmpCachesDir := param.tmpCachesDir
 	// TODO(b/279554423): Eventually enable this for container-rvc, vm-rvc, pi-arc,
-	// vm-tm devices after initial experiments are conducted on local.
-	useDevCaches := (tmpCachesDir != "" && !param.upload)
+	// devices after initial experiments are conducted on local and vm-tm configs.
+	useDevCaches := (tmpCachesDir != "" && (!param.upload || param.androidPackage == "android-vm-tm"))
 	if useDevCaches {
 		if err := dututils.MkdirRemote(ctx, d, tmpCachesDir); err != nil {
 			s.Fatalf("Failed to create temp cache dir %q:  %v", tmpCachesDir, err)
@@ -625,7 +625,6 @@ func DataCollector(ctx context.Context, s *testing.State) {
 
 		if useDevCaches {
 			testing.ContextLogf(ctx, "Installing GMS core caches into dev directory: %q", tmpCachesDir)
-			// TODO(b/289858912): Find workaround for unsquashfs not available in Uprev.
 			if err := decompressSystemImage(ctx, d, param.vmEnabled, tempDir); err != nil {
 				s.Fatal("Failed to decompress system image: ", err)
 			}
