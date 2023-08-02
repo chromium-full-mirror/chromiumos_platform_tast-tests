@@ -10,6 +10,8 @@ import "go.chromium.org/tast/core/testing/hwdep"
 func SoundCardInitConditions() []hwdep.Condition {
 	return []hwdep.Condition{
 		hwdep.SmartAmp(),
-		hwdep.SkipOnModel("atlas", "nocturne", "volteer2", "helios"),
+		hwdep.SkipOnModel("atlas", "nocturne", "volteer2", "helios",
+			// TODO(b/283089078)
+			"geralt"),
 	}
 }
