@@ -30,7 +30,7 @@ func init() {
 			"akihiroota@chromium.org",      // Test author
 		},
 		BugComponent: "b:1272895",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Params: []testing.Param{{
