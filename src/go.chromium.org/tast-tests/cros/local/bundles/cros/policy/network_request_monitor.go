@@ -28,6 +28,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/useravatar"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/userfeedback"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/wallpapergooglephotos"
+	webrtc "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/webrtclogupload"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -90,8 +91,10 @@ func init() {
 			pci.SearchFlag(&policy.UserAvatarCustomizationSelectorsEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.UserFeedbackAllowed{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.WallpaperGooglePhotosIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.WebRtcEventLogCollectionAllowed{}, pci.VerifiedValue),
+			pci.SearchFlag(&policy.WebRtcTextLogCollectionAllowed{}, pci.VerifiedValue),
 		},
-		Timeout: 6 * time.Minute,
+		Timeout: 8 * time.Minute,
 	})
 }
 
@@ -227,6 +230,17 @@ func optionalServices() []optionalService {
 			trigger:   wallpapergooglephotos.TriggerWallpaperGooglePhotosIntegration,
 			dataFiles: []string{},
 		},
+		{
+			name: "webrtc_event_and_text_log_collection",
+			associatedAnnotations: []string{
+				webrtc.EventLogCollectionHashID,
+				webrtc.TextLogCollectionHashID},
+			policies: []policy.Policy{
+				&policy.WebRtcEventLogCollectionAllowed{Val: false},
+				&policy.WebRtcTextLogCollectionAllowed{Val: false}},
+			trigger:   webrtc.TriggerWebRTCLogUploads,
+			dataFiles: []string{},
+		},
 		// Note: user_avatar_customization should be kept last in this list to avoid
 		// issues with other test cases.
 		{
@@ -359,6 +373,9 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open the browser: ", err)
 	}
 	defer closeBrowser(cleanupCtx)
+
+	// Setup credential for a test bond user to join Meet call.
+	webrtc.SetBondCredentials(s.RequiredVar("ui.bond_credentials"))
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_network_request_monitor")
 

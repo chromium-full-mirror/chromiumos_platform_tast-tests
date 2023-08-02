@@ -2,10 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// Package webrtclogupload contains utility to trigger meet client for tast test.
 package webrtclogupload
 
 import (
 	"context"
+	"net/http/httptest"
 	"regexp"
 	"time"
 
@@ -52,6 +54,15 @@ type AnnotationTestParam struct {
 	Interval           time.Duration
 }
 
+var connSource ash.ConnSource
+var creds string
+
+// SetBondCredentials assigns credentials picked for Meet test bond user
+// to join the meeting.
+func SetBondCredentials(bondCreds string) {
+	creds = bondCreds
+}
+
 // NetLogAnnotationTest starts and stops net export, trigger WebRTC logs and
 // polls for appearance of annotation hashcode in net export log.
 func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome,
@@ -70,7 +81,6 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 	}
 
 	// Setup browser and connSource by type of browser.
-	var cs ash.ConnSource
 	var br *browser.Browser
 	switch runParam.Bt {
 	case browser.TypeLacros:
@@ -80,19 +90,21 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 			return errors.Wrap(err, "failed to launch lacros")
 		}
 		defer l.Close(closeCtx)
-		cs = l
+		connSource = l
 		br = l.Browser()
 	case browser.TypeAsh:
-		cs = cr
+		connSource = cr
 		br = cr.Browser()
 	}
+
+	SetBondCredentials(runParam.Creds)
 
 	// Open the net-export page and start logging.
 	if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
 		return errors.Wrap(err, "failed to start logging")
 	}
 
-	if err := TriggerWebRTCLogUploads(ctx, cr, br, tconn, runParam.Creds, cs); err != nil {
+	if err := TriggerWebRTCLogUploads(ctx, cr, br, nil, tconn, 0); err != nil {
 		return errors.Wrap(err, "failed to launch Meet client")
 	}
 
@@ -133,9 +145,15 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 }
 
 // TriggerWebRTCLogUploads is used to create a Meet client and trigger feedback to create WebRTC logs.
-func TriggerWebRTCLogUploads(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, tconn *chrome.TestConn, creds string, connSource ash.ConnSource) (errr error) {
+func TriggerWebRTCLogUploads(ctx context.Context, cr *chrome.Chrome, _ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, _ int) (errr error) {
 	const meetTimeout = 10 * time.Minute
 	closeCtx := ctx
+
+	// Setup ConnSource so that Chrome can connect to hrTelemetryAPI
+	// for sending commands to Meet client.
+	if connSource == nil {
+		connSource = cr
+	}
 
 	// Ensure that we close the Meet window at the end of the test in case
 	// the test fails.
