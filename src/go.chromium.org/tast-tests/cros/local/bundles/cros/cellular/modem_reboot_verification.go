@@ -32,7 +32,7 @@ func init() {
 
 // ModemRebootVerification checks if the modem can be rebooted using GPIO.
 func ModemRebootVerification(ctx context.Context, s *testing.State) {
-	if err := cellular.RestartModemWithHelper(ctx); err != nil {
+	if _, err := cellular.RestartModemWithHelper(ctx); err != nil {
 		s.Fatal("Failed to reboot modem using GPIO: ", err)
 	}
 }

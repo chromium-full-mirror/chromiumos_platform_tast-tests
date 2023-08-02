@@ -183,6 +183,13 @@ func (fd FixtData) FakeDMS() *fakedms.FakeDMS {
 const uptimeBeforeTest = 2 * time.Minute
 
 func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	// Initialize Starfish before any Modem initialization.
+	sfish, err := starfish.NewStarfish(ctx)
+	if err != nil {
+		s.Fatal("Failed to setup starfish module on supported setup: ", err)
+	}
+	f.sf = sfish
+
 	// Check if the modem is exported by ModemManager before calling NewHelper().
 	modem, err := modemmanager.NewModem(ctx)
 	if err != nil {
@@ -190,7 +197,8 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		if !ModemHelperPathExists() {
 			s.Fatal("Failed to get modem and no ModemHelper: ", err)
 		}
-		if err := RestartModemWithHelper(ctx); err != nil {
+		modem, err = RestartModemWithHelper(ctx)
+		if err != nil {
 			s.Fatal("Failed to restart modem: ", err)
 		}
 	}
@@ -209,23 +217,18 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	f.helper = helper
 
-	if !f.useTestESIM {
-		if err := helper.EnsureDefaultService(ctx); err != nil {
-			s.Fatal("Failed to ensure default service: ", err)
-		}
-	}
-
-	sfish, err := starfish.NewStarfish(ctx)
-	if err != nil {
-		s.Fatal("Failed to setup starfish module on supported setup: ", err)
-	}
 	if sfish != nil {
 		// ResetModem needed to detect SIM.
 		if _, err := helper.ResetModem(ctx); err != nil {
 			s.Log("Failed to reset modem for Starfish: ", err)
 		}
 	}
-	f.sf = sfish
+
+	if !f.useTestESIM {
+		if err := helper.EnsureDefaultService(ctx); err != nil {
+			s.Fatal("Failed to ensure default service: ", err)
+		}
+	}
 
 	var fdms *fakedms.FakeDMS
 	if f.useFakeDMS {
@@ -316,7 +319,8 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	modem, err := modemmanager.NewModem(ctx)
 	if err != nil && ModemHelperPathExists() {
 		testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
-		if err := RestartModemWithHelper(ctx); err != nil {
+		modem, err = RestartModemWithHelper(ctx)
+		if err != nil {
 			if s.TestName() != "cellular.IsModemUp" {
 				s.Fatal("Failed to restart modem (precondition): ", err)
 			}
@@ -472,7 +476,7 @@ func waitForModemToBeExported(ctx context.Context) error {
 	// Wait for modem to be exported by ModemManager.
 	if _, err := modemmanager.NewModem(ctx); err != nil && ModemHelperPathExists() {
 		testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
-		if err := RestartModemWithHelper(ctx); err != nil {
+		if _, err := RestartModemWithHelper(ctx); err != nil {
 			return errors.Wrap(err, "failed to restart modem")
 		}
 	}

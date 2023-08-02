@@ -184,31 +184,32 @@ func GetDlcIDForVariant(ctx context.Context) (string, error) {
 }
 
 // RestartModemWithHelper uses the modemfwd helper to force a modem restart.
-func RestartModemWithHelper(ctx context.Context) error {
+func RestartModemWithHelper(ctx context.Context) (*modemmanager.Modem, error) {
 	helper, err := GetModemFirmwareHelperEntry(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get modem firmware helper")
+		return nil, errors.Wrap(err, "failed to get modem firmware helper")
 	}
 
 	device, err := GetModemFirmwareDevice(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get modem device")
+		return nil, errors.Wrap(err, "failed to get modem device")
 	}
 
 	if err := modemfwd.WaitForDevice(ctx, device.DeviceId); err != nil {
-		return errors.Wrap(err, "failed to wait for modem device")
+		return nil, errors.Wrap(err, "failed to wait for modem device")
 	}
 
 	helperPath := filepath.Join(GetModemHelperPath(), helper.Filename)
 	args := helper.ExtraArgument
 	args = append([]string{"--reboot"}, args...)
 	if err := testexec.CommandContext(ctx, helperPath, args...).Run(); err != nil {
-		return errors.Wrap(err, "failed to restart modem with modemfwd-helper")
+		return nil, errors.Wrap(err, "failed to restart modem with modemfwd-helper")
 	}
 
 	// Wait for MM to export the modem after rebooting
-	if _, err = modemmanager.NewModem(ctx); err != nil {
-		return errors.Wrap(err, "failed to get modem after reboot")
+	modem, err := modemmanager.NewModem(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get modem after reboot")
 	}
-	return nil
+	return modem, nil
 }
