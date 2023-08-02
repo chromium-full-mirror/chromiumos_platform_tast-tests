@@ -238,9 +238,8 @@ func MARSSIDRoam(ctx context.Context, s *testing.State) {
 		if bytes.Equal(roamMAC, connMAC) {
 			return nil
 		}
-		testing.Sleep(ctx, time.Second)
 		return errors.Errorf("current MAC is %s", roamMAC)
-	}, &testing.PollOptions{Timeout: 60 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 60 * time.Second, Interval: time.Second}); err != nil {
 		s.Fatal("Failed change MAC address of WiFi interface: ", err)
 	}
 	s.Log("DUT: roamed")

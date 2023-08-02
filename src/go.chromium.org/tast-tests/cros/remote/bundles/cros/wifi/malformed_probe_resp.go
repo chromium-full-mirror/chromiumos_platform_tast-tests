@@ -158,6 +158,7 @@ func MalformedProbeResp(ctx context.Context, s *testing.State) {
 					received++
 				}
 			}
+			// GoBigSleepLint this sleep is the part of the test design.
 			if err := testing.Sleep(ctx, scanLoopInterval); err != nil {
 				return err
 			}

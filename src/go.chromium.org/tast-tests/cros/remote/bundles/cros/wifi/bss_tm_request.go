@@ -385,6 +385,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 			sendReqAndWaitConnected(roamBSSID, fromBSSID, ap1, ap0, hostapd.BSSTMReqParams{Neighbors: []string{fromBSSID}}, true)
 			if sleepDur := requestParams.ReassocDelay + bssTMReassocBuffer - time.Now().Sub(t); sleepDur > 0 {
 				s.Log("Sleeping for ", sleepDur)
+				// GoBigSleepLint this sleep is the part of the test design.
 				if err := testing.Sleep(ctx, sleepDur); err != nil {
 					s.Fatal("Failed to sleep: ", err)
 				}

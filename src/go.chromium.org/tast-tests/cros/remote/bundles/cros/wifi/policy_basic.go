@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
@@ -54,6 +55,10 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Fixture:      "wificellFixtEnrolled",
 		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.Served),
+			pci.SearchFlag(&policy.OpenNetworkConfiguration{}, pci.Served),
+		},
 		Params: []testing.Param{
 			{
 				// Verify that DUT can connect to a WPA-EAP AP before sign in and still connect to the same WPA-EAP AP after sign in (b/192279295)
@@ -190,7 +195,7 @@ func init() {
 }
 
 /*
-This test verifies if the DUT can connect to specific APs using the enterprise provisioned per-device or per-user policies
+PolicyBasic test verifies if the DUT can connect to specific APs using the enterprise provisioned per-device or per-user policies
 by correctly parsing the Open Network Configuration (ONC).
 
 ONC spec: https://chromium.googlesource.com/chromium/src/+/main/components/onc/docs/onc_spec.md

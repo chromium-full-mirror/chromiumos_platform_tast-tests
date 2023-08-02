@@ -203,7 +203,7 @@ func ChannelScanDwellTime(ctx context.Context, s *testing.State) {
 					s.Error("Timed out waiting for frame sender to finish")
 				}
 			}(cleanupCtx)
-			// Wait a little while for beacons to start actually being transmitted
+			// GoBigSleepLint. Wait a little while for beacons to start actually being transmitted
 			if err := testing.Sleep(ctx, scanStartDelay); err != nil {
 				return nil, nil, errors.Wrap(err, "interrupted while sleeping for frame sender startup")
 			}
