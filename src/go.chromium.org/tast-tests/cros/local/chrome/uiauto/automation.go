@@ -47,6 +47,8 @@ const (
 			}`
 )
 
+const releaseCleanupTime = 20 * time.Millisecond
+
 // Context is the context used when interacting with chrome.automation.
 // Each individual UI interaction is limited by the pollOpts such that it will return an error when the pollOpts timeout.
 type Context struct {
@@ -261,8 +263,14 @@ type NodeInfo struct {
 // Info returns the information for the node found by the input finder.
 func (ac *Context) Info(ctx context.Context, finder *nodewith.Finder) (*NodeInfo, error) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
-	defer cancel()
+	deadline, ok := ctx.Deadline()
+	var cancel context.CancelFunc
+	// Reserve time for cleanup if there is sufficient timeout
+	// or no timeout is set.
+	if !ok || time.Until(deadline) > releaseCleanupTime {
+		ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
+		defer cancel()
+	}
 
 	q, err := ac.createQuery(ctx, finder)
 	if err != nil {
@@ -287,8 +295,14 @@ func (ac *Context) Info(ctx context.Context, finder *nodewith.Finder) (*NodeInfo
 // Note that the returning array might not contain any node.
 func (ac *Context) NodesInfo(ctx context.Context, finder *nodewith.Finder) ([]NodeInfo, error) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
-	defer cancel()
+	deadline, ok := ctx.Deadline()
+	var cancel context.CancelFunc
+	// Reserve time for cleanup if there is sufficient timeout
+	// or no timeout is set.
+	if !ok || time.Until(deadline) > releaseCleanupTime {
+		ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
+		defer cancel()
+	}
 
 	q, err := ac.createQueryForMultipleNodes(ctx, finder)
 	if err != nil {
@@ -328,8 +342,14 @@ func (ac *Context) Matches(ctx context.Context, finder *nodewith.Finder, actual 
 // It will wait until the location is the same for a two iterations of polling.
 func (ac *Context) Location(ctx context.Context, finder *nodewith.Finder) (*coords.Rect, error) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
-	defer cancel()
+	deadline, ok := ctx.Deadline()
+	var cancel context.CancelFunc
+	// Reserve time for cleanup if there is sufficient timeout
+	// or no timeout is set.
+	if !ok || time.Until(deadline) > releaseCleanupTime {
+		ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
+		defer cancel()
+	}
 
 	q, err := ac.createQuery(ctx, finder)
 	if err != nil {
@@ -367,8 +387,14 @@ func (ac *Context) Location(ctx context.Context, finder *nodewith.Finder) (*coor
 // It will not wait for the location to be stable.
 func (ac *Context) ImmediateLocation(ctx context.Context, finder *nodewith.Finder) (*coords.Rect, error) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
-	defer cancel()
+	deadline, ok := ctx.Deadline()
+	var cancel context.CancelFunc
+	// Reserve time for cleanup if there is sufficient timeout
+	// or no timeout is set.
+	if !ok || time.Until(deadline) > releaseCleanupTime {
+		ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
+		defer cancel()
+	}
 
 	q, err := ac.createQuery(ctx, finder)
 	if err != nil {
@@ -515,8 +541,14 @@ func (w *watcher) release(ctx context.Context) {
 func (ac *Context) Select(startNodeFinder *nodewith.Finder, startOffset int, endNodeFinder *nodewith.Finder, endOffset int) Action {
 	return func(ctx context.Context) error {
 		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
-		defer cancel()
+		deadline, ok := ctx.Deadline()
+		var cancel context.CancelFunc
+		// Reserve time for cleanup if there is sufficient timeout
+		// or no timeout is set.
+		if !ok || time.Until(deadline) > releaseCleanupTime {
+			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
+			defer cancel()
+		}
 
 		qStart, err := startNodeFinder.GenerateQuery()
 		if err != nil {
@@ -561,13 +593,24 @@ func (ac *Context) Select(startNodeFinder *nodewith.Finder, startOffset int, end
 	}
 }
 
+func ctxDeadline(ctx context.Context) time.Time {
+	deadline, _ := ctx.Deadline()
+	return deadline
+}
+
 // Exists returns a function that returns nil if a node exists.
 // If any node in the chain is not found, it will return an error.
 func (ac *Context) Exists(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
 		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
-		defer cancel()
+		deadline, ok := ctx.Deadline()
+		var cancel context.CancelFunc
+		// Reserve time for cleanup if there is sufficient timeout
+		// or no timeout is set.
+		if !ok || time.Until(deadline) > releaseCleanupTime {
+			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
+			defer cancel()
+		}
 
 		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
@@ -626,8 +669,14 @@ func (ac *Context) IsNodeFound(ctx context.Context, finder *nodewith.Finder) (bo
 // http://cs/eureka_internal/chromium/src/extensions/renderer/api/automation/automation_internal_custom_bindings.cc?l=995
 func (ac *Context) BoundsForRange(ctx context.Context, finder *nodewith.Finder, startIndex, endIndex int) (*coords.Rect, error) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
-	defer cancel()
+	deadline, ok := ctx.Deadline()
+	var cancel context.CancelFunc
+	// Reserve time for cleanup if there is sufficient timeout
+	// or no timeout is set.
+	if !ok || time.Until(deadline) > releaseCleanupTime {
+		ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
+		defer cancel()
+	}
 
 	if err := ac.WaitForLocation(finder)(ctx); err != nil {
 		return nil, err
@@ -872,8 +921,14 @@ func (ac *Context) EnsureGoneFor(finder *nodewith.Finder, duration time.Duration
 func (ac *Context) Gone(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
 		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
-		defer cancel()
+		deadline, ok := ctx.Deadline()
+		var cancel context.CancelFunc
+		// Reserve time for cleanup if there is sufficient timeout
+		// or no timeout is set.
+		if !ok || time.Until(deadline) > releaseCleanupTime {
+			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
+			defer cancel()
+		}
 
 		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
@@ -1154,8 +1209,14 @@ func (ac *Context) DoDefaultUntil(finder *nodewith.Finder, condition func(contex
 func (ac *Context) FocusAndWait(finder *nodewith.Finder) Action {
 	return ac.WaitForEvent(nodewith.Root(), event.Focus, func(ctx context.Context) error {
 		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
-		defer cancel()
+		deadline, ok := ctx.Deadline()
+		var cancel context.CancelFunc
+		// Reserve time for cleanup if there is sufficient timeout
+		// or no timeout is set.
+		if !ok || time.Until(deadline) > releaseCleanupTime {
+			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
+			defer cancel()
+		}
 
 		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
@@ -1225,8 +1286,14 @@ func Sleep(d time.Duration) Action {
 func (ac *Context) MakeVisible(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
 		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
-		defer cancel()
+		deadline, ok := ctx.Deadline()
+		var cancel context.CancelFunc
+		// Reserve time for cleanup if there is sufficient timeout
+		// or no timeout is set.
+		if !ok || time.Until(deadline) > releaseCleanupTime {
+			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
+			defer cancel()
+		}
 
 		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
@@ -1321,8 +1388,14 @@ func (ac *Context) CheckRestriction(finder *nodewith.Finder, restriction restric
 func (ac *Context) DoDefault(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
 		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
-		defer cancel()
+		deadline, ok := ctx.Deadline()
+		var cancel context.CancelFunc
+		// Reserve time for cleanup if there is sufficient timeout
+		// or no timeout is set.
+		if !ok || time.Until(deadline) > releaseCleanupTime {
+			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
+			defer cancel()
+		}
 
 		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
@@ -1350,8 +1423,14 @@ func (ac *Context) DoDefault(finder *nodewith.Finder) Action {
 func (ac *Context) ResetScrollOffset(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
 		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 100*time.Millisecond)
-		defer cancel()
+		deadline, ok := ctx.Deadline()
+		var cancel context.CancelFunc
+		// Reserve time for cleanup if there is sufficient timeout
+		// or no timeout is set.
+		if !ok || time.Until(deadline) > releaseCleanupTime {
+			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
+			defer cancel()
+		}
 
 		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
