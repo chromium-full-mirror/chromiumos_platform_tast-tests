@@ -62,7 +62,10 @@ type activeServices struct {
 // NewRouter prepares initial test AP state (e.g., initializing wiphy/wdev).
 // ctx is the deadline for the step and daemonCtx is the lifetime for background
 // daemons.
-func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Router, error) {
+func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (router *Router, err error) {
+	ctx, st := timing.Start(ctx, "initialize")
+	defer st.End()
+
 	testing.ContextLogf(ctx, "Creating new OpenWrt router controller for router %q", name)
 	r := &Router{
 		host:           host,
@@ -77,80 +80,74 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Ro
 	}
 	r.im = common.NewRouterIfaceManager(r, r.iwr)
 
-	shortCtx, cancel := ctxutil.Shorten(ctx, common.RouterCloseContextDuration)
+	// Always call Close on init failure and ensure there is enough time to do so.
+	fullCtx := ctx
+	defer (func() {
+		if err == nil {
+			return
+		}
+		testing.ContextLog(fullCtx, "Router initialization failed, closing before returning error")
+		if closeErr := r.Close(fullCtx); closeErr != nil {
+			testing.ContextLogf(fullCtx, "Failed to close after initialization error %v due to %v", err, closeErr)
+		}
+	})()
+	ctx, cancel := ctxutil.Shorten(ctx, common.RouterCloseContextDuration)
 	defer cancel()
 
-	ctx, st := timing.Start(shortCtx, "initialize")
-	defer st.End()
-
+	testing.ContextLog(ctx, "Waiting for router to be ready for testing")
 	if err := r.waitForReady(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to wait for router to be ready")
-	}
-
-	closeBeforeErrorReturn := func(cause error) {
-		if err := r.Close(shortCtx); err != nil {
-			testing.ContextLogf(shortCtx, "Failed to close after initialization error %v due to %v", cause, err)
-		}
+		testing.ContextLog(ctx, "Failed to wait for router to say it is ready: ", err)
+		testing.ContextLog(ctx, "Assuming router is ready and continuing with setup")
 	}
 
 	// Start collecting system logs and save logs already in the buffer to a file.
 	// The daemonCtx is used for the log collector as it should live longer than
 	// the current stage when we are in precondition.
-	var err error
+	testing.ContextLog(ctx, "Starting router log collection")
 	if r.syslogdCollector, err = log.StartLogreadCollector(daemonCtx, host); err != nil {
-		err = errors.Wrap(err, "failed to start syslogd log collector")
-		closeBeforeErrorReturn(err)
-		return nil, err
+		return nil, errors.Wrap(err, "failed to start syslogd log collector")
 	}
 	if err := common.CollectRouterLogs(daemonCtx, r, r.syslogdCollector, "pre_setup"); err != nil {
-		err = errors.Wrap(err, "failed to collect syslogd logs before setup actions")
-		closeBeforeErrorReturn(err)
-		return nil, err
+		return nil, errors.Wrap(err, "failed to collect syslogd logs before setup actions")
 	}
 
 	// Set up working dir.
-	if err := r.host.CommandContext(shortCtx, "rm", "-rf", r.workDir()).Run(); err != nil {
-		err = errors.Wrapf(err, "failed to remove workdir %q", r.workDir())
-		closeBeforeErrorReturn(err)
-		return nil, err
+	testing.ContextLog(ctx, "Preparing working dir on router")
+	if err := r.host.CommandContext(ctx, "rm", "-rf", r.workDir()).Run(); err != nil {
+		return nil, errors.Wrapf(err, "failed to remove workdir %q", r.workDir())
 	}
-	if err := r.host.CommandContext(shortCtx, "mkdir", "-p", r.workDir()).Run(); err != nil {
-		err = errors.Wrapf(err, "failed to create workdir %q", r.workDir())
-		closeBeforeErrorReturn(err)
-		return nil, err
+	if err := r.host.CommandContext(ctx, "mkdir", "-p", r.workDir()).Run(); err != nil {
+		return nil, errors.Wrapf(err, "failed to create workdir %q", r.workDir())
 	}
 
-	if err := r.killHostapdDHCP(shortCtx); err != nil {
-		err = errors.Wrap(err, "failed to kill hostapd and DHCP")
-		closeBeforeErrorReturn(err)
-		return nil, err
+	testing.ContextLog(ctx, "Killing hostapd and dhcp processes")
+	if err := r.killHostapdDHCP(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to kill hostapd and DHCP")
 	}
 
-	if err := r.setupWifiPhys(shortCtx); err != nil {
-		closeBeforeErrorReturn(err)
+	testing.ContextLog(ctx, "Setting up wifi phys")
+	if err := r.setupWifiPhys(ctx); err != nil {
 		return nil, err
 	}
 
 	// Clean up any lingering bridge and veth ifaces.
+	testing.ContextLog(ctx, "Removing all bridge and veth interfaces")
 	if err := common.RemoveAllBridgeIfaces(ctx, r.ipr); err != nil {
-		closeBeforeErrorReturn(err)
 		return nil, err
 	}
 	if err := common.RemoveAllVethIfaces(ctx, r.ipr); err != nil {
-		closeBeforeErrorReturn(err)
 		return nil, err
 	}
 
-	if err := r.iwr.SetRegulatoryDomain(shortCtx, "US"); err != nil {
-		closeBeforeErrorReturn(err)
+	testing.ContextLog(ctx, "Setting regulatory domain to US")
+	if err := r.iwr.SetRegulatoryDomain(ctx, "US"); err != nil {
 		return nil, errors.Wrap(err, "failed to set regulatory domain to US")
 	}
 
 	// Save logs collected from setup actions.
+	testing.ContextLog(ctx, "Collecting logs from setup")
 	if err := common.CollectRouterLogs(daemonCtx, r, r.syslogdCollector, "post_setup"); err != nil {
-		err = errors.Wrap(err, "failed to collect syslogd logs after setup actions")
-		closeBeforeErrorReturn(err)
-		return nil, err
+		return nil, errors.Wrap(err, "failed to collect syslogd logs after setup actions")
 	}
 
 	testing.ContextLogf(ctx, "Created new OpenWrt router controller for router %q", r.name)
@@ -170,20 +167,24 @@ func (r *Router) Close(ctx context.Context) error {
 	var firstErr error
 
 	// Collect closing log to facilitate debugging.
-	if err := common.CollectRouterLogs(ctx, r, r.syslogdCollector, "pre_close"); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to collect syslogd logs before close actions"))
+	if r.syslogdCollector != nil {
+		if err := common.CollectRouterLogs(ctx, r, r.syslogdCollector, "pre_close"); err != nil {
+			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to collect syslogd logs before close actions"))
+		}
 	}
 
 	// Remove the interfaces that we created.
-	for _, nd := range r.im.Available {
-		if err := r.im.Remove(ctx, nd.IfName); err != nil {
-			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to remove interfaces"))
+	if r.im != nil {
+		for _, nd := range r.im.Available {
+			if err := r.im.Remove(ctx, nd.IfName); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to remove interfaces"))
+			}
 		}
-	}
-	for _, nd := range r.im.Busy {
-		testing.ContextLogf(ctx, "iface %s not yet freed", nd.IfName)
-		if err := r.im.Remove(ctx, nd.IfName); err != nil {
-			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to remove interfaces"))
+		for _, nd := range r.im.Busy {
+			testing.ContextLogf(ctx, "iface %s not yet freed", nd.IfName)
+			if err := r.im.Remove(ctx, nd.IfName); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to remove interfaces"))
+			}
 		}
 	}
 
@@ -193,11 +194,13 @@ func (r *Router) Close(ctx context.Context) error {
 	}
 
 	// Clean up any lingering bridge and veth ifaces.
-	if err := common.RemoveAllBridgeIfaces(ctx, r.ipr); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, err)
-	}
-	if err := common.RemoveAllVethIfaces(ctx, r.ipr); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, err)
+	if r.ipr != nil {
+		if err := common.RemoveAllBridgeIfaces(ctx, r.ipr); err != nil {
+			utils.CollectFirstErr(ctx, &firstErr, err)
+		}
+		if err := common.RemoveAllVethIfaces(ctx, r.ipr); err != nil {
+			utils.CollectFirstErr(ctx, &firstErr, err)
+		}
 	}
 
 	// Clean working dir.
@@ -206,11 +209,13 @@ func (r *Router) Close(ctx context.Context) error {
 	}
 
 	// Collect closing log to facilitate debugging.
-	if err := common.CollectRouterLogs(ctx, r, r.syslogdCollector, "post_close"); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to collect syslogd logs after close actions"))
-	}
-	if err := r.syslogdCollector.Close(); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop syslogd log collector"))
+	if r.syslogdCollector != nil {
+		if err := common.CollectRouterLogs(ctx, r, r.syslogdCollector, "post_close"); err != nil {
+			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to collect syslogd logs after close actions"))
+		}
+		if err := r.syslogdCollector.Close(); err != nil {
+			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop syslogd log collector"))
+		}
 	}
 
 	testing.ContextLogf(ctx, "Closed OpenWrt router controller for router %q", r.name)
@@ -274,14 +279,14 @@ func (r *Router) waitForReady(ctx context.Context) error {
 	defer t.End()
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := r.host.CommandContext(ctx, "test", "-f", readyStatusFile).Run(); err != nil {
-			return errors.Wrapf(err, "ready status file %q` not present", readyStatusFile)
+			return errors.Wrapf(err, "ready status file %q not present", readyStatusFile)
 		}
 		return nil
 	}, &testing.PollOptions{
 		Interval: 1 * time.Second,
 		Timeout:  30 * time.Second,
 	}); err != nil {
-		return err
+		return errors.Wrap(err, "failed to wait for ready file on router")
 	}
 	return nil
 }
