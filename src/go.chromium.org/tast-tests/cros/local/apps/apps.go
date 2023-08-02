@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -556,6 +557,10 @@ func InstallPWAForURL(ctx context.Context, tconn *chrome.TestConn, br *browser.B
 		return errors.Wrapf(err, "failed to open URL %q", pwaURL)
 	}
 	defer conn.Close()
+
+	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+		return errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", pwaURL)
+	}
 
 	ui := uiauto.New(tconn).WithInterval(2 * time.Second)
 	installIcon := nodewith.ClassName("PwaInstallView").Role(role.Button)

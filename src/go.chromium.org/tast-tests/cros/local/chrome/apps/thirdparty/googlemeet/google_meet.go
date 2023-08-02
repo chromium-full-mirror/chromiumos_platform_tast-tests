@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/loginstatus"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 
 	"go.chromium.org/tast/core/errors"
@@ -443,6 +444,14 @@ func InstallPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) err
 		return errors.Wrap(err, "failed to check whether Meet PWA has already been installed")
 	} else if alreadyInstalled {
 		return nil
+	}
+
+	login, err := loginstatus.GetLoginStatus(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get login status")
+	}
+	if !login.IsLoggedIn {
+		return errors.New("user is not logged in")
 	}
 
 	// Install Meet PWA.
