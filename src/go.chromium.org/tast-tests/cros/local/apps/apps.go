@@ -570,7 +570,8 @@ func InstallPWAForURL(ctx context.Context, tconn *chrome.TestConn, br *browser.B
 		// The installability checks occur asynchronously for PWAs.
 		// Wait for the Install button to appear in the Chrome omnibox before installing.
 		ui.WithTimeout(timeout).WaitUntilExists(installIcon),
-		ui.LeftClick(installIcon),
+		ui.LeftClickUntil(installIcon,
+			ui.WithTimeout(5*time.Second).WaitUntilExists(installButton)),
 		ui.LeftClick(installButton))(ctx)
 }
 
