@@ -24,11 +24,11 @@ func init() {
 		Desc: "Check battery temperature, voltage, and current readings",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"js@semihalf.com",
+			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_ec"},
+		Requirements: []string{"sys-fw-0022-v02"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 	})
