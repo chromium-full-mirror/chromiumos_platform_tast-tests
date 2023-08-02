@@ -49,7 +49,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Fixture:           "lacrosWithArcBooted",
 		}},
-		Timeout: 5 * time.Minute,
+		Timeout: 10 * time.Minute,
 	})
 }
 
@@ -103,8 +103,8 @@ func GamepadPerf(ctx context.Context, s *testing.State) {
 	}
 	defer act.Stop(ctx, tconn)
 
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		s.Fatal("Failed to wait until CPU idle: ", err)
+	if _, err := cpu.WaitUntilStabilized(ctx, cpu.IdleCoolDownConfig()); err != nil {
+		s.Fatal("Failed to wait until CPU is stabilized: ", err)
 	}
 
 	s.Log("Injecting one button key event each time")

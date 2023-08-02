@@ -49,7 +49,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Fixture:           "lacrosWithArcBooted",
 		}},
-		Timeout: 5 * time.Minute,
+		Timeout: 10 * time.Minute,
 	})
 }
 
@@ -96,8 +96,8 @@ func KeyboardPerf(ctx context.Context, s *testing.State) {
 	}
 	defer act.Stop(ctx, tconn)
 
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		s.Fatal("Failed to wait until CPU idle: ", err)
+	if _, err := cpu.WaitUntilStabilized(ctx, cpu.IdleCoolDownConfig()); err != nil {
+		s.Fatal("Failed to wait until CPU is stabilized: ", err)
 	}
 
 	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {

@@ -49,7 +49,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Fixture:           "lacrosWithArcBooted",
 		}},
-		Timeout: 5 * time.Minute,
+		Timeout: 10 * time.Minute,
 	})
 }
 
@@ -100,8 +100,8 @@ func MousePerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not maximize test app: ", err)
 	}
 
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		s.Fatal("Failed to wait until CPU idle: ", err)
+	if _, err := cpu.WaitUntilStabilized(ctx, cpu.IdleCoolDownConfig()); err != nil {
+		s.Fatal("Failed to wait until CPU is stabilized: ", err)
 	}
 
 	// Check latency for mouse ACTION_MOVE events which are generated when moving mouse after left-button pressing down and holding.
