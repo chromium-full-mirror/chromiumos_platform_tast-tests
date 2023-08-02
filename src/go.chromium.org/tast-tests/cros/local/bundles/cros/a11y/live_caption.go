@@ -105,7 +105,7 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := uiauto.Combine("Play the audio",
 			ui.WaitUntilExists(audioPlayButton),
-			ui.LeftClick(audioPlayButton),
+			ui.DoDefault(audioPlayButton),
 			ui.WaitUntilExists(audioPauseButton),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to play the audio")
