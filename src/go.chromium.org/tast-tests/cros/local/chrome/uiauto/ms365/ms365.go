@@ -22,11 +22,19 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
 	officePWAInstallURL = "https://www.microsoft365.com/?from=Homescreen"
 )
+
+func log(msg string) uiauto.Action {
+	return func(ctx context.Context) error {
+		testing.ContextLog(ctx, msg)
+		return nil
+	}
+}
 
 // Ms365 represents an instance of the Microsoft 365 app UI.
 type Ms365 struct {
@@ -126,6 +134,7 @@ func (ms *Ms365) LoginToMicrosoft365(setupCompleteDialogFinder *nodewith.Finder,
 		ms.InputUserName(ms.UserName),
 		func(ctx context.Context) error {
 			if skipPassword {
+				log("Skipping password")(ctx)
 				return nil
 			}
 			return uiauto.Combine("Input password and stay signed in",
@@ -188,4 +197,18 @@ func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome, browserType 
 		return errors.Wrap(err, "failed to install Office PWA")
 	}
 	return ash.WaitForChromeAppInstalled(ctx, ms.tconn, apps.Microsoft365.ID, time.Minute)
+}
+
+// ClearBrowserCookiesForOffice will clear all browser cookies for the Office website.
+func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome) error {
+	log("Clearing cookies for Office website")(ctx)
+	br := cr.Browser()
+	conn, err := br.NewTab(ctx, officePWAInstallURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open office website")
+	}
+	defer conn.Close()
+	defer conn.CloseTarget(ctx)
+
+	return conn.ClearSiteCookies(ctx, "www.microsoft365.com")
 }

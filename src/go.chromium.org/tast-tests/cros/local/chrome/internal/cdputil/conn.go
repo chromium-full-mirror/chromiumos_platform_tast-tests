@@ -17,6 +17,7 @@ import (
 	"github.com/mafredri/cdp/protocol/page"
 	"github.com/mafredri/cdp/protocol/profiler"
 	"github.com/mafredri/cdp/protocol/runtime"
+	"github.com/mafredri/cdp/protocol/storage"
 	"github.com/mafredri/cdp/protocol/target"
 	"github.com/mafredri/cdp/rpcc"
 
@@ -387,4 +388,9 @@ func (c *Conn) GetMediaPropertiesChangedObserver(ctx context.Context) (observer 
 // EnableBypassCSP enable bypassing CSP when initializing the CSP.
 func (c *Conn) EnableBypassCSP(ctx context.Context) error {
 	return c.cl.Page.SetBypassCSP(ctx, page.NewSetBypassCSPArgs(true))
+}
+
+// ClearSiteData clears site data for specific origin.
+func (c *Conn) ClearSiteData(ctx context.Context, args *storage.ClearDataForOriginArgs) error {
+	return c.cl.Storage.ClearDataForOrigin(ctx, args)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/mafredri/cdp/protocol/input"
 	"github.com/mafredri/cdp/protocol/media"
 	"github.com/mafredri/cdp/protocol/profiler"
+	"github.com/mafredri/cdp/protocol/storage"
 	"github.com/mafredri/cdp/protocol/target"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/cdputil"
@@ -327,4 +328,9 @@ func PrivateReleaseAllObjects(ctx context.Context, tconn *TestConn) error {
 // EnableBypassCSP enable bypassing CSP.
 func (c *Conn) EnableBypassCSP(ctx context.Context) error {
 	return c.co.EnableBypassCSP(ctx)
+}
+
+// ClearSiteCookies clears site data for specific origin.
+func (c *Conn) ClearSiteCookies(ctx context.Context, origin string) error {
+	return c.co.ClearSiteData(ctx, &storage.ClearDataForOriginArgs{Origin: origin, StorageTypes: "cookies"})
 }
