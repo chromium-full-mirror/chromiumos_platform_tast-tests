@@ -66,7 +66,7 @@ func init() {
 			wificell.BluetoothServiceName,
 		},
 		Vars:         []string{"router"},
-		Fixture:      "wificellFixt",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassPerf, tdreq.WiFiProcPassPerfBeforeUpdates},
 		Params: []testing.Param{
 			{

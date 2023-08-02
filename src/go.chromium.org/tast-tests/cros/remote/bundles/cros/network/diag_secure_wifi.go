@@ -66,7 +66,7 @@ func init() {
 		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.network.NetDiagService"},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
-		Fixture:      "wificellFixt",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Params: []testing.Param{{
 			Name: "none",
 			Val: secureWiFiParams{

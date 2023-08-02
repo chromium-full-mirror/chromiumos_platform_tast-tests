@@ -37,7 +37,7 @@ func init() {
 		},
 		HardwareDeps: hwdep.D(hwdep.WifiSAP(), hwdep.NoCellular()),
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "wificellFixt",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Params:       []testing.Param{},
 	})
 }

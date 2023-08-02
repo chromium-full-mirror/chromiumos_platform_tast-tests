@@ -33,7 +33,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
-		Fixture:      "wificellFixtCompanionDut",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT),
 		Timeout:      time.Minute + 8*sapOnOffRounds*20*time.Second, // Default: 18 minutes, typically test runs in half that time.
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		SoftwareDeps: []string{"wpa3_sae"},

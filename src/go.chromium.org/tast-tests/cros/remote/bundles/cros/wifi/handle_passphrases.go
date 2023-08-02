@@ -133,7 +133,7 @@ func init() {
 				},
 			},
 		},
-		Fixture: "wificellFixt",
+		Fixture: wificell.FixtureID(wificell.TFFeaturesNone),
 		Timeout: 6 * time.Minute,
 	})
 }

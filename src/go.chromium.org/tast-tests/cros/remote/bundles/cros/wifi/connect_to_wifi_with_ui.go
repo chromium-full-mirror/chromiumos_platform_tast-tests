@@ -64,7 +64,7 @@ func init() {
 			wificell.ShillServiceName,
 		},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "wificellFixtWithCapture",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesCapture),
 		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		Params: []testing.Param{{
 			Name: "open_network_using_quick_settings",

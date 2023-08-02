@@ -53,7 +53,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.policy.PolicyService"},
 		Timeout:      10 * time.Minute,
-		Fixture:      "wificellFixtEnrolled",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesEnroll),
 		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.Served),

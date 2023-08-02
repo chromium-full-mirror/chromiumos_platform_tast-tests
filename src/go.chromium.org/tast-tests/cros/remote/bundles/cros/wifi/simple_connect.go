@@ -62,7 +62,7 @@ func init() {
 			{
 				// Verifies that DUT can connect to an open 802.11a network on channels 48, 64.
 				Name:    "80211a",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211a), ap.Channel(48)},
 				}, {
@@ -72,7 +72,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11b network on channels 1, 6, 11.
 				Name:    "80211b",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211b), ap.Channel(1)},
 				}, {
@@ -84,7 +84,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11g network on channels 1, 6, 11.
 				Name:    "80211g",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 				}, {
@@ -96,7 +96,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11n network on 2.4GHz channels 1, 6, 11 with a channel width of 20MHz.
 				Name:    "80211n24ht20",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
 				}, {
@@ -108,7 +108,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11n network on 2.4GHz channel 6 with a channel width of 40MHz.
 				Name:    "80211n24ht40",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(6), ap.HTCaps(ap.HTCapHT40)},
 				}},
@@ -116,7 +116,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11n network on 5GHz channel 48 with a channel width of 20MHz.
 				Name:    "80211n5ht20",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20)},
 				}},
@@ -125,7 +125,7 @@ func init() {
 				// Verifies that DUT can connect to an open 802.11n network on 5GHz channel 48
 				// (40MHz channel with the second 20MHz chunk of the 40MHz channel on the channel below the center channel).
 				Name:    "80211n5ht40",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40Minus)},
 				}},
@@ -133,7 +133,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11n network on 5 GHz channel with short guard intervals enabled (both 20/40 Mhz).
 				Name:      "80211nsgi",
-				Fixture:   "wificellFixtWithCapture",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_cq"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20, ap.HTCapSGI20)},
@@ -144,7 +144,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11ac network on channel 60 with a channel width of 20MHz.
 				Name:    "80211acvht20",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211acPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT20), ap.SpectrumManagement(),
@@ -155,7 +155,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11ac network on channel 48 with a channel width of 40MHz.
 				Name:    "80211acvht40",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40),
@@ -166,7 +166,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11ac network on 5GHz channel 36 with center channel of 42 and channel width of 80MHz.
 				Name:    "80211acvht80mixed",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
@@ -178,7 +178,7 @@ func init() {
 				// Verifies that DUT can connect to an open 802.11ac network on channel 157 with center channel of 155 and channel width of 80MHz.
 				// The router is forced to use 80 MHz wide rates only.
 				Name:    "80211acvht80pure",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211acPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus),
@@ -189,7 +189,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11ax network on channel 60 with a channel width of 20MHz.
 				Name:      "80211axhe20",
-				Fixture:   "wificellFixtWithCapture",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
@@ -200,7 +200,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11ax network on channel 60 with a channel width of 40MHz.
 				Name:      "80211axhe40",
-				Fixture:   "wificellFixtWithCapture",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
@@ -211,7 +211,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11ax network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz.
 				Name:      "80211axhe80mixed",
-				Fixture:   "wificellFixtWithCapture",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
@@ -223,7 +223,7 @@ func init() {
 				// Verifies that DUT can connect to an open 802.11ax network on channel 157 with center channel of 155 and channel width of 80MHz.
 				// The router is forced to use 80 MHz wide rates only.
 				Name:      "80211axhe80pure",
-				Fixture:   "wificellFixtWithCapture",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
@@ -234,14 +234,14 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a hidden network on 2.4GHz channel.
 				Name:    "hidden24g",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(6), ap.Hidden()},
 				}},
 			}, {
 				// Verifies that DUT can connect to a hidden network on 5GHz channels.
 				Name:    "hidden5ht20",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.Hidden()},
 				}, {
@@ -252,7 +252,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a WEP network with both open and shared system authentication and 40-bit pre-shared keys.
 				Name:    "wep40",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac:       wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
@@ -291,7 +291,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a WEP network with both open and shared system authentication and 104-bit pre-shared keys.
 				Name:    "wep104",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac:       wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
@@ -330,7 +330,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a hidden WEP network with open/shared system authentication and 40/104-bit pre-shared keys.
 				Name:    "wephidden",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
 					secConfFac:       wep.NewConfigFactory(wep40KeysHidden(), wep.AuthAlgs(wep.AuthAlgoOpen)),
@@ -353,7 +353,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for pure WPA with TKIP.
 				Name:    "wpatkip",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: wpa.NewConfigFactory(
@@ -365,7 +365,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for pure WPA with AES based CCMP.
 				Name:    "wpaccmp",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: wpa.NewConfigFactory(
@@ -377,7 +377,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for pure WPA with both AES based CCMP and TKIP.
 				Name:      "wpamulti",
-				Fixture:   "wificellFixtWithCapture",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_cq"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
@@ -390,7 +390,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for WPA2 (aka RSN) with TKIP. Some AP still uses TKIP in WPA2.
 				Name:    "wpa2tkip",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: wpa.NewConfigFactory(
@@ -404,7 +404,7 @@ func init() {
 				// Verifies that DUT can connect to an AP broadcasting a WPA2 network using AES based CCMP.
 				// In addition, the client must also support 802.11w protected management frames.
 				Name:      "wpa2pmf",
-				Fixture:   "wificellFixtWithCapture",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_cq"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFRequired)},
@@ -420,7 +420,7 @@ func init() {
 				// In addition, the client must also support 802.11w protected management frames.
 				// And the client uses WPA-PSK-SHA256 for key management suite
 				Name:    "wpa2pmfsha256",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory(
@@ -441,7 +441,7 @@ func init() {
 				// Verifies that DUT can connect to an AP broadcasting a WPA2 network using AES based CCMP.
 				// In addition, the client may also negotiate use of 802.11w protected management frames.
 				Name:    "wpa2pmfoptional",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFOptional)},
 					secConfFac: wpa.NewConfigFactory(
@@ -454,7 +454,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for WPA2 (aka RSN) and encrypted under AES.
 				Name:    "wpa2",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: wpa.NewConfigFactory(
@@ -467,7 +467,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for both WPA and WPA2 with TKIP/AES supported for WPA and AES supported for WPA2.
 				Name:    "wpamixed",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: wpa.NewConfigFactory(
@@ -479,7 +479,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an AP in WPA2/WPA3 mixed mode. WiFi alliance suggests PMF in this mode.
 				Name:    "wpa3mixed",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
@@ -496,7 +496,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an AP in WPA3-SAE ("pure") mode. WiFi alliance requires PMF in this mode.
 				Name:    "wpa3",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				// Not all WiFi chips support SAE. We enable the feature as a Software dependency for now, but eventually
 				// this will require a hardware dependency (crbug.com/1070299).
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
@@ -516,7 +516,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected 802.11ac network supporting for WPA.
 				Name:    "wpavht80",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
@@ -531,7 +531,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network whose WPA passphrase can be pure unicode, mixed unicode and ASCII, and all the punctuations.
 				Name:    "wpaoddpassphrase",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: wpa.NewConfigFactory(
@@ -578,7 +578,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a hidden network supporting for WPA with TKIP, WPA with TKIP/AES, WPA2 with AES, and mixed WPA with TKIP/AES and WPA2 with AES.
 				Name:    "wpahidden",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
 					secConfFac: wpa.NewConfigFactory(
@@ -611,7 +611,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a WPA network using a raw PMK value instead of an ASCII passphrase.
 				Name:    "raw_pmk",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: wpa.NewConfigFactory(
@@ -626,7 +626,7 @@ func init() {
 				// DFS (dynamic frequency selection) channels are channels that may be unavailable if radar interference is detected.
 				// See: https://en.wikipedia.org/wiki/Dynamic_frequency_selection, https://en.wikipedia.org/wiki/List_of_WLAN_channels
 				Name:      "dfs",
-				Fixture:   "wificellFixtWithCapture",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_cq"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211nMixed), ap.Channel(120), ap.HTCaps(ap.HTCapHT40), ap.SpectrumManagement()},
@@ -636,7 +636,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a networks with the longest and shortest SSID.
 				Name:      "ssid_limits",
-				Fixture:   "wificellFixtWithCapture",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_cq"},
 				Val: []simpleConnectTestcase{{
 					apOpts: wifiutil.CommonAPOptions(ap.SSID("a")),
@@ -646,7 +646,7 @@ func init() {
 			}, {
 				// This test case verifies that the DUT accepts ascii and non-ascii type characters as the SSID.
 				Name:    "non_ascii_ssid",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					// TODO(crbug.com/1082582): shill don't allow leading 0x00 now, so let's append it in the
 					// end to keep the coverage.
@@ -680,7 +680,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for dynamic WEP encryption.
 				Name:    "8021xwep",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: dynamicwep.NewConfigFactory(
@@ -701,7 +701,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for WPA-EAP encryption.
 				Name:    "8021xwpa",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: wpaeap.NewConfigFactory(
@@ -761,7 +761,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an WPA3-Enterprise-transition AP
 				Name:    "8021xwpa3mixed",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFOptional)},
 					secConfFac: wpaeap.NewConfigFactory(
@@ -776,7 +776,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an WPA3-Enterprise-only AP
 				Name:    "8021xwpa3",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpaeap.NewConfigFactory(
@@ -793,7 +793,7 @@ func init() {
 				// We do these tests for only one inner authentication protocol because we
 				// presume that supplicant reuses this code between inner authentication types.
 				Name:    "8021xpeap_fail",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					// Failure due to bad password.
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
@@ -846,7 +846,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for PEAP authentication with tunneled MSCHAPV2.
 				Name:    "8021xpeap_mschapv2",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: tunneled1x.NewConfigFactory(
@@ -920,7 +920,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for PEAP authentication with tunneled MD5.
 				Name:    "8021xpeap_md5",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: tunneled1x.NewConfigFactory(
@@ -994,7 +994,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for PEAP authentication with tunneled GTC.
 				Name:    "8021xpeap_gtc",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: tunneled1x.NewConfigFactory(
@@ -1070,7 +1070,7 @@ func init() {
 				// We do these tests for only one inner authentication protocol because we
 				// presume that supplicant reuses this code between inner authentication types.
 				Name:    "8021xttls_fail",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					// Failure due to bad password.
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
@@ -1123,7 +1123,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for TTLS authentication with tunneled MSCHAPV2.
 				Name:    "8021xttls_mschapv2",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: tunneled1x.NewConfigFactory(
@@ -1197,7 +1197,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for TTLS authentication with tunneled MD5.
 				Name:    "8021xttls_md5",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: tunneled1x.NewConfigFactory(
@@ -1271,7 +1271,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for TTLS authentication with tunneled GTC.
 				Name:    "8021xttls_gtc",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: tunneled1x.NewConfigFactory(
@@ -1345,7 +1345,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for TTLS authentication with tunneled TTLSMSCHAPV2.
 				Name:    "8021xttls_ttlsmschapv2",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: tunneled1x.NewConfigFactory(
@@ -1419,7 +1419,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for TTLS authentication with tunneled TTLSMSCHAP.
 				Name:    "8021xttls_ttlsmschap",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: tunneled1x.NewConfigFactory(
@@ -1493,7 +1493,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for TTLS authentication with tunneled TTLSPAP.
 				Name:    "8021xttls_ttlspap",
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac: tunneled1x.NewConfigFactory(
@@ -1567,7 +1567,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11n network on 5 GHz channel and records power measurements.
 				Name:      "powern",
-				Fixture:   "wificellFixtWithPower",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesPower),
 				ExtraAttr: []string{"wificell_unstable"},
 				Val: []simpleConnectTestcase{{
 					apOpts:  []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20)},
@@ -1576,7 +1576,7 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to an open 802.11ac network on channel 60 with a channel width of 20MHz and records power measurements.
 				Name:      "powerac",
-				Fixture:   "wificellFixtWithPower",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesPower),
 				ExtraAttr: []string{"wificell_unstable"},
 				Val: []simpleConnectTestcase{{
 					apOpts:  []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40)},

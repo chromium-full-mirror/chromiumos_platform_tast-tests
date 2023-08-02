@@ -54,7 +54,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("bruce", "sona", "syndra")),
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      certsUsableAndPersistVars(),
-		Fixture:      "wificellFixt",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Params: []testing.Param{
 			{
 				Name: "suspend",

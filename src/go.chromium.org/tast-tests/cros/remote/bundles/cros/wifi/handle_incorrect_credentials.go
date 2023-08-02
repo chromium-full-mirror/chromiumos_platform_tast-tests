@@ -81,7 +81,7 @@ func init() {
 			wifiutil.FaillogServiceName,
 		),
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "wificellFixt",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{
 			{

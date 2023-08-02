@@ -28,7 +28,7 @@ func init() {
 		// TODO(b/187362093): Add a SoftwareDep for wake_on_wifi.
 		Attr:         []string{"group:wificell", "wificell_suspend", "wificell_unstable"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      "wificellFixt",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Requirements: []string{tdreq.WiFiPwrTimingWoW},
 	})
 }

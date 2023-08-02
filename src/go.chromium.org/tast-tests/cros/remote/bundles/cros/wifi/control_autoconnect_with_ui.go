@@ -43,7 +43,7 @@ func init() {
 			wifiutil.FaillogServiceName,
 		},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "wificellFixt",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Params: []testing.Param{
 			{
 				Name: "cycle_wifi",

@@ -30,7 +30,7 @@ func init() {
 		// See previous investigation in b/185378075.
 		Attr:        []string{"group:wificell"},
 		ServiceDeps: []string{wificell.ShillServiceName},
-		Fixture:     "wificellFixtWithCapture",
+		Fixture:     wificell.FixtureID(wificell.TFFeaturesCapture),
 	})
 }
 

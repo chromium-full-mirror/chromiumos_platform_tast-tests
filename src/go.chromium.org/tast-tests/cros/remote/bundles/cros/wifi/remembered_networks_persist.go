@@ -54,7 +54,7 @@ func init() {
 			"tast.cros.wifi.WifiService",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "wificellFixt",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Params: []testing.Param{
 			{
 				Name: "suspend",

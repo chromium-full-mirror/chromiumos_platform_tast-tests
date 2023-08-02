@@ -52,7 +52,7 @@ func simpleConnectDocPref(text string) []string {
 }
 
 const simpleConnectCommonSecApOpts = "ap.Mode(ap.Mode80211g), ap.Channel(1)"
-const defaultFixture string = "wificellFixtWithCapture"
+const defaultFixture string = `wificell.FixtureID(wificell.TFFeaturesCapture)`
 
 var dfsChannels = []int{
 	52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144,
@@ -872,9 +872,10 @@ func simpleConnectTunneled1x() []simpleConnectParams {
 }
 
 func simpleConnectPower() []simpleConnectParams {
+	const powerFixture string = `wificell.FixtureID(wificell.TFFeaturesPower)`
 	return []simpleConnectParams{{
 		Name:      "powern",
-		Fixture:   "wificellFixtWithPower",
+		Fixture:   powerFixture,
 		Doc:       simpleConnectDocPref("an open 802.11n network on 5 GHz channel and records power measurements."),
 		ExtraAttr: []string{"wificell_unstable"},
 		Val: []simpleConnectParamsVal{
@@ -885,7 +886,7 @@ func simpleConnectPower() []simpleConnectParams {
 		},
 	}, {
 		Name:      "powerac",
-		Fixture:   "wificellFixtWithPower",
+		Fixture:   powerFixture,
 		Doc:       simpleConnectDocPref("an open 802.11ac network on channel 60 with a channel width of 20MHz and records power measurements."),
 		ExtraAttr: []string{"wificell_unstable"},
 		Val: []simpleConnectParamsVal{
@@ -928,7 +929,7 @@ func TestSimpleConnect(t *testing.T) {
 	{{ end }}
 	Name: {{ .Name | fmt }},
 	{{ if .Fixture }}
-	Fixture: {{ .Fixture | fmt }},
+	Fixture: {{ .Fixture }},
 	{{ end }}
 	{{ if .ExtraAttr }}
 	ExtraAttr: {{ .ExtraAttr | fmt }},

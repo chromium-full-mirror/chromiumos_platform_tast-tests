@@ -27,7 +27,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_cq"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      "wificellFixtWithCapture",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesCapture),
 		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }

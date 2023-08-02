@@ -37,7 +37,7 @@ func init() {
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		// TODO(b/187362093): Extend the platforms when WoWLAN is known to be good on them.
 		HardwareDeps: hwdep.D(hwdep.Platform("volteer"), hwdep.ChromeEC()),
-		Fixture:      "wificellFixt",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Params: []testing.Param{
 			{
 				Name: "disconnect_after_suspend_diff_ap",

@@ -38,7 +38,7 @@ func init() {
 		Attr:         []string{"group:wificell", "wificell_func"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		SoftwareDeps: []string{"wpa3_sae"},
-		Fixture:      "wificellFixtWithCapture",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesCapture),
 		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportPMF, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		Params: []testing.Param{
 			{

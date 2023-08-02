@@ -41,7 +41,7 @@ func init() {
 			"tast.cros.browser.ChromeService",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "wificellFixt",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 	})
 }
 

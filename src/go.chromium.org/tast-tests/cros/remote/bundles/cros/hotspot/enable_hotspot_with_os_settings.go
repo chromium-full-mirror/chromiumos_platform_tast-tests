@@ -54,7 +54,7 @@ func init() {
 		},
 		HardwareDeps: hwdep.D(hwdep.WifiSAP(), hwdep.Cellular(), hwdep.Model("crota")),
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "wificellFixtCompanionDutWithCellular",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesCellular),
 		Timeout:      7 * time.Minute,
 		Params: []testing.Param{
 			{

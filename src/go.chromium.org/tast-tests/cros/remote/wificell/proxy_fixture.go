@@ -52,7 +52,7 @@ func init() {
 			ShillServiceName,
 		},
 		Vars:   []string{"ui.signinProfileTestExtensionManifestKey", "router", "pcap", "routertype", "pcaptype"},
-		Parent: "wificellFixt",
+		Parent: FixtureID(TFFeaturesNone),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: ProxyFixtBootToOOBEScreen,
@@ -71,7 +71,7 @@ func init() {
 			ShillServiceName,
 		},
 		Vars:   []string{"ui.signinProfileTestExtensionManifestKey", "router", "pcap", "routertype", "pcaptype"},
-		Parent: "wificellFixt",
+		Parent: FixtureID(TFFeaturesNone),
 	})
 }
 

@@ -83,7 +83,7 @@ func init() {
 				Timeout: 5 * handleAndSanitizeWifiSSIDTimeout,
 			},
 		},
-		Fixture: "wificellFixt",
+		Fixture: wificell.FixtureID(wificell.TFFeaturesNone),
 	})
 }
 

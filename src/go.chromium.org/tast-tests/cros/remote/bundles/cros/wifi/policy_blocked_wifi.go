@@ -111,7 +111,7 @@ func init() {
 			"tast.cros.wifi.WifiService",
 		),
 		Timeout:      10 * time.Minute,
-		Fixture:      "wificellFixtEnrolled",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesEnroll),
 		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		Params: []testing.Param{
 			{

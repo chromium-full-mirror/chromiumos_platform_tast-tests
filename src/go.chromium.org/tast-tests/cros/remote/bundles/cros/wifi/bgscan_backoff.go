@@ -39,7 +39,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      "wificellFixtWithCapture",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesCapture),
 		Timeout:      6 * time.Minute, // This test has long ping time, assign a longer timeout.
 		// Skip on Marvell on 8997 platforms because of test failure post security fixes b/187853331
 		// Test failure is due to increased RTT time during Background scan backoff transition.

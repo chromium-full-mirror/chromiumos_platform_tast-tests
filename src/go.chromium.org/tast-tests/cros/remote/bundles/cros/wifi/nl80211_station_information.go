@@ -39,7 +39,7 @@ func init() {
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		// Marvell chips don't support all the attributes
 		HardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
-		Fixture:      "wificellFixt",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Timeout:      2 * time.Minute,
 		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})

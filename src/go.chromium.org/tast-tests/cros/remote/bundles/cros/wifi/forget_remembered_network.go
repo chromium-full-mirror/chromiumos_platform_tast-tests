@@ -44,7 +44,7 @@ func init() {
 			"tast.cros.wifi.WifiService",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "wificellFixt",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Timeout:      7 * time.Minute,
 	})
 }

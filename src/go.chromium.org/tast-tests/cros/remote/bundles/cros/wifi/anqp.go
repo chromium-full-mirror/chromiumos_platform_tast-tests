@@ -68,7 +68,7 @@ func init() {
 		BugComponent: "b:156085",
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      "wificellFixt",
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Timeout:      10 * time.Minute,
 		Requirements: []string{tdreq.WiFiGenSupportPasspoint},
 		Params: []testing.Param{

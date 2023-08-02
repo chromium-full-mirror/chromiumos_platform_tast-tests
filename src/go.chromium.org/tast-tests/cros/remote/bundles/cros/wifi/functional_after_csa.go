@@ -36,13 +36,13 @@ func init() {
 			{
 				Name:    "client",
 				Val:     true,
-				Fixture: "wificellFixt",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesNone),
 			}, {
 				Name: "router",
 				Val:  false,
 				// TODO(b/197414763): Adding pcap to investigate the failure
 				// of disconnecting due to "CLASS3_FRAME_FROM_NONASSOC_STA".
-				Fixture: "wificellFixtWithCapture",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 			},
 		},
 	})

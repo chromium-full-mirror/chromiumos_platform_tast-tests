@@ -141,7 +141,7 @@ func (enum TFFeatures) String() string {
 	}
 	ret := []string{"wificellFixt"}
 	if enum&TFFeaturesCapture != 0 {
-		ret = append(ret, "WithCapture")
+		ret = append(ret, "Capture")
 		// Punch out the bit to check for weird values later.
 		enum ^= TFFeaturesCapture
 	}
@@ -166,11 +166,11 @@ func (enum TFFeatures) String() string {
 		enum ^= TFFeaturesCompanionDUT
 	}
 	if enum&TFFeaturesPower != 0 {
-		ret = append(ret, "WithPower")
+		ret = append(ret, "Power")
 		enum ^= TFFeaturesPower
 	}
 	if enum&TFFeaturesCellular != 0 {
-		ret = append(ret, "WithCellular")
+		ret = append(ret, "Cellular")
 		enum ^= TFFeaturesCellular
 	}
 	// Catch weird cases. Like when somebody extends enum, but forgets to extend this.
@@ -178,7 +178,7 @@ func (enum TFFeatures) String() string {
 		panic(fmt.Sprintf("Invalid TFFeatures enum, residual bits :%d", enum))
 	}
 
-	return strings.Join(ret, "")
+	return strings.Join(ret, "And")
 }
 
 // FixtureID is a convenience function to be used in the test registration.
