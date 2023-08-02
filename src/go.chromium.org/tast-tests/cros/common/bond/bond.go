@@ -237,6 +237,7 @@ type addBotsOptions struct {
 	sendVP9         bool
 	audio           bool
 	audioFilePath   string
+	video           bool
 }
 
 // AddBotsOption customizes the request of AddBods.
@@ -274,6 +275,13 @@ func WithVP9(allow, send bool) AddBotsOption {
 	}
 }
 
+// WithoutVideo disable bot video
+func WithoutVideo() AddBotsOption {
+	return func(opts *addBotsOptions) {
+		opts.video = false
+	}
+}
+
 // AddBots add a number of bots to the specified conference room with the
 // duration. On success, it also returns the list of bot IDs and the number
 // of bots that failed to join.
@@ -297,6 +305,7 @@ func (c *Client) AddBots(ctx context.Context, meetingCode string, numBots int, t
 		sendVP9:         true,
 		audio:           false,
 		audioFilePath:   "what_color_is_cheese_32bit_48k_stereo.raw",
+		video:           true,
 	}
 	for _, opt := range opts {
 		opt(&options)
@@ -317,7 +326,7 @@ func (c *Client) AddBots(ctx context.Context, meetingCode string, numBots int, t
 			"audio_file_path":  options.audioFilePath,
 			"mute_audio":       !options.audio,
 			"video_fps":        options.sendFPS,
-			"mute_video":       false,
+			"mute_video":       !options.video,
 			"requested_layout": options.requestedLayout,
 		},
 		"backend_options": map[string]string{
