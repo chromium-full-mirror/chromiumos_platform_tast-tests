@@ -144,19 +144,10 @@ func CxxCrash(ctx context.Context, s *testing.State) {
 		s.Log("Checking that temporary dump files are deleted")
 		// The time to wait for removal of temporary files. Typically they are removed in a few seconds.
 		const pollingTimeout = 10 * time.Second
-		err = testing.Poll(ctx, func(c context.Context) error {
-			// On ARCVM virtio-blk /data enabled devices, we mount and unmount the disk
-			// image on every iteration of testing.Poll to ensure that the Android-side
-			// changes are reflected on the host side.
-			cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, cr.NormalizedUser())
-			if err != nil {
-				return testing.PollBreak(errors.Wrap(err, "failed to mount Android /data virtio-blk disk image on host"))
-			}
-			defer cleanupFunc(cleanupCtx)
-
+		if err := arc.PollWithReadOnlyAndroidData(ctx, cr.NormalizedUser(), func(c context.Context) error {
 			files, err := ioutil.ReadDir(temporaryCrashDir)
 			if err != nil {
-				return testing.PollBreak(err)
+				return arc.PollBreakIfNotEUCLEANOnVirtioBlkData(ctx, err)
 			}
 
 			if len(files) != 0 {
@@ -167,8 +158,7 @@ func CxxCrash(ctx context.Context, s *testing.State) {
 				return errors.Errorf("temporary files found: %s", strings.Join(filePaths, ", "))
 			}
 			return nil
-		}, &testing.PollOptions{Timeout: pollingTimeout})
-		if err != nil {
+		}, &testing.PollOptions{Timeout: pollingTimeout}); err != nil {
 			s.Fatal("Temporary files are not deleted: ", err)
 		}
 	}

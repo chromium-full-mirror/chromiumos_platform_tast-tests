@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/cpu"
-	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -78,64 +77,41 @@ func getPlayStorePid(ctx context.Context, a *arc.ARC) (uint, error) {
 	return uint(pid), nil
 }
 
-// readFinskyPrefs reads content of Finsky shared prefs file.
-func readFinskyPrefs(ctx context.Context, user string) ([]byte, error) {
-	const finskyPrefsPath = "/data/data/com.android.vending/shared_prefs/finsky.xml"
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
-	defer cancel()
-
-	// Cryptohome dir for the current user.
-	rootCryptDir, err := cryptohome.SystemPath(ctx, user)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get the cryptohome directory for the user")
-	}
-
-	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, user)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to mount Android /data virtio-blk disk image on host")
-	}
-	defer cleanupFunc(cleanupCtx)
-
-	// android-data dir under the cryptohome dir (/home/root/${USER_HASH}/android-data)
-	androidDataDir := filepath.Join(rootCryptDir, "android-data")
-
-	return ioutil.ReadFile(filepath.Join(androidDataDir, finskyPrefsPath))
-}
-
 // waitForDailyHygieneDone waits for Play Store daily hygiene is done. dailyhygiene-last-version
 // in shared Finsky pref is set in case this flow is finished. Usually this happens in 2 minutes.
 // At this moment, Play Store self-update might be executing. This also handles the case when
 // daily hygiene fails internally. This is not ARC fault and we detect this as a signal that
 // daily hygiene ends. Next potentially successful attempt should happen in 20 min which is
 // problematic to wait in test.
-func waitForDailyHygieneDone(ctx context.Context, user string) (bool, error) {
+func waitForDailyHygieneDone(ctx context.Context, user string) (bool, []byte, error) {
 	reOk := regexp.MustCompile(`<int name="dailyhygiene-last-version" value="\d+"`)
 	reFail := regexp.MustCompile(`<int name="dailyhygiene-failed" value="1" />`)
+
+	androidDataDir, err := arc.AndroidDataDir(ctx, user)
+	if err != nil {
+		return false, []byte{}, errors.Wrap(err, "failed to get android-data dir for the user")
+	}
+	finskyPrefsPath := filepath.Join(androidDataDir, "data/data/com.android.vending/shared_prefs/finsky.xml")
+
 	var ok bool
-	return ok, testing.Poll(ctx, func(ctx context.Context) error {
-		// On ARCVM virtio-blk /data enabled devices, we mount and unmount the disk image on
-		// every iteration of testing.Poll to ensure that the Android-side changes are
-		// reflected on the host side.
-		out, err := readFinskyPrefs(ctx, user)
+	var fileContent []byte
+	err = arc.PollWithReadOnlyAndroidData(ctx, user, func(ctx context.Context) error {
+		fileContent, err = ioutil.ReadFile(finskyPrefsPath)
 		if err != nil {
 			// It is OK if it does not exist yet
 			return err
 		}
-
-		if reOk.Find(out) != nil {
+		if reOk.Find(fileContent) != nil {
 			ok = true
 			return nil
 		}
-
-		if reFail.Find(out) != nil {
+		if reFail.Find(fileContent) != nil {
 			ok = false
 			return nil
 		}
-
 		return errors.New("dailyhygiene is not yet complete")
 	}, &testing.PollOptions{Timeout: 4 * time.Minute, Interval: 5 * time.Second})
+	return ok, fileContent, err
 }
 
 func PlayStorePersistent(ctx context.Context, s *testing.State) {
@@ -176,11 +152,9 @@ func PlayStorePersistent(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Waiting for daily hygiene done")
-	ok, err := waitForDailyHygieneDone(ctx, cr.NormalizedUser())
+	ok, out, err := waitForDailyHygieneDone(ctx, cr.NormalizedUser())
 	if err != nil {
-		if out, rerr := readFinskyPrefs(ctx, cr.NormalizedUser()); rerr != nil {
-			s.Error("Failed to read Finsky prefs: ", rerr)
-		} else if rerr := ioutil.WriteFile(filepath.Join(s.OutDir(), "finsky.xml"), out, 0644); rerr != nil {
+		if rerr := ioutil.WriteFile(filepath.Join(s.OutDir(), "finsky.xml"), out, 0644); rerr != nil {
 			s.Error("Failed to write Finsky prefs: ", rerr)
 		} else {
 			s.Log("Finsky prefs is saved to finsky.xml")

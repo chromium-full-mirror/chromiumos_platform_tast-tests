@@ -103,40 +103,29 @@ func PlayAutoInstall(ctx context.Context, s *testing.State) {
 	defer a.Close(cleanupCtx)
 
 	s.Log("Waiting PAI triggered")
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// On ARCVM virtio-blk /data enabled devices, we mount and unmount the disk image on
-		// every iteration of testing.Poll to ensure that the Android-side changes are
-		// reflected on the host side.
-		cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, cr.NormalizedUser())
-		if err != nil {
-			s.Fatal("Failed to make Android /data directory available on host: ", err)
-		}
-		defer cleanupFunc(cleanupCtx)
-
+	var data string
+	if err := arc.PollWithReadOnlyAndroidData(ctx, cr.NormalizedUser(), func(context.Context) error {
 		if _, err := os.Stat(paiListUnderHome); err != nil {
 			if os.IsNotExist(err) {
 				return errors.Errorf("paiList %q is not created yet", paiListUnderHome)
 			}
+			return arc.PollBreakIfNotEUCLEANOnVirtioBlkData(ctx, err)
+		}
+		// Although ReadFile isn't retried, it needs to be called inside the polling function
+		// because the source file is in Android /data, which needs to be mounted if virtio-blk
+		// /data is used.
+		out, err := ioutil.ReadFile(paiListUnderHome)
+		if err != nil {
 			return testing.PollBreak(err)
 		}
+		data = string(out)
 		return nil
 	}, &testing.PollOptions{Timeout: 2 * time.Minute}); err != nil {
-		s.Fatal("Failed to wait PAI triggered: ", err)
-	}
-
-	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to make Android /data directory available on host: ", err)
-	}
-	defer cleanupFunc(cleanupCtx)
-
-	data, err := ioutil.ReadFile(paiListUnderHome)
-	if err != nil {
 		s.Fatal("Failed to read PAI list: ", err)
 	}
 
 	paiDocs := make(map[string]bool)
-	for _, doc := range strings.Split(string(data), "\n") {
+	for _, doc := range strings.Split(data, "\n") {
 		// Mark that app was not recognized as default at this momemnt.
 		// List of know default apps will be applied to this map, and value
 		// for each entry would be set to true. All other apps would be

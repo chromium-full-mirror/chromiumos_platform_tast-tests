@@ -10,6 +10,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"golang.org/x/sys/unix"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/vm"
@@ -165,9 +167,89 @@ func UnmountSDCardPartitionFromHost(ctx context.Context, user string) error {
 	return cmd.Run(testexec.DumpLogOnError)
 }
 
+// PollBreakIfNotEUCLEANOnVirtioBlkData takes an error and wraps the error with testing.PollBreak
+// except for when virtio-blk /data is used and the given error is EUCLEAN (structure needs
+// cleaning). This is intended to be used in the closure provided to PollWithReadOnlyAndroidData.
+func PollBreakIfNotEUCLEANOnVirtioBlkData(ctx context.Context, inErr error) error {
+	if !errors.Is(inErr, unix.EUCLEAN) {
+		return testing.PollBreak(inErr)
+	}
+	virtioBlkDataEnabled, err := IsVirtioBlkDataEnabled(ctx)
+	if err != nil {
+		// Return the given error as-is without wrapping in testing.PollBreak.
+		testing.ContextLog(ctx, "Failed to check if virtio-blk /data is enabled: ", err)
+		return inErr
+	}
+	if virtioBlkDataEnabled {
+		return inErr
+	}
+	return testing.PollBreak(inErr)
+}
+
+// PollWithReadOnlyAndroidData is a utility function for waiting on a change inside Android /data.
+// When virtio-blk /data is used, the disk image is mounted before executing the given function on
+// every iteration of testing.Poll. The mount and unmount are done on every iteration because the
+// content of mounted /data will not reflect the guest-side change to /data made after the mount.
+// Mounting virtio-blk /data and accessing files in it from the host side is prone to fail with
+// "structure needs cleaning" error (EUCLEAN) when the mount raced with some guest-side change to
+// the file. In such cases, the caller should remount /data and retry the operation by returning a
+// non-PollBreak error in the closure. Use PollBreakIfNotEUCLEANOnVirtioBlkData to wrap an error
+// that should result in a testing.PollBreak but could be an EUCLEAN for virtio-blk /data.
+//
+// Example:
+//
+//	// Wait until |path| (in Android /data) is created, and read the content.
+//	err := PollWithReadOnlyAndroidData(ctx, username, func(ctx context.Context) error {
+//		if _, err := os.Stat(path); err != nil {
+//			if os.IsNotExist(err) {
+//				return errors.Wrap(err, "the file does not exist yet")
+//			}
+//			// This could be EUCLEAN if virtio-blk /data is used, but otherwise it is a fatal error.
+//			return PollBreakIfNotEUCLEANOnVirtioBlkData(err)
+//		}
+//		// Read the content of |path| (at this point, EUCLEAN should not be observed)
+//		// NOTE: Do this inside PollWithReadOnlyAndroidData rather than after the poll
+//		// (with a remount), as the accesses to |path| might fail after the remount if
+//		// the file could still be changed from the guest side.
+//		if _, err = ReadFile(path); err != nil {
+//			return testing.PollBreak(err)
+//		}
+//		return nil
+//	}, pollOptions)
+func PollWithReadOnlyAndroidData(ctx context.Context, user string, fn func(context.Context) error, pollopt *testing.PollOptions) error {
+	virtioBlkDataEnabled, err := IsVirtioBlkDataEnabled(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to check if virtio-blk /data is enabled")
+	}
+
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		if virtioBlkDataEnabled {
+			// Before mounting the virtio-blk disk image, run sync on the Android side to ensure
+			// that the disk image is up-to-date.
+			if err := BootstrapCommand(ctx, "/system/bin/sync").Run(testexec.DumpLogOnError); err != nil {
+				// Retry on sync errors.
+				return errors.Wrap(err, "failed to call sync on guest")
+			}
+
+			// Mount and unmount the disk image on every iteration of testing.Poll to ensure that
+			// the Android-side changes are reflected on the host side.
+			cleanupFunc, err := MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx, user)
+			if err != nil {
+				return testing.PollBreak(err)
+			}
+			defer cleanupFunc(ctx)
+		}
+
+		return fn(ctx)
+	}, pollopt)
+}
+
 // MountVirtioBlkDataDiskImageReadOnlyIfUsed first checks if ARCVM virtio-blk /data is used
 // on the device, and if that is the case, finds the path to the virtio-blk disk image
 // and mounts the disk on the host's /home/root/<hash>/android-data/data as read-only.
+// NOTE: This should be used with care, since mounting Android's /data on host and accessing files
+// in it while ARCVM is still running has various problems; see the comment of
+// PollWithReadOnlyAndroidData.
 func MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx context.Context, user string) (func(context.Context), error) {
 	virtioBlkDataEnabled, err := IsVirtioBlkDataEnabled(ctx)
 	if err != nil {
