@@ -48,7 +48,20 @@ func Run(ctx context.Context, s *testing.State) {
 
 	// The test will separately open each video format using each
 	// of the following codecs.
-	var codecs = []string{"h264", "h264_60"}
+	type codec struct {
+		displayName   string
+		crosVideoName string
+	}
+	var codecs = []codec{
+		{
+			displayName:   "h264_30",
+			crosVideoName: "h264",
+		},
+		{
+			displayName:   "h264_60",
+			crosVideoName: "h264_60",
+		},
+	}
 
 	// Shorten context a bit to allow for cleanup.
 	closeCtx := ctx
@@ -201,9 +214,11 @@ func Run(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		const videoPrefix = "CrosVideo"
+		var totalDroppedFrames int
+		var totalDecodedFrames int
 		for _, codec := range codecs {
 			// Open the video with the given codec.
-			if err := videoConn.Navigate(ctx, fmt.Sprintf(videoURL, codec)); err != nil {
+			if err := videoConn.Navigate(ctx, fmt.Sprintf(videoURL, codec.crosVideoName)); err != nil {
 				return errors.Wrapf(err, "failed to navigate to %q", videoURL)
 			}
 
@@ -258,13 +273,13 @@ func Run(ctx context.Context, s *testing.State) {
 				// Start watching, and record the initial decoded frames and
 				// dropped frame information to compare against after this
 				// section of the test completes.
-				recorder.Annotate(ctx, fmt.Sprintf("Start_watching_%s_%s", format.name, codec))
+				recorder.Annotate(ctx, fmt.Sprintf("Start_watching_%s_%s", format.name, codec.displayName))
 				prevDroppedFrames, prevDecodedFrames, err := getFrameData(ctx, videoConn)
 				if err != nil {
 					return errors.Wrap(err, "failed to get initial video frame data")
 				}
 
-				stopSnapshot, err := recorder.StartSnapshot(ctx, fmt.Sprintf("%s.%s.%s", videoPrefix, format.name, codec), ashMetrics, browserMetrics)
+				stopSnapshot, err := recorder.StartSnapshot(ctx, fmt.Sprintf("%s.%s.%s", videoPrefix, format.name, codec.displayName), ashMetrics, browserMetrics)
 				if err != nil {
 					return errors.Wrap(err, "failed to start recording a snapshot")
 				}
@@ -375,43 +390,70 @@ func Run(ctx context.Context, s *testing.State) {
 
 				// Before cleaning up, track how many frames were dropped in
 				// this section.
-				totalDroppedFrames, totalDecodedFrames, err := getFrameData(ctx, videoConn)
+				droppedFrames, decodedFrames, err := getFrameData(ctx, videoConn)
 				if err != nil {
-					return errors.Wrapf(err, "failed to get video frame data after finishing %s %s", format.name, codec)
+					return errors.Wrapf(err, "failed to get video frame data after finishing %s %s", format.name, codec.displayName)
 				}
 
-				decodedFrames := totalDecodedFrames - prevDecodedFrames
-				if decodedFrames == 0 {
-					return errors.Errorf("got 0 decoded frames for %s %s", format.name, codec)
+				sectionDecodedFrames := decodedFrames - prevDecodedFrames
+				if sectionDecodedFrames == 0 {
+					return errors.Errorf("got 0 decoded frames for %s %s", format.name, codec.displayName)
 				}
 
+				sectionDroppedFrames := droppedFrames - prevDroppedFrames
+
 				pv.Set(perf.Metric{
-					Name:      fmt.Sprintf("%s.%s.%s.DroppedFrames", videoPrefix, format.name, codec),
+					Name:      fmt.Sprintf("%s.%s.%s.DroppedFrames", videoPrefix, format.name, codec.displayName),
 					Unit:      "frames",
 					Direction: perf.SmallerIsBetter,
-				}, float64(totalDroppedFrames-prevDroppedFrames))
+				}, float64(sectionDroppedFrames))
 				pv.Set(perf.Metric{
-					Name:      fmt.Sprintf("%s.%s.%s.DecodedFrames", videoPrefix, format.name, codec),
+					Name:      fmt.Sprintf("%s.%s.%s.DecodedFrames", videoPrefix, format.name, codec.displayName),
 					Unit:      "frames",
-					Direction: perf.SmallerIsBetter,
-				}, float64(decodedFrames))
+					Direction: perf.BiggerIsBetter,
+				}, float64(sectionDecodedFrames))
 				pv.Set(perf.Metric{
-					Name:      fmt.Sprintf("%s.%s.%s.PercentDroppedFrames", videoPrefix, format.name, codec),
+					Name:      fmt.Sprintf("%s.%s.%s.PercentDroppedFrames", videoPrefix, format.name, codec.displayName),
 					Unit:      "percent",
 					Direction: perf.SmallerIsBetter,
-				}, float64(totalDroppedFrames-prevDroppedFrames)/float64(decodedFrames))
+				}, float64(sectionDroppedFrames)/float64(sectionDecodedFrames))
 
 				recorder.CustomScreenshot(ctx)
 
 				if err := format.cleanUp(ctx); err != nil {
 					return errors.Wrapf(err, "failed to clean up %q state", format.name)
 				}
-				recorder.Annotate(ctx, fmt.Sprintf("Finished_watching_%s_%s", format.name, codec))
+				recorder.Annotate(ctx, fmt.Sprintf("Finished_watching_%s_%s", format.name, codec.displayName))
 
 				if err := stopSnapshot(ctx); err != nil {
 					return errors.Wrap(err, "failed to stop recording a snapshot")
 				}
 			}
+
+			// Record decoded/dropped frames for each codec.
+			droppedFrames, decodedFrames, err := getFrameData(ctx, videoConn)
+			if err != nil {
+				return errors.Wrap(err, "failed to get video frame data at end of test")
+			}
+			totalDroppedFrames += droppedFrames
+			totalDecodedFrames += decodedFrames
+
+			pv.Set(perf.Metric{
+				Name:      fmt.Sprintf("%s.%s.DroppedFrames", videoPrefix, codec.displayName),
+				Unit:      "frames",
+				Direction: perf.SmallerIsBetter,
+			}, float64(droppedFrames))
+			pv.Set(perf.Metric{
+				Name:      fmt.Sprintf("%s.%s.DecodedFrames", videoPrefix, codec.displayName),
+				Unit:      "frames",
+				Direction: perf.BiggerIsBetter,
+			}, float64(decodedFrames))
+			pv.Set(perf.Metric{
+				Name:      fmt.Sprintf("%s.%s.PercentDroppedFrames", videoPrefix, codec.displayName),
+				Unit:      "percent",
+				Direction: perf.SmallerIsBetter,
+			}, float64(droppedFrames)/float64(decodedFrames))
+
 		}
 		// Video should be in the normal state. Let the test run until 10
 		// minutes have passed, to standardize how long recorder.Run takes.
@@ -423,6 +465,24 @@ func Run(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to sleep to close out the test")
 			}
 		}
+
+		// Record dropped/decoded frames across the entire test run.
+		pv.Set(perf.Metric{
+			Name:      fmt.Sprintf("%s.DroppedFrames", videoPrefix),
+			Unit:      "frames",
+			Direction: perf.SmallerIsBetter,
+		}, float64(totalDroppedFrames))
+		pv.Set(perf.Metric{
+			Name:      fmt.Sprintf("%s.DecodedFrames", videoPrefix),
+			Unit:      "frames",
+			Direction: perf.BiggerIsBetter,
+		}, float64(totalDecodedFrames))
+		pv.Set(perf.Metric{
+			Name:      fmt.Sprintf("%s.PercentDroppedFrames", videoPrefix),
+			Unit:      "percent",
+			Direction: perf.SmallerIsBetter,
+		}, float64(totalDroppedFrames)/float64(totalDecodedFrames))
+
 		return nil
 	}); err != nil {
 		s.Fatal("Failed to conduct the recorder task: ", err)
