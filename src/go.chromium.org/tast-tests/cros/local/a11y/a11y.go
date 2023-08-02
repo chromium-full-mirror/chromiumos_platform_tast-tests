@@ -43,6 +43,10 @@ const (
 	SwitchAccess    Feature = "switchAccess"
 )
 
+// ReadOnlyGoogleDocURL is a URL to a read-only Google doc that contains only the text,
+// "Long-string-to-test-select-to-speak".
+const ReadOnlyGoogleDocURL string = "https://docs.google.com/document/d/1qpu3koSIHpBzQbxeEE-dofSKXCIgdc4yJLI-o1LpCPs/view"
+
 // SetFeatureEnabled forcibly enables/disables the specified accessibility
 // feature using the provided connection to the extension.
 // NOTE: This can have the side effect of disabling UI elements such as toggles
@@ -142,10 +146,11 @@ type TTSFeatureInputs struct {
 // TTSFeatureData contains data and useful objects for an accessibility feature
 // that uses TTS. Tconn and SM live until TDown.TearDown() is called.
 type TTSFeatureData struct {
-	CTX   context.Context
-	TConn *chrome.TestConn
-	SM    *tts.SpeechMonitor
-	TDown *TearDownHelper
+	CTX    context.Context
+	TConn  *chrome.TestConn
+	SM     *tts.SpeechMonitor
+	TDown  *TearDownHelper
+	BRConn *browser.Conn
 }
 
 func newNoOpTTSFeatureData(tdh *TearDownHelper) TTSFeatureData {
@@ -274,5 +279,5 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to change TTS rate")
 	}
 
-	return TTSFeatureData{ctx, tconn, sm, tdown}, nil
+	return TTSFeatureData{ctx, tconn, sm, tdown, brConn}, nil
 }

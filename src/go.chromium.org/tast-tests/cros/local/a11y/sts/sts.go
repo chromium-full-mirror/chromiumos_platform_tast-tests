@@ -7,6 +7,7 @@ package sts
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
@@ -14,7 +15,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -124,6 +127,49 @@ func SetSelectionAndActivate(ctx context.Context, cr *chrome.Chrome, finder *nod
 	// Invoke Select-to-Speak.
 	if err := tts.PressKeysAndConsumeExpectations(ctx, sm, []string{"Search+S"}, expectations); err != nil {
 		return errors.Wrap(err, "error when invoking Select-to-Speak")
+	}
+
+	return nil
+}
+
+// ClickAndDragToActivate uses search + click and drag to start select to speak using the bounds of the given node.
+func ClickAndDragToActivate(ctx context.Context, cr *chrome.Chrome, finder *nodewith.Finder, sm *tts.SpeechMonitor, expectations []tts.SpeechExpectation) error {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
+
+	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
+	if err := ui.WaitUntilExists(finder)(ctx); err != nil {
+		return errors.Wrap(err, "timed out waiting for the node to speak")
+	}
+
+	bounds, err := ui.Location(ctx, finder)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the node to speak's location")
+	}
+
+	// Open a connection to the keyboard.
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "error with creating EventWriter from keyboard")
+	}
+
+	// Invoke Select to Speak with search and click and drag.
+	if err := kb.AccelPress(ctx, "Search"); err != nil {
+		return errors.Wrap(err, "error when pressing the search key")
+	}
+
+	if err := mouse.Drag(tconn, bounds.BottomRight(), bounds.TopLeft(), time.Second)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click and drag drag the mouse")
+	}
+
+	if err := kb.AccelRelease(ctx, "Search"); err != nil {
+		return errors.Wrap(err, "error when releasing the search key")
+	}
+
+	if err := sm.Consume(ctx, expectations); err != nil {
+		return errors.Wrap(err, "error when consuming expectations after search plus click and drag")
 	}
 
 	return nil

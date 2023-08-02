@@ -10,6 +10,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -50,7 +51,7 @@ func ChromevoxGoogleDocs(ctx context.Context, s *testing.State) {
 	vd := tts.GoogleTTSEnUsVoice()
 	ed := tts.GoogleTTSEngine()
 	bt := s.Param().(browser.Type)
-	url := "https://docs.google.com/document/d/1qpu3koSIHpBzQbxeEE-dofSKXCIgdc4yJLI-o1LpCPs/view"
+	url := a11y.ReadOnlyGoogleDocURL
 	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, vd, ed, bt, url)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
