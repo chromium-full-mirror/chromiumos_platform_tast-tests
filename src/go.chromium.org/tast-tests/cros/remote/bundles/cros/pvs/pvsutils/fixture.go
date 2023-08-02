@@ -19,6 +19,7 @@ const installDir = "/usr/local/share/shop_install"
 const gcloudSymlinkPath = "/usr/local/bin/gcloud"
 const uploadConfigJSON = `{"bucket":"chromeos-moblab-pvs-dev","service_account":"/home/chronos/user/.pvs/upload_config/.service_account.json","boto_key":""}`
 const defaultTagAndRef = "prod"
+const containerPVSOutputDir = "/home/pvs/.pvs"
 
 var pvsOutputDir = path.Join(chronosHome, ".pvs")
 var pvsResultsDir = path.Join(pvsOutputDir, "results")

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/pvs/pvsutils"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -37,18 +36,20 @@ func init() {
 // pvs.UserFlow.requirementFilterOverride is provided, "boot-perf" will be used as the
 // requirement filter when running through the user flow.
 func UserFlow(ctx context.Context, s *testing.State) {
-	dut := s.DUT().Conn()
-	containerID := s.FixtValue().(string)
+	pvsRunner := pvsutils.PVSRunner{
+		Dut:         s.DUT().Conn(),
+		ContainerID: s.FixtValue().(string),
+	}
 	requirementFilter := "boot-perf"
 	if requirementFilterOverride, ok := s.Var("pvs.UserFlow.requirementFilterOverride"); ok {
 		requirementFilter = requirementFilterOverride
 	}
 	s.Log("PVS is being run with the following filter: ", requirementFilter)
-	if _, err := pvsutils.RunPVSSubcommand(ctx, dut, containerID, "fetch"); err != nil {
+	if _, err := pvsRunner.RunPVSCommandNonfatal(ctx, "fetch"); err != nil {
 		s.Error("Error occured when calling `pvs fetch`: ", err)
 	}
 	runSubcommand := fmt.Sprintf("run --filter %v", requirementFilter)
-	if _, err := pvsutils.RunPVSSubcommand(ctx, dut, containerID, runSubcommand); err != nil {
+	if _, err := pvsRunner.RunPVSCommandNonfatal(ctx, runSubcommand); err != nil {
 		if _, ok := s.Var("pvs.UserFlow.ignorePVSRunFailure"); !ok {
 			s.Error("Error occured when calling `pvs run`: ", err)
 		} else {
@@ -56,10 +57,10 @@ func UserFlow(ctx context.Context, s *testing.State) {
 		}
 	}
 	listSubcommand := fmt.Sprintf("list --filter %v", requirementFilter)
-	if _, err := pvsutils.RunPVSSubcommand(ctx, dut, containerID, listSubcommand); err != nil {
+	if _, err := pvsRunner.RunPVSCommandNonfatal(ctx, listSubcommand); err != nil {
 		s.Error("Error occured when calling `pvs list`: ", err)
 	}
-	if _, err := pvsutils.RunPVSSubcommand(ctx, dut, containerID, "upload"); err != nil {
+	if _, err := pvsRunner.RunPVSCommandNonfatal(ctx, "upload"); err != nil {
 		s.Error("Error occured when calling `pvs upload`: ", err)
 	}
 }
