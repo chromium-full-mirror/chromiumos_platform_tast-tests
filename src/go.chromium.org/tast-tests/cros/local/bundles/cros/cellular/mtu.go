@@ -38,7 +38,7 @@ func init() {
 			ExtraData: []string{"callbox_high_mtu.pbf"},
 		}, {
 			Name:      "low_mtu",
-			Val:       mtuTestParams{"callbox_low_mtu.pbf", 1300},
+			Val:       mtuTestParams{"callbox_low_mtu.pbf", 1400},
 			ExtraData: []string{"callbox_low_mtu.pbf"},
 		}, {
 			Name:      "high_mtu_modb_override",
@@ -46,7 +46,7 @@ func init() {
 			ExtraData: []string{"callbox_high_mtu_override.pbf"},
 		}, {
 			Name:      "low_mtu_modb_no_override",
-			Val:       mtuTestParams{"callbox_low_mtu_override.pbf", 1300},
+			Val:       mtuTestParams{"callbox_low_mtu_override.pbf", 1400},
 			ExtraData: []string{"callbox_low_mtu_override.pbf"},
 		}},
 		Fixture: "cellular",
