@@ -218,10 +218,6 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		return errors.Wrap(err, "failed to connect to test API")
 	}
 
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		return errors.Wrap(err, "failed waiting for CPU to become idle")
-	}
-
 	// Reserve one second for closing tab.
 	shortCtx, cancel := ctxutil.Shorten(ctx, time.Second)
 	defer cancel()
@@ -243,6 +239,10 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 
 	if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 		return errors.Wrap(err, "timed out waiting for page loading")
+	}
+
+	if err := cpu.Cooldown(ctx); err != nil {
+		return errors.Wrap(err, "failed waiting for CPU to cool down")
 	}
 
 	if params.DisplayMediaType != "" {
