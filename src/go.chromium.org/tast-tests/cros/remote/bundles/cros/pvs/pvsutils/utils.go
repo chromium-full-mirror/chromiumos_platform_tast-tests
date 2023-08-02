@@ -74,6 +74,7 @@ type PVSRuntimeEnv struct {
 	SimulatedDutInfo    string
 	SimulatedTestsSkip  string
 	SimulatedTestsError string
+	SimulatedTestsFail  string
 	SimulatedTestKeyval string
 }
 
@@ -137,6 +138,9 @@ func (p PVSRuntimeEnv) generateEnvMap() map[string]string {
 	}
 	if p.SimulatedTestsError != "" {
 		env["SIMULATED_TESTS_ERROR"] = p.SimulatedTestsError
+	}
+	if p.SimulatedTestsFail != "" {
+		env["SIMULATED_TESTS_FAIL"] = p.SimulatedTestsFail
 	}
 	if p.SimulatedTestKeyval != "" {
 		env["SIMULATED_TEST_KEYVAL"] = p.SimulatedTestKeyval
