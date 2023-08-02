@@ -89,6 +89,8 @@ const (
 	LacrosEnrolledLoggedInShortMetricsInterval = "lacrosEnrolledLoggedInShortMetricsInterval"
 	// LacrosPolicyLoggedInAdvancedProtection is a fixture name.
 	LacrosPolicyLoggedInAdvancedProtection = "lacrosPolicyLoggedInAdvancedProtection"
+	// LacrosPolicyLoggedInBruschettaWithLacros is a fixture name.
+	LacrosPolicyLoggedInBruschetta = "lacrosPolicyLoggedInBruschetta"
 )
 
 // Fixtures defined in go.chromium.org/tast-tests/cros/local/policyutil/fixtures/persistent.go.

@@ -47,8 +47,10 @@ const (
 	referenceVMPflash     = "refvm_VARS.fd"
 	referenceVMPflashHash = "refvm_VARS.fd.SHA256"
 
-	// BruschettaFixture is the name of the fixture defined in this file.
+	// BruschettaFixture is the name of the fixture with ash.
 	BruschettaFixture = "bruschettaReferenceVM"
+	// BruschettaFixtureWithLacros is the name of the fixture with lacros.
+	BruschettaFixtureWithLacros = "bruschettaReferenceVMWithLacros"
 
 	defaultVMName = "bru"
 
@@ -64,7 +66,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            BruschettaFixture,
 		Desc:            "Set up reference VM",
-		Contacts:        []string{"sidereal@google.com", "clumptini+oncall@google.com"},
+		Contacts:        []string{"sidereal@google.com", "jamesye@google.com", "clumptini+oncall@google.com"},
 		Impl:            &bruschettaFixture{},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    resetTimeout,
@@ -72,6 +74,18 @@ func init() {
 		TearDownTimeout: uninstallationTimeout,
 		Data:            []string{referenceVMInstaller, referenceVMInstallerHash, referenceVMPflash, referenceVMPflashHash},
 		Parent:          fixture.ChromePolicyLoggedInBruschetta,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            BruschettaFixtureWithLacros,
+		Desc:            "Set up reference VM with Lacros",
+		Contacts:        []string{"sidereal@google.com", "jamesye@google.com", "clumptini+oncall@google.com"},
+		Impl:            &bruschettaFixture{},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Data:            []string{referenceVMInstaller, referenceVMInstallerHash, referenceVMPflash, referenceVMPflashHash},
+		Parent:          fixture.LacrosPolicyLoggedInBruschetta,
 	})
 }
 

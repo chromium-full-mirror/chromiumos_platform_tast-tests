@@ -187,6 +187,22 @@ func init() {
 		PostTestTimeout: 15 * time.Second,
 		Parent:          fixture.PersistentLacros,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.LacrosPolicyLoggedInBruschetta,
+		Desc:     "Logged into a user session with Bruschetta support and enable Lacros",
+		Contacts: []string{"clumptini+oncall@google.com"},
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.EnableFeatures("Bruschetta"))).Opts()
+			},
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.PersistentLacros,
+	})
 }
 
 type policyRealUserFixture struct {
