@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	mediacpu "go.chromium.org/tast-tests/cros/local/media/cpu"
@@ -231,6 +232,14 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 	defer conn.Close()
 	defer conn.CloseTarget(ctx)
 
+	// For consistency across test runs, let's try to put the UI in a known state:
+	// rotate the display to landscape-primary and maximize the browser window
+	// (setupCapture() maximizes the window).
+	if _, err := display.GetInternalInfo(ctx, tconn); err == nil {
+		if err = graphics.RotateDisplayToLandscapePrimary(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to set display to landscape-primary orientation")
+		}
+	}
 	if canCapture, err := setupCapture(ctx, conn, tconn, params.DisplayMediaType, params.StreamWidth, params.StreamHeight); err != nil {
 		return errors.Wrap(err, "failed to setup capture")
 	} else if !canCapture {
