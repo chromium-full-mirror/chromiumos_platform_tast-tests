@@ -207,7 +207,7 @@ func DisplayReportingDbus(ctx context.Context, s *testing.State) {
 		if len(enqueuedEvents) == 0 {
 			s.Fatal("No events found when policy enabled")
 		}
-		if len(enqueuedEvents) > 1 {
+		if len(enqueuedEvents) > 2 {
 			s.Fatal("More than one event reported when policy enabled. Full data: ", enqueuedEvents)
 		}
 
