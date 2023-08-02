@@ -103,7 +103,7 @@ func TFRouter(targets ...string) TFOption {
 // Format: hostname[:port]
 func TFPcap(target string) TFOption {
 	return func(tf *TestFixture) {
-		tf.pcapTarget = target
+		tf.pcap.target = target
 	}
 }
 
@@ -286,9 +286,7 @@ type TestFixture struct {
 	routerType support.RouterType
 	pcapType   support.RouterType
 
-	pcapTarget string
-	pcapHost   *ssh.Conn
-	pcap       router.Base
+	pcap *routerData
 
 	attenuatorTarget string
 	attenuator       *attenuator.Attenuator
@@ -422,6 +420,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 		// (connection + dbus + device + link + manager + portal + service)
 		logTags:      []string{"wifi"},
 		useWpaCliAPI: useWpaCliAPI,
+		pcap:         &routerData{},
 	}
 	// By default we require router presence.
 	tf.option.routerRequired = true
@@ -503,14 +502,13 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 	}
 	for i := range tf.routers {
 		rt := tf.routers[i]
-		testing.ContextLogf(ctx, "Adding router %s", rt.target)
+		testing.ContextLogf(ctx, "Adding router %q as router[%d]", rt.target, i)
 		routerHost, err := tf.connectCompanion(ctx, rt.target, true /* allow retry */)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to connect to the router %s", rt.target)
 		}
 		rt.host = routerHost
-		routerObj, err := newRouter(ctx, daemonCtx, rt.host,
-			strings.ReplaceAll(rt.target, ":", "_"))
+		routerObj, err := newRouter(ctx, daemonCtx, rt.host, rt.target)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create a router object")
 		}
@@ -519,7 +517,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 	}
 	if tf.option.routerAsCapture && len(tf.routers) > 0 {
 		testing.ContextLog(ctx, "Using router as pcap")
-		tf.pcapTarget = tf.routers[0].target
+		tf.pcap.target = tf.routers[0].target
 	}
 
 	// errInvalidHost checks if the error is a wrapped "no such host" error.
@@ -535,14 +533,14 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 	}
 
 	useDefaultPcap := false
-	if tf.pcapTarget == "" {
+	if tf.pcap.target == "" {
 		var err error
 		testing.ContextLog(ctx, "Using default pcap name")
-		tf.pcapTarget, err = utils.CompanionDeviceHostname(tf.duts[DefaultDUT].dut.HostName(), utils.CompanionSuffixPcap)
+		tf.pcap.target, err = utils.CompanionDeviceHostname(tf.duts[DefaultDUT].dut.HostName(), utils.CompanionSuffixPcap)
 		if err != nil {
 			// DUT might be specified with IP. As the routers are available,
 			// fallback to use router as pcap in this case.
-			tf.pcapTarget = ""
+			tf.pcap.target = ""
 		} else {
 			useDefaultPcap = true
 		}
@@ -555,17 +553,18 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 		// no two devices names point to the same device.
 		// Otherwise we'd need to open a nasty can of worms and e.g. check if two SSH tunnels
 		// anchored on our side on different ip/port pairs don't lead to the same device.
-		if tf.pcapTarget == router.target {
+		if tf.pcap.target == router.target {
 			testing.ContextLog(ctx, "Supplied pcap name already on router list")
-			tf.pcapHost = router.host
-			tf.pcap = router.object
+			tf.pcap.host = router.host
+			tf.pcap.object = router.object
 		}
 	}
 
 	// If pcap name is available and unique, try to connect it.
-	if tf.pcapHost == nil && tf.pcapTarget != "" {
+	if tf.pcap.host == nil && tf.pcap.target != "" {
+		testing.ContextLogf(ctx, "Adding router %q as pcap", tf.pcap.target)
 		var err error
-		tf.pcapHost, err = tf.connectCompanion(ctx, tf.pcapTarget, false /* no retry when DNS not found */)
+		tf.pcap.host, err = tf.connectCompanion(ctx, tf.pcap.target, false /* no retry when DNS not found */)
 		if err != nil {
 			// We want to fallback to use router as pcap iff the default
 			// pcap hostname is invalid. Fail here if it's not the case.
@@ -573,23 +572,24 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 				return nil, errors.Wrap(err, "failed to connect to pcap")
 			}
 		} else {
-			tf.pcap, err = newRouter(ctx, daemonCtx, tf.pcapHost, "pcap")
+			routerObj, err := newRouter(ctx, daemonCtx, tf.pcap.host, tf.pcap.target)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to create a router object for pcap")
 			}
-			testing.ContextLogf(ctx, "Successfully instantiated %s router controller for pcap", tf.pcap.RouterType().String())
+			tf.pcap.object = routerObj
+			testing.ContextLogf(ctx, "Successfully instantiated %s router controller for pcap", tf.pcap.object.RouterType().String())
 			// Validate that the pcap router actually supports pcap
-			if _, ok := tf.pcap.(support.Capture); !ok {
-				return nil, errors.Errorf("router type %q does not support Capture", tf.pcap.RouterType().String())
+			if _, ok := tf.pcap.object.(support.Capture); !ok {
+				return nil, errors.Errorf("router type %q does not support Capture", tf.pcap.object.RouterType().String())
 			}
 		}
 	}
 
 	// Finally, fallback to use the first router as pcap if needed.
-	if tf.pcapHost == nil && len(tf.routers) > 0 {
-		testing.ContextLog(ctx, "Fallback to use router 0 as pcap")
-		tf.pcapHost = tf.routers[0].host
-		tf.pcap = tf.routers[0].object
+	if tf.pcap.host == nil && len(tf.routers) > 0 {
+		testing.ContextLog(ctx, "Fallback to use router[0] as pcap")
+		tf.pcap.host = tf.routers[0].host
+		tf.pcap.object = tf.routers[0].object
 	}
 
 	if tf.attenuatorTarget != "" && len(tf.routers) > 0 {
@@ -605,8 +605,8 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 	// Seed the random as we have some randomization. e.g. default SSID.
 	rand.Seed(time.Now().UnixNano())
 
-	// Reinitialize state of routers.
-	if err := tf.ReinitRouters(ctx); err != nil {
+	// Reinitialize state of routers (including the pcap).
+	if err := tf.ReinitRouters(ctx, true); err != nil {
 		return nil, err
 	}
 	return tf, nil
@@ -694,26 +694,26 @@ func (tf *TestFixture) Close(ctx context.Context) error {
 	}
 
 	// Check if one of routers was used in dual-purpose (router&pcap) mode.
-	if tf.pcap != nil {
+	if tf.pcap.object != nil {
 		for i := range tf.routers {
 			rt := tf.routers[i]
-			if tf.pcap == rt.object {
+			if tf.pcap.object == rt.object {
 				// Don't close it, it will be closed while handling routers.
-				tf.pcap = nil
-				tf.pcapHost = nil
+				tf.pcap.object = nil
+				tf.pcap.host = nil
 				break
 			}
 		}
 	}
 	// If pcap was created specifically for this purpose, close it.
-	if tf.pcap != nil {
-		if err := tf.pcap.Close(ctx); err != nil {
+	if tf.pcap.object != nil {
+		if err := tf.pcap.object.Close(ctx); err != nil {
 			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to close pcap"))
 		}
-		if err := tf.pcapHost.Close(ctx); err != nil {
+		if err := tf.pcap.host.Close(ctx); err != nil {
 			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to close pcap ssh"))
 		}
-		tf.pcap = nil
+		tf.pcap.object = nil
 	}
 	// Close all created routers.
 	for i := range tf.routers {
@@ -763,7 +763,7 @@ func (tf *TestFixture) Reinit(ctx context.Context) error {
 	if err := tf.ReinitDUT(ctx); err != nil {
 		return errors.Wrap(err, "failed to reinit DUT")
 	}
-	if err := tf.ReinitRouters(ctx); err != nil {
+	if err := tf.ReinitRouters(ctx, false); err != nil {
 		return errors.Wrap(err, "failed to reinit routers")
 	}
 	return nil
@@ -784,8 +784,16 @@ func (tf *TestFixture) ReinitDUT(ctx context.Context) error {
 	return nil
 }
 
-// ReinitRouters re-initializes the routers.
-func (tf *TestFixture) ReinitRouters(ctx context.Context) error {
+// ReinitRouters re-initializes the routers. The APs are all deconfigured and
+// any OpenWrt routers are rebooted (for stability).
+//
+// The pcap is only rebooted if it is an OpenWrt router and is also being used
+// as a router or doPcapReboot is set to true. In most cases (such as between
+// tests), the pcap does not need to be rebooted for stability like the routers
+// need, as less is done to them to make them unstable. However, it can be
+// useful to reboot them during SetUp to ensure they are not in a bad state from
+// previous test runs.
+func (tf *TestFixture) ReinitRouters(ctx context.Context, doPcapReboot bool) error {
 	ctx, t := timing.Start(ctx, "ReinitRouters")
 	defer t.End()
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
@@ -793,14 +801,30 @@ func (tf *TestFixture) ReinitRouters(ctx context.Context) error {
 	if err := tf.DeconfigAllAPs(ctx); err != nil {
 		return errors.Wrap(err, "failed to deconfig all APs")
 	}
-	// Reboot all OpenWrt routers and reconnect to them.
+
+	// Collect all OpenWrt routers and reboot them.
+	var routersToReboot []*routerData
+	pcapIsRouter := false
 	for _, rd := range tf.routers {
+		if tf.pcap.target == rd.target {
+			pcapIsRouter = true
+		}
 		if rd.object.RouterType() != support.OpenWrtT {
 			continue
 		}
-		if err := tf.rebootRouter(ctx, rd); err != nil {
-			return err
+		routersToReboot = append(routersToReboot, rd)
+	}
+	if doPcapReboot && !pcapIsRouter && tf.pcap.object.RouterType() == support.OpenWrtT {
+		routersToReboot = append(routersToReboot, tf.pcap)
+	}
+	if len(routersToReboot) > 0 {
+		testing.ContextLogf(ctx, "Rebooting all %d OpenWrt routers", len(routersToReboot))
+		for _, rd := range routersToReboot {
+			if err := tf.rebootRouter(ctx, rd); err != nil {
+				return err
+			}
 		}
+		testing.ContextLogf(ctx, "Rebooted all %d OpenWrt routers", len(routersToReboot))
 	}
 	return nil
 }
@@ -811,7 +835,6 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 	routerName := rd.object.RouterName()
 	routerType := rd.object.RouterType()
 	routerMsgName := fmt.Sprintf("%s router %q", routerType.String(), routerName)
-	routerIsPcap := tf.pcapHost == rd.host
 
 	// Close and reboot router.
 	testing.ContextLogf(ctx, "Preparing %s for reboot", routerMsgName)
@@ -825,10 +848,6 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 	_ = rd.host.Close(ctx)
 	rd.host = nil
 	rd.object = nil
-	if routerIsPcap {
-		tf.pcapHost = nil
-		tf.pcap = nil
-	}
 
 	// Give the router a moment to shut down before trying to reconnect.
 	testing.ContextLogf(ctx, "Waiting %s before trying to reconnect to %s", routerPostRebootWaitTime, routerMsgName)
@@ -861,11 +880,6 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 	}
 	rd.object = routerObject
 	testing.ContextLogf(ctx, "Reconnected to %s with new router controller after reboot", routerMsgName)
-	if routerIsPcap {
-		tf.pcapHost = rd.host
-		tf.pcap = routerObject
-		testing.ContextLogf(ctx, "Router also serves as capture device, reconnecting pcapHost to %s after reboot", routerMsgName)
-	}
 	return nil
 }
 
@@ -909,9 +923,9 @@ func (tf *TestFixture) ConfigureAPOnRouterID(ctx context.Context, idx int, ops [
 		if err != nil {
 			return nil, err
 		}
-		p, ok := tf.pcap.(support.Capture)
+		p, ok := tf.pcap.object.(support.Capture)
 		if !ok {
-			return nil, errors.Errorf("pcap device with router type %q does not have log capture support", tf.pcap.RouterType().String())
+			return nil, errors.Errorf("pcap device with router type %q does not have log capture support", tf.pcap.object.RouterType().String())
 		}
 		capturer, err = p.StartCapture(ctx, name, config.Channel, freqOps)
 		if err != nil {
@@ -955,7 +969,7 @@ func (tf *TestFixture) ReserveForDeconfigAP(ctx context.Context, ap *APIface) (c
 		// Also reserve time for stopping the capturer if it exists.
 		// Noted that CancelFunc returned here is dropped as we rely on its
 		// parent's cancel() being called.
-		if p, ok := tf.pcap.(support.Capture); ok {
+		if p, ok := tf.pcap.object.(support.Capture); ok {
 			ctx, _ = p.ReserveForStopCapture(ctx, capturer)
 		}
 	}
@@ -966,9 +980,9 @@ func (tf *TestFixture) ReserveForDeconfigAP(ctx context.Context, ap *APIface) (c
 func (tf *TestFixture) DeconfigAP(ctx context.Context, ap *APIface) error {
 	ctx, st := timing.Start(ctx, "tf.DeconfigAP")
 	defer st.End()
-	p, ok := tf.pcap.(support.Capture)
+	p, ok := tf.pcap.object.(support.Capture)
 	if !ok {
-		return errors.Errorf("router type %q does not support Capture", tf.pcap.RouterType().String())
+		return errors.Errorf("router type %q does not support Capture", tf.pcap.object.RouterType().String())
 	}
 	var firstErr error
 
@@ -1394,7 +1408,7 @@ func (tf *TestFixture) StandardRouterWithBridgeAndVethSupport() (router.Standard
 
 // Pcap returns the pcap device in the fixture.
 func (tf *TestFixture) Pcap() router.Base {
-	return tf.pcap
+	return tf.pcap.object
 }
 
 // StandardPcap returns the Pcap as a router.Standard.
@@ -1668,6 +1682,8 @@ func (tf *TestFixture) SetWakeOnWifi(ctx context.Context, ops ...SetWakeOnWifiOp
 func newRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (router.Base, error) {
 	ctx, st := timing.Start(ctx, "NewRouter")
 	defer st.End()
+
+	name = strings.ReplaceAll(name, ":", "_")
 
 	rtype, err := resolveRouterTypeFromHost(ctx, host)
 	if err != nil {
@@ -2323,7 +2339,7 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 
 	var capturer *pcap.Capturer
 	if tf.option.packetCapture {
-		if tf.pcapHost == nil {
+		if tf.pcap.host == nil {
 			// This will happen only when running the test maunally.
 			return nil, nil, errors.New("missing pcap, perhaps you forgot to add -var=pcap=<host> argument")
 		}
@@ -2352,9 +2368,9 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 		if err != nil {
 			return nil, nil, err
 		}
-		p, ok := tf.pcap.(support.Capture)
+		p, ok := tf.pcap.object.(support.Capture)
 		if !ok {
-			return nil, nil, errors.Errorf("pcap device with router type %q does not have packet capture support", tf.pcap.RouterType().String())
+			return nil, nil, errors.Errorf("pcap device with router type %q does not have packet capture support", tf.pcap.object.RouterType().String())
 		}
 		capturer, err = p.StartCapture(ctx, tf.UniqueAPName(), config.Channel, freqOps)
 		if err != nil {
@@ -2378,7 +2394,7 @@ func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx) (*wifi.
 
 	resp, err := tf.duts[dutIdx].wifiClient.StopTethering(ctx, &wifi.StopTetheringRequest{UseWpaCliApi: tf.useWpaCliAPI})
 	if tf.tetheringCapturer != nil {
-		p := tf.pcap.(support.Capture)
+		p := tf.pcap.object.(support.Capture)
 		p.StopCapture(ctx, tf.tetheringCapturer)
 	}
 	if err != nil {
