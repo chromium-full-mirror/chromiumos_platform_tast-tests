@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
@@ -124,8 +125,10 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 
 	// For consistency across test runs, let's try to put the UI in a known state:
 	// rotate the display to landscape-primary and maximize the browser window.
-	if err = graphics.RotateDisplayToLandscapePrimary(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to set display to landscape-primary orientation")
+	if _, err := display.GetInternalInfo(ctx, tconn); err == nil {
+		if err = graphics.RotateDisplayToLandscapePrimary(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to set display to landscape-primary orientation")
+		}
 	}
 	w, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, "ChromeOS Video Test")
 	if err != nil {
