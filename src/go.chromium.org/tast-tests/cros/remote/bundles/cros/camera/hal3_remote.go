@@ -129,42 +129,48 @@ func init() {
 			},
 
 			{
-				Name:      "jda_back",
-				ExtraAttr: []string{"camerabox_facing_back"},
-				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_JDA, Facing: pb.Facing_FACING_BACK},
-				Timeout:   10 * time.Minute,
+				Name:              "jda_back",
+				ExtraAttr:         []string{"camerabox_facing_back"},
+				ExtraSoftwareDeps: []string{caps.HWDecodeJPEG, caps.BuiltinUSBCamera},
+				Val:               &pb.RunTestRequest{Test: pb.HAL3CameraTest_JDA, Facing: pb.Facing_FACING_BACK},
+				Timeout:           10 * time.Minute,
 			},
 			{
-				Name:      "jda_front",
-				ExtraAttr: []string{"camerabox_facing_front"},
-				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_JDA, Facing: pb.Facing_FACING_FRONT},
-				Timeout:   10 * time.Minute,
-			},
-
-			{
-				Name:      "jea_back",
-				ExtraAttr: []string{"camerabox_facing_back"},
-				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_JEA, Facing: pb.Facing_FACING_BACK},
-				Timeout:   10 * time.Minute,
-			},
-			{
-				Name:      "jea_front",
-				ExtraAttr: []string{"camerabox_facing_front"},
-				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_JEA, Facing: pb.Facing_FACING_FRONT},
-				Timeout:   10 * time.Minute,
+				Name:              "jda_front",
+				ExtraAttr:         []string{"camerabox_facing_front"},
+				ExtraSoftwareDeps: []string{caps.HWDecodeJPEG, caps.BuiltinUSBCamera},
+				Val:               &pb.RunTestRequest{Test: pb.HAL3CameraTest_JDA, Facing: pb.Facing_FACING_FRONT},
+				Timeout:           10 * time.Minute,
 			},
 
 			{
-				Name:      "jea_usb_back",
-				ExtraAttr: []string{"camerabox_facing_back"},
-				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_JEA_USB, Facing: pb.Facing_FACING_BACK},
-				Timeout:   10 * time.Minute,
+				Name:              "jea_mipi_back",
+				ExtraAttr:         []string{"camerabox_facing_back"},
+				ExtraSoftwareDeps: []string{caps.HWEncodeJPEG, caps.BuiltinMIPICamera},
+				Val:               &pb.RunTestRequest{Test: pb.HAL3CameraTest_JEA, Facing: pb.Facing_FACING_BACK},
+				Timeout:           10 * time.Minute,
 			},
 			{
-				Name:      "jea_usb_front",
-				ExtraAttr: []string{"camerabox_facing_front"},
-				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_JEA_USB, Facing: pb.Facing_FACING_FRONT},
-				Timeout:   10 * time.Minute,
+				Name:              "jea_mipi_front",
+				ExtraAttr:         []string{"camerabox_facing_front"},
+				ExtraSoftwareDeps: []string{caps.HWEncodeJPEG, caps.BuiltinMIPICamera},
+				Val:               &pb.RunTestRequest{Test: pb.HAL3CameraTest_JEA, Facing: pb.Facing_FACING_FRONT},
+				Timeout:           10 * time.Minute,
+			},
+
+			{
+				Name:              "jea_usb_back",
+				ExtraAttr:         []string{"camerabox_facing_back"},
+				ExtraSoftwareDeps: []string{caps.HWEncodeJPEG, caps.BuiltinUSBCamera},
+				Val:               &pb.RunTestRequest{Test: pb.HAL3CameraTest_JEA_USB, Facing: pb.Facing_FACING_BACK},
+				Timeout:           10 * time.Minute,
+			},
+			{
+				Name:              "jea_usb_front",
+				ExtraAttr:         []string{"camerabox_facing_front"},
+				ExtraSoftwareDeps: []string{caps.HWEncodeJPEG, caps.BuiltinUSBCamera},
+				Val:               &pb.RunTestRequest{Test: pb.HAL3CameraTest_JEA_USB, Facing: pb.Facing_FACING_FRONT},
+				Timeout:           10 * time.Minute,
 			},
 
 			{
