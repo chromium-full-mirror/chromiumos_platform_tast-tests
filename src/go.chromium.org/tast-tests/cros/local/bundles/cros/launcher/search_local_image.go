@@ -6,7 +6,6 @@ package launcher
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -45,10 +44,11 @@ func init() {
 		Attr:         []string{"group:launcher_search_quality_daily"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{localPictureName},
-		Timeout:      3 * time.Minute,
+		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
+			// some tests may failed due to b:294325272
 			{
-				Name: "search_by_filename_then_click",
+				Name: "search_by_filename_image_search",
 				Val: testParam{
 					TabletMode:     false,
 					Query:          "local",
@@ -57,7 +57,7 @@ func init() {
 				Fixture: fixture.LauncherImageSearch,
 			},
 			{
-				Name: "search_by_paper_then_click",
+				Name: "search_by_paper_lowercase_lca",
 				Val: testParam{
 					TabletMode:     false,
 					Query:          "paper",
@@ -65,17 +65,53 @@ func init() {
 				},
 				Fixture: fixture.LauncherImageSearchIca,
 			},
+			{
+				Name: "search_by_paper_uppercase_lca",
+				Val: testParam{
+					TabletMode:     false,
+					Query:          "Paper",
+					ExpectedResult: "Thoughts",
+				},
+				Fixture: fixture.LauncherImageSearchIca,
+			},
+			{
+				Name: "search_by_content_ocr",
+				Val: testParam{
+					TabletMode:     false,
+					Query:          "Thoughts",
+					ExpectedResult: "About",
+				},
+				Fixture: fixture.LauncherImageSearchOcr,
+			},
+			{
+				Name: "search_by_paper_ica_ocr",
+				Val: testParam{
+					TabletMode:     false,
+					Query:          "Paper",
+					ExpectedResult: "Thoughts",
+				},
+				Fixture: fixture.LauncherImageSearchIcaAndOcr,
+			},
+			{
+				Name: "search_by_content_ica_ocr",
+				Val: testParam{
+					TabletMode:     false,
+					Query:          "Thoughts",
+					ExpectedResult: "About",
+				},
+				Fixture: fixture.LauncherImageSearchIcaAndOcr,
+			},
 		},
 	})
 }
 
 func SearchLocalImage(ctx context.Context, s *testing.State) {
-	image, err := ioutil.ReadFile(s.DataPath(localPictureName))
+	image, err := os.ReadFile(s.DataPath(localPictureName))
 	if err != nil {
 		s.Fatal("Failed to read an image: ", err)
 	}
 
-	if err = ioutil.WriteFile(localPicturePath, image, 0644); err != nil {
+	if err = os.WriteFile(localPicturePath, image, 0644); err != nil {
 		s.Fatal("Failed to create an image in MyFiles: ", err)
 	}
 
@@ -99,8 +135,7 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 	ud := uidetection.NewDefault(tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
 	query := s.Param().(testParam).Query
 	expectedResult := s.Param().(testParam).ExpectedResult
-	picturePreview := nodewith.Role(role.Button).HasClass("ImageButton").NameContaining("search_local_images")
-	picture := nodewith.Role(role.Window).HasClass("WebContentsViewAura").NameContaining("search_local_images")
+	picture := nodewith.Role(role.ListBoxOption).HasClass("SearchResultImageView").NameContaining("search_local_images")
 
 	if err := uiauto.Retry(2, uiauto.NamedCombine("Search for image",
 		launcher.ClearSearchField(tconn, kb),
@@ -110,9 +145,11 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 			NeedRegex: false,
 			Result:    "search_local_images",
 		}),
-		ui.LeftClickUntil(picturePreview, ui.WithTimeout(3*time.Second).WaitUntilExists(picture)),
+		ui.DoDefault(picture),
 		launcher.VerifyTextWithUIDetection(ud, expectedResult),
 	))(ctx); err != nil {
+		s.Log(uiauto.RootDebugInfo(ctx, tconn))
 		s.Fatal("Failed to search image: ", err)
+
 	}
 }

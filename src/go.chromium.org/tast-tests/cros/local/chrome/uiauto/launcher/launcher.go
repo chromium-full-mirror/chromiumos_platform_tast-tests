@@ -171,7 +171,7 @@ func WaitForResultWithCategory(tconn *chrome.TestConn, searchInfo SearchCategory
 		return ui.WaitUntilExists(SearchResultListItemFinder.NameContaining(result))
 
 	case category == "Images":
-		return ui.WaitUntilExists(nodewith.Role(role.Button).HasClass("ImageButton").NameContaining(result))
+		return ui.WaitUntilExists(nodewith.Role(role.ListBox).HasClass("SearchResultImageListView").NameContaining("Images , search result category"))
 	}
 
 	categoryName := category + " , search result category"

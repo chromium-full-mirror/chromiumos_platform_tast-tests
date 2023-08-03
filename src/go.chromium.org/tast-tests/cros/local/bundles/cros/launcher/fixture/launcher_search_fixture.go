@@ -113,9 +113,7 @@ func init() {
 
 func (f *launcherSearchFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var opts []chrome.Option
-	for _, opt := range f.featureFlags {
-		opts = append(opts, chrome.ExtraArgs(opt))
-	}
+	opts = append(opts, chrome.EnableFeatures(f.featureFlags...))
 
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
