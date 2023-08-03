@@ -41,6 +41,11 @@ var supportedArchs = []string{
 	"arm64-v8a",
 }
 
+var appUIUpdatePollOptions = &testing.PollOptions{
+	Timeout:  5 * time.Second,
+	Interval: 10 * time.Millisecond,
+}
+
 func arcHostClockDest() string {
 	return filepath.Join(adb.AndroidTmpDirPath, "arc-host-clock-client")
 }
@@ -131,7 +136,7 @@ func WaitForEvents(ctx context.Context, d *ui.Device, count int, pkgName string)
 			return errors.Errorf("unexpected event count; got %d, want %d", num, count)
 		}
 		return nil
-	}, nil); err != nil {
+	}, appUIUpdatePollOptions); err != nil {
 		return "", err
 	}
 
@@ -152,7 +157,7 @@ func WaitForEvents(ctx context.Context, d *ui.Device, count int, pkgName string)
 			return errors.New("waiting for generate JSON data")
 		}
 		return nil
-	}, nil); err != nil {
+	}, appUIUpdatePollOptions); err != nil {
 		return "", err
 	}
 	return txt, nil
@@ -200,7 +205,7 @@ func WaitForClearUIWithWaitTime(ctx context.Context, d *ui.Device, pkgNamePtr *s
 			return errors.Errorf("failed to clean events; got %d, want 0", num)
 		}
 		return nil
-	}, nil); err != nil {
+	}, appUIUpdatePollOptions); err != nil {
 		return err
 	}
 	return nil
