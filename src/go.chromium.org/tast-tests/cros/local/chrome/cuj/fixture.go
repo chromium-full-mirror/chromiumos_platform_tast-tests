@@ -1862,12 +1862,22 @@ func (f *androidBatterySaverFixture) Reset(ctx context.Context) error {
 }
 
 func (f *androidBatterySaverFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	out, err := f.arc.Command(ctx, "settings", "get", "global", "low_power").Output(testexec.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed to get Android battery saver state: ", err)
-	}
-	if string(out) != "1\n" {
-		s.Fatal("Android battery saver is not on")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := f.arc.Command(ctx, "settings", "get", "global", "low_power").Output(testexec.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to get Android battery saver state")
+		}
+		if string(out) == "1\n" {
+			return nil
+		}
+		// Enable the Android battery saver if it's not automatically enabled.
+		s.Log("Enable Android battery saver")
+		if err := f.arc.Command(ctx, "settings", "put", "global", "low_power", "1").Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "failed to enable Android battery saver")
+		}
+		return errors.New("Android battery saver is not on")
+	}, &testing.PollOptions{Timeout: 8 * time.Second}); err != nil {
+		s.Fatal("Failed to ensure Android battery saver is on: ", err)
 	}
 }
 
