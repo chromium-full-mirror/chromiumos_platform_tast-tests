@@ -44,9 +44,10 @@ type paramData struct {
 	Attr         []string
 	Comment      string
 
-	VideoFiles    string
-	ValidatorType string
-	MustFail      bool
+	VideoFiles      string
+	ValidatorType   string
+	EnabledFeatures []string
+	MustFail        bool
 }
 
 // genFilesFromBugs generates multiple test cases for each files in the filesFromBugs map. The key of filesFromBugs would be appended in the test name and value will be assigned to VideoFiles.
@@ -179,7 +180,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		}, {
 			Name: "vp9_0_group1_frm_resize",
 			Attr: perBuildAttrs,
-			// TODO(b/207057398): Enable for V4L2 platforms.
+			// TODO(b/189500115): Enable for V4L2 platforms (at least QC venus).
 			SoftwareDeps:  `[]string{caps.HWDecodeVP9, "vaapi"}`,
 			VideoFiles:    "vp90Group1FrmResize",
 			ValidatorType: "decoding.MD5",
@@ -204,7 +205,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		}, {
 			Name: "vp9_0_group1_sub8x8_sf",
 			Attr: perBuildAttrs,
-			// TODO(b/207057398): Enable for V4L2 platforms.
+			// TODO(b/189500115): Enable for V4L2 platforms (at least QC venus).
 			SoftwareDeps:  `[]string{caps.HWDecodeVP9, "vaapi"}`,
 			VideoFiles:    "vp90Group1Sub8x8Sf",
 			ValidatorType: "decoding.MD5",
@@ -287,6 +288,99 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		ValidatorType: "decoding.MD5",
 	}, av1FilesFromBugs)...)
 
+	// V4L2FlatStatefulVideoDecoder VPx tests.
+	params = append(params, []paramData{{
+		Name:            "v4l2_flat_vp8_comprehensive",
+		Attr:            perBuildAttrs,
+		SoftwareDeps:    `[]string{caps.HWDecodeVP8, "v4l2_codec"}`,
+		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding())",
+		VideoFiles:      "vp8ComprehensiveFiles",
+		ValidatorType:   "decoding.MD5",
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+	}, {
+		Name:            "v4l2_flat_vp8_inter",
+		Attr:            perBuildAttrs,
+		SoftwareDeps:    `[]string{caps.HWDecodeVP8, "v4l2_codec"}`,
+		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding())",
+		VideoFiles:      "vp8InterFiles",
+		ValidatorType:   "decoding.MD5",
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+	}, {
+		Name:            "v4l2_flat_vp8_inter_multi_coeff",
+		Attr:            perBuildAttrs,
+		SoftwareDeps:    `[]string{caps.HWDecodeVP8, "v4l2_codec"}`,
+		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding())",
+		VideoFiles:      "vp8InterMultiCoeffFiles",
+		ValidatorType:   "decoding.MD5",
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+	}, {
+		Name:            "v4l2_flat_vp8_inter_segment",
+		Attr:            perBuildAttrs,
+		SoftwareDeps:    `[]string{caps.HWDecodeVP8, "v4l2_codec"}`,
+		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding())",
+		VideoFiles:      "vp8InterSegmentFiles",
+		ValidatorType:   "decoding.MD5",
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+	}, {
+		Name:            "v4l2_flat_vp8_intra",
+		Attr:            perBuildAttrs,
+		SoftwareDeps:    `[]string{caps.HWDecodeVP8, "v4l2_codec"}`,
+		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding())",
+		VideoFiles:      "vp8IntraFiles",
+		ValidatorType:   "decoding.MD5",
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+	}, {
+		Name:            "v4l2_flat_vp8_intra_multi_coeff",
+		Attr:            perBuildAttrs,
+		SoftwareDeps:    `[]string{caps.HWDecodeVP8, "v4l2_codec"}`,
+		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding())",
+		VideoFiles:      "vp8IntraMultiCoeffSegmentFiles",
+		ValidatorType:   "decoding.MD5",
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+	}, {
+		Name:            "v4l2_flat_vp8_intra_segment",
+		Attr:            perBuildAttrs,
+		SoftwareDeps:    `[]string{caps.HWDecodeVP8, "v4l2_codec"}`,
+		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding())",
+		VideoFiles:      "vp8IntraSegmentFiles",
+		ValidatorType:   "decoding.MD5",
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+	}, {
+		Name:            "v4l2_flat_vp9_0_group1_buf",
+		Attr:            perBuildAttrs,
+		SoftwareDeps:    `[]string{caps.HWDecodeVP9, "v4l2_codec"}`,
+		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding())",
+		VideoFiles:      "vp90Group1Buf",
+		ValidatorType:   "decoding.MD5",
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+	}, {
+		Name:            "vv4l2_flat_p9_0_group1_gf_dist",
+		Attr:            perBuildAttrs,
+		SoftwareDeps:    `[]string{caps.HWDecodeVP9, "v4l2_codec"}`,
+		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding())",
+		VideoFiles:      "vp90Group1GfDist",
+		ValidatorType:   "decoding.MD5",
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+	}, {
+		Name:            "v4l2_flat_vp9_0_group1_odd_size",
+		Attr:            perBuildAttrs,
+		SoftwareDeps:    `[]string{caps.HWDecodeVP9, "v4l2_codec"}`,
+		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding())",
+		VideoFiles:      "vp90Group1OddSize",
+		ValidatorType:   "decoding.MD5",
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+	}, {
+		Name:            "v4l2_flat_vp9_0_group1_sub8x8",
+		Attr:            perBuildAttrs,
+		SoftwareDeps:    `[]string{caps.HWDecodeVP9, "v4l2_codec"}`,
+		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding())",
+		VideoFiles:      "vp90Group1Sub8x8",
+		ValidatorType:   "decoding.MD5",
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+	},
+	// TODO(b/189500115): Add v4l2_flat_p9_0_group1_frm_resize/sub8x8_sf.
+	}...)
+
 	code := genparams.Template(t, `{{ range . }}{
 		Name: {{ .Name | fmt }},
         {{ if .Comment }}
@@ -306,6 +400,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
             videoFiles: {{ .VideoFiles  }},
             validatorType: {{ .ValidatorType }},
             mustFail: {{ .MustFail | fmt }},
+            enabledFeatures: {{ .EnabledFeatures | fmt }},
 		},
 	},
 	{{ end }}`, params)

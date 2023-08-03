@@ -548,6 +548,8 @@ type chromeStackDecoderVerificationTestParam struct {
 	validatorType decoding.ValidatorType // The frame validation type of video_decode_accelerator_tests.
 	// If set, verify that MD5SUM verification is not successful.
 	mustFail bool
+	// List of Chrome Features to enable, if any.
+	enabledFeatures []string
 }
 
 func init() {
@@ -573,9 +575,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
 				ExtraData:         appendJSONFiles(av1CommonFiles),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    av1CommonFiles,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      av1CommonFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -585,9 +588,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
 				ExtraData:         appendJSONFiles(av1FilmGrainFiles),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    av1FilmGrainFiles,
-					validatorType: decoding.SSIM,
-					mustFail:      false,
+					videoFiles:      av1FilmGrainFiles,
+					validatorType:   decoding.SSIM,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -596,9 +600,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeAV1_10BPP},
 				ExtraData:         appendJSONFiles(av110BitCommonFiles),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    av110BitCommonFiles,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      av110BitCommonFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -608,9 +613,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeAV1_10BPP},
 				ExtraData:         appendJSONFiles(av110BitFilmGrainFiles),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    av110BitFilmGrainFiles,
-					validatorType: decoding.SSIM,
-					mustFail:      false,
+					videoFiles:      av110BitFilmGrainFiles,
+					validatorType:   decoding.SSIM,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -619,9 +625,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles(h264InvalidBitstreams),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    h264InvalidBitstreams,
-					validatorType: decoding.MD5,
-					mustFail:      true,
+					videoFiles:      h264InvalidBitstreams,
+					validatorType:   decoding.MD5,
+					mustFail:        true,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -630,9 +637,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles(h264Files["baseline"]),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    h264Files["baseline"],
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      h264Files["baseline"],
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -641,9 +649,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles(h264Files["main"]),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    h264Files["main"],
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      h264Files["main"],
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -652,9 +661,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles(h264Files["high"]),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    h264Files["high"],
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      h264Files["high"],
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -664,9 +674,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles(h264Files["first_mb_in_slice"]),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    h264Files["first_mb_in_slice"],
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      h264Files["first_mb_in_slice"],
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -675,9 +686,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8ComprehensiveFiles),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp8ComprehensiveFiles,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp8ComprehensiveFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -686,9 +698,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8InterFiles),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp8InterFiles,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp8InterFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -697,9 +710,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8InterMultiCoeffFiles),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp8InterMultiCoeffFiles,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp8InterMultiCoeffFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -708,9 +722,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8InterSegmentFiles),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp8InterSegmentFiles,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp8InterSegmentFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -719,9 +734,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8IntraFiles),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp8IntraFiles,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp8IntraFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -730,9 +746,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8IntraMultiCoeffSegmentFiles),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp8IntraMultiCoeffSegmentFiles,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp8IntraMultiCoeffSegmentFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -741,9 +758,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8IntraSegmentFiles),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp8IntraSegmentFiles,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp8IntraSegmentFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -752,9 +770,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp90Group1Buf),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp90Group1Buf,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp90Group1Buf,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -763,9 +782,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "vaapi"},
 				ExtraData:         appendJSONFiles(vp90Group1FrmResize),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp90Group1FrmResize,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp90Group1FrmResize,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -774,9 +794,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp90Group1GfDist),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp90Group1GfDist,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp90Group1GfDist,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -785,9 +806,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp90Group1OddSize),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp90Group1OddSize,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp90Group1OddSize,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -796,9 +818,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp90Group1Sub8x8),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp90Group1Sub8x8,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp90Group1Sub8x8,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -807,9 +830,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "vaapi"},
 				ExtraData:         appendJSONFiles(vp90Group1Sub8x8Sf),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp90Group1Sub8x8Sf,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp90Group1Sub8x8Sf,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -818,9 +842,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1Buf),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp92Group1Buf,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp92Group1Buf,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -829,9 +854,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1FrmResize),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp92Group1FrmResize,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp92Group1FrmResize,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -840,9 +866,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1GfDist),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp92Group1GfDist,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp92Group1GfDist,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -851,9 +878,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1OddSize),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp92Group1OddSize,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp92Group1OddSize,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -862,9 +890,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1Sub8x8),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp92Group1Sub8x8,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp92Group1Sub8x8,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -873,9 +902,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1Sub8x8Sf),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp92Group1Sub8x8Sf,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp92Group1Sub8x8Sf,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -883,9 +913,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp9SVCFiles),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    vp9SVCFiles,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      vp9SVCFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -894,9 +925,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeHEVC},
 				ExtraData:         appendJSONFiles(hevcCommonFiles),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    hevcCommonFiles,
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      hevcCommonFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -905,9 +937,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264"}),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    []string{"test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264"},
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -916,9 +949,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264"}),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    []string{"test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264"},
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -927,9 +961,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264"}),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    []string{"test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264"},
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -938,9 +973,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264"}),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    []string{"test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264"},
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -949,9 +985,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264"}),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264"},
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -960,9 +997,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264"}),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264"},
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -971,9 +1009,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264"}),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264"},
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -982,9 +1021,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264_4K, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264"}),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    []string{"test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264"},
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -993,9 +1033,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf"}),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    []string{"test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf"},
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      []string{"test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -1004,9 +1045,10 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf"}),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    []string{"test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf"},
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      []string{"test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
 				},
 			},
 			{
@@ -1015,9 +1057,153 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"}),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    []string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"},
-					validatorType: decoding.MD5,
-					mustFail:      false,
+					videoFiles:      []string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
+				},
+			},
+			{
+				Name:              "v4l2_flat_vp8_comprehensive",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
+				ExtraData:         appendJSONFiles(vp8ComprehensiveFiles),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      vp8ComprehensiveFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+				},
+			},
+			{
+				Name:              "v4l2_flat_vp8_inter",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
+				ExtraData:         appendJSONFiles(vp8InterFiles),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      vp8InterFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+				},
+			},
+			{
+				Name:              "v4l2_flat_vp8_inter_multi_coeff",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
+				ExtraData:         appendJSONFiles(vp8InterMultiCoeffFiles),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      vp8InterMultiCoeffFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+				},
+			},
+			{
+				Name:              "v4l2_flat_vp8_inter_segment",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
+				ExtraData:         appendJSONFiles(vp8InterSegmentFiles),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      vp8InterSegmentFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+				},
+			},
+			{
+				Name:              "v4l2_flat_vp8_intra",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
+				ExtraData:         appendJSONFiles(vp8IntraFiles),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      vp8IntraFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+				},
+			},
+			{
+				Name:              "v4l2_flat_vp8_intra_multi_coeff",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
+				ExtraData:         appendJSONFiles(vp8IntraMultiCoeffSegmentFiles),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      vp8IntraMultiCoeffSegmentFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+				},
+			},
+			{
+				Name:              "v4l2_flat_vp8_intra_segment",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
+				ExtraData:         appendJSONFiles(vp8IntraSegmentFiles),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      vp8IntraSegmentFiles,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+				},
+			},
+			{
+				Name:              "v4l2_flat_vp9_0_group1_buf",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
+				ExtraData:         appendJSONFiles(vp90Group1Buf),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      vp90Group1Buf,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+				},
+			},
+			{
+				Name:              "vv4l2_flat_p9_0_group1_gf_dist",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
+				ExtraData:         appendJSONFiles(vp90Group1GfDist),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      vp90Group1GfDist,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+				},
+			},
+			{
+				Name:              "v4l2_flat_vp9_0_group1_odd_size",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
+				ExtraData:         appendJSONFiles(vp90Group1OddSize),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      vp90Group1OddSize,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+				},
+			},
+			{
+				Name:              "v4l2_flat_vp9_0_group1_sub8x8",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
+				ExtraData:         appendJSONFiles(vp90Group1Sub8x8),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      vp90Group1Sub8x8,
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 		},
@@ -1031,7 +1217,7 @@ func ChromeStackDecoderVerification(ctx context.Context, s *testing.State) {
 		tv = append(tv, s.DataPath(file))
 	}
 
-	if err := decoding.RunAccelVideoTestWithTestVectors(ctx, s.OutDir(), tv, param.validatorType, param.mustFail); err != nil {
+	if err := decoding.RunAccelVideoTestWithTestVectors(ctx, s.OutDir(), tv, param.validatorType, param.mustFail, param.enabledFeatures); err != nil {
 		s.Fatal("test failed: ", err)
 	}
 }

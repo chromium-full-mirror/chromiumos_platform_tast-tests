@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -147,8 +148,9 @@ func RunAccelVideoTest(ctx context.Context, outDir, filename string, parameters 
 // video_decode_accelerator_tests --gtest_filter=VideoDecoderTest.FlushAtEndOfStream
 // --validator_type=validatorType with the specified video files using the
 // direct VideoDecoder. It expects such execution to succeed unless mustFail is
-// set.
-func RunAccelVideoTestWithTestVectors(ctx context.Context, outDir string, testVectors []string, validatorType ValidatorType, mustFail bool) error {
+// set. enabledFeatures are passed to the binary in common Chrome fashion ,see
+// https://chromium.googlesource.com/chromium/src/+/main/docs/configuration.md#Features
+func RunAccelVideoTestWithTestVectors(ctx context.Context, outDir string, testVectors []string, validatorType ValidatorType, mustFail bool, enabledFeatures []string) error {
 	vl, err := logging.NewVideoLogger()
 	if err != nil {
 		return errors.Wrap(err, "failed to set values for verbose logging")
@@ -171,6 +173,10 @@ func RunAccelVideoTestWithTestVectors(ctx context.Context, outDir string, testVe
 		args = append(args, "--output_format=png")
 		args = append(args, "--output_limit=5")
 		args = append(args, "--output_folder="+filepath.Join(outDir, filename))
+
+		if len(enabledFeatures) > 0 {
+			args = append(args, "--enable-features="+strings.Join(enabledFeatures, `,`))
+		}
 
 		hasFailed := false
 		if _, err = runAccelVideoTestCmd(ctx,
