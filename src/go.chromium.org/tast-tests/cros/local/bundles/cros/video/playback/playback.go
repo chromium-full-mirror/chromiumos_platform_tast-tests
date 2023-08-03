@@ -71,7 +71,7 @@ type contextSwitchStat struct {
 
 // RunTest measures a number of performance metrics while playing a video with
 // or without hardware acceleration as per decoderType.
-func RunTest(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, videoName string, decoderType DecoderType, gridWidth, gridHeight int, perfTracing, measureRoughness bool) {
+func RunTest(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, videoName string, decoderType DecoderType, gridWidth, gridHeight int, perfTracing, measureSteadyStateMetrics, measureRoughness bool) {
 	vl, err := logging.NewVideoLogger()
 	if err != nil {
 		s.Fatal("Failed to set values for verbose logging")
@@ -84,7 +84,7 @@ func RunTest(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bT
 	defer crastestclient.Unmute(ctx)
 
 	s.Log("Starting playback")
-	if err = measurePerformance(ctx, s, cs, tconn, bTconn, s.DataFileSystem(), videoName, decoderType, gridWidth, gridHeight, perfTracing, measureRoughness, s.OutDir()); err != nil {
+	if err = measurePerformance(ctx, s, cs, tconn, bTconn, s.DataFileSystem(), videoName, decoderType, gridWidth, gridHeight, perfTracing, measureSteadyStateMetrics, measureRoughness, s.OutDir()); err != nil {
 		s.Fatal("Playback test failed: ", err)
 	}
 }
@@ -92,7 +92,7 @@ func RunTest(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bT
 // measurePerformance collects video playback performance playing a video with
 // either SW or HW decoder.
 func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, videoName string,
-	decoderType DecoderType, gridWidth, gridHeight int, perfTracing, measureRoughness bool, outDir string) error {
+	decoderType DecoderType, gridWidth, gridHeight int, perfTracing, measureSteadyStateMetrics bool, measureRoughness bool, outDir string) error {
 	server := httptest.NewServer(http.FileServer(fileSystem))
 	defer server.Close()
 
@@ -233,6 +233,15 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 		defer wg.Done()
 		batErr = graphics.MeasureSystemPowerConsumption(ctx, tconn, measurementDuration, p)
 	}()
+	if measureSteadyStateMetrics {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			batErr = graphics.MeasureSteadyStateSystemPowerConsumption(ctx, tconn,
+				100 /*numSamples*/, 500*time.Millisecond /*samplePeriod*/, 0.15 /*tolerance*/, measurementDuration /*minDuration*/, p)
+		}()
+	}
 	if measureRoughness {
 		wg.Add(1)
 

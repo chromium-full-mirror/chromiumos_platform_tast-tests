@@ -628,6 +628,141 @@ func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t ti
 	return nil
 }
 
+// MeasureSteadyStateSystemPowerConsumption samples the battery power
+// consumption every samplePeriod waiting for the measurements to converge such
+// that for the set of the last numSamples, the maximum is within
+// tolerance * 100% of the minimum sample. When convergence is achieved, the
+// average of the last numSamples will be recorded in p.
+//
+// Notes:
+//
+//   - The first sample will be collected after about
+//     (minDuration - numSamples*samplePeriod) + samplePeriod. That is, this
+//     function runs for at least minDuration (assuming that the context
+//     deadline is at least minDuration away).
+//
+//   - The function will read at least numSamples before considering
+//     convergence.
+//
+//   - If convergence can't be achieved before the context deadline and no other
+//     unexpected situation occurs, this function returns without error and
+//     without recording any value in p.
+//
+//   - To provide accurate readings, the battery needs to be configured to
+//     discharge (callers need to ensure this).
+func MeasureSteadyStateSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, numSamples int,
+	samplePeriod time.Duration, tolerance float64, minDuration time.Duration, p *perf.Values) error {
+	status, err := power.GetStatus(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the battery status")
+	}
+	if !status.BatteryDischarging {
+		return errors.New("the battery is not set to discharge")
+	}
+
+	// We don't use power.SysfsBatteryMetrics because we want to reject zero
+	// readings below.
+	battery, err := power.SysfsBatteryPath(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to find a battery")
+	}
+
+	minSamplingDuration := time.Duration(numSamples) * samplePeriod
+	if minSamplingDuration < minDuration {
+		sleepDurationBeforeStarting := minDuration - minSamplingDuration
+		// GoBigSleepLint: we need to wait before starting the collection of
+		// samples: any samples collected before this period would be discarded
+		// anyway because we need to ensure the function runs for at least
+		// minDuration.
+		if err := testing.Sleep(ctx, sleepDurationBeforeStarting); err != nil {
+			return errors.Wrap(err, "error sleeping")
+		}
+	}
+
+	// samples is the list of the last numSamples power readings. The goal is to
+	// first fill up this list with numSamples readings (full becomes true when
+	// that happens). After that, we'll keep getting power readings (thus
+	// discarding the oldest sample) until we converge to within tolerance.
+	samples := make([]float64, numSamples)
+	full := false
+	minSample := float64(0)
+	minSampleIndex := -1
+	maxSample := float64(0)
+	maxSampleIndex := -1
+	for currentIndex := 0; !full || (maxSample-minSample)/minSample > tolerance; currentIndex = (currentIndex + 1) % numSamples {
+		// Check whether enough time is left for the next sampling cycle before
+		// reaching the context deadline.
+		if deadLine, ok := ctx.Deadline(); ok && deadLine.Sub(time.Now()) <= samplePeriod {
+			testing.ContextLogf(ctx, "Context deadline reached before the system "+
+				"power consumption converged: full = %v, minSample = %fW, maxSample = %fW", full, minSample, maxSample)
+			return nil
+		}
+
+		// GoBigSleepLint: sleep the sample interval for measurements.
+		if err := testing.Sleep(ctx, samplePeriod); err != nil {
+			return errors.Wrap(err, "error sleeping")
+		}
+
+		power, err := power.ReadSystemPower(ctx, battery)
+		if err != nil {
+			return err
+		}
+		if power == 0.0 {
+			continue
+		}
+
+		samples[currentIndex] = power
+
+		if minSampleIndex == -1 || power < minSample {
+			minSample = samples[currentIndex]
+			minSampleIndex = currentIndex
+		} else if full && currentIndex == minSampleIndex && power > minSample {
+			// minSample and minSampleIndex are now outdated, so we need to find the
+			// minimum sample again.
+			minSample = samples[0]
+			minSampleIndex = 0
+			for i, sample := range samples {
+				if sample < samples[minSampleIndex] {
+					minSample = sample
+					minSampleIndex = i
+				}
+			}
+		}
+
+		if maxSampleIndex == -1 || power > maxSample {
+			maxSample = samples[currentIndex]
+			maxSampleIndex = currentIndex
+		} else if full && currentIndex == maxSampleIndex && power < maxSample {
+			// maxSample and maxSampleIndex are now outdated, so we need to find the
+			// maximum sample again.
+			maxSample = samples[0]
+			maxSampleIndex = 0
+			for i, sample := range samples {
+				if sample > samples[maxSampleIndex] {
+					maxSample = sample
+					maxSampleIndex = i
+				}
+			}
+		}
+
+		if !full && currentIndex == numSamples-1 {
+			full = true
+		}
+	}
+
+	// At this point, we have read at least numSamples power readings and have
+	// converged within tolerance. We can now record the average.
+	sum := float64(0)
+	for _, sample := range samples {
+		sum += sample
+	}
+	avg := sum / float64(numSamples)
+	testing.ContextLogf(ctx, "Steady-state system power consumption: %fW "+
+		"(minSample = %fW, maxSample = %fW)", avg, minSample, maxSample)
+	reportMetric("steady_state_system_power", "W", avg, perf.SmallerIsBetter, p)
+	return nil
+}
+
 // MeasureFdCount counts the average and peak number of open FDs by the GPU
 // process(es) during playback. Polls every 1 seconds up until the duration
 // given.

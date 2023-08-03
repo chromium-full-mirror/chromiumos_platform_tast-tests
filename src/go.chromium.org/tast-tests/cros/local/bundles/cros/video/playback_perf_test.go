@@ -78,13 +78,14 @@ type playbackParamData struct {
 	Name string
 
 	// playbackPerfParams
-	File             string
-	DecoderType      playback.DecoderType
-	BrowserType      string
-	GridWidth        int
-	GridHeight       int
-	PerfTracing      bool
-	MeasureRoughness bool
+	File                      string
+	DecoderType               playback.DecoderType
+	BrowserType               string
+	GridWidth                 int
+	GridHeight                int
+	PerfTracing               bool
+	MeasureSteadyStateMetrics bool
+	MeasureRoughness          bool
 
 	SoftwareDeps []string
 	HardwareDeps string
@@ -229,9 +230,12 @@ func TestPlaybackPerfParams(t *testing.T) {
 			fpss = append(fpss, 60)
 		}
 		for _, fps := range fpss {
-			params = append(params,
-				genPlaybackParam("h264", genPlaybackPerfDataPath("h264", resolution, fps),
-					resolution, fps, "hw", "oopvd", "chromeVideoOOPVD", nil))
+			param := genPlaybackParam("h264", genPlaybackPerfDataPath("h264", resolution, fps),
+				resolution, fps, "hw", "oopvd", "chromeVideoOOPVD", nil)
+			if resolution == 1080 && fps == 30 {
+				param.MeasureSteadyStateMetrics = true
+			}
+			params = append(params, param)
 		}
 	}
 
@@ -244,6 +248,9 @@ func TestPlaybackPerfParams(t *testing.T) {
 			[]string{"drm_atomic"})
 		// "rogue" is for MT8173 hana.
 		param.HardwareDeps = "hwdep.SkipGPUFamily([]string{\"rogue\"}), hwdep.InternalDisplay()"
+		if codec == "h264" {
+			param.MeasureSteadyStateMetrics = true
+		}
 		param.MeasureRoughness = true
 		params = append(params, param)
 	}
@@ -268,6 +275,9 @@ func TestPlaybackPerfParams(t *testing.T) {
 		for _, fps := range fpss {
 			param := genPlaybackParam("h264", genPlaybackPerfDataPath("h264", resolution, fps),
 				resolution, fps, "hw", "lacros", "chromeVideoLacros", []string{"lacros"})
+			if resolution == 1080 && fps == 30 {
+				param.MeasureSteadyStateMetrics = true
+			}
 			params = append(params, param)
 		}
 	}
@@ -281,6 +291,9 @@ func TestPlaybackPerfParams(t *testing.T) {
 			[]string{"drm_atomic", "lacros"})
 		// "rogue" is for MT8173 hana.
 		param.HardwareDeps = "hwdep.SkipGPUFamily([]string{\"rogue\"}), hwdep.InternalDisplay()"
+		if codec == "h264" {
+			param.MeasureSteadyStateMetrics = true
+		}
 		param.MeasureRoughness = true
 		params = append(params, param)
 	}
@@ -370,6 +383,9 @@ func TestPlaybackPerfParams(t *testing.T) {
 			{{ end }}
 			{{ if .PerfTracing }}
 			perfTracing: {{ .PerfTracing | fmt }},
+			{{ end }}
+			{{ if .MeasureSteadyStateMetrics }}
+			measureSteadyStateMetrics: {{ .MeasureSteadyStateMetrics | fmt }},
 			{{ end }}
 			{{ if .MeasureRoughness }}
 			measureRoughness: {{ .MeasureRoughness | fmt }},

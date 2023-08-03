@@ -29,6 +29,9 @@ type playbackPerfParams struct {
 	gridHeight int
 	// If set, trace system evens using perfetto during playback.
 	perfTracing bool
+	// If set, we record steady-state metrics: metrics that require convergence to
+	// within a specific tolerance in order to reduce noise across test runs.
+	measureSteadyStateMetrics bool
 	// If set, uses a longer video sequence which allows for measuring Media
 	// Devtools "playback roughness".
 	measureRoughness bool
@@ -883,9 +886,10 @@ func init() {
 			{
 				Name: "h264_1080p_30fps_hw_oopvd",
 				Val: playbackPerfParams{
-					fileName:    "perf/h264/1080p_30fps_300frames.h264.mp4",
-					decoderType: 0,
-					browserType: browser.TypeAsh,
+					fileName:                  "perf/h264/1080p_30fps_300frames.h264.mp4",
+					decoderType:               0,
+					browserType:               browser.TypeAsh,
+					measureSteadyStateMetrics: true,
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
 				ExtraData:         []string{"perf/h264/1080p_30fps_300frames.h264.mp4"},
@@ -927,10 +931,11 @@ func init() {
 			{
 				Name: "h264_1080p_30fps_hw_long_oopvd",
 				Val: playbackPerfParams{
-					fileName:         "crosvideo/1080.mp4",
-					decoderType:      0,
-					browserType:      browser.TypeAsh,
-					measureRoughness: true,
+					fileName:                  "crosvideo/1080.mp4",
+					decoderType:               0,
+					browserType:               browser.TypeAsh,
+					measureSteadyStateMetrics: true,
+					measureRoughness:          true,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily([]string{"rogue"}), hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "drm_atomic"},
@@ -1055,9 +1060,10 @@ func init() {
 			{
 				Name: "h264_1080p_30fps_hw_lacros",
 				Val: playbackPerfParams{
-					fileName:    "perf/h264/1080p_30fps_300frames.h264.mp4",
-					decoderType: 0,
-					browserType: browser.TypeLacros,
+					fileName:                  "perf/h264/1080p_30fps_300frames.h264.mp4",
+					decoderType:               0,
+					browserType:               browser.TypeLacros,
+					measureSteadyStateMetrics: true,
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "lacros"},
 				ExtraData:         []string{"perf/h264/1080p_30fps_300frames.h264.mp4"},
@@ -1099,10 +1105,11 @@ func init() {
 			{
 				Name: "h264_1080p_30fps_hw_long_lacros",
 				Val: playbackPerfParams{
-					fileName:         "crosvideo/1080.mp4",
-					decoderType:      0,
-					browserType:      browser.TypeLacros,
-					measureRoughness: true,
+					fileName:                  "crosvideo/1080.mp4",
+					decoderType:               0,
+					browserType:               browser.TypeLacros,
+					measureSteadyStateMetrics: true,
+					measureRoughness:          true,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily([]string{"rogue"}), hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "drm_atomic", "lacros"},
@@ -1988,5 +1995,6 @@ func PlaybackPerf(ctx context.Context, s *testing.State) {
 	defer ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, origShelfBehavior)
 
 	playback.RunTest(ctx, s, cs, tconn, bTconn, testOpt.fileName, testOpt.decoderType,
-		testOpt.gridWidth, testOpt.gridHeight, testOpt.perfTracing, testOpt.measureRoughness)
+		testOpt.gridWidth, testOpt.gridHeight, testOpt.perfTracing, testOpt.measureSteadyStateMetrics,
+		testOpt.measureRoughness)
 }
