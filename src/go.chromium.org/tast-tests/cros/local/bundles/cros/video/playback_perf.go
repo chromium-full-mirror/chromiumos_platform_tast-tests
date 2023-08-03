@@ -1053,14 +1053,47 @@ func init() {
 				Fixture:           "chromeVideoLacros",
 			},
 			{
-				Name: "vp9_720p_30fps_hw_lacros",
+				Name: "h264_1080p_30fps_hw_lacros",
 				Val: playbackPerfParams{
-					fileName:    "perf/vp9/720p_30fps_300frames.vp9.webm",
+					fileName:    "perf/h264/1080p_30fps_300frames.h264.mp4",
 					decoderType: 0,
 					browserType: browser.TypeLacros,
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "lacros"},
-				ExtraData:         []string{"perf/vp9/720p_30fps_300frames.vp9.webm"},
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "lacros"},
+				ExtraData:         []string{"perf/h264/1080p_30fps_300frames.h264.mp4"},
+				Fixture:           "chromeVideoLacros",
+			},
+			{
+				Name: "h264_1080p_60fps_hw_lacros",
+				Val: playbackPerfParams{
+					fileName:    "perf/h264/1080p_60fps_600frames.h264.mp4",
+					decoderType: 0,
+					browserType: browser.TypeLacros,
+				},
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_60", "lacros"},
+				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264.mp4"},
+				Fixture:           "chromeVideoLacros",
+			},
+			{
+				Name: "h264_2160p_30fps_hw_lacros",
+				Val: playbackPerfParams{
+					fileName:    "perf/h264/2160p_30fps_300frames.h264.mp4",
+					decoderType: 0,
+					browserType: browser.TypeLacros,
+				},
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_2160_30", "lacros"},
+				ExtraData:         []string{"perf/h264/2160p_30fps_300frames.h264.mp4"},
+				Fixture:           "chromeVideoLacros",
+			},
+			{
+				Name: "h264_2160p_60fps_hw_lacros",
+				Val: playbackPerfParams{
+					fileName:    "perf/h264/2160p_60fps_600frames.h264.mp4",
+					decoderType: 0,
+					browserType: browser.TypeLacros,
+				},
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_2160_60", "lacros"},
+				ExtraData:         []string{"perf/h264/2160p_60fps_600frames.h264.mp4"},
 				Fixture:           "chromeVideoLacros",
 			},
 			{

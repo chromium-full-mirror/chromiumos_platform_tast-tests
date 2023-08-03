@@ -260,12 +260,16 @@ func TestPlaybackPerfParams(t *testing.T) {
 	}
 
 	// lacros
-	for _, codec := range []string{"h264", "vp9"} {
-		resolution, fps, dec := 720, 30, "hw"
-		params = append(params,
-			genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
-				resolution, fps, dec, "lacros", "chromeVideoLacros",
-				[]string{"lacros"}))
+	for _, resolution := range []int{720, 1080, 2160} {
+		fpss := []int{30}
+		if resolution >= 1080 {
+			fpss = append(fpss, 60)
+		}
+		for _, fps := range fpss {
+			param := genPlaybackParam("h264", genPlaybackPerfDataPath("h264", resolution, fps),
+				resolution, fps, "hw", "lacros", "chromeVideoLacros", []string{"lacros"})
+			params = append(params, param)
+		}
 	}
 
 	// Long lacros
