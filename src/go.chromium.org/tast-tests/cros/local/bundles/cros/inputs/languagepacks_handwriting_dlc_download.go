@@ -36,7 +36,7 @@ func init() {
 		Attr:         []string{"group:language_packs_hw_recognition_dlc_download_daily"},
 		LacrosStatus: testing.LacrosVariantExists,
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Fixture:      fixture.ClamshellVKWithHandWritingLegacyRecognitionOn,
 	})
@@ -65,8 +65,19 @@ func LanguagepacksHandwritingDlcDownload(ctx context.Context, s *testing.State) 
 	languageTests := map[string]ime.InputMethod{
 		// Add more target languages when you need.
 		// ref: https://source.corp.google.com/piper///depot/google3/chrome/inputs/common/input_method_config.textproto
-		"fr": ime.FrenchFrance,
-		"zh": ime.ChinesePinyin,
+		// ime mapping: src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/chrome/ime/input_method.go
+		"ar":    ime.Arabic,
+		"es":    ime.SpanishSpain,
+		"fr":    ime.FrenchFrance,
+		"it":    ime.Italian,
+		"ja":    ime.Japanese,
+		"ko":    ime.Korean,
+		"nl":    ime.DutchNetherlands,
+		"pt":    ime.Portuguese,
+		"ta":    ime.Tamil,
+		"vi":    ime.VietnameseTelex,
+		"zh":    ime.ChinesePinyin,
+		"zh-HK": ime.Cantonese,
 	}
 
 	for language, ime := range languageTests {
