@@ -131,18 +131,6 @@ func init() {
 					expectedStreamsPerDevice: 1,
 				},
 			},
-
-			{
-				Name: "ac97",
-				Val: audioArecordParams{
-					crosvmArgs:               []string{"--ac97", "backend=cras,socket_type=legacy"},
-					expectedCardNames:        []string{"Intel 82801AA-ICH", "Intel 82801AA-ICH"},
-					expectedDeviceNames:      []string{"Intel 82801AA-ICH", "Intel 82801AA-ICH - MIC ADC"},
-					expectedStreamsPerDevice: 1,
-				},
-				// TODO(b/281092802): Remove this once the issue is fixed.
-				ExtraAttr: []string{"informational"},
-			},
 		},
 	})
 }

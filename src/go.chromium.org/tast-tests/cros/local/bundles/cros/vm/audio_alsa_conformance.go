@@ -57,11 +57,6 @@ func init() {
 			Val: audioutils.Config{
 				VhostUserArgs: []string{"snd", "--config", "capture=true,backend=cras,socket_type=legacy"},
 			},
-		}, {
-			Name: "ac97",
-			Val: audioutils.Config{
-				CrosvmArgs: []string{"--ac97", "backend=cras,capture=true,socket_type=legacy"},
-			},
 		}},
 	})
 }
