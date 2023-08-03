@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -81,8 +82,15 @@ func ARCToHostVPN(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to ping %s from host: %v", arcvpn.TunIP, err)
 	}
 
-	// Connect to host VPN.
-	if err := conn.Connect(ctx); err != nil {
+	// Connect to host VPN. Poll since there's a race between the ARC VPN disconnecting and the
+	// host VPN connecting. It's possible that while the ARC VPN is still connected, the host
+	// VPN tries to connect and fails since it's unintentionally trying to go through the ARC VPN.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := conn.Connect(ctx); err != nil {
+			return errors.Wrap(err, "still not connected to VPN server")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
 		s.Fatal("Failed to connect to VPN server: ", err)
 	}
 
