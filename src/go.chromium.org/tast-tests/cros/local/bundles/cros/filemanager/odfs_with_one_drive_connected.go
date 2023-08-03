@@ -97,8 +97,8 @@ func OdfsWithOneDriveConnected(ctx context.Context, s *testing.State) {
 	}
 
 	options := &cloudupload.OneDriveSetupFlowOptions{
-		CloudUpload: cloudUpload, Ms365App: ms365App, PWAInstalled: false, OneDriveConnected: true}
-	if err := cloudupload.RunOneDriveSetupFlow(options)(ctx); err != nil {
+		Ms365App: ms365App, PWAInstalled: false, OneDriveConnected: true}
+	if err := cloudUpload.RunOneDriveSetupFlow(options)(ctx); err != nil {
 		s.Fatal("Failed to run the setup dialog steps: ", err)
 	}
 

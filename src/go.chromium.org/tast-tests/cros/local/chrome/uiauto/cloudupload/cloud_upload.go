@@ -200,22 +200,21 @@ func (cu *CloudUpload) MaybeConfirmUploadOr365Window(ms365App *ms365.Ms365, file
 
 // OneDriveSetupFlowOptions contains the options required for running OneDrive setup flow.
 type OneDriveSetupFlowOptions struct {
-	CloudUpload       *CloudUpload
 	Ms365App          *ms365.Ms365
 	PWAInstalled      bool
 	OneDriveConnected bool
 }
 
 // RunOneDriveSetupFlow runs the step to test the setup flow.
-func RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) uiauto.Action {
+func (cu *CloudUpload) RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) uiauto.Action {
 	return func(ctx context.Context) error {
 		testing.ContextLog(ctx, "MS user:", options.Ms365App.UserName)
 
 		if err := uiauto.Combine("Setup dialog steps",
 			// Dialog setting up the File Handler, configuring the file type to open with Office 365.
-			options.CloudUpload.WaitFileHandlerAndChoose(filesconsts.OneDrive),
+			cu.WaitFileHandlerAndChoose(filesconsts.OneDrive),
 			// Fist setup dialog.
-			options.CloudUpload.WaitGetStartedDialogAndClickNext(),
+			cu.WaitGetStartedDialogAndClickNext(),
 			func(ctx context.Context) error {
 				// Skip PWA install step if it's already installed.
 				if options.PWAInstalled {
@@ -223,7 +222,7 @@ func RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) uiauto.Action {
 				}
 				// Otherwise expect PWA install screen.
 				// This step is quite slow because it downloads from the internet.
-				return options.CloudUpload.WaitInstallPWADialogAndClickInstall()(ctx)
+				return cu.WaitInstallPWADialogAndClickInstall()(ctx)
 			},
 			func(ctx context.Context) error {
 				// Skip Connect OneDrive step if it's already connected.
@@ -233,14 +232,14 @@ func RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) uiauto.Action {
 				// Otherwise expect Connect OneDrive screen.
 				return uiauto.Combine("Connect to OneDrive",
 					// Connect/mount the ODFS.
-					options.CloudUpload.WaitConnectToOneDriveDialogAndClickConnect(),
+					cu.WaitConnectToOneDriveDialogAndClickConnect(),
 					// Authenticate to OneDrive to mount ODFS.
 					// Skip password screen if PWA is already installed.
 					options.Ms365App.LoginToMicrosoft365(SetupCompleteDialog, options.PWAInstalled /*=skipPassword*/),
 				)(ctx)
 			},
 			// Last step of the setup flow.
-			options.CloudUpload.WaitSetupCompleteDialogAndClickDone(),
+			cu.WaitSetupCompleteDialogAndClickDone(),
 		)(ctx); err != nil {
 			errors.Wrap(err, "failed to complete the setup dialog steps")
 		}

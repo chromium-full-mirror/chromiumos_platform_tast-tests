@@ -90,8 +90,8 @@ func OdfsOpenFile(ctx context.Context, s *testing.State) {
 			// The steps inside the IF are the initial setup that only happen in the first file.
 			if i == 0 {
 				options := &cloudupload.OneDriveSetupFlowOptions{
-					CloudUpload: cloudUpload, Ms365App: ms365App, PWAInstalled: false, OneDriveConnected: false}
-				if err := cloudupload.RunOneDriveSetupFlow(options)(ctx); err != nil {
+					Ms365App: ms365App, PWAInstalled: false, OneDriveConnected: false}
+				if err := cloudUpload.RunOneDriveSetupFlow(options)(ctx); err != nil {
 					s.Fatal("Failed to run the setup dialog steps: ", err)
 				}
 			}
