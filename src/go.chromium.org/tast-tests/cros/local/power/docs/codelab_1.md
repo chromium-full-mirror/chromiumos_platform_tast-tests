@@ -111,7 +111,7 @@ its purpose.
 Depending on the device spec, test specific setup and workload, the cool down
 process could be adjusted by adjusting threshold and time.
 
-`power.TimeParams` determines measurement intervals and test time.
+`power.TimeParams` determines measurement intervals and total test duration.
 
 ```go
 	interval := s.Param().(power.TimeParams).Interval
@@ -123,16 +123,21 @@ between two metric snapshots.
 - `power.TimeParams.Total`: `time.Duration` type, and describes the duration of
 the main test body.
 
-Pick a measurement interval that works. See recommendation:
+Pick a measurement interval that works well with the total test duration. See
+recommendation:
 
-| Total     | Interval |
-|-----------|----------|
-| <20 min   | 5 sec    |
-| <1 hr     | 10 sec   |
-| Otherwise | 20 sec   |
+| Total test duration | Measurement interval |
+|---------------------|----------------------|
+| <5  min             | 5  sec               |
+| <20 min             | 10 sec               |
+| Otherwise           | 20 sec               |
 
-High measurement frequecy (with interval much shorter than 5 sec) is *not*
-recommended, because of sampling overhead and http://b/276789695.
+High measurement frequency (with interval shorter than 5 sec) is not recommended
+for the following reasons:
+
+- Additional power consumption from sampling overhead
+  http://b/288496804#comment10.
+- Reading error http://b/276789695#comment35.
 
 ```go
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
