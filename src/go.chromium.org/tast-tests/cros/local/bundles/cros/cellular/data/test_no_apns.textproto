@@ -6,6 +6,8 @@ mno {
       name: "Cros Cellular Network"
     }
     mccmnc: "00101"  # Callbox
+    mccmnc: "90170"  # Test network
+    mccmnc: "99970"  # Test network
     mccmnc: "23415"  # VodafoneUK
     mccmnc: "23430"  # EEUK
     mccmnc: "310260" # Tmobile

@@ -30,6 +30,7 @@ type Carrier int
 const (
 	CarrierUnknown Carrier = iota
 	CarrierAmarisoft
+	CarrierSysmocom // aleksandermj test network
 	CarrierVerizon
 	CarrierTmobile
 	CarrierAtt
@@ -63,6 +64,8 @@ var (
 	carrierMapping = map[string]Carrier{
 		"00101":  CarrierAmarisoft,
 		"001010": CarrierAmarisoft,
+		"90170":  CarrierSysmocom,
+		"99970":  CarrierSysmocom,
 		"23415":  CarrierVodafoneUK,
 		"23430":  CarrierEEUK,
 		"310260": CarrierTmobile,
@@ -86,6 +89,9 @@ func initializeCarrierAPNs() map[Carrier][]KnownAPN {
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4-pap", ipType: ipv4, username: "username", password: "password", auth: pap}, APNTypes: []string{typeDefault, typeIA}},
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv6", ipType: ipv6}, APNTypes: []string{typeDefault, typeIA}},
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4v6", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
+		},
+		CarrierSysmocom: []KnownAPN{
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "internet", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
 		},
 		// US
 		CarrierTmobile: []KnownAPN{
