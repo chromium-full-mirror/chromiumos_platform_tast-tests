@@ -158,3 +158,6 @@ const (
 	SettingPodCast          SettingPod = "cast"
 	SettingPodCameraFraming SettingPod = "Camera framing"
 )
+
+// HotspotDetailedViewToggle is the finder for the hotspot toggle in Hotspot detailed view in Quick Settings.
+var HotspotDetailedViewToggle = nodewith.Name("Toggle hotspot").Role(role.Switch)

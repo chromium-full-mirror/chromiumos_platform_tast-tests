@@ -29,11 +29,9 @@ func NavigateToHotspotDetailedView(ctx context.Context, tconn *chrome.TestConn) 
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		// Open quick settings, since checking NearbyShareEnabled() needs it open.
 		// This avoids opening and closing quick settings twice.
-		cleanup, err := ensureVisible(ctx, tconn)
-		if err != nil {
+		if _, err := ensureVisible(ctx, tconn); err != nil {
 			return err
 		}
-		defer cleanup(ctx)
 
 		return uiauto.Combine("click the Hotspot tile in quick setttings",
 			ui.WithTimeout(5*time.Second).LeftClick(FeatureTileHotspot),
