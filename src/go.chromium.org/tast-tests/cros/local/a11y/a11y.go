@@ -67,6 +67,18 @@ func ClearFeature(ctx context.Context, tconn *chrome.TestConn, feature Feature) 
 	return nil
 }
 
+// FeatureEnabled gets the current enabled state of the given feature.
+func FeatureEnabled(ctx context.Context, tconn *chrome.TestConn, feature Feature) (bool, error) {
+	var enabled bool
+	if err := tconn.Eval(ctx, fmt.Sprintf(`(async() => {
+			let state = await tast.promisify(tast.bind(chrome.accessibilityFeatures['%s'], 'get'))({});
+			return state.value;
+		})()`, feature), &enabled); err != nil {
+		return false, err
+	}
+	return enabled, nil
+}
+
 // URLFromHTML converts html in to a data:/text/html URL.
 func URLFromHTML(html string) string {
 	return fmt.Sprintf("data:text/html, %s", html)
