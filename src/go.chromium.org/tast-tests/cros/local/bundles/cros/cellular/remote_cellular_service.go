@@ -283,7 +283,7 @@ func (s *RemoteCellularService) QueryInterface(ctx context.Context, _ *empty.Emp
 		return nil, errors.Wrap(err, "failed to get device properties")
 	}
 
-	iface, err := props.GetString(shillconst.DevicePropertyInterface)
+	iface, err := props.GetString(shillconst.DevicePropertyCellularPrimaryMultiplexedInterface)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get device interface from properties")
 	}
