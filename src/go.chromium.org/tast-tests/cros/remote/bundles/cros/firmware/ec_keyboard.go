@@ -144,6 +144,12 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 			"<enter>":  "KEY_ENTER",
 			"<ctrl_l>": "KEY_LEFTCTRL",
 			"<alt_l>":  "KEY_LEFTALT",
+			"<esc>":    "KEY_ESC",
+			"<tab>":    "KEY_TAB",
+			"<f5>":     "KEY_F5|KEY_SCALE",
+			"<f6>":     "KEY_F6|KEY_BRIGHTNESSDOWN",
+			"<f7>":     "KEY_F7|KEY_BRIGHTNESSUP",
+			" ":        "KEY_SPACE",
 		}
 		keyPressFunc = func(ctx context.Context, key string) error {
 			if err := h.Servo.PressKey(ctx, key, servo.Dur(keyPressDur)); err != nil {
