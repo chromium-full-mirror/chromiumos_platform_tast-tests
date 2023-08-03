@@ -17,7 +17,14 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -104,4 +111,59 @@ func MD5SumFile(path string) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+}
+
+// WaitForGoogleDriveWindow wait for the Google Drive window with the specified
+// file name in the title to open.
+func WaitForGoogleDriveWindow(tconn *chrome.TestConn, fileName string) uiauto.Action {
+	ui := uiauto.New(tconn).WithInterval(500 * time.Millisecond)
+	googleDriveWindow := nodewith.Role(role.Window).NameContaining(fileName).HasClass("BrowserRootView")
+	return ui.WaitUntilExists(googleDriveWindow)
+}
+
+// CloseGoogleDriveWindow finds the Google Docs/Sheets/Slides window with the
+// specific file name and close it.
+func CloseGoogleDriveWindow(ctx context.Context, tconn *chrome.TestConn, fileName string) error {
+	w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
+		return strings.Contains(w.Title, fileName) && strings.Contains(w.Title, "Google")
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to find the Google Drive window to close")
+	}
+	if err := w.CloseWindow(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to close the Google Drive window")
+	}
+	return nil
+}
+
+// VerifySourceDestinationMD5SumMatch use MD5 to check if the file content
+// uploaded to Google Drive is the same with the local file.
+func VerifySourceDestinationMD5SumMatch(driveFsClient *DriveFs, srcFilePath, fileName string) uiauto.Action {
+	return func(ctx context.Context) error {
+		// Wait for file to be available locally
+		driveFilePath := driveFsClient.MyDrivePath(fileName)
+		driveFile, err := driveFsClient.NewFile(driveFilePath)
+		if err != nil {
+			return errors.Wrap(err, "failed to build DriveFS file")
+		}
+		err = action.RetrySilently(5, driveFile.ExistsAction(), 1*time.Second)(ctx)
+		if err != nil {
+			return errors.Wrap(err, "file not available locally")
+		}
+
+		// Now compare the uploaded data with what we have locally
+		md5SumForLocalFile, err := MD5SumFile(srcFilePath)
+		if err != nil {
+			return errors.Wrap(err, "failed to checksum for local file")
+		}
+		md5SumForDriveFsFile, err := MD5SumFile(driveFilePath)
+		if err != nil {
+			return errors.Wrap(err, "failed to checksum for DriveFS file")
+		}
+
+		if !strings.EqualFold(md5SumForDriveFsFile, md5SumForLocalFile) {
+			return errors.Errorf("Checksum mismatch! Got: %v Expected: %v", md5SumForDriveFsFile, md5SumForLocalFile)
+		}
+		return nil
+	}
 }

@@ -23,31 +23,31 @@ import (
 
 // CloudUpload represents an instance of the Cloud Upload UI.
 type CloudUpload struct {
-	ui    *uiauto.Context
-	tconn *chrome.TestConn
+	ui       *uiauto.Context
+	tconn    *chrome.TestConn
+	provider filesconsts.Provider
 }
 
 // App returns an instance of the Cloud Upload that can be used to find/wait and
 // interact with the CloudUpload WebUI, which is implemented here:
 // https://source.chromium.org/chromium/chromium/src/+/main:chrome/browser/resources/chromeos/cloud_upload/
-func App(tconn *chrome.TestConn) *CloudUpload {
+func App(tconn *chrome.TestConn, provider filesconsts.Provider) *CloudUpload {
 	// Create a uiauto.Context with default timeout.
 	ui := uiauto.New(tconn).WithInterval(500 * time.Millisecond)
 
-	return &CloudUpload{ui: ui, tconn: tconn}
+	return &CloudUpload{ui: ui, tconn: tconn, provider: provider}
 }
 
 var fileHandlerDialog = nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("Choose an app to open *"))
 var fileHandlerOpenButton = nodewith.Ancestor(fileHandlerDialog).Role(role.Button).Name("Open")
 
 // WaitFileHandlerAndChoose waits for the File Handlers dialog and chooses the target cloud to open office files.
-func (cu *CloudUpload) WaitFileHandlerAndChoose(provider filesconsts.Provider) uiauto.Action {
-
+func (cu *CloudUpload) WaitFileHandlerAndChoose() uiauto.Action {
 	var option *nodewith.Finder
-	if provider == filesconsts.DriveFs {
-		option = nodewith.Ancestor(fileHandlerDialog).Role(role.ListBoxOption).NameRegex(regexp.MustCompile("Google * Uses Google Drive*"))
-	} else if provider == filesconsts.OneDrive {
-		option = nodewith.Ancestor(fileHandlerDialog).Role(role.ListBoxOption).NameRegex(regexp.MustCompile("Microsoft 365*"))
+	if cu.provider == filesconsts.DriveFs {
+		option = nodewith.Ancestor(fileHandlerDialog).Role(role.ListBoxOption).NameContaining("Google Drive")
+	} else if cu.provider == filesconsts.OneDrive {
+		option = nodewith.Ancestor(fileHandlerDialog).Role(role.ListBoxOption).NameContaining("Microsoft 365")
 	}
 
 	return uiauto.Combine("File handlers dialog: choose Google Drive",
@@ -138,8 +138,11 @@ func (cu *CloudUpload) WaitSetupCompleteDialogAndClickDone() uiauto.Action {
 	)
 }
 
-// ConfirmUploadDialog is a finder for the confirmation dialog.
-var ConfirmUploadDialog = nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("(Move|Copy) .* to .* OneDrive .*"))
+// ConfirmUploadDialogForOneDrive is a finder for the OneDrive confirmation dialog.
+var ConfirmUploadDialogForOneDrive = nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("(Move|Copy) .* to .* OneDrive .*"))
+
+// ConfirmUploadDialogForGoogleDrive is a finder for the Google Drive confirmation dialog.
+var ConfirmUploadDialogForGoogleDrive = nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("(Move|Copy) .* to Google Drive .*"))
 
 // OneDriveConnectedDialog to find the OneDrive Connected dialog.
 var OneDriveConnectedDialog = nodewith.Role(role.Dialog).Name("Microsoft OneDrive connected")
@@ -157,7 +160,10 @@ func (cu *CloudUpload) WaitOneDriveConnectedDialogAndClickClose() uiauto.Action 
 
 // WaitUploadConfirmationDialogAndClickToUpload waits for the dialog confirming copy or move to the Cloud, and confirms the upload.
 func (cu *CloudUpload) WaitUploadConfirmationDialogAndClickToUpload(alwaysMove bool) uiauto.Action {
-	dialog := ConfirmUploadDialog
+	dialog := ConfirmUploadDialogForGoogleDrive
+	if cu.provider == filesconsts.OneDrive {
+		dialog = ConfirmUploadDialogForOneDrive
+	}
 	moveButton := nodewith.Ancestor(dialog).Role(role.Button).NameRegex(regexp.MustCompile("(Move|Copy) and open"))
 	alwaysMoveCheckbox := nodewith.Ancestor(dialog).Role(role.CheckBox)
 
@@ -184,13 +190,13 @@ func (cu *CloudUpload) WaitUploadConfirmationDialogAndClickToUpload(alwaysMove b
 func (cu *CloudUpload) MaybeConfirmUploadOr365Window(ms365App *ms365.Ms365, fileName string) uiauto.Action {
 	return func(ctx context.Context) error {
 		found, err := cu.ui.WithTimeout(2*time.Minute).FindAnyExists(ctx,
-			ConfirmUploadDialog,
+			ConfirmUploadDialogForOneDrive,
 			ms365.Microsoft365WindowFinder(fileName),
 		)
 		if err != nil {
 			return errors.Wrap(err, "failed to find the next step after Install PWA dialog")
 		}
-		if found == ConfirmUploadDialog {
+		if found == ConfirmUploadDialogForOneDrive {
 			return uiauto.Combine("Confirm upload and wait to open",
 				cu.WaitUploadConfirmationDialogAndClickToUpload(false),
 				ms365App.WaitForMicrosoft365Window(fileName),
@@ -207,14 +213,14 @@ type OneDriveSetupFlowOptions struct {
 	OneDriveConnected bool
 }
 
-// RunOneDriveSetupFlow runs the step to test the setup flow.
+// RunOneDriveSetupFlow runs the step to test the setup flow for OneDrive.
 func (cu *CloudUpload) RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) uiauto.Action {
 	return func(ctx context.Context) error {
 		testing.ContextLog(ctx, "MS user:", options.Ms365App.UserName)
 
 		if err := uiauto.Combine("Setup dialog steps",
 			// Dialog setting up the File Handler, configuring the file type to open with Office 365.
-			cu.WaitFileHandlerAndChoose(filesconsts.OneDrive),
+			cu.WaitFileHandlerAndChoose(),
 			// Fist setup dialog.
 			cu.WaitGetStartedDialogAndClickNext(),
 			func(ctx context.Context) error {
@@ -247,4 +253,9 @@ func (cu *CloudUpload) RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) u
 		}
 		return nil
 	}
+}
+
+// RunGoogleDriveSetupFlow runs the step to test the setup flow for Google Drive.
+func (cu *CloudUpload) RunGoogleDriveSetupFlow() uiauto.Action {
+	return cu.WaitFileHandlerAndChoose()
 }

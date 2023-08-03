@@ -103,6 +103,9 @@ type FixtureData struct {
 
 	// A list of the generated files, the test is expected to iterate over those files.
 	GeneratedFiles []TestFile
+
+	// The DriveFS helper, reused by tests.
+	DriveFs *drivefs.DriveFs
 }
 
 type fixture struct {
@@ -151,9 +154,11 @@ func prepareOfficeFile(srcPath, targetFolder string) (testFile TestFile, err err
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var cr *chrome.Chrome
 	var err error
+	var driveFsClient *drivefs.DriveFs
 	if f.provider == filesconsts.DriveFs {
 		cr = s.ParentValue().(*drivefs.FixtureData).Chrome
 		f.tconn = s.ParentValue().(*drivefs.FixtureData).TestAPIConn
+		driveFsClient = s.ParentValue().(*drivefs.FixtureData).DriveFs
 	} else if f.provider == filesconsts.OneDrive {
 		opts := f.chromeOptions
 
@@ -205,6 +210,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		Chrome:       cr,
 		TestAPIConn:  f.tconn,
 		TargetFolder: targetBaseName,
+		DriveFs:      driveFsClient,
 	}
 	return f.data
 }
@@ -242,6 +248,9 @@ func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 }
 
 func (f *fixture) Reset(ctx context.Context) error {
+	if err := ash.CloseAllWindows(ctx, f.tconn); err != nil {
+		testing.ContextLog(ctx, "Failed trying to close all windows: ", err)
+	}
 	return nil
 }
 

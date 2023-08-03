@@ -671,7 +671,7 @@ func (f *FilesApp) OpenOfficeFile(ctx context.Context, baseDir, fileName string,
 		open)(ctx); err != nil {
 		return nil, err
 	}
-	return cloudupload.App(f.tconn), nil
+	return cloudupload.App(f.tconn, provider), nil
 }
 
 // GetVolumeID executes JS directly in the JS to get the volume id from the volume manager list.

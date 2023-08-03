@@ -8,6 +8,7 @@ package ms365
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
@@ -155,10 +156,25 @@ func Microsoft365WindowFinder(fileName string) *nodewith.Finder {
 }
 
 // WaitForMicrosoft365Window wait for the Microsoft 365 window with the
-// specified file name/type in the title to open.
+// specified file name in the title to open.
 func (ms *Ms365) WaitForMicrosoft365Window(fileName string) uiauto.Action {
 	ms365App := Microsoft365WindowFinder(fileName)
 	return ms.ui.WaitUntilExists(ms365App)
+}
+
+// CloseMicrosoft365Window finds the Microsoft 365 app window with the specific
+// file name and close it.
+func CloseMicrosoft365Window(ctx context.Context, tconn *chrome.TestConn, fileName string) error {
+	w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
+		return strings.Contains(w.Title, fileName) && strings.Contains(w.Title, "Microsoft")
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to find the MS365 window to close")
+	}
+	if err := w.CloseWindow(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to close the MS365 window")
+	}
+	return nil
 }
 
 // InstallPWA installs Office PWA.

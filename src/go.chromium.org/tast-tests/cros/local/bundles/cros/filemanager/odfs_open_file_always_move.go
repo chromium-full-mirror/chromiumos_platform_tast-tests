@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -73,8 +72,6 @@ func OdfsOpenFileAlwaysMove(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to launch Files app: ", err)
 			}
 			defer files.Close(cleanupCtx)
-			// Close the Office 365 to avoid interfere with following tests and allow the file deletion in the fixture.
-			defer ash.CloseAllWindows(cleanupCtx, tconn)
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_"+fileType)
 
 			cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fileName, filesconsts.OneDrive)
@@ -113,6 +110,7 @@ func OdfsOpenFileAlwaysMove(ctx context.Context, s *testing.State) {
 			if err := ms365App.WaitForMicrosoft365Window(fileName)(ctx); err != nil {
 				s.Fatal("Failed waiting file to open on MS365: ", fileName, err)
 			}
+			defer ms365.CloseMicrosoft365Window(cleanupCtx, tconn, fileName)
 			if err := onedrive.CheckODFSContent(ctx, subTest.SrcFile, fileName); err != nil {
 				s.Fatal("ODFS upload didn't match: ", err)
 			}

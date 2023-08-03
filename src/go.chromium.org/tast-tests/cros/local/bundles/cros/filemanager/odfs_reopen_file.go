@@ -7,10 +7,8 @@ package filemanager
 import (
 	"context"
 	"path/filepath"
-	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -72,8 +70,6 @@ func OdfsReopenFile(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to launch Files app: ", err)
 		}
 		defer files.Close(cleanupCtx)
-		// Close the Office 365 to avoid interfere with following tests and allow the file deletion in the fixture.
-		defer ash.CloseAllWindows(cleanupCtx, tconn)
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_"+fileType)
 
 		// Opening the docx file from Downloads.
@@ -97,16 +93,7 @@ func OdfsReopenFile(ctx context.Context, s *testing.State) {
 		}
 
 		// Close the MS365 window.
-		w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
-			if strings.Contains(w.Title, fileName) && strings.Contains(w.Title, "Microsoft") {
-				return true
-			}
-			return false
-		})
-		if err != nil {
-			s.Fatal("Failed to find the MS365 window to close")
-		}
-		if err := w.CloseWindow(ctx, tconn); err != nil {
+		if err := ms365.CloseMicrosoft365Window(cleanupCtx, tconn, fileName); err != nil {
 			s.Fatal("Failed to close the MS365 window")
 		}
 
@@ -117,6 +104,7 @@ func OdfsReopenFile(ctx context.Context, s *testing.State) {
 		if err := ms365App.WaitForMicrosoft365Window(fileName)(ctx); err != nil {
 			s.Fatal("Failed to upload and open on MS365: ", fileName, err)
 		}
+		defer ms365.CloseMicrosoft365Window(cleanupCtx, tconn, fileName)
 
 		if err := onedrive.CheckODFSContent(ctx, subTest.SrcFile, fileName); err != nil {
 			s.Fatal("ODFS upload didn't match: ", err)

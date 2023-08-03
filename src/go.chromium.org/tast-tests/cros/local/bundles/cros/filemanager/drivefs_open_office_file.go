@@ -10,10 +10,9 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
+	"go.chromium.org/tast-tests/cros/local/drivefs"
 	"go.chromium.org/tast-tests/cros/local/filesconsts"
 	"go.chromium.org/tast-tests/cros/local/onedrive"
 	"go.chromium.org/tast/core/ctxutil"
@@ -22,10 +21,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OdfsOpenFile,
+		Func:         DrivefsOpenOfficeFile,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that docx, xlsx and pptx open in OneDrive",
-		BugComponent: "b:1199143",
+		Desc:         "Verifies docx, xlsx and pptx files can be open by Google Drive",
+		BugComponent: "b:288017991",
 		Timeout:      5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
@@ -42,27 +41,24 @@ func init() {
 			"group:hw_agnostic",
 			"informational",
 		},
-		VarDeps: []string{
-			"onedrive.accountPool",
-		},
-		Fixture: "onedrive",
+		Fixture: "onedriveAndGoogleDrive",
 	})
 }
 
-// OdfsOpenFile tests user opening the 3 file types:
-// 1. docx: First file, goes through the setup flow.
-// 2. pptx: Opens and goes through the "move file" confirmation dialog.
-// 3. xlsx: Same as pptx.
-func OdfsOpenFile(ctx context.Context, s *testing.State) {
-	accountPool := s.RequiredVar("onedrive.accountPool")
+// DrivefsOpenOfficeFile tests that opening a file from Downloads shows the file
+// handler dialog, Google Drive can be selected, the file is moved to Drive and
+// opened in the Editor
+func DrivefsOpenOfficeFile(ctx context.Context, s *testing.State) {
 	data := s.FixtValue().(*onedrive.FixtureData)
 	cr := data.Chrome
 	tconn := data.TestAPIConn
 	targetBaseName := filepath.Base(data.TargetFolder)
+	driveFsClient := data.DriveFs
 
-	for i, subTest := range data.GeneratedFiles {
+	for _, subTest := range data.GeneratedFiles {
 		fileName := subTest.FileName
 		fileType := subTest.FileType
+		srcFile := subTest.SrcFile
 		f := func(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
 			ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -73,37 +69,26 @@ func OdfsOpenFile(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to launch Files app: ", err)
 			}
 			defer files.Close(cleanupCtx)
-			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_"+fileType)
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "drive_open_office_file_"+fileType)
+			defer driveFsClient.SaveLogsOnError(cleanupCtx, s.HasError)
 
-			cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fileName, filesconsts.OneDrive)
+			cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fileName, filesconsts.DriveFs)
 			if err != nil {
 				s.Fatal("Failed to open office file: ", err)
 			}
-			ms365App, err := ms365.App(ctx, tconn, accountPool)
-			if err != nil {
-				s.Fatal("Failed to get instance of Ms365: ", err)
-			}
 
-			// The steps inside the IF are the initial setup that only happen in the first file.
-			if i == 0 {
-				options := &cloudupload.OneDriveSetupFlowOptions{
-					Ms365App: ms365App, PWAInstalled: false, OneDriveConnected: false}
-				if err := cloudUpload.RunOneDriveSetupFlow(options)(ctx); err != nil {
-					s.Fatal("Failed to run the setup dialog steps: ", err)
-				}
-			}
-
-			// Move/copy confirmation dialog.
+			// Run Google Drive setup flow and confirm upload in Move/copy confirmation dialog.
 			if err := uiauto.Combine("Confirm upload and wait to open",
+				cloudUpload.RunGoogleDriveSetupFlow(),
 				cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false /*=alwaysMove*/),
-				ms365App.WaitForMicrosoft365Window(fileName),
+				drivefs.WaitForGoogleDriveWindow(tconn, fileName),
 			)(ctx); err != nil {
-				s.Fatalf("Failed to upload and open on MS365: %q: %v", fileName, err)
+				s.Fatal("Failed to upload and open on Google Drive: ", fileName, err)
 			}
-			defer ms365.CloseMicrosoft365Window(cleanupCtx, tconn, fileName)
+			defer drivefs.CloseGoogleDriveWindow(cleanupCtx, tconn, fileName)
 
-			if err := onedrive.CheckODFSContent(ctx, subTest.SrcFile, fileName); err != nil {
-				s.Fatal("ODFS upload didn't match: ", err)
+			if err := drivefs.VerifySourceDestinationMD5SumMatch(driveFsClient, srcFile, fileName)(ctx); err != nil {
+				s.Fatal("Google Drive upload didn't match: ", err)
 			}
 		}
 

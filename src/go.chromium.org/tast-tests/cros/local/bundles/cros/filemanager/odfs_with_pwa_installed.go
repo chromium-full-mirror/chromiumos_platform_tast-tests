@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
@@ -93,8 +92,6 @@ func OdfsWithPWAInstalled(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch Files app: ", err)
 	}
 	defer files.Close(cleanupCtx)
-	// Close the Office 365 to avoid interfere with following tests and allow the file deletion in the fixture.
-	defer ash.CloseAllWindows(cleanupCtx, tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "odfs_with_pwa_installed")
 
 	cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fileName, filesconsts.OneDrive)
@@ -115,6 +112,7 @@ func OdfsWithPWAInstalled(ctx context.Context, s *testing.State) {
 	)(ctx); err != nil {
 		s.Fatal("Failed to upload and open on MS365: ", fileName, err)
 	}
+	defer ms365.CloseMicrosoft365Window(cleanupCtx, tconn, fileName)
 
 	if err := onedrive.CheckODFSContent(ctx, srcFile, fileName); err != nil {
 		s.Fatal("ODFS upload didn't match: ", err)

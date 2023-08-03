@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -71,8 +70,6 @@ func OdfsWithOneDriveConnected(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch Files app: ", err)
 	}
 	defer files.Close(cleanupCtx)
-	// Close the Office 365 to avoid interfere with following tests and allow the file deletion in the fixture.
-	defer ash.CloseAllWindows(cleanupCtx, tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "odfs_with_one_drive_installed")
 
 	ms365App, err := ms365.App(ctx, tconn, accountPool)
@@ -81,7 +78,7 @@ func OdfsWithOneDriveConnected(ctx context.Context, s *testing.State) {
 	}
 
 	// Connect to OneDrive via Files gear menu.
-	cloudUpload := cloudupload.App(tconn)
+	cloudUpload := cloudupload.App(tconn, filesconsts.OneDrive)
 	if err := uiauto.Combine("Connect to OneDrive via Files context menu",
 		files.ClickMoreMenuItem("Services", "Connect OneDrive"),
 		cloudUpload.WaitConnectToOneDriveDialogAndClickConnect(),
@@ -109,6 +106,7 @@ func OdfsWithOneDriveConnected(ctx context.Context, s *testing.State) {
 	)(ctx); err != nil {
 		s.Fatal("Failed to upload and open on MS365: ", fileName, err)
 	}
+	defer ms365.CloseMicrosoft365Window(cleanupCtx, tconn, fileName)
 
 	if err := onedrive.CheckODFSContent(ctx, srcFile, fileName); err != nil {
 		s.Fatal("ODFS upload didn't match: ", err)
