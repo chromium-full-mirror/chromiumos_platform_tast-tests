@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package tast.cros.demomode;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/demomode";
+
+service DemoModeService {
+  rpc SetUpDemoMode(SetUpDemoModeRequest) returns (google.protobuf.Empty) {}
+}
+
+message SetUpDemoModeRequest {}
