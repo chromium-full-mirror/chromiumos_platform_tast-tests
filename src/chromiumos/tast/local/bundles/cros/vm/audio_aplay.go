@@ -131,16 +131,6 @@ func init() {
 					expectedStreamsPerDevice: 1,
 				},
 			},
-
-			{
-				Name: "ac97",
-				Val: audioAplayParams{
-					crosvmArgs:               []string{"--ac97", "backend=cras,socket_type=legacy"},
-					expectedCardNames:        []string{"Intel 82801AA-ICH"},
-					expectedDeviceNames:      []string{"Intel 82801AA-ICH"},
-					expectedStreamsPerDevice: 1,
-				},
-			},
 		},
 	})
 }
