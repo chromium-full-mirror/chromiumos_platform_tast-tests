@@ -100,6 +100,10 @@ func KeyboardPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait until CPU idle: ", err)
 	}
 
+	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
+		s.Fatal("Failed to clear UI: ", err)
+	}
+
 	s.Log("Injecting key events")
 	const (
 		numEvents = 50
