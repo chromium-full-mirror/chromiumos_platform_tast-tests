@@ -175,6 +175,15 @@ func App(ctx context.Context, tconn *chrome.TestConn, appID string) (*FilesApp, 
 	return &FilesApp{tconn: tconn, ui: ui, appID: appID}, nil
 }
 
+// ExistingOrNew returns an existing instance of Files app if available, else a new one.
+func ExistingOrNew(ctx context.Context, tconn *chrome.TestConn) (*FilesApp, error) {
+	if err := uiauto.New(tconn).WithTimeout(time.Second).WaitUntilExists(WindowFinder(apps.FilesSWA.ID))(ctx); err == nil {
+		return App(ctx, tconn, apps.FilesSWA.ID)
+	}
+
+	return Launch(ctx, tconn)
+}
+
 // Close closes the Files App.
 // This is automatically done when chrome resets and is not necessary to call.
 func (f *FilesApp) Close(ctx context.Context) error {
