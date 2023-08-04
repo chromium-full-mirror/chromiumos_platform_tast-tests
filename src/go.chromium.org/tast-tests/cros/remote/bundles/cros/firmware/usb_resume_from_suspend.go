@@ -33,7 +33,7 @@ func init() {
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.firmware.UtilsService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
 		Timeout:      8 * time.Minute,
@@ -51,6 +51,20 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 
 	if err := h.RequireRPCClient(ctx); err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+
+	// If switching between tablet and laptop mode is supported, for example, on
+	// detachables and convertibles, set DUT in laptop mode in order for a key
+	// press to be effective later in waking DUT from suspend.
+	cmds, err := h.CheckECTabletLaptopModeCommand(ctx)
+	if err != nil {
+		s.Fatal("Failed to determine the commands for switching to tablet or laptop mode: ", err)
+	}
+	if cmds.SetECLaptopModeCmd != "" {
+		s.Logf("Running ec command %s to set DUT in laptop mode", cmds.SetECLaptopModeCmd)
+		if _, err := h.Servo.CheckAndRunTabletModeCommand(ctx, cmds.SetECLaptopModeCmd); err != nil {
+			s.Fatal("Failed to set DUT in laptop mode: ", err)
+		}
 	}
 
 	s.Log("Starting a new Chrome")

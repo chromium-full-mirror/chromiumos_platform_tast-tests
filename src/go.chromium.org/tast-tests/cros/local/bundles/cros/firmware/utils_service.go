@@ -354,3 +354,13 @@ func (us *UtilsService) PerformSpeedometerTest(ctx context.Context, req *empty.E
 
 	return &fwpb.SpeedometerResponse{Result: resultInfo.Name}, err
 }
+
+// CheckCrosConfigProperty runs 'cros_config' and checks the value for a given
+// hardware property.
+func (us *UtilsService) CheckCrosConfigProperty(ctx context.Context, req *fwpb.CheckCrosConfigRequest) (*fwpb.CheckCrosConfigResponse, error) {
+	out, err := crosconfig.Get(ctx, req.CrosConfigPath, req.CrosConfigProperty)
+	if err != nil && !crosconfig.IsNotFound(err) {
+		return nil, err
+	}
+	return &fwpb.CheckCrosConfigResponse{CrosConfigPropertyValue: out}, nil
+}

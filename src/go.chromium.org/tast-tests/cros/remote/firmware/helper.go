@@ -1756,3 +1756,98 @@ func (h *Helper) WaitFirmwareScreen(ctx context.Context) error {
 	}
 	return nil
 }
+
+// ECTabletLaptopModeCtrl contains the control name for setting DUT in tablet,
+// or laptop mode.
+type ECTabletLaptopModeCtrl int
+
+// These are some available controls for SetECTabletLaptopMode.
+const (
+	SetECTabletMode ECTabletLaptopModeCtrl = iota
+	SetECLaptopMode
+)
+
+// TabletLaptopModeCmds contains the ec commands for switching to tablet or
+// laptop mode.
+type TabletLaptopModeCmds struct {
+	SetECTabletModeCmd string
+	SetECLaptopModeCmd string
+}
+
+// CheckECTabletLaptopModeCommand returns TabletLaptopModeCmds, containing the
+// ec commands for swtiching to tablet and laptop mode, if they are supported.
+func (h *Helper) CheckECTabletLaptopModeCommand(ctx context.Context) (TabletLaptopModeCmds, error) {
+	var cmds TabletLaptopModeCmds
+	if err := h.RequireRPCUtils(ctx); err != nil {
+		return cmds, errors.Wrap(err, "requiring RPC utils")
+	}
+	testing.ContextLog(ctx, "Checking if DUT is convertible")
+	isConvertible, err := func(ctx context.Context) (bool, error) {
+		// Run 'cros_config /hardware-properties is-lid-convertible' remotely to
+		// check if DUT is a convertible device.
+		checkConvertibleRequest := fwpb.CheckCrosConfigRequest{
+			CrosConfigPath:     "/hardware-properties",
+			CrosConfigProperty: "is-lid-convertible",
+		}
+		checkConvertible, err := h.RPCUtils.CheckCrosConfigProperty(ctx, &checkConvertibleRequest)
+		if err != nil {
+			return false, err
+		}
+		if checkConvertible.CrosConfigPropertyValue != "" {
+			out, err := strconv.ParseBool(checkConvertible.CrosConfigPropertyValue)
+			if err != nil {
+				return false, errors.Wrapf(err, "failed to convert %s to bool", checkConvertible.CrosConfigPropertyValue)
+			}
+			return out, nil
+		}
+		// Just in case 'cros_config /hardware-properties is-lid-convertible'
+		// doesn't exist, for example, on zork/gumboz, reconfirm with the
+		// form-factor flag.
+		checkFormFactorRequest := fwpb.CheckCrosConfigRequest{
+			CrosConfigPath:     "/hardware-properties",
+			CrosConfigProperty: "form-factor",
+		}
+		formFactor, err := h.RPCUtils.CheckCrosConfigProperty(ctx, &checkFormFactorRequest)
+		if err != nil {
+			return false, err
+		}
+		if formFactor.CrosConfigPropertyValue == "CONVERTIBLE" {
+			return true, nil
+		}
+		return false, nil
+	}(ctx)
+	if err != nil {
+		return cmds, errors.Wrap(err, "failed to check if DUT is a convertible")
+	}
+	testing.ContextLog(ctx, "Checking if DUT is detachable")
+	isDetachable, err := func(ctx context.Context) (bool, error) {
+		// Run 'cros_config /detachable-base usb-path' remotely to check if DUT is a
+		// detachable device.
+		checkDetachableRequest := fwpb.CheckCrosConfigRequest{
+			CrosConfigPath:     "/detachable-base",
+			CrosConfigProperty: "usb-path",
+		}
+		detachableUSBPath, err := h.RPCUtils.CheckCrosConfigProperty(ctx, &checkDetachableRequest)
+		if err != nil {
+			return false, err
+		}
+		if detachableUSBPath.CrosConfigPropertyValue != "" {
+			return true, nil
+		}
+		return false, nil
+	}(ctx)
+	if err != nil {
+		return cmds, errors.Wrap(err, "failed to check if DUT is a detachable")
+	}
+	// Switching between tablet and laptop mode should only be applicable on
+	// convertible and detachable machines.
+	if isConvertible {
+		cmds.SetECTabletModeCmd = "tabletmode on"
+		cmds.SetECLaptopModeCmd = "tabletmode off"
+	}
+	if isDetachable {
+		cmds.SetECTabletModeCmd = "basestate detach"
+		cmds.SetECLaptopModeCmd = "basestate attach"
+	}
+	return cmds, nil
+}

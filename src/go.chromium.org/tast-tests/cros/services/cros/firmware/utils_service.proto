@@ -44,6 +44,9 @@ service UtilsService {
 
   // PerformSpeedometerTest opens a speedometer test website, runs it and returns the result value.
   rpc PerformSpeedometerTest (google.protobuf.Empty) returns (SpeedometerResponse) {}
+
+  // CheckCrosConfigProperty checks cros_config and returns the value of a hardware property.
+  rpc CheckCrosConfigProperty (CheckCrosConfigRequest) returns (CheckCrosConfigResponse) {}
 }
 
 // ReadServoKeyboardRequest listens the servo's keyboard emulator for a specified duration in seconds.
@@ -75,11 +78,22 @@ message NodeElement {
 message CrosConfigResponse {
   reserved 1;
   string product_id = 2;
-  string vendor_id = 3; 
+  string vendor_id = 3;
   string usb_path= 4 ;
 }
 
 // SpeedometerResponse provides the result from running a speedometer test.
 message SpeedometerResponse {
     string result = 1;
+}
+
+// CheckCrosConfigRequest represents a hardware property to be checked.
+message CheckCrosConfigRequest {
+  string cros_config_path = 1;
+  string cros_config_property = 2;
+}
+
+// CheckCrosConfigResponse returns the value of a given hardware property.
+message CheckCrosConfigResponse {
+  string cros_config_property_value = 1;
 }
