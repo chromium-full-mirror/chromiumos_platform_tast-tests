@@ -24,12 +24,13 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// Timeouts for testing.Fixture.
 const (
-	setUpTimeout    = 1 * time.Minute
-	resetTimeout    = 1 * time.Minute
-	tearDownTimeout = 1 * time.Minute
-	preTestTimeout  = 1 * time.Minute
-	postTestTimeout = 1 * time.Minute
+	SetUpTimeout    = 1 * time.Minute
+	ResetTimeout    = 1 * time.Minute
+	TearDownTimeout = 1 * time.Minute
+	PreTestTimeout  = 1 * time.Minute
+	PostTestTimeout = 1 * time.Minute
 )
 
 // List of power fixtures.
@@ -89,8 +90,8 @@ func init() {
 			"jakebarnes@google.com",
 		},
 		Impl:            &powerSetUpFixture{},
-		SetUpTimeout:    setUpTimeout,
-		TearDownTimeout: tearDownTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		TearDownTimeout: TearDownTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -106,11 +107,11 @@ func init() {
 			Backlight:          SetBacklightToZero,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -125,11 +126,11 @@ func init() {
 			Backlight:          SetBacklightToZero,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -151,11 +152,11 @@ func init() {
 				Backlight:          SetBacklightToZero,
 			},
 		),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -166,11 +167,11 @@ func init() {
 			"mqg@chromium.org",
 		},
 		Impl:            &powerMetricsNoUIFixture{},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout + power.RecorderTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout + power.RecorderTimeout,
+		PostTestTimeout: PostTestTimeout,
 		Parent:          "powerNoUIWiFi",
 	})
 
@@ -186,11 +187,11 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightness,
 		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -205,11 +206,11 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -224,11 +225,11 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightness,
 		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -243,11 +244,11 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -265,11 +266,11 @@ func init() {
 			BrowserType:     browser.TypeAsh,
 			EnableGAIALogin: true,
 		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout + setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -287,11 +288,11 @@ func init() {
 			BrowserType:     browser.TypeLacros,
 			EnableGAIALogin: true,
 		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout + setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -310,11 +311,11 @@ func init() {
 			EnableGAIALogin: true,
 			EnableARC:       true,
 		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -333,11 +334,11 @@ func init() {
 			EnableGAIALogin: true,
 			EnableARC:       true,
 		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -353,11 +354,11 @@ func init() {
 			KeyboardBrightness: SetKbBrightnessToZero,
 			Ramfs:              SetupRamfs,
 		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -373,11 +374,11 @@ func init() {
 			KeyboardBrightness: SetKbBrightnessToZero,
 			Ramfs:              SetupRamfs,
 		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 	// Dark theme basic fixtures
 	testing.AddFixture(&testing.Fixture{
@@ -392,11 +393,11 @@ func init() {
 			DarkTheme:          EnableDarkTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: PowerLacrosDark,
@@ -410,11 +411,11 @@ func init() {
 			DarkTheme:          EnableDarkTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 	// Nightlight basic fixtures
 	testing.AddFixture(&testing.Fixture{
@@ -429,11 +430,11 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: PowerLacrosNightlight,
@@ -447,11 +448,11 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -488,11 +489,11 @@ func init() {
 				},
 			},
 		),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -519,11 +520,11 @@ func init() {
 			},
 		}),
 		Parent:          fixture.StereoAloopLoaded,
-		SetUpTimeout:    chrome.GAIALoginTimeout + setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -543,11 +544,11 @@ func init() {
 				chrome.EnableFeatures("QsRevamp"),
 			},
 		}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -561,11 +562,11 @@ func init() {
 			ChargeLimit: DisableChargeLimit,
 			Powerd:      DoNotChangePowerd,
 		}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 }
 
