@@ -74,13 +74,13 @@ func DiagnosticsRunV2(ctx context.Context, s *testing.State) {
 	// not fail the Tast test.
 	if result.Status != croshealthd.StatusPassed &&
 		result.Status != croshealthd.StatusFailed {
-		s.Fatalf("Unexpected routine status for %q: got %q; want %q or %q;",
-			routine, result.Status, croshealthd.StatusPassed, croshealthd.StatusFailed)
+		s.Fatalf("Unexpected routine status for %q: got %q; want %q or %q; output: %s",
+			routine, result.Status, croshealthd.StatusPassed, croshealthd.StatusFailed, result.Output)
 	}
 
 	// Check to see that if the routine was run, the progress is 100%.
 	if result.Progress != 100 {
-		s.Fatalf("Unexpected progress value for %q routine with status %q: got %d; want 100;",
-			routine, result.Status, result.Progress)
+		s.Fatalf("Unexpected progress value for %q routine with status %q: got %d; want 100; output: %s",
+			routine, result.Status, result.Progress, result.Output)
 	}
 }

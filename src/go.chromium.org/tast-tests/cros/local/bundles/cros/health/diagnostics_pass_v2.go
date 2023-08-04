@@ -77,13 +77,13 @@ func DiagnosticsPassV2(ctx context.Context, s *testing.State) {
 	}
 
 	if result.Status != croshealthd.StatusPassed {
-		s.Fatalf("Unexpected routine status for %q: got %q; want Passed;",
-			routine, result.Status)
+		s.Fatalf("Unexpected routine status for %q: got %q; want Passed; output: %s",
+			routine, result.Status, result.Output)
 	}
 
 	// Check to see that if the routine was run, the progress is 100%.
 	if result.Progress != 100 {
-		s.Fatalf("Unexpected progress value for %q routine with status %q: got %d; want 100;",
-			routine, result.Status, result.Progress)
+		s.Fatalf("Unexpected progress value for %q routine with status %q: got %d; want 100; output: %s",
+			routine, result.Status, result.Progress, result.Output)
 	}
 }
