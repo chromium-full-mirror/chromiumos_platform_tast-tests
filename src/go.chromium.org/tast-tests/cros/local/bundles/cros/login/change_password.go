@@ -53,6 +53,13 @@ func init() {
 			// Credentials sync - successful password change.
 			Value: "screenplay-1b766b3e-874a-49dd-be9d-5c63994970e3",
 		}},
+		Params: []testing.Param{{
+			Name: "no_consumer_update",
+			Val:  false,
+		}, {
+			Name: "consumer_update",
+			Val:  true,
+		}},
 	})
 }
 
@@ -99,13 +106,22 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 
 	// Isolate the step to leverage `defer` pattern.
 	func() {
-		cr, err := chrome.New(
-			ctx,
+		isConsumerUpdate := s.Param().(bool)
+
+		options := []chrome.Option{
 			chrome.GAIALogin(gaiaCreds),
 			chrome.DontWaitForCryptohome(),
 			chrome.KeepState(),
 			chrome.RemoveNotification(false), // By default it waits for the user session.
-			chrome.DontSkipOOBEAfterLogin())
+			chrome.DontSkipOOBEAfterLogin(),
+		}
+
+		if isConsumerUpdate {
+			options = append(options, chrome.ExtraArgs("--enable-features=OobeSoftwareUpdate"))
+		}
+
+		cr, err := chrome.New(ctx, options...)
+
 		if err != nil {
 			s.Fatal("Chrome login failed: ", err)
 		}

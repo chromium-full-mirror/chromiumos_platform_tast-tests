@@ -169,7 +169,7 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 		}
 
 		// If user creation screen asks whether to add an account for "You" or "A child",
-		// click next button to choose "You".
+		// click the for "You" option and then click the "Next" button.
 		testing.ContextLog(ctx, "Clicking next button on user creation screen")
 		err := oobeConn.Call(ctx, nil, `() => {
 		  const elem = document.querySelector('user-creation-element');
@@ -177,6 +177,11 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 		    // This is not an error because user creation screen is not always shown.
 		    return;
 		  }
+		  const selfSignInButton = elem.shadowRoot.getElementById('selfButton');
+		  if (!selfSignInButton) {
+		    throw new Error('For personal use cr-button not found on user creation screen');
+		  }
+		  selfSignInButton.click();
 		  const nextButton = elem.shadowRoot.querySelector('oobe-next-button');
 		  if (!nextButton) {
 		    throw new Error('Next button not found on user creation screen');
