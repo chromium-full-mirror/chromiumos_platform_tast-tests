@@ -41,13 +41,14 @@ type notificationClearTestVal struct {
 }
 
 func init() {
+	// TODO(b/294542935): Re-enable the `clear_all*` variants.
+	// TODO(b/294542488): Re-enable the `one_at_a_time*` variants.
 	testing.AddTest(&testing.Test{
 		Func:         NotificationClosePerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures animation performance of the clear all animation or individual notification deletion in the message center",
 		Contacts:     []string{"cros-status-area-eng@google.com", "newcomer@chromium.org", "chromeos-wmp@google.com", "chromeos-sw-engprod@google.com"},
 		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      10 * time.Minute,
@@ -201,6 +202,8 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 		}
 
 		// Open the uber tray, then collapse quick settings which results in an expanded MessageCenter.
+		// TODO(b/294542935): We should click on the notification tray specifically, not just the whole
+		// status area in general as that's not guaranteed to open the notification bubble.
 		if err := uiauto.Combine(
 			"open the uber tray, then collapse quick settings",
 			automationController.LeftClick(statusArea),
