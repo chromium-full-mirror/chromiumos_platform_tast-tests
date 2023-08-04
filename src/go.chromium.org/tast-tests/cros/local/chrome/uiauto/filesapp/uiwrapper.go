@@ -102,7 +102,7 @@ func (f *FilesApp) DoubleClick(finder *nodewith.Finder) uiauto.Action {
 }
 
 // LeftClickUntil calls ui.LeftClickUntil scoping the finder to the Files App.
-func (f *FilesApp) LeftClickUntil(finder *nodewith.Finder, condition func(context.Context) error) uiauto.Action {
+func (f *FilesApp) LeftClickUntil(finder *nodewith.Finder, condition uiauto.Action) uiauto.Action {
 	return f.ui.LeftClickUntil(finder.FinalAncestor(WindowFinder(f.appID)), condition)
 }
 
@@ -114,4 +114,9 @@ func (f *FilesApp) FocusAndWait(finder *nodewith.Finder) uiauto.Action {
 // EnsureFocused calls ui.FocusAndWait if the target node is not focused.
 func (f *FilesApp) EnsureFocused(finder *nodewith.Finder) uiauto.Action {
 	return f.ui.EnsureFocused(finder.FinalAncestor(WindowFinder(f.appID)))
+}
+
+// RetryUntil calls ui.RetryUntil which performs `action` until `condition“ is met.
+func (f *FilesApp) RetryUntil(action, condition uiauto.Action) uiauto.Action {
+	return f.ui.RetryUntil(action, condition)
 }
