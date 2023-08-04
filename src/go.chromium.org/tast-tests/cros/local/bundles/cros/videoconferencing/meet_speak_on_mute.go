@@ -153,7 +153,7 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 	verifyNoNudgeDuringCoolDown := func(ctx context.Context) error {
 		if err := ui.WithTimeout(coolDownWaitDuration - 5*time.Second).WaitUntilExists(common.SpeakOnMuteNudge)(ctx); err == nil {
 			return errors.New("failed to apply mute cool down: the nudge appears during cool down")
-		} else if strings.Contains(err.Error(), nodewith.ErrNotFound) {
+		} else if strings.Contains(err.Error(), nodewith.ErrNotFound) || strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
 			return nil
 		} else {
 			return err
