@@ -126,7 +126,7 @@ func createAccount(ctx context.Context, tconn *chrome.TestConn) error {
 
 	inputField := nodewith.Role(role.TextField).Ancestor(agreeToTermsArea)
 	if err := uiauto.Combine("input age to verify",
-		ui.FocusAndWait(inputField),
+		ui.DoDefaultUntil(inputField, ui.WithTimeout(shortUITimeout).WaitUntilExists(inputField.Focused())),
 		kb.TypeAction("2000"), // Hardcode Year-of-birth to 2000.
 		ui.DoDefaultUntil(continueButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(continueButton)),
 	)(ctx); err != nil {
