@@ -20,13 +20,13 @@ const (
 	pointX = "3037d0359236fefb563c30e5c388db97f80c806282b4201d37f75e70f4e9a893"
 	pointY = "e865c0b9db57b41835006bb3d57e09117c86df1b208cefae5f73f44fc19d363f"
 
-	ussAuthSessionFakeBiometricsFixtureName = "ussAuthSessionFakeBiometricsFixture"
+	fakeBiometricsFixtureName = "fakeBiometricsFixture"
 )
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: ussAuthSessionFakeBiometricsFixtureName,
-		Desc: "Set up AuthSession With USS and Fake Biometrics Daemon",
+		Name: fakeBiometricsFixtureName,
+		Desc: "Set up AuthSession With Fake Biometrics Daemon",
 		Contacts: []string{
 			"lziest@google.com",
 			"cryptohome-core@google.com",
@@ -35,7 +35,10 @@ func init() {
 		ResetTimeout:    fixtureResetTimeout,
 		TearDownTimeout: fixtureTearDownTimeout,
 		Impl:            &biometricsFixtureImpl{},
-		Parent:          ussAuthSessionFixtureName,
+		// This fixture needs to be set up after a fresh reboot because PinWeaver's trust-on-first-use
+		// protocol is only allowed before a user is logged-in in a boot cycle. Previous tests might
+		// have logged-in a user so the test needs a clean boot.
+		Parent: "rebootFixture",
 	})
 }
 

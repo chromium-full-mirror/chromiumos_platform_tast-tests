@@ -1184,7 +1184,9 @@ func (u *CryptohomeClient) TerminateFpAuthFactor(ctx context.Context, authSessio
 // reply, just return the execution error and log the output.
 func (u *CryptohomeClient) PrepareThenAddFpAuthFactor(ctx context.Context, authSessionID, label string) error {
 	binaryMsg, err := u.binary.prepareThenAddFpAuthFactor(ctx, authSessionID, label)
-	testing.ContextLogf(ctx, "prepareAddFpAuthFactor returns with %q", binaryMsg)
+	if err != nil {
+		testing.ContextLogf(ctx, "prepareAddFpAuthFactor returns with %q", binaryMsg)
+	}
 	return err
 }
 

@@ -30,8 +30,9 @@ func init() {
 			"lziest@google.com",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
+		Attr:         []string{"group:mainline", "informational", "group:cryptohome"},
 		SoftwareDeps: []string{"pinweaver"},
-		Fixture:      "ussAuthSessionFakeBiometricsFixture",
+		Fixture:      "fakeBiometricsFixture",
 	})
 }
 
@@ -124,7 +125,7 @@ func AddFingerprintFactor(ctx context.Context, s *testing.State) {
 			ExpectedErrorCode: uda.CryptohomeErrorCode_CRYPTOHOME_ADD_CREDENTIALS_FAILED,
 		},
 	} {
-		s.Run(ctx, tc.Label, func(ctx context.Context, s *testing.State) {
+		if s.Run(ctx, tc.Label, func(ctx context.Context, s *testing.State) {
 			// Set up FakeAuthStackManager's behaviors.
 			fasm.SetCreateCredStatus(&tc.CreateCredStatus)
 			fasm.SetEnrollmentProgresses(tc.EnrollmentProgresses)
@@ -167,7 +168,9 @@ func AddFingerprintFactor(ctx context.Context, s *testing.State) {
 			if fasm.GetCreateCredStatus() != nil || fasm.GetEnrollmentProgresses() != nil {
 				s.Fatal("FakeAuthStackManager did not execute all predefined code paths")
 			}
-
-		})
+		}) {
+			// Don't continue to run upcoming subtests, as state has already gone wrong.
+			return
+		}
 	}
 }
