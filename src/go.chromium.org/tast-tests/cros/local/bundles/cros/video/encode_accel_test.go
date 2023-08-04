@@ -70,11 +70,84 @@ func encodeSoftwareDeps(codec string, height int, vbr bool) []string {
 	return deps
 }
 
+func psnrThreshold(codec string, height int) float32 {
+	psnrThresholdTable := map[string]map[int]float32{
+		"h264": {
+			180:  31.8,
+			270:  30.0,
+			360:  34.1,
+			720:  36.0,
+			1080: 35.0,
+			2160: 34.5,
+		},
+		"vp8": {
+			180:  29.5,
+			270:  28.5,
+			360:  29.5,
+			720:  35.7,
+			1080: 35.3,
+			2160: 35.3,
+		},
+		"vp9": {
+			180:  28.5,
+			270:  29.5,
+			360:  31.7,
+			540:  33.3,
+			720:  36.7,
+			1080: 38.4,
+			2160: 40.8,
+		},
+		"av1": {
+			180:  28.5,
+			270:  29.5,
+			360:  31.7,
+			540:  33.3,
+			720:  36.7,
+			1080: 38.4,
+			2160: 40.8,
+		},
+	}
+	return psnrThresholdTable[codec][height]
+}
+
+func psnrThresholdSVC(codec string, height int, svcMode string) float32 {
+	psnrThresholdSVCTable := map[string]map[int]map[string]float32{
+		"h264": {
+			720: {
+				"l1t2": 35.0,
+				"l1t3": 34.0,
+			},
+		},
+		"vp8": {
+			1080: {
+				"l1t2": 37.8,
+				"l1t3": 38.2,
+			},
+		},
+		"vp9": {
+			540: {
+				"l1t2":     32.4,
+				"l1t3":     32.7,
+				"l2t3_key": 27.5,
+				"l3t3_key": 25.0,
+			},
+			720: {
+				"l1t2":     35.5,
+				"l1t3":     36.0,
+				"l2t3_key": 29.8,
+				"l3t3_key": 25,
+			},
+		},
+	}
+	return psnrThresholdSVCTable[codec][height][svcMode]
+}
+
 func TestEncodeAccelParams(t *testing.T) {
 	type encodeAccelParam struct {
 		Name                   string
 		WebMName               string
 		Profile                string
+		PSNRThreshold          float32
 		SVCMode                string
 		DisableGlobalVaapiLock bool
 		BitrateMode            string
@@ -113,6 +186,7 @@ func TestEncodeAccelParams(t *testing.T) {
 				Name:              fmt.Sprintf("%s_%dp", codec, height),
 				WebMName:          webMFile,
 				Profile:           toProfile(codec),
+				PSNRThreshold:     psnrThreshold(codec, height),
 				BitrateMode:       "cbr",
 				ExtraSoftwareDeps: encodeSoftwareDeps(codec, height, false),
 				ExtraData:         []string{webMFile, webMJSONFile},
@@ -143,6 +217,7 @@ func TestEncodeAccelParams(t *testing.T) {
 				Name:              fmt.Sprintf("%s_%dp_%s", codec, height, svcMode),
 				WebMName:          webMFile,
 				Profile:           toProfile(codec),
+				PSNRThreshold:     psnrThresholdSVC(codec, height, svcMode),
 				SVCMode:           strings.ToUpper(svcMode),
 				BitrateMode:       "cbr",
 				ExtraSoftwareDeps: append(encodeSoftwareDeps(codec, height, false), "vaapi"),
@@ -168,6 +243,7 @@ func TestEncodeAccelParams(t *testing.T) {
 			Name:              fmt.Sprintf("%s_720p%s_vbr", codec, svcModeStr),
 			WebMName:          webMFile,
 			Profile:           toProfile(codec),
+			PSNRThreshold:     psnrThreshold(codec, height),
 			SVCMode:           strings.ToUpper(svcMode),
 			BitrateMode:       "vbr",
 			ExtraSoftwareDeps: deps,
@@ -184,6 +260,7 @@ func TestEncodeAccelParams(t *testing.T) {
 			Name:                   fmt.Sprintf("%s_1080p_global_vaapi_lock_disabled", codec),
 			WebMName:               webMFile,
 			Profile:                toProfile(codec),
+			PSNRThreshold:          psnrThreshold(codec, height),
 			BitrateMode:            "cbr",
 			DisableGlobalVaapiLock: true,
 			ExtraSoftwareDeps:      append(encodeSoftwareDeps(codec, height, false), "thread_safe_libva_backend"),
@@ -196,6 +273,7 @@ func TestEncodeAccelParams(t *testing.T) {
 	        Val: encode.TestOptions{
 	        WebMName: {{ .WebMName | fmt}},
 	        Profile: {{ .Profile }},
+	        PSNRThreshold: {{ .PSNRThreshold }},
 	        {{ if .SVCMode }}
 	        SVCMode : {{ .SVCMode | fmt}},
 	        {{ end }}

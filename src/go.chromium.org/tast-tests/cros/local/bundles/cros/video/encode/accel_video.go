@@ -104,6 +104,9 @@ type TestOptions struct {
 	// Profile is the codec that the encoder produces.
 	Profile videotype.CodecProfile
 
+	// PSNRThreshold is the PSNR threshold used in video_encode_accelerator_tests.
+	PSNRThreshold float32
+
 	// TestType specifies the tests to be run.
 	TestType AccelPerfTestType
 
@@ -273,6 +276,9 @@ func RunAccelVideoTest(ctx context.Context, s *testing.State, opts TestOptions) 
 	}
 	if opts.DisableGlobalVaapiLock {
 		testArgs = append(testArgs, "--disable_vaapi_lock")
+	}
+	if opts.PSNRThreshold != 0 {
+		testArgs = append(testArgs, fmt.Sprintf("--psnr_threshold=%.2f", opts.PSNRThreshold))
 	}
 
 	exec := filepath.Join(chrome.BinTestDir, "video_encode_accelerator_tests")
