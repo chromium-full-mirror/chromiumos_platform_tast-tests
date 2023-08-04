@@ -1258,6 +1258,14 @@ func RightClickApp(tconn *chrome.TestConn, appName string) uiauto.Action {
 		uiauto.New(tconn).RightClick(appOnShelf))
 }
 
+// DoDefaultApp returns a function that clicks the given app's icon on the shelf.
+func DoDefaultApp(tconn *chrome.TestConn, appName string) uiauto.Action {
+	appOnShelf := nodewith.Name(appName).Role(role.Button).ClassName(ShelfIconClassName)
+	return uiauto.Combine(fmt.Sprintf("left click %s icon on the shelf", appName),
+		ShowHotseatAction(tconn),
+		uiauto.New(tconn).DoDefault(appOnShelf))
+}
+
 // GetDefaultPinnedAppIDs returns the expected default app IDs that are pinned to the shelf.
 func GetDefaultPinnedAppIDs(ctx context.Context, tconn *chrome.TestConn) ([]string, error) {
 	var pinnedAppIDs []string

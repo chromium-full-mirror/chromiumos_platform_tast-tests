@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // VerifyAudacityLaunchAndClose verifies audacity window and item on shelf.
@@ -59,7 +60,21 @@ func VerifyAudacityLaunchAndClose(ctx context.Context,
 		return errors.New("failed to find Audacity on shelf")
 	}
 
+	// Sometimes the Audacity window is not in the front,
+	// which makes it fail to exit it with ctrl+Q.
+	if err := uiauto.Combine("quit Audacity",
+		keyboard.AccelAction("ctrl+Q"),
+		ui.WaitUntilGone(audacityWindow),
+	)(ctx); err == nil {
+		return nil
+	}
+
+	testing.ContextLogf(ctx, "Failed to exit Audacity, might because Audacity is not focused. Click the icon on shelf to bring it to the front and try again: %s", err)
+
+	// If it fails to exit Audacity with ctrl+Q,
+	// click the shelf icon to bring it up then close it.
 	return uiauto.Combine("quit Audacity",
+		ash.DoDefaultApp(tconn, "Audacity"),
 		keyboard.AccelAction("ctrl+Q"),
 		ui.WaitUntilGone(audacityWindow),
 	)(ctx)
