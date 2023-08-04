@@ -267,7 +267,7 @@ func (ac *Context) Info(ctx context.Context, finder *nodewith.Finder) (*NodeInfo
 	var cancel context.CancelFunc
 	// Reserve time for cleanup if there is sufficient timeout
 	// or no timeout is set.
-	if !ok || time.Until(deadline) > releaseCleanupTime {
+	if !ok || time.Until(deadline) > releaseCleanupTime+100*time.Millisecond {
 		ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
 		defer cancel()
 	}
@@ -299,7 +299,7 @@ func (ac *Context) NodesInfo(ctx context.Context, finder *nodewith.Finder) ([]No
 	var cancel context.CancelFunc
 	// Reserve time for cleanup if there is sufficient timeout
 	// or no timeout is set.
-	if !ok || time.Until(deadline) > releaseCleanupTime {
+	if !ok || time.Until(deadline) > releaseCleanupTime+100*time.Millisecond {
 		ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
 		defer cancel()
 	}
@@ -346,7 +346,7 @@ func (ac *Context) Location(ctx context.Context, finder *nodewith.Finder) (*coor
 	var cancel context.CancelFunc
 	// Reserve time for cleanup if there is sufficient timeout
 	// or no timeout is set.
-	if !ok || time.Until(deadline) > releaseCleanupTime {
+	if !ok || time.Until(deadline) > releaseCleanupTime+100*time.Millisecond {
 		ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
 		defer cancel()
 	}
@@ -391,7 +391,7 @@ func (ac *Context) ImmediateLocation(ctx context.Context, finder *nodewith.Finde
 	var cancel context.CancelFunc
 	// Reserve time for cleanup if there is sufficient timeout
 	// or no timeout is set.
-	if !ok || time.Until(deadline) > releaseCleanupTime {
+	if !ok || time.Until(deadline) > releaseCleanupTime+100*time.Millisecond {
 		ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
 		defer cancel()
 	}
@@ -545,7 +545,7 @@ func (ac *Context) Select(startNodeFinder *nodewith.Finder, startOffset int, end
 		var cancel context.CancelFunc
 		// Reserve time for cleanup if there is sufficient timeout
 		// or no timeout is set.
-		if !ok || time.Until(deadline) > releaseCleanupTime {
+		if !ok || time.Until(deadline) > releaseCleanupTime+100*time.Millisecond {
 			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
 			defer cancel()
 		}
@@ -607,7 +607,7 @@ func (ac *Context) Exists(finder *nodewith.Finder) Action {
 		var cancel context.CancelFunc
 		// Reserve time for cleanup if there is sufficient timeout
 		// or no timeout is set.
-		if !ok || time.Until(deadline) > releaseCleanupTime {
+		if !ok || time.Until(deadline) > releaseCleanupTime+100*time.Millisecond {
 			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
 			defer cancel()
 		}
@@ -673,7 +673,7 @@ func (ac *Context) BoundsForRange(ctx context.Context, finder *nodewith.Finder, 
 	var cancel context.CancelFunc
 	// Reserve time for cleanup if there is sufficient timeout
 	// or no timeout is set.
-	if !ok || time.Until(deadline) > releaseCleanupTime {
+	if !ok || time.Until(deadline) > releaseCleanupTime+100*time.Millisecond {
 		ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
 		defer cancel()
 	}
@@ -925,7 +925,7 @@ func (ac *Context) Gone(finder *nodewith.Finder) Action {
 		var cancel context.CancelFunc
 		// Reserve time for cleanup if there is sufficient timeout
 		// or no timeout is set.
-		if !ok || time.Until(deadline) > releaseCleanupTime {
+		if !ok || time.Until(deadline) > releaseCleanupTime+100*time.Millisecond {
 			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
 			defer cancel()
 		}
@@ -1213,7 +1213,7 @@ func (ac *Context) FocusAndWait(finder *nodewith.Finder) Action {
 		var cancel context.CancelFunc
 		// Reserve time for cleanup if there is sufficient timeout
 		// or no timeout is set.
-		if !ok || time.Until(deadline) > releaseCleanupTime {
+		if !ok || time.Until(deadline) > releaseCleanupTime+100*time.Millisecond {
 			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
 			defer cancel()
 		}
@@ -1290,7 +1290,7 @@ func (ac *Context) MakeVisible(finder *nodewith.Finder) Action {
 		var cancel context.CancelFunc
 		// Reserve time for cleanup if there is sufficient timeout
 		// or no timeout is set.
-		if !ok || time.Until(deadline) > releaseCleanupTime {
+		if !ok || time.Until(deadline) > releaseCleanupTime+100*time.Millisecond {
 			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
 			defer cancel()
 		}
@@ -1392,7 +1392,7 @@ func (ac *Context) DoDefault(finder *nodewith.Finder) Action {
 		var cancel context.CancelFunc
 		// Reserve time for cleanup if there is sufficient timeout
 		// or no timeout is set.
-		if !ok || time.Until(deadline) > releaseCleanupTime {
+		if !ok || time.Until(deadline) > releaseCleanupTime+100*time.Millisecond {
 			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
 			defer cancel()
 		}
@@ -1427,7 +1427,7 @@ func (ac *Context) ResetScrollOffset(finder *nodewith.Finder) Action {
 		var cancel context.CancelFunc
 		// Reserve time for cleanup if there is sufficient timeout
 		// or no timeout is set.
-		if !ok || time.Until(deadline) > releaseCleanupTime {
+		if !ok || time.Until(deadline) > releaseCleanupTime+100*time.Millisecond {
 			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
 			defer cancel()
 		}
