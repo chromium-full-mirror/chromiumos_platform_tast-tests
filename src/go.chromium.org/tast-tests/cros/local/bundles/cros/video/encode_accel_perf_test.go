@@ -48,7 +48,7 @@ func toProfileStr(profile videotype.CodecProfile) string {
 	}
 }
 
-func softwareDeps(profile videotype.CodecProfile, height int, vbr bool) []string {
+func encodePerfSoftwareDeps(profile videotype.CodecProfile, height int, vbr bool) []string {
 	var deps []string
 	switch profile {
 	case videotype.H264BaselineProf, videotype.H264HighProf:
@@ -149,8 +149,8 @@ func webMAndJSONFile(videoTitle string, height int) (string, string) {
 	return webMFileName, webMJSONFileName
 }
 
-func TestEncodeAccelParams(t *testing.T) {
-	type encodeAccelParam struct {
+func TestEncodeAccelPerfParams(t *testing.T) {
+	type encodeAccelPerfParam struct {
 		Name                   string
 		TestType               string
 		WebMName               string
@@ -179,7 +179,7 @@ func TestEncodeAccelParams(t *testing.T) {
 		{"static", "encode.Quality", []int{1080}},
 	}
 
-	var params []encodeAccelParam
+	var params []encodeAccelPerfParam
 	for _, testVideo := range testVideos {
 		for _, profile := range []videotype.CodecProfile{videotype.H264BaselineProf,
 			videotype.VP8Prof, videotype.VP9Prof, videotype.AV1MainProf} {
@@ -188,7 +188,7 @@ func TestEncodeAccelParams(t *testing.T) {
 					continue
 				}
 				webMFile, webMJSONFile := webMAndJSONFile(testVideo.title, height)
-				param := encodeAccelParam{
+				param := encodeAccelPerfParam{
 					Name:         fmt.Sprintf("%s_%dp_%s", toCodecStr(profile), height, testVideo.title),
 					WebMName:     webMFile,
 					Profile:      toProfileStr(profile),
@@ -196,7 +196,7 @@ func TestEncodeAccelParams(t *testing.T) {
 					TestType:     testVideo.testType,
 					Attr:         []string{"graphics_perbuild"},
 					Data:         []string{webMFile, webMJSONFile},
-					SoftwareDeps: softwareDeps(profile, height, false),
+					SoftwareDeps: encodePerfSoftwareDeps(profile, height, false),
 				}
 				params = append(params, param)
 			}
@@ -221,7 +221,7 @@ func TestEncodeAccelParams(t *testing.T) {
 		profile := c[0].(videotype.CodecProfile)
 		height := c[1].(int)
 		svc := c[2].(string)
-		deps := softwareDeps(profile, height, false)
+		deps := encodePerfSoftwareDeps(profile, height, false)
 		deps = append(deps, "vaapi")
 		if profile == videotype.VP9Prof && height == 540 && svc == "L3T3_KEY" {
 			deps = append(deps, caps.HWEncodeVP9OddDimension)
@@ -229,7 +229,7 @@ func TestEncodeAccelParams(t *testing.T) {
 
 		videoTitle := "desktop2"
 		webMFile, webMJSONFile := webMAndJSONFile(videoTitle, height)
-		param := encodeAccelParam{
+		param := encodeAccelPerfParam{
 			Name:         fmt.Sprintf("%s_%dp_%s_%s", toCodecStr(profile), height, strings.ToLower(svc), videoTitle),
 			WebMName:     webMFile,
 			Profile:      toProfileStr(profile),
@@ -248,7 +248,7 @@ func TestEncodeAccelParams(t *testing.T) {
 		videoTitle := "fallout4"
 		profile := videotype.H264BaselineProf
 		webMFile, webMJSONFile := webMAndJSONFile(videoTitle, height)
-		param := encodeAccelParam{
+		param := encodeAccelPerfParam{
 			Name:         fmt.Sprintf("%s_%dp_vbr_%s", toCodecStr(profile), height, videoTitle),
 			WebMName:     webMFile,
 			Profile:      toProfileStr(profile),
@@ -256,7 +256,7 @@ func TestEncodeAccelParams(t *testing.T) {
 			TestType:     "encode.Quality",
 			Attr:         []string{"graphics_perbuild"},
 			Data:         []string{webMFile, webMJSONFile},
-			SoftwareDeps: softwareDeps(profile, height, true),
+			SoftwareDeps: encodePerfSoftwareDeps(profile, height, true),
 		}
 		params = append(params, param)
 	}
@@ -267,7 +267,7 @@ func TestEncodeAccelParams(t *testing.T) {
 		webMFile, webMJSONFile := webMAndJSONFile(videoTitle, height)
 		defaultBitrate := 2480 * 1000 * 2
 		profile := videotype.H264HighProf
-		param := encodeAccelParam{
+		param := encodeAccelPerfParam{
 			Name:         fmt.Sprintf("%s_%dp_x%d_vbr_%s", toCodecStr(profile), height, multiplier, videoTitle),
 			WebMName:     webMFile,
 			Profile:      toProfileStr(profile),
@@ -276,7 +276,7 @@ func TestEncodeAccelParams(t *testing.T) {
 			TestType:     "encode.Quality",
 			Attr:         []string{"graphics_weekly"},
 			Data:         []string{webMFile, webMJSONFile},
-			SoftwareDeps: softwareDeps(profile, height, true),
+			SoftwareDeps: encodePerfSoftwareDeps(profile, height, true),
 		}
 		params = append(params, param)
 	}
@@ -286,7 +286,7 @@ func TestEncodeAccelParams(t *testing.T) {
 		height := 1080
 		videoTitle := "desktop2"
 		webMFile, webMJSONFile := webMAndJSONFile(videoTitle, height)
-		param := encodeAccelParam{
+		param := encodeAccelPerfParam{
 			Name:                   fmt.Sprintf("%s_%dp_global_vaapi_lock_disabled_%s", toCodecStr(profile), height, videoTitle),
 			WebMName:               webMFile,
 			Profile:                toProfileStr(profile),
@@ -296,7 +296,7 @@ func TestEncodeAccelParams(t *testing.T) {
 			TestType:     "encode.SpeedAndQuality",
 			Attr:         []string{"graphics_perbuild"},
 			Data:         []string{webMFile, webMJSONFile},
-			SoftwareDeps: append(softwareDeps(profile, height, false), "thread_safe_libva_backend"),
+			SoftwareDeps: append(encodePerfSoftwareDeps(profile, height, false), "thread_safe_libva_backend"),
 		}
 		params = append(params, param)
 	}
