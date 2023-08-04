@@ -36,8 +36,8 @@ const PolicyFile = "policy.json"
 // StateFile is the name of the state file for FakeDMS.
 const StateFile = "state.json"
 
-// GRPCUnixSocketURI is the path of the unix socket to communicate with the gRPC server in the FakeDMS.
-const GRPCUnixSocketURI = "fake_dmserver_grpc.sock"
+// GRPCUnixSocketURI is the path of the unix socket to communicate with the gRPC server in fake_dmserver.
+const GRPCUnixSocketURI = "grpc.sock"
 
 // EnrollmentFakeDMSDir is the directory where FakeDMS stores state during enrollment.
 // Used to share state between the enrolled fixture and the fakeDMSEnrolled fixtures.
@@ -58,6 +58,7 @@ type FakeDMS struct {
 	done             chan struct{} // channel that is closed when Wait() completes
 	policyPath       string        // where policies are written for server to read
 	grpcServerSocket string        // the unix socket to connect the client in tests with the grpc server in fake_dmserver
+	grpcTmpDirSocket string        // temp dir for the unix socket uri
 
 	remoteCommandsServiceClient     empb.RemoteCommandsServiceClient // the grpc client for remote commands
 	clientConn                      *grpc.ClientConn                 // the connection to the grpc server
@@ -91,7 +92,13 @@ func New(ctx context.Context, outDir string) (*FakeDMS, error) {
 	policyPath := filepath.Join(outDir, PolicyFile)
 	logPath := filepath.Join(outDir, LogFile)
 	statePath := filepath.Join(outDir, StateFile)
-	grpcUnixSocketURI := "unix://" + filepath.Join(outDir, GRPCUnixSocketURI)
+
+	// Create a temp dir for the grpc unix uri socket.
+	tmpDir, err := os.MkdirTemp("", "fdms-")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create tmp dir for grpc unix uri socket")
+	}
+	grpcUnixSocketURI := "unix://" + filepath.Join(tmpDir, GRPCUnixSocketURI)
 
 	fr, fw, err := os.Pipe()
 	if err != nil {
@@ -126,6 +133,7 @@ func New(ctx context.Context, outDir string) (*FakeDMS, error) {
 		done:             make(chan struct{}, 1),
 		policyPath:       policyPath,
 		grpcServerSocket: grpcUnixSocketURI,
+		grpcTmpDirSocket: tmpDir,
 	}
 
 	if err = fdms.start(ctx, fr); err != nil {
@@ -319,6 +327,7 @@ func (fdms *FakeDMS) Stop(ctx context.Context) {
 
 	// FakeDMS will not exit on its own.
 	fdms.kill(ctx)
+	os.RemoveAll(fdms.grpcTmpDirSocket)
 }
 
 // SendRemoteCommand sends a remote command request to the fake_dmserver.
