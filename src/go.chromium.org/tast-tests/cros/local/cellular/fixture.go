@@ -225,8 +225,16 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	if !f.useTestESIM {
-		if err := helper.EnsureDefaultService(ctx); err != nil {
+		service, err := helper.EnsureDefaultService(ctx)
+		if err != nil {
 			s.Fatal("Failed to ensure default service: ", err)
+		}
+		// Note: The Service path may change if Cellular is disabled or the Modem
+		// is reset, so log the name instead.
+		if name, err := service.GetName(ctx); err != nil {
+			testing.ContextLog(ctx, "Unable to get name for default Cellular Service: ", err)
+		} else {
+			testing.ContextLog(ctx, "Cellular has default Service: ", name)
 		}
 	}
 

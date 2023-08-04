@@ -984,3 +984,8 @@ func (m *Manager) GetNetworksForGeolocation(ctx context.Context) (*dbusutil.Prop
 	}
 	return dbusutil.NewProperties(geolocationInfoTechnology), nil
 }
+
+// ScanAndConnectToBestServices initiates a scan and connects to the best service for each technology.
+func (m *Manager) ScanAndConnectToBestServices(ctx context.Context) error {
+	return m.Call(ctx, "ScanAndConnectToBestServices").Err
+}

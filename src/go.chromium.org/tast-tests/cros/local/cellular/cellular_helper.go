@@ -261,26 +261,28 @@ func (h *Helper) EnsureEnabled(ctx context.Context) error {
 // EnsureDefaultService attempts to ensure that Cellular is enabled and that a
 // connectable default Service is available. If no Service is initially available,
 // the modem will be reset and a second check for a connectable service is performed.
-func (h *Helper) EnsureDefaultService(ctx context.Context) error {
+func (h *Helper) EnsureDefaultService(ctx context.Context) (*shill.Service, error) {
 	if err := h.EnsureEnabled(ctx); err != nil {
-		return errors.Wrap(err, "failed to ensure enabled state")
+		return nil, errors.Wrap(err, "failed to ensure enabled state")
 	}
 
 	// Ensure a Cellular Service is available.
-	if _, err := h.FindServiceForDevice(ctx); err != nil {
+	service, err := h.FindServiceForDevice(ctx)
+	if err != nil {
 		// If not available, try resetting the modem.
 		testing.ContextLog(ctx, "Cellular Service not available, resetting modem")
-		if _, err := h.ResetModem(ctx); err != nil {
-			return errors.Wrap(err, "failed to reset modem waiting for default cellular service")
+		if _, err = h.ResetModem(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to reset modem waiting for default cellular service")
 		}
-		if err := h.WaitForEnabledState(ctx, true); err != nil {
-			return errors.Wrap(err, "cellular not enabled after modem reset while waiting for default cellular service")
+		if err = h.WaitForEnabledState(ctx, true); err != nil {
+			return nil, errors.Wrap(err, "cellular not enabled after modem reset while waiting for default cellular service")
 		}
-		if _, err = h.FindServiceForDevice(ctx); err != nil {
-			return errors.Wrap(err, "unable to find a default cellular service")
+		service, err = h.FindServiceForDevice(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to find a default cellular service")
 		}
 	}
-	return nil
+	return service, nil
 }
 
 // Enable calls Manager.EnableTechnology(cellular) and returns true if the enable succeeded, or an error otherwise.
@@ -539,19 +541,19 @@ func (h *Helper) Disconnect(ctx context.Context) (time.Duration, error) {
 	if err := service.Disconnect(ctx); err != nil {
 		return 0, err
 	}
-	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyIsConnected, false, defaultTimeout); err != nil {
+	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateIdle, defaultTimeout); err != nil {
 		return 0, err
 	}
 	return time.Since(start), nil
 }
 
-// IsConnected return err if shillconst.ServicePropertyIsConnected is not true
+// IsConnected returns an error if the default Service is not connected.
 func (h *Helper) IsConnected(ctx context.Context) error {
 	service, err := h.FindServiceForDevice(ctx)
 	if err != nil {
 		return err
 	}
-	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyIsConnected, true, defaultTimeout); err != nil {
+	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyIsConnected, true, longTimeout); err != nil {
 		return err
 	}
 	return nil

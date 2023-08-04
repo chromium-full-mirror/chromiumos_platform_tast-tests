@@ -16,7 +16,6 @@ import (
 )
 
 var standardTests = []string{
-	"autoconnect.go",
 	"identifiers.go",
 	"is_connected.go",
 	"shill_enable_disable.go",
