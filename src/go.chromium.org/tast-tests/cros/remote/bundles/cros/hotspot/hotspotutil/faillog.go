@@ -17,11 +17,7 @@ var FaillogServiceName = "tast.cros.ui.ChromeUIService"
 
 // DumpUITreeWithScreenshotToFile dumps the UI tree and takes screenshot on error, save as file with specified name.
 // It takes a grpc client connection to creates a service to further dumps the UI tree and takes screenshot.
-func DumpUITreeWithScreenshotToFile(ctx context.Context, conn *grpc.ClientConn, hasError func() bool, filePrefix string) error {
-	if !hasError() {
-		return nil
-	}
-
+func DumpUITreeWithScreenshotToFile(ctx context.Context, conn *grpc.ClientConn, filePrefix string) error {
 	svc := ui.NewChromeUIServiceClient(conn)
 	if _, err := svc.DumpUITreeWithScreenshotToFile(ctx, &ui.DumpUITreeWithScreenshotToFileRequest{FilePrefix: filePrefix}); err != nil {
 		return err

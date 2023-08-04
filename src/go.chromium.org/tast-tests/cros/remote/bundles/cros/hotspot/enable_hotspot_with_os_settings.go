@@ -8,11 +8,8 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/shillconst"
-	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/hotspot/hotspotutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
-	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
 	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -89,7 +86,11 @@ func init() {
 	})
 }
 
-// EnableHotspotWithOSSettings tests that Hotspot can be turned on and off via ossettings.
+// EnableHotspotWithOSSettings tests that Hotspot can be turned on and off via ossettings by following steps:
+// 1- connect to the cellular network on the main DUT
+// 2- Go to network page or hotspot subpage in Settings and toggle hotspot on.
+// 3- Configures the companion DUT as a STA and connect to hotspot.
+// 4- Verify hotspot status UI and toggle off hotspot.
 func EnableHotspotWithOSSettings(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 
@@ -108,16 +109,13 @@ func EnableHotspotWithOSSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome with hotspot flag enabled: ", err)
 	}
 
-	if _, err := tf.DUTCellularClient(wificell.DefaultDUT).SetUp(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to initialize cellular shill service on DUT: ", err)
+	cleanup, err := tf.SetupAndConnectCellular(ctx, wificell.DefaultDUT)
+	if cleanup != nil {
+		defer cleanup(cleanupCtx)
 	}
-	s.Log("Successfully initialized cellular device on DUT")
-	defer tf.DUTCellularClient(wificell.DefaultDUT).TearDown(cleanupCtx, &emptypb.Empty{})
-
-	if _, err := tf.DUTCellularClient(wificell.DefaultDUT).Connect(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to connect to cellular network on DUT: ", err)
+	if err != nil {
+		s.Fatal("Failed to setup cellular client and connect to cellular network: ", err)
 	}
-	s.Log("Successfully connected to the cellular network")
 
 	testOpts := s.Param().(enableHotspotTestParam)
 
@@ -149,7 +147,14 @@ func EnableHotspotWithOSSettings(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to launch hotspot subpage: ", err)
 		}
 	}
-	defer hotspotutil.DumpUITreeWithScreenshotToFile(cleanupCtx, rpcClient.Conn, s.HasError, "ui_dump")
+	s.AttachErrorHandlers(
+		func(errMsg string) {
+			hotspotutil.DumpUITreeWithScreenshotToFile(cleanupCtx, rpcClient.Conn, "ui_dump_error")
+		},
+		func(errMsg string) {
+			hotspotutil.DumpUITreeWithScreenshotToFile(cleanupCtx, rpcClient.Conn, "ui_dump_fatal")
+		},
+	)
 
 	if _, err := ossettingsSvc.ToggleHotspot(ctx, &ossettings.ToggleHotspotRequest{Enabled: true}); err != nil {
 		s.Fatal("Failed to toggle on hotspot: ", err)
@@ -163,36 +168,11 @@ func EnableHotspotWithOSSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("WiFi should be turned off after turning on hotspot")
 	}
 
-	tetheringConfig, err := wifiClient.GetTetheringConfig(ctx)
+	disconnectDUT, err := tf.ConnectCompanionDUTToHotspot(ctx, wificell.PeerDUT, wificell.DefaultDUT)
 	if err != nil {
-		s.Fatal("Failed to get hotspot config: ", err)
+		s.Fatal("Failed to connect companion DUT to hotspot: ", err)
 	}
-	s.Logf("Using hotspot ssid: %s", tetheringConfig.Ssid)
-
-	if tetheringConfig.Security != shillconst.SecurityWPA2 {
-		s.Fatalf("Invalid tethering security: %s", tetheringConfig.Security)
-	}
-
-	fac := wpa.NewConfigFactory(
-		tetheringConfig.Passphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
-	)
-
-	secConf, err := fac.Gen()
-	if err != nil {
-		s.Fatal("Failed to generate security config: ", err)
-	}
-
-	cdIdx := wificell.DutIdx(wificell.PeerDUT)
-	_, err = tf.ConnectWifiFromDUT(ctx, cdIdx, tetheringConfig.Ssid, dutcfg.ConnSecurity(secConf))
-	if err != nil {
-		s.Fatal("Failed to connect to the hotspot, err: ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := tf.DisconnectDUTFromWifi(ctx, cdIdx); err != nil {
-			s.Error("Failed to disconnect from hotspot, err: ", err)
-		}
-	}(cleanupCtx)
-	s.Log("Downstream DUT connected to the hotspot")
+	defer disconnectDUT(cleanupCtx)
 
 	// Navigate to hotspot detail page if needed and verify client count.
 	if testOpts.launchPage == networkPage {

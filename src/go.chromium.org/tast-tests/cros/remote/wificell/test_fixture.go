@@ -2232,7 +2232,7 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer cancel()
 	if err := tf.DUTWifiClient(dutIdx).SetWifiEnabled(ctx, false); err != nil {
-		return nil, nil, errors.Wrap(err, "DUT: failed to disable the wifi, err: ")
+		return nil, nil, errors.Wrap(err, "DUT: failed to disable the wifi")
 	}
 	defer func(ctx context.Context) {
 		if retErr != nil {
@@ -2365,7 +2365,7 @@ func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx, c *teth
 	}
 	// Re-enable station mode
 	if err := tf.DUTWifiClient(dutIdx).SetWifiEnabled(ctx, true); err != nil {
-		return nil, errors.Wrap(err, "DUT: failed to enable the wifi, err: ")
+		return nil, errors.Wrap(err, "DUT: failed to enable the wifi")
 	}
 
 	return resp, nil
@@ -2430,4 +2430,55 @@ func (tf *TestFixture) RemoveWiFiInterfaces(ctx context.Context, dutIdx DutIdx) 
 		iwr.RemoveInterface(ctx, iface.IfName)
 	}
 	return ctx, restore, nil
+}
+
+// SetupAndConnectCellular setup the cellular client on dutIdx DUT and connect to the active cellular network.
+func (tf *TestFixture) SetupAndConnectCellular(ctx context.Context, dutIdx DutIdx) (cleanup func(ctx context.Context), err error) {
+	if _, err := tf.DUTCellularClient(dutIdx).SetUp(ctx, &emptypb.Empty{}); err != nil {
+		return nil, errors.Wrap(err, "failed to setup cellular client")
+	}
+	testing.ContextLog(ctx, "Successfully initialized cellular device on DUT")
+	cleanup = func(ctx context.Context) {
+		tf.DUTCellularClient(dutIdx).TearDown(ctx, &emptypb.Empty{})
+	}
+
+	if _, err := tf.DUTCellularClient(dutIdx).Connect(ctx, &emptypb.Empty{}); err != nil {
+		return cleanup, errors.Wrap(err, "failed to setup cellular client")
+	}
+	testing.ContextLog(ctx, "Successfully connected to the cellular network")
+	return cleanup, nil
+}
+
+// ConnectCompanionDUTToHotspot retrieves the tethering config on hotspot host DUT,
+// and uses a companion DUT to connect to the hotspot.
+func (tf *TestFixture) ConnectCompanionDUTToHotspot(ctx context.Context, cdDutIdx, hsDutIdx DutIdx) (cleanup func(ctx context.Context), err error) {
+	wifiClient := tf.DUTWifiClient(hsDutIdx)
+	tetheringConfig, err := wifiClient.GetTetheringConfig(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get hotspot config")
+	}
+	testing.ContextLogf(ctx, "Using hotspot ssid: %s", tetheringConfig.Ssid)
+
+	if tetheringConfig.Security != shillconst.SecurityWPA2 {
+		return nil, errors.New("invalid tethering security type")
+	}
+
+	fac := wpa.NewConfigFactory(
+		tetheringConfig.Passphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
+	)
+	secConf, err := fac.Gen()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to generate security config")
+	}
+
+	_, err = tf.ConnectWifiFromDUT(ctx, cdDutIdx, tetheringConfig.Ssid, dutcfg.ConnSecurity(secConf))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to connect to the hotspot")
+	}
+	testing.ContextLog(ctx, "Downsteam DUT connected to hotspot successfully")
+	return func(ctx context.Context) {
+		if err := tf.DisconnectDUTFromWifi(ctx, cdDutIdx); err != nil {
+			testing.ContextLogf(ctx, "Failed to disconnect from hotspot, err: %s", err)
+		}
+	}, nil
 }
