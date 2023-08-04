@@ -32,6 +32,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/common"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/media/vm"
 	"go.chromium.org/tast-tests/cros/local/network/dumputil"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -325,19 +326,21 @@ func (c *PolicyService) EnrollUsingChrome(ctx context.Context, req *ppb.EnrollUs
 	opts = append(opts, chrome.EnableLoginVerboseLogs())
 
 	// Make sure we have a network connection.
-	if err := ping.VerifyInternetConnectivity(ctx, 10*time.Second); err != nil {
-		dir, ok := testing.ContextOutDir(ctx)
-		if !ok || dir == "" {
-			return nil, errors.Wrap(err, "pre login network connection tests failed without network info dump")
-		}
-		path := filepath.Join(dir, "network_dump_ping_"+time.Now().Format("030405000")+".txt")
+	if !vm.IsRunningOnVM() {
+		if err := ping.VerifyInternetConnectivity(ctx, 10*time.Second); err != nil {
+			dir, ok := testing.ContextOutDir(ctx)
+			if !ok || dir == "" {
+				return nil, errors.Wrap(err, "pre login network connection tests failed without network info dump")
+			}
+			path := filepath.Join(dir, "network_dump_ping_"+time.Now().Format("030405000")+".txt")
 
-		if err := dumputil.DumpNetworkInfo(ctx, path); err != nil {
-			testing.ContextLog(ctx, "Failed to dump network info after a ping expectation failure: ", err)
-		}
-		testing.ContextLog(ctx, "Ping expectation failed, current network info dumped into ", path)
+			if err := dumputil.DumpNetworkInfo(ctx, path); err != nil {
+				testing.ContextLog(ctx, "Failed to dump network info after a ping expectation failure: ", err)
+			}
+			testing.ContextLog(ctx, "Ping expectation failed, current network info dumped into ", path)
 
-		return nil, errors.Wrap(err, "pre login network connection tests failed")
+			return nil, errors.Wrap(err, "pre login network connection tests failed")
+		}
 	}
 
 	// Make sure chrome.New does not take too long.

@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/config"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/media/vm"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/syslog"
@@ -45,9 +46,11 @@ func loginUser(ctx context.Context, cfg *config.Config, sess *driver.Session) er
 	case config.GAIALogin, config.SAMLLogin:
 		// GAIA login requires Internet connectivity.
 		if err := shill.WaitForOnline(ctx); err != nil {
-			if pingErr := ping.VerifyInternetConnectivity(ctx, 5*time.Second); pingErr != nil {
-				testing.ContextLog(ctx, "Failed to wait for shill online test: ", err)
-				return errors.Wrap(pingErr, "pre login network connection tests failed")
+			if !vm.IsRunningOnVM() {
+				if pingErr := ping.VerifyInternetConnectivity(ctx, 5*time.Second); pingErr != nil {
+					testing.ContextLog(ctx, "Failed to wait for shill online test: ", err)
+					return errors.Wrap(pingErr, "pre login network connection tests failed")
+				}
 			}
 
 			// Fail even if the ping test was successful.
