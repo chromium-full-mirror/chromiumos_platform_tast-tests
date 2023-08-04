@@ -35,7 +35,7 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "group:cellular_crosbolt", "cellular_crosbolt_perf_nightly", "cellular_crosbolt_unstable"},
 		Fixture:      "cellular",
 		Timeout:      10 * time.Minute,
-		HardwareDeps: hwdep.D(hwdep.CellularModemType(cellularconst.ModemTypeFM350)),
+		HardwareDeps: hwdep.D(hwdep.CellularModemType(cellularconst.ModemTypeFM350, cellularconst.ModemTypeFM101)),
 		SoftwareDeps: []string{"modemfwd"},
 		Params: []testing.Param{{
 			Name: "stress",
@@ -137,6 +137,9 @@ func ModemfwdRecovery(ctx context.Context, s *testing.State) {
 			s.Fatal("Modem didn't come back as expected")
 		}
 
+		if err := helper.EnsureEnabled(ctx); err != nil {
+			s.Fatal("Failed to find default Cellular Service: ", err)
+		}
 		// Ensure connectivity after recovery
 		if _, err := helper.Connect(ctx); err != nil {
 			s.Fatal("Failed to connect to cellular service: ", err)
