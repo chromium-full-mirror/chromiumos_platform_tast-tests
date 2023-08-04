@@ -57,8 +57,8 @@ func (a *AllowlistService) SetupFirewall(ctx context.Context, req *network.Setup
 func (a *AllowlistService) GaiaLogin(ctx context.Context, req *network.GaiaLoginRequest) (*empty.Empty, error) {
 	cr, err := chrome.New(
 		ctx,
-		chrome.GAIALogin(chrome.Creds{User: req.Username, Pass: req.Password, GAIAID: ""}),
-		chrome.ProdPolicy(),
+		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
+		chrome.GAIALogin(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs("--proxy-server=http://"+req.ProxyHostAndPort))
 	if err != nil {

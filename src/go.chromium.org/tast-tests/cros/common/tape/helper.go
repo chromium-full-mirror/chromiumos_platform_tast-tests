@@ -251,3 +251,8 @@ func (c *client) MoveDeviceToOU(ctx context.Context, rpcClient *rpc.Client, cust
 type NetworkKey struct {
 	NetworkID string `json:"network_id"`
 }
+
+// AppKey is an additionalTargetKey for ArcPolicy related policies.
+type AppKey struct {
+	AppID string `json:"app_id"`
+}

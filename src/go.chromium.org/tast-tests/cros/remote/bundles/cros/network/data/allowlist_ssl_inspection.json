@@ -5,7 +5,7 @@
     "android.com",
     "google-analytics.com",
     "googleusercontent.com",
-    "gstatic.com ",
+    "gstatic.com",
     ".ggpht.com",
     "android.clients.google.com",
     ".gvt2.com",
@@ -19,7 +19,8 @@
     "pki.google.com",
     "clients5.google.com",
     "clients6.google.com",
-    "connectivitycheck.gstatic.com"
+    "connectivitycheck.gstatic.com",
+    "www.google.com"
   ],
   "chromeos": [
     ".1e100.net1",

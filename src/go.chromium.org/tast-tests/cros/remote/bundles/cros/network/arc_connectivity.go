@@ -8,11 +8,19 @@ import (
 	"context"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
+	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/network/allowlist"
+	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	"go.chromium.org/tast-tests/cros/services/cros/network"
+	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
+
+const arcConnectivityTestTimeout = 12 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -24,54 +32,58 @@ func init() {
 			"acostinas@google.com",                      // Test author
 		},
 		BugComponent: "b:1000044",
-		// TODO(acostinas, b/191845062) Re-enable the test when OTA credentials are available in tast tests.
-		// Attr: []string{
-		// 	"group:golden_tier",
-		// 	"group:medium_low_tier",
-		// 	"group:hardware",
-		// 	"group:complementary",
-		// },
+		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{"allowlist_ssl_inspection.json"},
-		SoftwareDeps: []string{"reboot", "chrome", "chrome_internal"},
-		ServiceDeps:  []string{"tast.cros.network.AllowlistService", "tast.cros.network.ProxyService"},
-		VarDeps: []string{
-			"allowlist.username",
-			"allowlist.password",
-		},
-		Timeout: 12 * time.Minute,
+		ServiceDeps: []string{"tast.cros.network.AllowlistService",
+			"tast.cros.network.ProxyService",
+			"tast.cros.tape.Service"},
+		Timeout:      arcConnectivityTestTimeout,
+		SoftwareDeps: []string{"reboot", "chrome", "chrome_internal", "tpm2"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraSoftwareDeps: []string{"android_vm_r"},
 		}},
+		Vars: []string{
+			tape.ServiceAccountVar,
+		},
 	})
 }
 
-// ArcConnectivity calls the AllowlistService to setup a firewall and verifies PlayStore connectivity.
+// ArcConnectivity calls the AllowlistService to setup a firewall and verifies
+// PlayStore connectivity.
 func ArcConnectivity(ctx context.Context, s *testing.State) {
+	// Shorten deadline to leave time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
+	defer cancel()
+
 	defer func(ctx context.Context) {
-		// Since this test is changing the iptable rules to create a firewall on the DUT, we need to reboot to make sure the
-		// DUT gets back to its initial state, which doesn't restrict connectivity to http/s default ports.
-		if err := s.DUT().Reboot(ctx); err != nil {
-			s.Fatal("Failed to reboot DUT: ", err)
+		if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
+			s.Error("Failed to reset TPM after test: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
+
+	if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
+		s.Fatal("Failed to reset TPM: ", err)
+	}
 
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
-	defer cl.Close(ctx)
+	defer cl.Close(cleanupCtx)
 
-	allowlist, err := allowlist.ReadHostnames(ctx, s.DataPath("allowlist_ssl_inspection.json"), true, false)
+	// Read the hostnames that need to be allowed for installing the PlayStore
+	// and Android apps behind a firewall.
+	allowlist, err := allowlist.ReadHostnames(ctx,
+		s.DataPath("allowlist_ssl_inspection.json"), true, false)
 	if err != nil {
 		s.Fatal("Failed to read hostnames: ", err)
 	}
 
 	const port uint32 = 3129
 
-	// Start an HTTP proxy instance on the DUT which only allows connections to the allowlisted hostnames.
+	// Start an HTTP proxy instance on the DUT which only allows connections to
+	// the allowlisted hostnames.
 	proxyClient := network.NewProxyServiceClient(cl.Conn)
 	response, err := proxyClient.StartServer(ctx,
 		&network.StartServerRequest{
@@ -87,14 +99,55 @@ func ArcConnectivity(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to setup a firewall on the DUT: ", err)
 	}
 
-	user := s.RequiredVar("allowlist.username")
-	password := s.RequiredVar("allowlist.password")
+	policyClient := pspb.NewPolicyServiceClient(cl.Conn)
+
+	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	if err != nil {
+		s.Fatal("Failed to create tape client: ", err)
+	}
+
+	timeout := int32(arcConnectivityTestTimeout.Seconds())
+	poolID := tape.DefaultManaged
+
+	// Create an account manager and lease a test account for the duration of the test.
+	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true, /*lock*/
+		tape.WithTimeout(timeout), tape.WithPoolID(poolID))
+	if err != nil {
+		s.Fatal("Failed to create an account manager and lease an account: ", err)
+	}
+	defer accManager.CleanUp(cleanupCtx)
+
+	arcEnabledPolicy := &tape.AndroidAppsEnabledUsersAppsconfig{ArcEnabled: true, AckNoticeForArcEnabledSetToTrue: true}
+
+	if err := tapeClient.SetPolicy(ctx, arcEnabledPolicy, []string{"arcEnabled",
+		"ackNoticeForArcEnabledSetToTrue"}, nil, acc.RequestID); err != nil {
+		s.Fatal("Failed to set the ARC enabled policy: ", err)
+	}
+	arcPolicy := &tape.InstallTypeUsersApps{
+		AppInstallType: tape.USERAPPINSTALLTYPE_FORCED}
+	if err := tapeClient.SetPolicy(ctx, arcPolicy, []string{"appInstallType"},
+		tape.AppKey{AppID: "android:com.google.android.gm"}, acc.RequestID); err != nil {
+		s.Fatal("Failed to set the force-installed APP policy: ", err)
+	}
+
+	// Deprovision the DUT at the end of the test. As devices might get
+	// provisioned even when the enrollment fails we need to defer the
+	// deprovisioning before enrolling.
+	defer func(ctx context.Context) {
+		if err := tapeClient.DeprovisionHelper(cleanupCtx, cl, acc.CustomerID, acc.OrgUnitPath); err != nil {
+			s.Fatal("Failed to deprovision device: ", err)
+		}
+	}(cleanupCtx)
+
 	if _, err := al.GaiaLogin(ctx, &network.GaiaLoginRequest{
-		Username: user, Password: password, ProxyHostAndPort: response.HostAndPort}); err != nil {
+		Username: acc.Username, Password: acc.Password, ProxyHostAndPort: response.HostAndPort}); err != nil {
 		s.Fatal("Failed to login through the proxy: ", err)
 	}
 
-	// The user account allowlist.username/allowlist.password belongs to the OU allowlist-tast-test on the production DMServer.
+	defer policyClient.StopChrome(ctx, &empty.Empty{})
+
+	// The user account allowlist.username/allowlist.password belongs to the OU
+	// allowlist-tast-test on the production DMServer.
 	// The OU is configured to force install the Gmail app via policy.
 	if _, err := al.CheckArcAppInstalled(ctx, &network.CheckArcAppInstalledRequest{AppName: "com.google.android.gm"}); err != nil {
 		s.Fatal("Failed to install ARC app: ", err)
