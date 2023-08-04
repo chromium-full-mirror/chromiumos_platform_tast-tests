@@ -34,7 +34,6 @@ func GetDeviceInfo(ctx context.Context, args ...OptionalRecorderArg) map[string]
 			"hw":        util.GetHardwareRevision(ctx),
 			"milestone": util.GetChromeOSReleaseMilestone(),
 			"os":        util.GetChromeOSReleaseVersion(),
-			"channel":   util.GetChromeOSChannel(),
 			"firmware":  util.GetFirmwareVersion(ctx),
 			"ec":        util.GetECVersion(ctx),
 			"kernel":    util.GetKernelVersion(ctx),
@@ -45,6 +44,13 @@ func GetDeviceInfo(ctx context.Context, args ...OptionalRecorderArg) map[string]
 		},
 		// pdash_note: note to annotate results on the dashboard.
 		"note": getNote(args),
+	}
+
+	channel := util.GetChromeOSChannel()
+	if channel == "" {
+		deviceInfo["version"].(map[string]interface{})["channel"] = nil
+	} else {
+		deviceInfo["version"].(map[string]interface{})["channel"] = channel
 	}
 
 	skuMap := map[string]interface{}{
@@ -124,6 +130,9 @@ func DeviceInfoUtilCheck(ctx context.Context) []string {
 	// read check for strings.
 	for key, reStr := range stringCheckReg {
 		if readResult, ok := deviceInfo["version"].(map[string]interface{})[key]; ok {
+			if key == "channel" && readResult == nil {
+				continue
+			}
 			re := regexp.MustCompile(reStr)
 			if !re.MatchString(readResult.(string)) {
 				failed = append(failed, key+": "+readResult.(string))

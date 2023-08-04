@@ -18,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 
@@ -526,17 +527,24 @@ func UploadToDashboard(ctx context.Context, powerLogDict map[string]interface{},
 	}
 	urlParams := url.Values{}
 	urlParams.Add("data", string(powerLogJSON))
-	resp, err := http.PostForm(urlActual, urlParams)
-	if err != nil {
-		return errors.Wrap(err, "failed to upload to power dashboard")
-	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("unsuccessful http response from power dashboard: " + resp.Status)
-	}
+	const (
+		retryAttempts = 9
+		exponentBase  = 2
+	)
+	return action.RetryWithExponentialBackoff(retryAttempts, func(ctx context.Context) error {
+		resp, err := http.PostForm(urlActual, urlParams)
+		if err != nil {
+			return errors.Wrap(err, "failed to upload to power dashboard")
+		}
+		defer resp.Body.Close()
 
-	return nil
+		if resp.StatusCode != http.StatusOK {
+			return errors.New("unsuccessful http response from power dashboard: " + resp.Status)
+		}
+
+		return nil
+	}, time.Second, exponentBase)(ctx)
 }
 
 // sortMetricsNumerically is the helper function to sort metrics in numerical order.
