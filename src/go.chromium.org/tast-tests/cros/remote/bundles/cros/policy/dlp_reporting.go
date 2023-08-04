@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/reportingutil"
 	dlp "go.chromium.org/tast-tests/cros/services/cros/dlp"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
@@ -297,20 +298,22 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	s.Log("Waiting 60 seconds to make sure events reach the server and are processed")
-	// TODO(b/278667990): Replace sleep with poll.
-	// GoBigSleepLint: wait 60 seconds to make sure events reach the server and are processed.
-	if err := testing.Sleep(ctx, 60*time.Second); err != nil {
-		s.Fatal("Failed to sleep: ", err)
-	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		events, err := dlputil.RetrieveEvents(ctx, customerID, APIKey, c.ClientId, testStartTime)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to retrieve events"))
+		}
 
-	events, err := dlputil.RetrieveEvents(ctx, customerID, APIKey, c.ClientId, testStartTime)
-	if err != nil {
-		s.Fatal("Failed to retrieve events: ", err)
-	}
+		if err := dlputil.ValidateReportEvents(ctx, params.Action, events, &params.Counts); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to validate events"))
+		}
 
-	if err := dlputil.ValidateReportEvents(ctx, params.Action, events, &params.Counts); err != nil {
-		s.Fatal("Failed to validate events: ", err)
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  2 * time.Minute,
+		Interval: 20 * time.Second,
+	}); err != nil {
+		s.Errorf("Failed to validate DLP events: %v:", err)
 	}
 
 }
