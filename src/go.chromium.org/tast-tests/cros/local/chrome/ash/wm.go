@@ -252,9 +252,17 @@ func SetWindowState(ctx context.Context, tconn *chrome.TestConn, id int, et WMEv
 // returns an error when it can't be in the target state. It will return nil
 // when the window is already in the target state.
 func SetWindowStateAndWait(ctx context.Context, tconn *chrome.TestConn, id int, targetState WindowStateType) error {
+	w, err := GetWindow(ctx, tconn, id)
+	if err != nil {
+		return errors.Wrap(err, "failed to get window")
+	}
+	initialState := w.State
+	if initialState == targetState {
+		return nil
+	}
 	// Don't use autotest API waitForStateChange, because if the window state
 	// change does not occur, the autotestPrivate API never returns.
-	_, err := SetWindowState(ctx, tconn, id, stateToWmTypes[targetState], false /* waitForStateChange */)
+	_, err = SetWindowState(ctx, tconn, id, stateToWmTypes[targetState], false /* waitForStateChange */)
 	if err != nil {
 		return errors.Wrap(err, "failed to set the window state")
 	}
@@ -270,7 +278,8 @@ func SetWindowStateAndWait(ctx context.Context, tconn *chrome.TestConn, id int, 
 		}
 
 		if w.State != targetState {
-			return errors.New("window is still not in target state")
+			return errors.Errorf("window is still not in target state; initial: %s, current: %s, target: %s",
+				initialState, w.State, targetState)
 		}
 		return nil
 	}, defaultPollOptions)
