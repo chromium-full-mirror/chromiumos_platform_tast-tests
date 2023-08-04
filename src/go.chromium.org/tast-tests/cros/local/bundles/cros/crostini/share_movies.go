@@ -96,7 +96,8 @@ func ShareMovies(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	sharedFolders := sharedfolders.NewSharedFolders(tconn)
 	// Unshare shared folders in the end.

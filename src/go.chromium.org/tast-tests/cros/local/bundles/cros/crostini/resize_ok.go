@@ -68,7 +68,8 @@ func ResizeOk(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Linux Settings: ", err)
 	}
 
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	handler := faillog.DumpUITreeWithScreenshotHandler(ctx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	curSize, targetSize, err := st.GetCurAndTargetDiskSize(ctx)
 	if err != nil {

@@ -66,7 +66,6 @@ func HomeDirectoryCreateFile(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 	kb := s.FixtValue().(crostini.FixtureData).KB
-	cr := s.FixtValue().(crostini.FixtureData).Chrome
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -79,7 +78,8 @@ func HomeDirectoryCreateFile(ctx context.Context, s *testing.State) {
 	}
 	defer filesApp.Close(cleanupCtx)
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	if err := filesApp.OpenLinuxFiles()(ctx); err != nil {
 		s.Fatal("Failed to open Linux files: ", err)

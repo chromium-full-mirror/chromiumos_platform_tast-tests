@@ -10,9 +10,11 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/guestos/verifyapp"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -73,6 +75,15 @@ func init() {
 func VerifyAppWayland(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(crostini.FixtureData).Chrome
 	cont := s.FixtValue().(crostini.FixtureData).Cont
+	tconn := s.FixtValue().(crostini.FixtureData).Tconn
+
+	// Use a shortened context for test operations to reserve time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	// Run Lacros (if specified) as non-focused browser, so that the tested Wayland apps work in this situation.
 	_, cleanup, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))

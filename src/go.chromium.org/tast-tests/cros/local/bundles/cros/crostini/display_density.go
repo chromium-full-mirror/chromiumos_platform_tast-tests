@@ -120,7 +120,8 @@ func DisplayDensity(ctx context.Context, s *testing.State) {
 	}
 
 	defer uiauto.StopRecordFromKBAndSaveOnError(cleanupCtx, tconn, s.HasError, s.OutDir(), pre.DownloadsPath)
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	demoWindowSize := func(densityConfiguration density) (coords.Size, error) {
 		windowName := conf.Name

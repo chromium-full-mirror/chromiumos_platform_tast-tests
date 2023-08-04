@@ -90,13 +90,13 @@ func init() {
 func AppFirefox(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
-	cr := s.FixtValue().(crostini.FixtureData).Chrome
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	if err := launcher.SearchAndLaunchWithQuery(tconn, keyboard, "f", "Firefox ESR")(ctx); err != nil {
 		s.Fatal("Failed to launch Firefox from launcher: ", err)

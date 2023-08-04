@@ -98,6 +98,9 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	tconn := pre.Tconn
 	cont := pre.Cont
 
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
+
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, pre.Tconn)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 

@@ -17,6 +17,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/listset"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/crostini/ui/settings"
@@ -79,6 +80,9 @@ func ShareDrive(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
+
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	sharedFolders := sharedfolders.NewSharedFolders(tconn)
 	// Clean up shared folders in the end.

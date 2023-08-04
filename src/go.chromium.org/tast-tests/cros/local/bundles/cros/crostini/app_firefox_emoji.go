@@ -68,7 +68,8 @@ func AppFirefoxEmoji(ctx context.Context, s *testing.State) {
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
 
 	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	const inputEmoji = "😂"
 	ui := uiauto.New(tconn)

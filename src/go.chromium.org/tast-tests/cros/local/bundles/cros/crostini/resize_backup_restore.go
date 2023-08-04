@@ -14,14 +14,15 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/crostini"
-	"go.chromium.org/tast-tests/cros/local/crostini/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini/ui/settings"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/vm"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -73,6 +74,14 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	tconn := pre.Tconn
 	keyboard := pre.KB
 	cont := pre.Cont
+
+	// Use a shortened context for test operations to reserve time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	ownerID, err := cryptohome.UserHash(ctx, cr.NormalizedUser())
 	if err != nil {
@@ -139,8 +148,6 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open Linux Settings Backup & restore: ", err)
 	}
-
-	defer func() { faillog.DumpUITreeAndScreenshot(ctx, tconn, "resize_backup_restore", err) }()
 
 	if err = st.LeftClickUI(settings.BackupButton)(ctx); err != nil {
 		s.Fatal("Failed to click Backup button: ", err)

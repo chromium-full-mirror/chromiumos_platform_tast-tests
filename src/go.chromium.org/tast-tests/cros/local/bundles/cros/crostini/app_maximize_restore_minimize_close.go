@@ -68,7 +68,6 @@ func init() {
 }
 func AppMaximizeRestoreMinimizeClose(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
-	cr := s.FixtValue().(crostini.FixtureData).Chrome
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
 	d := s.FixtValue().(crostini.FixtureData).Differ()
 	cont := s.FixtValue().(crostini.FixtureData).Cont
@@ -139,14 +138,15 @@ func AppMaximizeRestoreMinimizeClose(ctx context.Context, s *testing.State) {
 			)},
 		}
 
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+		handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+		s.AttachErrorHandlers(handler, handler)
+
 		for _, windowControlAction := range windowControlActions {
 			s.Run(ctx, fmt.Sprintf("%s_%s", appParam.appName, windowControlAction.name),
 				func(ctx context.Context, s *testing.State) {
-					cleanupCtx := ctx
-					ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-					defer cancel()
-					defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
-
 					if err := windowControlAction.actions(ctx); err != nil {
 						s.Errorf("Failed to %s the app %s: %s", windowControlAction.name, appParam.appName, err)
 					}

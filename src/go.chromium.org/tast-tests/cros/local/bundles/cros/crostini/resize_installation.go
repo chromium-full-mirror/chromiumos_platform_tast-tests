@@ -15,8 +15,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
-	"go.chromium.org/tast-tests/cros/local/crostini/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini/ui"
 	"go.chromium.org/tast-tests/cros/local/crostini/ui/settings"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -94,6 +94,9 @@ func ResizeInstallation(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, crostini.PostTimeout)
 	defer cancel()
 
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
+
 	// Cleanup.
 	defer func() {
 		// Get the container.
@@ -116,7 +119,6 @@ func ResizeInstallation(ctx context.Context, s *testing.State) {
 			testing.ContextLogf(cleanupCtx, "Error deleting images: %q", err)
 		}
 	}()
-	defer func() { faillog.DumpUITreeAndScreenshot(ctx, tconn, "resize_installation", err) }()
 	// Install Crostini.
 	resultDiskSize, err := ui.InstallCrostini(ctx, tconn, cr, iOptions)
 	if err != nil {

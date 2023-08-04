@@ -66,9 +66,11 @@ func OpenWithTerminal(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
+
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, pre.Tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, pre.Tconn)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, pre.Chrome, "ui_tree")
 
 	// Launch Files app and open Downloads with terminal.
 	filesApp, err := filesapp.Launch(ctx, pre.Tconn)

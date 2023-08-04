@@ -8,9 +8,11 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/guestos/verifyapp"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -58,6 +60,14 @@ func init() {
 
 func VerifyAppX11(ctx context.Context, s *testing.State) {
 	pre := s.FixtValue().(crostini.FixtureData)
+
+	// Use a shortened context for test operations to reserve time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, pre.Tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	err := verifyapp.RunTest(ctx, s.OutDir(), pre.Chrome, pre.Cont, guestos.X11DemoConfig())
 	if err != nil {

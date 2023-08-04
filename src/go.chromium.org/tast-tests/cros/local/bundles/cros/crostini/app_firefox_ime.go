@@ -89,7 +89,6 @@ func AppFirefoxIME(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
-	cr := s.FixtValue().(crostini.FixtureData).Chrome
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
@@ -107,7 +106,8 @@ func AppFirefoxIME(ctx context.Context, s *testing.State) {
 	defer imetestutil.ResetToDefaultIME(cleanupCtx, tconn)
 
 	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	imeName := s.Param().(string)
 	imeData := imetestutil.IMETestCases[imeName]

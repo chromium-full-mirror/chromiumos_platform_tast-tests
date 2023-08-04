@@ -70,6 +70,9 @@ func TaskManager(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
+
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
@@ -80,7 +83,6 @@ func TaskManager(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Task Manager: ", err)
 	}
 	defer tm.Close(cleanupCtx, tconn)
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	crostiniProcessName := "Linux Virtual Machine: termina"
 

@@ -81,6 +81,9 @@ func DebianUpgradeAlert(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
+
 	ui := uiauto.New(tconn).WithInterval(500 * time.Millisecond)
 	continueButton := nodewith.Name("Continue anyway").Role(role.Button).First()
 
@@ -109,8 +112,6 @@ func DebianUpgradeAlert(ctx context.Context, s *testing.State) {
 		}
 		s.Log("Cleanup: shut down crostini completed")
 	}(cleanupCtx)
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Rename the os-release symlink to keep it as backup. Symlink is preserved.
 	if err := cont.Command(ctx, "sudo", "mv", releaseFilePath, releaseFileBackupPath).Run(testexec.DumpLogOnError); err != nil {

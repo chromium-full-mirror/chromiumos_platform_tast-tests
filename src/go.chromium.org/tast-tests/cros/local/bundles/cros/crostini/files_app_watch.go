@@ -63,7 +63,6 @@ func FilesAppWatch(ctx context.Context, s *testing.State) {
 	pre := s.FixtValue().(crostini.FixtureData)
 	tconn := pre.Tconn
 	cont := pre.Cont
-	cr := pre.Chrome
 
 	const (
 		testFileName1   = "FilesAppWatch1.txt"
@@ -93,7 +92,8 @@ func FilesAppWatch(ctx context.Context, s *testing.State) {
 	}
 	defer files.Close(cleanupCtx)
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 	// Validate file1.txt is shown in 'Linux files'.
 	if err := uiauto.Combine("find file1.txt",
 		files.OpenDir("Linux files", "Files - Linux files"),

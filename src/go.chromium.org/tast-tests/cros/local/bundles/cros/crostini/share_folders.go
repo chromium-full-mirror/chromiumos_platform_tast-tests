@@ -83,6 +83,9 @@ func ShareFolders(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
+
 	sharedFolders := sharedfolders.NewSharedFolders(tconn)
 	// Clean up shared folders in the end.
 	defer func() {
@@ -140,8 +143,6 @@ func ShareFolders(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Manage shared folders: ", err)
 	}
 	defer st.Close(ctx)
-
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	// Check results after sharing two folders.
 	if err := checkShareFoldersResults(ctx, tconn, cont, st, []string{folder1, folder2}, []string{sharedFolder1, sharedFolder2}); err != nil {

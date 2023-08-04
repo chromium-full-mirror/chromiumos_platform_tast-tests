@@ -100,7 +100,6 @@ func AppVscodeFromFileManager(ctx context.Context, s *testing.State) {
 	)
 
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
-	cr := s.FixtValue().(crostini.FixtureData).Chrome
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
 
@@ -115,7 +114,8 @@ func AppVscodeFromFileManager(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Files app: ", err)
 	}
 	defer filesApp.Close(cleanupCtx)
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	// Create a file in container.
 	if err := cont.Command(ctx, "touch", tmpFilename).Run(testexec.DumpLogOnError); err != nil {

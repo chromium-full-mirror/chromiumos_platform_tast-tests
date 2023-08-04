@@ -127,7 +127,8 @@ func AppEclipse(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create test file in the Container: ", err)
 	}
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	// Find eclipse window.
 	eclipseWindow := nodewith.NameContaining("Eclipse").Role(role.Window).First()

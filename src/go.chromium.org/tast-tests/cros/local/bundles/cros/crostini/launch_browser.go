@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast/core/testing"
@@ -72,6 +73,9 @@ func LaunchBrowser(ctx context.Context, s *testing.State) {
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	bt := s.Param().(browser.Type)
+
+	handler := faillog.DumpUITreeWithScreenshotHandler(ctx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	s.Run(ctx, "testing_sh_c ", func(ctx context.Context, s *testing.State) {
 		if err := guestos.LaunchBrowser(ctx, tconn, bt, cont, "browser-env", []string{"sh", "-c", "${BROWSER} http://browser-env.test/"}); err != nil {
