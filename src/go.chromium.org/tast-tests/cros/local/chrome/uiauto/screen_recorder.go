@@ -145,7 +145,7 @@ func ChooseScreenRecorder(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := New(tconn)
 	// There may be multiple "Choose what to share" nodes, so add First() here.
 	shareScreenDialog := nodewith.Name("Choose what to share").HasClass("DesktopMediaPickerDialogView").First()
-	entireScreenTab := nodewith.Name("Entire Screen").Role(role.Tab).Ancestor(shareScreenDialog)
+	entireScreenTab := nodewith.NameRegex(regexp.MustCompile("(?i)Entire Screen")).Role(role.Tab).Ancestor(shareScreenDialog)
 	firstDisplay := nodewith.Role(role.Button).Focusable().Ancestor(shareScreenDialog).First()
 	// The share button becomes focusable after the entire desktop button is clicked.
 	shareButton := nodewith.Name("Share").Role(role.Button).Ancestor(shareScreenDialog).Focusable()
