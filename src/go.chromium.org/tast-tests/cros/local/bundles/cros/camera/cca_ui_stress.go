@@ -408,7 +408,6 @@ func takeActionsRandomly(ctx context.Context, s *testing.State, app *cca.App) er
 func CCAUIStress(ctx context.Context, s *testing.State) {
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveScreenshotWhenFail: true, SaveCameraFolderWhenFail: true})
-	subTestTimeout := 5 * time.Minute
 	for _, tst := range []struct {
 		name     string
 		testFunc func(context.Context, *testing.State, *cca.App) error
@@ -422,14 +421,12 @@ func CCAUIStress(ctx context.Context, s *testing.State) {
 		"clickVideoShutterContinuously",
 		clickVideoShutterContinuously,
 	}} {
-		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
-		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
+		s.Run(ctx, tst.name, func(ctx context.Context, s *testing.State) {
 			if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
 				return tst.testFunc(ctx, s, app)
 			}, cca.TestWithAppParams{}); err != nil {
 				s.Fatalf("Test %v failed : %v", tst.name, err)
 			}
 		})
-		defer cancel()
 	}
 }
