@@ -222,9 +222,59 @@ func (uda *Context) LeftClick(s *Finder) uiauto.Action {
 	return uda.click(s, mouse.LeftButton)
 }
 
+// LeftClickUntil returns a function that repeatedly left clicks the finder
+// until the condition returns no error. This is useful for situations where
+// there is no indication of whether the element is ready to receive clicks.
+// It uses the polling options from the Context.
+func (uda *Context) LeftClickUntil(finder *Finder, condition func(context.Context) error) uiauto.Action {
+	return func(ctx context.Context) error {
+		if err := uda.LeftClick(finder)(ctx); err != nil {
+			return errors.Wrap(err, "failed to initially click the element")
+		}
+		// GoBigSleepLint: Wait a little bit before polling `condition`.
+		if err := testing.Sleep(ctx, uda.pollOpts.Interval); err != nil {
+			return err
+		}
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			if err := condition(ctx); err != nil {
+				if err := uda.LeftClick(finder)(ctx); err != nil {
+					return errors.Wrap(err, "failed to click the element")
+				}
+				return errors.Wrap(err, "click may not have been received yet")
+			}
+			return nil
+		}, &uda.pollOpts)
+	}
+}
+
 // RightClick returns an action that right-clicks a finder.
 func (uda *Context) RightClick(s *Finder) uiauto.Action {
 	return uda.click(s, mouse.RightButton)
+}
+
+// RightClickUntil returns a function that repeatedly right clicks the finder
+// until the condition returns no error. This is useful for situations where
+// there is no indication of whether the element is ready to receive clicks.
+// It uses the polling options from the Context.
+func (uda *Context) RightClickUntil(finder *Finder, condition func(context.Context) error) uiauto.Action {
+	return func(ctx context.Context) error {
+		if err := uda.RightClick(finder)(ctx); err != nil {
+			return errors.Wrap(err, "failed to initially click the element")
+		}
+		// GoBigSleepLint: Wait a little bit before polling `condition`.
+		if err := testing.Sleep(ctx, uda.pollOpts.Interval); err != nil {
+			return err
+		}
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			if err := condition(ctx); err != nil {
+				if err := uda.RightClick(finder)(ctx); err != nil {
+					return errors.Wrap(err, "failed to click the element")
+				}
+				return errors.Wrap(err, "click may not have been received yet")
+			}
+			return nil
+		}, &uda.pollOpts)
+	}
 }
 
 // DoubleClick returns an action that double-clicks a finder.
