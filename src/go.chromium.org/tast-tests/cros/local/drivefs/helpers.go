@@ -55,19 +55,33 @@ func SaveDriveLogsOnError(ctx context.Context, hasError func() bool, normalizedU
 }
 
 func saveDriveLogs(ctx context.Context, homeDir, persistableToken string) {
-	driveLogPath := ConfigPath(homeDir, persistableToken, "Logs", "drivefs.txt")
-	logContents, err := ioutil.ReadFile(driveLogPath)
-	if err != nil {
-		testing.ContextLogf(ctx, "Could not read the Drive log %q: %v", driveLogPath, err)
-		return
-	}
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok {
 		testing.ContextLog(ctx, "Could not obtain the context out dir")
 		return
 	}
+
+	driveFsLogPath := ConfigPath(homeDir, persistableToken, "Logs")
+	driveFsMainLogs := filepath.Join(driveFsLogPath, "drivefs.txt")
+	logContents, err := ioutil.ReadFile(driveFsMainLogs)
+	if err != nil {
+		testing.ContextLogf(ctx, "Could not read the Drive log %q: %v", driveFsMainLogs, err)
+		return
+	}
 	if err = ioutil.WriteFile(filepath.Join(outDir, "drivefs_logs.txt"), logContents, 0644); err != nil {
 		testing.ContextLog(ctx, "Could not write the Drive log to out dir: ", err)
+	}
+
+	// Get the structured logs which contain information about the Drive API
+	// calls that were made during execution.
+	structuredLogPath := filepath.Join(driveFsLogPath, "structured_log")
+	structuredLogContents, err := ioutil.ReadFile(structuredLogPath)
+	if err != nil {
+		testing.ContextLogf(ctx, "Could not read the Drive log %q: %v", structuredLogPath, err)
+		return
+	}
+	if err = ioutil.WriteFile(filepath.Join(outDir, "drivefs_structured_logs"), structuredLogContents, 0644); err != nil {
+		testing.ContextLog(ctx, "Could not write the Drive structured logs to out dir: ", err)
 	}
 }
 
