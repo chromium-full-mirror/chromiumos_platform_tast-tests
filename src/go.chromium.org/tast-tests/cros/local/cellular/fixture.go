@@ -204,7 +204,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	// Ensure that the primary SIM slot has a valid SIM.
-	if !(f.useTestESIM || f.restartMM) {
+	if !(f.useTestESIM || f.restartMM || sfish != nil) {
 		if err := modem.EnsureValidSIM(ctx); err != nil {
 			s.Fatal("Failed to ensure valid SIM: ", err)
 		}
