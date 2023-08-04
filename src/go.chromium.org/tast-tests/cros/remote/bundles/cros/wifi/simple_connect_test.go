@@ -201,6 +201,7 @@ func simpleConnect80211ax() []simpleConnectParams {
 			ap.Mode(ap.Mode80211axPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT20), ap.SpectrumManagement(),
 			ap.HEChWidth(ap.HEChWidth20Or40),
 		`}},
+		ExtraRequirements: []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 	}, {
 		Name:      "80211axhe40",
 		Fixture:   defaultFixture,
@@ -210,6 +211,7 @@ func simpleConnect80211ax() []simpleConnectParams {
 			ap.Mode(ap.Mode80211axPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC), ap.SpectrumManagement(),
 			ap.HEChWidth(ap.HEChWidth20Or40),
 		`}},
+		ExtraRequirements: []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 	}, {
 		Name:      "80211axhe80mixed",
 		Fixture:   defaultFixture,
@@ -219,6 +221,7 @@ func simpleConnect80211ax() []simpleConnectParams {
 			ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
 		`}},
+		ExtraRequirements: []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 	}, {
 		Name:      "80211axhe80pure",
 		Fixture:   defaultFixture,
@@ -229,6 +232,7 @@ func simpleConnect80211ax() []simpleConnectParams {
 			ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
 		`}},
+		ExtraRequirements: []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 	}}
 }
 

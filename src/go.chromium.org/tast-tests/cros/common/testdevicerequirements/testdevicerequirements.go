@@ -153,6 +153,9 @@ const (
 
 	// [[ WiFi radio ]]
 
+	// WiFiRfSupport80211ax the Wi-Fi module MUST support TX/RX @HE-MCS8/9/10/11, NSS=2, 20/40/80Mhz with GI=0.8/1.6us.
+	WiFiRfSupport80211ax = "wifi-rf-0006-v01"
+
 	// WiFiRf6E160MHz if the Wi-Fi controller supports Wifi 6E, the controller MUST support a transmission frequency bandwidth of 160 MHz.
 	WiFiRf6E160MHz = "wifi-rf-0016-v01"
 

@@ -197,6 +197,7 @@ func init() {
 						ap.HEChWidth(ap.HEChWidth20Or40),
 					},
 				}},
+				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
 			}, {
 				// Verifies that DUT can connect to an open 802.11ax network on channel 60 with a channel width of 40MHz.
 				Name:      "80211axhe40",
@@ -208,6 +209,7 @@ func init() {
 						ap.HEChWidth(ap.HEChWidth20Or40),
 					},
 				}},
+				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
 			}, {
 				// Verifies that DUT can connect to an open 802.11ax network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz.
 				Name:      "80211axhe80mixed",
@@ -219,6 +221,7 @@ func init() {
 						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
 					},
 				}},
+				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
 			}, {
 				// Verifies that DUT can connect to an open 802.11ax network on channel 157 with center channel of 155 and channel width of 80MHz.
 				// The router is forced to use 80 MHz wide rates only.
@@ -231,6 +234,7 @@ func init() {
 						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
 					},
 				}},
+				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
 			}, {
 				// Verifies that DUT can connect to a hidden network on 2.4GHz channel.
 				Name:    "hidden24g",
