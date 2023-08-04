@@ -29,13 +29,26 @@ func DoSystemProxyAuthentication(ctx context.Context, tconn *chrome.TestConn, us
 		uiTimeout         = 10 * time.Second
 	)
 
-	if err := quicksettings.Show(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to show system tray")
+	// TODO(b/290289663): Remove this check once qsRevamp is launched.
+	qsRevampEnabled, err := quicksettings.QsRevampEnabled(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get QsRevamp state")
+	}
+
+	if qsRevampEnabled {
+		if err := quicksettings.ShowNotificationCenter(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to show the notification center")
+		}
+	} else {
+		if err := quicksettings.Show(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to show system tray")
+		}
 	}
 
 	if _, err := ash.WaitForNotification(ctx, tconn, uiTimeout, ash.WaitTitle(notificationTitle)); err != nil {
 		return errors.Wrapf(err, "failed waiting %v for system-proxy notification", uiTimeout)
 	}
+
 	ui := uiauto.New(tconn)
 	if err := ui.WithPollOpts(testing.PollOptions{Interval: 2 * time.Second, Timeout: uiTimeout}).LeftClick(nodewith.Name(notificationTitle).Role(role.StaticText))(ctx); err != nil {
 		return errors.Wrap(err, "failed finding notification and clicking it")
