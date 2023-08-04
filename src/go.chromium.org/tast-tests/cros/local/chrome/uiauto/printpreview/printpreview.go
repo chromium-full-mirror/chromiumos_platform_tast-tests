@@ -9,6 +9,7 @@ package printpreview
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -82,7 +83,9 @@ func SelectPrinter(ctx context.Context, tconn *chrome.TestConn, printerName stri
 	}
 
 	// Find and select the printer.
-	printerList := nodewith.Name("Print Destinations")
+	// TODO(b/294823934): Consider replacing the regexp with a simple string
+	// if/after the default language is the same among all the test devices.
+	printerList := nodewith.NameRegex(regexp.MustCompile("Print (d|D)estinations"))
 	printer := nodewith.Name(printerName).Role(role.StaticText).Ancestor(printerList).First()
 	if err := uiauto.Combine("find and click printer",
 		ui.WithTimeout(10*time.Second).WaitUntilExists(printer),
