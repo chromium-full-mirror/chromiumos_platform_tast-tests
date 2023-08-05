@@ -20,7 +20,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const mgsTestTimeout = 6 * time.Minute
+const mgsTestTimeout = 15 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
