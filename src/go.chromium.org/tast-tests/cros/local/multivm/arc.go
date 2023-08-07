@@ -46,7 +46,7 @@ func (o ARCOptions) ActivateTimeout() time.Duration {
 // Activate spins up the ARC VM.
 func (o ARCOptions) Activate(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, st StateManagerTestingState) (VMActivation, error) {
 	testing.ContextLog(ctx, "Creating ARC")
-	vm, err := arc.New(ctx, st.OutDir())
+	vm, err := arc.New(ctx, st.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "starting ARC")
 	}

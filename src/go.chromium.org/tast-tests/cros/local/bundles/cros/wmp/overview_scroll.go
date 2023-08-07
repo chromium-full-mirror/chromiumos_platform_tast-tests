@@ -121,7 +121,7 @@ func OverviewScroll(ctx context.Context, s *testing.State) {
 	}
 
 	// Setup ARC.
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}

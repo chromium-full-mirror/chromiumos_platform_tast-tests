@@ -55,7 +55,7 @@ func KernelCrash(ctx context.Context, s *testing.State) {
 	}()
 
 	s.Log("Starting to ARCVM")
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARCVM: ", err)
 	}
@@ -107,7 +107,7 @@ func KernelCrash(ctx context.Context, s *testing.State) {
 	// The crash reports are sent via Mojo from the ArcCrashCollector service in ARCVM. So we need to wait the reboot of ARCVM.
 	// Also `crash.WaitForCrashFiles` waits for a while but it's too short for reboot of ARCVM.
 	s.Log("Waiting for new ARCVM process to start")
-	if a, err = arc.New(ctx, s.OutDir()); err != nil {
+	if a, err = arc.New(ctx, s.OutDir(), cr.NormalizedUser()); err != nil {
 		s.Fatal("Failed to start ARCVM: ", err)
 	}
 	// `defer a.Close(ctx)` is not needed here because it's already declared.

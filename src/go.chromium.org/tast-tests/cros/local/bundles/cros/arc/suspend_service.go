@@ -63,7 +63,7 @@ func (c *SuspendService) Prepare(ctx context.Context, req *empty.Empty) (*arcpb.
 	}
 	defer os.RemoveAll(td)
 
-	a, err := arc.New(ctx, td)
+	a, err := arc.New(ctx, td, cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start ARC")
 	}
@@ -123,7 +123,7 @@ func readARCClocks(ctx context.Context, readClocksPath string) (*arcpb.ClockValu
 
 	// Reestablish a connection to ARC since the service state will be lost
 	// when the RPC connection is renewed.
-	a, err := arc.New(ctx, td)
+	a, err := arc.New(ctx, td, "")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start ARC")
 	}

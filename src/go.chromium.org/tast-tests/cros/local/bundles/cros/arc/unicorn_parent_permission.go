@@ -91,7 +91,7 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		a, err := arc.New(ctx, s.OutDir())
+		a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 		if err != nil {
 			return rl.Retry("start ARC", err)
 		}

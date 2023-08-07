@@ -76,7 +76,7 @@ func SmartSelectionChrome(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(ctx)
 
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC by user policy: ", err)
 	}

@@ -144,7 +144,7 @@ func ManagedAppInstallLogging(ctx context.Context, s *testing.State) {
 		defer cr.Close(cleanupCtx)
 
 		// Ensure that ARC is launched.
-		a, err := arc.New(ctx, s.OutDir())
+		a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 		if err != nil {
 			return rl.Retry("start ARC by policy", err)
 		}

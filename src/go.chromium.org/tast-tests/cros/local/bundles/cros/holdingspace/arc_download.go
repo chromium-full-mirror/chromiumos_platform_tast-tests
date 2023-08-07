@@ -79,7 +79,7 @@ func ArcDownload(ctx context.Context, s *testing.State) {
 	}
 
 	// Launch ARC and handle error logging.
-	arc, err := arc.New(ctx, s.OutDir())
+	arc, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC by user policy: ", err)
 	}

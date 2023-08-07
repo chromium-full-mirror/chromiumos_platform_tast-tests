@@ -94,7 +94,7 @@ func OpenSession(ctx context.Context, extraArgs []string, outputDir string) (cr 
 		return nil, nil, errors.Wrap(err, "failed to login to Chrome")
 	}
 
-	a, err = arc.New(ctx, outputDir)
+	a, err = arc.New(ctx, outputDir, cr.NormalizedUser())
 	if err != nil {
 		cr.Close(ctx)
 		return nil, nil, errors.Wrap(err, "could not start ARC")

@@ -118,7 +118,7 @@ func ManagedBoot(ctx context.Context, s *testing.State) {
 		}
 
 		// Wait for ARC to boot. It should succeed only if enabled by policy.
-		a, err := arc.New(ctx, s.OutDir())
+		a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 		if err == nil {
 			defer a.Close(ctx)
 			if !expectEnabled {

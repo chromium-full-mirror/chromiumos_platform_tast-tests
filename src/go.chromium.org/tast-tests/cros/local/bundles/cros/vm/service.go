@@ -47,7 +47,7 @@ func (c *Service) RunARC(ctx context.Context, req *empty.Empty) (*empty.Empty, e
 		return nil, errors.Wrap(err, "failed to get output dir")
 	}
 
-	a, err := arc.New(ctx, outDir)
+	a, err := arc.New(ctx, outDir, cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start ARC")
 	}

@@ -65,7 +65,7 @@ func MTP(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}

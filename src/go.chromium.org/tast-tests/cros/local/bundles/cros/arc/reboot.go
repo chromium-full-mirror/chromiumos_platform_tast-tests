@@ -47,7 +47,7 @@ func Reboot(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}
@@ -75,7 +75,7 @@ func Reboot(ctx context.Context, s *testing.State) {
 	a.Close(ctx)
 
 	// Reboot Android and re-establish ADB connection.
-	a, err = arc.New(ctx, s.OutDir())
+	a, err = arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		// We can assume a == nil at this point.
 		s.Fatal("Failed to restart ARC: ", err)

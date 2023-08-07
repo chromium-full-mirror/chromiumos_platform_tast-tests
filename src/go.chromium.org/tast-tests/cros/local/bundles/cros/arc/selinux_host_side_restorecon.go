@@ -105,7 +105,7 @@ func SELinuxHostSideRestorecon(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
 
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		// Do not abort and proceed to SELinux label check.
 		s.Error("Failed to start ARC: ", err)

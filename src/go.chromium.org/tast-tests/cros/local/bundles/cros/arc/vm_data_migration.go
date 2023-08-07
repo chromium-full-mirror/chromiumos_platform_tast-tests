@@ -362,7 +362,7 @@ func reSignInAndVerifyMigration(ctx context.Context, s *testing.State, creds chr
 	}
 
 	// Check that ARC can start.
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}

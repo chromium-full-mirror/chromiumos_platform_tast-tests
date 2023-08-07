@@ -585,7 +585,7 @@ func (f *nearbyShareLoginFixture) SetUp(ctx context.Context, s *testing.FixtStat
 	// Starting ARC restarts ADB, which kills the connection to the snippet.
 	// Starting it here (before we check the connection and attempt a reconnect) will ensure the snippet connection is up.
 	if f.arcEnabled {
-		a, err := arc.New(ctx, s.OutDir())
+		a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 		if err != nil {
 			s.Fatal("Failed to start ARC: ", err)
 		}

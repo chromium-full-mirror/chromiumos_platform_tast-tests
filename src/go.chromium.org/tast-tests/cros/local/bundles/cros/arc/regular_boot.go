@@ -227,7 +227,7 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 		return &result, err
 	}
 
-	a, err := arc.New(ctx, testDir)
+	a, err := arc.New(ctx, testDir, cr.NormalizedUser())
 	if err != nil {
 		return &result, errors.Wrap(err, "failed to connect to ARC")
 	}

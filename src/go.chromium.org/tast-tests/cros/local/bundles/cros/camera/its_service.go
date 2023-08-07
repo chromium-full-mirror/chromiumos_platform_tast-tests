@@ -64,7 +64,7 @@ func (its *ITSService) SetUp(ctx context.Context, req *empty.Empty) (_ *empty.Em
 		}
 	}()
 
-	a, err := arc.New(ctx, outDir)
+	a, err := arc.New(ctx, outDir, cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start ARC")
 	}

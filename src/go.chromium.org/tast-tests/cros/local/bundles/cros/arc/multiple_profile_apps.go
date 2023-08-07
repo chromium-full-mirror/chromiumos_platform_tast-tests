@@ -95,7 +95,7 @@ func loginAndOptin(ctx context.Context, creds string, s *testing.State) (a *arc.
 		return nil, errors.Wrap(err, "failed to optin to play store and close")
 	}
 
-	a, err = arc.New(ctx, s.OutDir())
+	a, err = arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start ARC")
 	}

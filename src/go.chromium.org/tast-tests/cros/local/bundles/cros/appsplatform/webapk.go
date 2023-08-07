@@ -111,7 +111,7 @@ func WebAPK(ctx context.Context, s *testing.State) {
 	}
 	defer closeBrowser(cleanupCtx)
 
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Could not start ARC: ", err)
 	}

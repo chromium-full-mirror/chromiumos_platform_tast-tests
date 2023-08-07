@@ -188,7 +188,7 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		vmLogPath = filepath.Join(ureadaheadDataDir, vmLogName)
 
 		// Pull and obtain ARCVM pack from guest OS and dump pack file content to log.
-		vmPackPath, err = getGuestPack(ctx, outDir, vmLogPath, request.UseDevCaches)
+		vmPackPath, err = getGuestPack(ctx, outDir, vmLogPath, cr.NormalizedUser(), request.UseDevCaches)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain ureadahead pack from ARCVM guest OS")
 		}
@@ -318,7 +318,7 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 			return nil, errors.Wrapf(err, "failed to verify host ureadahead pack file dump, please check %q", logName)
 		}
 
-		a, err := arc.New(ctx, outDir)
+		a, err := arc.New(ctx, outDir, cr.NormalizedUser())
 		if err != nil {
 			return nil, errors.Wrap(err, "could not connect to ARC Container")
 		}
@@ -415,7 +415,7 @@ func verifyTracedServicesStopped(ctx context.Context, a *arc.ARC) error {
 }
 
 // getGuestPack pulls ureadahead initial pack for requested Chrome login mode from guest OS.
-func getGuestPack(ctx context.Context, outDir, logPath string, useDevCaches bool) (string, error) {
+func getGuestPack(ctx context.Context, outDir, logPath, chromeUsername string, useDevCaches bool) (string, error) {
 	const (
 		ureadaheadDataDir = "/var/lib/ureadahead"
 
@@ -434,7 +434,7 @@ func getGuestPack(ctx context.Context, outDir, logPath string, useDevCaches bool
 	}
 
 	// Connect to ARCVM instance.
-	a, err := arc.New(ctx, outDir)
+	a, err := arc.New(ctx, outDir, chromeUsername)
 	if err != nil {
 		return "", errors.Wrap(err, "could not connect to ARCVM")
 	}

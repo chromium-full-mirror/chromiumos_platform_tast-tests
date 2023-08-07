@@ -55,7 +55,7 @@ func PIPRoundedCornersUnderlay(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(cleanupCtx)
 
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}

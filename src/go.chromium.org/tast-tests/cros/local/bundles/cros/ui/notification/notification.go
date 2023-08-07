@@ -43,7 +43,7 @@ type ARCClient struct {
 // NewARCClient creates an ARCClient by installing the notification testing app,
 // launch the app and initialize the UI Automator that needed for generating notifications.
 func NewARCClient(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, outDir string) (cl *ARCClient, retErr error) {
-	a, err := arc.New(ctx, outDir)
+	a, err := arc.New(ctx, outDir, cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start ARC")
 	}

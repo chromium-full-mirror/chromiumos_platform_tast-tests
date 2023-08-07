@@ -260,7 +260,7 @@ func Manual(ctx context.Context, s *testing.State) {
 
 	var a *arc.ARC
 	if settings.arc {
-		a, err = arc.New(ctx, s.OutDir())
+		a, err = arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 		if err != nil {
 			s.Fatal("Failed to start ARC: ", err)
 		}

@@ -107,7 +107,7 @@ func (c *PowerPerfService) Setup(ctx context.Context, _ *emptypb.Empty) (*emptyp
 		return os.RemoveAll(td)
 	})
 
-	a, err := arc.New(ctx, td)
+	a, err := arc.New(ctx, td, cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start ARC")
 	}

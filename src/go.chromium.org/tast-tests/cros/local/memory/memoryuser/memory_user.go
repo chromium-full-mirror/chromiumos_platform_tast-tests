@@ -293,7 +293,7 @@ func newTestEnv(ctx context.Context, outDir string, p *RunParameters) (*TestEnv,
 	if p.UseARC {
 		if p.ExistingARC != nil {
 			te.arc = p.ExistingARC
-		} else if te.arc, err = arc.New(ctx, outDir); err != nil {
+		} else if te.arc, err = arc.New(ctx, outDir, te.cr.NormalizedUser()); err != nil {
 			return nil, errors.Wrap(err, "failed to start ARC")
 		}
 	}

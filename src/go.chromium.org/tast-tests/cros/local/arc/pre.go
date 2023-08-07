@@ -227,7 +227,7 @@ func (p *preImpl) Prepare(ctx context.Context, s *testing.PreState) interface{} 
 		ctx, cancel := context.WithTimeout(ctx, BootTimeout)
 		defer cancel()
 		var err error
-		if p.arc, err = New(ctx, s.OutDir()); err != nil {
+		if p.arc, err = New(ctx, s.OutDir(), p.cr.NormalizedUser()); err != nil {
 			s.Fatal("Failed to start ARC: ", err)
 		}
 		if p.init, err = NewSnapshot(ctx, p.arc); err != nil {

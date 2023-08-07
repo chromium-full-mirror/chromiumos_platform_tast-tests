@@ -804,7 +804,7 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
 			s.Fatal("Failed to optin to Play Store: ", err)
 		}
-		a, err = arc.New(ctx, s.OutDir())
+		a, err = arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 		if err != nil {
 			s.Fatal("Failed to start ARC: ", err)
 		}

@@ -58,11 +58,13 @@ func init() {
 func RunWithARC(ctx context.Context, s *testing.State) {
 	// First ensure crostini works in isolation by running a simple test.
 	cont := s.FixtValue().(crostini.FixtureData).Cont
+	cr := s.FixtValue().(crostini.FixtureData).Chrome
+
 	if err := crostini.BasicCommandWorks(ctx, cont); err != nil {
 		s.Fatal("Failed to run a command in the container: ", err)
 	}
 
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}

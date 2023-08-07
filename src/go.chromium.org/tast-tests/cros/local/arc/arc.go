@@ -214,7 +214,8 @@ func (a *ARC) Abx2Xml(ctx context.Context, data []byte) ([]byte, error) {
 // New waits for Android to finish booting.
 //
 // ARC must be enabled in advance by passing chrome.ARCEnabled or chrome.ARCSupported with
-// real user gaia login to chrome.New.
+// real user gaia login to chrome.New, and the Chrome username can be passed as the parameter.
+// chromeUsername can be an empty string, in which case some faillog is skipped.
 //
 // After this function returns successfully, you can assume BOOT_COMPLETED
 // intent has been broadcast from Android system, and ADB connection is ready.
@@ -222,7 +223,7 @@ func (a *ARC) Abx2Xml(ctx context.Context, data []byte) ([]byte, error) {
 // WaitIntentHelper() to wait for ArcIntentHelper to be ready, for example.
 //
 // The returned ARC instance must be closed when the test is finished.
-func New(ctx context.Context, outDir string) (*ARC, error) {
+func New(ctx context.Context, outDir, chromeUsername string) (*ARC, error) {
 	// Start a syslog reader so we can give more useful debug information
 	// waiting for boot. This is too late in the boot to
 	// catch crosvm startup crashes.

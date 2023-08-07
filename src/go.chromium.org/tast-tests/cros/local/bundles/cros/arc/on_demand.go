@@ -58,7 +58,7 @@ func performInitialBoot(ctx context.Context, outDir string, creds chrome.Creds, 
 	}
 	defer cr.Close(ctx)
 
-	a, err := arc.New(ctx, outDir)
+	a, err := arc.New(ctx, outDir, cr.NormalizedUser())
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to ARC")
 	}
@@ -112,7 +112,7 @@ func performRegularBoot(ctx context.Context, outDir string, creds chrome.Creds, 
 	}
 
 	// Verify that we can connect to ARC and Play Store is ready.
-	a, err := arc.New(ctx, outDir)
+	a, err := arc.New(ctx, outDir, cr.NormalizedUser())
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to ARC")
 	}

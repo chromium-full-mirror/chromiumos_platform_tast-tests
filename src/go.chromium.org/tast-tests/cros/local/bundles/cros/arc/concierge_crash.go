@@ -48,7 +48,7 @@ func ConciergeCrash(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}
@@ -92,7 +92,7 @@ func ConciergeCrash(ctx context.Context, s *testing.State) {
 	a = nil
 
 	// Make sure Android successfully boots.
-	a, err = arc.New(ctx, s.OutDir())
+	a, err = arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		// We can assume a == nil at this point.
 		s.Fatal("Failed to restart ARC: ", err)

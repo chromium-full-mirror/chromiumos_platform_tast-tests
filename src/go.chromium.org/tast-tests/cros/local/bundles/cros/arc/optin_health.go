@@ -83,7 +83,7 @@ func OptinHealth(ctx context.Context, s *testing.State) {
 			return rl.Retry("optin to Play Store", err)
 		}
 
-		a, err := arc.New(ctx, s.OutDir())
+		a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 		if err != nil {
 			return rl.Retry("start ARC", err)
 		}

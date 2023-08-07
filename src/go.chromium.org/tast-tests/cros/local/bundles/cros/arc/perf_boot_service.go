@@ -59,7 +59,7 @@ func (c *PerfBootService) GetPerfValues(ctx context.Context, req *empty.Empty) (
 	}
 	defer os.RemoveAll(td)
 
-	a, err := arc.New(ctx, td)
+	a, err := arc.New(ctx, td, cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start ARC")
 	}

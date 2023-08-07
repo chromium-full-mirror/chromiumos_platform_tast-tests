@@ -75,7 +75,7 @@ func (a *AllowlistService) CheckArcAppInstalled(ctx context.Context, req *networ
 	}
 
 	td, _ := testing.ContextOutDir(ctx)
-	arc, err := arc.New(ctx, td)
+	arc, err := arc.New(ctx, td, a.cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start ARC")
 	}

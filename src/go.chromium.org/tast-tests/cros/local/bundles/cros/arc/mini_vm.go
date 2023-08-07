@@ -90,7 +90,7 @@ func MiniVM(ctx context.Context, s *testing.State) {
 	if err := optin.Perform(ctx, cr, tconn); err != nil {
 		s.Fatal("Unable to perform ARC optin: ", err)
 	}
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to wait for ARC to finish booting: ", err)
 	}

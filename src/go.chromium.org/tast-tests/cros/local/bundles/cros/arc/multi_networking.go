@@ -63,7 +63,7 @@ func MultiNetworking(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to connect to Chrome: ", err)
 		}
 		defer cr.Close(cleanupCtx)
-		a, err := arc.New(ctx, s.OutDir())
+		a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 		if err != nil {
 			s.Fatal("Failed to start ARC: ", err)
 		}

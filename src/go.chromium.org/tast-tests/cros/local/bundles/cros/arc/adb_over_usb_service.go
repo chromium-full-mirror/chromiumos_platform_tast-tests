@@ -85,7 +85,7 @@ func (*ADBOverUSBService) CheckADBDJobStatus(ctx context.Context, req *empty.Emp
 		return nil, errors.Wrap(err, "failed to get output dir")
 	}
 
-	a, err := arc.New(ctx, outDir)
+	a, err := arc.New(ctx, outDir, cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start ARC")
 	}

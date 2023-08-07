@@ -289,7 +289,7 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 			logcatName = fmt.Sprintf("logcat_error_%d.log", errorCount)
 		}
 		logcatFilePath := filepath.Join(s.OutDir(), logcatName)
-		if err := dumpLogcat(ctx, s, logcatFilePath); err != nil {
+		if err := dumpLogcat(ctx, s, logcatFilePath, cr.NormalizedUser()); err != nil {
 			s.Log("Failed to dump logcat: ", err)
 		}
 		if err != nil {
@@ -487,7 +487,7 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 		}
 	}
 
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		return v, errors.Wrap(err, "failed to connect ARC")
 	}
@@ -594,8 +594,8 @@ func chromeOSVersion() (string, error) {
 }
 
 // dumpLogcat dumps logcat output to a log file in the test result directory.
-func dumpLogcat(ctx context.Context, s *testing.State, filePath string) error {
-	a, err := arc.New(ctx, s.OutDir())
+func dumpLogcat(ctx context.Context, s *testing.State, filePath, chromeUserName string) error {
+	a, err := arc.New(ctx, s.OutDir(), chromeUserName)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect ARC")
 	}

@@ -57,7 +57,7 @@ func performBoot(ctx context.Context, outDir string) error {
 	}
 	defer cr.Close(ctx)
 
-	a, err := arc.New(ctx, outDir)
+	a, err := arc.New(ctx, outDir, cr.NormalizedUser())
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to ARC")
 	}

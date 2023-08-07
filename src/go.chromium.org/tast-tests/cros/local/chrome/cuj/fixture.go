@@ -1497,7 +1497,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			defer cancel()
 
 			var err error
-			if a, err = arc.New(ctx, s.OutDir()); err != nil {
+			if a, err = arc.New(ctx, s.OutDir(), cr.NormalizedUser()); err != nil {
 				s.Fatal("Failed to start ARC: ", err)
 			}
 

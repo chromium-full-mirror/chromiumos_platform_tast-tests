@@ -253,7 +253,7 @@ func tryDataMigration(ctx context.Context, serviceAccount string, params dataMig
 	}
 	defer cr.Close(cleanupCtx)
 
-	a, err := arc.New(ctx, outDir)
+	a, err := arc.New(ctx, outDir, cr.NormalizedUser())
 	if err != nil {
 		return rl.Retry("start ARC", err)
 	}

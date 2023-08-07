@@ -182,7 +182,7 @@ func loginAndWaitForARC(ctx, cleanupCtx context.Context, s *testing.State, enrol
 	}
 
 	// Ensure that ARC is launched.
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		return nil, nil, rl.Retry("start ARC by policy", err)
 	}

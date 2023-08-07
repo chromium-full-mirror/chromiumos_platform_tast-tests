@@ -52,7 +52,7 @@ func ShutdownVMServices(ctx context.Context, s *testing.State) {
 	defer cr.Close(cleanupCtx)
 
 	// Start ARCVM to make sure vm service processes are running
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to run arc: ", err)
 	}

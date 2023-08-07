@@ -65,7 +65,7 @@ func EnableExternalStorage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to optin to Play Store and Close: ", err)
 	}
 
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}

@@ -1006,7 +1006,7 @@ func NewTestEnv(ctx context.Context, outDir string, enableARC, useHugePages bool
 	}()
 
 	if enableARC {
-		te.arc, err = arc.New(ctx, outDir)
+		te.arc, err = arc.New(ctx, outDir, te.cr.NormalizedUser())
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to start ARC")
 		}

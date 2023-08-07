@@ -80,7 +80,7 @@ func UreadaheadValidation(ctx context.Context, s *testing.State) {
 		}
 
 		// Connect to the ARCVM instance.
-		a, err := arc.New(ctx, outDir)
+		a, err := arc.New(ctx, outDir, cr.NormalizedUser())
 		if err != nil {
 			s.Fatal("Failed to connect to ARCVM: ", err)
 		}
