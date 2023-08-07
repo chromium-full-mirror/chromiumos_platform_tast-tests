@@ -17,7 +17,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LaunchBrowser,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Opens a browser window on the host from the guest, using several common approaches (/etc/alternatives, $BROWSER, and xdg-open)",
 		Contacts:     []string{"clumptini+oncall@google.com", "jamesye@google.com"},
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
