@@ -144,7 +144,7 @@ func AddAccelDisruptive(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify error message appears due to the disruptive shortcut.
-	conflictMessage := "Shortcut is used by Lock device. Press a new shortcut to replace."
+	conflictMessage := "Shortcut is being used for \"Lock device\". Press a new shortcut."
 	errorMessage := nodewith.Name(conflictMessage).Role(role.StaticText)
 	if err := ui.WaitUntilExists(errorMessage)(ctx); err != nil {
 		s.Fatal("Failed to find the error message indicating conflict: ", err)
