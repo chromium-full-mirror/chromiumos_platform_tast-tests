@@ -19,6 +19,7 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewCustomMetricConfig("ChromeOS.Zram.CompressedSizePct", "percent", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Platform.SwapInDaily", "pages", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Platform.SwapOutDaily", "pages", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Memory.Browser.PrivateMemoryFootprint", "MB", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Memory.OOMKills.Daily", "kills", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Memory.PressureLevel2", "level", perf.SmallerIsBetter),
 
