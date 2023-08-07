@@ -33,7 +33,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
 		Vars:         []string{"firmware.skipFlashUSB"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipCPUSocFamily([]string{"amd"})),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipCPUSocFamily("amd")),
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
 			Name:    "normal",

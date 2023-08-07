@@ -217,7 +217,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 			param := genPlaybackParam(codec, file, resolution, fps, dec,
 				"long", "", []string{"drm_atomic"})
 			// "rogue" is for MT8173 hana.
-			param.HardwareDeps = "hwdep.SkipGPUFamily([]string{\"rogue\"}), hwdep.InternalDisplay()"
+			param.HardwareDeps = "hwdep.SkipGPUFamily(\"rogue\"), hwdep.InternalDisplay()"
 			param.MeasureRoughness = true
 			params = append(params, param)
 		}
@@ -247,7 +247,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 			"long_oopvd", "chromeVideoOOPVD",
 			[]string{"drm_atomic"})
 		// "rogue" is for MT8173 hana.
-		param.HardwareDeps = "hwdep.SkipGPUFamily([]string{\"rogue\"}), hwdep.InternalDisplay()"
+		param.HardwareDeps = "hwdep.SkipGPUFamily(\"rogue\"), hwdep.InternalDisplay()"
 		if codec == "h264" {
 			param.MeasureSteadyStateMetrics = true
 		}
@@ -290,7 +290,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 			"long_lacros", "chromeVideoLacros",
 			[]string{"drm_atomic", "lacros"})
 		// "rogue" is for MT8173 hana.
-		param.HardwareDeps = "hwdep.SkipGPUFamily([]string{\"rogue\"}), hwdep.InternalDisplay()"
+		param.HardwareDeps = "hwdep.SkipGPUFamily(\"rogue\"), hwdep.InternalDisplay()"
 		if codec == "h264" {
 			param.MeasureSteadyStateMetrics = true
 		}
@@ -349,7 +349,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 					param.PerfTracing = true
 					if numVideos > 10 {
 						// More than 10 videos in parallel is too much for Grunt, see b/290637628.
-						param.HardwareDeps = "hwdep.SkipGPUFamily([]string{\"stoney\"})"
+						param.HardwareDeps = "hwdep.SkipGPUFamily(\"stoney\")"
 					}
 					param.Attr = []string{"group:graphics", "graphics_video", "graphics_nightly"}
 					params = append(params, param)
@@ -364,7 +364,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 		param := genPlaybackParam(codec, file, resolution, fps, dec,
 			"intel_mc", "chromeVideoWithIntelMediaCompression",
 			[]string{})
-		param.HardwareDeps = "hwdep.GPUFamily([]string{\"meteorlake\", \"alderlake\", \"raptorlake\"})"
+		param.HardwareDeps = "hwdep.GPUFamily(\"meteorlake\", \"alderlake\", \"raptorlake\")"
 		param.MeasureRoughness = true
 		params = append(params, param)
 	}

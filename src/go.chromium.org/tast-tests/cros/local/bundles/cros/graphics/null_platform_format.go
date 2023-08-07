@@ -41,9 +41,9 @@ func init() {
 			Name: "30bpp",
 			Val:  []string{"AR30", "AB30", "XR30", "XB30"},
 			ExtraHardwareDeps: hwdep.D(
-				hwdep.SkipCPUSocFamily([]string{"mediatek", "rockchip", "qualcomm"}),
-				hwdep.SkipGPUFamily(intelGen9AndEarlierGPUSoCs),
-				hwdep.SkipGPUFamily([]string{"stoney"})),
+				hwdep.SkipCPUSocFamily("mediatek", "rockchip", "qualcomm"),
+				hwdep.SkipGPUFamily(intelGen9AndEarlierGPUSoCs...),
+				hwdep.SkipGPUFamily("stoney")),
 		}},
 		Fixture: "gpuWatchHangs",
 	})

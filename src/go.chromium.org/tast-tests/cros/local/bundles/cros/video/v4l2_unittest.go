@@ -24,7 +24,7 @@ func init() {
 			"bchoobineh@google.com",
 		},
 		SoftwareDeps: []string{"v4l2_codec"},
-		HardwareDeps: hwdep.D(hwdep.SkipGPUFamily([]string{"rogue"})), // MTK8173
+		HardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")), // MTK8173
 		BugComponent: "b:168352",
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Fixture:      "graphicsNoChrome",

@@ -1211,7 +1211,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 
 				// TODO(b/184683272): Reenable everywhere.
 				if cat == "frm_resize" || cat == "sub8x8_sf" {
-					hardwareDeps = append(hardwareDeps, "hwdep.SkipGPUFamily([]string{\"picasso\"})")
+					hardwareDeps = append(hardwareDeps, "hwdep.SkipGPUFamily(\"picasso\")")
 				}
 
 				switch levelGroup {

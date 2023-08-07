@@ -28,7 +28,7 @@ func init() {
 			"bchoobineh@google.com",
 		},
 		SoftwareDeps: []string{"v4l2_codec"},
-		HardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"mediatek"})),
+		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("mediatek")),
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Fixture:      "graphicsNoChrome",

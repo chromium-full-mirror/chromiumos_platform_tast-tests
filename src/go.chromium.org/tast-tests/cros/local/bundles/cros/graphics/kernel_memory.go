@@ -21,7 +21,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that no errors occur while examining graphics memory usage",
 		Attr:         []string{"group:mainline", "group:graphics", "graphics_nightly"},
-		HardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"intel"})),
+		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		SoftwareDeps: []string{"no_qemu"},
 		Contacts: []string{

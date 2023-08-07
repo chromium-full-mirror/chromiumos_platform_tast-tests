@@ -40,65 +40,65 @@ func init() {
 		Params: []testing.Param{{
 			Name:              "dvfs",
 			Val:               dvfs,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"rockchip", "mediatek"})),
+			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("rockchip", "mediatek")),
 			Fixture:           "chromeGraphicsIdle",
 		}, {
 			Name:              "dvfs_arc",
 			Val:               dvfs,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"rockchip", "mediatek"})),
+			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("rockchip", "mediatek")),
 			Fixture:           "chromeGraphicsIdleArc",
 		}, {
 			// TODO(pwang): Not all platform has fbc enabled. Add SoftwareDeps/HardwareDeps once we got some results on stainless.
 			Name:              "fbc",
 			Val:               fbc,
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.CPUSocFamily([]string{"intel"})),
+			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.CPUSocFamily("intel")),
 			ExtraAttr:         []string{"informational"},
 			Fixture:           "chromeGraphicsIdle",
 		}, {
 			Name:              "fbc_arc",
 			Val:               fbc,
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.CPUSocFamily([]string{"intel"})),
+			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.CPUSocFamily("intel")),
 			ExtraAttr:         []string{"informational"},
 			Fixture:           "chromeGraphicsIdleArc",
 		}, {
 			Name:              "psr",
 			Val:               psr,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"intel"})),
+			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 			Fixture:           "chromeGraphicsIdle",
 		}, {
 			Name:              "psr_arc",
 			Val:               psr,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"intel"})),
+			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 			Fixture:           "chromeGraphicsIdleArc",
 		}, {
 			Name:              "gem_idle",
 			Val:               gemIdle,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"intel"})),
+			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 			Fixture:           "chromeGraphicsIdle",
 		}, {
 			Name:              "gem_idle_arc",
 			Val:               gemIdle,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"intel"})),
+			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 			Fixture:           "chromeGraphicsIdleArc",
 		}, {
 			Name:              "i915_min_clock",
 			Val:               i915MinClock,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"intel"})),
+			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 			Fixture:           "chromeGraphicsIdle",
 		}, {
 			Name:              "i915_min_clock_arc",
 			Val:               i915MinClock,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"intel"})),
+			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 			Fixture:           "chromeGraphicsIdleArc",
 		}, {
 			Name:              "rc6",
 			Val:               rc6,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"intel"})),
+			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 			Fixture:           "chromeGraphicsIdle",
 		}, {
 			Name:              "rc6_arc",
 			Val:               rc6,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"intel"})),
+			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 			Fixture:           "chromeGraphicsIdleArc",
 		}},
 	})

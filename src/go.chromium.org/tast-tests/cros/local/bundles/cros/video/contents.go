@@ -32,7 +32,7 @@ func init() {
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		// TODO(b/162437142): reenable on Zork when it does not hang forever.
-		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SkipGPUFamily([]string{"picasso"})),
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SkipGPUFamily("picasso")),
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"video.html", "playback.js"},
 		Params: []testing.Param{{

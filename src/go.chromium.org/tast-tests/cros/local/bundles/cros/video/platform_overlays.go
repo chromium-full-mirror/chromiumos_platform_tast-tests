@@ -61,9 +61,9 @@ func init() {
 				primaryFormats: []string{"AR30", "AB30", "XR30", "XB30"},
 			},
 			ExtraHardwareDeps: hwdep.D(
-				hwdep.SkipCPUSocFamily([]string{"mediatek", "qualcomm"}),
-				hwdep.SkipGPUFamily(intelGen9AndEarlierGPUSoCs),
-				hwdep.SkipGPUFamily([]string{"stoney"})),
+				hwdep.SkipCPUSocFamily("mediatek", "qualcomm"),
+				hwdep.SkipGPUFamily(intelGen9AndEarlierGPUSoCs...),
+				hwdep.SkipGPUFamily("stoney")),
 		}, {
 			Name: "24bpp_nv12_overlay",
 			Val: overlaysTestParam{
@@ -72,7 +72,7 @@ func init() {
 			},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays(),
 				// TODO(b/226417611): Reenable on AMD.
-				hwdep.SkipGPUVendor([]string{"amd"})),
+				hwdep.SkipGPUVendor("amd")),
 		}, {
 			Name: "30bpp_nv12_overlay",
 			Val: overlaysTestParam{
@@ -82,11 +82,11 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(
 				hwdep.SupportsNV12Overlays(),
 				// 30 bpp scanout conditions.
-				hwdep.SkipCPUSocFamily([]string{"mediatek", "qualcomm"}),
-				hwdep.SkipGPUFamily(intelGen9AndEarlierGPUSoCs),
-				hwdep.SkipGPUFamily([]string{"stoney"}),
+				hwdep.SkipCPUSocFamily("mediatek", "qualcomm"),
+				hwdep.SkipGPUFamily(intelGen9AndEarlierGPUSoCs...),
+				hwdep.SkipGPUFamily("stoney"),
 				// TODO(b/226417611): Reenable on AMD.
-				hwdep.SkipGPUVendor([]string{"amd"})),
+				hwdep.SkipGPUVendor("amd")),
 		}, {
 			Name: "24bpp_p010_overlay",
 			Val: overlaysTestParam{
@@ -94,8 +94,8 @@ func init() {
 				overlay:        overlay{"P010", "640x360"},
 			},
 			ExtraHardwareDeps: hwdep.D(
-				hwdep.SkipCPUSocFamily([]string{"mediatek", "qualcomm", "amd"}),
-				hwdep.SkipGPUFamily(preIntelGen11GPUSoCs)),
+				hwdep.SkipCPUSocFamily("mediatek", "qualcomm", "amd"),
+				hwdep.SkipGPUFamily(preIntelGen11GPUSoCs...)),
 		}, {
 			Name: "30bpp_p010_overlay",
 			Val: overlaysTestParam{
@@ -104,12 +104,12 @@ func init() {
 			},
 			ExtraHardwareDeps: hwdep.D(
 				// 30 bpp scanout conditions.
-				hwdep.SkipCPUSocFamily([]string{"mediatek", "qualcomm"}),
-				hwdep.SkipGPUFamily(intelGen9AndEarlierGPUSoCs),
-				hwdep.SkipGPUFamily([]string{"stoney"}),
+				hwdep.SkipCPUSocFamily("mediatek", "qualcomm"),
+				hwdep.SkipGPUFamily(intelGen9AndEarlierGPUSoCs...),
+				hwdep.SkipGPUFamily("stoney"),
 				// P010 overlay scanout conditions.
-				hwdep.SkipCPUSocFamily([]string{"mediatek", "qualcomm", "amd"}),
-				hwdep.SkipGPUFamily(preIntelGen11GPUSoCs)),
+				hwdep.SkipCPUSocFamily("mediatek", "qualcomm", "amd"),
+				hwdep.SkipGPUFamily(preIntelGen11GPUSoCs...)),
 		}},
 		Fixture: "gpuWatchHangs",
 	})

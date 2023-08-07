@@ -29,7 +29,7 @@ func init() {
 		Fixture:      "gpuWatchHangs",
 		Timeout:      120 * time.Minute,
 		// TODO(b/191801955): Reenable on grunt when it stops hanging forever.
-		HardwareDeps: hwdep.D(hwdep.SkipGPUFamily([]string{"stoney"})),
+		HardwareDeps: hwdep.D(hwdep.SkipGPUFamily("stoney")),
 	})
 }
 
