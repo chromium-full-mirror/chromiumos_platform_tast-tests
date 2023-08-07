@@ -21,7 +21,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: AddFingerprintFactor,
+		Func: AddRemoveFingerprintFactor,
 		Desc: "Checks that cryptohome fingerprint enrollment process succeeds with fake auth stack",
 		Contacts: []string{
 			"cryptohome-core@google.com",
@@ -41,11 +41,13 @@ type addFingerprintTestCase struct {
 	ExpectedErrorCode    uda.CryptohomeErrorCode
 }
 
-func AddFingerprintFactor(ctx context.Context, s *testing.State) {
+func AddRemoveFingerprintFactor(ctx context.Context, s *testing.State) {
 	const (
 		userName      = "foo@bar.baz"
 		userPassword  = "secret"
 		passwordLabel = "online-password"
+		fpLabel1      = "fp-1"
+		fpLabel2      = "fp-2"
 	)
 	f, ok := s.FixtValue().(*cryptohome.BiometricsFixture)
 	if !ok {
@@ -86,7 +88,7 @@ func AddFingerprintFactor(ctx context.Context, s *testing.State) {
 
 	for _, tc := range []addFingerprintTestCase{
 		{
-			Label: "fp-1",
+			Label: fpLabel1,
 			EnrollmentProgresses: []cryptohome.EnrollmentProgress{
 				{
 					ScanResult: biod.ScanResult_SCAN_RESULT_SUCCESS,
@@ -97,7 +99,7 @@ func AddFingerprintFactor(ctx context.Context, s *testing.State) {
 			ExpectedErrorCode: uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_NOT_SET,
 		},
 		{
-			Label: "fp-2",
+			Label: fpLabel2,
 			EnrollmentProgresses: []cryptohome.EnrollmentProgress{
 				{
 					ScanResult: biod.ScanResult_SCAN_RESULT_SUCCESS,
@@ -170,5 +172,36 @@ func AddFingerprintFactor(ctx context.Context, s *testing.State) {
 			// Don't continue to run upcoming subtests, as the test state has already gone wrong.
 			return
 		}
+
+	}
+
+	// Remove fingerprint auth factors fp-1 and fp-2.
+	if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
+			return errors.Wrap(err, "failed to authenticate with auth session")
+		}
+		for _, label := range []string{fpLabel1, fpLabel2} {
+			fasm.SetRecordID(label)
+			if err := client.RemoveAuthFactor(ctx, authSessionID, label); err != nil {
+				return errors.Wrapf(err, "failed to remove auth factor %s", label)
+			}
+		}
+		expectedConfiguredFactors = []*uda.AuthFactorWithStatus{{
+			AuthFactor: &uda.AuthFactor{
+				Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
+				Label: passwordLabel,
+			},
+		}}
+		listFactorsReply, err := client.ListAuthFactors(ctx, userName)
+		if err != nil {
+			return errors.Wrap(err, "cryptohome ListAuthFactors returns an error")
+		}
+		if err := cryptohomecommon.ExpectAuthFactorsWithTypeAndLabel(
+			listFactorsReply.ConfiguredAuthFactorsWithStatus, expectedConfiguredFactors); err != nil {
+			return errors.Wrap(err, "cryptohome ListAuthFactors does not return expected auth factors")
+		}
+		return nil
+	}); err != nil {
+		s.Fatal("Failed the fingerprint removal: ", err)
 	}
 }

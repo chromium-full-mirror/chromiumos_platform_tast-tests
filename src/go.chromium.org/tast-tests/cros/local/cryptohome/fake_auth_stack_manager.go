@@ -307,7 +307,32 @@ func (m *FakeAuthStackManager) AuthenticateCredential(reqBytes []byte) ([]byte, 
 	return marshaledReply, nil
 }
 
-// Close disconnects all FakeAuthStackManager services from dbus.
+// DeleteCredential handles the incoming same name D-Bus call.
+func (m *FakeAuthStackManager) DeleteCredential(reqBytes []byte) ([]byte, *dbus.Error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	var request messages.DeleteCredentialRequest
+	if err := proto.Unmarshal(reqBytes, &request); err != nil {
+		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to unmarshal request"))
+	}
+	statusSuccess := messages.DeleteCredentialReply_SUCCESS
+	statusFailure := messages.DeleteCredentialReply_DELETION_FAILED
+	var reply messages.DeleteCredentialReply
+	if m.recordID != "" && m.recordID == *request.RecordId {
+		reply.Status = &statusSuccess
+	} else {
+		reply.Status = &statusFailure
+	}
+	marshaledReply, err := proto.Marshal(&reply)
+	if err != nil {
+		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to marshal the response"))
+	}
+	m.recordID = ""
+	return marshaledReply, nil
+}
+
+// Close disconnects all FakeAuthStackManager services from D-Bus.
 func (m *FakeAuthStackManager) Close() {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
