@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/domainreliability"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/nearbyshare"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/passwordleakdetection"
+	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/remotedesktop"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/searchsuggestion"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/spellcheck"
@@ -37,6 +38,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/quickanswers"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -76,11 +78,10 @@ func init() {
 			pci.SearchFlag(&policy.DomainReliabilityAllowed{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.NearbyShareAllowed{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.PasswordLeakDetectionEnabled{}, pci.VerifiedFunctionalityUI),
-			// TODO(b/294216844): Reenable quick answers tests after fixing disabled state flakiness
-			// pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityUI),
-			// pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityOS),
-			// pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityUI),
-			// pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.RemoteAccessHostAllowRemoteSupportConnections{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SafeBrowsingProtectionLevel{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.SearchSuggestEnabled{}, pci.VerifiedFunctionalityUI),
@@ -161,21 +162,20 @@ func optionalServices() []optionalService {
 			trigger:               passwordleakdetection.TriggerPasswordLeakDetection,
 			dataFiles:             passwordleakdetection.GetDataFiles(),
 		},
-		// TODO(b/294216844): Reenable quick answers tests after fixing disabled state flakiness
-		// {
-		// 	name:                  "quick_answers_definition",
-		// 	associatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
-		// 	policies:              []policy.Policy{&policy.QuickAnswersDefinitionEnabled{Val: false}},
-		// 	trigger:               policyquickanswers.TriggerQuickAnswersDefinition,
-		// 	dataFiles:             policyquickanswers.GetDataFiles(),
-		// },
-		// {
-		// 	name:                  "quick_answers_unit_conversion",
-		// 	associatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
-		// 	policies:              []policy.Policy{&policy.QuickAnswersUnitConversionEnabled{Val: false}},
-		// 	trigger:               policyquickanswers.TriggerQuickAnswersUnitConversion,
-		// 	dataFiles:             policyquickanswers.GetDataFiles(),
-		// },
+		{
+			name:                  "quick_answers_definition",
+			associatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
+			policies:              []policy.Policy{&policy.QuickAnswersDefinitionEnabled{Val: false}},
+			trigger:               policyquickanswers.TriggerQuickAnswersDefinition,
+			dataFiles:             policyquickanswers.GetDataFiles(),
+		},
+		{
+			name:                  "quick_answers_unit_conversion",
+			associatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
+			policies:              []policy.Policy{&policy.QuickAnswersUnitConversionEnabled{Val: false}},
+			trigger:               policyquickanswers.TriggerQuickAnswersUnitConversion,
+			dataFiles:             policyquickanswers.GetDataFiles(),
+		},
 		{
 			name: "remote_desktop",
 			associatedAnnotations: []string{
@@ -327,12 +327,11 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// TODO(b/294216844): Reenable quick answers tests after fixing disabled state flakiness.
 	// Enable the pref that indicates the user has enabled the Quick Answers
 	// services.
-	// if err := quickanswers.SetPrefValue(ctx, tconn, "settings.quick_answers.enabled", true); err != nil {
-	// 	s.Fatal("Failed to enable Quick Answers: ", err)
-	// }
+	if err := quickanswers.SetPrefValue(ctx, tconn, "settings.quick_answers.enabled", true); err != nil {
+		s.Fatal("Failed to enable Quick Answers: ", err)
+	}
 
 	// Setup and start webserver (implicitly provides data form above).
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
