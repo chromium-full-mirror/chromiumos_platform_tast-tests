@@ -1,0 +1,1 @@
+../../../../guestos/data/copy_applet.py

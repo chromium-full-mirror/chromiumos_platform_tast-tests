@@ -1,0 +1,1 @@
+../../../../guestos/data/paste_applet.py
