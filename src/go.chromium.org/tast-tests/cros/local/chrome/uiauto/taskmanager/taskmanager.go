@@ -194,3 +194,17 @@ func (tm *TaskManager) OrderBy(column columnHeader, ascending bool) uiauto.Actio
 
 	return tm.ui.LeftClickUntil(columnHeaderFinder, tm.ui.Exists(itemsOrderedText))
 }
+
+// Reopen closes and reopens the task manager.
+func (tm *TaskManager) Reopen(ctx context.Context) error {
+	if err := tm.Close(ctx, tm.tconn); err != nil {
+		return errors.Wrap(err, "failed to close the task manager")
+	}
+	if err := ash.WaitForAppClosed(ctx, tm.tconn, tm.app.ID); err != nil {
+		return errors.Wrapf(err, "app %s is not closed", tm.app.Name)
+	}
+	if err := tm.Open(ctx); err != nil {
+		return errors.Wrap(err, "failed to re-open the task manager")
+	}
+	return nil
+}

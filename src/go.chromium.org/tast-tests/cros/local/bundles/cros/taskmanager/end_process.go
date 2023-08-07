@@ -305,11 +305,6 @@ func (pt *pluginTest) terminateAndVerify(ctx context.Context, res *endProcessTes
 	rand.Seed(time.Now().UnixNano())
 	p := pt.processes[rand.Intn(len(pt.processes))]
 
-	tab, ok := p.(*pluginTab)
-	if !ok {
-		return errors.New("unexpected process")
-	}
-
 	name, err := p.NameInTaskManager(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain the process name in task manager")
@@ -319,18 +314,20 @@ func (pt *pluginTest) terminateAndVerify(ctx context.Context, res *endProcessTes
 		return errors.Wrap(err, "failed to verify 'End process' button works")
 	}
 
-	// Removing the targets might need some time.
-	// Therefore, using poll to recheck until all the plugin targets are removed.
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		for _, t := range tab.plugin.targets {
-			if ts, err := res.br.FindTargets(ctx, chrome.MatchTargetID(t.TargetID)); err != nil {
-				return testing.PollBreak(err)
-			} else if len(ts) > 0 {
-				return errors.New("failed to terminate the plugin")
-			}
-		}
-		return nil
-	}, &testing.PollOptions{Interval: time.Second, Timeout: 15 * time.Second})
+	// Contents in the task manager will keep changing and might not be updated onto UI tree immediately,
+	// reopen the task manager to enforce the UI tree to update once.
+	if err := res.taskManager.Reopen(ctx); err != nil {
+		return errors.Wrap(err, "failed to re-open the task manager")
+	}
+
+	// Verify that 'End process' button works by checking process's representing node disappears from
+	// the task manager, since a process in task manager can always be found on UI tree even if it's offscreen.
+	nameNode := nodewith.Name(name).ClassName("AXVirtualView")
+	return uiauto.Combine(fmt.Sprintf("wait until the %q process gone within the task manager", name),
+		res.taskManager.WaitUntilStable,
+		res.ui.WaitUntilGone(nameNode),
+		res.ui.EnsureGoneFor(nameNode, 5*time.Second),
+	)(ctx)
 }
 
 func (pt *pluginTest) getDescription() string {
