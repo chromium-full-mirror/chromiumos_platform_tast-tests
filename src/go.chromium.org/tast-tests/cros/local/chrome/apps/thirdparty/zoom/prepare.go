@@ -143,84 +143,91 @@ func createAccount(ctx context.Context, tconn *chrome.TestConn) error {
 
 // launchNewMeeting creates a new meeting and choose to join meeting via browser.
 func launchNewMeeting(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn, meetingURL string) error {
-	ui := uiauto.New(tconn)
-
 	// Launch meeting sometimes hangs on loading meeting page. e.g. http://screen/KWBhnx6UUjtbxnL
 	// Considerding Zoom is an external app and potentially flaky adding this retry should mitigate the problem.
 	return uiauto.Retry(3, func(ctx context.Context) error {
 		if err := conn.Navigate(ctx, meetingURL); err != nil {
 			return err
 		}
+		return enterNewMeeting(ctx, tconn)
+	})(ctx)
+}
 
-		// After navigating to the start new meeting url. 3 possible results can be expected sequentially:
-		// 1. (Optional) The user is already in another meeting. It asks confirmation to start this one.
-		// 2. (Optional) It is the only meeting of this user. It continues to ask how to join the meeting.
-		// 3. (Optional) If meetingURL is invite link, there will be the join page to enter meeting page.
-		// 4. The user enters the meeting page.
-		joinFromYourBrowser := nodewith.Name("Join from Your Browser").Role(role.StaticText)
-		// If user is already in another meeting, then we need to explicitly end the meeting before joining this one.
-		startThisMeetingButton := nodewith.Name("Start this Meeting").Role(role.Button).Ancestor(zoomMainWebArea)
-		joinButton := nodewith.Name("Join").Role(role.Button).Ancestor(zoomMainWebArea)
+func enterNewMeeting(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+	// After navigating to the start new meeting url. 4 possible results can be expected sequentially:
+	// 1. (Optional) The user is already in another meeting. It asks confirmation to start this one.
+	// 2. (Optional) It is the only meeting of this user. It continues to ask how to join the meeting.
+	// 3. (Optional) If meetingURL is invite link, there will be the join page to enter meeting page.
+	// 4. The user enters the meeting page.
+	joinFromYourBrowser := nodewith.Name("Join from Your Browser").Role(role.StaticText)
+	// If user is already in another meeting, then we need to explicitly end the meeting before joining this one.
+	startThisMeetingButton := nodewith.Name("Start this Meeting").Role(role.Button).Ancestor(zoomMainWebArea)
+	joinButton := nodewith.Name("Join").Role(role.Button).Ancestor(zoomMainWebArea)
+	notificationsPrompt := prompts.ShowNotificationsPrompt.PromptFinder
+	avPermissionPrompt := prompts.AllowAVPermissionPrompt.PromptFinder
 
-		if foundNode, err := ui.FindAnyExists(ctx, startThisMeetingButton, joinFromYourBrowser, mainLayoutCanvas); err != nil {
-			return errors.Wrap(err, "failed to create new meeting")
-		} else if foundNode == startThisMeetingButton {
-			// Stop previous meeting takes a bit time, so using longer wait here.
-			if err := ui.WithTimeout(longUITimeout).DoDefaultUntil(startThisMeetingButton,
-				ui.WithTimeout(mediumUITimeout).WaitUntilGone(startThisMeetingButton),
-			)(ctx); err != nil {
-				return errors.Wrap(err, "failed to stop previous meeting")
-			}
+	noPermissionText := nodewith.Name("No permission. (200)").Role(role.StaticText)
+	foundNode, err := ui.WithTimeout(longUITimeout).FindAnyExists(ctx,
+		startThisMeetingButton,
+		joinFromYourBrowser,
+		mainLayoutCanvas,
+		notificationsPrompt,
+		avPermissionPrompt,
+		noPermissionText)
+	if err != nil {
+		return errors.Wrap(err, "failed to create new meeting")
+	}
+	switch foundNode {
+	case startThisMeetingButton:
+		// Stop previous meeting takes a bit time, so using longer wait here.
+		if err := ui.WithTimeout(longUITimeout).DoDefaultUntil(startThisMeetingButton,
+			ui.WithTimeout(mediumUITimeout).WaitUntilGone(startThisMeetingButton),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to stop previous meeting")
 		}
-
-		if foundNode, err := ui.FindAnyExists(ctx, joinFromYourBrowser, mainLayoutCanvas); err != nil {
-			return errors.Wrap(err, "failed to join new meeting")
-		} else if foundNode == joinFromYourBrowser {
-			if err := ui.DoDefaultUntil(joinFromYourBrowser,
-				ui.WithTimeout(5*time.Second).WaitUntilGone(joinFromYourBrowser),
-			)(ctx); err != nil {
-				return errors.Wrap(err, "failed to join meeting from browser")
-			}
+	case joinFromYourBrowser:
+		if err := ui.DoDefaultUntil(joinFromYourBrowser,
+			ui.WithTimeout(5*time.Second).WaitUntilGone(joinFromYourBrowser),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to join meeting from browser")
 		}
+	case joinButton:
+		previewVideo := nodewith.ClassName("preview-video").Ancestor(zoomMainWebArea)
+		// In Zoom website, the join button may be hidden in tablet mode.
+		// Make it visible before clicking.
+		// Since ui.MakeVisible() is not always successful, add a retry here.
+		clickJoinButton := ui.Retry(3, uiauto.Combine("click join button",
+			ui.WaitForLocation(joinButton),
+			ui.MakeVisible(joinButton),
+			ui.LeftClickUntil(joinButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(joinButton)),
+		))
 
-		if foundNode, err := ui.WithTimeout(longUITimeout).FindAnyExists(ctx, joinButton, mainLayoutCanvas); err != nil {
+		if err := uiauto.NamedCombine("join meeting",
+			ui.WaitUntilExists(previewVideo),
+			allowPerm(tconn),
+			clickJoinButton,
+		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to join meeting")
-		} else if foundNode == joinButton {
-			previewVideo := nodewith.ClassName("preview-video").Ancestor(zoomMainWebArea)
-			// In Zoom website, the join button may be hidden in tablet mode.
-			// Make it visible before clicking.
-			// Since ui.MakeVisible() is not always successful, add a retry here.
-			clickJoinButton := ui.Retry(3, uiauto.Combine("click join button",
-				ui.WaitForLocation(joinButton),
-				ui.MakeVisible(joinButton),
-				ui.LeftClickUntil(joinButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(joinButton)),
-			))
-
-			if err := uiauto.NamedCombine("join meeting",
-				ui.WaitUntilExists(previewVideo),
-				allowPerm(tconn),
-				clickJoinButton,
-			)(ctx); err != nil {
-				return errors.Wrap(err, "failed to join meeting")
-			}
 		}
-		// Use 1 minute timeout value because it may take longer to wait for page loading,
-		// especially for some low end DUTs.
-		if err := ui.WithTimeout(longUITimeout).WaitUntilExists(mainLayoutCanvas)(ctx); err != nil {
-			noPermissionText := nodewith.Name("No permission. (200)").Role(role.StaticText)
-			if ui.Exists(noPermissionText)(ctx) == nil {
-				return errors.Wrap(err, `the "No Permission" problem is displayed, zoom account may require re-registration`)
-			}
+	case notificationsPrompt, avPermissionPrompt:
+		if err := prompts.ClearPotentialPrompts(
+			tconn,
+			shortUITimeout,
+			prompts.ShowNotificationsPrompt,
+			prompts.AllowAVPermissionPrompt,
+		)(ctx); err != nil {
 			return err
 		}
+	case noPermissionText:
+		return errors.Wrap(err, `the "No Permission" problem is displayed, zoom account may require re-registration`)
+	case mainLayoutCanvas:
+		return nil
+	default:
+		return errors.New("failed to enter new meeting")
+	}
 
-		// Joining meeting can take a while, it sometimes hangs on `Joining Meeting...` screen.
-		joiningMeetingFinder := nodewith.Name("Joining Meeting...").Role(role.StaticText).First()
-		return uiauto.IfSuccessThen(
-			ui.WithTimeout(5*time.Second).WaitUntilExists(joiningMeetingFinder),
-			ui.WithTimeout(mediumUITimeout).WaitUntilGone(joiningMeetingFinder),
-		)(ctx)
-	})(ctx)
+	return enterNewMeeting(ctx, tconn)
 }
 
 func acceptCookiePrompts(tconn *chrome.TestConn) action.Action {
