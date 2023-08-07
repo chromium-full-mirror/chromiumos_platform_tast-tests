@@ -225,7 +225,7 @@ func TrayTriggersChrome(ctx context.Context, s *testing.State) {
 	}
 }
 
-func run(ctx context.Context, s *testing.State, cr *chrome.Chrome, testParams triggerTestParam) error {
+func run(ctx context.Context, s *testing.State, cr *chrome.Chrome, testParams triggerTestParam) (retErr error) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect Test API")
@@ -275,6 +275,7 @@ func run(ctx context.Context, s *testing.State, cr *chrome.Chrome, testParams tr
 		defer browserConn.Close()
 		defer browserConn.CloseTarget(cleanupCtx)
 	}
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), func() bool { return retErr != nil }, cr, "ui_zoom_start")
 
 	zm, err := zoom.StartNewMeeting(ctx, cr, br, browserConn, zoom.WithDefaultPermissions)
 	if err != nil {
@@ -282,7 +283,7 @@ func run(ctx context.Context, s *testing.State, cr *chrome.Chrome, testParams tr
 	}
 	defer zm.Close(cleanupCtx)
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_zoom")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), func() bool { return retErr != nil }, cr, "ui_zoom")
 
 	vcTray := vctray.New(ctx, tconn)
 	if isShown, err := vcTray.Exists(ctx); err != nil {
