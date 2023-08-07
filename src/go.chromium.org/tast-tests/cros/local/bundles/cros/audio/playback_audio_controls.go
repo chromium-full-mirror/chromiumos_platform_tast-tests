@@ -38,7 +38,7 @@ func init() {
 		Desc:         "Verifies local audio playback through default app and exercises various audio player controls",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      "chromeLoggedInQsRevampEnabled",
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
