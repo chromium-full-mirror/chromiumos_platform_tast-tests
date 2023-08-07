@@ -328,16 +328,12 @@ func (c *PolicyService) EnrollUsingChrome(ctx context.Context, req *ppb.EnrollUs
 	// Make sure we have a network connection.
 	if !vm.IsRunningOnVM() {
 		if err := ping.VerifyInternetConnectivity(ctx, 10*time.Second); err != nil {
-			dir, ok := testing.ContextOutDir(ctx)
-			if !ok || dir == "" {
-				return nil, errors.Wrap(err, "pre login network connection tests failed without network info dump")
-			}
-			path := filepath.Join(dir, "network_dump_ping_"+time.Now().Format("030405000")+".txt")
+			dumpfile := "network_dump_ping_" + time.Now().Format("030405000") + ".txt"
 
-			if err := dumputil.DumpNetworkInfo(ctx, path); err != nil {
+			if err := dumputil.DumpNetworkInfo(ctx, dumpfile); err != nil {
 				testing.ContextLog(ctx, "Failed to dump network info after a ping expectation failure: ", err)
 			}
-			testing.ContextLog(ctx, "Ping expectation failed, current network info dumped into ", path)
+			testing.ContextLog(ctx, "Ping expectation failed, current network info dumped into ", dumpfile)
 
 			return nil, errors.Wrap(err, "pre login network connection tests failed")
 		}
