@@ -95,6 +95,13 @@ type Mode struct {
 	VTotal     uint16
 }
 
+// Display described by a tuple of connector, encoder, and CRTC.
+type Display struct {
+	Connector *Connector // The display's connector.
+	Encoder   *Encoder   // The encoder matching the ID provided by the connector (if found).
+	Crtc      *Crtc      // The CRTC matching the ID provided by the encoder (if found).
+}
+
 // asBits converts an unsigned int value to 16 bit binary.
 func asBits(val uint64) []uint64 {
 	var bits = []uint64{}
@@ -475,4 +482,52 @@ func parseMode(matches []string) (*Mode, error) {
 		VSyncEnd:   uint16(vSyncEnd),
 		VTotal:     uint16(vTotal),
 	}, nil
+}
+
+// ModetestConnectedDisplays returns of list of displays which are connected according to modetest.
+func ModetestConnectedDisplays(ctx context.Context) ([]Display, error) {
+	var displays []Display
+
+	connectors, err := ModetestConnectors(ctx)
+	if err != nil {
+		return displays, errors.Wrap(err, "failed to get connectors from modetest")
+	}
+	encoders, err := ModetestEncoders(ctx)
+	if err != nil {
+		return displays, errors.Wrap(err, "failed to get encoders from modetest")
+	}
+	crtcs, err := ModetestCrtcs(ctx)
+	if err != nil {
+		return displays, errors.Wrap(err, "failed to get CRTCs from modetest")
+	}
+
+	encoderMap := make(map[uint32]*Encoder)
+	for _, encoder := range encoders {
+		encoderMap[encoder.EncoderID] = encoder
+	}
+	crtcMap := make(map[uint32]*Crtc)
+	for _, crtc := range crtcs {
+		crtcMap[crtc.CrtcID] = crtc
+	}
+
+	for _, connector := range connectors {
+		if !connector.Connected {
+			continue
+		}
+		encoder, exists := encoderMap[connector.EncoderID]
+		if !exists {
+			continue
+		}
+		crtc, exists := crtcMap[encoder.CrtcID]
+		if !exists {
+			continue
+		}
+		displays = append(displays, Display{
+			Connector: connector,
+			Encoder:   encoder,
+			Crtc:      crtc,
+		})
+	}
+
+	return displays, nil
 }
