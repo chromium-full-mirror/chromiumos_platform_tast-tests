@@ -137,6 +137,10 @@ func webMAndJSONFile(videoTitle string, height int) (string, string) {
 			1080: "encode/gipsrestat-1920x1080_846frames.vp9.webm",
 			2160: "encode/gipsrestat-3840x2160_360frames.vp9.webm",
 		},
+		"life_of_pixel": {
+			1080: "encode/life_of_pixel-1920x1080_600frames.vp9.webm",
+			2160: "encode/life_of_pixel-3840x2160_600frames.vp9.webm",
+		},
 		"static": {
 			1080: "encode/static-1920x1080_600frames.vp9.webm",
 		},
@@ -176,6 +180,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 		{"fallout4", "encode.SpeedAndQuality", []int{720, 1080, 2160}},
 		{"gipsrecmotion", "encode.SpeedAndQuality", basicHeights},
 		{"gipsrestat", "encode.SpeedAndQuality", basicHeights},
+		{"life_of_pixel", "encode.SpeedAndQuality", []int{1080, 2160}},
 		{"static", "encode.Quality", []int{1080}},
 	}
 
@@ -205,18 +210,18 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 
 	//Temporal and spatial layer encoding.
 	for _, c := range [][]interface{}{
-		{videotype.H264BaselineProf, 720, "L1T2"},
-		{videotype.H264BaselineProf, 720, "L1T3"},
-		{videotype.VP8Prof, 1080, "L1T2"},
-		{videotype.VP8Prof, 1080, "L1T3"},
-		{videotype.VP9Prof, 540, "L1T2"},
-		{videotype.VP9Prof, 540, "L1T3"},
-		{videotype.VP9Prof, 540, "L2T3_KEY"},
-		{videotype.VP9Prof, 540, "L3T3_KEY"},
-		{videotype.VP9Prof, 720, "L1T2"},
-		{videotype.VP9Prof, 720, "L1T3"},
-		{videotype.VP9Prof, 720, "L2T3_KEY"},
-		{videotype.VP9Prof, 720, "L3T3_KEY"},
+		{videotype.H264BaselineProf, 720, "L1T2", "desktop2"},
+		{videotype.H264BaselineProf, 720, "L1T3", "desktop2"},
+		{videotype.VP9Prof, 540, "L1T2", "desktop2"},
+		{videotype.VP9Prof, 540, "L1T3", "desktop2"},
+		{videotype.VP9Prof, 540, "L2T3_KEY", "desktop2"},
+		{videotype.VP9Prof, 540, "L3T3_KEY", "desktop2"},
+		{videotype.VP9Prof, 720, "L1T2", "desktop2"},
+		{videotype.VP9Prof, 720, "L1T3", "desktop2"},
+		{videotype.VP9Prof, 720, "L2T3_KEY", "desktop2"},
+		{videotype.VP9Prof, 720, "L3T3_KEY", "desktop2"},
+		{videotype.VP8Prof, 1080, "L1T2", "life_of_pixel"},
+		{videotype.VP8Prof, 1080, "L1T3", "life_of_pixel"},
 	} {
 		profile := c[0].(videotype.CodecProfile)
 		height := c[1].(int)
@@ -227,7 +232,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 			deps = append(deps, caps.HWEncodeVP9OddDimension)
 		}
 
-		videoTitle := "desktop2"
+		videoTitle := c[3].(string)
 		webMFile, webMJSONFile := webMAndJSONFile(videoTitle, height)
 		param := encodeAccelPerfParam{
 			Name:         fmt.Sprintf("%s_%dp_%s_%s", toCodecStr(profile), height, strings.ToLower(svc), videoTitle),

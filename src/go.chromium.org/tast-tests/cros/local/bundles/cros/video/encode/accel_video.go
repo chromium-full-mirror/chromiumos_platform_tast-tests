@@ -76,6 +76,9 @@ var md5OfYUV60Frames = map[string]string{
 	"encode/gipsrestat-1920x1080_846frames.vp9.webm": "f79541aee3d2af780a20ca12cafb9846",
 	"encode/gipsrestat-3840x2160_360frames.vp9.webm": "c4a42ff9ae6c8205900ecf5f1b84fea2",
 
+	"encode/life_of_pixel-1920x1080_600frames.vp9.webm": "60a797f607ee18622e61e1090494c428",
+	"encode/life_of_pixel-3840x2160_600frames.vp9.webm": "d78016bf96a0ee143d76e48e646249bd",
+
 	"encode/static-1920x1080_600frames.vp9.webm": "f70998128376800b1dc27e70ff2c335d",
 }
 
