@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast/core/ctxutil"
@@ -118,15 +119,36 @@ func DownloadPerf(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
+	perfValues := perf.NewValues()
+	defer func() {
+		if err := perfValues.Save(s.OutDir()); err != nil {
+			s.Error("Failed to save perf data: ", err)
+		}
+	}()
+
 	for _, st := range []subtest{
 		{"5MB", 5242880},
 		{"20MB", 20971520},
 		{"100MB", 104857600},
 	} {
 		s.Run(ctx, st.name, func(ctx context.Context, s *testing.State) {
+			startTime := time.Now()
 			if err := downloadFile(ctx, st); err != nil {
 				s.Error("Failed to download file: ", err)
 			}
+			downloadTime := time.Now().Sub(startTime)
+			perfValues.Set(perf.Metric{
+				Name:      "download_time_" + st.name,
+				Unit:      "seconds",
+				Direction: perf.SmallerIsBetter,
+				Multiple:  false,
+			}, downloadTime.Seconds())
+			perfValues.Set(perf.Metric{
+				Name:      "download_speed_" + st.name,
+				Unit:      "bps",
+				Direction: perf.BiggerIsBetter,
+				Multiple:  false,
+			}, float64(8*st.size)/downloadTime.Seconds())
 		})
 	}
 }
