@@ -21,6 +21,10 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+var ms = graphics.MsF
+var hz = graphics.Hz
+var fromHz = graphics.FromHz
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FPS,
@@ -51,16 +55,16 @@ func FPS(ctx context.Context, s *testing.State) {
 	const (
 		// Collect statistics for 5 seconds.
 		collectTime = 5 * time.Second
-
 		// Trim 10% outliers of measurements.
 		trimPercent = 10
-		// Accept up to 0.2 fps margin over the reference fps.
-		margin = 0.2
-		// Accept up to 0.2 fps standard deviation.
-		maxStddev = 0.2
-		// Minimum number of fps samples required
+		// Minimum number of vblank samples required.
 		minSamples = 30
 	)
+
+	// Accept a margin of error equivalent to 0.2 fps at 60Hz.
+	margin := fromHz(60.0) - fromHz(60.2)
+	// Accept a standard deviation equivalent to 0.2 fps at 60Hz.
+	maxStddev := fromHz(60.0) - fromHz(60.2)
 
 	// Open web page with constantly changing content to defeat PSR.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
@@ -112,9 +116,9 @@ func FPS(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to set display properties: ", err)
 			}
 
-			// Wait for display configuration to update.
 			// 5 seconds is chosen arbitrarily and may need adjustment.
 			const configurationDelay = 5 * time.Second
+			// GoBigSleepLint: Wait for display configuration to update.
 			if err := testing.Sleep(ctx, configurationDelay); err != nil {
 				s.Fatal("Cannot sleep: ", err)
 			}
@@ -133,8 +137,8 @@ func FPS(ctx context.Context, s *testing.State) {
 			defer graphics.ClearTraceBuffer()
 
 			outputPath := filepath.Join(s.OutDir(), "trace.txt")
-			if err := graphics.CollectFPSTrace(ctx, collectTime, outputPath); err != nil {
-				s.Fatal("Failed to collect fps trace: ", err)
+			if err := graphics.CollectVblankTrace(ctx, collectTime, outputPath); err != nil {
+				s.Fatal("Failed to collect vblank trace: ", err)
 			}
 
 			crtcs, err := graphics.ModetestCrtcs(ctx)
@@ -143,7 +147,7 @@ func FPS(ctx context.Context, s *testing.State) {
 			}
 
 			// Parse trace file and compute statistics.
-			fullFpsData, err := graphics.ParseFPSTrace(outputPath)
+			traceData, err := graphics.ParseVblankTrace(outputPath)
 			if err != nil {
 				s.Fatal("Cannot parse trace: ", err)
 			}
@@ -154,48 +158,49 @@ func FPS(ctx context.Context, s *testing.State) {
 					continue
 				}
 
-				targetFPS := crtc.Mode.Refresh
-				if targetFPS <= 0 {
+				if crtc.Mode.Refresh <= 0 {
 					continue
 				}
-				s.Logf("Checking crtc=%d at %fHz", index, targetFPS)
+				nominalInterval := fromHz(crtc.Mode.Refresh)
+				s.Logf("Checking CRTC #%d at %fms (%fHz)", index, ms(nominalInterval), hz(nominalInterval))
 
 				// If there are few samples due to i.e. PSR, skip this crtc.
-				if len(fullFpsData) <= index || len(fullFpsData[index]) < minSamples {
-					s.Logf("Not enough fps samples for crtc=%d", index)
+				if len(traceData) <= index || len(traceData[index]) < minSamples {
+					s.Logf("Not enough vblank samples for CRTC #%d", index)
 					continue
 				}
 
 				// Log untrimmed stats.
-				fpsStats := graphics.CalculateFPSStats(fullFpsData[index], 0)
-				s.Logf("%d total samples, mean: %f, stddev: %f (min/max %f/%f)",
-					fpsStats.NumSamples, fpsStats.Mean, fpsStats.Stddev, fpsStats.Min,
-					fpsStats.Max)
+				stats := graphics.CalculateVblankStats(traceData[index], 0)
+				s.Logf("%d total samples, mean: %fms (%fHz), stddev: %fms (min/max %f/%f)",
+					stats.NumSamples, ms(stats.Mean), hz(stats.Mean), ms(stats.Stddev),
+					ms(stats.Min), ms(stats.Max))
 
 				// Check results after trimming outliers.
-				fpsStats = graphics.CalculateFPSStats(fullFpsData[index], trimPercent)
-				s.Logf("%d trimmed samples, mean: %f, stddev: %f (min/max %f/%f)",
-					fpsStats.NumSamples, fpsStats.Mean, fpsStats.Stddev, fpsStats.Min,
-					fpsStats.Max)
+				stats = graphics.CalculateVblankStats(traceData[index], trimPercent)
+				s.Logf("%d trimmed samples, mean: %fms (%fHz), stddev: %fms (min/max %f/%f)",
+					stats.NumSamples, ms(stats.Mean), hz(stats.Mean), ms(stats.Stddev),
+					ms(stats.Min), ms(stats.Max))
 
 				// Check results.
-				if fpsStats.Mean > targetFPS+margin || fpsStats.Mean < targetFPS-margin {
-					s.Fatalf("Mean FPS %f out of expected range %f +/- %f",
-						fpsStats.Mean, targetFPS, margin)
+				if time.Duration.Abs(stats.Mean-nominalInterval) > margin {
+					s.Fatalf("Mean interval of %fms (%fHz) out of expected range %fms (%fHz) +/- %fms",
+						ms(stats.Mean), hz(stats.Mean), ms(nominalInterval), hz(nominalInterval),
+						ms(margin))
 				}
 
 				// TODO(b/172225622): re-enable stddev check if we can find
 				// meaningful bounds.
-				if fpsStats.Stddev > maxStddev {
-					s.Logf("FPS standard deviation %f too large (> %f)", fpsStats.Stddev,
-						maxStddev)
+				if stats.Stddev > maxStddev {
+					s.Logf("Standard deviation %fms too large (> %f)", ms(stats.Stddev),
+						ms(maxStddev))
 				}
 			}
 		}
 
 		// Move the window to the next display.
 		if err := kb.Accel(ctx, "Search+Alt+M"); err != nil {
-			s.Fatal("Failed to send keybord action to move the active window between displays: ",
+			s.Fatal("Failed to send keyboard action to move the active window between displays: ",
 				err)
 		}
 	}

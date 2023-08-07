@@ -40,7 +40,7 @@ func init() {
 	})
 }
 
-func getRefreshRate(ctx context.Context, outputPath string) (float64, error) {
+func measureRefreshRate(ctx context.Context, outputPath string) (float64, error) {
 	const (
 		// Collect statistics for 5 seconds.
 		collectTime = 5 * time.Second
@@ -48,7 +48,7 @@ func getRefreshRate(ctx context.Context, outputPath string) (float64, error) {
 		// Trim 10% outliers of measurements.
 		trimPercent = 10
 
-		// Minimum number of FPS samples.
+		// Minimum number of vblank samples.
 		minimumSamples = 30
 	)
 
@@ -57,24 +57,24 @@ func getRefreshRate(ctx context.Context, outputPath string) (float64, error) {
 	}
 	defer graphics.ClearTraceBuffer()
 
-	if err := graphics.CollectFPSTrace(ctx, collectTime, outputPath); err != nil {
-		return 0.0, errors.Wrap(err, "failed to collect fps trace")
+	if err := graphics.CollectVblankTrace(ctx, collectTime, outputPath); err != nil {
+		return 0.0, errors.Wrap(err, "failed to collect vblank trace")
 	}
 
 	// Parse trace file and compute statistics.
-	fpsData, err := graphics.ParseFPSTrace(outputPath)
+	traceData, err := graphics.ParseVblankTrace(outputPath)
 	if err != nil {
 		return 0.0, errors.Wrap(err, "cannot parse trace")
 	}
 
 	// Assume that crtc 0 is the internal display.
 	internalDisplayIndex := 0
-	if len(fpsData) == 0 || len(fpsData[internalDisplayIndex]) < minimumSamples {
-		return 0.0, errors.New("Few or no fps samples")
+	if len(traceData) == 0 || len(traceData[internalDisplayIndex]) < minimumSamples {
+		return 0.0, errors.New("Few or no vblank samples")
 	}
 
-	fpsStats := graphics.CalculateFPSStats(fpsData[internalDisplayIndex], trimPercent)
-	return fpsStats.Mean, nil
+	stats := graphics.CalculateVblankStats(traceData[internalDisplayIndex], trimPercent)
+	return graphics.Hz(stats.Mean), nil
 }
 
 func FPSThrottle(ctx context.Context, s *testing.State) {
@@ -131,7 +131,7 @@ func FPSThrottle(ctx context.Context, s *testing.State) {
 
 		// Get the refresh rate for the plugged-in state.
 		outputPath := filepath.Join(s.OutDir(), "pluggedInTrace.txt")
-		pluggedInRefreshRate, err := getRefreshRate(ctx, outputPath)
+		pluggedInRefreshRate, err := measureRefreshRate(ctx, outputPath)
 		if err != nil {
 			s.Fatal("Failed to detect refresh rate: ", err)
 		}
@@ -141,13 +141,14 @@ func FPSThrottle(ctx context.Context, s *testing.State) {
 		if err := testexec.CommandContext(ctx, "sudo", "-u", "power", "send_debug_power_status", "--external_power=2", fmt.Sprintf("--battery_percent=%d", lowBatteryLevel)).Run(); err != nil {
 			s.Fatal("Failed to send power status: ", err)
 		}
+		// GoBigSleepLint: Wait for power state propagation.
 		if err := testing.Sleep(ctx, powerStatePropagationDelay); err != nil {
 			s.Fatal("Cannot sleep: ", err)
 		}
 
 		// Get the refresh rate for the unplugged state.
 		outputPath = filepath.Join(s.OutDir(), "unPluggedTrace.txt")
-		unpluggedRefreshRate, err := getRefreshRate(ctx, outputPath)
+		unpluggedRefreshRate, err := measureRefreshRate(ctx, outputPath)
 		if err != nil {
 			s.Fatal("Failed to detect refresh rate: ", err)
 		}
@@ -162,13 +163,14 @@ func FPSThrottle(ctx context.Context, s *testing.State) {
 		if err := testexec.CommandContext(ctx, "sudo", "-u", "power", "send_debug_power_status", "--external_power=0", "--battery_percent=100").Run(); err != nil {
 			s.Fatal("Failed to send power status: ", err)
 		}
+		// GoBigSleepLint: Wait for power state propagation.
 		if err := testing.Sleep(ctx, powerStatePropagationDelay); err != nil {
 			s.Fatal("Cannot sleep: ", err)
 		}
 
 		// Get the refresh rate for the plugged-in state again.
 		outputPath = filepath.Join(s.OutDir(), "rePluggedInTrace.txt")
-		rePluggedRefreshRate, err := getRefreshRate(ctx, outputPath)
+		rePluggedRefreshRate, err := measureRefreshRate(ctx, outputPath)
 		if err != nil {
 			s.Fatal("Failed to detect refresh rate: ", err)
 		}
