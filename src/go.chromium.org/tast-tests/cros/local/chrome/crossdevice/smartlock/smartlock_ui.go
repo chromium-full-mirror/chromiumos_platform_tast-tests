@@ -33,7 +33,7 @@ const (
 
 // OpenConnectedDevicesPage opens the multidevice settings page in OS Settings
 func OpenConnectedDevicesPage(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*ossettings.OSSettings, error) {
-	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, filepath.Join(crossdevicesettings.ConnectedDevicesSettingsURL), func(context.Context) error { return nil })
+	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, filepath.Join(crossdevicesettings.ConnectedDevicesSettingsRelativePath), func(context.Context) error { return nil })
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to launch OS Settings at the multidevice feature page")
 	}
@@ -51,6 +51,11 @@ func ToggleSmartLockEnabled(ctx context.Context, enable bool, tconn *chrome.Test
 		return err
 	}
 	defer settingsConn.Close()
+
+	if err := chrome.AddTastLibrary(ctx, settingsConn); err != nil {
+		settingsConn.Close()
+		return errors.Wrap(err, "failed to introduce tast library")
+	}
 
 	if err := settingsConn.WaitForExpr(ctx, smartLockToggle); err != nil {
 		return errors.Wrap(err, "failed to find the Smart Lock toggle")
