@@ -7,7 +7,6 @@ package filemanager
 import (
 	"context"
 	"io/ioutil"
-	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -16,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -46,22 +46,24 @@ func init() {
 }
 
 func DrivefsSearch(ctx context.Context, s *testing.State) {
-	mountPath := s.FixtValue().(*drivefs.FixtureData).MountPath
-	tconn := s.FixtValue().(*drivefs.FixtureData).TestAPIConn
-	cr := s.FixtValue().(*drivefs.FixtureData).Chrome
+	fixt := s.FixtValue().(*drivefs.FixtureData)
+	tconn := fixt.TestAPIConn
+	dfs := fixt.DriveFs
 
 	// This test case is exercising the full-text search of DriveFS, keeping the name
 	// fairly unique to avoid having it match as content search (not just file name).
-	drivefsRoot := filepath.Join(mountPath, "root")
 	const fileName = "verify-full-text-search-functionality-drivefs"
-	if err := ioutil.WriteFile(filepath.Join(drivefsRoot, fileName), []byte("fake-content"), 0644); err != nil {
-		s.Fatalf("Could not create the test file inside %q: %v", drivefsRoot, err)
+	if err := ioutil.WriteFile(dfs.MyDrivePath(fileName), []byte("fake-content"), 0644); err != nil {
+		s.Fatalf("Could not create the test file at %q: %v", dfs.MyDrivePath(fileName), err)
 	}
 	// Don't delete the test file after the test as there may not be enough time
 	// after the test for the deletion to be synced to Drive.
 
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
-	defer drivefs.SaveDriveLogsOnError(ctx, s.HasError, cr.NormalizedUser(), mountPath)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer dfs.SaveLogsOnError(cleanupCtx, s.HasError)
 
 	// Launch Files App
 	filesApp, err := filesapp.Launch(ctx, tconn)

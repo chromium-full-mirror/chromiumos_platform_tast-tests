@@ -49,10 +49,10 @@ func init() {
 }
 
 func DrivefsGoogleDoc(ctx context.Context, s *testing.State) {
-	APIClient := s.FixtValue().(*drivefs.FixtureData).APIClient
-	tconn := s.FixtValue().(*drivefs.FixtureData).TestAPIConn
-	cr := s.FixtValue().(*drivefs.FixtureData).Chrome
-	mountPath := s.FixtValue().(*drivefs.FixtureData).MountPath
+	fixt := s.FixtValue().(*drivefs.FixtureData)
+	APIClient := fixt.APIClient
+	tconn := fixt.TestAPIConn
+	dfs := fixt.DriveFs
 
 	// Give the Drive API enough time to remove the file.
 	cleanupCtx := ctx
@@ -71,7 +71,7 @@ func DrivefsGoogleDoc(ctx context.Context, s *testing.State) {
 	}
 	defer APIClient.RemoveFileByID(cleanupCtx, file.Id)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-	defer drivefs.SaveDriveLogsOnError(ctx, s.HasError, cr.NormalizedUser(), mountPath)
+	defer dfs.SaveLogsOnError(cleanupCtx, s.HasError)
 
 	// Launch Files App and check that Drive is accessible.
 	filesApp, err := filesapp.Launch(ctx, tconn)

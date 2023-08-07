@@ -7,12 +7,13 @@ package filemanager
 import (
 	"context"
 	"os"
-	"path/filepath"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -45,23 +46,24 @@ func DrivefsUI(ctx context.Context, s *testing.State) {
 	const testFileName = "drivefs"
 
 	fixt := s.FixtValue().(*drivefs.FixtureData)
-	cr := fixt.Chrome
 	tconn := fixt.TestAPIConn
-	mountPath := fixt.MountPath
-	cleanupCtx := ctx
+	dfs := fixt.DriveFs
 
 	// Create a test file inside Drive.
-	drivefsRoot := filepath.Join(mountPath, "root")
-	testFile, err := os.Create(filepath.Join(drivefsRoot, testFileName))
+	testFilePath := dfs.MyDrivePath(testFileName)
+	testFile, err := os.Create(testFilePath)
 	if err != nil {
-		s.Fatalf("Failed to create test file inside %q: %v", drivefsRoot, err)
+		s.Fatalf("Failed to create test file at %q: %v", testFilePath, err)
 	}
 	testFile.Close()
 	// Don't delete the test file after the test as there may not be enough time
 	// after the test for the deletion to be synced to Drive.
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-	defer drivefs.SaveDriveLogsOnError(ctx, s.HasError, cr.NormalizedUser(), mountPath)
+	defer dfs.SaveLogsOnError(cleanupCtx, s.HasError)
 
 	// Launch Files App.
 	files, err := filesapp.Launch(ctx, tconn)
