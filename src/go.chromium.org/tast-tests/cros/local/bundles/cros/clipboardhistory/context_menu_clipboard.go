@@ -141,6 +141,10 @@ func ContextMenuClipboard(ctx context.Context, s *testing.State) {
 	}
 
 	cr, err := browserfixt.NewChrome(ctx, testParam.browserType, lacrosfixt.NewConfig(), option)
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
