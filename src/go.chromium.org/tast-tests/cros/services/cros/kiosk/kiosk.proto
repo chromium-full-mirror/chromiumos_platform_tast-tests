@@ -13,6 +13,8 @@ option go_package = "go.chromium.org/tast-tests/cros/services/cros/kiosk";
 
 // Kiosk provides functions to perform on kiosk.
 service KioskService {
+  rpc InitSyslogReader(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc ConfirmKioskStartedWithReader(google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc ConfirmKioskStarted(ConfirmKioskStartedRequest) returns (google.protobuf.Empty) {}
   rpc StartKiosk(google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc UpdatePolicies(UpdatePoliciesRequest) returns (google.protobuf.Empty) {}

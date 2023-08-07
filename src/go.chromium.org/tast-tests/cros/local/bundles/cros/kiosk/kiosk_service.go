@@ -37,22 +37,49 @@ func init() {
 type KioskService struct { // NOLINT
 	s *testing.ServiceState
 
-	kiosk      *kioskmode.Kiosk
-	chrome     *chrome.Chrome
-	fakeDMSDir string
-	fakeDMS    *fakedms.FakeDMS
+	kiosk        *kioskmode.Kiosk
+	chrome       *chrome.Chrome
+	fakeDMSDir   string
+	fakeDMS      *fakedms.FakeDMS
+	syslogReader *syslog.Reader
 }
 
-// ConfirmKioskStarted confirms kiosk mode started.
+// ConfirmKioskStarted confirms Kiosk mode started.
 func (c *KioskService) ConfirmKioskStarted(ctx context.Context, req *ppb.ConfirmKioskStartedRequest) (*empty.Empty, error) {
+	if _, err := c.InitSyslogReader(ctx, &empty.Empty{}); err != nil {
+		return nil, err
+	}
+	if _, err := c.ConfirmKioskStartedWithReader(ctx, &empty.Empty{}); err != nil {
+		return nil, err
+	}
+	return &empty.Empty{}, nil
+}
+
+// InitSyslogReader initializes a syslog reader to be used in ConfirmKioskStartedWithReader.
+//
+// Prefer `ConfirmKioskStarted` if possible. This is useful when you don't control the exact timing
+// of Kiosk launch.
+func (c *KioskService) InitSyslogReader(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	reader, err := syslog.NewReader(ctx, syslog.Program(syslog.Chrome))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run NewReader")
 	}
+	c.syslogReader = reader
+	return &empty.Empty{}, nil
+}
+
+// ConfirmKioskStartedWithReader is the same as ConfirmKioskStarted, but uses the reader previously
+// created in InitSyslogReader.
+func (c *KioskService) ConfirmKioskStartedWithReader(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	reader := c.syslogReader
+	c.syslogReader = nil
+	if reader == nil {
+		return nil, errors.New("no syslogReader, did you call InitSyslogReader?")
+	}
 	defer reader.Close()
 
 	if err := kioskmode.WaitLaunchLogsWithReader(ctx, reader); err != nil {
-		return nil, errors.Wrap(err, "There was a problem while checking chrome logs for Kiosk related entries")
+		return nil, errors.Wrap(err, "failed to wait Kiosk launch logs")
 	}
 
 	return &empty.Empty{}, nil

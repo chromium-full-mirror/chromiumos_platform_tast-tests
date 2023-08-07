@@ -17,14 +17,18 @@ import (
 	kspb "go.chromium.org/tast-tests/cros/services/cros/kiosk"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
-	gaiaKioskEnrollmentLaunchTimeout = 5 * time.Minute
-	gaiaKioskEnrollmentTimeout       = 5*time.Minute + gaiaKioskEnrollmentLaunchTimeout
+	// gaiaKioskEnrollmentTimeout is the timeout for enrollment.
+	gaiaKioskEnrollmentTimeout = 5 * time.Minute
+	// gaiaKioskEnrollmentLaunchTimeout is the timeout for launching Kiosk. The value should be based
+	// on `kiosk_mode.LaunchDuration`.
+	gaiaKioskEnrollmentLaunchTimeout  = 5 * time.Minute
+	gaiaKioskEnrollmentCleanupTimeout = 3 * time.Minute
+	gaiaKioskEnrollmentTestTimeout    = gaiaKioskEnrollmentLaunchTimeout + gaiaKioskEnrollmentTimeout + gaiaKioskEnrollmentCleanupTimeout
 )
 
 func init() {
@@ -33,14 +37,14 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "GAIA Enroll a kiosk device and make sure kiosk app started",
 		Contacts: []string{
-			"chromeos-commercial-remote-management@google.com",
-			"vsavu@google.com",
+			"chromeos-kiosk-eng+TAST@google.com",
+			"edmanp@google.com",
 		},
-		BugComponent: "b:1111632",
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Attr:         []string{"group:dpanel-end2end", "group:dmserver-enrollment-daily"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.kiosk.KioskService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service", "tast.cros.graphics.ScreenshotService"},
-		Timeout:      gaiaKioskEnrollmentTimeout,
+		Timeout:      gaiaKioskEnrollmentTestTimeout,
 		Params: []testing.Param{
 			{
 				Name: "autopush",
@@ -50,9 +54,7 @@ func init() {
 				},
 			},
 		},
-		Vars: []string{
-			tape.ServiceAccountVar,
-		},
+		Vars: []string{tape.ServiceAccountVar},
 	})
 }
 
@@ -68,9 +70,8 @@ func GAIAKioskEnrollment(ctx context.Context, s *testing.State) {
 	}(ctx)
 
 	// Shorten deadline to leave time separately for resetting the TPM and for logging and cleanup.
-	cleanupCtx, cleanupCancel := ctxutil.Shorten(ctx, 3*time.Minute)
-	defer cleanupCancel()
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, gaiaKioskEnrollmentCleanupTimeout)
 	defer cancel()
 
 	if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
@@ -93,29 +94,12 @@ func GAIAKioskEnrollment(ctx context.Context, s *testing.State) {
 	}
 	defer captureScreenshotOnError(cleanupCtx, s.HasError)
 
-	policyClient := pspb.NewPolicyServiceClient(cl.Conn)
-	kc := kspb.NewKioskServiceClient(cl.Conn)
-
-	kioskErr := make(chan error)
-	checkKioskStarted := func() {
-		kioskErr <- func() error {
-			ctx, cancel := context.WithTimeout(ctx, gaiaKioskEnrollmentLaunchTimeout)
-			defer cancel()
-			if _, err := kc.ConfirmKioskStarted(ctx, &kspb.ConfirmKioskStartedRequest{}); err != nil {
-				return errors.Wrap(err, "failed to start kiosk mode")
-			}
-			return nil
-		}()
-	}
-
-	go checkKioskStarted()
-
 	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}
 
-	timeout := int32(gaiaKioskEnrollmentTimeout.Seconds())
+	timeout := int32(gaiaKioskEnrollmentTestTimeout.Seconds())
 	// Create an account manager and lease a test account for the duration of the test.
 	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, false /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(poolID))
 	if err != nil {
@@ -132,6 +116,14 @@ func GAIAKioskEnrollment(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	// Init a syslog reader in KioskService before signing in.
+	kc := kspb.NewKioskServiceClient(cl.Conn)
+	if _, err := kc.InitSyslogReader(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to initialize syslog reader for Kiosk: ", err)
+	}
+
+	policyClient := pspb.NewPolicyServiceClient(cl.Conn)
+
 	if _, err := policyClient.GAIAEnrollUsingChrome(ctx, &pspb.GAIAEnrollUsingChromeRequest{
 		Username:    acc.Username,
 		Password:    acc.Password,
@@ -141,7 +133,9 @@ func GAIAKioskEnrollment(ctx context.Context, s *testing.State) {
 	}
 	defer policyClient.StopChrome(cleanupCtx, &empty.Empty{})
 
-	if err := <-kioskErr; err != nil {
-		s.Error("kiosk failed to start: ", err)
+	launchCtx, cancelLaunchCtx := context.WithTimeout(ctx, gaiaKioskEnrollmentLaunchTimeout)
+	defer cancelLaunchCtx()
+	if _, err := kc.ConfirmKioskStartedWithReader(launchCtx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to confirm Kiosk started: ", err)
 	}
 }
