@@ -135,7 +135,7 @@ func AddAccelWithConflict(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify error message appears due to the conflict
-	conflictMessage := "Shortcut is used by Open Key Shortcuts app. Press a new shortcut or press the same one again to use it for this action instead."
+	conflictMessage := "Shortcut is being used for \"Open Key Shortcuts app\". Press a new shortcut. To replace the original shortcut, press this shortcut again."
 	errorMessage := nodewith.Name(conflictMessage).Role(role.StaticText)
 	if err := ui.WaitUntilExists(errorMessage)(ctx); err != nil {
 		s.Log(uiauto.RootDebugInfo(ctx, tconn))
