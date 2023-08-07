@@ -43,7 +43,7 @@ func init() {
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: 30 * time.Second,
-		PreTestTimeout:  30 * time.Second,
+		PreTestTimeout:  60 * time.Second,
 		PostTestTimeout: 30 * time.Second,
 		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
 	})
@@ -60,7 +60,7 @@ func init() {
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: 30 * time.Second,
-		PreTestTimeout:  30 * time.Second,
+		PreTestTimeout:  60 * time.Second,
 		PostTestTimeout: 30 * time.Second,
 		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
 	})
@@ -76,7 +76,7 @@ func init() {
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: 30 * time.Second,
-		PreTestTimeout:  30 * time.Second,
+		PreTestTimeout:  60 * time.Second,
 		PostTestTimeout: 30 * time.Second,
 		Parent:          "driveFsStartedWithOfficeEnabled", // TODO(b/291524698): Create more DriveFS accounts.
 		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
@@ -299,12 +299,12 @@ func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Fatal("Failed to uninstall MS365 PWA: ", err)
 	}
 
-	if err := ash.CloseAllWindows(ctx, f.tconn); err != nil {
-		s.Fatal("Failed to close all windows in the fixture: ", err)
-	}
-
 	if err = ms365.ClearBrowserCookiesForOffice(ctx, f.cr); err != nil {
 		s.Fatal("Failed to clear browser cookies for office website: ", err)
+	}
+
+	if err := ash.CloseAllWindows(ctx, f.tconn); err != nil {
+		s.Fatal("Failed to close all windows in the fixture: ", err)
 	}
 }
 

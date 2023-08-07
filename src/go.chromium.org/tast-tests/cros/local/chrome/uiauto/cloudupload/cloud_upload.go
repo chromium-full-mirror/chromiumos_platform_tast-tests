@@ -161,18 +161,20 @@ func (cu *CloudUpload) WaitUploadConfirmationDialogAndClickToUpload(alwaysMove b
 	moveButton := nodewith.Ancestor(dialog).Role(role.Button).NameRegex(regexp.MustCompile("(Move|Copy) and open"))
 	alwaysMoveCheckbox := nodewith.Ancestor(dialog).Role(role.CheckBox)
 
+	longerCtx := cu.ui.WithTimeout(40 * time.Second)
+
 	return uiauto.Combine("Move/copy to cloud dialog: done",
 		log("Starting Move/Copy confirmation dialog step"),
-		cu.ui.WaitUntilExists(dialog),
+		longerCtx.WaitUntilExists(dialog),
 		func(ctx context.Context) error {
 			if alwaysMove {
-				return cu.ui.LeftClick(alwaysMoveCheckbox)(ctx)
+				return longerCtx.LeftClick(alwaysMoveCheckbox)(ctx)
 			}
 			// Default to no-op action.
 			return nil
 		},
-		cu.ui.LeftClick(moveButton),
-		cu.ui.WaitUntilGone(dialog),
+		longerCtx.LeftClick(moveButton),
+		longerCtx.WaitUntilGone(dialog),
 	)
 }
 

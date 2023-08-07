@@ -10,6 +10,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -48,8 +49,8 @@ type Ms365 struct {
 
 // App returns an instance of the Cloud Upload.
 func App(ctx context.Context, tconn *chrome.TestConn, accountPool string) (*Ms365, error) {
-	// Create a uiauto.Context with default timeout.
-	ui := uiauto.New(tconn).WithInterval(500 * time.Millisecond)
+	// Most of the interactions are with remote service, doubling the timeout to 30s.
+	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
@@ -221,14 +222,23 @@ func MaybeUninstallPwa(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Tes
 
 // ClearBrowserCookiesForOffice will clear all browser cookies for the Office website.
 func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome) error {
-	log("Clearing cookies for Office website")(ctx)
+	testing.ContextLog(ctx, "Clearing cookies for Office website")
 	br := cr.Browser()
-	conn, err := br.NewTab(ctx, officePWAInstallURL)
-	if err != nil {
-		return errors.Wrap(err, "failed to open office website")
-	}
-	defer conn.Close()
-	defer conn.CloseTarget(ctx)
+	// Opening Office PWA is usually quick, but occasionally really slow,
+	// with a shorter context it can try again if it hit a slow attempt.
+	quickCtx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
 
-	return conn.ClearSiteCookies(ctx, "www.microsoft365.com")
+	interval := 200 * time.Millisecond
+
+	return action.Retry(3, func(ctx context.Context) error {
+		conn, err := br.NewTab(ctx, officePWAInstallURL)
+		if err != nil {
+			return errors.Wrap(err, "failed to open office website")
+		}
+		defer conn.Close()
+		defer conn.CloseTarget(ctx)
+
+		return conn.ClearSiteCookies(ctx, "www.microsoft365.com")
+	}, interval)(quickCtx)
 }
