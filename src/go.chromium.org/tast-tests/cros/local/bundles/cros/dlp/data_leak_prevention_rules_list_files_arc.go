@@ -44,8 +44,9 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Name:              "arc_container",
-				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+				Name: "arc_container",
+				// TODO(b/293799735): Test makes DUT unhealthy.
+				// ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 				Fixture:           fixture.ChromePolicyLoggedInARC,
 				ExtraSoftwareDeps: []string{"android_p"},
 			}, {
