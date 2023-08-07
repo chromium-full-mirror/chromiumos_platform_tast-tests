@@ -20,33 +20,33 @@ func TestCopyPasteParams(t *testing.T) {
 	params := crostini.MakeTestParamsFromList(t, []crostini.Param{
 		{
 			Name: "wayland_to_wayland",
-			Val: `testParameters{
-				Copy:  waylandCopyConfig,
-				Paste: waylandPasteConfig,
+			Val: `guestos.CopyPasteConfig{
+				Copy:  guestos.WaylandCopyConfig,
+				Paste: guestos.WaylandPasteConfig,
 			}`,
 			UseFixture: true,
 		},
 		{
 			Name: "wayland_to_x11",
-			Val: `testParameters{
-				Copy:  waylandCopyConfig,
-				Paste: x11PasteConfig,
+			Val: `guestos.CopyPasteConfig{
+				Copy:  guestos.WaylandCopyConfig,
+				Paste: guestos.X11PasteConfig,
 			}`,
 			UseFixture: true,
 		},
 		{
 			Name: "x11_to_wayland",
-			Val: `testParameters{
-				Copy:  x11CopyConfig,
-				Paste: waylandPasteConfig,
+			Val: `guestos.CopyPasteConfig{
+				Copy:  guestos.X11CopyConfig,
+				Paste: guestos.WaylandPasteConfig,
 			}`,
 			UseFixture: true,
 		},
 		{
 			Name: "x11_to_x11",
-			Val: `testParameters{
-				Copy:  x11CopyConfig,
-				Paste: x11PasteConfig,
+			Val: `guestos.CopyPasteConfig{
+				Copy:  guestos.X11CopyConfig,
+				Paste: guestos.X11PasteConfig,
 			}`,
 			UseFixture: true,
 		}})

@@ -92,7 +92,7 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	if err := cont.PushFile(ctx, s.DataPath(appletFile), appletFile); err != nil {
 		s.Fatalf("Failed to push %v to container: %v", appletFile, err)
 	}
-	output, err := crostini.RunWindowedApp(ctx, tconn, cont, pre.KB, 30*time.Second, doMouseMove, true, "mouse_perf", []string{"python3", appletFile})
+	output, err := guestos.RunWindowedApp(ctx, tconn, cont, pre.KB, 30*time.Second, doMouseMove, true, "mouse_perf", []string{"python3", appletFile})
 	if err != nil {
 		s.Fatal("Failed to run app: ", err)
 	}

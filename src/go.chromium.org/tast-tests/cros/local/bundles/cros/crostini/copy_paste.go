@@ -1,4 +1,4 @@
-// Copyright 2019 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,73 +6,14 @@ package crostini
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
-
-const (
-	utf8Data = "Some data that gets copied 🔥 ❄"
-
-	// copyApplet is the data dependency needed to run a copy operation.
-	copyApplet      = "copy_applet.py"
-	copyAppletTitle = "gtk3_copy_demo"
-
-	// pasteApplet is the data dependency needed to run a paste operation.
-	pasteApplet      = "paste_applet.py"
-	pasteAppletTitle = "gtk3_paste_demo"
-)
-
-// CopyConfig holds the configuration for the copy half of the test.
-type copyConfig struct {
-	gdkBackend string
-	cmdArgs    []string
-}
-
-// waylandCopyConfig is the configuration needed to test copying from
-// a wayland application.
-var waylandCopyConfig = &copyConfig{
-	gdkBackend: "wayland",
-	cmdArgs:    []string{"env", "GDK_BACKEND=wayland", "python3", copyApplet},
-}
-
-// x11CopyConfig is the configuration needed to test copying from
-// an X11 application.
-var x11CopyConfig = &copyConfig{
-	gdkBackend: "x11",
-	cmdArgs:    []string{"env", "GDK_BACKEND=x11", "python3", copyApplet},
-}
-
-// PasteConfig holds the configuration for the paste half of the test.
-type pasteConfig struct {
-	gdkBackend string
-	cmdArgs    []string
-}
-
-// waylandPasteConfig is the configuration needed to test pasting into
-// a wayland application.
-var waylandPasteConfig = &pasteConfig{
-	gdkBackend: "wayland",
-	cmdArgs:    []string{"env", "GDK_BACKEND=wayland", "python3", pasteApplet},
-}
-
-// x11PasteConfig is the configuration needed to test pasting into
-// a x11 application.
-var x11PasteConfig = &pasteConfig{
-	gdkBackend: "x11",
-	cmdArgs:    []string{"env", "GDK_BACKEND=x11", "python3", pasteApplet},
-}
-
-// testParameters contains all the data needed to run a single test iteration.
-type testParameters struct {
-	Copy  *copyConfig
-	Paste *pasteConfig
-}
 
 func init() {
 
@@ -82,7 +23,7 @@ func init() {
 		Desc:         "Test copy paste functionality",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},
-		Data:         []string{copyApplet, pasteApplet},
+		Data:         []string{guestos.CopyApplet, guestos.PasteApplet},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
 		Params: []testing.Param{
@@ -93,9 +34,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  waylandCopyConfig,
-					Paste: waylandPasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.WaylandCopyConfig,
+					Paste: guestos.WaylandPasteConfig,
 				},
 			}, {
 				Name:              "wayland_to_wayland_buster_unstable",
@@ -104,9 +45,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  waylandCopyConfig,
-					Paste: waylandPasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.WaylandCopyConfig,
+					Paste: guestos.WaylandPasteConfig,
 				},
 			}, {
 				Name:              "wayland_to_wayland_bullseye_stable",
@@ -114,9 +55,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  waylandCopyConfig,
-					Paste: waylandPasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.WaylandCopyConfig,
+					Paste: guestos.WaylandPasteConfig,
 				},
 			}, {
 				Name:              "wayland_to_wayland_bullseye_unstable",
@@ -125,9 +66,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  waylandCopyConfig,
-					Paste: waylandPasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.WaylandCopyConfig,
+					Paste: guestos.WaylandPasteConfig,
 				},
 			}, {
 				Name:              "wayland_to_x11_buster_stable",
@@ -135,9 +76,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  waylandCopyConfig,
-					Paste: x11PasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.WaylandCopyConfig,
+					Paste: guestos.X11PasteConfig,
 				},
 			}, {
 				Name:              "wayland_to_x11_buster_unstable",
@@ -146,9 +87,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  waylandCopyConfig,
-					Paste: x11PasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.WaylandCopyConfig,
+					Paste: guestos.X11PasteConfig,
 				},
 			}, {
 				Name:              "wayland_to_x11_bullseye_stable",
@@ -156,9 +97,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  waylandCopyConfig,
-					Paste: x11PasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.WaylandCopyConfig,
+					Paste: guestos.X11PasteConfig,
 				},
 			}, {
 				Name:              "wayland_to_x11_bullseye_unstable",
@@ -167,9 +108,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  waylandCopyConfig,
-					Paste: x11PasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.WaylandCopyConfig,
+					Paste: guestos.X11PasteConfig,
 				},
 			}, {
 				Name:              "x11_to_wayland_buster_stable",
@@ -177,9 +118,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  x11CopyConfig,
-					Paste: waylandPasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.X11CopyConfig,
+					Paste: guestos.WaylandPasteConfig,
 				},
 			}, {
 				Name:              "x11_to_wayland_buster_unstable",
@@ -188,9 +129,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  x11CopyConfig,
-					Paste: waylandPasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.X11CopyConfig,
+					Paste: guestos.WaylandPasteConfig,
 				},
 			}, {
 				Name:              "x11_to_wayland_bullseye_stable",
@@ -198,9 +139,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  x11CopyConfig,
-					Paste: waylandPasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.X11CopyConfig,
+					Paste: guestos.WaylandPasteConfig,
 				},
 			}, {
 				Name:              "x11_to_wayland_bullseye_unstable",
@@ -209,9 +150,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  x11CopyConfig,
-					Paste: waylandPasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.X11CopyConfig,
+					Paste: guestos.WaylandPasteConfig,
 				},
 			}, {
 				Name:              "x11_to_x11_buster_stable",
@@ -219,9 +160,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  x11CopyConfig,
-					Paste: x11PasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.X11CopyConfig,
+					Paste: guestos.X11PasteConfig,
 				},
 			}, {
 				Name:              "x11_to_x11_buster_unstable",
@@ -230,9 +171,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  x11CopyConfig,
-					Paste: x11PasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.X11CopyConfig,
+					Paste: guestos.X11PasteConfig,
 				},
 			}, {
 				Name:              "x11_to_x11_bullseye_stable",
@@ -240,9 +181,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  x11CopyConfig,
-					Paste: x11PasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.X11CopyConfig,
+					Paste: guestos.X11PasteConfig,
 				},
 			}, {
 				Name:              "x11_to_x11_bullseye_unstable",
@@ -251,9 +192,9 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val: testParameters{
-					Copy:  x11CopyConfig,
-					Paste: x11PasteConfig,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.X11CopyConfig,
+					Paste: guestos.X11PasteConfig,
 				},
 			},
 		},
@@ -262,9 +203,10 @@ func init() {
 
 func CopyPaste(ctx context.Context, s *testing.State) {
 	pre := s.FixtValue().(crostini.FixtureData)
-	param := s.Param().(testParameters)
+	param := s.Param().(guestos.CopyPasteConfig)
 	tconn := pre.Tconn
 	cont := pre.Cont
+	kb := pre.KB
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
@@ -274,46 +216,7 @@ func CopyPaste(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
-	s.Log("Copying testing applets to container")
-	if err := cont.PushFile(ctx, s.DataPath(copyApplet), copyApplet); err != nil {
-		s.Fatal("Failed to push copy applet to container: ", err)
-	}
-	if err := cont.PushFile(ctx, s.DataPath(pasteApplet), pasteApplet); err != nil {
-		s.Fatal("Failed to push paste applet to container: ", err)
-	}
-
-	// Add the names of the backends used by each part of the test to differentiate the data used by each test run.
-	copiedData := fmt.Sprintf("%v to %v %s", param.Copy.gdkBackend, param.Paste.gdkBackend, utf8Data)
-
-	// The copy event happens at some indeterminate time after the
-	// copy applet receives a key press. To be sure we get that event
-	// we have to start listening for it before that point.
-	// Here, wrapping the promise by a closure in order not to be
-	// awaited at this moment.
-	var waiting chrome.JSObject
-	if err := tconn.Eval(ctx, `(p => () => p)(new Promise((resolve) => {
-		  const listener = (e) => {
-		    chrome.autotestPrivate.onClipboardDataChanged.removeListener(listener);
-		    resolve();
-		  };
-		  chrome.autotestPrivate.onClipboardDataChanged.addListener(listener);
-		}))`, &waiting); err != nil {
-		s.Fatal("Failed to set listener for 'copy' event: ", err)
-	}
-	defer waiting.Release(cleanupCtx)
-	if _, err := crostini.RunWindowedApp(ctx, tconn, cont, pre.KB, 120*time.Second, func(ctx context.Context) error {
-		// Unwrap the promise to wait its settled state.
-		return tconn.Call(ctx, nil, `p => p()`, &waiting)
-	}, true, copyAppletTitle, append(param.Copy.cmdArgs, copiedData)); err != nil {
-		s.Fatal("Failed to run copy applet: ", err)
-	}
-
-	output, err := crostini.RunWindowedApp(ctx, tconn, cont, pre.KB, 60*time.Second, nil, false, pasteAppletTitle, param.Paste.cmdArgs)
-	if err != nil {
-		s.Fatal("Failed to run paste application: ", err)
-	}
-
-	if output != copiedData {
-		s.Fatalf("Unexpected paste output: got %q, want %q", output, copiedData)
+	if err := guestos.CopyPaste(ctx, param, s.DataPath, tconn, kb, cont); err != nil {
+		s.Fatal("Copy and paste test failed: ", err)
 	}
 }

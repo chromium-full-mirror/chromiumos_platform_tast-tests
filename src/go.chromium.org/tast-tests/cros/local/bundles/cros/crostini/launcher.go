@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -360,7 +361,7 @@ func launchAppAndMeasureWindowSize(ctx context.Context, tconn *chrome.TestConn,
 		return coords.Size{}, errors.Wrapf(err, "failed to launch app %s", appID)
 	}
 
-	sz, err := crostini.PollWindowSize(ctx, tconn, windowName, 10*time.Second)
+	sz, err := guestos.PollWindowSize(ctx, tconn, windowName, 10*time.Second)
 	if err != nil {
 		return coords.Size{}, errors.Wrap(err, "failed to poll windows size")
 	}
