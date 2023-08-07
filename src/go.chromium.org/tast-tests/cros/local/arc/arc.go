@@ -237,7 +237,8 @@ func New(ctx context.Context, outDir string) (*ARC, error) {
 // NewWithTimeout waits for Android to finish booting until timeout expires.
 //
 // ARC must be enabled in advance by passing chrome.ARCEnabled or chrome.ARCSupported with
-// real user gaia login to chrome.New.
+// real user gaia login to chrome.New, and the Chrome username can be passed as the parameter.
+// chromeUsername can be an empty string, in which case some faillog is skipped.
 //
 // After this function returns successfully, you can assume BOOT_COMPLETED
 // intent has been broadcast from Android system, and ADB connection is ready.
@@ -245,22 +246,7 @@ func New(ctx context.Context, outDir string) (*ARC, error) {
 // WaitIntentHelper() to wait for ArcIntentHelper to be ready, for example.
 //
 // The returned ARC instance must be closed when the test is finished.
-func NewWithTimeout(ctx context.Context, outDir string, timeout time.Duration) (*ARC, error) {
-	return NewWithTimeoutAndChrome(ctx, outDir, timeout, "")
-}
-
-// NewWithTimeoutAndChrome waits for Android to finish booting until timeout expires.
-//
-// ARC must be enabled in advance by passing chrome.ARCEnabled or chrome.ARCSupported with
-// real user gaia login to chrome.New, and the Chrome instance can be passed as the parameter.
-//
-// After this function returns successfully, you can assume BOOT_COMPLETED
-// intent has been broadcast from Android system, and ADB connection is ready.
-// Note that this does not necessarily mean all ARC mojo services are up; call
-// WaitIntentHelper() to wait for ArcIntentHelper to be ready, for example.
-//
-// The returned ARC instance must be closed when the test is finished.
-func NewWithTimeoutAndChrome(ctx context.Context, outDir string, timeout time.Duration, chromeUsername string) (*ARC, error) {
+func NewWithTimeout(ctx context.Context, outDir string, timeout time.Duration, chromeUsername string) (*ARC, error) {
 	// Start a syslog reader so we can give more useful debug information
 	// waiting for boot. This is too late in the boot to
 	// catch crosvm startup crashes.

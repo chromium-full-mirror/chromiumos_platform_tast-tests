@@ -84,7 +84,7 @@ func DemoMode(ctx context.Context, s *testing.State) {
 	uia := uiauto.New(tconn)
 
 	// Wait for ARC to start and ADB to be setup, which would take a bit long.
-	arc, err := arc.NewWithTimeout(ctx, s.OutDir(), 4*time.Minute)
+	arc, err := arc.NewWithTimeout(ctx, s.OutDir(), 4*time.Minute, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to get ARC: ", err)
 	}

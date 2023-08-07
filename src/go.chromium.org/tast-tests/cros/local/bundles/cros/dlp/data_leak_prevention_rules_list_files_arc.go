@@ -137,7 +137,7 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 	defer ash.CloseAllWindows(cleanupCtx, tconn)
 
 	// Setup Arc.
-	a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
+	a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC by policy: ", err)
 	}

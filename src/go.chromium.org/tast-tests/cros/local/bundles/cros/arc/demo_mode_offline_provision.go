@@ -80,7 +80,7 @@ func DemoModeOfflineProvision(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	// Wait for ARC to start and ADB to be setup, which would take a bit long.
-	a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
+	a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to get ARC: ", err)
 	}

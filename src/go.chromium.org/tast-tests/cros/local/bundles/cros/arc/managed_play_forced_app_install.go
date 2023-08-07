@@ -123,7 +123,7 @@ func ManagedPlayForcedAppInstall(ctx context.Context, s *testing.State) {
 			return rl.Exit("verify force-installed apps", err)
 		}
 
-		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
+		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout, cr.NormalizedUser())
 		if err != nil {
 			return rl.Retry("start ARC by policy", err)
 		}

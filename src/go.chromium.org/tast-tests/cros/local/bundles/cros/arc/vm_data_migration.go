@@ -224,7 +224,7 @@ func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds,
 
 	// Use a longer timeout for arc.New, as booting with virtio-fs /data takes
 	// much longer than usual in some devices.
-	a, err := arc.NewWithTimeout(ctx, s.OutDir(), 4*time.Minute)
+	a, err := arc.NewWithTimeout(ctx, s.OutDir(), 4*time.Minute, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}

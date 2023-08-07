@@ -92,7 +92,7 @@ func (service *MGSService) WaitForPackages(ctx context.Context, req *arcpb.WaitF
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	a, err := arc.NewWithTimeout(ctx, outDir, bootTimeout)
+	a, err := arc.NewWithTimeout(ctx, outDir, bootTimeout, service.cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start ARC by user policy")
 	}

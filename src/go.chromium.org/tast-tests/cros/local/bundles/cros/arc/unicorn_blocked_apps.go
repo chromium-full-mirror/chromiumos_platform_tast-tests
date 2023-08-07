@@ -95,7 +95,7 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 			return rl.Retry("create test API Connection", err)
 		}
 
-		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
+		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout, cr.NormalizedUser())
 		if err != nil {
 			return rl.Retry("connect to ARC", err)
 		}

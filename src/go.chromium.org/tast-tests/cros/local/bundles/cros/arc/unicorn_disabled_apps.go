@@ -92,7 +92,7 @@ func UnicornDisabledApps(ctx context.Context, s *testing.State) {
 		}
 		defer cr.Close(cleanupCtx)
 
-		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
+		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout, cr.NormalizedUser())
 		if err != nil {
 			return rl.Retry("connect to ARC", err)
 		}

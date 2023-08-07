@@ -106,7 +106,7 @@ func ManagedPlayAppAvailabilityChange(ctx context.Context, s *testing.State) {
 		}
 		defer cr.Close(cleanupCtx)
 
-		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
+		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout, cr.NormalizedUser())
 		if err != nil {
 			return rl.Retry("start ARC by policy", err)
 		}

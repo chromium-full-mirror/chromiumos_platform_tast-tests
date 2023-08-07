@@ -90,7 +90,7 @@ func ManagedGuestSessionPlayStore(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
+	a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC by policy: ", err)
 	}

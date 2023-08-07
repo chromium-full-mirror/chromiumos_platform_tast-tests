@@ -120,7 +120,7 @@ func ManagedProvisioning(ctx context.Context, s *testing.State) {
 
 		s.Log("Waiting for managed provisioning")
 
-		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
+		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout, cr.NormalizedUser())
 		if err != nil {
 			return rl.Retry("start ARC by policy", err)
 		}
