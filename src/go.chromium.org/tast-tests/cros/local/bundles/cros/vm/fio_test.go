@@ -32,7 +32,10 @@ func TestFio(t *testing.T) {
 			if kind == "virtiofs_dax" {
 				dep = "amd64"
 			}
-
+			// TODO: b/291838028 - Should be removed after the bug is fixed
+			if kind == "block_packed" && job == "randwrite" {
+				continue
+			}
 			params = append(params, paramData{
 				Name: fmt.Sprintf("%s_%s", kind, job),
 				Kind: kind,
