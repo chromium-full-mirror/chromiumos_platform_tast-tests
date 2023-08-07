@@ -80,8 +80,8 @@ func init() {
 		Desc:     "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
 		Contacts: []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
 		Impl: &fixture{
-			chromeOptions: []chrome.Option{chrome.EnableFeatures("FeatureManagementDriveFsBulkPinning")},
-			bt:            browser.TypeAsh,
+			enableBulkPinning: true,
+			bt:                browser.TypeAsh,
 		},
 		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
 		ResetTimeout:    driveFsSetupAndTearDownTimeout,
@@ -129,7 +129,7 @@ func init() {
 		Desc:     "Lacros variant of driveFsStartedWithNativeMessagingLacros",
 		Contacts: []string{"msalomao@chromium.org", "chromeos-files-syd@chromium.org"},
 		Impl: &fixture{
-			chromeOptions: []chrome.Option{chrome.EnableFeatures("FeatureManagementDriveFsBulkPinning")},
+			enableBulkPinning: true,
 			drivefsOptions: map[string]string{
 				"switchblade_dss": "true",
 			}, bt: browser.TypeLacros},
@@ -198,14 +198,15 @@ type FixtureData struct {
 }
 
 type fixture struct {
-	mountPath      string // The path where Drivefs is mounted
-	cr             *chrome.Chrome
-	tconn          *chrome.TestConn
-	APIClient      *APIClient
-	driveFs        *DriveFs
-	chromeOptions  []chrome.Option
-	drivefsOptions map[string]string
-	bt             browser.Type
+	mountPath         string // The path where Drivefs is mounted
+	cr                *chrome.Chrome
+	tconn             *chrome.TestConn
+	APIClient         *APIClient
+	driveFs           *DriveFs
+	chromeOptions     []chrome.Option
+	drivefsOptions    map[string]string
+	bt                browser.Type
+	enableBulkPinning bool
 }
 
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -257,6 +258,9 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			if err != nil {
 				s.Fatal("Failed to get lacros options: ", err)
 			}
+		}
+		if f.enableBulkPinning {
+			opts = append(opts, chrome.EnableFeatures("FeatureManagementDriveFsBulkPinning"))
 		}
 
 		ctx, cancel := context.WithTimeout(ctx, chrome.LoginTimeout)
@@ -323,11 +327,33 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 
 // TearDown ensures Chrome is unlocked and closed.
 func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	f.Reset(ctx)
 	chrome.Unlock()
 	f.cleanUp(ctx, s)
 }
 
 func (f *fixture) Reset(ctx context.Context) error {
+	if f.enableBulkPinning {
+		conn, err := f.cr.Browser().NewConn(ctx, "chrome://drive-internals")
+		if err != nil {
+			return errors.Wrap(err, "failed to open drive-internals to ensure Bulk Pinning is disabled")
+		}
+
+		// Wait for the "bulk pinning" toggle to render in "drive-internals".
+		if err = conn.WaitForExpr(ctx, "document.querySelector('#bulk-pinning-toggle')"); err != nil {
+			return errors.Wrap(err, "bulk pinning toggle did not render in drive-internals")
+		}
+
+		// Flip the toggle OFF if it's ON.
+		if err = conn.Eval(ctx, "const t = document.querySelector('#bulk-pinning-toggle'); t && t.checked && t.click();", nil); err != nil {
+			return errors.Wrap(err, "failed to disable Bulk Pinning")
+		}
+
+		// Wait until the end of the event loop cycle to make sure changes are saved before closing all windows.
+		if err = conn.Eval(ctx, "new Promise(r => setTimeout(r))", nil); err != nil {
+			return errors.Wrap(err, "failed to wait for Bulk Pinning to be disabled")
+		}
+	}
 	if err := ash.CloseAllWindows(ctx, f.tconn); err != nil {
 		testing.ContextLog(ctx, "Failed trying to close all windows: ", err)
 	}
