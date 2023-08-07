@@ -18,8 +18,10 @@ import (
 )
 
 const (
-	// ConnectedDevicesSettingsURL is the path to the connected device settings page.
-	ConnectedDevicesSettingsURL = "chrome://os-settings/multidevice/features"
+	// ConnectedDevicesSettingsRelativePath is the path to the connected device settings page.
+	ConnectedDevicesSettingsRelativePath = "multidevice/features"
+	// ConnectedDevicesSettingsURL is the full url to the connected device settings page.
+	ConnectedDevicesSettingsURL = "chrome://os-settings/" + ConnectedDevicesSettingsRelativePath
 	// MultidevicePageJS is the JS locator for the multidevice settings page.
 	MultidevicePageJS = `shadowPiercingQuery("settings-multidevice-page")`
 	// MultideviceSubpageJS is the JS locator for the multidevice settings subpage element.
