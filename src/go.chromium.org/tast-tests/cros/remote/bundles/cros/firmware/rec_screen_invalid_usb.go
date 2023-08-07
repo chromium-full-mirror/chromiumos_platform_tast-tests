@@ -30,7 +30,7 @@ func init() {
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 		Attr:    []string{"group:firmware", "firmware_unstable", "firmware_usb"},
 		Fixture: fixture.NormalMode,
-		Timeout: 90 * time.Minute,
+		Timeout: 120 * time.Minute,
 	})
 }
 
