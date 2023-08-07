@@ -68,7 +68,7 @@ func NewDUTControlAndreiboard(grpcConn *grpc.ClientConn, bufSize int, readTimeou
 		DataLen:     consoleDataLen,
 		ReadTimeout: readTimeout,
 	}
-	gscConsole := common.NewBufferedConsole("andreiboard.log", bufSize, gscOpener)
+	gscConsole := common.NewBufferedConsole("gsc.log", bufSize, gscOpener)
 
 	ecOpener := &DUTControlRawUARTPortOpener{
 		Client:      dutControlClient,
@@ -348,4 +348,44 @@ func (a *DUTControlAndreiboard) ECSerialWrite(ctx context.Context, bytes []byte)
 // ECSerialRead reads the specified number of bytes from the EC console.
 func (a *DUTControlAndreiboard) ECSerialRead(ctx context.Context, size int) ([]byte, error) {
 	return a.ecConsole.ReadSerialBytes(ctx, size)
+}
+
+// PhysicalUart opens a handle for communication to/from a physical UART on the chip under test.
+func (a *DUTControlAndreiboard) PhysicalUart(name common.UartName, readTimeout time.Duration) common.SerialChannel {
+	uartOpener := &DUTControlRawUARTPortOpener{
+		Client:      a.client,
+		Uart:        string(name),
+		Baud:        UartBaud,
+		DataLen:     consoleDataLen,
+		ReadTimeout: readTimeout,
+	}
+	return common.NewBufferedConsole("", 2048, uartOpener)
+}
+
+// CcdSerialInterface opens a handle for communication to/from a USB interface on the chip under
+// test.
+func (a *DUTControlAndreiboard) CcdSerialInterface(name common.UartName, readTimeout time.Duration) common.SerialChannel {
+	var ep dutcontrol.CCDSerialEndPoint
+	switch name {
+	case common.UartAP:
+		ep = dutcontrol.CCDSerialEndPoint_AP
+		break
+	case common.UartEC:
+		ep = dutcontrol.CCDSerialEndPoint_EC
+		break
+	case common.UartFPMCU:
+		ep = dutcontrol.CCDSerialEndPoint_FPMCU
+		break
+	default:
+		ep = dutcontrol.CCDSerialEndPoint_UNKNOWN_SERIAL
+		break
+	}
+	uartOpener := &DUTControlCCDPortOpener{
+		Client:      a.client,
+		Ep:          ep,
+		Baud:        UartBaud,
+		DataLen:     consoleDataLen,
+		ReadTimeout: readTimeout,
+	}
+	return common.NewBufferedConsole("", 2048, uartOpener)
 }

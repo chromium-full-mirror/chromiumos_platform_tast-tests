@@ -54,6 +54,20 @@ type DUTControlRawUARTPortOpener struct {
 	ReadTimeout time.Duration
 }
 
+// DUTControlCCDPortOpener opens a CCD serial interface through the dutcontrol grpc client.
+type DUTControlCCDPortOpener struct {
+	// The dutcontrol grpc client.
+	Client dutcontrol.DutControlClient
+	// The uart number or an alias defined in the OpenTitanTool conf json file.
+	Ep dutcontrol.CCDSerialEndPoint
+	// The baud rate.
+	Baud int
+	// The max size of received serial data.
+	DataLen int
+	// The timeout for a read operation.
+	ReadTimeout time.Duration
+}
+
 // openDUTControlConsole opens a console and returns its data and write result receive channels.
 func openDUTControlConsole(stream dutcontrol.DutControl_ConsoleClient, req *dutcontrol.ConsoleRequest) (<-chan *dutcontrol.ConsoleSerialData, <-chan *dutcontrol.ConsoleSerialWriteResult, error) {
 	if err := stream.Send(req); err != nil {
@@ -116,6 +130,27 @@ func (c *DUTControlRawUARTPortOpener) OpenPort(ctx context.Context) (serial.Port
 			Operation: &dutcontrol.ConsoleRequest_Open{
 				Open: &dutcontrol.ConsoleOpen{
 					Type: &dutcontrol.ConsoleOpen_RawUart{RawUart: &dutcontrol.ConsoleOpenRawUART{Uart: c.Uart, Baud: int32(c.Baud), DataLen: int32(c.DataLen)}},
+				},
+			}})
+	if err != nil {
+		return nil, err
+	}
+
+	return &DUTControlPort{stream, data, write, c.ReadTimeout, nil}, nil
+}
+
+// OpenPort opens and returns the port.
+func (c *DUTControlCCDPortOpener) OpenPort(ctx context.Context) (serial.Port, error) {
+	stream, err := c.Client.Console(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	data, write, err := openDUTControlConsole(stream,
+		&dutcontrol.ConsoleRequest{
+			Operation: &dutcontrol.ConsoleRequest_Open{
+				Open: &dutcontrol.ConsoleOpen{
+					Type: &dutcontrol.ConsoleOpen_CcdSerial{CcdSerial: &dutcontrol.ConsoleOpenCCDSerial{Ep: c.Ep, Baud: int32(c.Baud), DataLen: int32(c.DataLen)}},
 				},
 			}})
 	if err != nil {

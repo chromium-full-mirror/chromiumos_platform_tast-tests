@@ -7,6 +7,7 @@ package ti50
 import (
 	"context"
 	"regexp"
+	"time"
 )
 
 // GpioStrap represents a certain preset gpio configuration
@@ -23,6 +24,18 @@ const (
 	GpioEdgeRising GpioEdge = "Rising"
 	// GpioEdgeFalling represents a falling edge
 	GpioEdgeFalling GpioEdge = "Falling"
+)
+
+// UartName identifies one of the three UARTs forwarded through CCD
+type UartName string
+
+const (
+	// UartAP represents the AP UART
+	UartAP UartName = "AP"
+	// UartEC represents the EC UART
+	UartEC UartName = "EC"
+	// UartFPMCU represents the FPMCU UART
+	UartFPMCU UartName = "FPMCU"
 )
 
 // DevBoard is the generic interface for development boards.
@@ -53,6 +66,28 @@ type DevBoard interface {
 	ECSerialWrite(ctx context.Context, bytes []byte) error
 	// ECSerialRead reads the specified number of bytes from the EC console.
 	ECSerialRead(ctx context.Context, size int) ([]byte, error)
+	// PhysicalUart allows reading/writing data to a physical UART of the GSC under test.
+	PhysicalUart(name UartName, readTimeout time.Duration) SerialChannel
+	// CcdSerialInterface allows reading/writing data to a USB interface provided by the GSC under test, which implements the "serial" USB class.
+	CcdSerialInterface(name UartName, readTimeout time.Duration) SerialChannel
+}
+
+// SerialChannel is a handle to communicate using a two-way byte stream.
+type SerialChannel interface {
+	// Open opens the port.
+	Open(ctx context.Context) error
+	// IsOpen returns true iff the port is open.
+	IsOpen() bool
+	// Close closes the port.
+	Close(ctx context.Context) error
+	// ReadSerialSubmatch reads from the port until regex is matched.
+	ReadSerialSubmatch(ctx context.Context, re *regexp.Regexp) (output [][]byte, err error)
+	// ReadSerialBytes reads from the serial port until number of bytes have been read.
+	ReadSerialBytes(ctx context.Context, size int) (output []byte, err error)
+	// WriteSerial writes to the port.
+	WriteSerial(ctx context.Context, bytes []byte) error
+	// ClearInput clears any pending input that hasn't been read yet.
+	ClearInput(ctx context.Context) error
 }
 
 // TestbedType represents a kind of testbed, including which GSC devboard, debugger and wiring.

@@ -50,13 +50,17 @@ func (c *BufferedConsole) Open(ctx context.Context) error {
 		c.port.Close(ctx)
 		return errors.New("failed to get directory for saving files")
 	}
-	f, err := os.OpenFile(filepath.Join(dir, c.filename), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		c.port.Close(ctx)
-		return err
+	if c.filename != "" {
+		f, err := os.OpenFile(filepath.Join(dir, c.filename), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			c.port.Close(ctx)
+			return err
+		}
+		c.logfile = f
+	} else {
+		c.logfile = nil
 	}
 	c.port = p
-	c.logfile = f
 	return nil
 }
 
@@ -99,7 +103,7 @@ func (c *BufferedConsole) readSerial(ctx context.Context) error {
 		return errors.New("buffer full")
 	}
 	n, err := c.port.Read(ctx, c.readBuf[c.readBufLen:])
-	if n > 0 {
+	if n > 0 && c.filename != "" {
 		if err := c.appendToLogFile(ctx, c.readBuf[c.readBufLen:c.readBufLen+n]); err != nil {
 			testing.ContextLog(ctx, "Log file error: ", err)
 		}
