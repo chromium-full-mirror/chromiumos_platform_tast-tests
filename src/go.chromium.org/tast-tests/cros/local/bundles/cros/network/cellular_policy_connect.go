@@ -196,7 +196,7 @@ func CellularPolicyConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait until refresh profile complete: ", err)
 	}
 
-	// Give some time to modem and shill to stabilize.
+	// GoBigSleepLint: Give some time to modem and shill to stabilize.
 	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 		s.Fatal("Failed to wait for 10 seconds: ", err)
 	}
@@ -272,7 +272,7 @@ func CellularPolicyConnect(ctx context.Context, s *testing.State) {
 			ui.WithTimeout(90*time.Second).WaitUntilGone(connectingToNetwork),
 			ui.WaitUntilExists(openNetwork),
 		)(ctx); err != nil {
-			s.Fatal("Failed to verify network is connectable through quick settings")
+			s.Fatal("Failed to verify network is connectable through quick settings: ", err)
 		}
 	} else {
 		if err := uiauto.Combine("Verify unmanaged network is not connectable in quick settings",
@@ -280,7 +280,7 @@ func CellularPolicyConnect(ctx context.Context, s *testing.State) {
 			ui.WaitUntilExists(disableTooltip),
 			ui.EnsureGoneFor(openNetwork, 3*time.Second),
 		)(ctx); err != nil {
-			s.Fatal("Failed to verify unmanaged network is not connectable in quick settings")
+			s.Fatal("Failed to verify unmanaged network is not connectable in quick settings: ", err)
 		}
 	}
 }
