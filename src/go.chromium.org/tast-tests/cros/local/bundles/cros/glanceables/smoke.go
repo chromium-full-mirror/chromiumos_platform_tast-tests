@@ -68,6 +68,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 		user string
 		// pass is the password used to log in.
 		pass              string
+		enabledFeatures   []string
 		showStudentBubble bool
 		showTeacherBubble bool
 		showTaskBubble    bool
@@ -76,6 +77,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 			name:              "student",
 			user:              s.RequiredVar("glanceables.Smoke.studentUsername"),
 			pass:              s.RequiredVar("glanceables.Smoke.studentPassword"),
+			enabledFeatures:   []string{"GlanceablesV2"},
 			showStudentBubble: true,
 			showTeacherBubble: false,
 			showTaskBubble:    true,
@@ -84,6 +86,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 			name:              "teacher",
 			user:              s.RequiredVar("glanceables.Smoke.teacherUsername"),
 			pass:              s.RequiredVar("glanceables.Smoke.teacherPassword"),
+			enabledFeatures:   []string{"GlanceablesV2", "GlanceablesV2ClassroomTeacherView"},
 			showStudentBubble: false,
 			showTeacherBubble: true,
 			showTaskBubble:    true,
@@ -92,6 +95,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 			name:              "managed",
 			user:              s.RequiredVar("glanceables.Smoke.regularUsername"),
 			pass:              s.RequiredVar("glanceables.Smoke.regularPassword"),
+			enabledFeatures:   []string{"GlanceablesV2"},
 			showStudentBubble: false,
 			showTeacherBubble: false,
 			showTaskBubble:    true,
@@ -105,7 +109,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 			defer fdms.Stop(cleanupCtx)
 
 			opts := []chrome.Option{
-				chrome.EnableFeatures("GlanceablesV2"),
+				chrome.EnableFeatures(param.enabledFeatures...),
 				chrome.GAIALogin(chrome.Creds{User: param.user, Pass: param.pass}),
 				chrome.DMSPolicy(fdms.URL),
 			}
