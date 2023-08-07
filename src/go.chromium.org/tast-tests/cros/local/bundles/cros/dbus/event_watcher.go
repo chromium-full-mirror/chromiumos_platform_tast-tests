@@ -23,7 +23,6 @@ func init() {
 		BugComponent: "b:776546", // ChromeOS > Platform > Technologies > Audio > Test
 		Attr: []string{
 			"group:mainline",
-			"informational", "group:criticalstaging", // TODO(b/278252387): Promote test.
 			"group:hw_agnostic",
 		},
 		Timeout:      time.Minute,
