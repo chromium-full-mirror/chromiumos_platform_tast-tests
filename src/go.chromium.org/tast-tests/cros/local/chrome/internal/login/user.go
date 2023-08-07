@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/media/vm"
+	"go.chromium.org/tast-tests/cros/local/network/dumputil"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/syslog"
@@ -49,12 +50,20 @@ func loginUser(ctx context.Context, cfg *config.Config, sess *driver.Session) er
 			if !vm.IsRunningOnVM() {
 				if pingErr := ping.VerifyInternetConnectivity(ctx, 5*time.Second); pingErr != nil {
 					testing.ContextLog(ctx, "Failed to wait for shill online test: ", err)
+
+					dumpfile := "network_dump_ping_" + time.Now().Format("030405000") + ".txt"
+					if err := dumputil.DumpNetworkInfo(ctx, dumpfile); err != nil {
+						testing.ContextLog(ctx, "Failed to dump network info after a ping expectation failure: ", err)
+					}
+					testing.ContextLog(ctx, "Ping expectation failed, current network info dumped into ", dumpfile)
+
 					return errors.Wrap(pingErr, "pre login network connection tests failed")
 				}
 			}
 
 			// Fail even if the ping test was successful.
 			// TODO(b/268671917): Remove double check when the root cause is clear.
+			testing.ContextLog(ctx, "Calling shill.WaitForOnline failed, but ping.VerifyInternetConnectivity passed")
 			return err
 		}
 		if err := performGAIALogin(ctx, cfg, sess, conn); err != nil {
