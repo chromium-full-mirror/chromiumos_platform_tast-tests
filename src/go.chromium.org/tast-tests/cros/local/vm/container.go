@@ -444,19 +444,7 @@ func (c *Container) CheckFileDoesNotExistInDir(ctx context.Context, path string,
 
 // GetFileList returns a list of the files in the given path in the container.
 func (c *Container) GetFileList(ctx context.Context, path string) (fileList []string, err error) {
-	// Get files in the path in container.
-	result, err := c.Command(ctx, "ls", "-1", path).Output()
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to run 'ls %s' in container", path)
-	}
-	fileList = strings.Split(string(result), "\n")
-
-	// Delete the last empty item if it is there.
-	if len(fileList) > 0 && fileList[len(fileList)-1] == "" {
-		fileList = fileList[:len(fileList)-1]
-	}
-
-	return fileList, nil
+	return getFileList(ctx, c, path)
 }
 
 // CheckFileContent checks that the content of the specified file equals to the given string.
@@ -488,16 +476,7 @@ func (c *Container) ReadFile(ctx context.Context, filePath string) (content stri
 
 // Cleanup removes all the files under the specific path.
 func (c *Container) Cleanup(ctx context.Context, path string) error {
-	list, err := c.GetFileList(ctx, path)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get file list of %s in container: ", path)
-	}
-	for _, file := range list {
-		if err := c.Command(ctx, "rm", "-rf", file).Run(testexec.DumpLogOnError); err != nil {
-			return errors.Wrapf(err, "failed to delete %s in %s", file, path)
-		}
-	}
-	return nil
+	return cleanup(ctx, c, path)
 }
 
 // LinuxPackageInfo queries the container for information about a Linux package

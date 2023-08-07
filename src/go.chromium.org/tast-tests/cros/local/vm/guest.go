@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	cpb "chromiumos/system_api/vm_cicerone_proto"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
@@ -28,6 +29,8 @@ type Guest interface {
 	CheckFileContent(ctx context.Context, filePath, testString string) error
 	PushFile(ctx context.Context, localPath, containerPath string) error
 	GetFile(ctx context.Context, containerPath, localPath string) error
+	GetFileList(ctx context.Context, path string) (fileList []string, err error)
+	Cleanup(ctx context.Context, path string) error
 }
 
 // containerCommand returns a testexec.Cmd with a vsh command that will run in
@@ -152,4 +155,35 @@ func getFile(ctx context.Context, containerName string, vm *VM, containerPath, l
 	// To handle a leading -, "--" is added after the command.
 	getCmd := fmt.Sprintf("get -- %q %q", containerPath, localPath)
 	return sftpCommand(ctx, vm.ContextID, port, getCmd)
+}
+
+// getFileList returns a list of the files in the given path in the container.
+func getFileList(ctx context.Context, guest Guest, path string) (fileList []string, err error) {
+	// Get files in the path in guest.
+	result, err := guest.Command(ctx, "ls", "-1", path).Output()
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to run 'ls %s' in guest", path)
+	}
+	fileList = strings.Split(string(result), "\n")
+
+	// Delete the last empty item if it is there.
+	if len(fileList) > 0 && fileList[len(fileList)-1] == "" {
+		fileList = fileList[:len(fileList)-1]
+	}
+
+	return fileList, nil
+}
+
+// cleanup removes all the files under the specific path.
+func cleanup(ctx context.Context, guest Guest, path string) error {
+	list, err := guest.GetFileList(ctx, path)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get file list of %s in guest: ", path)
+	}
+	for _, file := range list {
+		if err := guest.Command(ctx, "rm", "-rf", file).Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrapf(err, "failed to delete %s in %s", file, path)
+		}
+	}
+	return nil
 }

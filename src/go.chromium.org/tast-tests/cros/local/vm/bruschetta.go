@@ -44,3 +44,13 @@ func (bru *BruschettaVM) GetFile(ctx context.Context, containerPath, localPath s
 func (bru *BruschettaVM) CheckFileContent(ctx context.Context, filePath, testString string) error {
 	return checkFileContent(ctx, bru, filePath, testString)
 }
+
+// GetFileList returns a list of the files in the given path in the container.
+func (bru *BruschettaVM) GetFileList(ctx context.Context, path string) (fileList []string, err error) {
+	return getFileList(ctx, bru, path)
+}
+
+// Cleanup removes all the files under the specific path.
+func (bru *BruschettaVM) Cleanup(ctx context.Context, path string) error {
+	return cleanup(ctx, bru, path)
+}
