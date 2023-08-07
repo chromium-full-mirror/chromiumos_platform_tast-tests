@@ -89,16 +89,6 @@ func probe(ctx context.Context) ([]string, error) {
 // blocklist.  The probed result of the audio codec components should appear
 // either in the allowlist or the blocklist.
 func AudioCodecCoverage(ctx context.Context, s *testing.State) {
-	// TODO(b/278490777): Some PMIC and headset switch components will be
-	// included in the allowlist when the integrated component feature is
-	// implemented in AVL. Temporarily hardcode them here for now.
-	temporarilyExcluded := []string{
-		"i2c-104C227E:00",
-		"mt6358-sound",
-		"mt6359-sound",
-		"ts3a227e.4-003b",
-		"ts3a227e.5-003b",
-	}
 	allowlistJSON := s.RequiredVar("runtimeprobe.AudioCodecCoverage.allowlist")
 	blocklistJSON := s.RequiredVar("runtimeprobe.AudioCodecCoverage.blocklist")
 	var allowlist, blocklist []string
@@ -109,9 +99,6 @@ func AudioCodecCoverage(ctx context.Context, s *testing.State) {
 		knownKernelNames.Add(kernelName)
 	}
 	for _, kernelName := range blocklist {
-		knownKernelNames.Add(kernelName)
-	}
-	for _, kernelName := range temporarilyExcluded {
 		knownKernelNames.Add(kernelName)
 	}
 	probedKernelNames, err := probe(ctx)
