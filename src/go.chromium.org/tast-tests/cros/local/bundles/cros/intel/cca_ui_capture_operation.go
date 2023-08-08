@@ -98,6 +98,36 @@ func init() {
 			Val:       cameraStressTestParams{cca.FacingBack, 720, false},
 			Timeout:   60 * time.Minute,
 			ExtraAttr: []string{"group:intel-reliability-gold"},
+		}, {
+			Name:      "external_facing_image_bronze",
+			Val:       cameraStressTestParams{cca.FacingExternal, 360, true},
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-reliability-bronze"},
+		}, {
+			Name:      "external_facing_image_silver",
+			Val:       cameraStressTestParams{cca.FacingExternal, 540, true},
+			Timeout:   8 * time.Minute,
+			ExtraAttr: []string{"group:intel-reliability-silver"},
+		}, {
+			Name:      "external_facing_image_gold",
+			Val:       cameraStressTestParams{cca.FacingExternal, 720, true},
+			Timeout:   12 * time.Minute,
+			ExtraAttr: []string{"group:intel-reliability-gold"},
+		}, {
+			Name:      "external_facing_video_bronze",
+			Val:       cameraStressTestParams{cca.FacingExternal, 360, false},
+			Timeout:   30 * time.Minute,
+			ExtraAttr: []string{"group:intel-reliability-bronze"},
+		}, {
+			Name:      "external_facing_video_silver",
+			Val:       cameraStressTestParams{cca.FacingExternal, 540, false},
+			Timeout:   45 * time.Minute,
+			ExtraAttr: []string{"group:intel-reliability-silver"},
+		}, {
+			Name:      "external_facing_video_gold",
+			Val:       cameraStressTestParams{cca.FacingExternal, 720, false},
+			Timeout:   60 * time.Minute,
+			ExtraAttr: []string{"group:intel-reliability-gold"},
 		}},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 	})
@@ -195,17 +225,26 @@ func setCameraFacing(ctx context.Context, app *cca.App, wantFacing cca.Facing) e
 	if err != nil {
 		return errors.Wrap(err, "failed to get camera facing")
 	}
-	if gotFacing != wantFacing {
-		if err := app.SwitchCamera(ctx); err != nil {
-			return errors.Wrap(err, "failed to switch camera")
-		}
-		gotFacing, err = app.GetFacing(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get facing after switching")
-		}
-		if gotFacing != wantFacing {
-			return errors.Errorf("failed to switch to camera: got %q; want %q", gotFacing, wantFacing)
-		}
+	maxCamera, err := app.GetNumOfCameras(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get available number of cameras")
 	}
-	return nil
+
+	for i := 0; i < maxCamera; i++ {
+		if gotFacing != wantFacing {
+			if err := app.SwitchCamera(ctx); err != nil {
+				return errors.Wrap(err, "failed to switch camera")
+			}
+			gotFacing, err = app.GetFacing(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to get facing after switching")
+			}
+
+		}
+		if gotFacing == wantFacing {
+			return nil
+		}
+
+	}
+	return errors.Errorf("failed to switch to camera: got %q; want %q", gotFacing, wantFacing)
 }
