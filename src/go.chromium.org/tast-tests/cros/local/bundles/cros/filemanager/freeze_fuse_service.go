@@ -168,7 +168,7 @@ func (f *FreezeFUSEService) TestMountZipAndSuspend(ctx context.Context, request 
 			return nil, errors.Errorf("successful suspends did not increase by 1. Before: %d, After: %d", successfulSuspends, successfulSuspendsAfter)
 		}
 
-		if err := shill.WaitForOnline(ctx); err != nil {
+		if err := shill.WaitForOnlineAfterResume(ctx); err != nil {
 			return nil, errors.Wrap(err, "timed out waiting for the network to connect after resume")
 		}
 
