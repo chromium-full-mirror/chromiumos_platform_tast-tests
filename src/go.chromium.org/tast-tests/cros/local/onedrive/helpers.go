@@ -105,6 +105,8 @@ func MaybeUnmountOdfs(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Ch
 	if err != nil {
 		return errors.Wrap(err, "failed to launch Files app to unmount ODFS")
 	}
+	defer filesApp.Close(ctx)
+
 	volumeID, err := filesApp.GetVolumeID(ctx, cr, "Microsoft OneDrive")
 	if err != nil {
 		return errors.Wrap(err, "failed to get the volume ID for ODFS")
@@ -117,10 +119,6 @@ func MaybeUnmountOdfs(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Ch
 	testing.ContextLog(ctx, "Unmounting ODFS")
 	if err := filesApp.Unmount(cr, volumeID)(ctx); err != nil {
 		return errors.Wrap(err, "failed to unmount ODFS")
-	}
-
-	if err := filesApp.Close(ctx); err != nil {
-		return errors.Wrap(err, "failed to close Files app when unmounting ODFS")
 	}
 
 	return nil

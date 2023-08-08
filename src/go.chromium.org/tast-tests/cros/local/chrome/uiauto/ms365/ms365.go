@@ -183,11 +183,12 @@ func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome, browserType 
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	_, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, officePWAInstallURL)
+	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, officePWAInstallURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch browser")
 	}
 	defer cleanup(cleanupCtx)
+	defer conn.Close()
 
 	// Installing Office PWA requires a valid login.
 	signInButton := nodewith.Role(role.Button).Name("Sign in")

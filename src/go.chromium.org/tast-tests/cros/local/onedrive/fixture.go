@@ -300,6 +300,10 @@ func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Fatal("Failed to clear prefs on chrome://files-internals: ", err)
 	}
 
+	if err := fi.Close(ctx); err != nil {
+		s.Fatal("Failed to close chrome://files-internals: ", err)
+	}
+
 	if err := MaybeUnmountOdfs(ctx, f.tconn, f.cr); err != nil {
 		s.Fatal("Failed to unmount ODFS: ", err)
 	}
@@ -310,10 +314,6 @@ func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 
 	if err = ms365.ClearBrowserCookiesForOffice(ctx, f.cr); err != nil {
 		s.Fatal("Failed to clear browser cookies for office website: ", err)
-	}
-
-	if err := ash.CloseAllWindows(ctx, f.tconn); err != nil {
-		s.Fatal("Failed to close all windows in the fixture: ", err)
 	}
 }
 

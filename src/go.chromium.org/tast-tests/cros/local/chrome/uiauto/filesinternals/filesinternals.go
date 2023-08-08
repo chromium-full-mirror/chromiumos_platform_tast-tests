@@ -92,3 +92,11 @@ func (fi *FilesInternals) ClearOfficeFileHandlers() uiauto.Action {
 
 	}
 }
+
+// Close closes the Files Internals window.
+func (fi *FilesInternals) Close(ctx context.Context) error {
+	if err := fi.conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close the files internals tab")
+	}
+	return fi.conn.Close()
+}

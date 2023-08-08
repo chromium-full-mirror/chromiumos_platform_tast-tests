@@ -486,10 +486,12 @@ func (s *OSSettings) ClearSearch() uiauto.Action {
 func UninstallApp(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, appName, appID string) error {
 	ui := uiauto.New(tconn)
 	appNode := nodewith.Name(appName).HasClass("cr-title-text")
-	if _, err := LaunchAtPageURL(ctx, tconn, cr, "app-management/detail?id="+appID, ui.WaitUntilExists(appNode)); err != nil {
+	osSettings, err := LaunchAtPageURL(ctx, tconn, cr, "app-management/detail?id="+appID, ui.WaitUntilExists(appNode))
+	if err != nil {
 		testing.ContextLogf(ctx, "Failed to open Settings app at the app %s, it may not exist: %s", appName, err)
 		return nil
 	}
+	defer osSettings.Close(ctx)
 
 	uninstall := nodewith.Name("Uninstall").Role(role.Button)
 	uninstallWindow := nodewith.NameStartingWith("Uninstall").Role(role.Window)

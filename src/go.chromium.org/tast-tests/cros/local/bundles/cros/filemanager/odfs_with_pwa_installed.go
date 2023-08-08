@@ -78,6 +78,11 @@ func OdfsWithPWAInstalled(ctx context.Context, s *testing.State) {
 	if err := ms365App.InstallPWA(ctx, cr, bt); err != nil {
 		s.Fatal("Failed to install Office PWA: ", err)
 	}
+	// Office PWA window will open after installation, we need to close it.
+	// Here we just pass an empty file name string to close the PWA app itself.
+	if err := ms365.CloseMicrosoft365Window(ctx, tconn, ""); err != nil {
+		s.Fatal("Failed to close the Office PWA window: ", err)
+	}
 
 	// Pick one file from the generated files.
 	fileName := data.GeneratedFiles[0].FileName
