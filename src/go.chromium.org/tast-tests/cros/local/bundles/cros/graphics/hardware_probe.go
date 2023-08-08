@@ -9,6 +9,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/graphics/hardwareprobe"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -22,6 +23,8 @@ func init() {
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Attr:         []string{"group:graphics", "graphics_perbuild", "group:mainline"},
 		Fixture:      "gpuWatchDog",
+		// FIXME(b/294427962): fails on betty GCE
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Params: []testing.Param{{
 			Val:       false,
 			ExtraAttr: []string{"group:cq-medium"},
