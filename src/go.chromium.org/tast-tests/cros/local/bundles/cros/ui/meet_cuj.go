@@ -78,7 +78,7 @@ type meetTest struct {
 
 const defaultTestTimeout = 25 * time.Minute
 
-var platformEffectsModels = hwdep.Model("yaviks", "pujjoteen", "nirwen", "markarth", "frostflow", "dewatt", "omnigul", "anahera", "gimble", "marasov")
+var platformEffectsModels = hwdep.Model("yaviks", "pujjoteen", "nirwen", "markarth", "frostflow", "dewatt", "omnigul", "anahera", "gimble", "marasov", "taeko")
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -202,6 +202,58 @@ func init() {
 					noiseCancellation: true,
 					browserType:       browser.TypeAsh,
 					botsOptions:       []bond.AddBotsOption{bond.WithAudio("what_color_is_cheese_32bit_48k_stereo.raw")},
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
+			}, {
+				Name:              "docs_live_captions",
+				Timeout:           defaultTestTimeout,
+				ExtraAttr:         []string{"group:cuj"},
+				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				Val: meetTest{
+					bots:         []int{1, 3, 15},
+					layout:       googlemeet.TiledLayout,
+					present:      true,
+					docs:         true,
+					split:        true,
+					cam:          true,
+					zoomOut:      true,
+					liveCaptions: true,
+					browserType:  browser.TypeAsh,
+					botsOptions:  []bond.AddBotsOption{bond.WithAudio("what_color_is_cheese_32bit_48k_stereo.raw")},
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
+			}, {
+				Name:              "docs_background_blur",
+				Timeout:           defaultTestTimeout,
+				ExtraAttr:         []string{"group:cuj"},
+				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				Val: meetTest{
+					bots:           []int{1, 3, 15},
+					layout:         googlemeet.TiledLayout,
+					present:        true,
+					docs:           true,
+					split:          true,
+					cam:            true,
+					zoomOut:        true,
+					backgroundBlur: true,
+					browserType:    browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
+			}, {
+				Name:              "docs_adjust_lighting",
+				Timeout:           defaultTestTimeout,
+				ExtraAttr:         []string{"group:cuj"},
+				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				Val: meetTest{
+					bots:           []int{1, 3, 15},
+					layout:         googlemeet.TiledLayout,
+					present:        true,
+					docs:           true,
+					split:          true,
+					cam:            true,
+					zoomOut:        true,
+					adjustLighting: true,
+					browserType:    browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
 			}, {
