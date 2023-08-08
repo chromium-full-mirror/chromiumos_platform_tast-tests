@@ -145,7 +145,12 @@ func init() {
 		Contacts: []string{"nedol@google.com", "chromeos-commercial-printing@google.com"},
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return lacrosfixt.NewConfig().Opts()
+				opts, err := lacrosfixt.NewConfig().Opts()
+				if err != nil {
+					return nil, err
+				}
+
+				return append(opts, chrome.KeepEnrollment()), nil
 			},
 		},
 		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute + cleanupTimeout,
@@ -161,7 +166,12 @@ func init() {
 		Contacts: []string{"sugandhagoyal@google.com", "dp-chromeos-eng@google.com"},
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.LacrosExtraArgs("--metrics-upload-interval=1"))).Opts()
+				opts, err := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.LacrosExtraArgs("--metrics-upload-interval=1"))).Opts()
+				if err != nil {
+					return nil, err
+				}
+
+				return append(opts, chrome.KeepEnrollment()), nil
 			},
 		},
 		SetUpTimeout:    chrome.LoginTimeout + cleanupTimeout,
