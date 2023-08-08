@@ -27,7 +27,16 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+var audioOboetesterGlitchStrictModels = []string{
+	// brya
+	"redrix",
+
+	// hatch
+	"jinlon",
+}
 
 type audioOboetesterGlitchStressLoad int
 
@@ -42,6 +51,7 @@ const (
 type audioOboetesterGlitchParam struct {
 	stressMode audioOboetesterGlitchStressLoad
 	options    []arc.ActivityStartOption
+	threshold  int // [Optional] Mark the test as failed if the number of glitch exceeds threshold. Ignore if zero.
 }
 
 func init() {
@@ -69,6 +79,7 @@ func init() {
 						arc.WithExtraString("in_api", "aaudio"),
 						arc.WithExtraString("out_api", "aaudio"),
 					},
+					threshold: 30,
 				},
 			},
 			{
@@ -89,6 +100,7 @@ func init() {
 						arc.WithExtraString("in_api", "opensles"),
 						arc.WithExtraString("out_api", "opensles"),
 					},
+					threshold: 30,
 				},
 			},
 			{
@@ -99,6 +111,32 @@ func init() {
 						arc.WithExtraString("in_api", "opensles"),
 						arc.WithExtraString("out_api", "opensles"),
 					},
+				},
+			},
+
+			// Run the test with a stricter threshold for the selected models.
+			{
+				Name:              "aaudio_noload_strict",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(audioOboetesterGlitchStrictModels...)),
+				Val: audioOboetesterGlitchParam{
+					stressMode: audioOboetesterGlitchStressLoadNone,
+					options: []arc.ActivityStartOption{
+						arc.WithExtraString("in_api", "aaudio"),
+						arc.WithExtraString("out_api", "aaudio"),
+					},
+					threshold: 5,
+				},
+			},
+			{
+				Name:              "opensles_noload_strict",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(audioOboetesterGlitchStrictModels...)),
+				Val: audioOboetesterGlitchParam{
+					stressMode: audioOboetesterGlitchStressLoadNone,
+					options: []arc.ActivityStartOption{
+						arc.WithExtraString("in_api", "opensles"),
+						arc.WithExtraString("out_api", "opensles"),
+					},
+					threshold: 5,
 				},
 			},
 		},
@@ -258,8 +296,8 @@ func AudioOboetesterGlitch(ctx context.Context, s *testing.State) {
 		return activity.Stop(ctx, tconn)
 	}(cleanupCtx)
 
-	// The test takes at least `testDuration` seconds, so we can sleep and start polling later
 	testing.ContextLogf(ctx, "Sleeping for %v seconds to wait for the test to finish", testDuration)
+	// GoBigSleepLint: Run the test for testDuration seconds as a part of measurement.
 	testing.Sleep(ctx, testDuration*time.Second)
 
 	// Polling until the time total in `time.total = xx.xx seconds` is more than testDuration.
@@ -367,4 +405,8 @@ func AudioOboetesterGlitch(ctx context.Context, s *testing.State) {
 		Unit:      "times",
 		Direction: perf.SmallerIsBetter,
 	}, float64(outputXrun))
+
+	if param.threshold != 0 && glitchCount > param.threshold {
+		s.Errorf("glitch count exceeds threshold: %d > %d", glitchCount, param.threshold)
+	}
 }
