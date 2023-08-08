@@ -25,7 +25,7 @@ func init() {
 		Func:         OdfsWithOneDriveConnected,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies OneDrive can be connected separately before opening office files",
-		BugComponent: "b:288018298",
+		BugComponent: "b:1199143",
 		Timeout:      5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",

@@ -666,7 +666,14 @@ func (f *FilesApp) OpenOfficeFile(ctx context.Context, baseDir, fileName string,
 	}
 
 	if err := uiauto.Combine("Open office file",
-		f.OpenDir(baseDir, FilesTitlePrefix+baseDir),
+		func(ctx context.Context) error {
+			// For "Google Drive" we need to call OpenDrive() because it expects the
+			// title to be "My Drive".
+			if baseDir == GoogleDrive {
+				return f.OpenDrive()(ctx)
+			}
+			return f.OpenDir(baseDir, FilesTitlePrefix+baseDir)(ctx)
+		},
 		f.WaitForFile(fileName),
 		open)(ctx); err != nil {
 		return nil, err

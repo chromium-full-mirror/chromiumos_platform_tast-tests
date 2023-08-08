@@ -26,7 +26,7 @@ func init() {
 		Func:         OdfsWithPWAInstalled,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Verifies office PWA can be installed separately before opening office files",
-		BugComponent: "b:288018282",
+		BugComponent: "b:1199143",
 		Timeout:      5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
