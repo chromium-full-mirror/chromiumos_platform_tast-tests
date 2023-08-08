@@ -100,8 +100,8 @@ func (f *serviceFixture) PostTest(ctx context.Context, s *testing.FixtTestState)
 func ensureServiceState(ctx context.Context, request serviceRequest) error {
 	switch request {
 	case startService:
-		// WaitForCameraSocket includes a call to EnsureJobRunning.
-		return testutil.WaitForCameraSocket(ctx)
+		// WaitForCameraServiceBinding includes a call to EnsureJobRunning.
+		return testutil.WaitForCameraServiceBinding(ctx)
 	case stopService:
 		return upstart.StopJob(ctx, "cros-camera")
 	}
@@ -115,7 +115,7 @@ type connectorFixture struct {
 
 // SetUp only ensures that we don't have a stale user of the connector.
 // The readiness of the connector itself should be ensured in the parent fixture
-// by calling testutil.WaitForCameraSocket().
+// by calling testutil.WaitForCameraServiceBinding().
 func (f *connectorFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	cr, err := chrome.New(ctx, chrome.NoLogin())
 	if err != nil {

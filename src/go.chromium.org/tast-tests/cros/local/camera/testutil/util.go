@@ -14,13 +14,11 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -205,41 +203,19 @@ func IsVividDriverLoaded(ctx context.Context) bool {
 	return cmd.Run() == nil
 }
 
-// WaitForCameraSocket returns when the camera socket is ready.
-func WaitForCameraSocket(ctx context.Context) error {
-	const socket = "/run/camera/camera3.sock"
-
+// WaitForCameraServiceBinding returns when the connection between ash-chrome and cros camera service established.
+func WaitForCameraServiceBinding(ctx context.Context) error {
 	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
 		return errors.Wrap(err, "failed to start cros-camera")
 	}
-
-	arcCameraGID, err := sysutil.GetGID("arc-camera")
-	if err != nil {
-		return errors.Wrap(err, "failed to get gid of arc-camera")
-	}
-
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		info, err := os.Stat(socket)
-		if err != nil {
-			return err
-		}
-		perm := info.Mode().Perm()
-		if perm != 0660 {
-			return testing.PollBreak(errors.Errorf("perm %04o (want %04o)", perm, 0660))
-		}
-		st := info.Sys().(*syscall.Stat_t)
-		if st.Gid != arcCameraGID {
-			return testing.PollBreak(errors.Errorf("gid %04o (want %04o)", st.Gid, arcCameraGID))
-		}
-
 		cmd := testexec.CommandContext(ctx, "cros_camera_connector_test", "--gtest_filter=ConnectorTest.GetInfo")
 		if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 			return err
 		}
-
 		return nil
 	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
-		return errors.Wrap(err, "invalid camera socket")
+		return errors.Wrap(err, "failed to establish connection between ash-chrome and cros camera service")
 	}
 
 	return nil

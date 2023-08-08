@@ -45,9 +45,9 @@ func Connector(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
 	defer cancel()
 
-	err = testutil.WaitForCameraSocket(ctx)
+	err = testutil.WaitForCameraServiceBinding(ctx)
 	if err != nil {
-		s.Fatal("Failed to wait for Camera Socket: ", err)
+		s.Fatal("Failed to wait for Camera Service Binding: ", err)
 	}
 
 	t := gtest.New(exec, gtest.Logfile(filepath.Join(s.OutDir(), "gtest.log")))

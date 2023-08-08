@@ -54,9 +54,9 @@ func Suspend(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, chrome.ResetTimeout)
 	defer cancel()
 
-	err = testutil.WaitForCameraSocket(ctx)
+	err = testutil.WaitForCameraServiceBinding(ctx)
 	if err != nil {
-		s.Fatal("Failed to wait for Camera Socket: ", err)
+		s.Fatal("Failed to wait for Camera Service Binding before suspend: ", err)
 	}
 
 	t := gtest.New("cros_camera_connector_test",
@@ -70,9 +70,9 @@ func Suspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to suspend: ", err)
 	}
 
-	err = testutil.WaitForCameraSocket(ctx)
+	err = testutil.WaitForCameraServiceBinding(ctx)
 	if err != nil {
-		s.Fatal("Failed to wait for Camera Socket after suspend: ", err)
+		s.Fatal("Failed to wait for Camera Service Binding after suspend: ", err)
 	}
 
 	t = gtest.New("cros_camera_connector_test",
