@@ -82,6 +82,13 @@ func WaitMessageContains(messageContains string) WaitPredicate {
 	}
 }
 
+// WaitTitleOrMessageContains creates a predicate that checks whether the notification's message or title contains the given text.
+func WaitTitleOrMessageContains(messageContains string) WaitPredicate {
+	return func(n *Notification) bool {
+		return strings.Contains(n.Message, messageContains) || strings.Contains(n.Title, messageContains)
+	}
+}
+
 // WaitForNotification waits for the first notification that satisfies all wait
 // predicates.
 func WaitForNotification(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration, predicates ...WaitPredicate) (*Notification, error) {

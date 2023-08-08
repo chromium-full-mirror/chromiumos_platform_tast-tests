@@ -17,6 +17,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -39,6 +42,18 @@ type TestFileParams struct {
 	IsBad         bool
 	IsUnscannable bool
 }
+
+// DownloadBubbleState indicates the download state indicated by the download bubble (see launch/4200678).
+type DownloadBubbleState string
+
+const (
+	// DownloadBubbleStateUnavailable means that the download bubble UI wasn't found, so the feature is unavailable.
+	DownloadBubbleStateUnavailable DownloadBubbleState = "unavailable"
+	// DownloadBubbleStateAllowed means that a download was allowed.
+	DownloadBubbleStateAllowed DownloadBubbleState = "allowed"
+	// DownloadBubbleStateBlocked means that a download was blocked.
+	DownloadBubbleStateBlocked DownloadBubbleState = "blocked"
+)
 
 // ScanningTimeOut describes the typical time out for a scan.
 // The scanning timeout of chrome is 5 minutes, so we wait a bit more to get a proper TIMEOUT notification.
@@ -100,6 +115,8 @@ func WaitForDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh
 	return nil
 }
 
+// checkDMTokenRegistered checks that a dm token is registered.
+// This function has to be called from a poll.
 func checkDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *chrome.TestConn, server *httptest.Server, downloadsPath string) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -126,14 +143,21 @@ func checkDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *
 	}
 
 	// Check for notification (this might take some time in case of throttling).
-	if _, err := ash.WaitForNotification(
-		ctx,
-		tconnAsh,
-		ScanningTimeOut,
-		ash.WaitIDContains("notification-ui-manager"),
-		ash.WaitMessageContains("unknown_malware.zip"),
-	); err != nil {
-		return testing.PollBreak(errors.Wrap(err, "failed to wait for notification"))
+	downloadBubbleState, err := WaitForDownloadViaDownloadBubble(ctx, tconnAsh, "unknown_malware.zip")
+	if err != nil {
+		return testing.PollBreak(errors.Wrap(err, "failed to wait for download via download bubble UI"))
+	}
+
+	if downloadBubbleState == DownloadBubbleStateUnavailable {
+		if _, err := ash.WaitForNotification(
+			ctx,
+			tconnAsh,
+			1*time.Minute,
+			ash.WaitIDContains("notification-ui-manager"),
+			ash.WaitTitleOrMessageContains("unknown_malware.zip"),
+		); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to wait for notification"))
+		}
 	}
 
 	// Remove file if it was downloaded.
@@ -180,6 +204,45 @@ func checkDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *
 	}
 
 	return nil
+}
+
+// WaitForDownloadViaDownloadBubble waits for a download via the download bubble UI.
+// If the download bubble isn't enabled, it returns a state of UNAVAILABLE.
+func WaitForDownloadViaDownloadBubble(ctx context.Context, tconnAsh *chrome.TestConn, filename string) (DownloadBubbleState, error) {
+	ui := uiauto.New(tconnAsh)
+
+	downloadsToolbarButton := nodewith.Role(role.Button).HasClass("DownloadToolbarButtonView")
+	if err := ui.WithTimeout(2 * time.Second).WaitUntilExists(downloadsToolbarButton)(ctx); err != nil {
+		testing.ContextLog(ctx, "Didn't show DownloadBubble: ", err)
+		return DownloadBubbleStateUnavailable, nil
+	}
+
+	firstDownloadItem := nodewith.HasClass("DownloadBubbleRowView").First()
+
+	if err := ui.LeftClickUntil(downloadsToolbarButton, ui.WithTimeout(time.Second).WaitUntilExists(firstDownloadItem))(ctx); err != nil {
+		return "", errors.Wrap(err, "failed to click on downloadsToolbarButton")
+	}
+
+	firstDownloadFileLabel := nodewith.HasClass("Label").NameContaining(filename).Ancestor(firstDownloadItem)
+
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(firstDownloadFileLabel)(ctx); err != nil {
+		return "", errors.Wrap(err, "didn't show download item with correct file name")
+	}
+
+	firstDownloadStateLabelBlocked := nodewith.HasClass("Label").Ancestor(firstDownloadItem).NameContaining("Blocked")
+	firstDownloadStateLabelAllowed := nodewith.HasClass("Label").Ancestor(firstDownloadItem).NameContaining("Done")
+
+	nodeFound, err := ui.WithTimeout(ScanningTimeOut).FindAnyExists(ctx, firstDownloadStateLabelBlocked, firstDownloadStateLabelAllowed)
+
+	if err != nil {
+		return "", errors.Wrap(err, "couldn't determine download bubble state")
+	}
+
+	if nodeFound == firstDownloadStateLabelBlocked {
+		return DownloadBubbleStateBlocked, nil
+	}
+
+	return DownloadBubbleStateAllowed, nil
 }
 
 // WaitForDeepScanningVerdict waits until a valid deep scanning verdict is found.

@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/helpers"
@@ -269,27 +270,42 @@ func TestDownload(ctx context.Context, s *testing.State) {
 				}
 			}()
 
-			deadline, _ := ctx.Deadline()
-			s.Log("Context deadline is ", deadline)
-			ntfctn, err := ash.WaitForNotification(
-				ctx,
-				tconnAsh,
-				helpers.ScanningTimeOut,
-				ash.WaitIDContains("notification-ui-manager"),
-				ash.WaitTitleDoesntContain("Scanning"),
-				ash.WaitTitleDoesntContain("Downloading"),
-			)
+			downloadBubbleState, err := helpers.WaitForDownloadViaDownloadBubble(ctx, tconnAsh, dlFileName)
 			if err != nil {
-				s.Fatalf("Failed to wait for notification with title %q: %v", "", err)
+				s.Fatal("Failed to wait for download via download bubble UI: ", err)
 			}
 
-			if shouldBlockDownload {
-				if ntfctn.Title != "Dangerous download blocked" {
-					s.Fatal("Download should be blocked, but wasn't. Notification: ", ntfctn)
+			if downloadBubbleState == helpers.DownloadBubbleStateUnavailable {
+				ntfctn, err := ash.WaitForNotification(
+					ctx,
+					tconnAsh,
+					helpers.ScanningTimeOut,
+					ash.WaitIDContains("notification-ui-manager"),
+					ash.WaitTitleDoesntContain("Scanning"),
+					ash.WaitTitleDoesntContain("Downloading"),
+				)
+				if err != nil {
+					s.Fatal("Failed to wait for notification: ", err)
+				}
+
+				if shouldBlockDownload {
+					if ntfctn.Title != "Dangerous download blocked" && !strings.Contains(ntfctn.Message, "blocked") {
+						s.Fatal("Download should be blocked, but wasn't; notification: ", ntfctn)
+					}
+				} else {
+					if ntfctn.Title != "Download complete" {
+						s.Fatal("Download should be allowed, but wasn't; notification: ", ntfctn)
+					}
 				}
 			} else {
-				if ntfctn.Title != "Download complete" {
-					s.Fatal("Download should be allowed, but wasn't. Notification: ", ntfctn)
+				if shouldBlockDownload {
+					if downloadBubbleState != helpers.DownloadBubbleStateBlocked {
+						s.Fatal("Download should be blocked, but wasn't")
+					}
+				} else {
+					if downloadBubbleState != helpers.DownloadBubbleStateAllowed {
+						s.Fatal("Download should be allowed, but wasn't")
+					}
 				}
 			}
 
