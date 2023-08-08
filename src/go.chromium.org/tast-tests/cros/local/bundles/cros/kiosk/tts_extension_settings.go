@@ -165,6 +165,7 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 			if err := uiauto.Combine("open accessibility settings",
 				ui.DoDefault(nodewith.Name("Open accessibility settings menu").Role(role.ToggleButton)),
 				ui.DoDefault(nodewith.Name("Accessibility settings").Role(role.Button)),
+				ui.DoDefault(nodewith.NameStartingWith("Text-to-Speech").Role(role.Link)),
 			)(ctx); err != nil {
 				s.Fatal("Failed: ", err)
 			}
