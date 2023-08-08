@@ -24,19 +24,15 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// managedDeviceInfoTestParam is the parameter for ManagedDeviceInfo tests.
-type managedDeviceInfoTestParam struct {
-	// Which type of browser to start (ash or lacros).
-	browserType browser.Type
-	// Whether feature QsRevamp is enabled.
-	qsRevamp bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManagedDeviceInfo,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks that the Quick Settings managed device info is displayed correctly",
+		// Note: ash-chrome is tested in the chromium waterfall with the test
+		// QuickSettingsIntegrationTest.ManagedDeviceInfo.
+		// TODO(b/291732302): Once Kombucha remote support is built and Lacros
+		// can be tested, port this test to Crosier.
+		Desc: "Checks that the Quick Settings managed device info is displayed correctly in lacros",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
 			"leandre@chromium.org",
@@ -44,41 +40,9 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Name:    "qs_revamp_disabled",
-			Fixture: fixture.FakeDMS,
-			Val: managedDeviceInfoTestParam{
-				browserType: browser.TypeAsh,
-				qsRevamp:    false,
-			},
-		}, {
-			Name:    "qs_revamp_enabled",
-			Fixture: fixture.FakeDMS,
-			Val: managedDeviceInfoTestParam{
-				browserType: browser.TypeAsh,
-				qsRevamp:    true,
-			},
-		}, {
-			Name:              "lacros_qs_revamp_disabled",
-			Fixture:           fixture.PersistentLacros,
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: managedDeviceInfoTestParam{
-				browserType: browser.TypeLacros,
-				qsRevamp:    false,
-			},
-		}, {
-			Name:              "lacros_qs_revamp_enabled",
-			Fixture:           fixture.PersistentLacros,
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: managedDeviceInfoTestParam{
-				browserType: browser.TypeLacros,
-				qsRevamp:    true,
-			},
-		}},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		SoftwareDeps: []string{"chrome", "lacros"},
+		Fixture:      fixture.PersistentLacros,
 	})
 }
 
@@ -93,17 +57,12 @@ func ManagedDeviceInfo(ctx context.Context, s *testing.State) {
 
 	// Start a Browser instance that will fetch policies from the FakeDMS.
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	param := s.Param().(managedDeviceInfoTestParam)
-	bt := param.browserType
 	opts := []chrome.Option{
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.DMSPolicy(fdms.URL),
-		chrome.EnableFeatures("ManagedDeviceUIRedesign"),
+		chrome.EnableFeatures("ManagedDeviceUIRedesign", "QsRevamp"),
 	}
-	if param.qsRevamp {
-		opts = append(opts, chrome.EnableFeatures("QsRevamp"))
-	}
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeLacros, lacrosfixt.NewConfig(), opts...)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
