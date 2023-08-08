@@ -758,6 +758,7 @@ func init() {
 				chrome.EnableFeatures(
 					"CrOSLateBootAudioAPNoiseCancellation",
 					"CrOSLateBootAudioFlexibleLoopback",
+					"ShowLiveCaptionInVideoConferenceTray",
 					"SystemLiveCaption",
 					"VideoConference",
 				),
