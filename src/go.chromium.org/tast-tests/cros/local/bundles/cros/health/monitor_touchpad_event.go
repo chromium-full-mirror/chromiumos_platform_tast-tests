@@ -135,14 +135,14 @@ func MonitorTouchpadEvent(ctx context.Context, s *testing.State) {
 	scanner := bufio.NewScanner(stdoutPipe)
 
 	if !scanner.Scan() {
-		s.Fatal("Failed to scan next line: ", scanner.Err())
+		s.Fatal("Failed to scan next line for success message: ", scanner.Err())
 	} else if line := scanner.Text(); !strings.HasPrefix(line, "Subscribe to touchpad events successfully") {
 		s.Fatal("Failed to subscirbe event in healthd:", line)
 	}
 
 	// The connected event must be the first event.
 	if !scanner.Scan() {
-		s.Fatal("Failed to scan next line: ", scanner.Err())
+		s.Fatal("Failed to scan next line for connected event: ", scanner.Err())
 	} else if err := verifyConnectedEvent(scanner.Text()); err != nil {
 		s.Fatal("Connected event verification failed: ", err)
 	}
@@ -155,7 +155,7 @@ func MonitorTouchpadEvent(ctx context.Context, s *testing.State) {
 	}
 
 	if !scanner.Scan() {
-		s.Fatal("Failed to scan next line: ", scanner.Err())
+		s.Fatal("Failed to scan next line for touchpoint event: ", scanner.Err())
 	} else if err := verifyTouchpointEvent(scanner.Text()); err != nil {
 		s.Fatal("Touchpoint event verification failed: ", err)
 	}
