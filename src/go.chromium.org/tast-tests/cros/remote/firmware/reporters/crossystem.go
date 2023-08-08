@@ -26,6 +26,7 @@ const (
 	CrossystemParamFWTryNext          CrossystemParam = "fw_try_next"
 	CrossystemParamFWTryCount         CrossystemParam = "fw_try_count"
 	CrossystemParamFWUpdatetries      CrossystemParam = "fwupdate_tries"
+	CrossystemParamHwid               CrossystemParam = "hwid"
 	CrossystemParamKernkeyVfy         CrossystemParam = "kernkey_vfy"
 	CrossystemParamLocIdx             CrossystemParam = "loc_idx"
 	CrossystemParamMainfwAct          CrossystemParam = "mainfw_act"
