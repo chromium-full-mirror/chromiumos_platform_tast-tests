@@ -351,7 +351,7 @@ func QueryDNS(ctx context.Context, c Client, a *arc.ARC, cont *vm.Container, opt
 		if opts.ARCDigPath != "" && opts.Nameserver != "" {
 			return a.Command(ctx, opts.ARCDigPath, args...).Run()
 		}
-		out, err := a.Command(ctx, "dumpsys", "wifi", "tools", "dns", opts.Domain).Output()
+		out, err := a.Command(ctx, "dumpsys", "wifi", "tools", "dns", "host_default", opts.Domain).Output()
 		if err != nil {
 			return errors.Wrap(err, "failed to do ARC DNS query")
 		}
