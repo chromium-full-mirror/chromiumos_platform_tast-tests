@@ -1,0 +1,28 @@
+; Copyright 2023 The ChromiumOS Authors
+; Use of this source code is governed by a BSD-style license that can be
+; found in the LICENSE file.
+;
+; Mixed size random data with mixed reads and mostly writes, with verify
+; to be run in parallel with a suspend/resume workload.
+;
+
+[suspend_stress]
+
+readwrite=randrw
+rwmixread=15
+bssplit=4k/10:64k/50:1m/40
+
+ioengine=libaio
+iodepth=32
+direct=1
+
+time_based
+bwavgtime=5000
+iopsavgtime=5000
+clocksource=gettimeofday
+
+verify_only=0
+do_verify=1
+verify=meta
+verify_interval=64k
+verify_dump=1

@@ -9,10 +9,12 @@ import (
 	"encoding/json"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 var (
@@ -28,6 +30,7 @@ var (
 		"4k_read_qd4",
 		"4k_write_qd4",
 		"surfing",
+		"suspend_stress",
 	}
 )
 
@@ -51,6 +54,8 @@ type TestConfig struct {
 	// ResultWriter references the result processing object.
 	ResultWriter *FioResultWriter
 }
+
+const fioResultPath = "/tmp/fio_result"
 
 // remoteJobFile returns the path where to store/read the job file file on the
 // DUT.
@@ -157,6 +162,56 @@ func (t TestConfig) Run(ctx context.Context, dut *dut.DUT) error {
 	}
 
 	return nil
+}
+
+// RunBackground executes the test config on the specified DUT in the background.
+// It copies the job file, executes fio on the remote host and writes the results
+// to a tmp file. Returns the pid of the fio process.
+func (t TestConfig) RunBackground(ctx context.Context, dut *dut.DUT) (string, error) {
+	if err := validateJob(ctx, t.Job); err != nil {
+		return "", errors.Wrap(err, "failed validating job")
+	}
+
+	paths := map[string]string{t.JobFile: t.remoteJobFile()}
+
+	if _, err := linuxssh.PutFiles(ctx, dut.Conn(), paths, linuxssh.DereferenceSymlinks); err != nil {
+		return "", errors.Wrap(err, "failed to copy job file to remote host")
+	}
+
+	args := "{ nohup fio " + strings.Join(t.fioArgList(), " ") + " > " + fioResultPath + " & } 2>/dev/null ; echo $!"
+	pidFio, err := RunCmdWithStringOutput(ctx, dut, "bash", "-c", args)
+	if err != nil {
+		return "", errors.Wrapf(err, "%v failed", t.Job)
+	}
+	testing.ContextLogf(ctx, "fio pid is %s", pidFio)
+
+	return pidFio, nil
+}
+
+// ParseFioResults reads the fio results file and checks for errors and writes the parsed results.
+func (t TestConfig) ParseFioResults(ctx context.Context, dut *dut.DUT) error {
+	out, err := RunCmdWithOutput(ctx, dut, "cat", fioResultPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to read fio results, device likely rebooted")
+	}
+
+	res := &fioResult{}
+	if err := json.Unmarshal(out, res); err != nil {
+		return errors.Wrap(err, "failed to parse fio result")
+	}
+
+	for _, j := range res.Jobs {
+		if j.TotalError != 0 {
+			return errors.Errorf("detected errors during FIO job %q, first error: %v", j.Jobname, j.FirstError)
+		}
+	}
+
+	if t.ResultWriter != nil {
+		t.ResultWriter.Report(res.DiskUtil[0].Name, res)
+	}
+
+	return nil
+
 }
 
 func validateJob(ctx context.Context, job string) error {

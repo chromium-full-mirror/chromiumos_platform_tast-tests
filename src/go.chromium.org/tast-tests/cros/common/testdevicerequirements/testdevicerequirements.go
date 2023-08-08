@@ -314,6 +314,9 @@ const (
 	// StorageTrim The ChromeOS device non-volatile storage component MUST abide by discard behaviour it claims to support.
 	StorageTrim = "store-storagedev-0012-v01"
 
+	// StorageSuspend with The ChromeOS device non-volatile storage component MUST NOT prevent system-level suspend.
+	StorageSuspend = "store-storagedev-0013-v01"
+
 	// StorageCapacityMin with The ChromeOS device MUST provide >=32GB of non-volatile storage.
 	StorageCapacityMin = "store-capacity-0001-v02"
 
