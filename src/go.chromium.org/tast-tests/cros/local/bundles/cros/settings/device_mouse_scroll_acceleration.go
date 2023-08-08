@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/devicesettings/constants"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -81,14 +82,37 @@ func DeviceMouseScrollAcceleration(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify if enable scroll acceleration button exists.
-	scrollAccelerationButton := nodewith.NameContaining("Enable scroll acceleration").Role(role.ToggleButton).First()
+	scrollAccelerationButton := nodewith.NameContaining("Scroll acceleration").Role(role.ToggleButton).First()
 	if err := ui.WaitUntilExists(scrollAccelerationButton)(ctx); err != nil {
 		s.Fatal("Failed to find scroll acceleration button: ", err)
 	}
 
-	// Verify if scrolling speed slider exists.
+	// Verify if scrolling speed slider exists and is disabled.
 	scrollingSpeedSlider := nodewith.NameContaining("Scrolling speed").Role(role.Slider).First()
-	if err := ui.WaitUntilExists(scrollingSpeedSlider)(ctx); err != nil {
+	nodeInfo, err := ui.Info(ctx, scrollingSpeedSlider)
+	if err != nil {
 		s.Fatal("Failed to find scrolling speed slider: ", err)
+	}
+
+	_, disabled := nodeInfo.HTMLAttributes["disabled"]
+	if !disabled {
+		s.Fatal("Failed to find disabled scrolling speed slider")
+	}
+
+	// Turn off scroll acceleration should enable scrolling speed slider.
+	if err := ui.LeftClick(scrollAccelerationButton)(ctx); err != nil {
+		s.Fatal("Failed to click scroll acceleration button: ", err)
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		nodeInfo, err = ui.Info(ctx, scrollingSpeedSlider)
+		_, disabled = nodeInfo.HTMLAttributes["disabled"]
+		if disabled {
+			return errors.New("failed to find enabled scrolling speed slider")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 3 * time.Second}); err != nil {
+		s.Fatal("Failed to find enabled scrolling speed slider: ", err)
 	}
 }
