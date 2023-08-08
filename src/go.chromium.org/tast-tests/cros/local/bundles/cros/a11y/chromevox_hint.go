@@ -10,14 +10,18 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -32,6 +36,7 @@ func init() {
 		BugComponent: "b:1272895",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.Keyboard()),
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Params: []testing.Param{{
 			Name: "accept_dialog",
@@ -87,9 +92,17 @@ func ChromevoxHint(ctx context.Context, s *testing.State) {
 	}
 	defer sm.Close()
 
-	chromeVoxText := nodewith.NameStartingWith("Do you want to activate ChromeVox").Role(role.StaticText).Onscreen()
-	noButton := nodewith.Name("No, continue without ChromeVox").Role(role.Button).Onscreen()
-	yesButton := nodewith.Name("Yes, activate ChromeVox").Role(role.Button).Onscreen()
+	enabled, err := a11y.FeatureEnabled(ctx, tconn, a11y.SpokenFeedback)
+	if err != nil {
+		s.Fatal("Failed to get the spoken feedback enabled state: ", err)
+	}
+	if enabled {
+		s.Fatal("Expected spoken feedback to be disabled, but it was not")
+	}
+
+	const textSnippet = "The screen reader on ChromeOS, ChromeVox"
+	chromeVoxTextNode := nodewith.NameStartingWith(textSnippet).Role(role.StaticText).Onscreen()
+	closeButon := nodewith.Name("Close").Role(role.Button).Onscreen()
 	var speechExpectations []tts.SpeechExpectation
 	var actions uiauto.Action
 	ui := uiauto.New(tconn)
@@ -102,22 +115,48 @@ func ChromevoxHint(ctx context.Context, s *testing.State) {
 		// for stability purposes, match any utterance since ChromeVox sometimes
 		// speaks other utterances before the welcome message.
 		speechExpectations = []tts.SpeechExpectation{
-			tts.NewRegexExpectation("Do you want to activate ChromeVox, the built-in screen reader for ChromeOS*"),
+			tts.NewRegexExpectation(textSnippet + "*"),
 			tts.NewRegexExpectation(".*"),
 		}
 		actions = uiauto.Combine("wait for and interact with the ChromeVox hint dialog",
-			ui.WithTimeout(30*time.Second).WaitUntilExists(chromeVoxText),
-			ui.LeftClickUntil(yesButton, ui.Gone(chromeVoxText)),
+			ui.WithTimeout(30*time.Second).WaitUntilExists(chromeVoxTextNode),
+			func(ctx context.Context) error {
+				ew, err := input.Keyboard(ctx)
+				if err != nil {
+					return errors.Wrap(err, "failed to create EventWriter")
+				}
+				defer ew.Close(ctx)
+
+				// Press the spacebar to accept the ChromeVox hint dialog.
+				if err := ew.Accel(ctx, "Space"); err != nil {
+					return errors.Wrap(err, "failed to press Space")
+				}
+
+				return nil
+			},
+			ui.WaitUntilGone(chromeVoxTextNode),
 		)
 	} else {
 		// If the dialog is dismissed, we should only get one speech utterance that
 		// asks the user if they want to activate ChromeVox.
 		speechExpectations = []tts.SpeechExpectation{
-			tts.NewRegexExpectation("Do you want to activate ChromeVox, the built-in screen reader for ChromeOS*"),
+			tts.NewRegexExpectation(textSnippet + "*"),
 		}
 		actions = uiauto.Combine("wait for and interact with the ChromeVox hint dialog",
-			ui.WithTimeout(30*time.Second).WaitUntilExists(chromeVoxText),
-			ui.LeftClickUntil(noButton, ui.Gone(chromeVoxText)),
+			ui.WithTimeout(30*time.Second).WaitUntilExists(chromeVoxTextNode),
+			ui.LeftClickUntil(closeButon, ui.Gone(chromeVoxTextNode)),
+			func(ctx context.Context) error {
+				// Verify that ChromeVox is still disabled.
+				enabled, err := a11y.FeatureEnabled(ctx, tconn, a11y.SpokenFeedback)
+				if err != nil {
+					return errors.Wrap(err, "failed to get the spoken feedback enabled state")
+				}
+				if enabled {
+					return errors.New("expected spoken feedback to be disabled, but it was not")
+				}
+
+				return nil
+			},
 		)
 	}
 
@@ -127,11 +166,29 @@ func ChromevoxHint(ctx context.Context, s *testing.State) {
 	// since the dialog itself has no name.
 	// This should only take 20s from when idle first begins, but allow 30s to
 	// avoid any potential race conditions.
-	// Once the dialog text appears, click either the 'Yes' or 'No' button and
+	// Once the dialog text appears, either accept or dismiss the hint and
 	// wait for the dialog to disappear. This is detected by waiting for the
 	// static text to disappear.
 	if err := actions(ctx); err != nil {
 		s.Fatal("Failed to show and interact with the ChromeVox hint dialog: ", err)
+	}
+
+	if acceptDialog {
+		// Verify that ChromeVox is enabled. Use a poll since it may take some
+		// time for ChromeVox to enable after the hint is accepted.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			enabled, err := a11y.FeatureEnabled(ctx, tconn, a11y.SpokenFeedback)
+			if err != nil {
+				return errors.Wrap(err, "failed to get the spoken feedback enabled state")
+			}
+			if !enabled {
+				return errors.New("expected spoken feedback to be enabled, but it was not")
+			}
+
+			return nil
+		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+			s.Fatal("Failed to verify that ChromeVox was enabled after accepting the ChromeVox hint: ", err)
+		}
 	}
 
 	// Lastly, ensure that the correct speech is given by the TTS engine.
