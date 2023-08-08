@@ -122,7 +122,7 @@ func verifyTouchpointEvent(eventLine string) error {
 
 func MonitorTouchpadEvent(ctx context.Context, s *testing.State) {
 	// Run monitor command in background.
-	monitorCmd := testexec.CommandContext(ctx, "cros-health-tool", "event", "--category=touchpad", "--length_seconds=3")
+	monitorCmd := testexec.CommandContext(ctx, "cros-health-tool", "event", "--category=touchpad", "--length_seconds=10")
 	stdoutPipe, err := monitorCmd.StdoutPipe()
 	if err != nil {
 		s.Fatal("Failed to create stdout pipe: ", err)
@@ -158,5 +158,9 @@ func MonitorTouchpadEvent(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to scan next line for touchpoint event: ", scanner.Err())
 	} else if err := verifyTouchpointEvent(scanner.Text()); err != nil {
 		s.Fatal("Touchpoint event verification failed: ", err)
+	}
+
+	if err := monitorCmd.Kill(); err != nil {
+		s.Fatal("Failed to kill the event monitoring process: ", err)
 	}
 }
