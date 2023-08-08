@@ -156,47 +156,6 @@ const (
 	DontFlashIfSameMilestone SetupUSBOption = iota
 )
 
-/*
-FwScreenID contains the id for each individual fw screen.
-These ids were found from the depthcharge repo:
-'src/vboot/ui.h' & 'src/drivers/video/display.h'
-*/
-type FwScreenID int
-
-// Below are the ids representing different fw screens.
-// To-do: rearrange and rename these screens so that they
-// match with their counterparts defined in depthcharge.
-const (
-	Blank            FwScreenID = 0x0
-	DeveloperWarning FwScreenID = 0x101
-	DeveloperToNorm  FwScreenID = 0x205
-
-	DeveloperWarningMenu FwScreenID = 0x20a
-	DeveloperMenu        FwScreenID = 0x20b
-	DeveloperToNormMenu  FwScreenID = 0x20e
-	LanguagesMenu        FwScreenID = 0x20f
-
-	AdvancedOptions    FwScreenID = 0x120
-	LanguageSelect     FwScreenID = 0x130
-	DebugInfo          FwScreenID = 0x140
-	FirmwareLog        FwScreenID = 0x150
-	DeveloperMode      FwScreenID = 0x300
-	ReturnToSecureMode FwScreenID = 0x310
-
-	InsertScreen             FwScreenID = 0x202
-	OptionScreen             FwScreenID = 0x20d
-	InsertScreenMenuSwitcher FwScreenID = 0x200
-	OptionScreenMenuSwitcher FwScreenID = 0x202
-
-	RecoverySelect   FwScreenID = 0x200
-	RecoveyDiskStep1 FwScreenID = 0x220
-	RecoveyDiskStep2 FwScreenID = 0x221
-	RecoveyDiskStep3 FwScreenID = 0x222
-
-	RecoveyInvalid FwScreenID = 0x201
-	RecoveyNoGood  FwScreenID = 0x203
-)
-
 // NewHelper creates a new Helper object with info from testing.State.
 // For tests that do not use a certain Helper aspect (e.g. RPC or Servo), it is OK to pass null-values (nil or "").
 func NewHelper(d *dut.DUT, rpcHint *testing.RPCHint, cfgFilepath, servoHostPort, dutHostname, powerunitHostname, powerunitOutlet, hydraHostname string) *Helper {

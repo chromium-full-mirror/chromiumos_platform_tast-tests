@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -44,7 +45,7 @@ const (
 )
 
 type fwLogInfo struct {
-	fwScreenID  firmware.FwScreenID
+	fwScreenID  fwCommon.FwScreenID
 	selectedIdx int
 }
 
@@ -137,17 +138,17 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 			},
 			fwLogDataSequence: map[string][]fwLogInfo{
 				"kukui": {
-					{firmware.InsertScreen, 0},
-					{firmware.OptionScreen, 1},
-					{firmware.OptionScreen, 2},
-					{firmware.OptionScreen, 1},
-					{firmware.OptionScreen, 0},
+					{fwCommon.LegacyRecoveryInsert, 0},
+					{fwCommon.LegacyRecoveryToDevMenu, 1},
+					{fwCommon.LegacyRecoveryToDevMenu, 2},
+					{fwCommon.LegacyRecoveryToDevMenu, 1},
+					{fwCommon.LegacyRecoveryToDevMenu, 0},
 				},
 				"strongbad": {
-					{firmware.InsertScreenMenuSwitcher, 2},
-					{firmware.OptionScreenMenuSwitcher, 1},
-					{firmware.OptionScreenMenuSwitcher, 2},
-					{firmware.OptionScreenMenuSwitcher, 1},
+					{fwCommon.RecoverySelect, 2},
+					{fwCommon.RecoveryToDev, 1},
+					{fwCommon.RecoveryToDev, 2},
+					{fwCommon.RecoveryToDev, 1},
 				},
 			},
 		},
@@ -174,13 +175,13 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 			},
 			fwLogDataSequence: map[string][]fwLogInfo{
 				"kukui": {
-					{firmware.InsertScreen, 0},
-					{firmware.OptionScreen, 1},
-					{firmware.OptionScreen, 0},
+					{fwCommon.LegacyRecoveryInsert, 0},
+					{fwCommon.LegacyRecoveryToDevMenu, 1},
+					{fwCommon.LegacyRecoveryToDevMenu, 0},
 				},
 				"strongbad": {
-					{firmware.InsertScreenMenuSwitcher, 2},
-					{firmware.OptionScreenMenuSwitcher, 1},
+					{fwCommon.RecoverySelect, 2},
+					{fwCommon.RecoveryToDev, 1},
 				},
 			},
 		},

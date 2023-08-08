@@ -211,23 +211,23 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 			`\s+locale=\d+,?\s+(selected_item=\d+|selected_index=\d+)?`)
 		screensVisited := re.FindAllStringSubmatch(out, -1)
 		// Map firmware screen ids to respective names for readability.
-		var fwScreenNames = map[firmware.FwScreenID]string{
-			// White theme firmware screens.
-			firmware.Blank:            "blank",
-			firmware.DeveloperWarning: "developerWarning",
-			firmware.DeveloperToNorm:  "developerToNorm",
-			// Detachables ui firmware screens.
-			firmware.DeveloperWarningMenu: "developerWarningMenu",
-			firmware.DeveloperMenu:        "developerMenu",
-			firmware.DeveloperToNormMenu:  "developerToNormMenu",
-			firmware.LanguagesMenu:        "languagesMenu",
-			// Dark theme firmware screens.
-			firmware.AdvancedOptions:    "advancedOptions",
-			firmware.LanguageSelect:     "languageSelect",
-			firmware.DebugInfo:          "debugInfo",
-			firmware.FirmwareLog:        "firmwareLog",
-			firmware.DeveloperMode:      "developerMode",
-			firmware.ReturnToSecureMode: "returnToSecureMode",
+		var fwScreenNames = map[fwCommon.FwScreenID]string{
+			// Legacy clamshell UI.
+			fwCommon.LegacyBlank:            "blank",
+			fwCommon.LegacyDeveloperWarning: "developerWarning",
+			fwCommon.LegacyDeveloperToNorm:  "developerToNorm",
+			// Legacy menu UI.
+			fwCommon.LegacyDeveloperWarningMenu: "developerWarningMenu",
+			fwCommon.LegacyDeveloperMenu:        "developerMenu",
+			fwCommon.LegacyDeveloperToNormMenu:  "developerToNormMenu",
+			fwCommon.LegacyLanguagesMenu:        "languagesMenu",
+			// Menu UI.
+			fwCommon.AdvancedOptions: "advancedOptions",
+			fwCommon.LanguageSelect:  "languageSelect",
+			fwCommon.DebugInfo:       "debugInfo",
+			fwCommon.FirmwareLog:     "firmwareLog",
+			fwCommon.DeveloperMode:   "developerMode",
+			fwCommon.DeveloperToNorm: "developerToNorm",
 		}
 		var foundScreens []string
 		for _, screen := range screensVisited {
@@ -238,7 +238,7 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatalf("Failed to parse screen number for %s: %v", screen[1], err)
 			}
-			if name, ok := fwScreenNames[firmware.FwScreenID(screenNumber)]; ok {
+			if name, ok := fwScreenNames[fwCommon.FwScreenID(screenNumber)]; ok {
 				foundScreens = append(foundScreens, fmt.Sprintf("%s, %s", name, screen[2]))
 			} else {
 				foundScreens = append(foundScreens, fmt.Sprintf("screen=0x%s, %s", screen[1], screen[2]))

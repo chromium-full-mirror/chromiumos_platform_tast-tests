@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -168,22 +169,22 @@ func resetDUT(ctx context.Context, h *firmware.Helper) error {
 }
 
 func identifyFwScreens(h *firmware.Helper) []string {
-	var expFwScreensInOrder []firmware.FwScreenID
+	var expFwScreensInOrder []fwCommon.FwScreenID
 	switch h.Config.ModeSwitcherType {
 	case firmware.MenuSwitcher:
-		expFwScreensInOrder = []firmware.FwScreenID{
-			firmware.RecoverySelect,
-			firmware.RecoveyDiskStep1,
-			firmware.RecoveyDiskStep2,
-			firmware.RecoveyDiskStep3,
-			firmware.RecoveyInvalid,
-			firmware.RecoverySelect,
+		expFwScreensInOrder = []fwCommon.FwScreenID{
+			fwCommon.RecoverySelect,
+			fwCommon.RecoveryDiskStep1,
+			fwCommon.RecoveryDiskStep2,
+			fwCommon.RecoveryDiskStep3,
+			fwCommon.RecoveryInvalid,
+			fwCommon.RecoverySelect,
 		}
 	default:
-		expFwScreensInOrder = []firmware.FwScreenID{
-			firmware.InsertScreen,
-			firmware.RecoveyNoGood,
-			firmware.InsertScreen,
+		expFwScreensInOrder = []fwCommon.FwScreenID{
+			fwCommon.LegacyRecoveryInsert,
+			fwCommon.LegacyRecoveryNoGood,
+			fwCommon.LegacyRecoveryInsert,
 		}
 	}
 	var expMatches []string
