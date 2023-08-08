@@ -46,7 +46,7 @@ var FeatureTileHotspot = nodewith.HasClass("FeatureTile").NameContaining("Hotspo
 
 // FeatureTileDoNotDisturb is the finder for the "Do not disturb" feature tile.
 // It only exists with QsRevamp.
-var FeatureTileDoNotDisturb = nodewith.HasClass("FeatureTile").NameContaining("Do not disturb")
+var FeatureTileDoNotDisturb = nodewith.Role(role.ToggleButton).HasClass("FeatureTile").NameRegex(regexp.MustCompile("(?i)Do not disturb"))
 
 // FeatureTileKeyboard is the finder for the "Keyboard" (IME) feature tile.
 // It only exists with QsRevamp.
