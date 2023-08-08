@@ -42,6 +42,33 @@ const (
 	powerSetUpTimeout    = 2*idlePowerSleepTime + setUpTimeout
 )
 
+// Fixture vars.
+const (
+	// fixtureVarRouter is the fixture var for configuring the router hostname.
+	// Will use <dut>-router as the router hostname when not set.
+	fixtureVarRouter = "router"
+
+	// fixtureVarRouters is the fixture var for configuring the hostnames of
+	// multiple routers the testbed. Expects comma-separated hostnames.
+	fixtureVarRoutersMultiple = "routers"
+
+	// fixtureVarPcap is the fixture var for configuring the pcap hostname.
+	// Will use <dut>-pcap as the router hostname when not set.
+	fixtureVarPcap = "pcap"
+
+	// fixtureVarPcap is the fixture var for configuring the attenuator.
+	// Will use <dut>-attenuator as the attenuator hostname when not set.
+	fixtureVarAttenuator = "attenuator"
+
+	// fixtureVarRouterType is the fixture var for overriding the auto router type
+	// resolution to use a specific router type instead for routers.
+	fixtureVarRouterType = "routertype"
+
+	// fixtureVarPcapType is the fixture var for overriding the auto router type
+	// resolution to use a specific router type instead for the pcap.
+	fixtureVarPcapType = "pcaptype"
+)
+
 func init() {
 	// Most of the fixture variants are based on some default values. Let's generate common data in a loop,
 	// then adjust non-standard values and register fixtures in another loop.
@@ -75,17 +102,21 @@ func init() {
 			PostTestTimeout: postTestTimeout,
 			TearDownTimeout: tearDownTimeout,
 			ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
-			Vars:            []string{"routertype", "pcap", "pcaptype"},
+			Vars: []string{
+				fixtureVarPcap,
+				fixtureVarPcapType,
+				fixtureVarRouterType,
+			},
 		}
 
 		// Typical fixture extensions.
 		if f&TFFeaturesRouters != 0 {
-			fixtures[f].Vars = append(fixtures[f].Vars, "routers")
+			fixtures[f].Vars = append(fixtures[f].Vars, fixtureVarRoutersMultiple)
 		} else {
-			fixtures[f].Vars = append(fixtures[f].Vars, "router")
+			fixtures[f].Vars = append(fixtures[f].Vars, fixtureVarRouter)
 		}
 		if f&TFFeaturesAttenuator != 0 {
-			fixtures[f].Vars = append(fixtures[f].Vars, "attenuator")
+			fixtures[f].Vars = append(fixtures[f].Vars, fixtureVarAttenuator)
 		}
 		if f&TFFeaturesPower != 0 {
 			fixtures[f].ServiceDeps = append(fixtures[f].ServiceDeps, PowerServiceName)
@@ -371,7 +402,7 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 	// Read router/pcap variable. If not available or empty, NewTestFixture
 	// will fall back to Default{Router,Pcap}Host.
 	if f.features&TFFeaturesRouters != 0 {
-		if routers, ok := s.Var("routers"); ok && routers != "" {
+		if routers, ok := s.Var(fixtureVarRoutersMultiple); ok && routers != "" {
 			testing.ContextLog(ctx, "routers: ", routers)
 			slice := strings.Split(routers, ",")
 			if len(slice) < 2 {
@@ -388,13 +419,13 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 			ops = append(ops, TFRouter(routers...))
 		}
 	} else {
-		router, ok := s.Var("router")
+		router, ok := s.Var(fixtureVarRouter)
 		if ok && router != "" {
 			testing.ContextLog(ctx, "router: ", router)
 			ops = append(ops, TFRouter(router))
 		} // else: let TestFixture resolve the name.
 	}
-	pcap, ok := s.Var("pcap")
+	pcap, ok := s.Var(fixtureVarPcap)
 	if ok && pcap != "" {
 		testing.ContextLog(ctx, "pcap: ", pcap)
 		ops = append(ops, TFPcap(pcap))
@@ -405,7 +436,7 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	// Read attenuator variable.
 	if f.features&TFFeaturesAttenuator != 0 {
-		atten, ok := s.Var("attenuator")
+		atten, ok := s.Var(fixtureVarAttenuator)
 		if !ok || atten == "" {
 			// Attenuator is not typical companion, so we synthesize its name here.
 			atten = f.companionName(s, "-attenuator")
@@ -420,7 +451,7 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	// Allow for setting router type
 	var routerType support.RouterType
-	if rTypeStr, ok := s.Var("routertype"); !ok || rTypeStr == "" {
+	if rTypeStr, ok := s.Var(fixtureVarRouterType); !ok || rTypeStr == "" {
 		// Default to unknown so that it may be automatically determined with host
 		routerType = support.UnknownT
 	} else {
@@ -435,7 +466,7 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	// Allow for setting pcap type
 	var pcapType support.RouterType
-	if rTypeStr, ok := s.Var("pcaptype"); !ok || rTypeStr == "" {
+	if rTypeStr, ok := s.Var(fixtureVarPcapType); !ok || rTypeStr == "" {
 		// Default to unknown so that it may be automatically determined with host
 		pcapType = support.UnknownT
 	} else {
