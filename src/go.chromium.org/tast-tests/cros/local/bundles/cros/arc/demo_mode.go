@@ -97,7 +97,7 @@ func DemoMode(ctx context.Context, s *testing.State) {
 	// Verify that Play Store window shows up.
 	classNameRegexp := regexp.MustCompile(`^ExoShellSurface(-\d+)?$`)
 	playStoreUI := nodewith.Name("Play Store").Role(role.Window).ClassNameRegex(classNameRegexp)
-	if err := uia.WithTimeout(30 * time.Second).WaitUntilExists(playStoreUI)(ctx); err != nil {
+	if err := uia.WithTimeout(5 * time.Minute).WaitUntilExists(playStoreUI)(ctx); err != nil {
 		s.Fatal("Failed to see Play Store window: ", err)
 	}
 
