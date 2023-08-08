@@ -9,7 +9,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path"
@@ -25,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -68,27 +68,27 @@ func saveDriveLogs(ctx context.Context, homeDir, persistableToken string) {
 		return
 	}
 
-	driveFsLogPath := ConfigPath(homeDir, persistableToken, "Logs")
-	driveFsMainLogs := filepath.Join(driveFsLogPath, "drivefs.txt")
-	logContents, err := ioutil.ReadFile(driveFsMainLogs)
-	if err != nil {
-		testing.ContextLogf(ctx, "Could not read the Drive log %q: %v", driveFsMainLogs, err)
+	contextDriveLogsDir := filepath.Join(outDir, "drivefs_logs")
+	if err := os.Mkdir(contextDriveLogsDir, os.ModePerm); err != nil {
+		testing.ContextLogf(ctx, "Could not create directory %q: %v", contextDriveLogsDir, err)
 		return
 	}
-	if err = ioutil.WriteFile(filepath.Join(outDir, "drivefs_logs.txt"), logContents, 0644); err != nil {
-		testing.ContextLog(ctx, "Could not write the Drive log to out dir: ", err)
+	driveFsLogPath := ConfigPath(homeDir, persistableToken, "Logs")
+	files, err := os.ReadDir(driveFsLogPath)
+	if err != nil {
+		testing.ContextLogf(ctx, "Could not read Drive log directory %q: %v", driveFsLogPath, err)
+		return
 	}
 
-	// Get the structured logs which contain information about the Drive API
-	// calls that were made during execution.
-	structuredLogPath := filepath.Join(driveFsLogPath, "structured_log")
-	structuredLogContents, err := ioutil.ReadFile(structuredLogPath)
-	if err != nil {
-		testing.ContextLogf(ctx, "Could not read the Drive log %q: %v", structuredLogPath, err)
-		return
-	}
-	if err = ioutil.WriteFile(filepath.Join(outDir, "drivefs_structured_logs"), structuredLogContents, 0644); err != nil {
-		testing.ContextLog(ctx, "Could not write the Drive structured logs to out dir: ", err)
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		filePath := filepath.Join(driveFsLogPath, file.Name())
+		outputFilePath := filepath.Join(contextDriveLogsDir, file.Name())
+		if err := fsutil.CopyFile(filePath, outputFilePath); err != nil {
+			testing.ContextLogf(ctx, "Could not copy %q to %q: %v", filePath, outputFilePath, err)
+		}
 	}
 }
 
