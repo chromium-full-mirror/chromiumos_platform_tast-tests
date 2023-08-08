@@ -68,14 +68,16 @@ func init() {
 				expectPhysicalPresenceRequired: false,
 			},
 		}, {
-			Name: "cap_unless_locked_and_battery_connected",
+			Name:              "cap_unless_locked_and_battery_connected",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasGSCCr50()),
 			Val: cCDCapabilitiesBatteryBypassPPParam{
 				capState:                       servo.CapUnlessLocked,
 				isBatteryConnected:             true,
 				expectPhysicalPresenceRequired: true,
 			},
 		}, {
-			Name: "cap_unless_locked_and_battery_disconnected",
+			Name:              "cap_unless_locked_and_battery_disconnected",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasGSCCr50()),
 			Val: cCDCapabilitiesBatteryBypassPPParam{
 				capState:                       servo.CapUnlessLocked,
 				isBatteryConnected:             false,
@@ -153,8 +155,8 @@ func testIfPhysicalPresenceIsRequired(ctx context.Context, s *testing.State, exp
 		s.Fatal("Failed verify physical presence for CCD open: ", err)
 	}
 
-	// Sleep 5 seconds here to wait for the physical presence press state
-	// machine to timeout and reset so other tests don't fail.
+	// GoBigSleepLint: Sleep 5 seconds here to wait for the physical presence
+	// press state machine to timeout and reset so other tests don't fail.
 	testing.Sleep(ctx, 5*time.Second)
 
 	if isRequired, err := isPhysicalPresenceRequiredForGsctool(ctx, s); expectPhysicalPresenceRequired != isRequired {

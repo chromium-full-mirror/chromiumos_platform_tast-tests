@@ -53,7 +53,8 @@ func init() {
 				wpCommandSucceedsWhenCCDLocked: true,
 			},
 		}, {
-			Name: "cap_unless_locked",
+			Name:              "cap_unless_locked",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasGSCCr50()),
 			Val: cCDCapabilitiesOverrideWP{
 				capState:                       servo.CapUnlessLocked,
 				wpCommandSucceedsWhenCCDOpen:   true,

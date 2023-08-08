@@ -52,7 +52,8 @@ func init() {
 				commandsSucceedWhenCcdLocked: true,
 			},
 		}, {
-			Name: "cap_unless_locked",
+			Name:              "cap_unless_locked",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasGSCCr50()),
 			Val: cCDCapabilitiesOverrideBatt{
 				capState:                     servo.CapUnlessLocked,
 				commandsSucceedWhenCcdOpen:   true,

@@ -54,7 +54,8 @@ func init() {
 				expectWpEnabledWhenCCDLocked: false,
 			},
 		}, {
-			Name: "cap_unless_locked",
+			Name:              "cap_unless_locked",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasGSCCr50()),
 			Val: cCDCapabilitiesFlashEC{
 				capState:                     servo.CapUnlessLocked,
 				expectWpEnabledWhenCCDLocked: true,
