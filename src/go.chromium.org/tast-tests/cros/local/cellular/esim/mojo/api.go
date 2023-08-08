@@ -149,6 +149,23 @@ func (e *Euicc) ProfileList(ctx context.Context) ([]ESimProfile, error) {
 	return profiles, nil
 }
 
+// RequestAvailableProfiles starts a request for available profilesfor this
+// Euicc from SMDS. Returns a status indicating the result of the operation
+// and the combined list of all profiles doung across all SM-DS servers.
+func (e *Euicc) RequestAvailableProfiles(ctx context.Context) (ESimOperationResult, []ESimProfileProperties, error) {
+	var result struct {
+		Result                    ESimOperationResult
+		ESimProfilePropertiesList []ESimProfileProperties
+	}
+
+	js := "function(eid) {return this.requestAvailableProfiles(eid)}"
+	if err := e.manager.js.Call(ctx, &result, js, e.Eid); err != nil {
+		return ESimOperationFailure, nil, errors.Wrap(err, "requestAvailableProfiles call failed")
+	}
+
+	return result.Result, result.ESimProfilePropertiesList, nil
+}
+
 // RequestPendingProfiles starts a request for pending profiles for this
 // Euicc from SMDS. Returns a status indicating result of the operation.
 func (e *Euicc) RequestPendingProfiles(ctx context.Context) (ESimOperationResult, error) {

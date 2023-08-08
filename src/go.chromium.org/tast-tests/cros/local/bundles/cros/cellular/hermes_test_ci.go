@@ -76,13 +76,16 @@ func HermesTestCI(ctx context.Context, s *testing.State) {
 	const numProfiles = 2
 	profiles := make([]*hermes.Profile, numProfiles)
 	for i := 0; i < numProfiles; i++ {
-		activationCode, cleanupFunc, err := stork.FetchStorkProfilesForEid(ctx, eid, 1)
+		activationCodes, cleanupFunc, err := stork.FetchStorkProfilesForEid(ctx, eid, 1)
 		if err != nil {
 			s.Fatal("Failed to fetch Stork profile: ", err)
 		}
 		defer cleanupFunc(ctx)
-		s.Log("Fetched Stork profile with activation code: ", activationCode)
-		profiles[i] = installAndEnableProfile(ctx, s, euicc, activationCode)
+		if len(activationCodes) == 0 {
+			s.Fatal("Failed to get activationCodes for profile")
+		}
+		s.Log("Fetched Stork profile with activation code: ", activationCodes[0])
+		profiles[i] = installAndEnableProfile(ctx, s, euicc, activationCodes[0])
 	}
 
 	if err := hermes.CheckNumInstalledProfiles(ctx, euicc, numProfiles); err != nil {

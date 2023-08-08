@@ -62,8 +62,8 @@ const (
 // ActivationCode to be used to install an eSIM profile.
 type ActivationCode string
 
-// CleanupProfileFunc alerts Stork that the profile has been used.
-type CleanupProfileFunc func(ctx context.Context) error
+// CleanupSession alerts Stork that the Stork session has completed.
+type CleanupSession func(ctx context.Context) error
 
 // ProfileListData represents the JSON structure of profile list metadata sent to Stork.
 type ProfileListData struct {
@@ -115,28 +115,33 @@ func generateStorkRequestData(eid string, numProfiles int, confirmationCode stri
 	return strings.Replace(string(jsonBytes), "\"", "'", -1), nil
 }
 
-func getActivationCode(storkResponse map[string]json.RawMessage) (ActivationCode, error) {
+func getActivationCodes(storkResponse map[string]json.RawMessage) ([]ActivationCode, error) {
 	gtsTestProfileListValue, ok := storkResponse[gtsTestProfileListKey]
 	if !ok {
-		return ActivationCode(""), errors.Errorf("Stork response did not contain %v", gtsTestProfileListKey)
+		return nil, errors.Errorf("Stork response did not contain %v", gtsTestProfileListKey)
 	}
 
 	var gtsTestProfileList []json.RawMessage
 	if err := json.Unmarshal(gtsTestProfileListValue, &gtsTestProfileList); err != nil {
-		return ActivationCode(""), errors.Wrap(err, "invalid Stork gtsTestProfileList")
+		return nil, errors.Wrap(err, "invalid Stork gtsTestProfileList")
 	}
 
-	var profileInfo map[string]interface{}
-	if err := json.Unmarshal(gtsTestProfileList[0], &profileInfo); err != nil {
-		return ActivationCode(""), errors.Wrap(err, "Stork gtsTestProfile response was invalid")
+	var activationCodes []ActivationCode
+	for _, profile := range gtsTestProfileList {
+		var profileInfo map[string]interface{}
+		if err := json.Unmarshal(profile, &profileInfo); err != nil {
+			return nil, errors.Wrap(err, "Stork gtsTestProfile response was invalid")
+		}
+
+		matchingID, ok := profileInfo[matchingIDKey].(string)
+		if !ok {
+			return nil, errors.New("Stork matchingId was missing")
+		}
+
+		activationCodes = append(activationCodes, ActivationCode(activationCodePrefix+matchingID))
 	}
 
-	matchingID, ok := profileInfo[matchingIDKey].(string)
-	if !ok {
-		return ActivationCode(""), errors.New("Stork matchingId was missing")
-	}
-
-	return ActivationCode(activationCodePrefix + matchingID), nil
+	return activationCodes, nil
 }
 
 func getSessionID(storkResponse map[string]json.RawMessage) (string, error) {
@@ -152,7 +157,7 @@ func getSessionID(storkResponse map[string]json.RawMessage) (string, error) {
 	return sessionID, nil
 }
 
-func performFetchStorkProfile(ctx context.Context, data string) (ActivationCode, CleanupProfileFunc, error) {
+func performFetchStorkProfiles(ctx context.Context, data string) ([]ActivationCode, CleanupSession, error) {
 	command := testexec.CommandContext(ctx, curlCommandName,
 		cacertArgName, cacertArgValue,
 		hArgName, hArgValue,
@@ -162,20 +167,20 @@ func performFetchStorkProfile(ctx context.Context, data string) (ActivationCode,
 
 	output, err := tryCommand(ctx, command)
 	if err != nil {
-		return ActivationCode(""), nil, errors.Wrap(err, "failed sending Stork request")
+		return nil, nil, errors.Wrap(err, "failed sending Stork request")
 	}
 
 	var jsonOutput map[string]json.RawMessage
 	if err := json.Unmarshal(output, &jsonOutput); err != nil {
-		return ActivationCode(""), nil, errors.Wrap(err, "Stork response was invalid")
+		return nil, nil, errors.Wrap(err, "Stork response was invalid")
 	}
 
 	sessionID, err := getSessionID(jsonOutput)
 	if err != nil {
-		return ActivationCode(""), nil, errors.Wrap(err, "could not find session ID")
+		return nil, nil, errors.Wrap(err, "could not find session ID")
 	}
 
-	cleanupProfile := CleanupProfileFunc(func(ctx context.Context) error {
+	cleanupSession := CleanupSession(func(ctx context.Context) error {
 		command := testexec.CommandContext(ctx, curlCommandName,
 			cacertArgName, cacertArgValue,
 			endGtsSessionURLPrefix+sessionID)
@@ -185,12 +190,12 @@ func performFetchStorkProfile(ctx context.Context, data string) (ActivationCode,
 		return nil
 	})
 
-	activationCode, err := getActivationCode(jsonOutput)
+	activationCodes, err := getActivationCodes(jsonOutput)
 	if err != nil {
-		return ActivationCode(""), cleanupProfile, errors.Wrap(err, "could not find an activation code")
+		return nil, cleanupSession, errors.Wrap(err, "could not find an activation code")
 	}
 
-	return activationCode, cleanupProfile, nil
+	return activationCodes, cleanupSession, nil
 }
 
 func tryCommand(ctx context.Context, command *testexec.Cmd) ([]byte, error) {
@@ -212,24 +217,26 @@ func tryCommand(ctx context.Context, command *testexec.Cmd) ([]byte, error) {
 }
 
 // FetchStorkProfile fetches a test eSIM profile that does not require a confirmation code from Stork.
-func FetchStorkProfile(ctx context.Context) (ActivationCode, CleanupProfileFunc, error) {
-	return FetchStorkProfilesForEid(ctx, "", 1)
+func FetchStorkProfile(ctx context.Context) (ActivationCode, CleanupSession, error) {
+	activationCodes, cleanupSession, err := FetchStorkProfilesForEid(ctx, "", 1)
+	return activationCodes[0], cleanupSession, err
 }
 
 // FetchStorkProfilesForEid fetches a test eSIM profile without a confirmation code for a specific eID.
-func FetchStorkProfilesForEid(ctx context.Context, eid string, numProfiles int) (ActivationCode, CleanupProfileFunc, error) {
+func FetchStorkProfilesForEid(ctx context.Context, eid string, numProfiles int) ([]ActivationCode, CleanupSession, error) {
 	data, err := generateStorkRequestData(eid, numProfiles, "", 1)
 	if err != nil {
-		return ActivationCode(""), nil, err
+		return nil, nil, err
 	}
-	return performFetchStorkProfile(ctx, data)
+	return performFetchStorkProfiles(ctx, data)
 }
 
 // FetchStorkProfileWithCustomConfirmationCode fetches a test eSIM profile with a custom confirmation code from Stork.
-func FetchStorkProfileWithCustomConfirmationCode(ctx context.Context, confirmationCode string, maxConfirmationCodeAttempts int) (ActivationCode, CleanupProfileFunc, error) {
+func FetchStorkProfileWithCustomConfirmationCode(ctx context.Context, confirmationCode string, maxConfirmationCodeAttempts int) (ActivationCode, CleanupSession, error) {
 	data, err := generateStorkRequestData("", 1, confirmationCode, maxConfirmationCodeAttempts)
 	if err != nil {
 		return ActivationCode(""), nil, err
 	}
-	return performFetchStorkProfile(ctx, data)
+	activationCodes, cleanupSession, err := performFetchStorkProfiles(ctx, data)
+	return activationCodes[0], cleanupSession, err
 }

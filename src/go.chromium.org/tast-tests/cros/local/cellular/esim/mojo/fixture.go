@@ -42,6 +42,21 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 		Parent:          "cellular",
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeLoggedInWithMojoTestEuiccAndSmdsSupport",
+		Desc: "Logs into a user session and creates a JS object for accessing mojo eSIM API calls for test eUICCS and Smds support",
+		Contacts: []string{
+			"khegde@google.com",
+			"cros-network-health-team@google.com",
+			"chadduffin@google.com",
+			"cros-connectivity@google.com",
+		},
+		Impl:            newESimMojoFixture(testEuicc(), smdsSupport()),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Parent:          "cellularTestESIM",
+	})
 }
 
 type option func(*eSimMojoFixture)
@@ -62,6 +77,12 @@ func testEuicc() func(*eSimMojoFixture) {
 	}
 }
 
+func smdsSupport() func(*eSimMojoFixture) {
+	return func(e *eSimMojoFixture) {
+		e.smdsSupportRequired = true
+	}
+}
+
 // FixtData holds information made available to tests that specify this Fixture.
 type FixtData struct {
 	Cr      *chrome.Chrome
@@ -71,9 +92,10 @@ type FixtData struct {
 
 // eSimMojoFixture implements testing.FixtureImpl.
 type eSimMojoFixture struct {
-	manager     *ESimManager
-	cr          *chrome.Chrome
-	isTestEuicc bool
+	manager             *ESimManager
+	cr                  *chrome.Chrome
+	isTestEuicc         bool
+	smdsSupportRequired bool
 }
 
 func (f *eSimMojoFixture) Reset(ctx context.Context) error {
@@ -104,6 +126,9 @@ func (f *eSimMojoFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("UseStorkSmdsServerAddress"))
 		if slot == 1 {
 			chromeOpts = append(chromeOpts, chrome.EnableFeatures("CellularUseSecondEuicc"))
+		}
+		if f.smdsSupportRequired {
+			chromeOpts = append(chromeOpts, chrome.EnableFeatures("SmdsSupport", "SmdsSupportEuiccUpload", "SmdsDbusMigration"))
 		}
 	}
 

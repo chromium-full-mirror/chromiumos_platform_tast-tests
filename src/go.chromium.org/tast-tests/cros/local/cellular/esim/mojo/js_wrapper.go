@@ -53,6 +53,16 @@ async function() {
 			return res;
 		},
 
+		async requestAvailableProfiles(eid) {
+			const euicc = await this.getEuicc_(eid);
+			const response = await euicc.requestAvailableProfiles();
+
+			return {
+				Result: response.result,
+				ESimProfilePropertiesList: response.profiles
+			};
+		},
+
 		async requestPendingProfiles(eid) {
 			const euicc = await this.getEuicc_(eid);
 			return (await euicc.requestPendingProfiles()).result;
@@ -70,7 +80,7 @@ async function() {
 			return {
 				Result: response.result,
 				Iccid: iccid
-			}
+			};
 		},
 
 		async getEidQrCode(eid) {
@@ -110,7 +120,7 @@ async function() {
 
 		async setProfileNickname(iccid, name) {
 			const profile = await this.getProfile_(iccid);
-			return (await profile.setProfileNickname(name)).result
+			return (await profile.setProfileNickname(name)).result;
 		}
   }
 }`
