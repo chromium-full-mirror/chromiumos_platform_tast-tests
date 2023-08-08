@@ -179,6 +179,10 @@ func toOptions(req *pb.NewRequest) ([]chrome.Option, error) {
 		options = append(options, chrome.EnableHIDScreenOnOOBE())
 	}
 
+	if req.DontSkipOobeAfterLogin {
+		options = append(options, chrome.DontSkipOOBEAfterLogin())
+	}
+
 	switch req.GetLoginMode() {
 	case pb.LoginMode_LOGIN_MODE_NO_LOGIN:
 		options = append(options, chrome.NoLogin())

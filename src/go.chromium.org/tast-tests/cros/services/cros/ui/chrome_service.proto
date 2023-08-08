@@ -117,6 +117,9 @@ message NewRequest {
   // If true, Lacros will be launched with KeepAlive enabled. This means Lacros
   // will keep running even after all windows are closed.
   bool lacros_keep_alive = 17;
+
+  // If true, stay in OOBE after user login.
+  bool dont_skip_oobe_after_login = 18;
 }
 
 // LoginMode describes the user mode for the login.
