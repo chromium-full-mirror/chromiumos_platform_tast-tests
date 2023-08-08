@@ -317,7 +317,17 @@ func getBlockDevList(ctx context.Context, dut *dut.DUT) ([]string, error) {
 		return nil, errors.Wrap(err, "failed to list block devices")
 	}
 
-	return strings.Fields(sysBlockLs), nil
+	var result []string
+	for _, dev := range strings.Fields(sysBlockLs) {
+		if strings.HasPrefix(dev, "zram") {
+			// Skip zram devices for they fail size check and are
+			// not physical devices anyway.
+			continue
+		}
+		result = append(result, dev)
+	}
+
+	return result, nil
 }
 
 // GetRemovableSD returns the disk structure representing a removable SD card.
