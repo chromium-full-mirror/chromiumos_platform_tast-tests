@@ -1005,10 +1005,28 @@ func decompressImage(ctx context.Context, d *dut.DUT, vmEnabled bool, imageName,
 		linuxssh.PreserveSymlinks); err != nil {
 		return errors.Wrapf(err, "failed to get %q from the device", imageName)
 	}
-	// Decompress image file.
-	if err := testexec.CommandContext(ctx, "unsquashfs", "-no-xattrs", "-f", "-d", dstDir, localImg).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrapf(err, "failed to unsquashfs image: %v", imageName)
+
+	// Temporary check for fsck.erofs until b/293823961 is resolved.
+	// TODO(niwa): Remove this once we confirm that fsck.erofs is executable from this test in CFT container.
+	if err := testexec.CommandContext(ctx, "fsck.erofs", "-V").Run(testexec.DumpLogOnError); err != nil {
+		testing.ContextLog(ctx, "fsck.erofs is not available: ", err)
+	} else {
+		testing.ContextLog(ctx, "fsck.erofs is available")
 	}
+
+	// Detect image type with `unsquashfs -s`.
+	if err := testexec.CommandContext(ctx, "unsquashfs", "-s", localImg).Run(); err == nil {
+		// Decompress Squashfs image with `unsquashfs`.
+		if err := testexec.CommandContext(ctx, "unsquashfs", "-no-xattrs", "-f", "-d", dstDir, localImg).Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrapf(err, "failed to decompress Squashfs image: %v", imageName)
+		}
+	} else {
+		// Decompress EROFS image with `fsck.erofs --extract`.
+		if err := testexec.CommandContext(ctx, "fsck.erofs", "--extract="+dstDir, localImg).Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrapf(err, "failed to decompress EROFS image: %v", imageName)
+		}
+	}
+
 	return nil
 }
 
