@@ -251,6 +251,13 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 		if creds.Pass == "" {
 			return errors.New("please supply a password with chrome.Auth()")
 		}
+		if cfg.ReauthMode() {
+			// TODO(b/293118052): Remove this when the bug is fixed.
+			// GoBigSleepLint: Temporary workaround until the Gaia bug is fixed.
+			if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+				return errors.Wrap(err, "failed to sleep before entring password")
+			}
+		}
 		if err := insertGAIAField(ctx, gaiaConn, "input[name=password]", creds.Pass); err != nil {
 			return errors.Wrap(err, "failed to fill in password field")
 		}
