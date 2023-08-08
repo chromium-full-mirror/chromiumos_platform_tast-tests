@@ -15,11 +15,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
-// WaitForOnline waits for Internet connectivity, a shorthand which is useful so external packages don't have to worry
-// about Shill details (e.g., Service, Manager). Tests that require Internet connectivity (e.g., for a real GAIA login)
-// need to ensure that before trying to perform Internet requests. This function is one way to do that.
-// Returns an error if we don't come back online within a reasonable amount of time.
-func WaitForOnline(ctx context.Context) error {
+func waitForOnline(ctx context.Context, timeout time.Duration) error {
 	m, err := NewManager(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to shill's Manager")
@@ -28,9 +24,24 @@ func WaitForOnline(ctx context.Context) error {
 	expectProps := map[string]interface{}{
 		shillconst.ServicePropertyState: shillconst.ServiceStateOnline,
 	}
-	if _, err := m.WaitForServiceProperties(ctx, expectProps, 15*time.Second); err != nil {
+	if _, err := m.WaitForServiceProperties(ctx, expectProps, timeout); err != nil {
 		return errors.Wrap(err, "network did not come back online")
 	}
 
 	return nil
+}
+
+// WaitForOnline waits for Internet connectivity, a shorthand which is useful so external packages don't have to worry
+// about Shill details (e.g., Service, Manager). Tests that require Internet connectivity (e.g., for a real GAIA login)
+// need to ensure that before trying to perform Internet requests. This function is one way to do that.
+// Returns an error if we don't come back online within a reasonable amount of time.
+func WaitForOnline(ctx context.Context) error {
+	return waitForOnline(ctx, 15*time.Second)
+}
+
+// WaitForOnlineAfterResume uses a longer timeout than WaitForOnline. This is due to how long network issues in the lab
+// can take to resolve. If the ethernet dongle does not resume properly, it can take up to 3 minutes for the test hooks
+// to reset the device and connect to the network.
+func WaitForOnlineAfterResume(ctx context.Context) error {
+	return waitForOnline(ctx, 3*time.Minute)
 }
