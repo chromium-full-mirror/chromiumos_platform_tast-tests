@@ -100,7 +100,7 @@ func (ms *Ms365) StaySignedIn() uiauto.Action {
 
 	return uiauto.Combine("MS Stay Signed In",
 		ms.ui.WaitUntilExists(msStaySignedInButton),
-		ms.ui.LeftClick(msStaySignedInButton),
+		ms.ui.LeftClickUntil(msStaySignedInButton, ms.ui.Gone(msStaySignedInButton)),
 	)
 }
 
@@ -113,7 +113,7 @@ func (ms *Ms365) AcceptPermissionIfNeeded(setupCompleteDialogFinder *nodewith.Fi
 		runAcceptPermission := uiauto.Combine("MS permission screen",
 			ms.ui.WaitUntilExists(msAcceptPermissionButton),
 			ms.kb.TypeKeyAction(input.KEY_END),
-			ms.ui.LeftClick(msAcceptPermissionButton),
+			ms.ui.LeftClickUntil(msAcceptPermissionButton, ms.ui.Gone(msAcceptPermissionButton)),
 		)
 
 		// When the permission dialog doesn't show it goes directly to Setup Complete dialog.
