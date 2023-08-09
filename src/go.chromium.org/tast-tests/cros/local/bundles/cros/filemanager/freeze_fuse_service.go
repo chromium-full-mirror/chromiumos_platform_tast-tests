@@ -6,13 +6,11 @@ package filemanager
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -24,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	fmpb "go.chromium.org/tast-tests/cros/services/cros/filemanager"
 	"go.chromium.org/tast/core/ctxutil"
@@ -137,27 +136,17 @@ func (f *FreezeFUSEService) TestMountZipAndSuspend(ctx context.Context, request 
 	}
 
 	for i := int32(1); i <= request.Iterations; i++ {
-		// Read wakeup count here to prevent suspend retries, which happen without user input.
-		wakeupCount, err := ioutil.ReadFile("/sys/power/wakeup_count")
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to read wakeup count before suspend")
-		}
-
 		successfulSuspends, err := readSuccessfulSuspends(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read successful suspends before suspend attempt")
 		}
 
-		// Suspend for 45 seconds since the stress script slows us down.
-		// This gives freeze during suspend enough time to timeout in 20s.
+		// Suspend for 20 seconds since the stress script slows us down. Freeze of userspace happens before setting the
+		// RTC to wake the system, so we just need to worry about the up to 20s delay for freeze in the kernel.
 		testing.ContextLogf(ctx, "Attempting suspend iteration %d", i)
-		if err := testexec.CommandContext(
-			ctx,
-			"powerd_dbus_suspend",
-			fmt.Sprintf("--wakeup_count=%s", strings.Trim(string(wakeupCount), "\n")),
-			"--timeout=30",
-			"--suspend_for_sec=45").Run(); err != nil {
-			return nil, errors.Wrap(err, "powerd_dbus_suspend failed to properly suspend")
+		if _, err := suspend.Request(ctx, suspend.Delay(0*time.Second), suspend.WithoutRetries(),
+			suspend.For(20*time.Second), suspend.Timeout(30*time.Second)); err != nil {
+			return nil, errors.Wrap(err, "DUT failed to properly suspend")
 		}
 
 		successfulSuspendsAfter, err := readSuccessfulSuspends(ctx)
