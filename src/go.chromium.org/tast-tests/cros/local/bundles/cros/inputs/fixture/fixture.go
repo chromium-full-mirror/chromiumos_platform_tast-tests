@@ -41,7 +41,6 @@ const (
 	assistMultiWord
 	autocorrectToggle
 	diacriticsOnPhysicalKeyboardLongpress
-	virtualKeyboardMultitouch
 	handwritingLegacyRecognition
 	qsRevampEnabled
 	emojiPickerGifSupport
@@ -70,7 +69,6 @@ const (
 	TabletVKStereoAloopLoaded                     = "tabletVKStereoAloopLoaded"
 	TabletVKRestart                               = "tabletVKRestart"
 	TabletVKInGuest                               = "tabletVKInGuest"
-	TabletVKWithMultitouch                        = "tabletVKWithMultitouch"
 	// Lacros fixtures.
 	LacrosAnyVK                                         = "lacrosAnyVK"
 	LacrosAnyVKInGuest                                  = "lacrosAnyVKInGuest"
@@ -90,7 +88,6 @@ const (
 	LacrosTabletVKStereoAloopLoaded                     = "lacrosTabletVKStereoAloopLoaded"
 	LacrosTabletVKInGuest                               = "lacrosTabletVKInGuest"
 	LacrosTabletVKRestart                               = "lacrosTabletVKRestart"
-	LacrosTabletVKWithMultitouch                        = "lacrosTabletVKWithMultitouch"
 )
 
 func init() {
@@ -368,20 +365,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: TabletVKWithMultitouch,
-		Desc: "Tablet mode with VK and multitouch enabled",
-		Contacts: []string{
-			"michellegc@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(tabletMode, true, false, browser.TypeAsh, virtualKeyboardMultitouch),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: ClamshellVKWithHandWritingLegacyRecognitionOn,
 		Desc: "Clamshell mode with handwriting legacy recognition on",
 		Contacts: []string{
@@ -626,20 +609,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: LacrosTabletVKWithMultitouch,
-		Desc: "Lacros variant: tablet mode with VK and multitouch enabled",
-		Contacts: []string{
-			"michellegc@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(tabletMode, true, false, browser.TypeLacros, virtualKeyboardMultitouch),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: LacrosClamshellNonVKInGAIA,
 		Desc: "Lacros variant: clamshell mode in gaia login with VK disabled",
 		Contacts: []string{
@@ -750,8 +719,6 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs("--enable-features=DiacriticsOnPhysicalKeyboardLongpress,DiacriticsOnPhysicalKeyboardLongpressDefaultOn"))
 		case firstPartyVietnameseInput:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=FirstPartyVietnameseInput"))
-		case virtualKeyboardMultitouch:
-			opts = append(opts, chrome.ExtraArgs("--enable-features=VirtualKeyboardMultitouch"))
 		case handwritingLegacyRecognition:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=HandwritingLegacyRecognition"))
 		case qsRevampEnabled:

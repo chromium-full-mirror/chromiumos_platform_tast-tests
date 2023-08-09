@@ -41,11 +41,11 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
-				Fixture: fixture.TabletVKWithMultitouch,
+				Fixture: fixture.TabletVK,
 			},
 			{
 				Name:              "lacros",
-				Fixture:           fixture.LacrosTabletVKWithMultitouch,
+				Fixture:           fixture.LacrosTabletVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraAttr:         []string{"informational"},
 			},
