@@ -22,7 +22,7 @@ func init() {
 		Func:         ChargeDischargeBattery,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that battery can be charged or discharged to a certain range",
-		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
+		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		Contacts:     []string{"chromeos-platform-power@google.com", "jingmuli@google.com"},
 		HardwareDeps: hwdep.D(
 			hwdep.Battery(), // Test doesn't run on ChromeOS devices without a battery.
@@ -38,18 +38,26 @@ func init() {
 			Val: power.ChargeParams{
 				MinChargePercentage:   30.0,
 				MaxChargePercentage:   97.0,
-				DischargeOnCompletion: true},
+				DischargeOnCompletion: true,
+				IsCustomized:          false,
+				IsPowerQual:           false,
+			},
 			Timeout: 3 * time.Hour,
 		}, {
 			Name: "charging_measurement_prep",
 			Val: power.ChargeParams{
 				MinChargePercentage:   7.5,
 				MaxChargePercentage:   8.0,
-				DischargeOnCompletion: true},
+				DischargeOnCompletion: true,
+				IsCustomized:          false,
+				IsPowerQual:           false},
 			Timeout: 5 * time.Hour,
 		}, {
-			Name:    "customization_prep",
-			Val:     power.ChargeParams{DischargeOnCompletion: true, Customized: true},
+			Name: "customization_prep",
+			Val: power.ChargeParams{
+				DischargeOnCompletion: true,
+				IsCustomized:          true,
+				IsPowerQual:           false},
 			Timeout: 5 * time.Hour,
 		}},
 	})
@@ -64,7 +72,7 @@ func ChargeDischargeBattery(ctx context.Context, s *testing.State) {
 	var err error
 	var minPercent, maxPercent float64
 
-	if s.Param().(power.ChargeParams).Customized {
+	if s.Param().(power.ChargeParams).IsCustomized {
 		minChargePercentStr, ok := s.Var("min_charge_percent")
 		if !ok {
 			s.Fatal("The min_charge_percent is not provided")
@@ -90,6 +98,7 @@ func ChargeDischargeBattery(ctx context.Context, s *testing.State) {
 	}
 
 	dischargeOnCompletion := s.Param().(power.ChargeParams).DischargeOnCompletion
+	isPowerQual := s.Param().(power.ChargeParams).IsPowerQual
 
 	r := power.NewRecorder(ctx, 20*time.Second, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
@@ -98,7 +107,7 @@ func ChargeDischargeBattery(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
 
-	if err := setup.PrepareBattery(ctx, float64(minPercent), float64(maxPercent), dischargeOnCompletion); err != nil {
+	if err := setup.PrepareBattery(ctx, float64(minPercent), float64(maxPercent), dischargeOnCompletion, isPowerQual); err != nil {
 		s.Fatal("Failed to charge/discharge DUT: ", err)
 	}
 

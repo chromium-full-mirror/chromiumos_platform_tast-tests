@@ -67,7 +67,7 @@ func SetKeyboardBrightness(ctx context.Context, percent float64) (CleanupCallbac
 		return nil, err
 	}
 
-	testing.ContextLogf(ctx, "Setting keyboard backlight brightness to %f nonlinear percent from level %d", percent, prevBrightness)
+	testing.ContextLogf(ctx, "Setting keyboard backlight brightness to %.2f%% nonlinear percent from level %d", percent, prevBrightness)
 	if err := setKeyboardBrightnessNonlinearPercent(ctx, percent); err != nil {
 		return nil, err
 	}

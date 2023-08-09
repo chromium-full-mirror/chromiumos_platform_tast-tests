@@ -137,7 +137,7 @@ func DisableBatteryCharging(ctx context.Context) error {
 // PrepareBattery charges or drains the battery to reach the specified
 // range. Upon completion, the DUT would be allowed to resume charging or
 // being forced to discharge as specified.
-func PrepareBattery(ctx context.Context, minPercentage, maxPercentage float64, dischargeOnCompletion bool) error {
+func PrepareBattery(ctx context.Context, minPercentage, maxPercentage float64, dischargeOnCompletion, isPowerQual bool) error {
 	if minPercentage < 0.0 || minPercentage > 100.0 {
 		return errors.New("invalid min percentage, it should be within [0.0, 100.0]")
 	}
@@ -162,7 +162,7 @@ func PrepareBattery(ctx context.Context, minPercentage, maxPercentage float64, d
 		err = nil
 	} else if currentPercentage < minPercentage {
 		testing.ContextLog(ctx, "Current battery charge is below the acceptable range")
-		err = chargeBattery(ctx, minPercentage)
+		err = chargeBattery(ctx, minPercentage, isPowerQual)
 	} else {
 		testing.ContextLog(ctx, "Current battery charge is above the acceptable range")
 		err = drainBattery(ctx, maxPercentage)
@@ -179,17 +179,15 @@ func PrepareBattery(ctx context.Context, minPercentage, maxPercentage float64, d
 	return AllowBatteryCharging(ctx)
 }
 
-func chargeBattery(ctx context.Context, targetPercentage float64) error {
+func chargeBattery(ctx context.Context, targetPercentage float64, isPowerQual bool) error {
 	testing.ContextLog(ctx, "Start charging battery")
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	resetScreenBrightness, err := SetBacklightBrightnessLinearPercent(ctx, 5)
-	if err != nil {
-		return errors.Wrap(err, "failed to minimise screen brightness")
-	}
+	screenBrightnessPercentage := screenBrightnessPercentageToSet(ctx, isPowerQual)
+	resetScreenBrightness, err := SetBacklightBrightnessLinearPercent(ctx, screenBrightnessPercentage)
 	defer resetScreenBrightness(cleanupCtx)
 
 	resetKeyboardBrightness, err := SetKeyboardBrightness(ctx, 0)
@@ -218,10 +216,17 @@ func chargeBattery(ctx context.Context, targetPercentage float64) error {
 		if status.BatteryPercent < targetPercentage {
 			return errors.New("failed to reach target battery charge")
 		}
+		// Some battery status goes directly from "Charging" to "Discharging" when the battery is full
+		// to lessen battery degradation, so when the battery is more than 97 and goes to "Discharging"
+		// we treat it as the battery is full and stop charging.
+		if status.BatteryDischarging && status.BatteryPercent >= 97 {
+			testing.ContextLog(ctx, "Battery full(Discharge on AC), stop charging")
+			return nil
+		}
 		testing.ContextLog(ctx, "Successfully charged battery")
 		return nil
 	}, &testing.PollOptions{
-		Interval: time.Second,
+		Interval: time.Minute,
 	})
 }
 
@@ -317,4 +322,24 @@ func stressCPU(ctx context.Context, nCores int, tempPath string) (CleanupCallbac
 		}
 		return nil
 	}, nil
+}
+
+func screenBrightnessPercentageToSet(ctx context.Context, isPowerQual bool) float64 {
+	if !isPowerQual {
+		return 5.0
+	}
+
+	defaultBrightnessLevel, err := defaultBacklightBrightness(ctx, 150, false)
+	if err != nil {
+		testing.ContextLog(ctx, "Use 40.0% linear percentage as the default screen brightness for battery charge qual test for the following error: ", err)
+		return 40.0
+	}
+
+	defaultBrightnessPercent, err := levelToLinear(ctx, defaultBrightnessLevel)
+	if err != nil {
+		testing.ContextLog(ctx, "Use 40.0% linear percentage as the default screen brightness for battery charge qual test for the following error: ", err)
+		return 40.0
+	}
+
+	return defaultBrightnessPercent
 }

@@ -6,6 +6,7 @@ package setup
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -153,7 +154,7 @@ func SetBacklightBrightnessLinearPercent(ctx context.Context, percent float64) (
 		return nil, err
 	}
 
-	testing.ContextLogf(ctx, "Setting screen backlight brightness to %f linear percent from level %d", percent, prevBrightness)
+	testing.ContextLogf(ctx, "Setting screen backlight brightness to %.2f%% linear percent from level %d", percent, prevBrightness)
 	if err := setBacklightBrightnessLinearPercent(ctx, percent); err != nil {
 		return nil, err
 	}
@@ -162,4 +163,20 @@ func SetBacklightBrightnessLinearPercent(ctx context.Context, percent float64) (
 		testing.ContextLogf(ctx, "Restoring screen backlight brightness to level %d", prevBrightness)
 		return setBacklightBrightness(ctx, prevBrightness)
 	}, nil
+}
+
+func levelToLinear(ctx context.Context, level uint) (float64, error) {
+	levelArg := fmt.Sprintf("--level_to_linear=%d", level)
+
+	output, err := testexec.CommandContext(ctx, "backlight_tool", levelArg).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to convert level to linear percentage")
+	}
+
+	percent, err := strconv.ParseFloat(strings.TrimSpace(string(output)), 10)
+	if err != nil {
+		return 0, errors.Wrapf(err, "unable to parse current linear percentage from %q", output)
+	}
+
+	return float64(percent), nil
 }
