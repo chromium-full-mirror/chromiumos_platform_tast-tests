@@ -33,7 +33,13 @@ func init() {
 			"dp-chromeos-eng@google.com",
 			"crmullins@google.com",
 		},
-		Attr:         []string{"group:golden_tier"},
+		// TODO(b/295344270): Remove CalendarIntegrationEnabled from criticalstaging
+		Attr: []string{
+			"group:golden_tier",
+			"group:mainline",
+			"informational",
+			"group:criticalstaging",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		SearchFlags: []*testing.StringPair{
