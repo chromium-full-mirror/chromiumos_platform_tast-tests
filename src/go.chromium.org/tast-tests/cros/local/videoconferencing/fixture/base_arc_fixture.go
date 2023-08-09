@@ -29,15 +29,12 @@ func init() {
 		},
 		Vars: []string{"ui.gaiaPoolDefault"},
 		Impl: arc.NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
+			opts := []chrome.Option{
 				chrome.EnableFeatures("SpeakOnMuteEnabled"),
-				chrome.EnableFeatures("VideoConference"),
-				chrome.EnableFeatures("CrOSLateBootAudioFlexibleLoopback"),
-				chrome.EnableFeatures("SystemLiveCaption"),
-				chrome.EnableFeatures("FeatureManagementVideoConference"),
-				chrome.ExtraArgs("--disable-sync"),
 				chrome.ExtraArgs(arc.DisableSyncFlags()...),
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}
+			opts = append(opts, vcOpts...)
+			return opts, nil
 		}),
 		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout,
