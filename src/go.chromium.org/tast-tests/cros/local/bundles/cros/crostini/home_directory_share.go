@@ -8,23 +8,19 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/crostini"
-	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/vm"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HomeDirectoryCreateFile,
+		Func:         HomeDirectoryShare,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test creating a file/folder in Linux files and container using a pre-built crostini image",
+		Desc:         "Test sharing the VM home directory with the Files app",
 		Contacts:     []string{"clumptini+oncall@chromium.org"},
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
@@ -62,7 +58,7 @@ func init() {
 	})
 }
 
-func HomeDirectoryCreateFile(ctx context.Context, s *testing.State) {
+func HomeDirectoryShare(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 	kb := s.FixtValue().(crostini.FixtureData).KB
@@ -81,46 +77,11 @@ func HomeDirectoryCreateFile(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
-	if err := filesApp.OpenLinuxFiles()(ctx); err != nil {
-		s.Fatal("Failed to open Linux files: ", err)
+	if err := guestos.FilesAppToGuest(ctx, filesApp, kb, cont, filesapp.Linuxfiles); err != nil {
+		s.Fatal("Files app to guest failed: ", err)
 	}
 
-	if err := testCreateFolderFromLinuxFiles(ctx, filesApp, cont, kb); err != nil {
-		s.Fatal("Failed to test creating files in Linux files: ", err)
+	if err := guestos.GuestToFilesApp(ctx, filesApp, cont, filesapp.Linuxfiles); err != nil {
+		s.Fatal("Guest to Files app failed: ", err)
 	}
-
-	if err := testCreateFileFromContainer(ctx, tconn, filesApp, cont); err != nil {
-		s.Fatal("Failed to test creating files in container: ", err)
-	}
-	// Select back to Downloads to remove the linux watcher.
-	if err := filesApp.OpenDownloads()(ctx); err != nil {
-		s.Fatal("Failed to open Downloads to remove Linux watcher: ", err)
-	}
-}
-
-func testCreateFolderFromLinuxFiles(ctx context.Context, filesApp *filesapp.FilesApp, cont *vm.Container, kb *input.KeyboardEventWriter) error {
-	const dirName = "test_folder"
-
-	// Files app doesn't have a way to directly create a file, but
-	// we can create a folder, which is just as good.
-	if err := filesApp.CreateFolder(kb, dirName)(ctx); err != nil {
-		return errors.Wrapf(err, "failed to create new folder %q", dirName)
-	}
-
-	// Check that the file now exists in the container.
-	if err := filesApp.WaitForFile(dirName)(ctx); err != nil {
-		return errors.Wrapf(err, "creation of folder %q did not propagate to container", dirName)
-	}
-	return nil
-}
-
-func testCreateFileFromContainer(ctx context.Context, tconn *chrome.TestConn, filesApp *filesapp.FilesApp, cont *vm.Container) error {
-	const fileName = "testfile.txt"
-
-	// Create file in container.
-	if err := cont.Command(ctx, "touch", fileName).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to create test file in the container")
-	}
-
-	return filesApp.WaitForFile(fileName)(ctx)
 }
