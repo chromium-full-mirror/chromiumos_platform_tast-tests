@@ -24,7 +24,7 @@ func init() {
 		Data: []string{
 			"third_party/Test_multiscript_chrome_v1.xml",
 		},
-		Attr:    []string{"group:cellular", "cellular_unstable", "cellular_sim_prod_esim"},
+		Attr:    []string{"group:cellular", "cellular_sim_prod_esim"},
 		Timeout: 3 * time.Minute,
 	})
 }
