@@ -22,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SelectToSpeakGoogleDocs,
-		LacrosStatus: testing.LacrosVariantNeeded, // TODO(b/271632573): Add lacros variant.
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "A test that invokes Select-to-Speak and verifies it can read content in a Google doc",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
@@ -31,7 +31,15 @@ func init() {
 		BugComponent: "b:1272897", // ChromeOS Public Tracker > Experiences > Accessibility > Features > Select To Speak
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		Params: []testing.Param{{
+			Fixture: "chromeLoggedIn",
+			Val:     browser.TypeAsh,
+		}, {
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Fixture:           "lacros",
+			Val:               browser.TypeLacros,
+		}},
 	})
 }
 func SelectToSpeakGoogleDocs(ctx context.Context, s *testing.State) {
@@ -39,7 +47,7 @@ func SelectToSpeakGoogleDocs(ctx context.Context, s *testing.State) {
 
 	ed := tts.GoogleTTSEngine()
 	html := "<p>placeholder</p>"
-	bt := browser.TypeAsh
+	bt := s.Param().(browser.Type)
 	stsData, err := sts.SetUp(ctx, cr, ed, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up Select to Speak: ", err)
