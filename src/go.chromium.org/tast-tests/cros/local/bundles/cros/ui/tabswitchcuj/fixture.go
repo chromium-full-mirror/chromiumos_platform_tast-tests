@@ -71,27 +71,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "tabSwitchCUJWPRAshWithBackupRefPtr",
-		Desc: "Variant of tabSwitchCUJWPRAsh with BackupRefPtr enabled",
-		Contacts: []string{
-			"ramsaroop@chromium.org",
-			"cros-sw-perf@google.com",
-		},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			opts, err := s.ParentValue().(wpr.FixtValue).FOpt()(ctx, s)
-			if err != nil {
-				return nil, err
-			}
-			opts = append(opts, chrome.EnableFeatures("PartitionAllocBackupRefPtr:enabled-processes/browser-only"))
-			return opts, nil
-		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-		Parent:          "tabSwitchCUJWPR",
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: "tabSwitchCUJWPRAshWithFieldTrials",
 		Desc: "Variant of tabSwitchCUJWPRAsh with all field trials enabled",
 		Contacts: []string{

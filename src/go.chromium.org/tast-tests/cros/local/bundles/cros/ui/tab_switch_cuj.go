@@ -22,13 +22,12 @@ func init() {
 		Func:         TabSwitchCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of tab-switching CUJ",
-		// TODO(b/234063928): Remove crosbolt attributes when TabSwitchCUJ runs stably on suite cuj.
-		Attr: []string{"group:cuj"},
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"yichenz@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      22*time.Minute + cuj.CPUStablizationTimeout,
@@ -52,14 +51,6 @@ func init() {
 			},
 
 			// Experimental variants.
-			{
-				Name:      "backup_ref_ptr",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val: tabswitchcuj.TabSwitchParam{
-					BrowserType: browser.TypeAsh,
-				},
-				Fixture: "tabSwitchCUJWPRAshWithBackupRefPtr",
-			},
 			{
 				Name:      "field_trials",
 				ExtraAttr: []string{"cuj_experimental"},

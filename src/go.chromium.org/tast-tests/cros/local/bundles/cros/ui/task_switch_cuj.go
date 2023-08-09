@@ -68,14 +68,6 @@ func init() {
 
 			// Experimental variants.
 			{
-				Name:      "backup_ref_ptr",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val: taskswitchcuj.TaskSwitchTest{
-					BrowserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserARCSupportedWithBackupRefPtr",
-			},
-			{
 				Name:      "field_trials",
 				ExtraAttr: []string{"cuj_experimental"},
 				Val: taskswitchcuj.TaskSwitchTest{

@@ -397,21 +397,6 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithMainThreadCompositingPriority",
 			}, {
-				Name:      "16p_present_notes_split_backup_ref_ptr",
-				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetTest{
-					bots:        []int{15},
-					layout:      googlemeet.TiledLayout,
-					present:     true,
-					docs:        true,
-					split:       true,
-					cam:         true,
-					zoomOut:     true,
-					browserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithBackupRefPtrAndWebRTCEventLogging",
-			}, {
 				// 49p variant with MainThreadCompositingPriority feature enabled.
 				// TODO(crbug/1410581): Remove this variant when done with testing.
 				Name:      "49p_maincompositing",

@@ -57,12 +57,6 @@ func init() {
 
 			// Experimental variants.
 			{
-				Name:      "backup_ref_ptr",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val:       browser.TypeAsh,
-				Fixture:   "loggedInToCUJUserWithBackupRefPtr",
-			},
-			{
 				Name:      "field_trials",
 				ExtraAttr: []string{"cuj_experimental"},
 				Val:       browser.TypeAsh,
