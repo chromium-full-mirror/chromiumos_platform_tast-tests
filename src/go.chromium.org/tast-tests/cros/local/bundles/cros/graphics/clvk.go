@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Clvk,
 		Desc:         "Run OpenCL implementation on top of Vulkan using clvk",
-		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
+		BugComponent: "b:1171198", // ChromeOS > Platform > Graphics > GPU > OpenCL
 		Contacts: []string{
 			"chromeos-gfx@google.com",
 			"rjodin@chromium.org",
