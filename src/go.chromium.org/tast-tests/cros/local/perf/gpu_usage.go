@@ -126,6 +126,14 @@ const (
 	logUtilTotalAdjustment  = "Adjust total utilization for values greater than one"
 )
 
+// List of programs that could have multiple processes using GPU. Define the
+// regular expression to identify these programs, and process names to use in
+// GPU usage metrics.
+var rankingProcess = map[string]string{
+	"^chrome$":        "chrome",
+	`^virgl-\d+-(.*)`: "virgl-id-$1",
+}
+
 // Perf timeline does snapshot repeatly with a short interval. To reduce the
 // log volume, we design the log / logs data structures so each pattern of log
 // will be printed only once.
@@ -160,7 +168,6 @@ type drmUsage struct {
 	drmMinor uint32 // Minor part of DRM device number.
 
 	// Keep unique names for process, engine, and memory kind.
-	allProcesses   map[string]bool
 	allEngines     map[string]bool
 	allMemoryKinds map[string]bool
 
@@ -178,10 +185,15 @@ func newDrmUsage(minor uint32) *drmUsage {
 	return &drmUsage{
 		drmMinor:        minor,
 		lastUtilization: make(map[string]gpuUtilization),
-		allProcesses:    make(map[string]bool),
 		allEngines:      make(map[string]bool),
 		allMemoryKinds:  make(map[string]bool),
 	}
+}
+
+// gpuUsageValue records the GPU usage values.
+type gpuUsageValue struct {
+	utilization float64
+	memory      float64
 }
 
 // GPUUsageDataSource is performance timeline data source to get GPU utilization
@@ -203,6 +215,10 @@ type GPUUsageDataSource struct {
 	procNums []int
 	// fileNums tracks the number of files analyzed for each snapshot.
 	fileNums []int
+
+	// Accumulated utilization of a process on a DRM. Used to rank the DRMs and
+	// processes.
+	accUsage map[uint32]map[string]*gpuUsageValue
 }
 
 // Assert that GPUInfoSource can be used in perf.Timeline.
@@ -213,6 +229,8 @@ func NewGPUUsageDataSource() *GPUUsageDataSource {
 	return &GPUUsageDataSource{
 		drms: make(map[uint32]*drmUsage),
 		logs: make(logs),
+
+		accUsage: make(map[uint32]map[string]*gpuUsageValue),
 	}
 }
 
@@ -260,26 +278,9 @@ func (ds *GPUUsageDataSource) Start(ctx context.Context) error {
 		}
 		drmSaved := ds.drms[minor]
 
-		// Loop through all the processes having GPU utilization for the DRM.
-		for proc, perProcUtil := range drm.utilizationSamples[0] {
-			// Save the processes and engines related to this DRM.
-			drmSaved.allProcesses[proc] = true
-			for engine := range perProcUtil {
-				drmSaved.allEngines[engine] = true
-			}
-		}
 		// Keep the GPU utilization time so utilization percentage can be
 		// obtained during next snapshot.
 		drmSaved.lastUtilization = drm.utilizationSamples[0]
-
-		// Loop through all the processes having GPU memory usage for the DRM.
-		for proc, perProcMemory := range drm.memorySamples[0] {
-			// Save the processes and memory kind related to this DRM.
-			drmSaved.allProcesses[proc] = true
-			for kind := range perProcMemory {
-				drmSaved.allMemoryKinds[kind] = true
-			}
-		}
 	}
 	ds.lastTime = samplingTime
 	return nil
@@ -307,14 +308,19 @@ func (ds *GPUUsageDataSource) Snapshot(ctx context.Context, values *perf.Values)
 		}
 		drmSaved := ds.drms[minor]
 
+		if ds.accUsage[minor] == nil {
+			ds.accUsage[minor] = make(map[string]*gpuUsageValue)
+		}
+
 		// Get utilization percentage from the lastUtilization, keyed by the
 		// process.
 		utilDiffs := make(map[string]gpuUtilization)
 		// Loop through all the processes having GPU utilization for the DRM.
 		for proc, perProcUtil := range drm.utilizationSamples[0] {
-			drmSaved.allProcesses[proc] = true
 			utilDiffs[proc] = make(gpuUtilization)
+			var procAllEngineUtil float64
 			for engine, perEngineUtil := range perProcUtil {
+				procAllEngineUtil += perEngineUtil
 				drmSaved.allEngines[engine] = true
 				lastValue := 0.0
 				if lastProcUtil, ok := drmSaved.lastUtilization[proc]; ok {
@@ -331,6 +337,10 @@ func (ds *GPUUsageDataSource) Snapshot(ctx context.Context, values *perf.Values)
 				}
 				utilDiffs[proc][engine] = util
 			}
+			if ds.accUsage[minor][proc] == nil {
+				ds.accUsage[minor][proc] = &gpuUsageValue{}
+			}
+			ds.accUsage[minor][proc].utilization = procAllEngineUtil
 		}
 		// Keep the GPU utilization time so utilization percentage can be
 		// obtained during next snapshot.
@@ -338,10 +348,16 @@ func (ds *GPUUsageDataSource) Snapshot(ctx context.Context, values *perf.Values)
 
 		// Loop through all the processes having GPU memory usage for the DRM.
 		for proc, perProcMemory := range drm.memorySamples[0] {
-			drmSaved.allProcesses[proc] = true
-			for kind := range perProcMemory {
+			var procAllKindMemory float64
+			for kind, perKindMemory := range perProcMemory {
 				drmSaved.allMemoryKinds[kind] = true
+				procAllKindMemory += perKindMemory
 			}
+			if ds.accUsage[minor][proc] == nil {
+				ds.accUsage[minor][proc] = &gpuUsageValue{}
+			}
+			// Only record the maximum memory that a process has used.
+			ds.accUsage[minor][proc].memory = math.Max(procAllKindMemory, ds.accUsage[minor][proc].memory)
 		}
 		// Attach the samples of the current snapshot to the saved DRM usage
 		// sample slice.
@@ -361,8 +377,44 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 	}
 	testing.ContextLog(ctx, "Stop tracking GPU usage metrics")
 
+	// Rank DRMs based on the GPU Usage.
+	accDRMUtilization := make(map[uint32]*gpuUsageValue)
+	for minor, processesUsage := range ds.accUsage {
+		accDRMUtilization[minor] = &gpuUsageValue{}
+		for _, procUsage := range processesUsage {
+			accDRMUtilization[minor].utilization += procUsage.utilization
+			accDRMUtilization[minor].memory += procUsage.memory
+		}
+	}
+	sortedDRMs := sortKeysByValue[uint32](accDRMUtilization)
+	var rankLogs []string
+	for di, minor := range sortedDRMs {
+		rankLogs = append(rankLogs, fmt.Sprintf("rank%d - DRM %d", di+1, minor))
+	}
+	testing.ContextLogf(ctx, "DRM ranked by GPU usage: %s", strings.Join(rankLogs, "; "))
+
 	// Loop through all the saved GPU usage on a per DRM basis.
-	for minor, drm := range ds.drms {
+	for di, minor := range sortedDRMs {
+		drmRank := fmt.Sprintf("rank%d", di+1)
+		drm := ds.drms[minor]
+		// Rank processes based on the utilization.
+		sortedProcesses := sortKeysByValue[string](ds.accUsage[minor])
+		sortedProcessNames := make([]string, len(sortedProcesses))
+		processRankLogs := make(map[string][]string)
+		for i, proc := range sortedProcesses {
+			// proc is with <name>_<id> format.
+			name := proc[:strings.LastIndex(proc, "_")]
+			// Special handling for the processes that need ranking.
+			for k, v := range rankingProcess {
+				reg := regexp.MustCompile(k)
+				if reg.MatchString(name) {
+					name = reg.ReplaceAllString(name, v)
+					processRankLogs[name] = make([]string, 0)
+				}
+			}
+			sortedProcessNames[i] = name
+		}
+
 		// Total GPU utilization by all processes for the DRM, keyed by the
 		// engine.
 		totalUtilization := make(map[string][]float64)
@@ -379,7 +431,13 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 		drmHasUtilization := false
 		drmHasMemory := false
 		// Loop through all the processes that have been recorded for the DRM.
-		for proc := range drm.allProcesses {
+		for pi, procName := range sortedProcessNames {
+			proc := sortedProcesses[pi]
+			if logs, ok := processRankLogs[procName]; ok {
+				processRankLogs[procName] = append(logs, fmt.Sprintf("rank%d - %s", len(logs)+1, proc))
+				procName = fmt.Sprintf("%s_rank%d", procName, len(logs)+1)
+			}
+
 			// Map used to store the utilization samples on a per engine basis.
 			processUtilization := make(map[string][]float64)
 			for engine := range drm.allEngines {
@@ -451,7 +509,7 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 					continue
 				}
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%sGPU.Usage.DRM%d.Utilization.%s.%s", ds.prefix, minor, engine, proc),
+					Name:      fmt.Sprintf("%sGPU.Usage.DRM_%s.Utilization.%s.%s", ds.prefix, drmRank, engine, procName),
 					Unit:      "percent",
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
@@ -464,7 +522,7 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 					continue
 				}
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%sGPU.Usage.DRM%d.Memory.%s.%s", ds.prefix, minor, kind, proc),
+					Name:      fmt.Sprintf("%sGPU.Usage.DRM_%s.Memory.%s.%s", ds.prefix, drmRank, kind, procName),
 					Unit:      "KiB",
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
@@ -476,7 +534,7 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 		if drmHasUtilization {
 			for engine := range drm.allEngines {
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%sGPU.Usage.DRM%d.Utilization.%s", ds.prefix, minor, engine),
+					Name:      fmt.Sprintf("%sGPU.Usage.DRM_%s.Utilization.%s", ds.prefix, drmRank, engine),
 					Unit:      "percent",
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
@@ -487,13 +545,18 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 		if drmHasMemory {
 			for kind := range drm.allMemoryKinds {
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%sGPU.Usage.DRM%d.Memory.%s", ds.prefix, minor, kind),
+					Name:      fmt.Sprintf("%sGPU.Usage.DRM_%s.Memory.%s", ds.prefix, drmRank, kind),
 					Unit:      "KiB",
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  ds.intervalName,
 				}, totalMemory[kind]...)
 			}
+		}
+
+		for procName, logs := range processRankLogs {
+			testing.ContextLogf(ctx, "Process %q ranked by GPU usage for DRM_%s (%d): %s",
+				procName, drmRank, minor, strings.Join(logs, "; "))
 		}
 	}
 
@@ -533,6 +596,7 @@ type gpuInfo struct {
 	file         string    // The file path where the usage info is read from.
 	samplingTime time.Time // When the GPU usage info is read.
 	drmClient    string    // The id of the DRM client that is using the GPU.
+	procName     string    // The process name.
 
 	utilization gpuUtilization // GPU Utilization.
 	memory      gpuMemory      // Memory utilization.
@@ -995,4 +1059,30 @@ func gpuDriClients(path string, clients map[string]string) error {
 		clients[words[1]] = words[0]
 	}
 	return nil
+}
+
+// sortKeysByValue sorts the map keys by the GPU usage.
+func sortKeysByValue[T string | uint32](m map[T]*gpuUsageValue) []T {
+	// Create a pair struct for key and value.
+	type pair struct {
+		k T
+		v *gpuUsageValue
+	}
+	var pairs []pair
+	for k, v := range m {
+		pairs = append(pairs, pair{k, v})
+	}
+	// Sort slice based on values.
+	sort.Slice(pairs, func(i, j int) bool {
+		if pairs[i].v.utilization == pairs[j].v.utilization {
+			return pairs[i].v.memory > pairs[j].v.memory
+		}
+		return pairs[i].v.utilization > pairs[j].v.utilization
+	})
+
+	keys := make([]T, len(pairs))
+	for i, p := range pairs {
+		keys[i] = p.k
+	}
+	return keys
 }
