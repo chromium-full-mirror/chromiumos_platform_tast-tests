@@ -1107,7 +1107,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	applyEffects := nodewith.Name("Apply visual effects").Role(role.MenuItem)
 	blur := nodewith.Name("Blur your background").Role(role.ToggleButton).Focusable()
 	turnOffBlur := nodewith.Name("Turn off visual effects").Role(role.ToggleButton).Focusable()
-	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(nodewith.Name("Close").Role(role.GenericContainer))
+	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(meetRootWebArea).Focusable()
 	setEffect := func(ctx context.Context, effect *nodewith.Finder) error {
 		return uiauto.Combine(
 			fmt.Sprintf("set effect with node %v", effect),
