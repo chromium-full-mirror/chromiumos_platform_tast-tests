@@ -110,7 +110,7 @@ func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 	}
 
 	websites := map[string]string{
-		"Twitter": "https://twitter.com",
+		"X":       "https://x.com",
 		"YouTube": "https://www.youtube.com",
 		"Google":  "http://maps.google.com",
 	}
