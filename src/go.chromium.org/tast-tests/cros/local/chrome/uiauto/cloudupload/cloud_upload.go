@@ -50,7 +50,7 @@ func (cu *CloudUpload) WaitFileHandlerAndChoose() uiauto.Action {
 		option = nodewith.Ancestor(fileHandlerDialog).Role(role.ListBoxOption).NameContaining("Microsoft 365")
 	}
 
-	return uiauto.Combine("File handlers dialog: choose Google Drive",
+	return uiauto.Combine("File handlers dialog: choose "+string(cu.provider),
 		log("Starting File Handlers step"),
 		cu.ui.WaitUntilExists(fileHandlerDialog),
 		cu.ui.LeftClick(option),
@@ -169,7 +169,7 @@ func (cu *CloudUpload) WaitUploadConfirmationDialogAndClickToUpload(alwaysMove b
 
 	longerUI := cu.ui.WithTimeout(40 * time.Second)
 
-	return uiauto.Combine("Move/copy to cloud dialog: done",
+	return uiauto.Combine("Move/copy to cloud dialog: upload",
 		log("Starting Move/Copy confirmation dialog step"),
 		longerUI.WaitUntilExists(dialog),
 		func(ctx context.Context) error {
@@ -179,7 +179,7 @@ func (cu *CloudUpload) WaitUploadConfirmationDialogAndClickToUpload(alwaysMove b
 			// Default to no-op action.
 			return nil
 		},
-		longerUI.LeftClickUntil(moveButton, longerUI.WaitUntilGone(dialog)),
+		longerUI.LeftClickUntil(moveButton, longerUI.Gone(dialog)),
 	)
 }
 

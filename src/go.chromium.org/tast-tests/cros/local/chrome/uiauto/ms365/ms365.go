@@ -73,9 +73,11 @@ func (ms *Ms365) InputUserName(userName string) uiauto.Action {
 
 	return uiauto.Combine("MS SignIn",
 		ms.ui.WaitUntilExists(msSignInWindow),
+		ms.ui.WaitUntilExists(usernameInput.Visible()),
 		ms.ui.LeftClick(usernameInput),
 		ms.kb.TypeAction(userName),
 		ms.kb.AccelAction("Enter"),
+		ms.ui.WaitUntilGone(usernameInput.Visible()),
 	)
 }
 
@@ -85,11 +87,12 @@ func (ms *Ms365) InputPassword(password string) uiauto.Action {
 	passwordInput := nodewith.Ancestor(msPasswordWindow).Role(role.TextField).NameContaining("password")
 
 	return uiauto.Combine("MS SignIn Password",
-		ms.ui.WaitUntilExists(msPasswordWindow),
-		ms.ui.WaitUntilExists(passwordInput),
+		ms.ui.WaitUntilExists(msPasswordWindow.Visible()),
+		ms.ui.WaitUntilExists(passwordInput.Visible()),
 		ms.ui.LeftClick(passwordInput),
 		ms.kb.TypeAction(password),
 		ms.kb.AccelAction("Enter"),
+		ms.ui.WaitUntilGone(passwordInput.Visible()),
 	)
 }
 

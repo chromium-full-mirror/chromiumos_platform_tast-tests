@@ -83,7 +83,7 @@ func DrivefsOfficeOpenFile(ctx context.Context, s *testing.State) {
 				cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false /*=alwaysMove*/),
 				drivefs.WaitForGoogleDriveWindow(tconn, fileName),
 			)(ctx); err != nil {
-				s.Fatal("Failed to upload and open on Google Drive: ", fileName, err)
+				s.Fatalf("Failed to upload and open on Google Drive: %q: %v", fileName, err)
 			}
 			defer drivefs.CloseGoogleDriveWindow(cleanupCtx, tconn, fileName)
 

@@ -116,7 +116,8 @@ func MD5SumFile(path string) (string, error) {
 // WaitForGoogleDriveWindow wait for the Google Drive window with the specified
 // file name in the title to open.
 func WaitForGoogleDriveWindow(tconn *chrome.TestConn, fileName string) uiauto.Action {
-	ui := uiauto.New(tconn).WithInterval(500 * time.Millisecond)
+	// Interacting with remote service, doubling the timeout to 30s.
+	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 	googleDriveWindow := nodewith.Role(role.Window).NameContaining(fileName).HasClass("BrowserRootView")
 	return ui.WaitUntilExists(googleDriveWindow)
 }

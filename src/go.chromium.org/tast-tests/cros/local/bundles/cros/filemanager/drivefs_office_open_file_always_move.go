@@ -96,7 +96,7 @@ func DrivefsOfficeOpenFileAlwaysMove(ctx context.Context, s *testing.State) {
 			}
 
 			if err := drivefs.WaitForGoogleDriveWindow(tconn, fileName)(ctx); err != nil {
-				s.Fatal("Failed waiting file to open on Google Drive: ", fileName, err)
+				s.Fatalf("Failed waiting file to open on Google Drive: %q: %v", fileName, err)
 			}
 			defer drivefs.CloseGoogleDriveWindow(cleanupCtx, tconn, fileName)
 
