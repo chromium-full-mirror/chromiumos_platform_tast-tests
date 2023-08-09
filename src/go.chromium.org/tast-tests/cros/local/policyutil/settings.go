@@ -13,11 +13,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // nodeChecker is used in checking different properties of a node while collecting the error messages.
@@ -82,34 +81,8 @@ func OSSettingsPageWithPassword(ctx context.Context, cr *chrome.Chrome, shortLin
 	}
 	defer conn.Close()
 
-	tconn, err := page.cr.TestAPIConn(ctx)
-	if err != nil {
-		page.err = errors.Wrap(err, "failed to create Test API connection")
-		return page
-	}
-
-	passwordNode := nodewith.Name("Confirm your password")
-
-	uia := uiauto.New(tconn)
-	if err := uia.WaitUntilExists(passwordNode.First())(ctx); err != nil {
-		testing.ContextLog(ctx, "Could not find password dialog: ", err)
-		return page
-	}
-
-	keyboard, err := input.Keyboard(ctx)
-	if err != nil {
-		page.err = errors.Wrap(err, "failed to open keyboard device")
-		return page
-	}
-	defer keyboard.Close(ctx)
-
-	if err := keyboard.Type(ctx, password+"\n"); err != nil {
-		page.err = errors.Wrap(err, "failed to type password")
-		return page
-	}
-
-	if err := uia.WaitUntilGone(passwordNode)(ctx); err != nil {
-		testing.ContextLog(ctx, "Could not wait until password dialog is gone: ", err)
+	if err := ossettings.ConfirmPassword(ctx, cr, password); err != nil {
+		page.err = errors.Wrap(err, "failed to confirm password")
 		return page
 	}
 

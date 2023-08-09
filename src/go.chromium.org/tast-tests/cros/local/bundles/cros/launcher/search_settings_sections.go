@@ -14,10 +14,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -193,8 +193,7 @@ func SearchSettingsSections(ctx context.Context, s *testing.State) {
 			}
 
 			if tc.passwordProtected {
-				err := enterPassword(ctx, ui, kb, deviceUserPassword)
-				if err != nil {
+				if err := ossettings.ConfirmPassword(ctx, cr, deviceUserPassword); err != nil {
 					s.Fatal("Failed to enter password: ", err)
 				}
 			}
@@ -206,16 +205,4 @@ func SearchSettingsSections(ctx context.Context, s *testing.State) {
 			}
 		})
 	}
-}
-
-func enterPassword(ctx context.Context, ui *uiauto.Context, kb *input.KeyboardEventWriter, password string) error {
-	if err := ui.WaitUntilExists(nodewith.Name("Confirm your password").First())(ctx); err != nil {
-		return errors.Wrap(err, "could not find password dialog")
-	}
-
-	if err := kb.Type(ctx, password+"\n"); err != nil {
-		return errors.Wrap(err, "failed to type password")
-	}
-
-	return nil
 }

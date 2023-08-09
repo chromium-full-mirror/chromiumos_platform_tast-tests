@@ -132,6 +132,37 @@ func LaunchAtAppMgmtPage(ctx context.Context, tconn *chrome.TestConn, cr *chrome
 	return LaunchAtPageURL(ctx, tconn, cr, fmt.Sprintf("app-management/detail?id=%s", appID), condition)
 }
 
+// ConfirmPassword enters the provided password in OS Settings, to open password-protected pages.
+func ConfirmPassword(ctx context.Context, cr *chrome.Chrome, password string) error {
+	passwordNode := nodewith.Name("Confirm your password")
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
+
+	uia := uiauto.New(tconn)
+	if err := uia.WaitUntilExists(passwordNode.First())(ctx); err != nil {
+		return errors.Wrap(err, "failed to find password dialog")
+	}
+
+	keyboard, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to open keyboard device")
+	}
+	defer keyboard.Close(ctx)
+
+	if err := keyboard.Type(ctx, password+"\n"); err != nil {
+		return errors.Wrap(err, "failed to type password")
+	}
+
+	if err := uia.WaitUntilGone(passwordNode)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait until password dialog is gone")
+	}
+
+	return nil
+}
+
 // OpenMobileDataSubpage navigates Settings app to mobile data subpage.
 func OpenMobileDataSubpage(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*OSSettings, error) {
 	ui := uiauto.New(tconn)
