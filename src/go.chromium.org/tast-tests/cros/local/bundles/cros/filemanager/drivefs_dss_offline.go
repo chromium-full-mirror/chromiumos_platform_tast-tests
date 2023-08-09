@@ -144,7 +144,9 @@ func DrivefsDssOffline(ctx context.Context, s *testing.State) {
 	}
 
 	// Reselect the file in order to query the Available offline toggle.
-	if err := filesApp.SelectFile(testFileNameWithExt)(ctx); err != nil {
+	if err := filesApp.PerformActionAndRetryMaximizedOnFail(
+		filesApp.SelectFile(testFileNameWithExt),
+	)(ctx); err != nil {
 		s.Fatalf("Failed to reselect test file %q: %v", testFileNameWithExt, err)
 	}
 
