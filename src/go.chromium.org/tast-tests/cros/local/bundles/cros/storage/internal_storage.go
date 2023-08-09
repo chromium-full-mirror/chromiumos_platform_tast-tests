@@ -6,7 +6,10 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
+	"math"
+	"strconv"
 	"strings"
 
 	"os"
@@ -17,7 +20,6 @@ import (
 )
 
 func init() {
-
 	testing.AddTest(&testing.Test{
 		Func: InternalStorage,
 		Desc: "Internal storage tests",
@@ -42,6 +44,11 @@ func InternalStorage(ctx context.Context, s *testing.State) {
 
 	// Check for known kernel issues
 	checkKernelErrors(ctx, s)
+
+	// Checks for free index nodes and storage
+	checkPathHasEnoughSpace(ctx, s, statefulPartition, spaceTypeInode, float64(100000))
+	checkPathHasEnoughSpace(ctx, s, statefulPartition, spaceTypeDisk, 0.7)
+	checkPathHasEnoughSpace(ctx, s, statefulPartitionEncrypted, spaceTypeDisk, 0.1)
 }
 
 // checkStatefulPartitionsWritable checks that the stateful partitions are writable
@@ -78,6 +85,50 @@ func checkKernelErrors(ctx context.Context, s *testing.State) {
 		s.Fatalf("critical kernel error: %s. Saw file system error: Data will be lost", out)
 	}
 	s.Log("No critical kernel errors found")
+}
+
+// SpaceType is different types of disk space used in the calculation for storage space.
+type spaceType string
+
+const (
+	spaceTypeDisk  spaceType = "disk"
+	spaceTypeInode spaceType = "inodes"
+)
+
+func checkPathHasEnoughSpace(ctx context.Context, s *testing.State, path string, typeOfSpace spaceType, minSpaceNeeded float64) {
+	checkPathExists(ctx, s, path)
+	const mbPerGB = 1000
+	var cmd string
+	if typeOfSpace == spaceTypeDisk {
+		oneMB := math.Pow(10, 6)
+		s.Logf("Checking for >= %f (GB/inodes) of %s under %s on dut", minSpaceNeeded, typeOfSpace, path)
+		cmd = fmt.Sprintf(`-PB %.f %s`, oneMB, path)
+	} else {
+		// checking typeOfSpace == "inodes"
+		cmd = fmt.Sprintf(`-Pi %s`, path)
+	}
+	args := strings.Split(cmd, " ")
+	output, err := testexec.CommandContext(ctx, "df", args...).Output()
+	outList := strings.Split(string(output), "\n")
+
+	if err != nil {
+		s.Fatalf("%s: error while running the command to check space: %s for %s", typeOfSpace, err, path)
+	}
+	if len(outList) < 2 {
+		s.Fatalf("Invalid command output: %s", string(output))
+	}
+	outputList := strings.Fields(string(outList[1]))
+	free, err := strconv.ParseFloat(outputList[3], 64)
+	if err != nil {
+		s.Fatalf("Error while parsing df command output : %s", err)
+	}
+	if typeOfSpace == spaceTypeDisk {
+		free = float64(free) / mbPerGB
+	}
+	if free < minSpaceNeeded {
+		s.Fatalf("%s: not enough free %s on %s - %f (GB/inodes) free, want %f (GB/inodes)", typeOfSpace, typeOfSpace, path, free, minSpaceNeeded)
+	}
+	s.Logf("Found %f (GB/inodes) >= %f (GB/inodes) of %s under %s on machine", free, minSpaceNeeded, typeOfSpace, path)
 }
 
 // checkPathExists checks if a given path exists or not.
