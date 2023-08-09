@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ime/emojipicker"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/input"
 )
@@ -27,6 +28,13 @@ func (its *InputsTestServer) TriggerEmojiPickerFromContextMenu(inputField InputF
 	)
 }
 
+// DismissGifNudgeOverlay returns a user action to dismiss gif nudge overlay in PK emoji picker.
+func (its *InputsTestServer) DismissGifNudgeOverlay() uiauto.Action {
+	return uiauto.Combine("Dismiss gif nudge overlay",
+		its.ui.LeftClickUntil(emojipicker.SearchFieldFinder, its.ui.WithTimeout(5*time.Second).WaitUntilGone(emojipicker.NudgeOverlay)),
+	)
+}
+
 // InputEmojiWithEmojiPicker returns a user action to input Emoji with PK emoji picker on E14s test server.
 func (its *InputsTestServer) InputEmojiWithEmojiPicker(uc *useractions.UserContext, inputField InputField, emojiChar string) uiauto.Action {
 	emojiCharFinder := emojipicker.NodeFinder.Name(emojiChar).First()
@@ -35,6 +43,7 @@ func (its *InputsTestServer) InputEmojiWithEmojiPicker(uc *useractions.UserConte
 	action := uiauto.Combine(fmt.Sprintf("input emoji with emoji picker on field %v", inputField),
 		its.Clear(inputField),
 		its.TriggerEmojiPickerFromContextMenu(inputField),
+		its.DismissGifNudgeOverlay(),
 		// Select item from emoji picker.
 		ui.LeftClick(emojiCharFinder),
 		// Wait for input value to test emoji.
@@ -92,15 +101,16 @@ func (its *InputsTestServer) InputEmojiWithEmojiPickerSearch(uc *useractions.Use
 // InputGifWithEmojiPickerSearch returns a user action to input GIF with PK emoji picker on E14S test server using search.
 func (its *InputsTestServer) InputGifWithEmojiPickerSearch(uc *useractions.UserContext, inputField InputField, keyboard *input.KeyboardEventWriter, searchString string) uiauto.Action {
 
-	emojiResultFinder := nodewith.NameContaining("GIF").First()
+	emojiResultFinder := emojipicker.NodeFinder.Role(role.Button).NameContaining("GIF").First()
 	ui := emojipicker.NewUICtx(its.tconn)
 
 	action := uiauto.Combine(fmt.Sprintf("input emoji with emoji picker on field %v", inputField),
 		its.Clear(inputField),
 		its.TriggerEmojiPickerFromContextMenu(inputField),
+		its.DismissGifNudgeOverlay(),
 		ui.LeftClickUntil(emojipicker.SearchFieldFinder, ui.WithTimeout(time.Second).WaitUntilExists(emojipicker.SearchFieldFinder)),
 		keyboard.TypeAction(searchString),
-		util.WaitForFieldEmpty(its.tconn, emojipicker.NodeFinder.Name("😄").First()),
+		ui.WithTimeout(time.Second).WaitUntilExists(emojiResultFinder),
 		ui.LeftClickUntil(emojiResultFinder, ui.WithTimeout(time.Second).WaitUntilGone(emojipicker.RootFinder)),
 		its.WaitUntilFieldContainsImages(inputField),
 	)

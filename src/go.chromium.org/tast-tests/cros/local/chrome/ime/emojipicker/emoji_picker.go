@@ -20,9 +20,10 @@ var (
 	RootFinder                    = nodewith.Name("Emoji Picker").Role(role.RootWebArea)
 	NodeFinder                    = nodewith.Ancestor(RootFinder)
 	SearchFieldFinder             = NodeFinder.NameRegex(regexp.MustCompile("[sS]earch( [eE]mojis)?")).Role(role.SearchBox)
-	RecentUsedHeading             = NodeFinder.Name("Recently used").Role(role.Heading)
+	RecentUsedHeading             = NodeFinder.NameRegex(regexp.MustCompile("Recently used(.*)")).Role(role.Heading)
 	RecentUsedMenu                = nodewith.Role(role.Button).Ancestor(RecentUsedHeading)
 	ClearRecentlyUsedButtonFinder = NodeFinder.Name("Clear recently used emojis").Role(role.Button)
+	NudgeOverlay                  = NodeFinder.HasClass("overlay")
 )
 
 // NewUICtx creates a new UI context used in emoji picker related tests.

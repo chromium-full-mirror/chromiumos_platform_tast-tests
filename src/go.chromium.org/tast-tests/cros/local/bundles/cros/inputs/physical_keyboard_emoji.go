@@ -145,6 +145,7 @@ func PhysicalKeyboardEmoji(ctx context.Context, s *testing.State) {
 
 		if err := uiauto.Combine("validate recently used emojis",
 			its.TriggerEmojiPickerFromContextMenu(inputField),
+			its.DismissGifNudgeOverlay(),
 			// Clear recent used emojis.
 			uiauto.UserAction(
 				"Clear recently used emoji",

@@ -33,7 +33,7 @@ func init() {
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
 		Params: []testing.Param{
 			{
-				Fixture: fixture.ClamshellNonVKGifSupport,
+				Fixture: fixture.ClamshellNonVK,
 			},
 			{
 				Name:              "lacros",

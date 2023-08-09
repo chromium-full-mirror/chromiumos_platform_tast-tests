@@ -57,7 +57,6 @@ const (
 	ClamshellNonVKWithDiacriticsOnPKLongpress     = "clamshellWithDiacriticsOnPKLongpress"
 	ClamshellNonVKWithFirstPartyVietnamese        = "clamshellNonVKWithFirstPartyVietnamese"
 	ClamshellNonVK                                = "clamshellNonVK"
-	ClamshellNonVKGifSupport                      = "clamshellNonVKGifSupport"
 	ClamshellNonVKStereoAloopLoaded               = "clamshellNonVKStereoAloopLoaded"
 	ClamshellNonVKInGuest                         = "clamshellNonVKInGuest"
 	ClamshellNonVKRestart                         = "clamshellNonVKRestart"
@@ -189,21 +188,6 @@ func init() {
 			"shengjun@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: ClamshellNonVKGifSupport,
-		Desc: "Clamshell mode with VK disabled and GIF Support in Emoji Picker",
-		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
-			"essential-inputs-team@google.com",
-		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle, emojiPickerGifSupport),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -294,7 +278,7 @@ func init() {
 			"shengjun@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, guestLogin),
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, guestLogin, emojiPickerGifSupport),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -447,7 +431,7 @@ func init() {
 			"shengjun@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle),
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle, emojiPickerGifSupport),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -538,7 +522,7 @@ func init() {
 			"shengjun@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, guestLogin),
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, guestLogin, emojiPickerGifSupport),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
