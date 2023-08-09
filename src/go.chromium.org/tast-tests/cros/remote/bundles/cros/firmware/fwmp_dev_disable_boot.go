@@ -53,25 +53,6 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 	}
 
 	setFWMP := func(ctx context.Context, flags string) error {
-		s.Log("Taking ownership")
-		if err := s.DUT().Conn().CommandContext(ctx, "tpm_manager_client", "take_ownership").Run(ssh.DumpLogOnError); err != nil {
-			return errors.Wrap(err, "failed to take ownership")
-		}
-
-		/*
-			Allow some delay to ensure that this command has fully propagated.
-			Without this delay, the following error would likely appear when
-			setting firmware management parameters:
-			'Failed to call SetFirmwareManagementParameters: (dbus, org.freedesktop.DBus.Error.ServiceUnknown,
-			Error calling D-Bus method: org.chromium.InstallAttributesInterface.SetFirmwareManagementParameters:
-			The name org.chromium.UserDataAuth was not provided by any .service files)'
-		*/
-		s.Logf("Sleeping for %s", 5*time.Second)
-		// GoBigSleepLint: This is a temporary sleep until a better solution can be found.
-		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-			return errors.Wrap(err, "failed to sleep")
-		}
-
 		// Set FWMP flags in a poll to increase the chances of success.
 		s.Log("Setting firmware management parameters")
 		reOwnerPassword := regexp.MustCompile(`flags:\s*(0|1)`)
@@ -133,8 +114,12 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 			if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 				s.Fatal("Failed to set power_state to reset: ", err)
 			}
-			if err := ms.FwScreenToNormalMode(ctx); err != nil {
-				s.Fatal("Failed while moving from firmware screen to normal mode: ", err)
+			// GoBigSleepLint: wait for firmware screen to appear.
+			if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+				s.Fatal("Failed to sleep: ", err)
+			}
+			if err := confirmContinueToNorm(ctx, h, ms); err != nil {
+				s.Fatal("Failed to confirm continue to norm: ", err)
 			}
 		}
 
@@ -165,34 +150,29 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 	}
 	ownershipID := strings.TrimSpace(string(ownershipData))
 
-	// When dev mode is disabled by FWMP, DUT is expected to boot into normal mode.
-	rebootCtx, cancelRebootCtx := context.WithTimeout(ctx, 10*time.Minute)
-	defer cancelRebootCtx()
+	s.Log("Attempting reboot into dev mode")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+		s.Fatal("Failed to set power_state to reset: ", err)
+	}
+	// GoBigSleepLint: wait for firmware screen to appear.
+	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+		s.Fatal("Failed to sleep: ", err)
+	}
+	if err := ms.BypassDevMode(ctx); err != nil {
+		s.Fatal("Failed to Bypass DevMode: ", err)
+	}
 
-	var opts []firmware.ModeSwitchOption
-	opts = append(opts, firmware.SkipModeCheckAfterReboot)
-	if err := ms.ModeAwareReboot(rebootCtx, firmware.ColdReset, opts...); err != nil {
-		// When dev mode got disabled by FWMP, pressing the ENTER key would be
-		// required on DUTs with RecButtonDevSwitch, for example chromeboxes,
-		// to free them from the 'confirm returning to secure mode' screen.
-		if strings.Contains(err.Error(), context.DeadlineExceeded.Error()) && h.Config.RecButtonDevSwitch {
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				s.Log("Pressing ENTER key")
-				if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurTab); err != nil {
-					errors.Wrap(err, "failed to press enter key")
-				}
-
-				recButtonCtx, cancelRecButtonCtx := context.WithTimeout(ctx, 1*time.Minute)
-				defer cancelRecButtonCtx()
-				if err := h.WaitConnect(recButtonCtx); err != nil {
-					return errors.Wrap(err, "failed to reconnect after pressing ENTER key")
-				}
-				return nil
-			}, &testing.PollOptions{Timeout: 4 * time.Minute}); err != nil {
-				s.Fatal("While trying to reboot DUT with dev mode disabled: ", err)
-			}
-		} else {
+	connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	defer cancel()
+	if err := h.WaitConnect(connectCtx); err != nil {
+		// Expect DUT to be disconnected and stuck at the DeveloperToNorm screen.
+		if !errors.As(err, &context.DeadlineExceeded) {
 			s.Fatal("Unexpected error occurred while attempting to boot DUT: ", err)
+		}
+
+		s.Log("Found DUT stuck at DeveloperToNorm screen, attempting boot into normal mode")
+		if err := confirmContinueToNorm(ctx, h, ms); err != nil {
+			s.Fatal("Failed to confirm continue to norm: ", err)
 		}
 	}
 
@@ -261,4 +241,47 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 	if err = s.DUT().Conn().CommandContext(ctx, "hwsec-ownership-id", "diff", "--id="+ownershipID).Run(ssh.DumpLogOnError); err != nil {
 		s.Fatal("While checking TPM ownership: ", err)
 	}
+}
+
+// confirmContinueToNorm attempts to boot the DUT to normal mode
+// when dev mode is blocked by the fwmp flags.
+func confirmContinueToNorm(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSwitcher) error {
+	menuNavigator, err := firmware.NewMenuNavigator(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "failed to create a new menu navigator")
+	}
+
+	testing.ContextLog(ctx, "Bypassing DeveloperToNorm screen")
+	switch h.Config.ModeSwitcherType {
+	case firmware.MenuSwitcher:
+		// When dev mode is blocked by the fwmp flags, we have observed
+		// different scenarios at the DeveloperToNorm screen. Depending on the FW
+		// versions, some would show a dialog, while some others have the "Cancel"
+		// highlighted as the default option. We found that pressing the esc key,
+		// in combination with the power button, or enter key, works for all of these
+		// scenarios in booting the DUT to normal mode.
+		testing.ContextLog(ctx, "Pressing <esc> key")
+		if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
+			return errors.Wrap(err, "failed to press \"<esc>\"")
+		}
+		fallthrough
+	case firmware.KeyboardDevSwitcher:
+		if err := menuNavigator.SelectOption(ctx); err != nil {
+			return errors.Wrap(err, "failed to select option")
+		}
+	case firmware.TabletDetachableSwitcher:
+		if err := ms.TriggerDevToNormal(ctx); err != nil {
+			return errors.Wrap(err, "failed to select option")
+		}
+	default:
+		return errors.Wrapf(err, "unsupported mode switcher type %s", h.Config.ModeSwitcherType)
+	}
+
+	connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	defer cancel()
+	if err := h.WaitConnect(connectCtx); err != nil {
+		return err
+	}
+
+	return nil
 }

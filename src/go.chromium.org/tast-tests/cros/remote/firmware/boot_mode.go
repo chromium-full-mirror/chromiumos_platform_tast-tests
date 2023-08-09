@@ -653,30 +653,6 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 	return nil
 }
 
-// FwScreenToNormalMode moves the DUT from the firmware bootup screen to Normal mode.
-// This should be called immediately after powering on.
-// The actual behavior depends on the ModeSwitcherType.
-func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSwitchOption) error {
-	h := ms.Helper
-	testing.ContextLog(ctx, "Set DFP mode")
-	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
-		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %s", err)
-	}
-	totalTimeout := h.Config.DelayRebootToPing + h.Config.FirmwareScreen
-	if msOptsContain(opts, WaitSoftwareSync) {
-		totalTimeout += h.Config.SoftwareSyncUpdate
-	}
-	// Repeating bypasser's sequence of presses has side effect on machines
-	// running MenuSwitcher and TabletDetachableSwitcher. Specifically, they
-	// might end up booting from the internal disk, or power off, if the first
-	// effective press lands at the wrong location.
-	params := RunBypasser{BypasserMethod: ms.bypasser.TriggerDevToNormal, RepeatBypasser: false, WaitUntilDUTConnected: totalTimeout}
-	if h.Config.ModeSwitcherType == KeyboardDevSwitcher {
-		params.RepeatBypasser = true
-	}
-	return ms.RunBypasserUntilDUTConnected(ctx, params)
-}
-
 // FwScreenToDevMode moves the DUT from the firmware bootup screen to Dev mode.
 // This should be called immediately after powering on.
 // The actual behavior depends on the ModeSwitcherType.
