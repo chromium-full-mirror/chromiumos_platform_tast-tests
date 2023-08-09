@@ -135,10 +135,13 @@ func PasspointForgetNetwork(ctx context.Context, s *testing.State) {
 	if _, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, ap.SSID, netconfigtypes.WiFi); err != nil {
 		s.Fatal("Failed to oen WiFi network page: ", err)
 	}
+	// Open the forget dialog and confirm subscription removal.
 	forget := nodewith.Name("Forget").First()
+	confirm := nodewith.Name("Confirm").First()
 	if err := uiauto.Combine("forget current active WiFi network",
 		ac.WaitUntilExists(forget),
-		ac.DoubleClick(forget),
+		ac.RetryUntil(ac.LeftClick(forget), ac.Exists(confirm)),
+		ac.RetryUntil(ac.LeftClick(confirm), ac.Gone(confirm)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to forget current active WiFi network: ", err)
 	}
