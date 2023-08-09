@@ -69,6 +69,13 @@ func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 		return "", errors.Wrap(err, "failed to get Downloads path")
 	}
 
+	out, err := testexec.CommandContext(ctx, "ls", "-l", downloadsPath).Output()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to list Downloads directory")
+	}
+	testing.ContextLog(ctx, "Files in the Downloads directory: ", string(out))
+
+	dumpStartTimeStr := time.Now().Format("2006-01-02 15:04:05")
 	waitForDownloadButton := ui.WithTimeout(5 * time.Second).WaitUntilExists(webRTCDownloadButton)
 	if err := uiauto.Combine("invoke the button for the dump download",
 		// Wait for |createDumpSection| node to appear to ensure
@@ -84,11 +91,10 @@ func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 	}
 
 	downloadStartTime := time.Now()
-	downloadStartTimeStr := downloadStartTime.Format("2006-01-02 15:04:05")
 	// Assume WebRTC dump file name should start with "webrtc".
 	const webRTCFileNamePrefix = "webrtc"
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		findFileCmd := fmt.Sprintf("find %s -name '%s*.txt' -newermt '%s'", downloadsPath, webRTCFileNamePrefix, downloadStartTimeStr)
+		findFileCmd := fmt.Sprintf("find %s -name '%s*.txt' -newermt '%s'", downloadsPath, webRTCFileNamePrefix, dumpStartTimeStr)
 		out, err := testexec.CommandContext(ctx, "bash", "-c", findFileCmd).Output()
 		if err != nil {
 			return errors.Wrapf(err, "find command %s failed", findFileCmd)
