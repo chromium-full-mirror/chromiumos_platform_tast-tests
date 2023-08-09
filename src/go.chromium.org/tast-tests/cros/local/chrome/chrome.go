@@ -484,18 +484,31 @@ func (c *Chrome) Close(ctx context.Context) error {
 		c.sess = nil
 	}
 
-	if dir, ok := testing.ContextOutDir(ctx); ok {
-		c.agg.Save(filepath.Join(dir, "jslog.txt"))
-	}
-	c.agg.Close()
+	dir, dirOk := testing.ContextOutDir(ctx)
+	defer c.agg.Close()
 
-	if outDir, ok := testing.ContextOutDir(ctx); ok {
-		if err := c.logMarker.Save(filepath.Join(outDir, filepath.Base(c.logFilename))); err != nil {
-			testing.ContextLog(ctx, "Failed to save the entire log: ", err)
-			return err
-		}
-	} else {
-		testing.ContextLog(ctx, "No output directory exists, not saving log file")
+	if dirOk {
+		return c.saveLogs(ctx, dir)
+	}
+
+	testing.ContextLog(ctx, "No output directory exists, not saving log file")
+	return nil
+}
+
+func (c *Chrome) saveLogs(ctx context.Context, outDir string) error {
+	c.agg.Save(filepath.Join(outDir, "jslog.txt"))
+
+	if err := c.logMarker.Save(filepath.Join(outDir, filepath.Base(c.logFilename))); err != nil {
+		testing.ContextLog(ctx, "Failed to save the entire log: ", err)
+		return err
+	}
+	return nil
+}
+
+// SaveLogsOnError saves jsLog.txt and chrome_$date-$time in the outDir when hasError returns true.
+func (c *Chrome) SaveLogsOnError(ctx context.Context, outDir string, hasError func() bool) error {
+	if hasError() {
+		return c.saveLogs(ctx, outDir)
 	}
 	return nil
 }

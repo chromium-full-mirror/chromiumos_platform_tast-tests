@@ -334,6 +334,10 @@ func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 		}
 	}
 
+	if f.cr != nil {
+		f.cr.SaveLogsOnError(ctx, s.OutDir(), s.HasError)
+	}
+
 	if f.screenRecorder != nil {
 		f.screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
 	}
