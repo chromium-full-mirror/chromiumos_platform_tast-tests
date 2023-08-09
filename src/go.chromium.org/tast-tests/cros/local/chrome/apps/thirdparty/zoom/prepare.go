@@ -166,7 +166,6 @@ func enterNewMeeting(ctx context.Context, tconn *chrome.TestConn) error {
 	joinButton := nodewith.Name("Join").Role(role.Button).Ancestor(zoomMainWebArea)
 	notificationsPrompt := prompts.ShowNotificationsPrompt.PromptFinder
 	avPermissionPrompt := prompts.AllowAVPermissionPrompt.PromptFinder
-
 	noPermissionText := nodewith.Name("No permission. (200)").Role(role.StaticText)
 	foundNode, err := ui.WithTimeout(longUITimeout).FindAnyExists(ctx,
 		startThisMeetingButton,
@@ -176,7 +175,7 @@ func enterNewMeeting(ctx context.Context, tconn *chrome.TestConn) error {
 		avPermissionPrompt,
 		noPermissionText)
 	if err != nil {
-		return errors.Wrap(err, "failed to create new meeting")
+		return errors.Wrap(err, "failed to enter new meeting")
 	}
 	switch foundNode {
 	case startThisMeetingButton:
@@ -222,7 +221,10 @@ func enterNewMeeting(ctx context.Context, tconn *chrome.TestConn) error {
 	case noPermissionText:
 		return errors.Wrap(err, `the "No Permission" problem is displayed, zoom account may require re-registration`)
 	case mainLayoutCanvas:
-		return nil
+		// Joining meeting can take a while, it sometimes hangs on `Joining Meeting...` screen.
+		joiningMeetingText := nodewith.Name("Joining Meeting...").Role(role.StaticText).First()
+		return uiauto.IfSuccessThen(ui.WithTimeout(5*time.Second).WaitUntilExists(joiningMeetingText),
+			ui.WithTimeout(mediumUITimeout).WaitUntilGone(joiningMeetingText))(ctx)
 	default:
 		return errors.New("failed to enter new meeting")
 	}
