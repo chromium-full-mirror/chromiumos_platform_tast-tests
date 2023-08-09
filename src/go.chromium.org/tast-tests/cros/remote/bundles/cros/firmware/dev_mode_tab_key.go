@@ -91,31 +91,20 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	// Check which firmware screen the dut uses.
-	// Retry if it wasn't found in the firmware log.
-	var err error
+	// Set expected firmware screen ID.
 	var mainFwScreenID fwCommon.FwScreenID
-	const retry = 1
-	for i := 0; i <= retry; i++ {
-		mainFwScreenID, err = checkFwScreenType(ctx, h, logPath)
-		if err == nil {
-			break
-		}
-		if i == retry {
-			// Don't reboot the dut at the last retry.
-			continue
-		}
-		// Reset dut to ensure that we always start with a fresh firmware log.
-		s.Log("Checking fw screen type failed. Reset DUT and retry")
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-			s.Fatal("Failed to warm reset dut: ", err)
-		}
-		if err := waitDUTReconnect(ctx); err != nil {
-			s.Fatal("Failed to reconnect DUT: ", err)
-		}
-	}
-	if err != nil {
-		s.Fatal("Failed to check fw screen type: ", err)
+	switch h.Config.ModeSwitcherType {
+	case firmware.MenuSwitcher:
+		// Expected Menu UI (MUI) screen.
+		mainFwScreenID = fwCommon.DeveloperMode
+	case firmware.KeyboardDevSwitcher:
+		// Expected Legacy Clamshell UI (LCUI) screen.
+		mainFwScreenID = fwCommon.LegacyDeveloperWarning
+	case firmware.TabletDetachableSwitcher:
+		// Expected Legacy Menu UI (LMUI) screen.
+		mainFwScreenID = fwCommon.LegacyDeveloperWarningMenu
+	default:
+		s.Fatalf("Unexpected ModeSwitcherType: %s", h.Config.ModeSwitcherType)
 	}
 
 	// Models released after May 16th have the "boot from external disk"
@@ -272,29 +261,6 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to check debug info data: ", err)
 		}
 	}
-}
-
-func checkFwScreenType(ctx context.Context, h *firmware.Helper, logPath string) (fwCommon.FwScreenID, error) {
-	mainFwScreenID := fwCommon.LegacyBlank
-	output, err := h.Reporter.CatFile(ctx, logPath)
-	if err != nil {
-		return mainFwScreenID, errors.Wrap(err, "failed to read firmware log")
-	}
-
-	for _, id := range []fwCommon.FwScreenID{
-		fwCommon.LegacyDeveloperWarning,
-		fwCommon.LegacyDeveloperWarningMenu,
-		fwCommon.DeveloperMode,
-	} {
-		pattern := fmt.Sprintf("screen=0x%x", id)
-		re := regexp.MustCompile(pattern)
-		match := re.FindStringSubmatch(output)
-		if len(match) == 1 {
-			mainFwScreenID = id
-			return mainFwScreenID, nil
-		}
-	}
-	return mainFwScreenID, errors.New("unable to match any firmware screen type")
 }
 
 func getScreenID(log string, mainFwScreen fwCommon.FwScreenID, checkDebugInfoPage bool) (fwCommon.FwScreenID, error) {
