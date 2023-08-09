@@ -52,7 +52,7 @@ func init() {
 	params[TFFeaturesCapture] = "Wificell setup with Capturer on pcap for each configured AP"
 	params[TFFeaturesCapture|TFFeaturesRouterAsCapture] = "Wificell setup with default capturer on router instead of pcap"
 	params[TFFeaturesRouters] = "Wificell setup with multiple routers"
-	params[TFFeaturesRouters|TFFeaturesAttenuator] = "WiFi romaing setup with multiple routers and attenuators"
+	params[TFFeaturesRouters|TFFeaturesAttenuator] = "WiFi roaming setup with multiple routers and attenuators"
 	params[TFFeaturesEnroll] = "Wificell setup with router and pcap object and chrome enrolled"
 	params[TFFeaturesCompanionDUT] = "Wificell setup with companion Chromebook DUT"
 	params[TFFeaturesCompanionDUT|TFFeaturesCapture] = "Wificell setup with companion Chromebook DUT and packet capture from the pcap device"
@@ -75,12 +75,14 @@ func init() {
 			PostTestTimeout: postTestTimeout,
 			TearDownTimeout: tearDownTimeout,
 			ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
-			Vars:            []string{"router", "routertype"},
+			Vars:            []string{"routertype", "pcap", "pcaptype"},
 		}
 
 		// Typical fixture extensions.
-		if f&TFFeaturesCapture != 0 {
-			fixtures[f].Vars = append(fixtures[f].Vars, "pcap", "pcaptype")
+		if f&TFFeaturesRouters != 0 {
+			fixtures[f].Vars = append(fixtures[f].Vars, "routers")
+		} else {
+			fixtures[f].Vars = append(fixtures[f].Vars, "router")
 		}
 		if f&TFFeaturesAttenuator != 0 {
 			fixtures[f].Vars = append(fixtures[f].Vars, "attenuator")
