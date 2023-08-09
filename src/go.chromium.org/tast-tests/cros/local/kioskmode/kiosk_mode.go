@@ -491,7 +491,7 @@ func setPolicyBlob(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensi
 // waitPoliciesPersisted polls for files in /var/lib/device_local_accounts/<account>/policy/policy
 // until the number of files matches the expected number of deviceLocalAccounts.
 //
-// This is neeced because policyutil.Refresh returns too early, before policies are stored in disk.
+// This is needed because policyutil.Refresh returns too early, before policies are stored in disk.
 //
 // TODO(b/282959122): Consider removing this function if policyutil.Refresh solves this.
 func waitPoliciesPersisted(ctx context.Context, deviceLocalAccounts []policy.DeviceLocalAccountInfo) error {
