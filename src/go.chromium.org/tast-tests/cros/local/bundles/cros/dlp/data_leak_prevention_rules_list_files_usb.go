@@ -153,18 +153,16 @@ func init() {
 					restriction: restrictionlevel.Allowed,
 				},
 			}, {
-				Name: "ash_blocked",
-				// TODO(b/293799735): This test makes DUT unhealthy.
-				// ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
-				Fixture: fixture.ChromePolicyLoggedIn,
+				Name:      "ash_blocked",
+				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				Fixture:   fixture.ChromePolicyLoggedIn,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeAsh,
 					restriction: restrictionlevel.Blocked,
 				},
 			}, {
-				Name: "lacros_blocked",
-				// TODO(b/293799735): This test makes DUT unhealthy.
-				// ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+				Name:              "lacros_blocked",
+				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.LacrosPolicyLoggedIn,
 				Val: fileUSBCopyTestParams{
@@ -172,18 +170,16 @@ func init() {
 					restriction: restrictionlevel.Blocked,
 				},
 			}, {
-				Name: "ash_warn_proceeded",
-				// TODO(b/293799735): This test makes DUT unhealthy.
-				// ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
-				Fixture: fixture.ChromePolicyLoggedIn,
+				Name:      "ash_warn_proceeded",
+				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				Fixture:   fixture.ChromePolicyLoggedIn,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeAsh,
 					restriction: restrictionlevel.WarnProceeded,
 				},
 			}, {
-				Name: "lacros_warn_proceeded",
-				// TODO(b/293799735): This test makes DUT unhealthy.
-				// ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+				Name:              "lacros_warn_proceeded",
+				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.LacrosPolicyLoggedIn,
 				Val: fileUSBCopyTestParams{
