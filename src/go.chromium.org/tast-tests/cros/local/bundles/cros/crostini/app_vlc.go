@@ -136,7 +136,7 @@ func AppVLC(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("verify VLC",
 		ui.WithTimeout(2*time.Minute).WaitUntilExists(mainWindow),
 		ui.WithTimeout(10*time.Second).WaitUntilExists(popupWindowClose),
-		ui.LeftClick(popupWindowClose),
+		ui.DoDefault(popupWindowClose),
 		ui.WithTimeout(10*time.Second).WaitUntilGone(popupWindow),
 		screenshot.DiffWindow(ctx, d, "VLC", screenshot.Retries(5)),
 	)(ctx); err != nil {
@@ -219,10 +219,7 @@ func AppVLC(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set video timestamp: ", err)
 	}
 
-	if err := uiauto.Combine("VLC capture video",
-		crostini.Maximize(tconn, mainWindow),
-		screenshot.DiffWindow(ctx, d, "VLC with video", screenshot.Retries(5), screenshot.RetryInterval(500*time.Millisecond)),
-	)(ctx); err != nil {
+	if err := screenshot.DiffWindow(ctx, d, "VLC with video", screenshot.Retries(5), screenshot.RetryInterval(500*time.Millisecond))(ctx); err != nil {
 		s.Fatal("Failed to capture VLC playing video: ", err)
 	}
 
