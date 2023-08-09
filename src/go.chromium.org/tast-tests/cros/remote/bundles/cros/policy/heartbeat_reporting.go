@@ -22,11 +22,16 @@ import (
 
 const heartbeatReportingTimeout = 7 * time.Minute
 
+type heartbeatTestParams struct {
+	IsUserEvent     bool // If true, send user events from umanaged device, else send device events from managed device.
+	EnabledFeatures string
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HeartbeatReporting,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "GAIA Enroll a device and verify heartbeat reporting functionality",
+		Desc:         "Verify heartbeat reporting functionality",
 		Contacts: []string{
 			"cros-reporting-team@google.com",
 			"albertojuarez@google.com",
@@ -42,6 +47,32 @@ func init() {
 			reportingutil.EventsAPIKeyPath,
 			tape.ServiceAccountVar,
 		},
+		Params: []testing.Param{
+			{
+				Name: "report_user_heartbeat_event_from_unmanaged_device",
+				Val: heartbeatTestParams{
+					IsUserEvent: true,
+					// Enable the reporting pipeline, user heartbeat events, reporting from unmanaged device, and enable multigenerational storage for FAST_BATCH priority (i.e. exclude FAST_BATCH from legacy_storage_enabled list).
+					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestUserHeartbeatEvent, EnableReportingFromUnmanagedDevices, CrOSLateBootMissiveStorage:legacy_storage_enabled/IMMEDIATE,SLOW_BATCH,BACKGROUND_BATCH,MANUAL_BATCH,SECURITY,MANUAL_BATCH_LACROS",
+				},
+			},
+			{
+				Name: "report_device_heartbeat_event_from_managed_device",
+				Val: heartbeatTestParams{
+					IsUserEvent: false,
+					// Enable the reporting pipeline, device heartbeat events.
+					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent",
+				},
+			},
+			{
+				Name: "report_device_heartbeat_event_from_managed_device_using_multigenerational_storage",
+				Val: heartbeatTestParams{
+					IsUserEvent: false,
+					// Enable the reporting pipeline, device heartbeat events, and multigenerational storage for FAST_BATCH priority (i.e. exclude FAST_BATCH from legacy_storage_enabled list).
+					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent, CrOSLateBootMissiveStorage:legacy_storage_enabled/IMMEDIATE,SLOW_BATCH,BACKGROUND_BATCH,MANUAL_BATCH,SECURITY,MANUAL_BATCH_LACROS",
+				},
+			},
+		},
 	})
 }
 
@@ -50,6 +81,7 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 	customerID := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
 	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
+	params := s.Param().(heartbeatTestParams)
 
 	defer func(ctx context.Context) {
 		if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
@@ -98,42 +130,75 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set the asset policy: ", err)
 	}
 
-	testStartTime := time.Now()
-	if _, err := policyClient.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
-		Username:           acc.Username,
-		Password:           acc.Password,
-		DmserverUrl:        reportingutil.DmServerURL,
-		ReportingServerUrl: reportingutil.ReportingServerURL,
-		EnabledFeatures:    "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent",
-		SkipLogin:          true,
-	}); err != nil {
-		s.Fatal("Failed to enroll using chrome: ", err)
+	if params.IsUserEvent {
+		// This is a user event. Login with managed user, but don't enroll the device.
+		if _, err := policyClient.GAIALoginForReporting(ctx, &ps.GAIALoginForReportingRequest{
+			Username:           acc.Username,
+			Password:           acc.Password,
+			DmserverUrl:        reportingutil.DmServerURL,
+			ReportingServerUrl: reportingutil.ReportingServerURL,
+			// Enable user heart beat events, reporting from unmanaged devices, and legacy/non-multigenerational storage for all priorities except FAST_BATCH (the priority that heartbeat events use).
+			EnabledFeatures: params.EnabledFeatures,
+		}); err != nil {
+			s.Fatal("Failed to login to chrome with managed user: ", err)
+		}
+	} else {
+		// This is a device event. Enroll device and maybe login, depending on `SkipLogin` setting.
+		if _, err := policyClient.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
+			Username:           acc.Username,
+			Password:           acc.Password,
+			DmserverUrl:        reportingutil.DmServerURL,
+			ReportingServerUrl: reportingutil.ReportingServerURL,
+			EnabledFeatures:    params.EnabledFeatures,
+			SkipLogin:          true,
+		}); err != nil {
+			s.Fatal("Failed to enroll using chrome: ", err)
+		}
 	}
+
+	testStartTime := time.Now()
+
 	defer policyClient.StopChrome(ctx, &empty.Empty{})
 
-	c, err := policyClient.ClientID(ctx, &empty.Empty{})
-	if err != nil {
-		s.Fatalf("Failed to grab client ID from device: %v:", err)
-	}
+	// Gather device info for device events
+	var clientID string
 
-	// TODO(b/296398085) : Remove once server solution is in place.
-	// Check if the device is marked as deprovisioned on the
-	// server, if it was then exit the test since the server
-	// won't allow any events coming from this device.
-	// Trying to get an idea of how many errors where coming from
-	// this failure, will remove once a better solution is in place.
-	currentAccount := accManager.Accounts[0]
-	isDeprovisioned, err := tapeClient.Deprovisioned(ctx, c.ClientId, currentAccount.OrgUnitPath, currentAccount.CustomerID)
-	if err != nil {
-		s.Fatal("Failed to check if device is deprovisioned: ", err)
-	}
-	if isDeprovisioned {
-		testing.ContextLog(ctx, "Device is deprovisioned - not checking events")
-		return
+	if !params.IsUserEvent {
+		c, err := policyClient.ClientID(ctx, &empty.Empty{})
+		clientID = c.ClientId
+		if err != nil {
+			s.Fatalf("Failed to grab client ID from device: %v:", err)
+		}
+
+		// TODO(b/296398085) : Remove once server solution is in place.
+		// Check if the device is marked as deprovisioned on the
+		// server, if it was then exit the test since the server
+		// won't allow any events coming from this device.
+		// Trying to get an idea of how many errors where coming from
+		// this failure, will remove once a better solution is in place.
+		currentAccount := accManager.Accounts[0]
+		isDeprovisioned, err := tapeClient.Deprovisioned(ctx, clientID, currentAccount.OrgUnitPath, currentAccount.CustomerID)
+		if err != nil {
+			s.Fatal("Failed to check if device is deprovisioned: ", err)
+		}
+		if isDeprovisioned {
+			testing.ContextLog(ctx, "Device is deprovisioned - not checking events")
+			return
+		}
+
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		events, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerID, c.ClientId, APIKey, "HEARTBEAT_EVENTS", testStartTime)
+		var events []reportingutil.InputEvent
+		var err error
+
+		if params.IsUserEvent {
+			// Look up user events using user account info.
+			events, err = reportingutil.LookupUserEvents(ctx, reportingutil.ReportingServerURL, customerID, APIKey, "HEARTBEAT_EVENTS", acc.Username, testStartTime)
+		} else {
+			// Look up device events using client id.
+			events, err = reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerID, clientID, APIKey, "HEARTBEAT_EVENTS", testStartTime)
+		}
 		if err != nil {
 			return errors.Wrap(err, "failed to look up events")
 		}

@@ -72,11 +72,10 @@ func PruneEvents(ctx context.Context, events []InputEvent, correctEventType Veri
 	return prunedEvents, nil
 }
 
-// LookupEvents Call the Reporting API Server's ChromeReportingDebugService.LookupEvents
-// endpoint to get a list of events received by the server from this user.
-func LookupEvents(ctx context.Context, reportingServerURL, obfuscatedCustomerID, clientID, apiKey, destination string, testStartTime time.Time) ([]InputEvent, error) {
-	reqPath := fmt.Sprintf("%v/test/events?key=%v&obfuscatedCustomerId=%v&deviceId=%v&destination=%v", reportingServerURL, apiKey, obfuscatedCustomerID, clientID, destination)
-	req, err := http.NewRequestWithContext(ctx, "GET", reqPath, nil)
+// LookupEventsByRequestPath calls the Reporting API Server's ChromeReportingDebugService.LookupEvents
+// endpoint to get a list of events received by the server based on the arguments in `requestPath`.
+func LookupEventsByRequestPath(ctx context.Context, requestPath string, testStartTime time.Time) ([]InputEvent, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", requestPath, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to craft event query request to the Reporting Server")
 	}
@@ -87,7 +86,7 @@ func LookupEvents(ctx context.Context, reportingServerURL, obfuscatedCustomerID,
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return nil, errors.Errorf("reporting server encountered an error with the event query %q %v %q", reqPath, resp.StatusCode, http.StatusText(resp.StatusCode))
+		return nil, errors.Errorf("reporting server encountered an error with the event query %q %v %q", requestPath, resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 	resBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -108,6 +107,20 @@ func LookupEvents(ctx context.Context, reportingServerURL, obfuscatedCustomerID,
 		}
 	}
 	return filteredEvents, nil
+}
+
+// LookupEvents calls the Reporting API Server's ChromeReportingDebugService.LookupEvents
+// endpoint to get a list of events received by the server from a managed device.
+func LookupEvents(ctx context.Context, reportingServerURL, obfuscatedCustomerID, clientID, apiKey, destination string, testStartTime time.Time) ([]InputEvent, error) {
+	reqPath := fmt.Sprintf("%v/test/events?key=%v&obfuscatedCustomerId=%v&deviceId=%v&destination=%v", reportingServerURL, apiKey, obfuscatedCustomerID, clientID, destination)
+	return LookupEventsByRequestPath(ctx, reqPath, testStartTime)
+}
+
+// LookupUserEvents calls the Reporting API Server's ChromeReportingDebugService.LookupEvents
+// endpoint to get a list of events received by the server from a managed user.
+func LookupUserEvents(ctx context.Context, reportingServerURL, obfuscatedCustomerID, apiKey, destination, userEmail string, testStartTime time.Time) ([]InputEvent, error) {
+	reqPath := fmt.Sprintf("%v/test/events?key=%v&obfuscatedCustomerId=%v&destination=%v&userEmail=%v", reportingServerURL, apiKey, obfuscatedCustomerID, destination, userEmail)
+	return LookupEventsByRequestPath(ctx, reqPath, testStartTime)
 }
 
 // Deprovision deprovisions the DUT. This should be used after the test is over.

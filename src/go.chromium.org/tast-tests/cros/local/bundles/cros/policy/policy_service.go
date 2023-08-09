@@ -187,26 +187,48 @@ func (c *PolicyService) GAIAZTEEnrollUsingChrome(ctx context.Context, req *ppb.G
 	return &empty.Empty{}, nil
 }
 
+// GAIALoginForReporting logsa a managed user into an unmanaged ChromeOS device.
+func (c *PolicyService) GAIALoginForReporting(ctx context.Context, req *ppb.GAIALoginForReportingRequest) (*empty.Empty, error) {
+	testing.ContextLogf(ctx, "Logging into unmanaged ChromeOS device for reporting with managed user: %s, dmserver: %s", string(req.Username), string(req.DmserverUrl))
+	// Managed user login
+	if err := c.newChrome(
+		ctx,
+		chrome.GAIALogin(chrome.Creds{User: req.Username, Pass: req.Password}),
+		chrome.DMSPolicy(req.DmserverUrl),
+		chrome.EnableFeatures(req.EnabledFeatures),
+		chrome.EncryptedReportingAddr(fmt.Sprintf("%v/record", req.ReportingServerUrl)),
+		chrome.ExtraArgs(req.ExtraArgs),
+		chrome.CustomLoginTimeout(chrome.EnrollmentAndLoginTimeout),
+	); err != nil {
+		return nil, errors.Wrap(err, "failed to start chrome")
+	}
+
+	return &empty.Empty{}, nil
+
+}
+
+// GAIAEnrollForReporting enrolls the device. If `req.SkipLogin` is true, skips login, otherwise logs into the device as a managed user.
 func (c *PolicyService) GAIAEnrollForReporting(ctx context.Context, req *ppb.GAIAEnrollForReportingRequest) (*empty.Empty, error) {
 	testing.ContextLogf(ctx, "Enrolling using Chrome for reporting with username: %s, dmserver: %s", string(req.Username), string(req.DmserverUrl))
 
-	var opts []chrome.Option
-
-	opts = append(opts, chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}))
-	opts = append(opts, chrome.SkipAutoEnrollmentCheck())
+	var loginOption chrome.Option
 	if req.SkipLogin {
-		opts = append(opts, chrome.NoLogin())
+		loginOption = chrome.NoLogin()
 	} else {
-		opts = append(opts, chrome.GAIALogin(chrome.Creds{User: req.Username, Pass: req.Password}))
+		loginOption = chrome.GAIALogin(chrome.Creds{User: req.Username, Pass: req.Password})
 	}
 
-	opts = append(opts, chrome.DMSPolicy(req.DmserverUrl))
-	opts = append(opts, chrome.EnableFeatures(req.EnabledFeatures))
-	opts = append(opts, chrome.EncryptedReportingAddr(fmt.Sprintf("%v/record", req.ReportingServerUrl)))
-	opts = append(opts, chrome.ExtraArgs(req.ExtraArgs))
-	opts = append(opts, chrome.CustomLoginTimeout(chrome.EnrollmentAndLoginTimeout))
-
-	if err := c.newChrome(ctx, opts...); err != nil {
+	if err := c.newChrome(
+		ctx,
+		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
+		chrome.SkipAutoEnrollmentCheck(),
+		loginOption,
+		chrome.DMSPolicy(req.DmserverUrl),
+		chrome.EnableFeatures(req.EnabledFeatures),
+		chrome.EncryptedReportingAddr(fmt.Sprintf("%v/record", req.ReportingServerUrl)),
+		chrome.ExtraArgs(req.ExtraArgs),
+		chrome.CustomLoginTimeout(chrome.EnrollmentAndLoginTimeout),
+	); err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
 	}
 

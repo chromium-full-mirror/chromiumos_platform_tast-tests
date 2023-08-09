@@ -20,6 +20,7 @@ service PolicyService {
   rpc GAIAEnrollUsingChrome(GAIAEnrollUsingChromeRequest) returns (google.protobuf.Empty) {}
   rpc GAIAEnrollAndLoginUsingChrome(GAIAEnrollAndLoginUsingChromeRequest) returns (google.protobuf.Empty) {}
   rpc GAIAEnrollForReporting(GAIAEnrollForReportingRequest) returns (google.protobuf.Empty) {}
+  rpc GAIALoginForReporting(GAIALoginForReportingRequest) returns (google.protobuf.Empty) {} 
   rpc SAMLTestIdPEnrollUsingChrome(SAMLTestIdPEnrollUsingChromeRequest) returns (google.protobuf.Empty) {}
   rpc UpdatePolicies(UpdatePoliciesRequest) returns (google.protobuf.Empty) {}
   rpc CheckChromeAndFakeDMS(google.protobuf.Empty) returns (google.protobuf.Empty) {}
@@ -116,6 +117,14 @@ message GAIAEnrollForReportingRequest{
   string enabled_features = 5;
   string extra_args = 6;
   bool skip_login = 7;
+}
+message GAIALoginForReportingRequest{
+  string username = 1;
+  string password = 2;
+  string dmserver_url = 3;
+  string reporting_server_url = 4;
+  string enabled_features = 5;
+  string extra_args = 6;
 }
 
 message SAMLTestIdPEnrollUsingChromeRequest {
