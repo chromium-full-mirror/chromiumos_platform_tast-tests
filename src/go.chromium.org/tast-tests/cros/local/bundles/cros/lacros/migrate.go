@@ -7,6 +7,7 @@ package lacros
 import (
 	"context"
 	"os"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/lacros/migrate"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -32,6 +33,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Data:         []string{"migrate/indexeddb_check.js", "migrate/indexeddb_set.js"},
+		Timeout:      5 * time.Minute,
 	})
 }
 
