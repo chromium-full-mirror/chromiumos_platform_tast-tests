@@ -30,18 +30,11 @@
 
     // Request notifications permission and subscribe.
     function subscribe() {
-      navigator.serviceWorker.getRegistration().then((registration) => {
-        Notification.requestPermission().then(() => {
-          return registration.pushManager.subscribe(SUBSCRIPTION_OPTIONS);
-        }).then((pushSubscription) => {
+      Notification.requestPermission().then(() => {
+        subscribeUserToPush().then((pushSubscription)=>{
           // This endpoint will match the token in the netlogs raw bytes associated with gcm_registration network annotation.
           const match = ENDPOINT_REGEX.exec(pushSubscription.endpoint);
-          updateStatus(match);
-        }, (error) => {
-          updateStatus(error);
-        });
-      }, (err) => {
-        console.log('Service Worker registration failed', err);
+          updateStatus(match);});
       });
     }
 
@@ -60,6 +53,19 @@
         outputArray[i] = rawData.charCodeAt(i);
       }
       return outputArray;
+    }
+
+    function subscribeUserToPush() {
+      return navigator.serviceWorker.ready
+        .then(function (registration) {
+          return registration.pushManager.subscribe(SUBSCRIPTION_OPTIONS);
+        })
+        .then(function (pushSubscription) {
+          return pushSubscription;
+        }, (error) => {
+            const errorParts = String(error).split(":");
+            updateStatus(errorParts[0]);
+        });
     }
   </script>
 </body>

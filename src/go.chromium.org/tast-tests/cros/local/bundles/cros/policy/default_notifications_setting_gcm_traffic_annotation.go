@@ -8,10 +8,10 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -62,7 +62,7 @@ func init() {
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
 		}},
-		Timeout: 6 * time.Minute,
+		Timeout: 3 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DefaultNotificationsSetting{}, pci.VerifiedFunctionalityUI),
 		},
@@ -91,49 +91,42 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 	for _, param := range []struct {
 		name                 string
 		expectAskPermission  bool // expectAskPermission states whether a dialog to ask for permission should appear or not.
-		selectAllow          bool // whether to allow the permission request
-		shouldFindAnnotation bool // whether traffic annotation should appear on log
+		shouldFindAnnotation bool // whether to allow the permission request and whether traffic annotation should appear on log.
 		value                *policy.DefaultNotificationsSetting
 	}{
 		{
 			name:                 "unset_allow",
 			expectAskPermission:  true,
-			selectAllow:          true,
 			shouldFindAnnotation: true,
 			value:                &policy.DefaultNotificationsSetting{Stat: policy.StatusUnset},
 		},
 		{
 			name:                 "unset_deny",
 			expectAskPermission:  true,
-			selectAllow:          false,
 			shouldFindAnnotation: false,
 			value:                &policy.DefaultNotificationsSetting{Stat: policy.StatusUnset},
 		},
 		{
 			name:                 "allow",
 			expectAskPermission:  false,
-			selectAllow:          false, // Not used by test.
 			shouldFindAnnotation: true,
 			value:                &policy.DefaultNotificationsSetting{Val: 1}, // Allow sites to show desktop notifications.
 		},
 		{
 			name:                 "deny",
 			expectAskPermission:  false,
-			selectAllow:          false, // Not used by test.
 			shouldFindAnnotation: false,
 			value:                &policy.DefaultNotificationsSetting{Val: 2}, // Do not allow any site to show desktop notifications.
 		},
 		{
 			name:                 "ask_allow",
 			expectAskPermission:  true,
-			selectAllow:          true,
 			shouldFindAnnotation: true,
 			value:                &policy.DefaultNotificationsSetting{Val: 3}, // Ask every time a site wants to show desktop notifications.
 		},
 		{
 			name:                 "ask_deny",
 			expectAskPermission:  true,
-			selectAllow:          false,
 			shouldFindAnnotation: false,
 			value:                &policy.DefaultNotificationsSetting{Val: 3}, // Ask every time a site wants to show desktop notifications.
 		},
@@ -181,40 +174,55 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 
 			ui := uiauto.New(tconn)
 			permissionWindow := nodewith.HasClass("PermissionPromptBubbleBaseView").Role(role.Window)
+			subscribeButton := nodewith.Name("subscribe").Role(role.Button)
 			allowButton := nodewith.Name("Allow").Role(role.Button)
 			blockButton := nodewith.Name("Block").Role(role.Button)
+			statusText := nodewith.Name("Status").Role(role.StaticText)
+			generalErrorText := nodewith.NameContaining("Error").Role(role.StaticText)
+			NotAllowedErrorText := nodewith.Name("NotAllowedError").Role(role.StaticText)
 
 			// Click on the subscribe button to trigger permissions request and push notification subscription.
-			if err := ui.DoDefault(nodewith.Name("subscribe").Role(role.Button))(ctx); err != nil {
+			if err := ui.DoDefault(subscribeButton)(ctx); err != nil {
 				s.Fatal("Failed to click Subscribe button: ", err)
 			}
 
 			if param.expectAskPermission {
-				if param.selectAllow {
+				if param.shouldFindAnnotation {
 					if err := ui.DoDefault(allowButton)(ctx); err != nil {
 						s.Fatal("Failed to click the allow button: ", err)
 					}
 					if strings.HasPrefix(param.name, "ask") {
-						// When policy is set to "ask", the permission panel shows up twice. See crbug.com/614632.
+						// When policy is set to "ask", the permission panel occasionally shows up twice. See crbug.com/614632.
 						if err := ui.DoDefault(allowButton)(ctx); err != nil {
-							s.Fatal("Failed to click the allow button: ", err)
+							s.Log("Failed to click additional allow button: ", err)
 						}
 					}
 				} else {
 					if err := ui.DoDefault(blockButton)(ctx); err != nil {
 						s.Fatal("Failed to click the block button: ", err)
 					}
-					// Check that registration fails when permission is blocked.
-					// HTML should update with error message.
-					if err := ui.WaitUntilExists(nodewith.Name("NotAllowedError: Registration failed - permission denied").Role(role.StaticText))(ctx); err != nil {
-						s.Fatal("Failed to verify that registration fails due to permissions block: ", err)
-					}
 				}
 			} else {
-				// The 10 seconds duration is an arbitrary picked timeout,
+				// The 5 seconds duration is an arbitrary picked timeout,
 				// should be long enough to verify no prompt will appear.
-				if err := ui.EnsureGoneFor(permissionWindow, 10*time.Second)(ctx); err != nil {
+				if err := ui.EnsureGoneFor(permissionWindow, 5*time.Second)(ctx); err != nil {
 					s.Fatal("Failed to verify that prompts are not shown and permission is granted/denied automatically: ", err)
+				}
+			}
+
+			if param.shouldFindAnnotation {
+				// Verify the status text has been replaced.
+				if err := ui.WaitUntilGone(statusText)(ctx); err != nil {
+					s.Fatal("Got unexpected Status text: ", err)
+				}
+				if err := ui.EnsureGoneFor(generalErrorText, 3*time.Second)(ctx); err != nil {
+					s.Fatal("Got unexpected error text: ", err)
+				}
+			} else {
+				// Check that registration fails when permission is blocked.
+				// HTML should update with error message.
+				if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(NotAllowedErrorText)(ctx); err != nil {
+					s.Fatal("Failed to verify that registration fails due to permissions block: ", err)
 				}
 			}
 
@@ -231,8 +239,8 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 				}
 				return errors.New("Annotation with matching token not found yet")
 			}, &testing.PollOptions{
-				Timeout:  50 * time.Second,
-				Interval: 10 * time.Second,
+				Timeout:  10 * time.Second,
+				Interval: 1 * time.Second,
 			})
 
 			// Check if there was an error when checking logs.
@@ -284,7 +292,7 @@ func getGcmTokensFromLogs(ctx context.Context, cr *chrome.Chrome, annotation str
 	downloadLocation := filepath.Join(downloadsPath, annotations.DownloadName)
 
 	// Read the net export log file.
-	logFile, err := ioutil.ReadFile(downloadLocation)
+	logFile, err := os.ReadFile(downloadLocation)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open logfile")
 	}
