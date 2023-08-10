@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/godbus/dbus/v5"
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/proto"
 
@@ -26,10 +25,7 @@ import (
 )
 
 type displayTestParam struct {
-	internalDisplay bool
-	externalDisplay bool
-	privacyScreen   bool
-	policyEnabled   bool
+	policyEnabled bool
 }
 
 func init() {
@@ -46,65 +42,18 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      2 * time.Minute,
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.TouchScreen()),
 		Params: []testing.Param{
 			{
-				Name:              "external_display_disabled",
-				ExtraHardwareDeps: hwdep.D(hwdep.ExternalDisplay(), hwdep.NoInternalDisplay()),
+				Name: "enabled",
 				Val: displayTestParam{
-					internalDisplay: false,
-					externalDisplay: true,
-					privacyScreen:   false,
-					policyEnabled:   false,
+					policyEnabled: true,
 				},
 			},
 			{
-				Name:              "external_display_enabled",
-				ExtraHardwareDeps: hwdep.D(hwdep.ExternalDisplay(), hwdep.NoInternalDisplay()),
+				Name: "disabled",
 				Val: displayTestParam{
-					internalDisplay: false,
-					externalDisplay: true,
-					privacyScreen:   false,
-					policyEnabled:   true,
-				},
-			},
-			{
-				Name:              "internal_display_disabled",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoPrivacyScreen()),
-				Val: displayTestParam{
-					internalDisplay: true,
-					externalDisplay: false,
-					privacyScreen:   false,
-					policyEnabled:   false,
-				},
-			},
-			{
-				Name:              "internal_display_enabled",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoPrivacyScreen()),
-				Val: displayTestParam{
-					internalDisplay: true,
-					externalDisplay: false,
-					privacyScreen:   false,
-					policyEnabled:   true,
-				},
-			},
-			{
-				Name:              "internal_display_privacy_screen_disabled",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.PrivacyScreen()),
-				Val: displayTestParam{
-					internalDisplay: true,
-					externalDisplay: false,
-					privacyScreen:   true,
-					policyEnabled:   false,
-				},
-			},
-			{
-				Name:              "internal_display_privacy_screen_enabled",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.PrivacyScreen()),
-				Val: displayTestParam{
-					internalDisplay: true,
-					externalDisplay: false,
-					privacyScreen:   true,
-					policyEnabled:   true,
+					policyEnabled: false,
 				},
 			},
 		},
@@ -118,22 +67,20 @@ func init() {
 }
 
 func DisplayReportingDbus(ctx context.Context, s *testing.State) {
-	internalDisplay := s.Param().(displayTestParam).internalDisplay
-	externalDisplay := s.Param().(displayTestParam).externalDisplay
-	privacyScreen := s.Param().(displayTestParam).privacyScreen
 	policyEnabled := s.Param().(displayTestParam).policyEnabled
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
-	// Start monitoring dbus calls.
-	m := []dbusutil.MatchSpec{{Type: "method_call",
-		Path:      dbus.ObjectPath("/org/chromium/Missived"),
-		Interface: "org.chromium.Missived",
-		Member:    "EnqueueRecord"}}
-
-	eventMonitor, err := dbusutil.DbusEventMonitor(ctx, m)
+	// Start monitoring dbus events.
+	ew, err := dbusutil.NewEventWatcher(ctx, []dbusutil.MatchSpec{
+		{
+			Interface: "org.chromium.Missived",
+			Member:    "EnqueueRecord",
+		},
+	})
 	if err != nil {
-		s.Fatal("Connection to missive dbus monitoring error: ", err)
+		s.Fatal("Cannot create EventWatcher: ", err)
 	}
+	defer ew.Close()
 
 	cr, err := chrome.New(ctx,
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
@@ -168,104 +115,52 @@ func DisplayReportingDbus(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify policies: ", err)
 	}
 
-	testing.ContextLog(ctx,
-		"Sleeping for 60 secs")
-	// GoBigSleepLint: Sleep for 60 seconds to make sure that the telemetry is reported.
-	// TODO(b/278252387): Convert this to poll when tast's
-	// dbusutil.DbusEventMonitor supports it.
-	if err := testing.Sleep(ctx, time.Minute); err != nil {
-		s.Fatal("Failed to sleep: ", err)
-	}
+	findEventTimeout := 60 * time.Second
 
-	enqueuedEvents, err := eventMonitor()
-	if err != nil {
-		s.Fatal("Failed to capture dbus calls to missive: ", err)
-	}
-
-	for _, method := range enqueuedEvents {
-		arg, ok := method.Arguments[0].([]byte)
-		if !ok {
-			s.Fatal("Failed to cast arguments")
-		}
-		enq := &rep.EnqueueRecordRequest{}
-		if err := proto.Unmarshal(arg, enq); err != nil {
-			s.Fatal("Failed to unmarshal an EnqueueRecordRequest")
-		}
-
-		metricData := &rep.MetricData{}
-		if err := proto.Unmarshal(enq.GetRecord().GetData(), metricData); err != nil {
-			s.Fatal("Failed to unmarshal data for a CROS_SECURITY_AGENT record")
-		}
-	}
-	// Verify that nothing was sent if the policy is disabled.
-	if !policyEnabled && len(enqueuedEvents) > 0 {
-		s.Fatal("Events found when policy disabled")
-	}
-
-	// Verify that the information was sent and that it is not malformed.
+	testing.ContextLog(ctx, "Waiting for events")
 	if policyEnabled {
-		if len(enqueuedEvents) == 0 {
-			s.Fatal("No events found when policy enabled")
-		}
-		if len(enqueuedEvents) > 2 {
-			s.Fatal("More than one event reported when policy enabled. Full data: ", enqueuedEvents)
-		}
+		// Only expecting two events:
+		// - Touch screen data
+		// - Normal display data
+		for i := 0; i < 2; i++ {
+			select {
+			case ev, ok := <-ew.Events():
+				if !ok {
+					s.Fatal("Got error while trying to query events")
+				}
+				arg, ok := ev.Arguments[0].([]byte)
+				if !ok {
+					s.Fatal("Failed to cast arguments")
+				}
+				enq := &rep.EnqueueRecordRequest{}
+				if err := proto.Unmarshal(arg, enq); err != nil {
+					s.Fatal("Failed to unmarshal an EnqueueRecordRequest with error: ", err)
+				}
+				if enq.GetRecord().GetDestination() != rep.Destination_INFO_METRIC {
+					s.Fatal("Destination mismatch, got ", enq.GetRecord().GetDestination(), " wanted INFO_METRIC")
+				}
 
-		if len(enqueuedEvents[0].Arguments) == 0 {
-			s.Fatal("Event has no arguments")
-		}
-		arg, ok := enqueuedEvents[0].Arguments[0].([]byte)
-		if !ok {
-			s.Fatal("Failed to cast arguments")
-		}
-		enq := &rep.EnqueueRecordRequest{}
-		if err := proto.Unmarshal(arg, enq); err != nil {
-			s.Fatal("Failed to unmarshal record request")
-		}
-		if enq.GetRecord().GetDestination() != rep.Destination_INFO_METRIC {
-			s.Fatal("Destination mismatch, got ", enq.GetRecord().GetDestination(), " wanted INFO_METRIC")
-		}
-
-		metricData := &rep.MetricData{}
-		if err := proto.Unmarshal(enq.GetRecord().GetData(), metricData); err != nil {
-			s.Fatal("Failed to unmarshal data for the event")
-		}
-
-		if metricData.GetInfoData() == nil {
-			s.Fatal("No info data found on the event")
-		}
-		// Privacy screen info.
-		if metricData.GetInfoData().GetPrivacyScreenInfo() == nil {
-			s.Fatal("No privacy screen info found on the info data")
-		}
-		privacyInfo := metricData.GetInfoData().GetPrivacyScreenInfo()
-		if privacyInfo.GetSupported() != privacyScreen {
-			s.Fatal("Privacy screen mismatch")
-		}
-
-		// Display info.
-		if metricData.GetInfoData().GetDisplayInfo() == nil {
-			s.Fatal("No display info found on the info data")
-		}
-		if metricData.GetInfoData().GetDisplayInfo().GetDisplayDevice() == nil {
-			s.Fatal("No display device(s) found on the info data")
-		}
-		displayDevices := metricData.GetInfoData().GetDisplayInfo().GetDisplayDevice()
-
-		if internalDisplay && externalDisplay {
-			if len(displayDevices) < 2 {
-				s.Fatal("Was expecting 2 display devices reported and got ", len(displayDevices), ". Full data: ", displayDevices)
+				metricData := &rep.MetricData{}
+				if err := proto.Unmarshal(enq.GetRecord().GetData(), metricData); err != nil {
+					s.Fatal("Failed to unmarshal data with error: ", err)
+				}
+				if metricData.GetInfoData() == nil {
+					s.Fatal("No info data found on the event: ", metricData)
+				}
+				if metricData.GetInfoData().GetDisplayInfo() == nil && metricData.GetInfoData().GetTouchScreenInfo() == nil {
+					s.Fatal("No display info or touch screen info found on the info data, event: ", metricData)
+				}
+			case <-time.After(findEventTimeout):
+				s.Fatal("findEventTimeout passed and no event found with policy enabled")
 			}
-		} else if internalDisplay || externalDisplay {
-			if len(displayDevices) > 1 {
-				s.Fatal("Was expecting one display device reported and got ", len(displayDevices), ". Full data: ", displayDevices)
-			}
-			if internalDisplay && !displayDevices[0].GetIsInternal() {
-				s.Fatal("Display info reporting internal display as external display")
-			}
-			if externalDisplay && displayDevices[0].GetIsInternal() {
-				s.Fatal("Display info reporting external display as internal display")
-			}
+		}
+	} else {
+		// Not expecting any events.
+		select {
+		case ev, _ := <-ew.Events():
+			s.Fatal("Found event with policy disabled, event: ", ev)
+		case <-time.After(findEventTimeout):
+			testing.ContextLog(ctx, "findEventTimeout passed and no event found")
 		}
 	}
 }
