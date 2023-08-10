@@ -37,27 +37,32 @@ func Histograms(ctx context.Context, s *testing.State) {
 	)
 
 	// report reports a linear histogram sample of val.
-	report := func(val int) {
+	report := func(val, numSamples int) {
 		s.Logf("Reporting %v sample with value %v", name, val)
-		cmd := testexec.CommandContext(ctx, "metrics_client", name, "-e", strconv.Itoa(val), strconv.Itoa(max))
+		var cmd *testexec.Cmd
+		if numSamples == 1 {
+			cmd = testexec.CommandContext(ctx, "metrics_client", name, "-e", strconv.Itoa(val), strconv.Itoa(max))
+		} else {
+			cmd = testexec.CommandContext(ctx, "metrics_client", "-n", strconv.Itoa(numSamples), name, "-e", strconv.Itoa(val), strconv.Itoa(max))
+		}
 		if err := cmd.Run(); err != nil {
 			defer cmd.DumpLog(ctx)
 			s.Fatal("Failed to report sample: ", err)
 		}
 	}
 
-	// check verifies that h contains a single bucket over range [val,val+1) containing a single sample.
-	check := func(h *metrics.Histogram, val int) {
+	// check verifies that h contains a single bucket over range [val,val+1) containing numSamples samples.
+	check := func(h *metrics.Histogram, val int, numSamples int64) {
 		if len(h.Buckets) != 1 {
 			s.Fatalf("Got %v buckets instead of 1", len(h.Buckets))
 		}
 		if h.Buckets[0].Min != int64(val) || h.Buckets[0].Max != int64(val)+1 {
 			s.Errorf("Bucket has range [%v, %v) but sample was %v", h.Buckets[0].Min, h.Buckets[0].Max, val)
 		}
-		if h.Buckets[0].Count != 1 {
-			s.Errorf("Bucket has count %v instead of 1", h.Buckets[0].Count)
-		} else if tc := h.TotalCount(); tc != 1 {
-			s.Errorf("Histogram has total count %v instead of 1", tc)
+		if h.Buckets[0].Count != numSamples {
+			s.Errorf("Bucket has count %v instead of %d", h.Buckets[0].Count, numSamples)
+		} else if tc := h.TotalCount(); tc != numSamples {
+			s.Errorf("Histogram has total count %v instead of %d", tc, numSamples)
 		}
 	}
 
@@ -72,21 +77,21 @@ func Histograms(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	report(sample1)
+	report(sample1, 1)
 	s.Logf("Waiting for %v histogram", name)
 	h1, err := metrics.WaitForHistogram(ctx, tconn, name, timeout)
 	if err != nil {
 		s.Fatal("Failed to get histogram: ", err)
 	}
 	s.Log("Got histogram: ", h1)
-	check(h1, sample1)
+	check(h1, sample1, 1)
 
-	report(sample2)
+	report(sample2, 10)
 	s.Logf("Waiting for %v histogram update", name)
 	h2, err := metrics.WaitForHistogramUpdate(ctx, tconn, name, h1, timeout)
 	if err != nil {
 		s.Fatal("Failed to get histogram update: ", err)
 	}
 	s.Log("Got histogram update: ", h2)
-	check(h2, sample2)
+	check(h2, sample2, 10)
 }
