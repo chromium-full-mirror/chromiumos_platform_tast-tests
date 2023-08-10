@@ -466,6 +466,9 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	// devices after initial experiments are conducted on local and vm-tm configs.
 	useDevCaches := (tmpCachesDir != "" && (!param.upload || param.androidPackage == "android-vm-tm"))
 	if useDevCaches {
+		if err := dututils.RemoveAllRemote(ctx, d, tmpCachesDir); err != nil {
+			s.Fatalf("Failed to cleanup temp cache dir %q:  %v", tmpCachesDir, err)
+		}
 		if err := dututils.MkdirRemote(ctx, d, tmpCachesDir); err != nil {
 			s.Fatalf("Failed to create temp cache dir %q:  %v", tmpCachesDir, err)
 		}
@@ -624,7 +627,6 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		}
 
 		if useDevCaches {
-			testing.ContextLogf(ctx, "Installing GMS core caches into dev directory: %q", tmpCachesDir)
 			if err := decompressSystemImage(ctx, d, param.vmEnabled, tempDir); err != nil {
 				s.Fatal("Failed to decompress system image: ", err)
 			}
@@ -648,11 +650,11 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			fileCacheBaseName := "file_hash_cache"
 			localFileHashCache := filepath.Join(tempDir, fileCacheBaseName)
 
-			if err := cache.InstallGmsCoreCaches(ctx, jarPath, tempDir, localGMSTar, localGMSManifest, localGMSCoreCache, true /* enforceMatchingTimestamp */); err != nil {
+			testing.ContextLogf(ctx, "Installing GMS core caches into temp directory: %q", localGMSCoreCache)
+			if err := cache.InstallGmsCoreCaches(ctx, jarPath, tempDir, localGMSTar, localGMSManifest, localGMSCoreCache, true /* enforceMatchingTimestamp */, true /* preservePermissionsOwnership */); err != nil {
 				s.Fatal("Failed to install GMS core caches: ", err)
 			}
 
-			testing.ContextLogf(ctx, "Generating Packages cache into dev directory: %q", tmpCachesDir)
 			vendorTmpDir := filepath.Join(tempDir, "vendor_root")
 			if err = os.Mkdir(vendorTmpDir, 0744); err != nil {
 				s.Fatalf("Failed to create %q: %v", vendorTmpDir, err)
@@ -665,6 +667,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to decompress vendor image: ", err)
 			}
 
+			testing.ContextLogf(ctx, "Generating Packages cache and File Hash cache into temp directories: %q and %q respectively", localPackagesCache, localFileHashCache)
 			if err := cache.GeneratePackagesCache(ctx, jarPath, tempDir, getAndroidPath(param.vmEnabled), vendorTmpDir, localPackagesCache, localFileHashCache, localXMLPath, param.uploadPackagesReference); err != nil {
 				s.Fatal("Failed to generate packages cache: ", err)
 			}
@@ -1031,32 +1034,40 @@ func decompressImage(ctx context.Context, d *dut.DUT, vmEnabled bool, imageName,
 }
 
 func copyDevCacheArtifactsToRemote(ctx context.Context, d *dut.DUT, vmEnabled bool, localDir, remoteDir, gmsCoreCacheName, packagesCacheName, fileHashCacheName string) error {
+	const (
+		appChimera        = "app_chimera"
+		androidSystemUgid = "656360"
+	)
+
 	localGMSCoreCache := filepath.Join(localDir, gmsCoreCacheName)
 	localPackagesCache := filepath.Join(localDir, packagesCacheName)
 	localFileHashCache := filepath.Join(localDir, fileHashCacheName)
 	remoteGMSCoreCache := filepath.Join(remoteDir, gmsCoreCacheName)
+	remoteAppChimera := filepath.Join(remoteGMSCoreCache, appChimera)
 	remotePackagesCache := filepath.Join(remoteDir, packagesCacheName)
 	remoteFileHashCache := filepath.Join(remoteDir, fileHashCacheName)
 	dataMap := map[string]string{
-		localGMSCoreCache:  remoteGMSCoreCache,
+		localGMSCoreCache:  remoteAppChimera,
 		localPackagesCache: remotePackagesCache,
 		localFileHashCache: remoteFileHashCache,
 	}
-	if _, err := linuxssh.PutFiles(ctx, d.Conn(), dataMap, linuxssh.DereferenceSymlinks); err != nil {
-		return errors.Wrapf(err, "failed to send data from %q to remote data path %q", localGMSCoreCache, remoteGMSCoreCache)
+	if bytes, err := linuxssh.PutFiles(ctx, d.Conn(), dataMap, linuxssh.PreserveSymlinks); err != nil {
+		return errors.Wrapf(err, "failed to copy data from %q to remote data path %q", localDir, remoteDir)
+	} else if bytes == 0 {
+		return errors.Errorf("zero bytes transferred from %q to remote data path %q", localDir, remoteDir)
+	}
+
+	// TODO(b/297564065): Remove workaround including references to `app_chimera` once destination is no longer altered.
+	if err := dututils.RemoveAllRemote(ctx, d, remoteAppChimera); err != nil {
+		return errors.Wrapf(err, "failed to remove extraneous %q path", appChimera)
+	}
+	if err := dututils.MvRemote(ctx, d, remoteAppChimera+appChimera, remoteAppChimera); err != nil {
+		return errors.Wrapf(err, "failed to rename %q path", appChimera)
 	}
 
 	// Update file ownership and permissions of remote files. This is mimicking what
 	// GmsCoreCacheInstaller is already doing but on the remote host.
-	var ugid string
-	if vmEnabled {
-		// ARCVM requires system user.
-		ugid = "1000"
-	} else {
-		// Container can use Android system user instead.
-		ugid = "656360"
-	}
-	if err := dututils.ChownRemote(ctx, d, ugid, ugid, remoteGMSCoreCache); err != nil {
+	if err := dututils.ChownRecRemote(ctx, d, androidSystemUgid, androidSystemUgid, remoteGMSCoreCache); err != nil {
 		return errors.Wrap(err, "failed to chown GMS core caches path")
 	}
 	if err := dututils.ChmodRemote(ctx, d, "0700", remoteGMSCoreCache); err != nil {

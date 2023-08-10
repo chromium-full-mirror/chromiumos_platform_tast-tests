@@ -34,7 +34,7 @@ const (
 var regExpEndsWithBuildID = regexp.MustCompile(`^.+/(\d+)/$`)
 
 // findRecentCacheBuilderJar scans the list of available entries with ARC cache builders jar files
-// and returns one whichv has the highest build ID that indicates the most recent entry.
+// and returns one which has the highest build ID that indicates the most recent entry.
 func findRecentCacheBuilderJar(ctx context.Context, versionRelease int) (string, error) {
 	testing.ContextLogf(ctx, "Build is not official, finding the latest %q", cacheBuilderJarName)
 
@@ -107,8 +107,8 @@ func InstallCacheBuilderJar(ctx context.Context, dut *dut.DUT, vmEnabled bool, d
 		return "", err
 	}
 
-	testing.ContextLogf(ctx, "Installing cache builder jar from %q", url)
 	jarPath := filepath.Join(dir, filepath.Base(url))
+	testing.ContextLogf(ctx, "Installing cache builder jar from %q to %q", url, jarPath)
 
 	if err := testexec.CommandContext(ctx, "gsutil", "copy", url, jarPath).Run(testexec.DumpLogOnError); err != nil {
 		return "", errors.Wrapf(err, "failed to download from %s", url)
@@ -145,8 +145,12 @@ func ValidatePackagesCache(ctx context.Context, jarPath, sourcePath, referencePa
 // InstallGmsCoreCaches installs GMS Core caches based on files from manifestPath and tarPath where
 // enforceMatchingTimestamp will determine whether to require manifest entry timestamp and timestamp
 // of actual system image apk files to match from the system-root rootDir path.
-func InstallGmsCoreCaches(ctx context.Context, jarPath, rootDir, tarPath, manifestPath, outDir string, enforceMatchingTimestamp bool) error {
-	const javaClass = "org.chromium.arc.cachebuilder.GmsCoreCacheInstaller"
+func InstallGmsCoreCaches(ctx context.Context, jarPath, rootDir, tarPath, manifestPath, outDir string, enforceMatchingTimestamp, preservePermissionsOwnership bool) error {
+	const (
+		javaClass  = "org.chromium.arc.cachebuilder.GmsCoreCacheInstaller"
+		appChimera = "app_chimera"
+	)
+
 	if tarPath == manifestPath {
 		return errors.New("failed to run cache installer due to invalid identical tar and manifest paths")
 	}
@@ -162,14 +166,24 @@ func InstallGmsCoreCaches(ctx context.Context, jarPath, rootDir, tarPath, manife
 	} else {
 		enforceMatchingTimestampStr = "no"
 	}
+	var preservePermissionsOwnershipStr string
+	if preservePermissionsOwnership {
+		preservePermissionsOwnershipStr = "yes"
+	} else {
+		preservePermissionsOwnershipStr = "no"
+	}
 
 	if err := testexec.CommandContext(
 		ctx, "sudo", "java", "-cp", jarPath, javaClass,
-		"--system-root", rootDir, "--gms-caches", tarPath, "--enforce-matching-timestamp", enforceMatchingTimestampStr,
+		"--system-root", rootDir, "--gms-caches", tarPath,
+		"--enforce-matching-timestamp", enforceMatchingTimestampStr,
+		"--preserve-permissions-ownership", preservePermissionsOwnershipStr,
 		"--manifest", manifestPath, "--output-dir", outDir).Run(testexec.DumpLogOnError); err != nil {
 		return err
 	}
-	if err := testexec.CommandContext(ctx, "sudo", "chmod", "0744", outDir).Run(testexec.DumpLogOnError); err != nil {
+	appChimeraPath := filepath.Join(outDir, appChimera)
+	testing.ContextLogf(ctx, "Updating permissions for %q", appChimeraPath)
+	if err := testexec.CommandContext(ctx, "sudo", "chmod", "-R", "0755", appChimeraPath).Run(testexec.DumpLogOnError); err != nil {
 		return err
 	}
 	return nil

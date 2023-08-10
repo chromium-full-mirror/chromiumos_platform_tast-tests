@@ -506,9 +506,7 @@ func verifyDevCachesInstalled(ctx context.Context, a *arc.ARC, useDevCaches bool
 			return errors.Wrap(err, "failed to read prop")
 		}
 		// Value of 3 corresponds to GMS Core, Packages and File Hashes caches installed.
-		// TODO(b/294475855): Update to value < 3 once bug is fixed. This will allow putting some
-		// basic checks in arccachesetup without breaking Uprev.
-		if cachesInstalled, err := strconv.Atoi(value); err != nil || cachesInstalled < 2 {
+		if cachesInstalled, err := strconv.Atoi(value); err != nil || cachesInstalled < 3 {
 			return errors.Wrap(err, "failed to verify dev caches installed correctly")
 		}
 	}

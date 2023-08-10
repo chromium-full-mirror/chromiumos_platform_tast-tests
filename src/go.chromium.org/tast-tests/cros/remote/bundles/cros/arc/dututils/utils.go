@@ -7,8 +7,9 @@ package dututils
 
 import (
 	"context"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"strings"
+
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -39,8 +40,8 @@ func CatRemote(ctx context.Context, d *dut.DUT, path string) ([]byte, error) {
 	return output, nil
 }
 
-// ChownRemote changes user and/or group ownership of a file at path on the DUT.
-func ChownRemote(ctx context.Context, d *dut.DUT, uid, gid, path string) error {
+// ChownRecRemote changes user and/or group ownership of a file at path recursively on the DUT.
+func ChownRecRemote(ctx context.Context, d *dut.DUT, uid, gid, path string) error {
 	if uid == "" || gid == "" || path == "" {
 		return errors.New("failed to run chown due to invalid options")
 	}
@@ -99,6 +100,17 @@ func RemoveAllRemote(ctx context.Context, d *dut.DUT, path string) error {
 		return errors.New("path can not be empty")
 	}
 	if err := d.Conn().CommandContext(ctx, "rm", "-rf", path).Run(testexec.DumpLogOnError); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MvRemote moves or renames files on the DUT.
+func MvRemote(ctx context.Context, d *dut.DUT, sourcePath, destPath string) error {
+	if sourcePath == "" || destPath == "" {
+		return errors.New("failed to run mv due to invalid options")
+	}
+	if err := d.Conn().CommandContext(ctx, "mv", sourcePath, destPath).Run(testexec.DumpLogOnError); err != nil {
 		return err
 	}
 	return nil
