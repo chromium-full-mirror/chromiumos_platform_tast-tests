@@ -144,8 +144,6 @@ func init() {
 		}, {
 			Name: "disk_read",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDiskRead),
-			// TODO(b/282664940): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:      "power_button",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutinePowerButton),
