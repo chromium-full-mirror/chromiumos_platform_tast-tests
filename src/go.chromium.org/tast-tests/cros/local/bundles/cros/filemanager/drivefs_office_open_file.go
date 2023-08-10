@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
@@ -20,9 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DrivefsOpenOfficeFileAlwaysMove,
+		Func:         DrivefsOfficeOpenFile,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that docx, xlsx and pptx open in Google Drive and we can see 'always move' checkbox for 2nd time",
+		Desc:         "Verifies docx, xlsx and pptx files can be open by Google Drive",
 		BugComponent: "b:1199143",
 		Timeout:      5 * time.Minute,
 		Contacts: []string{
@@ -44,20 +45,20 @@ func init() {
 	})
 }
 
-// DrivefsOpenOfficeFileAlwaysMove tests user opening the 3 file types:
-// 1. docx: First file, goes through the setup flow.
-// 2. pptx: Opens and  checks the "Don't ask again" in the move file confirmation dialog.
-// 3. xlsx: Opens without the confirmation dialog.
-func DrivefsOpenOfficeFileAlwaysMove(ctx context.Context, s *testing.State) {
+// DrivefsOfficeOpenFile tests that opening a file from Downloads shows the file
+// handler dialog, Google Drive can be selected, the file is moved to Drive and
+// opened in the Editor
+func DrivefsOfficeOpenFile(ctx context.Context, s *testing.State) {
 	data := s.FixtValue().(*onedrive.FixtureData)
 	cr := data.Chrome
 	tconn := data.TestAPIConn
 	targetBaseName := filepath.Base(data.TargetFolder)
 	driveFsClient := data.DriveFs
 
-	for i, subTest := range data.GeneratedFiles {
+	for _, subTest := range data.GeneratedFiles {
 		fileName := subTest.FileName
 		fileType := subTest.FileType
+		srcFile := subTest.SrcFile
 		f := func(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
 			ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -68,7 +69,7 @@ func DrivefsOpenOfficeFileAlwaysMove(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to launch Files app: ", err)
 			}
 			defer files.Close(cleanupCtx)
-			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_"+fileType)
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "drive_open_office_file_"+fileType)
 			defer driveFsClient.SaveLogsOnError(cleanupCtx, s.HasError)
 
 			cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fileName, filesconsts.DriveFs)
@@ -76,31 +77,17 @@ func DrivefsOpenOfficeFileAlwaysMove(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to open office file: ", err)
 			}
 
-			if err := cloudUpload.RunGoogleDriveSetupFlow()(ctx); err != nil {
-				s.Fatal("Failed to run the setup dialog steps: ", err)
-			}
-
-			// Move/copy confirmation dialog.
-			// 1st file: It doesn't show the "Don't ask again" option.
-			// 2nd file: We want to check the "Don't ask again".
-			// 3rd file: The dialog shouldn't show.
-			if i < 2 {
-				alwaysMove := false // 1st file.
-				if i == 1 {
-					alwaysMove = true // 2nd file.
-				}
-
-				if err := cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(alwaysMove)(ctx); err != nil {
-					s.Fatal("Failed confirming to upload to cloud: ", err)
-				}
-			}
-
-			if err := drivefs.WaitForGoogleDriveWindow(tconn, fileName)(ctx); err != nil {
-				s.Fatal("Failed waiting file to open on Google Drive: ", fileName, err)
+			// Run Google Drive setup flow and confirm upload in Move/copy confirmation dialog.
+			if err := uiauto.Combine("Confirm upload and wait to open",
+				cloudUpload.RunGoogleDriveSetupFlow(),
+				cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false /*=alwaysMove*/),
+				drivefs.WaitForGoogleDriveWindow(tconn, fileName),
+			)(ctx); err != nil {
+				s.Fatal("Failed to upload and open on Google Drive: ", fileName, err)
 			}
 			defer drivefs.CloseGoogleDriveWindow(cleanupCtx, tconn, fileName)
 
-			if err := drivefs.VerifySourceDestinationMD5SumMatch(driveFsClient, subTest.SrcFile, fileName)(ctx); err != nil {
+			if err := drivefs.VerifySourceDestinationMD5SumMatch(driveFsClient, srcFile, fileName)(ctx); err != nil {
 				s.Fatal("Google Drive upload didn't match: ", err)
 			}
 		}

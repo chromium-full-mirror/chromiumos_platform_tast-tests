@@ -21,7 +21,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DrivefsReopenOfficeFile,
+		Func:         DrivefsOfficeReopenFile,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that office file can be open directly in Google Drive",
 		BugComponent: "b:1199143",
@@ -45,9 +45,9 @@ func init() {
 	})
 }
 
-// DrivefsReopenOfficeFile tests user opening the 1 docx file, going through the setup flow.
+// DrivefsOfficeReopenFile tests user opening the 1 docx file, going through the setup flow.
 // Then opening the same file directly from the Google Drive, which should open without any setup, copy or move.
-func DrivefsReopenOfficeFile(ctx context.Context, s *testing.State) {
+func DrivefsOfficeReopenFile(ctx context.Context, s *testing.State) {
 	data := s.FixtValue().(*onedrive.FixtureData)
 	cr := data.Chrome
 	tconn := data.TestAPIConn
