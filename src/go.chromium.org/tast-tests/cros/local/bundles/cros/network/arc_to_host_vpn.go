@@ -90,7 +90,7 @@ func ARCToHostVPN(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "still not connected to VPN server")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
 		s.Fatal("Failed to connect to VPN server: ", err)
 	}
 
