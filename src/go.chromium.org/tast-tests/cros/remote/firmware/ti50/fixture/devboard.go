@@ -102,7 +102,12 @@ type devboardFixture struct {
 }
 
 func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	i.hostPort = s.RequiredVar(DevBoardService)
+	if hostPort, ok := s.Var(DevBoardService); ok {
+		i.hostPort = hostPort
+	} else {
+		testing.ContextLogf(ctx, "-var=%s= not provided, using default: localhost:39999", DevBoardService)
+		i.hostPort = "localhost:39999"
+	}
 	i.v = &Value{}
 
 	if err := i.dialGrpc(ctx); err != nil {

@@ -106,18 +106,37 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 	iv := &ImageValue{downloaded: false}
 
 	var configPaths []string
-	if conf, ok := s.Var(FwConfigJSON); ok {
+	conf, hasManualConf := s.Var(FwConfigJSON)
+	if hasManualConf {
 		configPaths = append(configPaths, conf)
 	}
 
 	if inputURL == "" {
+		// Absence of BuildURL argument.  This instructs tast to not flash any image to
+		// the devboard, but run the test against the code already running.  This works
+		// only if the image on the board is of the same type (system_test_auto / ti50) as
+		// the test case expects.  A json configuration file will be selected from
+		// ti50/common based on the information from devboardservice and the type of image
+		// declared on the test case.
 		testing.ContextLogf(ctx, "-var=%s= not provided, assuming the devboard has a %s image", BuildURL, imageType)
 		iv.imagePath = ""
+
+		if !hasManualConf {
+			testing.ContextLogf(ctx, "-var=%s= not provided, using default from ti50/common", FwConfigJSON)
+			config, err := defaultConfigPath(testbedProperties.TestbedType, imageType)
+			if err != nil {
+				return nil, err
+			}
+			configPaths = append(configPaths, config)
+		}
 		iv.configPaths = configPaths
+
 		return iv, nil
 	}
 
 	if strings.HasPrefix(inputURL, LatestPrefix) {
+		// Special value "latests-tot" finds the most recent complete set of artifacts,
+		// and then goes into the case below.
 		latestURL, err := findLatestCompletedBuildURL(ctx, inputURL[len(LatestPrefix):])
 		if err != nil {
 			return nil, err
@@ -127,6 +146,9 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 	}
 
 	if strings.HasPrefix(inputURL, gsPrefix) {
+		// BuildURL pointing to artifacts via a Google Storage URL.  The logic below
+		// selects an image and corresponding json file depending on the type needed by
+		// the test case.
 		fullURL := inputURL
 		jsonURL := ""
 		// Assume URL is a build folder if it doesn't end in .bin.
@@ -199,8 +221,10 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		return nil, err
 	}
 	if img.IsDir() {
-		// Given directory is assumed to have ports/ and build/ subdirectories, that is,
-		// be ti50/common.
+		// BuildURL is a local directory, which must be a ti50/common checkout.  Code
+		// below will select an image file within the build/ directory and json file
+		// within the oports/ directory, based on the type of image required by the test
+		// case and chip/variant.
 		var name string
 		slot, _ := s.Var(Slot)
 		chip, _ := s.Var(Chip)
@@ -288,5 +312,18 @@ func imageDirectory(t ti50.TestbedType, i ImageType) (string, error) {
 		return "host_emulation-" + string(i), nil
 	default:
 		return "", errors.New("unknown testbed type: " + string(t))
+	}
+}
+
+func defaultConfigPath(testbedType ti50.TestbedType, imageType ImageType) (string, error) {
+	switch testbedType {
+	case "gsc_dt_ab":
+		return "/mnt/host/source/src/platform/ti50/common/ports/dauntless/software/tools/" + string(imageType) + "_dauntless.json", nil
+	case "gsc_ot_fpga_cw310":
+		return "/mnt/host/source/src/platform/ti50/common/ports/opentitan/software/tools/" + string(imageType) + "_opentitan.json", nil
+	case "gsc_he":
+		return "/mnt/host/source/src/platform/ti50/common/ports/host_emulation/software/tools/" + string(imageType) + "_host_emulation.json", nil
+	default:
+		return "", errors.New("unknown testbed type: " + string(testbedType))
 	}
 }
