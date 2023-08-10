@@ -9,13 +9,13 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/login/signinutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -25,30 +25,29 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CryptohomeRecovery,
+		Func:         CryptohomeRecoveryFromSettings,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks cryptohome account recovery flow",
+		Desc:         "Checks cryptohome password change flow, with setting up the flow from OS Settings",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"anastasiian@chromium.org",
+			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary"},
-		VarDeps: []string{
-			"ui.signinProfileTestExtensionManifestKey",
-			"ui.gaiaPoolDefault",
+		SoftwareDeps: []string{
+			"chrome",
+			"chrome_internal",
 		},
-		Timeout: 2*chrome.GAIALoginTimeout + userutil.TakingOwnershipTimeout + time.Minute,
-		Fixture: fixture.CleanOwnership,
+		Attr: []string{"group:mainline", "informational", "group:hw_agnostic"},
+		VarDeps: []string{
+			"ui.gaiaPoolDefault",
+			"ui.signinProfileTestExtensionManifestKey",
+		},
+		Timeout: chrome.GAIALoginTimeout + 2*chrome.LoginTimeout + userutil.TakingOwnershipTimeout + time.Minute,
 	})
 }
 
-func CryptohomeRecovery(ctx context.Context, s *testing.State) {
+func CryptohomeRecoveryFromSettings(ctx context.Context, s *testing.State) {
 	const (
 		testFile = "test_file"
 		testData = "test that data persisted after the recovery"
@@ -77,7 +76,6 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 	func() {
 		cr, err := chrome.New(ctx,
 			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-			chrome.DontSkipOOBEAfterLogin(),
 			chrome.EnableFeatures("CryptohomeRecovery"),
 		)
 		if err != nil {
@@ -90,38 +88,7 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to connect Test API: ", err)
 		}
-		defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-
-		oobeConn, err := cr.WaitForOOBEConnection(ctx)
-		if err != nil {
-			s.Fatal("Failed to create OOBE connection: ", err)
-		}
-		defer oobeConn.Close()
-
-		if err := oobeConn.Eval(ctx, "OobeAPI.advanceToScreen('recovery-check')", nil); err != nil {
-			s.Fatal("Failed to advance to the 'recovery-check' screen: ", err)
-		}
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.isReadyForTesting()"); err != nil {
-			s.Fatal("Failed to wait for the consolidated consent screen to be visible: ", err)
-		}
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.enableRecoveryToggle()", nil); err != nil {
-			s.Fatal("Failed to enable recovery toggle on the consolidated consent screen: ", err)
-		}
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.clickAcceptButton()", nil); err != nil {
-			s.Fatal("Failed to click consolidated consent screen accept button: ", err)
-		}
-
-		if err := signinutil.WaitForRecoverySetup(ctx, oobeConn); err != nil {
-			s.Fatal("Failed to wait for recovery setup to be finished: ", err)
-		}
-
-		if err := oobeConn.Eval(ctx, "OobeAPI.skipPostLoginScreens()", nil); err != nil {
-			// This is not fatal because sometimes it fails because Oobe shutdowns too fast after the call - which produces error.
-			s.Log("Failed to call skip post login screens: ", err)
-		}
-		if err := cr.WaitForOOBEConnectionToBeDismissed(ctx); err != nil {
-			s.Fatal("Failed to wait for OOBE to be dismissed: ", err)
-		}
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "first_login")
 
 		// This is needed for reven tests, as login flow there relies on the existence of a device setting.
 		if err := userutil.WaitForOwnership(ctx, cr); err != nil {
@@ -131,6 +98,21 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 		// Write test file to check that data persisted on password change.
 		if err := hwsec.WriteUserTestContent(ctx, cryptohome, cmdRunner, cr.NormalizedUser(), testFile, testData); err != nil {
 			s.Fatal("Failed to write a user test file: ", err)
+		}
+
+		// Set up Recovery through a connection to the Settings page.
+		settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "osPrivacy/lockScreen", func(context.Context) error { return nil })
+		if err != nil {
+			s.Fatal("Failed to open setting page: ", err)
+		}
+		defer settings.Close(ctx)
+
+		if err := ossettings.ConfirmPassword(ctx, cr, creds.Pass); err != nil {
+			s.Fatal("Failed to confirm password: ", err)
+		}
+
+		if err := settings.SetToggleOption(cr, "Local data recovery", true)(ctx); err != nil {
+			s.Fatal("Failed to toggle recovery: ", err)
 		}
 
 		s.Log("The user was created - logging out")
@@ -160,7 +142,7 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tLoginConn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "recovery")
 
 	if err := signinutil.EnterInvalidPassword(ctx, cr, creds); err != nil {
 		s.Fatal("Failed to enter invalid password: ", err)
