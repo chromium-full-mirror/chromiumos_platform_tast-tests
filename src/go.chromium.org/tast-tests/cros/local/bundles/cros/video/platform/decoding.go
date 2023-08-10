@@ -156,12 +156,7 @@ func LoopArgs(decoder string, numLoops, numFrames int) []string {
 	case strings.Contains(decoder, "decode_test"):
 		args = []string{fmt.Sprintf("--loop%s", loopsParam)}
 		if numFrames > 0 {
-			args = append(args, fmt.Sprintf("--frames=%d", numLoops))
-		}
-	case strings.Contains(decoder, "decode_test"):
-		args = []string{fmt.Sprintf("--loop%s", loopsParam)}
-		if numFrames > 0 {
-			args = append(args, fmt.Sprintf("--limit=%d", numLoops))
+			args = append(args, fmt.Sprintf("--frames=%d", numFrames))
 		}
 	}
 	return args
