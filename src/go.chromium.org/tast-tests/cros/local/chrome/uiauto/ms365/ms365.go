@@ -243,7 +243,7 @@ func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome) error 
 	br := cr.Browser()
 	// Opening Office PWA is usually quick, but occasionally really slow,
 	// with a shorter context it can try again if it hit a slow attempt.
-	quickCtx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	quickCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	interval := 200 * time.Millisecond

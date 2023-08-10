@@ -248,7 +248,7 @@ func (cu *CloudUpload) RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) u
 			// Last step of the setup flow.
 			cu.WaitSetupCompleteDialogAndClickDone(),
 		)(ctx); err != nil {
-			errors.Wrap(err, "failed to complete the setup dialog steps")
+			return errors.Wrap(err, "failed to complete the setup dialog steps")
 		}
 		return nil
 	}
