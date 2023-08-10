@@ -95,10 +95,56 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 	}
 	defer ash.SetTabletModeEnabled(cleanupCtx, tconn, originalTabletMode)
 
-	canSplitScreen, err := ash.CanSplitScreenForChrome(ctx)
+	canSplitScreen, err := func(ctx context.Context) (bool, error) {
+		if originalTabletMode != true {
+			// The tests also run on devices that do not support tablet mode. Thus,
+			// in case of an error, just log it and return false.
+			if err := ash.SetTabletModeEnabled(ctx, tconn, true); err != nil {
+				testing.ContextLog(ctx, "Failed to set tablet mode: ", err)
+				return false, nil
+			}
+			defer ash.SetTabletModeEnabled(ctx, tconn, originalTabletMode)
+		}
+
+		ws, err := ash.GetAllWindows(ctx, tconn)
+		if err != nil {
+			return false, errors.Wrap(err, "failed to get windows")
+		}
+		// There should exist only one blank Chrome window now.
+		if len(ws) != 1 {
+			return false, errors.Errorf("got %d windows when one Chrome window is expected", len(ws))
+		}
+
+		win := ws[0]
+		// Try to split the active window and see if it works on the current device.
+		initialState := win.State
+		if err := ash.SetWindowStateWithTimeout(ctx, tconn, win.ID, ash.WindowStatePrimarySnapped, 5*time.Second); err != nil {
+			w, wErr := ash.GetWindow(ctx, tconn, win.ID)
+			if wErr != nil {
+				// Log the current error and return with the original error.
+				testing.ContextLog(ctx, "Failed to get window: ", wErr)
+				return false, errors.Wrap(err, "failed to snap window")
+			}
+			if w.State != initialState {
+				return false, errors.Wrapf(err, "failed to snap window with state changed from %s to %s", initialState, w.State)
+			}
+
+			// On a device with small resolutions like 1200x675, it's normal
+			// that Chrome cannot be snapped because the width of the split
+			// screen is smaller than the minimum width of the Chrome window.
+			// Just log the error and return false with nil.
+			testing.ContextLogf(ctx, "Failed to snap window with state in %s: %v", w.State, err)
+			return false, nil
+		}
+		// Restore the original window state.
+		defer ash.SetWindowStateAndWait(ctx, tconn, win.ID, initialState)
+
+		return true, nil
+	}(ctx)
 	if err != nil {
 		s.Fatal("Failed to determine if Chrome can be split screened: ", err)
 	}
+	s.Log("Whether Chrome can be split screened in the current device: ", canSplitScreen)
 
 	// Run an http server to serve the test contents for accessing from the chrome browsers.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
