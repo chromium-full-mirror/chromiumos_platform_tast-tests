@@ -49,9 +49,11 @@ func init() {
 func BackwardMigratePolicy(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(*fakedms.FakeDMS)
 
-	if err := migrate.ClearMigrationState(ctx); err != nil {
+	crCleanup, err := migrate.StartChromeToClearMigrationState(ctx)
+	if err != nil {
 		s.Fatal("Failed to run Chrome to clear migration state: ", err)
 	}
+	crCleanup.Close(ctx)
 
 	crForward, err := forwardMigratePolicy(ctx, fdms, s)
 	if err != nil {

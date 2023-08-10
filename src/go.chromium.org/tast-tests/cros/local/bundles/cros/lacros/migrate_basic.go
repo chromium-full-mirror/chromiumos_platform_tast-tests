@@ -32,11 +32,13 @@ func init() {
 
 // MigrateBasic tests that migration is run to completion and Lacros is launchable after the migration.
 func MigrateBasic(ctx context.Context, s *testing.State) {
-	if err := migrate.ClearMigrationState(ctx); err != nil {
+	cr, err := migrate.StartChromeToClearMigrationState(ctx)
+	if err != nil {
 		s.Fatal("Failed to run Chrome to clear migration state: ", err)
 	}
+	cr.Close(ctx)
 
-	cr, err := migrate.Run(ctx, []chrome.Option{}, []lacrosfixt.Option{})
+	cr, err = migrate.Run(ctx, []chrome.Option{}, []lacrosfixt.Option{})
 	if err != nil {
 		s.Fatal("Failed to migrate profile: ", err)
 	}

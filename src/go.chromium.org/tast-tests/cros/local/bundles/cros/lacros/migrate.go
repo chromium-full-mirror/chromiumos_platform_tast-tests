@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -56,20 +55,11 @@ func Migrate(ctx context.Context, s *testing.State) {
 // prepareAshProfile resets profile migration and sets up profile data.
 func prepareAshProfile(ctx context.Context, s *testing.State, kb *input.KeyboardEventWriter) {
 	// First restart Chrome with Lacros disabled in order to reset profile migration.
-	cr, err := chrome.New(ctx, chrome.DisableFeatures("LacrosOnly"))
+	cr, err := migrate.StartChromeToClearMigrationState(ctx)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(ctx)
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if _, err := os.Stat(migrate.LacrosFirstRunPath); !os.IsNotExist(err) {
-			return errors.Wrap(err, "'First Run' file exists or cannot be read")
-		}
-		return nil
-	}, nil); err != nil {
-		s.Fatal("'First Run' file exists or cannot be read: ", err)
-	}
 
 	if err := migrate.SetupProfileData(ctx, cr, s, cr.Browser()); err != nil {
 		s.Fatal("Failed to set up profile data: ", err)

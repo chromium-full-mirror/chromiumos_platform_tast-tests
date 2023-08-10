@@ -30,9 +30,11 @@ func init() {
 
 // BackwardMigrateBasic tests forward and then backward lacros migration.
 func BackwardMigrateBasic(ctx context.Context, s *testing.State) {
-	if err := migrate.ClearMigrationState(ctx); err != nil {
+	cr, err := migrate.StartChromeToClearMigrationState(ctx)
+	if err != nil {
 		s.Fatal("Failed to run Chrome to clear migration state: ", err)
 	}
+	cr.Close(ctx)
 
 	forwardMigrate(ctx, s)
 	backwardMigrate(ctx, s)
