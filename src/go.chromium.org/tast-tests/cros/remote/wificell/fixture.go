@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -64,6 +65,10 @@ const (
 	// TFOptions.AttenuatorTarget for fixtures that have the TFFeaturesAttenuator
 	// feature.
 	fixtureVarAttenuator = "attenuator"
+
+	// fixtureVarEnableRouterReboot is the fixture var for setting
+	// TFOptions.EnableRouterReboot for all fixtures.
+	fixtureVarEnableRouterReboot = "wificell.EnableRouterReboot"
 )
 
 func init() {
@@ -100,7 +105,10 @@ func init() {
 			PostTestTimeout: postTestTimeout,
 			TearDownTimeout: tearDownTimeout,
 			ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
-			Vars:            []string{fixtureVarPcap},
+			Vars: []string{
+				fixtureVarPcap,
+				fixtureVarEnableRouterReboot,
+			},
 		}
 
 		// Typical fixture extensions.
@@ -456,6 +464,14 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	if f.features&TFFeaturesCellular != 0 {
 		ops.EnableCellular(true)
+	}
+
+	if enableRouterRebootStr, ok := s.Var(fixtureVarEnableRouterReboot); ok {
+		enableRouterReboot, err := strconv.ParseBool(enableRouterRebootStr)
+		if err != nil {
+			s.Fatalf("Failed to parse bool fixture var %q: %v", fixtureVarEnableRouterReboot, err)
+		}
+		ops.EnableRouterReboot(enableRouterReboot)
 	}
 
 	tf, err := NewTestFixture(ctx, s.FixtContext(), ops.Build())

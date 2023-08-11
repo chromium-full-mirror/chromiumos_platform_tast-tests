@@ -675,6 +675,11 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 	testing.ContextLogf(ctx, "[WIFICELL_FIXTURE] rebootRouter :: %s :: START", routerMsgName)
 	defer testing.ContextLogf(ctx, "[WIFICELL_FIXTURE] rebootRouter :: %s :: END", routerMsgName)
 
+	if !tf.options.EnableRouterReboot {
+		testing.ContextLogf(ctx, "Skipping reboot of %s: fixture option EnableRouterReboot is false", routerName)
+		return nil
+	}
+
 	if rd.object.RouterType() != support.OpenWrtT {
 		testing.ContextLogf(ctx, "Skipping reboot of %s: Router is not an OpenWrt router", routerName)
 		return nil

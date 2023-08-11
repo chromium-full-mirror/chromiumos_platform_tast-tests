@@ -69,6 +69,18 @@ type TFOptions struct {
 	// Default is false.
 	UseFirstRouterAsPcap bool
 
+	// EnableRouterReboot when true, will cause routers to be rebooted between
+	// tests to more reliably clean their state.
+	//
+	// Only OpenWrt routers are rebooted.
+	//
+	// Default is true.
+	//
+	// Can be helpful to disable this to allow for easier test debugging and
+	// development. Should only be disabled when necessary, not for normal test
+	// runs.
+	EnableRouterReboot bool
+
 	// EnableDutUI when true, will not skip stopping the UI on the duts when
 	// initializing Chrome.
 	//
@@ -118,6 +130,7 @@ func newTFOptions() *TFOptions {
 		RequirePrimaryRouter: true,
 		EnablePacketCapture:  false,
 		UseFirstRouterAsPcap: false,
+		EnableRouterReboot:   true,
 		EnableDutUI:          false,
 		EnableCellular:       false,
 		SetDutWifiLogging:    true,
@@ -226,6 +239,12 @@ func (b *TFOptionsBuilder) EnablePacketCapture(enablePacketCapture bool) *TFOpti
 // UseFirstRouterAsPcap sets TFOptions.UseFirstRouterAsPcap.
 func (b *TFOptionsBuilder) UseFirstRouterAsPcap(useFirstRouterAsPcap bool) *TFOptionsBuilder {
 	b.options.UseFirstRouterAsPcap = useFirstRouterAsPcap
+	return b
+}
+
+// EnableRouterReboot sets TFOptions.EnableRouterReboot.
+func (b *TFOptionsBuilder) EnableRouterReboot(value bool) *TFOptionsBuilder {
+	b.options.EnableRouterReboot = value
 	return b
 }
 
