@@ -14,9 +14,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     FeatureCrOSConfigHasOEMName,
-		Desc:     "Verifies that CrOSConfig has OEM name",
-		Contacts: []string{"chromeos-oem-services@google.com"},
+		Func:           FeatureCrOSConfigHasOEMName,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verifies that CrOSConfig has OEM name",
+		Contacts:       []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr:         []string{"group:telemetry_extension_hw"},

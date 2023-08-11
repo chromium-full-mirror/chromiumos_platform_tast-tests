@@ -16,10 +16,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FeatureAPIOEMData,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests chrome.os.telemetry.getOemData Chrome Extension API function exposed to Telemetry Extension",
-		Contacts:     []string{"chromeos-oem-services@google.com"},
+		Func:           FeatureAPIOEMData,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Tests chrome.os.telemetry.getOemData Chrome Extension API function exposed to Telemetry Extension",
+		Contacts:       []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr:         []string{"group:telemetry_extension_hw"},
