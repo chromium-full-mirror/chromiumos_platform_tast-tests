@@ -95,42 +95,43 @@ func CameraEffectsChromeRetain(ctx context.Context, s *testing.State) {
 	defer srv.Close()
 
 	url := srv.URL + fakehtml.PageURL
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, url)
+
+	func() {
+		conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, url)
+		if err != nil {
+			s.Fatal("Failed to launch browser: ", err)
+		}
+		defer closeBrowser(cleanupCtx)
+		defer conn.Close()
+		defer conn.CloseTarget(cleanupCtx)
+
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+
+		fakeHTMLUI := fakehtml.NewUI(tconn)
+		if err := fakeHTMLUI.MayBeAllowCameraAccess(ctx); err != nil {
+			s.Fatal("Failed to allow camera access: ", err)
+		}
+
+		if err := uiauto.New(tconn).WaitUntilExists(fakehtml.VideoNode)(ctx); err != nil {
+			s.Fatal("Camera is not working appropriately: ", err)
+		}
+
+		vcTray := vctray.New(ctx, tconn)
+
+		if err := vcTray.SetCameraEffects(vctray.BackgroundBlurFull, true)(ctx); err != nil {
+			s.Fatal("Failed to set camera effects: ", err)
+		}
+	}()
+
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, url)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
-	defer conn.CloseTarget(cleanupCtx)
+	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
-	defer cleanup(cleanupCtx)
+	defer conn.CloseTarget(cleanupCtx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
-
-	fakeHTMLUI := fakehtml.NewUI(tconn)
-	if err := fakeHTMLUI.MayBeAllowCameraAccess(ctx); err != nil {
-		s.Fatal("Failed to allow camera access: ", err)
-	}
-
-	if err := uiauto.New(tconn).WaitUntilExists(fakehtml.VideoNode)(ctx); err != nil {
-		s.Fatal("Camera is not working appropriately: ", err)
-	}
-
-	vcTray := vctray.New(ctx, tconn)
-
-	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurFull, true)(ctx); err != nil {
-		s.Fatal("Failed to set camera effects: ", err)
-	}
-
-	if err := conn.CloseTarget(ctx); err != nil {
-		s.Fatal("Failed to close fake HTML page: ", err)
-	}
-
-	conn, _, cleanup, err = browserfixt.SetUpWithURL(ctx, cr, browserType, url)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer conn.CloseTarget(cleanupCtx)
-	defer conn.Close()
-	defer cleanup(cleanupCtx)
 
 	d, err := screenshot.NewDifferFromChrome(ctx, s, cr,
 		screenshot.Config{
