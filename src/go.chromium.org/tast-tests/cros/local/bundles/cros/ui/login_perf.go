@@ -513,6 +513,10 @@ func reportMaxHistogramValue(
 
 // logout is a proxy to chrome.autotestPrivate.logout
 func logout(ctx context.Context, cr *chrome.Chrome, l *lacros.Lacros) error {
+	if cr == nil {
+		testing.ContextLog(ctx, "Sign out: skipped (no chrome)")
+		return nil
+	}
 	testing.ContextLog(ctx, "Sign out: started")
 
 	// Limit sign-out attempt to 1 minute (so that we could retry early).
