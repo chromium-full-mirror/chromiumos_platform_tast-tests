@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/crostini/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini/ui/settings"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/errors"
@@ -168,13 +167,12 @@ func (sf *SharedFolders) AddFolder(folder string) uiauto.Action {
 
 // Unshare unshares folders from Linux.
 func (sf *SharedFolders) Unshare(cr *chrome.Chrome, folders ...string) uiauto.Action {
-	return func(ctx context.Context) (retErr error) {
+	return func(ctx context.Context) error {
 		s, err := settings.OpenLinuxSettings(ctx, sf.tconn, cr, settings.ManageSharedFolders)
 		if err != nil {
 			return errors.Wrap(err, "failed to find Manage shared folders")
 		}
 		defer s.Close(ctx)
-		defer func() { faillog.DumpUITreeAndScreenshot(ctx, sf.tconn, "unshare", retErr) }()
 
 		for _, folder := range folders {
 			if _, ok := sf.Folders[folder]; !ok {
@@ -192,13 +190,12 @@ func (sf *SharedFolders) Unshare(cr *chrome.Chrome, folders ...string) uiauto.Ac
 
 // CheckNoSharedFolders checks there are no folders listed in the Managed shared folders page.
 func (sf *SharedFolders) CheckNoSharedFolders(cont *vm.Container, cr *chrome.Chrome) uiauto.Action {
-	return func(ctx context.Context) (retErr error) {
+	return func(ctx context.Context) error {
 		s, err := settings.OpenLinuxSettings(ctx, sf.tconn, cr, settings.ManageSharedFolders)
 		if err != nil {
 			return errors.Wrap(err, "failed to find Manage shared folders")
 		}
 		defer s.Close(ctx)
-		defer func() { faillog.DumpUITreeAndScreenshot(ctx, sf.tconn, "check_no_shared", retErr) }()
 
 		sharedFoldersList, err := s.GetSharedFolders(ctx)
 		if err != nil {
@@ -227,13 +224,12 @@ func (sf *SharedFolders) CheckNoSharedFolders(cont *vm.Container, cr *chrome.Chr
 
 // UnshareAll unshares all shared folders.
 func (sf *SharedFolders) UnshareAll(cont *vm.Container, cr *chrome.Chrome) uiauto.Action {
-	return func(ctx context.Context) (retErr error) {
+	return func(ctx context.Context) error {
 		s, err := settings.OpenLinuxSettings(ctx, sf.tconn, cr, settings.ManageSharedFolders)
 		if err != nil {
 			return errors.Wrap(err, "failed to open Manage shared folders")
 		}
 		defer s.Close(ctx)
-		defer func() { faillog.DumpUITreeAndScreenshot(ctx, sf.tconn, "unshare_all", retErr) }()
 
 		sharedFoldersList, err := s.GetSharedFolders(ctx)
 		if err != nil {

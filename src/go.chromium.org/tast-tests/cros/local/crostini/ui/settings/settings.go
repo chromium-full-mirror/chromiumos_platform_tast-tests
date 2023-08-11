@@ -22,7 +22,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
-	"go.chromium.org/tast-tests/cros/local/crostini/faillog"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -187,7 +186,7 @@ func OpenLinuxInstaller(ctx context.Context, tconn *chrome.TestConn, cr *chrome.
 //
 // It also clicks next to skip the information screen.  An ui.Installer
 // page object can be constructed after calling OpenLinuxInstallerAndClickNext to adjust the settings and to complete the installation.
-func OpenLinuxInstallerAndClickNext(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (retErr error) {
+func OpenLinuxInstallerAndClickNext(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
 	// Open Settings app.
 	if err := ash.CloseNotifications(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to close all notifications in OpenLinuxInstaller()")
@@ -203,7 +202,6 @@ func OpenLinuxInstallerAndClickNext(ctx context.Context, tconn *chrome.TestConn,
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 	defer s.Close(cleanupCtx)
-	defer func(ctx context.Context) { faillog.DumpUITreeAndScreenshot(ctx, tconn, "crostini_installer", retErr) }(cleanupCtx)
 
 	if err := ui.WaitUntilExists(DevelopersButton)(ctx); err == nil {
 		// Linux has been installed already, uninstall it.
