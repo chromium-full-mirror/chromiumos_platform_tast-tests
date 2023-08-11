@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
@@ -235,6 +236,18 @@ func WebUIJSErrors(ctx context.Context, s *testing.State) {
 	defer cr.Close(cleanupCtx)
 	defer closeBrowser(cleanupCtx)
 
+	// Grab a screenshot and a ui tree dump *before* the browser is closed by the
+	// defer's. This helps debug issues where it seems like the page closes too
+	// soon.
+	errorShortName := "unknown"
+	s.AttachErrorHandlers(
+		func(errMsg string) {
+			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, errorShortName+"_error")
+		},
+		func(errMsg string) {
+			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "fatal")
+		})
+
 	if err := crash.SetUpCrashTest(ctx, crash.WithMockConsent()); err != nil {
 		s.Fatal("SetUpCrashTest failed: ", err)
 	}
@@ -252,15 +265,19 @@ func WebUIJSErrors(ctx context.Context, s *testing.State) {
 	}
 
 	if err := checkPageLoadError(ctx, cleanupCtx, crashDirs, s.OutDir()); err != nil {
+		errorShortName = "page_load"
 		s.Error("checkPageLoadError failed: ", err)
 	}
 	if err := checkLoggedError(ctx, cleanupCtx, crashDirs, s.OutDir()); err != nil {
+		errorShortName = "log_error"
 		s.Error("checkLoggedError failed: ", err)
 	}
 	if err := checkUncaughtExceptionError(ctx, cleanupCtx, crashDirs, s.OutDir()); err != nil {
+		errorShortName = "exception"
 		s.Error("checkUncaughtExceptionError failed: ", err)
 	}
 	if err := checkUnhandledPromiseRejectionError(ctx, cleanupCtx, crashDirs, s.OutDir()); err != nil {
+		errorShortName = "promise_rejection"
 		s.Error("checkUnhandledPromiseRejectionError failed: ", err)
 	}
 
