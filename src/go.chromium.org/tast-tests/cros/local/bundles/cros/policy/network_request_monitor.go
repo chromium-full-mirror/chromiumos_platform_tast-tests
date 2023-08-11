@@ -92,8 +92,11 @@ func init() {
 			pci.SearchFlag(&policy.UserAvatarCustomizationSelectorsEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.UserFeedbackAllowed{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.WallpaperGooglePhotosIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
-			pci.SearchFlag(&policy.WebRtcEventLogCollectionAllowed{}, pci.VerifiedValue),
-			pci.SearchFlag(&policy.WebRtcTextLogCollectionAllowed{}, pci.VerifiedValue),
+			// TODO(b/281982842): Add WebRtcEventLogCollectionAllowed
+			// and WebRtcTextLogCollectionAllowed after fixing the failures caused
+			// by bot's attempt to join the Meet client in Lacros mode.
+			// pci.SearchFlag(&policy.WebRtcEventLogCollectionAllowed{}, pci.VerifiedValue),
+			// pci.SearchFlag(&policy.WebRtcTextLogCollectionAllowed{}, pci.VerifiedValue),
 		},
 		Timeout: 8 * time.Minute,
 	})
@@ -230,7 +233,9 @@ func optionalServices() []optionalService {
 			trigger:   wallpapergooglephotos.TriggerWallpaperGooglePhotosIntegration,
 			dataFiles: []string{},
 		},
-		{
+		// TODO(b/281982842): Re-enable the test after fixing the failures caused
+		// by bot's attempt to join the Meet client in Lacros mode.
+		/*{
 			name: "webrtc_event_and_text_log_collection",
 			associatedAnnotations: []string{
 				webrtc.EventLogCollectionHashID,
@@ -240,7 +245,7 @@ func optionalServices() []optionalService {
 				&policy.WebRtcTextLogCollectionAllowed{Val: false}},
 			trigger:   webrtc.TriggerWebRTCLogUploads,
 			dataFiles: []string{},
-		},
+		},*/
 		// Note: user_avatar_customization should be kept last in this list to avoid
 		// issues with other test cases.
 		{
