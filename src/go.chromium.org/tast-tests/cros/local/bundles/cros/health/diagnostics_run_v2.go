@@ -26,14 +26,16 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
-			Name:      "memory_v2",
-			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineMemoryV2},
-			ExtraAttr: []string{"informational"},
+			Name: "memory_v2",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineMemoryV2},
+			// TODO(b/295498872): Promote tast to critical
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name:      "cpu_stress_v2",
-			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
-			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"informational"},
+			Name:    "cpu_stress_v2",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
+			Timeout: 5 * time.Minute,
+			// TODO(b/295497926): Promote tast to critical
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "audio_driver",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
@@ -42,12 +44,12 @@ func init() {
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
 			Timeout: 5 * time.Minute,
 			// TODO(b/281766836): Promote tast to critical
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "ufs_lifetime",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineUFSLifetime},
 			// TODO(b/283724445): Promote tast to critical.
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 		}, {
 			Name: "volume_button",

@@ -25,36 +25,41 @@ func init() {
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      "crosHealthdRunning",
-		// TODO(b/277548688): Monitor test results and promote stable tests to critical.
 		Params: []testing.Param{{
-			Name:      "memory_v2",
-			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineMemoryV2},
+			Name: "memory_v2",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineMemoryV2},
+			// TODO(b/295498872): Promote tast to critical
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name:      "cpu_stress_v2",
-			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
-			Timeout:   5 * time.Minute,
+			Name:    "cpu_stress_v2",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
+			Timeout: 5 * time.Minute,
+			// TODO(b/295497926): Promote tast to critical
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name:      "audio_driver",
-			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
+			Name: "audio_driver",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
+			// TODO(b/295499944): Promote tast to critical
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name:      "cpu_cache_v2",
-			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
-			Timeout:   5 * time.Minute,
+			Name:    "cpu_cache_v2",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
+			Timeout: 5 * time.Minute,
+			// TODO(b/281766836): Promote tast to critical
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name:              "ufs_lifetime",
-			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineUFSLifetime},
+			Name: "ufs_lifetime",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineUFSLifetime},
+			// TODO(b/283724445): Promote tast to critical.
 			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 		}, {
 			Name: "prime_search_v2",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutinePrimeSearchV2},
 		}, {
-			Name:      "volume_button",
-			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
+			Name: "volume_button",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
+			// TODO(b/295499336): Promote tast to critical.
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:              "led_lit_up",
