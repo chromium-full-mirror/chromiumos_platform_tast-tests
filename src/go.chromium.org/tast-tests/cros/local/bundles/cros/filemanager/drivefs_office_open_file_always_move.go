@@ -21,7 +21,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DrivefsOfficeOpenFileAlwaysMove,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that docx, xlsx and pptx open in Google Drive and we can see 'always move' checkbox for 2nd time",
 		BugComponent: "b:1199143",
 		Timeout:      5 * time.Minute,
@@ -40,7 +40,13 @@ func init() {
 			"group:hw_agnostic",
 			"informational",
 		},
-		Fixture: "onedriveAndGoogleDrive",
+		Params: []testing.Param{{
+			Fixture: "onedriveAndGoogleDrive",
+		}, {
+			Name:              "lacros",
+			Fixture:           "onedriveAndGoogleDriveLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+		}},
 	})
 }
 
@@ -95,10 +101,9 @@ func DrivefsOfficeOpenFileAlwaysMove(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			if err := drivefs.WaitForGoogleDriveWindow(tconn, fileName)(ctx); err != nil {
-				s.Fatalf("Failed waiting file to open on Google Drive: %q: %v", fileName, err)
+			if err := drivefs.WaitForDSSWindowAndClose(tconn, fileName)(ctx); err != nil {
+				s.Fatalf("Failed waiting file to open in Google Drive: %q: %v", fileName, err)
 			}
-			defer drivefs.CloseGoogleDriveWindow(cleanupCtx, tconn, fileName)
 
 			if err := drivefs.VerifySourceDestinationMD5SumMatch(driveFsClient, subTest.SrcFile, fileName)(ctx); err != nil {
 				s.Fatal("Google Drive upload didn't match: ", err)

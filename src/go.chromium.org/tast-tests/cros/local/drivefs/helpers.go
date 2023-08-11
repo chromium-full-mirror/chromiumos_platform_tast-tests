@@ -113,18 +113,39 @@ func MD5SumFile(path string) (string, error) {
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
 }
 
-// WaitForGoogleDriveWindow wait for the Google Drive window with the specified
-// file name in the title to open.
-func WaitForGoogleDriveWindow(tconn *chrome.TestConn, fileName string) uiauto.Action {
-	// Most of the interactions are with remote service, increase the timeout to 60s.
-	ui := uiauto.New(tconn).WithTimeout(60 * time.Second)
-	googleDriveWindow := nodewith.Role(role.Window).NameContaining(fileName).HasClass("BrowserRootView")
-	return ui.WaitUntilExists(googleDriveWindow)
+// GoogleDSSWindowFinder is a finder for a window of Google DSS (Docs/Sheets/Slides)
+// opened for the given fileName.
+func GoogleDSSWindowFinder(fileName string) *nodewith.Finder {
+	return nodewith.Role(role.Window).NameContaining(fileName + " - Google").HasClass("WebContentsViewAura")
 }
 
-// CloseGoogleDriveWindow finds the Google Docs/Sheets/Slides window with the
+// CloseAddAccountWindowIfNeededAndWaitFor can be used in the case where we
+// want to wait for a specific element (e.g. window), but there might be a Add
+// Account window appearing before the element (e.g. in Lacros).
+// This method will close the Add Account window if it shows, and then wait
+// for the element.
+func CloseAddAccountWindowIfNeededAndWaitFor(tconn *chrome.TestConn, elementToWait *nodewith.Finder) uiauto.Action {
+	return func(ctx context.Context) error {
+		// Most of the interactions are with remote service, increase the timeout to 60s.
+		ui := uiauto.New(tconn).WithTimeout(60 * time.Second)
+		addAccountWindow := nodewith.Role(role.Window).NameContaining("Sign in to add a Google account").HasClass("WebContentsViewAura")
+		closeButton := nodewith.Role(role.Button).Name("Close").HasClass("ImageButton")
+		found, err := ui.FindAnyExists(ctx, addAccountWindow, elementToWait)
+		if err != nil {
+			return errors.Wrap(err, "failed to find either Add account window or the actual element to wait for")
+		}
+		// Found the Add Account window, close it.
+		if found == addAccountWindow {
+			return ui.LeftClickUntil(closeButton, ui.Exists(elementToWait))(ctx)
+		}
+		// Found the element directly.
+		return nil
+	}
+}
+
+// closeGoogleDSSWindow finds the Google Docs/Sheets/Slides window with the
 // specific file name and close it.
-func CloseGoogleDriveWindow(ctx context.Context, tconn *chrome.TestConn, fileName string) error {
+func closeGoogleDSSWindow(ctx context.Context, tconn *chrome.TestConn, fileName string) error {
 	w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
 		return strings.Contains(w.Title, fileName) && strings.Contains(w.Title, "Google")
 	})
@@ -135,6 +156,35 @@ func CloseGoogleDriveWindow(ctx context.Context, tconn *chrome.TestConn, fileNam
 		return errors.Wrap(err, "failed to close the Google Drive window")
 	}
 	return nil
+}
+
+// waitForDSSWindowAndClose waits for the Google Docs/Sheets/Slides window to open and close it.
+// If "ignoreCloseError" is true, it will just ignore the error, otherwise it returns error if the closure fails,.
+func waitForDSSWindowAndClose(tconn *chrome.TestConn, fileName string, ignoreCloseError bool) uiauto.Action {
+	return func(ctx context.Context) error {
+		if err := CloseAddAccountWindowIfNeededAndWaitFor(tconn, GoogleDSSWindowFinder(fileName))(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for the DSS window")
+		}
+		if err := closeGoogleDSSWindow(ctx, tconn, fileName); err != nil {
+			if !ignoreCloseError {
+				return errors.Wrap(err, "failed to close the DSS window")
+			}
+		}
+		return nil
+	}
+}
+
+// WaitForDSSWindowAndClose closes the DSS window and guarantees that
+// the window is closed successfully, it will return errors if the closure fails.
+func WaitForDSSWindowAndClose(tconn *chrome.TestConn, fileName string) uiauto.Action {
+	return waitForDSSWindowAndClose(tconn, fileName, false /*=ignoreCloseError*/)
+}
+
+// WaitForDSSWindowAndMaybeClose tries to close the DSS window but won't
+// return error if it fails. This is used mostly when closing window is the last
+// step.
+func WaitForDSSWindowAndMaybeClose(tconn *chrome.TestConn, fileName string) uiauto.Action {
+	return waitForDSSWindowAndClose(tconn, fileName, true /*=ignoreCloseError*/)
 }
 
 // VerifySourceDestinationMD5SumMatch use MD5 to check if the file content

@@ -22,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OdfsReopenFile,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that docx, xlsx and pptx open in OneDrive",
 		BugComponent: "b:1199143",
 		Timeout:      5 * time.Minute,
@@ -44,7 +44,13 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Fixture: "onedrive",
+		Params: []testing.Param{{
+			Fixture: "onedrive",
+		}, {
+			Name:              "lacros",
+			Fixture:           "onedriveLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+		}},
 	})
 }
 
@@ -88,23 +94,17 @@ func OdfsReopenFile(ctx context.Context, s *testing.State) {
 		}
 
 		// Move/copy confirmation dialog.
-		if err := cloudUpload.MaybeConfirmUploadOr365Window(ms365App, fileName)(ctx); err != nil {
+		if err := cloudUpload.MaybeConfirmUploadOr365Window(tconn, ms365App, fileName)(ctx); err != nil {
 			s.Fatalf("Failed to upload and open on MS365: %q - %v", fileName, err)
-		}
-
-		// Close the MS365 window.
-		if err := ms365.CloseMicrosoft365Window(cleanupCtx, tconn, fileName); err != nil {
-			s.Fatal("Failed to close the MS365 window")
 		}
 
 		// Open the file again from OneDrive.
 		if _, err := files.OpenOfficeFile(ctx, filesapp.OneDrive, fileName, filesconsts.OneDrive); err != nil {
 			s.Fatal("Failed to open OneDrive: ", err)
 		}
-		if err := ms365App.WaitForMicrosoft365Window(fileName)(ctx); err != nil {
+		if err := ms365App.WaitForMicrosoft365WindowAndMaybeClose(tconn, fileName)(ctx); err != nil {
 			s.Fatal("Failed to upload and open on MS365: ", fileName, err)
 		}
-		defer ms365.CloseMicrosoft365Window(cleanupCtx, tconn, fileName)
 
 		if err := onedrive.CheckODFSContent(ctx, subTest.SrcFile, fileName); err != nil {
 			s.Fatal("ODFS upload didn't match: ", err)

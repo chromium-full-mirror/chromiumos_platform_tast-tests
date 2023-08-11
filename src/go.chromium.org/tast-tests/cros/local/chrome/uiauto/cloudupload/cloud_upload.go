@@ -184,9 +184,9 @@ func (cu *CloudUpload) WaitUploadConfirmationDialogAndClickToUpload(alwaysMove b
 }
 
 // MaybeConfirmUploadOr365Window waits for either the confirmation dialog and confirms it;
-// or waits for the Microsoft 365 window.
+// or waits for the Microsoft 365 window and close it.
 // This should be used when the confirmation dialog isn't relevant for the test.
-func (cu *CloudUpload) MaybeConfirmUploadOr365Window(ms365App *ms365.Ms365, fileName string) uiauto.Action {
+func (cu *CloudUpload) MaybeConfirmUploadOr365Window(tconn *chrome.TestConn, ms365App *ms365.Ms365, fileName string) uiauto.Action {
 	return func(ctx context.Context) error {
 		found, err := cu.ui.WithTimeout(2*time.Minute).FindAnyExists(ctx,
 			ConfirmUploadDialogForOneDrive,
@@ -198,7 +198,7 @@ func (cu *CloudUpload) MaybeConfirmUploadOr365Window(ms365App *ms365.Ms365, file
 		if found == ConfirmUploadDialogForOneDrive {
 			return uiauto.Combine("Confirm upload and wait to open",
 				cu.WaitUploadConfirmationDialogAndClickToUpload(false),
-				ms365App.WaitForMicrosoft365Window(fileName),
+				ms365App.WaitForMicrosoft365WindowAndClose(tconn, fileName),
 			)(ctx)
 		}
 		return nil

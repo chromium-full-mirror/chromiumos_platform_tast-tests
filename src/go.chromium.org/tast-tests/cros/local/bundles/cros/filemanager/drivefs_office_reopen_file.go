@@ -22,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DrivefsOfficeReopenFile,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that office file can be open directly in Google Drive",
 		BugComponent: "b:1199143",
 		Timeout:      5 * time.Minute,
@@ -41,7 +41,13 @@ func init() {
 			"group:hw_agnostic",
 			"informational",
 		},
-		Fixture: "onedriveAndGoogleDrive",
+		Params: []testing.Param{{
+			Fixture: "onedriveAndGoogleDrive",
+		}, {
+			Name:              "lacros",
+			Fixture:           "onedriveAndGoogleDriveLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+		}},
 	})
 }
 
@@ -77,24 +83,18 @@ func DrivefsOfficeReopenFile(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Confirm upload and wait to open",
 		cloudUpload.RunGoogleDriveSetupFlow(),
 		cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false /*=alwaysMove*/),
-		drivefs.WaitForGoogleDriveWindow(tconn, fileName),
+		drivefs.WaitForDSSWindowAndClose(tconn, fileName),
 	)(ctx); err != nil {
-		s.Fatal("Failed to upload and open on Google Drive: ", fileName, err)
-	}
-
-	// Close the Google Drive window.
-	if err := drivefs.CloseGoogleDriveWindow(cleanupCtx, tconn, fileName); err != nil {
-		s.Fatal("Failed to close the Google Drive window")
+		s.Fatal("Failed to upload and open in Google Drive: ", fileName, err)
 	}
 
 	// Open the file again from Google Drive.
 	if _, err := files.OpenOfficeFile(ctx, filesapp.GoogleDrive, fileName, filesconsts.DriveFs); err != nil {
 		s.Fatal("Failed to open file from Google Drive: ", err)
 	}
-	if err := drivefs.WaitForGoogleDriveWindow(tconn, fileName)(ctx); err != nil {
-		s.Fatal("Failed to upload and open on MS365: ", fileName, err)
+	if err := drivefs.WaitForDSSWindowAndMaybeClose(tconn, fileName)(ctx); err != nil {
+		s.Fatal("Failed to upload and open in Google Drive: ", fileName, err)
 	}
-	defer drivefs.CloseGoogleDriveWindow(cleanupCtx, tconn, fileName)
 
 	if err := drivefs.VerifySourceDestinationMD5SumMatch(driveFsClient, subTest.SrcFile, fileName)(ctx); err != nil {
 		s.Fatal("Google Drive upload didn't match: ", err)

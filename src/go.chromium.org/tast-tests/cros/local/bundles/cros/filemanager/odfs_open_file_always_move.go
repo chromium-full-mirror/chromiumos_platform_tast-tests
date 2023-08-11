@@ -22,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OdfsOpenFileAlwaysMove,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that docx, xlsx and pptx open in OneDrive and we can see 'always move' checkbox for 2nd time",
 		BugComponent: "b:1199143",
 		Timeout:      5 * time.Minute,
@@ -44,7 +44,13 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Fixture: "onedrive",
+		Params: []testing.Param{{
+			Fixture: "onedrive",
+		}, {
+			Name:              "lacros",
+			Fixture:           "onedriveLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+		}},
 	})
 }
 
@@ -107,10 +113,9 @@ func OdfsOpenFileAlwaysMove(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			if err := ms365App.WaitForMicrosoft365Window(fileName)(ctx); err != nil {
+			if err := ms365App.WaitForMicrosoft365WindowAndClose(tconn, fileName)(ctx); err != nil {
 				s.Fatal("Failed waiting file to open on MS365: ", fileName, err)
 			}
-			defer ms365.CloseMicrosoft365Window(cleanupCtx, tconn, fileName)
 			if err := onedrive.CheckODFSContent(ctx, subTest.SrcFile, fileName); err != nil {
 				s.Fatal("ODFS upload didn't match: ", err)
 			}

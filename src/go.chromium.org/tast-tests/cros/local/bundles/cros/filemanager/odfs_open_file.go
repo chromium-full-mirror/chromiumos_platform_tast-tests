@@ -23,7 +23,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OdfsOpenFile,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that docx, xlsx and pptx open in OneDrive",
 		BugComponent: "b:1199143",
 		Timeout:      5 * time.Minute,
@@ -45,7 +45,13 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Fixture: "onedrive",
+		Params: []testing.Param{{
+			Fixture: "onedrive",
+		}, {
+			Name:              "lacros",
+			Fixture:           "onedriveLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+		}},
 	})
 }
 
@@ -96,11 +102,10 @@ func OdfsOpenFile(ctx context.Context, s *testing.State) {
 			// Move/copy confirmation dialog.
 			if err := uiauto.Combine("Confirm upload and wait to open",
 				cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false /*=alwaysMove*/),
-				ms365App.WaitForMicrosoft365Window(fileName),
+				ms365App.WaitForMicrosoft365WindowAndClose(tconn, fileName),
 			)(ctx); err != nil {
 				s.Fatalf("Failed to upload and open on MS365: %q: %v", fileName, err)
 			}
-			defer ms365.CloseMicrosoft365Window(cleanupCtx, tconn, fileName)
 
 			if err := onedrive.CheckODFSContent(ctx, subTest.SrcFile, fileName); err != nil {
 				s.Fatal("ODFS upload didn't match: ", err)

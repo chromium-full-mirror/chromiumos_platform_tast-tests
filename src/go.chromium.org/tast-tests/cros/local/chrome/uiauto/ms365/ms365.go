@@ -129,7 +129,6 @@ func (ms *Ms365) AcceptPermissionIfNeeded(setupCompleteDialogFinder *nodewith.Fi
 		}
 		// `setupCompleteDialog` has been found, nothing to do.
 		return nil
-
 	}
 }
 
@@ -155,19 +154,12 @@ func (ms *Ms365) LoginToMicrosoft365(setupCompleteDialogFinder *nodewith.Finder,
 // Microsoft365WindowFinder is a finder for a window of Microsoft 365 (Word, Excel or PowerPoint)
 // opened for the given fileName.
 func Microsoft365WindowFinder(fileName string) *nodewith.Finder {
-	return nodewith.Role(role.Window).NameContaining(fileName).HasClass("BrowserRootView")
+	return nodewith.Role(role.Window).NameContaining(fileName).HasClass("WebContentsViewAura")
 }
 
-// WaitForMicrosoft365Window wait for the Microsoft 365 window with the
-// specified file name in the title to open.
-func (ms *Ms365) WaitForMicrosoft365Window(fileName string) uiauto.Action {
-	ms365App := Microsoft365WindowFinder(fileName)
-	return ms.ui.WaitUntilExists(ms365App)
-}
-
-// CloseMicrosoft365Window finds the Microsoft 365 app window with the specific
+// closeMicrosoft365Window finds the Microsoft 365 app window with the specific
 // file name and close it.
-func CloseMicrosoft365Window(ctx context.Context, tconn *chrome.TestConn, fileName string) error {
+func closeMicrosoft365Window(ctx context.Context, tconn *chrome.TestConn, fileName string) error {
 	w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
 		return strings.Contains(w.Title, fileName) && strings.Contains(w.Title, "Microsoft")
 	})
@@ -180,18 +172,56 @@ func CloseMicrosoft365Window(ctx context.Context, tconn *chrome.TestConn, fileNa
 	return nil
 }
 
+// waitForMicrosoft365WindowAndClose waits for the Microsoft 365 app window to open and close it.
+// If "ignoreCloseError" is true, it will just ignore the error, otherwise it returns error if the closure fails,.
+func (ms *Ms365) waitForMicrosoft365WindowAndClose(tconn *chrome.TestConn, fileName string, ignoreCloseError bool) uiauto.Action {
+	return func(ctx context.Context) error {
+		ms365App := Microsoft365WindowFinder(fileName)
+		if err := ms.ui.WaitUntilExists(ms365App)(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for the MS365 window")
+		}
+		if err := closeMicrosoft365Window(ctx, tconn, fileName); err != nil {
+			if !ignoreCloseError {
+				return errors.Wrap(err, "failed to close the MS365 window")
+			}
+		}
+		return nil
+	}
+}
+
+// WaitForMicrosoft365WindowAndClose closes the MS window and guarantees that
+// the window is closed successfully, it will return errors if the closure fails.
+func (ms *Ms365) WaitForMicrosoft365WindowAndClose(tconn *chrome.TestConn, fileName string) uiauto.Action {
+	return ms.waitForMicrosoft365WindowAndClose(tconn, fileName, false /*=ignoreCloseError*/)
+}
+
+// WaitForMicrosoft365WindowAndMaybeClose tries to close the MS window but won't
+// return error if it fails. This is used mostly when closing window is the last
+// step.
+func (ms *Ms365) WaitForMicrosoft365WindowAndMaybeClose(tconn *chrome.TestConn, fileName string) uiauto.Action {
+	return ms.waitForMicrosoft365WindowAndClose(tconn, fileName, true /*=ignoreCloseError*/)
+}
+
 // InstallPWA installs Office PWA.
 func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome, browserType browser.Type) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, officePWAInstallURL)
+	br, closeConn, err := browserfixt.Connect(ctx, cr, browserType)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch browser")
 	}
-	defer cleanup(cleanupCtx)
+	defer closeConn(cleanupCtx)
+
+	// Use NewConn instead of NewTab to prevent Lacros from reusing the existing
+	// chrome://newtab, the reuse will cause chrome://newtab to be closed below.
+	conn, err := br.NewConn(ctx, officePWAInstallURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open office website")
+	}
 	defer conn.Close()
+	defer conn.CloseTarget(cleanupCtx)
 
 	// Installing Office PWA requires a valid login.
 	signInButton := nodewith.Role(role.Button).Name("Sign in")
@@ -241,9 +271,18 @@ func MaybeUninstallPwa(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Tes
 }
 
 // ClearBrowserCookiesForOffice will clear all browser cookies for the Office website.
-func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome) error {
+func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome, bt browser.Type) error {
 	testing.ContextLog(ctx, "Clearing cookies for Office website")
-	br := cr.Browser()
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	br, closeConn, err := browserfixt.Connect(ctx, cr, bt)
+	if err != nil {
+		return errors.Wrap(err, "failed to set up browser")
+	}
+	defer closeConn(cleanupCtx)
 
 	interval := 200 * time.Millisecond
 
@@ -253,7 +292,9 @@ func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome) error 
 		quickCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 
-		conn, err := br.NewTab(quickCtx, officePWAInstallURL)
+		// Use NewConn instead of NewTab to prevent Lacros from reusing the existing
+		// chrome://newtab, the reuse will cause chrome://newtab to be closed below.
+		conn, err := br.NewConn(quickCtx, officePWAInstallURL)
 		if err != nil {
 			return errors.Wrap(err, "failed to open office website")
 		}

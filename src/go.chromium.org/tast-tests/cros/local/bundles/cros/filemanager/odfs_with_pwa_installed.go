@@ -24,7 +24,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OdfsWithPWAInstalled,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies office PWA can be installed separately before opening office files",
 		BugComponent: "b:1199143",
 		Timeout:      5 * time.Minute,
@@ -49,15 +49,12 @@ func init() {
 		Params: []testing.Param{{
 			Fixture: "onedrive",
 			Val:     browser.TypeAsh,
-		},
-		// TODO(b/293795743): enable Lacros variant
-		// {
-		// 	Name:              "lacros",
-		// 	Fixture:           "onedriveLacros",
-		// 	ExtraSoftwareDeps: []string{"lacros"},
-		// 	Val:               browser.TypeLacros,
-		// },
-		},
+		}, {
+			Name:              "lacros",
+			Fixture:           "onedriveLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               browser.TypeLacros,
+		}},
 	})
 }
 
@@ -77,11 +74,6 @@ func OdfsWithPWAInstalled(ctx context.Context, s *testing.State) {
 	}
 	if err := ms365App.InstallPWA(ctx, cr, bt); err != nil {
 		s.Fatal("Failed to install Office PWA: ", err)
-	}
-	// Office PWA window will open after installation, we need to close it.
-	// Here we just pass an empty file name string to close the PWA app itself.
-	if err := ms365.CloseMicrosoft365Window(ctx, tconn, ""); err != nil {
-		s.Fatal("Failed to close the Office PWA window: ", err)
 	}
 
 	// Pick one file from the generated files.
@@ -113,11 +105,10 @@ func OdfsWithPWAInstalled(ctx context.Context, s *testing.State) {
 	// Move/copy confirmation dialog.
 	if err := uiauto.Combine("Confirm upload and wait to open",
 		cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false /*=alwaysMove*/),
-		ms365App.WaitForMicrosoft365Window(fileName),
+		ms365App.WaitForMicrosoft365WindowAndMaybeClose(tconn, fileName),
 	)(ctx); err != nil {
 		s.Fatal("Failed to upload and open on MS365: ", fileName, err)
 	}
-	defer ms365.CloseMicrosoft365Window(cleanupCtx, tconn, fileName)
 
 	if err := onedrive.CheckODFSContent(ctx, srcFile, fileName); err != nil {
 		s.Fatal("ODFS upload didn't match: ", err)

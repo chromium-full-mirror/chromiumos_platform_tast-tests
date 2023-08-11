@@ -23,7 +23,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OdfsManageInSettings,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that the user can connect and disconnect from OneDrive from Settings",
 		BugComponent: "b:1199143",
 		Timeout:      5 * time.Minute,
@@ -43,7 +43,13 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Fixture: "onedrive",
+		Params: []testing.Param{{
+			Fixture: "onedrive",
+		}, {
+			Name:              "lacros",
+			Fixture:           "onedriveLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+		}},
 	})
 }
 

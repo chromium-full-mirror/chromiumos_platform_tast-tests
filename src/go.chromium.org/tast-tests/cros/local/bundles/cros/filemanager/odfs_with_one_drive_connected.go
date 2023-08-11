@@ -23,7 +23,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OdfsWithOneDriveConnected,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies OneDrive can be connected separately before opening office files",
 		BugComponent: "b:1199143",
 		Timeout:      5 * time.Minute,
@@ -45,7 +45,13 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Fixture: "onedrive",
+		Params: []testing.Param{{
+			Fixture: "onedrive",
+		}, {
+			Name:              "lacros",
+			Fixture:           "onedriveLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+		}},
 	})
 }
 
@@ -102,11 +108,10 @@ func OdfsWithOneDriveConnected(ctx context.Context, s *testing.State) {
 	// Move/copy confirmation dialog.
 	if err := uiauto.Combine("Confirm upload and wait to open",
 		cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false /*=alwaysMove*/),
-		ms365App.WaitForMicrosoft365Window(fileName),
+		ms365App.WaitForMicrosoft365WindowAndMaybeClose(tconn, fileName),
 	)(ctx); err != nil {
 		s.Fatal("Failed to upload and open on MS365: ", fileName, err)
 	}
-	defer ms365.CloseMicrosoft365Window(cleanupCtx, tconn, fileName)
 
 	if err := onedrive.CheckODFSContent(ctx, srcFile, fileName); err != nil {
 		s.Fatal("ODFS upload didn't match: ", err)

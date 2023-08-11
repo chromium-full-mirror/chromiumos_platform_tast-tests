@@ -22,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DrivefsOfficeOpenFile,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies docx, xlsx and pptx files can be open by Google Drive",
 		BugComponent: "b:1199143",
 		Timeout:      5 * time.Minute,
@@ -41,7 +41,13 @@ func init() {
 			"group:hw_agnostic",
 			"informational",
 		},
-		Fixture: "onedriveAndGoogleDrive",
+		Params: []testing.Param{{
+			Fixture: "onedriveAndGoogleDrive",
+		}, {
+			Name:              "lacros",
+			Fixture:           "onedriveAndGoogleDriveLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+		}},
 	})
 }
 
@@ -69,7 +75,7 @@ func DrivefsOfficeOpenFile(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to launch Files app: ", err)
 			}
 			defer files.Close(cleanupCtx)
-			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "drive_open_office_file_"+fileType)
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "drive_office_open_file_"+fileType)
 			defer driveFsClient.SaveLogsOnError(cleanupCtx, s.HasError)
 
 			cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fileName, filesconsts.DriveFs)
@@ -81,11 +87,10 @@ func DrivefsOfficeOpenFile(ctx context.Context, s *testing.State) {
 			if err := uiauto.Combine("Confirm upload and wait to open",
 				cloudUpload.RunGoogleDriveSetupFlow(),
 				cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false /*=alwaysMove*/),
-				drivefs.WaitForGoogleDriveWindow(tconn, fileName),
+				drivefs.WaitForDSSWindowAndClose(tconn, fileName),
 			)(ctx); err != nil {
-				s.Fatalf("Failed to upload and open on Google Drive: %q: %v", fileName, err)
+				s.Fatalf("Failed to upload and open in Google Drive: %q: %v", fileName, err)
 			}
-			defer drivefs.CloseGoogleDriveWindow(cleanupCtx, tconn, fileName)
 
 			if err := drivefs.VerifySourceDestinationMD5SumMatch(driveFsClient, srcFile, fileName)(ctx); err != nil {
 				s.Fatal("Google Drive upload didn't match: ", err)

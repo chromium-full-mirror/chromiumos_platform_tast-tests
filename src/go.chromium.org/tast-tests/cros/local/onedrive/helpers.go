@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -101,11 +102,15 @@ func CheckODFSContent(ctx context.Context, srcFilePath, dstFileName string) erro
 
 // MaybeUnmountOdfs unmounts ODFS if it's mounted.
 func MaybeUnmountOdfs(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	filesApp, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch Files app to unmount ODFS")
 	}
-	defer filesApp.Close(ctx)
+	defer filesApp.Close(cleanupCtx)
 
 	volumeID, err := filesApp.GetVolumeID(ctx, cr, "Microsoft OneDrive")
 	if err != nil {

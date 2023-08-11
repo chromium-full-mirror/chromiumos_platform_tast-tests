@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesinternals"
@@ -79,6 +80,23 @@ func init() {
 		PreTestTimeout:  60 * time.Second,
 		PostTestTimeout: 30 * time.Second,
 		Parent:          "driveFsStartedWithOfficeEnabled", // TODO(b/291524698): Create more DriveFS accounts.
+		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "onedriveAndGoogleDriveLacros",
+		Desc:     "Lacros variant of onedriveAndGoogleDrive",
+		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
+		Impl: &fixture{
+			bt:       browser.TypeLacros,
+			provider: filesconsts.DriveFs,
+		},
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: 30 * time.Second,
+		PreTestTimeout:  60 * time.Second,
+		PostTestTimeout: 30 * time.Second,
+		Parent:          "driveFsStartedWithOfficeEnabledLacros", // TODO(b/291524698): Create more DriveFS accounts.
 		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
 	})
 }
@@ -156,6 +174,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var err error
 	var driveFsClient *drivefs.DriveFs
 	if f.provider == filesconsts.DriveFs {
+		// Lacros is handled by the its parent fixture.
 		cr = s.ParentValue().(*drivefs.FixtureData).Chrome
 		f.tconn = s.ParentValue().(*drivefs.FixtureData).TestAPIConn
 		driveFsClient = s.ParentValue().(*drivefs.FixtureData).DriveFs
@@ -287,6 +306,17 @@ func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	f.data.GeneratedFiles = generatedFiles
 	f.cleanUpFiles = append(f.cleanUpFiles, generatedFiles...)
 
+	// Open a new tab for Lacros to make sure Lacros process is alive during the entire test.
+	// Note:
+	//  * The Lacros process is required for both cleanup and the actual test,
+	// both PWA installation/uninstalling and ODFS mounting/unmounting need this.
+	//  * We also call this in Ash, `SetUp` will open chrome://newtab in Lacros
+	// but not in Ash, which is exactly what we need.
+	_, _, err = browserfixt.SetUp(ctx, f.cr, f.bt)
+	if err != nil {
+		s.Fatal("Failed to set up browser for the new tab: ", err)
+	}
+
 	fi, err := filesinternals.Start(ctx, f.tconn, f.cr)
 	if err != nil {
 		s.Fatal("Failed to start chrome://files-internals: ", err)
@@ -312,7 +342,7 @@ func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Fatal("Failed to uninstall MS365 PWA: ", err)
 	}
 
-	if err = ms365.ClearBrowserCookiesForOffice(ctx, f.cr); err != nil {
+	if err := ms365.ClearBrowserCookiesForOffice(ctx, f.cr, f.bt); err != nil {
 		s.Fatal("Failed to clear browser cookies for office website: ", err)
 	}
 }
@@ -340,6 +370,12 @@ func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 
 	if f.screenRecorder != nil {
 		f.screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+	}
+
+	// Close the active browser (opened by `browserfixt.SetUp` in PreTest).
+	_, brClose, _ := browserfixt.ConnectAndOwn(ctx, f.cr, f.bt)
+	if brClose != nil {
+		brClose(ctx)
 	}
 }
 
