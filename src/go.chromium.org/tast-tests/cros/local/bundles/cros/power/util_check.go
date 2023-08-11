@@ -22,8 +22,11 @@ func init() {
 			"chromeos-platform-power@google.com",
 			"yanyeli@google.com",
 		},
-		Attr:    []string{"group:mainline", "informational"},
-		Timeout: 1 * time.Minute,
+		// This test collects hardware info that does not apply to virtual
+		// machines (betty, tast-vm).
+		SoftwareDeps: []string{"crossystem"},
+		Attr:         []string{"group:mainline", "informational"},
+		Timeout:      1 * time.Minute,
 	})
 }
 
