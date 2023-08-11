@@ -19,8 +19,8 @@ func init() {
 		Func:         CommandVim,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test vim in Terminal window",
-		Contacts:     []string{"jamesye@google.com", "clumptini+oncall@google.com"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Contacts:     []string{"clumptini+oncall@google.com", "jamesye@google.com"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
