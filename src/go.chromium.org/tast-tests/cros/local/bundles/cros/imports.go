@@ -73,6 +73,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/logs"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/media"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/meta"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/metrics"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/mgs"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/mlservice"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/mojo"

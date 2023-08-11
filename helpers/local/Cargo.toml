@@ -14,8 +14,13 @@ panic = "abort"
 name = "crash_rust_panic"
 path = "crash.Rust.panic.rs"
 
+[[bin]]
+name = "metrics_rust_bindings"
+path = "metrics_rust_bindings.rs"
+
 [dependencies]
 libchromeos = "0.1.0"
+metrics_rs = "0.1.0"
 
 [patch.crates-io] # ignored by ebuild
 audio_streams = { path = "../../../../../chroot/usr/lib/cros_rust_registry/registry/audio_streams-0.1.0/" } # ignored by ebuild
@@ -23,5 +28,6 @@ base_event_token_derive = { path = "../../../../../chroot/usr/lib/cros_rust_regi
 crosvm-base = { path = "../../../../../chroot/usr/lib/cros_rust_registry/registry/crosvm-base-0.1.0/" } # ignored by ebuild
 data_model = { path = "../../../../../chroot/usr/lib/cros_rust_registry/registry/data_model-0.1.50/" } # ignored by ebuild
 libchromeos = { path = "../../../../platform2/libchromeos-rs/" } # ignored by ebuild
+metrics_rs = { path = "../../../../platform2/metrics/rust-client/" } # ignored by ebuild
 minijail = { path = "../../../../platform/minijail/rust/minijail" } # ignored by ebuild
 sync = { path = "../../../../../chroot/usr/lib/cros_rust_registry/registry/sync-0.1.149/" } # ignored by ebuild
