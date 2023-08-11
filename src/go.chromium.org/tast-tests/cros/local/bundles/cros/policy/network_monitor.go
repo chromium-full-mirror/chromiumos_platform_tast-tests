@@ -6,19 +6,16 @@ package policy
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/mitmproxy"
+	"go.chromium.org/tast-tests/cros/local/chrome/martianproxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
-
-const mitmdumpBinFile = "mitmdump_bin"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -33,7 +30,6 @@ func init() {
 		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      15 * time.Minute,
-		Data:         []string{mitmdumpBinFile},
 		Fixture:      fixture.ChromeLoggedIn,
 	})
 }
@@ -45,23 +41,17 @@ func NetworkMonitor(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	mp := mitmproxy.New()
-	cleanupFunc, certPath, err := mp.SetBinaryPath(s.DataPath(mitmdumpBinFile)).
-		SetDumpDir(s.OutDir()).Start(ctx)
-	if err != nil {
-		s.Fatal("Failed to launch mitmproxy: ", err)
+	proxy := martianproxy.New().SetOutDir(s.OutDir()).SetHar(true)
+	if err := proxy.Start(ctx); err != nil {
+		s.Fatal("Failed to start proxy: ", err)
 	}
-	defer func(ctx context.Context) {
-		if err := cleanupFunc(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to cleanup mitmproxy: ", err)
-		}
-	}(cleanupCtx)
+	defer proxy.Close(cleanupCtx)
 
-	if err := mitmproxy.ImportRootCertificate(ctx, cr.NormalizedUser(), certPath); err != nil {
+	if err := proxy.ImportRootCertificate(ctx, cr.NormalizedUser()); err != nil {
 		s.Fatal("Failed to import cert: ", err)
 	}
 
-	if err := cr.SetProxy(ctx, fmt.Sprintf("localhost:%d", mp.ListenPort())); err != nil {
+	if err := cr.SetProxy(ctx, proxy.ProxyAddress()); err != nil {
 		s.Fatal("Failed to set Chrome proxy: ", err)
 	}
 
