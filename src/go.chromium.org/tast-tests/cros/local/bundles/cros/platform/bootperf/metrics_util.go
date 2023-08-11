@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -579,32 +578,26 @@ func getPreviousBootIDFromLog() (string, error) {
 	return m[1], nil
 }
 
-// findMostRecentBootstatArchivePath returns the path of the bootstat archive
-// generated from the most recent successful shutdown.
-func findMostRecentBootstatArchivePath() (string, error) {
+// getBootstatArchivePath returns the path of the bootstat archive generated
+// from chromeos_shutdown.
+func getBootstatArchivePath() (string, error) {
 	bootstatArchives, _ := filepath.Glob(bootstatArchiveGlob) // filepath.Glob() only returns error on malformed glob patterns.
-	if len(bootstatArchives) == 0 {
-		return "", errors.New("failed to list bootstat archive directories")
+	if len(bootstatArchives) != 1 {
+		return "", errors.Errorf("expect only one bootstat archive, found %d", len(bootstatArchives))
 	}
 
 	previousBootID, err := getPreviousBootIDFromLog()
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get previous boot ID from boot_id.log")
 	}
-	// Sort bootstatArchives to order the archive directories (almost) chronologically.
-	// It's likely but not guaranteed that the directory with the largest timestamp will be the one of previous boot: time adjustments may rewind the clock.
-	// We need to search for the directory with a matching boot_id.
-	sort.Strings(bootstatArchives)
-	for i := len(bootstatArchives) - 1; i >= 0; i-- {
-		bootstatDir := bootstatArchives[i]
 
-		bootIDPath := filepath.Join(bootstatDir, "boot_id")
-		b, err := ioutil.ReadFile(bootIDPath)
-		if err == nil && canonicalizeBootID(string(b)) == previousBootID {
-			return bootstatDir, nil
-		}
+	bootIDPath := filepath.Join(bootstatArchives[0], "boot_id")
+	b, err := ioutil.ReadFile(bootIDPath)
+	if err != nil || canonicalizeBootID(string(b)) != previousBootID {
+		return "", errors.New("unexpected boot_id")
 	}
-	return "", errors.New("failed to find the bootstat archive for the latest shutdown")
+
+	return bootstatArchives[0], nil
 }
 
 // readFirmwareTimestamps reads firmware timestamp data from `cbmem -t/-T`.
@@ -632,7 +625,7 @@ func readFirmwareTimestamps(ctx context.Context, machine bool) ([]byte, error) {
 //   - seconds_reboot_time
 //   - seconds_reboot_error
 func GatherRebootMetrics(results *platform.GetRebootMetricsResponse) error {
-	bootstatDir, err := findMostRecentBootstatArchivePath()
+	bootstatDir, err := getBootstatArchivePath()
 	if err != nil {
 		return err
 	}
@@ -746,7 +739,7 @@ func CalculateDiff(results *platform.GetBootPerfMetricsResponse) {
 func GatherRebootRawDataFiles(raw map[string][]byte) error {
 	// Collect sync-rtc-tlsdated-start of the current boot and  sync-rtc-tlsdated-stop of previous boot.
 	files := []string{filepath.Join(bootstatCurrentDir, "sync-rtc-tlsdated-start")}
-	lastBootstatArchive, err := findMostRecentBootstatArchivePath()
+	lastBootstatArchive, err := getBootstatArchivePath()
 	if err != nil {
 		return err
 	}
