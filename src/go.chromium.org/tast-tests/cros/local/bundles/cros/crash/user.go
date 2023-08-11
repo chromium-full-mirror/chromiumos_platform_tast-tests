@@ -36,8 +36,9 @@ const (
 )
 
 type userCrashParams struct {
-	testFunc    func(context.Context, *chrome.Chrome, *testing.State)
-	consentType localcrash.ConsentType
+	testFunc         func(context.Context, *chrome.Chrome, *testing.State)
+	consentType      localcrash.ConsentType
+	fieldTrialConfig chrome.FieldTrialConfigMode
 }
 
 func init() {
@@ -79,24 +80,55 @@ func init() {
 				consentType: localcrash.MockConsent,
 			},
 		}, {
-			Name: "chronos_crasher_real_consent",
+			Name: "chronos_crasher_real_consent_finch_off",
 			Val: userCrashParams{
-				testFunc:    testChronosCrasher,
-				consentType: localcrash.RealConsent,
+				testFunc:         testChronosCrasher,
+				consentType:      localcrash.RealConsent,
+				fieldTrialConfig: chrome.FieldTrialConfigDisable,
 			},
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 		}, {
-			Name: "chronos_crasher_mock_consent",
+			Name: "chronos_crasher_real_consent_finch_on",
 			Val: userCrashParams{
-				testFunc:    testChronosCrasher,
-				consentType: localcrash.MockConsent,
+				testFunc:         testChronosCrasher,
+				consentType:      localcrash.RealConsent,
+				fieldTrialConfig: chrome.FieldTrialConfigEnable,
 			},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 		}, {
-			Name: "chronos_crasher_no_consent",
+			Name: "chronos_crasher_mock_consent_finch_off",
 			Val: userCrashParams{
-				testFunc:    testChronosCrasherNoConsent,
-				consentType: localcrash.RealConsent,
+				testFunc:         testChronosCrasher,
+				consentType:      localcrash.MockConsent,
+				fieldTrialConfig: chrome.FieldTrialConfigDisable,
 			},
+			ExtraSoftwareDeps: []string{"chrome"},
+		}, {
+			Name: "chronos_crasher_mock_consent_finch_on",
+			Val: userCrashParams{
+				testFunc:         testChronosCrasher,
+				consentType:      localcrash.MockConsent,
+				fieldTrialConfig: chrome.FieldTrialConfigEnable,
+			},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraSoftwareDeps: []string{"chrome"},
+		}, {
+			Name: "chronos_crasher_no_consent_finch_off",
+			Val: userCrashParams{
+				testFunc:         testChronosCrasherNoConsent,
+				consentType:      localcrash.RealConsent,
+				fieldTrialConfig: chrome.FieldTrialConfigDisable,
+			},
+			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
+		}, {
+			Name: "chronos_crasher_no_consent_finch_on",
+			Val: userCrashParams{
+				testFunc:         testChronosCrasherNoConsent,
+				consentType:      localcrash.RealConsent,
+				fieldTrialConfig: chrome.FieldTrialConfigEnable,
+			},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 		}, {
 			Name: "root_crasher_real_consent",
@@ -106,11 +138,22 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 		}, {
-			Name: "root_crasher_mock_consent",
+			Name: "root_crasher_mock_consent_finch_off",
 			Val: userCrashParams{
-				testFunc:    testRootCrasher,
-				consentType: localcrash.MockConsent,
+				testFunc:         testRootCrasher,
+				consentType:      localcrash.MockConsent,
+				fieldTrialConfig: chrome.FieldTrialConfigDisable,
 			},
+			ExtraSoftwareDeps: []string{"chrome"},
+		}, {
+			Name: "root_crasher_mock_consent_finch_on",
+			Val: userCrashParams{
+				testFunc:         testRootCrasher,
+				consentType:      localcrash.MockConsent,
+				fieldTrialConfig: chrome.FieldTrialConfigEnable,
+			},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraSoftwareDeps: []string{"chrome"},
 		}, {
 			Name: "root_crasher_no_consent",
 			Val: userCrashParams{
@@ -733,19 +776,29 @@ func User(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to restart UI job")
 	}
 
-	consentType := s.Param().(userCrashParams).consentType
+	params := s.Param().(userCrashParams)
 
+	consentType := params.consentType
+
+	s.Log("fieldTrialConfig: ", params.fieldTrialConfig)
 	var cr *chrome.Chrome
-	if consentType == localcrash.RealConsent {
+	if consentType == localcrash.RealConsent || params.fieldTrialConfig != chrome.FieldTrialConfigDefault {
 		var err error
-		cr, err = chrome.New(ctx, chrome.ExtraArgs(localcrash.ChromeVerboseConsentFlags))
+		var opts []chrome.Option
+		if consentType == localcrash.RealConsent {
+			opts = append(opts, chrome.ExtraArgs(localcrash.ChromeVerboseConsentFlags))
+		}
+		if params.fieldTrialConfig != chrome.FieldTrialConfigDefault {
+			opts = append(opts, chrome.FieldTrialConfig(params.fieldTrialConfig))
+		}
+		cr, err = chrome.New(ctx, opts...)
 		if err != nil {
 			s.Fatal("Chrome login failed: ", err)
 		}
 		defer cr.Close(ctx)
 	}
 
-	f := s.Param().(userCrashParams).testFunc
+	f := params.testFunc
 	if err := crash.RunCrashTest(ctx, cr, s, f, consentType); err != nil {
 		s.Error("Test failed: ", err)
 	}
