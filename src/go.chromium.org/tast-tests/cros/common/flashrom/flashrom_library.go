@@ -60,10 +60,10 @@ const (
 	chipFoundMessage = `Found .* flash chip`
 
 	// Message in the output which indicates that software WP status is enabled.
-	wpStatusEnabled = `WP: write protect is enabled.`
+	wpStatusEnabled = `Protection mode: hardware`
 
 	// Message in the output which indicates that software WP status is disabled.
-	wpStatusDisabled = `WP: write protect is disabled.`
+	wpStatusDisabled = `Protection mode: disabled`
 
 	// Error message for software WP status.
 	wpStatusErrorMessage = `Failed to get WP status: (.*)\n`
