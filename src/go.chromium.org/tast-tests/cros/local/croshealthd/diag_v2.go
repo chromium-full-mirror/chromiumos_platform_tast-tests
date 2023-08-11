@@ -23,14 +23,15 @@ import (
 
 // List of cros_healthd diagnostic routines.
 const (
-	RoutineMemoryV2      string = "memory_v2"
-	RoutineCPUStressV2   string = "cpu_stress_v2"
-	RoutineAudioDriver   string = "audio_driver"
-	RoutineCPUCacheV2    string = "cpu_cache_v2"
-	RoutineUFSLifetime   string = "ufs_lifetime"
-	RoutinePrimeSearchV2 string = "prime_search_v2"
-	RoutineVolumeButton  string = "volume_button"
-	RoutineLedLitUp      string = "led_lit_up"
+	RoutineMemoryV2        string = "memory_v2"
+	RoutineCPUStressV2     string = "cpu_stress_v2"
+	RoutineAudioDriver     string = "audio_driver"
+	RoutineCPUCacheV2      string = "cpu_cache_v2"
+	RoutineUFSLifetime     string = "ufs_lifetime"
+	RoutinePrimeSearchV2   string = "prime_search_v2"
+	RoutineVolumeButton    string = "volume_button"
+	RoutineLedLitUp        string = "led_lit_up"
+	RoutineFloatingPointV2 string = "floating_point_v2"
 )
 
 // RoutineResultV2 contains the progress of the routine as a percentage and
@@ -51,18 +52,12 @@ type RoutineParamsV2 struct {
 // RoutineResult on success or an error.
 func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (*RoutineResultV2, error) {
 	diagParams := []string{params.Routine, "--single_line_json"}
-	switch r := params.Routine; r {
+	switch params.Routine {
 	case RoutineMemoryV2:
 		// 15000 KiB runs for about 3 seconds on a volteer machine.
 		diagParams = append(diagParams, "--max_testing_mem_kib=15000")
-	case RoutineCPUStressV2:
-		// Runs the routine for 1 second.
-		diagParams = append(diagParams, "--length_seconds=1")
-	case RoutineCPUCacheV2:
-		// Runs the routine for 1 second.
-		diagParams = append(diagParams, "--length_seconds=1")
-	case RoutinePrimeSearchV2:
-		// Runs the routine for 1 second.
+	case RoutineCPUStressV2, RoutineCPUCacheV2, RoutinePrimeSearchV2, RoutineFloatingPointV2:
+		// Runs the CPU routine for 1 second.
 		diagParams = append(diagParams, "--length_seconds=1")
 	case RoutineVolumeButton:
 		// Runs the routine for 5 second.

@@ -52,6 +52,11 @@ func init() {
 		}, {
 			Name: "volume_button",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
+		}, {
+			Name: "floating_point_v2",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineFloatingPointV2},
+			// TODO(b/295481052): Promote to critical.
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}}})
 }
 
