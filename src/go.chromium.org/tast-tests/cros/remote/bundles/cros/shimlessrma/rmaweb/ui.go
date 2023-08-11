@@ -538,6 +538,10 @@ func (uiHelper *UIHelper) changeEnrollment(toEnroll bool) action.Action {
 			return errors.Wrap(err, "fail to reboot after clear_tpm_owner_request")
 		}
 
+		if err := uiHelper.Dut.Conn().CommandContext(ctx, "gdbus", "wait", "--system", "--timeout", "15", "org.chromium.UserDataAuth").Run(); err != nil {
+			return errors.Wrap(err, "failed to wait for D-Bus service org.chromium.UserDataAuth")
+		}
+
 		if err := uiHelper.Dut.Conn().CommandContext(ctx, "tpm_manager_client", "take_ownership").Run(); err != nil {
 			return errors.Wrap(err, "fail to take ownership")
 		}
