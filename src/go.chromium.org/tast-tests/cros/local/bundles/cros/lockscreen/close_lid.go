@@ -35,10 +35,10 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:cq-medium"},
 		Params: []testing.Param{{
 			Name: "finch_on",
-			Val:  "enable",
+			Val:  chrome.FieldTrialConfigEnable,
 		}, {
 			Name: "finch_off",
-			Val:  "disable",
+			Val:  chrome.FieldTrialConfigDisable,
 		}},
 	})
 }
@@ -68,7 +68,7 @@ func CloseLid(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
 		// b/228256145 to avoid powerd restart.
 		chrome.DisableFeatures("FirmwareUpdaterApp"),
-		chrome.FieldTrialConfig(s.Param().(string)),
+		chrome.FieldTrialConfig(s.Param().(chrome.FieldTrialConfigMode)),
 		chrome.FakeLogin(chrome.Creds{User: username, Pass: password}))
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)

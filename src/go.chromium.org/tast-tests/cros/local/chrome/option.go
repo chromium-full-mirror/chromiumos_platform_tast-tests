@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/config"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (
@@ -29,6 +30,18 @@ type Creds = credconfig.Creds
 // See https://commandcenter.blogspot.com.au/2014/01/self-referential-functions-and-design.html
 // for details about this pattern.
 type Option = config.Option
+
+// FieldTrialConfigMode describes the setting for use of fieldtrial_testing_config.json.
+type FieldTrialConfigMode = int
+
+const (
+	// FieldTrialConfigDefault is the default value, and will not specify any additional chrome flags.
+	FieldTrialConfigDefault FieldTrialConfigMode = iota
+	// FieldTrialConfigDisable starts chrome with --disable-field-trial-config.
+	FieldTrialConfigDisable
+	// FieldTrialConfigEnable starts chrome with --enable-field-trial-config.
+	FieldTrialConfigEnable
+)
 
 // EnableWebAppInstall returns an Option that can be passed to enable web app auto-install after user login.
 // By default web app auto-install is disabled to reduce network traffic in test environment.
@@ -570,11 +583,19 @@ func EnableStackSampledMetrics() Option {
 	}
 }
 
-// FieldTrialConfig returns an Option that can be passed to New to set finch
-// field trial config to [enable|disable|default].
-func FieldTrialConfig(value string) Option {
+// FieldTrialConfig returns an Option that can be passed to New to control use of fieldtrial_testing_config.json.
+func FieldTrialConfig(opt FieldTrialConfigMode) Option {
 	return func(cfg *config.MutableConfig) error {
-		cfg.FieldTrialConfig = value
+		switch opt {
+		case FieldTrialConfigDefault:
+			cfg.FieldTrialConfig = ""
+		case FieldTrialConfigEnable:
+			cfg.FieldTrialConfig = "enable"
+		case FieldTrialConfigDisable:
+			cfg.FieldTrialConfig = "disable"
+		default:
+			return errors.Errorf("invalid FieldTrialConfigMode: %d", opt)
+		}
 		return nil
 	}
 }

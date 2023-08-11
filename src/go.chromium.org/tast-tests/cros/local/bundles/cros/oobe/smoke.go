@@ -31,17 +31,17 @@ func init() {
 		Fixture:      fixture.UpdateEngine, // Ensure to update engine status is idle and to reset between tests (b/263421799).
 		Params: []testing.Param{{
 			Name: "finch_on",
-			Val:  "enable",
+			Val:  chrome.FieldTrialConfigEnable,
 		}, {
 			Name: "finch_off",
-			Val:  "disable",
+			Val:  chrome.FieldTrialConfigDisable,
 		}},
 	})
 }
 
 func Smoke(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
-		chrome.FieldTrialConfig(s.Param().(string)),
+		chrome.FieldTrialConfig(s.Param().(chrome.FieldTrialConfigMode)),
 		chrome.NoLogin(),
 		chrome.ExtraArgs("--enable-features=OobeGaiaInfoScreen,OobeSoftwareUpdate"))
 	if err != nil {

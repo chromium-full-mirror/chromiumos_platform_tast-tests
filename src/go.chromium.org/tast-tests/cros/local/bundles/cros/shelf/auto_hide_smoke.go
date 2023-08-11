@@ -25,7 +25,7 @@ type autoHideTestType struct {
 	tabletMode       bool
 	underRTL         bool // If true, the system UI is adapted to right-to-left languages.
 	bt               browser.Type
-	fieldTrialConfig string
+	fieldTrialConfig chrome.FieldTrialConfigMode
 }
 
 func init() {
@@ -51,7 +51,7 @@ func init() {
 				tabletMode:       false,
 				underRTL:         false,
 				bt:               browser.TypeAsh,
-				fieldTrialConfig: "enable",
+				fieldTrialConfig: chrome.FieldTrialConfigEnable,
 			},
 		}, {
 			Name:      "clamshell_mode_finch_off",
@@ -60,7 +60,7 @@ func init() {
 				tabletMode:       false,
 				underRTL:         false,
 				bt:               browser.TypeAsh,
-				fieldTrialConfig: "disable",
+				fieldTrialConfig: chrome.FieldTrialConfigDisable,
 			},
 		}, {
 			Name: "clamshell_mode_rtl",

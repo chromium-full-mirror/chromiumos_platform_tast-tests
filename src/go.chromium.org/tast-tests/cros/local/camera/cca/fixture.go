@@ -119,7 +119,7 @@ func init() {
 		Name:            "ccaLaunchedWithFakeVCDCameraFinchOn",
 		Desc:            "Launched CCA with fake VCD camera input with finch field trial config enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true, fieldTrialConfig: "enable"},
+		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true, fieldTrialConfig: chrome.FieldTrialConfigEnable},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		PreTestTimeout:  ccaSetUpTimeout,
@@ -144,7 +144,7 @@ func init() {
 		Name:            "ccaLaunchedWithFakeVCDCameraFinchOff",
 		Desc:            "Launched CCA with fake VCD camera input with finch field trial config disabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true, fieldTrialConfig: "disable"},
+		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true, fieldTrialConfig: chrome.FieldTrialConfigDisable},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		PreTestTimeout:  ccaSetUpTimeout,
@@ -371,7 +371,7 @@ type fixture struct {
 	enableFeatures         []feature
 	disableFeatures        []feature
 	screenRecorder         *uiauto.ScreenRecorder
-	fieldTrialConfig       string
+	fieldTrialConfig       chrome.FieldTrialConfigMode
 	tabletIP               string
 }
 
