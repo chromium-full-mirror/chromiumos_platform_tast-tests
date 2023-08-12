@@ -35,7 +35,8 @@ const (
 	setUpTimeout         = 17 * time.Minute
 	tearDownTimeout      = 5 * time.Minute
 	resetTimeout         = 11 * time.Minute
-	postTestTimeout      = 5 * time.Second
+	preTestTimeout       = 30 * time.Second
+	postTestTimeout      = 30 * time.Second
 	enrollmentRunTimeout = 4 * time.Minute
 	enrollRetry          = 3
 	idlePowerSleepTime   = 50 * time.Second
@@ -99,6 +100,7 @@ func init() {
 			Impl:            newTastFixture(f),
 			SetUpTimeout:    setUpTimeout,
 			ResetTimeout:    resetTimeout,
+			PreTestTimeout:  preTestTimeout,
 			PostTestTimeout: postTestTimeout,
 			TearDownTimeout: tearDownTimeout,
 			ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
@@ -537,12 +539,6 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}
 
-	if f.features&TFFeaturesCompanionDUT != 0 {
-		if err := tf.SeedRegdomain(ctx); err != nil {
-			s.Fatal("Failed to configure Regdomain seeding AP: ", err)
-		}
-	}
-
 	if f.features&TFFeaturesPower != 0 {
 		if err := f.setUpPower(ctx, s); err != nil {
 			s.Fatal("Failed to set up power measurement: ", err)
@@ -553,11 +549,6 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 }
 
 func (f *tastFixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
-	if f.features&TFFeaturesCompanionDUT != 0 {
-		if err := f.tf.DeconfigSeedingAP(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to deconfig seeding AP: ", err) // Do nothing else, the primary error is more important.
-		}
-	}
 	if f.features&TFFeaturesPower != 0 {
 		if f.tf.powerCleanup == nil {
 			s.Error("No power cleanup function available")
@@ -606,13 +597,17 @@ func (f *tastFixtureImpl) Reset(ctx context.Context) error {
 }
 
 func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	if f.features&TFFeaturesPower == 0 {
-		return
-	}
-	if _, err := f.tf.powerClient.Start(s.TestContext(), &empty.Empty{}); err != nil {
-		s.Fatal("Failed to start power metrics: ", err)
+	if f.features&TFFeaturesCompanionDUT != 0 {
+		if err := f.tf.SeedRegdomain(ctx); err != nil {
+			s.Fatal("Failed to configure Regdomain seeding AP: ", err)
+		}
 	}
 
+	if f.features&TFFeaturesPower != 0 {
+		if _, err := f.tf.powerClient.Start(s.TestContext(), &empty.Empty{}); err != nil {
+			s.Fatal("Failed to start power metrics: ", err)
+		}
+	}
 }
 
 func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
@@ -625,6 +620,12 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 		powerResults := perf.NewValuesFromProto(values)
 		if err = f.savePowerResults(ctx, s, powerResults); err != nil {
 			s.Fatal("Failed to save power results: ", err)
+		}
+	}
+
+	if f.features&TFFeaturesCompanionDUT != 0 {
+		if err := f.tf.DeconfigSeedingAP(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to deconfig seeding AP: ", err) // Do nothing else, the primary error is more important.
 		}
 	}
 
