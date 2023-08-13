@@ -377,6 +377,9 @@ const (
 	// EmmcStorageUserSimWriteLatency with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device latency MUST NOT exceed 35ms for the 99th percentile writes of the user simulating workload.
 	EmmcStorageUserSimWriteLatency = "store-emmc-0024-v01"
 
+	// EmmcControllerBW with If the ChromeOS reference supports eMMC, the physical interface to which eMMC component is attached MUST demonstrate at least 250 MB/sec transfer rate.
+	EmmcControllerBW = "store-emmc-0025-v01"
+
 	// Storage NVMe
 
 	// NvmeStorageOnPcie with If the ChromeOS device uses NVMe to provide non-volatile storage, it MUST provide NVMe over PCIe physical interface.
@@ -426,6 +429,9 @@ const (
 
 	// NvmeStorageUserSimWriteLatency with  If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device latency MUST NOT exceed 12ms for the 99th percentile writes of the user simulating workload.
 	NvmeStorageUserSimWriteLatency = "store-nvme-0020-v01"
+
+	// NvmePcieBW with If the ChromeOS reference supports NVMe, the PCIe link to which NVMe component is attached MUST demonstrate more than 2GB/sec transfer rate.
+	NvmePcieBW = "store-nvme-0021-v01"
 
 	// Storage UFS
 
@@ -509,6 +515,12 @@ const (
 
 	// UfsStorageUserSimWriteLatency with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device latency MUST NOT exceed 12ms for the 99th percentile writes of the user simulating workload.
 	UfsStorageUserSimWriteLatency = "store-ufs-0035-v01"
+
+	// UfsControllerG3BW with If the ChromeOS reference supports HS-Gear3 for UFS, the M-Phy interface to which UFS component is attached MUST demonstrate transfer more than 500 MB/sec transfer rate per lane.
+	UfsControllerG3BW = "store-ufs-0036-v01"
+
+	// UfsControllerG4BW with If the ChromeOS reference supports HS-Gear4 for UFS, the M-Phy interface to which UFS component is attached MUST demonstrate transfer more than 1 GB/sec transfer rate per lane.
+	UfsControllerG4BW = "store-ufs-0037-v01"
 
 	// Removable Storage
 
