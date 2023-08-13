@@ -281,10 +281,6 @@ const (
 
 	// Storage Requirements
 
-	// InternalStorageGeneral with The ChromeOS device MUST provide storage with a non-volatile solid-state storage device.
-	// This is a catch-all requirement for all tests that don't have a dedicated requirement at the moment.
-	InternalStorageGeneral = "store-general-0001-v01"
-
 	// InternalStorageInterface with The ChromeOS device MUST provide non-volatile storage via one or more of the following interfaces:
 	// * eMMC
 	// * NVMe
@@ -305,6 +301,12 @@ const (
 
 	// StorageTBWReport with If the ChromeOS device provides non-volatile storage via an interface whose standard specifies reporting written/read bytes, its non-volatile storage MUST support reporting written/read bytes.
 	StorageTBWReport = "store-storagedev-0007-v01"
+
+	// StorageLPST with The ChromeOS device non-volatile storage component MUST be capable of runtime transition to the low power state when idle.
+	StorageLPST = "store-storagedev-0011-v01"
+
+	// StorageTrim The ChromeOS device non-volatile storage component MUST abide by discard behaviour it claims to support.
+	StorageTrim = "store-storagedev-0012-v01"
 
 	// StorageCapacityMin with The ChromeOS device MUST provide >=32GB of non-volatile storage.
 	StorageCapacityMin = "store-capacity-0001-v02"
@@ -432,6 +434,9 @@ const (
 
 	// NvmePcieBW with If the ChromeOS reference supports NVMe, the PCIe link to which NVMe component is attached MUST demonstrate more than 2GB/sec transfer rate.
 	NvmePcieBW = "store-nvme-0021-v01"
+
+	// NvmeBlkZeroOutPerf with If the ChromeOS device uses NVMe to provide non-volatile storage, issuing BLKZEROUT upon its NVMe storage device MUST have similar or better performance than sequential device overwrite.
+	NvmeBlkZeroOutPerf = "store-nvme-0022-v01"
 
 	// Storage UFS
 

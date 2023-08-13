@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Data:         util.Configs,
 		Requirements: []string{
-			tdreq.InternalStorageGeneral,
+			tdreq.StorageTrim,
 		},
 	})
 }

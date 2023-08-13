@@ -37,7 +37,7 @@ func init() {
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Requirements: []string{
-			tdreq.InternalStorageGeneral,
+			tdreq.StorageLPST,
 		},
 	})
 }

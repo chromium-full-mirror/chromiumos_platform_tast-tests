@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/dut"
@@ -45,6 +46,9 @@ func init() {
 			Val:               util.ExpectedTrimValueUfs,
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 		}},
+		Requirements: []string{
+			tdreq.StorageTrim,
+		},
 	})
 }
 
