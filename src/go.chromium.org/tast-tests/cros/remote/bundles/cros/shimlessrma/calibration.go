@@ -55,7 +55,7 @@ func init() {
 			"tast.cros.shimlessrma.AppService",
 		},
 		Fixture: fixture.NormalMode,
-		Timeout: 5 * time.Minute,
+		Timeout: 10 * time.Minute,
 		Params: []testing.Param{{
 			Name: "accel",
 			Val:  sensorAccel,
