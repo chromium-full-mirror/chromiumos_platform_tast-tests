@@ -609,6 +609,11 @@ func wmRV22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 		return errors.Wrap(err, "failed to rotate to 0")
 	}
 
+	// Check vertical split in landscape tablet mode.
+	if err := wm.CheckVerticalTabletSplit(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to assert vertical split window bounds after rotating to landscape tablet mode from portrait tablet mode")
+	}
+
 	// Convert to clamshell mode.
 	if err := switchTabletMode(false); err != nil {
 		return errors.Wrap(err, "failed to switch to clamshell mode")
