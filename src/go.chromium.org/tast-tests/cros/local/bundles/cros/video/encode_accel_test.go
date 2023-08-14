@@ -93,6 +93,7 @@ func psnrThreshold(codec string, height int) float32 {
 			2160: 34.5,
 		},
 		"vp8": {
+			135:  25.6,
 			180:  29.5,
 			270:  28.5,
 			360:  29.5,
@@ -101,6 +102,7 @@ func psnrThreshold(codec string, height int) float32 {
 			2160: 35.3,
 		},
 		"vp9": {
+			135:  25.6,
 			180:  28.5,
 			270:  29.5,
 			360:  31.7,
@@ -110,6 +112,7 @@ func psnrThreshold(codec string, height int) float32 {
 			2160: 40.8,
 		},
 		"av1": {
+			135:  25.7,
 			180:  28.5,
 			270:  29.5,
 			360:  31.7,
@@ -119,7 +122,12 @@ func psnrThreshold(codec string, height int) float32 {
 			2160: 40.8,
 		},
 	}
-	return psnrThresholdTable[codec][height]
+
+	val, found := psnrThresholdTable[codec][height]
+	if !found {
+		panic(fmt.Sprintf("psnrThresholdTable[%s][%d] is not found", codec, height))
+	}
+	return val
 }
 
 func psnrThresholdSVC(codec string, height int, svcMode string) float32 {
@@ -131,6 +139,12 @@ func psnrThresholdSVC(codec string, height int, svcMode string) float32 {
 			},
 		},
 		"vp8": {
+			720: {
+				// The same thresholds as vp8_720p is used because there is no
+				// video.EncodeAccelPerf.vp8_720p_(l1t2|l1t3).
+				"l1t2": 35.7,
+				"l1t3": 35.7,
+			},
 			1080: {
 				"l1t2": 37.8,
 				"l1t3": 38.2,
@@ -151,7 +165,12 @@ func psnrThresholdSVC(codec string, height int, svcMode string) float32 {
 			},
 		},
 	}
-	return psnrThresholdSVCTable[codec][height][svcMode]
+
+	val, found := psnrThresholdSVCTable[codec][height][svcMode]
+	if !found {
+		panic(fmt.Sprintf("psnrThresholdTable[%s][%d][%s] is not found", codec, height, svcMode))
+	}
+	return val
 }
 
 func TestEncodeAccelParams(t *testing.T) {

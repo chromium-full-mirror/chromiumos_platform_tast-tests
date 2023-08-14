@@ -100,7 +100,7 @@ func init() {
 				Val: encode.TestOptions{
 					WebMName:      "encode/desktop2-240x135_850frames.vp9.webm",
 					Profile:       videotype.VP8Prof,
-					PSNRThreshold: 0,
+					PSNRThreshold: 25.6,
 					BitrateMode:   "cbr",
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_enc_vp8_odd_dimension"},
@@ -177,7 +177,7 @@ func init() {
 				Val: encode.TestOptions{
 					WebMName:      "encode/desktop2-240x135_850frames.vp9.webm",
 					Profile:       videotype.VP9Prof,
-					PSNRThreshold: 0,
+					PSNRThreshold: 25.6,
 					BitrateMode:   "cbr",
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_enc_vp9_odd_dimension"},
@@ -254,7 +254,7 @@ func init() {
 				Val: encode.TestOptions{
 					WebMName:      "encode/desktop2-240x135_850frames.vp9.webm",
 					Profile:       videotype.AV1MainProf,
-					PSNRThreshold: 0,
+					PSNRThreshold: 25.7,
 					BitrateMode:   "cbr",
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_1080_30", "autotest-capability:hw_enc_av1_odd_dimension"},
@@ -355,7 +355,7 @@ func init() {
 				Val: encode.TestOptions{
 					WebMName:      "encode/desktop2-1280x720_850frames.vp9.webm",
 					Profile:       videotype.VP8Prof,
-					PSNRThreshold: 0,
+					PSNRThreshold: 35.7,
 					SVCMode:       "L1T2",
 					BitrateMode:   "cbr",
 				},
@@ -367,7 +367,7 @@ func init() {
 				Val: encode.TestOptions{
 					WebMName:      "encode/desktop2-1280x720_850frames.vp9.webm",
 					Profile:       videotype.VP8Prof,
-					PSNRThreshold: 0,
+					PSNRThreshold: 35.7,
 					SVCMode:       "L1T3",
 					BitrateMode:   "cbr",
 				},
