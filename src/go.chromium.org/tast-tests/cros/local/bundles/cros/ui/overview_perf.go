@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -94,6 +95,13 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to obtain the tablet mode status: ", err)
 	}
 	defer ash.SetTabletModeEnabled(cleanupCtx, tconn, originalTabletMode)
+
+	// Take screenshot when s.Fatal() is called.
+	s.AttachErrorHandlers(
+		nil, // Skip the handler for s.Error().
+		func(errMsg string) {
+			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+		})
 
 	canSplitScreen, err := func(ctx context.Context) (bool, error) {
 		if originalTabletMode != true {
