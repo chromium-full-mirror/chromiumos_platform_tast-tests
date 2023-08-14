@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 
 	"go.chromium.org/tast-tests/cros/local/screenshot"
@@ -217,13 +218,13 @@ func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName s
 }
 
 // SaveScreenshot takes a screenshot and saves to test output.
-func SaveScreenshot(ctx context.Context) error {
+func SaveScreenshot(ctx context.Context, cr *chrome.Chrome) error {
 	dir, ok := testing.ContextOutDir(ctx)
 	if !ok || dir == "" {
 		return errors.New("failed to get name of output directory")
 	}
 	path := filepath.Join(dir, "screenshot_power_test.png")
-	if err := screenshot.Capture(ctx, path); err != nil {
+	if err := screenshot.CaptureChrome(ctx, cr, path); err != nil {
 		return errors.Wrap(err, "couldn't take a screenshot")
 	}
 	return nil

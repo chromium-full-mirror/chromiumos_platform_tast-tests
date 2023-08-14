@@ -161,7 +161,7 @@ func ExampleUI(ctx context.Context, s *testing.State) {
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}
 
-	if err := power.SaveScreenshot(ctx); err != nil {
+	if err := power.SaveScreenshot(ctx, cr); err != nil {
 		s.Error("Failed to take screenshot: ", err)
 	}
 }
