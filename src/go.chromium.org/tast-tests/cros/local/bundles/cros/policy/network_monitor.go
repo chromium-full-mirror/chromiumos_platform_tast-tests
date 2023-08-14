@@ -42,18 +42,10 @@ func NetworkMonitor(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	proxy := martianproxy.New().SetOutDir(s.OutDir()).SetHar(true)
-	if err := proxy.Start(ctx); err != nil {
-		s.Fatal("Failed to start proxy: ", err)
+	if err := cr.LaunchAndApplyProxy(ctx, proxy); err != nil {
+		s.Fatal("Failed to launch and apply proxy: ", err)
 	}
 	defer proxy.Close(cleanupCtx)
-
-	if err := proxy.ImportRootCertificate(ctx, cr.NormalizedUser()); err != nil {
-		s.Fatal("Failed to import cert: ", err)
-	}
-
-	if err := cr.SetProxy(ctx, proxy.ProxyAddress()); err != nil {
-		s.Fatal("Failed to set Chrome proxy: ", err)
-	}
 
 	// TODO: Add test logic here to monitor network traffic.
 	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://www.google.com")

@@ -424,53 +424,6 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	}, nil
 }
 
-// SetProxy sets the network proxy. It is hardcoded to use fixed_servers mode for now.
-func (c *Chrome) SetProxy(ctx context.Context, proxyAddress string) error {
-	tconn, err := c.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get test API connection")
-	}
-
-	host, port, err := parseProxyAddress(proxyAddress)
-	if err != nil {
-		return err
-	}
-
-	var settingsAPICall = fmt.Sprintf(`
-	var config = {
-		mode: "fixed_servers",
-		rules: {
-			singleProxy: {
-				host: %q,
-				port:%d
-			}
-		}
-	};
-	chrome.proxy.settings.set(
-			{value: config, scope: 'regular'},
-			function() {})`, host, port)
-
-	return tconn.Eval(ctx, settingsAPICall, nil)
-}
-
-// parseProxyAddress parses a host:port string and returns the components.
-func parseProxyAddress(c string) (host string, port int, err error) {
-	parts := strings.Split(c, ":")
-	if len(parts[0]) == 0 {
-		// If no host, return error.
-		return "", 0, errors.Errorf("no host provided in %q", c)
-	}
-	if len(parts) == 2 {
-		port, err = strconv.Atoi(parts[1])
-		if err != nil {
-			return "", 0, errors.Errorf("got invalid port int in %q", c)
-		}
-		return parts[0], port, nil
-	}
-
-	return "", 0, errors.Errorf("got invalid proxy address %q", c)
-}
-
 // Close disconnects from Chrome and cleans up standard extensions.
 // To avoid delays between tests, the ui job (and by extension, Chrome) is not restarted,
 // so the current user (if any) remains logged in.

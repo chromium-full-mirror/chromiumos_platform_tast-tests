@@ -8,12 +8,10 @@ package martianproxy
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -44,6 +42,7 @@ type Proxy struct {
 	compressLog        bool
 	logFileName        string
 	cmd                *testexec.Cmd
+	isRunning          bool // Is the proxy running? It is set to true on starting proxy.
 }
 
 // New creates a new Martian proxy instance with default configuration.
@@ -92,6 +91,11 @@ func (p *Proxy) SetHar(har bool) *Proxy {
 	return p
 }
 
+// IsRunning returns whether the proxy is running.
+func (p *Proxy) IsRunning() bool {
+	return p.isRunning
+}
+
 // updateLogFileName updates the timestamp from when the log starts.
 // Proxy logs are downloaded from the memory on demand.
 // It is impossible to follow the log file naming convention which indicating the time log starts.
@@ -117,12 +121,16 @@ func (p *Proxy) Start(ctx context.Context) error {
 
 	p.cmd = testexec.CommandContext(ctx, "martian_proxy", pOpts...)
 	p.updateLogFileName()
-	return p.cmd.Start()
+	if err := p.cmd.Start(); err != nil {
+		return err
+	}
+	p.isRunning = true
+	return nil
 }
 
 // Close closes proxy.
 func (p *Proxy) Close(ctx context.Context) error {
-	if p.cmd == nil {
+	if !p.isRunning {
 		testing.ContextLog(ctx, "Martian proxy is not running before close")
 		return nil
 	}
@@ -136,6 +144,7 @@ func (p *Proxy) Close(ctx context.Context) error {
 	if err := p.cmd.Kill(); err != nil {
 		return errors.Wrap(err, "failed to close proxy")
 	}
+	p.isRunning = false
 	return p.cmd.Wait()
 }
 
@@ -148,29 +157,15 @@ func (p *Proxy) apiAddress(endPoint proxyEndPoint) string {
 	return fmt.Sprintf("http://localhost:%d/%s", p.apiPort, endPoint)
 }
 
-// ImportRootCertificate imports the proxy root certificate to user trusted cert store using certutil cmd.
-func (p *Proxy) ImportRootCertificate(ctx context.Context, normalizedUser string) error {
+// DownloadRootCertificate downloads the root CA certificate from proxy server that to be imported to Chrome.
+func (p *Proxy) DownloadRootCertificate(ctx context.Context) (string, error) {
 	downloadedCertFile := filepath.Join(p.outDir, string(certEndPoint))
-
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return p.downloadDataFromProxy(ctx, certEndPoint, downloadedCertFile)
 	}, &testing.PollOptions{Interval: time.Second, Timeout: 10 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to download the cert file")
+		return "", errors.Wrap(err, "failed to download the cert file")
 	}
-	defer os.Remove(downloadedCertFile)
-
-	userHome, err := cryptohome.UserPath(ctx, normalizedUser)
-	if err != nil {
-		return errors.Wrap(err, "failed to get user path")
-	}
-
-	cmd := testexec.CommandContext(ctx, "certutil", "-d", fmt.Sprintf("sql:%s/.pki/nssdb", userHome),
-		"-A", "-t", "C,C,C", "-n", "martian.proxy", "-i", downloadedCertFile)
-	if err := cmd.Run(); err != nil {
-		cmd.DumpLog(ctx)
-		return errors.Wrap(err, "failed to import certificate")
-	}
-	return nil
+	return downloadedCertFile, nil
 }
 
 func (p *Proxy) downloadDataFromProxy(ctx context.Context, endpoint proxyEndPoint, downloadPath string) error {
