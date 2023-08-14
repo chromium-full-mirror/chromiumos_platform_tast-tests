@@ -226,7 +226,10 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 							if stream == simulcast {
 								paramData.Simulcasts = 3
 								for i := 0; i < paramData.Simulcasts; i++ {
-									paramData.SimulcastHWEncs = append(paramData.SimulcastHWEncs, enc == hwEnc)
+									height := resolution.Height >> (paramData.Simulcasts - 1 - i)
+									// The software encoder is used for a video whose resolution is less than 360p.
+									hwEncForSimulcast := enc == hwEnc && height >= 360
+									paramData.SimulcastHWEncs = append(paramData.SimulcastHWEncs, hwEncForSimulcast)
 								}
 							} else {
 								paramData.Svc = string(stream)
