@@ -146,12 +146,6 @@ func init() {
 			// TODO(b/279707249): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
-			Name: "bluetooth_scanning",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothScanning),
-			// TODO(b/280388009): Promote to critical.
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
-		}, {
 			Name: "power_button",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutinePowerButton),
 		}},
