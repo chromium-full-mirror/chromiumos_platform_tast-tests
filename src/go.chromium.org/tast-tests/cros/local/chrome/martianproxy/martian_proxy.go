@@ -8,6 +8,7 @@ package martianproxy
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -119,6 +120,11 @@ func (p *Proxy) Start(ctx context.Context) error {
 		pOpts = append(pOpts, "-har")
 	}
 
+	// Create out dir if it does not exist.
+	if err := os.MkdirAll(p.outDir, 0755); err != nil {
+		return errors.Wrapf(err, "failed to create directory %q", p.outDir)
+	}
+
 	p.cmd = testexec.CommandContext(ctx, "martian_proxy", pOpts...)
 	p.updateLogFileName()
 	if err := p.cmd.Start(); err != nil {
@@ -169,7 +175,7 @@ func (p *Proxy) DownloadRootCertificate(ctx context.Context) (string, error) {
 }
 
 func (p *Proxy) downloadDataFromProxy(ctx context.Context, endpoint proxyEndPoint, downloadPath string) error {
-	return testexec.CommandContext(ctx, "curl", p.apiAddress(endpoint), "-o", downloadPath).Run()
+	return testexec.CommandContext(ctx, "curl", p.apiAddress(endpoint), "-o", downloadPath).Run(testexec.DumpLogOnError)
 }
 
 // resetLog calls the proxy api to delete logs in memory and restart logging.
