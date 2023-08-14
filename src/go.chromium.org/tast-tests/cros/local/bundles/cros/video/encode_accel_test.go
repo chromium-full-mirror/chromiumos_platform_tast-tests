@@ -66,6 +66,18 @@ func encodeSoftwareDeps(codec string, height int, vbr bool) []string {
 			panic(fmt.Sprintf("No vbr test is intended for %s", codec))
 		}
 	}
+	if height%2 != 0 {
+		switch codec {
+		case "vp8":
+			deps = append(deps, caps.HWEncodeVP8OddDimension)
+		case "vp9":
+			deps = append(deps, caps.HWEncodeVP9OddDimension)
+		case "av1":
+			deps = append(deps, caps.HWEncodeAV1OddDimension)
+		default:
+			panic(fmt.Sprintf("No odd dimension test is intended for %s", codec))
+		}
+	}
 
 	return deps
 }

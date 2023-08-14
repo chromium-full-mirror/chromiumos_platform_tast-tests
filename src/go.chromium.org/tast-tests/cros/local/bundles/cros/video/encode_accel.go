@@ -103,7 +103,7 @@ func init() {
 					PSNRThreshold: 0,
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30"},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_enc_vp8_odd_dimension"},
 				ExtraData:         []string{"encode/desktop2-240x135_850frames.vp9.webm", "encode/desktop2-240x135_850frames.vp9.webm.json"},
 			},
 			{
@@ -180,7 +180,7 @@ func init() {
 					PSNRThreshold: 0,
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30"},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_enc_vp9_odd_dimension"},
 				ExtraData:         []string{"encode/desktop2-240x135_850frames.vp9.webm", "encode/desktop2-240x135_850frames.vp9.webm.json"},
 			},
 			{
@@ -257,7 +257,7 @@ func init() {
 					PSNRThreshold: 0,
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_1080_30"},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_1080_30", "autotest-capability:hw_enc_av1_odd_dimension"},
 				ExtraData:         []string{"encode/desktop2-240x135_850frames.vp9.webm", "encode/desktop2-240x135_850frames.vp9.webm.json"},
 			},
 			{
