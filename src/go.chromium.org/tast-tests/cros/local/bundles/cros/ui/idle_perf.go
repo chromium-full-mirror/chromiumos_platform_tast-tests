@@ -96,7 +96,7 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for cpu to stabilize before test.
-	if _, err := cpu.WaitUntilStabilized(ctx, cuj.CPUCoolDownConfig()); err != nil {
+	if _, err := cpu.WaitUntilStabilized(ctx, cujrecorder.CPUCoolDownConfig()); err != nil {
 		// Log the cpu stabilizing wait failure instead of make it fatal.
 		// TODO(b/213238698): Include the error as part of test data.
 		s.Log("Failed to wait for CPU to become idle: ", err)

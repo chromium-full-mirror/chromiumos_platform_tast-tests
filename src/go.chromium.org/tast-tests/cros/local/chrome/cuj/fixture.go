@@ -10,7 +10,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
@@ -31,12 +30,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
+	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -44,17 +43,9 @@ import (
 )
 
 const (
-	// CPUCoolDownTimeout is the time to wait for cpu cool down.
-	CPUCoolDownTimeout = 7 * time.Minute
-	// CPUIdleTimeout is the time to wait for cpu utilization to go down.
-	// This value should match waitIdleCPUTimeout in cpu/idle.go.
-	CPUIdleTimeout = 2 * time.Minute
-	// CPUPkgStateTimeout is the max amount of time needed for cpu
-	// pkg state activity to drop.
-	CPUPkgStateTimeout = 3 * time.Minute
 	// CPUStablizationTimeout is the time to wait for cpu stablization, which
 	// is the sum of cpu cool down time, cpu idle time, and cpu pkg state activity drop time.
-	CPUStablizationTimeout = CPUCoolDownTimeout + CPUIdleTimeout + CPUPkgStateTimeout
+	CPUStablizationTimeout = cujrecorder.CooldownTimeout
 	// BatteryChargingTimeout is the battery charging duration if capacity is
 	//  below 25%
 	BatteryChargingTimeout = 3 * time.Minute
@@ -1114,20 +1105,6 @@ func runningPackages(ctx context.Context, a *arc.ARC) (map[string]struct{}, erro
 	return acts, nil
 }
 
-// CPUCoolDownConfig returns a cpu.CoolDownConfig to be used for CUJ tests.
-func CPUCoolDownConfig() cpu.CoolDownConfig {
-	cdConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
-	cdConfig.PollTimeout = CPUCoolDownTimeout
-	return cdConfig
-}
-
-// CPUPkgIdleConfig returns a cpu.IdleConfig to be used for CUJ tests.
-func CPUPkgIdleConfig() cpu.IdleConfig {
-	pkgIdleConfig := cpu.DefaultPkgIdleConfig()
-	pkgIdleConfig.Timeout = CPUPkgStateTimeout
-	return pkgIdleConfig
-}
-
 // chargeBatteryCapacity allows charging of the battery for 3 minutes if battery capacity
 // is not higher than a pre-defined level (minimumBatteryCapacity+lowBatteryShutdownPercent).
 func chargeBatteryCapacity(ctx context.Context, minimumBatteryCapacity float64, chargeBatteryTestPollOpt *testing.PollOptions) error {
@@ -1208,22 +1185,8 @@ func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 		}
 	}
 
-	// Wait for cpu to stabilize before test. Note this only works as expected if
-	// all child fixtures's PreTest and the setup in each test main function do
-	// not do cpu intensive works. Otherwise, this needs to moved into body of
-	// tests.
-	if _, err := cpu.WaitUntilStabilized(ctx, CPUCoolDownConfig()); err != nil {
-		// Log the cpu stabilizing wait failure instead of make it fatal.
-		// TODO(b/213238698): Include the error as part of test data.
-		s.Log("Failed to wait for CPU to become idle: ", err)
-	}
-
-	// Usually takes longer than cpu.WaitUntilIdle(). Check x86 microarchitecture as well.
-	if arch := runtime.GOARCH; arch != "arm" && arch != "arm64" {
-		if err := cpu.WaitUntilPkgStateIdleWithConfig(ctx, CPUPkgIdleConfig()); err != nil {
-			s.Log("CPU package c-state failed to idle: ", err)
-		}
-	}
+	// Wait for CPU stabilization and package idling.
+	cujrecorder.WaitForCPUStabilization(ctx)
 
 	// Ensure display on to record UI performance correctly. Keep trying for 2 min
 	// since it could take 2 min for `powerd` dbus service to be accessible via

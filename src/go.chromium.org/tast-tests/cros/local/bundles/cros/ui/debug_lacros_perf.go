@@ -104,7 +104,7 @@ func init() {
 
 func DebugLacrosPerf(ctx context.Context, s *testing.State) {
 	// Wait for CPU to stabilize before test.
-	if _, err := cpu.WaitUntilStabilized(ctx, cuj.CPUCoolDownConfig()); err != nil {
+	if _, err := cpu.WaitUntilStabilized(ctx, cujrecorder.CPUCoolDownConfig()); err != nil {
 		s.Log("Failed to wait for CPU to become idle: ", err)
 	}
 

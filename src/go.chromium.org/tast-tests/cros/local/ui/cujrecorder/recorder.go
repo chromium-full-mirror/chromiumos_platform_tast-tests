@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
@@ -63,9 +64,19 @@ const checkInterval = 5 * time.Second
 // SystemTraceConfigFile is a perfetto tracing config.
 const SystemTraceConfigFile = "perfetto/system_trace_config.pbtxt"
 
-// CooldownTimeout is the time to wait for the CPU to idle if
-// CooldownBeforeRun is set.
-const CooldownTimeout = 10 * time.Minute
+const (
+	// CPUCoolDownTimeout is the time to wait for CPU cool down.
+	CPUCoolDownTimeout = 7 * time.Minute
+	// CPUIdleTimeout is the time to wait for CPU utilization to go down.
+	// This value should match waitIdleCPUTimeout in cpu/idle.go.
+	CPUIdleTimeout = 2 * time.Minute
+	// CPUPkgStateIdleTimeout is the max amount of time needed for CPU
+	// pkg state activity to drop.
+	CPUPkgStateIdleTimeout = 3 * time.Minute
+	// CooldownTimeout is the time to wait for the CPU to idle if
+	// CooldownBeforeRun is set.
+	CooldownTimeout = CPUCoolDownTimeout + CPUIdleTimeout + CPUPkgStateIdleTimeout
+)
 
 // Annotation regex must follow the same formatting rules as perf.Metric.Name.
 // However, the length of the annotation must be less, to accommodate for the
@@ -886,11 +897,7 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 	}
 
 	if !skipCooldown && (r.options.CooldownBeforeRun || r.options.Mode == Benchmark) {
-		cdConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
-		cdConfig.PollTimeout = CooldownTimeout
-		if _, err := cpu.WaitUntilStabilized(ctx, cdConfig); err != nil {
-			testing.ContextLog(ctx, "Failed to wait for CPU to become idle: ", err)
-		}
+		WaitForCPUStabilization(ctx)
 	}
 
 	if r.screenRecorderStart != nil {
@@ -1769,6 +1776,37 @@ func (r *Recorder) StartSnapshot(ctx context.Context, prefix string, ashMetrics,
 
 		return nil
 	}, nil
+}
+
+// CPUCoolDownConfig returns a cpu.CoolDownConfig to be used for CUJ tests.
+func CPUCoolDownConfig() cpu.CoolDownConfig {
+	cdConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
+	cdConfig.PollTimeout = CPUCoolDownTimeout
+	return cdConfig
+}
+
+// CPUPkgIdleConfig returns a cpu.IdleConfig to be used for CUJ tests.
+func CPUPkgIdleConfig() cpu.IdleConfig {
+	pkgIdleConfig := cpu.DefaultPkgIdleConfig()
+	pkgIdleConfig.Timeout = CPUPkgStateIdleTimeout
+	return pkgIdleConfig
+}
+
+// WaitForCPUStabilization stabilizes the DUT by waiting for cpu to cool down
+// and idle.
+func WaitForCPUStabilization(ctx context.Context) {
+	if _, err := cpu.WaitUntilStabilized(ctx, CPUCoolDownConfig()); err != nil {
+		// Log the CPU stabilizing wait failure instead of make it fatal.
+		// TODO(b/213238698): Include the error as part of test data.
+		testing.ContextLog(ctx, "Failed to wait for CPU to become idle: ", err)
+	}
+
+	// Usually takes longer than cpu.WaitUntilIdle(). Check x86 microarchitecture as well.
+	if arch := runtime.GOARCH; arch != "arm" && arch != "arm64" {
+		if err := cpu.WaitUntilPkgStateIdleWithConfig(ctx, CPUPkgIdleConfig()); err != nil {
+			testing.ContextLog(ctx, "CPU package c-state failed to idle: ", err)
+		}
+	}
 }
 
 // histsWithSamples returns the names of the histograms that have at least one sample.
