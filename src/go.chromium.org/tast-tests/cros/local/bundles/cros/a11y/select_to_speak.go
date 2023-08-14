@@ -22,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SelectToSpeak,
-		LacrosStatus: testing.LacrosVariantNeeded, // TODO(crbug.com/1159107): Test is disabled in continuous testing. Migrate when enabled.
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "A test that invokes Select-to-Speak and verifies the correct speech is given by the Google TTS engine",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
@@ -31,17 +31,25 @@ func init() {
 		BugComponent: "b:1272897",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome"},
-		Pre:          chrome.LoggedIn(),
+		Params: []testing.Param{{
+			Fixture: "chromeLoggedIn",
+			Val:     browser.TypeAsh,
+		}, {
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Fixture:           "lacros",
+			Val:               browser.TypeLacros,
+		}},
 	})
 }
 
 func SelectToSpeak(ctx context.Context, s *testing.State) {
-	cr := s.PreValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	ed := tts.GoogleTTSEngine()
 	text := "This is a select-to-speak test"
 	html := fmt.Sprintf("<p>%s</p>", text)
-	bt := browser.TypeAsh
+	bt := s.Param().(browser.Type)
 	stsData, err := sts.SetUp(ctx, cr, ed, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up Select to Speak: ", err)
