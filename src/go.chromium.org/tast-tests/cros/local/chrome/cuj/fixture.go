@@ -1723,12 +1723,6 @@ func (f *androidBatterySaverFixture) SetUp(ctx context.Context, s *testing.FixtS
 	if err != nil {
 		s.Fatal("Failed to connect to Power Manager: ", err)
 	}
-	// Battery Saver should be automatically re-enabled, this call forces a new
-	// signal to be emitted from powerd allowing Android to synchronize battery
-	// saver state.
-	if err := powerd.SetBatterySaverModeState(ctx, false); err != nil {
-		s.Fatal("Failed to toggle battery saver: ", err)
-	}
 
 	// Wait for battery saver to be enabled.
 	if err := testing.Poll(ctx, func(context context.Context) error {
@@ -1736,10 +1730,14 @@ func (f *androidBatterySaverFixture) SetUp(ctx context.Context, s *testing.FixtS
 		if err != nil {
 			return errors.Wrap(err, "failed to get battery saver state")
 		}
-		if state.Enabled == nil || *state.Enabled == false {
-			return errors.New("battery saver is not enabled")
+		if state.Enabled != nil && *state.Enabled {
+			return nil
 		}
-		return nil
+		// Enable battery saver mode if it is not initially enabled.
+		if err := powerd.SetBatterySaverModeState(ctx, true); err != nil {
+			return errors.Wrap(err, "failed to toggle battery saver")
+		}
+		return errors.New("battery saver is not enabled")
 	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 5 * time.Second}); err != nil {
 		s.Fatal("Failed to wait for battery saver to reenable: ", err)
 	}
