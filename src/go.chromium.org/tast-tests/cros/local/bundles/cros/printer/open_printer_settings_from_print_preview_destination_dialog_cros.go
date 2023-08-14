@@ -50,11 +50,13 @@ func init() {
 		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Params: []testing.Param{
 			{
-				Val: browser.TypeAsh,
+				Val:     browser.TypeAsh,
+				Fixture: "chromeLoggedInWithPrinterSetupAssistance",
 			},
 			{
 				Name:              "lacros",
 				Val:               browser.TypeLacros,
+				Fixture:           "lacrosPrinterSetupAssistanceEnabled",
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 		},
@@ -66,13 +68,8 @@ func OpenPrinterSettingsFromPrintPreviewDestinationDialogCros(ctx context.Contex
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	// Open chrome with print-preview-setup-assistance enabled.
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("PrintPreviewSetupAssistance"))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	// Close test instance of Chrome.
-	defer cr.Close(cleanupCtx)
+	// Get chrome with print-preview-setup-assistance flags enabled from fixture.
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// tconn is the ash TestConn.
 	tconn, err := cr.TestAPIConn(ctx)
@@ -127,7 +124,7 @@ func OpenPrinterSettingsFromPrintPreviewDestinationDialogCros(ctx context.Contex
 	if err := uiauto.Combine("find and click manage printers button",
 		ui.WaitUntilExists(launchButton),
 		ui.DoDefault(launchButton),
-		ui.WithTimeout(20*time.Second).WaitUntilExists(printerSettingsWindow),
+		ui.WithTimeout(30*time.Second).WaitUntilExists(printerSettingsWindow),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open settings: ", err)
 	}

@@ -53,13 +53,13 @@ func init() {
 		Params: []testing.Param{
 			{
 				Val:     browser.TypeAsh,
-				Fixture: "virtualUsbPrinterModulesLoaded",
+				Fixture: "virtualUSBPrinterModulesLoadedWithPrinterSetupAssistance",
 			},
 			{
 				Name:              "lacros",
 				Val:               browser.TypeLacros,
 				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "virtualUsbPrinterModulesLoadedWithLacros",
+				Fixture:           "virtualUSBPrinterModulesLoadedWithLacrosPrinterSetupAssistance",
 			},
 		},
 	})
@@ -70,13 +70,8 @@ func OpenPrinterSettingsFromPrintManagement(ctx context.Context, s *testing.Stat
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	// Open chrome with print-management-setup-assistance enabled.
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("PrintManagementSetupAssistance"))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	// Close test instance of Chrome.
-	defer cr.Close(cleanupCtx)
+	// Get chrome with print-preview-setup-assistance flags enabled from fixture.
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// tconn is the ash TestConn.
 	tconn, err := cr.TestAPIConn(ctx)

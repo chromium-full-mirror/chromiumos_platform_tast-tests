@@ -49,6 +49,8 @@ const (
 	ChromeLoggedInWithOsFeedbackSaveReportToLocalForE2ETesting = "chromeLoggedInWithOsFeedbackSaveReportToLocalForE2ETesting"
 	// Log in and proceed with the post-login OOBE flow with the accessibility button enabled on the marketing opt-in screen.
 	ChromeLoggedInWithOobeAndAccessibilityButtonEnabled = "chromeLoggedInWithOobeAndAccessibilityButtonEnabled"
+	// Logged into a user session with printer setup assistance and jelly flags enabled.
+	ChromeLoggedInWithPrinterSetupAssistance = "chromeLoggedInWithPrinterSetupAssistance"
 	// Logged into a user session; stack-sampled metrics on turned on.
 	ChromeLoggedInWithStackSampledMetrics = "chromeLoggedInWithStackSampledMetrics"
 	// Logged into a user session with FirmwareUpdaterApp disabled.
