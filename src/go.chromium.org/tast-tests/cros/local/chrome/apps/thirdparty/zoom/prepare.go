@@ -55,7 +55,7 @@ func navigateToZoomAndSignIn(ctx context.Context, cr *chrome.Chrome, br *browser
 	}
 
 	// Register new account if required.
-	nodeFound, err = ui.FindAnyExists(ctx, myAccountLink, myProfileImg, agreeToTermsArea)
+	nodeFound, err = ui.WithTimeout(time.Minute).FindAnyExists(ctx, myAccountLink, myProfileImg, agreeToTermsArea)
 	if err != nil {
 		return errors.Wrap(err, "failed to reach either my account or registration flow")
 	}
