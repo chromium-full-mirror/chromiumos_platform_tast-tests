@@ -861,6 +861,23 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeRTCPerf",
+		Desc:     "Logged into a user session with rtc performance settings",
+		Contacts: []string{"chromeos-rtc@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.ExtraArgs(chromeSuppressNotificationsArgs...),
+				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
 }
 
 var chromeVideoArgs = []string{
@@ -914,3 +931,8 @@ var chromeAllowDistinctiveIdentifierArgs = []string{
 	// allow a distinctive identifier for localhost which is where we server the
 	// DRM content from in the test.
 	"--unsafely-allow-protected-media-identifier-for-domain=127.0.0.1"}
+
+var chromeWebRTCEncodedFrameArgs = []string{
+	"--enable-blink-features=RTCEncodedFrameSetMetadata,RTCEncodedVideoFrameAdditionalMetadata,RTCEncodedVideoFrameClone",
+	"--enable-features=AllowRTCEncodedVideoFrameSetMetadataAllFields",
+}

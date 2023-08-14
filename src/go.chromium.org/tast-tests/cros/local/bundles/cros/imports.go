@@ -105,6 +105,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/quickstart"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/rgbkbd"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/rollback"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/rtc"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/runtimeprobe"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/scanapp"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/scanner"
