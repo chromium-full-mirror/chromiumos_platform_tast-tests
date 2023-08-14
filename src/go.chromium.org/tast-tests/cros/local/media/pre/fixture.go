@@ -999,8 +999,6 @@ var chromeVideoArgs = []string{
 	// Disable that for testing.
 	"--disable-features=VaapiEnforceVideoMinMaxResolution",
 	"--disable-features=VaapiVideoMinResolutionForPerformance",
-	// Disable WebRTC force to use software encoder for small resolutions.
-	"--disable-features=ForceSoftwareForLowResolutions",
 	// Allow media autoplay. <video> tag won't automatically play upon loading the source unless this flag is set.
 	"--autoplay-policy=no-user-gesture-required",
 	// Do not show message center notifications.
