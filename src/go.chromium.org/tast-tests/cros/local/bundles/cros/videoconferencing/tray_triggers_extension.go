@@ -183,10 +183,10 @@ func TrayTriggersExtension(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to verify that extension triggers vcTray by sharing screen: ", err)
 		}
 
-		if err := uiauto.Combine("stop screen share",
+		if err := uiauto.Retry(3, uiauto.Combine("stop screen share",
 			extUI.StopScreenCapture,
 			vcTray.WaitUntilGone,
-		)(ctx); err != nil {
+		))(ctx); err != nil {
 			s.Fatal("Failed to verify that vcTray is gone after stopping sharing screen: ", err)
 		}
 	})
