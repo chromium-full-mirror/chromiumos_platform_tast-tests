@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/local/graphics/expectations"
 	"go.chromium.org/tast-tests/cros/local/media/decoding"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -1263,6 +1264,18 @@ func init() {
 }
 
 func ChromeStackDecoderVerification(ctx context.Context, s *testing.State) {
+	expectation, err := expectations.GetTestExpectation(ctx, s.TestName())
+	if err != nil {
+		s.Fatal("Failed to load test expectation: ", err)
+	}
+	// Schedules a post-test expectations handling. If the test is expected to
+	// fail, but did not, then this generates an error.
+	defer func() {
+		if err := expectation.HandleFinalExpectation(); err != nil {
+			s.Error("Unmet expectation: ", err)
+		}
+	}()
+
 	var tv []string
 	param := s.Param().(chromeStackDecoderVerificationTestParam)
 	for _, file := range param.videoFiles {
@@ -1270,6 +1283,8 @@ func ChromeStackDecoderVerification(ctx context.Context, s *testing.State) {
 	}
 
 	if err := decoding.RunAccelVideoTestWithTestVectors(ctx, s.OutDir(), tv, param.validatorType, param.mustFail, param.enabledFeatures); err != nil {
-		s.Fatal("test failed: ", err)
+		if expErr := expectation.ReportError("test failed: ", err); expErr != nil {
+			s.Fatal("Unexpected error: ", expErr)
+		}
 	}
 }
