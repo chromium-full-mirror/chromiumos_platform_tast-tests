@@ -8,6 +8,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -75,40 +77,61 @@ func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 	}
 	testing.ContextLog(ctx, "Files in the Downloads directory: ", string(out))
 
-	dumpStartTimeStr := time.Now().Format("2006-01-02 15:04:05")
-	waitForDownloadButton := ui.WithTimeout(5 * time.Second).WaitUntilExists(webRTCDownloadButton)
-	if err := uiauto.Combine("invoke the button for the dump download",
-		// Wait for |createDumpSection| node to appear to ensure
-		// the following UI operations can be successfully applied.
-		ui.WaitUntilExists(createDumpSection),
-		uiauto.IfFailThen(
-			waitForDownloadButton,
-			ui.DoDefaultUntil(createDumpSection, waitForDownloadButton),
-		),
-		ui.DoDefault(webRTCDownloadButton),
-	)(ctx); err != nil {
-		return "", err
+	dumpWebRTCFile := func(ctx context.Context) error {
+		dumpStartTime := time.Now()
+		testing.ContextLog(ctx, "Start to dump WebRTC file at ", dumpStartTime)
+		waitForDownloadButton := ui.WithTimeout(5 * time.Second).WaitUntilExists(webRTCDownloadButton)
+		if err := uiauto.Combine("invoke the button for the dump download",
+			// Wait for |createDumpSection| node to appear to ensure
+			// the following UI operations can be successfully applied.
+			ui.WaitUntilExists(createDumpSection),
+			uiauto.IfFailThen(
+				waitForDownloadButton,
+				ui.DoDefaultUntil(createDumpSection, waitForDownloadButton),
+			),
+			ui.DoDefault(webRTCDownloadButton),
+		)(ctx); err != nil {
+			return err
+		}
+
+		downloadStartTime := time.Now()
+		// Assume WebRTC dump file name should start with "webrtc".
+		const webRTCFileName = "webrtc*.txt"
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			files, err := filepath.Glob(filepath.Join(downloadsPath, webRTCFileName))
+			if err != nil {
+				return errors.Wrap(err, "failed to glob webrtc file")
+			}
+			if len(files) == 0 {
+				return errors.New("file not found")
+			}
+			for _, file := range files {
+				fState, err := os.Stat(file)
+				if err != nil {
+					continue
+				}
+				if fState.ModTime().After(dumpStartTime) {
+					dumpFilePath = file
+					break
+				}
+			}
+			if len(dumpFilePath) == 0 {
+				return errors.Errorf("cannot find file modified after %v", dumpStartTime)
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 3 * time.Second}); err != nil {
+			return errors.Wrap(err, "failed to find webrtc dump file in Downloads folder")
+		}
+		testing.ContextLog(ctx, "Downloaded WebRTC dump file in ", time.Since(downloadStartTime))
+		return nil
 	}
 
-	downloadStartTime := time.Now()
-	// Assume WebRTC dump file name should start with "webrtc".
-	const webRTCFileNamePrefix = "webrtc"
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		findFileCmd := fmt.Sprintf("find %s -name '%s*.txt' -newermt '%s'", downloadsPath, webRTCFileNamePrefix, dumpStartTimeStr)
-		out, err := testexec.CommandContext(ctx, "bash", "-c", findFileCmd).Output()
-		if err != nil {
-			return errors.Wrapf(err, "find command %s failed", findFileCmd)
-		}
-		filePath := strings.TrimSpace(string(out))
-		if len(filePath) == 0 {
-			return errors.New("file not found")
-		}
-		dumpFilePath = filePath
-		return nil
-	}, &testing.PollOptions{Timeout: time.Minute, Interval: 3 * time.Second}); err != nil {
-		return "", errors.Wrap(err, "failed to find webrtc dump file in Downloads folder")
+	// Sometimes download button might not be clicked successfully
+	// and some DUTs need more time to download the file. Add retries
+	// to mitigate the problem.
+	if err := uiauto.Retry(3, dumpWebRTCFile)(ctx); err != nil {
+		return "", errors.Wrap(err, "failed to dump WebRTC file")
 	}
-	testing.ContextLog(ctx, "Downloaded WebRTC dump file in ", time.Since(downloadStartTime))
 
 	return dumpFilePath, nil
 }
