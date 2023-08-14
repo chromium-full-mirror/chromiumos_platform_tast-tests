@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -78,7 +79,7 @@ const (
 	// Used to retrieve the tts cache included in the Android image from /system/etc.
 	PregeneratedTTSStateCache = "pregen_tts_state_cache.dat"
 	// Timeout to wait GMS Core resources.
-	gmsCoreWaitTimeout = 2 * time.Minute
+	gmsCoreWaitTimeout = 4 * time.Minute
 	// DexOptCacheArchive is the name of the tar file that includes DexOpt artifacts.
 	DexOptCacheArchive = "dex_opt_cache.tar"
 )
@@ -89,7 +90,10 @@ func OpenSession(ctx context.Context, extraArgs []string, outputDir string) (cr 
 	args = append(args, extraArgs...)
 
 	// Signs in as chrome.DefaultUser.
-	cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.ExtraArgs(args...))
+	cr, err := chrome.New(ctx,
+		chrome.ARCEnabled(),
+		chrome.UnRestrictARCCPU(),
+		chrome.ExtraArgs(args...))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to login to Chrome")
 	}
@@ -128,6 +132,67 @@ func OpenGmsCoreSession(ctx context.Context, packagesMode PackagesMode, gmsCoreM
 	return OpenSession(ctx, args, outputDir)
 }
 
+func waitGmsCoreUpdated(ctx context.Context, a *arc.ARC, gmsRootUnderHome string) error {
+	const (
+		configPrefs = "shared_prefs/ChimeraConfigService.xml"
+	)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+
+	configPrefsPath := filepath.Join(gmsRootUnderHome, configPrefs)
+	testing.ContextLogf(ctx, "Waiting GMS Core updated %q", configPrefsPath)
+
+	lastUpdatedRe := regexp.MustCompile(`<long\sname="Chimera.lastUpdateTime"\s+value="(\d+)"\s*/>`)
+
+	var t time.Time
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// On ARCVM virtio-blk /data enabled devices, we mount and unmount the disk image on
+		// every iteration of testing.Poll to ensure that the Android-side changes are
+		// reflected on the host side.
+		cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, chrome.DefaultUser)
+		if err != nil {
+			return errors.Wrap(err, "failed to make Android /data directory available on host")
+		}
+		defer cleanupFunc(cleanupCtx)
+
+		_, err = os.Stat(configPrefsPath)
+		if err != nil && !os.IsNotExist(err) {
+			// TODO(b/293511835): Stop the poll instead of keep trying, once the transient error
+			// is fixed.
+			return errors.Wrapf(err, "failed to stat %s", configPrefsPath)
+		}
+		if err != nil {
+			return errors.Wrapf(err, "path %s still does not exist", configPrefsPath)
+		}
+
+		content, err := a.ReadXMLFile(ctx, configPrefsPath)
+		if err != nil {
+			return testing.PollBreak(errors.Wrapf(err, "failed to read GMS Core prefs %q", configPrefsPath))
+		}
+
+		timestamp := lastUpdatedRe.FindStringSubmatch(string(content))
+		if timestamp == nil {
+			return errors.New("lastUpdateTime not yet set")
+		}
+		// Epoch time in millis.
+		epoch, err := strconv.ParseInt(timestamp[1], 10, 64)
+		if err != nil {
+			return testing.PollBreak(errors.Wrapf(err, "failed to parse timestamp %q", timestamp[1]))
+		}
+
+		t = time.UnixMilli(epoch)
+		return nil
+	}, &testing.PollOptions{Timeout: gmsCoreWaitTimeout, Interval: time.Second}); err != nil {
+		return errors.Wrap(err, "failed to wait GMS Core updated")
+	}
+
+	testing.ContextLogf(ctx, "Waited GMS Core updated. timestamp %s", t.String())
+	return nil
+}
+
 // CopyGmsCoreCaches waits for required caches are ready and copies them to the specified output directory.
 func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error {
 	const (
@@ -149,6 +214,11 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 
 	gmsRootUnderHome := filepath.Join(androidDataDir, gmsRoot)
 	chimeraPath := filepath.Join(gmsRootUnderHome, appChimera)
+
+	if err = waitGmsCoreUpdated(ctx, a, gmsRootUnderHome); err != nil {
+		return err
+	}
+
 	for _, e := range []struct {
 		filename string
 		cond     pathCondition
@@ -160,7 +230,7 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 		{"current_modules_init.pb", pathMustNotExist},
 		{"pending_modules_init.pb", pathMustNotExist},
 	} {
-		if err := waitForPath(ctx, filepath.Join(chimeraPath, e.filename), e.cond); err != nil {
+		if err := checkPath(ctx, filepath.Join(chimeraPath, e.filename), e.cond); err != nil {
 			return err
 		}
 	}
@@ -171,6 +241,10 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 	}
 
 	if err := waitForApksOptimized(ctx, chimeraPath, version); err != nil {
+		return err
+	}
+
+	if err := waitForPathStabilized(ctx, filepath.Join(chimeraPath, "current_config.fb")); err != nil {
 		return err
 	}
 
@@ -375,49 +449,95 @@ func CopyDexOptCache(ctx context.Context, outputDir string) error {
 	return nil
 }
 
-// waitForPath waits up to 1 minute or ctx deadline for the specified path to exist or not
+// checkPathNoLog checks if specified path exists or does not exist depending on pathCondition c
+// (i.e. pathMustExist).
+func checkPathNoLog(ctx context.Context, path string, c pathCondition) error {
+	// On ARCVM virtio-blk /data enabled devices, we mount and unmount the disk image on
+	// every iteration of testing.Poll to ensure that the Android-side changes are
+	// reflected on the host side.
+	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, chrome.DefaultUser)
+	if err != nil {
+		return errors.Wrap(err, "failed to make Android /data directory available on host")
+	}
+	defer cleanupFunc(ctx)
+
+	_, err = os.Stat(path)
+	if err != nil && !os.IsNotExist(err) {
+		return errors.Wrapf(err, "failed to stat %s", path)
+	}
+	exists := err == nil
+	if c == pathMustExist {
+		if !exists {
+			return errors.Wrapf(err, "path %s still does not exist", path)
+		}
+	} else {
+		if exists {
+			return errors.Wrapf(err, "path %s still exists", path)
+		}
+	}
+	return nil
+}
+
+// checkPath is the same as checkPathNoLog with extra logging.
+func checkPath(ctx context.Context, path string, c pathCondition) error {
+	testing.ContextLogf(ctx, "Check path %q", path)
+	return checkPathNoLog(ctx, path, c)
+}
+
+// waitForPath waits up to gmsCoreWaitTimeout or ctx deadline for the specified path to exist or not
 // exist depending on pathCondition c.
 func waitForPath(ctx context.Context, path string, c pathCondition) error {
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
 
 	testing.ContextLogf(ctx, "Waiting for path %q", path)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// On ARCVM virtio-blk /data enabled devices, we mount and unmount the disk image on
-		// every iteration of testing.Poll to ensure that the Android-side changes are
-		// reflected on the host side.
-		cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, chrome.DefaultUser)
-		if err != nil {
-			return errors.Wrap(err, "failed to make Android /data directory available on host")
-		}
-		defer cleanupFunc(cleanupCtx)
-
-		_, err = os.Stat(path)
-		if err != nil && !os.IsNotExist(err) {
-			// TODO(b/293511835): Stop the poll instead of keep trying, once the transient error
-			// is fixed.
-			return errors.Wrapf(err, "failed to stat %s", path)
-		}
-		exists := err == nil
-		if c == pathMustExist {
-			if !exists {
-				return errors.Wrapf(err, "path %s still does not exist", path)
-			}
-		} else {
-			if exists {
-				return errors.Wrapf(err, "path %s still exists", path)
-			}
-		}
-		return nil
+		return checkPathNoLog(ctx, path, c)
 	}, &testing.PollOptions{Timeout: gmsCoreWaitTimeout, Interval: time.Second}); err != nil {
 		return errors.Wrapf(err, "failed to wait for path %s", path)
 	}
 	return nil
 }
 
-// waitForApksOptimized waits up to 1 minute or ctx deadline for all APKs in given root path are
-// optimized, which means no *.flock locks and *.odex/*.vdex exist and matches actual APK count
+// waitForPathStabilized waits up to gmsCoreWaitTimeout or ctx deadline for the specified path
+// is stabilized.
+func waitForPathStabilized(ctx context.Context, path string) error {
+	const (
+		// Minimal duration when file considered stable.
+		minStableDuration = 20 * time.Second
+	)
+
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+
+	testing.ContextLogf(ctx, "Waiting for %q stabilized", path)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, chrome.DefaultUser)
+		if err != nil {
+			return errors.Wrap(err, "failed to make Android /data directory available on host")
+		}
+		defer cleanupFunc(ctx)
+
+		statInfo, err := os.Stat(path)
+		if err != nil {
+			return testing.PollBreak(errors.Wrapf(err, "failed to stat  %s", path))
+		}
+
+		stableDuration := time.Now().Sub(statInfo.ModTime())
+		if stableDuration < minStableDuration {
+			return errors.Errorf("path %q is not yet stable. Time since modified: %s", path, stableDuration.String())
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: gmsCoreWaitTimeout, Interval: 5 * time.Second}); err != nil {
+		return errors.Wrapf(err, "failed to wait for %s stabilized", path)
+	}
+
+	return nil
+}
+
+// waitForApksOptimized waits up to gmsCoreWaitTimeout or ctx deadline for all APKs in given root path
+// is optimized, which means no *.flock locks and *.odex/*.vdex exist and matches actual APK count
 // on PI and below.
 func waitForApksOptimized(ctx context.Context, root string, sdkVersion int) error {
 	cleanupCtx := ctx
