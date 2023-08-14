@@ -60,7 +60,11 @@ func prepareAshProfile(ctx context.Context, s *testing.State, kb *input.Keyboard
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(ctx)
-
+	conn, err := cr.NewConn(ctx, chrome.NewTabURL)
+	if err != nil {
+		s.Fatal("Failed to open a new tab")
+	}
+	defer conn.Close()
 	if err := migrate.SetupProfileData(ctx, cr, s, cr.Browser()); err != nil {
 		s.Fatal("Failed to set up profile data: ", err)
 	}

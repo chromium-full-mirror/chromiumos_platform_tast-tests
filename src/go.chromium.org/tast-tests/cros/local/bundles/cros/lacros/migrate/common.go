@@ -130,11 +130,21 @@ func VerifyLacrosLaunch(ctx context.Context, s *testing.State, cr *chrome.Chrome
 	return nil
 }
 
+const (
+	// Arbitrary page title.
+	abcPageTitle = "Alphabet Investor Relations"
+	// Arbitrary page URL.
+	abcPageURL = "https://abc.xyz"
+)
+
 // SetupProfileData creates a bookmark, a shortcut, installs an extension,
 // downloads a file, and simulates page activity
 // by saving a cookie, an IndexedDB entry, a LocalStorage value
 // and creating browsing history.
-// Clients are expected to launch a browser before calling the function.
+// Clients are expected to launch a browser and have one new tab page
+// (to absorb the difference between Ash and Lacros since Lacros
+// requires at least one tab to be present for the process to keep running)
+// before calling the function.
 // Clients are not expected to close tabs after the method call,
 // if the data is to be verified by VerifyProfileData.
 func SetupProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, br *browser.Browser) error {
@@ -163,8 +173,17 @@ func SetupProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, 
 	if err := setupDownloads(ctx, ui, br, kb); err != nil {
 		return err
 	}
-	if err := setupExternalPageActivity(ctx, ui, br, s); err != nil {
+	if err := setupHistoryEntry(ctx, ui, br, abcPageURL, abcPageTitle); err != nil {
 		return err
+	}
+	if err := setupExternalPageActivity(ctx, ui, br, s, abcPageURL); err != nil {
+		return err
+	}
+	if err := setupTabPageHistory(ctx, ui, br, abcPageURL); err != nil {
+		return err
+	}
+	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
+		return errors.Wrap(err, "failed to close the empty tab")
 	}
 	return nil
 }
@@ -185,6 +204,11 @@ func VerifyProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State,
 	if err := policyutil.EnsureGoogleCookiesAccepted(ctx, br); err != nil {
 		return errors.Wrap(err, "failed to accept cookies")
 	}
+	// Unlike other verify* functions, `verifyTabPageHistory` relies on what tab
+	// is opened when launching the browser so verify it first.
+	if err := verifyTabPageHistory(ctx, ui, br, kb, abcPageTitle); err != nil {
+		return err
+	}
 	if err := verifyBookmark(ctx, ui, br); err != nil {
 		return err
 	}
@@ -197,7 +221,10 @@ func VerifyProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State,
 	if err := verifyDownloads(ctx, ui, br); err != nil {
 		return err
 	}
-	if err := verifyExternalPageActivity(ctx, ui, br, kb, s); err != nil {
+	if err := verifyHistoryEntry(ctx, ui, br, abcPageTitle); err != nil {
+		return err
+	}
+	if err := verifyExternalPageActivity(ctx, ui, br, kb, s, abcPageURL, abcPageTitle); err != nil {
 		return err
 	}
 	return nil
@@ -424,11 +451,35 @@ func verifyDownloads(ctx context.Context, ui *uiauto.Context, br *browser.Browse
 	return nil
 }
 
+// setupHistoryEntry visits `pageURL` and makes sure that `pageTitle` appears on history page.
+func setupHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Browser, pageURL, pageTitle string) error {
+	// Visit the page and create a history entry.
+	conn, err := br.NewConn(ctx, pageURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open page")
+	}
+	defer conn.Close()
+	if err := waitForHistoryEntry(ctx, ui, br, pageTitle, true); err != nil {
+		return errors.Wrap(err, "failed to find history entry")
+	}
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close "+pageURL)
+	}
+
+	return nil
+}
+
+// verifyHistoryEntry verifies that `pageTitle` is present on history page.
+func verifyHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Browser, pageTitle string) error {
+	// Check that the browsing history contains the visited page.
+	if err := waitForHistoryEntry(ctx, ui, br, pageTitle, false); err != nil {
+		return errors.Wrap(err, "failed to find history entry")
+	}
+
+	return nil
+}
+
 const (
-	// Arbitrary page title.
-	pageTitle = "Alphabet Investor Relations"
-	// Arbitrary page URL.
-	pageURL = "https://abc.xyz"
 	// chrome://downloads page title.
 	downloadsPageTitle = "Downloads"
 	// Arbitrary cookie.
@@ -441,20 +492,15 @@ const (
 	indexedDBUserID = 123
 	// Arbitrary user email.
 	indexedDBUserEmail = "test@gmail.com"
-	// JS script to create an arbitrary indexedDB value.
 )
 
-// setupExternalPageActivity sets up an arbitrary user activity.
-func setupExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *browser.Browser, s *testing.State) error {
-	// Visit the page and create a history entry.
+// setupExternalPageActivity visits a page and stores data associated with the page with cookies, localStorage and indexedDB APIs.
+func setupExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *browser.Browser, s *testing.State, pageURL string) error {
 	conn, err := br.NewConn(ctx, pageURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to open page")
 	}
 	defer conn.Close()
-	if err := waitForHistoryEntry(ctx, ui, br, true); err != nil {
-		return errors.Wrap(err, "failed to find history entry")
-	}
 	// Set cookies on the page.
 	if err := conn.Call(ctx, nil, `(cookie) => document.cookie = cookie`, cookie); err != nil {
 		return errors.Wrap(err, "failed to set cookie")
@@ -471,19 +517,15 @@ func setupExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *brow
 	if err := conn.Call(ctx, nil, string(insertIndexedDBDataJS), indexedDBUserID, indexedDBUserEmail); err != nil {
 		return errors.Wrap(err, "insertIndexedDBDataJS failed")
 	}
-	// Navigate to the Downloads page to create a tab history.
-	if err := conn.Navigate(ctx, downloadsURL); err != nil {
-		return errors.Wrap(err, "failed to navigate to downloads page")
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close page")
 	}
+
 	return nil
 }
 
-// verifyExternalPageActivity verifies previously set up user activity.
-func verifyExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *browser.Browser, kb *input.KeyboardEventWriter, s *testing.State) error {
-	// Check that the browsing history contains the visited page.
-	if err := waitForHistoryEntry(ctx, ui, br, false); err != nil {
-		return errors.Wrap(err, "failed to find history entry")
-	}
+// verifyExternalPageActivity verifies previously set up user activity in setupExternalPageActivity.
+func verifyExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *browser.Browser, kb *input.KeyboardEventWriter, s *testing.State, pageURL, pageTitle string) error {
 	// Check if the cookie, localStorage and indexedDB values are set.
 	conn, err := br.NewConn(ctx, pageURL)
 	if err != nil {
@@ -516,19 +558,11 @@ func verifyExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *bro
 	if err := conn.CloseTarget(ctx); err != nil {
 		return errors.Wrap(err, "failed to close page")
 	}
-	// Check that going back in history once brings us to the page.
-	if err := kb.Accel(ctx, "Alt+Left"); err != nil {
-		return errors.Wrap(err, "failed to press alt+left")
-	}
-	title := nodewith.Name(pageTitle).First()
-	if err = ui.WaitUntilExists(title)(ctx); err != nil {
-		return errors.Wrap(err, "failed to go to the previously visited page")
-	}
 	return nil
 }
 
 // waitForHistoryEntry verifies that the page is listed on the History page.
-func waitForHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Browser, allowReload bool) error {
+func waitForHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Browser, pageTitle string, allowReload bool) error {
 	conn, err := br.NewConn(ctx, historyURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to open history page")
@@ -547,6 +581,45 @@ func waitForHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Br
 	}
 	if err := conn.CloseTarget(ctx); err != nil {
 		return errors.Wrap(err, "failed to close target")
+	}
+
+	return nil
+}
+
+// setupTabPageHistory opens a tab, visits pageURL first and visits the downloads page to create tab history.
+// The opened tab is left unclosed so that it can be verified after migration.
+func setupTabPageHistory(ctx context.Context, ui *uiauto.Context, br *browser.Browser, pageURL string) error {
+	conn, err := br.NewConn(ctx, pageURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open page "+pageURL)
+	}
+
+	// Navigate to the Downloads page to create a tab history.
+	if err := conn.Navigate(ctx, downloadsURL); err != nil {
+		return errors.Wrap(err, "failed to navigate to downloads page")
+	}
+
+	// Do not close the tab and return.
+	return nil
+}
+
+// verifyTabPageHistory verifies that the active tab has the tab history created by setupTabPageHistory.
+// The active tab should be the tab created by setupTabPageHistory when this function is called.
+func verifyTabPageHistory(ctx context.Context, ui *uiauto.Context, br *browser.Browser, kb *input.KeyboardEventWriter, pageTitle string) error {
+	// Verify that the currently opened page is the downloads page.
+	title := nodewith.Name(downloadsPageTitle).First()
+	if err := ui.WaitUntilExists(title)(ctx); err != nil {
+		return errors.Wrap(err, "download page is not present")
+	}
+
+	// Check that going back in history once brings us to the page with
+	// `pageTitle`.
+	if err := kb.Accel(ctx, "Alt+Left"); err != nil {
+		return errors.Wrap(err, "failed to press alt+left")
+	}
+	title = nodewith.Name(pageTitle).First()
+	if err := ui.WaitUntilExists(title)(ctx); err != nil {
+		return errors.Wrap(err, "failed to go to the previously visited page")
 	}
 
 	return nil
