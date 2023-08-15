@@ -213,7 +213,7 @@ func GetTopRowLayoutType(ctx context.Context, ew *KeyboardEventWriter) (TopRowLa
 
 // udevAttributes returns the attributes associated to a certain Linux udev device.
 func udevAttributes(ctx context.Context, devicePath string) (map[string]string, error) {
-	cmd := testexec.CommandContext(ctx, "udevadm", "info", "--attribute-walk", "property", "--name", devicePath)
+	cmd := testexec.CommandContext(ctx, "udevadm", "info", "--attribute-walk", "--name", devicePath)
 	out, err := cmd.Output()
 	if err != nil {
 		cmd.DumpLog(ctx)
