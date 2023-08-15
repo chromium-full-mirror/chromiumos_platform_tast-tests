@@ -62,6 +62,20 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseyeGaia",
 				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "bookworm_stable_gaia",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniStable,
+				Fixture:           "crostiniBookwormGaia",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "bookworm_unstable_gaia",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniUnstable,
+				Fixture:           "crostiniBookwormGaia",
+				Timeout:           7 * time.Minute,
 			},
 		},
 	})

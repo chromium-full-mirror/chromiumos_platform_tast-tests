@@ -72,6 +72,31 @@ func init() {
 		Data:            []string{GetContainerMetadataArtifact("bullseye", true), GetContainerRootfsArtifact("bullseye", true)},
 	})
 
+	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBookwormLargeContainerTablet",
+		Desc:            "Install Crostini with Bookworm in large container with apps installed in tablet mode",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniAppsFixture{deviceMode: devicemode.TabletMode},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout + restartCrostiniTimeout,
+		Parent:          "crostiniBookwormLargeContainer",
+		Vars:            append([]string{"keepState"}, screenshot.ScreenDiffVars...),
+		Data:            []string{GetContainerMetadataArtifact("bookworm", true), GetContainerRootfsArtifact("bookworm", true)},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBookwormLargeContainerClamshell",
+		Desc:            "Install Crostini with Bookworm in large container with apps installed in clamshell mode",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniAppsFixture{deviceMode: devicemode.ClamshellMode},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout + restartCrostiniTimeout,
+		Parent:          "crostiniBookwormLargeContainer",
+		Vars:            append([]string{"keepState"}, screenshot.ScreenDiffVars...),
+		Data:            []string{GetContainerMetadataArtifact("bookworm", true), GetContainerRootfsArtifact("bookworm", true)},
+	})
 }
 
 // crostiniAppsFixture holds the runtime state of the fixture.

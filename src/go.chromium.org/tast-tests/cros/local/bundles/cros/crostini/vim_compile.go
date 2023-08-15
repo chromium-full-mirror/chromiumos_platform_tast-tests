@@ -40,6 +40,12 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				Fixture:           "crostiniBullseye",
 				Timeout:           20 * time.Minute,
+			}, {
+				Name:              "bookworm",
+				ExtraData:         []string{"vim.tar.gz"},
+				ExtraSoftwareDeps: []string{"dlc"},
+				Fixture:           "crostiniBookworm",
+				Timeout:           20 * time.Minute,
 			},
 		},
 	})

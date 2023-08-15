@@ -53,6 +53,11 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				Fixture:           "crostiniBullseye",
 				Timeout:           1 * time.Hour,
+			}, {
+				Name:              "bookworm",
+				ExtraSoftwareDeps: []string{"dlc"},
+				Fixture:           "crostiniBookworm",
+				Timeout:           1 * time.Hour,
 			},
 		},
 	})

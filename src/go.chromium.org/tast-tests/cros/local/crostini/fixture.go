@@ -162,6 +162,20 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBookworm",
+		Desc:            "Install Crostini with Bookworm",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBookworm},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInForCrostini",
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBusterGaia",
 		Desc:            "Install Crostini with Buster in Chrome logged in with Gaia",
 		Contacts:        []string{"clumptini+oncall@google.com"},
@@ -190,8 +204,22 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBookwormGaia",
+		Desc:            "Install Crostini with Bookworm in Chrome logged in with Gaia",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBookworm},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInWithGaiaForCrostini",
+		Vars:            []string{"keepState", "ui.gaiaPoolDefault"},
+		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBusterLargeContainer",
-		Desc:            "Install Crostini with Bullseye in large container with apps installed",
+		Desc:            "Install Crostini with Buster in large container with apps installed",
 		Contacts:        []string{"clumptini+oncall@google.com"},
 		Impl:            &crostiniFixture{preData: preTestDataBusterLC},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
@@ -218,6 +246,20 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBookwormLargeContainer",
+		Desc:            "Install Crostini with Bookworm in large container with apps installed",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBookwormLC},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInForCrostiniWithoutArc",
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bookworm", true), GetContainerRootfsArtifact("bookworm", true)},
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBullseyeWithLacros",
 		Desc:            "Install Crostini with Bullseye and enable Lacros",
 		Contacts:        []string{"clumptini+oncall@google.com"},
@@ -229,6 +271,20 @@ func init() {
 		Parent:          "chromeLoggedInForCrostiniWithLacros",
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBookwormWithLacros",
+		Desc:            "Install Crostini with Bookworm and enable Lacros",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBookworm},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInForCrostiniWithLacros",
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -258,6 +314,20 @@ func init() {
 		Parent:          "chromeLoggedInForCrostiniLxdNext",
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBookwormWithLxdNext",
+		Desc:            "Install Crostini with Bookworm and LXD 5.0",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBookworm},
+		SetUpTimeout:    installationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInForCrostiniLxdNext",
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -322,6 +392,11 @@ var preTestDataBullseye = &preTestData{
 	debianVersion: vm.DebianBullseye,
 }
 
+var preTestDataBookworm = &preTestData{
+	container:     normal,
+	debianVersion: vm.DebianBookworm,
+}
+
 var preTestDataBusterLC = &preTestData{
 	container:     largeContainer,
 	debianVersion: vm.DebianBuster,
@@ -330,6 +405,11 @@ var preTestDataBusterLC = &preTestData{
 var preTestDataBullseyeLC = &preTestData{
 	container:     largeContainer,
 	debianVersion: vm.DebianBullseye,
+}
+
+var preTestDataBookwormLC = &preTestData{
+	container:     largeContainer,
+	debianVersion: vm.DebianBookworm,
 }
 
 // Differ returns an instance implementing the interface screenshot.Differ.

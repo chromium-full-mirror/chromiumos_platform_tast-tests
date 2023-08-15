@@ -57,6 +57,8 @@ const (
 	DebianBuster ContainerDebianVersion = "buster"
 	// DebianBullseye refers to the "bullseye" distribution of debian (a.k.a. debian 11).
 	DebianBullseye ContainerDebianVersion = "bullseye"
+	// DebianBookworm refers to the "bookworm" distribution of debian (a.k.a. debian 12).
+	DebianBookworm ContainerDebianVersion = "bookworm"
 )
 
 // ContainerArch represents the architecture of the container

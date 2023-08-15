@@ -40,6 +40,22 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniAppUnstable,
 				Fixture:           "crostiniBullseyeLargeContainer",
 				Timeout:           15 * time.Minute,
+			}, {
+				Name:              "bookworm_stable",
+				ExtraAttr:         []string{"informational"},
+				ExtraData:         []string{"hello-world-amd64.tar", "hello-world-arm64.tar"},
+				ExtraSoftwareDeps: []string{"vm_host", "dlc"},
+				ExtraHardwareDeps: crostini.CrostiniAppStable,
+				Fixture:           "crostiniBookwormLargeContainer",
+				Timeout:           15 * time.Minute,
+			}, {
+				Name:              "bookworm_unstable",
+				ExtraAttr:         []string{"informational"},
+				ExtraData:         []string{"hello-world-amd64.tar", "hello-world-arm64.tar"},
+				ExtraSoftwareDeps: []string{"vm_host", "dlc"},
+				ExtraHardwareDeps: crostini.CrostiniAppUnstable,
+				Fixture:           "crostiniBookwormLargeContainer",
+				Timeout:           15 * time.Minute,
 			},
 		},
 	})

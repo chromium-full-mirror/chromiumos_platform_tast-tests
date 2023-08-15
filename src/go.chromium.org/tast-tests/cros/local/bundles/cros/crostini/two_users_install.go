@@ -56,6 +56,20 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Timeout:           14 * time.Minute,
+			}, {
+				Name:              "bookworm_stable",
+				ExtraAttr:         []string{"informational"},
+				ExtraData:         []string{crostini.GetContainerMetadataArtifact("bookworm", false), crostini.GetContainerRootfsArtifact("bookworm", false)},
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniStable,
+				Timeout:           14 * time.Minute,
+			}, {
+				Name:              "bookworm_unstable",
+				ExtraAttr:         []string{"informational"},
+				ExtraData:         []string{crostini.GetContainerMetadataArtifact("bookworm", false), crostini.GetContainerRootfsArtifact("bookworm", false)},
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniUnstable,
+				Timeout:           14 * time.Minute,
 			},
 		},
 	})

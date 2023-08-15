@@ -72,6 +72,28 @@ func init() {
 					Paste: guestos.WaylandPasteConfig,
 				},
 			}, {
+				Name:              "wayland_to_wayland_bookworm_stable",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniStable,
+				Fixture:           "crostiniBookworm",
+				Timeout:           7 * time.Minute,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.WaylandCopyConfig,
+					Paste: guestos.WaylandPasteConfig,
+				},
+			}, {
+				Name:              "wayland_to_wayland_bookworm_unstable",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniUnstable,
+				Fixture:           "crostiniBookworm",
+				Timeout:           7 * time.Minute,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.WaylandCopyConfig,
+					Paste: guestos.WaylandPasteConfig,
+				},
+			}, {
 				Name:              "wayland_to_x11_buster_stable",
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"dlc"},
@@ -109,6 +131,28 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseye",
+				Timeout:           7 * time.Minute,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.WaylandCopyConfig,
+					Paste: guestos.X11PasteConfig,
+				},
+			}, {
+				Name:              "wayland_to_x11_bookworm_stable",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniStable,
+				Fixture:           "crostiniBookworm",
+				Timeout:           7 * time.Minute,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.WaylandCopyConfig,
+					Paste: guestos.X11PasteConfig,
+				},
+			}, {
+				Name:              "wayland_to_x11_bookworm_unstable",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniUnstable,
+				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
 				Val: guestos.CopyPasteConfig{
 					Copy:  guestos.WaylandCopyConfig,
@@ -158,6 +202,28 @@ func init() {
 					Paste: guestos.WaylandPasteConfig,
 				},
 			}, {
+				Name:              "x11_to_wayland_bookworm_stable",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniStable,
+				Fixture:           "crostiniBookworm",
+				Timeout:           7 * time.Minute,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.X11CopyConfig,
+					Paste: guestos.WaylandPasteConfig,
+				},
+			}, {
+				Name:              "x11_to_wayland_bookworm_unstable",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniUnstable,
+				Fixture:           "crostiniBookworm",
+				Timeout:           7 * time.Minute,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.X11CopyConfig,
+					Paste: guestos.WaylandPasteConfig,
+				},
+			}, {
 				Name:              "x11_to_x11_buster_stable",
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"dlc"},
@@ -195,6 +261,28 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseye",
+				Timeout:           7 * time.Minute,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.X11CopyConfig,
+					Paste: guestos.X11PasteConfig,
+				},
+			}, {
+				Name:              "x11_to_x11_bookworm_stable",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniStable,
+				Fixture:           "crostiniBookworm",
+				Timeout:           7 * time.Minute,
+				Val: guestos.CopyPasteConfig{
+					Copy:  guestos.X11CopyConfig,
+					Paste: guestos.X11PasteConfig,
+				},
+			}, {
+				Name:              "x11_to_x11_bookworm_unstable",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniUnstable,
+				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
 				Val: guestos.CopyPasteConfig{
 					Copy:  guestos.X11CopyConfig,
