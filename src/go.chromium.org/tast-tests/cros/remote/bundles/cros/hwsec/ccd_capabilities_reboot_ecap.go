@@ -87,8 +87,13 @@ func CCDCapabilitiesRebootECAP(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set `RebootECAP` capability state: ", err)
 	}
 
-	if err := verifyGscEcrstCommand(ctx, s, userParams.commandsSucceedWhenCcdOpen); err != nil {
-		s.Fatal("Failed to verify if the EC can be reset when CCD open: ", err)
+	// `ecrst pulse` is a safe command, so should always succeed.
+	if err := verifyGscEcrstCommand(ctx, s, true, true); err != nil {
+		s.Fatal("Failed to verify if the EC can be reset (using pulse) when CCD open: ", err)
+	}
+
+	if err := verifyGscEcrstCommand(ctx, s, false, userParams.commandsSucceedWhenCcdOpen); err != nil {
+		s.Fatal("Failed to verify if the EC can be reset (using on/off) when CCD open: ", err)
 	}
 
 	if err := verifyGscSysrstCommand(ctx, s, userParams.commandsSucceedWhenCcdOpen); err != nil {
@@ -106,8 +111,13 @@ func CCDCapabilitiesRebootECAP(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	if err := verifyGscEcrstCommand(ctx, s, userParams.commandsSucceedWhenCcdLocked); err != nil {
-		s.Fatal("Failed to verify if the EC can be reset when CCD locked: ", err)
+	// `ecrst pulse` is a safe command, so should always succeed.
+	if err := verifyGscEcrstCommand(ctx, s, true, true); err != nil {
+		s.Fatal("Failed to verify if the EC can be reset (using pulse) when CCD locked: ", err)
+	}
+
+	if err := verifyGscEcrstCommand(ctx, s, false, userParams.commandsSucceedWhenCcdLocked); err != nil {
+		s.Fatal("Failed to verify if the EC can be reset (using on/off) when CCD locked: ", err)
 	}
 
 	if err := verifyGscSysrstCommand(ctx, s, userParams.commandsSucceedWhenCcdLocked); err != nil {
@@ -115,21 +125,27 @@ func CCDCapabilitiesRebootECAP(ctx context.Context, s *testing.State) {
 	}
 }
 
-func verifyGscEcrstCommand(ctx context.Context, s *testing.State, expectSuccess bool) error {
+func verifyGscEcrstCommand(ctx context.Context, s *testing.State, usePulse, expectSuccess bool) error {
 	h := s.FixtValue().(*fixture.Value).Helper
 	oldID, err := dut.ReadBootID(ctx, h.DUT.Conn())
 	if err != nil {
 		return errors.Wrap(err, "failed to read boot id")
 	}
 
-	if err := runGscEcrstPulseCommand(ctx, s, expectSuccess); err != nil {
-		return errors.Wrap(err, "failed to run GSC ecrst pulse command")
+	if usePulse {
+		if err := runGscEcrstPulseCommand(ctx, s, expectSuccess); err != nil {
+			return errors.Wrap(err, "failed to run GSC ecrst pulse command")
+		}
+	} else {
+		if err := runGscEcrstOnOffCommand(ctx, s, expectSuccess); err != nil {
+			return errors.Wrap(err, "failed to run GSC ecrst on/off command")
+		}
 	}
 
 	// Make sure the DUT has booted before trying to connect again
-	testing.ContextLog(ctx, "Waiting to ensure DUT booted after `ecrst` pulse")
+	testing.ContextLog(ctx, "Waiting to ensure DUT booted after `ecrst`")
 	if err := h.EnsureDUTBooted(ctx); err != nil {
-		return errors.Wrap(err, "failed to ensure DUT booted after running `ecrst pulse` GSC command")
+		return errors.Wrap(err, "failed to ensure DUT booted after running `ecrst` GSC command")
 	}
 	testing.ContextLog(ctx, "DUT booted successfully")
 
@@ -188,7 +204,7 @@ func verifyGscSysrstCommand(ctx context.Context, s *testing.State, expectSuccess
 func runGscEcrstPulseCommand(ctx context.Context, s *testing.State, expectSuccess bool) error {
 	h := s.FixtValue().(*fixture.Value).Helper
 	command := "ecrst pulse 1000"
-	regex := "Pulsing EC reset|"
+	regex := "Pulsing EC reset|RBOX: assert EC_RST_L"
 	failureRegex := "Access Denied"
 	if !expectSuccess {
 		regex = failureRegex
@@ -200,13 +216,45 @@ func runGscEcrstPulseCommand(ctx context.Context, s *testing.State, expectSucces
 	return nil
 }
 
+// runGscEcrstOnOffCommand attempts to call the GSC `ecrst on` command, sleep
+// for 1000ms, then call the `ecrst off` command. An `expectSuccess` parameter
+// is required so success can be verified. An error is returned if this function
+// fails.
+func runGscEcrstOnOffCommand(ctx context.Context, s *testing.State, expectSuccess bool) error {
+	h := s.FixtValue().(*fixture.Value).Helper
+	command := "ecrst on"
+	regex := "EC_RST_L is asserted|RBOX: assert EC_RST_L"
+	failureRegex := "Access Denied"
+	if !expectSuccess {
+		regex = failureRegex
+	}
+
+	if err := h.Servo.CheckGSCCommandOutput(ctx, command, []string{regex}); err != nil {
+		return errors.Wrap(err, "failed to match GSC command output, expected command `"+command+"` to succeed = "+strconv.FormatBool(expectSuccess))
+	}
+
+	testing.Sleep(ctx, 1*time.Second) // GoBigSleepLint: hold EC in reset
+
+	command = "ecrst off"
+	regex = "EC_RST_L is deasserted|RBOX: deassert EC_RST_L"
+	if !expectSuccess {
+		regex = failureRegex
+	}
+
+	if err := h.Servo.CheckGSCCommandOutput(ctx, command, []string{regex}); err != nil {
+		return errors.Wrap(err, "failed to match GSC command output, expected command `"+command+"` to succeed = "+strconv.FormatBool(expectSuccess))
+	}
+
+	return nil
+}
+
 // runGscSysrstPulseCommand attempts to call the GSC sysrst command with an
 // argument to pulse for 1000ms. An `expectSuccess` parameter is required so
 // success can be verified. An error is returned if this function fails.
 func runGscSysrstPulseCommand(ctx context.Context, s *testing.State, expectSuccess bool) error {
 	h := s.FixtValue().(*fixture.Value).Helper
 	command := "sysrst pulse 1000"
-	regex := "Pulsing AP reset|"
+	regex := "Pulsing AP reset|PLT_RST_L ASSERTED"
 	failureRegex := "Access Denied"
 	if !expectSuccess {
 		regex = failureRegex
