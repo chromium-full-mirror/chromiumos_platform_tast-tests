@@ -15,12 +15,17 @@ import (
 )
 
 type bootPerformanceInfo struct {
-	BootUpSeconds            float64 `json:"boot_up_seconds"`
-	BootUpTimestamp          float64 `json:"boot_up_timestamp"`
-	ShutdownSeconds          float64 `json:"shutdown_seconds"`
-	ShutdownTimestamp        float64 `json:"shutdown_timestamp"`
-	ShutdownReason           string  `json:"shutdown_reason"`
-	TpmInitializationSeconds float64 `json:"tpm_initialization_seconds"`
+	BootUpSeconds              float64 `json:"boot_up_seconds"`
+	BootUpTimestamp            float64 `json:"boot_up_timestamp"`
+	ShutdownSeconds            float64 `json:"shutdown_seconds"`
+	ShutdownTimestamp          float64 `json:"shutdown_timestamp"`
+	ShutdownReason             string  `json:"shutdown_reason"`
+	TpmInitializationSeconds   float64 `json:"tpm_initialization_seconds"`
+	PowerOnToKernelSeconds     float64 `json:"power_on_to_kernel_seconds"`
+	KernelToPreStartupSeconds  float64 `json:"kernel_to_pre_startup_seconds"`
+	KernelToPostStartupSeconds float64 `json:"kernel_to_post_startup_seconds"`
+	StartupToChromeExecSeconds float64 `json:"startup_to_chrome_exec_seconds"`
+	ChromeExecToLoginSeconds   float64 `json:"chrome_exec_to_login_seconds"`
 }
 
 func init() {
@@ -48,16 +53,31 @@ func getBootPerformanceData(ctx context.Context, outDir string) (bootPerformance
 
 func validateBootPerformanceData(bootPerf *bootPerformanceInfo) error {
 	if bootPerf.BootUpSeconds < 0.5 {
-		return errors.New("Failed. It is impossible that boot_up_seconds is less than 0.5")
+		return errors.New("it is impossible that boot_up_seconds is less than 0.5")
 	}
 	if bootPerf.BootUpTimestamp < 0.5 {
-		return errors.New("Failed. It is impossible that boot_up_timestamp is less than 0.5")
+		return errors.New("it is impossible that boot_up_timestamp is less than 0.5")
 	}
 	if len(bootPerf.ShutdownReason) == 0 {
-		return errors.New("Failed. shutdown_reason should not be empty string")
+		return errors.New("shutdown_reason should not be empty string")
 	}
 	if bootPerf.TpmInitializationSeconds < 0.000001 {
-		return errors.New("Failed. It is impossible that tpm_initialization_seconds is less than 0.000001")
+		return errors.New("it is impossible that tpm_initialization_seconds is less than 0.000001")
+	}
+	if bootPerf.PowerOnToKernelSeconds < 0.000001 {
+		return errors.New("it is impossible power_on_to_kernel_seconds is less than 0.000001")
+	}
+	if bootPerf.KernelToPreStartupSeconds < 0.000001 {
+		return errors.New("it is impossible kernel_to_pre_startup_seconds is less than 0.000001")
+	}
+	if bootPerf.KernelToPostStartupSeconds < 0.000001 {
+		return errors.New("it is impossible kernel_to_post_startup_seconds is less than 0.000001")
+	}
+	if bootPerf.StartupToChromeExecSeconds < 0.000001 {
+		return errors.New("it is impossible startup_to_chrome_exec_seconds is less than 0.000001")
+	}
+	if bootPerf.ChromeExecToLoginSeconds < 0.000001 {
+		return errors.New("it is impossible chrome_exec_to_login_seconds is less than 0.000001")
 	}
 
 	return nil
