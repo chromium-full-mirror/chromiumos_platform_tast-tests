@@ -106,6 +106,8 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 			}
 			s.Fatal("Modem not registered: ", err)
 		}
+		// Set the multiplex property
+		mmApnInfo[mmconst.BearerPropertyMultiplex] = mmconst.BearerMultiplexSupportRequested
 		s.Log("Connecting with ", mmApnInfo)
 
 		if _, err = modemmanager.Connect(ctx, simpleModem, mmApnInfo); err != nil {
