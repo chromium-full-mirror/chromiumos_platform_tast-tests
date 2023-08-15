@@ -28,5 +28,5 @@ func ScrollDownFor(ctx context.Context, tpw *input.TrackpadEventWriter, tw *inpu
 			return err
 		}
 	}
-	return nil
+	return tw.End()
 }
