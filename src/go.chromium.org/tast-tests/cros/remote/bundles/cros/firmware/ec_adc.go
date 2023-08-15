@@ -6,9 +6,13 @@ package firmware
 
 import (
 	"context"
+	"regexp"
 	"strconv"
+	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -27,6 +31,7 @@ func init() {
 		Attr:         []string{},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		Timeout:      10 * time.Minute,
 	})
 }
 
@@ -61,21 +66,47 @@ func ECADC(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	s.Logf("Reading EC internal temperature for %d times", readCount)
+	s.Logf("Reading EC temperature sensors for %d iterations", readCount)
 	for i := 1; i <= readCount; i++ {
-		ecTemperatureOut, err := h.Servo.RunECCommandGetOutput(ctx, "temps", []string{`ECInternal\s+: (\d+) K`})
+		ecTemperatureOut, err := h.Servo.RunECCommandGetOutput(ctx, "temps", []string{`.*>`})
 		if err != nil {
-			s.Fatal("Failed to read EC internal temperature temperature: ", err)
+			s.Fatal("Failed to read EC temperature sensors: ", err)
 		}
-		ecTemperatureStr := ecTemperatureOut[0][1]
-		ecTemperature, err := strconv.ParseInt(ecTemperatureStr, 10, 64)
+		ecTempsParsed, err := parseTempsOutput(ctx, ecTemperatureOut[0][0])
 		if err != nil {
-			s.Fatalf("Failed to parse EC internal temperature (%s) as int: %s",
-				ecTemperatureStr,
+			s.Fatalf("Failed to parse temperature reading (%s): %s",
+				ecTemperatureOut[0][1],
 				err)
 		}
-		if ecTemperature > maxECTemp || ecTemperature < minECTemp {
-			s.Fatal("Abnormal EC temperature: ", ecTemperature)
+		for _, ecTemperature := range ecTempsParsed {
+			if ecTemperature.TempKelvin > maxECTemp || ecTemperature.TempKelvin < minECTemp {
+				s.Fatalf("Abnormal EC temperature: %+v", ecTemperature)
+			}
 		}
 	}
+}
+
+type temp struct {
+	Name       string
+	TempKelvin int64
+}
+
+var tempRe = regexp.MustCompile(`(\S+)\s*:\s*(\d+) K`)
+
+func parseTempsOutput(ctx context.Context, output string) ([]temp, error) {
+	var result []temp
+	for _, line := range strings.Split(output, "\r\n") {
+		m := tempRe.FindStringSubmatch(line)
+		if m != nil {
+			k, err := strconv.ParseInt(m[2], 10, 64)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to parse int")
+			}
+			result = append(result, temp{
+				Name:       m[1],
+				TempKelvin: k,
+			})
+		}
+	}
+	return result, nil
 }
