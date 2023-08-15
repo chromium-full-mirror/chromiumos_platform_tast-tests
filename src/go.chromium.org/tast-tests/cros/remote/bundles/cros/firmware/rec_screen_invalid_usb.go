@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"time"
 
@@ -79,14 +78,17 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 	if err := h.WaitDUTConnectDuringBootFromUSB(ctx, true); err != nil {
 		s.Fatal("Failed to boot from the USB: ", err)
 	}
-	screenNames := identifyFwScreens(h)
-	verifyFwLog := firmware.ProcessLastBootFwLog{
-		SaveLog:       true,
-		SaveLogPath:   filepath.Join(s.OutDir(), "firmware.log"),
-		VerifyScreens: screenNames,
+
+	match, err := h.Reporter.CheckDisplayedScreens(ctx, identifyFwScreens(h))
+	if err != nil {
+		s.Fatal("Failed to verify firmware screen data: ", err)
 	}
-	if err := h.ScanLastBootFwLog(ctx, verifyFwLog); err != nil {
-		s.Fatal("Failed to scan last boot fw log: ", err)
+	if !match {
+		saveLogPath := filepath.Join(s.OutDir(), "firmware.log")
+		if err := h.SaveCBMEMLogs(ctx, saveLogPath); err != nil {
+			s.Fatal("Failed to save firmware log while matching firmware screen data: ", err)
+		}
+		s.Fatal("Failed to find matching firmware screen data")
 	}
 }
 
@@ -174,11 +176,11 @@ func resetDUT(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-func identifyFwScreens(h *firmware.Helper) []string {
-	var expFwScreensInOrder []fwCommon.FwScreenID
+func identifyFwScreens(h *firmware.Helper) []fwCommon.FwScreenID {
+	var expFWScreensInOrder []fwCommon.FwScreenID
 	switch h.Config.ModeSwitcherType {
 	case firmware.MenuSwitcher:
-		expFwScreensInOrder = []fwCommon.FwScreenID{
+		expFWScreensInOrder = []fwCommon.FwScreenID{
 			fwCommon.RecoverySelect,
 			fwCommon.RecoveryDiskStep1,
 			fwCommon.RecoveryDiskStep2,
@@ -187,15 +189,11 @@ func identifyFwScreens(h *firmware.Helper) []string {
 			fwCommon.RecoverySelect,
 		}
 	default:
-		expFwScreensInOrder = []fwCommon.FwScreenID{
+		expFWScreensInOrder = []fwCommon.FwScreenID{
 			fwCommon.LegacyRecoveryInsert,
 			fwCommon.LegacyRecoveryNoGood,
 			fwCommon.LegacyRecoveryInsert,
 		}
 	}
-	var expMatches []string
-	for _, match := range expFwScreensInOrder {
-		expMatches = append(expMatches, fmt.Sprintf(`(vb2ex_display_ui|vboot_draw_|ui_display).*screen=0x%x`, match))
-	}
-	return expMatches
+	return expFWScreensInOrder
 }

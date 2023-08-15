@@ -5,11 +5,9 @@
 package firmware
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -18,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -114,41 +111,16 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 	}
 	for idx := 1; idx <= usbBusNum; idx++ {
 		s.Logf("Verifying resume from suspend for usb bus %d", idx)
-		if err := checkUSBSuspendResume(ctx, h, idx, out); err != nil {
+		var usbEvents []string
+		for _, event := range []string{"usb_dev_suspend", "usb_dev_resume"} {
+			reCallAction := `(` + fmt.Sprintf(`usb%d:.*calling\s*%s`, idx, event) +
+				`|` + fmt.Sprintf(`calling\s*usb%d.*%s`, idx, event) + `)`
+			reActionSuccess := `(` + fmt.Sprintf(`usb%d:.*%s.*returned\s*0`, idx, event) +
+				`|` + fmt.Sprintf(`call\s*usb%d.*returned\s*0`, idx) + `)`
+			usbEvents = append(usbEvents, reCallAction, reActionSuccess)
+		}
+		if err := h.ScanWithExpectedSequenceInSource(ctx, out, usbEvents); err != nil {
 			s.Fatalf("While checking for usb bus %d: %v", idx, err)
 		}
 	}
-}
-
-// checkUSBSuspendResume checks the kernel message file, and scans for the associated usb
-// events for a specified port in the following order: usb_dev_suspend, and usb_dev_resume.
-func checkUSBSuspendResume(ctx context.Context, h *firmware.Helper, usbBusNum int, log string) error {
-	var usbEvents []string
-	for _, event := range []string{"usb_dev_suspend", "usb_dev_resume"} {
-		reCallAction := `(` + fmt.Sprintf(`usb%d:.*calling\s*%s`, usbBusNum, event) +
-			`|` + fmt.Sprintf(`calling\s*usb%d.*%s`, usbBusNum, event) + `)`
-		reActionSuccess := `(` + fmt.Sprintf(`usb%d:.*%s.*returned\s*0`, usbBusNum, event) +
-			`|` + fmt.Sprintf(`call\s*usb%d.*returned\s*0`, usbBusNum) + `)`
-		usbEvents = append(usbEvents, reCallAction, reActionSuccess)
-	}
-	// Scan for the kernel message file, and expect to find usb_dev_suspend
-	// first, before reaching usb_dev_resume. Pop out the event found from usbEvents.
-	scanner := bufio.NewScanner(strings.NewReader(log))
-	for scanner.Scan() {
-		if len(usbEvents) > 0 {
-			if match := regexp.MustCompile(usbEvents[0]).FindStringSubmatch(scanner.Text()); match != nil {
-				testing.ContextLogf(ctx, "Found usb event: %s", match[0])
-				usbEvents = usbEvents[1:]
-			}
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return errors.Wrap(err, "failed to scan kernal message file")
-	}
-	// Verify all usb events were found. Namely, calling usb_dev_suspend and usb_dev_resume
-	// were both successful.
-	if len(usbEvents) != 0 {
-		return errors.Errorf("got %d usb events not found, check test log for details", len(usbEvents))
-	}
-	return nil
 }

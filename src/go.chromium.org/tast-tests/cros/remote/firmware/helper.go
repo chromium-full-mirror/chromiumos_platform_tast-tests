@@ -1695,38 +1695,15 @@ func (h *Helper) ResetServoEthernetDongle(ctx context.Context) error {
 	return h.Servo.ToggleOffOn(ctx, servo.DutEthPwrEn)
 }
 
-// ProcessLastBootFwLog stores instructions for processing a firmware log.
-type ProcessLastBootFwLog struct {
-	SaveLog       bool
-	SaveLogPath   string
-	VerifyScreens []string
-}
-
-// ScanLastBootFwLog scans the firmware log relevant to the dut's last boot-up.
-func (h *Helper) ScanLastBootFwLog(ctx context.Context, data ProcessLastBootFwLog) error {
-	out, err := h.DUT.Conn().CommandContext(ctx, "cbmem", "-1").Output(ssh.DumpLogOnError)
+// SaveCBMEMLogs saves the CBMEM logs from last boot-up.
+func (h *Helper) SaveCBMEMLogs(ctx context.Context, saveLogPath string) error {
+	out, err := h.Reporter.GetCBMEMLogs(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to run cbmem command")
 	}
-	if data.SaveLog {
-		if err := ioutil.WriteFile(data.SaveLogPath, out, 0666); err != nil {
-			return errors.Wrapf(err, "failed to write firmware log to %s", data.SaveLogPath)
-		}
-	}
-	scanner := bufio.NewScanner(strings.NewReader(string(out)))
-	for scanner.Scan() {
-		if len(data.VerifyScreens) > 0 {
-			if match := regexp.MustCompile(data.VerifyScreens[0]).FindStringSubmatch(scanner.Text()); match != nil {
-				testing.ContextLogf(ctx, "Found %q", match[0])
-				data.VerifyScreens = data.VerifyScreens[1:]
-			}
-		}
-	}
-	if len(data.VerifyScreens) != 0 {
-		return errors.Errorf("unable to find %q in firmware log", data.VerifyScreens[0])
-	}
-	if err := scanner.Err(); err != nil {
-		return errors.Wrap(err, "failed to scan firmware log")
+
+	if err := ioutil.WriteFile(saveLogPath, []byte(out), 0666); err != nil {
+		return errors.Wrapf(err, "failed to write firmware log to %s", saveLogPath)
 	}
 	return nil
 }
@@ -1737,7 +1714,7 @@ func (h *Helper) RestartUI(ctx context.Context) error {
 	stderr, _ := cmd.StderrPipe()
 
 	if err := cmd.Start(); err != nil {
-		return errors.Wrapf(err, "failed to restart ui")
+		return errors.Wrap(err, "failed to restart ui")
 	}
 	scanner := bufio.NewScanner(stderr)
 	errMsg := ""
