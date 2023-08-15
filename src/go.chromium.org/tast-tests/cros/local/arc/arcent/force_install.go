@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -159,18 +160,23 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 		emptyPlayStoreText = "No results found."
 	)
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
+	attempts := 0
+
 	assertState := func(ctx context.Context, isEmpty bool, message string) error {
 		if isEmpty == shouldBeEmpty {
 			return nil
 		}
 
+		faillog.SaveScreenshotToFileOnError(cleanupCtx, cr, outDir, func() bool { return true }, fmt.Sprintf("play_store_%d_%d.png", runID, attempts))
+		a.DumpUIHierarchyOnError(cleanupCtx, outDir, func() bool { return true })
+
 		testing.ContextLog(ctx, message)
 		return errors.New(message)
 	}
-
-	defer faillog.SaveScreenshotToFileOnError(ctx, cr, outDir, func() bool {
-		return retErr != nil
-	}, fmt.Sprintf("play_store_%d.png", runID))
 
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		// if GMS Core updates after launch, it can cause Play Store to be closed so we have to
@@ -179,9 +185,11 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 		if err != nil {
 			return err
 		}
-		defer act.Close(ctx)
+		defer act.Close(cleanupCtx)
 
 		err = testing.Poll(ctx, func(ctx context.Context) error {
+			attempts++
+
 			if running, err := act.IsRunning(ctx); err != nil {
 				return testing.PollBreak(err)
 			} else if !running {
@@ -195,6 +203,7 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 
 			// This is to ensure that we're looking at a normal asset browser UI.
 			if err := d.Object(ui.TextMatches(searchBarTextStart)).Exists(ctx); err != nil {
+				testing.ContextLog(ctx, "Search bar is missing")
 				return errors.Wrap(err, "Search bar is missing")
 			}
 
@@ -210,13 +219,13 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 
 			// Play Store is considered to be empty when we didn't find an app blurb or app card.
 			return assertState(ctx, true, "no app in the catalog")
-		}, &testing.PollOptions{Interval: time.Second, Timeout: 30 * time.Second})
+		}, &testing.PollOptions{Interval: 5 * time.Second, Timeout: 30 * time.Second})
 
 		if err != nil {
 			playstore.Close(ctx, a)
 		}
 		return err
-	}, &testing.PollOptions{Interval: 10 * time.Second})
+	}, &testing.PollOptions{Interval: 5 * time.Second})
 }
 
 // IsAnyAppInCatalog finds an app icon in Play Store catalog view.
