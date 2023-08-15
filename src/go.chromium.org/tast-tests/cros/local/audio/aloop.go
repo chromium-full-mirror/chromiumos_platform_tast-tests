@@ -22,24 +22,27 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// AloopLoadedTimeout defines the timeout for AloopLoadedFixture
+const AloopLoadedTimeout = 20 * time.Second
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.AloopLoaded,
 		Desc:            "Configure the ALSA loopback device for CRAS",
 		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
-		Impl:            &aloopLoadedFixture{},
-		SetUpTimeout:    20 * time.Second,
-		TearDownTimeout: 20 * time.Second,
-		PreTestTimeout:  20 * time.Second,
+		Impl:            &AloopLoadedFixture{},
+		SetUpTimeout:    AloopLoadedTimeout,
+		TearDownTimeout: AloopLoadedTimeout,
+		PreTestTimeout:  AloopLoadedTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.StereoAloopLoaded,
 		Desc:            "Configure the ALSA loopback device as a stereo device for CRAS",
 		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
-		Impl:            &aloopLoadedFixture{Channels: 2},
-		SetUpTimeout:    20 * time.Second,
-		TearDownTimeout: 20 * time.Second,
-		PreTestTimeout:  20 * time.Second,
+		Impl:            &AloopLoadedFixture{Channels: 2},
+		SetUpTimeout:    AloopLoadedTimeout,
+		TearDownTimeout: AloopLoadedTimeout,
+		PreTestTimeout:  AloopLoadedTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.AloopLoadedWithoutUI,
@@ -47,9 +50,9 @@ func init() {
 		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		Impl:            uiStoppedFixture{},
 		Parent:          fixture.AloopLoaded,
-		SetUpTimeout:    20 * time.Second,
-		TearDownTimeout: 20 * time.Second,
-		PreTestTimeout:  20 * time.Second,
+		SetUpTimeout:    AloopLoadedTimeout,
+		TearDownTimeout: AloopLoadedTimeout,
+		PreTestTimeout:  AloopLoadedTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.StereoAloopLoadedWithoutUI,
@@ -57,9 +60,9 @@ func init() {
 		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		Impl:            uiStoppedFixture{},
 		Parent:          fixture.StereoAloopLoaded,
-		SetUpTimeout:    20 * time.Second,
-		TearDownTimeout: 20 * time.Second,
-		PreTestTimeout:  20 * time.Second,
+		SetUpTimeout:    AloopLoadedTimeout,
+		TearDownTimeout: AloopLoadedTimeout,
+		PreTestTimeout:  AloopLoadedTimeout,
 	})
 }
 
@@ -100,7 +103,7 @@ func unloadAloop(ctx context.Context) error {
 	return modprobeError
 }
 
-// SetupLoopback sets the playback and capture nodes to the ALSA loopback via the Quick Settings UI .
+// SetupLoopback sets the playback and capture nodes to the ALSA loopback via the Quick Settings UI.
 func SetupLoopback(ctx context.Context, cr *chrome.Chrome) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -169,14 +172,19 @@ SectionDevice."Loopback Capture".0 {
 }
 `
 
-type aloopLoadedFixture struct {
+// AloopLoadedFixture is a fixture to load snd-aloop kernel module.
+// Take note that this fixture doesn't select the output/input node.
+// We need to call internal.SelectIODevices to select the output/input node
+// via D-Bus, or SetupLoopback to select the output/input node via Quick Settings UI.
+type AloopLoadedFixture struct {
 	// Channels of the aloop device. 0 to not change the existing configuration.
 	Channels int
 
 	originalUCM []byte
 }
 
-func (f *aloopLoadedFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+// SetUp the AloopLoadedFixture
+func (f *AloopLoadedFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	if f.Channels != 0 {
 		s.Logf("Replacing %s with channels=%d", aloopUCMPath, f.Channels)
 		var ucmContent bytes.Buffer
@@ -196,10 +204,12 @@ func (f *aloopLoadedFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		s.Fatal("Cannot load aloop: ", err)
 	}
 
-	return nil
+	// Provides pass-through for the value yielded by the parent fixture.
+	return s.ParentValue()
 }
 
-func (f *aloopLoadedFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+// TearDown the AloopLoadedFixture
+func (f *AloopLoadedFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if f.Channels != 0 {
 		s.Log("Restoring ", aloopUCMPath)
 		if err := testexec.CommandContext(ctx, "umount", aloopUCMPath).Run(testexec.DumpLogOnError); err != nil {
@@ -213,11 +223,13 @@ func (f *aloopLoadedFixture) TearDown(ctx context.Context, s *testing.FixtState)
 	}
 }
 
-func (aloopLoadedFixture) Reset(ctx context.Context) error {
+// Reset the AloopLoadedFixture
+func (AloopLoadedFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (aloopLoadedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+// PreTest the AloopLoadedFixture by restarting CRAS and wait until loopback node is available
+func (AloopLoadedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	// Restart CRAS to prevent CRAS state leakage between tests.
 	if _, err := RestartCras(ctx); err != nil {
 		s.Fatal("Cannot restart CRAS: ", err)
@@ -242,7 +254,8 @@ func (aloopLoadedFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	}
 }
 
-func (aloopLoadedFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+// PostTest the AloopLoadedFixture
+func (AloopLoadedFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
 type uiStoppedFixture struct{}
 
