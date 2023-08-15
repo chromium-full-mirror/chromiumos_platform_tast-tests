@@ -59,8 +59,6 @@ func init() {
 				category: "sd_card",
 				duration: 3 * time.Second,
 			},
-			// TODO(b/279849703): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "touchscreen",
 			Val: eventStartupParams{
