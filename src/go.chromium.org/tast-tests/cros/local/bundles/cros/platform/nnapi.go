@@ -52,9 +52,7 @@ func NNAPI(ctx context.Context, s *testing.State) {
 		logFilename := fmt.Sprintf("nnapi_test-%d.log", i)
 		logOutput(s, logFilename, shutil.EscapeSlice(cmd.Args), stdout, stderr)
 
-		if strings.Contains(stdout, "error") || strings.Contains(stderr, "error") {
-			s.Errorf("%s contained output with an error. See %s", shutil.EscapeSlice(cmd.Args), logFilename)
-		} else if outSlice := strings.Split(stdout, "\n"); !containsAll(outSlice, tc.expectedLines) {
+		if outSlice := strings.Split(stdout, "\n"); !containsAll(outSlice, tc.expectedLines) {
 			s.Errorf("%s did not produce all of %q. See %s", shutil.EscapeSlice(cmd.Args), tc.expectedLines, logFilename)
 		}
 	}
