@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/chromecrash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -107,21 +106,13 @@ func ChromeCrashEarly(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	ct, err := chromecrash.NewCrashTester(ctx, chromecrash.Browser, browser.TypeAsh, chromecrash.MetaFile)
-	if err != nil {
-		s.Fatal("NewCrashTester failed: ", err)
-	}
-	defer ct.Close()
-	// FYI, we don't call ct.AssociateWithChrome() in this test because we don't
-	// call chrome.New(). See comment below.
-
-	if err = crash.SetUpCrashTest(ctx, crash.WithMockConsent()); err != nil {
+	if err := crash.SetUpCrashTest(ctx, crash.WithMockConsent()); err != nil {
 		s.Fatal("SetUpCrashTest failed: ", err)
 	}
 	defer crash.TearDownCrashTest(cleanupCtx)
 
 	// Stop and then start session manager. This ensures we are logged out.
-	if err = upstart.RestartJob(ctx, "ui"); err != nil {
+	if err := upstart.RestartJob(ctx, "ui"); err != nil {
 		s.Fatal("Failed to restart ui job: ", err)
 	}
 
