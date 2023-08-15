@@ -53,8 +53,7 @@ func init() {
 		Desc:         "Monitors uploaded crash events detected properly or not",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
-		// TODO(b/266018436): Promote to critical.
-		Attr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
 		// crash_sender needs more time to run because crash_sender
