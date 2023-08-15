@@ -531,18 +531,18 @@ func (r *Runner) SetRegulatoryDomain(ctx context.Context, country string) error 
 func (r *Runner) SetAndVerifyRegulatoryDomain(ctx context.Context, country string) error {
 	selfManaged, err := r.IsRegulatorySelfManaged(ctx)
 	if err != nil {
-		return errors.Wrap(err, "Failed to read regulatory status")
+		return errors.Wrap(err, "failed to read regulatory status")
 	}
 	if selfManaged {
 		return errors.New("Set regulatory domain on a self-managed solution")
 	}
 	err = r.SetRegulatoryDomain(ctx, country)
 	if err != nil {
-		return errors.Wrap(err, "Failed to set country code")
+		return errors.Wrap(err, "failed to set country code")
 	}
 	domain, err := r.PhyRegulatoryDomain(ctx, "phy0")
 	if err != nil {
-		return errors.Wrap(err, "Failed to read regulatory status")
+		return errors.Wrap(err, "failed to read regulatory status")
 	}
 
 	// We've set AP to the US country code. However, some drivers may implement subset of that domain (99).
@@ -1209,7 +1209,8 @@ func parseVHT(attrs *sectionAttributes, sectionName, content string) {
 }
 
 func parseHE(attrs *sectionAttributes, sectionName, content string) {
-	if strings.Contains(sectionName, "Station") {
+	// Since v5.19 iw unifies the interface types and uses managed for STA mode.
+	if strings.Contains(sectionName, "managed") {
 		// Station HE capability.
 		if strings.Contains(content, "HE MAC Capabilities") {
 			attrs.supportHESTA = true
