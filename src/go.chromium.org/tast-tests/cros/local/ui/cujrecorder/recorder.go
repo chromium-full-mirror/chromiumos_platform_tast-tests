@@ -1095,11 +1095,6 @@ func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context
 		return nil, nil
 	}
 
-	if r.options.Mode == Perf {
-		testing.ContextLog(ctx, "Skipping power test as this is a perf test")
-		return nil, nil
-	}
-
 	powerTestOptions := setup.PowerTestOptions{
 		// The default for the following options is to disable these settings.
 		Wifi:               setup.DisableWifiInterfaces,
