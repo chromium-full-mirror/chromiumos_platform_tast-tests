@@ -572,6 +572,19 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 				s.Log("Skip because DUT does not have a lid")
 				return nil
 			}
+			s.Log("Disable tablet mode, and then close lid")
+			if err := checkAndRunTabletMode(ctx, testArgs.tabletmodeOFF); err != nil {
+				s.Logf("Failed to turn tabletmode off using command: %s. Attempting to turn off by setting tablet_mode_angle with ectool", testArgs.tabletmodeOFF)
+				cmd := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain)
+				// Setting tabletModeAngle to 360 will force DUT into clamshell mode.
+				if err := cmd.ForceTabletModeAngle(ctx, "360", "0"); err != nil {
+					return errors.Wrap(err, "failed to set tablet mode angle")
+				}
+			}
+			// Allow some delay to ensure that DUT has completely transitioned out of tablet mode.
+			if err := testing.Sleep(ctx, 3*time.Second); err != nil {
+				return errors.Wrap(err, "failed to sleep")
+			}
 			// Close RPC connection and emulate DUT lid closing.
 			h.CloseRPCConnection(ctx)
 			if err := h.Servo.CloseLid(ctx); err != nil {
@@ -798,7 +811,7 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 	}
 
 	// Attempt to wake DUT's screen by controls defined under screenWakeTrigger.
-	var triggerOptions = []screenWakeTrigger{screenWakeByEjectingStylus, screenWakeByScreenTouch, screenWakeByPowerButton, screenWakeByCloseOpenLid, screenWakeByMovingLid}
+	var triggerOptions = []screenWakeTrigger{screenWakeByEjectingStylus, screenWakeByScreenTouch, screenWakeByPowerButton, screenWakeByMovingLid, screenWakeByCloseOpenLid}
 	for _, triggerOpt := range triggerOptions {
 		s.Logf("---------------------- Wake DUT's screen: %s ---------------------- ", triggerOpt)
 		if err := screenWake(ctx, triggerOpt); err != nil {
