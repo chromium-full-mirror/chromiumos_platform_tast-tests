@@ -51,6 +51,7 @@ func init() {
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_nightly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("grunt", "zork", "guybrush")),
 			}, {
 				Name: "kms_atomic",
 				Val: graphics.IgtTest{
@@ -72,6 +73,7 @@ func init() {
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_nightly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("grunt", "zork", "guybrush")),
 			}, {
 				Name: "kms_async_flips",
 				Val: graphics.IgtTest{
@@ -235,6 +237,7 @@ func init() {
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_nightly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("grunt", "zork", "guybrush")),
 			}, {
 				Name: "kms_hdr",
 				Val: graphics.IgtTest{
