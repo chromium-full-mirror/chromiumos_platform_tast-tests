@@ -8,20 +8,12 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/shillconst"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/crostini"
-	"go.chromium.org/tast-tests/cros/local/network/ping"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
-	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
-
-type crostiniConnectivityTestParams struct {
-	v6Only bool
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -39,26 +31,26 @@ func init() {
 				Name:              "dualstack_buster",
 				ExtraSoftwareDeps: []string{"dlc"},
 				Fixture:           "crostiniBuster",
-				Timeout:           10 * time.Minute,
-				Val:               crostiniConnectivityTestParams{},
+				Timeout:           2 * time.Minute,
+				Val:               guestos.ConnectivityTestParams{},
 			}, {
 				Name:              "dualstack_bullseye",
 				ExtraSoftwareDeps: []string{"dlc"},
 				Fixture:           "crostiniBullseye",
-				Timeout:           10 * time.Minute,
-				Val:               crostiniConnectivityTestParams{},
+				Timeout:           2 * time.Minute,
+				Val:               guestos.ConnectivityTestParams{},
 			}, {
 				Name:              "v6only_buster",
 				ExtraSoftwareDeps: []string{"dlc"},
 				Fixture:           "crostiniBuster",
-				Timeout:           10 * time.Minute,
-				Val:               crostiniConnectivityTestParams{v6Only: true},
+				Timeout:           2 * time.Minute,
+				Val:               guestos.ConnectivityTestParams{V6Only: true},
 			}, {
 				Name:              "v6only_bullseye",
 				ExtraSoftwareDeps: []string{"dlc"},
 				Fixture:           "crostiniBullseye",
-				Timeout:           10 * time.Minute,
-				Val:               crostiniConnectivityTestParams{v6Only: true},
+				Timeout:           2 * time.Minute,
+				Val:               guestos.ConnectivityTestParams{V6Only: true},
 			},
 		},
 	})
@@ -66,7 +58,7 @@ func init() {
 
 func CrostiniConnectivity(ctx context.Context, s *testing.State) {
 	cont := s.FixtValue().(crostini.FixtureData).Cont
-	v6only := s.Param().(crostiniConnectivityTestParams).v6Only
+	v6only := s.Param().(guestos.ConnectivityTestParams).V6Only
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
@@ -84,92 +76,7 @@ func CrostiniConnectivity(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// Wait for online and verify topology in host.
-	if err := testEnv.ShillService.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
-		s.Error("Failed to wait for service online: ", err)
+	for _, err := range guestos.NetworkConnectivity(ctx, cont, v6only, testEnv) {
+		s.Error("Connectivity test failed: ", err)
 	}
-	routerAddrs, err := testEnv.Router.WaitForVethInAddrs(ctx, !v6only, true)
-	if err != nil {
-		s.Fatal("Failed to get inner addrs from router env: ", err)
-	}
-	serverAddrs, err := testEnv.Server.WaitForVethInAddrs(ctx, !v6only, true)
-	if err != nil {
-		s.Fatal("Failed to get inner addrs from server env: ", err)
-	}
-	var pingAddrs []string
-	if !v6only {
-		pingAddrs = append(pingAddrs, serverAddrs.IPv4Addr.String())
-		pingAddrs = append(pingAddrs, routerAddrs.IPv4Addr.String())
-	}
-	for _, ip := range serverAddrs.IPv6Addrs {
-		pingAddrs = append(pingAddrs, ip.String())
-	}
-	for _, ip := range routerAddrs.IPv6Addrs {
-		pingAddrs = append(pingAddrs, ip.String())
-	}
-	if !v6only {
-		pingAddrs = append(pingAddrs, routing.TestDomainNameV4)
-	}
-	pingAddrs = append(pingAddrs, routing.TestDomainNameV6)
-	for _, target := range pingAddrs {
-		if err := ping.ExpectPingSuccessWithTimeout(ctx, target, "chronos", 10*time.Second); err != nil {
-			s.Errorf("Network verification failed: %v is not reachable as user %s on host: %v", target, "chronos", err)
-		}
-	}
-
-	// Check if testEnv prefix propagated into Crostini, and log it for debugging.
-	const addressPollTimeout = 5 * time.Second
-	if !v6only {
-		if err := checkCrostiniAddress(ctx, cont, false, addressPollTimeout); err != nil {
-			s.Error("Failed to get IPv4 address in Crostini: ", err)
-		}
-	}
-	if err := checkCrostiniAddress(ctx, cont, true, addressPollTimeout); err != nil {
-		s.Error("Failed to get IPv6 address in Crostini: ", err)
-	}
-
-	// Verify reachability to destinations in Crostini
-	const pingPollTimeout = 20 * time.Second
-	for _, ip := range pingAddrs {
-		if err := crostiniRetriedPingWithTimeout(ctx, cont, ip, pingPollTimeout); err != nil {
-			s.Errorf("Failed to ping %s from Crostini: %v", ip, err)
-		} else {
-			testing.ContextLogf(ctx, "Succeeded to ping %s from Crostini", ip)
-		}
-	}
-}
-
-func checkCrostiniAddress(ctx context.Context, cont *vm.Container, ipv6 bool, timeout time.Duration) error {
-	ipCmdOption := "-4"
-	versionForLog := "IPv4"
-	if ipv6 {
-		ipCmdOption = "-6"
-		versionForLog = "IPv6"
-	}
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := cont.Command(ctx, "/usr/bin/ip", ipCmdOption, "addr", "show", "scope", "global").Output(testexec.DumpLogOnError)
-		if err != nil {
-			return err
-		}
-		if len(out) == 0 {
-			return errors.Errorf("no global %s address is configured", versionForLog)
-		}
-		testing.ContextLog(ctx, "Crostini ", versionForLog, " address information: \n", string(out))
-		return nil
-	}, &testing.PollOptions{Timeout: timeout})
-}
-
-func crostiniRetriedPingWithTimeout(ctx context.Context, cont *vm.Container, addr string, timeout time.Duration) error {
-	numRetries := 0
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		output, err := cont.Command(ctx, "/bin/ping", "-c1", "-w2", addr).Output()
-		if err == nil {
-			return nil
-		}
-		numRetries++
-		return errors.Wrapf(err, "failed to ping %s with %d retries: output %s", addr, numRetries, output)
-	}, &testing.PollOptions{Timeout: timeout, Interval: 500 * time.Millisecond}); err != nil {
-		return errors.Wrap(err, "failed to ping with polling")
-	}
-	return nil
 }
