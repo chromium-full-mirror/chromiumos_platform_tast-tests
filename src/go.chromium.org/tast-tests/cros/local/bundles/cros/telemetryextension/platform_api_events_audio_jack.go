@@ -93,11 +93,19 @@ func PlatformAPIEventsAudioJack(ctx context.Context, s *testing.State) {
 			case <-time.After(200 * time.Millisecond):
 				// Trigger the audio jack event by plugging and unplugging.
 				if err := aw.PlugOutHeadphone(); err != nil {
-					firstError = errors.Wrap(err, "failed to plug out audio jack")
+					firstError = errors.Wrap(err, "failed to plug out headphone")
 					return
 				}
 				if err := aw.PlugInHeadphone(); err != nil {
-					firstError = errors.Wrap(err, "failed to plug in audio jack")
+					firstError = errors.Wrap(err, "failed to plug in headphone")
+					return
+				}
+				if err := aw.PlugOutMicrophone(); err != nil {
+					firstError = errors.Wrap(err, "failed to plug out microphone")
+					return
+				}
+				if err := aw.PlugInMicrophone(); err != nil {
+					firstError = errors.Wrap(err, "failed to plug in microphone")
 					return
 				}
 			}
