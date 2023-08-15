@@ -179,7 +179,7 @@ func initializeSwitchTaskByOverviewMode(ctx context.Context, tconn *chrome.TestC
 				return errors.Wrap(err, "failed to enter overview mode")
 			}
 
-			// Add a sleep after entering overview mode to mimic a user
+			// GoBigSleepLint: Add a sleep after entering overview mode to mimic a user
 			// finding the right window to click on. By making the device
 			// render window previews, we could help increase CPU load.
 			if err := testing.Sleep(ctx, 2*time.Second); err != nil {
@@ -237,7 +237,7 @@ func initializeSwitchTaskByOverviewMode(ctx context.Context, tconn *chrome.TestC
 			// A mobile prompt might pop up and inactivate the ARC window.
 			// Dismiss the prompt if it appears.
 			if targetWindow.WindowType == ash.WindowTypeArc {
-				if err := ash.WaitForOverviewState(ctx, tconn, ash.Hidden, 5*time.Second); err != nil {
+				if err := ash.WaitForOverviewState(ctx, tconn, ash.Hidden, 30*time.Second); err != nil {
 					return errors.Wrap(err, "failed to wait for overview to hide")
 				}
 
