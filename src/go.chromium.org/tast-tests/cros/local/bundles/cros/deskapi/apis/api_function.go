@@ -79,6 +79,34 @@ func RemoveDesk(ctx context.Context, conn *browser.Conn, deskID string) error {
 	return conn.Call(ctx, nil, removeDeskJS, deskID)
 }
 
+// RemoveDeskWithUndo removes a desk with the option to undo the removal.
+func RemoveDeskWithUndo(ctx context.Context, conn *browser.Conn, deskID string) error {
+	const removeDeskJS = `async (deskId) => {
+		await new Promise((resolve, reject) => {
+			chrome.runtime.sendMessage(
+				"kflgdebkpepnpjobkdfeeipcjdahoomc", {
+					"messageType": "RemoveDesk",
+					"operands": {
+						"deskId": deskId,
+						"options": {
+							"combineDesks": false,
+							"allowUndo": true,
+						},
+						"skipConfirmation": true
+					}
+				},
+				(response) => {
+					if (response.errorMessage) {
+						reject(new Error(response.errorMessage));
+						return;
+					}
+					resolve();
+				});
+			});
+		}`
+	return conn.Call(ctx, nil, removeDeskJS, deskID)
+}
+
 // GetActiveDesk retrieves the current active desk.
 func GetActiveDesk(ctx context.Context, conn *browser.Conn) (string, error) {
 	const getActiveDeskJS = `new Promise((resolve, reject) => {
