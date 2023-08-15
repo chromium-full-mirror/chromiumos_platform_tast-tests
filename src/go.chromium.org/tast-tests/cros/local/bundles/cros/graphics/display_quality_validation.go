@@ -108,6 +108,7 @@ func init() {
 				Val: graphics.IgtTest{
 					Exe:      "kms_busy",
 					Subtests: []string{"basic"},
+					DisableHangCheck: true,
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_nightly"},
