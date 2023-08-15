@@ -42,6 +42,7 @@ func walkFiles(ctx context.Context, s *testing.State, dir string) error {
 	const (
 		minijailPath   = "/sbin/minijail0"
 		walkerTestPath = "/usr/local/libexec/tast/helpers/local/cros/security.Minijail.landlock_walk"
+		enoentError    = "exit status 2"
 	)
 	numFiles := 0
 
@@ -62,7 +63,7 @@ func walkFiles(ctx context.Context, s *testing.State, dir string) error {
 		err = testexec.CommandContext(ctx, minijailPath, args...).Run()
 
 		// Landlock policy based on src/platform2/login_manager/landlock_policy.cc.
-		// TODO(b/294842930): move to a conf file used by login_manger,
+		// TODO(b/294842930): move to a conf file used by login_manager,
 		// once libminijail has support.
 		landlockArgs := []string{"--fs-default-paths",
 			"--fs-path-rx=/",
@@ -86,7 +87,18 @@ func walkFiles(ctx context.Context, s *testing.State, dir string) error {
 		errLandlock := testexec.CommandContext(ctx, minijailPath, landlockArgs...).Run()
 
 		if (err == nil) != (errLandlock == nil) {
+			// Handle file deleted during the walk.
+			if (err != nil && err.Error() == enoentError) || (errLandlock != nil && errLandlock.Error() == enoentError) {
+				return nil
+			}
+
 			errorMsg := "Could not verify access rights: " + path
+			if err != nil {
+				errorMsg += " non-Landlock error:" + err.Error()
+			}
+			if errLandlock != nil {
+				errorMsg += " Landlock error: " + errLandlock.Error()
+			}
 			return errors.New(errorMsg)
 		}
 		return nil

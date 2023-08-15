@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -14,7 +15,7 @@ int main(int argc, char *argv[]) {
   }
   FILE *file = fopen(argv[1],  argv[2]);
   if (file == 0) {
-    return -1;
+    return errno;
   }
 
   return 0;
