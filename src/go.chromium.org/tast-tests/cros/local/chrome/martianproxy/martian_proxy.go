@@ -187,7 +187,9 @@ func (p *Proxy) ConfigureWithJSON(ctx context.Context, jsonFilePath string) erro
 	}
 
 	resp, err := p.sendRequest(ctx, requestGenerater)
-	defer resp.Body.Close()
+	if resp != nil && resp.Body != nil {
+		resp.Body.Close()
+	}
 	return err
 }
 

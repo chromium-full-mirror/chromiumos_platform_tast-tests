@@ -6,6 +6,7 @@ package meta
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -43,7 +44,11 @@ func init() {
 			Name:      "mock",
 			Val:       mockResponseRule,
 			ExtraData: []string{mockResponseRule},
-		}},
+		},
+			{
+				Name: "dump",
+				Val:  "",
+			}},
 	})
 }
 
@@ -52,18 +57,24 @@ func NetworkManipulate(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	isDumpOnly := strings.HasSuffix(s.TestName(), "dump")
 
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	proxy := martianproxy.New()
+	if isDumpOnly {
+		proxy.SetHar(true).SetOutDir(s.OutDir())
+	}
+
 	if err := cr.LaunchAndApplyProxy(ctx, proxy); err != nil {
 		s.Fatal("Failed to launch and apply proxy: ", err)
 	}
 	defer proxy.Close(cleanupCtx)
 
-	ruleFile := s.DataPath(s.Param().(string))
-
-	if err := proxy.ConfigureWithJSON(ctx, ruleFile); err != nil {
-		s.Fatalf("Failed to configure proxy with json file %q: %v", ruleFile, err)
+	if !isDumpOnly {
+		ruleFile := s.DataPath(s.Param().(string))
+		if err := proxy.ConfigureWithJSON(ctx, ruleFile); err != nil {
+			s.Fatalf("Failed to configure proxy with json file %q: %v", ruleFile, err)
+		}
 	}
 
 	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://www.example.com")
