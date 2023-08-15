@@ -29,6 +29,7 @@ const benchmarkPrefix = "Benchmark."
 type BenchmarkTest struct {
 	BrowserType   browser.Type
 	BenchmarkInfo benchmarkInfo
+	RecorderMode  cujrecorder.RecorderMode
 }
 
 // benchmarkInfo will contain benchmark specific information.
@@ -93,7 +94,10 @@ func Run(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to set window state to %v: %v", benchmarkParam.windowState, err)
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{Mode: cujrecorder.Benchmark})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{
+		Mode:              testParam.RecorderMode,
+		CooldownBeforeRun: true,
+	})
 
 	if err != nil {
 		s.Fatal("Failed to create a recorder: ", err)

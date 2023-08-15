@@ -341,6 +341,10 @@ const (
 	// Benchmark runs the recorder with no timelines enabled. There should be
 	// negligible overhead associated with this recorder mode.
 	Benchmark
+
+	// BenchmarkDisableDPTFPowerd is the same as benchmark mode, except it
+	// disables powerd and DPTF as part of the power test.
+	BenchmarkDisableDPTFPowerd
 )
 
 // RecorderOptions contains options to control the recorder setup.
@@ -1124,7 +1128,7 @@ func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context
 	// as high a score as possible, we want to make sure we are properly
 	// cooling the CPU.
 	powerStateCleanup := func(ctx context.Context) error { return nil }
-	if r.options.DoNotChangePowerd || r.options.Mode == Benchmark {
+	if r.options.DoNotChangePowerd || (r.options.Mode != BenchmarkDisableDPTFPowerd && r.options.Mode == Benchmark) {
 		testing.ContextLog(ctx, "Not changing Powerd")
 		powerTestOptions.Powerd = setup.DoNotChangePowerd
 
@@ -1139,7 +1143,7 @@ func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context
 			return cleanupWithTconn(ctx, r.tconn)
 		}
 	}
-	if r.options.DoNotChangeDPTF || r.options.Mode == Benchmark {
+	if r.options.DoNotChangeDPTF || (r.options.Mode != BenchmarkDisableDPTFPowerd && r.options.Mode == Benchmark) {
 		testing.ContextLog(ctx, "Not changing DPTF")
 		powerTestOptions.DPTF = setup.DoNotChangeDPTF
 	}
