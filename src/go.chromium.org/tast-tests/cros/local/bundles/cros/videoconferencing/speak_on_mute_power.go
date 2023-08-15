@@ -40,7 +40,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Data:         []string{data.SpeechInputFile},
 		BugComponent: "b:187682",
-		Timeout:      4*time.Minute + power.RecorderTimeout,
+		Timeout:      10*time.Minute + power.RecorderTimeout,
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		Fixture:      "powerAshGAIAWithSpeakOnMute",
 		Params: []testing.Param{
@@ -123,7 +123,7 @@ func SpeakOnMutePower(ctx context.Context, s *testing.State) {
 		waitForNudge,
 	)
 
-	const testDuration = 2 * time.Minute
+	const testDuration = 5 * time.Minute
 
 	extendedSpeechWav := filepath.Join(s.OutDir(), "speech.wav")
 	if err := wav.RepeatForDuration(ctx, s.DataPath(data.SpeechInputFile), extendedSpeechWav, testDuration); err != nil {
