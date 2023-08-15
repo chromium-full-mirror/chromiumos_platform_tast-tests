@@ -42,12 +42,7 @@ func init() {
 			"test_1KB.txt",
 		},
 		Timeout: 5 * time.Minute,
-		Params: []testing.Param{{
-			Fixture: "driveFsStarted",
-		}, {
-			Name:    "chrome_networking",
-			Fixture: "driveFsStartedWithChromeNetworking",
-		}},
+		Fixture: "driveFsStarted",
 	})
 }
 
