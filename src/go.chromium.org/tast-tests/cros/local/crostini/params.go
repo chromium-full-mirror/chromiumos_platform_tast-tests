@@ -322,8 +322,12 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			}
 
 			// _unstable tests can never be CQ critical.
+			// Buster support is deprecated, therefore the tests (other than MinimalSet) are informational.
 			var extraAttr []string
-			if (!i.stable && canBeCritical) || bt == browser.TypeLacros || testCase.DeviceMode == devicemode.TabletMode {
+			if !testCase.IsNotMainline && ((!i.stable && canBeCritical) ||
+				bt == browser.TypeLacros ||
+				testCase.DeviceMode == devicemode.TabletMode ||
+				(i.debianVersion == vm.DebianBuster && !testCase.MinimalSet)) {
 				extraAttr = append(extraAttr, "informational")
 			}
 
