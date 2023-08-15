@@ -1,0 +1,35 @@
+{
+    "fifo.Group": {
+      "modifiers": [
+            {
+                "url.Filter": {
+                    "scheme": "https",
+                    "host": "www.example.com",
+                    "path": "/",
+                    "scope": ["response"],
+                    "modifier" : {
+                        "header.Append": {
+                            "scope": ["response"],
+                            "name": "Location",
+                            "value": "https://www.google.com/"
+                        }
+                    }
+                }
+            },
+            {
+                "url.Filter": {
+                    "scheme": "https",
+                    "host": "www.example.com",
+                    "path": "/",
+                    "scope": ["response"],
+                    "modifier" : {
+                        "status.Modifier": {
+                            "scope": ["response"],
+                            "statusCode": 302
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}

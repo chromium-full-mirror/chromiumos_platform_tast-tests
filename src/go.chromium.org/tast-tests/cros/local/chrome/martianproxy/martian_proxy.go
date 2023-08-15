@@ -8,6 +8,8 @@ package martianproxy
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -30,6 +32,7 @@ const (
 	certEndPoint      proxyEndPoint = "authority.cer"
 	logsEndPoint                    = "logs"
 	logsResetEndPoint               = "logs/reset"
+	configure                       = "configure"
 )
 
 // Proxy represents a structure of the proxy wrapper.
@@ -44,6 +47,7 @@ type Proxy struct {
 	logFileName        string
 	cmd                *testexec.Cmd
 	isRunning          bool // Is the proxy running? It is set to true on starting proxy.
+	httpClient         *http.Client
 }
 
 // New creates a new Martian proxy instance with default configuration.
@@ -54,6 +58,7 @@ func New() *Proxy {
 		outDir:             defaultOutDir,
 		compressLog:        true,
 		downloadLogOnClose: true,
+		httpClient:         &http.Client{},
 	}
 }
 
@@ -141,9 +146,9 @@ func (p *Proxy) Close(ctx context.Context) error {
 		return nil
 	}
 
-	if p.downloadLogOnClose {
+	if p.har && p.downloadLogOnClose {
 		if err := p.downloadLogs(ctx, false); err != nil {
-			return errors.Wrap(err, "failed to download proxy log")
+			testing.ContextLog(ctx, "Failed to download proxy log: ", err)
 		}
 	}
 
@@ -163,6 +168,53 @@ func (p *Proxy) apiAddress(endPoint proxyEndPoint) string {
 	return fmt.Sprintf("http://localhost:%d/%s", p.apiPort, endPoint)
 }
 
+type requestGeneratorFunc func() (*http.Request, error)
+
+// ConfigureWithJSON configures the proxy with json configuration file.
+// Refer to https://github.com/google/martian#configure
+func (p *Proxy) ConfigureWithJSON(ctx context.Context, jsonFilePath string) error {
+	requestGenerater := func() (*http.Request, error) {
+		fileReader, err := os.Open(jsonFilePath)
+		if err != nil {
+			return nil, errors.Wrapf(err, "unable to read file %s", jsonFilePath)
+		}
+		req, err := http.NewRequest(http.MethodPost, p.apiAddress(configure), fileReader)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create request")
+		}
+		req.Header.Set("Content-Type", "application/json")
+		return req, nil
+	}
+
+	resp, err := p.sendRequest(ctx, requestGenerater)
+	defer resp.Body.Close()
+	return err
+}
+
+// sendRequest sends the HTTP request. It automatically retries on non-2xx result.
+func (p *Proxy) sendRequest(ctx context.Context, requestGenerater requestGeneratorFunc) (*http.Response, error) {
+	var resp *http.Response
+	return resp, testing.Poll(ctx, func(ctx context.Context) error {
+		req, err := requestGenerater()
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to generate request"))
+		}
+		resp, err = p.httpClient.Do(req)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to send request to proxy"))
+		} else if resp.StatusCode != http.StatusOK {
+			defer resp.Body.Close()
+			resBody, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return errors.Wrap(err, "failed to read the response body")
+			}
+			testing.ContextLog(ctx, "Resp body: ", string(resBody[:]))
+			return errors.Errorf("status code error: got %d; want %d", resp.StatusCode, http.StatusOK)
+		}
+		return nil
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 10 * time.Second})
+}
+
 // DownloadRootCertificate downloads the root CA certificate from proxy server that to be imported to Chrome.
 func (p *Proxy) DownloadRootCertificate(ctx context.Context) (string, error) {
 	downloadedCertFile := filepath.Join(p.outDir, string(certEndPoint))
@@ -175,13 +227,35 @@ func (p *Proxy) DownloadRootCertificate(ctx context.Context) (string, error) {
 }
 
 func (p *Proxy) downloadDataFromProxy(ctx context.Context, endpoint proxyEndPoint, downloadPath string) error {
-	return testexec.CommandContext(ctx, "curl", p.apiAddress(endpoint), "-o", downloadPath).Run(testexec.DumpLogOnError)
+	out, err := os.Create(downloadPath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	req := func() (*http.Request, error) {
+		return http.NewRequest(http.MethodGet, p.apiAddress(endpoint), nil)
+	}
+
+	resp, err := p.sendRequest(ctx, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	return err
 }
 
 // resetLog calls the proxy api to delete logs in memory and restart logging.
 func (p *Proxy) resetLog(ctx context.Context) error {
 	defer p.updateLogFileName()
-	return testexec.CommandContext(ctx, "curl", "-X", "DELETE", p.apiAddress(logsResetEndPoint)).Run(testexec.DumpLogOnError)
+	req := func() (*http.Request, error) {
+		return http.NewRequest(http.MethodDelete, p.apiAddress(logsResetEndPoint), nil)
+	}
+	resp, err := p.sendRequest(ctx, req)
+	defer resp.Body.Close()
+	return err
 }
 
 // downloadLogs downloads proxy log from API and resets logging.
