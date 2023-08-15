@@ -20,15 +20,14 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ECADC,
-		Desc: "Basic check for EC ADC temperature",
+		Desc: "Check that all temperature sensors return reasonable values over 200 iterations",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"js@semihalf.com",
+			"aaboagye@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO(b/194908031): Add back to firmware_unstable and firmware_bringup once this test actually works.
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{},
+		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      10 * time.Minute,
