@@ -42,7 +42,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.NormalMode,
-		Timeout:      15 * time.Minute, // Timeout might need to be adjusted depending on number of iterations.
+		Timeout:      30 * time.Minute, // Timeout might need to be adjusted depending on number of iterations.
 	})
 }
 
@@ -64,7 +64,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	}
 
 	// Number of iterations to run stress test for.
-	numIters := 10
+	numIters := 25
 	if numItersStr, ok := s.Var("firmware.suspendStressIters"); ok {
 		numItersInt, err := strconv.Atoi(numItersStr)
 		if err != nil {
@@ -110,7 +110,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Original autotest included a stop/start modemfwd as a temporary workaround for misbehaved modemfwd (b/164255562).
+	// GoBigSleepLint: Original autotest included a stop/start modemfwd as a temporary workaround for misbehaved modemfwd (b/164255562).
 	// Since associated issues are fixed, a simple wait should be enough to prevent related errors.
 	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 		s.Fatal("Failed to sleep for 2s")
@@ -170,9 +170,9 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		// Random duration in range [minResuspendResumeTime, minResuspendResumeTime+maxResuspendResumeTime) to wait between suspend iterations.
 		resuspendDelay := time.Duration(minResuspendResumeTime+rand.Intn(maxResuspendResumeTime)) * time.Second
 		s.Logf("Sleeping for %s before next iteration", resuspendDelay)
+		// GoBigSleepLint: random duration in range [minResuspendResumeTime, minResuspendResumeTime+maxResuspendResumeTime) to wait between suspend iterations.
 		if err := testing.Sleep(ctx, resuspendDelay); err != nil {
 			// Don't ignore this error even without fail fast set as it means context timed out.
 			s.Fatalf("Test timed out between suspends on iteration %d: %v", i+1, err)
@@ -357,15 +357,21 @@ func testLoginSuccess(ctx context.Context, h *firmware.Helper) error {
 func testEctool(ctx context.Context, h *firmware.Helper) error {
 	ec := firmware.NewECTool(h.DUT, firmware.ECToolNameMain)
 
-	out, err := h.Servo.RunECCommandGetOutput(ctx, "battery", []string{`(Command 'battery' not found or ambiguous|Status:\s+0x[0-9A-Fa-f]+)`})
-	if err != nil {
-		return errors.Wrap(err, "failed to check for presence of battery cmd in EC")
-	} else if strings.Contains(out[0][0], "Command 'battery' not found") {
-		testing.ContextLog(ctx, "Battery not available/testable")
-	} else {
-		if err := testECToolBattery(ctx, h, ec); err != nil {
-			errors.Wrap(err, "failed testing ectool battery")
+	testing.ContextLog(ctx, "Polling for 10s to get battery info from EC")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := h.Servo.RunECCommandGetOutput(ctx, "battery", []string{`(Command 'battery' not found or ambiguous|Status:\s+0x[0-9A-Fa-f]+)`})
+		if err != nil {
+			return errors.Wrap(err, "failed to check for presence of battery cmd in EC")
+		} else if strings.Contains(out[0][0], "Command 'battery' not found") {
+			testing.ContextLog(ctx, "Battery not available/testable")
+		} else {
+			if err := testECToolBattery(ctx, h, ec); err != nil {
+				testing.PollBreak(err)
+			}
 		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 3 * time.Second}); err != nil {
+		errors.Wrap(err, "failed testing ectool battery")
 	}
 
 	if err := testECToolFanspeed(ctx, h, ec); err != nil {
