@@ -103,8 +103,8 @@ func VerifySubcategory(ctx context.Context, ui *uiauto.Context, subcategories []
 
 // VerifyShortcuts checks that the shortcut descriptions and the shortcut keys exists.
 func VerifyShortcuts(ctx context.Context, ui *uiauto.Context, description string, shortcutKeys ShortcutKeys) error {
-	descriptionNode := nodewith.Name(description).Role(role.RowHeader)
-	shortcutKeysNode := nodewith.Name(shortcutKeys.Keys).Role(shortcutKeys.Role)
+	descriptionNode := nodewith.Name(description).Role(role.RowHeader).First()
+	shortcutKeysNode := nodewith.Name(shortcutKeys.Keys).Role(shortcutKeys.Role).First()
 
 	if err := uiauto.Combine("Verify shortcut description and shortcut keys exist",
 		ui.WaitUntilExists(descriptionNode),
@@ -118,8 +118,8 @@ func VerifyShortcuts(ctx context.Context, ui *uiauto.Context, description string
 
 // VerifyShortcutsRegex checks that the shortcut descriptions and the shortcut keys input as regular expression, exists.
 func VerifyShortcutsRegex(ctx context.Context, ui *uiauto.Context, description string, shortcutKeys ShortcutKeys) error {
-	descriptionNode := nodewith.NameRegex(regexp.MustCompile(description)).Role(role.RowHeader)
-	shortcutKeysNode := nodewith.NameRegex(regexp.MustCompile(shortcutKeys.Keys)).Role(shortcutKeys.Role)
+	descriptionNode := nodewith.NameRegex(regexp.MustCompile(description)).Role(role.RowHeader).First()
+	shortcutKeysNode := nodewith.NameRegex(regexp.MustCompile(shortcutKeys.Keys)).Role(shortcutKeys.Role).First()
 
 	if err := uiauto.Combine("Verify shortcut description and shortcut keys exist",
 		ui.WaitUntilExists(descriptionNode),
@@ -213,4 +213,35 @@ func ClearSearch(ctx context.Context, ui *uiauto.Context) uiauto.Action {
 		ui.WaitUntilGone(clearSearchBtn),
 		ui.WaitUntilGone(SearchResultFinder),
 	)
+}
+
+// AddCustomShortcut adds any custom shortcut to given action/widget with or without an alert and returns the result
+func AddCustomShortcut(ctx context.Context, ui *uiauto.Context, kb *input.KeyboardEventWriter, action, newShortcut, warnMessage string) error {
+
+	// Open the edit dialog and input the custom shortcut for the action with a warning alert
+	if warnMessage != "" {
+		testing.ContextLogf(ctx, "Warning message to be checked %q", warnMessage)
+		if err := uiauto.Combine("Add custom shortcut",
+			ui.WaitUntilExists(nodewith.Name(action).Role(role.Dialog)),
+			ui.LeftClick(nodewith.Name("Add shortcut").Role(role.Button)),
+			kb.AccelAction(newShortcut),
+			ui.WaitUntilExists(nodewith.Name(warnMessage).Role(role.StaticText)),
+			kb.AccelAction(newShortcut),
+			ui.LeftClick(nodewith.Name("Done").Role(role.Button)),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to add custom shortcut")
+		}
+	} else {
+		// Open the edit dialog and input the custom shortcut for the action with no warning alert
+		if err := uiauto.Combine("Add custom shortcut",
+			ui.WaitUntilExists(nodewith.Name(action).Role(role.Dialog)),
+			ui.LeftClick(nodewith.Name("Add shortcut").Role(role.Button)),
+			kb.AccelAction(newShortcut),
+			ui.LeftClick(nodewith.Name("Done").Role(role.Button)),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to add custom shortcut")
+		}
+	}
+
+	return nil
 }
