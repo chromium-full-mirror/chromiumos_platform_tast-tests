@@ -672,9 +672,9 @@ func (ct *CrashTester) killBrowser(ctx context.Context) error {
 	return nil
 }
 
-// MetaFileContains checks that each value in |expectedValues| appears in
+// metaFileContains checks that each value in |expectedValues| appears in
 // |metaFile|. Return nil if each value is found.
-func MetaFileContains(ctx context.Context, metaFile string, expectedValues map[string]string) error {
+func metaFileContains(ctx context.Context, metaFile string, expectedValues map[string]string) error {
 	b, err := ioutil.ReadFile(metaFile)
 	if err != nil {
 		return errors.Wrapf(err, "couldn't read meta file %s contents", metaFile)
@@ -690,9 +690,9 @@ func MetaFileContains(ctx context.Context, metaFile string, expectedValues map[s
 	return nil
 }
 
-// ValidateComputedSeverity checks the computed_severity and computed_product
+// validateComputedSeverity checks the computed_severity and computed_product
 // values in |metaFile|. Return nil if each value is found.
-func (ct *CrashTester) ValidateComputedSeverity(ctx context.Context, metaFile string) error {
+func (ct *CrashTester) validateComputedSeverity(ctx context.Context, metaFile string) error {
 	expectedValues := map[string]string{}
 	if ct.browserType == browser.TypeAsh {
 		expectedValues["computed_product"] = "Ui"
@@ -707,12 +707,34 @@ func (ct *CrashTester) ValidateComputedSeverity(ctx context.Context, metaFile st
 		expectedValues["computed_severity"] = "ERROR"
 	}
 
-	return MetaFileContains(ctx, metaFile, expectedValues)
+	return metaFileContains(ctx, metaFile, expectedValues)
 }
 
-// GetMetaFilename returns the meta filename found in |matches|. Only one .meta file
+// validateBuildTime ensures that the meta files from Lacros crashes have valid
+// upload_var_build_time_millis in them. Lacros needs to populate
+// upload_var_build_time_millis because crash_sender's
+// SenderBase::EvaluateMetaFileMinimal() relies on it for age checks.
+func (ct *CrashTester) validateBuildTime(ctx context.Context, metaFile string) error {
+	if ct.browserType == browser.TypeAsh {
+		// Only Lacros has build time included in crash reports.
+		return nil
+	}
+
+	contents, err := ioutil.ReadFile(metaFile)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't read meta file %s contents", metaFile)
+	}
+
+	re := regexp.MustCompile("upload_var_build_time_millis=[0-9]+\n")
+	if re.Find(contents) == nil {
+		return errors.Errorf("Did not find upload_var_build_time_millis in %q", contents)
+	}
+	return nil
+}
+
+// getMetaFilename returns the meta filename found in |matches|. Only one .meta file
 // should exist.
-func GetMetaFilename(matches map[string][]string, metaRegex string) (string, error) {
+func getMetaFilename(matches map[string][]string, metaRegex string) (string, error) {
 	metaFiles := matches[metaRegex]
 	if len(metaFiles) == 0 {
 		return "", errors.New("expected a .meta file but found none")
@@ -807,18 +829,27 @@ func (ct *CrashTester) KillAndGetCrashFiles(ctx context.Context) ([]string, erro
 
 	// Check that the .meta file has the correct computed_severity and computed_product values.
 	if ct.waitFor == MetaFile {
-		metaFile, fileErr := GetMetaFilename(matches, fmt.Sprintf(chromeCrashFilePatternWithPid+"meta", ct.killedPID))
+		metaFile, fileErr := getMetaFilename(matches, fmt.Sprintf(chromeCrashFilePatternWithPid+"meta", ct.killedPID))
 		if fileErr != nil {
 			return nil, errors.Wrap(fileErr, "failed to get meta file")
 		}
 
-		if validateErr := ct.ValidateComputedSeverity(ctx, metaFile); validateErr != nil {
+		if validateErr := ct.validateComputedSeverity(ctx, metaFile); validateErr != nil {
 			if outDir, outDirExists := testing.ContextOutDir(ctx); outDirExists {
 				if moveErr := crash.MoveFilesToOut(ctx, outDir, metaFile); moveErr != nil {
 					testing.ContextLog(ctx, "Failed to save the meta file: ", moveErr)
 				}
 			}
 			return nil, errors.Wrap(validateErr, "failed to validate meta file severity")
+		}
+
+		if validateErr := ct.validateBuildTime(ctx, metaFile); validateErr != nil {
+			if outDir, outDirExists := testing.ContextOutDir(ctx); outDirExists {
+				if moveErr := crash.MoveFilesToOut(ctx, outDir, metaFile); moveErr != nil {
+					testing.ContextLog(ctx, "Failed to save the meta file: ", moveErr)
+				}
+			}
+			return nil, errors.Wrap(validateErr, "failed to validate build time in meta file")
 		}
 	}
 	return files, nil
