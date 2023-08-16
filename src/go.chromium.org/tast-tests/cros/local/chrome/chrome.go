@@ -273,6 +273,9 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	// TODO(b/281865378): Remove once InputDeviceSettingsSplit flag is enabled by default in Chromium.
 	opts = append(opts, EnableFeatures("InputDeviceSettingsSplit"))
 
+	// "Customize Chrome" popup interferes with tast tests. See b/296141011.
+	opts = append(opts, DisableFeatures("IPH_DesktopCustomizeChrome"), LacrosDisableFeatures("IPH_DesktopCustomizeChrome"))
+
 	cfg, err := config.NewConfig(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to process options")
