@@ -77,15 +77,16 @@ func (zm *Zoom) leaveComputerAudio(ctx context.Context) error {
 // SetJoinAudio chooses an audio option or dismisses the dialog on the Join Audio page.
 func (zm *Zoom) SetJoinAudio(expectedValue bool) action.Action {
 	ui := zm.ui
-	joinAudioByComputerButton := nodewith.Name("Join Audio by Computer").Role(role.Button)
+	joinAudioByComputerButton := nodewith.Name("Join Audio by Computer").Role(role.Button).First()
 	closeButton := nodewith.Name("close").HasClass("join-dialog__close").Role(role.Button)
 	joinAudioButton := nodewith.Name("join audio").Role(role.Button).Focusable()
 	dismissJoinAudioDialog := ui.DoDefaultUntil(
 		closeButton,
 		ui.WithTimeout(shortUITimeout).WaitUntilGone(closeButton))
-	triggerJoinAudioDialog := ui.DoDefaultUntil(
-		joinAudioButton,
-		ui.WithTimeout(shortUITimeout).WaitUntilExists(joinAudioByComputerButton))
+	triggerJoinAudioDialog := uiauto.NamedAction("trigger 'Join Audio' dialog",
+		ui.DoDefaultUntil(
+			joinAudioButton,
+			ui.WithTimeout(shortUITimeout).WaitUntilExists(joinAudioByComputerButton)))
 
 	return func(ctx context.Context) error {
 		audioButton, err := ui.FindAnyExists(ctx, unmuteButton, muteButton, joinAudioButton)
