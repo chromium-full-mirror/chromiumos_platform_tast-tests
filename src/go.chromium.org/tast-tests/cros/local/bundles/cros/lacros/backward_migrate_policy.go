@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast/core/errors"
@@ -70,25 +71,21 @@ func BackwardMigratePolicy(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-	lacrosConn, err := lacros.Launch(ctx, tconn)
+	l, err := lacros.Launch(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch lacros: ", err)
 	}
-	if err := migrate.SetupProfileData(ctx, crForward, s, lacrosConn.Browser()); err != nil {
+	defer func() {
+		if l != nil {
+			l.Close(ctx)
+		}
+	}()
+	if err := migrate.SetupProfileData(ctx, crForward, s, l.Browser()); err != nil {
 		s.Fatal("Failed to set up profile data: ", err)
 	}
 
-	// GoBigSleepLint: Chrome uses many profile data stores that we do not own
-	// and that are not flushed to disk immediately, but only
-	// periodically persisted.
-	// Since we cannot flush directly from the tast, sleep to wait for the data
-	// to be synced.
-	if err := testing.Sleep(ctx, 15*time.Second); err != nil {
-		s.Fatal("Failed to sleep: ", err)
-	}
-
-	lacrosConn.CloseResources(ctx)
-	lacrosConn = nil
+	l.Close(ctx)
+	l = nil
 
 	crBackward, err := backwardMigratePolicy(ctx, fdms, crForward)
 	if err != nil {
@@ -100,6 +97,15 @@ func BackwardMigratePolicy(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	// Restore the browsing session from Lacros before calling `VerifyProfileData()`.
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get keyboard: ", err)
+	}
+	defer kb.Close(ctx)
+	if err := kb.Accel(ctx, "Ctrl+Shift+T"); err != nil {
+		s.Fatal("Failed to press Ctrl+Shift+T: ", err)
+	}
 	if err := migrate.VerifyProfileData(ctx, crBackward, s, crBackward.Browser()); err != nil {
 		s.Fatal("Failed to verify: ", err)
 	}

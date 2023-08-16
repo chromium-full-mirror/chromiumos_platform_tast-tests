@@ -189,7 +189,7 @@ func SetupProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, 
 }
 
 // VerifyProfileData verifies data previously set up by SetupProfileData.
-// Clients are expected to launch a browser before calling the function.
+// Clients are expected to launch a browser before calling the function with the tab from `SetupProfileData()`.
 func VerifyProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, br *browser.Browser) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
