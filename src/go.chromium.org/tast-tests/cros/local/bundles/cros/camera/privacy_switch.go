@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -29,6 +30,7 @@ func init() {
 		},
 		BugComponent: "b:1093480",
 		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:camera-stability"},
+		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
 		SoftwareDeps: []string{caps.BuiltinUSBCamera},
 	})
 }
