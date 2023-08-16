@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -75,6 +74,7 @@ func PlaybackAudioControls(ctx context.Context, s *testing.State) {
 	// Set up capture (aloop) module.
 	unload, err := audio.LoadAloop(ctx)
 	if err != nil {
+		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
 		s.Fatal("Failed to load ALSA loopback module: ", err)
 	}
 
@@ -88,15 +88,9 @@ func PlaybackAudioControls(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	// Select ALSA loopback output and input nodes as active nodes by UI.
-	// Call Hide() and Show() to reset the Quick Settings menu first.
-	if err := quicksettings.Hide(ctx, tconn); err != nil {
-		s.Fatal("Failed to hide Quick Settings menu: ", err)
-	}
-	if err := quicksettings.Show(ctx, tconn); err != nil {
-		s.Fatal("Failed to show Quick Settings menu: ", err)
-	}
-	if err := quicksettings.SelectAudioOption(ctx, tconn, "Loopback Playback"); err != nil {
-		s.Fatal("Failed to select ALSA loopback output: ", err)
+	if err := audio.SetupLoopback(ctx, cr); err != nil {
+		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
+		s.Fatal("Failed to SetupLoopback: ", err)
 	}
 
 	// Ensure landscape orientation. Gallery app has different UI if its size is
@@ -114,19 +108,6 @@ func PlaybackAudioControls(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to rotate display: ", err)
 		}
 		defer display.SetDisplayRotationSync(cleanupCtx, tconn, displayInfo.ID, display.Rotate0)
-	}
-
-	// After selecting Loopback Playback, SelectAudioOption() sometimes detected that audio setting
-	// is still opened while it is actually fading out, and failed to select Loopback Capture.
-	// Call Hide() and Show() to reset the quicksettings menu first.
-	if err := quicksettings.Hide(ctx, tconn); err != nil {
-		s.Fatal("Failed to hide Quick Settings menu: ", err)
-	}
-	if err := quicksettings.Show(ctx, tconn); err != nil {
-		s.Fatal("Failed to show Quick Settings menu: ", err)
-	}
-	if err := quicksettings.SelectAudioOption(ctx, tconn, "Loopback Capture"); err != nil {
-		s.Fatal("Failed to select ALSA loopback input: ", err)
 	}
 
 	// First audio file name and path variables.
@@ -200,6 +181,7 @@ func PlaybackAudioControls(ctx context.Context, s *testing.State) {
 
 		// Verify whether audio is playing or not.
 		if _, err := crastestclient.FirstRunningDevice(ctx, audio.OutputStream); err != nil {
+			crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
 			s.Fatal("Failed to play audio: ", err)
 		}
 
@@ -222,6 +204,7 @@ func PlaybackAudioControls(ctx context.Context, s *testing.State) {
 
 		// Verify whether audio is playing or not.
 		if _, err := crastestclient.FirstRunningDevice(ctx, audio.OutputStream); err != nil {
+			crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
 			s.Fatal("Failed to play audio: ", err)
 		}
 
