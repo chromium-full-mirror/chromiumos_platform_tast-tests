@@ -37,7 +37,7 @@ func init() {
 		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
 		Impl: &fixture{
 			bt:            browser.TypeAsh,
-			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud")},
+			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync")},
 			provider:      filesconsts.OneDrive,
 		},
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -54,7 +54,7 @@ func init() {
 		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
 		Impl: &fixture{
 			bt:            browser.TypeLacros,
-			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud")},
+			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync")},
 			provider:      filesconsts.OneDrive,
 		},
 		SetUpTimeout:    chrome.LoginTimeout,

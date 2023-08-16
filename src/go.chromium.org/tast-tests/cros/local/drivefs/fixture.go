@@ -146,7 +146,7 @@ func init() {
 		Name: "driveFsStartedWithOfficeEnabled", Desc: "Ensures DriveFS is mounted with #upload-to-office enabled",
 		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromium.org"},
 		Impl: &fixture{
-			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud")},
+			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync")},
 			bt:            browser.TypeAsh,
 		},
 		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
