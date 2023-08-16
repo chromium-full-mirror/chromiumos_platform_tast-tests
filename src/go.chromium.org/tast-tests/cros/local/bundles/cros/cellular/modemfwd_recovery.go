@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Verifies that modemfwd's recovery mechanism works properly",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "danielwinkler@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "group:cellular_crosbolt", "cellular_crosbolt_perf_nightly", "cellular_crosbolt_unstable"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "group:cellular_crosbolt", "cellular_crosbolt_perf_nightly"},
 		Fixture:      "cellular",
 		Timeout:      10 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.CellularModemType(cellularconst.ModemTypeFM350, cellularconst.ModemTypeFM101)),
