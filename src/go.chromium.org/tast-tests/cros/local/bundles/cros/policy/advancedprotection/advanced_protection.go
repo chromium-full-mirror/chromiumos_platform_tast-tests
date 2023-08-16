@@ -81,14 +81,19 @@ func TriggerUploadForScanning(ctx context.Context, _ *chrome.Chrome, br *browser
 		return errors.Wrap(err, "failed to download file")
 	}
 
-	// After the file is downloaded, a notification box will appear to notify
-	// the user that this file is potentially dangerous. If Advanced
-	// Protection is enabled, then there will be an option to upload the file for
-	// additional scanning.
+	// Open the Chrome downloads page. Note: There is usually also a popup dialog
+	// with the same info, but this dialog can be different on ash vs lacros. The
+	// downloads page is more consistent, so we prefer it here.
+	downloadsConn, err := br.NewConn(ctx, "chrome://downloads")
+	if err != nil {
+		return errors.Wrap(err, "failed to open chrome://downloads")
+	}
+	defer downloadsConn.Close()
+
 	ui := uiauto.New(tconn)
-	sendFile := nodewith.Name("Send").Role(role.Button)
+	sendFile := nodewith.Name("Scan").Role(role.Button)
 	if err := uiauto.Combine("Upload file for scanning",
-		// If prompted to upload file for scanning, click 'Send'. This will
+		// If prompted to upload file for scanning, click 'Scan'. This will
 		// only show if Advanced Protection is allowed.
 		uiauto.IfSuccessThen(
 			ui.WithTimeout(3*time.Second).WaitUntilExists(sendFile),
