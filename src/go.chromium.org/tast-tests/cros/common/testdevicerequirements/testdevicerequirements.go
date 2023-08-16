@@ -317,6 +317,9 @@ const (
 	// StorageSuspend with The ChromeOS device non-volatile storage component MUST NOT prevent system-level suspend.
 	StorageSuspend = "store-storagedev-0013-v01"
 
+	// StorageStable with The ChromeOS device's non-volatile storage component MUST NOT cause crashes or data loss.
+	StorageStable = "store-storagedev-0014-v01"
+
 	// StorageCapacityMin with The ChromeOS device MUST provide >=32GB of non-volatile storage.
 	StorageCapacityMin = "store-capacity-0001-v02"
 
