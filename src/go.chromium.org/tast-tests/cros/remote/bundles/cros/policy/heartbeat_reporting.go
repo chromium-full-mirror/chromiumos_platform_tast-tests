@@ -116,6 +116,22 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to grab client ID from device: %v:", err)
 	}
 
+	// TODO(b/296398085) : Remove once server solution is in place.
+	// Check if the device is marked as deprovisioned on the
+	// server, if it was then exit the test since the server
+	// won't allow any events coming from this device.
+	// Trying to get an idea of how many errors where coming from
+	// this failure, will remove once a better solution is in place.
+	currentAccount := accManager.Accounts[0]
+	isDeprovisioned, err := tapeClient.Deprovisioned(ctx, c.ClientId, currentAccount.OrgUnitPath, currentAccount.CustomerID)
+	if err != nil {
+		s.Fatal("Failed to check if device is deprovisioned: ", err)
+	}
+	if isDeprovisioned {
+		testing.ContextLog(ctx, "Device is deprovisioned - not checking events")
+		return
+	}
+
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		events, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerID, c.ClientId, APIKey, "HEARTBEAT_EVENTS", testStartTime)
 		if err != nil {
