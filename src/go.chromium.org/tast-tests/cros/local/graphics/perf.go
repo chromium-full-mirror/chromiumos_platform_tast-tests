@@ -581,7 +581,7 @@ func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t ti
 	if err != nil {
 		return errors.Wrap(err, "failed to get the battery status")
 	}
-	if !status.BatteryDischarging {
+	if status.IsLinePowerConnected() {
 		return errors.New("the battery is not set to discharge")
 	}
 
