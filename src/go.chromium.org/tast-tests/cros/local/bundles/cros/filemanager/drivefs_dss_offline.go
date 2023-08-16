@@ -143,13 +143,6 @@ func DrivefsDssOffline(ctx context.Context, s *testing.State) {
 		s.Log("Failed to enable offline, offline might already be enabled")
 	}
 
-	// Reselect the file in order to query the Available offline toggle.
-	if err := filesApp.PerformActionAndRetryMaximizedOnFail(
-		filesApp.SelectFile(testFileNameWithExt),
-	)(ctx); err != nil {
-		s.Fatalf("Failed to reselect test file %q: %v", testFileNameWithExt, err)
-	}
-
 	s.Log("Waiting for the Available offline toggle to stabilize")
 	var previousNodeInfo *uiauto.NodeInfo
 	var currentNodeInfo *uiauto.NodeInfo
