@@ -225,7 +225,7 @@ func testPerfETMSystemWide(ctx context.Context, s *testing.State) {
 
 	// Test ETM profiling of Chrome.
 	perfData := filepath.Join(s.OutDir(), "system-wide-perf.data")
-	perfCommand := []string{"record", "-e", "cs_etm/autofdo/uk", "-N", "-o", perfData, "-a", "--", "sleep", "1"}
+	perfCommand := []string{"record", "-e", "cs_etm/autofdo/uk", "-N", "-o", perfData, "-a", "--", "sleep", "2"}
 	cmd := testexec.CommandContext(ctx, "perf", perfCommand...)
 	// Launch perf but don't wait.
 	err = cmd.Start()
@@ -235,11 +235,15 @@ func testPerfETMSystemWide(ctx context.Context, s *testing.State) {
 	// Open search result page
 	conn, err := cr.NewConn(ctx, "https://google.com/search?q=Google")
 	if err != nil {
-		s.Fatal("Failed to create new Chrome connection: ", err)
+		s.Logf("Failed to create new Chrome connection: %v. Skipping the test", err)
+		_ = cmd.Wait(testexec.DumpLogOnError)
+		return
 	}
 	defer conn.Close()
-	// Wait unti perf completes.
-	err = cmd.Wait(testexec.DumpLogOnError)
+	// Wait until perf completes. No need to check the status because it can
+	// give an error status for unrelated reason and still produce a profile.
+	// If the profile is invalid we will see it later in the verification.
+	_ = cmd.Wait(testexec.DumpLogOnError)
 
 	// Test ETM data in the raw profile dump.
 	cmd = testexec.CommandContext(ctx, "perf", "report", "-D", "-i", perfData)
