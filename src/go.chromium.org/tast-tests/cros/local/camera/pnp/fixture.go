@@ -185,6 +185,10 @@ func (f *fakeHALFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		ID:        1,
 		Connected: true,
 		Frames:    &testutil.FakeCameraImageConfig{Path: dutFakeHALPath},
+		SupportedFormats: []*testutil.FakeCameraFormatsConfig{{
+			Width:      1280,
+			Height:     720,
+			FrameRates: []int{30}}},
 	}
 	if err := testutil.WriteFakeHALConfig(ctx,
 		testutil.FakeHALConfig{Cameras: []testutil.FakeCameraConfig{fakeCameraConfig}}); err != nil {
