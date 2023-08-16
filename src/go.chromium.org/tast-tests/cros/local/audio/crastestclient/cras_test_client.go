@@ -109,7 +109,7 @@ func FirstRunningDevice(ctx context.Context, streamType audio.StreamType) (strin
 
 		devName = dev[1]
 		return nil
-	}, &testing.PollOptions{Timeout: 3 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		return "", err
 	}
 
