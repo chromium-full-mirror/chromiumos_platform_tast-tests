@@ -7,6 +7,7 @@ package platform
 import (
 	"context"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -172,10 +173,10 @@ func readSwappiness(ctx context.Context) (int, error) {
 	return swappinessVal, nil
 }
 
-func readTHP(ctx context.Context) (string, error) {
-	thp, err := ioutil.ReadFile("/sys/kernel/mm/transparent_hugepage/enabled")
+func readTHP(ctx context.Context, thpFile string) (string, error) {
+	thp, err := ioutil.ReadFile(thpFile)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to read TPH mode")
+		return "", err
 	}
 	// The thp is of format like `[always] madvise never`, with the value
 	// inside [] as the mode that's currently used.
@@ -219,10 +220,16 @@ func validateTHP(ctx context.Context, newGameMode uint8) error {
 	const BorealisTHP = "always"
 	const DefaultTHP = "madvise"
 
-	thp, err := readTHP(ctx)
+	const thpFile = "/sys/kernel/mm/transparent_hugepage/enable"
+	if _, err := os.Stat(thpFile); err != nil {
+		testing.ContextLog(ctx, "THP is not enabled, skip the validation of THP tuning")
+		return nil
+	}
+	thp, err := readTHP(ctx, thpFile)
 	if err != nil {
 		return errors.Wrap(err, "failed to read THP mode")
 	}
+
 	if newGameMode == resourced.GameModeBorealis {
 		// For borealis Game, THP should be always mode.
 		if thp != BorealisTHP {
