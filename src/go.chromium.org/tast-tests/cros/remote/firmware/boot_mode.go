@@ -1187,7 +1187,7 @@ func (ms *ModeSwitcher) PowerOff(ctx context.Context) error {
 		if err == nil {
 			return nil
 		}
-		if !errors.Is(err, context.DeadlineExceeded) {
+		if !errors.As(err, &context.DeadlineExceeded) {
 			return errors.Wrap(err, "unexpected error in waiting for the dut to reach power-off")
 		}
 		testing.ContextLog(ctx, "Command poweroff failed to power off DUT: ", err)
