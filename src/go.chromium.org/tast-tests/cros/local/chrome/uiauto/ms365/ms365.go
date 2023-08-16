@@ -50,8 +50,8 @@ type Ms365 struct {
 
 // App returns an instance of the Cloud Upload.
 func App(ctx context.Context, tconn *chrome.TestConn, accountPool string) (*Ms365, error) {
-	// Most of the interactions are with remote service, doubling the timeout to 30s.
-	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+	// Most of the interactions are with remote service, increase the timeout to 60s.
+	ui := uiauto.New(tconn).WithTimeout(60 * time.Second)
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
@@ -74,7 +74,7 @@ func (ms *Ms365) InputUserName(userName string) uiauto.Action {
 	return uiauto.Combine("MS SignIn",
 		ms.ui.WaitUntilExists(msSignInWindow),
 		ms.ui.WaitUntilExists(usernameInput.Visible()),
-		ms.ui.LeftClick(usernameInput),
+		ms.ui.LeftClickUntilFocused(usernameInput),
 		ms.kb.TypeAction(userName),
 		ms.kb.AccelAction("Enter"),
 		ms.ui.WaitUntilGone(usernameInput.Visible()),
@@ -89,7 +89,7 @@ func (ms *Ms365) InputPassword(password string) uiauto.Action {
 	return uiauto.Combine("MS SignIn Password",
 		ms.ui.WaitUntilExists(msPasswordWindow.Visible()),
 		ms.ui.WaitUntilExists(passwordInput.Visible()),
-		ms.ui.LeftClick(passwordInput),
+		ms.ui.LeftClickUntilFocused(passwordInput),
 		ms.kb.TypeAction(password),
 		ms.kb.AccelAction("Enter"),
 		ms.ui.WaitUntilGone(passwordInput.Visible()),
@@ -244,21 +244,22 @@ func MaybeUninstallPwa(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Tes
 func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome) error {
 	testing.ContextLog(ctx, "Clearing cookies for Office website")
 	br := cr.Browser()
-	// Opening Office PWA is usually quick, but occasionally really slow,
-	// with a shorter context it can try again if it hit a slow attempt.
-	quickCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
 
 	interval := 200 * time.Millisecond
 
 	return action.Retry(3, func(ctx context.Context) error {
-		conn, err := br.NewTab(ctx, officePWAInstallURL)
+		// Opening Office PWA is usually quick, but occasionally really slow,
+		// with a shorter context it can try again if it hit a slow attempt.
+		quickCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+
+		conn, err := br.NewTab(quickCtx, officePWAInstallURL)
 		if err != nil {
 			return errors.Wrap(err, "failed to open office website")
 		}
 		defer conn.Close()
 		defer conn.CloseTarget(ctx)
 
-		return conn.ClearSiteCookies(ctx, "www.microsoft365.com")
-	}, interval)(quickCtx)
+		return conn.ClearSiteCookies(quickCtx, "www.microsoft365.com")
+	}, interval)(ctx)
 }
