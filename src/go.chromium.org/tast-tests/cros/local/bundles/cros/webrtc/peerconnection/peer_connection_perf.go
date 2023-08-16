@@ -290,7 +290,7 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		return errors.Wrap(err, "failed to measure")
 	}
 
-	var gpuErr, cStateErr, cpuErr, batErr, traceErr error
+	var gpuErr, cStateErr, cpuErr, batErr error
 	var wg sync.WaitGroup
 	wg.Add(4)
 	go func() {
@@ -309,14 +309,7 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		defer wg.Done()
 		batErr = graphics.MeasureSystemPowerConsumption(ctx, tconn, cpuMeasuring, p)
 	}()
-	if params.TraceChromeEvents {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			traceErr = measureChromeTraceEvents(ctx, s, p)
-		}()
-	}
-	wg.Wait()
+
 	if gpuErr != nil {
 		return errors.Wrap(gpuErr, "failed to measure GPU counters")
 	}
@@ -329,12 +322,44 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 	if batErr != nil {
 		return errors.Wrap(batErr, "failed to measure system power consumption")
 	}
-	if traceErr != nil {
+
+	resolutions, err := encoderResolutions(params.StreamWidth, params.StreamHeight, params.Simulcasts, params.Svc)
+	if err != nil {
+		return errors.Wrap(err, "failed to get expected resolutions")
+	}
+	if traceErr := measureChromeTraceEvents(ctx, s, resolutions, p); traceErr != nil {
 		return errors.Wrap(traceErr, "failed to measure decoding/encoding chrome trace events")
 	}
 
 	testing.ContextLogf(ctx, "Metric: %+v", p)
 	return nil
+}
+
+func encoderResolutions(width, height, simulcasts int, svc string) ([]graphics.Size, error) {
+
+	streams := 1
+	if simulcasts > 1 {
+		streams = simulcasts
+	}
+	if len(svc) >= 2 {
+		switch svc[:2] {
+		case "L1":
+			streams = 1
+		case "L2":
+			streams = 2
+		case "L3":
+			streams = 3
+		default:
+			return nil, errors.Errorf("unknown SVC = %s", svc)
+		}
+	}
+	var resolutions []graphics.Size
+	for i := 1; i <= streams; i++ {
+		w := width >> (streams - i)
+		h := height >> (streams - i)
+		resolutions = append(resolutions, graphics.Size{Width: w, Height: h})
+	}
+	return resolutions, nil
 }
 
 // RunRTCPeerConnectionPerf starts a Chrome instance (with or without hardware video decoder and encoder),

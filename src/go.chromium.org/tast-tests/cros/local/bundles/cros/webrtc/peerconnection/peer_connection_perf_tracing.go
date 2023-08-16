@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -272,7 +273,7 @@ const (
 )
 
 // recordDurationOfEvents fills the performance values about the duration of events.
-func recordDurationOfEvents(events []chromeEventInfo,
+func recordDurationOfEvents(events []chromeEventInfo, resolutions []graphics.Size,
 	results *[maxChromeTraceEventResults]map[string][]int64) error {
 	durationEventSet := map[string]chromeTraceEventResultIndex{
 		"RTCVideoEncoder::Impl::EncodeOneFrame":                rtcEncodeFuncDuration,
@@ -302,9 +303,9 @@ func recordDurationOfEvents(events []chromeEventInfo,
 		case "PlatformEncoding.Encode":
 			argKey = "size"
 		case "V4L2VEA::ImageProcessor::Process":
-			argKey = "input_size"
+			argKey = "output_size"
 		case "VAVEA::ImageProcessor::BlitSurface":
-			argKey = "source_visible_rect"
+			argKey = "dest_visible_rect"
 		}
 		suffix := noPerfNameSuffix
 		if argKey != "" {
@@ -314,7 +315,53 @@ func recordDurationOfEvents(events []chromeEventInfo,
 				// between TRACE_EVENT_NESTABLE_ASYNC_BEGIN and TRACE_EVENT_NESTABLE_ASYNC_END.
 				continue
 			}
-			suffix = strings.ReplaceAll(strings.ReplaceAll(value, ",", "_"), " ", "")
+			var wh []string
+			switch event.name {
+			case "PlatformEncoding.Encode", "V4L2VEA::ImageProcessor::Process":
+				// gfx::Size
+				// 1280x720
+				wh = strings.Split(value, "x")
+				if len(wh) != 2 {
+					return errors.Errorf("failed parsing gfx::Size: %s => %v", value, wh)
+				}
+			case "VAVEA::ImageProcessor::BlitSurface":
+				// gfx::Rect
+				// 0,0 1280x720
+				xyres := strings.Split(value, " ")
+				if len(xyres) != 2 {
+					return errors.Errorf("failed parsing gfx::Rect: %s => %v", value, xyres)
+				}
+				wh = strings.Split(xyres[1], "x")
+				if len(wh) != 2 {
+					return errors.Errorf("failed parsing gfx::Size: %s => %v", xyres[1], wh)
+				}
+			}
+
+			w, err := strconv.Atoi(wh[0])
+			if err != nil {
+				return errors.Wrapf(err, "failed converting to integer: %v", wh)
+			}
+			h, err := strconv.Atoi(wh[1])
+			if err != nil {
+				return errors.Wrapf(err, "failed converting to integer: %v", wh)
+			}
+			expectedSize := false
+			for _, size := range resolutions {
+				if h == size.Height {
+					expectedSize = true
+					suffix = "h_" + wh[1]
+					break
+				} else if w == size.Width {
+					expectedSize = true
+					suffix = "w_" + wh[0]
+					break
+				}
+			}
+			if !expectedSize {
+				// RTCPeerConnection needs to ramp up the encoded resolution
+				// before it reaches the expected one.
+				continue
+			}
 		}
 		results[index][suffix] = append(results[index][suffix], event.duration)
 	}
@@ -428,7 +475,7 @@ func recordIntervalTimeOfEvents(ctx context.Context,
 }
 
 // processTraceOutput returns the performance values from the tracing output data.
-func processTraceOutput(ctx context.Context, traceOut [][]string) (
+func processTraceOutput(ctx context.Context, traceOut [][]string, resolutions []graphics.Size) (
 	results [maxChromeTraceEventResults]map[string][]int64, err error) {
 
 	events, err := formatTraceOutput(traceOut)
@@ -440,7 +487,7 @@ func processTraceOutput(ctx context.Context, traceOut [][]string) (
 		results[i] = make(map[string][]int64)
 	}
 
-	if err = recordDurationOfEvents(events, &results); err != nil {
+	if err = recordDurationOfEvents(events, resolutions, &results); err != nil {
 		return results, err
 	}
 	if err = recordIntervalTimeOfEvents(ctx, events, &results); err != nil {
@@ -452,13 +499,13 @@ func processTraceOutput(ctx context.Context, traceOut [][]string) (
 
 // measureChromeTraceEvents profiles the chrome hardware video decoding and encoding
 // for a webrtc peerconnection call using perfetto.
-func measureChromeTraceEvents(ctx context.Context, s *testing.State, p *perf.Values) error {
+func measureChromeTraceEvents(ctx context.Context, s *testing.State, resolutions []graphics.Size, p *perf.Values) error {
 	traceOut, err := recordTracing(ctx, s)
 	if err != nil {
 		return err
 	}
 
-	results, err := processTraceOutput(ctx, traceOut)
+	results, err := processTraceOutput(ctx, traceOut, resolutions)
 	if err != nil {
 		return err
 	}
