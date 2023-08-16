@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/demomode/constants"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -28,7 +29,6 @@ func init() {
 		Contacts:     []string{"cros-demo-mode-eng@google.com", "jacksontadie@google.com"},
 		// Chrome OS Server Projects > Enterprise Management > Demo Mode
 		BugComponent: "b:812312",
-		Fixture:      fixture.PostDemoModeOOBE,
 		Attr:         []string{"group:mainline", "informational"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.
@@ -36,10 +36,21 @@ func init() {
 		// is only shown for chrome-branded builds when the device is ARC-capable.
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "tpm2"},
 		Timeout:      5 * time.Minute,
+		Params: []testing.Param{{
+			Name:    "alpha",
+			Val:     constants.DMServerAlphaURL, // DMServerURL
+			Fixture: fixture.PostDemoModeOOBEAlpha,
+		}, {
+			Name:    "prod",
+			Val:     constants.DMServerProdURL, // DMServerURL
+			Fixture: fixture.PostDemoModeOOBEProd,
+		}},
 	})
 }
 
 func Freeplay(ctx context.Context, s *testing.State) {
+	dmServerURL := s.Param().(string)
+
 	cr, err := chrome.New(ctx,
 		chrome.NoLogin(),
 		chrome.ARCSupported(),
@@ -47,6 +58,7 @@ func Freeplay(ctx context.Context, s *testing.State) {
 		// --force-devtools-available forces devtools on regardless of policy (devtools is
 		// disabled in Demo Mode policy) to support connecting to the test API extension.
 		chrome.ExtraArgs("--force-devtools-available"),
+		chrome.DMSPolicy(dmServerURL),
 	)
 	if err != nil {
 		s.Fatal("Failed to restart Chrome: ", err)

@@ -26,7 +26,7 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
-		Fixture:      fixture.PostDemoModeOOBE,
+		Fixture:      fixture.PostDemoModeOOBEProd,
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.

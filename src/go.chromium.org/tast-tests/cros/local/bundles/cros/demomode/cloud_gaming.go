@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/demomode/constants"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -60,7 +61,8 @@ func CloudGaming(ctx context.Context, s *testing.State) {
 		// --component-updater=test-request adds a "test-request" parameter to Omaha
 		// update requests, causing the fetched Demo Mode App component to come from a
 		// test cohort.
-		chrome.ExtraArgs("--force-devtools-available", "--component-updater=test-request"))
+		chrome.ExtraArgs("--force-devtools-available", "--component-updater=test-request"),
+		chrome.DMSPolicy(constants.DMServerAlphaURL))
 	if err != nil {
 		s.Fatal("Failed to restart Chrome: ", err)
 	}

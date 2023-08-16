@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/demomode/constants"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -20,6 +21,12 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// demoModeSWATestCase struct encapsulates parameters for each SWA test.
+type demoModeSWATestCase struct {
+	dmServerURL     string
+	shouldRunOnline bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SWA,
@@ -27,7 +34,6 @@ func init() {
 		Desc:         "Verify that the Demo Mode System Web App launches in fullscreen and goes to windowed mode after user interaction",
 		Contacts:     []string{"cros-demo-mode-eng@google.com", "jacksontadie@google.com"},
 		BugComponent: "b:812312",
-		Fixture:      fixture.PostDemoModeOOBE,
 		Attr:         []string{"group:mainline", "informational"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.
@@ -35,17 +41,33 @@ func init() {
 		// is only shown for chrome-branded builds when the device is ARC-capable.
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "tpm2"},
 		Params: []testing.Param{{
-			Name: "online",
-			Val:  true, // shouldRunOnline
+			Name: "online_alpha",
+			Val: demoModeSWATestCase{
+				dmServerURL:     constants.DMServerAlphaURL,
+				shouldRunOnline: true,
+			},
+			Fixture: fixture.PostDemoModeOOBEAlpha,
 		}, {
+			Name: "online_prod",
+			Val: demoModeSWATestCase{
+				dmServerURL:     constants.DMServerProdURL,
+				shouldRunOnline: true,
+			},
+			Fixture: fixture.PostDemoModeOOBEProd,
+		}, {
+			// DMServer URL is irrelevant for offline test case, so we don't have two separate cases
 			Name: "offline",
-			Val:  false, // shouldRunOnline
+			Val: demoModeSWATestCase{
+				dmServerURL:     constants.DMServerAlphaURL,
+				shouldRunOnline: false,
+			},
+			Fixture: fixture.PostDemoModeOOBEAlpha,
 		}},
 	})
 }
 
 func SWA(ctx context.Context, s *testing.State) {
-	shouldRunOnline := s.Param().(bool)
+	tc := s.Param().(demoModeSWATestCase)
 
 	// Behavior that will be tested both online and offline.
 	restartChromeAndVerifySWA := func(ctx context.Context) error {
@@ -59,7 +81,8 @@ func SWA(ctx context.Context, s *testing.State) {
 			// --component-updater=test-request adds a "test-request" parameter to Omaha
 			// update requests, causing the fetched Demo Mode App component to come from a
 			// test cohort.
-			chrome.ExtraArgs("--force-devtools-available", "--component-updater=test-request"))
+			chrome.ExtraArgs("--force-devtools-available", "--component-updater=test-request"),
+			chrome.DMSPolicy(tc.dmServerURL))
 		if err != nil {
 			return errors.Wrap(err, "failed to restart Chrome")
 		}
@@ -80,7 +103,7 @@ func SWA(ctx context.Context, s *testing.State) {
 		return demomode.VerifySWAFunctionality(ctx, tconn, highlightsMainNav)
 	}
 
-	if shouldRunOnline {
+	if tc.shouldRunOnline {
 		if err := restartChromeAndVerifySWA(ctx); err != nil {
 			s.Fatal("Failed to verify SWA functionality online: ", err)
 		}

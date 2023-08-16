@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 
+	"go.chromium.org/tast-tests/cros/common/demomode/constants"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	ps "go.chromium.org/tast-tests/cros/services/cros/demomode"
@@ -25,7 +26,7 @@ const (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: fixture.PostDemoModeOOBE,
+		Name: fixture.PostDemoModeOOBEAlpha,
 		Desc: "Has proceeded through Demo Mode setup flow from OOBE",
 		Contacts: []string{
 			"cros-demo-mode-eng@google.com",
@@ -34,6 +35,28 @@ func init() {
 		Impl: &fixtureImpl{
 			// This user has infinite idle time-out value for demo mode, thus will not end demo mode session in middle of test.
 			enrollmentUser: "admin-tast",
+			dmServerURL:    constants.DMServerAlphaURL,
+		},
+		SetUpTimeout:    setUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
+		ServiceDeps: []string{
+			"tast.cros.demomode.DemoModeService",
+			"tast.cros.hwsec.OwnershipService",
+			"tast.cros.ui.ChromeUIService",
+			"tast.cros.browser.ChromeService"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.PostDemoModeOOBEProd,
+		Desc: "Has proceeded through Demo Mode setup flow from OOBE with Cloud Gaming customizations configured",
+		Contacts: []string{
+			"jacksontadie@google.com",
+			"cros-demo-mode-eng@google.com",
+		},
+		Impl: &fixtureImpl{
+			// This user has infinite idle time-out value for demo mode, thus will not end demo mode session in middle of test.
+			enrollmentUser: "admin-tast",
+			dmServerURL:    constants.DMServerProdURL,
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -55,6 +78,7 @@ func init() {
 			// This user has infinite idle time-out value for demo mode, thus will not end demo mode session in middle of test.
 			enrollmentUser:  "admin-tast",
 			enabledFeatures: []string{"CloudGamingDevice"},
+			dmServerURL:     constants.DMServerAlphaURL,
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -72,8 +96,10 @@ type fixtureImpl struct {
 	// The user that the device enrolls into Demo Mode with. This allows us to
 	// control which Organizational Unit the device enrolls into, thus the policies.
 	enrollmentUser string
-	// Additional features that should be enabled during Demo Mode setup
+	// Additional features that should be enabled during Demo Mode setup.
 	enabledFeatures []string
+	// URL defining which DMServer environment to talk to during Demo Mode enrollment.
+	dmServerURL string
 }
 
 var _ testing.FixtureImpl = &fixtureImpl{}
@@ -99,7 +125,8 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 		// Download test version of components (most importantly demo-mode-resources and demo-mode-app),
 		// to catch issues before they reach prod
 		// TODO(b/263269444): Consider running a version of these tests against the prod components as well
-		"--component-updater=test-request"}
+		"--component-updater=test-request",
+		"--device-management-url=" + f.dmServerURL}
 
 	chromeService := ui.NewChromeServiceClient(cl.Conn)
 	if _, err := chromeService.New(ctx, &ui.NewRequest{
