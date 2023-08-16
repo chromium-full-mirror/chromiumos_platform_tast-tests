@@ -178,10 +178,10 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			VideoFiles:    "vp90Group1Buf",
 			ValidatorType: "decoding.MD5",
 		}, {
-			Name: "vp9_0_group1_frm_resize",
-			Attr: perBuildAttrs,
-			// TODO(b/189500115): Enable for V4L2 platforms (at least QC venus).
-			SoftwareDeps:  `[]string{caps.HWDecodeVP9, "vaapi"}`,
+			Name:          "vp9_0_group1_frm_resize",
+			Attr:          perBuildAttrs,
+			HardwareDeps:  "hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding())",
+			SoftwareDeps:  `[]string{caps.HWDecodeVP9}`,
 			VideoFiles:    "vp90Group1FrmResize",
 			ValidatorType: "decoding.MD5",
 		}, {
@@ -203,10 +203,10 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			VideoFiles:    "vp90Group1Sub8x8",
 			ValidatorType: "decoding.MD5",
 		}, {
-			Name: "vp9_0_group1_sub8x8_sf",
-			Attr: perBuildAttrs,
-			// TODO(b/189500115): Enable for V4L2 platforms (at least QC venus).
-			SoftwareDeps:  `[]string{caps.HWDecodeVP9, "vaapi"}`,
+			Name:          "vp9_0_group1_sub8x8_sf",
+			Attr:          perBuildAttrs,
+			HardwareDeps:  "hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding())",
+			SoftwareDeps:  `[]string{caps.HWDecodeVP9}`,
 			VideoFiles:    "vp90Group1Sub8x8Sf",
 			ValidatorType: "decoding.MD5",
 		}, {
