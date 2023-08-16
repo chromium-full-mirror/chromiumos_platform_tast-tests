@@ -614,6 +614,11 @@ func initializeLoginPerfTest(ctx context.Context,
 	retCreds chrome.Creds,
 	retErr error,
 ) {
+	// Reserve some time to dump ARC state if apps fail to install.
+	cleanupContext := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
 	options := []chrome.Option{
 		chrome.GAIALoginPool(loginPool),
 		chrome.EnableRestoreTabs(),
@@ -651,9 +656,9 @@ func initializeLoginPerfTest(ctx context.Context,
 	defer func() {
 		// cr is not valid after logout.
 		if cr == nil {
-			testing.ContextLog(ctx, "initializeLoginPerfTest: Chrome is nil, will not close")
+			testing.ContextLog(cleanupContext, "initializeLoginPerfTest: Chrome is nil, will not close")
 		} else {
-			cr.Close(ctx)
+			cr.Close(cleanupContext)
 			cr = nil
 		}
 	}()
@@ -692,9 +697,11 @@ func initializeLoginPerfTest(ctx context.Context,
 			"Ash.ArcAppInitialAppsInstallDuration",
 			10*time.Minute,
 		)
+		// While waiting we could hit the |ctx| timeout so we are
+		// using the |cleanupContext| to avoid the |ctx|.
 		if metricsErr != nil {
-			if err := optin.DumpLogCat(ctx, "error"); err != nil {
-				testing.ContextLog(ctx,
+			if err := optin.DumpLogCat(cleanupContext, "error"); err != nil {
+				testing.ContextLog(cleanupContext,
 					"WARNING: Failed to dump logcat: ", err)
 			}
 			return chrome.Creds{}, errors.Wrap(metricsErr,
