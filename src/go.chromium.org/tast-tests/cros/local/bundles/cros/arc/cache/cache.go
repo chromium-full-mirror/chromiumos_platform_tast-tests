@@ -215,8 +215,17 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 	gmsRootUnderHome := filepath.Join(androidDataDir, gmsRoot)
 	chimeraPath := filepath.Join(gmsRootUnderHome, appChimera)
 
-	if err = waitGmsCoreUpdated(ctx, a, gmsRootUnderHome); err != nil {
-		return err
+	isARCVMEnabled, err := arc.VMEnabled()
+	if err != nil {
+		return errors.Wrap(err, "failed to get ARCVM flag")
+	}
+
+	if isARCVMEnabled {
+		if err = waitGmsCoreUpdated(ctx, a, gmsRootUnderHome); err != nil {
+			return err
+		}
+	} else {
+		testing.ContextLog(ctx, "Using legacy waiting flow for GMS Core caches. See b/296238089")
 	}
 
 	for _, e := range []struct {
@@ -230,8 +239,14 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 		{"current_modules_init.pb", pathMustNotExist},
 		{"pending_modules_init.pb", pathMustNotExist},
 	} {
-		if err := checkPath(ctx, filepath.Join(chimeraPath, e.filename), e.cond); err != nil {
-			return err
+		if isARCVMEnabled {
+			if err := checkPath(ctx, filepath.Join(chimeraPath, e.filename), e.cond); err != nil {
+				return err
+			}
+		} else {
+			if err := waitForPath(ctx, filepath.Join(chimeraPath, e.filename), e.cond); err != nil {
+				return err
+			}
 		}
 	}
 
