@@ -308,6 +308,12 @@ var (
 
 	// AttachAPNCheckbox is the finder for the attach checkbox in the APN details dialog.
 	AttachAPNCheckbox = nodewith.Role(role.CheckBox).NameContaining("Attach")
+
+	// NewAPNBtn is the finder for the new APN button in the APN details page.
+	NewAPNBtn = nodewith.Name("New APN").Role(role.Button)
+
+	// APNLimitTooltip is the finder for the tooltip of the new APN button when number of APN hit the max limit.
+	APNLimitTooltip = nodewith.Name("Remove an APN to add a new APN").Role(role.Tooltip)
 )
 
 // Elements in "Proxy" section of Network page.

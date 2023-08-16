@@ -425,6 +425,32 @@ func (s *OSSettings) VerifyApnIsVisibleInSubtext(ctx context.Context, tconn *chr
 	return nil
 }
 
+// CreateCustomAPN creates new APN and verify it is shown in the APN list after.
+func (s *OSSettings) CreateCustomAPN(ctx context.Context, apnName, username, psswd string) error {
+	if err := s.ui.LeftClick(NewAPNBtn)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click on New APN button")
+	}
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to open the keyboard")
+	}
+	defer kb.Close(ctx)
+	if err := uiauto.Combine("Add custom APN in new APN dialog",
+		s.ui.WaitUntilExists(NameOfAPNInput),
+		kb.TypeAction(apnName),
+		s.ui.LeftClick(UserNameOfAPNInput),
+		kb.TypeAction(username),
+		s.ui.LeftClick(PasswordOfAPNInput),
+		kb.TypeAction(psswd),
+		s.ui.LeftClick(nodewith.Name("Add").Role(role.Button)),
+		s.ui.WaitUntilExists(nodewith.NameContaining(apnName)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to add custom APN and verify it shows in the APN list")
+	}
+
+	return nil
+}
+
 // VerifyAutoconnectStateOfActiveNetwork verifies that the autoconnect toggle of the active network matches the |enabled| state.
 func VerifyAutoconnectStateOfActiveNetwork(ctx context.Context, tconn *chrome.TestConn, enabled bool) error {
 	if err := GoToActiveNetworkDetails(ctx, tconn); err != nil {
