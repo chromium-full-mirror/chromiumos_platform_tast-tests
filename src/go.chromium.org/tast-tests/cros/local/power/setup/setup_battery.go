@@ -27,31 +27,16 @@ type chargeState struct {
 }
 
 var (
-	coDontCharge               = chargeState{"chargeoverride", "dontcharge", "Override port set to -2"}
-	coOff                      = chargeState{"chargeoverride", "off", "Override port set to -1"}
-	ccDischarge                = chargeState{"chargecontrol", "discharge", "Charge state machine force discharge."}
-	ccNormal                   = chargeState{"chargecontrol", "normal", "Charge state machine is in normal mode."}
-	boardsCannotChargeOverride = []string{"jacuzzi", "jacuzzi64"}
+	coDontCharge = chargeState{"chargeoverride", "dontcharge", "Override port set to -2"}
+	coOff        = chargeState{"chargeoverride", "off", "Override port set to -1"}
+	ccDischarge  = chargeState{"chargecontrol", "discharge", "Charge state machine force discharge."}
+	ccNormal     = chargeState{"chargecontrol", "normal", "Charge state machine is in normal mode."}
 )
 
 // BatteryPreparationTimeout is the time required to charge and drain battery
 // to specified range. Use in conjunction with ReachBatteryRange function. This
 // timeout is an estimate for a fully charged device to drain to 97%
 const BatteryPreparationTimeout = 30 * time.Minute
-
-func contains(list []string, s string) bool {
-	for _, e := range list {
-		if e == s {
-			return true
-		}
-	}
-	return false
-}
-
-func supportChargeOverride() bool {
-	board := util.GetBoard()
-	return !contains(boardsCannotChargeOverride, board)
-}
 
 func setChargeState(ctx context.Context, s chargeState) error {
 	stdout, stderr, err := testexec.CommandContext(ctx, "ectool", s.command, s.state).SeparatedOutput(testexec.DumpLogOnError)
@@ -97,7 +82,7 @@ func SetBatteryDischarge(ctx context.Context, expectedMaxCapacityDischarge float
 		return nil, errors.Errorf("battery percent %.2f is too low to start discharging", capacity)
 	}
 
-	useChargeOverride := supportChargeOverride()
+	useChargeOverride := util.SupportChargeOverride()
 	chargeState := coDontCharge
 	if !useChargeOverride {
 		chargeState = ccDischarge
@@ -132,7 +117,7 @@ func SetBatteryDischarge(ctx context.Context, expectedMaxCapacityDischarge float
 // AllowBatteryCharging will re-enable AC power and allow the battery to charge.
 func AllowBatteryCharging(ctx context.Context) error {
 	chargeState := coOff
-	if !supportChargeOverride() {
+	if !util.SupportChargeOverride() {
 		chargeState = ccNormal
 	}
 	return setChargeState(ctx, chargeState)
@@ -143,7 +128,7 @@ func AllowBatteryCharging(ctx context.Context) error {
 // AC power cable is physically re-inserted to the DUT again.
 func DisableBatteryCharging(ctx context.Context) error {
 	chargeState := coDontCharge
-	if !supportChargeOverride() {
+	if !util.SupportChargeOverride() {
 		chargeState = ccDischarge
 	}
 	return setChargeState(ctx, chargeState)

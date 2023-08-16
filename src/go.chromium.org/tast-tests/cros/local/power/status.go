@@ -102,10 +102,9 @@ func GetStatus(ctx context.Context) (*Status, error) {
 
 // IsLinePowerConnected returns a boolean indicating if the line power is
 // connected. "line_power_connected" from dump_power_status does not reflect the
-// true state of battery on Jacuzzi.
+// true state of battery on Jacuzzi and Kukui.
 func (s Status) IsLinePowerConnected() bool {
-	board := util.GetBoard()
-	if !strings.HasPrefix(board, "jacuzzi") {
+	if util.SupportChargeOverride() {
 		return s.LinePowerConnected
 	}
 	return s.BatteryStatus != "Discharging"
