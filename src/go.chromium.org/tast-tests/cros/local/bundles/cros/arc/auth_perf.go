@@ -188,7 +188,8 @@ type measuredValues struct {
 // createChrome creates Chrome session used to perform ARC opt-ins. Normally it is created only
 // once per test run. However, if error is found, Chrome session is recreated.
 func createChrome(ctx context.Context, gaia chrome.Option, param testParam) (*chrome.Chrome, *chrome.TestConn, error) {
-	args := append(arc.DisableSyncFlags(), "--arc-force-show-optin-ui")
+	// --force-devtools-available is required to interact with the ARC OOBE UI for managed users.
+	args := append(arc.DisableSyncFlags(), "--arc-force-show-optin-ui", "--force-devtools-available")
 	if param.chromeArgs != nil {
 		args = append(args, param.chromeArgs...)
 	}
