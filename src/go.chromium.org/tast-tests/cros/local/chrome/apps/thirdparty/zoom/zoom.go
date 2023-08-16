@@ -56,7 +56,7 @@ var (
 	launchMeetingWindow = nodewith.Name("Launch Meeting - Zoom").Role(role.Window)
 
 	// The main canvas of the meeting, it can be used to identify whether if it is in a meeting.
-	mainLayoutCanvas = nodewith.HasClass("main-layout__canvas").Role(role.Canvas)
+	mainLayoutCanvas = nodewith.HasClass("main-layout__canvas").Role(role.Canvas).First()
 
 	// End button in the meeting.
 	endMenu                = nodewith.Name("End").Role(role.PopUpButton).Ancestor(zoomMainWebArea)

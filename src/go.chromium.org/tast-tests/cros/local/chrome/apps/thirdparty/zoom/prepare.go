@@ -171,6 +171,8 @@ func enterNewMeeting(ctx context.Context, tconn *chrome.TestConn) error {
 		startThisMeetingButton,
 		joinFromYourBrowser,
 		mainLayoutCanvas,
+		endMenu,
+		leaveButton,
 		notificationsPrompt,
 		avPermissionPrompt,
 		noPermissionText)
@@ -220,7 +222,7 @@ func enterNewMeeting(ctx context.Context, tconn *chrome.TestConn) error {
 		}
 	case noPermissionText:
 		return errors.Wrap(err, `the "No Permission" problem is displayed, zoom account may require re-registration`)
-	case mainLayoutCanvas:
+	case mainLayoutCanvas, endMenu, leaveButton:
 		// Joining meeting can take a while, it sometimes hangs on `Joining Meeting...` screen.
 		joiningMeetingText := nodewith.Name("Joining Meeting...").Role(role.StaticText).First()
 		return uiauto.IfSuccessThen(ui.WithTimeout(5*time.Second).WaitUntilExists(joiningMeetingText),
