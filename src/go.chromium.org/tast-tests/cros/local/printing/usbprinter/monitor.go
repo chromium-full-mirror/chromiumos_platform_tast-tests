@@ -43,6 +43,12 @@ func waitEvent(ctx context.Context, action string, devInfo DevInfo, onPidReady c
 	// matches the expected devInfo and action.
 	matchVID := "ID_VENDOR_ID=" + devInfo.VID
 	matchPID := "ID_MODEL_ID=" + devInfo.PID
+	if action == "remove" {
+		// The remove event might not contain the ID_* properties, so match against
+		// the PRODUCT property instead.
+		matchVID = "PRODUCT=" + strings.TrimLeft(devInfo.VID, "0") + "/" + strings.TrimLeft(devInfo.PID, "0") + "/"
+		matchPID = matchVID
+	}
 	matchAction := "ACTION=" + action
 	var sb strings.Builder
 	rd := bufio.NewReader(p)
