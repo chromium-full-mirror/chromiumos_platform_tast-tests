@@ -42,13 +42,13 @@ type schedConfig struct {
 
 // cyclicTestParameters contains all the data needed to run a single test iteration.
 type cyclicTestParameters struct {
-	Config       schedConfig   // The schedule config of the cyclictest.
-	Threads      int           // Number of threads.
-	Interval     time.Duration // Interval time.
-	Loops        int           // Number of times.
-	Affinity     affinity      // Run cyclictest threads on which sets of processors.
-	P99Threshold time.Duration // P99 latency threshold.
-	StressConfig *schedConfig  // The schedule config of the stress process. if `StressConfig` is nil, no stress process will be run.
+	Config              schedConfig   // The schedule config of the cyclictest.
+	Threads             int           // Number of threads.
+	Interval            time.Duration // Interval time.
+	Loops               int           // Number of times.
+	Affinity            affinity      // Run cyclictest threads on which sets of processors.
+	MaxLatencyThreshold time.Duration // Max latency threshold.
+	StressConfig        *schedConfig  // The schedule config of the stress process. if `StressConfig` is nil, no stress process will be run.
 }
 
 const (
@@ -62,8 +62,8 @@ const (
 	defaultInterval = 10000 * time.Microsecond
 	// defaultLoops is the default number of loops tested in cyclictest.
 	defaultLoops = 6000
-	// defaultP99Threshold is the default p99 latency threshold allowed in cyclictest.
-	defaultP99Threshold = 200 * time.Microsecond
+	// defaultMaxLatencyThreshold is the default max latency threshold allowed in cyclictest.
+	defaultMaxLatencyThreshold = 3000 * time.Microsecond
 	// defaultStressWorker is the number of workers spawned in the stress test per cpu thread.
 	defaultStressWorker = 2
 )
@@ -85,12 +85,12 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasPriority,
 					},
-					Threads:      1,
-					Interval:     defaultInterval,
-					Loops:        defaultLoops,
-					Affinity:     defaultAff,
-					P99Threshold: defaultP99Threshold,
-					StressConfig: nil,
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
+					StressConfig:        nil,
 				},
 			},
 			{
@@ -100,12 +100,12 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasClientPriority,
 					},
-					Threads:      1,
-					Interval:     defaultInterval,
-					Loops:        defaultLoops,
-					Affinity:     defaultAff,
-					P99Threshold: defaultP99Threshold,
-					StressConfig: nil,
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
+					StressConfig:        nil,
 				},
 			},
 			{
@@ -115,12 +115,12 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasPriority,
 					},
-					Threads:      4,
-					Interval:     defaultInterval,
-					Loops:        defaultLoops,
-					Affinity:     defaultAff,
-					P99Threshold: defaultP99Threshold,
-					StressConfig: nil,
+					Threads:             4,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
+					StressConfig:        nil,
 				},
 			},
 			{
@@ -130,12 +130,12 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasClientPriority,
 					},
-					Threads:      4,
-					Interval:     defaultInterval,
-					Loops:        defaultLoops,
-					Affinity:     defaultAff,
-					P99Threshold: defaultP99Threshold,
-					StressConfig: nil,
+					Threads:             4,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
+					StressConfig:        nil,
 				},
 			},
 			{
@@ -145,11 +145,11 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasPriority,
 					},
-					Threads:      1,
-					Interval:     defaultInterval,
-					Loops:        defaultLoops,
-					Affinity:     defaultAff,
-					P99Threshold: defaultP99Threshold,
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig: &schedConfig{
 						Policy:   rrSched,
 						Priority: defaultStressPriority,
@@ -163,11 +163,11 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasPriority,
 					},
-					Threads:      1,
-					Interval:     defaultInterval,
-					Loops:        defaultLoops,
-					Affinity:     defaultAff,
-					P99Threshold: defaultP99Threshold,
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig: &schedConfig{
 						Policy:   otherSched,
 						Priority: 0,
@@ -181,12 +181,12 @@ func init() {
 						Policy:   otherSched,
 						Priority: 0,
 					},
-					Threads:      1,
-					Interval:     defaultInterval,
-					Loops:        defaultLoops,
-					Affinity:     defaultAff,
-					P99Threshold: 1000 * time.Microsecond,
-					StressConfig: nil,
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: 10000 * time.Microsecond,
+					StressConfig:        nil,
 				},
 			},
 			{
@@ -196,12 +196,12 @@ func init() {
 						Policy:   otherSched,
 						Priority: -20,
 					},
-					Threads:      1,
-					Interval:     defaultInterval,
-					Loops:        defaultLoops,
-					Affinity:     defaultAff,
-					P99Threshold: 500 * time.Microsecond,
-					StressConfig: nil,
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: 5000 * time.Microsecond,
+					StressConfig:        nil,
 				},
 			},
 			{
@@ -211,12 +211,12 @@ func init() {
 						Policy:   otherSched,
 						Priority: 19,
 					},
-					Threads:      1,
-					Interval:     defaultInterval,
-					Loops:        defaultLoops,
-					Affinity:     defaultAff,
-					P99Threshold: 5000 * time.Microsecond,
-					StressConfig: nil,
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: 20000 * time.Microsecond,
+					StressConfig:        nil,
 				},
 			},
 			{
@@ -226,11 +226,11 @@ func init() {
 						Policy:   otherSched,
 						Priority: 0,
 					},
-					Threads:      1,
-					Interval:     defaultInterval,
-					Loops:        defaultLoops,
-					Affinity:     defaultAff,
-					P99Threshold: 30000 * time.Microsecond,
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: 10000 * time.Microsecond,
 					StressConfig: &schedConfig{
 						Policy:   otherSched,
 						Priority: 0,
@@ -244,12 +244,12 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasPriority,
 					},
-					Threads:      1,
-					Interval:     defaultInterval,
-					Loops:        defaultLoops,
-					Affinity:     smallCore,
-					P99Threshold: defaultP99Threshold,
-					StressConfig: nil,
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            smallCore,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
+					StressConfig:        nil,
 				},
 				ExtraSoftwareDeps: []string{"cpu_heterogeneous"},
 			},
@@ -260,12 +260,12 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasPriority,
 					},
-					Threads:      1,
-					Interval:     defaultInterval,
-					Loops:        defaultLoops,
-					Affinity:     bigCore,
-					P99Threshold: defaultP99Threshold,
-					StressConfig: nil,
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            bigCore,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
+					StressConfig:        nil,
 				},
 				ExtraSoftwareDeps: []string{"cpu_heterogeneous"},
 			},
@@ -348,9 +348,9 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 			Direction: perf.SmallerIsBetter}
 		p.Set(maxLatency, stat.Max)
 
-		if stat.P99 > float64(param.P99Threshold/time.Microsecond) {
-			s.Log("p99 latency exceeds threshold: ", stat.P99,
-				" > ", param.P99Threshold)
+		if stat.Max > float64(param.MaxLatencyThreshold/time.Microsecond) {
+			s.Error("Max latency exceeds threshold: ", stat.Max,
+				"us > ", param.MaxLatencyThreshold)
 		}
 	}
 	if err := p.Save(s.OutDir()); err != nil {
