@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_canonmg2900_golden_20230308.bin",
-  "size": 29698,
-  "sha256sum": "bd4641e68e03dc68851ff8906e34ed52b67203a2a25474007552fee84bb4527c"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_canonmg2900_golden_20230104.bin",
+  "size": 31463,
+  "sha256sum": "256644af2d8ec4f0e7309c681fcaf9a966fb30da800e3fd78a324f8124a1f487"
 }
