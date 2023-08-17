@@ -8,16 +8,18 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
-	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
+	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -36,8 +38,9 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
 		SoftwareDeps: []string{"chrome", "no_tablet_form_factor"},
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		Timeout:      4 * time.Minute,
+		VarDeps:      []string{arcent.LoginPoolVar},
 		Params: []testing.Param{{
 			Name: "enabled",
 			Val: managedPlayStoreIconTestArgs{
@@ -91,48 +94,38 @@ func init() {
 func ManagedPlayStoreIcon(ctx context.Context, s *testing.State) {
 	args := s.Param().(managedPlayStoreIconTestArgs)
 
-	fdms, err := fakedms.New(ctx, s.OutDir())
-	if err != nil {
-		s.Fatal("Failed to start FakeDMS: ", err)
-	}
-	defer fdms.Stop(ctx)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
-	pb := policy.NewBlob()
-	pb.AddPolicies([]policy.Policy{args.arcEnabled})
-	if err := fdms.WritePolicyBlob(pb); err != nil {
-		s.Fatal("Failed to write policies to FakeDMS: ", err)
+	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+	if err != nil {
+		s.Fatal("Failed to get login creds: ", err)
 	}
+
+	policies := []policy.Policy{args.arcEnabled}
+	fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
+	defer fdms.Stop(cleanupCtx)
 
 	// Start a Chrome instance that will fetch policies from the FakeDMS.
-	cr, err := chrome.New(ctx,
-		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
-		chrome.DMSPolicy(fdms.URL),
+	cr, err := chrome.New(
+		ctx,
+		chrome.GAIALogin(creds),
 		chrome.ARCSupported(),
-		chrome.DeferLogin(),
-	)
+		chrome.DMSPolicy(fdms.URL),
+		chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	if err != nil {
 		s.Fatal("Chrome startup failed: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
-	if err := cr.ContinueLogin(ctx); err != nil {
-		s.Fatal("Chrome login failed: ", err)
-	}
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Connect to Test API to use it with the UI library.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-
-	// Set up keyboard.
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to get keyboard: ", err)
-	}
-	defer kb.Close(ctx)
-
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Look for the Play Store icon.
 	// Polling till the icon is found or the timeout is reached.
