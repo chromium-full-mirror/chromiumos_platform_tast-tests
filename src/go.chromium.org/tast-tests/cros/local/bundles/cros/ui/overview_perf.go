@@ -5,10 +5,14 @@
 package ui
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"image/png"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -23,6 +27,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -96,13 +101,19 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 	}
 	defer ash.SetTabletModeEnabled(cleanupCtx, tconn, originalTabletMode)
 
+	// A function, if assigned, will save the screenshot captured when
+	// determining the split-screen capability. It is called when there are
+	// test failures. The saved screenshot can help debugging.
+	var saveCanSplitScreenshot func(context.Context) error
 	// Take screenshot when s.Fatal() is called.
 	s.AttachErrorHandlers(
 		nil, // Skip the handler for s.Error().
 		func(errMsg string) {
 			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+			if saveCanSplitScreenshot != nil {
+				saveCanSplitScreenshot(cleanupCtx)
+			}
 		})
-
 	canSplitScreen, err := func(ctx context.Context) (bool, error) {
 		if originalTabletMode != true {
 			// The tests also run on devices that do not support tablet mode. Thus,
@@ -121,6 +132,26 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 		// There should exist only one blank Chrome window now.
 		if len(ws) != 1 {
 			return false, errors.Errorf("got %d windows when one Chrome window is expected", len(ws))
+		}
+
+		// Wait until the Chrome buttons for tablet mode are ready by checking
+		// the existence and stability of the "New tab" button.
+		if err := uiauto.New(tconn).WaitForLocation(nodewith.ClassName("ToolbarButton").Name("New tab"))(ctx); err != nil {
+			return false, errors.Wrap(err, "failed to wait for Chrome \"New tab\" button in tablet mode")
+		}
+
+		// Take the current screenshot. If the test fails, compare it with the
+		// failure screenshot to find out Chrome UI changes.
+		if img, err := screenshot.CaptureChromeImageWithTestAPI(ctx, tconn); err != nil {
+			testing.ContextLog(ctx, "Failed to capture screenshot: ", err)
+		} else {
+			saveCanSplitScreenshot = func(ctx context.Context) error {
+				imgBuf := new(bytes.Buffer)
+				if err := png.Encode(imgBuf, img); err != nil {
+					return errors.Wrap(err, "failed to encode png image")
+				}
+				return os.WriteFile((filepath.Join(s.OutDir(), "ui_can_split.png")), imgBuf.Bytes(), 0644)
+			}
 		}
 
 		win := ws[0]
