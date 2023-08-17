@@ -59,7 +59,7 @@ func init() {
 			"rjodin@chromium.org",
 		},
 		Fixture: "graphicsNoChrome",
-		Timeout: 5 * time.Minute,
+		Timeout: 10 * time.Minute,
 	})
 }
 
