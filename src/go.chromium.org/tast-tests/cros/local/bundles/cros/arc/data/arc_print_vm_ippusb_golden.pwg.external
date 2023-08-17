@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/arc_print_vm_ippusb_golden_20230426.pwg",
-  "size": 449623,
-  "sha256sum": "e5eec389a6f02e22b35be249da6172f28f0a6e80aa760f55e464ae7813b31297"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/arc_print_vm_ippusb_golden_20230817.pwg",
+  "size": 448698,
+  "sha256sum": "2910c879e606c87121cc7f343b8dfee03d69372b75f83a1568a6e1fd5da0bf5f"
 }
