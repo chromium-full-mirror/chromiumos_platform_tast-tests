@@ -68,9 +68,6 @@ func init() {
 			Name: "prime_search",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutinePrimeSearch),
 		}, {
-			Name: "lan_connectivity",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineLanConnectivity),
-		}, {
 			// Cannot be added to DiagnosticsPass.* since the result would be
 			// "Not run" in lab's network. See b/286497166.
 			Name: "signal_strength",
@@ -84,17 +81,8 @@ func init() {
 			Name: "has_secure_wifi_connection",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHasSecureWifiConnection),
 		}, {
-			Name: "dns_resolver_present",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
-		}, {
 			Name: "dns_latency",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDNSLatency),
-		}, {
-			Name: "dns_resolution",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
-		}, {
-			Name: "captive_portal",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),
 		}, {
 			Name: "http_firewall",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHTTPFirewall),

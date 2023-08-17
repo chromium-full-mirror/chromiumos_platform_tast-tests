@@ -79,29 +79,25 @@ func init() {
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutinePrimeSearch),
 			ExtraAttr: []string{"informational"},
 		}, {
-			Name:      "lan_connectivity",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineLanConnectivity),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name: "lan_connectivity",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineLanConnectivity),
 		}, {
 			Name:      "gateway_can_be_pinged",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineGatewayCanBePinged),
 			ExtraAttr: []string{"informational"},
 		}, {
-			Name:      "dns_resolver_present",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name: "dns_resolver_present",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
 		}, {
 			Name:      "dns_latency",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineDNSLatency),
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name:      "dns_resolution",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name: "dns_resolution",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
 		}, {
-			Name:      "captive_portal",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name: "captive_portal",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),
 		}, {
 			Name:      "memory",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
