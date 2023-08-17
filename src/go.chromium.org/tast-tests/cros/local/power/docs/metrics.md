@@ -46,8 +46,7 @@ This document lists the metrics collected in power package through TestMetrics()
 | fan_${fan name}             | RPM   | Speed of each fan.                                                           |
 | **GPU Metrics**             |
 | Name                        | Unit  | Note                                                                         |
-| gpu_rc0                     | %     | The percent of time the GPU is in RC0 state.                                 |
-| gpu_rc6                     | %     | The percent of time the GPU is in RC6 state.                                 |
+| drm_rank${rank}\_memory_${type}                     | kiB     | The amount of memory that a GPU process is using, ranked by GPU utilization. Types include _total, active, shared_.                                 |
 | gpu_freq                    | MHz   | GPU clock frequency.                                                         |
 | **Zram IO Metrics**         |
 | Name                        | Unit  | Note                                                                         |

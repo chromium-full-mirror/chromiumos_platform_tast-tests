@@ -36,7 +36,7 @@ const (
 	fpsMetricType              = "fps."
 	generalPerfMetricType      = "perf."
 	gpuFreqMetricType          = "gpufreq_wavg."
-	gpuStateMetricType         = "gpuidle."
+	gpuUsageMetricType         = "gpu_usage."
 	packageCstatesMetricType   = "cpupkg."
 	batterySOCMetricType       = "battery."
 	histogramMetricType        = "histogram."
@@ -61,7 +61,7 @@ var validMetricTypeMap = map[string]bool{
 	"fps":               true,
 	"perf":              true,
 	"gpufreq_wavg":      true,
-	"gpuidle":           true,
+	"gpu_usage":         true,
 	"cpupkg":            true,
 	"histogram":         true,
 	"power":             true,
@@ -85,7 +85,8 @@ const (
 	fpsMetricTypeUnit              = "fps"
 	generalPerfMetricTypeUnit      = "point"
 	gpuFreqMetricTypeUnit          = "megahertz"
-	gpuStateMetricTypeUnit         = "percent"
+	gpuUsageUtilizationTypeUnit    = "percent"
+	gpuUsageMemoryTypeUnit         = "kiB"
 	histogramLatencyMetricTypeUnit = "us"
 	packageCstatesMetricTypeUnit   = "percent"
 	powerRelatedMetricTypeUnit     = "W"
@@ -203,6 +204,10 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 
 		size := len(metricNameSlice)
 
+		// TODO: b/296507731 - Support prefixes in power recorder
+		// if power recorder starts accepting prefixes, size conditions for
+		// metricName/type should also be updated
+
 		// metric.Name is guaranteed be non-empty string.
 		metricName = metricNameSlice[size-1]
 
@@ -221,7 +226,7 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 		// 2. "t": not a power metric, therefore a metric type isn't assigned and
 		// it will not be included in the typeMap.
 		// 3. size == 1: assign metricType to "other" when type is not provided.
-		// 4. Retrieve metricType from metricNameSlice.
+		// 4. Assume format (metricType.)metricName from metricNameSlice.
 		if metricName == "system" {
 			metricType = "power"
 		} else if metricName == "t" {
@@ -230,7 +235,8 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 		} else if size == 1 {
 			metricType = "other"
 		} else {
-			metricType = metricNameSlice[size-2]
+			metricType = metricNameSlice[0]
+			metricName = strings.ToLower(strings.Join(metricNameSlice[1:size], "_"))
 		}
 
 		// Validate metricType.
@@ -629,11 +635,11 @@ func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 
 	for metricType, metrics := range typeToMetricsMap {
 		// Sort the following types in numerical order: cpu-C0, cpu-C1E, cpu-C6, cpu-C8, cpu-C10.
-		if metricType == "cpuidle" || metricType == "gpuidle" || metricType == "cpupkg" {
+		if metricType == "cpuidle" || metricType == "cpupkg" {
 			sortMetricsNumerically(ctx, metrics)
 			continue
 		}
-		// Sort all other types in albetical order ignoring cases.
+		// Sort all other types in alphabetical order ignoring cases.
 		sort.Slice(metrics, func(i, j int) bool {
 			return strings.ToLower(metrics[i]) < strings.ToLower(metrics[j])
 		})

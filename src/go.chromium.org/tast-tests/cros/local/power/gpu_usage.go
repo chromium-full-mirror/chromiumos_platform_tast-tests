@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package perf
+package power
 
 import (
 	"bufio"
@@ -509,8 +509,8 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 					continue
 				}
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%sGPU.Usage.DRM_%s.Utilization.%s.%s", ds.prefix, drmRank, engine, procName),
-					Unit:      "percent",
+					Name:      fmt.Sprintf("%s%sDRM_%s.Utilization.%s.%s", ds.prefix, gpuUsageMetricType, drmRank, engine, procName),
+					Unit:      gpuUsageUtilizationTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  ds.intervalName,
@@ -522,8 +522,8 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 					continue
 				}
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%sGPU.Usage.DRM_%s.Memory.%s.%s", ds.prefix, drmRank, kind, procName),
-					Unit:      "KiB",
+					Name:      fmt.Sprintf("%s%sDRM_%s.Memory.%s.%s", ds.prefix, gpuUsageMetricType, drmRank, kind, procName),
+					Unit:      gpuUsageMemoryTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  ds.intervalName,
@@ -534,8 +534,8 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 		if drmHasUtilization {
 			for engine := range drm.allEngines {
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%sGPU.Usage.DRM_%s.Utilization.%s", ds.prefix, drmRank, engine),
-					Unit:      "percent",
+					Name:      fmt.Sprintf("%s%sDRM_%s.Utilization.%s", ds.prefix, gpuUsageMetricType, drmRank, engine),
+					Unit:      gpuUsageUtilizationTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  ds.intervalName,
@@ -545,8 +545,8 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 		if drmHasMemory {
 			for kind := range drm.allMemoryKinds {
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%sGPU.Usage.DRM_%s.Memory.%s", ds.prefix, drmRank, kind),
-					Unit:      "KiB",
+					Name:      fmt.Sprintf("%s%sDRM_%s.Memory.%s", ds.prefix, gpuUsageMetricType, drmRank, kind),
+					Unit:      gpuUsageMemoryTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  ds.intervalName,

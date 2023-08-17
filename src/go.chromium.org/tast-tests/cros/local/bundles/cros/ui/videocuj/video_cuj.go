@@ -31,7 +31,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
-	localPerf "go.chromium.org/tast-tests/cros/local/perf"
+	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -109,7 +109,7 @@ func Run(ctx context.Context, s *testing.State) {
 	// collection to all TPS tests after comparing the performance.
 	if strings.Contains(s.TestName(), "gpuusage") {
 		gpuUsageTimeline, err := perf.NewTimeline(ctx, []perf.TimelineDatasource{
-			localPerf.NewGPUUsageDataSource()}, perf.Interval(5*time.Second))
+			power.NewGPUUsageDataSource()}, perf.Interval(5*time.Second))
 		if err != nil {
 			s.Fatal("Failed to create GPU usage timeline: ", err)
 		}

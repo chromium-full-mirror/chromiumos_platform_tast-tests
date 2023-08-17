@@ -18,7 +18,7 @@ func TestMetrics() []perf.TimelineDatasource {
 		NewPackageCStatesMetrics(),
 		NewProcfsCPUMetrics(),
 		NewFanMetrics(),
-		NewGPUStateMetrics(),
+		NewGPUUsageDataSource(),
 		NewGPUFreqMetrics(),
 		NewZramIOMetrics(),
 		NewMemoryMetrics(),
