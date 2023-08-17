@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -53,6 +54,11 @@ func Run(ctx context.Context, s *testing.State) {
 	closeCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
+
+	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
+	if err != nil {
+		s.Fatal("Failed to capture device snapshot: ", err)
+	}
 
 	testParam := s.Param().(BenchmarkTest)
 	benchmarkParam := testParam.BenchmarkInfo
@@ -137,7 +143,6 @@ func Run(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to retrieve benchmark scores: ", err)
 	}
 
-	pv := perf.NewValues()
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to report: ", err)
 	}

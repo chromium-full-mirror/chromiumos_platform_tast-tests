@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -21,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/input"
+	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 
@@ -42,6 +42,11 @@ func Run(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
+	if err != nil {
+		s.Fatal("Failed to capture device snapshot: ", err)
+	}
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
@@ -281,7 +286,6 @@ func Run(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to conduct the recorder task: ", err)
 	}
 
-	pv := perf.NewValues()
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to record the performance data: ", err)
 	}

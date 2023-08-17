@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
-	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -36,6 +35,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -408,6 +408,11 @@ func Run(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer cancel()
 
+	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
+	if err != nil {
+		s.Fatal("Failed to capture device snapshot: ", err)
+	}
+
 	// Perform initial test setup
 	setupVars, err := runSetup(ctx, s)
 	if err != nil {
@@ -428,7 +433,6 @@ func Run(ctx context.Context, s *testing.State) {
 	}
 
 	// Write out values
-	pv := perf.NewValues()
 	if err := setupVars.recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to report: ", err)
 	}

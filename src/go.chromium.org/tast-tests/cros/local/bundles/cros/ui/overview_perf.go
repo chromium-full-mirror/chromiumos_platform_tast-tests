@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
@@ -75,6 +76,11 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
+
+	initialSnapshot, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
+	if err != nil {
+		s.Fatal("Failed to capture device snapshot: ", err)
+	}
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
@@ -295,6 +301,7 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 	}
 
 	pv := runner.Values().Values(ctx)
+	pv.Merge(initialSnapshot)
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to record the data: ", err)
 	}

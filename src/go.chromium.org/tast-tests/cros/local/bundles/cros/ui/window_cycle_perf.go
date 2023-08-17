@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/input"
+	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/ui"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
@@ -68,6 +69,11 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
+
+	initialSnapshot, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
+	if err != nil {
+		s.Fatal("Failed to capture device snapshot: ", err)
+	}
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
@@ -203,6 +209,7 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 	}
 
 	pv := runner.Values().Values(ctx)
+	pv.Merge(initialSnapshot)
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to record the data: ", err)
 	}

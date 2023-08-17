@@ -41,6 +41,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/loginstatus"
+	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/webrtcinternals"
 
@@ -710,6 +711,11 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
+	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
+	if err != nil {
+		s.Fatal("Failed to capture device snapshot: ", err)
+	}
+
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -1179,7 +1185,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	// Make sure the Meet call window hasn't crashed before starting the recorder.
 	assertTabActive(ctx)
 
-	pv := perf.NewValues()
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
 		// Open up the collab window inside the recorder to collect
 		// PageLoad.PaintTiming.NavigationToFirstContentfulPaint.
