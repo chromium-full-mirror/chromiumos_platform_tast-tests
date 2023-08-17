@@ -70,7 +70,7 @@ func NightLightSchedule(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	// Turn on night light by clicking the night light pod icon in quick settings.
-	nightLightIconButton := nodewith.HasClass("FeaturePodIconButton").NameContaining("Night Light")
+	nightLightIconButton := nodewith.HasClass("IconButton").NameContaining("Night Light")
 	if err := uiauto.Combine(
 		"Click night light pod in quick settings",
 		ui.LeftClick(nodewith.HasClass("UnifiedSystemTray")),
@@ -98,10 +98,13 @@ func NightLightSchedule(ctx context.Context, s *testing.State) {
 		s.Fatal("After clicking night light pod button, it still shows \"Night light is off\"")
 	}
 
-	// Open display settings by clicking the sub label of night light pod.
+	// Open display settings by clicking the chevron button right after night light pod and the gear button.
 	if err := uiauto.Combine(
 		"Show display settings by clicking night light sub label",
-		ui.LeftClick(nodewith.HasClass("FeaturePodLabelButton").Name("Show display settings")),
+		// The chevron button.
+		ui.LeftClick(nodewith.HasClass("IconButton").Name("Show display settings")),
+		// The gear button.
+		ui.LeftClick(nodewith.HasClass("IconButton").Name("Show display settings")),
 		ui.WaitUntilExists(nodewith.HasClass("BrowserFrame").Name("Settings - Displays")),
 	)(ctx); err != nil {
 		s.Fatal("Failed to click night light sub label to show display settings: ", err)
@@ -113,7 +116,7 @@ func NightLightSchedule(ctx context.Context, s *testing.State) {
 	endTimeKnob := nodewith.HasClass("knob").NameContaining("End time")
 	if err := uiauto.Combine(
 		"Choose custom night light schedule",
-		ui.LeftClick(nodewith.Role("popUpButton").Name("Schedule")),
+		ui.LeftClick(nodewith.Role("comboBoxSelect").Name("Schedule")),
 		ui.LeftClick(customScheduleOption),
 		ui.WaitUntilExists(startTimeKnob),
 	)(ctx); err != nil {
@@ -180,12 +183,13 @@ func NightLightSchedule(ctx context.Context, s *testing.State) {
 // extractTimeFromString extracts the time from the given string and returns the time data in 24 hours format.
 func extractTimeFromString(ctx context.Context, stringWithTime string) (timeData, error) {
 	// Get time string with format HH:MM A/PM from string.
-	reg := regexp.MustCompile("\\d+:\\d\\d\\s[A|P]M")
+	reg := regexp.MustCompile("\\d+:\\d\\d.[A|P]M")
 	timeString := reg.FindString(stringWithTime)
 
 	data := timeData{hour: 0, minute: 0}
+	seperator := ' '
 	period := "AM"
-	_, err := fmt.Sscanf(timeString, "%d:%d %s", &data.hour, &data.minute, &period)
+	_, err := fmt.Sscanf(timeString, "%d:%d%c%s", &data.hour, &data.minute, &seperator, &period)
 	if err != nil {
 		return data, errors.Wrapf(err, "failed to get time with format HH:MM A/PM from %s", timeString)
 	}
