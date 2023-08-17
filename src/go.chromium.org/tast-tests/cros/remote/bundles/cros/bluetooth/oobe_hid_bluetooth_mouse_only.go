@@ -121,9 +121,12 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "Turning btpeer adapter on")
 
-	// Turn on mouse device and check that mouse device is paired to.
-	if result, err := mouseDevice.RPC().AdapterPowerOn(ctx); err != nil || !result {
-		s.Fatal("Failed to power on btpeer adapter: ", err)
+	// Discover btpeer as a mouse.
+	mouseDevice, err = bluetooth.NewEmulatedBTPeerDevice(ctx, fv.BTPeers[0], &bluetooth.EmulatedBTPeerDeviceConfig{
+		DeviceType: cbt.DeviceTypeMouse,
+	})
+	if err != nil {
+		s.Fatalf("Failed to configure btpeer as a %s device: %s", mouseDevice.DeviceType(), err)
 	}
 
 	testing.ContextLog(ctx, "Checking that pointer was found")

@@ -117,9 +117,12 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find node: ", err)
 	}
 
-	// Turn on keyboard device and check that keyboard device is paired to.
-	if _, err := keyboardDevice.RPC().AdapterPowerOn(ctx); err != nil {
-		s.Fatal("Failed to power on btpeer adapter: ", err)
+	// Discover btpeer as a keyboard.
+	keyboardDevice, err = bluetooth.NewEmulatedBTPeerDevice(ctx, fv.BTPeers[0], &bluetooth.EmulatedBTPeerDeviceConfig{
+		DeviceType: cbt.DeviceTypeKeyboard,
+	})
+	if err != nil {
+		s.Fatalf("Failed to configure btpeer as a %s device: %s", keyboardDevice.DeviceType(), err)
 	}
 
 	// Verify keyboard device is pairing.
