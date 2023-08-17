@@ -13,9 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/saveddesks"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -112,11 +110,6 @@ func DesksTemplatesBasic(ctx context.Context, s *testing.State) {
 
 	if err := saveddesks.OpenApps(ctx, tconn, ac, appsList); err != nil {
 		s.Fatal("Failed to open apps: ", err)
-	}
-
-	// TODO(b/296141011): Disable the customize chrome pop up on a browser launch instead of waiting for the popup event to be over.
-	if err := ac.WithInterval(5*time.Second).WaitUntilNoEvent(nodewith.Root(), event.HaspopupChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for other popup events to be completed: ", err)
 	}
 
 	// Enter overview mode.
