@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/arc/dututils"
 	"go.chromium.org/tast-tests/cros/services/cros/arc"
 	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -178,9 +177,13 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 
 	s.Log("Validating GMS Core cache")
 	// Note, vdex and odex are not guaranteed to be the same even if produced from the same sources.
+	// stored_modulesets.pb, current_config.fb and current_features.fb may differ from run to run.
 	if err := saveOutput(filepath.Join(s.OutDir(), "app_chimera.diff"),
 		testexec.CommandContext(ctx, "diff", "--recursive", "--no-dereference",
 			"--exclude=*.odex", "--exclude=*.vdex",
+			"--exclude=stored_modulesets.pb",
+			"--exclude=current_config.fb",
+			"--exclude=current_features.fb",
 			filepath.Join(withCacheDir, "app_chimera"),
 			filepath.Join(withoutCacheDir, "app_chimera"))); err != nil {
 		s.Error("Error validating app_chimera folders: ", err)
