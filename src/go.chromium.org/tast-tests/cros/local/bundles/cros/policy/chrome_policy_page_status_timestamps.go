@@ -60,8 +60,8 @@ func reloadPolicies(ctx context.Context, conn *browser.Conn, s *testing.State) {
 		s.Fatal("Failed while waiting for Reload policies button to become enabled again: ", err)
 	}
 
-	// TODO(crbug/1326565): Wait for policies to be reloaded.
 	if s.Param().(browser.Type) == browser.TypeLacros {
+		// GoBigSleepLint: TODO(crbug/1326565): Wait for policies to be reloaded.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			s.Fatal("Failed while waiting for policies to be reloaded: ", err)
 		}
@@ -88,15 +88,17 @@ func readStatusBoxes(ctx context.Context, conn *browser.Conn, s *testing.State) 
 		const policies = getPolicyFieldsets();
 		const statuses = {};
 		for (let i = 0; i < policies.length; ++i) {
-			const legend = policies[i].querySelector('legend').textContent;
+			const statusHeading = policies[i]
+				.querySelector('.status-box-heading').textContent;
 			const entries = {};
 			const rows = policies[i]
 				.querySelectorAll('.status-entry div:nth-child(2)');
 			for (let j = 0; j < rows.length; ++j) {
-				entries[rows[j].className] = rows[j].textContent.trim();
+				entries[rows[j].className.split(' ')[0]] = rows[j].textContent.trim();
 			}
-			statuses[legend.trim()] = entries;
+			statuses[statusHeading.trim()] = entries;
 		}
+
 		return statuses;
 	})()`, &boxes); err != nil {
 		s.Fatal("Failed to read status boxes: ", err)
@@ -160,7 +162,7 @@ func ChromePolicyPageStatusTimestamps(ctx context.Context, s *testing.State) {
 	checkTime(newBoxes, boxNames, "time-since-last-refresh", zeroSecsAgoRE, s)
 	checkTime(newBoxes, boxNames, "time-since-last-fetch-attempt", zeroSecsAgoRE, s)
 
-	// Sleep for 1 minute, refresh page, check that timestamps are updated.
+	// GoBigSleepLint: Sleep for 1 minute, refresh page, check that timestamps are updated.
 	if err = testing.Sleep(ctx, time.Minute); err != nil {
 		s.Fatal("Failed to sleep for 1 minute: ", err)
 	}
