@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -42,21 +43,22 @@ type testCase struct {
 	Policy               *policy.AdvancedProtectionAllowed
 }
 
-// GetTestCases returns the list of TestCase objects for each policy value.
-func GetTestCases() []testCase {
+// TestCases returns the map of policy setting enum to testCase object
+// for each AdvancedProtectionAllowed policy value.
+func TestCases() map[networkrequestmonitor.PolicySetting]testCase {
 	// Reordering the TestCase objects in the returned list may break tests.
-	return []testCase{
-		{
+	return map[networkrequestmonitor.PolicySetting]testCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:                 "disabled",
 			ShouldFindAnnotation: false,
 			Policy:               &policy.AdvancedProtectionAllowed{Val: false},
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "enabled",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.AdvancedProtectionAllowed{Val: true},
 		},
-		{
+		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.AdvancedProtectionAllowed{Stat: policy.StatusUnset},
@@ -66,7 +68,7 @@ func GetTestCases() []testCase {
 
 // TriggerUploadForScanning downloads a suspicious file and then uploads it for
 // scanning.
-func TriggerUploadForScanning(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+func TriggerUploadForScanning(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, _ networkrequestmonitor.PolicySetting) (err error) {
 	// Open the browser and download the test suspicious file from the local file
 	// server.
 	conn, err := br.NewConn(ctx, "")

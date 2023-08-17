@@ -99,7 +99,7 @@ func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.Sta
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := ukm.TriggerAndVerifyUkmApp(ctx, cr, br, nil, nil, index); err != nil {
+			if err := ukm.TriggerAndVerifyUkmAppFromIndex(ctx, br, index); err != nil {
 				s.Fatal("Failed to verify log on ukm app: ", err)
 			}
 

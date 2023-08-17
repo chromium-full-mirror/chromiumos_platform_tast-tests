@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/personalization"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -45,25 +46,23 @@ type CustomizationTestCase struct {
 	Policy                    *policy.UserAvatarCustomizationSelectorsEnabled
 }
 
-// TestCases returns the list of CustomizationTestCase objects on which
-// UserAvatarCustomizationSelectorsEnabled policy is tested.
-func TestCases() []CustomizationTestCase {
-	// The "disabled" test case must be the first element of the returned list.
-	// Otherwise, policy.NetworkRequestMonitor test will use the wrong test case.
-	return []CustomizationTestCase{
-		{
+// TestCases returns the map of policy setting enum to CustomizationTestCase
+// objects on which the UserAvatarCustomizationSelectorsEnabled policy is tested.
+func TestCases() map[networkrequestmonitor.PolicySetting]CustomizationTestCase {
+	return map[networkrequestmonitor.PolicySetting]CustomizationTestCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:                      "disabled",
 			ShouldFindAnnotation:      false,
 			ShouldFindCustomSelectors: false,
 			Policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Val: false},
 		},
-		{
+		networkrequestmonitor.PolicyUnset: {
 			Name:                      "unset",
 			ShouldFindAnnotation:      true,
 			ShouldFindCustomSelectors: true,
 			Policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Stat: policy.StatusUnset},
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:                      "enabled",
 			ShouldFindAnnotation:      true,
 			ShouldFindCustomSelectors: true,
@@ -75,9 +74,9 @@ func TestCases() []CustomizationTestCase {
 // TriggerUserAvatarCustomization opens the user avatar customization app and
 // verifies that certain avatar selectors are disabled based on policy value.
 func TriggerUserAvatarCustomization(ctx context.Context, _ *chrome.Chrome,
-	_ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) error {
+	_ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) error {
 
-	param := TestCases()[paramIndex]
+	param := TestCases()[policySetting]
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
 	// Open user avatar personalization app. Note: We retry here because sometimes the button

@@ -71,7 +71,7 @@ func AdvancedProtectionAllowed(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	for index, param := range advancedprotection.GetTestCases() {
+	for key, param := range advancedprotection.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -102,7 +102,7 @@ func AdvancedProtectionAllowed(ctx context.Context, s *testing.State) {
 			// Trigger file upload for scanning. This should trigger the
 			// safe_browsing_binary_upload_app annotation, if Advanced Protection is
 			// enabled.
-			if err := advancedprotection.TriggerUploadForScanning(ctx, nil, br, server, tconn, index); err != nil {
+			if err := advancedprotection.TriggerUploadForScanning(ctx, nil, br, server, tconn, key); err != nil {
 				s.Fatal("Failed to trigger upload for scanning: ", err)
 			}
 

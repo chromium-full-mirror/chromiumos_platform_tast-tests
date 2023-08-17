@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -34,24 +35,23 @@ type TestCase struct {
 // AnnotationHashCode is the hashcode for annotation omnibox_suggest.
 const AnnotationHashCode = "47815025"
 
-// GetTestCases returns the list of TestCase objects on which
-// SearchSuggestEnabled policy is tested.
-func GetTestCases() []TestCase {
-	// Reordering the TestCase objects in the returned list may break tests.
-	return []TestCase{
-		{
+// TestCases returns the map of policy setting enum to TestCase objects
+// on which the SearchSuggestEnabled policy is tested.
+func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
+	return map[networkrequestmonitor.PolicySetting]TestCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:                 "disabled",
 			ShouldFindAnnotation: false,
 			Policy:               &policy.SearchSuggestEnabled{Val: false},
 			Enabled:              false,
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "enabled",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.SearchSuggestEnabled{Val: true},
 			Enabled:              true,
 		},
-		{
+		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.SearchSuggestEnabled{Stat: policy.StatusUnset},
@@ -61,8 +61,8 @@ func GetTestCases() []TestCase {
 }
 
 // TriggerSearchSuggestion verifies suggestions are not shown when policy is off.
-func TriggerSearchSuggestion(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
-	param := GetTestCases()[paramIndex]
+func TriggerSearchSuggestion(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
+	param := TestCases()[policySetting]
 
 	// Open a keyboard device.
 	keyboard, err := input.Keyboard(ctx)

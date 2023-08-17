@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -42,25 +43,23 @@ type DefinitionTestCase struct {
 	Policy                *policy.QuickAnswersDefinitionEnabled
 }
 
-// GetDefinitionTestCases returns the list of DefinitionTestCase objects on
-// which QuickAnswersDefinitionEnabled policy is tested.
-func GetDefinitionTestCases() []DefinitionTestCase {
-	// Reordering the DefinitionTestCase objects in the returned list may break
-	// tests.
-	return []DefinitionTestCase{
-		{
+// DefinitionTestCases returns the map of policy setting enum to DefinitionTestCase
+// objects on which the QuickAnswersDefinitionEnabled policy is tested.
+func DefinitionTestCases() map[networkrequestmonitor.PolicySetting]DefinitionTestCase {
+	return map[networkrequestmonitor.PolicySetting]DefinitionTestCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:                  "disabled",
 			ShouldFindAnnotation:  false,
 			ShouldShowContextMenu: false,
 			Policy:                &policy.QuickAnswersDefinitionEnabled{Val: false},
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:                  "enabled",
 			ShouldFindAnnotation:  true,
 			ShouldShowContextMenu: true,
 			Policy:                &policy.QuickAnswersDefinitionEnabled{Val: true},
 		},
-		{
+		networkrequestmonitor.PolicyUnset: {
 			Name:                  "unset",
 			ShouldFindAnnotation:  true,
 			ShouldShowContextMenu: true,
@@ -77,25 +76,23 @@ type UnitConversionTestCase struct {
 	Policy                *policy.QuickAnswersUnitConversionEnabled
 }
 
-// GetUnitConversionTestCases returns the list of UnitConversionTestCase objects
-// on which QuickAnswersUnitConversionEnabled policy is tested.
-func GetUnitConversionTestCases() []UnitConversionTestCase {
-	// Reordering the UnitConversionTestCase objects in the returned list may
-	// break tests.
-	return []UnitConversionTestCase{
-		{
+// UnitConversionTestCases returns the map of policy setting enum to UnitConversionTestCase
+// objects on which QuickAnswersUnitConversionEnabled policy is tested.
+func UnitConversionTestCases() map[networkrequestmonitor.PolicySetting]UnitConversionTestCase {
+	return map[networkrequestmonitor.PolicySetting]UnitConversionTestCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:                  "disabled",
 			ShouldFindAnnotation:  false,
 			ShouldShowContextMenu: false,
 			Policy:                &policy.QuickAnswersUnitConversionEnabled{Val: false},
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:                  "enabled",
 			ShouldFindAnnotation:  true,
 			ShouldShowContextMenu: true,
 			Policy:                &policy.QuickAnswersUnitConversionEnabled{Val: true},
 		},
-		{
+		networkrequestmonitor.PolicyUnset: {
 			Name:                  "unset",
 			ShouldFindAnnotation:  true,
 			ShouldShowContextMenu: true,
@@ -111,8 +108,8 @@ func GetDataFiles() []string {
 }
 
 // TriggerQuickAnswersDefinition attempts to trigger quick answers definition and checks if the policy works as defined in the DefinitionTestCase param.
-func TriggerQuickAnswersDefinition(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
-	param := GetDefinitionTestCases()[paramIndex]
+func TriggerQuickAnswersDefinition(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
+	param := DefinitionTestCases()[policySetting]
 
 	// Open page with the query word on it.
 	conn, err := br.NewConn(ctx, server.URL+"/"+testFileName, browser.WithNewWindow())
@@ -168,8 +165,8 @@ func TriggerQuickAnswersDefinition(ctx context.Context, _ *chrome.Chrome, br *br
 }
 
 // TriggerQuickAnswersUnitConversion attempts to trigger quick answers unit conversion and checks if the policy works as defined in the UnitConversionTestCase param.
-func TriggerQuickAnswersUnitConversion(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
-	param := GetUnitConversionTestCases()[paramIndex]
+func TriggerQuickAnswersUnitConversion(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
+	param := UnitConversionTestCases()[policySetting]
 
 	// Open page with source units on it.
 	conn, err := br.NewConn(ctx, server.URL+"/"+testFileName, browser.WithNewWindow())

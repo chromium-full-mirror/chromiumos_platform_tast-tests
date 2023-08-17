@@ -110,7 +110,7 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	for index, param := range remotedesktop.TestCases() {
+	for key, param := range remotedesktop.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 
 			// Perform cleanup.
@@ -147,7 +147,7 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			if err := remotedesktop.TriggerRemoteSupportRegistration(ctx, nil, br, nil, tconn, index); err != nil {
+			if err := remotedesktop.TriggerRemoteSupportRegistration(ctx, nil, br, nil, tconn, key); err != nil {
 				s.Fatal("Failure during CRD launch: ", err)
 			}
 

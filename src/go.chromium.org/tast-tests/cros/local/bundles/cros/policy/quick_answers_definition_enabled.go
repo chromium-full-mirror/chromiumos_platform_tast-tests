@@ -76,7 +76,7 @@ func QuickAnswersDefinitionEnabled(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable Quick Answers: ", err)
 	}
 
-	for index, param := range policyquickanswers.GetDefinitionTestCases() {
+	for key, param := range policyquickanswers.DefinitionTestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -103,7 +103,7 @@ func QuickAnswersDefinitionEnabled(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			if err := policyquickanswers.TriggerQuickAnswersDefinition(ctx, cr, br, server, tconn, index); err != nil {
+			if err := policyquickanswers.TriggerQuickAnswersDefinition(ctx, cr, br, server, tconn, key); err != nil {
 				s.Fatal("Failed to trigger and verify quick answers definition: ", err)
 			}
 

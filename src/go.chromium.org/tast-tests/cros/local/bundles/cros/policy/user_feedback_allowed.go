@@ -77,7 +77,7 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 	// The popup to send feedback to Google is opened in two ways: 1) Key
 	// combination (Alt+Shift+I); 2) From the menu (Chrome Menu > Help >
 	// Report an Issue). In this test, we are checking policy using scenario 1).
-	for index, param := range userfeedback.GetTestCases() {
+	for key, param := range userfeedback.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -103,7 +103,7 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			if err := userfeedback.TriggerUserFeedback(ctx, cr, br, nil, tconn, index); err != nil {
+			if err := userfeedback.TriggerUserFeedback(ctx, cr, br, nil, tconn, key); err != nil {
 				s.Fatal("Failed to trigger user feedback: ", err)
 			}
 

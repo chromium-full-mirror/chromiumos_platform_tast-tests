@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -35,24 +36,23 @@ const (
 	ChromeFeedbackReportAppHashCode = "134729048" // chrome_feedback_report_app
 )
 
-// GetTestCases returns the list of TestCase objects on which
-// UserFeedbackAllowed policy is tested.
-func GetTestCases() []TestCase {
-	// Reordering the TestCase objects in the returned list may break tests.
-	return []TestCase{
-		{
+// TestCases returns the map of policy setting enum to TestCase objects
+// on which the UserFeedbackAllowed policy is tested.
+func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
+	return map[networkrequestmonitor.PolicySetting]TestCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:                 "deny",
 			Value:                &policy.UserFeedbackAllowed{Val: false},
 			WantReportOption:     false,
 			ShouldFindAnnotation: false,
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "allow",
 			Value:                &policy.UserFeedbackAllowed{Val: true},
 			WantReportOption:     true,
 			ShouldFindAnnotation: true,
 		},
-		{
+		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
 			Value:                &policy.UserFeedbackAllowed{Stat: policy.StatusUnset},
 			WantReportOption:     true,
@@ -63,8 +63,8 @@ func GetTestCases() []TestCase {
 
 // TriggerUserFeedback verifies feedback app doesnt send reports when policy is
 // off.
-func TriggerUserFeedback(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
-	param := GetTestCases()[paramIndex]
+func TriggerUserFeedback(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
+	param := TestCases()[policySetting]
 
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
 

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -36,26 +37,25 @@ type TestCase struct {
 	Policy                  *policy.CalendarIntegrationEnabled
 }
 
-// GetTestCases returns the list of TestCase objects on which
-// CalendarIntegrationEnabled policy is tested.
-func GetTestCases() []TestCase {
-	// Reordering the TestCase objects in the returned list may break tests.
-	return []TestCase{
-		{
+// TestCases returns the map of policy setting enum to TestCase
+// object on which CalendarIntegrationEnabled policy is tested.
+func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
+	return map[networkrequestmonitor.PolicySetting]TestCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:                    "disabled",
 			ShouldFindEventListView: false,
 			ShouldFindManagedIcon:   true,
 			ShouldFindAnnotation:    false,
 			Policy:                  &policy.CalendarIntegrationEnabled{Val: false},
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:                    "enabled",
 			ShouldFindEventListView: true,
 			ShouldFindManagedIcon:   false,
 			ShouldFindAnnotation:    true,
 			Policy:                  &policy.CalendarIntegrationEnabled{Val: true},
 		},
-		{
+		networkrequestmonitor.PolicyUnset: {
 			Name:                    "unset",
 			ShouldFindEventListView: true,
 			ShouldFindManagedIcon:   false,
@@ -68,8 +68,8 @@ func GetTestCases() []TestCase {
 // TriggerCalendarIntegration verifies calendar integration process works as
 // expected. i.e. the existence of the managed icon and event list view
 // depending on the policy value.
-func TriggerCalendarIntegration(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
-	param := GetTestCases()[paramIndex]
+func TriggerCalendarIntegration(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
+	param := TestCases()[policySetting]
 
 	ui := uiauto.New(tconn)
 	dateTray := nodewith.HasClass("DateTray")

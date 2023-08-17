@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -42,16 +43,16 @@ type TestCase struct {
 	Policy               *policy.DomainReliabilityAllowed
 }
 
-// GetTestCases returns the list of TestCase objects for each policy value.
-func GetTestCases() []TestCase {
-	// Reordering the TestCase objects in the returned list may break tests.
-	return []TestCase{
-		{
+// TestCases returns the map of policy settings enum to TestCase object for each
+// value on which DomainReliabilityAllowed policy is tested.
+func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
+	return map[networkrequestmonitor.PolicySetting]TestCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:                 "disabled",
 			ShouldFindAnnotation: false,
 			Policy:               &policy.DomainReliabilityAllowed{Val: false},
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "enabled",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.DomainReliabilityAllowed{Val: true},
@@ -63,7 +64,7 @@ func GetTestCases() []TestCase {
 // reporting when allowed by policy. It is triggered by preventing DNS resolution
 // for all hostnames including a test domain reliability URL and attempting to connect
 // to that URL.
-func TriggerDomainReliabilityAllowed(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, _ int) (err error) {
+func TriggerDomainReliabilityAllowed(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, _ networkrequestmonitor.PolicySetting) (err error) {
 	// Reserve 10 seconds for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

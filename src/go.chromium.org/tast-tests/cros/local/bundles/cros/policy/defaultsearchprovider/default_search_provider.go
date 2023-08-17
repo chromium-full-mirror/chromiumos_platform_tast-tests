@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -33,12 +34,11 @@ type TestCase struct {
 	ShouldFindAnnotation bool
 }
 
-// GetTestCases returns the list of TestCase objects on which
-// DefaultSearchProviderEnabled policy is tested.
-func GetTestCases() []TestCase {
-	// Reordering the TestCase objects in the returned list may break tests.
-	return []TestCase{
-		{
+// TestCases returns the map of PolicySetting to TestCase parameter
+// objects on which the DefaultSearchProviderEnabled policy is tested.
+func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
+	return map[networkrequestmonitor.PolicySetting]TestCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:    "disabled",
 			Enabled: false,
 			Value:   &policy.DefaultSearchProviderEnabled{Val: false},
@@ -47,13 +47,13 @@ func GetTestCases() []TestCase {
 			// to true/unset, URL loaded is http://google.com/q=abc.
 			ShouldFindAnnotation: true,
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "enabled",
 			Enabled:              true,
 			Value:                &policy.DefaultSearchProviderEnabled{Val: true},
 			ShouldFindAnnotation: true,
 		},
-		{
+		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
 			Enabled:              true,
 			Value:                &policy.DefaultSearchProviderEnabled{Stat: policy.StatusUnset},
@@ -70,8 +70,8 @@ const (
 )
 
 // TriggerDefaultSearchProvider verifies the default search provider policy.
-func TriggerDefaultSearchProvider(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
-	param := GetTestCases()[paramIndex]
+func TriggerDefaultSearchProvider(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
+	param := TestCases()[policySetting]
 
 	addressBarNode := browserui.AddressBarFinder
 

@@ -77,7 +77,7 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable Quick Answers: ", err)
 	}
 
-	for index, param := range policyquickanswers.GetUnitConversionTestCases() {
+	for key, param := range policyquickanswers.UnitConversionTestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -102,7 +102,7 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := policyquickanswers.TriggerQuickAnswersUnitConversion(ctx, cr, br, server, tconn, index); err != nil {
+			if err := policyquickanswers.TriggerQuickAnswersUnitConversion(ctx, cr, br, server, tconn, key); err != nil {
 				s.Fatal("Failed to trigger and verify quick answers unit conversion: ", err)
 			}
 

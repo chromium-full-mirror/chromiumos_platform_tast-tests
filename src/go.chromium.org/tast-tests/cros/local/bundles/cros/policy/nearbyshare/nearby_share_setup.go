@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -28,17 +29,16 @@ type TestCase struct {
 	Policy           *policy.NearbyShareAllowed
 }
 
-// GetTestCases returns the list of TestCase objects on which
-// NearbyShareAllowed policy is tested.
-func GetTestCases() []TestCase {
-	// Reordering the TestCase objects in the returned list may break tests.
-	return []TestCase{
-		{
+// TestCases returns the map of policy settings enum to TestCase
+// objects on which the NearbyShareAllowed policy is tested.
+func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
+	return map[networkrequestmonitor.PolicySetting]TestCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:             "disabled",
 			ShouldBeDisabled: true,
 			Policy:           &policy.NearbyShareAllowed{Val: false},
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:             "enabled",
 			ShouldBeDisabled: false,
 			Policy:           &policy.NearbyShareAllowed{Val: true},
@@ -48,8 +48,8 @@ func GetTestCases() []TestCase {
 
 // VerifyNearbySharePermissions opens the 'Connected devices' page in OS
 // Settings and verifies that Nearby Share is disabled based on policy value.
-func VerifyNearbySharePermissions(ctx context.Context, cr *chrome.Chrome, _ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
-	param := GetTestCases()[paramIndex]
+func VerifyNearbySharePermissions(ctx context.Context, cr *chrome.Chrome, _ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
+	param := TestCases()[policySetting]
 
 	const (
 		connectedDevicesURL      = "multidevice"

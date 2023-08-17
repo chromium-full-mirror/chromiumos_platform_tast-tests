@@ -13,6 +13,7 @@ import (
 	"regexp"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -47,21 +48,21 @@ type testCase struct {
 
 // TestCases returns the list of testCase objects on which
 // WallpaperGooglePhotosIntegrationEnabled policy is tested.
-func TestCases() []testCase {
-	return []testCase{
-		{
+func TestCases() map[networkrequestmonitor.PolicySetting]testCase {
+	return map[networkrequestmonitor.PolicySetting]testCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:                                  "disabled",
 			ShouldGooglePhotosCollectionBeEnabled: false,
 			ShouldFindAnnotations:                 false,
 			Policy:                                &policy.WallpaperGooglePhotosIntegrationEnabled{Val: false},
 		},
-		{
+		networkrequestmonitor.PolicyUnset: {
 			Name:                                  "unset",
 			ShouldGooglePhotosCollectionBeEnabled: true,
 			ShouldFindAnnotations:                 true,
 			Policy:                                &policy.WallpaperGooglePhotosIntegrationEnabled{Stat: policy.StatusUnset},
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:                                  "enabled",
 			ShouldGooglePhotosCollectionBeEnabled: true,
 			ShouldFindAnnotations:                 true,
@@ -73,8 +74,8 @@ func TestCases() []testCase {
 // TriggerWallpaperGooglePhotosIntegration verifies that launching the
 // wallpaper google photos collection from the personalization app
 // works as expected.
-func TriggerWallpaperGooglePhotosIntegration(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
-	param := TestCases()[paramIndex]
+func TriggerWallpaperGooglePhotosIntegration(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
+	param := TestCases()[policySetting]
 
 	windows, err := ash.GetAllWindows(ctx, tconn)
 	if err != nil {

@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/defaultsearchprovider"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/domainreliability"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/nearbyshare"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/passwordleakdetection"
 	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/remotedesktop"
@@ -102,7 +103,7 @@ func init() {
 	})
 }
 
-type triggerOptionalService func(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) error
+type triggerOptionalService func(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) error
 
 type optionalService struct {
 	// name of the optional service.
@@ -212,7 +213,7 @@ func optionalServices() []optionalService {
 				// TODO(b/293876410): Reenable App Sync once AppKM traffic annotations are split off or can be ignored.
 				&policy.SyncTypesListDisabled{Val: []string{"apps"}},
 			},
-			trigger:   ukm.TriggerAndVerifyUkmApp,
+			trigger:   ukm.TriggerAndVerifyUkmAppFromPolicySetting,
 			dataFiles: []string{},
 		},
 		{
@@ -389,7 +390,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	// Trigger the optional services one by one.
 	for _, service := range optionalServices() {
 		s.Run(ctx, service.name, func(ctx context.Context, s *testing.State) {
-			if err := service.trigger(ctx, cr, br, server, tconn, 0); err != nil {
+			if err := service.trigger(ctx, cr, br, server, tconn, networkrequestmonitor.PolicyDisabled); err != nil {
 				s.Fatalf("Failed to trigger %v: %v", service.name, err)
 			}
 			hashCodes = append(hashCodes, service.associatedAnnotations...)

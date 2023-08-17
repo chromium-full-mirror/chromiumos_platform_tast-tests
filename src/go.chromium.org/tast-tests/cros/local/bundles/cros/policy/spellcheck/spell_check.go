@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -41,12 +42,11 @@ type TestCase struct {
 	ShouldFindAnnotation bool
 }
 
-// GetTestCases returns the list of TestCase objects on which
-// SpellCheckServiceEnabled policy is tested.
-func GetTestCases() []TestCase {
-	// Reordering the TestCase objects in the returned list may break tests.
-	return []TestCase{
-		{
+// TestCases returns the map of policy setting enum to TestCase object
+// on which the SpellCheckServiceEnabled policy is tested.
+func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
+	return map[networkrequestmonitor.PolicySetting]TestCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:              "disallow",
 			Value:             &policy.SpellCheckServiceEnabled{Val: false},
 			WantRestriction:   restriction.Disabled,
@@ -55,7 +55,7 @@ func GetTestCases() []TestCase {
 			WantContextCheck:     "",
 			ShouldFindAnnotation: false,
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "allow",
 			Value:                &policy.SpellCheckServiceEnabled{Val: true},
 			WantRestriction:      restriction.Disabled,
@@ -63,7 +63,7 @@ func GetTestCases() []TestCase {
 			WantContextCheck:     checked.True,
 			ShouldFindAnnotation: true,
 		},
-		{
+		networkrequestmonitor.PolicyUnset: {
 			Name:              "unset",
 			Value:             &policy.SpellCheckServiceEnabled{Stat: policy.StatusUnset},
 			WantRestriction:   restriction.None,
@@ -82,8 +82,8 @@ func GetDataFiles() []string {
 }
 
 // TriggerSpellCheck attempts to trigger spellcheck and verifies if the policy works as defined in the TestCase param.
-func TriggerSpellCheck(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
-	param := GetTestCases()[paramIndex]
+func TriggerSpellCheck(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
+	param := TestCases()[policySetting]
 
 	// Inside ChromeOS settings, check that the button is restricted and set to the correct value.
 	if err := policyutil.OSSettingsPage(ctx, cr, "osSyncSetup").

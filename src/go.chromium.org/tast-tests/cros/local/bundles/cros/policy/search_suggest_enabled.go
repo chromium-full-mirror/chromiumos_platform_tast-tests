@@ -63,7 +63,7 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	for index, param := range searchsuggestion.GetTestCases() {
+	for key, param := range searchsuggestion.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -92,7 +92,7 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := searchsuggestion.TriggerSearchSuggestion(ctx, cr, br, nil, tconn, index); err != nil {
+			if err := searchsuggestion.TriggerSearchSuggestion(ctx, cr, br, nil, tconn, key); err != nil {
 				s.Fatal("Failed to trigger search suggestion: ", err)
 			}
 

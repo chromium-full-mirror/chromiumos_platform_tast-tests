@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/crd"
@@ -38,23 +39,23 @@ type testCase struct {
 	Policy                 *policy.RemoteAccessHostAllowRemoteSupportConnections
 }
 
-// TestCases returns the list of testCase objects on which
-// RemoteAccessHostAllowRemoteSupportConnections policy is tested.
-func TestCases() []testCase {
-	return []testCase{
-		{
+// TestCases returns the map of policy setting to testCase objects
+// on which the RemoteAccessHostAllowRemoteSupportConnections policy is tested.
+func TestCases() map[networkrequestmonitor.PolicySetting]testCase {
+	return map[networkrequestmonitor.PolicySetting]testCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:                   "disabled",
 			ShouldCRDLaunchSucceed: false,
 			ShouldFindAnnotations:  false,
 			Policy:                 &policy.RemoteAccessHostAllowRemoteSupportConnections{Val: false},
 		},
-		{
+		networkrequestmonitor.PolicyUnset: {
 			Name:                   "unset",
 			ShouldCRDLaunchSucceed: true,
 			ShouldFindAnnotations:  true,
 			Policy:                 &policy.RemoteAccessHostAllowRemoteSupportConnections{Stat: policy.StatusUnset},
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:                   "enabled",
 			ShouldCRDLaunchSucceed: true,
 			ShouldFindAnnotations:  true,
@@ -65,8 +66,8 @@ func TestCases() []testCase {
 
 // TriggerRemoteSupportRegistration verifies that launching chrome remote
 // desktop works as expected.
-func TriggerRemoteSupportRegistration(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
-	param := TestCases()[paramIndex]
+func TriggerRemoteSupportRegistration(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
+	param := TestCases()[policySetting]
 
 	didCRDLaunchSucceed := true
 	errContainsRemoteSupportBlockedMessage := false

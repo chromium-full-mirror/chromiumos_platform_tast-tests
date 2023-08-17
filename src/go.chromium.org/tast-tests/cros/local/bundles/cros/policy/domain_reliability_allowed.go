@@ -80,7 +80,7 @@ func DomainReliabilityAllowed(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	for index, param := range domainreliability.GetTestCases() {
+	for key, param := range domainreliability.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 
 			// Perform cleanup.
@@ -120,7 +120,7 @@ func DomainReliabilityAllowed(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			if err := domainreliability.TriggerDomainReliabilityAllowed(ctx, cr, br, nil, tconn, index); err != nil {
+			if err := domainreliability.TriggerDomainReliabilityAllowed(ctx, cr, br, nil, tconn, key); err != nil {
 				s.Fatal("Failed to trigger and verify domain reliability: ", err)
 			}
 

@@ -71,7 +71,7 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	for _, param := range passwordleakdetection.GetTestCases() {
+	for _, param := range passwordleakdetection.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {

@@ -78,7 +78,7 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 	// Enable netlog on startup, since the profile image is fetched on startup.
 	opts = append(opts, netexport.CommandLineArgs(browser.TypeAsh)...)
 
-	for index, param := range useravatar.TestCases() {
+	for key, param := range useravatar.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Start Chrome. Note that we restart Chrome for each test case to reset the netlog.
 			cr, err := chrome.New(ctx, opts...)
@@ -125,7 +125,7 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to verify updated policies: ", err)
 			}
 
-			if err := useravatar.TriggerUserAvatarCustomization(ctx, nil, nil, nil, tconn, index); err != nil {
+			if err := useravatar.TriggerUserAvatarCustomization(ctx, nil, nil, nil, tconn, key); err != nil {
 				s.Fatal("Failed to trigger and verify user avatar customization: ", err)
 			}
 

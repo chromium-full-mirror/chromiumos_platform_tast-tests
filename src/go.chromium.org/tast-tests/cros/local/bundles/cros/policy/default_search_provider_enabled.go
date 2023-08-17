@@ -65,7 +65,7 @@ func DefaultSearchProviderEnabled(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	for index, param := range defaultsearchprovider.GetTestCases() {
+	for key, param := range defaultsearchprovider.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -88,7 +88,7 @@ func DefaultSearchProviderEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := defaultsearchprovider.TriggerDefaultSearchProvider(ctx, cr, br, nil, tconn, index); err != nil {
+			if err := defaultsearchprovider.TriggerDefaultSearchProvider(ctx, cr, br, nil, tconn, key); err != nil {
 				s.Fatal("Failed to trigger default search provider: ", err)
 			}
 

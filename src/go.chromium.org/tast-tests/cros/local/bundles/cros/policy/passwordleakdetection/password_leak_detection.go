@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/errors"
@@ -33,22 +34,21 @@ const (
 	testFileName = "password_leak_detection.html"
 )
 
-// GetTestCases returns the list of TestCase objects on which
-// PasswordLeakDetectionEnabled policy is tested.
-func GetTestCases() []TestCase {
-	// Reordering the TestCase objects in the returned list may break tests.
-	return []TestCase{
-		{
+// TestCases returns the map of policy setting enum to TestCase objects
+// on which the PasswordLeakDetectionEnabled policy is tested.
+func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
+	return map[networkrequestmonitor.PolicySetting]TestCase{
+		networkrequestmonitor.PolicyDisabled: {
 			Name:                 "disabled",
 			ShouldFindAnnotation: false,
 			Policy:               &policy.PasswordLeakDetectionEnabled{Val: false},
 		},
-		{
+		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "enabled",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.PasswordLeakDetectionEnabled{Val: true},
 		},
-		{
+		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.PasswordLeakDetectionEnabled{Stat: policy.StatusUnset},
@@ -70,7 +70,7 @@ func GetDataFiles() []string {
 //
 // We currently use option #2 for this test as it only requires running some JS
 // on a test webpage we control.
-func TriggerPasswordLeakDetection(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, _ *chrome.TestConn, _ int) (err error) {
+func TriggerPasswordLeakDetection(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, _ *chrome.TestConn, _ networkrequestmonitor.PolicySetting) (err error) {
 	// Open a webpage that will trigger password leak detection, when enabled.
 	conn, err := br.NewConn(ctx, server.URL+"/"+testFileName)
 	if err != nil {

@@ -72,7 +72,7 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	for index, param := range spellcheck.GetTestCases() {
+	for key, param := range spellcheck.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -98,7 +98,7 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := spellcheck.TriggerSpellCheck(ctx, cr, br, server, tconn, index); err != nil {
+			if err := spellcheck.TriggerSpellCheck(ctx, cr, br, server, tconn, key); err != nil {
 				s.Fatal("Failed to trigger and verify spellcheck: ", err)
 			}
 

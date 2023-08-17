@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	policyannotations "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/policy_annotations"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -24,54 +25,78 @@ const ukmTestURL = "https://www.google.com"
 // UkmNetworkAnnotationID is annotation hash code.
 const UkmNetworkAnnotationID = "727478"
 
+var ukmFalseMSBBTrueTestCase = policyannotations.AnnotationTestParams{
+	Name:                  "ukm_false_msbb_true",
+	AnnotationLogExpected: false,
+	Policies: []policy.Policy{
+		&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: false},
+		&policy.SyncDisabled{Val: false},
+		&policy.EnableSyncConsent{Val: true},
+	},
+}
+
+var ukmTrueMSBBTrueTestCase = policyannotations.AnnotationTestParams{
+	Name:                  "ukm_true_msbb_true",
+	AnnotationLogExpected: true,
+	Policies: []policy.Policy{
+		&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: true},
+		&policy.SyncDisabled{Val: false},
+		&policy.EnableSyncConsent{Val: true},
+	},
+}
+
+var ukmTrueMSBBFalseTestCase = policyannotations.AnnotationTestParams{
+	Name:                  "ukm_true_msbb_false",
+	AnnotationLogExpected: true,
+	Policies: []policy.Policy{
+		&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: true},
+		&policy.SyncDisabled{Val: true},
+		&policy.EnableSyncConsent{Val: false},
+	},
+}
+
+var ukmFalseMSBBFalseTestCase = policyannotations.AnnotationTestParams{
+	Name:                  "ukm_false_msbb_false",
+	AnnotationLogExpected: false,
+	Policies: []policy.Policy{
+		&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: false},
+		&policy.SyncDisabled{Val: true},
+		&policy.EnableSyncConsent{Val: false},
+	},
+}
+
 // TestCases returns the list of TestCase objects on which
 // UrlKeyedAnonymizedDataCollectionEnabled policy is tested.
 func TestCases() []policyannotations.AnnotationTestParams {
-	// Removing ukm_false_msbb_true from 0th position in the returned
-	// list can break NetworkRequestMonitor test.
 	return []policyannotations.AnnotationTestParams{
-		{
-			Name:                  "ukm_false_msbb_true",
-			AnnotationLogExpected: false,
-			Policies: []policy.Policy{
-				&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: false},
-				&policy.SyncDisabled{Val: false},
-				&policy.EnableSyncConsent{Val: true},
-			},
-		},
-		{
-			Name:                  "ukm_true_msbb_true",
-			AnnotationLogExpected: true,
-			Policies: []policy.Policy{
-				&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: true},
-				&policy.SyncDisabled{Val: false},
-				&policy.EnableSyncConsent{Val: true},
-			},
-		},
-		{
-			Name:                  "ukm_true_msbb_false",
-			AnnotationLogExpected: true,
-			Policies: []policy.Policy{
-				&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: true},
-				&policy.SyncDisabled{Val: true},
-				&policy.EnableSyncConsent{Val: false},
-			},
-		},
-		{
-			Name:                  "ukm_false_msbb_false",
-			AnnotationLogExpected: false,
-			Policies: []policy.Policy{
-				&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: false},
-				&policy.SyncDisabled{Val: true},
-				&policy.EnableSyncConsent{Val: false},
-			},
-		},
+		ukmFalseMSBBTrueTestCase,
+		ukmTrueMSBBTrueTestCase,
+		ukmTrueMSBBFalseTestCase,
+		ukmFalseMSBBFalseTestCase,
 	}
 }
 
-// TriggerAndVerifyUkmApp - trigger and verify appearance of log in chrome://ukm.
-func TriggerAndVerifyUkmApp(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, _ *chrome.TestConn, paramIndex int) error {
-	tc := TestCases()[paramIndex]
+// UmbrellaTestCases returns the map of policy setting enum to AnnotationTestParams
+// for the NetworkRequestMonitor test.
+func UmbrellaTestCases() map[networkrequestmonitor.PolicySetting]policyannotations.AnnotationTestParams {
+	return map[networkrequestmonitor.PolicySetting]policyannotations.AnnotationTestParams{
+		networkrequestmonitor.PolicyDisabled: ukmFalseMSBBTrueTestCase,
+	}
+}
+
+// TriggerAndVerifyUkmAppFromIndex triggers and verifies the appearance
+// of logs in chrome://ukm using index of the test case.
+func TriggerAndVerifyUkmAppFromIndex(ctx context.Context, br *browser.Browser, paramIndex int) error {
+	return triggerAndVerifyUkmApp(ctx, br, TestCases()[paramIndex])
+}
+
+// TriggerAndVerifyUkmAppFromPolicySetting triggers and verifies the appearance
+// of logs in chrome://ukm using the policy setting enum.
+func TriggerAndVerifyUkmAppFromPolicySetting(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, _ *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) error {
+	return triggerAndVerifyUkmApp(ctx, br, UmbrellaTestCases()[policySetting])
+}
+
+func triggerAndVerifyUkmApp(ctx context.Context, br *browser.Browser, param policyannotations.AnnotationTestParams) error {
 	ukmAppConn, err := navigateToPageAndLogElement(ctx, br,
 		"chrome://ukm", `document.getElementsByClassName("ukm-collection-status")[0]`)
 	if err != nil {
@@ -87,7 +112,7 @@ func TriggerAndVerifyUkmApp(ctx context.Context, _ *chrome.Chrome, br *browser.B
 	defer conn.Close()
 
 	// verify logs on ukm app.
-	if err := verifyOnUkmApp(ctx, ukmAppConn, tc); err != nil {
+	if err := verifyOnUkmApp(ctx, ukmAppConn, param); err != nil {
 		return errors.Wrap(err, "test failed")
 	}
 

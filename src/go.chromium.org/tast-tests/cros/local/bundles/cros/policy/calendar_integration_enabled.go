@@ -71,7 +71,7 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	for index, param := range calendarintegration.GetTestCases() {
+	for key, param := range calendarintegration.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
@@ -99,7 +99,7 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			if err := calendarintegration.TriggerCalendarIntegration(ctx, cr, br, nil, tconn, index); err != nil {
+			if err := calendarintegration.TriggerCalendarIntegration(ctx, cr, br, nil, tconn, key); err != nil {
 				s.Fatal("Failed to trigger and verify calendar integration: ", err)
 			}
 
