@@ -18,12 +18,12 @@ import (
 	"github.com/shirou/gopsutil/v3/host"
 
 	commoncrash "go.chromium.org/tast-tests/cros/common/crash"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crash/crash"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	localcrash "go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/syslog"
-	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
@@ -36,9 +36,8 @@ const (
 )
 
 type userCrashParams struct {
-	testFunc         func(context.Context, *chrome.Chrome, *testing.State)
-	consentType      localcrash.ConsentType
-	fieldTrialConfig chrome.FieldTrialConfigMode
+	testFunc    func(context.Context, *chrome.Chrome, *testing.State)
+	consentType localcrash.ConsentType
 }
 
 func init() {
@@ -80,54 +79,54 @@ func init() {
 				consentType: localcrash.MockConsent,
 			},
 		}, {
-			Name: "chronos_crasher_real_consent_finch_off",
+			Name: "chronos_crasher_real_consent_fieldtrial_testing_config_off",
 			Val: userCrashParams{
-				testFunc:         testChronosCrasher,
-				consentType:      localcrash.RealConsent,
-				fieldTrialConfig: chrome.FieldTrialConfigDisable,
+				testFunc:    testChronosCrasher,
+				consentType: localcrash.RealConsent,
 			},
+			Fixture:           fixture.ChromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent,
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 		}, {
-			Name: "chronos_crasher_real_consent_finch_on",
+			Name: "chronos_crasher_real_consent_fieldtrial_testing_config_on",
 			Val: userCrashParams{
-				testFunc:         testChronosCrasher,
-				consentType:      localcrash.RealConsent,
-				fieldTrialConfig: chrome.FieldTrialConfigEnable,
+				testFunc:    testChronosCrasher,
+				consentType: localcrash.RealConsent,
 			},
+			Fixture:           fixture.ChromeLoggedInWithFieldTrialConfigEnableAndVerboseConsent,
 			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 		}, {
-			Name: "chronos_crasher_mock_consent_finch_off",
+			Name: "chronos_crasher_mock_consent_fieldtrial_testing_config_off",
 			Val: userCrashParams{
-				testFunc:         testChronosCrasher,
-				consentType:      localcrash.MockConsent,
-				fieldTrialConfig: chrome.FieldTrialConfigDisable,
+				testFunc:    testChronosCrasher,
+				consentType: localcrash.MockConsent,
 			},
+			Fixture:           fixture.ChromeLoggedInWithFieldTrialConfigDisable,
 			ExtraSoftwareDeps: []string{"chrome"},
 		}, {
-			Name: "chronos_crasher_mock_consent_finch_on",
+			Name: "chronos_crasher_mock_consent_fieldtrial_testing_config_on",
 			Val: userCrashParams{
-				testFunc:         testChronosCrasher,
-				consentType:      localcrash.MockConsent,
-				fieldTrialConfig: chrome.FieldTrialConfigEnable,
+				testFunc:    testChronosCrasher,
+				consentType: localcrash.MockConsent,
 			},
+			Fixture:           fixture.ChromeLoggedInWithFieldTrialConfigEnable,
 			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"chrome"},
 		}, {
-			Name: "chronos_crasher_no_consent_finch_off",
+			Name: "chronos_crasher_no_consent_fieldtrial_testing_config_off",
 			Val: userCrashParams{
-				testFunc:         testChronosCrasherNoConsent,
-				consentType:      localcrash.RealConsent,
-				fieldTrialConfig: chrome.FieldTrialConfigDisable,
+				testFunc:    testChronosCrasherNoConsent,
+				consentType: localcrash.RealConsent,
 			},
+			Fixture:           fixture.ChromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent,
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 		}, {
-			Name: "chronos_crasher_no_consent_finch_on",
+			Name: "chronos_crasher_no_consent_fieldtrial_testing_config_on",
 			Val: userCrashParams{
-				testFunc:         testChronosCrasherNoConsent,
-				consentType:      localcrash.RealConsent,
-				fieldTrialConfig: chrome.FieldTrialConfigEnable,
+				testFunc:    testChronosCrasherNoConsent,
+				consentType: localcrash.RealConsent,
 			},
+			Fixture:           fixture.ChromeLoggedInWithFieldTrialConfigEnableAndVerboseConsent,
 			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 		}, {
@@ -136,22 +135,23 @@ func init() {
 				testFunc:    testRootCrasher,
 				consentType: localcrash.RealConsent,
 			},
+			Fixture:           fixture.ChromeLoggedInVerboseConsentLogs,
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 		}, {
-			Name: "root_crasher_mock_consent_finch_off",
+			Name: "root_crasher_mock_consent_fieldtrial_testing_config_off",
 			Val: userCrashParams{
-				testFunc:         testRootCrasher,
-				consentType:      localcrash.MockConsent,
-				fieldTrialConfig: chrome.FieldTrialConfigDisable,
+				testFunc:    testRootCrasher,
+				consentType: localcrash.MockConsent,
 			},
+			Fixture:           fixture.ChromeLoggedInWithFieldTrialConfigDisable,
 			ExtraSoftwareDeps: []string{"chrome"},
 		}, {
-			Name: "root_crasher_mock_consent_finch_on",
+			Name: "root_crasher_mock_consent_fieldtrial_testing_config_on",
 			Val: userCrashParams{
-				testFunc:         testRootCrasher,
-				consentType:      localcrash.MockConsent,
-				fieldTrialConfig: chrome.FieldTrialConfigEnable,
+				testFunc:    testRootCrasher,
+				consentType: localcrash.MockConsent,
 			},
+			Fixture:           fixture.ChromeLoggedInWithFieldTrialConfigEnable,
 			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"chrome"},
 		}, {
@@ -160,6 +160,7 @@ func init() {
 				testFunc:    testRootCrasherNoConsent,
 				consentType: localcrash.RealConsent,
 			},
+			Fixture:           fixture.ChromeLoggedInVerboseConsentLogs,
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 		}, {
 			Name: "crash_filtering",
@@ -705,6 +706,11 @@ func testMaxEnqueuedCrash(ctx context.Context, cr *chrome.Chrome, s *testing.Sta
 	if err != nil {
 		s.Fatal("Failed before queueing: ", err)
 	}
+	if strings.HasPrefix(crashDir, "/home/root") {
+		// crash_reporter will log "/run/daemon-store/crash/<hash>" rather than /home/root/<hash>/crash
+		hash := strings.Split(crashDir, "/")[3]
+		crashDir = "/run/daemon-store/crash/" + hash
+	}
 	fullMessage := fmt.Sprintf("Crash directory %s already full with %d pending reports",
 		crashDir, maxCrashDirectorySize)
 	opts := crash.DefaultCrasherOptions()
@@ -772,30 +778,20 @@ func testMaxEnqueuedCrash(ctx context.Context, cr *chrome.Chrome, s *testing.Sta
 }
 
 func User(ctx context.Context, s *testing.State) {
-	if err := upstart.RestartJob(ctx, "ui"); err != nil {
-		s.Fatal("Failed to restart UI job")
-	}
-
 	params := s.Param().(userCrashParams)
 
 	consentType := params.consentType
 
-	s.Log("fieldTrialConfig: ", params.fieldTrialConfig)
 	var cr *chrome.Chrome
-	if consentType == localcrash.RealConsent || params.fieldTrialConfig != chrome.FieldTrialConfigDefault {
-		var err error
-		var opts []chrome.Option
-		if consentType == localcrash.RealConsent {
-			opts = append(opts, chrome.ExtraArgs(localcrash.ChromeVerboseConsentFlags))
+	if s.FixtValue() != nil {
+		var ok bool
+		cr, ok = s.FixtValue().(*chrome.Chrome)
+		if !ok {
+			s.Fatalf("Expected a Chrome fixture but got %T", s.FixtValue())
 		}
-		if params.fieldTrialConfig != chrome.FieldTrialConfigDefault {
-			opts = append(opts, chrome.FieldTrialConfig(params.fieldTrialConfig))
-		}
-		cr, err = chrome.New(ctx, opts...)
-		if err != nil {
-			s.Fatal("Chrome login failed: ", err)
-		}
-		defer cr.Close(ctx)
+	}
+	if consentType == localcrash.RealConsent && cr == nil {
+		s.Fatal("ConsentType was RealConsent but there's no chrome. Ensure that the test has a chrome fixture")
 	}
 
 	f := params.testFunc
