@@ -30,7 +30,14 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		// We only care about crash_sender on internal builds.
 		SoftwareDeps: []string{"chrome", "cros_internal", "metrics_consent"},
-		Fixture:      fixture.ChromeLoggedInVerboseConsentLogs,
+		Params: []testing.Param{{
+			Name:      "fieldtrial_testing_config_on",
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Fixture:   fixture.ChromeLoggedInWithFieldTrialConfigEnableAndVerboseConsent,
+		}, {
+			Name:    "fieldtrial_testing_config_off",
+			Fixture: fixture.ChromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent,
+		}},
 	})
 }
 

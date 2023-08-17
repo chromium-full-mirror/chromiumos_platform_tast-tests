@@ -41,9 +41,14 @@ func init() {
 			Val:               crash.RealConsent,
 			Fixture:           fixture.ChromeLoggedInVerboseConsentLogs,
 		}, {
-			Name:    "mock_consent",
-			Fixture: "chromeLoggedIn",
+			Name:    "mock_consent_fieldtrial_testing_config_off",
+			Fixture: fixture.ChromeLoggedInWithFieldTrialConfigDisable,
 			Val:     crash.MockConsent,
+		}, {
+			Name:      "mock_consent_fieldtrial_testing_config_on",
+			Fixture:   fixture.ChromeLoggedInWithFieldTrialConfigEnable,
+			Val:       crash.MockConsent,
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
