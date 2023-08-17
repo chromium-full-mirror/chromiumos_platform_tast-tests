@@ -107,5 +107,8 @@ func (s Status) IsLinePowerConnected() bool {
 	if util.SupportChargeOverride() {
 		return s.LinePowerConnected
 	}
+	// s.BatteryStatus should be used here instead of s.BatteryDischarging, as
+	// the latter will always return 0 (i.e. NOT discharging) when a battery is
+	// fully charged, regardless of the line power status.
 	return s.BatteryStatus != "Discharging"
 }
