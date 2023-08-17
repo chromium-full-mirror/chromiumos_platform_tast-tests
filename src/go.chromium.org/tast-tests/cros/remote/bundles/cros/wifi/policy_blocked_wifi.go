@@ -49,6 +49,7 @@ const scanWaitingFailure string = "failed to wait for current scan to be done"
 const connectionVerificationFailure string = "failed to verify that WiFi was connected"
 const ssidDataRemovalFailure string = "failed to remove entries for SSID"
 const tabPressFailure string = "failed to move to next UI element with Tab"
+const failedToStartChrome string = "DUT: failed to start Chrome: "
 
 var (
 	useDeviceGUID           = "device_network_config"
@@ -63,6 +64,7 @@ var (
 		AllowOnlyPolicyNetworksToConnect:     false,
 		BlockedHexSSIDs:                      []string{blockedSSIDHex, blockedPreferredSSIDHex},
 	}
+	allSSIDs = []string{notBlockedSSID, blockedSSID, blockedPreferredSSID}
 )
 
 type policyBlockedWifiTestcase struct {
@@ -237,50 +239,36 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 	defer deconfigAP(cleanupCtxBlockedAndPreferredAP, blockedAndPreferredAP)
 	ctx, cancelBlockedAndPreferredAP := testFixture.ReserveForDeconfigAP(ctx, blockedAndPreferredAP)
 	defer cancelBlockedAndPreferredAP()
+	// End configure 3 access points for blocked, non blocked, blocked+preferred SSIDs.
 
-	// Prepare policy for device.
-	pb := policy.NewBlob()
-	pb.AddPolicy(params.devicePolicy)
-	pJSON, err := json.Marshal(pb)
-	if err != nil {
-		s.Fatal("Error while marshalling policies to JSON: ", err)
+	startChromeRequest := func(keepState bool) *ui.NewRequest {
+		req := &ui.NewRequest{
+			LoginMode:                    ui.LoginMode_LOGIN_MODE_NO_LOGIN,
+			SigninProfileTestExtensionId: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
+			KeepState:                    keepState,
+		}
+		return req
 	}
+	chromeService := ui.NewChromeServiceClient(rpcClient.Conn)
 
 	// Enroll device and apply policies from pJSON.
-	// Isolate the step to leverage `defer` pattern.
-	func() {
-		if _, err := policyClient.EnrollUsingChrome(ctx, &ps.EnrollUsingChromeRequest{
-			PolicyJson: pJSON,
-			SkipLogin:  true,
-		}); err != nil {
-			s.Fatal("Failed to enroll using chrome: ", err)
-		}
-		policyClient.StopChromeAndFakeDMS(ctx, &empty.Empty{})
-	}()
+	if err := enrollDut(ctx, params.devicePolicy, policyClient); err != nil {
+		s.Fatal("Failed to enroll using chrome: ", err)
+	}
 
+	// Run WiFi connections tests with applied policy on the login screen.
 	func() {
 		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+		ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 		defer cancel()
 
-		chromeService := ui.NewChromeServiceClient(rpcClient.Conn)
-		startChromeRequest := func() *ui.NewRequest {
-			req := &ui.NewRequest{
-				LoginMode:                    ui.LoginMode_LOGIN_MODE_NO_LOGIN,
-				SigninProfileTestExtensionId: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
-				KeepState:                    true,
-			}
-			return req
-		}
-		if _, err := chromeService.New(ctx, startChromeRequest()); err != nil {
+		if _, err := chromeService.New(ctx, startChromeRequest(true /*keepsState*/)); err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}
 		defer chromeService.Close(cleanupCtx, &emptypb.Empty{})
 
-		ctx, cancel = testFixture.ReserveForDisconnect(ctx)
-		defer cancel()
-
-		// ------ Testing join WiFi with one click from the quick settings on the login screen.
+		// ------ Testing join WiFi with one click from the quick settings on the
+		// login screen.
 		s.Log("Start testing WiFi connection from one click in quick settings before login")
 
 		// Connect to blocked WiFi which is also defined in ONC policy.
@@ -320,7 +308,7 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 		// WiFi popup shows error, previous network is still connected, this is a bug.
 		// TODO(b/278189326): Change this to joinAndTestWiFiFromQuickSettings() after bug is fixed.
 		if err := expectFailAddAndJoinWiFiQuickSettings(blockedAndPreferredAP, localCtx); err != nil {
-			s.Fatal("Failed to join not blocked WiFi from quick settings: ", err)
+			s.Fatal("Expected to fail while joining blocked and preferred WiFi from quick settings: ", err)
 		}
 
 		// Connect back to blockedAP, so can verify that it is disconnected after the login.
@@ -329,15 +317,17 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	// Run WiFi connections tests with applied policy after the login to users session.
 	func() {
 		// Get chrome service and login to users session with default test user.
 		// Policies were applied on device level, so they will be efficient for any logged in user.
 		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+		defer cancel()
 		chromeService := ui.NewChromeServiceClient(rpcClient.Conn)
 		if _, err := chromeService.New(ctx, &ui.NewRequest{KeepState: true}); err != nil {
 			s.Fatal("DUT: failed to start Chrome: ", err)
 		}
-		defer chromeService.Close(cleanupCtx, &emptypb.Empty{})
 
 		// Check that blockedAP is disconnected after login.
 		if err := expectWiFiNotConnected(ctx, wifiSvc, blockedAP.Config().SSID); err != nil {
@@ -346,6 +336,17 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 
 		// --------- Testing join WiFi with one click from quick settings after login.
 		s.Log("Start testing WiFi connection from one click settings after login")
+		// Removed stored passwords from shill and re-enroll DUT with policies to recover shill state.
+		if _, err := chromeService.Close(cleanupCtx, &emptypb.Empty{}); err != nil {
+			s.Fatal("Failed to close chrome: ", err)
+		}
+		if err := cleanShillAndReEnroll(localCtx, params.devicePolicy, policyClient); err != nil {
+			s.Fatal("Failed to clean shill and enroll DUT with policies: ", err)
+		}
+		chromeService = ui.NewChromeServiceClient(rpcClient.Conn)
+		if _, err := chromeService.New(ctx, &ui.NewRequest{KeepState: true}); err != nil {
+			s.Fatal(failedToStartChrome, err)
+		}
 
 		// Connect and test connection to the notBlockedAP.
 		if err := expectSuccJoinWiFi(notBlockedAP, localCtx, quickSettings, expectDialog); err != nil {
@@ -367,6 +368,18 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 
 		// --------- Testing join WiFi with one click from OS settings after login.
 		s.Log("Start testing WiFi connection from OS settings after login with one click")
+
+		// Removed stored passwords from shill and re-enroll DUT with policies to recover shill state.
+		if _, err := chromeService.Close(cleanupCtx, &emptypb.Empty{}); err != nil {
+			s.Fatal("Failed to close chrome: ", err)
+		}
+		if err := cleanShillAndReEnroll(localCtx, params.devicePolicy, policyClient); err != nil {
+			s.Fatal("Failed to clean shill and enroll DUT with policies: ", err)
+		}
+		chromeService = ui.NewChromeServiceClient(rpcClient.Conn)
+		if _, err := chromeService.New(ctx, &ui.NewRequest{KeepState: true}); err != nil {
+			s.Fatal(failedToStartChrome, err)
+		}
 
 		// Connect and test connection to the notBlockedAP.
 		if err := expectSuccJoinWiFi(notBlockedAP, localCtx, osSettings, expectDialog); err != nil {
@@ -395,27 +408,35 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 		// Connect and test connection to the blockedAP.
 		// WiFi popup expected to show error because network is blocked by policy.
 		if err := expectFailAddAndJoinWiFiQuickSettings(blockedAP, localCtx); err != nil {
-			s.Fatal("Failed to join not blocked WiFi from quick settings: ", err)
+			s.Fatal("Expected to fail while joining blocked WiFi from quick settings: ", err)
 		}
 
 		// Connect and test connection to the blockedAndPreferredAP.
 		// WiFi popup shows error, this is a bug.
 		// TODO(b/278189326): Change this to joinAndTestWiFiFromQuickSettings() after bug is fixed.
 		if err := expectFailAddAndJoinWiFiQuickSettings(blockedAndPreferredAP, localCtx); err != nil {
-			s.Fatal("Failed to join not blocked WiFi from quick settings: ", err)
+			s.Fatal("Expected to fail while joining not blocked prefered WiFi from quick settings: ", err)
 		}
 		// --------- End of test join WiFi from quick settings "Add a new WiFi connection" in quick settings after login.
 	}()
+
+	// Cleaning SSIDs and policy data after the test.
+	if err := cleanAllSSIDDataFromShill(localCtx); err != nil {
+		s.Fatal("Failed to clean SSIDs: ", err)
+	}
+	if _, err := chromeService.New(ctx, startChromeRequest(false /*keepState*/)); err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
 }
 
 // expectBlockedJoinWiFiOSSettings verifies that provided network is disabled by administrator.
 func expectBlockedJoinWiFiOSSettings(ctx context.Context, conn *grpc.ClientConn, expectedAP *wificell.APIface) (retErr error) {
+	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	uiSvc := ui.NewAutomationServiceClient(conn)
 	ssid := expectedAP.Config().SSID
-	cleanupCtx := ctx
 	cleanup, err := openNetworkSettingPage(ctx, conn, ssid)
 	defer cleanup(cleanupCtx)
 	if err != nil {
@@ -493,11 +514,6 @@ func expectSuccAddAndJoinWiFiQuickSettings(accessPoint *wificell.APIface, localC
 
 	if err := expectWiFiConnected(ctx, wifiSvc, ssid); err != nil {
 		return errors.Wrap(err, connectionVerificationFailure)
-	}
-
-	req := &wifi.DeleteEntriesForSSIDRequest{Ssid: []byte(ssid)}
-	if _, err := wifiSvc.DeleteEntriesForSSID(ctx, req); err != nil {
-		return errors.Wrap(err, ssidDataRemovalFailure)
 	}
 	return nil
 }
@@ -597,16 +613,6 @@ func expectSuccJoinWiFi(expectedAP *wificell.APIface, localCtx localContext, set
 
 	if err := expectWiFiConnected(ctx, wifiSvc, ssid); err != nil {
 		return errors.Wrap(err, connectionVerificationFailure)
-	}
-
-	// Clean entered data/passwords for WiFi, except it is blockedPreferredSSID,
-	// because cleaning data for blockedPreferredSSID will clean shill credentials
-	// received from the ONC policy.
-	if ssid != blockedPreferredSSID {
-		req := &wifi.DeleteEntriesForSSIDRequest{Ssid: []byte(ssid)}
-		if _, err := wifiSvc.DeleteEntriesForSSID(ctx, req); err != nil {
-			return errors.Wrap(err, ssidDataRemovalFailure)
-		}
 	}
 	return nil
 }
@@ -747,4 +753,68 @@ func isUIElementVisible(ctx context.Context, uiSvc ui.AutomationServiceClient, u
 	} else {
 		return true, nil
 	}
+}
+
+// enrollDut enrolls DUT with policies. It will also re-try enroll
+// if first attempt has failed. Retry is not very efficient because usually
+// second attempt also fails, but in some cases can help.
+func enrollDut(ctx context.Context, devicePolicy *policy.DeviceOpenNetworkConfiguration, policyClient ps.PolicyServiceClient) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
+	defer cancel()
+	var err error
+
+	// Prepare policy for device.
+	var pJSON []byte
+	policyBlob := policy.NewBlob()
+	policyBlob.AddPolicy(devicePolicy)
+	pJSON, err = json.Marshal(policyBlob)
+	if err != nil {
+		return err
+	}
+
+	retryAttempt := 0
+	for retryAttempt < 2 {
+		retryAttempt++
+		_, err = policyClient.EnrollUsingChrome(ctx, &ps.EnrollUsingChromeRequest{
+			PolicyJson: pJSON,
+			SkipLogin:  true,
+		})
+		defer policyClient.StopChromeAndFakeDMS(cleanupCtx, &empty.Empty{})
+		if err == nil {
+			break
+		}
+	}
+	return err
+}
+
+// cleanAllSSIDDataFromShill cleans all known SSIDs data from Shill,
+// so WiFi become unknown to DUT again. This will also clean policy defined WiFi
+// from Shill, so it can be executed only at the very end of tests or you need
+// to apply policy again.
+func cleanAllSSIDDataFromShill(localCtx localContext) error {
+	ctx := localCtx.ctx
+	wifiSvc := localCtx.wifiSvc
+	for _, ssid := range allSSIDs {
+		req := &wifi.DeleteEntriesForSSIDRequest{Ssid: []byte(ssid)}
+		if _, err := wifiSvc.DeleteEntriesForSSID(ctx, req); err != nil {
+			return errors.Wrap(err, ssidDataRemovalFailure)
+		}
+	}
+	return nil
+}
+
+// cleanShillAndReEnroll removes all data from shill and re-enroll DUT with
+// policies.
+func cleanShillAndReEnroll(localCtx localContext, devicePolicy *policy.DeviceOpenNetworkConfiguration,
+	policyClient ps.PolicyServiceClient) error {
+	if err := cleanAllSSIDDataFromShill(localCtx); err != nil {
+		return err
+	}
+
+	ctx := localCtx.ctx
+	if err := enrollDut(ctx, devicePolicy, policyClient); err != nil {
+		return err
+	}
+	return nil
 }
