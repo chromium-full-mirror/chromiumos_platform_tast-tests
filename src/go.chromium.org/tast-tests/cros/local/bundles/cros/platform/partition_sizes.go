@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -32,51 +31,22 @@ func init() {
 	})
 }
 
-func crosCommonFunc(ctx context.Context, s *testing.State, funcname string) string {
-	// Return the result of funcname as a string.
-	script := `
+func PartitionSizes(ctx context.Context, s *testing.State) {
+	// Get the internal disk device's name, e.g. "/dev/sda".
+	const script = `
 set -e
 . /usr/sbin/write_gpt.sh
 . /usr/share/misc/chromeos-common.sh
-load_base_vars`
-	script = fmt.Sprintf("%s\n%s", script, funcname)
+load_base_vars
+get_fixed_dst_drive`
 	out, err := testexec.CommandContext(ctx, "sh", "-c", strings.TrimSpace(script)).Output(testexec.DumpLogOnError)
 	if err != nil {
-		s.Fatal("Failed to call: ", funcname)
+		s.Fatal("Failed to get device: ", err)
 	}
-	return strings.TrimSpace(string(out))
-}
-
-func devIsPresent(devname string) bool {
-	// Returns true if devname is present and accessible.
-	devPath := fmt.Sprintf("/sys/block/%s", devname)
-	_, err := os.Stat(devPath)
-	if err != nil {
-		return false
-	}
-	return true
-}
-
-func PartitionSizes(ctx context.Context, s *testing.State) {
-	// Try getting the internal disk device name using write_gpt.sh.
-	//
-	// Note that this will return an empty string in the case where
-	// disk_layout.json did not specify a `rootdev_base`.
-	devPath := crosCommonFunc(ctx, s, "get_fixed_dst_drive")
-	baseDev := filepath.Base(devPath)
+	baseDev := filepath.Base(strings.TrimSpace(string(out)))
 	if baseDev == "." { // filepath.Base("") returns "."
-		s.Log("Got empty device, attempting to discover")
 		baseDev = "sda"
-		// In the case where the fixed disk is an NVMe device, it will appear at a
-		// different location under /sys/block, so fall back to that location in the
-		// case where /sys/block/sda does not exist.
-		if !devIsPresent(baseDev) {
-			// Try getting the largest NVMe namespace, e.g. "nvme0n1".
-			baseDev = crosCommonFunc(ctx, s, "get_largest_nvme_namespace")
-			if !devIsPresent(baseDev) {
-				s.Error("Failed to discover the internal disk device")
-			}
-		}
+		s.Logf("Got empty device; defaulting to %q (running in VM?)", baseDev)
 	}
 	s.Log("Checking partitions on device ", baseDev)
 
