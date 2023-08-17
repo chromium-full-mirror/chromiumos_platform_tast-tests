@@ -400,6 +400,56 @@ func init() {
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromeLoggedInWithFieldTrialConfigEnable,
+		Desc:     "Logged into a user session with FieldTrialConfigEnable",
+		Contacts: []string{"mutexlox@chromium.org", "cros-exp-wg@google.com"},
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{FieldTrialConfig(FieldTrialConfigEnable)}, nil
+		}),
+		SetUpTimeout:    LoginTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromeLoggedInWithFieldTrialConfigDisable,
+		Desc:     "Logged into a user session with FieldTrialConfigDisable",
+		Contacts: []string{"mutexlox@chromium.org", "cros-exp-wg@google.com"},
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{FieldTrialConfig(FieldTrialConfigDisable)}, nil
+		}),
+		SetUpTimeout:    LoginTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromeLoggedInWithFieldTrialConfigEnableAndVerboseConsent,
+		Desc:     "Logged into a user session with FieldTrialConfigEnable and verbose consent flags enabled",
+		Contacts: []string{"mutexlox@chromium.org", "cros-exp-wg@google.com"},
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{FieldTrialConfig(FieldTrialConfigEnable),
+				ExtraArgs("--vmodule=*stats_reporting_controller*=1,*autotest_private_api*=1,*owner_pending_setting_controller*=1")}, nil
+		}),
+		SetUpTimeout:    LoginTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent,
+		Desc:     "Logged into a user session with FieldTrialConfigDisable",
+		Contacts: []string{"mutexlox@chromium.org", "cros-exp-wg@google.com"},
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{FieldTrialConfig(FieldTrialConfigDisable),
+				ExtraArgs("--vmodule=*stats_reporting_controller*=1,*autotest_private_api*=1,*owner_pending_setting_controller*=1")}, nil
+		}),
+		SetUpTimeout:    LoginTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
 }
 
 // OptionsCallback is the function used to set up the fixture by returning Chrome options.

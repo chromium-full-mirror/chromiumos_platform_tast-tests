@@ -69,4 +69,12 @@ const (
 	ChromeLoggedInWithForceVMDisplayExternal = "chromeLoggedInWithForceVMDisplayExternal"
 	// Logged into a user session with Jelly enabled.
 	ChromeLoggedInWithJelly = "chromeLoggedInWithJelly"
+	// Logged in to a user session with FieldTrialConfigEnable.
+	ChromeLoggedInWithFieldTrialConfigEnable = "chromeLoggedInWithFieldTrialConfigEnable"
+	// Logged in to a user session with FieldTrialConfigDisable.
+	ChromeLoggedInWithFieldTrialConfigDisable = "chromeLoggedInWithFieldTrialConfigDisable"
+	// Logged in to a user session with FieldTrialConfigEnable *and* verbose consent flags.
+	ChromeLoggedInWithFieldTrialConfigEnableAndVerboseConsent = "chromeLoggedInWithFieldTrialConfigEnableAndVerboseConsent"
+	// Logged in to a user session with FieldTrialConfigDisable *and* verbose consent flags.
+	ChromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent = "chromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent"
 )
