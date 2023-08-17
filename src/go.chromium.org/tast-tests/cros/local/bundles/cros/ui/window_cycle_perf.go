@@ -7,6 +7,7 @@ package ui
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -34,8 +35,9 @@ func init() {
 		Desc:         "Measures the animation smoothness of window cycle animations when Alt + tabbing",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"xiyuan@chromium.org",
 			"chromeos-wmp@google.com",
+			"andp@chromium.org",
+			"xiyuan@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
@@ -109,7 +111,7 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 	defer recorder.Close(cleanupCtx)
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		for i, numWindows := range []int{2, 8} {
+		for i, numWindows := range []int{2, 8, 16} {
 			if err := ash.CreateWindows(ctx, tconn, br, ui.PerftestURL, numWindows-numExistingWindows); err != nil {
 				s.Fatal("Failed to open browser windows: ", err)
 			}
@@ -170,7 +172,8 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 				return nil
 			},
 				"Ash.WindowCycleView.AnimationSmoothness.Show",
-				"Ash.WindowCycleView.AnimationSmoothness.Container")),
+				"Ash.WindowCycleView.AnimationSmoothness.Container",
+				"Ash.WindowCycleController.Enter.PresentationTime")),
 				func(ctx context.Context, pv *perfutil.Values, hists []*metrics.Histogram) error {
 					for _, hist := range hists {
 						mean, err := hist.Mean()
@@ -179,10 +182,16 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 						}
 						name := hist.Name + "." + suffix
 						testing.ContextLog(ctx, name, " = ", mean)
+						unit := "ms"
+						direction := perf.SmallerIsBetter
+						if strings.Contains(hist.Name, "AnimationSmoothness") {
+							unit = "percent"
+							direction = perf.BiggerIsBetter
+						}
 						pv.Append(perf.Metric{
 							Name:      name,
-							Unit:      "percent",
-							Direction: perf.BiggerIsBetter,
+							Unit:      unit,
+							Direction: direction,
 						}, mean)
 					}
 					return nil
