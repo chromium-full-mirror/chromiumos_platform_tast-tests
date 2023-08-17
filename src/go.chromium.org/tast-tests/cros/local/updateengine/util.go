@@ -42,7 +42,13 @@ func StopDaemon(ctx context.Context) error {
 // RestartDaemon will restart the daemon.
 func RestartDaemon(ctx context.Context) error {
 	testing.ContextLog(ctx, "restart daemon: ", JobName)
-	return upstart.RestartJob(ctx, JobName)
+	if err := upstart.RestartJob(ctx, JobName); err != nil {
+		return errors.Wrapf(err, "failed to restart %s", JobName)
+	}
+	if err := WaitForService(ctx); err != nil {
+		return errors.Wrapf(err, "failed to wait for service: %s", JobName)
+	}
+	return nil
 }
 
 // WaitForService waits for the update-engine DBus service to be available.
