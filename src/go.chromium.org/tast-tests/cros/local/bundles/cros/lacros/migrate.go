@@ -6,6 +6,8 @@ package lacros
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"time"
 
@@ -31,7 +33,7 @@ func init() {
 		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Data:         []string{"migrate/indexeddb_check.js", "migrate/indexeddb_set.js"},
+		Data:         []string{"migrate/indexeddb_check.js", "migrate/indexeddb_set.js", "migrate/boring_page.html"},
 		Timeout:      5 * time.Minute,
 	})
 }
@@ -43,17 +45,24 @@ func Migrate(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	prepareAshProfile(ctx, s, kb)
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
+	page := migrate.Page{
+		URL:   server.URL + "/migrate/boring_page.html",
+		Title: "Boring Page",
+	}
+
+	prepareAshProfile(ctx, s, kb, page)
 	cr, err := migrate.Run(ctx, []chrome.Option{}, []lacrosfixt.Option{})
 	if err != nil {
 		s.Fatal("Failed to migrate profile: ", err)
 	}
 	defer cr.Close(ctx)
-	verifyLacrosProfile(ctx, s, kb, cr)
+	verifyLacrosProfile(ctx, s, kb, cr, page)
 }
 
 // prepareAshProfile resets profile migration and sets up profile data.
-func prepareAshProfile(ctx context.Context, s *testing.State, kb *input.KeyboardEventWriter) {
+func prepareAshProfile(ctx context.Context, s *testing.State, kb *input.KeyboardEventWriter, page migrate.Page) {
 	// First restart Chrome with Lacros disabled in order to reset profile migration.
 	cr, err := migrate.StartChromeToClearMigrationState(ctx)
 	if err != nil {
@@ -65,13 +74,13 @@ func prepareAshProfile(ctx context.Context, s *testing.State, kb *input.Keyboard
 		s.Fatal("Failed to open a new tab")
 	}
 	defer conn.Close()
-	if err := migrate.SetupProfileData(ctx, cr, s, cr.Browser()); err != nil {
+	if err := migrate.SetupProfileData(ctx, cr, s, cr.Browser(), page); err != nil {
 		s.Fatal("Failed to set up profile data: ", err)
 	}
 }
 
 // verifyLacrosProfile checks that the edits done by prepareAshProfile were carried over to Lacros.
-func verifyLacrosProfile(ctx context.Context, s *testing.State, kb *input.KeyboardEventWriter, cr *chrome.Chrome) {
+func verifyLacrosProfile(ctx context.Context, s *testing.State, kb *input.KeyboardEventWriter, cr *chrome.Chrome, page migrate.Page) {
 	if _, err := os.Stat(migrate.LacrosFirstRunPath); err != nil {
 		s.Fatal("Error reading 'First Run' file: ", err)
 	}
@@ -86,7 +95,7 @@ func verifyLacrosProfile(ctx context.Context, s *testing.State, kb *input.Keyboa
 		s.Fatal("Failed to launch lacros: ", err)
 	}
 
-	if err := migrate.VerifyProfileData(ctx, cr, s, l.Browser()); err != nil {
+	if err := migrate.VerifyProfileData(ctx, cr, s, l.Browser(), page); err != nil {
 		s.Fatal("Failed to verify: ", err)
 	}
 }

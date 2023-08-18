@@ -6,6 +6,8 @@ package lacros
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -42,7 +44,7 @@ func init() {
 			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.DeveloperToolsAvailability{}, pci.Served),
 		},
-		Data:    []string{"migrate/indexeddb_check.js", "migrate/indexeddb_set.js"},
+		Data:    []string{"migrate/indexeddb_check.js", "migrate/indexeddb_set.js", "migrate/boring_page.html"},
 		Timeout: 3 * time.Minute,
 	})
 }
@@ -80,7 +82,15 @@ func BackwardMigratePolicy(ctx context.Context, s *testing.State) {
 			l.Close(ctx)
 		}
 	}()
-	if err := migrate.SetupProfileData(ctx, crForward, s, l.Browser()); err != nil {
+
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
+	page := migrate.Page{
+		URL:   server.URL + "/migrate/boring_page.html",
+		Title: "Boring Page",
+	}
+
+	if err := migrate.SetupProfileData(ctx, crForward, s, l.Browser(), page); err != nil {
 		s.Fatal("Failed to set up profile data: ", err)
 	}
 
@@ -106,7 +116,7 @@ func BackwardMigratePolicy(ctx context.Context, s *testing.State) {
 	if err := kb.Accel(ctx, "Ctrl+Shift+T"); err != nil {
 		s.Fatal("Failed to press Ctrl+Shift+T: ", err)
 	}
-	if err := migrate.VerifyProfileData(ctx, crBackward, s, crBackward.Browser()); err != nil {
+	if err := migrate.VerifyProfileData(ctx, crBackward, s, crBackward.Browser(), page); err != nil {
 		s.Fatal("Failed to verify: ", err)
 	}
 }

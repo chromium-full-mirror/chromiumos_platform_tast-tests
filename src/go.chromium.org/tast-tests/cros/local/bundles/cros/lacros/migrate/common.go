@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -207,12 +206,11 @@ func VerifyExtension(ctx context.Context, cr *chrome.Chrome, br *browser.Browser
 	return nil
 }
 
-const (
-	// Arbitrary page title.
-	abcPageTitle = "Alphabet Investor Relations"
-	// Arbitrary page URL.
-	abcPageURL = "https://abc.xyz"
-)
+// Page represents a web page.
+type Page struct {
+	URL   string
+	Title string
+}
 
 // SetupProfileData creates a bookmark, a shortcut, downloads a file, and
 // simulates page activity by saving a cookie, an IndexedDB entry, a
@@ -223,7 +221,7 @@ const (
 // before calling the function.
 // Clients are not expected to close tabs after the method call,
 // if the data is to be verified by VerifyProfileData.
-func SetupProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, br *browser.Browser) error {
+func SetupProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, br *browser.Browser, page Page) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create Test API connection")
@@ -234,9 +232,6 @@ func SetupProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, 
 		return errors.Wrap(err, "failed to get keyboard")
 	}
 	defer kb.Close(ctx)
-	if err := policyutil.EnsureGoogleCookiesAccepted(ctx, br); err != nil {
-		return errors.Wrap(err, "failed to accept cookies")
-	}
 	if err := setupBookmark(ctx, ui, br, kb); err != nil {
 		return err
 	}
@@ -246,13 +241,13 @@ func SetupProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, 
 	if err := setupDownloads(ctx, ui, br, kb); err != nil {
 		return err
 	}
-	if err := setupHistoryEntry(ctx, ui, br, abcPageURL, abcPageTitle); err != nil {
+	if err := setupHistoryEntry(ctx, ui, br, page); err != nil {
 		return err
 	}
-	if err := setupExternalPageActivity(ctx, ui, br, s, abcPageURL); err != nil {
+	if err := setupExternalPageActivity(ctx, ui, br, s, page); err != nil {
 		return err
 	}
-	if err := setupTabPageHistory(ctx, ui, br, abcPageURL); err != nil {
+	if err := setupTabPageHistory(ctx, ui, br, page); err != nil {
 		return err
 	}
 	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
@@ -263,7 +258,7 @@ func SetupProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, 
 
 // VerifyProfileData verifies data previously set up by SetupProfileData.
 // Clients are expected to launch a browser before calling the function with the tab from `SetupProfileData()`.
-func VerifyProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, br *browser.Browser) error {
+func VerifyProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, br *browser.Browser, page Page) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create Test API connection")
@@ -274,12 +269,9 @@ func VerifyProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State,
 		return errors.Wrap(err, "failed to get keyboard")
 	}
 	defer kb.Close(ctx)
-	if err := policyutil.EnsureGoogleCookiesAccepted(ctx, br); err != nil {
-		return errors.Wrap(err, "failed to accept cookies")
-	}
 	// Unlike other verify* functions, `verifyTabPageHistory` relies on what tab
 	// is opened when launching the browser so verify it first.
-	if err := verifyTabPageHistory(ctx, ui, br, kb, abcPageTitle); err != nil {
+	if err := verifyTabPageHistory(ctx, ui, br, kb, page); err != nil {
 		return err
 	}
 	if err := verifyBookmark(ctx, ui, br); err != nil {
@@ -291,10 +283,10 @@ func VerifyProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State,
 	if err := verifyDownloads(ctx, ui, br); err != nil {
 		return err
 	}
-	if err := verifyHistoryEntry(ctx, ui, br, abcPageTitle); err != nil {
+	if err := verifyHistoryEntry(ctx, ui, br, page); err != nil {
 		return err
 	}
-	if err := verifyExternalPageActivity(ctx, ui, br, kb, s, abcPageURL, abcPageTitle); err != nil {
+	if err := verifyExternalPageActivity(ctx, ui, br, kb, s, page); err != nil {
 		return err
 	}
 	return nil
@@ -459,27 +451,27 @@ func verifyDownloads(ctx context.Context, ui *uiauto.Context, br *browser.Browse
 }
 
 // setupHistoryEntry visits `pageURL` and makes sure that `pageTitle` appears on history page.
-func setupHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Browser, pageURL, pageTitle string) error {
+func setupHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Browser, page Page) error {
 	// Visit the page and create a history entry.
-	conn, err := br.NewConn(ctx, pageURL)
+	conn, err := br.NewConn(ctx, page.URL)
 	if err != nil {
 		return errors.Wrap(err, "failed to open page")
 	}
 	defer conn.Close()
-	if err := waitForHistoryEntry(ctx, ui, br, pageTitle, true); err != nil {
+	if err := waitForHistoryEntry(ctx, ui, br, page, true); err != nil {
 		return errors.Wrap(err, "failed to find history entry")
 	}
 	if err := conn.CloseTarget(ctx); err != nil {
-		return errors.Wrap(err, "failed to close "+pageURL)
+		return errors.Wrap(err, "failed to close "+page.URL)
 	}
 
 	return nil
 }
 
 // verifyHistoryEntry verifies that `pageTitle` is present on history page.
-func verifyHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Browser, pageTitle string) error {
+func verifyHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Browser, page Page) error {
 	// Check that the browsing history contains the visited page.
-	if err := waitForHistoryEntry(ctx, ui, br, pageTitle, false); err != nil {
+	if err := waitForHistoryEntry(ctx, ui, br, page, false); err != nil {
 		return errors.Wrap(err, "failed to find history entry")
 	}
 
@@ -502,8 +494,8 @@ const (
 )
 
 // setupExternalPageActivity visits a page and stores data associated with the page with cookies, localStorage and indexedDB APIs.
-func setupExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *browser.Browser, s *testing.State, pageURL string) error {
-	conn, err := br.NewConn(ctx, pageURL)
+func setupExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *browser.Browser, s *testing.State, page Page) error {
+	conn, err := br.NewConn(ctx, page.URL)
 	if err != nil {
 		return errors.Wrap(err, "failed to open page")
 	}
@@ -532,9 +524,9 @@ func setupExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *brow
 }
 
 // verifyExternalPageActivity verifies previously set up user activity in setupExternalPageActivity.
-func verifyExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *browser.Browser, kb *input.KeyboardEventWriter, s *testing.State, pageURL, pageTitle string) error {
+func verifyExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *browser.Browser, kb *input.KeyboardEventWriter, s *testing.State, page Page) error {
 	// Check if the cookie, localStorage and indexedDB values are set.
-	conn, err := br.NewConn(ctx, pageURL)
+	conn, err := br.NewConn(ctx, page.URL)
 	if err != nil {
 		return errors.Wrap(err, "failed to open page")
 	}
@@ -569,13 +561,13 @@ func verifyExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *bro
 }
 
 // waitForHistoryEntry verifies that the page is listed on the History page.
-func waitForHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Browser, pageTitle string, allowReload bool) error {
+func waitForHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Browser, page Page, allowReload bool) error {
 	conn, err := br.NewConn(ctx, historyURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to open history page")
 	}
 	defer conn.Close()
-	link := nodewith.Name(pageTitle).Role(role.Link)
+	link := nodewith.Name(page.Title).Role(role.Link)
 	err = ui.WaitUntilExists(link)(ctx)
 	if err != nil && allowReload {
 		// If the page in question has just been visited, sometimes the
@@ -593,12 +585,12 @@ func waitForHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Br
 	return nil
 }
 
-// setupTabPageHistory opens a tab, visits pageURL first and visits the downloads page to create tab history.
+// setupTabPageHistory opens a tab, visits `page` first and visits the downloads page to create tab history.
 // The opened tab is left unclosed so that it can be verified after migration.
-func setupTabPageHistory(ctx context.Context, ui *uiauto.Context, br *browser.Browser, pageURL string) error {
-	conn, err := br.NewConn(ctx, pageURL)
+func setupTabPageHistory(ctx context.Context, ui *uiauto.Context, br *browser.Browser, page Page) error {
+	conn, err := br.NewConn(ctx, page.URL)
 	if err != nil {
-		return errors.Wrap(err, "failed to open page "+pageURL)
+		return errors.Wrap(err, "failed to open page "+page.URL)
 	}
 
 	// Navigate to the Downloads page to create a tab history.
@@ -612,7 +604,7 @@ func setupTabPageHistory(ctx context.Context, ui *uiauto.Context, br *browser.Br
 
 // verifyTabPageHistory verifies that the active tab has the tab history created by setupTabPageHistory.
 // The active tab should be the tab created by setupTabPageHistory when this function is called.
-func verifyTabPageHistory(ctx context.Context, ui *uiauto.Context, br *browser.Browser, kb *input.KeyboardEventWriter, pageTitle string) error {
+func verifyTabPageHistory(ctx context.Context, ui *uiauto.Context, br *browser.Browser, kb *input.KeyboardEventWriter, page Page) error {
 	// Verify that the currently opened page is the downloads page.
 	title := nodewith.Name(downloadsPageTitle).First()
 	if err := ui.WaitUntilExists(title)(ctx); err != nil {
@@ -624,7 +616,7 @@ func verifyTabPageHistory(ctx context.Context, ui *uiauto.Context, br *browser.B
 	if err := kb.Accel(ctx, "Alt+Left"); err != nil {
 		return errors.Wrap(err, "failed to press alt+left")
 	}
-	title = nodewith.Name(pageTitle).First()
+	title = nodewith.Name(page.Title).First()
 	if err := ui.WaitUntilExists(title)(ctx); err != nil {
 		return errors.Wrap(err, "failed to go to the previously visited page")
 	}
