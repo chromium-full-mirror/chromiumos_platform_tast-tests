@@ -6,6 +6,7 @@ package main
 
 import (
 	// Underscore-imported packages register their tests via init functions.
+
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/a11y"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/accountmanager"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/ad"
@@ -147,4 +148,5 @@ import (
 	// returns FixtData type from policyutil/fixtures.
 	_ "go.chromium.org/tast-tests/cros/local/kioskmode/fixtures"
 	_ "go.chromium.org/tast-tests/cros/local/meta" // import fixture for meta tests
+	_ "go.chromium.org/tast-tests/cros/local/power/histogram"
 )

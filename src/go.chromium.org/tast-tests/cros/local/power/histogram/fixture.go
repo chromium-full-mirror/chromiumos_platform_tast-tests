@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+// Package histogram contains fixtures related to power histograms.
+package histogram
 
 import (
 	"context"
