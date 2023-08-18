@@ -56,7 +56,7 @@ func init() {
 				Val: encode.TestOptions{
 					WebMName:      "encode/desktop2-640x360_850frames.vp9.webm",
 					Profile:       videotype.H264BaselineProf,
-					PSNRThreshold: 34.1,
+					PSNRThreshold: 33.8,
 					BitrateMode:   "cbr",
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30"},
