@@ -11,16 +11,23 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"image/color"
 	"image/jpeg"
 	"io"
-	"io/ioutil"
 	"math"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/blackjack/webcam"
+	"google.golang.org/protobuf/types/known/emptypb"
 
+	"go.chromium.org/tast-tests/cros/remote/dutfs"
+	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
+	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -34,10 +41,11 @@ type Pixel struct {
 }
 
 var (
-	redColor   = Pixel{250, 50, 50, 255}   // RGBA
-	greenColor = Pixel{50, 250, 50, 255}   // RGBA
-	blueColor  = Pixel{50, 50, 250, 250}   // RGBA
-	whiteColor = Pixel{250, 250, 250, 250} // RGBA
+	redColor   = Pixel{240, 80, 80, 255}   // RGBA
+	greenColor = Pixel{80, 240, 80, 255}   // RGBA
+	blueColor  = Pixel{80, 80, 240, 255}   // RGBA
+	whiteColor = Pixel{250, 250, 250, 255} // RGBA
+	grayColor  = Pixel{120, 120, 120, 255} // RGBA
 
 	detectVideoColor = [3]string{"red", "green", "blue"}
 
@@ -48,22 +56,54 @@ var (
 	maxWebcamLen = 20
 
 	// webcam limit score
-	webcamMappingLimitScore = 40.0
+	webcamMappingDisplayFixtureLimitScore = 40.0
 
-	// key:'dut' & fixture uid , value: camera gocv index
+	// webcam limit score
+	webcamMappingLimitScore = 160
+
+	// key: screen id (or 'dut' & fixture uid) , value: webcam port
 	screenToCamera = make(map[string]string)
 
 	// dht
 	dhtMarker = []byte{255, 196}
-	dht       = []byte{1, 162, 0, 0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 1, 0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 0, 2, 1, 3, 3, 2, 4, 3, 5, 5, 4, 4, 0, 0, 1, 125, 1, 2, 3, 0, 4, 17, 5, 18, 33, 49, 65, 6, 19, 81, 97, 7, 34, 113, 20, 50, 129, 145, 161, 8, 35, 66, 177, 193, 21, 82, 209, 240, 36, 51, 98, 114, 130, 9, 10, 22, 23, 24, 25, 26, 37, 38, 39, 40, 41, 42, 52, 53, 54, 55, 56, 57, 58, 67, 68, 69, 70, 71, 72, 73, 74, 83, 84, 85, 86, 87, 88, 89, 90, 99, 100, 101, 102, 103, 104, 105, 106, 115, 116, 117, 118, 119, 120, 121, 122, 131, 132, 133, 134, 135, 136, 137, 138, 146, 147, 148, 149, 150, 151, 152, 153, 154, 162, 163, 164, 165, 166, 167, 168, 169, 170, 178, 179, 180, 181, 182, 183, 184, 185, 186, 194, 195, 196, 197, 198, 199, 200, 201, 202, 210, 211, 212, 213, 214, 215, 216, 217, 218, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 17, 0, 2, 1, 2, 4, 4, 3, 4, 7, 5, 4, 4, 0, 1, 2, 119, 0, 1, 2, 3, 17, 4, 5, 33, 49, 6, 18, 65, 81, 7, 97, 113, 19, 34, 50, 129, 8, 20, 66, 145, 161, 177, 193, 9, 35, 51, 82, 240, 21, 98, 114, 209, 10, 22, 36, 52, 225, 37, 241, 23, 24, 25, 26, 38, 39, 40, 41, 42, 53, 54, 55, 56, 57, 58, 67, 68, 69, 70, 71, 72, 73, 74, 83, 84, 85, 86, 87, 88, 89, 90, 99, 100, 101, 102, 103, 104, 105, 106, 115, 116, 117, 118, 119, 120, 121, 122, 130, 131, 132, 133, 134, 135, 136, 137, 138, 146, 147, 148, 149, 150, 151, 152, 153, 154, 162, 163, 164, 165, 166, 167, 168, 169, 170, 178, 179, 180, 181, 182, 183, 184, 185, 186, 194, 195, 196, 197, 198, 199, 200, 201, 202, 210, 211, 212, 213, 214, 215, 216, 217, 218, 226, 227, 228, 229, 230, 231, 232, 233, 234, 242, 243, 244, 245, 246, 247, 248, 249, 250}
+	dht       = []byte{1, 162, 0, 0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+		1, 0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 0, 2, 1, 3, 3, 2,
+		4, 3, 5, 5, 4, 4, 0, 0, 1, 125, 1, 2, 3, 0, 4, 17, 5, 18, 33, 49, 65, 6, 19, 81, 97, 7, 34, 113, 20, 50, 129,
+		145, 161, 8, 35, 66, 177, 193, 21, 82, 209, 240, 36, 51, 98, 114, 130, 9, 10, 22, 23, 24, 25, 26, 37, 38, 39,
+		40, 41, 42, 52, 53, 54, 55, 56, 57, 58, 67, 68, 69, 70, 71, 72, 73, 74, 83, 84, 85, 86, 87, 88, 89, 90, 99,
+		100, 101, 102, 103, 104, 105, 106, 115, 116, 117, 118, 119, 120, 121, 122, 131, 132, 133, 134, 135, 136,
+		137, 138, 146, 147, 148, 149, 150, 151, 152, 153, 154, 162, 163, 164, 165, 166, 167, 168, 169, 170, 178,
+		179, 180, 181, 182, 183, 184, 185, 186, 194, 195, 196, 197, 198, 199, 200, 201, 202, 210, 211, 212, 213,
+		214, 215, 216, 217, 218, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 241, 242, 243, 244, 245, 246,
+		247, 248, 249, 250, 17, 0, 2, 1, 2, 4, 4, 3, 4, 7, 5, 4, 4, 0, 1, 2, 119, 0, 1, 2, 3, 17, 4, 5, 33, 49,
+		6, 18, 65, 81, 7, 97, 113, 19, 34, 50, 129, 8, 20, 66, 145, 161, 177, 193, 9, 35, 51, 82, 240, 21, 98,
+		114, 209, 10, 22, 36, 52, 225, 37, 241, 23, 24, 25, 26, 38, 39, 40, 41, 42, 53, 54, 55, 56, 57, 58, 67,
+		68, 69, 70, 71, 72, 73, 74, 83, 84, 85, 86, 87, 88, 89, 90, 99, 100, 101, 102, 103, 104, 105, 106, 115,
+		116, 117, 118, 119, 120, 121, 122, 130, 131, 132, 133, 134, 135, 136, 137, 138, 146, 147, 148, 149, 150,
+		151, 152, 153, 154, 162, 163, 164, 165, 166, 167, 168, 169, 170, 178, 179, 180, 181, 182, 183, 184, 185,
+		186, 194, 195, 196, 197, 198, 199, 200, 201, 202, 210, 211, 212, 213, 214, 215, 216, 217, 218, 226, 227,
+		228, 229, 230, 231, 232, 233, 234, 242, 243, 244, 245, 246, 247, 248, 249, 250}
 	sosMarker = []byte{255, 218}
-
-	// enable save webcam img
-	enableSaveImg = false
 )
 
-// DUTMonitor is the definition word of DUT
+// DUTMonitor is the definition word of DUT.
 var DUTMonitor = "dut"
+
+// RedPicFileName is the red pic file name.
+var RedPicFileName = "r.jpg"
+
+// GreenPicFileName is the green pic file name.
+var GreenPicFileName = "g.jpg"
+
+// BluePicFileName is the blue pic file name.
+var BluePicFileName = "b.jpg"
+
+// Enable Webcam Save Img if value is "on".
+var enableWebcamSaveImg = testing.RegisterVarString(
+	"utils.enableWebcamSaveImg",
+	"off",
+	"WWCB enable webcam save image",
+)
 
 // InitWebcam initializes Webcam.
 func InitWebcam(ctx context.Context, s *testing.State) error {
@@ -105,6 +145,171 @@ func InitWebcam(ctx context.Context, s *testing.State) error {
 	return nil
 }
 
+// MappingWebcamWithDockFixture is for extend MappingWebcam with dockFixture.
+func MappingWebcamWithDockFixture(ctx context.Context, s *testing.State, fs *dutfs.Client, keyboardSvc inputspb.KeyboardServiceClient, displaySvc wwcb.DisplayServiceClient, appsSvc pb.AppsServiceClient, uiautoSvc ui.AutomationServiceClient, displayFixtureUIDs []string, dockFixtureUID string) error {
+	if err := ControlFixture(ctx, dockFixtureUID, "on"); err != nil {
+		return errors.Wrap(err, "turn on dock fixture")
+	}
+	if err := MappingWebcam(ctx, s, fs, keyboardSvc, displaySvc, appsSvc, uiautoSvc, displayFixtureUIDs); err != nil {
+		return errors.Wrap(err, "failed to mapping webcam")
+	}
+	defer ControlFixture(ctx, dockFixtureUID, "off")
+
+	return nil
+}
+
+// MappingWebcam is for mapping webcam by RGB photos.
+func MappingWebcam(ctx context.Context, s *testing.State, fs *dutfs.Client, keyboardSvc inputspb.KeyboardServiceClient, displaySvc wwcb.DisplayServiceClient, appsSvc pb.AppsServiceClient, uiautoSvc ui.AutomationServiceClient, displayFixtureUIDs []string) error {
+	// GoBigSleepLint: Wait for monitor lighting.
+	// TODO(b/297788785): Update monitors lighting confirm of rgb webcam mapping method.
+	testing.Sleep(ctx, 30*time.Second)
+
+	displayIDs, err := displaySvc.GetDisplayIDs(ctx, &emptypb.Empty{})
+	if err != nil {
+		return errors.Wrap(err, "get display ID")
+	}
+
+	for id := range displayIDs.DisplayIds {
+		testing.ContextLogf(ctx, "display id:%s", displayIDs.DisplayIds[id])
+	}
+
+	// open RGB pic on each monitor.
+	picFileNames := []string{RedPicFileName, GreenPicFileName}
+
+	if len(displayFixtureUIDs) == 2 {
+		picFileNames = []string{RedPicFileName, GreenPicFileName, BluePicFileName}
+	}
+
+	screenToCamera = make(map[string]string)
+
+	// create RGB photos and upload to DUT.
+	for _, fileName := range picFileNames {
+		imageFile := filepath.Join(MyFilesPath, fileName)
+		imgColor := color.RGBA{255, 0, 0, 255}
+		if fileName == GreenPicFileName {
+			imgColor = color.RGBA{0, 255, 0, 255}
+		} else if fileName == BluePicFileName {
+			imgColor = color.RGBA{0, 0, 255, 255}
+		}
+		image := GenerateImage(3840, 2160, imgColor)
+		if err := WriteImageOnDUT(ctx, fs, image, imageFile); err != nil {
+			s.Fatal("Failed to write test image on DUT: ", err)
+		}
+		defer fs.Remove(ctx, imageFile)
+	}
+
+	if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Files", TimeoutSecs: 60}); err != nil {
+		s.Fatal("Failed to launch Filesapp: ", err)
+	}
+
+	if err := ClickOnMaximizeButton(ctx, uiautoSvc, "Files"); err != nil {
+		testing.ContextLog(ctx, "Fail on clicking maximize button ", err)
+	}
+
+	for i := len(picFileNames) - 1; i >= 0; i-- {
+		fileName := picFileNames[i]
+		galleryWindowName := fmt.Sprintf("Gallery - %s", fileName)
+
+		if err := OpenMediaFileOnFilesapp(ctx, uiautoSvc, fileName); err != nil {
+			s.Fatal("Failed to open media file on Filesapp: ", err)
+		}
+
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if _, err := displaySvc.SwitchWindowToDisplay(ctx, &wwcb.QueryRequest{DisplayIndex: int32(i), WindowTitle: galleryWindowName}); err != nil {
+				return err
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 200 * time.Millisecond}); err != nil {
+			s.Fatal("Failed to switch Gallery window to the external display: ", err)
+		}
+
+		if i == (len(picFileNames) - 1) {
+			if err := ClickOnMaximizeButton(ctx, uiautoSvc, galleryWindowName); err != nil {
+				testing.ContextLog(ctx, "Fail on clicking maximize button ", err)
+			}
+		}
+	}
+
+	// GoBigSleepLint: Wait for Filesapp zoom to full screen.
+	// TODO(b/298143823): Update checking windows full screen status on remote mode.
+	testing.Sleep(ctx, 2*time.Second)
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		camPixel := make(map[string]Pixel)
+		mappingColors := [3]Pixel{redColor, greenColor, blueColor}
+		mappingMonitors := displayIDs.DisplayIds
+
+		// Init all webcam pixel color.
+		for _, devPort := range webcamOnline {
+			p, err := getAvgPixelFromWebcam(ctx, s, devPort, "mapping")
+
+			if err != nil {
+				testing.ContextLog(ctx, "Init all webcam pixel color failed: ", err)
+				continue
+			}
+
+			camPixel[devPort] = filterColorPixelValue(p)
+		}
+		alreadyMappingCamera := make(map[string]bool)
+
+		for index, monitorsKey := range mappingMonitors {
+			maxScore := -1
+			mappingPort := ""
+			mappingColor := mappingColors[index]
+
+			testing.ContextLogf(ctx, "==== %s (%d) scores ====", monitorsKey, index)
+			for devPort, p := range camPixel {
+				_, isAlreadyMapping := alreadyMappingCamera[devPort]
+				if isAlreadyMapping {
+					continue
+				}
+
+				rgbScore := []int{p.R, p.G, p.B}
+				imgScore := rgbScore[index]
+				testing.ContextLogf(ctx, "%s (R:%d,G:%d,B:%d): %d", devPort, p.R, p.G, p.B, imgScore)
+
+				if imgScore > maxScore {
+					mappingPort = devPort
+					maxScore = imgScore
+				}
+			}
+
+			if maxScore < webcamMappingLimitScore {
+				p := camPixel[mappingPort]
+				grayScore := scalarScore(p, grayColor)
+				colorScore := scalarScore(p, mappingColor)
+
+				if int(colorScore) < webcamMappingLimitScore && grayScore > colorScore {
+					return errors.Errorf("'%s' monitor is abnormal. Please check the monitor is lighting. (GrayScore (%f) is higher than ColorScore (%f))", monitorsKey, grayScore, colorScore)
+				}
+			}
+
+			testing.ContextLogf(ctx, "max score is %d , mapping %s to %s", maxScore, mappingPort, monitorsKey)
+
+			screenToCamera[monitorsKey] = mappingPort
+			alreadyMappingCamera[mappingPort] = true
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 100 * time.Second, Interval: 30 * time.Second}); err != nil {
+		return errors.Errorf("Failed on mapping webcam: %s", err)
+	}
+
+	testing.ContextLog(ctx, "==== mapping result ====")
+	for uid, devPort := range screenToCamera {
+		testing.ContextLogf(ctx, "mapping %s to %s", devPort, uid)
+	}
+
+	// close all pic
+	for i := 0; i < len(picFileNames)+1; i++ {
+		if err := CloseWindow(ctx, keyboardSvc, uiautoSvc, "Gallery"); err != nil {
+			testing.ContextLog(ctx, "Fail on closing pic window ", err)
+		}
+	}
+
+	return nil
+}
+
 // MappingWithDockFixture is for extend MappingDisplayFixtureToCamera with dockFixture
 func MappingWithDockFixture(ctx context.Context, s *testing.State, displayFixtureUIDs []string, dockFixtureUID string) error {
 	ControlFixture(ctx, dockFixtureUID, "on")
@@ -130,7 +335,7 @@ func MappingDisplayFixtureToCamera(ctx context.Context, s *testing.State, displa
 
 	// Init all webcam pixel color.
 	for _, devPort := range webcamOnline {
-		p, err := getAvgPixelFromWebcam(ctx, s, devPort)
+		p, err := getAvgPixelFromWebcam(ctx, s, devPort, "mapping")
 
 		if err != nil {
 			return err
@@ -159,7 +364,7 @@ func MappingDisplayFixtureToCamera(ctx context.Context, s *testing.State, displa
 				continue
 			}
 
-			p, err := getAvgPixelFromWebcam(ctx, s, devPort)
+			p, err := getAvgPixelFromWebcam(ctx, s, devPort, "mapping")
 
 			if err != nil {
 				return err
@@ -170,7 +375,7 @@ func MappingDisplayFixtureToCamera(ctx context.Context, s *testing.State, displa
 			s := fmt.Sprintf("mapping '%s' to fixture '%s' score:%f", devPort, uid, imgScore)
 			testing.ContextLog(ctx, s)
 
-			if imgScore > webcamMappingLimitScore && imgScore > screenColorScore {
+			if imgScore > webcamMappingDisplayFixtureLimitScore && imgScore > screenColorScore {
 				screenCameraDevPort = devPort
 				screenColorScore = imgScore
 			}
@@ -180,8 +385,7 @@ func MappingDisplayFixtureToCamera(ctx context.Context, s *testing.State, displa
 			screenToCamera[uid] = screenCameraDevPort
 			alreadyMappingCamera[screenCameraDevPort] = true
 		} else {
-			s := fmt.Sprintf("mapping fixture '%s' to webcam failed", uid)
-			return errors.New(s)
+			return errors.Errorf("mapping fixture '%s' to webcam failed", uid)
 		}
 	}
 
@@ -197,7 +401,7 @@ func MappingDisplayFixtureToCamera(ctx context.Context, s *testing.State, displa
 			continue
 		}
 
-		p, err := getAvgPixelFromWebcam(ctx, s, devPort)
+		p, err := getAvgPixelFromWebcam(ctx, s, devPort, "mapping")
 
 		if err != nil {
 			return err
@@ -234,7 +438,7 @@ func VerifyVideo(ctx context.Context, s *testing.State, uid string, duration int
 	devPort, isHave := screenToCamera[uid]
 
 	if !isHave {
-		return errors.New("the fixture uid " + uid + " not found")
+		return errors.New("the uid " + uid + " not found")
 	}
 
 	cam, err := webcam.Open(devPort)
@@ -280,6 +484,11 @@ func VerifyVideo(ctx context.Context, s *testing.State, uid string, duration int
 		}
 
 		imgFileName := path.Join(s.OutDir(), "tmp.jpeg")
+		if enableWebcamSaveImg.Value() == "on" {
+			currentTime := time.Now()
+			imgFileName = path.Join(s.OutDir(), devPort[5:]+"_verify_"+currentTime.Format("15:04:05")+".jpeg")
+		}
+
 		frame, err := cam.ReadFrame()
 		if len(frame) != 0 {
 			timeNow := time.Now().Unix()
@@ -291,7 +500,7 @@ func VerifyVideo(ctx context.Context, s *testing.State, uid string, duration int
 			distTime := timeNow - takeFrameTime
 
 			if distTime >= 1 {
-				err := ioutil.WriteFile(imgFileName, frame, 0644)
+				err := os.WriteFile(imgFileName, frame, 0644)
 
 				if err != nil {
 					return errors.New("webcam with '" + uid + "' webcam write file error")
@@ -303,7 +512,7 @@ func VerifyVideo(ctx context.Context, s *testing.State, uid string, duration int
 				if err != nil {
 					frame = addMotionDht(frame)
 					os.Remove(imgFileName)
-					err := ioutil.WriteFile(imgFileName, frame, 0644)
+					err := os.WriteFile(imgFileName, frame, 0644)
 					if err != nil {
 						return errors.New("webcam with '" + uid + "' webcam write file error")
 					}
@@ -355,7 +564,7 @@ func GetGamLightingValue(ctx context.Context, s *testing.State, uid string) (int
 		return -1, errors.New("the webcam uid " + uid + " not found")
 	}
 
-	pixel, err := getAvgPixelFromWebcam(ctx, s, devPort)
+	pixel, err := getAvgPixelFromWebcam(ctx, s, devPort, "LightingValue")
 
 	if err != nil {
 		return -1, err
@@ -373,7 +582,7 @@ func GetGamHotColdValue(ctx context.Context, s *testing.State, uid string) (int,
 		return -1, errors.New("the webcam uid " + uid + " not found")
 	}
 
-	pixel, err := getAvgPixelFromWebcam(ctx, s, devPort)
+	pixel, err := getAvgPixelFromWebcam(ctx, s, devPort, "HotColdValue")
 
 	if err != nil {
 		return -1, err
@@ -388,8 +597,23 @@ func addMotionDht(frame []byte) []byte {
 	return append(jpegParts[0], append(dhtMarker, append(dht, append(sosMarker, jpegParts[1]...)...)...)...)
 }
 
+// filterColorPixelValue is for get max pixel value by color.
+func filterColorPixelValue(p Pixel) Pixel {
+	colorStr := detectColor(p)
+
+	if colorStr == "red" {
+		return Pixel{p.R, 0, 0, 255}
+	}
+
+	if colorStr == "green" {
+		return Pixel{0, p.G, 0, 255}
+	}
+
+	return Pixel{0, 0, p.B, 255}
+}
+
 // getAvgPixelFromWebcam is for get avg pixel from webcam.
-func getAvgPixelFromWebcam(ctx context.Context, s *testing.State, devPort string) (Pixel, error) {
+func getAvgPixelFromWebcam(ctx context.Context, s *testing.State, devPort string, logStr string) (Pixel, error) {
 	var p Pixel
 	cam, err := webcam.Open(devPort)
 
@@ -433,9 +657,9 @@ func getAvgPixelFromWebcam(ctx context.Context, s *testing.State, devPort string
 		}
 
 		imgFileName := path.Join(s.OutDir(), "tmp.jpeg")
-		if enableSaveImg {
+		if enableWebcamSaveImg.Value() == "on" {
 			currentTime := time.Now()
-			imgFileName = path.Join(s.OutDir(), devPort[5:]+"_"+currentTime.Format("15:04:05")+".jpeg")
+			imgFileName = path.Join(s.OutDir(), devPort[5:]+"_"+logStr+"_"+currentTime.Format("15:04:05")+".jpeg")
 		}
 
 		frame, err := cam.ReadFrame()
@@ -445,17 +669,17 @@ func getAvgPixelFromWebcam(ctx context.Context, s *testing.State, devPort string
 			return Pixel{}, err
 		} else if frameCount > 10 && len(frame) != 0 {
 			frame = addMotionDht(frame)
-			err := ioutil.WriteFile(imgFileName, frame, 0644)
+			err := os.WriteFile(imgFileName, frame, 0644)
 
 			if err != nil {
-				return Pixel{}, errors.New("get Pixel From Webcam write file error")
+				return Pixel{}, errors.New("get Pixel From Webcam write file error: " + devPort)
 			}
 
 			image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
 			file, err := os.Open(imgFileName)
 
 			if err != nil {
-				return Pixel{}, errors.New("get Pixel From Webcam file open error")
+				return Pixel{}, errors.New("get Pixel From Webcam file open error: " + devPort)
 			}
 
 			defer file.Close()
@@ -463,7 +687,7 @@ func getAvgPixelFromWebcam(ctx context.Context, s *testing.State, devPort string
 			p, err = getAvgPixelColor(file)
 
 			if err != nil {
-				return Pixel{}, errors.New("get Pixel From Webcam error")
+				return Pixel{}, errors.New("get Pixel From Webcam error: " + devPort)
 			}
 
 			break
