@@ -10,9 +10,9 @@ package policy
 import (
 	"encoding/json"
 
+	"4d63.com/optional"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/leighmcculloch/go-optional"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"go.chromium.org/tast/core/errors"

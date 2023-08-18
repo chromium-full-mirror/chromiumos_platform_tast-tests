@@ -49,9 +49,9 @@ package policy
 import (
 \t"encoding/json"
 
+\t"4d63.com/optional"
 \t"github.com/google/go-cmp/cmp"
 \t"github.com/google/go-cmp/cmp/cmpopts"
-\t"github.com/leighmcculloch/go-optional"
 \t"google.golang.org/protobuf/reflect/protoreflect"
 
 \t"go.chromium.org/tast/core/errors"
