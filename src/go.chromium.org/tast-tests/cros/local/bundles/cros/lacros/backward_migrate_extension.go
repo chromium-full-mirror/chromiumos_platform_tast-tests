@@ -10,7 +10,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/lacros/migrate"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -70,13 +69,7 @@ func setupAshProfileWithExtensionForBackwardMigration(ctx context.Context) error
 		return errors.Wrap(err, "failed to accept cookies")
 	}
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create Test API connection")
-	}
-	ui := uiauto.New(tconn)
-
-	return migrate.SetupExtension(ctx, ui, cr.Browser())
+	return migrate.SetupExtension(ctx, cr, cr.Browser())
 }
 
 func migrateAndVerifyLacrosLaunch(ctx context.Context, s *testing.State) error {
@@ -93,12 +86,7 @@ func migrateAndVerifyLacrosLaunch(ctx context.Context, s *testing.State) error {
 }
 
 func verifyAshProfileWithExtension(ctx context.Context, cr *chrome.Chrome) error {
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create Test API connection")
-	}
-	ui := uiauto.New(tconn)
-	if err := migrate.VerifyExtension(ctx, ui, cr.Browser()); err != nil {
+	if err := migrate.VerifyExtension(ctx, cr, cr.Browser()); err != nil {
 		return errors.Wrap(err, "failed to verify extension in Ash")
 	}
 

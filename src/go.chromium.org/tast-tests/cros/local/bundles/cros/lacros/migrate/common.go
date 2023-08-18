@@ -131,16 +131,92 @@ func VerifyLacrosLaunch(ctx context.Context, s *testing.State, cr *chrome.Chrome
 }
 
 const (
+	// Arbitrary extension from Chrome Store.
+	extensionName = "User-Agent Switcher for Chrome"
+	// ID of the above extension.
+	extensionID = "djflhoibgkdhkhhcedjiklpkjnoahfmg"
+	// Chrome Store URL of the above extension
+	extensionWebStoreURL = "https://chrome.google.com/webstore/detail/" + extensionID + "?hl=en"
+	// Arbitrary extension URL.
+	extensionURL = "chrome://extensions/?id=" + extensionID
+)
+
+// SetupExtension installs an arbitrary extension.
+func SetupExtension(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) error {
+	// Navigate to the extension web store page.
+	conn, err := br.NewConn(ctx, extensionWebStoreURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to navigate to extension web store page")
+	}
+	defer conn.Close()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
+	ui := uiauto.New(tconn)
+
+	// Look for the "Add to Chrome" button on the page, which shows
+	// a popup for the final installation of the extension.
+	// On the popup find the "Add extension" button to install the extension.
+	// After the extension is installed, the "Add to Chrome" button on
+	// the extension page should change to the "Remove from Chrome" button.
+	addToChromeButton := nodewith.Name("Add to Chrome").Role(role.Button).First()
+	addExtensionButton := nodewith.Name("Add extension").Role(role.Button)
+	removeButton := nodewith.Name("Remove from Chrome").Role(role.Button).First()
+	if err := uiauto.Combine("Install extension",
+		ui.LeftClick(addToChromeButton),
+		// The "Add extension" button may not immediately be clickable.
+		ui.LeftClickUntil(addExtensionButton, ui.Gone(addExtensionButton)),
+		// TODO(crbug.com/1326398): Remove tab reload when this bug is fixed.
+		ui.RetryUntil(br.ReloadActiveTab, ui.WithTimeout(7*time.Second).WaitUntilExists(removeButton)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to install")
+	}
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close extension web store page")
+	}
+	return nil
+}
+
+// VerifyExtension checks that the extension is installed and enabled.
+func VerifyExtension(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) error {
+	conn, err := br.NewConn(ctx, extensionURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open extension page")
+	}
+	defer conn.Close()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
+	ui := uiauto.New(tconn)
+
+	extensionText := nodewith.Name(extensionName).Role(role.StaticText)
+	onText := nodewith.Name("On").Role(role.StaticText)
+	if err := uiauto.Combine("Verify the extension is installed and enabled",
+		ui.WaitUntilExists(extensionText),
+		ui.Exists(onText),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify extension status")
+	}
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close extension page")
+	}
+	return nil
+}
+
+const (
 	// Arbitrary page title.
 	abcPageTitle = "Alphabet Investor Relations"
 	// Arbitrary page URL.
 	abcPageURL = "https://abc.xyz"
 )
 
-// SetupProfileData creates a bookmark, a shortcut, installs an extension,
-// downloads a file, and simulates page activity
-// by saving a cookie, an IndexedDB entry, a LocalStorage value
-// and creating browsing history.
+// SetupProfileData creates a bookmark, a shortcut, downloads a file, and
+// simulates page activity by saving a cookie, an IndexedDB entry, a
+// LocalStorage value and creating browsing history.
 // Clients are expected to launch a browser and have one new tab page
 // (to absorb the difference between Ash and Lacros since Lacros
 // requires at least one tab to be present for the process to keep running)
@@ -162,9 +238,6 @@ func SetupProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, 
 		return errors.Wrap(err, "failed to accept cookies")
 	}
 	if err := setupBookmark(ctx, ui, br, kb); err != nil {
-		return err
-	}
-	if err := SetupExtension(ctx, ui, br); err != nil {
 		return err
 	}
 	if err := setupShortcut(ctx, ui, br, kb); err != nil {
@@ -212,9 +285,6 @@ func VerifyProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State,
 	if err := verifyBookmark(ctx, ui, br); err != nil {
 		return err
 	}
-	if err := VerifyExtension(ctx, ui, br); err != nil {
-		return err
-	}
 	if err := verifyShortcut(ctx, ui, br); err != nil {
 		return err
 	}
@@ -226,69 +296,6 @@ func VerifyProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State,
 	}
 	if err := verifyExternalPageActivity(ctx, ui, br, kb, s, abcPageURL, abcPageTitle); err != nil {
 		return err
-	}
-	return nil
-}
-
-const (
-	// Arbitrary extension from Chrome Store.
-	extensionName = "User-Agent Switcher for Chrome"
-	// ID of the above extension.
-	extensionID = "djflhoibgkdhkhhcedjiklpkjnoahfmg"
-	// Chrome Store URL of the above extension
-	extensionWebStoreURL = "https://chrome.google.com/webstore/detail/" + extensionID + "?hl=en"
-	// Arbitrary extension URL.
-	extensionURL = "chrome://extensions/?id=" + extensionID
-)
-
-// SetupExtension installs an arbitrary extension.
-func SetupExtension(ctx context.Context, ui *uiauto.Context, br *browser.Browser) error {
-	// Navigate to the extension web store page.
-	conn, err := br.NewConn(ctx, extensionWebStoreURL)
-	if err != nil {
-		return errors.Wrap(err, "failed to navigate to extension web store page")
-	}
-	defer conn.Close()
-	// Look for the "Add to Chrome" button on the page, which shows
-	// a popup for the final installation of the extension.
-	// On the popup find the "Add extension" button to install the extension.
-	// After the extension is installed, the "Add to Chrome" button on
-	// the extension page should change to the "Remove from Chrome" button.
-	addToChromeButton := nodewith.Name("Add to Chrome").Role(role.Button).First()
-	addExtensionButton := nodewith.Name("Add extension").Role(role.Button)
-	removeButton := nodewith.Name("Remove from Chrome").Role(role.Button).First()
-	if err := uiauto.Combine("Install extension",
-		ui.LeftClick(addToChromeButton),
-		// The "Add extension" button may not immediately be clickable.
-		ui.LeftClickUntil(addExtensionButton, ui.Gone(addExtensionButton)),
-		// TODO(crbug.com/1326398): Remove tab reload when this bug is fixed.
-		ui.RetryUntil(br.ReloadActiveTab, ui.WithTimeout(7*time.Second).WaitUntilExists(removeButton)),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to install")
-	}
-	if err := conn.CloseTarget(ctx); err != nil {
-		return errors.Wrap(err, "failed to close extension web store page")
-	}
-	return nil
-}
-
-// VerifyExtension checks that the extension is installed and enabled.
-func VerifyExtension(ctx context.Context, ui *uiauto.Context, br *browser.Browser) error {
-	conn, err := br.NewConn(ctx, extensionURL)
-	if err != nil {
-		return errors.Wrap(err, "failed to open extension page")
-	}
-	defer conn.Close()
-	extensionText := nodewith.Name(extensionName).Role(role.StaticText)
-	onText := nodewith.Name("On").Role(role.StaticText)
-	if err := uiauto.Combine("Verify the extension is installed and enabled",
-		ui.WaitUntilExists(extensionText),
-		ui.Exists(onText),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to verify extension status")
-	}
-	if err := conn.CloseTarget(ctx); err != nil {
-		return errors.Wrap(err, "failed to close extension page")
 	}
 	return nil
 }

@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -59,18 +58,11 @@ func setupAshProfileWithExtension(ctx context.Context) error {
 	}
 	defer cr.Close(ctx)
 
-	// TODO(crbug.com/1471799): Create `ui` within `SetupExtension()`.
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create Test API connection")
-	}
-	ui := uiauto.New(tconn)
-
 	if err := policyutil.EnsureGoogleCookiesAccepted(ctx, cr.Browser()); err != nil {
 		return errors.Wrap(err, "failed to accept cookies")
 	}
 
-	return migrate.SetupExtension(ctx, ui, cr.Browser())
+	return migrate.SetupExtension(ctx, cr, cr.Browser())
 }
 
 func verifyLacrosProfileForExtension(ctx context.Context, cr *chrome.Chrome) error {
@@ -85,10 +77,7 @@ func verifyLacrosProfileForExtension(ctx context.Context, cr *chrome.Chrome) err
 	}
 	defer l.Close(ctx)
 
-	// TODO(crbug.com/1471799): Create `ui` within `VerifyExtension()`.
-	ui := uiauto.New(tconn)
-
-	if err := migrate.VerifyExtension(ctx, ui, l.Browser()); err != nil {
+	if err := migrate.VerifyExtension(ctx, cr, l.Browser()); err != nil {
 		return errors.Wrap(err, "failed to verify extension on Lacros")
 	}
 
