@@ -10,9 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -31,7 +34,11 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      "bootModeNormal",
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.ui.PowerMenuService"},
+		ServiceDeps: []string{
+			"tast.cros.ui.PowerMenuService",
+			"tast.cros.browser.ChromeService",
+			"tast.cros.power.BatteryService",
+		},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Timeout:      time.Hour,
 	})
@@ -170,6 +177,23 @@ func ECCharging(ctx context.Context, s *testing.State) {
 
 	cleanup := setupChan(ctx, h, s) // Make things quiet.
 	defer cleanup()
+
+	cl, err := rpc.Dial(ctx, h.DUT, s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+	defer cl.Close(ctx)
+
+	// Disable Charge Limit for this test, since it messes with detecting if the
+	// battery is correctly charging while plugged in.
+	client := power.NewBatteryServiceClient(cl.Conn)
+	if _, err := client.New(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to start Battery Service Client: ", err)
+	}
+	defer client.Close(ctx, &empty.Empty{})
+	if _, err := client.StopChargeLimit(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to stop Charge Limit: ", err)
+	}
 
 	// Dewatt requested 0mA at 95%. 94% had a request. Picked 93 for a bit of margin.
 	targetDischarge := 93
