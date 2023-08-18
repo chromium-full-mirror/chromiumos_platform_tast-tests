@@ -17,6 +17,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/xmlrpc"
+	input "go.chromium.org/tast-tests/cros/remote/inputs"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -199,6 +200,18 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 	err = removeCommonDataErrorsFromStylusLogFile(hostRawTouchLogFilePath, hostTouchLogFilePath)
 	if err != nil {
 		s.Error("Failed to clean raw touchlog file: ", err)
+	}
+
+	results, err := input.DetermineSingleLineVerdict(hostTouchLogFilePath)
+	if err != nil {
+		s.Error("Error occurred whilst generating verdict: ", err)
+	}
+	for _, result := range results {
+		if result.Passed {
+			s.Log(result.Message)
+		} else {
+			s.Error(result.Message)
+		}
 	}
 }
 
