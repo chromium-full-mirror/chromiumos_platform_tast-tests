@@ -168,3 +168,12 @@ var AddCellularButton = nodewith.Name("Add eSIM").Role(role.Button)
 
 // HotspotDetailedViewToggle is the finder for the hotspot toggle in Hotspot detailed view in Quick Settings.
 var HotspotDetailedViewToggle = nodewith.Name("Toggle hotspot").Role(role.Switch)
+
+// HotspotPolicyImage is the finder for the policy icon in Hotspot detailed view in Quick Settings.
+var HotspotPolicyImage = nodewith.Name("This setting is managed by your administrator").Role(role.Image)
+
+// HotspotOnNoDeviceConnectedText is the finder for the text that showing hotspot is on but no devices connected in Hotspot detailed view.
+var HotspotOnNoDeviceConnectedText = nodewith.Name("On, no devices connected").Role(role.StaticText)
+
+// HotspotTurningOnText is the finder for the text that showing hotspot is turning on in Hotspot detailed view.
+var HotspotTurningOnText = nodewith.NameStartingWith("Turning on").Role(role.StaticText)

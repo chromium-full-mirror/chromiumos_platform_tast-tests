@@ -162,6 +162,7 @@ type ONCGlobalNetworkConfiguration struct {
 \tAllowOnlyPolicyNetworksToConnect\tbool\t`json:"AllowOnlyPolicyNetworksToConnect"`
 \tAllowOnlyPolicyCellularNetworks\tbool\t`json:"AllowOnlyPolicyCellularNetworks"`
 \tAllowCellularSimLock\tbool\t`json:"AllowCellularSimLock"`
+\tAllowCellularHotspot\tbool\t`json:"AllowCellularHotspot"`
 \tBlockedHexSSIDs\t[]string\t`json:"BlockedHexSSIDs,omitempty"`
 }
 

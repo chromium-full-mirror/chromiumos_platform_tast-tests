@@ -28371,6 +28371,7 @@ type ONCGlobalNetworkConfiguration struct {
 	AllowOnlyPolicyNetworksToConnect     bool     `json:"AllowOnlyPolicyNetworksToConnect"`
 	AllowOnlyPolicyCellularNetworks      bool     `json:"AllowOnlyPolicyCellularNetworks"`
 	AllowCellularSimLock                 bool     `json:"AllowCellularSimLock"`
+	AllowCellularHotspot                 bool     `json:"AllowCellularHotspot"`
 	BlockedHexSSIDs                      []string `json:"BlockedHexSSIDs,omitempty"`
 }
 

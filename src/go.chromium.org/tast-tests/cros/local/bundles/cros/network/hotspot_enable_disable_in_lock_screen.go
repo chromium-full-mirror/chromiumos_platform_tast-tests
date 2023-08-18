@@ -14,10 +14,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -110,12 +108,11 @@ func HotspotEnableDisableInLockScreen(ctx context.Context, s *testing.State) {
 	}
 
 	// Navigate to the hotspot detailed view should also toggle on hotspot.
-	hotspotOnMessage := nodewith.Name("On, no devices connected").Role(role.StaticText)
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("Toggle off hotspot in Hotspot detailed view",
-		ui.WaitUntilExists(hotspotOnMessage),
+		ui.WaitUntilExists(quicksettings.HotspotOnNoDeviceConnectedText),
 		ui.LeftClick(quicksettings.HotspotDetailedViewToggle),
-		ui.EnsureGoneFor(hotspotOnMessage, 5*time.Second),
+		ui.EnsureGoneFor(quicksettings.HotspotOnNoDeviceConnectedText, 5*time.Second),
 	)(ctx); err != nil {
 		s.Fatal("Failed to toggle off hotspot in Hotspot detailed view: ", err)
 	}
