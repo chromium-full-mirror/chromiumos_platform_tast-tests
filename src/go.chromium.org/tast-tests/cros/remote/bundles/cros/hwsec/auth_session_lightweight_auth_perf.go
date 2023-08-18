@@ -19,6 +19,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type lightweightAuthPerfTestCase struct {
+	testPin bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: AuthSessionLightweightAuthPerf,
@@ -31,10 +35,20 @@ func init() {
 		Attr:         []string{"hwsec_destructive_crosbolt_perbuild", "group:hwsec_destructive_crosbolt"},
 		SoftwareDeps: []string{"tpm_clear_allowed", "reboot"},
 		Vars:         []string{"hwsec.AuthSessionLightweightAuthPerf.iterations"},
+		Params: []testing.Param{{
+			Val: lightweightAuthPerfTestCase{testPin: false},
+		}, {
+			Name:              "pin_reset",
+			ExtraSoftwareDeps: []string{"pinweaver"},
+			Val:               lightweightAuthPerfTestCase{testPin: true},
+		}},
+		Timeout: 3 * time.Minute,
 	})
 }
 
 func AuthSessionLightweightAuthPerf(ctx context.Context, s *testing.State) {
+	testPin := s.Param().(lightweightAuthPerfTestCase).testPin
+
 	// Setup helper functions.
 	r := hwsecremote.NewCmdRunner(s.DUT())
 	helper, err := hwsecremote.NewHelper(r, s.DUT())
@@ -72,118 +86,116 @@ func AuthSessionLightweightAuthPerf(ctx context.Context, s *testing.State) {
 
 	value := perf.NewValues()
 
-	// Run |iterations| times.
-	for i := int64(0); i < iterations; i++ {
-		startTs := time.Now()
-		// Perform unlock for user during the session.
-		err := utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
-			if _, err := utility.AuthenticateAuthFactor(ctx, authSessionID, util.Password1Label, util.FirstPassword1); err != nil {
-				return errors.Wrap(err, "failed to authenticate user")
-			}
-			return nil
-		})
-		duration := time.Now().Sub(startTs)
-
-		if err != nil {
-			s.Fatal("Failed to authenticate user with password with verify intent: ", err)
-		}
-
-		value.Append(perf.Metric{
-			Name:      "auth_factor_unlock_duration",
-			Unit:      "us",
-			Direction: perf.SmallerIsBetter,
-			Multiple:  true,
-		}, float64(duration.Microseconds()))
-	}
-
-	// Add a PIN factor.
-	if err := utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-		if _, err := utility.AuthenticateAuthFactor(ctx, authSessionID, util.Password1Label, util.FirstPassword1); err != nil {
-			return errors.Wrap(err, "failed to authenticate auth factor")
-		}
-		if err := utility.AddPinAuthFactor(ctx, authSessionID, util.PinLabel, util.FirstPin); err != nil {
-			return errors.Wrap(err, "failed to add auth factor")
-		}
-		return nil
-	}); err != nil {
-		s.Fatal("Failed to add PIN factor: ", err)
-	}
-
-	// Run |iterations| times.
-	for i := int64(0); i < iterations; i++ {
-		// Simulate that there's a PIN to reset.
-		if err := utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-			reply, err := utility.AuthenticatePinAuthFactor(ctx, authSessionID, util.PinLabel, util.IncorrectPassword)
-			if err == nil {
-				return errors.New("authentication succeeds with a wrong PIN")
-			}
-			if reply.ErrorInfo.PrimaryAction != uda.PrimaryAction_PRIMARY_INCORRECT_AUTH {
-				return errors.Errorf("authentication fails with incorrect primary action: %v, should be %v", reply.ErrorInfo.PrimaryAction, uda.PrimaryAction_PRIMARY_INCORRECT_AUTH)
-			}
-			return nil
-		}); err != nil {
-			s.Fatal("Failed to increment PIN wrong attempt: ", err)
-		}
-
-		startTs := time.Now()
-		// Perform unlock for user during the session, but there is a PIN to reset.
-		err = utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
-			if _, err := utility.AuthenticateAuthFactor(ctx, authSessionID, util.Password1Label, util.FirstPassword1); err != nil {
-				return errors.Wrap(err, "failed to authenticate user")
-			}
-			return nil
-		})
-		duration := time.Now().Sub(startTs)
-
-		if err != nil {
-			s.Fatal("Failed to authenticate user with password with verify intent: ", err)
-		}
-
-		value.Append(perf.Metric{
-			Name:      "auth_factor_unlock_with_reset_duration",
-			Unit:      "us",
-			Direction: perf.SmallerIsBetter,
-			Multiple:  true,
-		}, float64(duration.Microseconds()))
-
-		// Ensure PIN is reset so that state is clean for next iteration.
-		// We have to poll here because the reset routine is run in the background,
-		// and we don't know when it'll complete.
-		if err := utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-			return testing.Poll(ctx, func(ctx context.Context) error {
-				_, err := utility.AuthenticatePinAuthFactor(ctx, authSessionID, util.PinLabel, util.FirstPin)
-				return err
-			}, &testing.PollOptions{
-				Timeout:  time.Second,
-				Interval: time.Millisecond * 100,
+	// Don't run other test cases in the `pin_reset` test case because the perf values
+	// don't need to be recorded twice.
+	if !testPin {
+		// Run |iterations| times.
+		for i := int64(0); i < iterations; i++ {
+			startTs := time.Now()
+			// Perform unlock for user during the session.
+			err := utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
+				if _, err := utility.AuthenticateAuthFactor(ctx, authSessionID, util.Password1Label, util.FirstPassword1); err != nil {
+					return errors.Wrap(err, "failed to authenticate user")
+				}
+				return nil
 			})
-		}); err != nil {
-			s.Fatal("Failed to ensure PIN is reset: ", err)
-		}
-	}
+			duration := time.Since(startTs)
 
-	// Run |iterations| times to test webAuthn.
-	for i := int64(0); i < iterations; i++ {
-		startTs := time.Now()
-		// Perform webAuthn for user during the session.
-		err := utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_WEBAUTHN, func(authSessionID string) error {
+			if err != nil {
+				s.Fatal("Failed to authenticate user with password with verify intent: ", err)
+			}
+
+			value.Append(perf.Metric{
+				Name:      "auth_factor_unlock_duration",
+				Unit:      "us",
+				Direction: perf.SmallerIsBetter,
+				Multiple:  true,
+			}, float64(duration.Microseconds()))
+		}
+
+		// Run |iterations| times to test webAuthn.
+		for i := int64(0); i < iterations; i++ {
+			startTs := time.Now()
+			// Perform webAuthn for user during the session.
+			err := utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_WEBAUTHN, func(authSessionID string) error {
+				if _, err := utility.AuthenticateAuthFactor(ctx, authSessionID, util.Password1Label, util.FirstPassword1); err != nil {
+					return errors.Wrap(err, "failed to authenticate user")
+				}
+				return nil
+			})
+			duration := time.Since(startTs)
+			if err != nil {
+				s.Fatal("Call to unlock webauthn secret resulted in an error: ", err)
+			}
+
+			value.Append(perf.Metric{
+				Name:      "auth_factor_unlock_webauthn_secret_duration",
+				Unit:      "us",
+				Direction: perf.SmallerIsBetter,
+				Multiple:  true,
+			}, float64(duration.Microseconds()))
+		}
+	} else {
+		// Add a PIN factor.
+		if err := utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 			if _, err := utility.AuthenticateAuthFactor(ctx, authSessionID, util.Password1Label, util.FirstPassword1); err != nil {
-				return errors.Wrap(err, "failed to authenticate user")
+				return errors.Wrap(err, "failed to authenticate auth factor")
+			}
+			if err := utility.AddPinAuthFactor(ctx, authSessionID, util.PinLabel, util.FirstPin); err != nil {
+				return errors.Wrap(err, "failed to add auth factor")
 			}
 			return nil
-		})
-
-		duration := time.Now().Sub(startTs)
-		if err != nil {
-			s.Fatal("Call to unlock webauthn secret resulted in an error: ", err)
+		}); err != nil {
+			s.Fatal("Failed to add PIN factor: ", err)
 		}
 
-		value.Append(perf.Metric{
-			Name:      "auth_factor_unlock_webauthn_secret_duration",
-			Unit:      "us",
-			Direction: perf.SmallerIsBetter,
-			Multiple:  true,
-		}, float64(duration.Microseconds()))
+		// Run |iterations| times.
+		for i := int64(0); i < iterations; i++ {
+			// Simulate that there's a PIN to reset.
+			if err := utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+				reply, err := utility.AuthenticatePinAuthFactor(ctx, authSessionID, util.PinLabel, util.IncorrectPassword)
+				if err == nil {
+					return errors.New("authentication succeeds with a wrong PIN")
+				}
+				if reply.ErrorInfo.PrimaryAction != uda.PrimaryAction_PRIMARY_INCORRECT_AUTH {
+					return errors.Errorf("authentication fails with incorrect primary action: %v, should be %v", reply.ErrorInfo.PrimaryAction, uda.PrimaryAction_PRIMARY_INCORRECT_AUTH)
+				}
+				return nil
+			}); err != nil {
+				s.Fatal("Failed to increment PIN wrong attempt: ", err)
+			}
+
+			startTs := time.Now()
+			// Perform unlock for user during the session, but there is a PIN to reset.
+			err = utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
+				if _, err := utility.AuthenticateAuthFactor(ctx, authSessionID, util.Password1Label, util.FirstPassword1); err != nil {
+					return errors.Wrap(err, "failed to authenticate user")
+				}
+				return nil
+			})
+			duration := time.Since(startTs)
+
+			if err != nil {
+				s.Fatal("Failed to authenticate user with password with verify intent: ", err)
+			}
+
+			value.Append(perf.Metric{
+				Name:      "auth_factor_unlock_with_reset_duration",
+				Unit:      "us",
+				Direction: perf.SmallerIsBetter,
+				Multiple:  true,
+			}, float64(duration.Microseconds()))
+
+			// Ensure PIN is reset so that state is clean for next iteration.
+			if err := utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+				if _, err := utility.AuthenticatePinAuthFactor(ctx, authSessionID, util.PinLabel, util.FirstPin); err != nil {
+					return errors.Wrap(err, "failed to authenticate user")
+				}
+				return nil
+			}); err != nil {
+				s.Fatal("Failed to ensure PIN is reset: ", err)
+			}
+		}
 	}
 
 	if err := value.Save(s.OutDir()); err != nil {
