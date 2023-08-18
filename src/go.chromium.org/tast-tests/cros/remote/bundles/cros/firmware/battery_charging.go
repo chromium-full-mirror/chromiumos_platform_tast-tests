@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/services/cros/power"
-	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -63,15 +62,6 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 
-	s.Log("Starting a new Chrome")
-	chromeService := pb.NewChromeServiceClient(h.RPCClient.Conn)
-	if _, err := chromeService.New(ctx, &pb.NewRequest{
-		LoginMode: pb.LoginMode_LOGIN_MODE_GUEST_LOGIN,
-	}); err != nil {
-		s.Fatal("Failed to create new Chrome at login: ", err)
-	}
-	defer chromeService.Close(ctx, &empty.Empty{})
-
 	// Increase timeout in getting response from ec uart.
 	if err := h.Servo.SetString(ctx, "ec_uart_timeout", "10"); err != nil {
 		s.Fatal("Failed to extend ec uart timeout: ", err)
@@ -111,6 +101,9 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 	defer client.Close(ctx, &empty.Empty{})
 	if _, err := client.StopChargeLimit(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to stop Charge Limit: ", err)
+	}
+	if err := h.DUT.Conn().CommandContext(ctx, "restart", "powerd").Run(); err != nil {
+		s.Fatal("Failed to restart powerd: ", err)
 	}
 
 	for _, tc := range []struct {
