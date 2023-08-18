@@ -36,6 +36,13 @@ func init() {
 				// Provide an unnamed subtest intentionally so the test can be triggered by giving the
 				// test name directly without providing a test parameter.
 				Val: "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/example.json",
+			}, {
+				Name: "videoplayback_ash_test",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/videoplayback_ash_test.json",
+			},
+			{
+				Name: "videoplayback_lacros_test",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/videoplayback_lacros_test.json",
 			},
 			// TODO(b/274972858): add other parameterized tests.
 			// For example, add "essential" and "advanced" tests that use different configurations.
