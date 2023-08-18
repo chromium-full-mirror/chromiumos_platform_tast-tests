@@ -73,9 +73,13 @@ func checkCharging(ctx context.Context, h *firmware.Helper, s *testing.State) {
 	if cs["global.state"] != "charge" {
 		s.Fatal("DUT is not charging (DUT is on AC but does not report charging)")
 	}
-	if chargingInt(cs["batt.current"], "mA") < 0 {
-		s.Fatalf("DUT is not charging (battery current below zero: %s)", cs["batt.current"])
+	if chargingInt(cs["batt.current"], "mA") <= 0 {
+		s.Fatalf("DUT is not charging (battery current below/equal to zero: %s)", cs["batt.current"])
 	}
+	if chargingInt(cs["chg.voltage"], "mV") <= 0 {
+		s.Fatalf("DUT is not charging (charger voltage below/equal to zero: %s)", cs["chg.voltage"])
+	}
+
 	if (chargingInt(cs["batt.desired_current"], "mA") < 100) &&
 		(chargingInt(cs["batt.state_of_charge"], "%") < 100) {
 		s.Fatalf("Trickle charging battery? Need more discharge? (desired current: %s)",
@@ -83,21 +87,21 @@ func checkCharging(ctx context.Context, h *firmware.Helper, s *testing.State) {
 	}
 
 	// check the requested vs actual values.
-	if float32(chargingInt(cs["chg.voltage"], "mV")) >= 1.05*float32(chargingInt(cs["batt.desired_voltage"], "mV")) {
+	if float32(chargingInt(cs["chg.voltage"], "mV")) > 1.05*float32(chargingInt(cs["batt.desired_voltage"], "mV")) {
 		s.Fatalf("Charger target voltage is too high. (target: %s, battery: %s)",
 			cs["chg.voltage"], cs["batt.desired_voltage"])
 	}
-	if float32(chargingInt(cs["chg.current"], "mA")) >= 1.05*float32(chargingInt(cs["batt.desired_current"], "mA")) {
+	if float32(chargingInt(cs["chg.current"], "mA")) > 1.05*float32(chargingInt(cs["batt.desired_current"], "mA")) {
 		s.Fatalf("Charger target current is too high. (target: %s, battery: %s)",
 			cs["chg.current"], cs["batt.desired_current"])
 	}
 
-	if float32(chargingInt(cs["batt.voltage"], "mV")) >= 1.05*float32(chargingInt(cs["chg.voltage"], "mV")) {
-		s.Fatalf("Battery actual voltage is too high. (battery: %s, charger: %s",
+	if float32(chargingInt(cs["batt.voltage"], "mV")) > 1.05*float32(chargingInt(cs["chg.voltage"], "mV")) {
+		s.Fatalf("Battery actual voltage is too high. (battery: %s, charger: %s)",
 			cs["batt.voltage"], cs["chg.voltage"])
 	}
-	if float32(chargingInt(cs["batt.current"], "mA")) >= 1.05*float32(chargingInt(cs["chg.current"], "mA")) {
-		s.Fatalf("Battery actual current is too high. (battery: %s, charger: %s",
+	if float32(chargingInt(cs["batt.current"], "mA")) > 1.05*float32(chargingInt(cs["chg.current"], "mA")) {
+		s.Fatalf("Battery actual current is too high. (battery: %s, charger: %s)",
 			cs["batt.current"], cs["chg.current"])
 	}
 
