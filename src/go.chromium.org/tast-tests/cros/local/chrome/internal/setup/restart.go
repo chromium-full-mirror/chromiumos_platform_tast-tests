@@ -32,14 +32,14 @@ import (
 // https://source.corp.google.com/chromeos_public/src/platform2/libbrillo/brillo/cryptohome.cc;l=83
 var obfuscatedUsernameRegexp = regexp.MustCompile(`^[\da-f]{40}$`)
 
-// Finch experiements in fieldtrial_testing_config.json are enabled in certain builds.
+// Experiements in fieldtrial_testing_config.json are enabled in certain builds.
 // https://source.chromium.org/chromium/chromium/src/+/main:testing/variations/README.md
 // This var allows you to enable, disable or use the default for your build. Tests can
 // also set enable or disable via `chrome.FieldTrialConfig()` which overrides this var.
 var fieldTrialConfig = testing.RegisterVarString(
 	"setup.FieldTrialConfig",
 	"default",
-	"[enable|disable|default] Whether to force enable / disable finch experiements, or use default.")
+	"[enable|disable|default] Whether to force enable / disable fieldtrial_testing_config experiements, or use default.")
 
 // RestartChromeForTesting restarts the ui job, asks session_manager to enable Chrome testing,
 // and waits for Chrome to listen on its debugging port.

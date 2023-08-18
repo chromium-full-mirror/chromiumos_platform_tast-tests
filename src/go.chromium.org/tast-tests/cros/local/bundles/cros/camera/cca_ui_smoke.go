@@ -30,7 +30,7 @@ func init() {
 			"chromeos-camera-eng@google.com",
 			"pihsun@chromium.org",
 			"shik@chromium.org",
-			"cros-exp-wg+testresults@google.com", // for finch
+			"cros-exp-wg+testresults@google.com", // for fieldtrial_testing_config
 		},
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
@@ -48,13 +48,13 @@ func init() {
 			ExtraAttr: []string{"group:camera-postsubmit", "informational", "group:criticalstaging"},
 			Val:       none,
 		}, {
-			Name:      "fake_vcd_finch_on",
-			Fixture:   "ccaLaunchedWithFakeVCDCameraFinchOn",
+			Name:      "fake_vcd_fieldtrial_testing_config_on",
+			Fixture:   "ccaLaunchedWithFakeVCDCameraFieldTrialConfigOn",
 			ExtraAttr: []string{"group:cq-medium"},
 			Val:       none,
 		}, {
-			Name:      "fake_vcd_finch_off",
-			Fixture:   "ccaLaunchedWithFakeVCDCameraFinchOff",
+			Name:      "fake_vcd_fieldtrial_testing_config_off",
+			Fixture:   "ccaLaunchedWithFakeVCDCameraFieldTrialConfigOff",
 			ExtraAttr: []string{"group:cq-medium"},
 			Val:       none,
 		}, {

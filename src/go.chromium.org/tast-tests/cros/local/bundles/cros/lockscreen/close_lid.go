@@ -27,17 +27,17 @@ func init() {
 			"cros-lurs@google.com",
 			"anastasiian@chromium.org",
 			"chromeos-sw-engprod@google.com",
-			"cros-exp-wg+testresults@google.com", // for finch
+			"cros-exp-wg+testresults@google.com", // for fieldtrial_testing_config
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:cq-medium"},
 		Params: []testing.Param{{
-			Name: "finch_on",
+			Name: "fieldtrial_testing_config_on",
 			Val:  chrome.FieldTrialConfigEnable,
 		}, {
-			Name: "finch_off",
+			Name: "fieldtrial_testing_config_off",
 			Val:  chrome.FieldTrialConfigDisable,
 		}},
 	})

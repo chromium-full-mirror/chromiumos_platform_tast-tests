@@ -240,7 +240,7 @@ func (c *Config) EnableHIDScreenOnOOBE() bool { return c.m.EnableHIDScreenOnOOBE
 // metrics enabled.
 func (c *Config) EnableStackSampledMetrics() bool { return c.m.EnableStackSampledMetrics }
 
-// FieldTrialConfig returns [enable|disable] if finch field trial config should be specified.
+// FieldTrialConfig returns [enable|disable] to control whether field trial testing config should be used.
 func (c *Config) FieldTrialConfig() string { return c.m.FieldTrialConfig }
 
 // EnableHDR returns true if --force-color-profile should be disabled.
