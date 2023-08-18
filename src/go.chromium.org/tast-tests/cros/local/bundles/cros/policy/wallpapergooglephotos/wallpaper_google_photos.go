@@ -10,7 +10,7 @@ package wallpapergooglephotos
 import (
 	"context"
 	"net/http/httptest"
-	"regexp"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/personalization"
 	"go.chromium.org/tast-tests/cros/local/wallpaper"
 	"go.chromium.org/tast-tests/cros/local/wallpaper/constants"
@@ -90,35 +89,28 @@ func TriggerWallpaperGooglePhotosIntegration(ctx context.Context, _ *chrome.Chro
 		}
 	}
 
+	// Open the wallpaper subpage of the personalization app, and select the
+	// Google Photos collection.
 	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("open wallpaper page of personalization hub",
-		personalization.OpenPersonalizationHub(ui),
-		personalization.OpenWallpaperSubpage(ui),
+	if err := uiauto.Combine("open google photos wallpaper collection in personalization hub",
+		wallpaper.OpenWallpaperPicker(ui),
+		wallpaper.SelectCollection(ui, constants.GooglePhotosWallpaperCollection),
 	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to open wallpaper subpage of personalization hub")
+		return errors.Wrap(err, "failed to open google photos wallpaper collection in personalization hub")
 	}
 
-	// Loaded collections have names like name=20 Images.
-	loadedCollections := nodewith.NameRegex(regexp.MustCompile(`.*\d+\s[iI]mages`)).First()
-	googlePhotosCollection := loadedCollections.NameStartingWith(constants.GooglePhotosWallpaperCollection)
-	if err := ui.WaitUntilExists(googlePhotosCollection)(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for Google Photos wallpaper collection")
+	// If the Google Photos collection is enabled, there will now be a Google Photos
+	// Link in the breadcrumbs of the page.
+	googlePhotosBreadcrumbFound := true
+	if err := ui.WithTimeout(2 * time.Second).WaitUntilExists(personalization.BreadcrumbNodeFinder(constants.GooglePhotosWallpaperCollection))(ctx); err != nil {
+		if !nodewith.IsNodeNotFoundErr(err) {
+			return errors.Wrap(err, "failure while trying to find Google Photos breadcrumb")
+		}
+		googlePhotosBreadcrumbFound = false
 	}
 
-	googlePhotosLink := nodewith.Name("Google Photos").Role(role.ListBoxOption)
-	info, err := ui.Info(ctx, googlePhotosLink)
-	if err != nil {
-		return errors.Wrap(err, "failed to get google photos collection link info")
-	}
-
-	isGooglePhotosCollectionEnabled := info.HTMLAttributes["aria-disabled"] != "true"
-
-	if err := wallpaper.SelectCollection(ui, constants.GooglePhotosWallpaperCollection)(ctx); err != nil {
-		return errors.Wrap(err, "failed to select google photos item")
-	}
-
-	if param.ShouldGooglePhotosCollectionBeEnabled != isGooglePhotosCollectionEnabled {
-		return errors.Errorf("unexpected Google Photos collection enabled state: got %t expected %t", isGooglePhotosCollectionEnabled, param.ShouldGooglePhotosCollectionBeEnabled)
+	if param.ShouldGooglePhotosCollectionBeEnabled != googlePhotosBreadcrumbFound {
+		return errors.Errorf("unexpected Google Photos collection enabled state: got %t expected %t", googlePhotosBreadcrumbFound, param.ShouldGooglePhotosCollectionBeEnabled)
 	}
 
 	return nil
