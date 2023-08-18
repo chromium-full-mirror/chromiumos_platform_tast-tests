@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/graphics/expectations"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
@@ -56,6 +57,18 @@ func PlatformV4L2(ctx context.Context, s *testing.State) {
 	}
 	defer upstart.EnsureJobRunning(ctx, "ui")
 
+	expectation, err := expectations.GetTestExpectation(ctx, s.TestName())
+	if err != nil {
+		s.Fatal("Unable to get test expectation: ", err)
+	}
+	// Schedules a post-test expectations handling. If the test is expected to
+	// fail, but did not, then this generates an error.
+	defer func() {
+		if err := expectation.HandleFinalExpectation(); err != nil {
+			s.Error("Unmet expectation: ", err)
+		}
+	}()
+
 	command := s.Param().([]string)
 
 	s.Log("Running ", shutil.EscapeSlice(command))
@@ -91,7 +104,9 @@ func PlatformV4L2(ctx context.Context, s *testing.State) {
 		}
 
 		if exitCode > 0 {
-			s.Errorf("%s", matches)
+			if expErr := expectation.ReportErrorf("%s", matches); expErr != nil {
+				s.Error("Unexpected error: ", expErr)
+			}
 		} else {
 			s.Logf("%s", matches)
 		}
