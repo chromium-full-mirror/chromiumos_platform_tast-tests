@@ -233,87 +233,59 @@ func testPrimaryModeWithDualDisplay(ctx context.Context, displaySvc wwcb.Display
 		return errors.Wrap(err, "failed to switch windows to internal display")
 	}
 
-	if _, err := displaySvc.SetPrimaryDisplay(ctx, &wwcb.QueryRequest{DisplayIndex: 1}); err != nil {
-		return errors.Wrap(err, "failed to set external display as primary")
-	}
-
-	if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: fileWindowTitle, DisplayIndex: 1}); err != nil {
-		return errors.Wrap(err, "failed to verify the Files App's window is on external display")
-	}
-
-	if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: galleryWindowTitle, DisplayIndex: 1}); err != nil {
-		return errors.Wrap(err, "failed to verify the Gallery App's window is on external display")
-	}
 	return nil
 }
 
 func replugExternalDisplayInPrimary(ctx context.Context, displaySvc wwcb.DisplayServiceClient, extDispID1, extDispID2 string) error {
 	testing.ContextLog(ctx, "Unplug and replug in, check windows on expected display")
 
-	if err := utils.ControlFixture(ctx, extDispID1, "off"); err != nil {
-		return errors.Wrap(err, "failed to disconnect the first external display")
-	}
+	for _, outer := range []struct {
+		dispIndex int
+		fixtureID string
+	}{
+		{1, extDispID1},
+		{2, extDispID2},
+	} {
+		testing.ContextLogf(ctx, "Set external display %d as primary", outer.dispIndex)
 
-	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
-		return errors.Wrap(err, "failed to verify display count")
-	}
+		if _, err := displaySvc.SetPrimaryDisplay(ctx, &wwcb.QueryRequest{DisplayIndex: int32(outer.dispIndex)}); err != nil {
+			return errors.Wrapf(err, "failed to set external display %d as primary", outer.dispIndex)
+		}
 
-	if err := utils.ControlFixture(ctx, extDispID2, "off"); err != nil {
-		return errors.Wrap(err, "failed to disconnect the second external display")
-	}
+		if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: fileWindowTitle, DisplayIndex: int32(outer.dispIndex)}); err != nil {
+			return errors.Wrapf(err, "failed to verify the Files App's window is on external display: %d", int32(outer.dispIndex))
+		}
 
-	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 1}); err != nil {
-		return errors.Wrap(err, "failed to verify display count")
-	}
+		if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: galleryWindowTitle, DisplayIndex: int32(outer.dispIndex)}); err != nil {
+			return errors.Wrapf(err, "failed to verify the Gallery App's window is on external display: %d", int32(outer.dispIndex))
+		}
 
-	if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: fileWindowTitle, DisplayIndex: 0}); err != nil {
-		return errors.Wrap(err, "failed to verify the Files App's window is on internal display")
-	}
+		// Unplug and re-plug in the external display, then check the windows bound on which display.
+		for _, inner := range []struct {
+			onOff           string
+			windowOnDisplay int
+		}{
+			{"off", 0},
+			{"on", outer.dispIndex},
+		} {
+			if err := utils.ControlFixture(ctx, outer.fixtureID, inner.onOff); err != nil {
+				return errors.Wrapf(err, "failed to turn %s the fixture of the external display", inner.onOff)
+			}
 
-	if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: galleryWindowTitle, DisplayIndex: 0}); err != nil {
-		return errors.Wrap(err, "failed to verify the Gallery App's window is on internal display")
-	}
+			if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: fileWindowTitle, DisplayIndex: int32(inner.windowOnDisplay)}); err != nil {
+				return errors.Wrapf(err, "failed to verify the Files App's window is on the display index: %d", inner.windowOnDisplay)
+			}
 
-	if err := utils.ControlFixture(ctx, extDispID2, "on"); err != nil {
-		return errors.Wrap(err, "failed to connect to the second external display")
-	}
-
-	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
-		return errors.Wrap(err, "failed to verify display count")
-	}
-
-	if err := utils.ControlFixture(ctx, extDispID1, "on"); err != nil {
-		return errors.Wrap(err, "failed to connect to the first external display")
-	}
-
-	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 3}); err != nil {
-		return errors.Wrap(err, "failed to verify display count")
-	}
-
-	if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: fileWindowTitle, DisplayIndex: 1}); err != nil {
-		return errors.Wrap(err, "failed to verify the Files App's window is on external display")
-	}
-
-	if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: galleryWindowTitle, DisplayIndex: 1}); err != nil {
-		return errors.Wrap(err, "failed to verify the Gallery App's window is on external display")
+			if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: galleryWindowTitle, DisplayIndex: int32(inner.windowOnDisplay)}); err != nil {
+				return errors.Wrapf(err, "failed to verify the Gallery App's window is on the display index: %d", inner.windowOnDisplay)
+			}
+		}
 	}
 	return nil
 }
 
 func testMirrorModeWithDualDisplay(ctx context.Context, displaySvc wwcb.DisplayServiceClient) error {
 	testing.ContextLog(ctx, "Test mirror mode")
-
-	if _, err := displaySvc.SetPrimaryDisplay(ctx, &wwcb.QueryRequest{DisplayIndex: 0}); err != nil {
-		return errors.Wrap(err, "failed to set internal display as primary")
-	}
-
-	if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: fileWindowTitle, DisplayIndex: 0}); err != nil {
-		return errors.Wrap(err, "failed to verify the Files App's window is on internal display")
-	}
-
-	if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: galleryWindowTitle, DisplayIndex: 0}); err != nil {
-		return errors.Wrap(err, "failed to verify the Gallery App's window is on internal display")
-	}
 
 	if _, err := displaySvc.SetMirrorDisplay(ctx, &wwcb.QueryRequest{Enable: true}); err != nil {
 		return errors.Wrap(err, "failed to enable mirror display")
