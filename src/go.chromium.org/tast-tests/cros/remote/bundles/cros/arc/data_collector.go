@@ -920,7 +920,7 @@ func maybeUprevBranch(ctx context.Context, desc *dututils.BuildDescriptor, andro
 		}
 		set[arch] = true
 
-		ureadaheadURL := fmt.Sprintf("%s/%s/host_%s_%s_%s_%s.tar", runtimeArtifactsRoot, androidPackage, arch, binaryTranslationType, desc.BuildType, desc.BuildID)
+		ureadaheadURL := fmt.Sprintf("%s/%s/ureadahead_pack_host_%s_%s_%s_%s.tar", runtimeArtifactsRoot, androidPackage, arch, binaryTranslationType, desc.BuildType, desc.BuildID)
 		if err := exec.Command(gsUtil, "stat", ureadaheadURL).Run(); err != nil {
 			testing.ContextLogf(ctx, "Required ureadahead pack %q does not exist. Branch is not yet ready for uprev", ureadaheadURL)
 			return nil
