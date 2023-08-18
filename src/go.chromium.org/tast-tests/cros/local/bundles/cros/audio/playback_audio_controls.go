@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -65,6 +66,13 @@ func PlaybackAudioControls(ctx context.Context, s *testing.State) {
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to retrieve users Downloads path: ", err)
+	}
+
+	// SWA installation is not guaranteed during startup.
+	// Using this wait to check installation finished before starting test.
+	s.Log("Wait for Gallery to be installed")
+	if err := ash.WaitForChromeAppInstalled(ctx, tconn, apps.Gallery.ID, 2*time.Minute); err != nil {
+		s.Fatal("Failed to wait for installed app: ", err)
 	}
 
 	cleanupCtx := ctx
@@ -177,6 +185,11 @@ func PlaybackAudioControls(ctx context.Context, s *testing.State) {
 
 		if err := ui.LeftClick(openButton)(ctx); err != nil {
 			s.Fatal("Failed to left click open button: ", err)
+		}
+
+		s.Log("Wait for Gallery shown in shelf")
+		if err := ash.WaitForApp(ctx, tconn, apps.Gallery.ID, time.Minute); err != nil {
+			s.Fatal("Failed to check Gallery in shelf: ", err)
 		}
 
 		// Verify whether audio is playing or not.
