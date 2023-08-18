@@ -16,9 +16,7 @@ import (
 )
 
 var standardTests = []string{
-	"identifiers.go",
 	"is_connected.go",
-	"shill_enable_disable.go",
 	"smoke.go",
 	"smoke_ip_connectivity.go",
 }
