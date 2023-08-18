@@ -440,6 +440,7 @@ func ConfigureWifiNetwork(ctx context.Context, uiautomation ui.AutomationService
 		NodeWiths: []*ui.NodeWith{
 			{Value: &ui.NodeWith_NameContaining{NameContaining: connectButtonName}},
 			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
+			{Value: &ui.NodeWith_First{First: true}},
 		},
 	}
 

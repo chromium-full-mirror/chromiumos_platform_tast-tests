@@ -180,7 +180,7 @@ func ConnectToWifiWithUI(ctx context.Context, s *testing.State) {
 	defer wifiutil.DumpUITreeWithScreenshotToFile(ctx, testData.rpcClient.Conn, s.HasError, "ui_tree")
 
 	if err := p.impl(ctx, testData); err != nil {
-		s.Fatal("Failed to connect from Quick Settings: ", err)
+		s.Fatal("Failed to connect: ", err)
 	}
 }
 
@@ -286,6 +286,7 @@ func fromWifiNetworkPage(ctx context.Context, testData connectToWifiWithUITestDa
 		NodeWiths: []*ui.NodeWith{
 			{Value: &ui.NodeWith_NameContaining{NameContaining: buttonName}},
 			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
+			{Value: &ui.NodeWith_First{First: true}},
 		},
 	}
 	if _, err := testData.uiautomation.LeftClick(
