@@ -30,6 +30,7 @@ const (
 	USBDevModeNoServices    = "bootModeUSBDevNoServices"
 	USBDevModeGBBNoServices = "bootModeUSBDevGBBNoServices"
 	USBDevModeGBB           = "bootModeUSBDevGBB"
+	DevRecModeNoServices    = "bootModeDevRecNoServices"
 	RecModeNoServices       = "bootModeRecNoServices"
 	RecModeCopyServices     = "bootModeRecModeCopyServices"
 	USBDevModeWithReinstall = "bootModeUSBDevGBBAndReinstall"
@@ -93,6 +94,19 @@ func init() {
 		Desc:            "Reboot into usb-dev mode using GBB flags before test, ServiceDeps are not supported",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
 		Impl:            newFixture(common.BootModeUSBDev, true, false),
+		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
+		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
+		ResetTimeout:    10 * time.Second,
+		PreTestTimeout:  15 * time.Minute,
+		PostTestTimeout: 10 * time.Minute,
+		TearDownTimeout: 10 * time.Minute,
+		Data:            []string{firmware.ConfigFile},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            DevRecModeNoServices,
+		Desc:            "Reboot into dev recovery mode before test, ServiceDeps are not supported",
+		Contacts:        []string{"tast-fw-library-reviewers@google.com", "digehlot@google.com"},
+		Impl:            newFixture(common.BootModeRecovery, true, false),
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
 		ResetTimeout:    10 * time.Second,
