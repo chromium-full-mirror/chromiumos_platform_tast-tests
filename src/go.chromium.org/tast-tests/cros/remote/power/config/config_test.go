@@ -253,25 +253,6 @@ func TestValidateConfig(t *gotesting.T) {
 		t.Error("ValidateConfig returned an incorrect error for negative weight; got:", err)
 	}
 
-	totalWeightNotOne := Config{
-		FormatVersion: 1,
-		Name:          "LowEndChromebook",
-		Version:       "1.0",
-		Control:       Control{MaxDuration: 0, Retry: 0, FailOnSkippedTest: false},
-		Personas: []Persona{{
-			Name: "MKT",
-			Tests: []Test{
-				{"power.Browsing", 0.5},
-				{"power.YoutubeArc.1080p", 1.0},
-			},
-		}},
-	}
-	if _, _, _, err = ValidateConfig(&totalWeightNotOne); err == nil {
-		t.Error("ValidateConfig didn't return error for total weight not one")
-	} else if !strings.Contains(err.Error(), "total weight for tests") {
-		t.Error("ValidateConfig returned an incorrect error for total weight not one; got:", err)
-	}
-
 	unknownOrderedTests := Config{
 		FormatVersion: 1,
 		Name:          "LowEndChromebook",

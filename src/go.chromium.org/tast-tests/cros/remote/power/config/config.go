@@ -78,7 +78,6 @@ func ValidateConfig(c *Config) (tests, orderedTests, unorderedTests []string, er
 		}
 		// Check test name duplication and weight.
 		personaTests := make(map[string]bool)
-		var totalWeight float64 = 0.0
 		for _, t := range persona.Tests {
 			if t.Name == "" {
 				err = errors.Errorf("test name is empty in persona %q", persona.Name)
@@ -96,13 +95,6 @@ func ValidateConfig(c *Config) (tests, orderedTests, unorderedTests []string, er
 					strconv.FormatFloat(t.Weight, 'f', -1, 64))
 				return nil, nil, nil, err
 			}
-			totalWeight += t.Weight
-		}
-		if totalWeight != 1 {
-			err = errors.Errorf("total weight for tests in persona %q is not 1.0; got %s", persona.Name,
-				strconv.FormatFloat(totalWeight, 'f', -1, 64))
-			return nil, nil, nil, err
-
 		}
 	}
 
