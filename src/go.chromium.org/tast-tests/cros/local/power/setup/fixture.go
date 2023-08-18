@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -519,7 +519,7 @@ func init() {
 				chrome.EnableFeatures("FeatureManagementVideoConference"),
 			},
 		}),
-		Parent:          fixture.StereoAloopLoaded,
+		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.GAIALoginTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,

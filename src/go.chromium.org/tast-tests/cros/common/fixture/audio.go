@@ -8,15 +8,6 @@ package fixture
 const (
 	CrasStopped = "crasStopped"
 
-	// Configure the ALSA loopback device for CRAS.
-	AloopLoaded = "aloopLoaded"
-	// Configure the ALSA loopback device as a stereo device for CRAS.
-	StereoAloopLoaded = "stereoAloopLoaded"
-	// Configure the ALSA loopback device for CRAS and stop UI.
-	AloopLoadedWithoutUI = "aloopLoadedWithoutUI"
-	// Configure the ALSA loopback device as a stereo device for CRAS and stop UI.
-	StereoAloopLoadedWithoutUI = "stereoAloopLoadedWithoutUI"
-
 	// For the testbed with Chameleon
 	ChameleonAudioTestbed = "chameleonAudioTestbed"
 

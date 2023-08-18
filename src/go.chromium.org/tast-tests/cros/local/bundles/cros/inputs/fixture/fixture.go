@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/inputactions"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -205,7 +205,7 @@ func init() {
 		// Need QsRevamp to access new audio settings UI.
 		Impl: inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle, qsRevampEnabled),
 		// Need aloop for route playback to capture.
-		Parent:          fixture.StereoAloopLoaded,
+		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -311,7 +311,7 @@ func init() {
 		// Need QsRevamp to access new audio settings UI.
 		Impl: inputsFixture(tabletMode, true, false, browser.TypeAsh, qsRevampEnabled),
 		// Need aloop for route playback to capture.
-		Parent:          fixture.StereoAloopLoaded,
+		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -448,7 +448,7 @@ func init() {
 		// Need QsRevamp to access new audio settings UI.
 		Impl: inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle, qsRevampEnabled),
 		// Need aloop for route playback to capture.
-		Parent:          fixture.StereoAloopLoaded,
+		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -555,7 +555,7 @@ func init() {
 		// Need QsRevamp to access new audio settings UI.
 		Impl: inputsFixture(tabletMode, true, false, browser.TypeLacros, qsRevampEnabled),
 		// Need aloop for route playback to capture.
-		Parent:          fixture.StereoAloopLoaded,
+		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,

@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	fixture "go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
@@ -36,7 +36,7 @@ func init() {
 			"zentaro@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      fixture.StereoAloopLoaded,
+		Fixture:      fixture.AloopLoaded{Channels: 2}.Instance(),
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone(),
 			// TODO(b/277583823): Replace model list when a hardware dependency that

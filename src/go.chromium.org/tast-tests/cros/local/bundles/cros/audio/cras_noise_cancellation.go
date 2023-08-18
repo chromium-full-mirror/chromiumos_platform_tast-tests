@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/dlc"
@@ -32,7 +32,7 @@ func init() {
 			"group:mainline",
 			"group:video_conference", "video_conference_per_build",
 		},
-		Fixture:      fixture.StereoAloopLoaded,
+		Fixture:      fixture.AloopLoaded{Channels: 2}.Instance(),
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,

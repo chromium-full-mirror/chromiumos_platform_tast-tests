@@ -1,0 +1,53 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package fixture
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/testing"
+)
+
+// UIStopped is a ParameterizedFixture which stops the UI.
+type UIStopped struct{}
+
+var _ ParameterizedFixture = UIStopped{}
+
+// Instance returns the instance name of the parameterized UIStopped fixture.
+func (pf UIStopped) Instance() string {
+	return maybeRegisterFixture(&testing.Fixture{
+		Name:            "uiStopped",
+		Desc:            "Stops the UI",
+		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Impl:            uiStoppedFixture{},
+		SetUpTimeout:    20 * time.Second,
+		TearDownTimeout: 20 * time.Second,
+	})
+}
+
+type uiStoppedFixture struct{}
+
+func (uiStoppedFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	if err := upstart.StopJob(ctx, "ui"); err != nil {
+		s.Fatal("Cannot stop ui: ", err)
+	}
+	return nil
+}
+
+func (uiStoppedFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if err := upstart.EnsureJobRunning(ctx, "ui"); err != nil {
+		s.Fatal("Cannot start ui: ", err)
+	}
+}
+
+func (uiStoppedFixture) Reset(ctx context.Context) error {
+	return nil
+}
+
+func (uiStoppedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
+
+func (uiStoppedFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}

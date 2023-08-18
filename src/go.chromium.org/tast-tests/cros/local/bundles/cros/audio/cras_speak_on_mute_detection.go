@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/data"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
@@ -31,7 +31,10 @@ func init() {
 			"group:mainline",
 			"group:video_conference", "video_conference_per_build",
 		},
-		Fixture: fixture.StereoAloopLoadedWithoutUI,
+		Fixture: fixture.AloopLoaded{
+			Channels: 2,
+			Parent:   fixture.UIStopped{}.Instance(),
+		}.Instance(),
 		Data:    []string{data.TheQuickBrownFoxWav},
 		Timeout: 3 * time.Minute,
 		Params: []testing.Param{

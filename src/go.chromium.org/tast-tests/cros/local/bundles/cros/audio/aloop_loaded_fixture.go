@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -35,7 +35,7 @@ func init() {
 		Timeout:      1 * time.Minute,
 		Params: []testing.Param{
 			{
-				Fixture: fixture.AloopLoaded,
+				Fixture: fixture.AloopLoaded{}.Instance(),
 				Val: aloopLoadedFixtureParam{
 					channels:   8, // the default
 					uiJobGoal:  upstartcommon.StartGoal,
@@ -44,7 +44,7 @@ func init() {
 			},
 			{
 				Name:    "stereo",
-				Fixture: fixture.StereoAloopLoaded,
+				Fixture: fixture.AloopLoaded{Channels: 2}.Instance(),
 				Val: aloopLoadedFixtureParam{
 					channels:   2,
 					uiJobGoal:  upstartcommon.StartGoal,
@@ -52,8 +52,10 @@ func init() {
 				},
 			},
 			{
-				Name:    "without_ui",
-				Fixture: fixture.AloopLoadedWithoutUI,
+				Name: "without_ui",
+				Fixture: fixture.AloopLoaded{
+					Parent: fixture.UIStopped{}.Instance(),
+				}.Instance(),
 				Val: aloopLoadedFixtureParam{
 					channels:   8, // the default
 					uiJobGoal:  upstartcommon.StopGoal,
@@ -61,8 +63,11 @@ func init() {
 				},
 			},
 			{
-				Name:    "stereo_without_ui",
-				Fixture: fixture.StereoAloopLoadedWithoutUI,
+				Name: "stereo_without_ui",
+				Fixture: fixture.AloopLoaded{
+					Channels: 2,
+					Parent:   fixture.UIStopped{}.Instance(),
+				}.Instance(),
 				Val: aloopLoadedFixtureParam{
 					channels:   2,
 					uiJobGoal:  upstartcommon.StopGoal,

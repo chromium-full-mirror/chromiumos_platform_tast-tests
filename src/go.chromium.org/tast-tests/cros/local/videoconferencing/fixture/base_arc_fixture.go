@@ -8,8 +8,8 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
@@ -36,7 +36,7 @@ func init() {
 			opts = append(opts, vcOpts...)
 			return opts, nil
 		}),
-		Parent:          fixture.StereoAloopLoaded,
+		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout,
 		ResetTimeout:    arc.ResetTimeout,
 		PostTestTimeout: arc.PostTestTimeout,
