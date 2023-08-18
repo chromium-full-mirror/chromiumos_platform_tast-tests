@@ -19,7 +19,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/dropdown"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -214,12 +213,18 @@ func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetw
 				return &emptypb.Empty{}, err
 			}
 		case wifi.KnownNetworksControlsRequest_Connect:
-			if err := uiauto.Combine("connect to known network",
-				settings.LeftClick(networkItem),
-				settings.LeftClick(nodewith.Name("Connect").Role(role.Button)),
-				waitUntilConnected(res.tconn, settings),
-			)(ctx); err != nil {
+			if err := settings.LeftClick(networkItem)(ctx); err != nil {
 				return &emptypb.Empty{}, err
+			}
+
+			// Skip the connection attempt if we are already connected.
+			if err := verifyConnectedStatus(ctx, ssid, true); err != nil {
+				if err := uiauto.Combine("connect to known network",
+					settings.LeftClick(nodewith.Name("Connect").Role(role.Button)),
+					waitUntilConnected(res.tconn, settings),
+				)(ctx); err != nil {
+					return &emptypb.Empty{}, err
+				}
 			}
 
 			// The connect control clicks on the network and navigate to another page.
@@ -342,24 +347,11 @@ func setTextField(ui *uiauto.Context, kb *input.KeyboardEventWriter, textField *
 func waitUntilConnected(tconn *chrome.TestConn, settings *ossettings.OSSettings) uiauto.Action {
 	return func(ctx context.Context) error {
 		return testing.Poll(ctx, func(ctx context.Context) error {
-			notifications, err := ash.Notifications(ctx, tconn)
-			if err != nil {
-				return testing.PollBreak(errors.Wrap(err, "failed to get all visible notifications"))
-			}
-
-			for _, notification := range notifications {
-				titleMatched := ash.WaitTitle("Network connection error")(notification)
-				if titleMatched {
-					return testing.PollBreak(errors.New("failed to wait until network is connected: connection error"))
-				}
-			}
-
 			if found, err := settings.IsNodeFound(ctx, nodewith.NameStartingWith("Connected").Role(role.StaticText)); err != nil {
 				return testing.PollBreak(errors.Wrap(err, "failed to check if network is not connected"))
 			} else if !found {
 				return errors.New("network is not connected")
 			}
-
 			return nil
 		}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 300 * time.Millisecond})
 	}

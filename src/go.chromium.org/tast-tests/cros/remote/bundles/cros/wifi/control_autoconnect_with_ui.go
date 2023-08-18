@@ -43,7 +43,7 @@ func init() {
 			wifiutil.FaillogServiceName,
 		},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesWithUI),
 		Params: []testing.Param{
 			{
 				Name: "cycle_wifi",
@@ -75,6 +75,19 @@ func ControlAutoconnectWithUI(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 
 	ap := map[apIdentifier]*apUtil{}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	// Start a chrome session before configuring access points to guarantee that all
+	// of the expected certificates are loaded to prevent issues with encryption.
+	cr := ui.NewChromeServiceClient(tf.DUTRPC(wificell.DefaultDUT).Conn)
+	if _, err := cr.New(ctx, &ui.NewRequest{}); err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx, &emptypb.Empty{})
+
 	for _, id := range []apIdentifier{primaryAP, anotherAP, notUsedAP1, notUsedAP2} {
 		accessPoint, err := tf.ConfigureAP(ctx, wificell.DefaultOpenNetworkAPOptions(), nil)
 		if err != nil {
@@ -89,37 +102,25 @@ func ControlAutoconnectWithUI(ctx context.Context, s *testing.State) {
 
 		ap[id] = &apUtil{APIface: accessPoint, tf: tf}
 	}
-	cleanupCtx := ctx
-	ctx, cancel := tf.ReserveForDisconnect(ctx)
+	cleanupCtx = ctx
+	ctx, cancel = tf.ReserveForDisconnect(ctx)
 	defer cancel()
 	defer tf.CleanDisconnectDUTFromWifi(cleanupCtx, wificell.DefaultDUT)
 
-	// Isolate the step to leverage `defer` pattern.
-	func(ctx context.Context) {
-		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-		defer cancel()
+	// Checking if the known network list is empty as the precondition of this test.
+	settingsSvc := ossettings.NewOsSettingsServiceClient(tf.DUTRPC(wificell.DefaultDUT).Conn)
+	resp, err := settingsSvc.KnownWifiNetworks(ctx, &emptypb.Empty{})
+	if err != nil {
+		s.Fatal("Failed to acquire the known network list: ", err)
+	}
+	if len(resp.GetSsids()) != 0 {
+		s.Fatal("Failed to verify DUT is ready for test: known network list is not empty")
+	}
 
-		cr := ui.NewChromeServiceClient(tf.DUTRPC(wificell.DefaultDUT).Conn)
-		if _, err := cr.New(ctx, &ui.NewRequest{}); err != nil {
-			s.Fatal("Failed to start Chrome: ", err)
-		}
-		defer cr.Close(cleanupCtx, &emptypb.Empty{})
-
-		// Checking if the known network list is empty as the precondition of this test.
-		settingsSvc := ossettings.NewOsSettingsServiceClient(tf.DUTRPC(wificell.DefaultDUT).Conn)
-		resp, err := settingsSvc.KnownWifiNetworks(ctx, &emptypb.Empty{})
-		if err != nil {
-			s.Fatal("Failed to acquire the known network list: ", err)
-		} else if len(resp.GetSsids()) != 0 {
-			s.Fatal("Failed to verify DUT is ready for test: known network list is not empty")
-		}
-
-		// Preparing the primary known network for upcoming tests.
-		if err := ap[primaryAP].connectAndWaitForItToBeKnownNetwork(ctx); err != nil {
-			s.Fatalf("Failed to connect to AP %q: %v", ap[primaryAP].Config().SSID, err)
-		}
-	}(ctx)
+	// Preparing the primary known network for upcoming tests.
+	if err := ap[primaryAP].connectAndWaitForItToBeKnownNetwork(ctx); err != nil {
+		s.Fatalf("Failed to connect to AP %q: %v", ap[primaryAP].Config().SSID, err)
+	}
 
 	for _, test := range []struct {
 		description string

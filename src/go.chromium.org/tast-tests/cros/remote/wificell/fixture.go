@@ -88,6 +88,7 @@ func init() {
 	params[TFFeaturesPower] = "Default wificell setup with power diagnostics"
 	params[TFFeaturesCellular] = "Wificell setup on a cellular capable device"
 	params[TFFeaturesCompanionDUT|TFFeaturesCellular] = "Wificell setup on a cellular capable device with companion chromebook DUT"
+	params[TFFeaturesWithUI] = "Wificell setup with the UI"
 
 	fixtures := make(map[TFFeatures]*testing.Fixture)
 	for f, desc := range params {
@@ -166,6 +167,8 @@ const (
 	TFFeaturesPower
 	// TFFeaturesCellular set up cellular shill service on the DUT.
 	TFFeaturesCellular
+	// TFFeaturesWithUI ensures the UI is started as part of the fixture setup.
+	TFFeaturesWithUI
 )
 
 // String returns name component corresponding to enum value(s).
@@ -206,6 +209,10 @@ func (enum TFFeatures) String() string {
 	if enum&TFFeaturesCellular != 0 {
 		ret = append(ret, "Cellular")
 		enum ^= TFFeaturesCellular
+	}
+	if enum&TFFeaturesWithUI != 0 {
+		ret = append(ret, "WithUI")
+		enum ^= TFFeaturesWithUI
 	}
 	// Catch weird cases. Like when somebody extends enum, but forgets to extend this.
 	if enum != 0 {
@@ -464,6 +471,9 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	if f.features&TFFeaturesCellular != 0 {
 		ops.EnableCellular(true)
+	}
+	if f.features&TFFeaturesWithUI != 0 {
+		ops.EnableDutUI(true)
 	}
 
 	if enableRouterRebootStr, ok := s.Var(fixtureVarEnableRouterReboot); ok {

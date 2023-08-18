@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -54,7 +53,7 @@ func init() {
 			"tast.cros.wifi.WifiService",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesWithUI),
 		Params: []testing.Param{
 			{
 				Name: "suspend",
@@ -117,6 +116,20 @@ func RememberedNetworksPersist(ctx context.Context, s *testing.State) {
 		}
 	)
 
+	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	cr := ui.NewChromeServiceClient(rpcClient.Conn)
+	if _, err := cr.New(ctx, &ui.NewRequest{}); err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx, &emptypb.Empty{})
+
+	var ssids []string
+
 	s.Log("Configuring APs")
 	for _, networkConfig := range networks {
 		apOpts := []hostapd.Option{
@@ -141,18 +154,22 @@ func RememberedNetworksPersist(ctx context.Context, s *testing.State) {
 			}
 		}(cleanupAPCtx)
 
+		if _, err := tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, networkConfig.ap); err != nil {
+			s.Fatal("Failed to connect network: ", err)
+		}
+		ssids = append(ssids, networkConfig.ap.Config().SSID)
+
 		var cancel context.CancelFunc
 		ctx, cancel = tf.ReserveForDeconfigAP(ctx, networkConfig.ap)
 		defer cancel()
 	}
 
-	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
-	test := s.Param().(rememberedNetworksPersistParam)
-
-	ssids, err := addRememberedNetworks(ctx, networks, tf, rpcClient)
-	if err != nil {
-		s.Fatal("Failed to add remembered networks: ", err)
+	wifiUIService := wifi.NewWifiServiceClient(rpcClient.Conn)
+	if err := confirmNetworksRemembered(ctx, wifiUIService, ssids); err != nil {
+		s.Fatal("Failed to verify the added networks are in remembered networks list: ", err)
 	}
+
+	test := s.Param().(rememberedNetworksPersistParam)
 
 	if err := test.testScenario(ctx, tf); err != nil {
 		s.Fatal("Failed to perform test scenario: ", err)
@@ -160,37 +177,10 @@ func RememberedNetworksPersist(ctx context.Context, s *testing.State) {
 
 	// Retrieve resource again due to rebooting could cause RPC client closing.
 	rpcClient = tf.DUTRPC(wificell.DefaultDUT)
+
 	if err := loginAndVerifyRememberedNetworksPersist(ctx, rpcClient.Conn, test.tryReuseSession, ssids); err != nil {
 		s.Fatal("Failed to verify remembered networks persist after login: ", err)
 	}
-}
-
-// addRememberedNetworks remembers the networks by adding it and ensure the networks are remembered.
-func addRememberedNetworks(ctx context.Context, networks []*rememberedNetworksTestNetworks, tf *wificell.TestFixture, rpcClient *rpc.Client) (ssids []string, err error) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
-	cr := ui.NewChromeServiceClient(rpcClient.Conn)
-	if _, err := cr.New(ctx, &ui.NewRequest{}); err != nil {
-		return ssids, errors.Wrap(err, "failed to start Chrome")
-	}
-	defer cr.Close(cleanupCtx, &emptypb.Empty{})
-
-	// Remember a network by connecting to it.
-	for _, network := range networks {
-		if _, err = tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, network.ap); err != nil {
-			return ssids, errors.Wrap(err, "failed to connect network")
-		}
-		ssids = append(ssids, network.ap.Config().SSID)
-	}
-
-	wifiUIService := wifi.NewWifiServiceClient(rpcClient.Conn)
-	if err := confirmNetworksRemembered(ctx, wifiUIService, ssids); err != nil {
-		return ssids, errors.Wrap(err, "failed to verify the added networks are in remembered networks list")
-	}
-
-	return ssids, nil
 }
 
 func loginAndVerifyRememberedNetworksPersist(ctx context.Context, conn *grpc.ClientConn, tryReuseSession bool, ssids []string) error {

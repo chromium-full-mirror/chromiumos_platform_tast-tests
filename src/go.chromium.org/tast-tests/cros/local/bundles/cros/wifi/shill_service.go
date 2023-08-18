@@ -116,7 +116,9 @@ func (s *ShillService) InitDUT(ctx context.Context, req *wifi.InitDUTRequest) (*
 			return nil, errors.Wrap(err, "failed to stop ui")
 		}
 	} else {
-		if err := upstart.EnsureJobRunning(ctx, "ui"); err != nil {
+		// TODO(b/273868074): Update to EnsureJob once the wonkiness
+		// around Shill profile popping has been resolved.
+		if err := upstart.RestartJob(ctx, "ui"); err != nil {
 			return nil, errors.Wrap(err, "failed to start ui")
 		}
 	}
