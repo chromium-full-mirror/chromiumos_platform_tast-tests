@@ -23,7 +23,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Dock3UsbChargingGRPC,
+		Func:         USBChargingViaDock,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test power charging via a powered Dock over USB-C",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
@@ -35,7 +35,7 @@ func init() {
 	})
 }
 
-func Dock3UsbChargingGRPC(ctx context.Context, s *testing.State) {
+func USBChargingViaDock(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -80,6 +80,7 @@ func Dock3UsbChargingGRPC(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open IP Power: ", err)
 	}
 	defer utils.CloseIppower(cleanupCtx, []int{1})
+
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)
 	}
