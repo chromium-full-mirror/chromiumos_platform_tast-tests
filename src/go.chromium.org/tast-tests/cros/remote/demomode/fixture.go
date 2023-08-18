@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/demomode/constants"
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	ps "go.chromium.org/tast-tests/cros/services/cros/demomode"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -39,12 +40,13 @@ func init() {
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
-		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
+		Vars:            []string{"ui.signinProfileTestExtensionManifestKey", tape.ServiceAccountVar},
 		ServiceDeps: []string{
 			"tast.cros.demomode.DemoModeService",
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.ui.ChromeUIService",
-			"tast.cros.browser.ChromeService"},
+			"tast.cros.browser.ChromeService",
+			"tast.cros.tape.Service"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: fixture.PostDemoModeOOBEProd,
@@ -60,12 +62,13 @@ func init() {
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
-		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
+		Vars:            []string{"ui.signinProfileTestExtensionManifestKey", tape.ServiceAccountVar},
 		ServiceDeps: []string{
 			"tast.cros.demomode.DemoModeService",
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.ui.ChromeUIService",
-			"tast.cros.browser.ChromeService"},
+			"tast.cros.browser.ChromeService",
+			"tast.cros.tape.Service"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: fixture.PostDemoModeOOBECloudGaming,
@@ -82,12 +85,13 @@ func init() {
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
-		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
+		Vars:            []string{"ui.signinProfileTestExtensionManifestKey", tape.ServiceAccountVar},
 		ServiceDeps: []string{
 			"tast.cros.demomode.DemoModeService",
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.ui.ChromeUIService",
-			"tast.cros.browser.ChromeService"},
+			"tast.cros.browser.ChromeService",
+			"tast.cros.tape.Service"},
 	})
 }
 
@@ -168,6 +172,26 @@ func (f *fixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {}
 func (f *fixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
 func (f *fixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
+	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to connect to the RPC Service on the DUT: ", err)
+	}
+	defer cl.Close(ctx)
+
+	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	if err != nil {
+		s.Fatal("Failed to create tape client: ", err)
+	}
+	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, false /*lock*/, tape.WithTimeout(30), tape.WithPoolID(tape.DemoMode))
+	if err != nil {
+		s.Fatal("Failed to create account manager and lease an account: ", err)
+	}
+	defer accManager.CleanUp(ctx)
+
+	if err := tapeClient.DeprovisionHelper(ctx, cl, acc.CustomerID, acc.OrgUnitPath); err != nil {
+		s.Fatal("Failed to deprovision device: ", err)
+	}
+
 	if err := policyutil.EnsureTPMAndSystemStateAreResetLocal(ctx, s.DUT(), s.RPCHint()); err != nil {
 		s.Fatal("Failed to reset TPM after tests: ", err)
 	}

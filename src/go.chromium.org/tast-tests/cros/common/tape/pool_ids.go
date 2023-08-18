@@ -16,6 +16,7 @@ const (
 	ChromeosbytebotCom                    = "chromeosbytebot_com"
 	Crosprqa4Com                          = "crosprqa4_com"
 	DefaultManaged                        = "default_managed"
+	DemoMode                              = "demo_mode"
 	DeviceTrustDisabled                   = "device_trust_disabled"
 	DeviceTrustEnabled                    = "device_trust_enabled"
 	Enrollment                            = "enrollment"
