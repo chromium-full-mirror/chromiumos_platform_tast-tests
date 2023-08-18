@@ -7,6 +7,7 @@
 package org.chromium.arc.testapp.cameraintent;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -20,7 +21,7 @@ import android.widget.TextView;
 public class MainActivity extends Activity {
     private static final String KEY_ACTION = "action";
     private static final String KEY_DATA = "data";
-    private static final String KEY_URI = "uri";
+    private static final String KEY_HAS_URI = "has_uri";
     private static final int EXPECT_NOTHING = 0;
     private static final int EXPECT_IMAGE_DATA = 1;
     private static final int EXPECT_VIDEO_URI = 2;
@@ -77,21 +78,47 @@ public class MainActivity extends Activity {
             throw new IllegalArgumentException("Unsupported action: " + action);
         }
 
-        final Uri uri = getIntent().getParcelableExtra(KEY_URI);
+        final boolean hasUri = getIntent().getBooleanExtra(KEY_HAS_URI, false);
         final Intent intent = new Intent(action);
-        if (uri != null) {
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        if (hasUri) {
+            String fileName = null;
+            String mimeType = null;
+            if (isImageCaptureAction(action)) {
+                fileName = "test.jpg";
+                mimeType = "image/jpg";
+            } else if (isVideoCaptureAction(action)) {
+                fileName = "test.mp4";
+                mimeType = "video/mp4";
+            } else {
+                throw new IllegalArgumentException(
+                    "URI cannot be brought with the action: " + action);
+            }
+            final ContentValues values = new ContentValues();
+            values.put(MediaStore.MediaColumns.TITLE, fileName);
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+            values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType);
+
+            final Uri outputUri = getContentResolver().insert(
+                MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, outputUri);
         }
 
-        if ((MediaStore.ACTION_IMAGE_CAPTURE.equals(action)
-                        || MediaStore.ACTION_IMAGE_CAPTURE_SECURE.equals(action))
-                && uri == null) {
+        if (isImageCaptureAction(action) && !hasUri) {
             startActivityForResult(intent, EXPECT_IMAGE_DATA);
-        } else if (MediaStore.ACTION_VIDEO_CAPTURE.equals(action) && uri == null) {
+        } else if (isVideoCaptureAction(action) && !hasUri) {
             startActivityForResult(intent, EXPECT_VIDEO_URI);
         } else {
             startActivityForResult(intent, EXPECT_NOTHING);
         }
+    }
+
+    private boolean isImageCaptureAction(final String action) {
+        return MediaStore.ACTION_IMAGE_CAPTURE.equals(action)
+                || MediaStore.ACTION_IMAGE_CAPTURE_SECURE.equals(action);
+    }
+
+    private boolean isVideoCaptureAction(final String action) {
+        return MediaStore.ACTION_VIDEO_CAPTURE.equals(action);
     }
 
     private void setResult(String text) {

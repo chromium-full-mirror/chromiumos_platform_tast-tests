@@ -26,7 +26,7 @@ import (
 
 type intentOptions struct {
 	Action       string
-	URI          string
+	URI          bool
 	Mode         cca.Mode
 	TestBehavior testBehavior
 	ResultInfo   resultInfo
@@ -50,8 +50,6 @@ const (
 	recordVideoAction         = "android.media.action.VIDEO_CAPTURE"
 	launchOnPhotoModeAction   = "android.media.action.STILL_IMAGE_CAMERA"
 	launchOnVideoModeAction   = "android.media.action.VIDEO_CAMERA"
-	testPhotoURI              = "content://org.chromium.arc.intent_helper.fileprovider/download/test.jpg"
-	testVideoURI              = "content://org.chromium.arc.intent_helper.fileprovider/download/test.mp4"
 	arcCameraFolderPath       = "data/media/0/DCIM/Camera"
 	testAppPkg                = "org.chromium.arc.testapp.cameraintent"
 	testAppActivity           = "org.chromium.arc.testapp.cameraintent.MainActivity"
@@ -167,7 +165,7 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 			Name: "take photo (no extra)",
 			IntentOptions: intentOptions{
 				Action:       takePhotoAction,
-				URI:          "",
+				URI:          false,
 				Mode:         cca.Photo,
 				TestBehavior: captureConfirmAndDone,
 			},
@@ -175,7 +173,7 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 			Name: "take photo (has extra)",
 			IntentOptions: intentOptions{
 				Action:       takePhotoAction,
-				URI:          testPhotoURI,
+				URI:          true,
 				Mode:         cca.Photo,
 				TestBehavior: captureConfirmAndDone,
 				ResultInfo: resultInfo{
@@ -187,7 +185,7 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 			Name: "launch camera on photo mode",
 			IntentOptions: intentOptions{
 				Action:       launchOnPhotoModeAction,
-				URI:          "",
+				URI:          false,
 				Mode:         cca.Photo,
 				TestBehavior: captureAndAlive,
 				ResultInfo: resultInfo{
@@ -198,7 +196,7 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 			Name: "launch camera on video mode",
 			IntentOptions: intentOptions{
 				Action:       launchOnVideoModeAction,
-				URI:          "",
+				URI:          false,
 				Mode:         cca.Video,
 				TestBehavior: captureAndAlive,
 				ResultInfo: resultInfo{
@@ -209,7 +207,7 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 			Name: "record video (no extras)",
 			IntentOptions: intentOptions{
 				Action:       recordVideoAction,
-				URI:          "",
+				URI:          false,
 				Mode:         cca.Video,
 				TestBehavior: captureConfirmAndDone,
 				ResultInfo: resultInfo{
@@ -221,7 +219,7 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 			Name: "record video (has extras)",
 			IntentOptions: intentOptions{
 				Action:       recordVideoAction,
-				URI:          testVideoURI,
+				URI:          true,
 				Mode:         cca.Video,
 				TestBehavior: captureConfirmAndDone,
 				ResultInfo: resultInfo{
@@ -233,7 +231,7 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 			Name: "close app",
 			IntentOptions: intentOptions{
 				Action:       takePhotoAction,
-				URI:          "",
+				URI:          false,
 				Mode:         cca.Photo,
 				TestBehavior: closeApp,
 			},
@@ -241,7 +239,7 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 			Name: "cancel when review",
 			IntentOptions: intentOptions{
 				Action:       takePhotoAction,
-				URI:          "",
+				URI:          false,
 				Mode:         cca.Photo,
 				TestBehavior: captureCancelAndAlive,
 			},
@@ -289,9 +287,11 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 func launchIntent(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, options intentOptions, outDir string, tb *testutil.TestBridge, uiDevice *ui.Device) (*cca.App, error) {
 	launchByIntent := func(ctx context.Context, tconn *chrome.TestConn) error {
 		args := []string{"start", "-n", fmt.Sprintf("%s/%s", testAppPkg, testAppActivity), "-e", "action", options.Action}
-		if options.URI != "" {
-			args = append(args, "--eu", "uri", options.URI)
+		hasURI := "false"
+		if options.URI {
+			hasURI = "true"
 		}
+		args = append(args, "--ez", "has_uri", hasURI)
 
 		testing.ContextLogf(ctx, "Testing action: %s", options.Action)
 		output, err := a.Command(ctx, "am", args...).Output(testexec.DumpLogOnError)
@@ -523,7 +523,7 @@ func checkInstancesCoexistence(ctx context.Context, cr *chrome.Chrome, a *arc.AR
 	// Launch camera intent.
 	intentApp, err := launchIntent(ctx, cr, a, intentOptions{
 		Action:       takePhotoAction,
-		URI:          "",
+		URI:          false,
 		Mode:         cca.Photo,
 		TestBehavior: captureConfirmAndDone,
 	}, outDir, tb, uiDevice)
