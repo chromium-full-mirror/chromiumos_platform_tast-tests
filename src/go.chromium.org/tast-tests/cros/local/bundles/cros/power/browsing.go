@@ -87,6 +87,17 @@ func init() {
 			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:               browsingTestParam{ConfigName: "custom", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"lacros"},
+		}, {
+			Name:    "expr1_ash",
+			Fixture: "powerAsh",
+			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:     browsingTestParam{ConfigName: "typical", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
+		}, {
+			Name:              "expr1_lacros",
+			Fixture:           "powerLacros",
+			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:               browsingTestParam{ConfigName: "typical", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
+			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }
