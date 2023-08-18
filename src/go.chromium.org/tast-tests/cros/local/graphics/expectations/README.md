@@ -98,7 +98,7 @@ To use test expectations, the test writer should implement
 ```
 expectation, err := expectations.GetTestExpectation(ctx, s.TestName())
 if err != nil {
-	s.Fatal("Unable to get test expectation", err)
+	s.Fatal("Unable to get test expectation: ", err)
 }
 // Schedules a post-test expectations handling. If the test is expected to
 // fail, but did not, then this generates an error.
