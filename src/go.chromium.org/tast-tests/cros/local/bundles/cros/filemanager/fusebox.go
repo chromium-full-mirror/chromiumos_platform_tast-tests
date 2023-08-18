@@ -279,14 +279,8 @@ func removeAll(path string) error {
 }
 
 // renameFile is a rough approximation to running /usr/bin/mv on a Fusebox file.
-//
-// TODO(b/255520194): this should just be a call to os.Rename, once the Fusebox
-// client and server support that. Until then, fake it as a copy and delete.
 func renameFile(srcName, dstName string) error {
-	if err := copyFile(srcName, dstName); err != nil {
-		return err
-	}
-	return os.Remove(srcName)
+	return os.Rename(srcName, dstName)
 }
 
 // readFileInChunks is like os.ReadFile but uses multiple "read" syscalls (each
