@@ -8,11 +8,13 @@ package utils
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -26,21 +28,13 @@ const (
 // VerifyPowerStatus verifies battery is charging or discharging.
 func VerifyPowerStatus(ctx context.Context, dut *dut.DUT, isBatteryCharging bool) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		regex := `state:(\s+\w+\s?\w+)`
-		expMatch := regexp.MustCompile(regex)
-
-		out, err := dut.Conn().CommandContext(ctx, "sudo", "power_supply_info").Output()
+		out, err := dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/power_supply/BAT0/status").Output()
 		if err != nil {
-			return errors.Wrap(err, "failed to retrieve power supply info from DUT")
-		}
-
-		matches := expMatch.FindStringSubmatch(string(out))
-		if len(matches) < 2 {
-			return errors.Errorf("failed to match regex: %q in: %q", expMatch, string(out))
+			return errors.Wrap(err, "retrieve power supply info from DUT")
 		}
 
 		var chargingState bool
-		if strings.TrimSpace(matches[1]) != "Discharging" {
+		if strings.TrimSpace(string(out)) != "Discharging" {
 			chargingState = true
 		} else {
 			chargingState = false
@@ -58,7 +52,7 @@ func VerifyUSBAudioConnection(ctx context.Context, dut *dut.DUT, isConnected boo
 		cmd := fmt.Sprint("cras_test_client | awk '$8==\"USB\" {print $5}'")
 		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
 		if err != nil {
-			return errors.Wrap(err, "failed to retrieve audio info with USB type from DUT")
+			return errors.Wrap(err, "retrieve audio info with USB type from DUT")
 		}
 
 		status := false
@@ -80,7 +74,7 @@ func VerifyDisplayCount(ctx context.Context, dut *dut.DUT, want int) error {
 		cmd := fmt.Sprintf("ls /sys/class/drm | grep card0-")
 		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
 		if err != nil {
-			return errors.Wrap(err, "failed to list display from DUT")
+			return errors.Wrap(err, "list display from DUT")
 		}
 
 		displayCount := 0
@@ -88,7 +82,7 @@ func VerifyDisplayCount(ctx context.Context, dut *dut.DUT, want int) error {
 			cmd := fmt.Sprintf("cat /sys/class/drm/%s/status", item)
 			out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
 			if err != nil {
-				return errors.Wrap(err, "failed to retrieve display status from DUT")
+				return errors.Wrap(err, "retrieve display status from DUT")
 			}
 
 			if strings.TrimSpace(string(out)) == "connected" {
@@ -107,7 +101,7 @@ func VerifyDisplayCount(ctx context.Context, dut *dut.DUT, want int) error {
 func GetUSBDevice(ctx context.Context, dut *dut.DUT) ([]string, error) {
 	lsusbInfo, err := dut.Conn().CommandContext(ctx, "lsusb").Output(testexec.DumpLogOnError)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get lsusb info")
+		return nil, errors.Wrap(err, "get lsusb info")
 	}
 	return strings.Split(strings.TrimSpace(string(lsusbInfo)), "\n"), err
 }
@@ -134,7 +128,7 @@ func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected 
 	testingCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	if err := VerifyPowerStatus(testingCtx, dut, isConnected); err != nil {
-		return errors.Wrap(err, "failed to verify connection of power")
+		return errors.Wrap(err, "verify connection of power")
 	}
 
 	var displayCount int
@@ -144,25 +138,65 @@ func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected 
 		displayCount = 1
 	}
 	if err := VerifyDisplayCount(testingCtx, dut, displayCount); err != nil {
-		return errors.Wrap(err, "failed to verify connection of external display")
+		return errors.Wrap(err, "verify connection of external display")
 	}
 
 	if err := VerifyUSBAudioConnection(testingCtx, dut, isConnected); err != nil {
-		return errors.Wrap(err, "failed to verify connection of USB audio")
+		return errors.Wrap(err, "verify connection of USB audio")
 	}
 
 	if isConnected {
 		if err := FindInterface(ctx, dut, dockingEth); err != nil {
-			return errors.Wrap(err, "failed to find docking station Ethernet")
+			return errors.Wrap(err, "find docking station Ethernet")
 		}
 	} else {
 		if err := FindInterface(ctx, dut, dockingEth); err == nil {
-			return errors.New("Expect the Ethernet interface in the Dock is not connected; however it is still found")
+			return errors.New("expect the ethernet interface in the dock is not connected; however it is still found")
 		}
 	}
 
 	if err := VerifyTypeADevicesCount(testingCtx, dut, expectUSBTypeADeviceNum); err != nil {
-		return errors.Wrap(err, "failed to verify connection of USB Type-A devices")
+		return errors.Wrap(err, "verify connection of USB Type-A devices")
+	}
+	return nil
+}
+
+// VerifyNetworkState verifies the state of the given network interface is as expected or not.
+func VerifyNetworkState(ctx context.Context, dut *dut.DUT, network string, expectedState bool) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/net/"+network+"/operstate").Output()
+		if err != nil {
+			return errors.Wrap(err, "retrieve ethernet operstate")
+		}
+
+		var currentState bool
+		if strings.TrimSpace(string(out)) == "up" {
+			currentState = true
+		} else {
+			currentState = false
+		}
+
+		if currentState != expectedState {
+			return errors.Errorf("unexpected ethernet state, got: %t, want: %t", currentState, expectedState)
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
+}
+
+// VerifyEthState verifies the state of the ethernets are as expected or not.
+func VerifyEthState(ctx context.Context, dut *dut.DUT, expectedState bool) error {
+	networks, err := ListEthernets(ctx, dut)
+	if err != nil {
+		return errors.Wrap(err, "list network interface")
+	}
+
+	for _, network := range networks {
+		if strings.Contains(network, "eth") {
+			if err := VerifyNetworkState(ctx, dut, network, expectedState); err != nil {
+				return errors.Wrapf(err, "verify the state of %s internet", network)
+			}
+		}
 	}
 	return nil
 }
@@ -172,7 +206,7 @@ func ListEthernets(ctx context.Context, dut *dut.DUT) ([]string, error) {
 	cmd := fmt.Sprint(`ifconfig -s`)
 	out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to execute ifconfig command")
+		return nil, errors.Wrap(err, "execute ifconfig command")
 	}
 
 	var ethernets []string
@@ -227,7 +261,7 @@ func FindInterface(ctx context.Context, dut *dut.DUT, ifName string) error {
 		cmd := fmt.Sprint(`ifconfig -s`)
 		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
 		if err != nil {
-			return errors.Wrap(err, "failed to find interfaces")
+			return errors.Wrap(err, "find interfaces")
 		}
 
 		for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
@@ -247,7 +281,7 @@ func FindInterface(ctx context.Context, dut *dut.DUT, ifName string) error {
 func ListProcessInfo(ctx context.Context, dut *dut.DUT, file string) ([]string, error) {
 	out, err := dut.Conn().CommandContext(ctx, "lsof", file).Output(testexec.DumpLogOnError)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to execute lsof command")
+		return nil, errors.Wrap(err, "execute lsof command")
 	}
 	return strings.Fields(string(out)), err
 }
@@ -257,7 +291,7 @@ func BuiltinUsbCamerasFromV4L2Test(ctx context.Context, dut *dut.DUT) ([]string,
 	cmd := dut.Conn().CommandContext(ctx, "media_v4l2_test", "--list_builtin_usbcam")
 	out, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to run media_v4l2_test")
+		return nil, errors.Wrap(err, "run media_v4l2_test")
 	}
 	return strings.Fields(string(out)), nil
 }
@@ -267,7 +301,7 @@ func USBCamerasFromV4L2Test(ctx context.Context, dut *dut.DUT) ([]string, error)
 	cmd := dut.Conn().CommandContext(ctx, "media_v4l2_test", "--list_usbcam")
 	out, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to run media_v4l2_test")
+		return nil, errors.Wrap(err, "run media_v4l2_test")
 	}
 	return strings.Fields(string(out)), nil
 }
@@ -277,7 +311,7 @@ func VideoDevices(ctx context.Context, dut *dut.DUT) ([]string, error) {
 	cmd := dut.Conn().CommandContext(ctx, "ls", "/dev/video*")
 	out, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to run ls command")
+		return nil, errors.Wrap(err, "run ls command")
 	}
 	return strings.Fields(string(out)), nil
 }
@@ -287,7 +321,7 @@ func DevicesFromV4L2(ctx context.Context, dut *dut.DUT) ([]string, error) {
 	cmd := dut.Conn().CommandContext(ctx, "v4l2-ctl", "--list-devices")
 	out, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to run v4l2 command")
+		return nil, errors.Wrap(err, "run v4l2 command")
 	}
 	return strings.Fields(string(out)), nil
 }
@@ -300,4 +334,68 @@ func Contains(list []string, s string) bool {
 		}
 	}
 	return false
+}
+
+// FormatStorageToFAT formats the specified storage to FAT format.
+func FormatStorageToFAT(ctx context.Context, mountPoint string, dut *dut.DUT, fs *dutfs.Client) error {
+	// Get the device node.
+	cmd := fmt.Sprintf("df | grep '%s' | awk '{print $1}'", mountPoint)
+	deviceNode, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrapf(err, "get device node of %s", mountPoint)
+	}
+	testing.ContextLogf(ctx, "mount point: %s", mountPoint)
+
+	// Umount device.
+	cmd = fmt.Sprintf("sudo umount %s", deviceNode)
+	if err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "umount %s", string(deviceNode))
+	}
+
+	// Format device.
+	cmd = fmt.Sprintf("sudo mkfs.vfat %s", deviceNode)
+	if err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "format %s", string(deviceNode))
+	}
+
+	// Mount device.
+	if dirExists, err := fs.Exists(ctx, mountPoint); err != nil {
+		return errors.Wrap(err, "check mount point exists")
+	} else if dirExists == false {
+		if err := fs.MkDir(ctx, mountPoint, os.FileMode(0750)); err != nil {
+			return errors.Wrap(err, "create mount point")
+		}
+	}
+
+	cmd = fmt.Sprintf("sudo mount %s \"%s\"", strings.TrimSpace(string(deviceNode)), mountPoint)
+	if err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "mount %s", string(deviceNode))
+	}
+	return nil
+}
+
+// VerifyFileReasonable verifies its integrity and checks the transfer time not too long.
+func VerifyFileReasonable(ctx context.Context, transferTime, remoteTextPath, usbTextPath string, dut *dut.DUT) error {
+	// Compare texts line by line in two files.
+	diffCmd := fmt.Sprintf("diff '%s' '%s'", remoteTextPath, usbTextPath)
+	if err := dut.Conn().CommandContext(ctx, "sh", "-c", diffCmd).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "compare the DUT file with USB file")
+	}
+
+	// Verify that the time is reasonable.
+	re := regexp.MustCompile(`(\d+:\d+\.\d+)elapsed`)
+	matches := re.FindStringSubmatch(string(transferTime))
+	const layout = "4:05.00"
+	t, err := time.Parse(layout, matches[1])
+	if err != nil {
+		return errors.Wrap(err, "parse the transfer time of the file")
+	}
+
+	_, min, sec := t.Clock()
+	totalSeconds := float64(min*60+sec) + float64(t.Nanosecond())/1e9
+	const timeOut = 1
+	if totalSeconds >= timeOut {
+		return errors.Errorf("copy the file because it took too long; transmission time: %vs, estimated time: %vs, time difference: %vs", totalSeconds, timeOut, totalSeconds-1)
+	}
+	return nil
 }
