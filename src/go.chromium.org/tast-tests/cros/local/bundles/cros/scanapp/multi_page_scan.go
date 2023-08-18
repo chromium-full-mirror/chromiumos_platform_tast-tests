@@ -43,15 +43,15 @@ func init() {
 		Fixture:      "virtualUsbPrinterModulesLoaded",
 		Data: []string{
 			scanning.SourceImage,
-			singlePagePdfGoldenFile,
-			twoPagePdfGoldenFile,
+			singlePagePDFGoldenFile,
+			twoPagePDFGoldenFile,
 		},
 	})
 }
 
 const (
-	singlePagePdfGoldenFile = "multi_page_flatbed_single_page.pdf"
-	twoPagePdfGoldenFile    = "multi_page_flatbed_two_page.pdf"
+	singlePagePDFGoldenFile = "multi_page_flatbed_single_page.pdf"
+	twoPagePDFGoldenFile    = "multi_page_flatbed_two_page.pdf"
 )
 
 var multiPageScanTests = []struct {
@@ -63,17 +63,17 @@ var multiPageScanTests = []struct {
 	name:       "multi_page_base",
 	removePage: false,
 	rescanPage: false,
-	goldenFile: twoPagePdfGoldenFile,
+	goldenFile: twoPagePDFGoldenFile,
 }, {
 	name:       "multi_page_remove_page",
 	removePage: true,
 	rescanPage: false,
-	goldenFile: singlePagePdfGoldenFile,
+	goldenFile: singlePagePDFGoldenFile,
 }, {
 	name:       "multi_page_rescan_page",
 	removePage: false,
 	rescanPage: true,
-	goldenFile: twoPagePdfGoldenFile,
+	goldenFile: twoPagePDFGoldenFile,
 },
 }
 
@@ -125,6 +125,7 @@ func MultiPageScan(ctx context.Context, s *testing.State) {
 			ColorMode:  scanapp.ColorModeColor,
 			PageSize:   scanapp.PageSizeLetter,
 			Resolution: scanapp.Resolution300DPI,
+			ScanTo:     scanapp.MyFiles,
 		}),
 		app.ClickMultiPageScanCheckbox(),
 	)(ctx); err != nil {

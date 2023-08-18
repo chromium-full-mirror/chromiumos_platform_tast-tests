@@ -60,6 +60,7 @@ var testSetups = []scanning.TestingStruct{
 			ColorMode:  scanapp.ColorModeColor,
 			PageSize:   scanapp.PageSizeA3,
 			Resolution: scanapp.Resolution300DPI,
+			ScanTo:     scanapp.MyFiles,
 		},
 		GoldenFile: a3GoldenFile,
 	}, {
@@ -70,6 +71,7 @@ var testSetups = []scanning.TestingStruct{
 			ColorMode:  scanapp.ColorModeColor,
 			PageSize:   scanapp.PageSizeA4,
 			Resolution: scanapp.Resolution300DPI,
+			ScanTo:     scanapp.MyFiles,
 		},
 		GoldenFile: a4GoldenFile,
 	}, {
@@ -80,6 +82,7 @@ var testSetups = []scanning.TestingStruct{
 			ColorMode:  scanapp.ColorModeColor,
 			PageSize:   scanapp.PageSizeB4,
 			Resolution: scanapp.Resolution300DPI,
+			ScanTo:     scanapp.MyFiles,
 		},
 		GoldenFile: b4GoldenFile,
 	}, {
@@ -90,6 +93,7 @@ var testSetups = []scanning.TestingStruct{
 			ColorMode:  scanapp.ColorModeColor,
 			PageSize:   scanapp.PageSizeLegal,
 			Resolution: scanapp.Resolution300DPI,
+			ScanTo:     scanapp.MyFiles,
 		},
 		GoldenFile: legalGoldenFile,
 	}, {
@@ -100,6 +104,7 @@ var testSetups = []scanning.TestingStruct{
 			ColorMode:  scanapp.ColorModeColor,
 			PageSize:   scanapp.PageSizeLetter,
 			Resolution: scanapp.Resolution300DPI,
+			ScanTo:     scanapp.MyFiles,
 		},
 		GoldenFile: letterGoldenFile,
 	}, {
@@ -110,6 +115,7 @@ var testSetups = []scanning.TestingStruct{
 			ColorMode:  scanapp.ColorModeColor,
 			PageSize:   scanapp.PageSizeTabloid,
 			Resolution: scanapp.Resolution300DPI,
+			ScanTo:     scanapp.MyFiles,
 		},
 		GoldenFile: tabloidGoldenFile,
 	},

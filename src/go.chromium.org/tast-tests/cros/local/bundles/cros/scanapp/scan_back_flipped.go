@@ -52,6 +52,7 @@ var backFlippedTests = []scanning.TestingStruct{
 			ColorMode:  scanapp.ColorModeColor,
 			PageSize:   scanapp.PageSizeLetter,
 			Resolution: scanapp.Resolution100DPI,
+			ScanTo:     scanapp.MyFiles,
 		},
 		GoldenFile: pdfBackFlippedGoldenFile,
 	},

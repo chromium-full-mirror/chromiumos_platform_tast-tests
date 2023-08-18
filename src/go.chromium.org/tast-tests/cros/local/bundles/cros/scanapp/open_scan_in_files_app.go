@@ -50,6 +50,7 @@ var settings = scanapp.ScanSettings{
 	ColorMode:  scanapp.ColorModeColor,
 	PageSize:   scanapp.PageSizeLetter,
 	Resolution: scanapp.Resolution300DPI,
+	ScanTo:     scanapp.MyFiles,
 }
 
 func OpenScanInFilesApp(ctx context.Context, s *testing.State) {

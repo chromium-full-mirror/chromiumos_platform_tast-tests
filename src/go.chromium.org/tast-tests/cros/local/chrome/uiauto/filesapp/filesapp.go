@@ -40,6 +40,9 @@ const FilesTitlePrefix = "Files - "
 // FileSaverPseudoAppID represents the file saver app ID.
 const FileSaverPseudoAppID = "SaverPseudoAppID"
 
+// FolderSelectPseudoAppID represents the folder selector app ID.
+const FolderSelectPseudoAppID = "FolderSelectorPseudoAppID"
+
 // FilesAppURL is the base URL for Files app and file dialogs (Save As or File Picker).
 const FilesAppURL = "chrome://file-manager/"
 
@@ -80,6 +83,13 @@ type FilesApp struct {
 	appID string
 }
 
+// Create returns a new FilesApp.
+// This is used for uiactions that will open a FilesApp during their
+// operation, rather than at the time of this struct instantiation.
+func Create(tconn *chrome.TestConn, ui *uiauto.Context, appID string) *FilesApp {
+	return &FilesApp{tconn: tconn, ui: ui, appID: appID}
+}
+
 // WindowFinder finds the window based on the Files app type running.
 func WindowFinder(appID string) *nodewith.Finder {
 	if appID == apps.FilesSWA.ID {
@@ -90,6 +100,9 @@ func WindowFinder(appID string) *nodewith.Finder {
 	}
 	if appID == FileSaverPseudoAppID {
 		return nodewith.Name("Save file as").Role(role.Window).HasClass("WebDialogView")
+	}
+	if appID == FolderSelectPseudoAppID {
+		return nodewith.Name("Select a folder to save to").Role(role.Window).HasClass("WebDialogView")
 	}
 	return nodewith.NameStartingWith("Files").Role(role.Window).HasClass("RootView")
 }
@@ -187,6 +200,17 @@ func ExistingOrNew(ctx context.Context, tconn *chrome.TestConn) (*FilesApp, erro
 	return Launch(ctx, tconn)
 }
 
+// WaitUntilWindowExists returns a function that waits until the FilesApp opens.
+func (f *FilesApp) WaitUntilWindowExists() uiauto.Action {
+	downloads := nodewith.Name(Downloads).Role(role.TreeItem)
+	return f.WaitUntilExists(downloads)
+}
+
+// WaitUntilWindowGone returns a function that waits until the FilesApp closes.
+func (f *FilesApp) WaitUntilWindowGone() uiauto.Action {
+	return f.WaitUntilGone(WindowFinder(f.appID))
+}
+
 // Close closes the Files App.
 // This is automatically done when chrome resets and is not necessary to call.
 func (f *FilesApp) Close(ctx context.Context) error {
@@ -221,7 +245,10 @@ func (f *FilesApp) WaitForTitle(expectedTitle string) uiauto.Action {
 // An error is returned if dir is not found or does not open.
 func (f *FilesApp) OpenDir(dirName, expectedTitle string) uiauto.Action {
 	dir := nodewith.Name(dirName).Role(role.TreeItem).First()
-
+	if f.appID == FolderSelectPseudoAppID {
+		return f.LeftClickUntil(nodewith.Name(dirName).Role(role.StaticText).Ancestor(dir),
+			f.Exists(nodewith.Name(expectedTitle).Role(role.Button).First()))
+	}
 	return f.LeftClickUntil(nodewith.Name(dirName).Role(role.StaticText).Ancestor(dir),
 		f.Exists(f.windowFinderWithTitle(expectedTitle)))
 }
@@ -428,6 +455,12 @@ func (f *FilesApp) ClickDirectoryContextMenuItem(dirName string, menuItems ...st
 		steps = append(steps, f.LeftClick(nodewith.Name(menuItem).Role(role.MenuItem)))
 	}
 	return uiauto.Combine(fmt.Sprintf("ClickDirectoryContextMenuItem(%s, %s)", dirName, menuItems), steps...)
+}
+
+// ClickOpen returns a function that left clicks a button with name 'Open'.
+func (f *FilesApp) ClickOpen() uiauto.Action {
+	node := nodewith.Name("Open").Role(role.Button)
+	return f.LeftClick(node.Ancestor(nodewith.HasClass("dialog-footer")))
 }
 
 // SelectMultipleFiles returns a function that selects multiple items in the Files app listBox while pressing 'Ctrl'.

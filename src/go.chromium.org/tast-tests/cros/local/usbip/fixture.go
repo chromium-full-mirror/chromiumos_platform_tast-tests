@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/network/tcpdump"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -68,6 +67,18 @@ func init() {
 		PreTestTimeout:  UsbipModulesLoadedTimeout,
 		PostTestTimeout: UsbipModulesLoadedTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "virtualUsbPrinterModulesLoadedWithDriveFsStarted",
+		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromeLoggedInWithGaia` fixture)",
+		Contacts:        []string{"project-bolton@google.com"},
+		Impl:            &LoadModuleFixture{},
+		Parent:          "driveFsStarted",
+		SetUpTimeout:    UsbipModulesLoadedTimeout,
+		TearDownTimeout: UsbipModulesLoadedTimeout,
+		PreTestTimeout:  UsbipModulesLoadedTimeout,
+		PostTestTimeout: UsbipModulesLoadedTimeout,
+	})
+
 	testing.AddFixture(&testing.Fixture{
 		Name:            "virtualUsbPrinterModulesLoadedWithLacros",
 		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `lacros` fixture)",

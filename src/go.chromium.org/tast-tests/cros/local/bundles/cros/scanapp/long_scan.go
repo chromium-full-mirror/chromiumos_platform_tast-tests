@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/scanapp"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -102,6 +101,7 @@ func LongScan(ctx context.Context, s *testing.State) {
 		ColorMode:  scanapp.ColorModeColor,
 		PageSize:   scanapp.PageSizeLetter,
 		Resolution: scanapp.Resolution100DPI,
+		ScanTo:     scanapp.MyFiles,
 	})(ctx); err != nil {
 		s.Fatal("Failed to set scan settings: ", err)
 	}

@@ -28,6 +28,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/scanapp"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/drivefs"
 	"go.chromium.org/tast-tests/cros/local/printing/document"
 	"go.chromium.org/tast-tests/cros/local/printing/ippusbbridge"
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
@@ -40,6 +41,15 @@ import (
 const (
 	// SourceImage is the image used to configure the virtual USB scanner.
 	SourceImage = "scan_source.jpg"
+
+	// PNGGoldenFile is the expected file for Scan and ScanToDrive tests.
+	PNGGoldenFile = "flatbed_png_color_letter_300_dpi.png"
+
+	// JPGGoldenFile is the expected file for Scan and ScanToDrive tests.
+	JPGGoldenFile = "adf_simplex_jpg_grayscale_a4_150_dpi.jpg"
+
+	// PDFGoldenFile is the expected file for Scan and ScanToDrive tests.
+	PDFGoldenFile = "adf_duplex_pdf_grayscale_max_300_dpi.pdf"
 
 	// Attributes is the path to the attributes used to configure the virtual
 	// USB scanner.
@@ -535,14 +545,30 @@ func RunAppSettingsTests(ctx context.Context, s *testing.State, cr *chrome.Chrom
 		s.Fatal("Failed to expand More settings: ", err)
 	}
 
-	myFilesPath, err := cryptohome.MyFilesPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to retrieve users MyFiles path: ", err)
-	}
-	defaultScanPattern := filepath.Join(myFilesPath, scanapp.DefaultScanFilePattern)
 	for _, test := range testParams {
 		settings := test.Settings
 		settings.Scanner = printer.VisibleName
+		folderPath := ""
+		switch settings.ScanTo {
+		case scanapp.MyFiles:
+			folderPath, err = cryptohome.MyFilesPath(ctx, cr.NormalizedUser())
+			if err != nil {
+				s.Fatal("Failed to get MyFilesPath from cryptohome: ", err)
+			}
+		case scanapp.MyDrive:
+			driveFsClient := s.FixtValue().(*drivefs.FixtureData).DriveFs
+			if driveFsClient == nil {
+				s.Fatal("Failed to get DriveFsClient from fixture: ", err)
+			}
+			folderPath = driveFsClient.MyDrivePath()
+		default:
+			s.Fatal("No filepath is available for the given ScanTo setting: ", err)
+		}
+
+		if folderPath == "" {
+			s.Fatal("Failed to get path to ScanTo folder: ", err)
+		}
+		defaultScanPattern := filepath.Join(folderPath, scanapp.DefaultScanFilePattern)
 		s.Run(ctx, test.Name, func(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+test.Name)
 			defer func() {

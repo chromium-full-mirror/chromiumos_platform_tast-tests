@@ -1,27 +1,29 @@
-// Copyright 2020 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// Package scanapp provides tests and utilities for the UI ScanApp.
 package scanapp
 
 import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/scanapp/scanning"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/scanapp"
+	"go.chromium.org/tast-tests/cros/local/drivefs"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Scan,
+		Func:         ScanToDrive,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the Scan app can be used to perform scans",
+		Desc:         "Tests that the Scan app can be used to perform scans to Drive",
 		Contacts: []string{
 			"cros-peripherals@google.com",
 			"project-bolton@google.com",
+			"masonwilde@google.com",
 		},
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent: "b:860616",
@@ -32,10 +34,10 @@ func init() {
 			"paper-io_scanning",
 			"group:cq-medium",
 		},
-		SoftwareDeps: []string{"chrome", "virtual_usb_printer"},
+		SoftwareDeps: []string{"chrome", "drivefs", "virtual_usb_printer"},
 		// TODO(b/202847398): Skip sona devices due to abnormal failures.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("sona")),
-		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
+		Fixture:      "virtualUsbPrinterModulesLoadedWithDriveFsStarted",
 		Data: []string{
 			scanning.SourceImage,
 			scanning.PNGGoldenFile,
@@ -45,7 +47,7 @@ func init() {
 	})
 }
 
-var scanTests = []scanning.TestingStruct{
+var scanToDriveTests = []scanning.TestingStruct{
 	{
 		Name: "flatbed_png_color_letter_300_dpi",
 		Settings: scanapp.ScanSettings{
@@ -54,7 +56,7 @@ var scanTests = []scanning.TestingStruct{
 			ColorMode:  scanapp.ColorModeColor,
 			PageSize:   scanapp.PageSizeLetter,
 			Resolution: scanapp.Resolution300DPI,
-			ScanTo:     scanapp.MyFiles,
+			ScanTo:     scanapp.MyDrive,
 		},
 		GoldenFile: scanning.PNGGoldenFile,
 	}, {
@@ -67,7 +69,7 @@ var scanTests = []scanning.TestingStruct{
 			ColorMode:  scanapp.ColorModeGrayscale,
 			PageSize:   scanapp.PageSizeA4,
 			Resolution: scanapp.Resolution150DPI,
-			ScanTo:     scanapp.MyFiles,
+			ScanTo:     scanapp.MyDrive,
 		},
 		GoldenFile: scanning.JPGGoldenFile,
 	}, {
@@ -78,14 +80,15 @@ var scanTests = []scanning.TestingStruct{
 			ColorMode:  scanapp.ColorModeGrayscale,
 			PageSize:   scanapp.PageSizeFitToScanArea,
 			Resolution: scanapp.Resolution300DPI,
-			ScanTo:     scanapp.MyFiles,
+			ScanTo:     scanapp.MyDrive,
 		},
 		GoldenFile: scanning.PDFGoldenFile,
 	},
 }
 
-func Scan(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+func ScanToDrive(ctx context.Context, s *testing.State) {
+	fixt := s.FixtValue().(*drivefs.FixtureData)
+	cr := fixt.Chrome
 
 	var scannerParams = scanning.ScannerStruct{
 		Descriptors: scanning.Descriptors,
@@ -93,5 +96,5 @@ func Scan(ctx context.Context, s *testing.State) {
 		EsclCaps:    scanapp.EsclCapabilities,
 	}
 
-	scanning.RunAppSettingsTests(ctx, s, cr, scanTests, scannerParams)
+	scanning.RunAppSettingsTests(ctx, s, cr, scanToDriveTests, scannerParams)
 }

@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
@@ -36,8 +37,9 @@ var doneButtonFinder *nodewith.Finder = nodewith.Name("Done").Role(role.Button)
 
 // ScanApp represents an instance of the Scan App.
 type ScanApp struct {
-	ui    *uiauto.Context
-	tconn *chrome.TestConn
+	filesapp *filesapp.FilesApp
+	ui       *uiauto.Context
+	tconn    *chrome.TestConn
 }
 
 // DropdownName defines the name of a dropdown.
@@ -117,6 +119,18 @@ func (r Resolution) ToInt() (int, error) {
 	return strconv.Atoi(strings.TrimSuffix(string(r), " dpi"))
 }
 
+// ScanTo specifies whether the scan should be saved to MyFiles or Drive.
+type ScanTo string
+
+const (
+	// MyFiles will cause the test runner to use cryptohome to find the base path
+	// for saving and finding the scan.
+	MyFiles ScanTo = "My files"
+	// MyDrive will cause the test runner to use drivefs to find the base path for
+	// saving and finding the scan.
+	MyDrive ScanTo = "My Drive"
+)
+
 // ScanSettings defines the settings to use to perform a scan.
 type ScanSettings struct {
 	Scanner    string
@@ -125,6 +139,7 @@ type ScanSettings struct {
 	ColorMode  ColorMode
 	PageSize   PageSize
 	Resolution Resolution
+	ScanTo     ScanTo
 }
 
 const (
@@ -155,8 +170,8 @@ func launchHelper(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Contex
 	if err := apps.Launch(ctx, tconn, apps.Scan.ID); err != nil {
 		return nil, err
 	}
-
-	s := ScanApp{tconn: tconn, ui: ui}
+	f := filesapp.Create(tconn, ui, filesapp.FolderSelectPseudoAppID)
+	s := ScanApp{filesapp: f, tconn: tconn, ui: ui}
 
 	// Wait until the scan button is enabled to verify the app is loaded.
 	if err := s.WithTimeout(time.Minute).WaitUntilExists(scanButtonFinder)(ctx); err != nil {
@@ -230,12 +245,35 @@ func (s *ScanApp) SelectFileType(fileType FileType) uiauto.Action {
 	return s.selectScanSetting(DropdownNameFileType, string(fileType))
 }
 
+// SelectScanTo returns a function that interacts with the Scan app to
+// select `scanTo` from the file select dialogue.
+func (s *ScanApp) SelectScanTo(scanTo ScanTo) uiauto.Action {
+	// Those are unicode ellipses U+2026 to avoid confusion.
+	steps := []uiauto.Action{
+		s.selectScanSetting(DropdownNameScanTo, "Select folder in Files app…"),
+		s.filesapp.WithTimeout(time.Second * 5).WaitUntilWindowExists(),
+	}
+	switch scanTo {
+	case MyFiles:
+		steps = append(steps, s.filesapp.OpenDir(filesapp.MyFiles, filesapp.MyFiles))
+	case MyDrive:
+		steps = append(steps, s.filesapp.OpenDir(filesapp.GoogleDrive, filesapp.MyDrive))
+	default:
+		return nil
+	}
+	steps = append(steps,
+		s.filesapp.ClickOpen(),
+		s.filesapp.WaitUntilWindowGone())
+	return uiauto.Combine("SelectScanTo", steps...)
+}
+
 // SetScanSettings returns a function that interacts with the Scan app to set
 // the scan settings.
 func (s *ScanApp) SetScanSettings(settings ScanSettings) uiauto.Action {
 	steps := []uiauto.Action{
 		s.SelectScanner(settings.Scanner),
 		s.SelectSource(settings.Source),
+		s.SelectScanTo(settings.ScanTo),
 		s.SelectFileType(settings.FileType),
 		s.SelectColorMode(settings.ColorMode),
 		s.SelectPageSize(settings.PageSize),
