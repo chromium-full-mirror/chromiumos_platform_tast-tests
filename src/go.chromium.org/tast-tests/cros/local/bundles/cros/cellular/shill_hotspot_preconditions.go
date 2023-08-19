@@ -48,10 +48,6 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 		s.Log("Unable to set Tethering allowed: ", err)
 	}
 
-	// GoBigSleepLint: TODO(b/267804414): A 5 second delay is enough to ensure that the service is destroyed when a Reattach is triggered.
-	testing.Sleep(ctx, 5*time.Second)
-
-	// TODO(b/267804414): SetTetheringAllowed will trigger a Reattach, so we need to reconnect.
 	if _, err := helper.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to Cellular for hotspot: ", err)
 	}

@@ -190,14 +190,6 @@ func ShillCallboxTethering(ctx context.Context, s *testing.State) {
 	//TODO(b/267804414): SetTetheringAllowed is only needed during fishfooding and can be removed later.
 	err = helper.Manager.SetTetheringAllowed(ctx, true)
 
-	// GoBigSleepLint: TODO(b/267804414): A 5 second delay is enough to ensure that the service is destroyed when a Reattach is triggered.
-	testing.Sleep(ctx, 5*time.Second)
-
-	// TODO(b/267804414): SetTetheringAllowed will trigger a Reattach, so we need to reconnect.
-	if _, err := helper.Connect(ctx); err != nil {
-		s.Fatal("Failed to connect to cellular service: ", err)
-	}
-
 	if _, err := helper.Manager.CreateFakeUserProfile(ctx, callboxTetheringTestProfileName); err != nil {
 		s.Fatalf("Failed to create fake profile %q", callboxTetheringTestProfileName)
 	}
