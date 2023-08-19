@@ -52,11 +52,11 @@ func init() {
 			},
 			{
 				Name:      "blocksize",
-				ExtraAttr: []string{"informational"},
+				ExtraAttr: []string{"informational", "group:criticalstaging"},
 				Val: crasStreamMixVal{
 					rate:      48000,
 					channel:   2,
-					blockSize: 256,
+					blockSize: 512,
 				},
 			},
 			{
@@ -69,11 +69,11 @@ func init() {
 			},
 			{
 				Name:      "all",
-				ExtraAttr: []string{"informational"},
+				ExtraAttr: []string{"informational", "group:criticalstaging"},
 				Val: crasStreamMixVal{
 					rate:      44100,
 					channel:   1,
-					blockSize: 256,
+					blockSize: 512,
 				},
 			},
 		},
