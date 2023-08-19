@@ -13,12 +13,14 @@ import (
 	common "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
 type fixtureParams struct {
 	expectedMode        common.BootMode
+	isDevModeExpected   bool
 	leaveStatefulMarker bool
 }
 
@@ -58,6 +60,12 @@ func init() {
 			Fixture:   fixture.USBDevModeGBBNoServices,
 			ExtraAttr: []string{"group:firmware", "firmware_smoke", "firmware_usb"},
 		}, {
+			Name:              "dev_rec",
+			Val:               fixtureParams{expectedMode: common.BootModeRecovery, isDevModeExpected: true},
+			Fixture:           fixture.DevRecModeNoServices,
+			ExtraAttr:         []string{"group:firmware", "firmware_smoke", "firmware_usb", "group:labqual", "firmware_bios", "firmware_level2"},
+			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+		}, {
 			Name:              "rec",
 			Val:               fixtureParams{expectedMode: common.BootModeRecovery},
 			Fixture:           fixture.RecModeNoServices,
@@ -96,6 +104,13 @@ func Fixture(ctx context.Context, s *testing.State) {
 		s.Errorf("GBB flags: got %v, want %v", res.Set, v.GBBFlags)
 	}
 
+	if param.isDevModeExpected {
+		if devswBoot, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamDevswBoot); err != nil {
+			s.Fatal(err, "failed to get crossystem devsw_boot")
+		} else if devswBoot != "1" {
+			s.Fatalf("expected devsw_boot to be 1, got %s", devswBoot)
+		}
+	}
 	if param.leaveStatefulMarker {
 		ms, err := firmware.NewModeSwitcher(ctx, h)
 		if err != nil {
