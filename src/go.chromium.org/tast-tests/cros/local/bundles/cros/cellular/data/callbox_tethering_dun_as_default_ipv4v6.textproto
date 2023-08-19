@@ -16,6 +16,7 @@ mno {
     }
     mobile_apn {
       apn: "callbox-dun-ipv4v6"
+      is_required_by_carrier_spec : true
       ip_type: IPV4V6
       type: DUN
     }
