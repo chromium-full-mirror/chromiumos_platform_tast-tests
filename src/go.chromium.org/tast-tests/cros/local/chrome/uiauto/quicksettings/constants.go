@@ -19,6 +19,10 @@ var LegacyRootFinder = nodewith.HasClass("UnifiedSystemTrayView")
 // It should be used when feature QsRevamp is enabled.
 var QsRootFinder = nodewith.HasClass("QuickSettingsView")
 
+// NBSWarningLabel is the finder to find the NBS Warning Label in the UI.
+// This is only available when an NBS BT audio device is connected and chosen.
+var NBSWarningLabel = nodewith.Role(role.StaticText).NameStartingWith("Your Chromebook or Bluetooth device is using an older version of Bluetooth.")
+
 // SystemTray is to distinguish it from calendar view in cases that use the calendar, it is also the finder to find the Quick Settings area in the UI.
 var SystemTray = nodewith.HasClass("UnifiedSystemTray")
 

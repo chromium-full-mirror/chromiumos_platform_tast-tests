@@ -136,3 +136,33 @@ func (s *Service) AvailableWifiNetworks(ctx context.Context, e *empty.Empty) (*p
 		return res, nil
 	})
 }
+
+// SelectNthAudioOption selects the Nth (0-indexed) audio node with the requested name.
+func (s *Service) SelectNthAudioOption(ctx context.Context, req *pb.SelectNthAudioOptionRequest) (*empty.Empty, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		cleanup, err := ensureVisible(ctx, tconn)
+		if err != nil {
+			return &emptypb.Empty{}, err
+		}
+		defer cleanup(ctx)
+
+		if err := SelectNthAudioOption(ctx, tconn, req.AudioNodeName, int(req.Nth)); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to select audio option")
+		}
+
+		return &emptypb.Empty{}, nil
+	})
+}
+
+// IsNBSWarningShown returns whether the NBS warning is shown in quick settings.
+func (s *Service) IsNBSWarningShown(ctx context.Context, e *empty.Empty) (*pb.IsNBSWarningShownResponse, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (_ *pb.IsNBSWarningShownResponse, retErr error) {
+		isNBSWarningShown, err := IsNBSWarningShown(ctx, tconn)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to open audio settings")
+		}
+		return &pb.IsNBSWarningShownResponse{
+			IsNbsWarningShown: isNBSWarningShown,
+		}, nil
+	})
+}

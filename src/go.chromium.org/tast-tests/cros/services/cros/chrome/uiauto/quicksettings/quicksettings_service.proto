@@ -37,6 +37,9 @@ service QuickSettingsService {
   // This RPC requires the network detailed view to be opened, an error will be returned if
   // the view is not presented.
   rpc AvailableWifiNetworks(google.protobuf.Empty) returns (AvailableWifiNetworksResponse) {}
+
+  // IsNBSWarningShown returns whether the NBS warning message is present in the quick settings.
+  rpc IsNBSWarningShown(google.protobuf.Empty) returns (IsNBSWarningShownResponse) {}
 }
 
 message ToggleOptionRequest {
@@ -56,4 +59,14 @@ message AvailableWifiNetworksResponse {
 
 message IsHotspotTileShownResponse {
   bool is_hotspot_tile_shown = 1;
+}
+
+
+message SelectNthAudioOptionRequest {
+  string audio_node_name = 1;
+  int32 nth = 2;
+}
+
+message IsNBSWarningShownResponse {
+  bool is_nbs_warning_shown = 1;
 }

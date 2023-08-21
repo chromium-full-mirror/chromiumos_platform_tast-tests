@@ -24,7 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
-
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -983,8 +983,13 @@ func ToggleMic(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
 	return nil
 }
 
-// SelectAudioOption selects the audio input or output device with the given name from the audio settings page.
+// SelectAudioOption selects the first audio device with the given name from the audio settings page.
 func SelectAudioOption(ctx context.Context, tconn *chrome.TestConn, device string) error {
+	return SelectNthAudioOption(ctx, tconn, device, 0)
+}
+
+// SelectNthAudioOption selects the Nth (0-indexed) audio device with the given name from the audio settings page.
+func SelectNthAudioOption(ctx context.Context, tconn *chrome.TestConn, device string, nth int) error {
 	cleanup, err := ensureVisible(ctx, tconn)
 	if err != nil {
 		return err
@@ -995,16 +1000,36 @@ func SelectAudioOption(ctx context.Context, tconn *chrome.TestConn, device strin
 		return err
 	}
 	ui := uiauto.New(tconn)
-	option := nodewith.Role(role.CheckBox).NameStartingWith(device)
+	option := nodewith.Role(role.CheckBox).NameStartingWith(device).Nth(nth)
 
-	// If there are several audio options available, the target option may be out of view.
-	// Furthermore, chrome.automation occasionally reports the wrong location of the audio option after focusing it into view.
+	// chrome.automation occasionally reports the wrong location of the audio option after focusing it into view.
 	// Using DoDefault here is more reliable since we cannot rely on a stable location from the a11y tree.
 	if err := ui.DoDefault(option)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to click %v audio option", device)
 	}
 
 	return nil
+}
+
+// IsNBSWarningShown returns whether the NBS warning is shown in quick settings.
+func IsNBSWarningShown(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
+
+	cleanup, err := ensureVisible(ctx, tconn)
+	if err != nil {
+		return false, err
+	}
+	defer cleanup(cleanupCtx)
+
+	if err := OpenAudioSettings(ctx, tconn); err != nil {
+		return false, err
+	}
+
+	ui := uiauto.New(tconn)
+
+	return ui.IsNodeFound(ctx, NBSWarningLabel)
 }
 
 // RestrictedFeatureTiles returns a map from a descriptive name to a
