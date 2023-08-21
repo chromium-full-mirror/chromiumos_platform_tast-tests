@@ -16,6 +16,7 @@ import (
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -26,6 +27,7 @@ func init() {
 		Contacts:     []string{"lacros-team@google.com"},
 		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("markarth")),
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "lacrosEduGaiaLogin",
 		// It takes about 40 seconds to install an extension, 20 seconds to uninstall an extension.
