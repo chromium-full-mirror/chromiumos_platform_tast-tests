@@ -46,6 +46,9 @@ service AudioService {
 
   // DownloadsPath returns the path to the Downloads folder of the current user.
   rpc DownloadsPath(google.protobuf.Empty) returns (AudioServiceResponse) {}
+
+  // SetWBSEnabled sets whether WBS should be enabled in the audio server
+  rpc SetWBSEnabled (AudioServiceRequest) returns (google.protobuf.Empty) {}
 }
 
 message AudioServiceRequest {
@@ -54,6 +57,7 @@ message AudioServiceRequest {
   string FileName=3;
   int32 DurationInSecs=4;
   string FilePath=5;
+  bool WBSEnabled=6;
 }
 
 message AudioServiceResponse {

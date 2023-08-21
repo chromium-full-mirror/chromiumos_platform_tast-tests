@@ -332,6 +332,7 @@ type WaitPredicate struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Value:
+	//
 	//	*WaitPredicate_IdContains
 	//	*WaitPredicate_Title
 	//	*WaitPredicate_TitleContains

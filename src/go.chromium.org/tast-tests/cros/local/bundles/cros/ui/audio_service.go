@@ -207,3 +207,11 @@ func (as *AudioService) DownloadsPath(ctx context.Context, req *empty.Empty) (*u
 	}
 	return &ui.AudioServiceResponse{DownloadsPath: downloadsPath}, nil
 }
+
+// SetWBSEnabled will set whether WBS should be enabled in the audio server.
+func (as *AudioService) SetWBSEnabled(ctx context.Context, req *ui.AudioServiceRequest) (*empty.Empty, error) {
+	if err := crastestclient.SetWBSEnabled(ctx, req.WBSEnabled); err != nil {
+		return nil, errors.Wrap(err, "failed to change WBS support on host")
+	}
+	return &empty.Empty{}, nil
+}

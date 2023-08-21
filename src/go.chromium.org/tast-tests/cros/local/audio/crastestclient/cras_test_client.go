@@ -82,6 +82,21 @@ func PinCaptureCommand(ctx context.Context, dev, duration, blocksize int) *teste
 	return crasTestClientCommand(ctx, captureMode, "/dev/null", dev, duration, 2, blocksize, 48000)
 }
 
+// SetWBSEnabled enables/disables WBS on host.
+func SetWBSEnabled(ctx context.Context, enabled bool) error {
+	arg := "0"
+	if enabled {
+		arg = "1"
+	}
+
+	_, err := testexec.CommandContext(ctx, "cras_test_client", "--set_wbs_enabled", arg).Output()
+	if err != nil {
+		return errors.Errorf("failed to toggle WBS cap on host: %s", err)
+	}
+
+	return nil
+}
+
 // FirstRunningDevice returns the first input/output device by parsing audio thread logs.
 // A device may not be opened immediately so it will repeat a query until there is a running device or timeout.
 func FirstRunningDevice(ctx context.Context, streamType audio.StreamType) (string, error) {
