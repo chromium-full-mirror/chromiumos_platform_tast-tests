@@ -93,7 +93,7 @@ func TriggerUploadForScanning(ctx context.Context, _ *chrome.Chrome, br *browser
 	defer downloadsConn.Close()
 
 	ui := uiauto.New(tconn)
-	sendFile := nodewith.Name("Scan").Role(role.Button)
+	sendFile := nodewith.Name("Scan for malware").Role(role.Button)
 	if err := uiauto.Combine("Upload file for scanning",
 		// If prompted to upload file for scanning, click 'Scan'. This will
 		// only show if Advanced Protection is allowed.
