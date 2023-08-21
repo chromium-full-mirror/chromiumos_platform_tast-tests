@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	cryptossh "golang.org/x/crypto/ssh"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -21,6 +20,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/log"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	qs "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
+	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -90,10 +91,12 @@ const (
 
 // Tast services.
 const (
-	serviceDepBluetoothService   = "tast.cros.bluetooth.BluetoothService"
-	serviceDepBluetoothUIService = "tast.cros.bluetooth.BluetoothUIService"
-	serviceDepChromeService      = "tast.cros.browser.ChromeService"
-	serviceDepUpstartService     = "tast.cros.platform.UpstartService"
+	serviceDepBluetoothService     = "tast.cros.bluetooth.BluetoothService"
+	serviceDepBluetoothUIService   = "tast.cros.bluetooth.BluetoothUIService"
+	serviceDepUpstartService       = "tast.cros.platform.UpstartService"
+	serviceDepAudioService         = "tast.cros.ui.AudioService"
+	serviceDepChromeService        = "tast.cros.browser.ChromeService"
+	serviceDepQuickSettingsService = "tast.cros.chrome.uiauto.quicksettings.QuickSettingsService"
 )
 
 // DUT D-Bus services.
@@ -204,6 +207,13 @@ type DUTConfig struct {
 
 	// UpstartService is a client of the UpstartService that manages system jobs.
 	UpstartService platform.UpstartServiceClient
+
+	// AudioService is a client of the AudioService that manages audio settings.
+	AudioService ui.AudioServiceClient
+
+	// QuickSettingsService is a client of the QuickSettingsService that manages
+	// UI related services in the quick settings.
+	QuickSettingsService qs.QuickSettingsServiceClient
 }
 
 func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (*DUTConfig, error) {
@@ -212,12 +222,14 @@ func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (
 		return nil, errors.Wrapf(err, "failed to connect to the local gRPC service on DUT %s", dut.HostName())
 	}
 	return &DUTConfig{
-		DUT:                dut,
-		DUTRPCClient:       rpcClient,
-		BluetoothService:   bts.NewBluetoothServiceClient(rpcClient.Conn),
-		BluetoothUIService: bts.NewBluetoothUIServiceClient(rpcClient.Conn),
-		ChromeService:      ui.NewChromeServiceClient(rpcClient.Conn),
-		UpstartService:     platform.NewUpstartServiceClient(rpcClient.Conn),
+		DUT:                  dut,
+		DUTRPCClient:         rpcClient,
+		BluetoothService:     bts.NewBluetoothServiceClient(rpcClient.Conn),
+		BluetoothUIService:   bts.NewBluetoothUIServiceClient(rpcClient.Conn),
+		ChromeService:        ui.NewChromeServiceClient(rpcClient.Conn),
+		UpstartService:       platform.NewUpstartServiceClient(rpcClient.Conn),
+		AudioService:         ui.NewAudioServiceClient(rpcClient.Conn),
+		QuickSettingsService: qs.NewQuickSettingsServiceClient(rpcClient.Conn),
 	}, nil
 }
 
@@ -271,6 +283,12 @@ type FixtValue struct {
 
 	// ChromeService is a client of the ChromeService that is used to start Chrome.
 	ChromeService ui.ChromeServiceClient
+
+	// AudioService is a client of the AudioService that is used to configure Audio.
+	AudioService ui.AudioServiceClient
+
+	// QuickSettingsService is a client of QuickSettingsService to access the UI.
+	QuickSettingsService qs.QuickSettingsServiceClient
 
 	// DUTs stores the dut-specific configurations for each DUT in the fixture.
 	// The first item in this list refers to the primary DUT, and subsequent items
@@ -371,6 +389,8 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	tf.fv.BluetoothService = primaryDUTConfig.BluetoothService
 	tf.fv.ChromeService = primaryDUTConfig.ChromeService
 	tf.fv.UpstartService = primaryDUTConfig.UpstartService
+	tf.fv.AudioService = primaryDUTConfig.AudioService
+	tf.fv.QuickSettingsService = primaryDUTConfig.QuickSettingsService
 
 	// Configure companion DUT.
 	if tf.features.RequireCompanionDUT {
