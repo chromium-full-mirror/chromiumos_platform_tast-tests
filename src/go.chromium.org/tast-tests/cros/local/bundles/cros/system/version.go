@@ -68,12 +68,6 @@ func Version(ctx context.Context, s *testing.State) {
 	} else {
 		convertAndSave(branchNumber, "CHROMEOS_BRANCH", pv)
 	}
-	// Report the ChromeOS patch number.
-	if patchNumber, ok := lsb[lsbrelease.PatchNumber]; !ok {
-		s.Error("Failed to get ChromeOS patch number")
-	} else {
-		convertAndSave(patchNumber, "CHROMEOS_PATCH", pv)
-	}
 
 	// Report the Chrome version.
 	if chromeVersion, err := versionutil.AshVersion(ctx); err != nil {
