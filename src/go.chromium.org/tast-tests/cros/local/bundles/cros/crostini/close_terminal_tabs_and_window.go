@@ -113,6 +113,7 @@ func CloseTerminalTabsAndWindow(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("close all tabs",
 		terminalApp.ClickNthTabCloseButton(1),
 		terminalApp.WaitForTabsCount(3 /*nonTmuxTabs*/, 0 /*tmuxTabs*/),
+		terminalApp.ClickNthTabUntilNodeExists(1, terminalapp.Prompt),
 		kb.AccelAction("Ctrl+d"),
 		terminalApp.WaitForTabsCount(2 /*nonTmuxTabs*/, 0 /*tmuxTabs*/),
 		terminalApp.ShutdownCrostini(cont),
