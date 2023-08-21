@@ -310,11 +310,10 @@ func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	// Note:
 	//  * The Lacros process is required for both cleanup and the actual test,
 	// both PWA installation/uninstalling and ODFS mounting/unmounting need this.
-	//  * We also call this in Ash, `SetUp` will open chrome://newtab in Lacros
+	//  * We also call this in Ash, it will open chrome://newtab in Lacros
 	// but not in Ash, which is exactly what we need.
-	_, _, err = browserfixt.SetUp(ctx, f.cr, f.bt)
-	if err != nil {
-		s.Fatal("Failed to set up browser for the new tab: ", err)
+	if _, _, _, err = browserfixt.SetUpBrowserOrUseCurrent(ctx, f.cr, f.bt); err != nil {
+		s.Fatal("Failed to get a browser to open new tab: ", err)
 	}
 
 	fi, err := filesinternals.Start(ctx, f.tconn, f.cr)
@@ -372,11 +371,8 @@ func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 		f.screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
 	}
 
-	// Close the active browser (opened by `browserfixt.SetUp` in PreTest).
-	_, brClose, _ := browserfixt.ConnectAndOwn(ctx, f.cr, f.bt)
-	if brClose != nil {
-		brClose(ctx)
-	}
+	// Close the active browser if there's any.
+	browserfixt.MaybeConnectBrowserAndClose(ctx, f.cr, f.bt)
 }
 
 func deleteFileRetrying(ctx context.Context, file string) error {

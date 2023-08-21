@@ -185,3 +185,60 @@ func ConnectAndOwn(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (*br
 		return nil, nil, errors.Errorf("unrecognized Chrome type %s", string(bt))
 	}
 }
+
+// SetUpBrowserOrUseCurrent either connects to the existing running browser
+// instance or create a new one if it can't connect. Besides the browser itself,
+// the return values also includes 2 callbacks, `closeResource` to close the
+// tab but not the browser, `closeBrowser` will close the whole browser.
+func SetUpBrowserOrUseCurrent(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (*browser.Browser, func(ctx context.Context), func(ctx context.Context) error, error) {
+	switch bt {
+	case browser.TypeAsh:
+		// For Ash, it's okay to call SetUp even if there's an existing running browser.
+		br, closeBrowser, err := SetUp(ctx, cr, bt)
+		return br, func(ctx context.Context) {}, closeBrowser, err
+	case browser.TypeLacros:
+		// For Lacros we can't call Connect if there's no running browsers, it will
+		// hang there until context deadline exceeded. We need to check first.
+		running, err := lacros.IsLacrosRunning(ctx, cr)
+		if err != nil {
+			return nil, nil, nil, errors.Wrap(err, "failed to check if Lacros is running or not before trying to connect")
+		}
+		// Lacros is running.
+		if running {
+			br, closeResource, err := Connect(ctx, cr, bt)
+			if err != nil {
+				return nil, nil, nil, errors.Wrap(err, "failed to connect to the existing running Lacros")
+			}
+			return br, closeResource, func(ctx context.Context) error { return nil }, err
+		}
+		// Lacros is not running.
+		br, closeBrowser, err := SetUp(ctx, cr, bt)
+		if err != nil {
+			return nil, nil, nil, errors.Wrap(err, "failed to set up a new Lacros")
+		}
+		return br, func(ctx context.Context) {}, closeBrowser, nil
+	default:
+		return nil, nil, nil, errors.Errorf("unrecognized browser type %s", string(bt))
+	}
+}
+
+// MaybeConnectBrowserAndClose connects and own the running browser if there's any,
+// and then close the whole browser. It's mainly used in the cleanup phase.
+func MaybeConnectBrowserAndClose(ctx context.Context, cr *chrome.Chrome, bt browser.Type) error {
+	// For Lacros we can't call Connect if there's no running browsers, it will
+	// hang there until context deadline exceeded. We need to check first.
+	if bt == browser.TypeLacros {
+		running, err := lacros.IsLacrosRunning(ctx, cr)
+		if err != nil {
+			return errors.Wrap(err, "failed to check if Lacros is running or not before trying to connect")
+		}
+		if !running {
+			return nil
+		}
+	}
+	_, closeBrowser, _ := ConnectAndOwn(ctx, cr, bt)
+	if closeBrowser != nil {
+		closeBrowser(ctx)
+	}
+	return nil
+}

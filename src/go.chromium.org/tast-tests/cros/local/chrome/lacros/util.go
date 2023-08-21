@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	internal "go.chromium.org/tast-tests/cros/local/chrome/internal/lacros"
@@ -42,6 +43,15 @@ func CloseLacros(ctx context.Context, l *Lacros) {
 	if l != nil {
 		l.Close(ctx) // Ignore error.
 	}
+}
+
+// IsLacrosRunning checks if Lacros is running or not.
+func IsLacrosRunning(ctx context.Context, cr *chrome.Chrome) (bool, error) {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get TestConn to check Lacros")
+	}
+	return ash.AppRunning(ctx, tconn, apps.Lacros.ID)
 }
 
 // ResetState terminates Lacros and removes its user data directory, unless KeepAlive is enabled.

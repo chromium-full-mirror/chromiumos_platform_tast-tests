@@ -146,7 +146,7 @@ func CloseAddAccountWindowIfNeededAndWaitFor(tconn *chrome.TestConn, elementToWa
 // closeGoogleDSSWindow finds the Google Docs/Sheets/Slides window with the
 // specific file name and close it.
 func closeGoogleDSSWindow(ctx context.Context, tconn *chrome.TestConn, fileName string) error {
-	w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
+	w, err := ash.WaitForAnyWindow(ctx, tconn, func(w *ash.Window) bool {
 		return strings.Contains(w.Title, fileName) && strings.Contains(w.Title, "Google")
 	})
 	if err != nil {
