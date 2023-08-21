@@ -6,6 +6,7 @@ package bluetooth
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/xmlrpc"
 )
@@ -144,7 +145,7 @@ func NewCommonAudioPeripheral(xmlrpcClient *xmlrpc.XMLRpc, methodNamePrefix stri
 // StartPulseaudio calls the Chameleond RPC method of the same name.
 // This implements AudioPeripheral.StartPulseaudio, see that for more details.
 func (c *CommonAudioPeripheral) StartPulseaudio(ctx context.Context, audioProfile string) (bool, error) {
-	return c.RPC("StartPulseaudio").Args(audioProfile).CallForBool(ctx)
+	return c.RPC("StartPulseaudio").Timeout(30 * time.Second).Args(audioProfile).CallForBool(ctx)
 }
 
 // StopPulseaudio calls the Chameleond RPC method of the same name.
