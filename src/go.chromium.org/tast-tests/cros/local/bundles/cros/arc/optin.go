@@ -36,9 +36,6 @@ func init() {
 			ExtraAttr:         []string{"group:cq-minimal"},
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
-			Name:              "container_r",
-			ExtraSoftwareDeps: []string{"android_container_r"},
-		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"group:cq-minimal"},
 			ExtraSoftwareDeps: []string{"android_vm"},
