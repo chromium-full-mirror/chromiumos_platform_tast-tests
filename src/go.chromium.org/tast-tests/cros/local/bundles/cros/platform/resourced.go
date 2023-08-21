@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/resourced"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -220,7 +221,7 @@ func validateTHP(ctx context.Context, newGameMode uint8) error {
 	const BorealisTHP = "always"
 	const DefaultTHP = "madvise"
 
-	const thpFile = "/sys/kernel/mm/transparent_hugepage/enable"
+	const thpFile = "/sys/kernel/mm/transparent_hugepage/enabled"
 	if _, err := os.Stat(thpFile); err != nil {
 		testing.ContextLog(ctx, "THP is not enabled, skip the validation of THP tuning")
 		return nil
@@ -228,6 +229,15 @@ func validateTHP(ctx context.Context, newGameMode uint8) error {
 	thp, err := readTHP(ctx, thpFile)
 	if err != nil {
 		return errors.Wrap(err, "failed to read THP mode")
+	}
+	memInfo, err := kernelmeter.MemInfo()
+	if err != nil {
+		return errors.Wrap(err, "cannot obtain memory info")
+	}
+	// THP tuning is enabled for boards with total memory > 4GiB.
+	if memInfo.Total <= kernelmeter.NewMemSizeMiB(5*1024) {
+		testing.ContextLog(ctx, "THP tuning is not enabled on this device, skip the validation of THP tuning")
+		return nil
 	}
 
 	if newGameMode == resourced.GameModeBorealis {
