@@ -7,6 +7,7 @@ package quicksettings
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
@@ -16,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/common"
 	pb "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -140,11 +142,15 @@ func (s *Service) AvailableWifiNetworks(ctx context.Context, e *empty.Empty) (*p
 // SelectNthAudioOption selects the Nth (0-indexed) audio node with the requested name.
 func (s *Service) SelectNthAudioOption(ctx context.Context, req *pb.SelectNthAudioOptionRequest) (*empty.Empty, error) {
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+		defer cancel()
+
 		cleanup, err := ensureVisible(ctx, tconn)
 		if err != nil {
 			return &emptypb.Empty{}, err
 		}
-		defer cleanup(ctx)
+		defer cleanup(cleanupCtx)
 
 		if err := SelectNthAudioOption(ctx, tconn, req.AudioNodeName, int(req.Nth)); err != nil {
 			return &emptypb.Empty{}, errors.Wrap(err, "failed to select audio option")

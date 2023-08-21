@@ -38,6 +38,9 @@ service QuickSettingsService {
   // the view is not presented.
   rpc AvailableWifiNetworks(google.protobuf.Empty) returns (AvailableWifiNetworksResponse) {}
 
+  // SelectNthAudioOption selects the Nth (0-indexed) audio node in the quick settings.
+  rpc SelectNthAudioOption(SelectNthAudioOptionRequest) returns (google.protobuf.Empty) {}
+
   // IsNBSWarningShown returns whether the NBS warning message is present in the quick settings.
   rpc IsNBSWarningShown(google.protobuf.Empty) returns (IsNBSWarningShownResponse) {}
 }
@@ -61,10 +64,9 @@ message IsHotspotTileShownResponse {
   bool is_hotspot_tile_shown = 1;
 }
 
-
 message SelectNthAudioOptionRequest {
-  string audio_node_name = 1;
-  int32 nth = 2;
+  string AudioNodeName = 1;
+  int32 Nth = 2;
 }
 
 message IsNBSWarningShownResponse {
