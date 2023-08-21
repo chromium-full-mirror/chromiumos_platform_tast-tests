@@ -304,6 +304,11 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 			return testing.PollBreak(errors.Wrap(err, "failed to retrieve events"))
 		}
 
+		if events.Size() < params.Counts.Sum() {
+			// Events may not have reached the server yet. Poll again.
+			return errors.New("cannot find the expected number of events")
+		}
+
 		if err := dlputil.ValidateReportEvents(ctx, params.Action, events, &params.Counts); err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to validate events"))
 		}

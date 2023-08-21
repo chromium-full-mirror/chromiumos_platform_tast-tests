@@ -75,12 +75,22 @@ type EventsBundle struct {
 	warnProceed []reportingutil.InputEvent
 }
 
+// Size returns the total number of events stored.
+func (events EventsBundle) Size() int {
+	return len(events.block) + len(events.report) + len(events.warn) + len(events.warnProceed)
+}
+
 // EventsCounts contains expected counts of report events per restriction level.
 type EventsCounts struct {
 	Block       int
 	Report      int
 	Warn        int
 	WarnProceed int
+}
+
+// Sum returns the sum of event counts across restrictions.
+func (counts EventsCounts) Sum() int {
+	return counts.Block + counts.Report + counts.Warn + counts.WarnProceed
 }
 
 const (
