@@ -20,14 +20,14 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// This test is only run on the cellular_single_active group. All boards in that group
+// This test is only run on the cellular_sim_active group. All boards in that group
 // provide the Modem.SimSlots property and have at least one provisioned SIM slot.
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UIOtaCellularDisconnectSms,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that MT SMS is received appears as notificatoin on UI",
+		Desc:         "Verifies that the UI shows a notification for a received MT SMS sent while disconnected from cellular service",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_sms"},
