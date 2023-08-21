@@ -1550,12 +1550,13 @@ func (c *CommonChameleond) PrinterDevice() devices.ChameleonDevice {
 // the provided deviceType, if it is known.
 func (c *CommonChameleond) BluetoothPeripheralDevice(deviceType bluetooth.DeviceType) (bluetooth.BluezPeripheral, error) {
 	deviceTypeToRPC := map[bluetooth.DeviceType]bluetooth.BluezPeripheral{
-		bluetooth.DeviceTypeKeyboard:   c.bluetoothKeyboardDevice,
-		bluetooth.DeviceTypeLEKeyboard: c.bLEKeyboard,
-		bluetooth.DeviceTypeMouse:      c.bluetoothMouseDevice,
-		bluetooth.DeviceTypeLEMouse:    c.bLEMouse,
-		bluetooth.DeviceTypeLEPhone:    c.bLEPhone,
-		bluetooth.DeviceTypeLEFastPair: c.bLEFastPair,
+		bluetooth.DeviceTypeKeyboard:       c.bluetoothKeyboardDevice,
+		bluetooth.DeviceTypeLEKeyboard:     c.bLEKeyboard,
+		bluetooth.DeviceTypeMouse:          c.bluetoothMouseDevice,
+		bluetooth.DeviceTypeBluetoothAudio: c.bluetoothAudioDevice,
+		bluetooth.DeviceTypeLEMouse:        c.bLEMouse,
+		bluetooth.DeviceTypeLEPhone:        c.bLEPhone,
+		bluetooth.DeviceTypeLEFastPair:     c.bLEFastPair,
 	}
 	rpc, ok := deviceTypeToRPC[deviceType]
 	if !ok {
@@ -1655,8 +1656,7 @@ func (c *CommonChameleond) FetchSupportedPortIDByType(ctx context.Context, portT
 	}
 	portIDs := supportedPortIDsByType[matchingPortType]
 	if index < 0 || index >= len(portIDs) {
-		return 0, errors.Errorf(
-			"invalid port index %d, this device supports %d ports of type %q so index values are of the range 0 to %d, inclusive",
+		return 0, errors.Errorf("invalid port index %d, this device supports %d ports of type %q so index values are of the range 0 to %d, inclusive",
 			index, len(portIDs), portType, len(portIDs)-1)
 	}
 	return portIDs[index], nil

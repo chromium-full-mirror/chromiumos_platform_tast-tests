@@ -294,6 +294,16 @@ func (d *EmulatedBTPeerDevice) RPCFastPair() cbt.FastPairPeripheral {
 	return d.rpc.(cbt.FastPairPeripheral)
 }
 
+// RPCAudio returns the Chameleond RPC interface for this device as an
+// AudioPeripheral.
+//
+// This should only be used if the RPC interface provided to
+// NewEmulatedBTPeerDevice when this EmulatedBTPeerDevice was created was an
+// AudioPeripheral. Otherwise, calling this method will cause a panic.
+func (d *EmulatedBTPeerDevice) RPCAudio() cbt.AudioPeripheral {
+	return d.rpc.(cbt.AudioPeripheral)
+}
+
 // AdvertisedName returns the cached result of
 // RPC().GetAdvertisedName().
 func (d *EmulatedBTPeerDevice) AdvertisedName() string {
