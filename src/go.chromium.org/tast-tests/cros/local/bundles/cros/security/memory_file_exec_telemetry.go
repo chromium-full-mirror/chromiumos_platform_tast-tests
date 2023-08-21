@@ -47,7 +47,7 @@ func init() {
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"chrome", "metrics_consent", "memfd_exec_detection"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      chrome.LoginTimeout + umaTimeout + cleanupTimeout,
 	})
 }
