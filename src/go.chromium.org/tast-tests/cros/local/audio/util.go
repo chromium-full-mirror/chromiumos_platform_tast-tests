@@ -211,12 +211,13 @@ func CalculateFrequency(data []float64, sampleRate float64) float64 {
 	return math.Sqrt(dsum2/sum2) * sampleRate / (math.Pi * 2)
 }
 
-// CheckFrequency checks if the audio's frequency is expected.
+// CountFrequencyErrors count the number of unexpected audio's frequency.
 // It slices the input and calculates the frequency for each slices.
 // If the number of slices with unexpected frequency exceeds incorrectLimit, returns error.
 // It ignores slices in the beginning that contain only zeros and the first slice with non-zero data.
 // The number of all-zero slices must be less than `startingSlicesLimit`, or it returns error.
-func CheckFrequency(ctx context.Context, data []int16, sampleRate, expectedFreq, freqTolerance float64, incorrectLimit int) error {
+// The difference from CheckFrequency is this function returns the number of incorrect slices, instead of returning error
+func CountFrequencyErrors(ctx context.Context, data []int16, sampleRate, expectedFreq, freqTolerance float64) (int, error) {
 	const (
 		samplesPerSlice     = 1000 // Number of samples per slice. 1000 on 48kHz = 21ms
 		startingSlicesLimit = 24   // Max starting slices allowed. 24 on 48kHz = 500ms
@@ -245,7 +246,7 @@ func CheckFrequency(ctx context.Context, data []int16, sampleRate, expectedFreq,
 			} else {
 				startingSlices++
 				if startingSlices > startingSlicesLimit {
-					return errors.New("reached starting slices limit")
+					return 0, errors.New("reached starting slices limit")
 				}
 			}
 		} else {
@@ -263,9 +264,21 @@ func CheckFrequency(ctx context.Context, data []int16, sampleRate, expectedFreq,
 	}
 
 	if isStarting {
-		return errors.New("not enough data to get out of starting phase")
+		return 0, errors.New("not enough data to get out of starting phase")
 	}
-	if incorrectSlices > incorrectLimit {
+
+	return incorrectSlices, nil
+}
+
+// CheckFrequency checks if the audio's frequency is expected.
+// It slices the input and calculates the frequency for each slices.
+// If the number of slices with unexpected frequency exceeds incorrectLimit, returns error.
+// It ignores slices in the beginning that contain only zeros and the first slice with non-zero data.
+// The number of all-zero slices must be less than `startingSlicesLimit`, or it returns error.
+func CheckFrequency(ctx context.Context, data []int16, sampleRate, expectedFreq, freqTolerance float64, incorrectLimit int) error {
+	if incorrectSlices, err := CountFrequencyErrors(ctx, data, sampleRate, expectedFreq, freqTolerance); err != nil {
+		return err
+	} else if incorrectSlices > incorrectLimit {
 		return errors.Errorf("incorrect slices count over limit, incorrect slices: %v, limit: %v", incorrectSlices, incorrectLimit)
 	}
 	return nil
