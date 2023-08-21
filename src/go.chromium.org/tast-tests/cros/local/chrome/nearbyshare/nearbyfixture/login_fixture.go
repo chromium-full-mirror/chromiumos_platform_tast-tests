@@ -617,6 +617,7 @@ func (f *nearbyShareLoginFixture) SetUp(ctx context.Context, s *testing.FixtStat
 	return &FixtData{
 		Chrome:            cr,
 		CrOSUsername:      crosUsername,
+		CrOSPassword:      crosPassword,
 		AndroidDevice:     androidDevice,
 		AndroidDeviceName: androidDeviceName,
 		AndroidUsername:   androidUsername,

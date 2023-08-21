@@ -104,6 +104,9 @@ type FixtData struct {
 	// CrOSUsername is the user account logged into Chrome.
 	CrOSUsername string
 
+	// CrOSPassword is the password for the user account logged into Chrome.
+	CrOSPassword string
+
 	// CrOSDeviceName is the CrOS device name configured for Nearby Share.
 	CrOSDeviceName string
 
@@ -209,6 +212,8 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		Chrome:            cr,
 		TestConn:          tconn,
 		CrOSDeviceName:    crosDisplayName,
+		CrOSUsername:      s.ParentValue().(*FixtData).CrOSUsername,
+		CrOSPassword:      s.ParentValue().(*FixtData).CrOSPassword,
 		CrOSDownloadsPath: crosAttributes.DownloadsPath,
 		CrOSSendPath:      filepath.Join(crosAttributes.DownloadsPath, nearbycommon.SendFolderName),
 		AndroidDevice:     androidDevice,
