@@ -120,7 +120,10 @@ func runAccelVideoTestCmd(ctx context.Context, execCmd, filter, logfilepath stri
 //  2. If the output of the decoder is a linear buffer (this is false by
 //     default).
 //  3. If the global VA-API lock should be disabled.
-func RunAccelVideoTest(ctx context.Context, outDir, filename string, parameters TestParams) error {
+//
+// enabledFeatures are passed to the binary in common Chrome fashion ,see
+// https://chromium.googlesource.com/chromium/src/+/main/docs/configuration.md#Features
+func RunAccelVideoTest(ctx context.Context, outDir, filename string, parameters TestParams, enabledFeatures []string) error {
 	vl, err := logging.NewVideoLogger()
 	if err != nil {
 		return errors.Wrap(err, "failed to set values for verbose logging")
@@ -129,6 +132,11 @@ func RunAccelVideoTest(ctx context.Context, outDir, filename string, parameters 
 
 	args := generateCmdArgs(outDir, filename, parameters)
 	args = append(args, logging.ChromeVmoduleFlag())
+	// By default MD5 validator is used, but we don't want that here.
+	args = append(args, "--validator_type=none")
+	if len(enabledFeatures) > 0 {
+		args = append(args, "--enable-features="+strings.Join(enabledFeatures, `,`))
+	}
 
 	const exec = "video_decode_accelerator_tests"
 	if report, err := runAccelVideoTestCmd(ctx,
