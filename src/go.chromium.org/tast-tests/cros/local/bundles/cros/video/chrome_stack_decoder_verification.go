@@ -1169,7 +1169,7 @@ func init() {
 				},
 			},
 			{
-				Name:              "v4l2_flat_p9_0_group1_gf_dist",
+				Name:              "v4l2_flat_vp9_0_group1_gf_dist",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
