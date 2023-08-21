@@ -27,7 +27,7 @@ func init() {
 		Contacts:     []string{"cros-telemetry@google.com"},
 		BugComponent: "b:1032705",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		Attr:         []string{"group:mainline"},
 	})
 }
 
