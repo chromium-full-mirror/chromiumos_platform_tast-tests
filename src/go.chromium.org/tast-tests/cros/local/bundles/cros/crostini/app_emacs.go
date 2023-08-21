@@ -6,22 +6,13 @@ package crostini
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/crostini"
-	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
-	"go.chromium.org/tast-tests/cros/local/terminalapp"
-	"go.chromium.org/tast-tests/cros/local/uidetection"
-	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -109,62 +100,7 @@ func AppEmacs(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
-	// Open Terminal app.
-	terminalApp, err := terminalapp.Launch(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to open Terminal app: ", err)
-	}
-
-	defer terminalApp.Exit(keyboard)(cleanupCtx)
-
-	if err := createFileWithEmacs(ctx, keyboard, terminalApp, tconn, cont, d); err != nil {
+	if err := guestos.CreateFileWithEmacs(ctx, keyboard, tconn, cont, d); err != nil {
 		s.Fatal("Failed to create file with emacs in Terminal: ", err)
 	}
-}
-
-// createFileWithEmacs creates a file with emacs and types a string into it and save it in container.
-func createFileWithEmacs(ctx context.Context, keyboard *input.KeyboardEventWriter, terminalApp *terminalapp.TerminalApp, tconn *chrome.TestConn, cont *vm.Container, d screenshot.Differ) error {
-	const (
-		testFile   = "test.txt"
-		testString = "This is a test string"
-	)
-
-	// Anything animated like blinking cursors will break screendiffs.
-	cont.WriteFile(ctx, "~/.emacs", "(blink-cursor-mode 0)")
-
-	// Open emacs in Terminal.
-	// Avoid opening the splash screen since it means the screenshot will contain data like CPU architecture,
-	// which is terrible for screen diffing.
-	if err := terminalApp.RunCommand(keyboard, fmt.Sprintf("emacs --no-splash %s", testFile))(ctx); err != nil {
-		return errors.Wrap(err, "failed to run command 'emacs' in Terminal window")
-	}
-
-	ui := uiauto.New(tconn)
-	uda := uidetection.NewDefault(tconn)
-	window := nodewith.Name("emacs@penguin").Role(role.Window).First()
-
-	if err := uiauto.Combine("Click, input, save and exit Emacs",
-		// Sometimes the first character got lost if input immediately.
-		// Wait until the menu exists, indicating the window is launched.
-		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(window).First()),
-		// Type string.
-		keyboard.TypeAction(testString),
-		// Press ctrl+x and ctrl+s to save.
-		keyboard.AccelAction("ctrl+X"),
-		keyboard.AccelAction("ctrl+S"),
-		// After saving, wait for the "save" button to grey out.
-		screenshot.DiffWindow(ctx, d, "emacs"),
-		// Press ctrl+x and ctrl+c to and quit.
-		keyboard.AccelAction("ctrl+X"),
-		keyboard.AccelAction("ctrl+C"),
-		// Check window closed.
-		ui.WaitUntilGone(window))(ctx); err != nil {
-		return err
-	}
-
-	// Check the content of the test file.
-	if err := cont.CheckFileContent(ctx, testFile, testString+"\n"); err != nil {
-		return errors.Wrap(err, "failed to verify the content of the file")
-	}
-	return nil
 }

@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -31,6 +32,7 @@ type Guest interface {
 	GetFile(ctx context.Context, containerPath, localPath string) error
 	GetFileList(ctx context.Context, path string) (fileList []string, err error)
 	Cleanup(ctx context.Context, path string) error
+	WriteFile(ctx context.Context, path, contents string) error
 }
 
 // containerCommand returns a testexec.Cmd with a vsh command that will run in
@@ -184,6 +186,17 @@ func cleanup(ctx context.Context, guest Guest, path string) error {
 		if err := guest.Command(ctx, "rm", "-rf", file).Run(testexec.DumpLogOnError); err != nil {
 			return errors.Wrapf(err, "failed to delete %s in %s", file, path)
 		}
+	}
+	return nil
+}
+
+// writeFile creates a file in the container using echo.
+func writeFile(ctx context.Context, guest Guest, filePath, fileContent string) error {
+	if err := guest.Command(ctx, "mkdir", "-p", filepath.Dir(filePath)).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "failed to create the directory containing the file %v in guest", filePath)
+	}
+	if err := guest.Command(ctx, "sh", "-c", fmt.Sprintf("echo -n %s > %s", shutil.Escape(fileContent), filePath)).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "failed to write file %v in guest", filePath)
 	}
 	return nil
 }

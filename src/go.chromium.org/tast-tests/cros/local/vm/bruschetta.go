@@ -29,6 +29,11 @@ func (bru *BruschettaVM) ReadFile(ctx context.Context, filePath string) (content
 	return readFile(ctx, bru, filePath)
 }
 
+// WriteFile creates a file in the container using echo.
+func (bru *BruschettaVM) WriteFile(ctx context.Context, filePath, fileData string) error {
+	return writeFile(ctx, bru, filePath, fileData)
+}
+
 // PushFile copies a local file to the container's filesystem.
 func (bru *BruschettaVM) PushFile(ctx context.Context, localPath, containerPath string) error {
 	return pushFile(ctx, fakeContainerName, bru.VM, localPath, containerPath)
