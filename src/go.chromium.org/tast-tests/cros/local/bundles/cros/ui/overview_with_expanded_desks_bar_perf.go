@@ -90,11 +90,11 @@ func OverviewWithExpandedDesksBarPerf(ctx context.Context, s *testing.State) {
 
 	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
-	if err := runSubtest(ctx, s, tconn, runner, 2 /* desks */); err != nil {
+	if err := runOverviewWithExpandedDesksBarSubtest(ctx, s, tconn, runner, 2 /* desks */); err != nil {
 		s.Fatal("Test case with 2 desks failed: ", err)
 	}
 
-	if err := runSubtest(ctx, s, tconn, runner, 8 /* desks */); err != nil {
+	if err := runOverviewWithExpandedDesksBarSubtest(ctx, s, tconn, runner, 8 /* desks */); err != nil {
 		s.Fatal("Test case with 8 desks failed: ", err)
 	}
 
@@ -103,9 +103,9 @@ func OverviewWithExpandedDesksBarPerf(ctx context.Context, s *testing.State) {
 	}
 }
 
-// runSubtest creates the number of desks needed and then enters and exits
-// overview multiple times.
-func runSubtest(ctx context.Context, s *testing.State,
+// runOverviewWithExpandedDesksBarSubtest creates the number of desks needed and
+// then enters and exits overview multiple times.
+func runOverviewWithExpandedDesksBarSubtest(ctx context.Context, s *testing.State,
 	tconn *chrome.TestConn, runner *perfutil.Runner, desks int) error {
 	for {
 		dc, err := ash.GetDeskCount(ctx, tconn)
