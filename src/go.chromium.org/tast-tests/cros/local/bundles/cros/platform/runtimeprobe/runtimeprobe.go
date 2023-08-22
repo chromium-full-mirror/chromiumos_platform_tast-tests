@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -114,6 +115,21 @@ func modelName(labels []string) (string, error) {
 	return "", errors.New("no model label found")
 }
 
+var mainBranchRe = regexp.MustCompile(`^\d+\.0\.0$`)
+
+// isMainBranch returns whether the test environment is on main branch images.
+func isMainBranch() (bool, error) {
+	lsbContent, err := lsbrelease.Load()
+	if err != nil {
+		return false, err
+	}
+	version, ok := lsbContent[lsbrelease.Version]
+	if !ok {
+		return false, errors.Errorf("failed to find %s in /etc/lsb-release", lsbrelease.Version)
+	}
+	return mainBranchRe.MatchString(version), nil
+}
+
 // categoryAliases returns the aliases of given category.  The category
 // "video" is a legacy usage of "camera" category and both follow the
 // {category}_{cid}_{qid} name policy.
@@ -169,9 +185,9 @@ func collectKnownComponents(ctx context.Context, model, category string, tryCoun
 	return components, nil
 }
 
-// countComponents returns a counter counting each component label which is
-// available on device |model|.
-func countComponents(labels []string, category, model string, knownComponents map[string]struct{}) map[string]int {
+// countComponents returns a counter counting each component label and
+// normalizes their names.
+func countComponents(labels []string, category, model string) map[string]int {
 	count := make(map[string]int)
 	// Filter labels with prefix "hwid_component:<component type>/" and trim them.
 	for _, alias := range categoryAliases(category) {
@@ -182,9 +198,7 @@ func countComponents(labels []string, category, model string, knownComponents ma
 			}
 			label := strings.TrimPrefix(label, categoryPrefix)
 			key := normalizeComponentName(model, category, model+"_"+label)
-			if _, found := knownComponents[key]; found {
-				count[key]++
-			}
+			count[key]++
 		}
 	}
 	return count
@@ -234,13 +248,31 @@ func GenericTest(ctx context.Context, s *testing.State, categories []string, get
 		s.Fatal("modelName failed: ", err)
 	}
 
-	mapping := make(map[string]map[string]int)
+	failOnUnknownComponentLabels, err := isMainBranch()
+	if err != nil {
+		s.Fatal("isMainBranch failed: ", err)
+	}
+
+	categoryToExpectedComponentCounts := make(map[string]map[string]int)
 	var requestCategories []rppb.ProbeRequest_SupportCategory
+	var knownComponents map[string]struct{}
 	for _, category := range categories {
 		categoryValue, found := rppb.ProbeRequest_SupportCategory_value[category]
 		if !found {
 			s.Fatalf("Invalid category %q", category)
 		}
+
+		count := countComponents(hostInfoLabels, category, model)
+		// Waived components are defined in |waived_comp_categories| on the
+		// HWID service:
+		// platform/factory-private/config/hwid/service/appengine/configurations.yaml
+		// If a component in the dut labels is not found in the probe config on
+		// the DUT, countComponents will also ignore it.
+		if len(count) == 0 {
+			s.Logf("%q components are not found in host info labels. Skipped", category)
+			continue
+		}
+		categoryToExpectedComponentCounts[category] = count
 
 		knownComponents, err := collectKnownComponents(ctx, model, category, defaultTryCount)
 		if err != nil {
@@ -252,18 +284,6 @@ func GenericTest(ctx context.Context, s *testing.State, categories []string, get
 			s.Logf("%q components are not found in the probe config. Skipped", category)
 			continue
 		}
-
-		count := countComponents(hostInfoLabels, category, model, knownComponents)
-		// Waived components are defined in |waived_comp_categories| on the
-		// HWID service:
-		// platform/factory-private/config/hwid/service/appengine/configurations.yaml
-		// If a component in the dut labels is not found in the probe config on
-		// the DUT, countComponents will also ignore it.
-		if len(count) == 0 {
-			s.Logf("No %q labels or known components in the labels. Skipped", category)
-			continue
-		}
-		mapping[category] = count
 		requestCategories = append(requestCategories, rppb.ProbeRequest_SupportCategory(categoryValue))
 	}
 
@@ -275,7 +295,7 @@ func GenericTest(ctx context.Context, s *testing.State, categories []string, get
 		s.Fatal("probe failed: ", err)
 	}
 
-	for category, compCounts := range mapping {
+	for category, expectedCompCounts := range categoryToExpectedComponentCounts {
 		probedComponents, err := getComponents(result, category)
 		var extraComponents []string
 		if err != nil {
@@ -283,7 +303,7 @@ func GenericTest(ctx context.Context, s *testing.State, categories []string, get
 			continue
 		}
 		for _, component := range probedComponents {
-			result, name := decreaseComponentCount(compCounts, model, category, component)
+			result, name := decreaseComponentCount(expectedCompCounts, model, category, component)
 			s.Logf("Probed %s component: %s", category, name)
 			if !result && name != "generic" {
 				extraComponents = append(extraComponents, category+"/"+name)
@@ -291,7 +311,15 @@ func GenericTest(ctx context.Context, s *testing.State, categories []string, get
 		}
 
 		var unprobedComponents []string
-		for name := range compCounts {
+		for name := range expectedCompCounts {
+			// Only raise an error when a component exists in host
+			// info labels but not RACC configs on ToT images.
+			if _, found := knownComponents[name]; !found {
+				if !failOnUnknownComponentLabels {
+					s.Logf("Unknown %s component label: %s. Skipped", category, name)
+					continue
+				}
+			}
 			unprobedComponents = append(unprobedComponents, category+"/"+name)
 		}
 		if len(unprobedComponents) > 0 {
