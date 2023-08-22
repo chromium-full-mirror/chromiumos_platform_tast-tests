@@ -80,13 +80,13 @@ func CameraEffectsChromeResolution(ctx context.Context, s *testing.State) {
 
 	url := srv.URL + fakehtml.PageURL
 
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, url)
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, url)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
-	defer conn.CloseTarget(cleanupCtx)
+	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
-	defer cleanup(cleanupCtx)
+	defer conn.CloseTarget(cleanupCtx)
 
 	fakeHTMLUI := fakehtml.NewUI(tconn)
 	if err := fakeHTMLUI.MayBeAllowCameraAccess(ctx); err != nil {

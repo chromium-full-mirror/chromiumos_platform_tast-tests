@@ -235,7 +235,7 @@ func run(ctx context.Context, s *testing.State, cr *chrome.Chrome, testParams tr
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 	var br *browser.Browser
-	var cleanup action.Action
+	var closeBrowser action.Action
 	var browserConn *chrome.Conn
 	if testParams.incognitoMode {
 		kb, err := input.Keyboard(ctx)
@@ -267,11 +267,11 @@ func run(ctx context.Context, s *testing.State, cr *chrome.Chrome, testParams tr
 	} else {
 		browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
-		browserConn, br, cleanup, err = browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
+		browserConn, br, closeBrowser, err = browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
 		if err != nil {
 			return errors.Wrap(err, "failed to launch browser")
 		}
-		defer cleanup(cleanupCtx)
+		defer closeBrowser(cleanupCtx)
 		defer browserConn.Close()
 		defer browserConn.CloseTarget(cleanupCtx)
 	}

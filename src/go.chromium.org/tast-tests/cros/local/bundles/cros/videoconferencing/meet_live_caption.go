@@ -144,11 +144,13 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to add bots: %d bots are not added: %v", nFailures, err)
 	}
 
-	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
+	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
-	defer cleanup(cleanupCtx)
+	defer closeBrowser(cleanupCtx)
+	defer conn.Close()
+	defer conn.CloseTarget(cleanupCtx)
 
 	var gm *googlemeet.GoogleMeet
 	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
