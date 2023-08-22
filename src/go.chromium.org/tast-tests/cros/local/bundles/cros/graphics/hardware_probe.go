@@ -6,10 +6,7 @@ package graphics
 
 import (
 	"context"
-	"fmt"
-	"strconv"
 
-	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/graphics/hardwareprobe"
 	"go.chromium.org/tast/core/testing"
 )
@@ -65,24 +62,5 @@ func HardwareProbe(ctx context.Context, s *testing.State) {
 	}
 	if result.CPUFamily == "unknown" || result.CPUFamily == "" {
 		s.Error("Unrecognized CPU family: ", result.CPUFamily)
-	}
-
-	pv := perf.NewValues()
-	for i, device := range result.VGADevice {
-		s.Logf("PCI vendor:device %v:%v", device.VendorID, device.DeviceID)
-		vendorID, err := strconv.ParseInt(device.VendorID, 16, 64)
-		if err != nil {
-			s.Fatalf("Failed to convert vendorID %v to decimal", device.VendorID)
-		}
-		deviceID, err := strconv.ParseInt(device.DeviceID, 16, 64)
-		if err != nil {
-			s.Fatalf("Failed to convert deviceID %v to decimal", device.DeviceID)
-		}
-		pv.Set(perf.Metric{
-			Name: fmt.Sprintf("pciid_%v", i),
-		}, float64(vendorID<<4+deviceID))
-	}
-	if err := pv.Save(s.OutDir()); err != nil {
-		s.Error("Failed to save perf data: ", err)
 	}
 }
