@@ -54,12 +54,14 @@ func AddRemoveFingerprintFactor(ctx context.Context, s *testing.State) {
 		s.Fatal("Test fixture is not BiometricsFixture")
 	}
 	fasm := f.FakeAuthStackManager
-	if err := cryptohome.RemoveVault(ctx, userName); err != nil {
-		s.Fatal("Failed to remove old vault for preparation: ", err)
-	}
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
+
+	// Ensure a clean state.
+	if err := client.UnmountAndRemoveVault(ctx, userName); err != nil {
+		s.Fatal("Failed to remove old vault for preparation: ", err)
+	}
 
 	// Create and mount the persistent user.
 	if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {

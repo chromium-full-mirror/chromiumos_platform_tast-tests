@@ -92,6 +92,10 @@ func (f *biometricsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState)
 }
 
 func (f *biometricsFixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
+	// Clean up test user states, in case there's any.
+	if err := UnmountAll(ctx); err != nil {
+		s.Error("Failed to unmount all: ", err)
+	}
 	// Restore biod process if it is available.
 	cmdRunner := hwseclocal.NewLoglessCmdRunner()
 	helper, err := hwseclocal.NewHelper(cmdRunner)
@@ -118,5 +122,9 @@ func (f *biometricsFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTes
 }
 
 func (f *biometricsFixtureImpl) Reset(ctx context.Context) error {
+	// Clean up obsolete states, in case there's any.
+	if err := UnmountAll(ctx); err != nil {
+		return err
+	}
 	return nil
 }
