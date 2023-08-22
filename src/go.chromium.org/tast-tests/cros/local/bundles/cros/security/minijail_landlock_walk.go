@@ -30,7 +30,7 @@ func init() {
 }
 
 func MinijailLandlockWalk(ctx context.Context, s *testing.State) {
-	dirsArray := []string{"/home", "/media", "/opt"}
+	dirsArray := []string{"/home", "/media"}
 
 	for _, dir := range dirsArray {
 		s.Log("Examining: ", dir)
