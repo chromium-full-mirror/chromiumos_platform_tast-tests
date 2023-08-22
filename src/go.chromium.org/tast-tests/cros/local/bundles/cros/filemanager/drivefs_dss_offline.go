@@ -87,7 +87,7 @@ func DrivefsDssOffline(ctx context.Context, s *testing.State) {
 
 	// Create the unique folder that will be directly navigated to below.
 	testFilePath := driveFsClient.MyDrivePath(uniqueTestFolderName, testDocFileName)
-	folder, err := APIClient.Createfolder(ctx, uniqueTestFolderName, []string{"root"})
+	folder, err := APIClient.CreateFolder(ctx, uniqueTestFolderName, []string{"root"})
 	if err != nil {
 		s.Fatal("Failed to create folder in MyDrive: ", err)
 	}

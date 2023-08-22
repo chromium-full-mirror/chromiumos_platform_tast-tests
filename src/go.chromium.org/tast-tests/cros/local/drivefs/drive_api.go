@@ -87,9 +87,9 @@ func (d *APIClient) CreateBlankGoogleSlide(ctx context.Context, fileName string,
 	return d.service.Files.Create(slide).Context(ctx).Do()
 }
 
-// Createfolder creates a folder with supplied filename in the directory path.
+// CreateFolder creates a folder with supplied filename in the directory path.
 // All paths should start with root unless they are team drives, in which case the drive path.
-func (d *APIClient) Createfolder(ctx context.Context, fileName string, dirPath []string) (*drive.File, error) {
+func (d *APIClient) CreateFolder(ctx context.Context, fileName string, dirPath []string) (*drive.File, error) {
 	folder := &drive.File{
 		MimeType: "application/vnd.google-apps.folder",
 		Name:     fileName,

@@ -92,7 +92,7 @@ func GoogleDriveFiles(ctx context.Context, s *testing.State) {
 
 	// Ensure the name of folder is unique by combine a long string, timestamp and a random number.
 	folderName := fmt.Sprintf("filemanager_GoogleDriveFiles_test_folder_name_%020d_%06d", time.Now().UnixNano(), rand.Intn(100000))
-	folder, err := apiClient.Createfolder(ctx, folderName, []string{"root"})
+	folder, err := apiClient.CreateFolder(ctx, folderName, []string{"root"})
 	if err != nil {
 		s.Fatal("Failed to create folder: ", err)
 	}
