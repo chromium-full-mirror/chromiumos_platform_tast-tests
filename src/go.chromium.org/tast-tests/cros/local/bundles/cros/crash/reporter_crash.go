@@ -15,9 +15,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	commoncrash "go.chromium.org/tast-tests/cros/common/crash"
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -36,12 +34,11 @@ func init() {
 		Params: []testing.Param{{
 			Name:              "real_consent",
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
-			Val:               crash.RealConsent,
-			Fixture:           fixture.ChromeLoggedInVerboseConsentLogs,
+			Fixture:           crash.LoggedInRealConsent,
 			ExtraAttr:         []string{"informational"},
 		}, {
-			Name: "mock_consent",
-			Val:  crash.MockConsent,
+			Name:    "mock_consent",
+			Fixture: crash.MockConsentFixture,
 		}},
 		Attr: []string{"group:mainline"},
 	})
@@ -73,12 +70,8 @@ func setCorePatternCrashTest(ctx context.Context, crashTest bool) error {
 }
 
 func ReporterCrash(ctx context.Context, s *testing.State) {
-	opt := crash.WithMockConsent()
-	useConsent := s.Param().(crash.ConsentType)
-	if useConsent == crash.RealConsent {
-		opt = crash.WithConsent(s.FixtValue().(*chrome.Chrome))
-	}
-	if err := crash.SetUpCrashTest(ctx, opt); err != nil {
+	// Fixture took care of setting consent; just do the rest of the init.
+	if err := crash.SetUpCrashTest(ctx); err != nil {
 		s.Fatal("SetUpCrashTest failed: ", err)
 	}
 	defer crash.TearDownCrashTest(ctx)
@@ -131,7 +124,7 @@ func ReporterCrash(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Couldn't get daemon store dirs: ", err)
 	}
-	if useConsent == crash.MockConsent {
+	if s.FixtValue().(*crash.Fixture).ConsentType == crash.MockConsent {
 		// We might not be logged in, so also allow system crash dir.
 		crashDirs = append(crashDirs, crash.SystemCrashDir)
 	}

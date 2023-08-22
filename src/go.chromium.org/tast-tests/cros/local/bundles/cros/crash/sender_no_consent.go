@@ -9,8 +9,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast/core/testing"
 )
@@ -33,25 +31,19 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "fieldtrial_testing_config_on",
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
-			Fixture:   fixture.ChromeLoggedInWithFieldTrialConfigEnableAndVerboseConsent,
+			Fixture:   crash.LoggedInNoConsentFieldTrialConfigEnable,
 		}, {
 			Name:    "fieldtrial_testing_config_off",
-			Fixture: fixture.ChromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent,
+			Fixture: crash.LoggedInNoConsentFieldTrialConfigDisable,
 		}},
 	})
 }
 
 func SenderNoConsent(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
-	if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes(crash.FilterInIgnoreAllCrashes), crash.WithConsent(cr)); err != nil {
+	if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes(crash.FilterInIgnoreAllCrashes)); err != nil {
 		s.Fatal("Setup failed: ", err)
 	}
 	defer crash.TearDownCrashTest(ctx)
-
-	// Revoke the consent.
-	if err := crash.SetConsent(ctx, cr, false); err != nil {
-		s.Fatal("Failed to revoke consent: ", err)
-	}
 
 	const basename = "some_program.1.2.3.4"
 	if _, err := crash.AddFakeMinidumpCrash(ctx, basename); err != nil {

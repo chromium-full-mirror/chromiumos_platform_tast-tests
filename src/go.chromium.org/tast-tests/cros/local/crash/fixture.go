@@ -67,6 +67,188 @@ const (
 	RealConsentPerUserOff
 )
 
+// Fixture definitions
+const (
+	LoggedInRealConsent = "loggedInRealCrashConsent"
+	LoggedInNoConsent   = "loggedInNoCrashConsent"
+	MockConsentFixture  = "mockCrashConsent"
+	// Mock consent disabled doesn't exit - it'd just fall back to real
+	// consent, which may be incidentally enabled. If you want disabled, you
+	// need real consent and chrome.
+
+	// fieldtrial config on/off versions.
+	LoggedInRealConsentFieldTrialConfigEnable  = "loggedInRealCrashConsentFieldTrialConfigEnable"
+	LoggedInRealConsentFieldTrialConfigDisable = "loggedInRealCrashConsentFieldTrialConfigDisable"
+	LoggedInNoConsentFieldTrialConfigEnable    = "loggedInNoCrashConsentFieldTrialConfigEnable"
+	LoggedInNoConsentFieldTrialConfigDisable   = "loggedInNoCrashConsentFieldTrialConfigDisable"
+	MockConsentFieldTrialConfigEnable          = "mockCrashConsentFieldTrialConfigEnable"
+	MockConsentFieldTrialConfigDisable         = "mockCrashConsentFieldTrialConfigDisable"
+)
+
+const (
+	setUpTimeoutRealConsent = 35*time.Second + chrome.LoginTimeout
+	setUpTimeoutMockConsent = 5 * time.Second
+	resetTimeout            = 5 * time.Second
+	tearDownTimeout         = 5 * time.Second
+)
+
+func init() {
+	testing.AddFixture(&testing.Fixture{
+		Name:            LoggedInRealConsent,
+		Desc:            "Logged in with real consent enabled, using chrome with verbose consent flags",
+		Contacts:        []string{"cros-telemetry@google.com", "mutexlox@chromium.org"},
+		Impl:            newFixture(true, RealConsent),
+		SetUpTimeout:    setUpTimeoutRealConsent,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            LoggedInNoConsent,
+		Desc:            "Logged in with real consent disabled, using chrome with verbose consent flags",
+		Contacts:        []string{"cros-telemetry@google.com", "mutexlox@chromium.org"},
+		Impl:            newFixture(false, RealConsent),
+		SetUpTimeout:    setUpTimeoutRealConsent,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            MockConsentFixture,
+		Desc:            "Mock consent enabled",
+		Contacts:        []string{"cros-telemetry@google.com", "mutexlox@chromium.org"},
+		Impl:            newFixture(true, MockConsent),
+		SetUpTimeout:    setUpTimeoutMockConsent,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+	// fieldtrial_testing_config variants
+	testing.AddFixture(&testing.Fixture{
+		Name:            LoggedInRealConsentFieldTrialConfigEnable,
+		Desc:            "Logged in with real consent enabled, using chrome with verbose consent flags and field trial config on",
+		Contacts:        []string{"cros-telemetry@google.com", "mutexlox@chromium.org"},
+		Impl:            newFixture(true, RealConsent, chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable)),
+		SetUpTimeout:    setUpTimeoutRealConsent,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            LoggedInRealConsentFieldTrialConfigDisable,
+		Desc:            "Logged in with real consent enabled, using chrome with verbose consent flags and field trial config off",
+		Contacts:        []string{"cros-telemetry@google.com", "mutexlox@chromium.org"},
+		Impl:            newFixture(true, RealConsent, chrome.FieldTrialConfig(chrome.FieldTrialConfigDisable)),
+		SetUpTimeout:    setUpTimeoutRealConsent,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            LoggedInNoConsentFieldTrialConfigEnable,
+		Desc:            "Logged in with real consent disabled, using chrome with verbose consent flags and field trial config on",
+		Contacts:        []string{"cros-telemetry@google.com", "mutexlox@chromium.org"},
+		Impl:            newFixture(false, RealConsent, chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable)),
+		SetUpTimeout:    setUpTimeoutRealConsent,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            LoggedInNoConsentFieldTrialConfigDisable,
+		Desc:            "Logged in with real consent disabled, using chrome with verbose consent flags and field trial config off",
+		Contacts:        []string{"cros-telemetry@google.com", "mutexlox@chromium.org"},
+		Impl:            newFixture(false, RealConsent, chrome.FieldTrialConfig(chrome.FieldTrialConfigDisable)),
+		SetUpTimeout:    setUpTimeoutRealConsent,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            MockConsentFieldTrialConfigEnable,
+		Desc:            "Mock consent enabled with field trial config on",
+		Contacts:        []string{"cros-telemetry@google.com", "mutexlox@chromium.org"},
+		Impl:            newFixture(true, MockConsent, chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable)),
+		SetUpTimeout:    setUpTimeoutMockConsent,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            MockConsentFieldTrialConfigDisable,
+		Desc:            "Mock consent enabled with field trial config off",
+		Contacts:        []string{"cros-telemetry@google.com", "mutexlox@chromium.org"},
+		Impl:            newFixture(true, MockConsent, chrome.FieldTrialConfig(chrome.FieldTrialConfigDisable)),
+		SetUpTimeout:    setUpTimeoutMockConsent,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+}
+
+// Fixture is a fixture for tast tests that wish for crash_reporter to manage a chrome instance and
+// set consent on it for them. (or alternatively to set mock consent).
+// It does *not* do anything other than chrome creation and consent management.
+type Fixture struct {
+	Cr             *chrome.Chrome
+	ConsentEnabled bool
+	ConsentType    ConsentType
+	opts           []chrome.Option
+}
+
+// newFixture creates a CrashFixture with specified options.
+func newFixture(consentEnabled bool, consentType ConsentType, chromeOpts ...chrome.Option) testing.FixtureImpl {
+	return &Fixture{ConsentEnabled: consentEnabled, ConsentType: consentType, opts: chromeOpts}
+}
+
+// SetUp sets up the fixture, before any tests in it run.
+func (f *Fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	if f.ConsentType == RealConsent {
+		opts := append(f.opts, chrome.ExtraArgs(ChromeVerboseConsentFlags))
+		cr, err := chrome.New(ctx, opts...)
+		if err != nil {
+			s.Fatal("Failed to start chrome: ", err)
+		}
+		f.Cr = cr
+		if err := SetConsent(ctx, f.Cr, f.ConsentEnabled); err != nil {
+			s.Fatal("Failed to disable consent: ", err)
+		}
+	} else if f.ConsentType == MockConsent {
+		if err := setMockConsent(false, crashTestInProgressDir, rebootPersistDir); err != nil {
+			s.Fatal("Failed to set mock consent: ", err)
+		}
+	} else {
+		s.Fatal("Unimplemented consent type: ", f.ConsentType)
+	}
+
+	return f
+}
+
+// TearDown tears down the fixture, after all tests have run.
+func (f *Fixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if f.ConsentType == MockConsent {
+		if err := clearMockConsent(ctx, crashTestInProgressDir, rebootPersistDir); err != nil {
+			s.Log("Failed to clear mock consent: ", err)
+		}
+	}
+	if f.Cr != nil {
+		if err := f.Cr.Close(ctx); err != nil {
+			s.Log("Failed to close chrome connection: ", err)
+		}
+	}
+}
+
+// Reset does lightweight resetting between tests.
+func (f *Fixture) Reset(ctx context.Context) error {
+	// Real consent was already taken care of by the fixture; don't re-do
+	// it.  Otherwise, reset MockConsent, as TearDownCrashTest disables it.
+	if f.ConsentType == MockConsent {
+		if err := setMockConsent(false, crashTestInProgressDir, rebootPersistDir); err != nil {
+			return errors.Wrap(err, "failed to set mock consent")
+		}
+	}
+	return nil
+}
+
+// PreTest runs before each test. Failures here are attributed the test.
+func (f *Fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+// PostTest is runs after each test. Failures here are attributed the test.
+func (f *Fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
 // SetConsent enables or disables metrics consent, based on the value of consent.
 // Pre: cr must point to a logged-in chrome session.
 func SetConsent(ctx context.Context, cr *chrome.Chrome, consent bool) error {
@@ -103,6 +285,7 @@ func SetConsent(ctx context.Context, cr *chrome.Chrome, consent bool) error {
 		// This is hacky, but empirically, it resolves flakiness on the crash.User.*_crasher_{no,real}_consent tests.
 		// Ideally, we would find a better condition to wait for in the testing.Poll above, but we cannot directly
 		// observe Chrome's internal state.
+		// GoBigSleepLint: see details above.
 		if err := testing.Sleep(ctx, time.Second); err != nil {
 			testing.ContextLogf(ctx, "Failed to sleep: %v. Ignoring", err)
 		}
@@ -139,18 +322,49 @@ func SetConsent(ctx context.Context, cr *chrome.Chrome, consent bool) error {
 	// The fraction of the end time is intentionally rounded down here.
 	// For example, if the system clock were 12:34:56.700, the cache would be purged no later than 12:34:57.000.
 	end := time.Unix(time.Now().Add(1*time.Second).Unix(), 0)
+	// GoBigSleepLint: crash_reporter keeps a 1-second-long cache of the consent status. We need to wait for it to refresh.
 	testing.Sleep(ctx, end.Sub(time.Now()))
 
 	// If a test wants consent to be turned off, make sure mock consent doesn't
 	// interfere.
-	if err := os.Remove(filepath.Join(crashTestInProgressDir, mockConsentFile)); err != nil && !os.IsNotExist(err) {
-		return errors.Wrap(err, "unable to remove mock consent file")
-	}
-	if err := os.Remove(filepath.Join(SystemCrashDir, mockConsentFile)); err != nil && !os.IsNotExist(err) {
+	if err := clearMockConsent(ctx, crashTestInProgressDir, rebootPersistDir); err != nil {
 		return errors.Wrap(err, "unable to remove mock consent file")
 	}
 
 	return nil
+}
+
+func setMockConsent(rebootTest bool, inProgDir, rebootPersistDir string) error {
+	mockConsentPath := filepath.Join(inProgDir, mockConsentFile)
+	if err := ioutil.WriteFile(mockConsentPath, nil, 0644); err != nil {
+		return errors.Wrapf(err, "failed writing mock consent file %s", mockConsentPath)
+	}
+	if rebootTest {
+		mockConsentPersistent := filepath.Join(rebootPersistDir, mockConsentFile)
+		if err := ioutil.WriteFile(mockConsentPersistent, []byte(rebootPersistenceCount), 0644); err != nil {
+			return errors.Wrapf(err, "failed writing mock consent file %s", mockConsentPersistent)
+		}
+	}
+	return nil
+}
+
+func clearMockConsent(ctx context.Context, inProgDir, rebootPersistDir string) error {
+	mockConsentPath := filepath.Join(inProgDir, mockConsentFile)
+	var firstErr error
+	if err := os.Remove(mockConsentPath); err != nil && !os.IsNotExist(err) {
+		testing.ContextLogf(ctx, "Error removing mock consent file %s: %v", mockConsentPath, err)
+		if firstErr == nil {
+			firstErr = errors.Wrap(err, "unable to remove mock consent file")
+		}
+	}
+	mockConsentPersistent := filepath.Join(rebootPersistDir, mockConsentFile)
+	if err := os.Remove(mockConsentPersistent); err != nil && !os.IsNotExist(err) {
+		testing.ContextLogf(ctx, "Error removing mock consent file %s: %v", mockConsentPersistent, err)
+		if firstErr == nil {
+			firstErr = errors.Wrap(err, "unable to remove mock consent file")
+		}
+	}
+	return firstErr
 }
 
 // ensureSoftwareDeps checks that the current test declares appropriate software
@@ -158,7 +372,10 @@ func SetConsent(ctx context.Context, cr *chrome.Chrome, consent bool) error {
 func ensureSoftwareDeps(ctx context.Context) error {
 	deps, ok := testing.ContextSoftwareDeps(ctx)
 	if !ok {
-		return errors.New("failed to extract software dependencies from context (using wrong context?)")
+		// This doesn't work in a fixture -- fixtures run before individual software deps for tests are determined.
+		// Just assume it's ok.
+		testing.ContextLog(ctx, "Failed to determine software deps. Maybe in a fixture?")
+		return nil
 	}
 
 	const exp = "metrics_consent"
@@ -508,18 +725,9 @@ func setUpCrashTest(ctx context.Context, p *setUpParams) (retErr error) {
 		}
 	}
 
-	// We must set mock consent _after_ stashing crashes, or we'll stash
-	// the mock consent for reboot tests.
 	if p.setMockConsent {
-		mockConsentPath := filepath.Join(p.inProgDir, mockConsentFile)
-		if err := ioutil.WriteFile(mockConsentPath, nil, 0644); err != nil {
-			return errors.Wrapf(err, "failed writing mock consent file %s", mockConsentPath)
-		}
-		if p.rebootTest {
-			mockConsentPersistent := filepath.Join(p.rebootPersistDir, mockConsentFile)
-			if err := ioutil.WriteFile(mockConsentPersistent, []byte(rebootPersistenceCount), 0644); err != nil {
-				return errors.Wrapf(err, "failed writing mock consent file %s", mockConsentPersistent)
-			}
+		if err := setMockConsent(p.rebootTest, p.inProgDir, p.rebootPersistDir); err != nil {
+			return errors.Wrap(err, "unable to set mock consent")
 		}
 	}
 
@@ -681,18 +889,10 @@ func tearDownCrashTest(ctx context.Context, p *tearDownParams) error {
 		}
 	}
 
-	mockConsentPath := filepath.Join(p.inProgDir, mockConsentFile)
-	if err := os.Remove(mockConsentPath); err != nil && !os.IsNotExist(err) {
-		testing.ContextLogf(ctx, "Error removing mock consent file %s: %v", mockConsentPath, err)
+	if err := clearMockConsent(ctx, p.inProgDir, p.rebootPersistDir); err != nil {
+		testing.ContextLog(ctx, "Error removing mock consent file: ", err)
 		if firstErr == nil {
-			firstErr = errors.Wrapf(err, "couldn't remove mock consent file %s", mockConsentPath)
-		}
-	}
-	mockConsentPersistent := filepath.Join(p.rebootPersistDir, mockConsentFile)
-	if err := os.Remove(mockConsentPersistent); err != nil && !os.IsNotExist(err) {
-		testing.ContextLogf(ctx, "Error removing persistent mock consent file %s: %v", mockConsentPersistent, err)
-		if firstErr == nil {
-			firstErr = errors.Wrapf(err, "couldn't remove persistent mock consent file %s", mockConsentPersistent)
+			firstErr = errors.Wrap(err, "couldn't remove mock consent file")
 		}
 	}
 

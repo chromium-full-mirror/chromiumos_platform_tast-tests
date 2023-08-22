@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast/core/ctxutil"
@@ -42,10 +41,11 @@ func init() {
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 			ExtraAttr:         []string{"informational"},
 			Val:               crash.RealConsent,
-			Fixture:           fixture.ChromeLoggedInVerboseConsentLogs,
+			Fixture:           crash.LoggedInRealConsent,
 		}, {
-			Name: "mock_consent",
-			Val:  crash.MockConsent,
+			Name:    "mock_consent",
+			Val:     crash.MockConsent,
+			Fixture: crash.MockConsentFixture,
 		}, {
 			Name:              "real_consent_per_user_on",
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
@@ -92,11 +92,7 @@ func KernelWarning(ctx context.Context, s *testing.State) {
 			s.Fatal("Setting up crash test failed: ", err)
 		}
 	} else {
-		opt := crash.WithMockConsent()
-		if consentType == crash.RealConsent {
-			opt = crash.WithConsent(s.FixtValue().(*chrome.Chrome))
-		}
-		if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes("kernel_warning"), opt); err != nil {
+		if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes("kernel_warning")); err != nil {
 			s.Fatal("SetUpCrashTest failed: ", err)
 		}
 	}

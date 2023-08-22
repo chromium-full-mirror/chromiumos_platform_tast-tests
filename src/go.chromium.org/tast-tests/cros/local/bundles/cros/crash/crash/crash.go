@@ -22,7 +22,6 @@ import (
 	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast/core/errors"
@@ -198,7 +197,7 @@ func waitForProcessEnd(ctx context.Context, name string) error {
 
 // RunCrasherProcess runs the crasher process.
 // Will wait up to 10 seconds for crash_reporter to finish.
-func RunCrasherProcess(ctx context.Context, cr *chrome.Chrome, opts CrasherOptions) (*CrasherResult, error) {
+func RunCrasherProcess(ctx context.Context, opts CrasherOptions) (*CrasherResult, error) {
 	if opts.CrasherPath != CrasherPath {
 		if err := testexec.CommandContext(ctx, "cp", "-a", CrasherPath, opts.CrasherPath).Run(); err != nil {
 			return nil, errors.Wrap(err, "failed to copy crasher")
@@ -303,8 +302,8 @@ func crashFilePrefix(crasherPath string) string {
 }
 
 // RunCrasherProcessAndAnalyze executes a crasher process and extracts result data from dumps and logs.
-func RunCrasherProcessAndAnalyze(ctx context.Context, cr *chrome.Chrome, opts CrasherOptions) (*CrasherResult, error) {
-	result, err := RunCrasherProcess(ctx, cr, opts)
+func RunCrasherProcessAndAnalyze(ctx context.Context, opts CrasherOptions) (*CrasherResult, error) {
+	result, err := RunCrasherProcess(ctx, opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to execute and capture result of crasher")
 	}
@@ -575,8 +574,8 @@ func checkSendResult(ctx context.Context, got []*crash.SendResult, co CrasherOpt
 }
 
 // CheckCrashingProcess runs crasher process and verifies that it's processed.
-func CheckCrashingProcess(ctx context.Context, cr *chrome.Chrome, opts CrasherOptions) error {
-	result, err := RunCrasherProcessAndAnalyze(ctx, cr, opts)
+func CheckCrashingProcess(ctx context.Context, opts CrasherOptions) error {
+	result, err := RunCrasherProcessAndAnalyze(ctx, opts)
 	if err != nil {
 		return errors.Wrap(err, "failed to run and analyze crasher")
 	}
@@ -610,12 +609,8 @@ func CheckCrashingProcess(ctx context.Context, cr *chrome.Chrome, opts CrasherOp
 }
 
 // RunCrashTest runs a crash test case after setting up crash reporter.
-func RunCrashTest(ctx context.Context, cr *chrome.Chrome, s *testing.State, testFunc func(context.Context, *chrome.Chrome, *testing.State), consentType crash.ConsentType) error {
-	opt := crash.WithMockConsent()
-	if consentType == crash.RealConsent {
-		opt = crash.WithConsent(cr)
-	}
-	if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes(crash.FilterInIgnoreAllCrashes), opt); err != nil {
+func RunCrashTest(ctx context.Context, s *testing.State, testFunc func(context.Context, *testing.State)) error {
+	if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes(crash.FilterInIgnoreAllCrashes)); err != nil {
 		s.Fatal("Couldn't set up crash test: ", err)
 	}
 	defer func() {
@@ -641,7 +636,7 @@ func RunCrashTest(ctx context.Context, cr *chrome.Chrome, s *testing.State, test
 		}
 	}
 	resetRateLimiting()
-	testFunc(ctx, cr, s)
+	testFunc(ctx, s)
 	return nil
 }
 

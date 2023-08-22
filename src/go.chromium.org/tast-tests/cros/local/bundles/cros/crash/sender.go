@@ -13,8 +13,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast/core/testing"
 )
@@ -38,28 +36,20 @@ func init() {
 			Name:              "real_consent",
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
-			Val:               crash.RealConsent,
-			Fixture:           fixture.ChromeLoggedInVerboseConsentLogs,
+			Fixture:           crash.LoggedInRealConsent,
 		}, {
 			Name:    "mock_consent_fieldtrial_testing_config_off",
-			Fixture: fixture.ChromeLoggedInWithFieldTrialConfigDisable,
-			Val:     crash.MockConsent,
+			Fixture: crash.MockConsentFieldTrialConfigDisable,
 		}, {
 			Name:      "mock_consent_fieldtrial_testing_config_on",
-			Fixture:   fixture.ChromeLoggedInWithFieldTrialConfigEnable,
-			Val:       crash.MockConsent,
+			Fixture:   crash.MockConsentFieldTrialConfigEnable,
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
 
 func Sender(ctx context.Context, s *testing.State) {
-	opt := crash.WithMockConsent()
-	useConsent := s.Param().(crash.ConsentType)
-	if useConsent == crash.RealConsent {
-		opt = crash.WithConsent(s.FixtValue().(*chrome.Chrome))
-	}
-	if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes(crash.FilterInIgnoreAllCrashes), opt); err != nil {
+	if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes(crash.FilterInIgnoreAllCrashes)); err != nil {
 		s.Fatal("Setup failed: ", err)
 	}
 	defer crash.TearDownCrashTest(ctx)
