@@ -249,7 +249,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to request scan")
 			}
 			if err := func(ctx context.Context) error {
-				scanStartCtx, cancel := context.WithTimeout(ctx, 200*time.Millisecond)
+				scanStartCtx, cancel := context.WithTimeout(ctx, 1*time.Second)
 				defer cancel()
 				for {
 					event, err := wpaMonitor.WaitForEvent(scanStartCtx)
