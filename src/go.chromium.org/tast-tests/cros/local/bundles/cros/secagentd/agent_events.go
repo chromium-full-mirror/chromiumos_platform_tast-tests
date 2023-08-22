@@ -18,6 +18,7 @@ import (
 
 	rep "chromiumos/reporting"
 	xdr "chromiumos/xdr/secagentd"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdcommon"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentddbusmonitor"
@@ -183,7 +184,7 @@ func fillTpmInformation(ctx context.Context, tcb *xdr.TcbAttributes) error {
 	return nil
 }
 
-// getTpmValue finds the corresponding value for different tpm fields
+// getTpmValue finds the corresponding value for different tpm fields.
 func getTpmValue(key, tpmInfo string, hexString bool, tpmRegexMap map[string]*regexp.Regexp) (string, error) {
 	re := tpmRegexMap[key]
 	matches := re.FindStringSubmatch(tpmInfo)
@@ -222,71 +223,53 @@ func AgentEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
 
-	stop, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid)
+	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 30*time.Second)
 	if err != nil {
 		s.Fatal("Failed to setup dbus monitoring: ", err)
 	}
+	defer cancel()
 
 	expAgent := xdr.AgentStartEvent{}
 	if err = makeExpectedAgent(ctx, &expAgent); err != nil {
 		s.Fatal("Failed to make expected AgentEvent proto: ", err)
 	}
 
-	// GoBigSleepLint: Small grace period for the events to be processed and
-	// emitted by secagentd.
-	// TODO(b/278252387): Convert this to poll when tast's
-	// dbusutil.DbusEventMonitor supports it.
-	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
-		s.Fatal("Failed to sleep: ", err)
+	event, ok := <-ew.Events()
+	if !ok {
+		s.Fatal("Timed out waiting for expected events")
+	}
+	arg, ok := event.Arguments[0].([]byte)
+	if !ok {
+		s.Fatal("Failed to cast arguments")
+	}
+	enq := &rep.EnqueueRecordRequest{}
+	if err := proto.Unmarshal(arg, enq); err != nil {
+		s.Fatal("Failed to unmarshal an EnqueueRecordRequest: ", err)
+	}
+	if enq.GetRecord().GetDestination() != rep.Destination_CROS_SECURITY_AGENT {
+		s.Fatalf("Wrong destination: got %s, want CROS_SECURITY_AGENT", enq.GetRecord().GetDestination())
+	}
+	pe := &xdr.XdrAgentEvent{}
+	if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
+		s.Fatal("Failed to unmarshal data for a CROS_SECURITY_AGENT record: ", err)
+	}
+	if len(pe.GetBatchedEvents()) != 1 {
+		s.Fatalf("Incorrect number of events: got %d, want 1", len(pe.GetBatchedEvents()))
 	}
 
-	// Collect the log of EnqueueRecord dbus calls to Missived.
-	calledMethods, err := stop()
-	if err != nil {
-		s.Fatal("Failed to capture EnqueueRecord dbus calls to missived: ", err)
-	}
-	s.Logf("secagentd enqueued %d events", len(calledMethods))
-	if len(calledMethods) == 0 {
-		s.Fatal("No EnqueueRecords found")
+	batched := pe.GetBatchedEvents()[0]
+	if err := secagentdcommon.CheckCommon(batched.GetCommon()); err != nil {
+		s.Error("Invalid common field: ", err)
 	}
 
-	for _, method := range calledMethods {
-		if len(method.Arguments) == 0 {
-			s.Fatal("Method has no arguments")
-		}
-		arg, ok := method.Arguments[0].([]byte)
-		if !ok {
-			s.Fatal("Failed to cast arguments")
-		}
-		enq := &rep.EnqueueRecordRequest{}
-		if err := proto.Unmarshal(arg, enq); err != nil {
-			s.Fatal("Failed to unmarshal an EnqueueRecordRequest")
-		}
-		if enq.GetRecord().GetDestination() != rep.Destination_CROS_SECURITY_AGENT {
-			s.Fatal("Destination NOT CROS_SECURITY_AGENT")
-		}
-		pe := &xdr.XdrAgentEvent{}
-		if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
-			s.Fatal("Failed to unmarshal data for a CROS_SECURITY_AGENT record")
-		}
-		if len(pe.GetBatchedEvents()) != 1 {
-			s.Fatalf("Incorrect number of events. Expected: 1, Actual: %d", len(pe.GetBatchedEvents()))
-		}
-
-		batched := pe.GetBatchedEvents()[0]
-		if err := secagentdcommon.CheckCommon(batched.GetCommon()); err != nil {
-			s.Error("Invalid common field: ", err)
-		}
-
-		agent := batched.GetAgentStart()
-		//TODO(b/254534567) Source secureboot for expected AgentStart. Copy for now.
-		if agent.Tcb.FirmwareSecureBoot != nil {
-			expAgent.Tcb.FirmwareSecureBoot = agent.Tcb.GetFirmwareSecureBoot().Enum()
-		}
-		if !proto.Equal(&expAgent, agent) {
-			s.Log("Actual AgentStart: ", agent.String())
-			s.Log("Expected AgentStart: ", expAgent.String())
-			s.Error("Agent Events FAILED to match")
-		}
+	agent := batched.GetAgentStart()
+	//TODO(b/254534567) Source secureboot for expected AgentStart. Copy for now.
+	if agent.Tcb.FirmwareSecureBoot != nil {
+		expAgent.Tcb.FirmwareSecureBoot = agent.Tcb.GetFirmwareSecureBoot().Enum()
+	}
+	if !proto.Equal(&expAgent, agent) {
+		s.Log("Actual AgentStart: ", agent.String())
+		s.Log("Expected AgentStart: ", expAgent.String())
+		s.Error("Agent Events FAILED to match")
 	}
 }

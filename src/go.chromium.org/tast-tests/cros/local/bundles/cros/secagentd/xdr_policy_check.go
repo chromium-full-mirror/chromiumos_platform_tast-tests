@@ -55,7 +55,7 @@ func init() {
 	})
 }
 
-func setXdrPolicy(ctx context.Context, s *testing.State, v bool, t string) uint64 {
+func setXdrPolicy(ctx context.Context, s *testing.State, policyEnabled bool, timer string) uint64 {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
@@ -63,7 +63,7 @@ func setXdrPolicy(ctx context.Context, s *testing.State, v bool, t string) uint6
 		s.Fatal("Failed to clean up before updating policy: ", err)
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{&policy.DeviceReportXDREvents{Val: v}})
+		return policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{&policy.DeviceReportXDREvents{Val: policyEnabled}})
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to update policies. Make sure Chrome has API keys and apply go/pavolshack if running on a VM: ", err)
 	}
@@ -74,8 +74,8 @@ func setXdrPolicy(ctx context.Context, s *testing.State, v bool, t string) uint6
 	// some internal poll delays to emit more events sooner.
 	agentPid, err := secagentdupstart.RestartSecagentd(ctx,
 		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true"),
-		upstart.WithArg("SET_HEARTBEAT_PERIOD_S_FOR_TESTING", t),
-		upstart.WithArg("PLUGIN_BATCH_INTERVAL_S_FOR_TESTING", t))
+		upstart.WithArg("SET_HEARTBEAT_PERIOD_S_FOR_TESTING", timer),
+		upstart.WithArg("PLUGIN_BATCH_INTERVAL_S_FOR_TESTING", timer))
 	if err != nil {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
@@ -99,43 +99,36 @@ func XdrPolicyCheck(ctx context.Context, s *testing.State) {
 		expectEnqueue bool
 	}{
 		{
-			name:          "xdr_policy_enabled",
-			policy:        true,
-			expectEnqueue: true,
+			name:   "xdr_policy_enabled",
+			policy: true,
 		},
 		{
-			name:          "xdr_policy_disabled",
-			policy:        false,
-			expectEnqueue: false,
+			name:   "xdr_policy_disabled",
+			policy: false,
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
 			const batchIntervalS = 1
 			agentPid := setXdrPolicy(ctx, s, param.policy, strconv.Itoa(batchIntervalS))
-			stop, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid)
+
+			ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 30*time.Second)
 			if err != nil {
 				s.Fatal("Failed to setup dbus monitoring: ", err)
 			}
+			defer cancel()
 
 			// Start an arbitrary process that exits instantaneously. This will
 			// cause Process events to be emitted if permitted by policy.
 			cmd := testexec.CommandContext(ctx, "/bin/echo")
 			cmd.Wait()
-			// GoBigSleepLint: Small grace period for the events to be
-			// processed and emitted by secagentd.
-			// TODO(b/278252387): Convert this to poll when tast's
-			// dbusutil.DbusEventMonitor supports it.
-			testing.Sleep(ctx, 2*batchIntervalS*time.Second)
 
-			calledMethods, err := stop()
-			if err != nil {
-				s.Fatal("Failed to capture EnqueueRecord dbus calls to missive: ", err)
-			}
-			s.Logf("secagentd enqueued %d events", len(calledMethods))
-			if param.expectEnqueue && len(calledMethods) == 0 {
-				s.Fatal("secagentd unexpectedly failed to enqueue any events to missive")
-			} else if !param.expectEnqueue && len(calledMethods) != 0 {
-				s.Fatalf("secagentd unexpectedly enqueued %d events to missive", len(calledMethods))
+			_, ok := <-ew.Events()
+			if ok != param.policy {
+				if param.policy {
+					s.Fatal("Timed out waiting for expected events")
+				} else {
+					s.Fatal("secagentd unexpectedly enqueued events to missive")
+				}
 			}
 		})
 	}

@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdupstart"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -152,10 +153,11 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
 
-	stop, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid)
+	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 30*time.Second)
 	if err != nil {
 		s.Fatal("Failed to setup dbus monitoring: ", err)
 	}
+	defer cancel()
 
 	if err := secagentdprocfsscraper.WaitForBpfMaps(ctx, agentPid); err != nil {
 		s.Fatal("Failed to verify secagentd is ready to test: ", err)
@@ -181,104 +183,64 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 	// "signal: Killed"
 	cmd.Wait()
 
-	// Wait for the current batch to be flushed.
-	// GoBigSleepLint: Using poll here doesn't make sense. There is no particular
-	// condition we can poll for. This is simply giving secagentd ample time to
-	// process and post events to dbus and is an educated guess.
-	// TODO(b/278252387): Convert this to poll when tast's
-	// dbusutil.DbusEventMonitor supports it.
-	if err := testing.Sleep(ctx, 2*batchIntervalS*time.Second); err != nil {
-		s.Fatal("Failed to sleep: ", err)
-	}
-
-	// Collect the log of EnqueueRecord dbus calls to Missived.
-	calledMethods, err := stop()
-	if err != nil {
-		s.Fatal("Failed to capture EnqueueRecord dbus calls to missived: ", err)
-	}
-	s.Logf("secagentd enqueued %d events", len(calledMethods))
-
 	execFound, terminateFound := false, false
-	for _, method := range calledMethods {
-		if len(method.Arguments) == 0 {
-			continue
-		}
-		arg, ok := method.Arguments[0].([]byte)
-		if !ok {
-			continue
-		}
-		enq := &rep.EnqueueRecordRequest{}
-		if err := proto.Unmarshal(arg, enq); err != nil {
-			s.Fatal("Failed to unmarshal an EnqueueRecordRequest")
-		}
-		if enq.GetRecord().GetDestination() != rep.Destination_CROS_SECURITY_PROCESS {
-			continue
-		}
-		pe := &xdr.XdrProcessEvent{}
-		if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
-			s.Fatal("Failed to unmarshal data for a CROS_SECURITY_PROCESS record")
-		}
-		s.Log("Snooped XdrProcessEvent: ", pe.String())
 
-		var bExecs []*xdr.ProcessExecEvent
-		var bTerminates []*xdr.ProcessTerminateEvent
-		for _, v := range pe.GetBatchedEvents() {
-			if v.GetProcessExec() != nil {
-				bExecs = append(bExecs, v.GetProcessExec())
-			}
-			if v.GetProcessTerminate() != nil {
-				bTerminates = append(bTerminates, v.GetProcessTerminate())
-			}
+	for {
+		bExecs, bTerminates := checkProcessEventWatcher(s, ew)
 
-			if err := secagentdcommon.CheckCommon(v.GetCommon()); err != nil {
-				s.Error("Invalid common field: ", err)
-			}
-		}
-
-		for _, exec := range bExecs {
-			if exec != nil && exec.GetSpawnProcess() != nil && exec.GetSpawnProcess().GetCanonicalPid() == expPid {
-				execFound = true
-				// Copy the random UUIDs so that proto.Equal() is happy.
-				copyUUID(exec.GetSpawnProcess(), expExec.SpawnProcess)
-				copyUUID(exec.GetProcess(), expExec.Process)
-				copyUUID(exec.GetParentProcess(), expExec.ParentProcess)
-				// Copy over the terminate timestamp if present.
-				if exec.TerminateTimestampUs != nil {
-					if !param.expCoalescedTerm {
-						s.Errorf("Unexpected terminate timestamp found in ProcessExec event for pid %d", expPid)
+		if bExecs != nil {
+			for _, exec := range bExecs {
+				if exec != nil && exec.GetSpawnProcess() != nil && exec.GetSpawnProcess().GetCanonicalPid() == expPid {
+					execFound = true
+					// Copy the random UUIDs so that proto.Equal() is happy.
+					copyUUID(exec.GetSpawnProcess(), expExec.SpawnProcess)
+					copyUUID(exec.GetProcess(), expExec.Process)
+					copyUUID(exec.GetParentProcess(), expExec.ParentProcess)
+					// Copy over the terminate timestamp if present.
+					if exec.TerminateTimestampUs != nil {
+						if !param.expCoalescedTerm {
+							s.Errorf("Unexpected terminate timestamp found in ProcessExec event for pid %d", expPid)
+						}
+						expExec.TerminateTimestampUs = proto.Int64(exec.GetTerminateTimestampUs())
 					}
-					expExec.TerminateTimestampUs = proto.Int64(exec.GetTerminateTimestampUs())
-				}
-				// The spawned process is guaranteed to be seen for the first
-				// time. The rest of the hierarchy depends on tast
-				// implementation details so we skip checking those.
-				expExec.GetSpawnProcess().MetaFirstAppearance = proto.Bool(true)
-				expExec.GetProcess().MetaFirstAppearance = exec.GetProcess().MetaFirstAppearance
-				expExec.GetParentProcess().MetaFirstAppearance = exec.GetParentProcess().MetaFirstAppearance
-				if !proto.Equal(&expExec, exec) {
-					s.Log("Actual ProcessExec: ", exec.String())
-					s.Log("Expected ProcessExec: ", expExec.String())
-					s.Errorf("Found a ProcessExec event for pid %d but its contents failed to match", expPid)
+					// The spawned process is guaranteed to be seen for the first
+					// time. The rest of the hierarchy depends on tast
+					// implementation details so we skip checking those.
+					expExec.GetSpawnProcess().MetaFirstAppearance = proto.Bool(true)
+					expExec.GetProcess().MetaFirstAppearance = exec.GetProcess().MetaFirstAppearance
+					expExec.GetParentProcess().MetaFirstAppearance = exec.GetParentProcess().MetaFirstAppearance
+					if !proto.Equal(&expExec, exec) {
+						s.Log("Actual ProcessExec: ", exec.String())
+						s.Log("Expected ProcessExec: ", expExec.String())
+						s.Errorf("Found a ProcessExec event for pid %d but its contents failed to match", expPid)
+					}
 				}
 			}
 		}
-		for _, terminate := range bTerminates {
-			if terminate != nil && terminate.GetProcess() != nil && terminate.GetProcess().GetCanonicalPid() == expPid {
-				terminateFound = true
-				copyUUID(terminate.GetProcess(), expTerm.Process)
-				copyUUID(terminate.GetParentProcess(), expTerm.ParentProcess)
-				// We definitely saw the exec events already so this isn't the
-				// first appearance of either process.
-				expTerm.GetProcess().MetaFirstAppearance = proto.Bool(false)
-				expTerm.GetParentProcess().MetaFirstAppearance = proto.Bool(false)
-				if !proto.Equal(&expTerm, terminate) {
-					s.Log("Actual ProcessTerminate: ", terminate.String())
-					s.Log("Expected ProcessTerminate: ", expTerm.String())
-					s.Errorf("Found a ProcessTerminate event for pid %d but its contents failed to match", expPid)
+
+		if bTerminates != nil {
+			for _, terminate := range bTerminates {
+				if terminate != nil && terminate.GetProcess() != nil && terminate.GetProcess().GetCanonicalPid() == expPid {
+					terminateFound = true
+					copyUUID(terminate.GetProcess(), expTerm.Process)
+					copyUUID(terminate.GetParentProcess(), expTerm.ParentProcess)
+					// We definitely saw the exec events already so this isn't the
+					// first appearance of either process.
+					expTerm.GetProcess().MetaFirstAppearance = proto.Bool(false)
+					expTerm.GetParentProcess().MetaFirstAppearance = proto.Bool(false)
+					if !proto.Equal(&expTerm, terminate) {
+						s.Log("Actual ProcessTerminate: ", terminate.String())
+						s.Log("Expected ProcessTerminate: ", expTerm.String())
+						s.Errorf("Found a ProcessTerminate event for pid %d but its contents failed to match", expPid)
+					}
 				}
 			}
+		}
+		if execFound && (param.expCoalescedTerm || terminateFound) {
+			break
 		}
 	}
+
 	if !execFound {
 		s.Errorf("Failed to find a matching ProcessExec event for pid %d", expPid)
 	}
@@ -290,6 +252,49 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 		// side of not flaking the test.
 		s.Logf("Found uncoalesced ProcessExit event for pid %d", expPid)
 	}
+}
+
+func checkProcessEventWatcher(s *testing.State, ew *dbusutil.EventWatcher) ([]*xdr.ProcessExecEvent, []*xdr.ProcessTerminateEvent) {
+	event, ok := <-ew.Events()
+	if !ok {
+		s.Fatal("Timed out waiting for expected events")
+	}
+	if len(event.Arguments) == 0 {
+		return nil, nil
+	}
+	arg, ok := event.Arguments[0].([]byte)
+	if !ok {
+		return nil, nil
+	}
+	enq := &rep.EnqueueRecordRequest{}
+	if err := proto.Unmarshal(arg, enq); err != nil {
+		s.Fatal("Failed to unmarshal an EnqueueRecordRequest: ", err)
+	}
+
+	if enq.GetRecord().GetDestination() != rep.Destination_CROS_SECURITY_PROCESS {
+		return nil, nil
+	}
+	pe := &xdr.XdrProcessEvent{}
+	if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
+		s.Fatal("Failed to unmarshal data for a CROS_SECURITY_PROCESS record: ", err)
+	}
+
+	var bExecs []*xdr.ProcessExecEvent
+	var bTerminates []*xdr.ProcessTerminateEvent
+	for _, v := range pe.GetBatchedEvents() {
+		if v.GetProcessExec() != nil {
+			bExecs = append(bExecs, v.GetProcessExec())
+		}
+		if v.GetProcessTerminate() != nil {
+			bTerminates = append(bTerminates, v.GetProcessTerminate())
+		}
+
+		if err := secagentdcommon.CheckCommon(v.GetCommon()); err != nil {
+			s.Error("Invalid common field: ", err)
+		}
+	}
+
+	return bExecs, bTerminates
 }
 
 // ProcessEvents runs a toy program, scrapes expected process and ancestral
