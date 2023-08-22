@@ -255,9 +255,6 @@ func (t *TestBridge) AppWindow(ctx context.Context) (*AppWindow, error) {
 // TearDown tears down the connection of test bridge.
 func (t *TestBridge) TearDown(ctx context.Context) error {
 	if t.bridge != nil {
-		if err := t.bridge.Call(ctx, nil, `function() { this.close(); }`); err != nil {
-			testing.ContextLog(ctx, "Failed to close worker: ", err)
-		}
 		if err := t.bridge.Release(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to release test bridge object: ", err)
 		}
