@@ -40,7 +40,8 @@ const (
 	newMeetingURL = "http://meet.google.com/new"
 	homePageURL   = "https://meet.google.com/"
 
-	appName = "Meet"
+	appName             = "Meet"
+	captionsButtonRegex = "Turn (on|off) captions.*"
 )
 
 var (
@@ -354,6 +355,35 @@ func (gm *GoogleMeet) SwitchMicrophone(expectedOn bool) action.Action {
 			return prompts.ActionAndGrantPermissionIfRequired(
 				gm.tconn, gm.conn, switchAction, webutil.PermissionMicrophone)(ctx)
 		}
+
+		return switchAction(ctx)
+	}
+}
+
+// SwitchCaptions turns on/off live captioning on the main screen.
+// It assumes the captions are turned off if not available.
+func (gm *GoogleMeet) SwitchCaptions(expectedOn bool) action.Action {
+	captionsButton := nodewith.NameRegex(regexp.MustCompile(captionsButtonRegex))
+	actionDesc := "switch off captions"
+	if expectedOn {
+		actionDesc = "switch on captions"
+	}
+
+	return func(ctx context.Context) error {
+		info, err := gm.ui.WithTimeout(mediumUITimeout).Info(ctx, captionsButton)
+		if err != nil {
+			return errors.Wrap(err, "failed to wait for the meet captions switch button to show")
+		}
+
+		if (strings.HasPrefix(info.Name, "Turn on") && !expectedOn) || (strings.HasPrefix(info.Name, "Turn off") && expectedOn) {
+			return nil
+		}
+
+		captionsButton = nodewith.Name(info.Name)
+		switchAction := uiauto.NamedAction(actionDesc,
+			gm.ui.WithTimeout(mediumUITimeout).DoDefaultUntil(
+				captionsButton,
+				gm.ui.WaitUntilGone(captionsButton)))
 
 		return switchAction(ctx)
 	}

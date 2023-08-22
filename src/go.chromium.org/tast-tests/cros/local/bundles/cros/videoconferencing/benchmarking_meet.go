@@ -27,12 +27,14 @@ import (
 )
 
 type meetParams struct {
-	appBlur         bool
-	appRelight      bool
-	platformBlur    bool
-	platformRelight bool
-	modelType       effects.ModelType
-	botCount        int
+	appBlur           bool
+	appLiveCaptions   bool
+	appRelight        bool
+	platformBlur      bool
+	platformRelight   bool
+	microphoneEnabled bool
+	modelType         effects.ModelType
+	botCount          int
 }
 
 const botDuration = 7 * time.Minute
@@ -236,6 +238,13 @@ func init() {
 					botCount:        9,
 				},
 			},
+			{
+				Name: "app_live_captions_720p",
+				Val: meetParams{
+					appLiveCaptions:   true,
+					microphoneEnabled: true,
+				},
+			},
 		},
 	})
 }
@@ -243,7 +252,7 @@ func init() {
 func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 	// Shorten context to allow for cleanup. Reserve one minute in case of power
 	// test.
-	cleanupCtx := ctx
+	closeCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
@@ -268,10 +277,10 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 
 	fixt := s.FixtValue().(fixture.BenchmarkSetUpFixtureData)
 	cr := fixt.Chrome
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	r := power.NewRecorder(ctx, metricInterval, s.OutDir(), s.TestName())
-	defer r.Close(cleanupCtx)
+	defer r.Close(closeCtx)
 
 	// Record Memory usage.
 	p := perf.NewValues()
@@ -290,13 +299,11 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Opening Meet")
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.NewTabURL)
+	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
+	defer cleanup(closeCtx)
 
 	// Create a new meeting with bots.
 	var gm *googlemeet.GoogleMeet
@@ -342,12 +349,13 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	defer gm.Close(cleanupCtx)
+	defer gm.Close(closeCtx)
 
 	// Configure Meeting.
 	if err := uiauto.Combine("Configure Google Meet",
 		gm.EnterFullScreen,
-		gm.MuteIfMicAvailable,
+		gm.SwitchMicrophone(param.microphoneEnabled),
+		gm.SwitchCaptions(param.appLiveCaptions),
 		gm.ChangeSettings(
 			gm.SetLeaveEmptyCalls(false),
 			gm.SetAdjustVideoLighting(param.appRelight),
