@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/diskstats"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/perfboot"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
@@ -31,6 +32,7 @@ type bootMetrics struct {
 	appShownDuration      time.Duration
 	enabledScreenDuration time.Duration
 	appKills              *arc.AppKills
+	diskStats             diskstats.DiskStatMap
 }
 
 func init() {
@@ -103,6 +105,7 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 		if bootMetrics.appKills != nil {
 			bootMetrics.appKills.AppendPerfMetrics(perfValues, "")
 		}
+		bootMetrics.diskStats.AppendPerfMetrics(perfValues)
 	}
 
 	if err := perfValues.Save(s.OutDir()); err != nil {
@@ -210,6 +213,13 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 
 	if err := optin.WaitForPlayStoreShown(ctx, tconn, 2*time.Minute); err != nil {
 		return &result, errors.Wrap(err, "failed to wait Play Store shown")
+	}
+
+	// Collect disk stats immediately after Play Store is shown to reduce the
+	// impact of further disk access.
+	result.diskStats, err = diskstats.CollectDiskStats(ctx)
+	if err != nil {
+		return &result, errors.Wrap(err, "failed to read disk stats")
 	}
 
 	delay, err := readFirstAppLaunchHistogram(ctx, tconn, "Arc.FirstAppLaunchDelay.TimeDelta")

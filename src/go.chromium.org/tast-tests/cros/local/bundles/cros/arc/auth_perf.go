@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/diskstats"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -183,6 +184,7 @@ type measuredValues struct {
 	bootTime           float64
 	energyUsage        *power.RAPLValues
 	appKills           *arc.AppKills
+	diskStats          diskstats.DiskStatMap
 }
 
 // createChrome creates Chrome session used to perform ARC opt-ins. Normally it is created only
@@ -276,6 +278,7 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 	var bootTimes []float64
 	var energyUsage []*power.RAPLValues
 	var appKills []*arc.AppKills
+	var diskStats []diskstats.DiskStatMap
 
 	for len(playStoreShownTimes) < successBootCount {
 		s.Logf("Running ARC opt-in iteration #%d out of %d",
@@ -324,6 +327,7 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 		if v.energyUsage != nil {
 			energyUsage = append(energyUsage, v.energyUsage)
 		}
+		diskStats = append(diskStats, v.diskStats)
 	}
 
 	perfValues := perf.NewValues()
@@ -388,6 +392,10 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 
 	for _, appKill := range appKills {
 		appKill.AppendPerfMetrics(perfValues, "")
+	}
+
+	for _, stats := range diskStats {
+		stats.AppendPerfMetrics(perfValues)
 	}
 
 	// Outputs comma separated results to the log.
@@ -479,6 +487,12 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 	}
 
 	v.playStoreShownTime = time.Now().Sub(startTime).Seconds() * 1000
+
+	// Collect disk stats immediately after Play Store is shown to reduce the
+	// impact of further disk access.
+	if v.diskStats, err = diskstats.CollectDiskStats(ctx); err != nil {
+		return v, err
+	}
 
 	// energyBefore could be nil (not considered an error) on non-Intel CPUs.
 	if energyBefore != nil {
