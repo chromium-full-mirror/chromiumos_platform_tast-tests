@@ -2406,6 +2406,18 @@ func DefaultOpenNetworkAPOptions() []hostapd.Option {
 	}
 }
 
+// DefaultWPA3NetworkAPOptions returns the Options for an common 802.11n WPA3 wifi.
+// The function is useful to allow common logic shared between the default setting
+// and customized setting.
+func DefaultWPA3NetworkAPOptions() []hostapd.Option {
+	return []hostapd.Option{
+		hostapd.Mode(hostapd.Mode80211nPure),
+		hostapd.Channel(48),
+		hostapd.HTCaps(hostapd.HTCapHT20),
+		hostapd.PMF(hostapd.PMFOptional),
+	}
+}
+
 // DefaultOpenNetworkAP configures the router to provide an 802.11n open wifi.
 func (tf *TestFixture) DefaultOpenNetworkAP(ctx context.Context) (*APIface, error) {
 	return tf.ConfigureAP(ctx, DefaultOpenNetworkAPOptions(), nil)

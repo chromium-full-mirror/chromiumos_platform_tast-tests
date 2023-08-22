@@ -6,20 +6,25 @@ package wifi
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
+	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -27,7 +32,7 @@ import (
 // which performs the following steps, in order:
 //
 //  1. Login as the specified user.
-//  2. Join the networks.
+//  2. Join the networks (in order).
 //  3. Perform the specified verification steps.
 type shareNetworkTestScenario struct {
 	loginAs        shareNetworkTestUser
@@ -56,6 +61,8 @@ type shareNetworkTestNetworkConfigs struct {
 	sharedWithOtherUser bool
 }
 
+const shareNetworkTestNetworkPsk = "chromeos"
+
 var (
 	openNetwork = &shareNetworkTestNetwork{
 		configs: &shareNetworkTestNetworkConfigs{
@@ -66,6 +73,32 @@ var (
 		joinRequest: &wifi.JoinWifiRequest{
 			Security:            &wifi.JoinWifiRequest_None{},
 			ShareWithOtherUsers: wifi.JoinWifiRequest_Default,
+		},
+	}
+
+	secureNetwork = &shareNetworkTestNetwork{
+		configs: &shareNetworkTestNetworkConfigs{
+			ssidPrefix:          "Test_WPA3_network_1_",
+			securityConfig:      wpa.NewConfigFactory(shareNetworkTestNetworkPsk, wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+			options:             wificell.DefaultWPA3NetworkAPOptions(),
+			sharedWithOtherUser: false,
+		},
+		joinRequest: &wifi.JoinWifiRequest{
+			Security:            &wifi.JoinWifiRequest_Psk{Psk: shareNetworkTestNetworkPsk},
+			ShareWithOtherUsers: wifi.JoinWifiRequest_TurnOff,
+		},
+	}
+
+	secureNetwork2 = &shareNetworkTestNetwork{
+		configs: &shareNetworkTestNetworkConfigs{
+			ssidPrefix:          "Test_WPA3_network_2_",
+			securityConfig:      wpa.NewConfigFactory(shareNetworkTestNetworkPsk, wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+			options:             wificell.DefaultWPA3NetworkAPOptions(),
+			sharedWithOtherUser: false,
+		},
+		joinRequest: &wifi.JoinWifiRequest{
+			Security:            &wifi.JoinWifiRequest_Psk{Psk: shareNetworkTestNetworkPsk},
+			ShareWithOtherUsers: wifi.JoinWifiRequest_TurnOff,
 		},
 	}
 )
@@ -91,6 +124,7 @@ func init() {
 			"tast.cros.browser.ChromeService",
 			"tast.cros.wifi.WifiService",
 			"tast.cros.chrome.uiauto.quicksettings.QuickSettingsService",
+			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",
 			"tast.cros.ui.AutomationService",
 			wifiutil.FaillogServiceName,
 		},
@@ -100,30 +134,50 @@ func init() {
 		Params: []testing.Param{
 			{
 				Val: []*shareNetworkTestScenario{
-					// Login as device owner, join an open network and then ensure the network is connected.
+					// Login as device owner, join 2 different networks (one shared and one non-shared) and then ensure the shared network is connected.
 					{
 						loginAs: deviceOwner,
 						networksToJoin: []*shareNetworkTestNetwork{
+							secureNetwork,
 							openNetwork,
 						},
 						verifications: []func(*rpc.Client) action.Action{
 							openNetwork.checkConnected,
+							openNetwork.forgetButtonAvailable, // Any user should be able to forget a shared network.
 						},
 					},
-					// Verify that the network is still connected and also shared with secondary user.
+					// Login as another user and verify the connected shared network from last user session is still connected and shared with this user.
 					{
 						loginAs: normalUser,
 						verifications: []func(*rpc.Client) action.Action{
 							openNetwork.checkConnected,
 							openNetwork.checkKnownNetwork,
+							openNetwork.forgetButtonAvailable, // Any user should be able to forget a shared network.
+							secureNetwork.isNotKnownNetwork,
 						},
 					},
-					// Verify that the network is still connected and also shared with guest user.
+					// Further add a non-shared network for later use.
+					{
+						loginAs: normalUser,
+						networksToJoin: []*shareNetworkTestNetwork{
+							secureNetwork2,
+						},
+					},
+					// Verify that the shared network is shared with guest user and non-shared networks are not shared with guest user.
 					{
 						loginAs: guest,
 						verifications: []func(*rpc.Client) action.Action{
-							openNetwork.checkConnected,
 							openNetwork.checkKnownNetwork,
+							openNetwork.forgetButtonAvailable, // Any user should be able to forget a shared network.
+							secureNetwork.isNotKnownNetwork,
+							secureNetwork2.isNotKnownNetwork,
+						},
+					},
+					// Verify the non-shared added by other user is indeed not shared with device owner.
+					{
+						loginAs: deviceOwner,
+						verifications: []func(*rpc.Client) action.Action{
+							secureNetwork2.isNotKnownNetwork,
 						},
 					},
 				},
@@ -179,7 +233,12 @@ func ShareNetwork(ctx context.Context, s *testing.State) {
 	defer tf.DeconfigAllAPs(cleanupCtx)
 
 	for _, test := range testScenario {
+		user := test.loginAs
 		var actions []action.Action
+
+		// Verify that shill profile is loaded correctly for each user session.
+		actions = append(actions, correctShillProfileIsLoaded(rpcClient, s.DUT()))
+
 		if len(test.networksToJoin) > 0 {
 			actions = append(actions, joinNetworks(rpcClient, test.networksToJoin))
 		}
@@ -187,7 +246,6 @@ func ShareNetwork(ctx context.Context, s *testing.State) {
 			actions = append(actions, verification(rpcClient))
 		}
 
-		user := test.loginAs
 		if err := loginAndPerformActions(ctx, rpcClient, loginReqs[user], actions...); err != nil {
 			s.Fatal("Failed to perform test scenario: ", err)
 		}
@@ -267,6 +325,79 @@ func (network *shareNetworkTestNetwork) checkKnownNetwork(rpcClient *rpc.Client)
 			Control: wifi.KnownNetworksControlsRequest_WaitUntilExist,
 		}); err != nil {
 			return errors.Wrap(err, "failed to verify the network is listed in known networks")
+		}
+		return nil
+	}
+}
+
+// isNotKnownNetwork returns an action that verifies a network is not a known network by check if the network is not listed in the known network list.
+// The returned action will return an error if the network is known, and otherwise will return |nil|.
+func (network *shareNetworkTestNetwork) isNotKnownNetwork(rpcClient *rpc.Client) action.Action {
+	wifiSvc := wifi.NewWifiServiceClient(rpcClient.Conn)
+	return func(ctx context.Context) error {
+		if _, err := wifiSvc.KnownNetworksControls(ctx, &wifi.KnownNetworksControlsRequest{
+			Ssids:   []string{network.Config().SSID},
+			Control: wifi.KnownNetworksControlsRequest_WaitUntilGone,
+		}); err != nil {
+			return errors.Wrap(err, "failed to verify the network is listed in known networks")
+		}
+		return nil
+	}
+}
+
+// forgetButtonAvailable checks that the "Forget" button can be found on the
+// details page of |network.Config().SSID| instead of just checking that the
+// network is known since we want to check that a user is actually able to
+// forget known networks, and not just that users can remember networks.
+func (network *shareNetworkTestNetwork) forgetButtonAvailable(rpcClient *rpc.Client) action.Action {
+	osSettingsSvc := ossettings.NewOsSettingsServiceClient(rpcClient.Conn)
+	req := &ossettings.EvalJSWithShadowPiercerRequest{
+		Expression: `var buttons = shadowPiercingQueryAll("cr-button");
+		var forgetButton = undefined;
+		buttons.forEach(button => {
+			if (button.innerText.includes("Forget")) {
+				forgetButton = button;
+			}
+		})
+		forgetButton != undefined;`,
+	}
+
+	return func(ctx context.Context) error {
+		if _, err := osSettingsSvc.OpenNetworkDetailPage(ctx, &ossettings.OpenNetworkDetailPageRequest{
+			NetworkName: network.Config().SSID,
+			NetworkType: ossettings.OpenNetworkDetailPageRequest_WIFI,
+		}); err != nil {
+			return errors.Wrap(err, "failed to open network detail page")
+		}
+
+		resp, err := osSettingsSvc.EvalJSWithShadowPiercer(ctx, req)
+		if err != nil {
+			return errors.Wrap(err, "failed to find the forget button")
+		}
+
+		if !resp.GetBoolValue() {
+			return errors.New("forget button not found")
+		}
+		return nil
+	}
+}
+
+// correctShillProfileIsLoaded verifies that the loaded shill profile is aims to the active user.
+func correctShillProfileIsLoaded(rpcClient *rpc.Client, dut *dut.DUT) action.Action {
+	crSvc := ui.NewChromeServiceClient(rpcClient.Conn)
+	return func(ctx context.Context) error {
+		resp, err := crSvc.UserHash(ctx, &emptypb.Empty{})
+		if err != nil {
+			return errors.Wrap(err, "failed to verify shill profile is loaded correctly")
+		}
+
+		// Validate that the loaded profile aims to current user.
+		data, err := linuxssh.ReadFile(ctx, dut.Conn(), "/var/run/shill/loaded_profile_list")
+		if err != nil {
+			return errors.Wrap(err, "failed to read the loaded shill profile")
+		}
+		if !regexp.MustCompile(resp.GetUserHash()).MatchString(string(data)) {
+			return errors.Errorf("the loaded shill profile is incorrect, got: %q; want: %q", string(data), resp.GetUserHash())
 		}
 		return nil
 	}

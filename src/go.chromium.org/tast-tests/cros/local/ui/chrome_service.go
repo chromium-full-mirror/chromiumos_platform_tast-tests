@@ -18,6 +18,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosinfo"
 	"go.chromium.org/tast-tests/cros/local/common"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -158,6 +160,22 @@ func (svc *ChromeService) Reconnect(ctx context.Context, _ *empty.Empty) (*empty
 	}
 
 	return &empty.Empty{}, nil
+}
+
+// UserHash retrieves the user hash of the current logged in user.
+func (svc *ChromeService) UserHash(ctx context.Context, _ *empty.Empty) (*ui.UserHashResponse, error) {
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+
+	if svc.sharedObject.Chrome == nil {
+		return nil, errors.New("Chrome not available")
+	}
+
+	val, err := cryptohome.UserHash(ctx, svc.sharedObject.Chrome.Creds().User)
+	if err != nil {
+		return nil, err
+	}
+	return &ui.UserHashResponse{UserHash: val}, nil
 }
 
 func toOptions(req *pb.NewRequest) ([]chrome.Option, error) {

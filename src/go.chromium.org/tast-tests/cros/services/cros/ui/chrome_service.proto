@@ -31,6 +31,9 @@ service ChromeService {
   //
   // Note that this method cannot be used to recover Chrome after crashes since the devtools port may change.
   rpc Reconnect(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // UserHash retrieves the user hash of the current logged in user.
+  rpc UserHash(google.protobuf.Empty) returns (UserHashResponse) {}
 }
 
 // NewRequest to login to Chrome with configurable features, arguments and GAIA
@@ -154,4 +157,8 @@ enum ArcMode {
   ARC_MODE_DISABLED = 1;
   ARC_MODE_ENABLED = 2;
   ARC_MODE_SUPPORTED = 3;
+}
+
+message UserHashResponse {
+  string user_hash = 1;
 }
