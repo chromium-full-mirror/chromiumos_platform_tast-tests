@@ -341,7 +341,7 @@ func (zm *Zoom) ShareScreen(tabName string) action.Action {
 
 	return uiauto.NamedCombine("share screen",
 		zm.ShowInterface,
-		ui.DoDefaultUntil(shareScreenButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(presentMode)),
+		ui.WithTimeout(longUITimeout).DoDefaultUntil(shareScreenButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(presentMode)),
 		ui.LeftClick(presentMode),
 		ui.LeftClick(presentTab),
 		ui.LeftClickUntil(shareButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(shareButton)),
