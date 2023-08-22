@@ -88,7 +88,7 @@ func CaptureModeDemoToolsKeyComboViewer(ctx context.Context, s *testing.State) {
 		recordFullscreenToggleButton = nodewith.HasClass("IconButton").Name("Record full screen")
 		captureModeSettingsButton    = nodewith.HasClass("IconButton").Name("Settings")
 		captureSettingsWiget         = nodewith.HasClass("CaptureModeSettingsWidget")
-		demoToolsToggleButton        = nodewith.HasClass("ToggleButton").Name("Show clicks and keys")
+		demoToolsToggleSwitch        = nodewith.HasClass("Switch").Name("Show clicks and keys")
 		keyComboWidget               = nodewith.HasClass("KeyComboWidget")
 	)
 
@@ -103,11 +103,10 @@ func CaptureModeDemoToolsKeyComboViewer(ctx context.Context, s *testing.State) {
 		ac.DoDefault(captureModeSettingsButton),
 		ac.WaitUntilExists(captureSettingsWiget),
 		// Click on the demo tools toggle button to enable the feature.
-		ac.LeftClick(demoToolsToggleButton),
+		ac.LeftClick(demoToolsToggleSwitch),
 	)(ctx); err != nil {
 		s.Fatal("Failed to enable the demo tools feature the settings menu: ", err)
 	}
-
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to create a keyboard: ", err)
