@@ -52,9 +52,6 @@ func init() {
 			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 		}, {
-			Name: "volume_button",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
-		}, {
 			Name: "floating_point_v2",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineFloatingPointV2},
 			// TODO(b/295481052): Promote to critical.
