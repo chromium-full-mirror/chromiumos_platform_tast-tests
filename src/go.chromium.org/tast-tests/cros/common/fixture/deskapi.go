@@ -4,10 +4,12 @@
 
 package fixture
 
-// Fixtured defined in go.chromium.org/tast-tests/cros/remote/policyutil/desk_api_fixture.go.
+// Fixtured defined in go.chromium.org/tast-tests/cros/remote/policyutil/desk_api_*_fixture.go
 const (
-	// Enrolled desk API feature using TAPE leased account.
-	DeskAPI = "deskAPI"
+	// Enrolled desk API feature using TAPE leased account for lacros.
+	DeskAPILacros = "deskAPILacros"
+	// Enrolled desk API feature using TAPE leased account for ash.
+	DeskAPIAsh = "deskAPIAsh"
 )
 
 // DeskFixtData holds the data for DeskAPI fixture.

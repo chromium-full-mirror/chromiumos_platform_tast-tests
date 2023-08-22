@@ -6,50 +6,14 @@ package policyutil
 
 import (
 	"context"
-	"time"
-
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
+	"time"
 )
-
-func init() {
-	testing.AddFixture(&testing.Fixture{
-		Name:            fixture.DeskAPI,
-		Desc:            "Fixture providing Desk API feature access ",
-		Contacts:        []string{"chromeos-commercial-remote-management@google.com", "cros-commercial-productivity-eng@google.com", "aprilzhou@google.com"},
-		Impl:            &deskFixt{},
-		SetUpTimeout:    15 * time.Minute,
-		TearDownTimeout: 5 * time.Minute,
-		ResetTimeout:    15 * time.Second,
-		ServiceDeps: []string{
-			"tast.cros.policy.PolicyService",
-			"tast.cros.hwsec.OwnershipService",
-			"tast.cros.graphics.ScreenshotService",
-			"tast.cros.tape.Service",
-			"tast.cros.browser.ChromeService",
-		},
-		Vars: []string{
-			tape.ServiceAccountVar,
-		},
-	})
-}
-
-type deskFixt struct {
-	accManager *tape.OwnedTestAccountManager
-}
-
-// DeskFixtData holds the data pass from fixture to test body.
-type DeskFixtData struct {
-	//cr *Chrome
-	Username string
-	Password string
-}
 
 // DmServerURL is the URL to the autopush DM server.
 const dmServerURL = "https://crosman-alpha.sandbox.google.com/devicemanagement/data/api"
@@ -61,7 +25,14 @@ type tapeClient interface {
 	SetPolicy(context.Context, tape.PolicySchema, []string, interface{}, string) error
 }
 
-func (e *deskFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+// DeskFixtData holds the data pass from fixture to test body.
+type DeskFixtData struct {
+	Username string
+	Password string
+}
+
+// DeskAPISetup sets up the initial setting for desk API fixture.
+func DeskAPISetup(ctx context.Context, s *testing.FixtState, isLacros bool) (string, string, *tape.OwnedTestAccountManager) {
 	// Make sure the DUT is connected at the beginning.
 	// TODO(b/239013478): Clean up the connection checks when the issue is resolved.
 	if err := s.DUT().Health(ctx); err != nil {
@@ -107,13 +78,26 @@ func (e *deskFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}
-	e.accManager = accManager
+	//e.accManager = accManager
 
 	// Disable Asset ID screen on enrollment.
-	disableUpdatingDeviceAttribute(ctx, tapeClient, acc.RequestID)
+	if err := disableUpdatingDeviceAttribute(ctx, tapeClient, acc.RequestID); err != nil {
+		s.Log("Failed to disable updating device attribute: ", err)
+	}
 
 	// Enable Desk API
-	enableDeskAPI(ctx, tapeClient, acc.RequestID)
+	if err := enableDeskAPI(ctx, tapeClient, acc.RequestID); err != nil {
+		s.Fatal("Failed to enable Desk API policy: ", err)
+	}
+	if isLacros {
+		if err := enableLacros(ctx, tapeClient, acc.RequestID); err != nil {
+			s.Fatal("Failed to enable Lacros: ", err)
+		}
+	} else {
+		if err := disableLacros(ctx, tapeClient, acc.RequestID); err != nil {
+			s.Fatal("Failed to enable Ash: ", err)
+		}
+	}
 
 	// Perform enroll without login here, as in local test will need to instantiate a chrome session anyway.
 	if _, err := pc.GAIAEnrollUsingChrome(ctx, &pspb.GAIAEnrollUsingChromeRequest{
@@ -124,28 +108,25 @@ func (e *deskFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
 
-	return DeskFixtData{acc.Username, acc.Password}
+	return acc.Username, acc.Password, accManager
 }
 
-func (e *deskFixt) TearDown(ctx context.Context, s *testing.FixtState) {
-	if err := EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
-		s.Fatal("Failed to reset TPM: ", err)
+func enableLacros(ctx context.Context, client tapeClient, requestID string) error {
+	policy := &tape.LacrosAvailabilityUsers{
+		LacrosAvailability: tape.LACROSAVAILABILITYENUM_LACROS_AVAILABILITY_ENUM_LACROS_ONLY,
 	}
-	// Release accounts.
-	e.accManager.CleanUp(ctx)
+	if err := client.SetPolicy(ctx, policy, []string{"lacrosAvailability"}, nil, requestID); err != nil {
+		return errors.Wrap(err, "failed to set the lacros policy")
+	}
+	return nil
 }
 
-func (*deskFixt) Reset(ctx context.Context) error                        { return nil }
-func (*deskFixt) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
-func (*deskFixt) PostTest(ctx context.Context, s *testing.FixtTestState) {}
-
-func disableUpdatingDeviceAttribute(ctx context.Context, client tapeClient, requestID string) error {
-	assetPolicy := &tape.AllowPopulateAssetIdentifierUsers{
-		AllowToUpdateDeviceAttribute: false,
+func disableLacros(ctx context.Context, client tapeClient, requestID string) error {
+	policy := &tape.LacrosAvailabilityUsers{
+		LacrosAvailability: tape.LACROSAVAILABILITYENUM_LACROS_AVAILABILITY_ENUM_LACROS_DISALLOWED,
 	}
-
-	if err := client.SetPolicy(ctx, assetPolicy, []string{"allowToUpdateDeviceAttribute"}, nil, requestID); err != nil {
-		return errors.Wrap(err, "failed to disable the AllowToUpdateDeviceAttribute policy")
+	if err := client.SetPolicy(ctx, policy, []string{"lacrosAvailability"}, nil, requestID); err != nil {
+		return errors.Wrap(err, "failed to set the lacros policy")
 	}
 	return nil
 }
@@ -157,6 +138,17 @@ func enableDeskAPI(ctx context.Context, client tapeClient, requestID string) err
 	}
 	if err := client.SetPolicy(ctx, policy, []string{"deskApiThirdPartyAccessEnabled", "deskApiThirdPartyAllowlist"}, nil, requestID); err != nil {
 		return errors.Wrap(err, "failed to set the Desk API policy")
+	}
+	return nil
+}
+
+func disableUpdatingDeviceAttribute(ctx context.Context, client tapeClient, requestID string) error {
+	assetPolicy := &tape.AllowPopulateAssetIdentifierUsers{
+		AllowToUpdateDeviceAttribute: false,
+	}
+
+	if err := client.SetPolicy(ctx, assetPolicy, []string{"allowToUpdateDeviceAttribute"}, nil, requestID); err != nil {
+		return errors.Wrap(err, "failed to disable the AllowToUpdateDeviceAttribute policy")
 	}
 	return nil
 }

@@ -41,14 +41,15 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
-		Fixture:      fixture.DeskAPI,
 		Params: []testing.Param{{
-			Name: "ash",
-			Val:  browser.TypeAsh,
+			Name:    "ash",
+			Val:     browser.TypeAsh,
+			Fixture: fixture.DeskAPIAsh,
 		}, {
 			Name:              "lacros",
 			Val:               browser.TypeLacros,
 			ExtraSoftwareDeps: []string{"lacros"},
+			Fixture:           fixture.DeskAPILacros,
 		}},
 	})
 }
