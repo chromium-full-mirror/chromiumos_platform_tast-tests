@@ -19,6 +19,8 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+var hwdepDSPModels = hwdep.Model("redrix", "gimble", "anahera")
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasNoiseCancellationPower,
@@ -97,6 +99,47 @@ func init() {
 					},
 					extraCrasClientArgs: []string{"--effects=aec"},
 				},
+			},
+			{
+				Name: "dsp_aec",
+				Val: crasNoiseCancellationPowerParam{
+					crasSetUp: func(ctx context.Context, s *testing.State) {
+						cras, err := audio.RestartCras(ctx)
+						if err != nil {
+							s.Fatal("Failed to restart CRAS: ", err)
+						}
+						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
+							s.Fatal("Failed to set internal mic active: ", err)
+						}
+						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
+							s.Fatal("Failed to set internal speaker active: ", err)
+						}
+					},
+					extraCrasClientArgs: []string{"--effects=0x11"},
+				},
+				ExtraHardwareDeps: hwdep.D(hwdepDSPModels),
+			},
+			{
+				Name: "dsp_aec_nc",
+				Val: crasNoiseCancellationPowerParam{
+					crasSetUp: func(ctx context.Context, s *testing.State) {
+						cras, err := audio.RestartCras(ctx)
+						if err != nil {
+							s.Fatal("Failed to restart CRAS: ", err)
+						}
+						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
+							s.Fatal("Failed to set internal mic active: ", err)
+						}
+						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
+							s.Fatal("Failed to set internal speaker active: ", err)
+						}
+						if err := cras.SetNoiseCancellationEnabled(ctx, true); err != nil {
+							s.Fatal("Failed to SetNoiseCancellationEnabled: ", err)
+						}
+					},
+					extraCrasClientArgs: []string{"--effects=0x11"},
+				},
+				ExtraHardwareDeps: hwdep.D(hwdepDSPModels),
 			},
 		},
 	})
