@@ -789,7 +789,7 @@ func init() {
 					browserType:      browser.TypeAsh,
 					measureRoughness: true,
 				},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.InternalDisplay()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.InternalDisplay(), hwdep.SupportsHEVCVideoDecodingInChrome()),
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080-5-frag.mp4"},
 				Fixture:           "chromeVideo",

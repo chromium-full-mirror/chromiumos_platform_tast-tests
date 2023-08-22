@@ -218,6 +218,9 @@ func TestPlaybackPerfParams(t *testing.T) {
 				"long", "", []string{"drm_atomic"})
 			// "rogue" is for MT8173 hana.
 			param.HardwareDeps = "hwdep.SkipGPUFamily(\"rogue\"), hwdep.InternalDisplay()"
+			if codec == "hevc" {
+				param.HardwareDeps += ", hwdep.SupportsHEVCVideoDecodingInChrome()"
+			}
 			param.MeasureRoughness = true
 			params = append(params, param)
 		}
