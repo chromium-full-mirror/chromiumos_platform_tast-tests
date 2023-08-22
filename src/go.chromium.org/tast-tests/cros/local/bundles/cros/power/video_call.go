@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -35,7 +36,7 @@ func init() {
 		Desc:         "Collect power metrics when mutitasking typing and video call",
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		Contacts:     []string{"chromeos-platform-power@google.com"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Params: []testing.Param{{
 			Name:    "3m_ash",
 			Fixture: "powerAsh",
