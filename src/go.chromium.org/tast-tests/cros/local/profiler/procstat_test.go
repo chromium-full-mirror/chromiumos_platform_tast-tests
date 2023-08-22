@@ -5,10 +5,7 @@
 package profiler
 
 import (
-	"context"
-	"os"
 	"testing"
-	"time"
 )
 
 func TestParseProcStat(t *testing.T) {
@@ -76,51 +73,5 @@ func TestParseProcStateWithError(t *testing.T) {
 				t.Fatalf("unexpected error: want %s; got %s", item.errString, err)
 			}
 		})
-	}
-}
-
-func TestProcStat(t *testing.T) {
-	// TODO(b/285592661): Remove or fix test.
-	t.Skip("Skip broken test b/285592661")
-
-	const (
-		tol        = 100 * time.Millisecond
-		stressTime = time.Second
-	)
-
-	pid := os.Getpid()
-
-	var out ProcStatOutput
-
-	profiler := ProcStat(&out, pid)
-	instance, err := profiler(context.Background(), t.TempDir())
-	if err != nil {
-		t.Fatal("failed to start profiler:", err)
-	}
-
-	// stress CPU
-	until := time.After(stressTime)
-loop:
-	for {
-		select {
-		case <-until:
-			break loop
-		default:
-		}
-	}
-
-	err = instance.end(context.Background())
-	if err != nil {
-		t.Fatal("failed to stop profiler:", err)
-	}
-
-	if out.WallTime < stressTime-tol || out.WallTime > stressTime+tol {
-		t.Errorf("expected WallTime to be %s, got %s", stressTime, out.WallTime)
-	}
-	if out.UserTime < stressTime-tol || out.UserTime > stressTime+tol {
-		t.Errorf("expected UserTime to be %s, got %s", stressTime, out.UserTime)
-	}
-	if out.SysTime > tol {
-		t.Errorf("expected SysTime to be 0, got %s", out.SysTime)
 	}
 }
