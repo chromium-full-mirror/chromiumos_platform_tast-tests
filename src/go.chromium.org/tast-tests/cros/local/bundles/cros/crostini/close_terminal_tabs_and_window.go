@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/devicemode"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -136,6 +137,13 @@ func CloseTerminalTabsAndWindow(ctx context.Context, s *testing.State) {
 		lastLoc.Width != newLoc.Width || lastLoc.Height != newLoc.Height {
 		s.Fatalf("Failed to veriy the new location of thee Terminal app, got %s, want %s", newLoc, lastLoc)
 	}
+
+	// The close button of a window is only available in clamshell mode.
+	revert, err := devicemode.EnsureDeviceMode(ctx, tconn, devicemode.ClamshellMode)
+	if err != nil {
+		s.Fatal("Failed to ensure in clamshell mode: ", err)
+	}
+	defer revert(cleanupCtx)
 
 	closeButton := nodewith.Name("Close").ClassName("FrameCaptionButton")
 	if err := ui.LeftClickUntil(closeButton, ui.WithTimeout(time.Minute).WaitUntilGone(terminalapp.RootWindow))(ctx); err != nil {
