@@ -91,7 +91,7 @@ func SwapNotification(ctx context.Context, s *testing.State) {
 	}
 
 	// Launch the test app from the notification and verify that swap is disabled
-	if err := quicksettings.Show(ctx, tconn); err != nil {
+	if err := quicksettings.ShowNotificationCenter(ctx, tconn); err != nil {
 		s.Fatal("Failed to show quick settings: ", err)
 	}
 
