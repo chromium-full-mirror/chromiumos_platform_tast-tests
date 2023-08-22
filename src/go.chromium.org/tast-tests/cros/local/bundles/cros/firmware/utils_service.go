@@ -346,7 +346,7 @@ func (us *UtilsService) PerformSpeedometerTest(ctx context.Context, req *empty.E
 	}
 
 	// Get the result from speedometer test.
-	result := nodewith.NameRegex(regexp.MustCompile(`^[0-9]+[.]?[0-9]*$`)).Role(role.StaticText).First()
+	result := nodewith.NameRegex(regexp.MustCompile(`^[0-9]+[.]?[0-9]*$`)).Role(role.InlineTextBox).First()
 	resultInfo, err := uia.Info(ctx, result)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get the result value")
