@@ -33,8 +33,6 @@ func init() {
 			tdreq.EmmcStorageControllerCqeActive,
 			tdreq.EmmcStorageDeviceRevision,
 			tdreq.EmmcStorageDeviceHS,
-			tdreq.EmmcStorageDeviceFFU,
-			tdreq.EmmcStorageDeviceExtCsd,
 		},
 	})
 }
@@ -57,17 +55,6 @@ func EmmcConfiguration(ctx context.Context, s *testing.State) {
 		Unit:      "value",
 		Direction: perf.BiggerIsBetter,
 	}, float64(emmcRevision))
-
-	ffu, err := disk.ReadSysfsInt64(ctx, "device/ffu_capable")
-	if err != nil {
-		s.Fatal("Failed to read FFU capability: ", err)
-	}
-
-	perfValues.Set(perf.Metric{
-		Name:      "_EMMC_FFU",
-		Unit:      "value",
-		Direction: perf.BiggerIsBetter,
-	}, float64(ffu))
 
 	caps2, err := disk.ReadDebugfsHexInt64(ctx, "caps2")
 	if err != nil {
@@ -96,16 +83,6 @@ func EmmcConfiguration(ctx context.Context, s *testing.State) {
 		Unit:      "value",
 		Direction: perf.BiggerIsBetter,
 	}, cqe)
-
-	if _, err := disk.ReadSysfsString(ctx, "device/life_time"); err != nil {
-		s.Fatal("Failed to read eMMC lifetime: ", err)
-	}
-
-	perfValues.Set(perf.Metric{
-		Name:      "_EMMC_ExtCsd",
-		Unit:      "value",
-		Direction: perf.BiggerIsBetter,
-	}, float64(1))
 
 	if err := perfValues.Save(s.OutDir()); err != nil {
 		s.Fatal("Can't save keyval results: ", err)

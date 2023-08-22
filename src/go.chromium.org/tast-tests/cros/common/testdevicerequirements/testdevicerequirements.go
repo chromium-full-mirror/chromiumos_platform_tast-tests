@@ -299,8 +299,14 @@ const (
 	// StorageEmmcCapacity with The ChromeOS device MAY use eMMC storage devices for a 128GB device or smaller.
 	StorageEmmcCapacity = "store-storagedev-0002-v01"
 
-	// StorageTBWReport with If the ChromeOS device provides non-volatile storage via an interface whose standard specifies reporting written/read bytes, its non-volatile storage MUST support reporting written/read bytes.
-	StorageTBWReport = "store-storagedev-0007-v01"
+	// StorageFFU with Storage device firmware MUST support Field Firmware Update (FFU) according to the applicable interface type standard.
+	StorageFFU = "store-storagedev-0004-v01"
+
+	// StorageLVFS with Storage vendor MUST provide firmware updates with LVFS/FWUPD compatible packages.
+	StorageLVFS = "store-storagedev-0005-v01"
+
+	// StorageHealthReport with Storage device MUST provide health information according to the applicable interface type standard.
+	StorageHealthReport = "store-storagedev-0006-v01"
 
 	// StorageLPST with The ChromeOS device non-volatile storage component MUST be capable of runtime transition to the low power state when idle.
 	StorageLPST = "store-storagedev-0011-v01"
@@ -393,9 +399,6 @@ const (
 	// NvmeStorageProtocolVersion with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device MUST support NVMe 1.3 or higher.
 	NvmeStorageProtocolVersion = "store-nvme-0004-v01"
 
-	// NvmeStorageHealthInfo with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device MUST provide health info via SMART / Health Information Log.
-	NvmeStorageHealthInfo = "store-nvme-0006-v01"
-
 	// NvmeStorageSeqReadTp with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device MUST support >= 250 MB/second sequential read operations.
 	NvmeStorageSeqReadTp = "store-nvme-0007-v01"
 
@@ -463,9 +466,6 @@ const (
 
 	// UfsStorageDeviceRxLanes with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device SHOULD support 2 Rx lanes.
 	UfsStorageDeviceRxLanes = "store-ufs-0011-v01"
-
-	// UfsStorageHealthDescriptor with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device MUST provide health info via Health Descriptor
-	UfsStorageHealthDescriptor = "store-ufs-0013-v01"
 
 	// UfsStorageSeqReadTp with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device MUST support >= 250 MB/second sequential read operations.
 	UfsStorageSeqReadTp = "store-ufs-0014-v01"

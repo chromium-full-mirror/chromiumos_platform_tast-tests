@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const storageInfoPath = "/mnt/stateful_partition/encrypted/var/log/storage_info.txt"
 const wbFeatureBit = 8
 
 func init() {
@@ -35,7 +34,6 @@ func init() {
 			tdreq.UfsStorageDeviceGear,
 			tdreq.UfsStorageDeviceTxLanes,
 			tdreq.UfsStorageDeviceRxLanes,
-			tdreq.UfsStorageHealthDescriptor,
 			tdreq.UfsStorageProvisioningType,
 			tdreq.UfsWriteBoosterSupport,
 			tdreq.UfsWriteBoosterSpaceMode,
@@ -47,6 +45,7 @@ func init() {
 }
 
 func UfsConfiguration(ctx context.Context, s *testing.State) {
+	const storageInfoPath = "/mnt/stateful_partition/encrypted/var/log/storage_info.txt"
 	storageInfo, err := util.RunCmdWithStringOutput(ctx, s.DUT(), "cat", storageInfoPath)
 	if err != nil {
 		s.Fatal("Could not read storage info from the device: ", err)
@@ -56,9 +55,6 @@ func UfsConfiguration(ctx context.Context, s *testing.State) {
 
 	singularKeys := []string{
 		"wSpecVersion",
-		"bPreEOLInfo",
-		"bDeviceLifeTimeEstA",
-		"bDeviceLifeTimeEstB",
 		"bProvisioningType",
 		"bWriteBoosterBufferPreserveUserSpaceEn",
 		"bWriteBoosterBufferType",
