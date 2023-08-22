@@ -456,6 +456,10 @@ func measurePerformance(ctx context.Context, filename, exec string, args []strin
 func collectMetricsPerTime(ctx context.Context, decodeCmd *testexec.Cmd, p *perf.Values) error {
 	// Start looping decode. Don't collect errors, as we anticipate an error from the remote kill.
 	go decodeCmd.Run()
+	defer func() {
+		decodeCmd.Kill()
+		decodeCmd.Wait()
+	}()
 
 	// Start measuring performance.
 	wg := new(errgroup.Group)
