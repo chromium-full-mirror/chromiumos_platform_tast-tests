@@ -174,7 +174,7 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 		{Path: "/usr/sbin/chromeos-trim", Context: "cros_chromeos_trim_exec"},
 		{Path: "/usr/sbin/conntrackd", Context: "cros_conntrackd_exec"},
 		{Path: "/usr/sbin/crosdns", Context: "cros_crosdns_exec", IgnoreErrors: true},
-		{Path: "/usr/sbin/cros-machine-id-regen", Context: "cros_machine_id_regen_exec"},
+		{Path: "/usr/sbin/machine-id-regen", Context: "cros_machine_id_regen_exec"},
 		{Path: "/usr/sbin/cryptohomed", Context: "cros_cryptohomed_exec"},
 		{Path: "/usr/sbin/dlcservice", Context: "cros_dlcservice_exec"},
 		{Path: "/usr/sbin/hpsd", Context: "cros_hpsd_exec", IgnoreErrors: true},
