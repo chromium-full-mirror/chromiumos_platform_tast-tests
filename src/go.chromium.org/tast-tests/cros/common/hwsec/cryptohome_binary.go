@@ -380,6 +380,15 @@ func (c *cryptohomeBinary) updatePinAuthFactor(ctx context.Context, authSessionI
 	return c.call(ctx, args...)
 }
 
+// relabelAuthFactor calls "cryptohome --action=relabel_auth_factor".
+func (c *cryptohomeBinary) relabelAuthFactor(ctx context.Context, authSessionID, label, newLabel string) ([]byte, error) {
+	args := []string{"--action=relabel_auth_factor",
+		"--auth_session_id=" + authSessionID,
+		"--key_label=" + label,
+		"--new_key_label=" + newLabel}
+	return c.call(ctx, args...)
+}
+
 // prepareGuestVault calls "cryptohome --action=prepare_guest_vault"
 func (c *cryptohomeBinary) prepareGuestVault(ctx context.Context) ([]byte, error) {
 	return c.call(ctx, "--output-format=binary-protobuf", "--action=prepare_guest_vault")

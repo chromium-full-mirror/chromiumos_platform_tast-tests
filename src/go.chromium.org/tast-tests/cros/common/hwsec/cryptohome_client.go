@@ -1080,6 +1080,12 @@ func (u *CryptohomeClient) UpdatePinAuthFactor(ctx context.Context, authSessionI
 	return err
 }
 
+// RelabelAuthFactor relabels an auth factor for the user.
+func (u *CryptohomeClient) RelabelAuthFactor(ctx context.Context, authSessionID, label, newLabel string) error {
+	_, err := u.binary.relabelAuthFactor(ctx, authSessionID, label, newLabel)
+	return err
+}
+
 // PrepareGuestVault prepares vault for guest session.
 func (u *CryptohomeClient) PrepareGuestVault(ctx context.Context) (*uda.PrepareGuestVaultReply, error) {
 	binaryMsg, err := u.binary.prepareGuestVault(ctx)
