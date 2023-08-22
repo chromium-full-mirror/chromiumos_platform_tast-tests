@@ -18,10 +18,12 @@ import (
 
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/crosserverutil"
+	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 )
 
@@ -124,6 +126,43 @@ func (t *Tester) PreHibernateSteps(ctx context.Context) {
 
 	// Check the kernel log for entries that indicate file system corruption.
 	t.checkForFileSystemCorruptions(ctxCycle)
+}
+
+// Logout logs a signed in user out of the system.
+func (t *Tester) Logout(ctx context.Context) {
+	cl, err := rpc.Dial(ctx, t.dut, t.rpcHint)
+	if err != nil {
+		t.logger.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+
+	upstartService := platform.NewUpstartServiceClient(cl.Conn)
+
+	_, err = upstartService.StopJob(ctx, &platform.StopJobRequest{
+		JobName: "ui",
+	})
+	if err != nil {
+		t.logger.Fatal("Failed to stop 'ui' job: ", err)
+	}
+}
+
+// HiberimageExists returns true if the 'hiberimage' logical volume exists,
+// otherwise false.
+func (t *Tester) HiberimageExists(ctx context.Context) bool {
+	out, err := t.dut.Conn().CommandContext(ctx, "/sbin/lvs", "--options=name", "--noheadings").CombinedOutput()
+	if err != nil {
+		t.logger.Fatal("Failed to get list of logical volumes: ", err)
+	}
+
+	lvs := strings.Split(string(out), "\n")
+	for i := 0; i < len(lvs); i++ {
+		lv := strings.TrimSpace(lvs[i])
+
+		if lv == "hiberimage" {
+			return true
+		}
+	}
+
+	return false
 }
 
 // CloseGRPCClient closes the associated GRPC client.
