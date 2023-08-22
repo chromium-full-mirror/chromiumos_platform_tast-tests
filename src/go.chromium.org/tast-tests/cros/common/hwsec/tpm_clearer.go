@@ -31,7 +31,6 @@ var SystemStateFiles = []string{
 	"/run/tpm_manager",
 	"/var/cache/app_pack",
 	"/var/cache/shill/default.profile",
-	"/var/lib/boot-lockbox",
 	"/var/lib/bootlockbox",
 	"/var/lib/chaps",
 	"/var/lib/cryptohome",
