@@ -11,9 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -74,16 +72,6 @@ func ToggleBluetoothFromQuickSettings(ctx context.Context, s *testing.State) {
 		}
 		if err := bt.PollForAdapterState(ctx, state); err != nil {
 			s.Fatal("Failed to toggle Bluetooth state: ", err)
-		}
-		if state {
-			// Enabling bluetooth takes us to the bluetooth detailed page.
-			// Navigate back to the main page.
-			previousMenu := nodewith.Role(role.Button).NameContaining("Previous menu")
-			if err := uiauto.Combine("navigate back to main page",
-				ui.WaitUntilExists(previousMenu),
-				ui.DoDefault(previousMenu))(ctx); err != nil {
-				s.Fatal("Failed to click on previous menu button: ", err)
-			}
 		}
 		state = !state
 	}
