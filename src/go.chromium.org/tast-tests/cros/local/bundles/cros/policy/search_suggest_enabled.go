@@ -36,7 +36,11 @@ func init() {
 		},
 		BugComponent: "crbug:UI>Browser>Omnibox",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:mainline",
+			"informational",
+		},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
