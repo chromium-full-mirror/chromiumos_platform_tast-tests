@@ -33,12 +33,21 @@ message JoinWifiRequest {
     string ca_cert = 2;
   }
 
+  enum SharedOption {
+    Default = 0;
+    TurnOn = 1;
+    TurnOff = 2;
+  }
+
   string ssid = 1;
   oneof security {
     google.protobuf.Any none = 2;
     string psk = 3;
     SecurityEapTls eap_tls = 4;
   }
+
+  // shareWithOtherUsers indicates if this network should be added as a shared network.
+  SharedOption shareWithOtherUsers = 5;
 }
 
 message KnownNetworksControlsRequest {
