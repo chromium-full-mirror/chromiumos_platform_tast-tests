@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -26,6 +27,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      1 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Fixture:      fixture.AloopLoaded{Channels: 2}.Instance(),
 		Params: []testing.Param{
 			{
 				Val: crasRTCParam{
