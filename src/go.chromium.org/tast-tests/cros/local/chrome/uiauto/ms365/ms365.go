@@ -166,10 +166,19 @@ func closeMicrosoft365Window(ctx context.Context, tconn *chrome.TestConn, fileNa
 	if err != nil {
 		return errors.Wrap(err, "failed to find the MS365 window to close")
 	}
-	if err := w.CloseWindow(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to close the MS365 window")
+	return w.CloseWindow(ctx, tconn)
+}
+
+// CloseMicrosoftAuthWindowWithoutSignIn finds the Microsoft auth window and
+// close it without signing in.
+func CloseMicrosoftAuthWindowWithoutSignIn(tconn *chrome.TestConn) uiauto.Action {
+	return func(ctx context.Context) error {
+		w, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, "Sign in to your account")
+		if err != nil {
+			return errors.Wrap(err, "failed to find the MS365 auth window to close")
+		}
+		return w.CloseWindow(ctx, tconn)
 	}
-	return nil
 }
 
 // waitForMicrosoft365WindowAndClose waits for the Microsoft 365 app window to open and close it.

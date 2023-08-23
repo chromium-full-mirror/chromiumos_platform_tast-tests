@@ -8,6 +8,7 @@ package cloudupload
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"time"
 
@@ -20,6 +21,13 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+func log(msg string) uiauto.Action {
+	return func(ctx context.Context) error {
+		testing.ContextLog(ctx, msg)
+		return nil
+	}
+}
 
 // CloudUpload represents an instance of the Cloud Upload UI.
 type CloudUpload struct {
@@ -41,8 +49,8 @@ func App(tconn *chrome.TestConn, provider filesconsts.Provider) *CloudUpload {
 var fileHandlerDialog = nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("Choose an app to open *"))
 var fileHandlerOpenButton = nodewith.Ancestor(fileHandlerDialog).Role(role.Button).Name("Open")
 
-// WaitFileHandlerAndChoose waits for the File Handlers dialog and chooses the target cloud to open office files.
-func (cu *CloudUpload) WaitFileHandlerAndChoose() uiauto.Action {
+// WaitFileHandlerAndChooseProvider waits for the File Handlers dialog and chooses the target cloud to open office files.
+func (cu *CloudUpload) WaitFileHandlerAndChooseProvider() uiauto.Action {
 	var option *nodewith.Finder
 	if cu.provider == filesconsts.DriveFs {
 		option = nodewith.Ancestor(fileHandlerDialog).Role(role.ListBoxOption).NameContaining("Google Drive")
@@ -58,31 +66,76 @@ func (cu *CloudUpload) WaitFileHandlerAndChoose() uiauto.Action {
 	)
 }
 
-// WaitGetStartedDialogAndClickNext waits for the dialog Get Started and clicks the button to proceed.
-func (cu *CloudUpload) WaitGetStartedDialogAndClickNext() uiauto.Action {
+// DialogAction represents the actions available on various dialogs in cloud upload.
+type DialogAction string
+
+// Dialog action names.
+const (
+	Next   DialogAction = "next"
+	Cancel DialogAction = "cancel"
+	// Cancel first and choose Continue in the Cancel dialog, then go with Next
+	CancelThenNext DialogAction = "cancelThenNext"
+)
+
+var cancelSetupDialog = nodewith.Role(role.Dialog).Name("Cancel Microsoft 365 setup?")
+
+// waitCancelDialogAndClick waits for the Cancel Setup dialog and clicks the button represented
+// by the specified action.
+func (cu *CloudUpload) waitCancelDialogAndClick(action DialogAction) uiauto.Action {
+	dialog := nodewith.Role(role.Dialog).Name("Cancel Microsoft 365 setup?")
+	continueButton := nodewith.Ancestor(dialog).Role(role.Button).Name("Continue setup")
+	cancelButton := nodewith.Ancestor(dialog).Role(role.Button).Name("Cancel setup")
+	actionButton := continueButton
+	if action == Cancel {
+		actionButton = cancelButton
+	}
+	return uiauto.Combine(fmt.Sprintf("Cancel OneDrive setup dialog: action - %s", action),
+		log("Cancel OneDrive setup"),
+		cu.ui.WaitUntilExists(dialog),
+		cu.ui.LeftClickUntil(actionButton, cu.ui.Gone(dialog)),
+	)
+}
+
+// WaitGetStartedDialogAndClick waits for the dialog Get Started and clicks
+// the button represented by the specified action.
+func (cu *CloudUpload) WaitGetStartedDialogAndClick(action DialogAction) uiauto.Action {
 	dialog := nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("Set up Microsoft 365 *"))
 	getStartedButton := nodewith.Ancestor(dialog).Role(role.Button).Name("Get started")
-	return uiauto.Combine("Setup OneDrive dialog: get started",
-		log("Starting Get Started step"),
+	cancelButton := nodewith.Ancestor(dialog).Role(role.Button).Name("Cancel")
+	// Click different buttons based on the action.
+	if action == Cancel {
+		return uiauto.Combine("Cancel at Get Started step",
+			log("Starting Get Started step - Cancel"),
+			cu.ui.WaitUntilExists(dialog),
+			cu.ui.LeftClickUntil(cancelButton, cu.ui.Exists(cancelSetupDialog)),
+			cu.waitCancelDialogAndClick(Cancel),
+			cu.ui.WaitUntilGone(dialog),
+		)
+	}
+	if action == CancelThenNext {
+		return uiauto.Combine("Cancel and Continue at Get Started step",
+			log("Starting Get Started step - Cancel then Continue"),
+			cu.ui.WaitUntilExists(dialog),
+			cu.ui.LeftClickUntil(cancelButton, cu.ui.Exists(cancelSetupDialog)),
+			cu.waitCancelDialogAndClick(Next),
+			cu.ui.LeftClickUntil(getStartedButton, cu.ui.Gone(dialog)),
+		)
+	}
+	// action == Next
+	return uiauto.Combine("Next at Get Started step",
+		log("Starting Get Started step - Next"),
 		cu.ui.WaitUntilExists(dialog),
 		cu.ui.LeftClickUntil(getStartedButton, cu.ui.Gone(dialog)),
 	)
 }
 
-func log(msg string) uiauto.Action {
-	return func(ctx context.Context) error {
-		testing.ContextLog(ctx, msg)
-		return nil
-	}
-}
-
-// WaitInstallPWADialogAndClickInstall waits for the Install PWA dialog and clicks "Install".
-func (cu *CloudUpload) WaitInstallPWADialogAndClickInstall() uiauto.Action {
+// WaitInstallPWADialogAndClick waits for the Install PWA dialog and clicks
+// the button represented by the specified action.
+func (cu *CloudUpload) WaitInstallPWADialogAndClick(action DialogAction) uiauto.Action {
 	installPWADialog := nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile(`Install.* Microsoft 365`))
 	installButton := nodewith.Ancestor(installPWADialog).Role(role.Button).Name("Install")
-	return uiauto.Combine("Install PWA dialog: install",
-		log("Starting Install PWA step"),
-		cu.ui.WaitUntilExists(installPWADialog),
+	cancelButton := nodewith.Ancestor(installPWADialog).Role(role.Button).Name("Cancel")
+	installWithRetry := uiauto.Combine("Install at Install PWA step",
 		cu.ui.WaitUntilExists(installButton),
 		cu.ui.LeftClick(installButton),
 		cu.ui.WaitUntilGone(installButton),
@@ -98,7 +151,7 @@ func (cu *CloudUpload) WaitInstallPWADialogAndClickInstall() uiauto.Action {
 				return errors.Wrap(err, "failed to find the next step after Install PWA dialog")
 			}
 			if found == installButton {
-				if err := cu.WaitInstallPWADialogAndClickInstall()(ctx); err != nil {
+				if err := cu.WaitInstallPWADialogAndClick(Next)(ctx); err != nil {
 					return err
 				}
 			}
@@ -106,18 +159,78 @@ func (cu *CloudUpload) WaitInstallPWADialogAndClickInstall() uiauto.Action {
 			return nil
 		},
 	)
+
+	// Click different buttons based on the action.
+	if action == Cancel {
+		return uiauto.Combine("Cancel at Install PWA step",
+			log("Starting Install PWA step - Cancel"),
+			cu.ui.WaitUntilExists(installPWADialog),
+			cu.ui.LeftClickUntil(cancelButton, cu.ui.Exists(cancelSetupDialog)),
+			cu.waitCancelDialogAndClick(Cancel),
+			cu.ui.WaitUntilGone(installPWADialog),
+		)
+	}
+	if action == CancelThenNext {
+		return uiauto.Combine("Cancel and Continue at Install PWA step",
+			log("Starting Install PWA step - Cancel then Continue"),
+			cu.ui.WaitUntilExists(installPWADialog),
+			cu.ui.LeftClickUntil(cancelButton, cu.ui.Exists(cancelSetupDialog)),
+			cu.waitCancelDialogAndClick(Next),
+			installWithRetry,
+		)
+	}
+	// action == Next
+	return uiauto.Combine("Next at Install PWA step",
+		log("Starting Install PWA step step - Next"),
+		cu.ui.WaitUntilExists(installPWADialog),
+		installWithRetry,
+	)
 }
 
 var connectToOneDriveDialog = nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile(`Connect to Microsoft OneDrive.*`))
 
-// WaitConnectToOneDriveDialogAndClickConnect waits for the Connect To OneDrive dialog and clicks "Connect to OneDrive".
-func (cu *CloudUpload) WaitConnectToOneDriveDialogAndClickConnect() uiauto.Action {
+// WaitConnectToOneDriveDialogAndClick waits for the Connect To OneDrive dialog
+// and clicks the button represented by the specified action.
+func (cu *CloudUpload) WaitConnectToOneDriveDialogAndClick(action DialogAction) uiauto.Action {
 	connectToOneDriveDialog := connectToOneDriveDialog
 	connectButton := nodewith.Ancestor(connectToOneDriveDialog).Role(role.Button).Name("Connect to OneDrive")
-	return uiauto.Combine("Connect to OneDrive dialog: connect",
-		log("Starting Connect to OneDrive step"),
+	cancelButton := nodewith.Ancestor(connectToOneDriveDialog).Role(role.Button).Name("Cancel")
+	// Click different buttons based on the action.
+	if action == Cancel {
+		return uiauto.Combine("Cancel at Connect to OneDrive step",
+			log("Starting Connect to OneDrive step - Cancel"),
+			cu.ui.WaitUntilExists(connectToOneDriveDialog),
+			cu.ui.LeftClickUntil(cancelButton, cu.ui.Exists(cancelSetupDialog)),
+			cu.waitCancelDialogAndClick(Cancel),
+			cu.ui.WaitUntilGone(connectToOneDriveDialog),
+		)
+	}
+
+	if action == CancelThenNext {
+		return uiauto.Combine("Cancel and Continue at Connect to OneDrive step",
+			log("Starting Connect to OneDrive step - Cancel then Continue"),
+			cu.ui.WaitUntilExists(connectToOneDriveDialog),
+			cu.ui.LeftClickUntil(cancelButton, cu.ui.Exists(cancelSetupDialog)),
+			cu.waitCancelDialogAndClick(Next),
+			cu.ui.LeftClickUntil(connectButton, cu.ui.Gone(connectToOneDriveDialog)),
+		)
+	}
+	// action == Next
+	return uiauto.Combine("Next at Connect to OneDrive step",
+		log("Starting Connect to OneDrive step - Next"),
 		cu.ui.WaitUntilExists(connectToOneDriveDialog),
 		cu.ui.LeftClickUntil(connectButton, cu.ui.Gone(connectToOneDriveDialog)),
+	)
+}
+
+// WaitConnectOneDriveError waits for the Connect To OneDrive dialog and check
+// the error message shown on the dialog.
+func (cu *CloudUpload) WaitConnectOneDriveError() uiauto.Action {
+	errorMessage := nodewith.Ancestor(connectToOneDriveDialog).Role(role.StaticText).Name("Can't connect to OneDrive. Try again.")
+	return uiauto.Combine("Check Connect to OneDrive error",
+		log("Checking error message at Connect to OneDrive step"),
+		cu.ui.WaitUntilExists(connectToOneDriveDialog),
+		cu.ui.WaitUntilExists(errorMessage),
 	)
 }
 
@@ -214,9 +327,9 @@ func (cu *CloudUpload) RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) u
 
 		if err := uiauto.Combine("Setup dialog steps",
 			// Dialog setting up the File Handler, configuring the file type to open with Office 365.
-			cu.WaitFileHandlerAndChoose(),
+			cu.WaitFileHandlerAndChooseProvider(),
 			// Fist setup dialog.
-			cu.WaitGetStartedDialogAndClickNext(),
+			cu.WaitGetStartedDialogAndClick(Next),
 			func(ctx context.Context) error {
 				// Skip PWA install step if it's already installed.
 				if options.PWAInstalled {
@@ -224,7 +337,7 @@ func (cu *CloudUpload) RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) u
 				}
 				// Otherwise expect PWA install screen.
 				// This step is quite slow because it downloads from the internet.
-				return cu.WaitInstallPWADialogAndClickInstall()(ctx)
+				return cu.WaitInstallPWADialogAndClick(Next)(ctx)
 			},
 			func(ctx context.Context) error {
 				// Skip Connect OneDrive step if it's already connected.
@@ -234,7 +347,7 @@ func (cu *CloudUpload) RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) u
 				// Otherwise expect Connect OneDrive screen.
 				return uiauto.Combine("Connect to OneDrive",
 					// Connect/mount the ODFS.
-					cu.WaitConnectToOneDriveDialogAndClickConnect(),
+					cu.WaitConnectToOneDriveDialogAndClick(Next),
 					// Authenticate to OneDrive to mount ODFS.
 					// Skip password screen if PWA is already installed.
 					options.Ms365App.LoginToMicrosoft365(SetupCompleteDialog, options.PWAInstalled /*=skipPassword*/),
@@ -251,5 +364,5 @@ func (cu *CloudUpload) RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) u
 
 // RunGoogleDriveSetupFlow runs the step to test the setup flow for Google Drive.
 func (cu *CloudUpload) RunGoogleDriveSetupFlow() uiauto.Action {
-	return cu.WaitFileHandlerAndChoose()
+	return cu.WaitFileHandlerAndChooseProvider()
 }

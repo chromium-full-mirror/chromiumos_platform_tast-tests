@@ -79,7 +79,7 @@ func OdfsManageInSettings(ctx context.Context, s *testing.State) {
 		settingsApp.WaitUntilExists(oneDriveDisconnectedLink),
 		settingsApp.LeftClickUntil(oneDriveDisconnectedLink, settingsApp.Exists(connectAccountButton)),
 		settingsApp.LeftClick(connectAccountButton),
-		cloudUpload.WaitConnectToOneDriveDialogAndClickConnect(),
+		cloudUpload.WaitConnectToOneDriveDialogAndClick(cloudupload.Next),
 		ms365.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog, false /*=skipPassword*/),
 		cloudUpload.WaitOneDriveConnectedDialogAndClickClose(),
 	)(ctx); err != nil {
