@@ -23,15 +23,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// PhoneIP is the address of the adb-over-wifi device to use in Cross device tests.
-var PhoneIP = testing.RegisterVarString(
-	"crossdevice.PhoneIP",
-	"",
-	"IP address of an Android Phone that has enabled adb-over-tcp",
-)
-
 // AdbSetup configures adb and connects to the Android device with adb root if available.
-func AdbSetup(ctx context.Context) (*adb.Device, bool, error) {
+func AdbSetup(ctx context.Context, phoneIP string) (*adb.Device, bool, error) {
 	// TODO(b/207520262): Remove when we have Android support in skylab for configuring phone.
 	setupadb := false
 	var err error
@@ -50,11 +43,11 @@ func AdbSetup(ctx context.Context) (*adb.Device, bool, error) {
 	}
 	var adbDevice *adb.Device
 
-	if PhoneIP.Value() != "" {
+	if phoneIP != "" {
 		if err := ConnectToWifi(ctx); err != nil {
 			return nil, false, errors.Wrap(err, "failed to connect CrOS device to Wifi")
 		}
-		adbDevice, err = AdbOverWifi(ctx)
+		adbDevice, err = AdbOverWifi(ctx, phoneIP)
 		if err != nil {
 			return nil, false, errors.Wrap(err, "failed to connect to adb over wifi device")
 		}
@@ -87,8 +80,8 @@ func AdbSetup(ctx context.Context) (*adb.Device, bool, error) {
 	// If the phone was previously connected with ADB-over-wifi and the
 	// `adb root` command resulted in the ADB server restarting, we need
 	// to reconnect to the phone.
-	if rooted && PhoneIP.Value() != "" {
-		adbDevice, err = AdbOverWifi(ctx)
+	if rooted && phoneIP != "" {
+		adbDevice, err = AdbOverWifi(ctx, phoneIP)
 		if err != nil {
 			return nil, false, errors.Wrap(err, "failed to connect to adb over wifi device")
 		}
@@ -102,10 +95,10 @@ func AdbSetup(ctx context.Context) (*adb.Device, bool, error) {
 }
 
 // AdbOverWifi connects to the adb-over-wifi Android device that was previously setup.
-func AdbOverWifi(ctx context.Context) (*adb.Device, error) {
+func AdbOverWifi(ctx context.Context, phoneIP string) (*adb.Device, error) {
 	// Connect to the adb-over-tcp Phone that was setup previously (e.g manually or via autotest control file).
-	testing.ContextLogf(ctx, "Android phone IP is: %s", PhoneIP.Value())
-	adbDevice, err := adb.Connect(ctx, PhoneIP.Value(), 1*time.Minute)
+	testing.ContextLogf(ctx, "Android phone IP is: %s", phoneIP)
+	adbDevice, err := adb.Connect(ctx, phoneIP, 1*time.Minute)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to adb over wifi")
 	}

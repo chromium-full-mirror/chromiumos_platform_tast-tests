@@ -24,14 +24,20 @@ func init() {
 		BugComponent: "b:1131838",
 		Attr:         []string{"group:cross-device", "cross-device_nearbyshare"},
 		Data:         []string{nearbysnippet.ZipName},
+		Fixture:      "crossDeviceRemote",
 		Timeout:      3 * time.Minute,
 	})
 }
 
 // SmokeSnippetLibrary tests that we can successfully start and interact with the Nearby Snippet on the Android device.
 func SmokeSnippetLibrary(ctx context.Context, s *testing.State) {
+	var phoneIP string
+	if err := s.FixtFillValue(&phoneIP); err != nil {
+		s.Fatal("Failed to deserialize value from parent fixture with FixtFillValue")
+	}
+
 	// Set up adb, connect to the Android phone, and check if ADB root access is available.
-	adbDevice, rooted, err := crossdevice.AdbSetup(ctx)
+	adbDevice, rooted, err := crossdevice.AdbSetup(ctx, phoneIP)
 	if err != nil {
 		s.Fatal("Failed to set up an adb device: ", err)
 	}

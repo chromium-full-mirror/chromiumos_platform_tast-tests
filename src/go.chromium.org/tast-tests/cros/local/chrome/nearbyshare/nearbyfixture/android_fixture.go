@@ -77,6 +77,7 @@ func init() {
 			unrootedAndroidUsername,
 			skipAndroidLogin,
 		},
+		Parent:          "crossDeviceRemote",
 		SetUpTimeout:    6 * time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -98,6 +99,7 @@ func init() {
 			unrootedAndroidUsername,
 			skipAndroidLogin,
 		},
+		Parent:          "crossDeviceRemote",
 		SetUpTimeout:    6 * time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -119,6 +121,7 @@ func init() {
 			unrootedAndroidUsername,
 			skipAndroidLogin,
 		},
+		Parent:          "crossDeviceRemote",
 		SetUpTimeout:    6 * time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -140,8 +143,15 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 	snippetZip := s.DataPath(nearbysnippet.ZipName)
 	accountUtilZip := s.DataPath(crossdevice.AccountUtilZip)
 
+	var phoneIP string
+	// Get the phone IP address from the remote fixture.
+	if err := s.ParentFillValue(&phoneIP); err != nil {
+		s.Fatal("Failed to deserialize fixture data with FixtFillValue: ", err)
+	}
+	s.Logf("Parent fixture value is %s", phoneIP)
+
 	// Set up adb, connect to the Android phone, and check if ADB root access is available.
-	adbDevice, rooted, err := crossdevice.AdbSetup(ctx)
+	adbDevice, rooted, err := crossdevice.AdbSetup(ctx, phoneIP)
 	if err != nil {
 		s.Fatal("Failed to set up an adb device: ", err)
 	}
@@ -270,6 +280,7 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		AndroidUsername:      androidUsername,
 		AndroidLoggedIn:      loggedIn,
 		AndroidNearbyChannel: f.androidNearbyChannel,
+		PhoneIP:              phoneIP,
 	}
 
 }

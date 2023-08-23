@@ -97,6 +97,7 @@ func init() {
 			crossDevicePerBoxUsername17,
 			crossDevicePerBoxPassword,
 		},
+		Parent:          "crossDeviceRemote",
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -135,6 +136,7 @@ func init() {
 			crossDevicePerBoxUsername17,
 			crossDevicePerBoxPassword,
 		},
+		Parent:          "crossDeviceRemote",
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -173,6 +175,7 @@ func init() {
 			crossDevicePerBoxUsername17,
 			crossDevicePerBoxPassword,
 		},
+		Parent:          "crossDeviceRemote",
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -185,14 +188,22 @@ type crossdeviceAndroidFixture struct {
 	adbDevice     *adb.Device
 	androidDevice *AndroidDevice
 	feature       Feature
+	phoneIP       string
 }
 
 func (f *crossdeviceAndroidFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	accountUtilZip := s.DataPath(AccountUtilZip)
 	snippetZip := s.DataPath(MultideviceSnippetZipName)
 
+	var phoneIP string
+	// Get the phone IP address from the remote fixture.
+	if err := s.ParentFillValue(&phoneIP); err != nil {
+		s.Fatal("Failed to deserialize fixture data with FixtFillValue: ", err)
+	}
+	s.Logf("Parent fixture value is %s", phoneIP)
+
 	// Set up adb, connect to the Android phone, and check if ADB root access is available.
-	adbDevice, rooted, err := AdbSetup(ctx)
+	adbDevice, rooted, err := AdbSetup(ctx, phoneIP)
 	if err != nil {
 		s.Fatal("Failed to set up an adb device: ", err)
 	}
@@ -285,6 +296,7 @@ func (f *crossdeviceAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		AndroidDevice: androidDevice,
 		Username:      androidUsername,
 		Password:      androidPassword,
+		PhoneIP:       phoneIP,
 	}
 }
 func (f *crossdeviceAndroidFixture) TearDown(ctx context.Context, s *testing.FixtState) {

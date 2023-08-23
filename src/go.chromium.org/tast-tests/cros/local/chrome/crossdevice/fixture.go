@@ -367,6 +367,7 @@ type crossdeviceFixture struct {
 	noSignIn                          bool
 	logcatStartTime                   adb.LogcatTimestamp
 	downloadsPath                     string
+	phoneIP                           string
 }
 
 // FixtData holds information made available to tests that specify this Fixture.
@@ -389,12 +390,18 @@ type FixtData struct {
 
 	// The options used to start Chrome sessions.
 	ChromeOptions []chrome.Option
+
+	// IP Address of the phone if using adb-over-wifi else empty string for USB runs
+	PhoneIP string
 }
 
 func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	// Android device from parent fixture.
 	androidDevice := s.ParentValue().(*FixtData).AndroidDevice
 	f.androidDevice = androidDevice
+
+	phoneIP := s.ParentValue().(*FixtData).PhoneIP
+	f.phoneIP = phoneIP
 
 	// Credentials to use (same as Android).
 	crosUsername := s.ParentValue().(*FixtData).Username
@@ -528,7 +535,16 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 
 	// Phone and Chromebook will not be paired if we are not signed in to the Chromebook yet.
 	if !f.noSignIn {
-		// Sometimes during login the tcp connection to the snippet server on Android is lost.
+		// Sometimes during login the tcp connection to the snippet server and/or adb is lost.
+		// Check we can still connect to the adb device.
+		if err := androidDevice.Device.IsConnected(ctx); err != nil {
+			s.Log("Android device is no longer reachable via adb. Reconnecting")
+			adbDevice, _, err := AdbSetup(ctx, phoneIP)
+			if err != nil {
+				s.Fatal("Failed to reconnect to adb device: ", err)
+			}
+			androidDevice.Device = adbDevice
+		}
 		// If the Pair RPC fails, reconnect to the snippet server and try again.
 		if err := f.PairWithAndroid(ctx, tconn, cr); err != nil {
 			s.Fatal("Pairing with Android failed: ", err)
@@ -680,9 +696,9 @@ func (f *crossdeviceFixture) PostTest(ctx context.Context, s *testing.FixtTestSt
 
 	// Restore connection to the ADB-over-WiFi device if it was lost during the test.
 	// This is needed for Instant Tether tests that disable WiFi on the Chromebook which interrupts the ADB connection.
-	if PhoneIP.Value() != "" && f.androidDevice.Device.IsConnected(ctx) != nil {
-		s.Log("Connection to ADB device lost, restaring")
-		device, err := AdbOverWifi(ctx)
+	if f.phoneIP != "" && f.androidDevice.Device.IsConnected(ctx) != nil {
+		s.Log("Connection to ADB device lost, restarting")
+		device, _, err := AdbSetup(ctx, f.phoneIP)
 		if err != nil {
 			s.Fatal("Failed to re-initialize adb-over-wifi: ", err)
 		}

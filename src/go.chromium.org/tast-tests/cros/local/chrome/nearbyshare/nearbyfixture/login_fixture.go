@@ -499,10 +499,11 @@ func (f *nearbyShareLoginFixture) SetUp(ctx context.Context, s *testing.FixtStat
 	androidDeviceName := s.ParentValue().(*FixtData).AndroidDeviceName
 	androidUsername := s.ParentValue().(*FixtData).AndroidUsername
 	loggedIn := s.ParentValue().(*FixtData).AndroidLoggedIn
+	phoneIP := s.ParentValue().(*FixtData).PhoneIP
 
 	if err := androidDevice.IsConnected(ctx); err != nil {
 		s.Log("Android device is no longer reachable via adb. Reconnecting")
-		adbDevice, _, err := crossdevice.AdbSetup(ctx)
+		adbDevice, _, err := crossdevice.AdbSetup(ctx, phoneIP)
 		if err != nil {
 			s.Fatal("Failed to reconnect to adb device: ", err)
 		}
@@ -596,7 +597,7 @@ func (f *nearbyShareLoginFixture) SetUp(ctx context.Context, s *testing.FixtStat
 	// Check we can still connect to the adb device.
 	if err := androidDevice.IsConnected(ctx); err != nil {
 		s.Log("Android device is no longer reachable via adb. Reconnecting")
-		adbDevice, _, err := crossdevice.AdbSetup(ctx)
+		adbDevice, _, err := crossdevice.AdbSetup(ctx, phoneIP)
 		if err != nil {
 			s.Fatal("Failed to reconnect to adb device: ", err)
 		}

@@ -133,6 +133,9 @@ type FixtData struct {
 
 	// ARC is the ARC instance, if enabled.
 	ARC *arc.ARC
+
+	// IP Address of the phone if using adb-over-wifi else empty string for USB runs
+	PhoneIP string
 }
 
 func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
