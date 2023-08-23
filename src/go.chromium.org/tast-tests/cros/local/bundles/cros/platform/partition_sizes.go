@@ -15,7 +15,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -25,9 +24,7 @@ func init() {
 		Contacts:     []string{"chromeos-storage@google.com"},
 		BugComponent: "b:974567",
 		Attr:         []string{"group:mainline"},
-		// b/265023645: The ChromeOS Flex installer performs internal disk discovery
-		// and there is no way to get the disk's path without performing the install.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("reven")),
+		SoftwareDeps: []string{"known_fixed_ssd"},
 	})
 }
 
