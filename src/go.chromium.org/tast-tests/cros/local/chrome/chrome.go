@@ -290,9 +290,10 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		timeout = cfg.CustomLoginTimeout()
 	}
 	// b/211032595: Sometimes, vm test requires longer timeout.
-	// Make sure the timeout to be at least 2 minutes.
-	if timeout < time.Minute*2 {
-		timeout = time.Minute * 2
+	// b/269211070: Sometimes, gaia login requires a longer timeout.
+	// Make sure the timeout to be at least 4 minutes.
+	if timeout < time.Minute*4 {
+		timeout = time.Minute * 4
 	}
 	origCtx := ctx
 	ctx, cancel := context.WithTimeout(origCtx, timeout)
