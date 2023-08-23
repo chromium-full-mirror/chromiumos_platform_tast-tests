@@ -11,9 +11,7 @@ import (
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -29,23 +27,6 @@ func init() {
 		SoftwareDeps: []string{"crossystem"},
 		Fixture:      fixture.USBDevModeWithReinstall,
 		Timeout:      360 * time.Minute,
-		Params: []testing.Param{{
-			Name:              "nvme",
-			Val:               util.ExpectedTrimValueNvme,
-			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
-		}, {
-			Name:              "emmc",
-			Val:               util.ExpectedTrimValueEmmc,
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
-		}, {
-			Name:              "emmc_bridge",
-			Val:               util.ExpectedTrimValueEmmcBridge,
-			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOverNvme()),
-		}, {
-			Name:              "ufs",
-			Val:               util.ExpectedTrimValueUfs,
-			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
-		}},
 		Requirements: []string{
 			tdreq.StorageTrim,
 		},
@@ -84,8 +65,7 @@ func Trim(ctx context.Context, s *testing.State) {
 	}
 
 	// Run trim and compare chunks
-	trimValFunc := s.Param().(func(context.Context, *dut.DUT, string) (util.TrimComparisonFunc, error))
-	trimCompFunc, err := trimValFunc(ctx, s.DUT(), disk.Path)
+	trimCompFunc, err := disk.GetExpectedTrimValueFunc(ctx)
 	if err != nil {
 		s.Fatal("Could not determine expected trim value: ", err)
 	}

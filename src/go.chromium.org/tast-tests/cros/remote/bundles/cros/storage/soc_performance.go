@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -31,23 +30,15 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "nvme_link_bw",
-			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 			ExtraRequirements: []string{tdreq.NvmePcieBW},
 		}, {
 			Name:              "emmc_link_bw",
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
-			ExtraRequirements: []string{tdreq.EmmcControllerBW},
-		}, {
-			Name:              "emmc_over_nvme_link_bw",
-			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOverNvme()),
 			ExtraRequirements: []string{tdreq.EmmcControllerBW},
 		}, {
 			Name:              "ufs_g3_link_bw",
-			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsControllerG3BW},
 		}, {
 			Name:              "ufs_g4_link_bw",
-			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsControllerG4BW},
 		}},
 	})

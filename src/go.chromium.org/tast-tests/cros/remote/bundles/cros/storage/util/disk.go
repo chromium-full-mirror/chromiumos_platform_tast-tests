@@ -92,6 +92,7 @@ type Disk struct {
 	DUT                *dut.DUT
 	Path               string
 	Name               string
+	PhysicalDevicePath string
 	PhysicalDeviceName string
 	Size               int
 	Type               DiskType
@@ -117,6 +118,7 @@ func newDisk(ctx context.Context, dut *dut.DUT, path string, isPartition bool) (
 		DUT:                dut,
 		Path:               path,
 		Name:               name,
+		PhysicalDevicePath: "/dev/" + physDevName,
 		PhysicalDeviceName: physDevName,
 		Size:               size,
 		Type:               UnknownDisk,
@@ -295,6 +297,23 @@ func (d *Disk) ReadSysfsInt64(ctx context.Context, relativePath string) (int64, 
 		return 0, errors.Wrapf(err, "failed to parse %q as int64 from %q", strVal, relativePath)
 	}
 	return value, nil
+}
+
+// GetExpectedTrimValueFunc returns comparison function for expected after-trim
+// value of the device.
+func (d *Disk) GetExpectedTrimValueFunc(ctx context.Context) (TrimComparisonFunc, error) {
+	switch d.Type {
+	case NvmeDisk:
+		fallthrough
+	case EmmcOverNvmeDisk:
+		return ExpectedTrimValueNvme(ctx, d.DUT, d.PhysicalDevicePath)
+	case EmmcDisk:
+		return ExpectedTrimValueEmmc(ctx, d.DUT, d.PhysicalDevicePath)
+	case UfsDisk:
+		return ExpectedTrimValueUfs(ctx, d.DUT, d.PhysicalDevicePath)
+	default:
+		return nil, nil
+	}
 }
 
 func getRootDevPartition(ctx context.Context, dut *dut.DUT) (string, error) {
