@@ -17,9 +17,9 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
-// setProxy sets the network proxy by calling tconn API.
+// SetProxy sets the network proxy by calling tconn API.
 // It is hardcoded to use fixed_servers mode for now.
-func (c *Chrome) setProxy(ctx context.Context, proxyAddress string) error {
+func (c *Chrome) SetProxy(ctx context.Context, proxyAddress string) error {
 	tconn, err := c.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get test API connection")
@@ -83,7 +83,7 @@ func (c *Chrome) LaunchAndApplyProxy(ctx context.Context, proxy *martianproxy.Pr
 		return errors.Wrap(err, "failed to import CA certificate")
 	}
 
-	return c.setProxy(ctx, proxy.ProxyAddress())
+	return c.SetProxy(ctx, proxy.ProxyAddress())
 }
 
 // parseProxyAddress parses a host:port string and returns the components.

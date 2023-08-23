@@ -6,16 +6,19 @@ package policy
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/martianproxy"
+	"go.chromium.org/tast-tests/cros/local/chrome/mitmproxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
+
+const mitmdumpBinFile = "mitmdump_bin"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -30,6 +33,7 @@ func init() {
 		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      15 * time.Minute,
+		Data:         []string{mitmdumpBinFile},
 		Fixture:      fixture.ChromeLoggedIn,
 	})
 }
@@ -41,11 +45,25 @@ func NetworkMonitor(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	proxy := martianproxy.New().SetOutDir(s.OutDir()).SetHar(true)
-	if err := cr.LaunchAndApplyProxy(ctx, proxy); err != nil {
-		s.Fatal("Failed to launch and apply proxy: ", err)
+	mp := mitmproxy.New()
+	cleanupFunc, certPath, err := mp.SetBinaryPath(s.DataPath(mitmdumpBinFile)).
+		SetDumpDir(s.OutDir()).Start(ctx)
+	if err != nil {
+		s.Fatal("Failed to launch mitmproxy: ", err)
 	}
-	defer proxy.Close(cleanupCtx)
+	defer func(ctx context.Context) {
+		if err := cleanupFunc(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to cleanup mitmproxy: ", err)
+		}
+	}(cleanupCtx)
+
+	if err := mitmproxy.ImportRootCertificate(ctx, cr.NormalizedUser(), certPath); err != nil {
+		s.Fatal("Failed to import cert: ", err)
+	}
+
+	if err := cr.SetProxy(ctx, fmt.Sprintf("localhost:%d", mp.ListenPort())); err != nil {
+		s.Fatal("Failed to set Chrome proxy: ", err)
+	}
 
 	// TODO: Add test logic here to monitor network traffic.
 	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://www.google.com")
