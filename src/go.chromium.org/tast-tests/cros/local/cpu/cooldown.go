@@ -192,7 +192,13 @@ func Cooldown(ctx context.Context) error {
 	}
 	// Usually takes longer than WaitUntilIdle().
 	if arch := runtime.GOARCH; arch != "arm" && arch != "arm64" {
-		if err := WaitUntilPkgStateIdleWithConfig(ctx, DefaultPkgIdleConfig()); err != nil {
+		pkgIdleConfig := DefaultPkgIdleConfig()
+		// Tremont (JasperLake) has difficulties reaching the package state idle
+		// level allowed in default config. Details in b/289367416.
+		if uarch, _ := FetchIntelCPUUarch(); uarch == "Tremont" {
+			pkgIdleConfig = LoosePkgIdleConfig()
+		}
+		if err := WaitUntilPkgStateIdleWithConfig(ctx, pkgIdleConfig); err != nil {
 			return errors.Wrap(err, "CPU package c-state failed to idle")
 		}
 	}

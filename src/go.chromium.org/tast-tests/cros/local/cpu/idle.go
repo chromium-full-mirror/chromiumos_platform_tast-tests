@@ -50,6 +50,17 @@ func DefaultPkgIdleConfig() IdleConfig {
 	}
 }
 
+// LoosePkgIdleConfig returns a looser config, compared to default config, that
+// allows a larger CPUUsagePercentMax.
+func LoosePkgIdleConfig() IdleConfig {
+	return IdleConfig{
+		Timeout:             3 * time.Minute,
+		CPUUsagePercentBase: 25.0,
+		CPUUsagePercentMax:  60.0,
+		Steps:               8,
+	}
+}
+
 // WaitUntilIdle waits until the CPU is idle, for a maximum of 120s. The CPU is
 // considered idle if the average usage over all CPU cores is less than 5%.
 // This percentage will be gradually increased to 20%, as older boards might
