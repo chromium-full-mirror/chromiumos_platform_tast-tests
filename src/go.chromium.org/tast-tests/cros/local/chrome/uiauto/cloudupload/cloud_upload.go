@@ -54,8 +54,7 @@ func (cu *CloudUpload) WaitFileHandlerAndChoose() uiauto.Action {
 		log("Starting File Handlers step"),
 		cu.ui.WaitUntilExists(fileHandlerDialog),
 		cu.ui.LeftClick(option),
-		cu.ui.LeftClick(fileHandlerOpenButton),
-		cu.ui.WaitUntilGone(fileHandlerDialog),
+		cu.ui.LeftClickUntil(fileHandlerOpenButton, cu.ui.Gone(fileHandlerDialog)),
 	)
 }
 
@@ -66,8 +65,7 @@ func (cu *CloudUpload) WaitGetStartedDialogAndClickNext() uiauto.Action {
 	return uiauto.Combine("Setup OneDrive dialog: get started",
 		log("Starting Get Started step"),
 		cu.ui.WaitUntilExists(dialog),
-		cu.ui.LeftClick(getStartedButton),
-		cu.ui.WaitUntilGone(dialog),
+		cu.ui.LeftClickUntil(getStartedButton, cu.ui.Gone(dialog)),
 	)
 }
 
@@ -119,8 +117,7 @@ func (cu *CloudUpload) WaitConnectToOneDriveDialogAndClickConnect() uiauto.Actio
 	return uiauto.Combine("Connect to OneDrive dialog: connect",
 		log("Starting Connect to OneDrive step"),
 		cu.ui.WaitUntilExists(connectToOneDriveDialog),
-		cu.ui.LeftClick(connectButton),
-		cu.ui.WaitUntilGone(connectToOneDriveDialog),
+		cu.ui.LeftClickUntil(connectButton, cu.ui.Gone(connectToOneDriveDialog)),
 	)
 }
 
@@ -133,8 +130,7 @@ func (cu *CloudUpload) WaitSetupCompleteDialogAndClickDone() uiauto.Action {
 	return uiauto.Combine("Setup Complete dialog: done",
 		log("Starting Setup Complete step"),
 		cu.ui.WaitUntilExists(SetupCompleteDialog),
-		cu.ui.LeftClick(doneButton),
-		cu.ui.WaitUntilGone(SetupCompleteDialog),
+		cu.ui.LeftClickUntil(doneButton, cu.ui.Gone(SetupCompleteDialog)),
 	)
 }
 
@@ -153,8 +149,7 @@ func (cu *CloudUpload) WaitOneDriveConnectedDialogAndClickClose() uiauto.Action 
 	return uiauto.Combine("OneDrive Connected dialog: close",
 		log("Starting OneDrive connected step"),
 		cu.ui.WaitUntilExists(OneDriveConnectedDialog),
-		cu.ui.LeftClick(closeButton),
-		cu.ui.WaitUntilGone(OneDriveConnectedDialog),
+		cu.ui.LeftClickUntil(closeButton, cu.ui.Gone(OneDriveConnectedDialog)),
 	)
 }
 

@@ -72,10 +72,13 @@ func OdfsManageInSettings(ctx context.Context, s *testing.State) {
 
 	settingsApp := ossettings.New(tconn)
 	cloudUpload := cloudupload.App(tconn, filesconsts.OneDrive)
+	oneDriveDisconnectedLink := nodewith.Name("OneDrive Disconnected").Role(role.Link)
+	connectAccountButton := nodewith.Name("Connect account").Role(role.Button)
 	if err := uiauto.Combine("Connect to OneDrive via the Files settings page",
 		filesApp.ClickMoreMenuItem("Files settings"),
-		settingsApp.LeftClick(nodewith.Name("OneDrive Disconnected").Role(role.Link)),
-		settingsApp.LeftClick(nodewith.Name("Connect account").Role(role.Button)),
+		settingsApp.WaitUntilExists(oneDriveDisconnectedLink),
+		settingsApp.LeftClickUntil(oneDriveDisconnectedLink, settingsApp.Exists(connectAccountButton)),
+		settingsApp.LeftClick(connectAccountButton),
 		cloudUpload.WaitConnectToOneDriveDialogAndClickConnect(),
 		ms365.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog, false /*=skipPassword*/),
 		cloudUpload.WaitOneDriveConnectedDialogAndClickClose(),
@@ -91,10 +94,13 @@ func OdfsManageInSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to navigate to OneDrive in Files App: ", err)
 	}
 
+	oneDriveConnectedLink := nodewith.NameStartingWith("OneDrive Signed in as").Role(role.Link)
+	disconnectButton := nodewith.Name("Disconnect").Role(role.Button)
 	if err := uiauto.Combine("Disconnect from OneDrive via the Files settings page",
 		filesApp.ClickMoreMenuItem("Files settings"),
-		settingsApp.LeftClick(nodewith.NameStartingWith("OneDrive Signed in as").Role(role.Link)),
-		settingsApp.LeftClick(nodewith.Name("Disconnect").Role(role.Button)),
+		settingsApp.WaitUntilExists(oneDriveConnectedLink),
+		settingsApp.LeftClickUntil(oneDriveConnectedLink, settingsApp.Exists(disconnectButton)),
+		settingsApp.LeftClick(disconnectButton),
 	)(ctx); err != nil {
 		s.Fatal("Failed disconnect from OneDrive via the Files settings page: ", err)
 	}
