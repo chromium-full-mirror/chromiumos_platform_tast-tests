@@ -203,7 +203,7 @@ func init() {
 			"alvinjia@google.com",
 		},
 		// Need QsRevamp to access new audio settings UI.
-		Impl: inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle, qsRevampEnabled),
+		Impl: inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle, qsRevampEnabled, emojiPickerGifSupport),
 		// Need aloop for route playback to capture.
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -446,7 +446,7 @@ func init() {
 			"alvinjia@google.com",
 		},
 		// Need QsRevamp to access new audio settings UI.
-		Impl: inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle, qsRevampEnabled),
+		Impl: inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle, qsRevampEnabled, emojiPickerGifSupport),
 		// Need aloop for route playback to capture.
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
