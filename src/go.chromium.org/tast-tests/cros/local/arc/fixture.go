@@ -430,6 +430,29 @@ func init() {
 
 	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"))).Opts()
+	}
+	// lacrosWithArcBootedAndDisableExternalStorage is a fixture that combines the functionality of arcBootedWithDisableExternalStorage and lacros.
+	testing.AddFixture(&testing.Fixture{
+		Name: "lacrosWithArcBootedAndDisableExternalStorage",
+		Desc: "Lacros Chrome from a pre-built image with ARC booted and external storage disabled",
+		Contacts: []string{
+			"hungmn@google.com",
+			"arc-performance@google.com",
+		},
+		Impl:            NewArcBootedFixture(fixtureConfig),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		return []chrome.Option{
 			chrome.ARCEnabled(),
 			chrome.UnRestrictARCCPU(),
@@ -538,7 +561,6 @@ type bootedFixture struct {
 	fOpt chrome.OptionsCallback // Function to return chrome options.
 }
 
-
 // BootedFixtureConfig configures the fixture in NewArcBootedFixture
 type BootedFixtureConfig struct {
 	// OptionsCallback function to provide functions to chrome.
@@ -553,7 +575,6 @@ type BootedFixtureConfig struct {
 	PlayStoreOptin bool
 }
 
-
 // DefaultBootedFixtureConfig provides sane defaults for most tests.
 func DefaultBootedFixtureConfig() BootedFixtureConfig {
 	return BootedFixtureConfig{
@@ -561,10 +582,10 @@ func DefaultBootedFixtureConfig() BootedFixtureConfig {
 			return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU()}, nil
 		},
 		// specified config appended to arcvm_dev.conf.
-		ArcvmConfig:         "",
-		BootTimeout:         BootTimeout,
-		EnableUIAutomator:   true,
-		PlayStoreOptin:      false,
+		ArcvmConfig:       "",
+		BootTimeout:       BootTimeout,
+		EnableUIAutomator: true,
+		PlayStoreOptin:    false,
 	}
 }
 
@@ -572,10 +593,10 @@ func DefaultBootedFixtureConfig() BootedFixtureConfig {
 // ARCEnabled() will always be added to the Chrome options returned by OptionsCallback.
 func NewArcBootedFixture(arcBootedFixtureConfig BootedFixtureConfig) testing.FixtureImpl {
 	return &bootedFixture{
-		enableUIAutomator:   arcBootedFixtureConfig.EnableUIAutomator,
-		arcvmConfig:         arcBootedFixtureConfig.ArcvmConfig,
-		playStoreOptin:      arcBootedFixtureConfig.PlayStoreOptin,
-		bootTimeout:         arcBootedFixtureConfig.BootTimeout,
+		enableUIAutomator: arcBootedFixtureConfig.EnableUIAutomator,
+		arcvmConfig:       arcBootedFixtureConfig.ArcvmConfig,
+		playStoreOptin:    arcBootedFixtureConfig.PlayStoreOptin,
+		bootTimeout:       arcBootedFixtureConfig.BootTimeout,
 		fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts, err := arcBootedFixtureConfig.FOpts(ctx, s)
 			if err != nil {

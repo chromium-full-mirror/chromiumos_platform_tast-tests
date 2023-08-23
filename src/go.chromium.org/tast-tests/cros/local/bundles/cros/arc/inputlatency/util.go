@@ -24,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -320,4 +321,15 @@ func vmTimeDiff(ctx context.Context, a *arc.ARC) (int64, error) {
 		return 0, errors.Wrap(err, "unable to convert arc-host-clock-client output")
 	}
 	return i, nil
+}
+
+// WaitForCPUStabilized waits until the CPU is stable enough for capturing input latency metrics
+func WaitForCPUStabilized(ctx context.Context) error {
+	idleConfig := cpu.DefaultIdleConfig()
+	// Input propagation should not consume a lot of CPU. Setting a higher percentage than the
+	// default ones to make sure the tests can pass consistently while having stable metric
+	// results.
+	idleConfig.CPUUsagePercentMax = 40
+	_, err := cpu.WaitUntilStabilizedWithIdleConfig(ctx, cpu.IdleCoolDownConfig(), idleConfig)
+	return err
 }

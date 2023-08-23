@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/inputlatency"
-	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/testing"
 )
@@ -34,20 +33,20 @@ func init() {
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_container"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Fixture:           "lacrosWithArcBooted",
+			Fixture:           "lacrosWithArcBootedAndDisableExternalStorage",
 		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 		}, {
 			Name:              "vm_lacros",
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Fixture:           "lacrosWithArcBooted",
+			Fixture:           "lacrosWithArcBootedAndDisableExternalStorage",
 		}},
 		Timeout: 10 * time.Minute,
 	})
@@ -96,7 +95,7 @@ func KeyboardPerf(ctx context.Context, s *testing.State) {
 	}
 	defer act.Stop(ctx, tconn)
 
-	if _, err := cpu.WaitUntilStabilized(ctx, cpu.IdleCoolDownConfig()); err != nil {
+	if err := inputlatency.WaitForCPUStabilized(ctx); err != nil {
 		s.Fatal("Failed to wait until CPU is stabilized: ", err)
 	}
 
