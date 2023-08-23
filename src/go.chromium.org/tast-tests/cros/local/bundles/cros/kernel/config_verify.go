@@ -23,7 +23,7 @@ func init() {
 		},
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:cq-medium", "group:mainline"},
 		Params: []testing.Param{{
 			Name: "chromeos",
 			Val:  addExtraCheckForChromeOS,
