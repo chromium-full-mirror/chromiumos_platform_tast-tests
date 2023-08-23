@@ -1,0 +1,105 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package perf
+
+import (
+	"encoding/json"
+	"io/ioutil"
+	"path/filepath"
+	"time"
+)
+
+// CheckpointsFileName is the .json file printed for debugging / testing.
+const CheckpointsFileName = "checkpoint_log.json"
+
+// Section records the start and end timestamp.
+// Every Checkpoint can have multiple sections.
+type Section struct {
+	startTs time.Time
+	endTs   time.Time
+}
+
+// SetEnd sets the end timestamp of a Section.
+func (s *Section) SetEnd(ts time.Time) {
+	s.endTs = ts
+}
+
+// MarshalJSON formats Section for printing in json.
+func (s Section) MarshalJSON() ([]byte, error) {
+	sectionJSON := []float64{
+		float64(s.startTs.UnixMicro()) / 1000000.0,
+		float64(s.endTs.UnixMicro()) / 1000000.0,
+	}
+	return json.Marshal(sectionJSON)
+}
+
+// NewSection initialize a new Section with a start timestamp.
+func NewSection(startTs time.Time) *Section {
+	return &Section{
+		startTs: startTs,
+	}
+}
+
+// Checkpoints is a map of Checkpoint(string) to a list of Sections.
+// The timestamps used in Sections are supplied by Clock.
+type Checkpoints struct {
+	checkpoints map[string][]*Section
+	clock       Clock
+}
+
+// NewSection initialize a new Section with the current timestamp.
+func (c *Checkpoints) NewSection(checkpointName string) *Section {
+	section := NewSection(c.clock.Now())
+	if _, ok := c.checkpoints[checkpointName]; ok {
+		c.checkpoints[checkpointName] = append(c.checkpoints[checkpointName], section)
+	} else {
+		c.checkpoints[checkpointName] = []*Section{section}
+	}
+	return section
+}
+
+// EndSection ends section with the current timestamp, and adds it to
+// Checkpoints under the given checkpointName.
+func (c *Checkpoints) EndSection(section *Section) {
+	section.SetEnd(c.clock.Now())
+}
+
+// Save saves checkpoints as a json file for debugging. outDir should be the
+// output directory path obtained from testing.State.
+func (c *Checkpoints) Save(outDir string) error {
+	fileName := CheckpointsFileName
+	json, err := json.MarshalIndent(*c, "", "    ")
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filepath.Join(outDir, fileName), json, 0644)
+}
+
+// MarshalJSON formats Checkpoints for printing in json.
+func (c Checkpoints) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.checkpoints)
+}
+
+// NewCheckpoints returns a new empty Checkpoints.
+func NewCheckpoints(setters ...CheckpointsSetter) *Checkpoints {
+	c := &Checkpoints{
+		checkpoints: make(map[string][]*Section),
+		clock:       &defaultClock{},
+	}
+	for _, setter := range setters {
+		setter(c)
+	}
+	return c
+}
+
+// CheckpointsSetter sets options for Checkpoints.
+type CheckpointsSetter func(*Checkpoints)
+
+// SetClock sets a Clock implementation.
+func SetClock(clock Clock) CheckpointsSetter {
+	return func(c *Checkpoints) {
+		c.clock = clock
+	}
+}

@@ -92,6 +92,8 @@ type defaultClock struct{}
 
 // Sleep waits for a certain time duration.
 func (t defaultClock) Sleep(ctx context.Context, d time.Duration) error {
+	// GoBigSleepLint: In Timeline implementation, Sleep waits for the next
+	// round of metrics collection.
 	return testing.Sleep(ctx, d)
 }
 
