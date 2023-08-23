@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -48,6 +49,7 @@ func init() {
 		Params: []testing.Param{{
 			Val:               "arc_print_ippusb_golden.pwg",
 			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("elm", "hana", "kevin", "scarlet")),
 			ExtraData:         []string{"arc_print_ippusb_golden.pwg"},
 			ExtraAttr:         []string{"group:cq-medium"},
 		}, {
