@@ -43,7 +43,7 @@ const (
 	SlideShow     = "Slide show"
 	FeelTheBreeze = "Feel the breeze"
 	FloatOnBy     = "Float on by"
-	VideoTheme    = "Dawn to dark"
+	VideoTheme    = "Dawn to dark - exclusive"
 )
 
 // const for ambient video choices.
