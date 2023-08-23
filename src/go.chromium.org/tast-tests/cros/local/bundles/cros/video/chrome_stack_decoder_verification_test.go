@@ -354,7 +354,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		ValidatorType:   "decoding.MD5",
 		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 	}, {
-		Name:            "v4l2_flat_vp9_0_group1_gf_dist",
+		Name:            "v4l2_flat_p9_0_group1_gf_dist",
 		Attr:            perBuildAttrs,
 		SoftwareDeps:    `[]string{caps.HWDecodeVP9, "v4l2_codec"}`,
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding())",
