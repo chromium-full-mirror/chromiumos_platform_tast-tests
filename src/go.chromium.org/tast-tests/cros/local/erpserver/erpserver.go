@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 
@@ -314,6 +315,54 @@ func (erpserver *ErpServer) NextRecord() *reporting.WrappedRecord {
 			})
 			return record.record
 		}
+	}
+}
+
+// NextRecordAsync waits for receiving a new record asynchronously and will timeout if it takes more than the specified timeout.
+func (erpserver *ErpServer) NextRecordAsync(timeout time.Duration) (*reporting.WrappedRecord, error) {
+	// Create a channel to communicate between the server's main thread and the thread that is responsible for receiving new records.
+	recordChan := make(chan *recordData, 1)
+
+	// Start a new goroutine to receive new records and add them to the channel.
+	go func() {
+		for {
+			// Block until a new record is received or until the timeout expires.
+			select {
+			case record := <-erpserver.queue:
+				// Search for the new sequence info in the existing sequence
+				// list to avoid records duplication.
+				exists := false
+				for _, sequenceInfoItem := range erpserver.sequenceInfoList {
+					if sequenceInfoItem.Priority == record.sequence.Priority &&
+						sequenceInfoItem.GenerationID == record.sequence.GenerationID &&
+						sequenceInfoItem.SequencingID == record.sequence.SequencingID {
+						exists = true
+						break
+					}
+				}
+
+				// If the record does not exist add the sequence info to the list and add the record to the channel.
+				if !exists {
+					erpserver.sequenceInfoList = append(erpserver.sequenceInfoList, SequenceInfo{
+						GenerationID: record.sequence.GenerationID,
+						Priority:     record.sequence.Priority,
+						SequencingID: record.sequence.SequencingID,
+					})
+					recordChan <- &record
+				}
+			case <-time.After(timeout):
+				return
+			}
+		}
+	}()
+
+	// Block until a record is received from the channel or until the timeout expires.
+	select {
+	case record := <-recordChan:
+		// Return the record.
+		return record.record, nil
+	case <-time.After(timeout):
+		return nil, errors.New("timed out waiting for new record")
 	}
 }
 

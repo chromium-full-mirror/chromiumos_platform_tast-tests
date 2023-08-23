@@ -165,8 +165,25 @@ func ReportingNetworkTelemetry(ctx context.Context, s *testing.State) {
 	// resulting 2 network telemetry records in the initial upload.
 	// TODO(b/288882710): Make collection and upload rates configurable to
 	// reduce them for testing and update the test accordingly.
+
+	// Create a channel to communicate between the goroutines.
+	ch := make(chan *reporting.WrappedRecord)
+
+	// Start 2 goroutines to fetch records.
 	for i := 0; i < 2; i++ {
-		record := server.NextRecord()
+		go func() {
+			record, err := server.NextRecordAsync(4 * time.Minute)
+			if err != nil {
+				s.Fatal("Failed to wait for the record: ", err)
+			}
+			ch <- record
+		}()
+	}
+
+	// Wait for all of the records to be fetched.
+	for i := 0; i < 2; i++ {
+		record := <-ch
+
 		if record == nil {
 			s.Errorf("Record %d is nil", i)
 		}

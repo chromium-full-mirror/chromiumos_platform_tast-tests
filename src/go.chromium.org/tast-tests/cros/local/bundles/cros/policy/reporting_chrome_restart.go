@@ -24,7 +24,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ReportingChromeRestart,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that missive and enqueue work after chrome shuts down and restarts",
+		Desc:         "Verifies that missive and enqueue work after chrome shuts down and restarts, kill chrome, check missive, start chrome, check missive, enqueue",
 		Contacts: []string{
 			"cros-reporting-team@google.com",
 			"albertojuarez@google.com", // Test author
@@ -37,7 +37,6 @@ func init() {
 	})
 }
 
-// Kill chrome, check missive, start chrome, check missive, enqueue.
 func ReportingChromeRestart(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	// Prepare fake ERP server.
@@ -102,8 +101,25 @@ func ReportingChromeRestart(ctx context.Context, s *testing.State) {
 	}
 
 	// Make sure that all 10 records are formed correctly.
+
+	// Create a channel to communicate between the goroutines.
+	ch := make(chan *reporting.WrappedRecord)
+
+	// Start 10 goroutines to fetch records.
 	for i := 0; i < 10; i++ {
-		record := server.NextRecord()
+		go func() {
+			record, err := server.NextRecordAsync(1 * time.Minute)
+			if err != nil {
+				s.Fatal("Failed to wait for the record: ", err)
+			}
+			ch <- record
+		}()
+	}
+
+	// Wait for all of the records to be fetched.
+	for i := 0; i < 10; i++ {
+		record := <-ch
+
 		if record == nil {
 			s.Errorf("Record %d is nil", i)
 		}
