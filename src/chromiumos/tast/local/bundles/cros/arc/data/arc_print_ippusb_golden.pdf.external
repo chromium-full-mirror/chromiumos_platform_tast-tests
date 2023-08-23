@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/arc_print_ippusb_golden_20230420.pdf",
-  "size": 19425,
-  "sha256sum": "68f72c642a4a54ff16bd18c83fbf722b0b6755b87e037648af74375bf1f84714"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/arc_print_ippusb_golden_20200424.pdf",
+  "size": 19646,
+  "sha256sum": "d83298cd5c90e6e9014da445924851034493a3587c693c5a6c9c11f1383a137c"
 }

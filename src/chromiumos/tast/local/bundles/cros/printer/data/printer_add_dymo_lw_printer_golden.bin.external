@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_dymo_lw_printer_golden_20230308.bin",
-  "size": 502,
-  "sha256sum": "c823feb8fa4d252b4b77929f34a83b4552bf0060ee6809ba744b76e60ebc7655"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_dymo_lw_printer_golden_20220919.bin",
+  "size": 1583,
+  "sha256sum": "7ce1128681225cdcf6e232830dd86d251a742c59cbb55d5fe7802a7af80e510f"
 }
