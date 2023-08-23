@@ -122,8 +122,12 @@ type FixtureData struct {
 	// A list of the generated files, the test is expected to iterate over those files.
 	GeneratedFiles []TestFile
 
-	// The DriveFS helper, reused by tests.
+	// The DriveFS helper, reused by tests. This will be nil for tests without DriveFS.
 	DriveFs *drivefs.DriveFs
+
+	// The APIClient singleton used to make calls directly to Drive.
+	// This will be nil for tests without DriveFS.
+	DriveAPIClient *drivefs.APIClient
 }
 
 type fixture struct {
@@ -173,11 +177,13 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var cr *chrome.Chrome
 	var err error
 	var driveFsClient *drivefs.DriveFs
+	var driveAPIClient *drivefs.APIClient
 	if f.provider == filesconsts.DriveFs {
 		// Lacros is handled by the its parent fixture.
 		cr = s.ParentValue().(*drivefs.FixtureData).Chrome
 		f.tconn = s.ParentValue().(*drivefs.FixtureData).TestAPIConn
 		driveFsClient = s.ParentValue().(*drivefs.FixtureData).DriveFs
+		driveAPIClient = s.ParentValue().(*drivefs.FixtureData).APIClient
 	} else if f.provider == filesconsts.OneDrive {
 		opts := f.chromeOptions
 
@@ -226,10 +232,11 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	f.srcFiles["xlsx"] = s.DataPath("Sample_XLSX_file_20230724.xlsx")
 
 	f.data = &FixtureData{
-		Chrome:       cr,
-		TestAPIConn:  f.tconn,
-		TargetFolder: targetBaseName,
-		DriveFs:      driveFsClient,
+		Chrome:         cr,
+		TestAPIConn:    f.tconn,
+		TargetFolder:   targetFolder,
+		DriveFs:        driveFsClient,
+		DriveAPIClient: driveAPIClient,
 	}
 	return f.data
 }

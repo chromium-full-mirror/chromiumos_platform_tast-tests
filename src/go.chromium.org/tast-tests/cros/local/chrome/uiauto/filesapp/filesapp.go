@@ -129,7 +129,7 @@ func LaunchSWAToPath(ctx context.Context, tconn *chrome.TestConn, path string) (
 			return testing.PollBreak(errors.Wrapf(err, "failed to wait for path %q to exist or path is not a directory", path))
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		return nil, err
 	}
 	if err := tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.launchFilesAppToPath)`, path); err != nil {
@@ -667,9 +667,12 @@ func (f *FilesApp) OpenOfficeFile(ctx context.Context, baseDir, fileName string,
 
 	if err := uiauto.Combine("Open office file",
 		func(ctx context.Context) error {
-			// For "Google Drive" we need to call OpenDrive() because it expects the
-			// title to be "My Drive".
-			if baseDir == GoogleDrive {
+			if baseDir == "" {
+				// Empty `baseDir` means we are opening the file from the current folder.
+				return nil
+			} else if baseDir == GoogleDrive {
+				// For "Google Drive" we need to call OpenDrive() because it expects the
+				// title to be "My Drive".
 				return f.OpenDrive()(ctx)
 			}
 			return f.OpenDir(baseDir, FilesTitlePrefix+baseDir)(ctx)
