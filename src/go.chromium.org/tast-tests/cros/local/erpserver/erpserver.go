@@ -60,6 +60,7 @@ type RequestEncryptedRecord struct {
 // UploadRequest is a struct that maps to ERP upload requests JSON.
 type UploadRequest struct {
 	AttachEncryptionSettings bool
+	AttachConfigurationFile  bool
 	EncryptedRecord          []RequestEncryptedRecord
 }
 
@@ -71,10 +72,26 @@ type ResponseEncryptionSettings struct {
 	PublicKeySignature string `json:"publicKeySignature"`
 }
 
+// ResponseConfigFile is a struct that maps to the ERP config file in the
+// JSON response.
+type ResponseConfigFile struct {
+	EventConfigs               []EventConfig `json:"eventConfigs"`
+	ConfigurationFileSignature string        `json:"configurationFileSignature"`
+}
+
+// EventConfig is a struct that maps to the ERP event config in the
+// JSON response.
+type EventConfig struct {
+	Destination           string `json:"destination"`
+	MinimumReleaseVersion int32  `json:"minimumReleaseVersion"`
+	MaximumReleaseVersion int32  `json:"maximumReleaseVersion"`
+}
+
 // UploadResponse is a struct that maps to ERP upload responses JSON.
 type UploadResponse struct {
 	LastSucceedUploadedRecord *SequenceInfo               `json:"lastSucceedUploadedRecord,omitempty"`
 	EncryptionSettings        *ResponseEncryptionSettings `json:"encryptionSettings,omitempty"`
+	ConfigurationFile         *ResponseConfigFile         `json:"configurationFile,omitempty"`
 }
 
 // getKey decrypt the symemtric key used for record encryption using the private key.
@@ -128,6 +145,7 @@ type ErpServer struct {
 	queue            chan recordData
 	sequenceInfoList []SequenceInfo // List of sequence info of reported records that matches filter.
 	filter           func(*reporting.WrappedRecord) bool
+	fakeConfigFile   *ResponseConfigFile
 }
 
 // New creates a fake ERP server. If bufferSize is 0, default buffer size will be used.
@@ -157,6 +175,12 @@ func (erpserver *ErpServer) SetFilter(filter func(*reporting.WrappedRecord) bool
 	erpserver.filter = filter
 }
 
+// SetFakeConfigFile sets a fake configuration file that will be returned to the
+// client if requested.
+func (erpserver *ErpServer) SetFakeConfigFile(configFile *ResponseConfigFile) {
+	erpserver.fakeConfigFile = configFile
+}
+
 func (erpserver *ErpServer) handleUpload(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	testing.ContextLog(ctx, "ERP new request")
 	body, err := ioutil.ReadAll(r.Body)
@@ -180,6 +204,13 @@ func (erpserver *ErpServer) handleUpload(ctx context.Context, w http.ResponseWri
 			PublicKeyID:        erpserver.keyID,
 			PublicKey:          erpserver.publicKeyEncoded,
 			PublicKeySignature: erpserver.signatureEncoded,
+		}
+	}
+
+	if request.AttachConfigurationFile {
+		testing.ContextLog(ctx, "ERP attach configuration file requested")
+		if erpserver.fakeConfigFile != nil {
+			response.ConfigurationFile = erpserver.fakeConfigFile
 		}
 	}
 
