@@ -8,12 +8,9 @@ package passwordleakdetection
 
 import (
 	"context"
-	"net/http/httptest"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -70,7 +67,9 @@ func GetDataFiles() []string {
 //
 // We currently use option #2 for this test as it only requires running some JS
 // on a test webpage we control.
-func TriggerPasswordLeakDetection(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, _ *chrome.TestConn, _ networkrequestmonitor.PolicySetting) (err error) {
+func TriggerPasswordLeakDetection(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	server := params.Server
+	br := params.Browser
 	// Open a webpage that will trigger password leak detection, when enabled.
 	conn, err := br.NewConn(ctx, server.URL+"/"+testFileName)
 	if err != nil {

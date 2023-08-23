@@ -8,11 +8,9 @@ package quickanswers
 
 import (
 	"context"
-	"net/http/httptest"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
@@ -108,8 +106,15 @@ func GetDataFiles() []string {
 }
 
 // TriggerQuickAnswersDefinition attempts to trigger quick answers definition and checks if the policy works as defined in the DefinitionTestCase param.
-func TriggerQuickAnswersDefinition(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
-	param := DefinitionTestCases()[policySetting]
+func TriggerQuickAnswersDefinition(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	server := params.Server
+	br := params.Browser
+	cr := params.Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+	policyParam := DefinitionTestCases()[params.PolicySetting]
 
 	// Open page with the query word on it.
 	conn, err := br.NewConn(ctx, server.URL+"/"+testFileName, browser.WithNewWindow())
@@ -143,14 +148,14 @@ func TriggerQuickAnswersDefinition(ctx context.Context, _ *chrome.Chrome, br *br
 		ui.WaitUntilExists(quickAnswers),
 		ui.WaitUntilExists(definitionResult),
 	)(ctx); err != nil {
-		if param.ShouldShowContextMenu {
+		if policyParam.ShouldShowContextMenu {
 			return errors.Wrap(err, "quick answers result not showing up")
 		}
 		if !nodewith.IsNodeNotFoundErr(err) {
 			return errors.Wrap(err, "failure while trying to show the context menu")
 		}
 		// else the context menu was not found, as expected.
-	} else if !param.ShouldShowContextMenu {
+	} else if !policyParam.ShouldShowContextMenu {
 		return errors.New("quick answers result shows when it should be disabled")
 	}
 
@@ -165,8 +170,15 @@ func TriggerQuickAnswersDefinition(ctx context.Context, _ *chrome.Chrome, br *br
 }
 
 // TriggerQuickAnswersUnitConversion attempts to trigger quick answers unit conversion and checks if the policy works as defined in the UnitConversionTestCase param.
-func TriggerQuickAnswersUnitConversion(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
-	param := UnitConversionTestCases()[policySetting]
+func TriggerQuickAnswersUnitConversion(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	server := params.Server
+	br := params.Browser
+	cr := params.Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+	param := DefinitionTestCases()[params.PolicySetting]
 
 	// Open page with source units on it.
 	conn, err := br.NewConn(ctx, server.URL+"/"+testFileName, browser.WithNewWindow())

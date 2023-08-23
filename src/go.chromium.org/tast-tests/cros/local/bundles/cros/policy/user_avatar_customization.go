@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/useravatar"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -129,7 +130,10 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to verify updated policies: ", err)
 			}
 
-			if err := useravatar.TriggerUserAvatarCustomization(ctx, nil, nil, nil, tconn, key); err != nil {
+			if err := useravatar.TriggerUserAvatarCustomization(ctx,
+				networkrequestmonitor.OptionalServiceParams{
+					Chrome:        cr,
+					PolicySetting: key}); err != nil {
 				s.Fatal("Failed to trigger and verify user avatar customization: ", err)
 			}
 

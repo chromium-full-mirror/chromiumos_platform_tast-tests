@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/annotations"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/spellcheck"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -22,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -66,11 +66,6 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
 	// Setup and start webserver (implicitly provides data form above).
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
@@ -109,7 +104,11 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			}
 			defer cleanup(cleanupCtx)
 
-			if err := spellcheck.TriggerSpellCheck(ctx, cr, br, server, tconn, key); err != nil {
+			if err := spellcheck.TriggerSpellCheck(ctx, networkrequestmonitor.OptionalServiceParams{
+				Server:        server,
+				Chrome:        cr,
+				Browser:       br,
+				PolicySetting: key}); err != nil {
 				s.Fatal("Failed to trigger and verify spellcheck: ", err)
 			}
 

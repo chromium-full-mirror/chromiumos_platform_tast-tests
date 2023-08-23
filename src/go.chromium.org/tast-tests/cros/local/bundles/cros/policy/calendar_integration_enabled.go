@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/calendarintegration"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -61,11 +62,6 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -98,7 +94,11 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			if err := calendarintegration.TriggerCalendarIntegration(ctx, cr, br, nil, tconn, key); err != nil {
+			if err := calendarintegration.TriggerCalendarIntegration(ctx,
+				networkrequestmonitor.OptionalServiceParams{
+					Chrome:        cr,
+					Browser:       br,
+					PolicySetting: key}); err != nil {
 				s.Fatal("Failed to trigger and verify calendar integration: ", err)
 			}
 

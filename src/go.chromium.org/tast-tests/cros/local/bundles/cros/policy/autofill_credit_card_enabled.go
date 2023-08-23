@@ -8,7 +8,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -18,18 +17,15 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/autofillpayments"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/https"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -100,74 +96,22 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
 	server, err := newLocalHTTPSTestServer(s.DataPath(autofillCreditCardHTMLFile), s.DataPath(autofillCreditCardCertFile), s.DataPath(autofillCreditCardKeyFile))
 	if err != nil {
 		s.Fatal("Failed to start the server: ", err)
 	}
 	defer server.Close()
 
-	creditCardFields := []struct {
-		// The value which is set on the settings page and which should have been filled into the html input field after the autofill has been triggered.
-		fieldValue string
-		// The field's corresponding id on autofill_credit_card_enabled.html
-		htmlFieldID string
-	}{
-		{
-			fieldValue:  "4111111111111111", // A fake Visa fulfilling the Luhn algorithm.
-			htmlFieldID: "cc-number",
-		},
-		{
-			fieldValue:  "Tester",
-			htmlFieldID: "cc-name",
-		},
-		{
-			fieldValue:  time.Now().AddDate( /*year=*/ 1, 0, 0).Format("01/2006"),
-			htmlFieldID: "cc-exp",
-		},
-	}
+	for key, param := range autofillpayments.GetTestCases() {
 
-	for _, param := range []struct {
-		name                 string
-		wantRestriction      restriction.Restriction
-		wantChecked          checked.Checked
-		shouldFindAnnotation bool
-		policy               *policy.AutofillCreditCardEnabled
-	}{
-		{
-			name:                 "unset",
-			wantRestriction:      restriction.None,
-			wantChecked:          checked.True,
-			shouldFindAnnotation: true,
-			policy:               &policy.AutofillCreditCardEnabled{Stat: policy.StatusUnset},
-		},
-		{
-			name:                 "allow",
-			wantRestriction:      restriction.None,
-			wantChecked:          checked.True,
-			shouldFindAnnotation: true,
-			policy:               &policy.AutofillCreditCardEnabled{Val: true},
-		},
-		{
-			name:                 "deny",
-			wantRestriction:      restriction.Disabled,
-			wantChecked:          checked.False,
-			shouldFindAnnotation: false,
-			policy:               &policy.AutofillCreditCardEnabled{Val: false},
-		},
-	} {
-		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 				s.Fatal("Failed to clean up: ", err)
 			}
 
 			// Update policies.
-			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.policy}); err != nil {
+			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.Policy}); err != nil {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
@@ -177,120 +121,18 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to open the browser: ", err)
 			}
 			defer closeBrowser(cleanupCtx)
-			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
+			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
-			// Open the net-export page and start logging.
-			if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
-				s.Fatal("Failed to start logging: ", err)
-			}
-
-			// Ensure saving payment methods toggle is accordingly enabled/disabled.
-			if err := policyutil.SettingsPage(ctx, cr, br, "payments").
-				SelectNode(ctx, nodewith.
-					Name("Save and fill payment methods").
-					Role(role.ToggleButton)).
-				Restriction(param.wantRestriction).
-				Checked(param.wantChecked).
-				Verify(); err != nil {
-				s.Error("Unexpected settings state: ", err)
-			}
-
-			// If autofilling credit card details policy is enabled, let's ensure that we can add
-			// a credit card in the settings and autofill it into a credit card form.
-			if param.wantChecked == checked.True {
-				ui := uiauto.New(tconn)
-				visaNode := nodewith.NameContaining("Visa").NameContaining("1111").Role(role.StaticText)
-
-				isSavedAlready, err := ui.IsNodeFound(ctx, visaNode)
-				if err != nil {
-					s.Fatal("Failed to check if credit card node is already found: ", err)
-				}
-
-				// TODO(crbug.com/1298550): Don't rely on all files being in same directory.
-				baseDirectory, _ := filepath.Split(s.DataPath(autofillCreditCardCertFile))
-				serverConfiguration := https.ServerConfiguration{
-					ServerKeyPath:         s.DataPath(autofillCreditCardKeyFile),
-					ServerCertificatePath: s.DataPath(autofillCreditCardCertFile),
-					CaCertificatePath:     s.DataPath(autofillCreditCardCaCertFile),
-					HostedFilesBasePath:   baseDirectory,
-				}
-
-				// Save the certificate in chrome's certificate settings.
-				if err := https.ConfigureChromeToAcceptCertificate(ctx, serverConfiguration, cr, br, tconn); err != nil {
-					s.Fatal("Failed to set the certificate in Chrome's settings: ", err)
-				}
-
-				// The certificate doesn't work in 127.0.0.1 and it needs to be replaced with localhost.
-				port := server.Listener.Addr().(*net.TCPAddr).Port
-				urlToOpen := fmt.Sprintf("https://localhost:%d/%v", port, autofillCreditCardHTMLFile)
-
-				// Open the website with the credit card form.
-				conn, err := openCreditCardPage(ctx, br, tconn, urlToOpen)
-				if err != nil {
-					s.Fatal("Failed to open website: ", err)
-				}
-				defer conn.Close()
-
-				// If the credit card has already been saved, saving the same card again is not possible.
-				if !isSavedAlready {
-					kb, err := input.Keyboard(ctx)
-					if err != nil {
-						s.Fatal("Failed to use keyboard: ", err)
-					}
-					defer kb.Close(ctx)
-
-					// Fill in the credit card details and click on the save button.
-					jsScript := "(htmlFieldID, fieldValue) => { document.getElementById(htmlFieldID).value = fieldValue; }"
-					for _, creditCardField := range creditCardFields {
-						if err := conn.Call(ctx, nil, jsScript, creditCardField.htmlFieldID, creditCardField.fieldValue); err != nil {
-							s.Fatal("Failed to set the field value: ", err)
-						}
-					}
-
-					if err := uiauto.Combine("trigger and handle the save prompt for the credit card",
-						ui.DoDefaultUntil(nodewith.Name("OK").Role(role.Button).ClassName("test-target-button"), ui.Exists(visaNode)),
-						ui.LeftClickUntil(nodewith.Role(role.Button).Name("Save").ClassName("MdTextButton"), ui.Exists(nodewith.NameContaining("Card saved").Role(role.StaticText))),
-					)(ctx); err != nil {
-						s.Fatal("Failed to save credit card: ", err)
-					}
-
-					// Re-open the website with the credit card form.
-					conn.Close()
-					conn, err = openCreditCardPage(ctx, br, tconn, urlToOpen)
-					if err != nil {
-						s.Fatal("Failed to open website: ", err)
-					}
-					defer conn.Close()
-				}
-
-				// Trigger the autofill on the credit card form page.
-				nameTextBox := nodewith.Role(role.TextField).Name("Name on card")
-				autofillPopup := nodewith.Role(role.ListBoxOption).ClassName("PopupCellView").First()
-				if err := uiauto.Combine("clicking the Name on card field and choosing the suggested credit card",
-					ui.DoDefaultUntil(nameTextBox, ui.Exists(autofillPopup)),
-					ui.DoDefaultUntil(autofillPopup, ui.Exists(nodewith.Role(role.InlineTextBox).Name(creditCardFields[0].fieldValue))),
-				)(ctx); err != nil {
-					s.Fatal("Failed to trigger and use credit card autofill: ", err)
-				}
-
-				// Run JavaScript checks to confirm that all the fields are set correctly.
-				for _, creditCardField := range creditCardFields {
-					var valueFromHTML string
-					if err := conn.Eval(ctx, "document.getElementById('"+creditCardField.htmlFieldID+"').value", &valueFromHTML); err != nil {
-						s.Fatalf("Failed to get htmlFieldID=%s: %v", creditCardField.htmlFieldID, err)
-					}
-					if valueFromHTML != creditCardField.fieldValue {
-						s.Errorf("Credit card field was not set properly; got %q, want %q", valueFromHTML, creditCardField.fieldValue)
-					}
-				}
-			}
-			foundAnnotation := false
-			if foundAnnotation, err = annotations.StopLoggingCheckLogs(ctx, cr, br, autofillCreditCardAnnotationHash); err != nil {
-				s.Fatal("Failed to stop logging and check logs: ", err)
-			}
-
-			if foundAnnotation != param.shouldFindAnnotation {
-				s.Fatalf("Unexpected autofill annotation result: got %t expected %t", foundAnnotation, param.shouldFindAnnotation)
+			// TODO(crbug.com/1298550): Don't rely on all files being in same directory.
+			baseDirectory := filepath.Dir(s.DataPath(autofillCreditCardCertFile))
+			if err := autofillpayments.TriggerAutofillCreditCardEnabled(ctx,
+				networkrequestmonitor.OptionalServiceParams{
+					Chrome:        cr,
+					Browser:       br,
+					Server:        server,
+					BaseDirectory: baseDirectory,
+					PolicySetting: key}); err != nil {
+				s.Fatal("Failed to trigger autofill for payments: ", err)
 			}
 		})
 	}

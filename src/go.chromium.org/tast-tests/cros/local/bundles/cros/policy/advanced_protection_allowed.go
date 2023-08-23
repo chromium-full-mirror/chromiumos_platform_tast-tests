@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/advancedprotection"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -107,7 +108,11 @@ func AdvancedProtectionAllowed(ctx context.Context, s *testing.State) {
 			// Trigger file upload for scanning. This should trigger the
 			// safe_browsing_binary_upload_app annotation, if Advanced Protection is
 			// enabled.
-			if err := advancedprotection.TriggerUploadForScanning(ctx, nil, br, server, tconn, key); err != nil {
+			if err := advancedprotection.TriggerUploadForScanning(ctx,
+				networkrequestmonitor.OptionalServiceParams{
+					Chrome:        cr,
+					Browser:       br,
+					PolicySetting: key}); err != nil {
 				s.Fatal("Failed to trigger upload for scanning: ", err)
 			}
 

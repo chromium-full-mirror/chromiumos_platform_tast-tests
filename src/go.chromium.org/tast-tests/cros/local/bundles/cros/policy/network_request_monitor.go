@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/advancedprotection"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/autofillpayments"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/calendarintegration"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/defaultsearchprovider"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/domainreliability"
@@ -72,6 +73,8 @@ func init() {
 		Data: concatDataFileLists(),
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AdvancedProtectionAllowed{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.AutofillAddressEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.AutofillCreditCardEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DefaultSearchProviderEnabled{}, pci.VerifiedFunctionalityUI),
@@ -79,6 +82,7 @@ func init() {
 			pci.SearchFlag(&policy.DomainReliabilityAllowed{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.NearbyShareAllowed{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.PasswordLeakDetectionEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.PasswordManagerEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityUI),
@@ -100,7 +104,7 @@ func init() {
 	})
 }
 
-type triggerOptionalService func(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) error
+type triggerOptionalService func(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) error
 
 type optionalService struct {
 	// name of the optional service.
@@ -124,6 +128,17 @@ func optionalServices() []optionalService {
 			policies:              []policy.Policy{&policy.AdvancedProtectionAllowed{Val: false}},
 			trigger:               advancedprotection.TriggerUploadForScanning,
 			dataFiles:             advancedprotection.DataFiles(),
+		},
+		{
+			name:                  "autofill_payments",
+			associatedAnnotations: []string{autofillpayments.AutofillCreditCardAnnotationHash},
+			policies: []policy.Policy{
+				&policy.AutofillAddressEnabled{Val: false},
+				&policy.AutofillCreditCardEnabled{Val: false},
+				&policy.PasswordManagerEnabled{Val: false},
+			},
+			trigger:   autofillpayments.TriggerAutofillCreditCardEnabled,
+			dataFiles: autofillpayments.DataFiles(),
 		},
 		{
 			name:                  "calendar_integration",
@@ -404,7 +419,12 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	// Trigger the optional services one by one.
 	for _, service := range optionalServices() {
 		s.Run(ctx, service.name, func(ctx context.Context, s *testing.State) {
-			if err := service.trigger(ctx, cr, br, server, tconn, networkrequestmonitor.PolicyDisabled); err != nil {
+			params := networkrequestmonitor.OptionalServiceParams{
+				Chrome:        cr,
+				Browser:       br,
+				Server:        server,
+				PolicySetting: networkrequestmonitor.PolicyDisabled}
+			if err := service.trigger(ctx, params); err != nil {
 				s.Fatalf("Failed to trigger %v: %v", service.name, err)
 			}
 			hashCodes = append(hashCodes, service.associatedAnnotations...)

@@ -8,13 +8,10 @@ package userfeedback
 
 import (
 	"context"
-	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/feedbackapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -63,8 +60,14 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 
 // TriggerUserFeedback verifies feedback app doesnt send reports when policy is
 // off.
-func TriggerUserFeedback(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
-	param := TestCases()[policySetting]
+func TriggerUserFeedback(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	br := params.Browser
+	cr := params.Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+	policyParam := TestCases()[params.PolicySetting]
 
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
 
@@ -82,7 +85,7 @@ func TriggerUserFeedback(ctx context.Context, _ *chrome.Chrome, br *browser.Brow
 	// Launch feedback app and go to confirmation page.
 	feedbackRootNode, err := feedbackapp.LaunchAndGoToShareDataPage(ctx, tconn)
 
-	if param.WantReportOption {
+	if policyParam.WantReportOption {
 		if err != nil {
 			return errors.Wrap(err, "failed to launch feedback app")
 		}

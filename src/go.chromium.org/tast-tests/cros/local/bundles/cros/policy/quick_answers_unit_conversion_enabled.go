@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/annotations"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -106,7 +107,12 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := policyquickanswers.TriggerQuickAnswersUnitConversion(ctx, cr, br, server, tconn, key); err != nil {
+			if err := policyquickanswers.TriggerQuickAnswersUnitConversion(ctx,
+				networkrequestmonitor.OptionalServiceParams{
+					Chrome:        cr,
+					Browser:       br,
+					Server:        server,
+					PolicySetting: key}); err != nil {
 				s.Fatal("Failed to trigger and verify quick answers unit conversion: ", err)
 			}
 

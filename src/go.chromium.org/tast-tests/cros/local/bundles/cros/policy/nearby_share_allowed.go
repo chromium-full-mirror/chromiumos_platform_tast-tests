@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/nearbyshare"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -58,11 +59,6 @@ func NearbyShareAllowed(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Test the 'enabled' and 'disabled' cases only, since these are the valid values in DPanel.
@@ -79,7 +75,10 @@ func NearbyShareAllowed(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			if err := nearbyshare.VerifyNearbySharePermissions(ctx, cr, nil, nil, tconn, key); err != nil {
+			if err := nearbyshare.VerifyNearbySharePermissions(ctx,
+				networkrequestmonitor.OptionalServiceParams{
+					Chrome:        cr,
+					PolicySetting: key}); err != nil {
 				s.Fatal("Failed to verify Nearby Share permissions: ", err)
 			}
 		})

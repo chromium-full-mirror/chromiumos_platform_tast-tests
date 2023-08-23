@@ -7,12 +7,9 @@ package spellcheck
 
 import (
 	"context"
-	"net/http/httptest"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
@@ -83,21 +80,27 @@ func GetDataFiles() []string {
 }
 
 // TriggerSpellCheck attempts to trigger spellcheck and verifies if the policy works as defined in the TestCase param.
-func TriggerSpellCheck(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
-	param := TestCases()[policySetting]
-
+func TriggerSpellCheck(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	br := params.Browser
+	cr := params.Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+	server := params.Server
+	policyParam := TestCases()[params.PolicySetting]
 	// Inside ChromeOS settings, check that the button is restricted and set to the correct value.
 	if err := policyutil.OSSettingsPage(ctx, cr, "osSyncSetup").
 		SelectNode(ctx, nodewith.
 			Role(role.ToggleButton).
 			NameStartingWith("Enhanced spell check")).
-		Restriction(param.WantRestriction).
-		Checked(param.WantSettingsCheck).
+		Restriction(policyParam.WantRestriction).
+		Checked(policyParam.WantSettingsCheck).
 		Verify(); err != nil {
 		return errors.Wrap(err, "unexpected os settings state")
 	}
 
-	if param.WantRestriction == restriction.Disabled {
+	if policyParam.WantRestriction == restriction.Disabled {
 		// Check for the enterprise icon.
 		if err := policyutil.OSSettingsPage(ctx, cr, "osSyncSetup").
 			SelectNode(ctx, nodewith.
@@ -132,14 +135,14 @@ func TriggerSpellCheck(ctx context.Context, cr *chrome.Chrome, br *browser.Brows
 		return errors.Wrap(err, "failed to get info for menuitemcheckBox")
 	}
 
-	if param.WantRestriction != menuItem.Restriction {
-		return errors.Errorf("menu item in wrong restriction state: want=%s, actual=%s", param.WantRestriction, menuItem.Restriction)
+	if policyParam.WantRestriction != menuItem.Restriction {
+		return errors.Errorf("menu item in wrong restriction state: want=%s, actual=%s", policyParam.WantRestriction, menuItem.Restriction)
 	}
 
 	// If the checkmark is there, menuItem.Checked is checked.True (="true"),
 	// otherwise it is "".
-	if param.WantContextCheck != menuItem.Checked {
-		return errors.Errorf("Menu item in wrong checking state: want=%s, actual=%s", param.WantContextCheck, menuItem.Checked)
+	if policyParam.WantContextCheck != menuItem.Checked {
+		return errors.Errorf("Menu item in wrong checking state: want=%s, actual=%s", policyParam.WantContextCheck, menuItem.Checked)
 	}
 	return nil
 }

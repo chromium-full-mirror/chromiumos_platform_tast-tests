@@ -7,14 +7,11 @@ package domainreliability
 
 import (
 	"context"
-	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -64,7 +61,13 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 // reporting when allowed by policy. It is triggered by preventing DNS resolution
 // for all hostnames including a test domain reliability URL and attempting to connect
 // to that URL.
-func TriggerDomainReliabilityAllowed(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, _ networkrequestmonitor.PolicySetting) (err error) {
+func TriggerDomainReliabilityAllowed(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	cr := params.Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+
 	// Reserve 10 seconds for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

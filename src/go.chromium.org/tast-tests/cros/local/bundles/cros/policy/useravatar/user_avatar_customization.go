@@ -7,13 +7,10 @@ package useravatar
 
 import (
 	"context"
-	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -73,10 +70,14 @@ func TestCases() map[networkrequestmonitor.PolicySetting]CustomizationTestCase {
 
 // TriggerUserAvatarCustomization opens the user avatar customization app and
 // verifies that certain avatar selectors are disabled based on policy value.
-func TriggerUserAvatarCustomization(ctx context.Context, _ *chrome.Chrome,
-	_ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) error {
+func TriggerUserAvatarCustomization(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	cr := params.Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+	policyParam := TestCases()[params.PolicySetting]
 
-	param := TestCases()[policySetting]
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
 	// Open user avatar personalization app. Note: We retry here because sometimes the button
@@ -108,7 +109,7 @@ func TriggerUserAvatarCustomization(ctx context.Context, _ *chrome.Chrome,
 	takeVideoSelector := selectorFinder(takeVideoButtonName, avatarButtonContainerClass)
 	profileImageSelector := selectorFinder(profileImageName, imageContainerClass)
 
-	if param.ShouldFindCustomSelectors {
+	if policyParam.ShouldFindCustomSelectors {
 		if err := uiauto.Combine("Verify custom selectors are shown",
 			ui.WaitUntilExists(chooseFromFileSelector),
 			ui.WaitUntilExists(takePhotoSelector),

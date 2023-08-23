@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/userfeedback"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -61,12 +62,6 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// Connect to Test API to use it with the UI library.
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
 	// Get virtual keyboard to test key combination behavior.
 	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {
@@ -103,7 +98,11 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			if err := userfeedback.TriggerUserFeedback(ctx, cr, br, nil, tconn, key); err != nil {
+			if err := userfeedback.TriggerUserFeedback(ctx,
+				networkrequestmonitor.OptionalServiceParams{
+					Chrome:        cr,
+					Browser:       br,
+					PolicySetting: key}); err != nil {
 				s.Fatal("Failed to trigger user feedback: ", err)
 			}
 

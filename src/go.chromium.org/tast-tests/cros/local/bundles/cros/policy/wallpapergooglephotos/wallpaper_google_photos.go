@@ -9,14 +9,11 @@ package wallpapergooglephotos
 
 import (
 	"context"
-	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/personalization"
@@ -73,8 +70,13 @@ func TestCases() map[networkrequestmonitor.PolicySetting]testCase {
 // TriggerWallpaperGooglePhotosIntegration verifies that launching the
 // wallpaper google photos collection from the personalization app
 // works as expected.
-func TriggerWallpaperGooglePhotosIntegration(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
-	param := TestCases()[policySetting]
+func TriggerWallpaperGooglePhotosIntegration(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	cr := params.Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+	policyParam := TestCases()[params.PolicySetting]
 
 	windows, err := ash.GetAllWindows(ctx, tconn)
 	if err != nil {
@@ -109,8 +111,8 @@ func TriggerWallpaperGooglePhotosIntegration(ctx context.Context, _ *chrome.Chro
 		googlePhotosBreadcrumbFound = false
 	}
 
-	if param.ShouldGooglePhotosCollectionBeEnabled != googlePhotosBreadcrumbFound {
-		return errors.Errorf("unexpected Google Photos collection enabled state: got %t expected %t", googlePhotosBreadcrumbFound, param.ShouldGooglePhotosCollectionBeEnabled)
+	if policyParam.ShouldGooglePhotosCollectionBeEnabled != googlePhotosBreadcrumbFound {
+		return errors.Errorf("unexpected Google Photos collection enabled state: got %t expected %t", googlePhotosBreadcrumbFound, policyParam.ShouldGooglePhotosCollectionBeEnabled)
 	}
 
 	return nil

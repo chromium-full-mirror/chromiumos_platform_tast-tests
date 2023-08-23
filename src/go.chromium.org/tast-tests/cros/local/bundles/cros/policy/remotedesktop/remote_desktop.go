@@ -8,13 +8,10 @@ package remotedesktop
 
 import (
 	"context"
-	"net/http/httptest"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/crd"
 	"go.chromium.org/tast/core/errors"
 )
@@ -66,8 +63,14 @@ func TestCases() map[networkrequestmonitor.PolicySetting]testCase {
 
 // TriggerRemoteSupportRegistration verifies that launching chrome remote
 // desktop works as expected.
-func TriggerRemoteSupportRegistration(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
-	param := TestCases()[policySetting]
+func TriggerRemoteSupportRegistration(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	br := params.Browser
+	cr := params.Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+	policyParam := TestCases()[params.PolicySetting]
 
 	didCRDLaunchSucceed := true
 	errContainsRemoteSupportBlockedMessage := false
@@ -76,11 +79,11 @@ func TriggerRemoteSupportRegistration(ctx context.Context, _ *chrome.Chrome, br 
 		errContainsRemoteSupportBlockedMessage = strings.Contains(err.Error(), "Remote support connections blocked")
 	}
 
-	if param.ShouldCRDLaunchSucceed != didCRDLaunchSucceed {
-		return errors.Errorf("unexpected success status of remote desktop launch: got %t want %t", didCRDLaunchSucceed, param.ShouldCRDLaunchSucceed)
+	if policyParam.ShouldCRDLaunchSucceed != didCRDLaunchSucceed {
+		return errors.Errorf("unexpected success status of remote desktop launch: got %t want %t", didCRDLaunchSucceed, policyParam.ShouldCRDLaunchSucceed)
 	}
 
-	if !param.ShouldCRDLaunchSucceed && errContainsRemoteSupportBlockedMessage == false {
+	if !policyParam.ShouldCRDLaunchSucceed && errContainsRemoteSupportBlockedMessage == false {
 		return errors.Wrap(err, "remote desktop failure message did not include connections blocked")
 	}
 

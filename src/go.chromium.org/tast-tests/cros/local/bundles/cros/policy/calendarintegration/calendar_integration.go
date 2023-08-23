@@ -8,14 +8,11 @@ package calendarintegration
 
 import (
 	"context"
-	"net/http/httptest"
 	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -68,8 +65,14 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 // TriggerCalendarIntegration verifies calendar integration process works as
 // expected. i.e. the existence of the managed icon and event list view
 // depending on the policy value.
-func TriggerCalendarIntegration(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
-	param := TestCases()[policySetting]
+func TriggerCalendarIntegration(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	policySetting := params.PolicySetting
+	cr := params.Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+	policyParam := TestCases()[policySetting]
 
 	ui := uiauto.New(tconn)
 	dateTray := nodewith.HasClass("DateTray")
@@ -164,20 +167,20 @@ func TriggerCalendarIntegration(ctx context.Context, _ *chrome.Chrome, br *brows
 	}
 
 	// Check for enterprise management icon.
-	if param.ShouldFindManagedIcon && didFindManagedIcon == false {
+	if policyParam.ShouldFindManagedIcon && didFindManagedIcon == false {
 		return errors.New("did not find expected disabled by admin icon")
 	}
 
-	if !param.ShouldFindManagedIcon && didFindManagedIcon == true {
+	if !policyParam.ShouldFindManagedIcon && didFindManagedIcon == true {
 		return errors.New("found unexpected disabled by admin icon")
 	}
 
 	// Check for event list.
-	if param.ShouldFindEventListView && didFindEventListView == false {
+	if policyParam.ShouldFindEventListView && didFindEventListView == false {
 		return errors.New("did not find expected event list view")
 	}
 
-	if !param.ShouldFindEventListView && didFindEventListView == true {
+	if !policyParam.ShouldFindEventListView && didFindEventListView == true {
 		return errors.New("found unexpected event list view")
 	}
 

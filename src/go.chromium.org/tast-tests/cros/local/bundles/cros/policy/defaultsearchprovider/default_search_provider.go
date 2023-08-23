@@ -8,13 +8,10 @@ package defaultsearchprovider
 
 import (
 	"context"
-	"net/http/httptest"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -70,8 +67,14 @@ const (
 )
 
 // TriggerDefaultSearchProvider verifies the default search provider policy.
-func TriggerDefaultSearchProvider(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
-	param := TestCases()[policySetting]
+func TriggerDefaultSearchProvider(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	policyParam := TestCases()[params.PolicySetting]
+	cr := params.Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+	br := params.Browser
 
 	addressBarNode := browserui.AddressBarFinder
 
@@ -130,8 +133,8 @@ func TriggerDefaultSearchProvider(ctx context.Context, _ *chrome.Chrome, br *bro
 	location := nodeInfo.Value
 
 	defaultSearchEngineUsed := strings.Contains(location, defaultSearchEngine)
-	if param.Enabled != defaultSearchEngineUsed {
-		return errors.Errorf("unexpected usage of search engine: got %t; want %t (got %q; want %q)", defaultSearchEngineUsed, param.Enabled, location, defaultSearchEngine)
+	if policyParam.Enabled != defaultSearchEngineUsed {
+		return errors.Errorf("unexpected usage of search engine: got %t; want %t (got %q; want %q)", defaultSearchEngineUsed, policyParam.Enabled, location, defaultSearchEngine)
 	}
 	return nil
 }

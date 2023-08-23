@@ -5,6 +5,13 @@
 // Package networkrequestmonitor contains values used across the umbrella test and its component subtests.
 package networkrequestmonitor
 
+import (
+	"net/http/httptest"
+
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+)
+
 // PolicySetting is the key for a test case of a service, indicating the policy
 // value being tested and other expectations of the service behavior.
 type PolicySetting int
@@ -19,3 +26,12 @@ const (
 	// PolicyUnset is for the default unset state of the service test case.
 	PolicyUnset
 )
+
+// OptionalServiceParams is a struct to define params to trigger optional services
+type OptionalServiceParams struct {
+	Chrome        *chrome.Chrome
+	Browser       *browser.Browser
+	Server        *httptest.Server
+	BaseDirectory string
+	PolicySetting PolicySetting
+}

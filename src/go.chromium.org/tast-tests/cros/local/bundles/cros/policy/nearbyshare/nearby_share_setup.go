@@ -7,12 +7,9 @@ package nearbyshare
 
 import (
 	"context"
-	"net/http/httptest"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -48,8 +45,14 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 
 // VerifyNearbySharePermissions opens the 'Connected devices' page in OS
 // Settings and verifies that Nearby Share is disabled based on policy value.
-func VerifyNearbySharePermissions(ctx context.Context, cr *chrome.Chrome, _ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
-	param := TestCases()[policySetting]
+func VerifyNearbySharePermissions(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	policySetting := params.PolicySetting
+	cr := params.Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+	policyParam := TestCases()[policySetting]
 
 	const (
 		connectedDevicesURL      = "multidevice"
@@ -66,7 +69,7 @@ func VerifyNearbySharePermissions(ctx context.Context, cr *chrome.Chrome, _ *bro
 		return errors.Wrap(err, "failed to launch Connected devices OS Settings page")
 	}
 
-	if param.ShouldBeDisabled {
+	if policyParam.ShouldBeDisabled {
 		// Verify toggle is set to disabled.
 		if isEnabled, err := settings.IsToggleOptionEnabled(ctx, cr, toggleName); err != nil {
 			return errors.Wrap(err, "failed to get current toggle value")

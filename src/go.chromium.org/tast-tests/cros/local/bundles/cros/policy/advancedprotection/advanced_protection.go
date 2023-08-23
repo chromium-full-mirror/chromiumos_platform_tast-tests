@@ -8,13 +8,10 @@ package advancedprotection
 import (
 	"context"
 	"fmt"
-	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -68,7 +65,15 @@ func TestCases() map[networkrequestmonitor.PolicySetting]testCase {
 
 // TriggerUploadForScanning downloads a suspicious file and then uploads it for
 // scanning.
-func TriggerUploadForScanning(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, _ networkrequestmonitor.PolicySetting) (err error) {
+func TriggerUploadForScanning(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	cr := params.Chrome
+	server := params.Server
+	br := params.Browser
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+
 	// Open the browser and download the test suspicious file from the local file
 	// server.
 	conn, err := br.NewConn(ctx, "")

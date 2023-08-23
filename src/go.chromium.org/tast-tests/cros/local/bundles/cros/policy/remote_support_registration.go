@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/annotations"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/remotedesktop"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -147,7 +148,11 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			if err := remotedesktop.TriggerRemoteSupportRegistration(ctx, nil, br, nil, tconn, key); err != nil {
+			if err := remotedesktop.TriggerRemoteSupportRegistration(ctx,
+				networkrequestmonitor.OptionalServiceParams{
+					Chrome:        cr,
+					Browser:       br,
+					PolicySetting: key}); err != nil {
 				s.Fatal("Failure during CRD launch: ", err)
 			}
 

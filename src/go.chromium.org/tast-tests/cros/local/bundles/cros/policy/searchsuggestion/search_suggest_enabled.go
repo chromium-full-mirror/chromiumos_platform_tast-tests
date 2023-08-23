@@ -8,14 +8,11 @@ package searchsuggestion
 
 import (
 	"context"
-	"net/http/httptest"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -61,8 +58,14 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 }
 
 // TriggerSearchSuggestion verifies suggestions are not shown when policy is off.
-func TriggerSearchSuggestion(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) (err error) {
-	param := TestCases()[policySetting]
+func TriggerSearchSuggestion(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	br := params.Browser
+	cr := params.Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+	policyParam := TestCases()[params.PolicySetting]
 
 	// Open a keyboard device.
 	keyboard, err := input.Keyboard(ctx)
@@ -120,12 +123,12 @@ func TriggerSearchSuggestion(ctx context.Context, _ *chrome.Chrome, br *browser.
 		}
 	}
 
-	if suggest != param.Enabled {
-		errors.Errorf("unexpected existence of search suggestions: got %t; want %t", suggest, param.Enabled)
+	if suggest != policyParam.Enabled {
+		errors.Errorf("unexpected existence of search suggestions: got %t; want %t", suggest, policyParam.Enabled)
 	}
 
-	if suggest != param.ShouldFindAnnotation {
-		errors.Errorf("unexpected existence of search suggestions: got %t; want %t", suggest, param.ShouldFindAnnotation)
+	if suggest != policyParam.ShouldFindAnnotation {
+		errors.Errorf("unexpected existence of search suggestions: got %t; want %t", suggest, policyParam.ShouldFindAnnotation)
 	}
 
 	return nil

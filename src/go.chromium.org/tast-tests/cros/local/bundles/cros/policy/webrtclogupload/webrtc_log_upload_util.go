@@ -7,7 +7,6 @@ package webrtclogupload
 
 import (
 	"context"
-	"net/http/httptest"
 	"regexp"
 	"time"
 
@@ -111,7 +110,10 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 		return errors.Wrap(err, "failed to start logging")
 	}
 
-	if err := TriggerWebRTCLogUploads(ctx, cr, br, nil, tconn, 0); err != nil {
+	if err := TriggerWebRTCLogUploads(ctx,
+		networkrequestmonitor.OptionalServiceParams{
+			Chrome:  cr,
+			Browser: br}); err != nil {
 		return errors.Wrap(err, "failed to launch Meet client")
 	}
 
@@ -152,7 +154,13 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 }
 
 // TriggerWebRTCLogUploads is used to create a Meet client and trigger feedback to create WebRTC logs.
-func TriggerWebRTCLogUploads(ctx context.Context, cr *chrome.Chrome, _ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, _ networkrequestmonitor.PolicySetting) (errr error) {
+func TriggerWebRTCLogUploads(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	cr := params.Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+
 	const meetTimeout = 10 * time.Minute
 	closeCtx := ctx
 

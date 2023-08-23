@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/annotations"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/wallpapergooglephotos"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -122,7 +123,11 @@ func WallpaperGooglePhotosIntegrationEnabled(ctx context.Context, s *testing.Sta
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := wallpapergooglephotos.TriggerWallpaperGooglePhotosIntegration(ctx, nil, br, nil, tconn, index); err != nil {
+			if err := wallpapergooglephotos.TriggerWallpaperGooglePhotosIntegration(ctx,
+				networkrequestmonitor.OptionalServiceParams{
+					Chrome:        cr,
+					Browser:       br,
+					PolicySetting: index}); err != nil {
 				s.Fatal("Failure while trigger google photos integration: ", err)
 			}
 

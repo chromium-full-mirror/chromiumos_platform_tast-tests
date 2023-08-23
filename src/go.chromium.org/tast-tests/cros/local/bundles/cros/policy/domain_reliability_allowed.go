@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/domainreliability"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -108,11 +109,6 @@ func DomainReliabilityAllowed(ctx context.Context, s *testing.State) {
 
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
-			tconn, err := cr.TestAPIConn(ctx)
-			if err != nil {
-				s.Fatal("Failed to create Test API connection: ", err)
-			}
-
 			// Open the net-export page and start logging.
 			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
 			if err != nil {
@@ -120,7 +116,10 @@ func DomainReliabilityAllowed(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			if err := domainreliability.TriggerDomainReliabilityAllowed(ctx, cr, br, nil, tconn, key); err != nil {
+			if err := domainreliability.TriggerDomainReliabilityAllowed(ctx,
+				networkrequestmonitor.OptionalServiceParams{
+					Chrome:        cr,
+					PolicySetting: key}); err != nil {
 				s.Fatal("Failed to trigger and verify domain reliability: ", err)
 			}
 

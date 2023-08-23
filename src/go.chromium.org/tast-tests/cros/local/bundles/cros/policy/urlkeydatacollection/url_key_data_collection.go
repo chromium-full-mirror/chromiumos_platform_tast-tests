@@ -8,7 +8,6 @@ package urlkeydatacollection
 
 import (
 	"context"
-	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -92,8 +91,9 @@ func TriggerAndVerifyUkmAppFromIndex(ctx context.Context, br *browser.Browser, p
 
 // TriggerAndVerifyUkmAppFromPolicySetting triggers and verifies the appearance
 // of logs in chrome://ukm using the policy setting enum.
-func TriggerAndVerifyUkmAppFromPolicySetting(ctx context.Context, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, _ *chrome.TestConn, policySetting networkrequestmonitor.PolicySetting) error {
-	return triggerAndVerifyUkmApp(ctx, br, UmbrellaTestCases()[policySetting])
+func TriggerAndVerifyUkmAppFromPolicySetting(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	br := params.Browser
+	return triggerAndVerifyUkmApp(ctx, br, UmbrellaTestCases()[params.PolicySetting])
 }
 
 func triggerAndVerifyUkmApp(ctx context.Context, br *browser.Browser, param policyannotations.AnnotationTestParams) error {
