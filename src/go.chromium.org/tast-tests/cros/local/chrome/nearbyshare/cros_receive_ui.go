@@ -129,6 +129,17 @@ func WaitForReceivingCompleteNotification(ctx context.Context, tconn *chrome.Tes
 	return nil
 }
 
+// WaitForSendingCompleteNotification waits for the notification indicating that the outgoing share has completed.
+func WaitForSendingCompleteNotification(ctx context.Context, tconn *chrome.TestConn, receiverName string, timeout time.Duration) error {
+	if _, err := ash.WaitForNotification(ctx, tconn, timeout,
+		ash.WaitTitleContains("sent"),
+		ash.WaitTitleContains(receiverName),
+	); err != nil {
+		return errors.Wrap(err, "failed to wait for sending complete notification")
+	}
+	return nil
+}
+
 // OpenWiFiNetworkListNotification opens the Known Network List from the successful transfer notification.
 func OpenWiFiNetworkListNotification(ctx context.Context, tconn *chrome.TestConn, senderName, wifiName string, timeout time.Duration) error {
 	if _, err := ash.WaitForNotification(ctx, tconn, timeout,

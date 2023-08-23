@@ -66,6 +66,11 @@ service NearbyShareService {
   rpc WaitForIncomingShareCompletionNotification(
       CrOSReceiveFilesRequest) returns (google.protobuf.Empty) {}
 
+  // WaitForOutgoingShareCompletionNotification waits for the sharing complete
+  // notification to appear on the Sender Chromebook.
+  rpc WaitForOutgoingShareCompletionNotification(
+      WaitForOutgoingShareCompletionNotificationRequest) returns (google.protobuf.Empty) {}
+
   // Accepts the notification that appears when a nearby device is trying to
   // discover a share target. This puts the user into high visibility mode.
   rpc AcceptFastInitiationNotification(
@@ -95,6 +100,16 @@ service NearbyShareService {
   // bluetooth has been disabled when this RPC returns.
   rpc DisableBluetooth(google.protobuf.Empty)
       returns (google.protobuf.Empty) {}
+
+  // LockScreen locks the screen of the Chromebook. It is safe to assume that the
+  // screen has been locked when this RPC returns.
+  rpc LockScreen(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
+  // UnlockWithPassword unlocks the screen of the Chromebook. It is safe to assume that
+  // the screen has been unlocked when this RPC returns.
+  rpc UnlockWithPassword(UnlockWithPasswordRequest)
+      returns (google.protobuf.Empty) {}
 }
 
 // CrOSLoginRequest to login to Chrome with configurable GAIA credentials.
@@ -105,6 +120,12 @@ message CrOSLoginRequest {
   repeated string enabled_flags = 4;
   repeated string disabled_flags = 5;
   string nearby_static_id = 6;
+}
+
+// UnlockWithPasswordRequest to unlock Chrome with username and password.
+message UnlockWithPasswordRequest {
+  string username = 1;
+  string password = 2;
 }
 
 // CrOSAcceptFastInitiationNotificationRequest is a request to accept a
@@ -162,6 +183,13 @@ message CrOSFileHashResponse {
 // files from and the file transfer timeout in seconds.
 message CrOSReceiveFilesRequest {
   string sender_name = 1;
+  int32 transfer_timeout_seconds = 2;
+}
+
+// WaitForOutgoingShareCompletionNotificationRequest contains the receiver name
+// that we want to send files to and the file transfer timeout in seconds.
+message WaitForOutgoingShareCompletionNotificationRequest {
+  string receiver_name = 1;
   int32 transfer_timeout_seconds = 2;
 }
 

@@ -114,6 +114,10 @@ type nearbyShareFixture struct {
 type FixtData struct {
 	RemoteFilePath        string
 	SenderDisplayName     string
+	SenderUsername        string
+	SenderPassword        string
+	ReceiverUsername      string
+	ReceiverPassword      string
 	ReceiverDisplayName   string
 	Sender                nearbyservice.NearbyShareServiceClient
 	SenderSendPath        string
@@ -258,7 +262,11 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		ReceiverDownloadsPath: attributes.Receiver.DownloadsPath,
 		Receiver:              f.receiver,
 		SenderDisplayName:     senderDisplayName,
+		SenderUsername:        senderUsername,
+		SenderPassword:        senderPassword,
 		ReceiverDisplayName:   receiverDisplayName,
+		ReceiverUsername:      receiverUsername,
+		ReceiverPassword:      receiverPassword,
 	}
 }
 

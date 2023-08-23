@@ -23,7 +23,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/nearbyshare"
 	"go.chromium.org/tast-tests/cros/local/chrome/nearbyshare/nearbytestutils"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast-tests/cros/services/cros/nearbyservice"
 	"go.chromium.org/tast/core/errors"
@@ -375,7 +377,19 @@ func (n *NearbyService) WaitForIncomingShareCompletionNotification(ctx context.C
 	}
 	testing.ContextLog(ctx, "Waiting for receiving-complete notification on CrOS receiver")
 	if err := nearbyshare.WaitForReceivingCompleteNotification(ctx, n.tconn, req.SenderName, time.Duration(req.TransferTimeoutSeconds)*time.Second); err != nil {
-		return nil, errors.Wrap(err, "failed waiting for notification to indicate sharing has completed on CrOS")
+		return nil, errors.Wrap(err, "failed waiting for notification to indicate incoming sharing has completed on CrOS")
+	}
+	return &empty.Empty{}, nil
+}
+
+// WaitForOutgoingShareCompletionNotification waits for transfer completed notifications.
+func (n *NearbyService) WaitForOutgoingShareCompletionNotification(ctx context.Context, req *nearbyservice.WaitForOutgoingShareCompletionNotificationRequest) (*empty.Empty, error) {
+	if n.cr == nil {
+		return nil, errors.New("Chrome not available")
+	}
+	testing.ContextLog(ctx, "Waiting for sending-complete notification on CrOS sender")
+	if err := nearbyshare.WaitForSendingCompleteNotification(ctx, n.tconn, req.ReceiverName, time.Duration(req.TransferTimeoutSeconds)*time.Second); err != nil {
+		return nil, errors.Wrap(err, "failed waiting for notification to indicate outgoing sharing has completed on CrOS")
 	}
 	return &empty.Empty{}, nil
 }
@@ -445,5 +459,32 @@ func (n *NearbyService) DisableBluetooth(ctx context.Context, req *empty.Empty) 
 	if err := bluez.PollForBTDisabled(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed waiting for bluetooth to be disabled on the device")
 	}
+	return &empty.Empty{}, nil
+}
+
+// LockScreen locks the screen on the chromebook.
+func (n *NearbyService) LockScreen(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if err := lockscreen.Lock(ctx, n.tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to lock the screen")
+	}
+	if st, err := lockscreen.WaitState(ctx, n.tconn, func(st lockscreen.State) bool { return st.Locked && st.ReadyForPassword }, 10*time.Second); err != nil {
+		return nil, errors.Wrapf(err, "failed waiting for screen to be locked: (last status %+v)", st)
+	}
+	return &empty.Empty{}, nil
+}
+
+// UnlockWithPassword unlocks the screen on the chromebook using a password.
+func (n *NearbyService) UnlockWithPassword(ctx context.Context, req *nearbyservice.UnlockWithPasswordRequest) (*empty.Empty, error) {
+	// Open a keyboard device.
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open keyboard device")
+	}
+	defer kb.Close(ctx)
+
+	if err := lockscreen.UnlockWithPassword(ctx, n.tconn, req.Username, req.Password, kb, 10*time.Second, 30*time.Second); err != nil {
+		return nil, errors.Wrap(err, "failed to unlock the screen")
+	}
+
 	return &empty.Empty{}, nil
 }
