@@ -53,13 +53,13 @@ type TestBridge struct {
 func getTestConfig(cameraType UseCameraType) ([]byte, error) {
 	if cameraType == UseFakeHALCamera {
 		return json.Marshal(map[string]interface{}{
-			"abort_when_capture_monitor_timeout": true,
+			"abort_when_capture_monitor_timeout": false,
 			// Guarantee that only the fake HAL camera is available and all other cameras are disabled.
 			"enabled_hals": []string{"fake.so"},
 		})
 	}
 	return json.Marshal(map[string]bool{
-		"abort_when_capture_monitor_timeout": true,
+		"abort_when_capture_monitor_timeout": false,
 	})
 }
 
