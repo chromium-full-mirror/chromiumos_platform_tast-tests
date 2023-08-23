@@ -456,7 +456,17 @@ func InstallPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) err
 
 	// Install Meet PWA.
 	// Sometimes it navigates to a blank page, so retry 3 times here.
-	if err := uiauto.Retry(3, func(ctx context.Context) error {
+	if err := uiauto.Retry(3, func(ctx context.Context) (retErr error) {
+		defer func() {
+			if retErr != nil {
+				targetsToClose := func(t *chrome.Target) bool {
+					return t.Title == "Google Meet"
+				}
+				if err := cr.CloseTargets(ctx, targetsToClose); err != nil {
+					testing.ContextLog(ctx, "Failed to close targets: ", err)
+				}
+			}
+		}()
 		return apps.InstallPWAForURL(ctx, tconn, br, homePageURL, 30*time.Second)
 	})(ctx); err != nil {
 		return errors.Wrap(err, "failed to install Meet PWA")
