@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Verifies that the modem can handle being disabled while connecting in Shill",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
 		HardwareDeps: hwdep.D(hwdep.Cellular()),
 		Timeout:      3 * time.Minute,
 		Fixture:      "cellular",
