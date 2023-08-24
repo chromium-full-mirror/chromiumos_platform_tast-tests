@@ -11,6 +11,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
@@ -81,25 +82,7 @@ public class MainActivity extends Activity {
         final boolean hasUri = getIntent().getBooleanExtra(KEY_HAS_URI, false);
         final Intent intent = new Intent(action);
         if (hasUri) {
-            String fileName = null;
-            String mimeType = null;
-            if (isImageCaptureAction(action)) {
-                fileName = "test.jpg";
-                mimeType = "image/jpg";
-            } else if (isVideoCaptureAction(action)) {
-                fileName = "test.mp4";
-                mimeType = "video/mp4";
-            } else {
-                throw new IllegalArgumentException(
-                    "URI cannot be brought with the action: " + action);
-            }
-            final ContentValues values = new ContentValues();
-            values.put(MediaStore.MediaColumns.TITLE, fileName);
-            values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
-            values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType);
-
-            final Uri outputUri = getContentResolver().insert(
-                MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values);
+            final Uri outputUri = getOutputUri(action);
             intent.putExtra(MediaStore.EXTRA_OUTPUT, outputUri);
         }
 
@@ -110,6 +93,38 @@ public class MainActivity extends Activity {
         } else {
             startActivityForResult(intent, EXPECT_NOTHING);
         }
+    }
+
+    private Uri getOutputUri(final String action) {
+        String fileName = null;
+        String mimeType = null;
+        if (isImageCaptureAction(action)) {
+            fileName = "test.jpg";
+            mimeType = "image/jpg";
+        } else if (isVideoCaptureAction(action)) {
+            fileName = "test.mp4";
+            mimeType = "video/mp4";
+        } else {
+            throw new IllegalArgumentException(
+                "URI cannot be brought with the action: " + action);
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            // For ARC-P, we simply use the file provider provided by IntentHelper package as a
+            // workaround since we are not able to use FileProvider class provided by AndroidX
+            // library in the test app.
+            final String uriString =
+                "content://org.chromium.arc.intent_helper.fileprovider/download/" + fileName;
+            return Uri.parse(uriString);
+        }
+
+        final ContentValues values = new ContentValues();
+        values.put(MediaStore.MediaColumns.TITLE, fileName);
+        values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+        values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType);
+
+        return getContentResolver().insert(
+            MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values);
     }
 
     private boolean isImageCaptureAction(final String action) {
