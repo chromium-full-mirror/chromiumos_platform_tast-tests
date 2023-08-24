@@ -34,6 +34,8 @@ const (
 	scope = "https://www.googleapis.com/auth/meetings"
 
 	defaultCredPath = "/creds/service_accounts/bond_service_account.json"
+	// ExampleAudioFile - A 2 second audio clip of a person saying "What color is cheese"
+	ExampleAudioFile = "what_color_is_cheese_32bit_48k_stereo.raw"
 )
 
 const (
@@ -304,7 +306,7 @@ func (c *Client) AddBots(ctx context.Context, meetingCode string, numBots int, t
 		allowVP9:        true,
 		sendVP9:         true,
 		audio:           false,
-		audioFilePath:   "what_color_is_cheese_32bit_48k_stereo.raw",
+		audioFilePath:   ExampleAudioFile,
 		video:           true,
 	}
 	for _, opt := range opts {

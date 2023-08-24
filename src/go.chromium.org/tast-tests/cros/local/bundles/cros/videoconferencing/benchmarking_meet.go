@@ -11,11 +11,13 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/bond"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/effects"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
@@ -25,14 +27,16 @@ import (
 )
 
 type meetParams struct {
-	appBlur           bool
-	appLiveCaptions   bool
-	appRelight        bool
-	platformBlur      bool
-	platformRelight   bool
-	microphoneEnabled bool
-	modelType         effects.ModelType
-	botCount          int
+	appBlur              bool
+	appLiveCaptions      bool
+	appRelight           bool
+	platformBlur         bool
+	platformLiveCaptions bool
+	platformRelight      bool
+	muteAudio            bool
+	modelType            effects.ModelType
+	botCount             int
+	botsOptions          []bond.AddBotsOption
 }
 
 const botDuration = 7 * time.Minute
@@ -236,11 +240,25 @@ func init() {
 					botCount:        9,
 				},
 			},
+			// Audio is explicitly muted for all live caption tests, as
+			// audio is captioned regardless of whether or not any sound
+			// is being emitted from the device.
 			{
 				Name: "app_live_captions_720p",
 				Val: meetParams{
-					appLiveCaptions:   true,
-					microphoneEnabled: true,
+					appLiveCaptions: true,
+					botCount:        1,
+					botsOptions:     []bond.AddBotsOption{bond.WithAudio(bond.ExampleAudioFile)},
+					muteAudio:       true,
+				},
+			},
+			{
+				Name: "platform_live_captions_720p",
+				Val: meetParams{
+					platformLiveCaptions: true,
+					botCount:             1,
+					botsOptions:          []bond.AddBotsOption{bond.WithAudio(bond.ExampleAudioFile)},
+					muteAudio:            true,
 				},
 			},
 		},
@@ -271,6 +289,12 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		// Interval set to 1 second when using custom test duration.
 		metricInterval = 1 * time.Second
 
+	}
+
+	if param.muteAudio {
+		if err := crastestclient.Mute(ctx); err != nil {
+			s.Fatal("Failed to mute device: ", err)
+		}
 	}
 
 	fixt := s.FixtValue().(fixture.BenchmarkSetUpFixtureData)
@@ -316,8 +340,7 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		func() {
 			sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 			defer cancel()
-			_, _, err := bc.AddBots(sctx, meetingCode, param.botCount, botDuration)
-			if err != nil {
+			if _, _, err := bc.AddBots(sctx, meetingCode, param.botCount, botDuration, param.botsOptions...); err != nil {
 				s.Fatal("Failed to add bots: ", err)
 			}
 		}()
@@ -340,12 +363,25 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	if param.platformLiveCaptions {
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to connect to the test API connection: ", err)
+		}
+		s.Log("Toggling platform VC effects")
+		vct := vctray.New(ctx, tconn)
+		if err := vct.ChangeSettingsInPanel(
+			vct.SetLiveCaption(param.platformLiveCaptions),
+		)(ctx); err != nil {
+			s.Fatal("Failed to configure platform VC effects: ", err)
+		}
+	}
+
 	defer gm.Close(closeCtx)
 
 	// Configure Meeting.
 	if err := uiauto.Combine("Configure Google Meet",
-		gm.EnterFullScreen,
-		gm.SwitchMicrophone(param.microphoneEnabled),
+		gm.MuteIfMicAvailable,
 		gm.SwitchCaptions(param.appLiveCaptions),
 		gm.ChangeSettings(
 			gm.SetLeaveEmptyCalls(false),
@@ -353,6 +389,7 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 			gm.SetSendResolution(googlemeet.ResolutionHD720P),
 		),
 		gm.ApplyVideoEffects(gm.SetEffectBlur(param.appBlur)),
+		gm.EnterFullScreen,
 	)(ctx); err != nil {
 		s.Fatal("Failed to configure Meet: ", err)
 	}
