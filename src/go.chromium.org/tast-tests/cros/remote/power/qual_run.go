@@ -14,6 +14,8 @@ import (
 	"regexp"
 	"strconv"
 
+	"gonum.org/v1/gonum/stat"
+
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/power/config"
 	"go.chromium.org/tast-tests/cros/remote/power/result"
@@ -137,7 +139,7 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir string) error {
 			weights = append(weights, t.Weight)
 		}
 		persona.Power = result.Power{
-			Average: result.Average{MinutesBatteryLife: weightedHarmonicMean(values, weights)},
+			Average: result.Average{MinutesBatteryLife: stat.HarmonicMean(values, weights)},
 		}
 
 		res.Personas = append(res.Personas, persona)
@@ -209,24 +211,4 @@ func readPowerMetrics(file string) (result.Power, error) {
 		return result.Power{}, errors.Wrapf(err, "failed to unmarshal json from file %s", file)
 	}
 	return res.Power, nil
-}
-
-// weightedHarmonicMean returns the harmonic mean of the given values and weights.
-// A 0 value will be returned if for any reason the harmonic mean cannot be calculated.
-func weightedHarmonicMean(values, weights []float64) float64 {
-	// H = sum(weight_i) / sum(weight_i / value_i)
-	// See go/power-test-harmonic-mean
-	numerator := 0.0
-	denominator := 0.0
-	for i, v := range values {
-		if v == 0.0 {
-			return 0.0
-		}
-		denominator += weights[i] / v
-		numerator += weights[i]
-	}
-	if denominator == 0.0 {
-		return 0.0
-	}
-	return numerator / denominator
 }
