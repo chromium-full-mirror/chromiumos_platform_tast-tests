@@ -17,7 +17,7 @@ func init() {
 		Desc:         "Demonstrate how to get Android companion devices information",
 		Contacts:     []string{"tast-core@google.com", "seewaifu@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		VarDeps:      []string{"android.companions"},
+		VarDeps:      []string{android.CompanionsVarName},
 	})
 }
 
