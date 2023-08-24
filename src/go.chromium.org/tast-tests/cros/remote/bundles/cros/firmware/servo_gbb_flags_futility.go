@@ -27,7 +27,6 @@ func init() {
 		},
 		BugComponent: "b:1032353", // Chrome Operations > Fleet > Software > OS Fleet Automation
 		Fixture:      fixture.NormalMode,
-		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		Attr:         []string{"group:labqual_informational"},
 	})
 }
