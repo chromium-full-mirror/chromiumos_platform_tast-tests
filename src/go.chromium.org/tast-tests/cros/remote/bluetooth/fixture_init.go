@@ -156,6 +156,62 @@ func init() {
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIDisabledWith2BTPeersPowerFlossDisabled",
+		Desc: "Disables Chrome UI, enables Bluetooth, BlueZ stack with power measurements, and connects to 2 btpeer",
+		Contacts: []string{
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			BTPeerCount:    2,
+			FlossEnabled:   false,
+			PowerEnabled:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + BluetoothCooldownTimeout,
+		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + 2*btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+			serviceDepUpstartService,
+			serviceDepMetricsService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIDisabledWith2BTPeersPowerFlossEnabled",
+		Desc: "Disables Chrome UI, enables Bluetooth, Floss stack with power measurements, and connects to 2 btpeer",
+		Contacts: []string{
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			BTPeerCount:    2,
+			FlossEnabled:   true,
+			PowerEnabled:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + BluetoothCooldownTimeout,
+		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + 2*btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+			serviceDepUpstartService,
+			serviceDepMetricsService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "chromeUIDisabledWith1BTPeerFlossEnabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 1 btpeer",
 		Contacts: []string{
@@ -672,6 +728,82 @@ func init() {
 			serviceDepBluetoothService,
 			serviceDepChromeService,
 			serviceDepUpstartService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeLoggedInAsUserWithFastPairAnd1BTPeerPowerFlossDisabled",
+		Desc: "Logs into a chrome as a specific user and enables Bluetooth, FastPair, BlueZ and connects to 1 btpeer. Monitor and record power",
+		Contacts: []string{
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: true,
+			BTPeerCount:    1,
+			EnableFeatures: []string{
+				chromeFeatureFastPair,
+				chromeFeatureFastPairSavedDevices,
+			},
+			DisableFeatures:        []string{},
+			LoginMode:              ui.LoginMode_LOGIN_MODE_GAIA_LOGIN,
+			UseFastPairTapeAccount: true,
+			FlossEnabled:           false,
+			PowerEnabled:           true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+			fixtureVarFastPairChromeUsername,
+			fixtureVarFastPairChromePassword,
+			tape.ServiceAccountVar,
+		},
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+			serviceDepUpstartService,
+			serviceDepMetricsService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeLoggedInAsUserWithFastPairAnd1BTPeerPowerFlossEnabled",
+		Desc: "Logs into a chrome as a specific user and enables Bluetooth, FastPair, Floss and connects to 1 btpeer. Monitor and record power",
+		Contacts: []string{
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: true,
+			BTPeerCount:    1,
+			EnableFeatures: []string{
+				chromeFeatureFastPair,
+				chromeFeatureFastPairSavedDevices,
+			},
+			DisableFeatures:        []string{},
+			LoginMode:              ui.LoginMode_LOGIN_MODE_GAIA_LOGIN,
+			UseFastPairTapeAccount: true,
+			FlossEnabled:           true,
+			PowerEnabled:           true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+			fixtureVarFastPairChromeUsername,
+			fixtureVarFastPairChromePassword,
+			tape.ServiceAccountVar,
+		},
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+			serviceDepUpstartService,
+			serviceDepMetricsService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{

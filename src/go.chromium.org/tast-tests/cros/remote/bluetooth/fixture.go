@@ -623,6 +623,11 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			setupRequest := power.SetupRequest{Fixture: power.SetupRequest_NO_UI_NO_WIFI_BT,
 				IntervalSecond: DefaultBTPowerIntervalSecond}
 
+			if tf.features.EnableChromeUI {
+				setupRequest = power.SetupRequest{Fixture: power.SetupRequest_UI_NO_WIFI_BT,
+					IntervalSecond: DefaultBTPowerIntervalSecond}
+			}
+
 			if _, err := dutConfig.PowerMetricsService.Setup(ctx, &setupRequest); err != nil {
 				s.Fatal("Failed to set up metrics service: ", err)
 			}
