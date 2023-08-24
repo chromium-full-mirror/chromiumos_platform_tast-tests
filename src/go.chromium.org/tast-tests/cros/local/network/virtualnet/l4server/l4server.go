@@ -8,6 +8,7 @@ package l4server
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"time"
@@ -181,19 +182,29 @@ func (s *server) handleTCP(ctx context.Context, ec chan error) {
 	s.conns = append(s.conns, listener)
 	ec <- nil
 
-	// Only accept one connection.
-	conn, err := listener.AcceptTCP()
-	if err != nil {
-		testing.ContextLogf(ctx, "Failed to accept on %s network", s)
-		return
-	}
-
+	var conn *net.TCPConn
 	in := make([]byte, s.bufSize)
+
+	// Only accept one connection at the same time.
 	for {
 		if !s.run {
 			return
 		}
+
+		if conn == nil {
+			conn, err = listener.AcceptTCP()
+			if err != nil {
+				testing.ContextLogf(ctx, "Failed to accept on %s network", s)
+				return
+			}
+		}
+
 		n, err := conn.Read(in)
+		if err != nil && err == io.EOF {
+			// This connection has ended. Reset conn to accept the next one.
+			conn = nil
+			continue
+		}
 		if err != nil {
 			if s.run {
 				testing.ContextLogf(ctx, "%s read failed: %v", s, err)
