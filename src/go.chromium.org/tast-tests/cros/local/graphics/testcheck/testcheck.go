@@ -11,6 +11,8 @@ import (
 
 	// We have to import graphics package so that fixture declaration chain can be established.
 	_ "go.chromium.org/tast-tests/cros/local/graphics"
+
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast/core/testing"
 	tastcheck "go.chromium.org/tast/core/testing/testcheck"
 )
@@ -50,7 +52,9 @@ func getTests(t *gotesting.T, f tastcheck.TestFilter) []*testing.TestInstance {
 //
 // Note that this function is only traversing the local fixtures registered at the time this unit test is running.
 // If any fixtures are not found in entities list, try importting the package which registered the fixture.
+// Any remote fixtures in the same tree should be added to the remoteFixtures variables and this function is not able to access any of their parents.
 func CheckFixtures(t *gotesting.T, f tastcheck.TestFilter, requiredFixtures []string) {
+	remoteFixtures := []string{fixture.GpuRemoteWatcher}
 	nodes := tastcheck.Entities()
 	for _, tst := range getTests(t, f) {
 		node, ok := nodes[tst.Name]
@@ -60,13 +64,22 @@ func CheckFixtures(t *gotesting.T, f tastcheck.TestFilter, requiredFixtures []st
 		}
 		index := node.Parent
 		fixtures := make(map[string]bool)
+	FixtureLoop:
 		for {
 			if index == "" {
 				break
 			}
+			// Mock remote fixtures and break the loop.
+			for _, rf := range remoteFixtures {
+				if index == rf {
+					fixtures[node.Name] = true
+					break FixtureLoop
+				}
+			}
+			// Keep traversing the local fixture chain.
 			node, ok := nodes[index]
 			if !ok {
-				t.Errorf("%s, failed to find in entities list. Is the fixture imported by this unit test?", index)
+				t.Errorf("%s, failed to find in entities list. Try import the fixture by this unit test or add to remoteFixtures in graphics/testcheck?", index)
 				break
 			}
 			fixtures[node.Name] = true

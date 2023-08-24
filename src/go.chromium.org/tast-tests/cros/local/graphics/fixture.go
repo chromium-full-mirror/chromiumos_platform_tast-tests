@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	graphics_common "go.chromium.org/tast-tests/cros/common/graphics"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
@@ -55,6 +56,7 @@ func init() {
 		TearDownTimeout: 1 * time.Minute,
 		PreTestTimeout:  2 * time.Minute,
 		PostTestTimeout: 2 * time.Minute,
+		Parent:          fixture.GpuRemoteWatcher,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -348,6 +350,9 @@ func (f *gpuWatchHangsFixture) PostTest(ctx context.Context, s *testing.FixtTest
 	}
 	if postErr != nil {
 		s.Error("PostTest failed: ", postErr)
+		// If postTest fails, it often means there's a hang and following tests are likely to suffer from a possibly failed recovery.
+		// Mark the DUT for reboot by the remote server instance.
+		os.Create(graphics_common.GraphicsRemoteWatcherRebootFile)
 	}
 }
 
