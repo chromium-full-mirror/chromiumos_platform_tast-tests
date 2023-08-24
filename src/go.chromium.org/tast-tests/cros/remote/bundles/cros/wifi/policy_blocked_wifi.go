@@ -489,7 +489,13 @@ func expectFailJoinWiFiFromOneClick(expectedAP *wificell.APIface, localCtx local
 
 	disableTooltip := ui.Node().NameContaining("This network is disabled by your administrator").Role(ui.Role_ROLE_TOOLTIP).Finder()
 	if _, err := uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: disableTooltip}); err != nil {
-		return errors.Wrap(err, "error during searching disabled network tooltip")
+		// This is bug for boards with mobile data - tooltip about disabled network
+		// is not shown, accepting it because this info is available via OS settings.
+		// b/297339385.
+		mobileData := ui.Node().NameContaining("Mobile data").Role(ui.Role_ROLE_BUTTON).Finder()
+		if _, err := uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: mobileData}); err != nil {
+			return errors.Wrap(err, "error during searching disabled network tooltip")
+		}
 	}
 
 	if err := expectWiFiNotConnected(ctx, wifiSvc, ssid); err != nil {
@@ -539,10 +545,6 @@ func expectFailAddAndJoinWiFiQuickSettings(accessPoint *wificell.APIface, localC
 		return errors.Wrap(err, "failed to verify that WiFi was not connected")
 	}
 
-	req := &wifi.DeleteEntriesForSSIDRequest{Ssid: []byte(ssid)}
-	if _, err := wifiSvc.DeleteEntriesForSSID(ctx, req); err != nil {
-		return errors.Wrap(err, ssidDataRemovalFailure)
-	}
 	return nil
 }
 
@@ -734,6 +736,13 @@ func ensureUIElementVisible(ctx context.Context, uiSvc ui.AutomationServiceClien
 				}
 			}
 		}
+	}
+
+	// On the board with small screen last SSID will be still at the bottom of quick settings
+	// widget and not visible in VNC, so pressing one more tab to make it visible on screen.
+	// The last element in list is "Add new networks", so in the worst case pressing tab will move selection to it.
+	if _, err := keyboard.Accel(ctx, &inputs.AccelRequest{Key: "tab"}); err != nil {
+		return errors.Wrap(err, tabPressFailure)
 	}
 
 	return nil
