@@ -362,7 +362,7 @@ func WriteImageFromSingleSectionFile(ctx context.Context, path string, sec Image
 		return errors.Wrap(err, "reading image from file")
 	}
 
-	if out, err := flashromInstance.Write(ctx, "", false, false, "", []string{fmt.Sprintf("%s:%s", sec, path)}); err != nil {
+	if out, err := flashromInstance.Write(ctx, "", true /* noVerifyAll= */, false, "", []string{fmt.Sprintf("%s:%s", sec, path)}); err != nil {
 		return errors.Wrapf(err, "could not write host image: %v", string(out))
 	}
 
