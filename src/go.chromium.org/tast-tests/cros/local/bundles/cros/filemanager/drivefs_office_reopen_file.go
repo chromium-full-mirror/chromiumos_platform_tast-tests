@@ -92,7 +92,7 @@ func DrivefsOfficeReopenFile(ctx context.Context, s *testing.State) {
 	if _, err := files.OpenOfficeFile(ctx, filesapp.GoogleDrive, fileName, filesconsts.DriveFs); err != nil {
 		s.Fatal("Failed to open file from Google Drive: ", err)
 	}
-	if err := drivefs.WaitForDSSWindowAndMaybeClose(tconn, fileName)(ctx); err != nil {
+	if err := drivefs.WaitForDSSWindowAndCloseIgnoreError(tconn, fileName)(ctx); err != nil {
 		s.Fatal("Failed to upload and open in Google Drive: ", fileName, err)
 	}
 

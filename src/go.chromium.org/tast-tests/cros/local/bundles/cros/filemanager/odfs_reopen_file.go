@@ -102,7 +102,7 @@ func OdfsReopenFile(ctx context.Context, s *testing.State) {
 		if _, err := files.OpenOfficeFile(ctx, filesapp.OneDrive, fileName, filesconsts.OneDrive); err != nil {
 			s.Fatal("Failed to open OneDrive: ", err)
 		}
-		if err := ms365App.WaitForMicrosoft365WindowAndMaybeClose(tconn, fileName)(ctx); err != nil {
+		if err := ms365App.WaitForMicrosoft365WindowAndCloseIgnoreError(tconn, fileName)(ctx); err != nil {
 			s.Fatal("Failed to upload and open on MS365: ", fileName, err)
 		}
 

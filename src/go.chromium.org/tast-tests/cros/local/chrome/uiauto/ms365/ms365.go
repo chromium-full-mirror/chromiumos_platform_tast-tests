@@ -195,10 +195,10 @@ func (ms *Ms365) WaitForMicrosoft365WindowAndClose(tconn *chrome.TestConn, fileN
 	return ms.waitForMicrosoft365WindowAndClose(tconn, fileName, false /*=ignoreCloseError*/)
 }
 
-// WaitForMicrosoft365WindowAndMaybeClose tries to close the MS window but won't
+// WaitForMicrosoft365WindowAndCloseIgnoreError tries to close the MS window but won't
 // return error if it fails. This is used mostly when closing window is the last
 // step.
-func (ms *Ms365) WaitForMicrosoft365WindowAndMaybeClose(tconn *chrome.TestConn, fileName string) uiauto.Action {
+func (ms *Ms365) WaitForMicrosoft365WindowAndCloseIgnoreError(tconn *chrome.TestConn, fileName string) uiauto.Action {
 	return ms.waitForMicrosoft365WindowAndClose(tconn, fileName, true /*=ignoreCloseError*/)
 }
 

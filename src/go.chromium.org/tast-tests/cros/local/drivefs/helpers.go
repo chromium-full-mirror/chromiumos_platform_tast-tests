@@ -180,10 +180,10 @@ func WaitForDSSWindowAndClose(tconn *chrome.TestConn, fileName string) uiauto.Ac
 	return waitForDSSWindowAndClose(tconn, fileName, false /*=ignoreCloseError*/)
 }
 
-// WaitForDSSWindowAndMaybeClose tries to close the DSS window but won't
+// WaitForDSSWindowAndCloseIgnoreError tries to close the DSS window but won't
 // return error if it fails. This is used mostly when closing window is the last
 // step.
-func WaitForDSSWindowAndMaybeClose(tconn *chrome.TestConn, fileName string) uiauto.Action {
+func WaitForDSSWindowAndCloseIgnoreError(tconn *chrome.TestConn, fileName string) uiauto.Action {
 	return waitForDSSWindowAndClose(tconn, fileName, true /*=ignoreCloseError*/)
 }
 
