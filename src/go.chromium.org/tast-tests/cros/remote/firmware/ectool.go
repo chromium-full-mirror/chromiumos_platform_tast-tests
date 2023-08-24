@@ -483,3 +483,21 @@ func (ec *ECTool) FlashProtect(ctx context.Context, args ...string) (string, err
 	}
 	return string(out), nil
 }
+
+// ECToolBaseState specifies the base state.
+type ECToolBaseState string
+
+const (
+	// BaseAttach force base state to attached.
+	BaseAttach = "attach"
+	// BaseDetach force base state to detached.
+	BaseDetach = "detach"
+	// BaseAuto remove the force base state, and EC will determine the base state with physical setup.
+	BaseAuto = "reset"
+)
+
+// SetBaseState runs the `ectool basestate` command to set the status of tablet mode.
+func (ec *ECTool) SetBaseState(ctx context.Context, state ECToolBaseState) error {
+	_, err := ec.Command(ctx, "basestate", string(state)).Output(ssh.DumpLogOnError)
+	return err
+}

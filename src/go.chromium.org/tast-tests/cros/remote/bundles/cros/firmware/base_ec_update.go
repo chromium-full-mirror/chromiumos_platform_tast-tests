@@ -78,6 +78,30 @@ type hammerRequiredVariables struct {
 	usbPath string
 }
 
+type baseStateSetter interface {
+	SetBaseState(ctx context.Context, state firmware.ECToolBaseState) error
+}
+
+type gpioBaseStateSetter struct {
+	name   string
+	ecTool *firmware.ECTool
+}
+
+func (g *gpioBaseStateSetter) SetBaseState(ctx context.Context, state firmware.ECToolBaseState) error {
+	cmdList := []string{"gpioset", g.name}
+
+	switch state {
+	case firmware.BaseAttach, firmware.BaseAuto:
+		cmdList = append(cmdList, "1")
+	case firmware.BaseDetach:
+		cmdList = append(cmdList, "0")
+	default:
+		return errors.Errorf("unsupported state: %s", state)
+	}
+
+	return g.ecTool.Command(ctx, cmdList...).Run(testexec.DumpLogOnError)
+}
+
 func BaseECUpdate(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
@@ -292,44 +316,19 @@ func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, ut
 		return errors.Wrap(err, "failed to get hammerd process id")
 	}
 
-	// Included in baseGpioNames are a list of possible gpios available for
-	// controlling the base state. The first one found from the list would
-	// be used in setting base state attached/detached.
-	var baseStateGpio string
-	baseGpioNames := []firmware.GpioName{firmware.ENBASE, firmware.ENPP3300POGO, firmware.PP3300DXBASE}
-	foundNames, err := ecTool.FindBaseGpio(ctx, baseGpioNames)
+	setter, err := getBaseStateSetter(ctx, ecTool)
 	if err != nil {
-		return errors.Wrapf(err, "while looking for %q", baseGpioNames)
+		errors.Wrap(err, "failed to get base state setter")
 	}
-
-	for _, name := range baseGpioNames {
-		if _, ok := foundNames[name]; ok {
-			baseStateGpio = string(name)
-			break
+	// Detach then re-attach detachable's base to trigger update
+	// notification.
+	// We assume the base keyboard is always physically attached to the
+	// device during testing, and we use `TabletAuto` to revert forcing base
+	// state, so the state is back to attached.
+	for _, state := range []firmware.ECToolBaseState{firmware.BaseDetach, firmware.BaseAuto} {
+		if err := setter.SetBaseState(ctx, state); err != nil {
+			return errors.Wrap(err, "failed to switch the base state")
 		}
-	}
-
-	// Detach then re-attach detachable's base to trigger update notification.
-	for _, step := range []struct {
-		basestate    string
-		value        string
-		baseAttached bool
-	}{
-		{
-			basestate:    baseStateGpio,
-			value:        "0",
-			baseAttached: false,
-		},
-		{
-			basestate:    baseStateGpio,
-			value:        "1",
-			baseAttached: true,
-		},
-	} {
-		if err := ecTool.Command(ctx, "gpioset", step.basestate, step.value).Run(testexec.DumpLogOnError); err != nil {
-			return errors.Wrap(err, "failed to switch the basestate")
-		}
-
 		// GoBigSleepLint: Allow some delay to ensure base attached/detached by setting the gpio.
 		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep for 10 seconds for the command to fully propagate to the DUT")
@@ -430,6 +429,25 @@ func modifyBaseEC(ctx context.Context, dut *dut.DUT, boardInfo baseECInfo, fileD
 		return errors.Wrap(err, "failed to copy files into DUT")
 	}
 	return nil
+}
+
+func getBaseStateSetter(ctx context.Context, ecTool *firmware.ECTool) (baseStateSetter, error) {
+	// Included in baseGpioNames are a list of possible gpios available for
+	// controlling the base state. The first one found from the list would
+	// be used in setting base state attached/detached.
+	// If no GPIO matched, use ECTool as base state setter.
+	baseGpioNames := []firmware.GpioName{firmware.ENBASE, firmware.ENPP3300POGO, firmware.PP3300DXBASE}
+	foundNames, err := ecTool.FindBaseGpio(ctx, baseGpioNames)
+	if err != nil {
+		return ecTool, nil
+	}
+
+	for _, name := range baseGpioNames {
+		if _, ok := foundNames[name]; ok {
+			return &gpioBaseStateSetter{name: string(name), ecTool: ecTool}, nil
+		}
+	}
+	return nil, errors.New("cannot find base GPIO pin")
 }
 
 func hammerdProcessID(ctx context.Context, hammerdLog string, dut *dut.DUT) (string, error) {
