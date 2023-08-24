@@ -6,12 +6,12 @@ package settings
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/apps/helpapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -48,7 +48,7 @@ type chromeOSPageInfo struct {
 	chrome   apps.App
 }
 
-// ChromeOSPageInfo checks chromeOS version info and online help available to user.
+// ChromeOSPageInfo checks chromeOS version info and help app available to user.
 func ChromeOSPageInfo(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*chrome.Chrome)
 	tconn, err := cr.TestAPIConn(ctx)
@@ -87,14 +87,14 @@ func ChromeOSPageInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check update to ChromeOS: ", err)
 	}
 
-	s.Log("Check online help")
-	if err := checkOnlineHelp(resource)(ctx); err != nil {
-		s.Fatal("Failed to check online help: ", err)
+	s.Log("Check help app")
+	if err := checkHelpApp(resource)(ctx); err != nil {
+		s.Fatal("Failed to check help app: ", err)
 	}
 
-	s.Log("Check report issue")
-	if err := checkReportIssue(resource)(ctx); err != nil {
-		s.Fatal("Failed to check report issue: ", err)
+	s.Log("Check feedback app")
+	if err := checkSendFeedback(resource)(ctx); err != nil {
+		s.Fatal("Failed to check feedback app: ", err)
 	}
 
 	s.Log("Check detailed build informations")
@@ -121,24 +121,23 @@ func checkUpdate(settings *ossettings.OSSettings) uiauto.Action {
 	return settings.WaitUntilExists(ossettings.CheckUpdateBtn)
 }
 
-func checkOnlineHelp(resource *chromeOSPageInfo) uiauto.Action {
-	helpRoot := nodewith.Name(apps.Help.Name).HasClass("BrowserFrame").Role(role.Window)
-	titleReg := regexp.MustCompile("Welcome to your (Chromebook|Chromebox|Chromebit|Chromebase|Chrome device)")
+func checkHelpApp(resource *chromeOSPageInfo) uiauto.Action {
+	helpApp := helpapp.NewContext(resource.cr, resource.tconn)
 
-	return uiauto.Combine("check get help",
+	return uiauto.Combine("Open and close help app",
 		resource.settings.LaunchHelpApp(),
-		resource.ui.WaitUntilExists(nodewith.NameRegex(titleReg).Role(role.StaticText).Ancestor(helpRoot)),
-		func(ctx context.Context) error { return apps.Close(ctx, resource.tconn, apps.Help.ID) },
-		resource.ui.WaitUntilGone(helpRoot),
+		helpApp.WaitForApp(),
+		helpApp.Close(),
+		resource.ui.WaitUntilGone(helpapp.RootFinder),
 	)
 }
 
-func checkReportIssue(resource *chromeOSPageInfo) uiauto.Action {
-	return uiauto.Combine("check report issue",
+func checkSendFeedback(resource *chromeOSPageInfo) uiauto.Action {
+	return uiauto.Combine("Open and close feedback app",
 		resource.settings.LeftClick(ossettings.ReportIssue),
-		resource.ui.WaitUntilExists(ossettings.FeedbackDialogRoot),
-		resource.ui.LeftClick(nodewith.Name("Close").Ancestor(ossettings.FeedbackDialogRoot)),
-		resource.ui.WaitUntilGone(ossettings.FeedbackDialogRoot),
+		resource.ui.WaitUntilExists(ossettings.FeedbackWindowFinder),
+		resource.ui.LeftClick(nodewith.Name("Close").Ancestor(ossettings.FeedbackWindowFinder)),
+		resource.ui.WaitUntilGone(ossettings.FeedbackWindowFinder),
 	)
 }
 

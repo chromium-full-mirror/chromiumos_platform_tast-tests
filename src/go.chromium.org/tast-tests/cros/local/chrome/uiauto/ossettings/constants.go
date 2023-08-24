@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 )
@@ -91,7 +92,7 @@ var MenuButton = nodewith.Name("Main menu").Role(role.Button).Focusable()
 var (
 	VersionInfo       = nodewith.NameStartingWith("Version ").Role(role.StaticText)
 	CheckUpdateBtn    = nodewith.Name("Check for updates").Role(role.Button)
-	ReportIssue       = nodewith.Name("Report an issue").Role(role.Link)
+	ReportIssue       = nodewith.Name("Send feedback").Role(role.Link)
 	AdditionalDetails = nodewith.Name("Additional details").Role(role.Link)
 	TermsOfService    = nodewith.Name("Terms of Service").Role(role.Link)
 
@@ -121,8 +122,8 @@ var SearchResultFinder = nodewith.NameRegex(regexp.MustCompile(fmt.Sprintf(`(Sea
 // SearchFeedbackButton is a button for sending feedback when a search result doesn't exist.
 var SearchFeedbackButton = nodewith.Name("Report this search result").Role(role.Button)
 
-// FeedbackDialogRoot is the finder for the feedback dialog.
-var FeedbackDialogRoot = nodewith.Name("Send feedback to Google").HasClass("RootView")
+// FeedbackWindowFinder is the finder for the feedback app window.
+var FeedbackWindowFinder = nodewith.Name(apps.Feedback.Name).Role(role.Window)
 
 // networkFinder is the finder for the Network page UI in OS setting.
 var networkFinder = nodewith.Name("Network").Role(role.Link).Ancestor(WindowFinder)
