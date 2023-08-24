@@ -6,14 +6,13 @@ package policy
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/mitmproxy"
+	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -46,24 +45,12 @@ func NetworkMonitor(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	mp := mitmproxy.New()
-	cleanupFunc, certPath, err := mp.SetBinaryPath(s.DataPath(mitmdumpBinFile)).
-		SetDumpDir(s.OutDir()).Start(ctx)
-	if err != nil {
-		s.Fatal("Failed to launch mitmproxy: ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := cleanupFunc(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to cleanup mitmproxy: ", err)
-		}
-	}(cleanupCtx)
+	mp.SetBinaryPath(s.DataPath(mitmdumpBinFile)).SetDumpDir(s.OutDir())
 
-	if err := mitmproxy.ImportRootCertificate(ctx, cr.NormalizedUser(), certPath); err != nil {
-		s.Fatal("Failed to import cert: ", err)
+	if err := cr.LaunchAndApplyProxy(ctx, mp); err != nil {
+		s.Fatal("Failed to launch and apply proxy: ", err)
 	}
-
-	if err := cr.SetProxy(ctx, fmt.Sprintf("localhost:%d", mp.ListenPort())); err != nil {
-		s.Fatal("Failed to set Chrome proxy: ", err)
-	}
+	defer mp.Close(cleanupCtx)
 
 	// TODO: Add test logic here to monitor network traffic.
 	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://www.google.com")

@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/chrome/martianproxy"
+	"go.chromium.org/tast-tests/cros/local/chrome/proxy"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/errors"
 )
@@ -48,7 +48,7 @@ func (c *Chrome) SetProxy(ctx context.Context, proxyAddress string) error {
 }
 
 // importRootCertificate imports the proxy root certificate to current Chrome user.
-func (c *Chrome) importRootCertificate(ctx context.Context, proxy *martianproxy.Proxy) error {
+func (c *Chrome) importRootCertificate(ctx context.Context, proxy proxy.Proxy) error {
 	if !proxy.IsRunning() {
 		return errors.New("proxy is not started")
 	}
@@ -58,7 +58,7 @@ func (c *Chrome) importRootCertificate(ctx context.Context, proxy *martianproxy.
 		return errors.Wrap(err, "failed to get user path")
 	}
 
-	certFile, err := proxy.DownloadRootCertificate(ctx)
+	certFile, err := proxy.RootCertificate(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to download root certificate")
 	}
@@ -74,7 +74,7 @@ func (c *Chrome) importRootCertificate(ctx context.Context, proxy *martianproxy.
 }
 
 // LaunchAndApplyProxy launches defined Martian proxy and apply to current Chrome.
-func (c *Chrome) LaunchAndApplyProxy(ctx context.Context, proxy *martianproxy.Proxy) error {
+func (c *Chrome) LaunchAndApplyProxy(ctx context.Context, proxy proxy.Proxy) error {
 	if err := proxy.Start(ctx); err != nil {
 		return errors.Wrap(err, "failed to start proxy")
 	}

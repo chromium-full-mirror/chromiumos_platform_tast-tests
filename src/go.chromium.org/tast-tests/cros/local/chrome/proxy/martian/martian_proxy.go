@@ -25,7 +25,7 @@ const (
 	defaultOutDir    = "/var/log/martian_proxy"
 )
 
-// Proxy API endpoints
+// MartianProxy API endpoints
 type proxyEndPoint string
 
 const (
@@ -35,8 +35,8 @@ const (
 	configure                       = "configure"
 )
 
-// Proxy represents a structure of the proxy wrapper.
-type Proxy struct {
+// MartianProxy represents a structure of the proxy wrapper.
+type MartianProxy struct {
 	proxyPort int
 	apiPort   int
 	outDir    string
@@ -51,8 +51,8 @@ type Proxy struct {
 }
 
 // New creates a new Martian proxy instance with default configuration.
-func New() *Proxy {
-	return &Proxy{
+func New() *MartianProxy {
+	return &MartianProxy{
 		proxyPort:          defaultProxyPort,
 		apiPort:            defaultAPIPort,
 		outDir:             defaultOutDir,
@@ -63,57 +63,57 @@ func New() *Proxy {
 }
 
 // SetProxyPort sets the proxy port.
-func (p *Proxy) SetProxyPort(proxyPort int) *Proxy {
+func (p *MartianProxy) SetProxyPort(proxyPort int) *MartianProxy {
 	p.proxyPort = proxyPort
 	return p
 }
 
 // ProxyPort returns the port that the proxy listens on.
-func (p *Proxy) ProxyPort() int {
+func (p *MartianProxy) ProxyPort() int {
 	return p.proxyPort
 }
 
 // SetAPIPort sets the api port.
-func (p *Proxy) SetAPIPort(apiPort int) *Proxy {
+func (p *MartianProxy) SetAPIPort(apiPort int) *MartianProxy {
 	p.apiPort = apiPort
 	return p
 }
 
 // APIPort returns the port that the api server listens on.
-func (p *Proxy) APIPort() int {
+func (p *MartianProxy) APIPort() int {
 	return p.apiPort
 }
 
 // SetOutDir sets the proxy output path.
 // Har and logs will all be written to this path.
-func (p *Proxy) SetOutDir(path string) *Proxy {
+func (p *MartianProxy) SetOutDir(path string) *MartianProxy {
 	p.outDir = path
 	return p
 }
 
 // SetHar sets whether to log full logs in har.
-func (p *Proxy) SetHar(har bool) *Proxy {
+func (p *MartianProxy) SetHar(har bool) *MartianProxy {
 	p.har = har
 	return p
 }
 
 // IsRunning returns whether the proxy is running.
-func (p *Proxy) IsRunning() bool {
+func (p *MartianProxy) IsRunning() bool {
 	return p.isRunning
 }
 
 // updateLogFileName updates the timestamp from when the log starts.
-// Proxy logs are downloaded from the memory on demand.
+// MartianProxy logs are downloaded from the memory on demand.
 // It is impossible to follow the log file naming convention which indicating the time log starts.
 // Thus, save the start timepoint and use it for the log name.
-func (p *Proxy) updateLogFileName() {
+func (p *MartianProxy) updateLogFileName() {
 	nowStr := time.Now().Format("20230731-150405")
 	p.logFileName = fmt.Sprintf("proxy_%s.log", nowStr)
 }
 
 // Start launches the martian proxy on localhost.
-func (p *Proxy) Start(ctx context.Context) error {
-	// Proxy is launched via command. Available arguments can be found at https://github.com/google/martian/blob/master/cmd/proxy/main.go
+func (p *MartianProxy) Start(ctx context.Context) error {
+	// MartianProxy is launched via command. Available arguments can be found at https://github.com/google/martian/
 	// martian_proxy -generate-ca-cert -har -addr=:4040 -api-addr=:4041 -api=localhost
 	pOpts := []string{
 		"-generate-ca-cert",                     // Generate ca cert that can be downloaded from http://localhost:{api_port}/certificate.cer
@@ -140,7 +140,7 @@ func (p *Proxy) Start(ctx context.Context) error {
 }
 
 // Close closes proxy.
-func (p *Proxy) Close(ctx context.Context) error {
+func (p *MartianProxy) Close(ctx context.Context) error {
 	if !p.isRunning {
 		testing.ContextLog(ctx, "Martian proxy is not running before close")
 		return nil
@@ -160,11 +160,11 @@ func (p *Proxy) Close(ctx context.Context) error {
 }
 
 // ProxyAddress returns the proxy address to be set in browser.
-func (p *Proxy) ProxyAddress() string {
+func (p *MartianProxy) ProxyAddress() string {
 	return fmt.Sprintf("localhost:%d", p.proxyPort)
 }
 
-func (p *Proxy) apiAddress(endPoint proxyEndPoint) string {
+func (p *MartianProxy) apiAddress(endPoint proxyEndPoint) string {
 	return fmt.Sprintf("http://localhost:%d/%s", p.apiPort, endPoint)
 }
 
@@ -172,7 +172,7 @@ type requestGeneratorFunc func() (*http.Request, error)
 
 // ConfigureWithJSON configures the proxy with json configuration file.
 // Refer to https://github.com/google/martian#configure
-func (p *Proxy) ConfigureWithJSON(ctx context.Context, jsonFilePath string) error {
+func (p *MartianProxy) ConfigureWithJSON(ctx context.Context, jsonFilePath string) error {
 	requestGenerater := func() (*http.Request, error) {
 		fileReader, err := os.Open(jsonFilePath)
 		if err != nil {
@@ -194,7 +194,7 @@ func (p *Proxy) ConfigureWithJSON(ctx context.Context, jsonFilePath string) erro
 }
 
 // sendRequest sends the HTTP request. It automatically retries on non-2xx result.
-func (p *Proxy) sendRequest(ctx context.Context, requestGenerater requestGeneratorFunc) (*http.Response, error) {
+func (p *MartianProxy) sendRequest(ctx context.Context, requestGenerater requestGeneratorFunc) (*http.Response, error) {
 	var resp *http.Response
 	return resp, testing.Poll(ctx, func(ctx context.Context) error {
 		req, err := requestGenerater()
@@ -217,8 +217,8 @@ func (p *Proxy) sendRequest(ctx context.Context, requestGenerater requestGenerat
 	}, &testing.PollOptions{Interval: time.Second, Timeout: 10 * time.Second})
 }
 
-// DownloadRootCertificate downloads the root CA certificate from proxy server that to be imported to Chrome.
-func (p *Proxy) DownloadRootCertificate(ctx context.Context) (string, error) {
+// RootCertificate returns the file path of the root certificate and ensures its existence.
+func (p *MartianProxy) RootCertificate(ctx context.Context) (string, error) {
 	downloadedCertFile := filepath.Join(p.outDir, string(certEndPoint))
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return p.downloadDataFromProxy(ctx, certEndPoint, downloadedCertFile)
@@ -228,7 +228,7 @@ func (p *Proxy) DownloadRootCertificate(ctx context.Context) (string, error) {
 	return downloadedCertFile, nil
 }
 
-func (p *Proxy) downloadDataFromProxy(ctx context.Context, endpoint proxyEndPoint, downloadPath string) error {
+func (p *MartianProxy) downloadDataFromProxy(ctx context.Context, endpoint proxyEndPoint, downloadPath string) error {
 	out, err := os.Create(downloadPath)
 	if err != nil {
 		return err
@@ -250,7 +250,7 @@ func (p *Proxy) downloadDataFromProxy(ctx context.Context, endpoint proxyEndPoin
 }
 
 // resetLog calls the proxy api to delete logs in memory and restart logging.
-func (p *Proxy) resetLog(ctx context.Context) error {
+func (p *MartianProxy) resetLog(ctx context.Context) error {
 	defer p.updateLogFileName()
 	req := func() (*http.Request, error) {
 		return http.NewRequest(http.MethodDelete, p.apiAddress(logsResetEndPoint), nil)
@@ -261,7 +261,7 @@ func (p *Proxy) resetLog(ctx context.Context) error {
 }
 
 // downloadLogs downloads proxy log from API and resets logging.
-func (p *Proxy) downloadLogs(ctx context.Context, reset bool) error {
+func (p *MartianProxy) downloadLogs(ctx context.Context, reset bool) error {
 	logFile := filepath.Join(p.outDir, p.logFileName)
 	if err := p.downloadDataFromProxy(ctx, logsEndPoint, logFile); err != nil {
 		return errors.Wrap(err, "failed to download proxy log")

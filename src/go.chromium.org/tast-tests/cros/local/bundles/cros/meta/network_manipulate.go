@@ -13,7 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/martianproxy"
+	martianproxy "go.chromium.org/tast-tests/cros/local/chrome/proxy/martian"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
