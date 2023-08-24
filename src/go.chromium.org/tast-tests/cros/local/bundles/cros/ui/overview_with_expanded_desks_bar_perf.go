@@ -94,6 +94,18 @@ func OverviewWithExpandedDesksBarPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Test case with 2 desks failed: ", err)
 	}
 
+	// Maximize the active window so that the desks bar is created before the
+	// overview window animation is started. If the screen isn't covered by
+	// window(s), the desks bar will be created after the overview animation
+	// is completed.
+	activeWindow, err := ash.GetActiveWindow(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get active window: ", err)
+	}
+	if err := ash.SetWindowStateAndWait(ctx, tconn, activeWindow.ID, ash.WindowStateMaximized); err != nil {
+		s.Fatal("Failed to maximize active window: ", err)
+	}
+
 	if err := runOverviewWithExpandedDesksBarSubtest(ctx, s, tconn, runner, 8 /* desks */); err != nil {
 		s.Fatal("Test case with 8 desks failed: ", err)
 	}
@@ -127,7 +139,7 @@ func runOverviewWithExpandedDesksBarSubtest(ctx context.Context, s *testing.Stat
 	}
 
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(3*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
+	if err := ui.WithTimeout(time.Minute).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
 		s.Log("Failed to wait for overview stabilization: ", err)
 	}
 

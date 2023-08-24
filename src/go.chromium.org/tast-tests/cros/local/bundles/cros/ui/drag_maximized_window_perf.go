@@ -147,8 +147,8 @@ func DragMaximizedWindowPerf(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		// Needs to wait a bit before releasing the mouse, otherwise the window
-		// may not get back to be maximized.  See https://crbug.com/1158548.
+		// GoBigSleepLint: Sleep is necessary here because we have a dwell time
+		// to prevent accidental maximizes. See https://crbug.com/1158548.
 		if err := testing.Sleep(ctx, time.Second); err != nil {
 			return errors.Wrap(err, "failed to wait")
 		}
@@ -175,8 +175,9 @@ func DragMaximizedWindowPerf(ctx context.Context, s *testing.State) {
 		return nil
 	},
 		"Ash.Window.AnimationSmoothness.CrossFade.DragMaximize",
-		"Ash.Window.AnimationSmoothness.CrossFade.DragUnmaximize")),
-		perfutil.StoreSmoothness,
+		"Ash.Window.AnimationSmoothness.CrossFade.DragUnmaximize",
+		"Ash.PhantomWindowController.Show.PresentationTime")),
+		perfutil.StoreAllWithHeuristics(""),
 		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
 	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
