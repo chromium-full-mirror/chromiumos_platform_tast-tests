@@ -94,7 +94,7 @@ const (
 	WaitForBiodToStartTimeout = 30 * time.Second
 	// timeForCleanup is the amount of time to reserve for cleaning up firmware tests.
 	timeForCleanup       = 2 * time.Minute
-	flashFpMcuTimeout    = 75 * time.Second
+	flashFpMcuTimeout    = 90 * time.Second
 	biodUpstartJobName   = "biod"
 	powerdUpstartJobName = "powerd"
 	disableFpUpdaterPath = "/mnt/stateful_partition/.disable_fp_updater"
