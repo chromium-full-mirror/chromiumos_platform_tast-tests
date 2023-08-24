@@ -27,7 +27,7 @@ func init() {
 			"joelaf@chromium.org",
 		},
 		BugComponent: "b:167279",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 
 		Params: []testing.Param{{
 			// This test exists because `latency_sensitive` is added
