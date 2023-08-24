@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/wav"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
@@ -115,11 +114,8 @@ func SpeakOnMutePower(ctx context.Context, s *testing.State) {
 		waitForNudge = ui.WithTimeout(nudgeWaitDuration).WaitUntilExists(common.SpeakOnMuteNudge)
 	}
 
-	// There is 60 second cool down after mute.
-	coolDownWaitDuration := 1 * time.Minute
 	muteAndWaitForNudge := uiauto.Combine("mute and speak",
 		vcTray.ToggleAVDevice(vctray.DevMicrophone, false),
-		action.Sleep(coolDownWaitDuration-5*time.Second),
 		waitForNudge,
 	)
 
@@ -181,6 +177,12 @@ func SpeakOnMutePower(ctx context.Context, s *testing.State) {
 			ui.WaitUntilGone(common.SpeakOnMuteNudge),
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify unmute: ", err)
+		}
+
+		// Nudge time frame should reset by unmute.
+		// Mute and speak again should trigger the Nudge.
+		if err := muteAndWaitForNudge(ctx); err != nil {
+			s.Fatal("Failed to input audio and wait for nudge after reset: ", err)
 		}
 
 		s.Log("Waiting for playback to complete")

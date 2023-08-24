@@ -20,14 +20,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/input/voice"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -150,29 +148,16 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	// There is 60 second cool down after mute, and nudge should not appear during cool down.
-	coolDownWaitDuration := 1 * time.Minute
-	verifyNoNudgeDuringCoolDown := func(ctx context.Context) error {
-		if err := ui.WithTimeout(coolDownWaitDuration - 5*time.Second).WaitUntilExists(common.SpeakOnMuteNudge)(ctx); err == nil {
-			return errors.New("failed to apply mute cool down: the nudge appears during cool down")
-		} else if strings.Contains(err.Error(), nodewith.ErrNotFound) || strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
-			return nil
-		} else {
-			return err
-		}
-	}
-
-	// Nudge should appear 60 seconds after mute. We apply 5 seconds variance on both directions.
+	// Nudge should appear immediately after mute while speaking.
 	nudgeWaitDuration := 10 * time.Second
 	waitForNudge := ui.WithTimeout(nudgeWaitDuration).WaitUntilExists(common.SpeakOnMuteNudge)
 
 	muteAndWaitForNudge := uiauto.Combine("mute and speak",
 		vcTray.ToggleAVDevice(vctray.DevMicrophone, false),
-		verifyNoNudgeDuringCoolDown,
 		waitForNudge,
 	)
 
-	playDuration := 2 * time.Minute
+	playDuration := 1 * time.Minute
 	extendedSpeechWav := filepath.Join(s.OutDir(), "speech.wav")
 	if err := wav.RepeatForDuration(ctx, s.DataPath(data.SpeechInputFile), extendedSpeechWav, playDuration); err != nil {
 		s.Fatal("Cannot prepare wav file: ", err)
@@ -199,6 +184,12 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 		ui.WaitUntilGone(common.SpeakOnMuteNudge),
 	)(ctx); err != nil {
 		s.Fatal("Failed to verify unmute: ", err)
+	}
+
+	// Nudge time frame should reset by unmute.
+	// Mute and speak again should trigger the Nudge.
+	if err := muteAndWaitForNudge(ctx); err != nil {
+		s.Fatal("Failed to wait for nudge after reset: ", err)
 	}
 
 	s.Log("End the playback")
