@@ -156,6 +156,62 @@ func init() {
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIEnabledWith1BTPeerPowerFlossDisabled",
+		Desc: "Enables Chrome UI, enables Bluetooth, BlueZ with power measurement and connects to 1 btpeer",
+		Contacts: []string{
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: true,
+			BTPeerCount:    1,
+			FlossEnabled:   false,
+			PowerEnabled:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+			serviceDepUpstartService,
+			serviceDepMetricsService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIEnabledWith1BTPeerPowerFlossEnabled",
+		Desc: "Enables Chrome UI, enables Bluetooth, Floss with power measurement and connects to 1 btpeer",
+		Contacts: []string{
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: true,
+			BTPeerCount:    1,
+			FlossEnabled:   true,
+			PowerEnabled:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+			serviceDepUpstartService,
+			serviceDepMetricsService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "chromeUIDisabledWith2BTPeersPowerFlossDisabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, BlueZ stack with power measurements, and connects to 2 btpeer",
 		Contacts: []string{

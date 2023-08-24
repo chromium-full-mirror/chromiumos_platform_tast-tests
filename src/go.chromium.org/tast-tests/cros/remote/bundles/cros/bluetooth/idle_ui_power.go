@@ -1,0 +1,98 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package bluetooth
+
+import (
+	"context"
+	"time"
+
+	"google.golang.org/protobuf/types/known/emptypb"
+
+	"go.chromium.org/tast-tests/cros/remote/bluetooth"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         IdleUIPower,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Measure Bluetooth idle power consumption with UI open",
+		Contacts: []string{
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
+		},
+		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		Attr: []string{
+			"group:bluetooth",
+			"bluetooth_btpeers_1",
+		},
+		SoftwareDeps: []string{"chrome"},
+		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService", "tast.cros.power.MetricsService"},
+		Timeout:      15 * time.Minute,
+		Params: []testing.Param{
+			{
+				Name:      "floss_disabled",
+				Fixture:   "chromeUIEnabledWith1BTPeerPowerFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+			},
+			{
+				Name:              "floss_enabled",
+				Fixture:           "chromeUIEnabledWith1BTPeerPowerFlossEnabled",
+				ExtraAttr:         []string{"bluetooth_floss_flaky"},
+				ExtraSoftwareDeps: []string{"bluetooth_floss"},
+			},
+		},
+	})
+}
+
+// IdleUIPower tests power consumption when Bluetooth is on and UI is enabled.
+func IdleUIPower(ctx context.Context, s *testing.State) {
+	fv := s.FixtValue().(*bluetooth.FixtValue)
+
+	interval := 5 * time.Minute // Power measurement interval
+
+	// Disable Bluetooth
+	fv.BluetoothService.Disable(ctx, &emptypb.Empty{})
+
+	fv.StartPowerRecording(ctx)
+
+	testing.ContextLog(ctx, "Keep BT off for ", interval)
+	// GoBigSleepLint: sleep to keep BT off for measuring power consumption
+	testing.Sleep(ctx, interval)
+
+	pResults, err := fv.StopPowerRecording(ctx, s.TestName()+".bt_off")
+	if err != nil {
+		s.Fatal("Failed to measure power consumption: ", err)
+	}
+	pOff, err := fv.GetPowerMetrics(ctx, pResults, "system")
+	if err != nil {
+		s.Fatal("Failed to read power: ", err)
+	}
+	s.Log("Measured power [W]: ", pOff)
+
+	// Enable Bluetooth
+	fv.BluetoothService.Enable(ctx, &emptypb.Empty{})
+
+	fv.StartPowerRecording(ctx)
+
+	testing.ContextLog(ctx, "Keep BT on for ", interval)
+	// GoBigSleepLint: sleep to keep BT on for measuring power consumption
+	testing.Sleep(ctx, interval)
+
+	pResults, err = fv.StopPowerRecording(ctx, s.TestName()+".bt_on")
+	if err != nil {
+		s.Fatal("Failed to measure power consumption: ", err)
+	}
+	pOn, err := fv.GetPowerMetrics(ctx, pResults, "system")
+	if err != nil {
+		s.Fatal("Failed to read power: ", err)
+	}
+	s.Log("Measured power [W]: ", pOn)
+
+	s.Log("BT power consumption [W]: ", pOn-pOff)
+	if pOn-pOff > 0.01 {
+		s.Fatal("Bluetooth consumes more than 10mW power")
+	}
+}
