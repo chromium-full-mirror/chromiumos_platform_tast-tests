@@ -180,7 +180,7 @@ func eventMessageContainsMatch(ctx context.Context, events []reporters.Event, re
 	return false
 }
 
-// performDarkResumeSuspend perform powerd_dbus_suspend with disable_dark_resume and wakeup_timeout paramater.
+// performDarkResumeSuspend perform powerd_dbus_suspend with disable_dark_resume and suspend_for_sec parameter.
 // Checks and compare SLP and C10 package values before and after suspend.
 // Wakes DUT with ENTER key/power button press via servo.
 func performDarkResumeSuspend(ctx context.Context, firmwareHelper *firmware.Helper, dut *dut.DUT, isPowerPress bool) error {
@@ -190,7 +190,7 @@ func performDarkResumeSuspend(ctx context.Context, firmwareHelper *firmware.Help
 	}
 
 	testing.ContextLog(ctx, "Suspend DUT with dark resume command")
-	cmd := dut.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--disable_dark_resume=false", "--wakeup_timeout=10")
+	cmd := dut.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--disable_dark_resume=false", "--suspend_for_sec=10")
 	if err := cmd.Start(); err != nil {
 		return errors.Wrap(err, "failed to execute dark resume command")
 	}
