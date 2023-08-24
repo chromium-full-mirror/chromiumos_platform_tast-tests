@@ -13,7 +13,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/usbdevice"
+	"go.chromium.org/tast-tests/cros/common/usbdevice"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

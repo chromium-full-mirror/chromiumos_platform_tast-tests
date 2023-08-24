@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/usbdevice"
+	"go.chromium.org/tast-tests/cros/common/usbdevice"
 	"go.chromium.org/tast-tests/cros/local/usbip"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

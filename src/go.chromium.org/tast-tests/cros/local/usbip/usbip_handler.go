@@ -10,7 +10,7 @@ import (
 	"net"
 	"strconv"
 
-	"go.chromium.org/tast-tests/cros/local/usbdevice"
+	"go.chromium.org/tast-tests/cros/common/usbdevice"
 	"go.chromium.org/tast/core/errors"
 	"golang.org/x/sys/unix"
 )

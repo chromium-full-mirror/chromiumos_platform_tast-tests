@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/usbdevice"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -16,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/usbdevice"
 	"go.chromium.org/tast-tests/cros/local/usbip"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
