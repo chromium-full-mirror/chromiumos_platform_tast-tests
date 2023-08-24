@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -230,7 +231,7 @@ func WaitForDownloadViaDownloadBubble(ctx context.Context, tconnAsh *chrome.Test
 	}
 
 	firstDownloadStateLabelBlocked := nodewith.HasClass("Label").Ancestor(firstDownloadItem).NameContaining("Blocked")
-	firstDownloadStateLabelAllowed := nodewith.HasClass("Label").Ancestor(firstDownloadItem).NameContaining("Done")
+	firstDownloadStateLabelAllowed := nodewith.HasClass("Label").Ancestor(firstDownloadItem).NameRegex(regexp.MustCompile("(Done|Scan is done)"))
 
 	nodeFound, err := ui.WithTimeout(ScanningTimeOut).FindAnyExists(ctx, firstDownloadStateLabelBlocked, firstDownloadStateLabelAllowed)
 
