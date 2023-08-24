@@ -178,7 +178,7 @@ func (f *fakeHALFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 
 	f.cleanup = append(f.cleanup, testutil.RemoveTestConfig)
 	if err := testutil.SetupTestConfig(ctx, testutil.UseFakeHALCamera); err != nil {
-		s.Fatal("Failed to setup camera test config: ", err)
+		s.Fatal("Failed to set up camera test config: ", err)
 	}
 
 	fakeCameraConfig := testutil.FakeCameraConfig{

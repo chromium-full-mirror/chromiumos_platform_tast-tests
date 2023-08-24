@@ -44,11 +44,11 @@ func PNPChromeLogin(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	bt := s.FixtValue().(powersetup.PowerUIFixtureData).Bt
+	browserType := s.FixtValue().(powersetup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(powersetup.PowerUIFixtureData).Cr
 
 	// Open a window with about:blank tab on the target browser.
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, "about:blank")
+	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, "about:blank")
 	if err != nil {
 		s.Fatal("Failed to open a blank new tab: ", err)
 	}
@@ -60,7 +60,7 @@ func PNPChromeLogin(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get test API connection: ", err)
 	}
 
-	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(bt))
+	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(browserType))
 	if err != nil {
 		s.Fatal("Failed to open a browser window: ", err)
 	}
@@ -68,12 +68,12 @@ func PNPChromeLogin(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to maximize the browser window: ", err)
 	}
 
-	r := power.NewRecorder(ctx, pnp.PNPTimeParams.Interval, s.OutDir(), s.TestName())
-	defer r.Close(cleanupCtx)
-	if err := r.Cooldown(ctx); err != nil {
+	rec := power.NewRecorder(ctx, pnp.PNPTimeParams.Interval, s.OutDir(), s.TestName())
+	defer rec.Close(cleanupCtx)
+	if err := rec.Cooldown(ctx); err != nil {
 		s.Fatal("Cooldown failed: ", err)
 	}
-	if err := r.Start(ctx); err != nil {
+	if err := rec.Start(ctx); err != nil {
 		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
 
@@ -82,7 +82,7 @@ func PNPChromeLogin(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep: ", err)
 	}
 
-	if err := r.Finish(ctx); err != nil {
+	if err := rec.Finish(ctx); err != nil {
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}
 }

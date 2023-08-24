@@ -25,7 +25,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PNPGooglemeet,
+		Func:         PNPGoogleMeet,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power metrics when in a google meet session",
 		BugComponent: "b:167281",
@@ -52,23 +52,23 @@ func init() {
 	})
 }
 
-func PNPGooglemeet(ctx context.Context, s *testing.State) {
+func PNPGoogleMeet(ctx context.Context, s *testing.State) {
 	// Reserve some time to cleanup, even if it fails due to ctx timeout.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	bt := s.FixtValue().(powersetup.PowerUIFixtureData).Bt
+	browserType := s.FixtValue().(powersetup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(powersetup.PowerUIFixtureData).Cr
 
-	r := power.NewRecorder(ctx, pnp.PNPTimeParams.Interval, s.OutDir(), s.TestName())
-	defer r.Close(cleanupCtx)
-	if err := r.Cooldown(ctx); err != nil {
+	rec := power.NewRecorder(ctx, pnp.PNPTimeParams.Interval, s.OutDir(), s.TestName())
+	defer rec.Close(cleanupCtx)
+	if err := rec.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}
 
 	testing.ContextLog(ctx, "Opening Meet")
-	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, chrome.NewTabURL)
+	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
@@ -80,7 +80,7 @@ func PNPGooglemeet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get ash tconn: ", err)
 	}
 
-	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(bt))
+	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(browserType))
 	if err != nil {
 		s.Fatal("Failed to open a browser window: ", err)
 	}
@@ -88,7 +88,6 @@ func PNPGooglemeet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to maximize the browser window: ", err)
 	}
 
-	var gm *googlemeet.GoogleMeet
 	creds := s.RequiredVar("ui.bond_credentials")
 	bc, err := bond.NewClient(ctx, bond.WithCredsJSON([]byte(creds)))
 	if err != nil {
@@ -116,6 +115,7 @@ func PNPGooglemeet(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	var gm *googlemeet.GoogleMeet
 	gm, err = googlemeet.JoinMeeting(ctx, cr, br, conn, meetingCode,
 		map[string]string{
 			// Meet can dynamically switch between different segmentation models.
@@ -123,7 +123,7 @@ func PNPGooglemeet(ctx context.Context, s *testing.State) {
 			"e": "ForceSegmentationModelVariant::GpuMid",
 		}, googlemeet.WithAllPermissions)
 	if err != nil {
-		s.Fatal("Failed to join meeting: ", err)
+		s.Fatal("Failed to join a meeting: ", err)
 	}
 	defer gm.Close(cleanupCtx)
 
@@ -151,7 +151,7 @@ func PNPGooglemeet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to let things settle: ", err)
 	}
 
-	if err := r.Start(ctx); err != nil {
+	if err := rec.Start(ctx); err != nil {
 		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
 
@@ -160,7 +160,7 @@ func PNPGooglemeet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep: ", err)
 	}
 
-	if err := r.Finish(ctx); err != nil {
+	if err := rec.Finish(ctx); err != nil {
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}
 }
