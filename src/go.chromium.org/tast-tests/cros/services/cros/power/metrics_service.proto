@@ -36,6 +36,7 @@ message SetupRequest {
     NO_UI_NO_WIFI = 1;
     NO_UI_WIFI = 2;
     NO_UI_NO_WIFI_BT = 3;
+    UI_NO_WIFI_BT = 4;
   }
 }
 

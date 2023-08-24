@@ -90,6 +90,14 @@ func (m *MetricsService) Setup(ctx context.Context, req *power.SetupRequest) (*e
 		Bluetooth:          setup.DoNotChangeBluetooth,
 	}
 
+	UINoWifiBT := setup.PowerTestOptions{
+		UI:                 setup.DoNotChangeUI,
+		Backlight:          setup.SetBacklightToZero,
+		KeyboardBrightness: setup.SetKbBrightnessToZero,
+		Wifi:               setup.DisableWifiInterfaces,
+		Bluetooth:          setup.DoNotChangeBluetooth,
+	}
+
 	powerOptions := noUINoWifi
 
 	if req.Fixture == power.SetupRequest_NO_UI_WIFI {
@@ -98,6 +106,10 @@ func (m *MetricsService) Setup(ctx context.Context, req *power.SetupRequest) (*e
 
 	if req.Fixture == power.SetupRequest_NO_UI_NO_WIFI_BT {
 		powerOptions = noUINoWifiBT
+	}
+
+	if req.Fixture == power.SetupRequest_UI_NO_WIFI_BT {
+		powerOptions = UINoWifiBT
 	}
 
 	su.Add(setup.PowerTest(ctx, nil,
