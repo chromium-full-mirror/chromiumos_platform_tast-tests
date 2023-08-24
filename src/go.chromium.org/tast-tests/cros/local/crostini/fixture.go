@@ -310,6 +310,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts := generateChromeOpts(s)
 			opts = append(opts, chrome.EnableFeatures("CrostiniImeSupport"))
+			opts = append(opts, chrome.EnableFeatures("SystemEmojiPickerGIFSupport"))
 			if arc.Supported() {
 				opts = append(opts, chrome.ARCEnabled())
 				opts = append(opts, chrome.ExtraArgs(arc.DisableSyncFlags()...))

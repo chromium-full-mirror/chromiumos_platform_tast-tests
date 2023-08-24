@@ -7,6 +7,7 @@ package imetestutil
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime/emojipicker"
@@ -23,6 +24,9 @@ func OpenEmojiPickerAndInputEmoji(ctx context.Context, cr *chrome.Chrome, kb *in
 		// Launch the emoji keyboard.
 		kb.AccelAction("Search+Shift+Space"),
 		emojipicker.WaitUntilExists(tconn),
+		// With GIF picker flag on, there will be a nudge overlay when user opens emoji picker for the first time.
+		// We dismiss it here by clicking the search field.
+		ui.LeftClickUntil(emojipicker.SearchFieldFinder, ui.WithTimeout(5*time.Second).WaitUntilGone(emojipicker.NudgeOverlay)),
 		// Select the emoji.
 		ui.LeftClick(emojiCharFinder),
 		// The emoji picker should disappear after we click on an emoji.
