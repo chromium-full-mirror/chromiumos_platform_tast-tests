@@ -17,10 +17,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// callboxTetheringTestProfileName is the profile we create and use for cellular tethering tests.
-const callboxTetheringTestProfileName = "test"
+// callboxHotspotTestProfileName is the profile we create and use for cellular tethering tests.
+const callboxHotspotTestProfileName = "test"
 
-type shillCallboxTetheringTestParam struct {
+type shillCallboxHotspotTestParam struct {
 	ModbOverrideProto string
 	// Expected APN name for the bearer of type DEFAULT when tethering is enabled, if any.
 	EnabledDefaultApn string
@@ -32,7 +32,7 @@ type shillCallboxTetheringTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCallboxTethering,
+		Func:         ShillCallboxHotspot,
 		Desc:         "Verifies the different APN connection setups for tethering work",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "aleksandermj@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -41,63 +41,63 @@ func init() {
 			// DUN is DEFAULT
 			{
 				Name:      "dun_is_default_ipv4",
-				Val:       shillCallboxTetheringTestParam{"callbox_tethering_dun_is_default_ipv4.pbf", "callbox-ipv4", "", "callbox-ipv4"},
+				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_is_default_ipv4.pbf", "callbox-ipv4", "", "callbox-ipv4"},
 				ExtraData: []string{"callbox_tethering_dun_is_default_ipv4.pbf"},
 			}, {
 				Name:      "dun_is_default_ipv4v6",
-				Val:       shillCallboxTetheringTestParam{"callbox_tethering_dun_is_default_ipv4v6.pbf", "callbox-ipv4v6", "", "callbox-ipv4v6"},
+				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_is_default_ipv4v6.pbf", "callbox-ipv4v6", "", "callbox-ipv4v6"},
 				ExtraData: []string{"callbox_tethering_dun_is_default_ipv4v6.pbf"},
 			}, {
 				Name:      "dun_is_default_ipv6",
-				Val:       shillCallboxTetheringTestParam{"callbox_tethering_dun_is_default_ipv6.pbf", "callbox-ipv6", "", "callbox-ipv6"},
+				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_is_default_ipv6.pbf", "callbox-ipv6", "", "callbox-ipv6"},
 				ExtraData: []string{"callbox_tethering_dun_is_default_ipv6.pbf"},
 			},
 			// DUN and DEFAULT separate APNs and "DUN as DEFAULT" required by operator
 			{
 				Name:      "dun_as_default_ipv4",
-				Val:       shillCallboxTetheringTestParam{"callbox_tethering_dun_as_default_ipv4.pbf", "", "callbox-dun-ipv4", "callbox-ipv4"},
+				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_as_default_ipv4.pbf", "", "callbox-dun-ipv4", "callbox-ipv4"},
 				ExtraData: []string{"callbox_tethering_dun_as_default_ipv4.pbf"},
 			}, {
 				Name:      "dun_as_default_ipv4v6",
-				Val:       shillCallboxTetheringTestParam{"callbox_tethering_dun_as_default_ipv4v6.pbf", "", "callbox-dun-ipv4v6", "callbox-ipv4v6"},
+				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_as_default_ipv4v6.pbf", "", "callbox-dun-ipv4v6", "callbox-ipv4v6"},
 				ExtraData: []string{"callbox_tethering_dun_as_default_ipv4v6.pbf"},
 			}, {
 				Name:      "dun_as_default_ipv6",
-				Val:       shillCallboxTetheringTestParam{"callbox_tethering_dun_as_default_ipv6.pbf", "", "callbox-dun-ipv6", "callbox-ipv6"},
+				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_as_default_ipv6.pbf", "", "callbox-dun-ipv6", "callbox-ipv6"},
 				ExtraData: []string{"callbox_tethering_dun_as_default_ipv6.pbf"},
 			}, {
 				// Additional test with current DEFAULT as IPv4 and targeted DUN as IPv6
 				Name:      "dun_as_default_ipv4_default_ipv6_dun",
-				Val:       shillCallboxTetheringTestParam{"callbox_tethering_dun_as_default_ipv4_and_ipv6.pbf", "", "callbox-dun-ipv6", "callbox-ipv4"},
+				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_as_default_ipv4_and_ipv6.pbf", "", "callbox-dun-ipv6", "callbox-ipv4"},
 				ExtraData: []string{"callbox_tethering_dun_as_default_ipv4_and_ipv6.pbf"},
 			}, {
 				// Additional test with current DEFAULT as IPv6 and targeted DUN as IPv4
 				Name:      "dun_as_default_ipv6_default_ipv4_dun",
-				Val:       shillCallboxTetheringTestParam{"callbox_tethering_dun_as_default_ipv6_and_ipv4.pbf", "", "callbox-dun-ipv4", "callbox-ipv6"},
+				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_as_default_ipv6_and_ipv4.pbf", "", "callbox-dun-ipv4", "callbox-ipv6"},
 				ExtraData: []string{"callbox_tethering_dun_as_default_ipv6_and_ipv4.pbf"},
 			},
 			// DUN and DEFAULT separate APNs: will use a multiplexed DUN if supported, otherwise "DUN as DEFAULT"
 			{
 				Name:      "dun_and_default_ipv4",
-				Val:       shillCallboxTetheringTestParam{"callbox_tethering_dun_and_default_ipv4.pbf", "callbox-ipv4", "callbox-dun-ipv4", "callbox-ipv4"},
+				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_and_default_ipv4.pbf", "callbox-ipv4", "callbox-dun-ipv4", "callbox-ipv4"},
 				ExtraData: []string{"callbox_tethering_dun_and_default_ipv4.pbf"},
 			}, {
 				Name:      "dun_and_default_ipv4v6",
-				Val:       shillCallboxTetheringTestParam{"callbox_tethering_dun_and_default_ipv4v6.pbf", "callbox-ipv4v6", "callbox-dun-ipv4v6", "callbox-ipv4v6"},
+				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_and_default_ipv4v6.pbf", "callbox-ipv4v6", "callbox-dun-ipv4v6", "callbox-ipv4v6"},
 				ExtraData: []string{"callbox_tethering_dun_and_default_ipv4v6.pbf"},
 			}, {
 				Name:      "dun_and_default_ipv6",
-				Val:       shillCallboxTetheringTestParam{"callbox_tethering_dun_and_default_ipv6.pbf", "callbox-ipv6", "callbox-dun-ipv6", "callbox-ipv6"},
+				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_and_default_ipv6.pbf", "callbox-ipv6", "callbox-dun-ipv6", "callbox-ipv6"},
 				ExtraData: []string{"callbox_tethering_dun_and_default_ipv6.pbf"},
 			}, {
 				// Additional test with current DEFAULT as IPv4 and targeted DUN as IPv6
 				Name:      "dun_and_default_ipv4_default_ipv6_dun",
-				Val:       shillCallboxTetheringTestParam{"callbox_tethering_dun_and_default_ipv4_and_ipv6.pbf", "callbox-ipv4", "callbox-dun-ipv6", "callbox-ipv4"},
+				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_and_default_ipv4_and_ipv6.pbf", "callbox-ipv4", "callbox-dun-ipv6", "callbox-ipv4"},
 				ExtraData: []string{"callbox_tethering_dun_and_default_ipv4_and_ipv6.pbf"},
 			}, {
 				// Additional test with current DEFAULT as IPv6 and targeted DUN as IPv4
 				Name:      "dun_and_default_ipv6_default_ipv4_dun",
-				Val:       shillCallboxTetheringTestParam{"callbox_tethering_dun_and_default_ipv6_and_ipv4.pbf", "callbox-ipv6", "callbox-dun-ipv4", "callbox-ipv6"},
+				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_and_default_ipv6_and_ipv4.pbf", "callbox-ipv6", "callbox-dun-ipv4", "callbox-ipv6"},
 				ExtraData: []string{"callbox_tethering_dun_and_default_ipv6_and_ipv4.pbf"},
 			}},
 		Fixture: "cellular",
@@ -151,8 +151,8 @@ func validateExpectedBearers(ctx context.Context, s *testing.State, modem *modem
 	}
 }
 
-func ShillCallboxTethering(ctx context.Context, s *testing.State) {
-	params := s.Param().(shillCallboxTetheringTestParam)
+func ShillCallboxHotspot(ctx context.Context, s *testing.State) {
+	params := s.Param().(shillCallboxHotspotTestParam)
 	modbOverrideProto := params.ModbOverrideProto
 
 	serviceProps := map[string]interface{}{
@@ -190,12 +190,12 @@ func ShillCallboxTethering(ctx context.Context, s *testing.State) {
 	//TODO(b/267804414): SetTetheringAllowed is only needed during fishfooding and can be removed later.
 	err = helper.Manager.SetTetheringAllowed(ctx, true)
 
-	if _, err := helper.Manager.CreateFakeUserProfile(ctx, callboxTetheringTestProfileName); err != nil {
-		s.Fatalf("Failed to create fake profile %q", callboxTetheringTestProfileName)
+	if _, err := helper.Manager.CreateFakeUserProfile(ctx, callboxHotspotTestProfileName); err != nil {
+		s.Fatalf("Failed to create fake profile %q", callboxHotspotTestProfileName)
 	}
 	defer func(ctx context.Context) {
-		if err := helper.Manager.RemoveFakeUserProfile(ctx, callboxTetheringTestProfileName); err != nil {
-			s.Fatalf("Failed to remove profile %q", callboxTetheringTestProfileName)
+		if err := helper.Manager.RemoveFakeUserProfile(ctx, callboxHotspotTestProfileName); err != nil {
+			s.Fatalf("Failed to remove profile %q", callboxHotspotTestProfileName)
 		}
 	}(ctx)
 
