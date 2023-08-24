@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -77,7 +78,6 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 
 	s.Log("Checking preconditions")
 	// TODO(b/194910957): Old test checks that fw-a section does not have preamble flag PREAMBLE_USE_RO_NORMAL. this really needed?
-	// TODO(b/194910957): Old test unlocks CCD, is this needed?
 
 	// Reboot just in case the firmware version we backed up isn't the same one that software sync will restore.
 	// Use a cold reset to prevent "RO_AT_BOOT is not clear" errors.
@@ -85,11 +85,8 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reboot: ", err)
 	}
 	h.CloseRPCConnection(ctx)
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Requiring BiosServiceClient: ", err)
-	}
 
-	activeCopy, err := h.Servo.GetString(ctx, "ec_active_copy")
+	activeCopy, err := getActiveCopy(ctx, h.Servo)
 	if err != nil {
 		s.Fatal("EC active copy failed: ", err)
 	}
@@ -106,8 +103,10 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		ecSection = pb.ImageSection_ECRWBImageSection
 	}
 	s.Log("Corrupt the EC section: ", ecSection)
-	bs := h.BiosServiceClient
-	if _, err = bs.CorruptFWSection(ctx, &pb.FWSectionInfo{Section: ecSection, Programmer: pb.Programmer_ECProgrammer}); err != nil {
+	if err := h.RequireBiosServiceClient(ctx); err != nil {
+		s.Fatal("Requiring BiosServiceClient: ", err)
+	}
+	if _, err = h.BiosServiceClient.CorruptFWSection(ctx, &pb.FWSectionInfo{Section: ecSection, Programmer: pb.Programmer_ECProgrammer}); err != nil {
 		s.Fatal("Failed to corrupt EC: ", err)
 	}
 
@@ -124,7 +123,7 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Reboot AP, check EC hash, and software sync it")
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, firmware.WaitSoftwareSync); err != nil {
+	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, firmware.WaitSoftwareSync, firmware.AllowGBBForce); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
 	h.CloseRPCConnection(ctx)
@@ -138,7 +137,7 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 	if !bytes.Equal(ecHashAfter, ecHashBefore) {
 		s.Fatalf("EC hash wrong, got %s want %s", ecHashAfter, ecHashBefore)
 	}
-	activeCopy, err = h.Servo.GetString(ctx, "ec_active_copy")
+	activeCopy, err = getActiveCopy(ctx, h.Servo)
 	if err != nil {
 		s.Fatal("EC active copy failed: ", err)
 	}
@@ -177,7 +176,7 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		if !bytes.Equal(ecHashAfter, ecHashBefore) {
 			s.Fatalf("EC hash wrong, got %s want %s", ecHashAfter, ecHashBefore)
 		}
-		activeCopy, err = h.Servo.GetString(ctx, "ec_active_copy")
+		activeCopy, err = getActiveCopy(ctx, h.Servo)
 		if err != nil {
 			s.Fatal("EC active copy failed: ", err)
 		}
@@ -185,4 +184,16 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 			s.Fatalf("EC active copy incorrect, got %q want RW", activeCopy)
 		}
 	}
+}
+
+func getActiveCopy(ctx context.Context, s *servo.Servo) (string, error) {
+	activeCopy := ""
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		activeCopy, err = s.GetString(ctx, servo.ECActiveCopy)
+		return err
+	}, &testing.PollOptions{
+		Timeout: 20 * time.Second,
+	})
+	return activeCopy, err
 }
