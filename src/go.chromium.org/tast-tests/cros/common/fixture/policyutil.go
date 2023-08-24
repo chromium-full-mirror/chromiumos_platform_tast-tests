@@ -41,8 +41,8 @@ const (
 	ChromePolicyLoggedInFeatureChromeLabs = "chromePolicyLoggedInFeatureChromeLabs"
 	// ChromePolicyLoggedInARC is a fixture name.
 	ChromePolicyLoggedInARC = "chromePolicyLoggedInARC"
-	// ChromePolicyLoggedInARCTrashEnabled is a fixture name.
-	ChromePolicyLoggedInARCTrashEnabled = "chromePolicyLoggedInARCTrashEnabled"
+	// ChromePolicyLoggedInARCTrashFilesUXEnabled is a fixture name.
+	ChromePolicyLoggedInARCTrashFilesUXEnabled = "chromePolicyLoggedInARCTrashFilesUXEnabled"
 	// ChromePolicyLoggedInBruschetta is a fixture name.
 	ChromePolicyLoggedInBruschetta = "chromePolicyLoggedInBruschetta"
 	// ChromeEnrolledLoggedIn is a fixture name.

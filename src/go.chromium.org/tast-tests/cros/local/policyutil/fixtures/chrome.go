@@ -127,12 +127,12 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromePolicyLoggedInARCTrashEnabled,
-		Desc:     "Logged into a user session with ARC support and trash enabled",
+		Name:     fixture.ChromePolicyLoggedInARCTrashFilesUXEnabled,
+		Desc:     "Logged into a user session with ARC support, trash, and files new policy UX enabled",
 		Contacts: []string{"aidazolic@google.com", "chromeos-commercial-remote-management@google.com"},
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.EnableFeatures("FilesTrash"),
+				return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.EnableFeatures("FilesTrash"), chrome.EnableFeatures("NewFilesPolicyUX"),
 					chrome.ExtraArgs(arc.DisableSyncFlags()...)}, nil
 			},
 			waitForARC: true,

@@ -62,7 +62,7 @@ func init() {
 			{
 				Name:              "arc_container",
 				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
-				Fixture:           fixture.ChromePolicyLoggedInARCTrashEnabled,
+				Fixture:           fixture.ChromePolicyLoggedInARCTrashFilesUXEnabled,
 				ExtraSoftwareDeps: []string{"android_p"},
 			}, {
 				Name: "arc_vm",
@@ -72,7 +72,7 @@ func init() {
 					"group:hardware",
 					"group:complementary",
 				},
-				Fixture:           fixture.ChromePolicyLoggedInARCTrashEnabled,
+				Fixture:           fixture.ChromePolicyLoggedInARCTrashFilesUXEnabled,
 				ExtraSoftwareDeps: []string{"android_vm"},
 			},
 		},
@@ -308,50 +308,25 @@ func buttonDisabled(ctx context.Context, f *filesapp.FilesApp, button *nodewith.
 }
 
 func testCopyingToPlayfiles(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, f *filesapp.FilesApp, kb *input.KeyboardEventWriter) error {
-	// Only the restricted file.
-	if err := uiauto.Combine("copy the restricted file to Play files/Pictures",
-		f.OpenPath(filesapp.FilesTitlePrefix+filesapp.Downloads, filesapp.Downloads, folder),
-		tryCopyAndVerify(f, kb, restrictedFile),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to copy the restricted file")
-	}
-
-	// Both the restricted and unrestricted file.
-	if err := uiauto.Combine("copy both files to Play files/Pictures",
-		f.OpenPath(filesapp.FilesTitlePrefix+filesapp.Downloads, filesapp.Downloads, folder),
-		tryCopyAndVerify(f, kb, restrictedFile, unrestrictedFile),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to copy both the restricted and unrestricted file")
-	}
-
-	// The folder which contains a restricted file.
+	// The folder which contains a restricted file and a non-restricted file.
 	if err := uiauto.Combine("copy the folder to Play files/Pictures",
 		f.OpenDownloads(),
-		tryCopyAndVerify(f, kb, folder),
-	)(ctx); err != nil {
+		f.CopyFileToClipboard(folder),
+		f.OpenPlayfiles(),
+		f.OpenFile("Pictures"),
+		f.ClickDirectoryContextMenuItem("Pictures", "Paste into folder"),
+		f.WithTimeout(10*time.Second).WaitForFile(folder))(ctx); err != nil {
 		return errors.Wrap(err, "failed to copy the folder")
 	}
 
-	return nil
-}
-
-// tryCopyAndVerify returns an action that copies files or folders given in targets from the current directory
-// to Play files/Pictures and verifies they were not copied.
-func tryCopyAndVerify(f *filesapp.FilesApp, kb *input.KeyboardEventWriter, targets ...string) uiauto.Action {
-	var actions []uiauto.Action
-	actions = append(actions,
-		f.SelectMultipleFiles(kb, targets...),
-		kb.AccelAction("Ctrl+C"),
-		f.OpenPlayfiles(),
-		f.OpenFile("Pictures"),
-		f.ClickDirectoryContextMenuItem("Pictures", "Paste into folder"))
-
-	// Append checks that the files weren't copied.
-	for _, target := range targets {
-		actions = append(actions, f.EnsureFileGone(target, 10*time.Second))
+	if err := uiauto.Combine("Verify the files in the copied folder",
+		f.OpenFile(folder),
+		f.EnsureFileGone(restrictedFile, 10*time.Second),
+		f.WaitForFile(unrestrictedFile))(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify the files")
 	}
 
-	return uiauto.Combine("copy files to Play files/Pictures and verify", actions...)
+	return nil
 }
 
 func testTrashingAndRestoring(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, f *filesapp.FilesApp, kb *input.KeyboardEventWriter) error {
