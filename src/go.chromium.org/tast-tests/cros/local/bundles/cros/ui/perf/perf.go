@@ -22,7 +22,7 @@ func Run(s *testing.State, scenario perfutil.ScenarioFunc) func(ctx context.Cont
 		s.Run(ctx, name, func(ctx context.Context, s *testing.State) {
 			hists, err = scenario(ctx, name)
 			if err != nil {
-				testing.ContextLog(ctx, "Failed to run the test scenario")
+				testing.ContextLog(ctx, "Failed to run the test scenario: ", err)
 			}
 		})
 		return hists, err
