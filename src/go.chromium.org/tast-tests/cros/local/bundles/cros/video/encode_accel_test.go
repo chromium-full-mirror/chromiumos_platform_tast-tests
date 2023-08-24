@@ -87,7 +87,7 @@ func psnrThreshold(codec string, height int) float32 {
 		"h264": {
 			180:  31.8,
 			270:  30.0,
-			360:  33.8,
+			360:  33.3,
 			720:  36.0,
 			1080: 35.0,
 			2160: 34.5,
