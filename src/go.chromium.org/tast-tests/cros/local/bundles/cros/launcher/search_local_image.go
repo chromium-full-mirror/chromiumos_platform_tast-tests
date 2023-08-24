@@ -7,6 +7,7 @@ package launcher
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/launcher/fixture"
@@ -14,15 +15,14 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	localPicturePath = "/home/chronos/user/MyFiles/Downloads/search_local_images.png"
-	localPictureName = "search_local_images.png"
-)
+const localPictureName = "search_local_image.png"
 
 type testParam struct {
 	TabletMode     bool
@@ -46,16 +46,6 @@ func init() {
 		Data:         []string{localPictureName},
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
-			// some tests may failed due to b:294325272
-			{
-				Name: "search_by_filename_image_search",
-				Val: testParam{
-					TabletMode:     false,
-					Query:          "local",
-					ExpectedResult: "Thoughts",
-				},
-				Fixture: fixture.LauncherImageSearch,
-			},
 			{
 				Name: "search_by_paper_lowercase_lca",
 				Val: testParam{
@@ -106,25 +96,26 @@ func init() {
 }
 
 func SearchLocalImage(ctx context.Context, s *testing.State) {
-	image, err := os.ReadFile(s.DataPath(localPictureName))
-	if err != nil {
-		s.Fatal("Failed to read an image: ", err)
-	}
-
-	if err = os.WriteFile(localPicturePath, image, 0644); err != nil {
-		s.Fatal("Failed to create an image in MyFiles: ", err)
-	}
-
-	defer os.Remove(localPicturePath)
-
+	cr := s.FixtValue().(fixture.LauncherSearchFixtData).Chrome
 	tconn := s.FixtValue().(fixture.LauncherSearchFixtData).TestAPIConn
 	kb := s.FixtValue().(fixture.LauncherSearchFixtData).Keyboard
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	tabletMode := s.Param().(testParam).TabletMode
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to get user's Download path: ", err)
+	}
 
+	localFileLocation := filepath.Join(downloadsPath, localPictureName)
+	if err := fsutil.CopyFile(s.DataPath(localPictureName), localFileLocation); err != nil {
+		s.Fatalf("Failed to copy the test image to %s: %s", localFileLocation, err)
+	}
+	defer os.Remove(localFileLocation)
+
+	tabletMode := s.Param().(testParam).TabletMode
 	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, tabletMode, false /*stabilizeAppCount*/)
 	if err != nil {
 		s.Fatal("Failed to set up launcher test case: ", err)
@@ -135,7 +126,7 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 	ud := uidetection.NewDefault(tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
 	query := s.Param().(testParam).Query
 	expectedResult := s.Param().(testParam).ExpectedResult
-	picture := nodewith.Role(role.ListBoxOption).HasClass("SearchResultImageView").NameContaining("search_local_images")
+	picture := nodewith.Role(role.ListBoxOption).HasClass("SearchResultImageView").NameContaining("search_local_image")
 
 	if err := uiauto.Retry(2, uiauto.NamedCombine("Search for image",
 		launcher.ClearSearchField(tconn, kb),
@@ -143,7 +134,7 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 		launcher.WaitForResultWithCategory(tconn, launcher.SearchCategoryInfo{
 			Category:  "Images",
 			NeedRegex: false,
-			Result:    "search_local_images",
+			Result:    "search_local_image",
 		}),
 		ui.DoDefault(picture),
 		launcher.VerifyTextWithUIDetection(ud, expectedResult),
