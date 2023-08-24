@@ -493,6 +493,7 @@ var resetTypePowerState = map[ResetType]servo.PowerStateValue{
 // ModeAwareReboot resets the DUT with awareness of the DUT boot mode.
 // Dev mode will be retained, but rec mode will default back to normal mode.
 // This has the side-effect of disconnecting the RPC connection.
+// Pass the option AllowGBBForce if you know that the DUT is using GBB flags and won't wait for Ctrl-D or Ctrl-U to be pressed.
 func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType, opts ...ModeSwitchOption) error {
 	h := ms.Helper
 	if err := h.RequireServo(ctx); err != nil {
@@ -602,11 +603,11 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 	}
 
 	// If in dev mode, bypass the TO_DEV screen.
-	if fromMode == fwCommon.BootModeDev {
+	if fromMode == fwCommon.BootModeDev && !msOptsContain(opts, AllowGBBForce) {
 		if err := ms.FwScreenToDevMode(ctx, opts...); err != nil {
 			return errors.Wrap(err, "fw screen to developer mode")
 		}
-	} else if fromMode == fwCommon.BootModeUSBDev {
+	} else if fromMode == fwCommon.BootModeUSBDev && !msOptsContain(opts, AllowGBBForce) {
 		if err := ms.fwScreenToUSBDevMode(ctx, opts...); err != nil {
 			return errors.Wrap(err, "bypassing fw screen")
 		}
