@@ -62,6 +62,9 @@ service RemoteCellularService {
 
   // QueryModemType returns dut variant/model.
   rpc QueryModemType(google.protobuf.Empty) returns (QueryModemTypeResponse) {}
+
+  // QuerySignalBars returns dut signal bars count from ui.
+  rpc QuerySignalBars(google.protobuf.Empty) returns (QuerySignalBarsResponse) {}
 }
 
 message EnableResponse {
@@ -112,7 +115,7 @@ message WaitForNextSmsResponse {
 }
 
 message QueryModemTypeResponse {
-   uint32 modem_type = 1;
+  uint32 modem_type = 1;
 }
 
 message VerifyIPConnectivityRequest {
@@ -128,4 +131,8 @@ message VerifyIPConnectivityRequest {
 message VerifyIPConnectivityResponse {
   bool ipv4 = 1;
   bool ipv6 = 2;
+}
+
+message QuerySignalBarsResponse {
+    int32 count = 1;
 }

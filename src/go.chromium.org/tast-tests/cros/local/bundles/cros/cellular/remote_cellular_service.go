@@ -228,8 +228,9 @@ func (s *RemoteCellularService) QueryService(ctx context.Context, _ *empty.Empty
 	}
 	networkTechnology, err := props.GetString(shillconst.ServicePropertyCellularNetworkTechnology)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get service strength from properties")
+		return nil, errors.Wrap(err, "failed to get service network technology from properties")
 	}
+
 	return &cellular_pb.QueryServiceResponse{
 		Name:              name,
 		Device:            string(device),
@@ -499,4 +500,13 @@ func (s *RemoteCellularService) QueryModemType(ctx context.Context, _ *empty.Emp
 		return nil, errors.Wrap(err, "failed to run command cros_config on client host")
 	}
 	return &cellular_pb.QueryModemTypeResponse{ModemType: uint32(modemType)}, err
+}
+
+// QuerySignalBars gets the signal bars count from row item of UI for actively connected cellular network.
+func (s *RemoteCellularService) QuerySignalBars(ctx context.Context, _ *empty.Empty) (*cellular_pb.QuerySignalBarsResponse, error) {
+	count, err := cellular.GetSignalBarCount(ctx, s.helper)
+	if err != nil && err.Error() != "Process exited with status 1" {
+		return nil, errors.Wrap(err, "failed to find signal bars count from ui")
+	}
+	return &cellular_pb.QuerySignalBarsResponse{Count: int32(count)}, err
 }

@@ -8,6 +8,7 @@ package cellular
 import (
 	"context"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,8 +16,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/systemlogs"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filepicker"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
@@ -296,4 +299,65 @@ func (h *UIHelper) UploadCsvSimLockPortal(ctx context.Context, simlockConfigCsvF
 	testing.Sleep(ctx, 30*time.Second)
 
 	return nil
+}
+
+// GetSignalBarCount - Gets UI signal bars count from signal bar icon.
+func GetSignalBarCount(ctx context.Context, helper *Helper) (int32, error) {
+	networkName, err := helper.GetCurrentNetworkName(ctx)
+	if err != nil {
+		return -1, errors.Wrap(err, "could not get network name "+networkName)
+	}
+	cr, err := chrome.New(ctx)
+	if err != nil {
+		return -1, errors.Wrap(err, "failed to start Chrome")
+	}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return -1, errors.Wrap(err, "failed to create Test API connection")
+	}
+
+	app, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
+	if err != nil {
+		return -1, errors.Wrap(err, "failed to open mobile data sub page")
+	}
+	defer app.Close(ctx)
+
+	ui := uiauto.New(tconn).WithTimeout(60 * time.Second)
+	if err = uiauto.Combine("Open the Internet detail subpage and expand the advanced section",
+		ui.WithTimeout(4*time.Minute).WaitUntilExists(nodewith.NameContaining(networkName+", Connected").First()),
+		ui.LeftClick(nodewith.NameContaining(networkName+", Connected").First()),
+	)(ctx); err != nil {
+		faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(ctx, func() bool { return true }, tconn, "cellular_ossettings")
+		return -1, errors.Wrap(err, "failed to click on connected network row for "+networkName)
+	}
+
+	// Read UI for signal strength, like network_icon.html->cellular_2.svg or hover text for signal bars.
+	signalStrengthRow := nodewith.NameContaining("Cellular network").First().Ancestor(nodewith.NameContaining(networkName).First())
+	signalStrengthTxt, err := ui.Info(ctx, signalStrengthRow)
+	if err != nil {
+		faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(ctx, func() bool { return true }, tconn, "cellular_ossettings")
+		return -1, errors.Wrap(err, "failed to see signal strength text content: "+signalStrengthTxt.Name)
+	}
+	strengthTxtContent := string(signalStrengthTxt.Name)
+	// Read numeric digits between last space and %.
+	charIndex := strings.LastIndex(strengthTxtContent, "%")
+	spaceIndex := strings.LastIndex(strengthTxtContent, " ")
+	if charIndex == -1 {
+		return -1, errors.Wrap(err, "failed to find signal quality on UI "+signalStrengthTxt.Name)
+	}
+
+	strength, err := strconv.Atoi(strings.TrimSpace(strengthTxtContent[spaceIndex:charIndex]))
+	if err != nil {
+		faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(ctx, func() bool { return true }, tconn, "cellular_ossettings")
+		return -1, errors.Wrapf(err, "failed to parse signal quality value %s", strengthTxtContent[spaceIndex:charIndex])
+	}
+
+	// Chrome OS UI uses signal quality values set by this method to draw
+	// network icons. UI code maps |quality| to number of bars as follows:
+	// [1-25] 1 bar, [26-50] 2 bars, [51-75] 3 bars and [76-100] 4 bars.
+	// -128->-88 rsrp scales to UI quality of 0->100, used for 4G
+	// -115->-89 rscp scales to UI quality of 0->100, used for 3G
+	// -105->-83 rssi scales to UI quality of 0->100, used for other tech
+	return (int32(strength) + 24) / 25, nil
 }
