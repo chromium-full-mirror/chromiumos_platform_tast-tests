@@ -128,7 +128,6 @@ func CaptureModeDemoToolsKeyComboViewer(ctx context.Context, s *testing.State) {
 		"Showing key combo widget",
 		kb.AccelPressAction("Ctrl+t"),
 		ac.WaitUntilExists(keyComboWidget),
-		uiauto.Sleep(2*time.Second),
 	)(ctx); err != nil {
 		s.Fatal("Failed to show key combo viewer during video recording: ", err)
 	}
