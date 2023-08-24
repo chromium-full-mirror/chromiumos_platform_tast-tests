@@ -543,12 +543,15 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 		if err := h.Servo.RunECCommand(ctx, "reboot ap-off"); err != nil {
 			return errors.Wrap(err, "failed to reboot EC")
 		}
-		// GoBigSleepLint: It takes a little time before the boot mode can be checked.
-		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-			return errors.Wrap(err, "failed to sleep")
-		}
 		if msOptsContain(opts, VerifyGSCNoBoot) {
-			if err := h.Servo.CheckGSCBootMode(ctx, []string{"NO_BOOT", "NoBoot"}); err != nil {
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				if err := h.Servo.CheckGSCBootMode(ctx, []string{"NO_BOOT", "NoBoot"}); err != nil {
+					return errors.Wrap(err, "CheckGSCBootMode")
+				}
+				return nil
+			}, &testing.PollOptions{
+				Timeout: 1 * time.Minute,
+			}); err != nil {
 				return errors.Wrap(err, "gsc boot mode")
 			}
 		}
