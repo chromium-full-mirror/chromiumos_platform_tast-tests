@@ -6,13 +6,17 @@ package syslog
 
 import (
 	"context"
+	"io"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -76,6 +80,30 @@ func AuditLogsSinceBoot(ctx context.Context) ([]string, error) {
 	return nil, nil
 }
 
+// getLogsSinceRFCTimestamp parses a slice of strings assuming RFC timestamp is first.
+// Example log:
+// 2022-09-28T00:12:08.927021Z log message here will be returned.
+func getLogsSinceRFCTimestamp(lines []string, bootTime time.Time) ([]string, error) {
+	if len(lines) < 1 {
+		return nil, errors.New("failure: upstart logs empty")
+	}
+	for i, l := range lines {
+		splitstr := strings.Split(l, " ")
+		if len(splitstr) < 1 {
+			return nil, errors.New("failed to parse upstart log")
+		}
+		t, err := time.Parse(time.RFC3339, strings.Trim(splitstr[0], "\x00"))
+		if err != nil {
+			return nil, err
+		}
+		if bootTime.Before(t) {
+			recentLogs := lines[i:]
+			return recentLogs, nil
+		}
+	}
+	return nil, errors.New("failed to return logs")
+}
+
 // UpstartLogsSinceBoot returns all upstart logs since last boot.
 func UpstartLogsSinceBoot(ctx context.Context) ([]string, error) {
 	bootTime, err := BootTime()
@@ -83,24 +111,37 @@ func UpstartLogsSinceBoot(ctx context.Context) ([]string, error) {
 		return nil, errors.Wrap(err, "failed to get boot time")
 	}
 
-	upstartLogs, err := ioutil.ReadFile(upstartLogPath)
+	upstartLogs, err := os.ReadFile(upstartLogPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read upstart log")
 	}
 	lines := strings.Split(string(upstartLogs), "\n")
-	for i, l := range lines {
-		splitstr := strings.Split(l, " ")
-		if len(splitstr) < 1 {
-			return nil, errors.Wrap(err, "failed to parse upstart log")
+	logsSinceBoot, err := getLogsSinceRFCTimestamp(lines, bootTime)
+	if err != nil {
+		// Place upstart file in artifacts for debugging.
+		// If test setup failed, then the output failingUpstartLogFile may not exist.
+		dir, ok := testing.ContextOutDir(ctx)
+		if !ok || dir == "" {
+			return nil, errors.New("failed to get CtxOutDir")
 		}
-		t, err := time.Parse(time.RFC3339, splitstr[0])
+
+		failingUpstartLogFile := filepath.Join(dir, "failingupstart.log")
+		source, err := os.Open(upstartLogPath)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse upstart timestamp")
+			return nil, err
 		}
-		if bootTime.Before(t) {
-			recentLogs := lines[i:]
-			return recentLogs, nil
+		defer source.Close()
+
+		destination, err := os.Create(failingUpstartLogFile)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create failingupstartlog file")
 		}
+		defer destination.Close()
+		_, err = io.Copy(destination, source)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to save upstart file")
+		}
+		return nil, errors.Wrap(err, "failed to parse upstart logs")
 	}
-	return nil, nil
+	return logsSinceBoot, nil
 }
