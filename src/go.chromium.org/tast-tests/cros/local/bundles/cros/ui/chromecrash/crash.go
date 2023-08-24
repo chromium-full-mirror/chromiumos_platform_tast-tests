@@ -746,6 +746,20 @@ func getMetaFilename(matches map[string][]string, metaRegex string) (string, err
 	return metaFiles[0], nil
 }
 
+// getDmpFilename returns the .dmp filename found in |matches|. Only one .dmp file
+// should exist.
+func getDmpFilename(matches map[string][]string, dmpRegex string) (string, error) {
+	dmpFiles := matches[dmpRegex]
+	if len(dmpFiles) == 0 {
+		return "", errors.New("expected a .dmp file but found none")
+	}
+	if len(dmpFiles) > 1 {
+		return "", errors.New("found more than one .dmp file")
+	}
+
+	return dmpFiles[0], nil
+}
+
 // KillAndGetCrashFiles sends SIGSEGV to the given Chrome process, waits for it to
 // crash, finds all the new crash files, and then deletes them and returns their paths.
 func (ct *CrashTester) KillAndGetCrashFiles(ctx context.Context) ([]string, error) {
@@ -833,11 +847,20 @@ func (ct *CrashTester) KillAndGetCrashFiles(ctx context.Context) ([]string, erro
 		if fileErr != nil {
 			return nil, errors.Wrap(fileErr, "failed to get meta file")
 		}
+		dmpFile, fileErr := getDmpFilename(matches, fmt.Sprintf(chromeCrashFilePatternWithPid+"dmp", ct.killedPID))
+		if fileErr != nil {
+			return nil, errors.Wrap(fileErr, "failed to get .dmp file")
+		}
 
 		if validateErr := ct.validateComputedSeverity(ctx, metaFile); validateErr != nil {
 			if outDir, outDirExists := testing.ContextOutDir(ctx); outDirExists {
 				if moveErr := crash.MoveFilesToOut(ctx, outDir, metaFile); moveErr != nil {
 					testing.ContextLog(ctx, "Failed to save the meta file: ", moveErr)
+				}
+				// The dmp file contains the CrashKeys records as well, so it is useful
+				// for debugging missing CrashKeys.
+				if moveErr := crash.MoveFilesToOut(ctx, outDir, dmpFile); moveErr != nil {
+					testing.ContextLog(ctx, "Failed to save the .dmp file: ", moveErr)
 				}
 			}
 			return nil, errors.Wrap(validateErr, "failed to validate meta file severity")
@@ -847,6 +870,11 @@ func (ct *CrashTester) KillAndGetCrashFiles(ctx context.Context) ([]string, erro
 			if outDir, outDirExists := testing.ContextOutDir(ctx); outDirExists {
 				if moveErr := crash.MoveFilesToOut(ctx, outDir, metaFile); moveErr != nil {
 					testing.ContextLog(ctx, "Failed to save the meta file: ", moveErr)
+				}
+				// The dmp file contains the CrashKeys records as well, so it is useful
+				// for debugging missing CrashKeys.
+				if moveErr := crash.MoveFilesToOut(ctx, outDir, dmpFile); moveErr != nil {
+					testing.ContextLog(ctx, "Failed to save the .dmp file: ", moveErr)
 				}
 			}
 			return nil, errors.Wrap(validateErr, "failed to validate build time in meta file")
