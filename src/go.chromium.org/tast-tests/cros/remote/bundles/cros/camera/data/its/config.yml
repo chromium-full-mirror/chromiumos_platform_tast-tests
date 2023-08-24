@@ -1,0 +1,31 @@
+# Copyright 2020 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+TestBeds:
+  - Name: TEST_SCENE0
+    Controllers:
+        AndroidDevice:
+          - serial: <device-id>  # quotes are needed if serial id is entirely numeric
+            label: dut
+          #- serial: <tablet-id>  # quotes are needed if serial id is entirely numeric
+          #  label: tablet
+    TestParams:
+      brightness: 192
+      chart_distance: 31.0
+      debug_mode: "False"  # quotes are needed here
+      lighting_cntl: <controller-type>  # can be arduino or "None"
+      lighting_ch: <controller-channel>
+      camera: <camera-id>
+      scene: scene0  # if <scene-name> left as-is runs all scenes
+      foldable_device: "False" # set to True if testing a foldable device

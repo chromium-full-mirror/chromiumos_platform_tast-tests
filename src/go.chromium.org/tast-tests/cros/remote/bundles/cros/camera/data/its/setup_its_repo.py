@@ -44,7 +44,7 @@ def main(args):
     if args.patch_path:
         patch_path = Path(args.patch_path)
     else:
-        patch_path = Path(__file__).parent / "its.patch"
+        patch_path = ""
 
     # Prepare ITS repo.
     subprocess.check_call(["unzip", "-d", args.output, args.bundle_path])
@@ -85,10 +85,11 @@ def main(args):
     ]
     subprocess.check_call(tag_base_args, cwd=str(its_root))
 
-    # Apply python3 patch.
-    subprocess.check_call(
-        ["git", "apply", str(patch_path.resolve())], cwd=str(its_root)
-    )
+    if patch_path:
+        # Apply python3 patch.
+        subprocess.check_call(
+            ["git", "apply", str(patch_path.resolve())], cwd=str(its_root)
+        )
 
 
 if __name__ == "__main__":

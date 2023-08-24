@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type itsParam struct {
@@ -57,23 +58,30 @@ func init() {
 		Desc:         "Verifies camera HAL3 interface function on remote DUT",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
 		Attr:         []string{"group:camerabox"},
-		Data:         []string{"adb", pre.SetupITSRepoScript, pre.ITSPy3Patch},
+		Data:         []string{"adb", pre.SetupITSRepoScript, pre.ITSPy3Patch, pre.ChartPath, pre.NumpySrcTarGz, pre.ConfigYml},
 		Vars:         []string{"chart"},
-		SoftwareDeps: []string{"chrome", "android_p", "arc_camera3", caps.BuiltinCamera},
+		SoftwareDeps: []string{"chrome", "android_vm_t", "arc_camera3", caps.BuiltinCamera},
 		ServiceDeps:  []string{"tast.cros.camerabox.ITSService"},
 		Timeout:      15 * time.Minute,
-		Params:       []testing.Param{
+		Params: []testing.Param{
 			// X86
-			/* Disabled due to <1% pass rate over 30 days. See b/246818330
 			{
-				Name:              "scene0_back_x86",
+				Name:              "t_scene0_back_x86",
 				ExtraAttr:         []string{"camerabox_facing_back"},
-				ExtraData:         append([]string{pre.CtsVerifierX86Zip}),
+				ExtraData:         append([]string{pre.CtsTVerifierX86Zip, pre.ConfigYml}),
 				ExtraHardwareDeps: hwdep.D(hwdep.X86()),
-				Pre:               pre.ITSX86Pre,
-				Val:               itsParam{0, pb.Facing_FACING_BACK, ""},
-			}
-			*/
+				Pre:               pre.TITSX86Pre,
+				Val:               itsParam{0, pb.Facing_FACING_BACK, pre.ChartPath},
+			},
+			// X86
+			{
+				Name:              "t_scene0_front_x86",
+				ExtraAttr:         []string{"camerabox_facing_front"},
+				ExtraData:         append([]string{pre.CtsTVerifierX86Zip, pre.ConfigYml}),
+				ExtraHardwareDeps: hwdep.D(hwdep.X86()),
+				Pre:               pre.TITSX86Pre,
+				Val:               itsParam{0, pb.Facing_FACING_FRONT, pre.ChartPath},
+			},
 		},
 		BugComponent: "b:167281",
 	})
@@ -110,7 +118,7 @@ func ITS(ctx context.Context, s *testing.State) {
 		if hostname, ok := s.Var("chart"); ok {
 			altHostname = hostname
 		}
-		c, namePaths, err := chart.New(ctx, s.DUT(), altHostname, s.OutDir(), []string{param.ChartPath})
+		c, namePaths, err := chart.New(ctx, s.DUT(), altHostname, s.OutDir(), []string{s.DataPath(param.ChartPath)})
 		if err != nil {
 			s.Fatal("Failed to prepare chart tablet: ", err)
 		}
@@ -124,13 +132,21 @@ func ITS(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to display chart on chart tablet: ", err)
 		}
 	}
-
+	testing.ContextLog(ctx, "Prepare ITS test environment")
+	prepareOut, err := its.PrepareEnvironment(ctx, s.DataPath((pre.NumpySrcTarGz)))
+	if err != nil {
+		s.Fatal("Failed to Prepare ITS test environment: ", err)
+	}
 	testing.ContextLog(ctx, "Running ITS")
 	cmd := its.TestCmd(ctx, param.Scene, camID)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		s.Fatal("Failed to get stdout pipe of ITS command: ", err)
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		s.Fatal("Failed to get stderr pipe of ITS command: ", err)
 	}
 	defer stdout.Close()
 	stdoutLog, err := os.Create(path.Join(s.OutDir(), "its_stdout.log"))
@@ -144,7 +160,6 @@ func ITS(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create ITS stderr log file: ", err)
 	}
 	defer stderrLog.Close()
-	cmd.Stderr = stderrLog
 
 	sceneResults := make(chan *sceneResult, 1)
 	itsLogPath := ""
@@ -154,14 +169,13 @@ func ITS(ctx context.Context, s *testing.State) {
 
 		result := sceneResult{"", -1, -1}
 		// Rules for parsing lines from stdout/stderr of ITS test with |pat| and run the corresponding |handler|.
-		// Patterns are reference from https://cs.android.com/android/platform/superproject/+/android-9.0.0_r16:cts/apps/CameraITS/tools/run_all_tests.py
 		sequentialRules := []rule{
 			{regexp.MustCompile(`Saving output files to: (\S+)`), func(m []string) error {
 				itsLogPath = m[0]
 				testing.ContextLog(ctx, "ITS output log: ", itsLogPath)
 				return nil
 			}},
-			{regexp.MustCompile(`Start running ITS on camera \d+, (scene\d+)`), func(m []string) error {
+			{regexp.MustCompile(`Running ITS on device: \S+, camera\(s\): \[\'\d+\'\], scene\(s\): \[\'(scene\d+)\'\]`), func(m []string) error {
 				result.name = m[0]
 				testing.ContextLog(ctx, "Starting test scene: ", result.name)
 				return nil
@@ -181,18 +195,19 @@ func ITS(ctx context.Context, s *testing.State) {
 				return nil
 			}},
 		}
-		repeatedRule := rule{regexp.MustCompile(`(\S+\s+scene\d+/\S+\s+\[[\d.]+s\])`), func(m []string) error {
+		repeatedRule := rule{regexp.MustCompile(`(\S+\s+scene\d+/\S+)`), func(m []string) error {
 			// Example: SKIP  scene0/test_unified_timestamps [1.9s]
 			testing.ContextLog(ctx, m[0])
 			return nil
 		}}
-
+		stdoutLog.Write([]byte(prepareOut + "\n"))
 		ruleIndex := 0
-		scanner := bufio.NewScanner(stdout)
+		// Python3 logging default output to stderr
+		// https://docs.python.org/2/library/logging.handlers.html#logging.StreamHandler
+		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
 			line := scanner.Text()
 			stdoutLog.Write([]byte(line + "\n"))
-
 			if ruleIndex < len(sequentialRules) {
 				r := sequentialRules[ruleIndex]
 				m, err := r.match(line)

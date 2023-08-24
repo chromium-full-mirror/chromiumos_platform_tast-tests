@@ -39,6 +39,24 @@ const (
 	// CtsVerifierArmZip is data path to ITS bundle testing arm compatible platform.
 	CtsVerifierArmZip = "its/android-cts-verifier-9.0_r15-linux_x86-arm.zip"
 
+	// CtsRVerifierX86Zip is data path to ITS bundle testing x86 compatible platform.
+	CtsRVerifierX86Zip = "its/android-cts-verifier-11_r12-linux_x86-x86.zip"
+
+	// CtsRVerifierArmZip is data path to ITS bundle testing arm compatible platform.
+	CtsRVerifierArmZip = "its/android-cts-verifier-11_r12-linux_x86-arm.zip"
+
+	// CtsVerifierX86Zip is data path to ITS bundle testing x86 compatible platform.
+	CtsTVerifierX86Zip = "its/android-cts-verifier-13_r4-linux_x86-x86.zip"
+
+	// CtsVerifierArmZip is data path to ITS bundle testing arm compatible platform.
+	CtsTVerifierArmZip = "its/android-cts-verifier-13_r4-linux_x86-arm.zip"
+
+	//NumpySrcTarGz is numpy source package
+	NumpySrcTarGz = "its/numpy-1.24.4.tar.gz"
+
+	//ConfigYml is the config.ym for ITS
+	ConfigYml = "its/config.yml"
+
 	// ITSPy3Patch is the data path of py2 to py3 patch for ITS test
 	// scripts. Update the script content with the steps:
 	// $ python3 setup_its_repo.py android-cts-verifier-XXX.zip
@@ -50,13 +68,20 @@ const (
 	// SetupITSRepoScript is the data path of the script unpacking ITS
 	// bundle and apply python3 patches.
 	SetupITSRepoScript = "its/setup_its_repo.py"
+
+	// ChartPath is the path of the displayed chart
+	ChartPath = "its/google.png"
 )
 
 type bundleAbi string
+type androidCodeName string
 
 const (
-	x86 bundleAbi = "x86"
-	arm           = "arm"
+	x86      bundleAbi = "x86"
+	arm                = "arm"
+	androidP           = "androidP"
+	androidR           = "androidR"
+	androidT           = "androidT"
 )
 
 func (abi bundleAbi) bundlePath() (string, error) {
@@ -71,14 +96,16 @@ func (abi bundleAbi) bundlePath() (string, error) {
 
 // itsPreImpl implements testing.Precondition.
 type itsPreImpl struct {
-	cl         *rpc.Client
-	itsCl      pb.ITSServiceClient
-	abi        bundleAbi
-	dir        string
-	oldEnvPath string
-	hostname   string
-	adbDevice  *adb.Device
-	prepared   bool
+	cl              *rpc.Client
+	itsCl           pb.ITSServiceClient
+	abi             bundleAbi
+	dir             string
+	oldEnvPath      string
+	hostname        string
+	adbDevice       *adb.Device
+	prepared        bool
+	androidCodeName androidCodeName
+	defaultPy3Path  string
 }
 
 // ITSHelper provides helper functions accessing ITS package and mandating ARC.
@@ -87,10 +114,22 @@ type ITSHelper struct {
 }
 
 // ITSX86Pre is the test precondition to run Android x86 ITS test.
-var ITSX86Pre = &itsPreImpl{abi: x86}
+var ITSX86Pre = &itsPreImpl{abi: x86, androidCodeName: androidP}
 
 // ITSArmPre is the test precondition to run Android x86-arm ITS test.
-var ITSArmPre = &itsPreImpl{abi: arm}
+var ITSArmPre = &itsPreImpl{abi: arm, androidCodeName: androidP}
+
+// RITSX86Pre is the test precondition to run Android R x86 ITS test.
+var RITSX86Pre = &itsPreImpl{abi: x86, androidCodeName: androidR}
+
+// RITSArmPre is the test precondition to run Android R x86-arm ITS test.
+var RITSArmPre = &itsPreImpl{abi: arm, androidCodeName: androidR}
+
+// TITSX86Pre is the test precondition to run Android T x86 ITS test.
+var TITSX86Pre = &itsPreImpl{abi: x86, androidCodeName: androidT}
+
+// TITSArmPre is the test precondition to run Android T x86-arm ITS test.
+var TITSArmPre = &itsPreImpl{abi: arm, androidCodeName: androidT}
 
 func (p *itsPreImpl) String() string         { return fmt.Sprintf("its_%s_precondition", p.abi) }
 func (p *itsPreImpl) Timeout() time.Duration { return 5 * time.Minute }
@@ -186,15 +225,29 @@ func (p *itsPreImpl) Prepare(ctx context.Context, s *testing.PreState) interface
 	p.adbDevice = adbDevice
 
 	// Unpack ITS bundle.
-	bundlePath, err := p.abi.bundlePath()
 	if err != nil {
 		s.Fatal("Failed to get bundle path: ", err)
 	}
 
-	if err := testexec.CommandContext(
-		ctx, "python3", s.DataPath(SetupITSRepoScript), s.DataPath(bundlePath),
-		"--patch_path", s.DataPath(ITSPy3Patch), "--output", p.dir).Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to setup its repo from bundle path: ", err)
+	// Set up ITS repo
+	repoSetupArgs := []string{s.DataPath(SetupITSRepoScript), s.DataPath(p.bundlePath()), "--output", p.dir}
+	if p.androidCodeName == androidP {
+		repoSetupArgs = append(repoSetupArgs, "--patch_path", s.DataPath(ITSPy3Patch))
+	}
+	if err := testexec.CommandContext(ctx, "python3", repoSetupArgs...).Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to set up its repo from bundle path: ", err)
+	}
+
+	if p.androidCodeName == androidT {
+		if err := testexec.CommandContext(
+			ctx, "cp", s.DataPath(ConfigYml), p.itsRoot()).Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to move config.yml: ", err)
+		}
+		configYml := fmt.Sprintf("%s/config.yml", p.itsRoot())
+		if err := testexec.CommandContext(
+			ctx, "sudo", "sed", "-i", fmt.Sprintf("s/%s/%s/g", "<device-id>", p.hostname), configYml).Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to write device_id into config.yml: ", err)
+		}
 	}
 
 	// Install CTSVerifier apk.
@@ -234,14 +287,112 @@ func (p *itsPreImpl) Close(ctx context.Context, s *testing.PreState) {
 	p.prepared = false
 }
 
+// PrepareEnvironment prepare the environment for running ITS
+func (h *ITSHelper) PrepareEnvironment(ctx context.Context, numpyPath string) (string, error) {
+	retStr := ""
+	createPy3VenvCmd := fmt.Sprintf("python3 -m venv %s/py3venv --copies", h.p.itsRoot())
+
+	out, err := testexec.CommandContext(ctx, "bash", "-c", createPy3VenvCmd).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "Fail to create python venv")
+	}
+	retStr += string(out)
+
+	pipCmd := fmt.Sprintf("%s/py3venv/bin/pip", h.p.itsRoot())
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", numpyPath).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "Fail to install numpy")
+	}
+	retStr += string(out)
+
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "opencv-python==3.4.8.29").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "Fail to install opencv-python")
+	}
+	retStr += string(out)
+
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "matplotlib>=3.3.2,<4.0").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "Fail to install matplotlib")
+	}
+	retStr += string(out)
+
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "scipy==1.5.2").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "Fail to install scipy")
+	}
+	retStr += string(out)
+
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "pyserial>=3.5,<4.0").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "Fail to install pyserial")
+	}
+	retStr += string(out)
+
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "Pillow>=8.1.0,<9.0").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "Fail to install Pillow")
+	}
+	retStr += string(out)
+
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "PyYAML>=5.3.1,<6.0").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "Fail to install PyYAML")
+	}
+	retStr += string(out)
+
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "mobly").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "Fail to install mobly")
+	}
+	retStr += string(out)
+
+	envsetup := fmt.Sprintf("%s/build/envsetup.sh", h.p.itsRoot())
+	py3Cmd := fmt.Sprintf("%s/py3venv/bin/python3", h.p.itsRoot())
+
+	if err := testexec.CommandContext(
+		ctx, "sudo", "sed", "-i", fmt.Sprintf("s#%s#%s#g", "Require python opencv", "Require Python opencv"), envsetup).Run(testexec.DumpLogOnError); err != nil {
+		return "", errors.Wrap(err, "failed to replace python path in envsetup.sh")
+	}
+	if err := testexec.CommandContext(
+		ctx, "sudo", "sed", "-i", fmt.Sprintf("s#%s#%s#g", "python", py3Cmd), envsetup).Run(testexec.DumpLogOnError); err != nil {
+		return "", errors.Wrap(err, "failed to replace python path in envsetup.sh")
+	}
+
+	runAllTestsPY := fmt.Sprintf("%s/tools/run_all_tests.py", h.p.itsRoot())
+	if err := testexec.CommandContext(
+		ctx, "sudo", "sed", "-i", fmt.Sprintf("s#%s#%s#g", "python3", py3Cmd), runAllTestsPY).Run(testexec.DumpLogOnError); err != nil {
+		return "", errors.Wrap(err, "failed to replace python path in run_all_tests.py")
+	}
+
+	runSensorFusionPY := fmt.Sprintf("%s/tools/run_sensor_fusion.py", h.p.itsRoot())
+	if err := testexec.CommandContext(
+		ctx, "sudo", "sed", "-i", fmt.Sprintf("s#%s#%s#g", "python", py3Cmd), runSensorFusionPY).Run(testexec.DumpLogOnError); err != nil {
+		return "", errors.Wrap(err, "failed to replace python path in run_sensor_fusion.py")
+	}
+
+	os.Setenv("PATH", os.Getenv("PATH")+fmt.Sprintf(":%s/py3venv/bin/", h.p.itsRoot()))
+	os.Setenv("MPLCONFIGDIR", fmt.Sprintf("%s/tmp", h.p.itsRoot()))
+
+	out, err = testexec.CommandContext(ctx, "adb", "shell", "am", "compat", "enable", "ALLOW_TEST_API_ACCESS", "com.android.cts.verifier").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "Fail to enable ALLOW_TEST_API_ACCESS")
+	}
+	retStr += string(out)
+
+	return retStr, nil
+}
+
 // TestCmd returns command to run test scene with camera id.
 func (h *ITSHelper) TestCmd(ctx context.Context, scene, camera int) *testexec.Cmd {
 	setupPath := path.Join("build", "envsetup.sh")
 	scriptPath := path.Join("tools", "run_all_tests.py")
+	py3Cmd := fmt.Sprintf("%s/py3venv/bin/python3", h.p.itsRoot())
 	cmdStr := fmt.Sprintf(`cd %s
+	chmod -R 755 .
 	source %s
-	python3 %s device=%s scenes=%d camera=%d skip_scene_validation`,
-		h.p.itsRoot(), setupPath, scriptPath, h.p.hostname, scene, camera)
+	%s %s device=%s scenes=%d camera=%d skip_scene_validation`,
+		h.p.itsRoot(), setupPath, py3Cmd, scriptPath, h.p.hostname, scene, camera)
 	cmd := testexec.CommandContext(ctx, "bash", "-c", cmdStr)
 	cmd.Env = append(os.Environ(), "PYTHONUNBUFFERED=y")
 	return cmd
@@ -274,4 +425,34 @@ func (h *ITSHelper) CameraID(ctx context.Context, facing pb.Facing) (int, error)
 		return 1, nil
 	}
 	return 0, nil
+}
+
+func (p *itsPreImpl) bundlePath() string {
+	if p.androidCodeName == androidP {
+		if p.abi == x86 {
+			return CtsVerifierX86Zip
+		} else if p.abi == arm {
+			return CtsVerifierArmZip
+		} else {
+			return ""
+		}
+	} else if p.androidCodeName == androidR {
+		if p.abi == x86 {
+			return CtsRVerifierX86Zip
+		} else if p.abi == arm {
+			return CtsRVerifierArmZip
+		} else {
+			return ""
+		}
+	} else if p.androidCodeName == androidT {
+		if p.abi == x86 {
+			return CtsTVerifierX86Zip
+		} else if p.abi == arm {
+			return CtsTVerifierArmZip
+		} else {
+			return ""
+		}
+	} else {
+		return ""
+	}
 }
