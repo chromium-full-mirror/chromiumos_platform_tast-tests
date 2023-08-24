@@ -129,7 +129,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 
 		s.Logf("Suspending dut for %d seconds", suspendDuration)
 		// The --wakup_timeout automatically unsuspends after given time.
-		cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", fmt.Sprintf("--delay=%d", powerdDelayDur), fmt.Sprintf("--wakeup_timeout=%d", suspendDuration))
+		cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", fmt.Sprintf("--delay=%d", powerdDelayDur), fmt.Sprintf("--suspend_for_sec=%d", suspendDuration))
 		if err := cmd.Start(); err != nil {
 			logFailure("Failed to initiate suspend on DUT", err, i)
 		}
@@ -141,7 +141,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 			logFailure("Failed to get S0ix or S3 powerstate after suspend", err, i)
 		}
 
-		// The --wakeup_timeout means it should automatically go back to S0.
+		// The --suspend_for_sec means it should automatically go back to S0.
 		s.Log("Checking for S0 powerstate")
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
 			logFailure("Failed to get S0 powerstate after waking from suspend", err, i)
