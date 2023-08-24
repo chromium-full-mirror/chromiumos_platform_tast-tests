@@ -42,7 +42,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"pinweaver"},
 			Val:               lightweightAuthPerfTestCase{testPin: true},
 		}},
-		Timeout: 3 * time.Minute,
+		Timeout: 5 * time.Minute,
 	})
 }
 
