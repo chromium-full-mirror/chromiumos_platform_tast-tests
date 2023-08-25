@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/servo"
 
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -27,6 +27,8 @@ type Params struct {
 	globalDebug bool
 	dut         *dut.DUT
 	servoPort   int
+	servoProxy  *servo.Proxy
+	programmer  string
 }
 
 // ContextCommandRunner is interface used by Instance to execute commands.
@@ -34,7 +36,7 @@ type ContextCommandRunner interface {
 	runCommandLine(ctx context.Context, cmdArgs []string) (stdout, stderr []byte, err error)
 }
 
-// remoteRunner implements ContextCommandRunner and executes commands on the caller side.
+// remoteRunner implements ContextCommandRunner and executes commands on the servoProxy.
 type remoteRunner struct {
 	params Params
 }
@@ -42,21 +44,12 @@ type remoteRunner struct {
 // runCommandLine executes provided command.
 func (r *remoteRunner) runCommandLine(ctx context.Context, cmdArgs []string) (stdout, stderr []byte, err error) {
 	testing.ContextLog(ctx, "Running command line with arguments: ", cmdArgs)
-	cmd := testexec.CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
-
-	var outbuf, errbuf bytes.Buffer
-	cmd.Stdout = &outbuf
-	cmd.Stderr = &errbuf
-
-	if err := cmd.Start(); err != nil {
-		return nil, nil, err
+	outbuf, errbuf, err := r.params.servoProxy.SeparatedOutputCommand(ctx, true, cmdArgs[0], cmdArgs[1:]...)
+	if err != nil {
+		return outbuf, errbuf, errors.Wrapf(err, "command %q failed", strings.Join(cmdArgs, " "))
 	}
 
-	if err := cmd.Wait(); err != nil {
-		return nil, nil, errors.Wrapf(err, "command %q failed", strings.Join(cmd.Args, " "))
-	}
-
-	return outbuf.Bytes(), errbuf.Bytes(), nil
+	return outbuf, errbuf, nil
 }
 
 // localRunner implements ContextCommandRunner and executes commands on the DUT.
@@ -111,6 +104,8 @@ func (i *Instance) futilityCmdArgs() []string {
 func (i *Instance) appendFlashArgs(cmdArgs []string) []string {
 	if i.params.servoPort > 0 {
 		return append(cmdArgs, "--servo", "--servo_port", fmt.Sprintf("%d", i.params.servoPort))
+	} else if i.params.programmer != "" {
+		return append(cmdArgs, "--programmer", i.params.programmer)
 	}
 	return cmdArgs
 }
@@ -133,13 +128,12 @@ func NewLocalBuilder(dut *dut.DUT) *Builder {
 	}
 }
 
-// NewRemoteBuilder creates new futility instance builder and configures it to execute on same machine as the calling code.
-// servoPort is optional value (use zero to disable).
-func NewRemoteBuilder(servoPort int) *Builder {
+// NewRemoteBuilder creates new futility instance builder and configures it to execute on the servo host.
+func NewRemoteBuilder(servoProxy *servo.Proxy) *Builder {
 	return &Builder{
 		params: Params{
-			dut:       nil,
-			servoPort: servoPort,
+			servoPort:  servoProxy.GetPort(),
+			servoProxy: servoProxy,
 		},
 		isRemote: true,
 	}
@@ -153,9 +147,16 @@ func (b *Builder) Debug(debug bool) *Builder {
 
 // isValid verifies builder params during Build().
 func (b *Builder) isValid() error {
-	if b.params.dut != nil && b.params.servoPort != 0 {
+	if b.params.dut != nil && b.params.servoProxy != nil {
 		return errors.New("cannot execute both on DUT and with servo")
 	}
+	return nil
+}
+
+// SetProgrammer sets the servo programmer to use.
+func (b *Builder) SetProgrammer(programmer string) error {
+	b.params.servoPort = 0
+	b.params.programmer = programmer
 	return nil
 }
 
