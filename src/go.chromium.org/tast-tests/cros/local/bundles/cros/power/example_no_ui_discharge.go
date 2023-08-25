@@ -19,7 +19,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExampleNoUIDischarge,
 		Desc:         "Discharge battery before collecting power metrics when device is in idle with no UI",
-		BugComponent: "b:292445501",
+		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		// Disabled because this is an example test for other tests to follow.
 		// Attr:      []string{"group:mainline", "informational"},

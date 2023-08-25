@@ -27,8 +27,8 @@ is limited.
 
 ## How to use PrepareBattery for Test?
 
-TODO: Update `PrepareBattery` function signature and description.
-
+TODO(jingmuli): Update `PrepareBattery` function signature and description.
+s
 The [setup] package provides [PrepareBattery] function to help you charge or
 drain the DUT's battery to a specified range. The function has a signature as
 shown below.
@@ -51,7 +51,7 @@ expected and not a concern.
 
 ## Example
 
-TODO: Update `PrepareBattery` function signature, explanation and usage.
+TODO(jingmuli): Update `PrepareBattery` function signature, explanation and usage.
 
 This example is based on the [ExampleNoUIDischarge] test.
 
@@ -83,10 +83,9 @@ to set the minimum and maximum battery charge to be 74% and 76%.
 	}
 ```
 
-Note that the battery is already discharging before the `PrepareBattery` call
-because of the `PowerNoUINoWiFi` fixture configures the DUT to discharge during
-test. Thus, we want to make sure the battery continues to discharge after we
-prepared the battery.
+Because the battery is already discharging before the `PrepareBattery` call as
+a result of using the `PowerNoUINoWiFi` fixture, we want to make sure the
+battery continues to discharge after we prepared the battery.
 
 When you want to prepare battery for **measuring the power usage** of your
 feature, you should consider whether to place the `PrepareBattery` function
@@ -102,9 +101,8 @@ power, the starting state of your power recording should remain consistent.
 Once the battery charge is within the specified range, we can start recording
 the power metrics.
 
-TODO: Add a second charging test.
+TODO(jingmuli): Add a second charging test.
 
 [setup]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/power/setup/
 [PrepareBattery]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/power/setup/setup_battery.go?q=PrepareBattery
-[This example is based on the [ExampleNoUIDischarge] test.
-]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/example_no_ui_discarge.go
+[ExampleNoUIDischarge]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/example_no_ui_discarge.go
