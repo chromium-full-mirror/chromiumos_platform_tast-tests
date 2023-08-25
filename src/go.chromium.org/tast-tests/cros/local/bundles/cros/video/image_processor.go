@@ -62,6 +62,8 @@ func init() {
 					"images/puppets-320x180.nv12.yuv.json",
 					"images/puppets-480x270.i420.yuv",
 					"images/puppets-480x270.i420.yuv.json",
+					"images/puppets-480x270.mm21.yuv",
+					"images/puppets-480x270.mm21.yuv.json",
 					"images/puppets-480x270.nv12.yuv",
 					"images/puppets-480x270.nv12.yuv.json",
 					"images/puppets-640x360.i420.yuv",
