@@ -391,7 +391,7 @@ func (s *Servo) GetCCDSerial(ctx context.Context) (string, error) {
 	return "", errors.Errorf("no ccd serial in %q", value)
 }
 
-// RemoveCCDWatchdogs enumerates over all servo devices, and removes the watchdogs for any CCD devices.
+// RemoveCCDWatchdogs enumerates over all servo devices, removes the watchdogs and enables CCDKeepaliveEn for any CCD devices.
 func (s *Servo) RemoveCCDWatchdogs(ctx context.Context) error {
 	devices, err := s.GetStringList(ctx, Devices)
 	if err != nil {
@@ -406,6 +406,9 @@ func (s *Servo) RemoveCCDWatchdogs(ctx context.Context) error {
 		if strings.HasPrefix(stringType, "ccd") {
 			testing.ContextLog(ctx, "Removing watchdog: ", stringType)
 			if err := s.SetString(ctx, WatchdogRemove, stringType); err != nil {
+				return err
+			}
+			if err := s.SetOnOff(ctx, CCDKeepaliveEn, On); err != nil {
 				return err
 			}
 			didRemove = true
