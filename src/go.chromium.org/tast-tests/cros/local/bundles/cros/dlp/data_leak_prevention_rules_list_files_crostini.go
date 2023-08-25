@@ -15,6 +15,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -126,24 +128,35 @@ func DataLeakPreventionRulesListFilesCrostini(ctx context.Context, s *testing.St
 	// Start interacting with the UI.
 	ui := uiauto.New(tconn)
 
+	proceedButton := nodewith.Role(role.Button).Name("Copy anyway").First()
+	cancelButton := nodewith.Role(role.Button).Name("Cancel").First()
+
 	if err := files.IsFileManaged(ctx, ui, tconn, keyboard, files.DlFileName, true); err != nil {
 		s.Fatal("File isn't managed when it should be: ", err)
 	}
 
-	if err := copyToLinuxFilesAndVerifyWarning(ctx, ui, filesApp, keyboard, files.DlFileName, true); err != nil {
-		s.Fatal("Failed to copy to Linux files and verify that warning appears: ", err)
+	// Copy the file to Linux then cancel the warning.
+	if err := copyToLinuxFiles(ctx, ui, filesApp, keyboard, files.DlFileName); err != nil {
+		s.Fatal("Failed to copy to Linux files: ", err)
+	}
+	if err := uiauto.Combine("Click cancel button",
+		filesApp.WaitUntilExists(cancelButton),
+		ui.DoDefault(cancelButton),
+		filesApp.EnsureFileGone(files.DlFileName, 10*time.Second),
+	)(ctx); err != nil {
+		s.Fatal("Failed to cancel the warning: ", err)
 	}
 
-	if err := files.CancelWarningAndVerify(ctx, ui, tconn, keyboard, files.DlFileName); err != nil {
-		s.Fatal("Failed to cancel the paste: ", err)
+	// Copy the file to Linux then proceed the warning.
+	if err := copyToLinuxFiles(ctx, ui, filesApp, keyboard, files.DlFileName); err != nil {
+		s.Fatal("Failed to copy to Linux files: ", err)
 	}
-
-	if err := copyToLinuxFilesAndVerifyWarning(ctx, ui, filesApp, keyboard, files.DlFileName, true); err != nil {
-		s.Fatal("Failed to copy to Linux files and verify that warning appears: ", err)
-	}
-
-	if err := files.AcceptWarningAndVerify(ctx, ui, tconn, keyboard, files.DlFileName); err != nil {
-		s.Fatal("Failed to proceed the paste: ", err)
+	if err := uiauto.Combine("Click proceed button",
+		filesApp.WaitUntilExists(proceedButton),
+		ui.DoDefault(proceedButton),
+		filesApp.WithTimeout(10*time.Second).WaitForFile(files.DlFileName),
+	)(ctx); err != nil {
+		s.Fatal("Failed to proceed the warning: ", err)
 	}
 
 	if err := files.IsFileManaged(ctx, ui, tconn, keyboard, files.DlFileName, false); err != nil {
@@ -156,18 +169,16 @@ func DataLeakPreventionRulesListFilesCrostini(ctx context.Context, s *testing.St
 	}
 
 	// Copy again. Warning should be silently bypassed and the file should appear.
-	if err := copyToLinuxFilesAndVerifyWarning(ctx, ui, filesApp, keyboard, files.DlFileName, false); err != nil {
-		s.Fatal("Failed to copy to Linux files and verify that warning doesn't appear: ", err)
+	if err := copyToLinuxFiles(ctx, ui, filesApp, keyboard, files.DlFileName); err != nil {
+		s.Fatal("Failed to copy to Linux files: ", err)
 	}
-
-	if err := filesApp.WaitForFile(files.DlFileName)(ctx); err != nil {
+	if err := filesApp.WithTimeout(10 * time.Second).WaitForFile(files.DlFileName)(ctx); err != nil {
 		s.Error("Failed to wait for file: ", err)
 	}
 }
 
-// copyToLinuxFilesAndVerifyWarning tries to copy a file to Linux files.
-// If waitForWarning is true waits for DLP warning to appear, otherwise ensures it doesn't appear.
-func copyToLinuxFilesAndVerifyWarning(ctx context.Context, ui *uiauto.Context, f *filesapp.FilesApp, kb *input.KeyboardEventWriter, filename string, waitForWarning bool) error {
+// copyToLinuxFiles tries to copy a file to Linux files.
+func copyToLinuxFiles(ctx context.Context, ui *uiauto.Context, f *filesapp.FilesApp, kb *input.KeyboardEventWriter, filename string) error {
 	if err := uiauto.Combine("copy the file to Linux files",
 		f.OpenDownloads(),
 		f.CopyFileToClipboard(filename),
@@ -175,10 +186,6 @@ func copyToLinuxFilesAndVerifyWarning(ctx context.Context, ui *uiauto.Context, f
 		f.PasteFileFromClipboard(kb),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to copy the file to Linux files")
-	}
-
-	if err := files.VerifyWarning(ctx, ui, waitForWarning); err != nil {
-		return errors.Wrap(err, "failed to verify warning")
 	}
 
 	return nil

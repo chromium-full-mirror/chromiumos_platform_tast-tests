@@ -289,10 +289,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBusterPolicy",
-		Desc:            "Install Crostini with Buster, with Chrome logged in with policy",
-		Contacts:        []string{"clumptini+oncall@google.com", "aidazolic@google.com"},
-		Impl:            &crostiniFixture{preData: preTestDataBuster},
+		Name:     "crostiniBusterPolicy",
+		Desc:     "Install Crostini with Buster, with Chrome logged in with policy",
+		Contacts: []string{"clumptini+oncall@google.com", "aidazolic@google.com"},
+		Impl: &crostiniFixture{preData: preTestDataBuster,
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{chrome.EnableFeatures("NewFilesPolicyUX")}, nil
+			},
+		},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -365,16 +369,17 @@ type preTestData struct {
 
 // crostiniFixture holds the runtime state of the fixture.
 type crostiniFixture struct {
-	cr       *chrome.Chrome
-	tconn    *chrome.TestConn
-	cont     *vm.Container
-	kb       *input.KeyboardEventWriter
-	preData  *preTestData
-	postData *PostTestData
-	values   *perf.Values
-	restart  bool
-	snapshot bool
-	logDir   string
+	cr            *chrome.Chrome
+	tconn         *chrome.TestConn
+	cont          *vm.Container
+	kb            *input.KeyboardEventWriter
+	preData       *preTestData
+	postData      *PostTestData
+	values        *perf.Values
+	restart       bool
+	snapshot      bool
+	logDir        string
+	extraOptsFunc chrome.OptionsCallback
 }
 
 // FixtureData is the data returned by SetUp and passed to tests.
