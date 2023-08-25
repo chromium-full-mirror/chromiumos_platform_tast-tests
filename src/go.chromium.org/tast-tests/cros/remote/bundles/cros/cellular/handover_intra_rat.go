@@ -27,17 +27,18 @@ func init() {
 			"jstanko@google.com",
 		},
 		BugComponent: "b:167157",
-		Attr:         []string{"group:cellular", "cellular_callbox", "cellular_cmw_callbox", "cellular_run_isolated", "cellular_handover"},
+		Attr:         []string{"group:cellular", "cellular_callbox", "cellular_run_isolated", "cellular_handover"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "callboxManagedFixture",
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name: "lte",
+				// Separate cmw and cmx handovers as CMX requires multiple cells to be defined.
+				Name:      "lte_cmw",
+				ExtraAttr: []string{"cellular_cmw_callbox"},
 				Val: intraRatTestCase{
 					startingOptions: &manager.ConfigureCallboxRequestBody{
-						Hardware:     manager.CallboxHardwareCMW,
 						CellularType: manager.CellularTechnologyLTE,
 						Parameters: []manager.CellConfiguration{
 							manager.NewLteCellConfiguration(
@@ -56,6 +57,74 @@ func init() {
 							Band:      3,
 							Channel:   1575,
 							Bandwidth: 20,
+						},
+					},
+				},
+			},
+			{
+				Name:      "lte_cmx",
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				Val: intraRatTestCase{
+					startingOptions: &manager.ConfigureCallboxRequestBody{
+						CellularType: manager.CellularTechnologyLTE,
+						Parameters: []manager.CellConfiguration{
+							manager.NewLteCellConfiguration(
+								manager.BandOption(2),
+								manager.BandwidthOption(manager.Bandwidth15MHz),
+							),
+							manager.NewLteCellConfiguration(
+								manager.BandOption(7),
+								manager.BandwidthOption(manager.Bandwidth15MHz),
+								manager.TrackingAreaOption(2),
+							),
+						},
+					},
+					handovers: []manager.HandoverRequestBody{
+						manager.HandoverRequestBody{
+							Band:      7,
+							Channel:   3100,
+							Bandwidth: 20,
+						},
+						manager.HandoverRequestBody{
+							Band:      2,
+							Channel:   900,
+							Bandwidth: 20,
+						},
+					},
+				},
+			},
+			{
+				Name:      "nr5gnsa",
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				Val: intraRatTestCase{
+					startingOptions: &manager.ConfigureCallboxRequestBody{
+						CellularType: manager.CellularTechnologyNR5GSA,
+						Parameters: []manager.CellConfiguration{
+							manager.New5GNSACellConfiguration(
+								manager.NBandOption(78),
+								manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+								manager.SchedulingOption(100, 100, 4, 4),
+							),
+							manager.New5GNSACellConfiguration(
+								manager.NBandOption(79),
+								manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+								manager.TrackingAreaOption(2),
+								manager.SchedulingOption(100, 100, 4, 4),
+							),
+						},
+					},
+					handovers: []manager.HandoverRequestBody{
+						manager.HandoverRequestBody{
+							Destination: manager.CellularTechnologyNR5GSA,
+							Band:        79,
+							Channel:     713334,
+							Bandwidth:   100,
+						},
+						manager.HandoverRequestBody{
+							Destination: manager.CellularTechnologyNR5GSA,
+							Band:        78,
+							Channel:     633696,
+							Bandwidth:   100,
 						},
 					},
 				},
