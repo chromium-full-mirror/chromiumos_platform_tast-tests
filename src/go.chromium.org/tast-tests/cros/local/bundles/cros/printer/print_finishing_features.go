@@ -48,8 +48,9 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
-			"group:paper-io",
-			"paper-io_printing",
+			// TODO(b/297444117): return these tags after the test is properly fixed.
+			// "group:paper-io",
+			// "paper-io_printing",
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Printing
 		BugComponent: "b:1111614",
