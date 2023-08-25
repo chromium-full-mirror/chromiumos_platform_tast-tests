@@ -33,9 +33,40 @@ var JetStreamInfo = benchmarkInfo{
 
 // SetUpJetStream prepares the start state for Jetstream to run.
 func SetUpJetStream(ctx context.Context, ac *uiauto.Context) error {
-	// Wait for up to 2 minutes for JetStream to load resources.
-	startButton := nodewith.Name("Start Test").ClassName("button").Role(role.Link)
-	if err := ac.WithTimeout(2 * time.Minute).WaitUntilExists(startButton)(ctx); err != nil {
+	const (
+		retryTimes = 3
+		// Wait for up to 2.5 minutes for JetStream to load resources.
+		loadWaitTime = 2*time.Minute + 30*time.Second
+	)
+
+	jetStreamWebArea := nodewith.NameContaining("JetStream").Role(role.RootWebArea)
+	errorHeading := nodewith.Name("ERROR").Role(role.Heading).Ancestor(jetStreamWebArea)
+	waitForLoading := func(ctx context.Context) error {
+		startButton := nodewith.Name("Start Test").ClassName("button").Role(role.Link)
+		// If one of the node |startButton| or |errorHeading| exists,
+		// it indicates the page has finished loading resources.
+		foundNode, err := ac.WithTimeout(loadWaitTime).FindAnyExists(ctx, startButton, errorHeading)
+		if err != nil {
+			return errors.Wrap(err, "failed to find loaded node")
+		}
+		if foundNode == errorHeading {
+			return errors.New("error encountered during loading")
+		}
+		return nil
+	}
+
+	reloadButton := nodewith.Name("Reload").Role(role.Button).ClassName("ReloadButton")
+	reloadPage := uiauto.NamedCombine("reload page",
+		ac.LeftClick(reloadButton),
+		ac.WaitUntilGone(errorHeading),
+	)
+
+	if err := uiauto.Retry(retryTimes, uiauto.NamedCombine("wait for loading JetStream resources",
+		// Sometimes the website fails to load the resource and shows an error heading.
+		// Reload the page if the error heading exists.
+		uiauto.IfSuccessThen(ac.Exists(errorHeading), reloadPage),
+		waitForLoading,
+	))(ctx); err != nil {
 		return errors.Wrap(err, "failed to load JetStream resources")
 	}
 	return nil
