@@ -43,6 +43,8 @@ const (
 	ChromePolicyLoggedInARC = "chromePolicyLoggedInARC"
 	// ChromePolicyLoggedInARCTrashFilesUXEnabled is a fixture name.
 	ChromePolicyLoggedInARCTrashFilesUXEnabled = "chromePolicyLoggedInARCTrashFilesUXEnabled"
+	// ChromePolicyLoggedInFilesUXEnabled is a fixture name.
+	ChromePolicyLoggedInFilesUXEnabled = "chromePolicyLoggedInFilesUXEnabled"
 	// ChromePolicyLoggedInBruschetta is a fixture name.
 	ChromePolicyLoggedInBruschetta = "chromePolicyLoggedInBruschetta"
 	// ChromeEnrolledLoggedIn is a fixture name.
@@ -77,6 +79,8 @@ const (
 	LacrosPolicyLoggedInFeatureJourneys = "lacrosPolicyLoggedInFeatureJourneys"
 	// LacrosPolicyLoggedInFeatureChromeLabs is a fixture name.
 	LacrosPolicyLoggedInFeatureChromeLabs = "lacrosPolicyLoggedInFeatureChromeLabs"
+	// LacrosPolicyLoggedInFilesUXEnabled is a fixture name.
+	LacrosPolicyLoggedInFilesUXEnabled = "lacrosPolicyLoggedInFilesUXEnabled"
 	// LacrosPolicyLoggedInRealUser is a fixture name.
 	LacrosPolicyLoggedInRealUser = "lacrosPolicyLoggedInRealUser"
 	// LacrosPolicyRealUserLoggedIn is a fixture name.

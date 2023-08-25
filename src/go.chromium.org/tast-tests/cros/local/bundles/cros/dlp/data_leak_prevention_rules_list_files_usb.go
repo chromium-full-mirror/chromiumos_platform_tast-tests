@@ -21,8 +21,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
@@ -133,7 +136,7 @@ func init() {
 					"group:hardware",
 					"group:complementary",
 				},
-				Fixture: fixture.ChromePolicyLoggedIn,
+				Fixture: fixture.ChromePolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeAsh,
 					restriction: restrictionlevel.Allowed,
@@ -147,7 +150,7 @@ func init() {
 					"group:complementary",
 				},
 				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedIn,
+				Fixture:           fixture.LacrosPolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeLacros,
 					restriction: restrictionlevel.Allowed,
@@ -155,7 +158,7 @@ func init() {
 			}, {
 				Name:      "ash_blocked",
 				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
-				Fixture:   fixture.ChromePolicyLoggedIn,
+				Fixture:   fixture.ChromePolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeAsh,
 					restriction: restrictionlevel.Blocked,
@@ -164,7 +167,7 @@ func init() {
 				Name:              "lacros_blocked",
 				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedIn,
+				Fixture:           fixture.LacrosPolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeLacros,
 					restriction: restrictionlevel.Blocked,
@@ -172,7 +175,7 @@ func init() {
 			}, {
 				Name:      "ash_warn_proceeded",
 				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
-				Fixture:   fixture.ChromePolicyLoggedIn,
+				Fixture:   fixture.ChromePolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeAsh,
 					restriction: restrictionlevel.WarnProceeded,
@@ -181,7 +184,7 @@ func init() {
 				Name:              "lacros_warn_proceeded",
 				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedIn,
+				Fixture:           fixture.LacrosPolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeLacros,
 					restriction: restrictionlevel.WarnProceeded,
@@ -194,7 +197,7 @@ func init() {
 					"group:hardware",
 					"group:complementary",
 				},
-				Fixture: fixture.ChromePolicyLoggedIn,
+				Fixture: fixture.ChromePolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeAsh,
 					restriction: restrictionlevel.WarnCancelled,
@@ -208,7 +211,7 @@ func init() {
 					"group:complementary",
 				},
 				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedIn,
+				Fixture:           fixture.LacrosPolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeLacros,
 					restriction: restrictionlevel.WarnCancelled,
@@ -348,7 +351,7 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	}
 	if err := filesApp.FileExists(files.DlFileName)(ctx); err == nil {
 		if err := filesApp.DeleteFileOrFolder(keyboard, files.DlFileName)(ctx); err != nil {
-			s.Fatal("Failed to delete file before pasting: ", err)
+			s.Error("Failed to delete file before pasting: ", err)
 		}
 	}
 	if err := filesApp.PasteFileFromClipboard(keyboard)(ctx); err != nil {
@@ -357,24 +360,24 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 
 	switch appliedRestriction {
 	case restrictionlevel.WarnProceeded:
-		// Hit Enter, which is equivalent to clicking on the "Proceed" button.
-		if err := keyboard.Accel(ctx, "Enter"); err != nil {
-			s.Fatal("Failed to hit Enter: ", err)
+		proceedButton := nodewith.Role(role.Button).Name("Copy anyway").First()
+		ui := uiauto.New(tconnAsh)
+		if err := uiauto.Combine("Click proceed button",
+			filesApp.WaitUntilExists(proceedButton),
+			ui.DoDefault(proceedButton),
+			filesApp.WithTimeout(10*time.Second).WaitForFile(files.DlFileName),
+		)(ctx); err != nil {
+			s.Fatal("Failed to proceed the warning: ", err)
 		}
 	case restrictionlevel.WarnCancelled:
-		// Hit Esc, which is equivalent to clicking on the "Cancel" button.
-		if err := keyboard.Accel(ctx, "Esc"); err != nil {
-			s.Fatal("Failed to hit Esc: ", err)
-		}
-	}
-
-	if appliedRestriction == restrictionlevel.WarnCancelled || appliedRestriction == restrictionlevel.Blocked {
-		if err := filesApp.EnsureFileGone(files.DlFileName, 10*time.Second)(ctx); err != nil {
-			s.Error("File was copied while it shouldn't: ", err)
-		}
-	} else {
-		if err := filesApp.WaitForFile(files.DlFileName)(ctx); err != nil {
-			s.Error("File was not copied while it should: ", err)
+		cancelButton := nodewith.Role(role.Button).Name("Cancel").First()
+		ui := uiauto.New(tconnAsh)
+		if err := uiauto.Combine("Click cancel button",
+			filesApp.WaitUntilExists(cancelButton),
+			ui.DoDefault(cancelButton),
+			filesApp.EnsureFileGone(files.DlFileName, 10*time.Second),
+		)(ctx); err != nil {
+			s.Fatal("Failed to cancel the warning: ", err)
 		}
 	}
 

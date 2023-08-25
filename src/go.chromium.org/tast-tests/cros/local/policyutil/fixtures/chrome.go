@@ -145,6 +145,22 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromePolicyLoggedInFilesUXEnabled,
+		Desc:     "Logged into a user session with files new policy UX enabled",
+		Contacts: []string{"ayaelattar@google.com", "chromeos-commercial-remote-management@google.com"},
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{chrome.EnableFeatures("NewFilesPolicyUX")}, nil
+			},
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.FakeDMS,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromePolicyLoggedInBruschetta,
 		Desc:     "Logged into a user session with Bruschetta support",
 		Contacts: []string{"clumptini+oncall@google.com"},

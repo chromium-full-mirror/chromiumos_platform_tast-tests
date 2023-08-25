@@ -213,6 +213,22 @@ func init() {
 		PostTestTimeout: 15 * time.Second,
 		Parent:          fixture.PersistentLacros,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.LacrosPolicyLoggedInFilesUXEnabled,
+		Desc:     "Logged into a user session with files new policy UX enabled",
+		Contacts: []string{"ayaelattar@google.com", "chromeos-commercial-remote-management@google.com"},
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.EnableFeatures("NewFilesPolicyUX"))).Opts()
+			},
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.PersistentLacros,
+	})
 }
 
 type policyRealUserFixture struct {
