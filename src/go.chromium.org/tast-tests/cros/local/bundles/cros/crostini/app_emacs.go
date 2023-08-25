@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
+	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -100,7 +101,14 @@ func AppEmacs(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
-	if err := guestos.CreateFileWithEmacs(ctx, keyboard, tconn, cont, d); err != nil {
+	// Open Terminal app.
+	terminal, err := terminalapp.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to open Terminal app: ", err)
+	}
+	defer terminal.Exit(keyboard)(cleanupCtx)
+
+	if err := guestos.CreateFileWithEmacs(ctx, keyboard, terminal, tconn, cont, d); err != nil {
 		s.Fatal("Failed to create file with emacs in Terminal: ", err)
 	}
 }
