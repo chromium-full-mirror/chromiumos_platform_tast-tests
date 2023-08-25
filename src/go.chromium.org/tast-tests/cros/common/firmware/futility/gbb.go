@@ -95,7 +95,7 @@ func (i *Instance) GetGBB(ctx context.Context, opts *GetGBBOptions) (*GBB, []byt
 // GetGBBFlags extracts GBB flags from firmware.
 //
 // Returns GBB flags on success. Returns zero and error on failure.
-func (i *Instance) GetGBBFlags(ctx context.Context, biosFile string) (int, error) {
+func (i *Instance) GetGBBFlags(ctx context.Context) (int, error) {
 	gbb, output, err := i.GetGBB(ctx, &GetGBBOptions{})
 
 	if err != nil {
