@@ -203,6 +203,7 @@ func (m *Manager) DeleteCert(name string, org Organization, certType CertType) u
 		m.clickMoreActionsButton(name),
 		m.ui.LeftClick(nodewith.Name("Delete").Role(role.MenuItem)),
 		m.ui.LeftClick(certFinder.Name("OK").Role(role.Button)),
+		m.ui.WaitUntilGone(certFinder.Role(role.Dialog)),
 		m.ui.WaitUntilGone(certificateText),
 	)
 }
