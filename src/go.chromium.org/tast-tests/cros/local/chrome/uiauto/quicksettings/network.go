@@ -16,11 +16,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-var (
-	// AddCellularButton is the finder for adding new SIM profiles in Quick Settings.
-	AddCellularButton = nodewith.Name("Add new cellular network").Role(role.Button)
-)
-
 // NavigateToNetworkDetailedView will navigate to the detailed Network view
 // within the Quick Settings. This is safe to call even when the Quick Settings
 // are already open.

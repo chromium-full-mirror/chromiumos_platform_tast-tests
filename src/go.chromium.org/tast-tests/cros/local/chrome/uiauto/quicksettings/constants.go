@@ -163,5 +163,8 @@ const (
 	SettingPodCameraFraming SettingPod = "Camera framing"
 )
 
+// AddCellularButton is the finder for adding new SIM profiles in Quick Settings.
+var AddCellularButton = nodewith.Name("Add eSIM").Role(role.Button)
+
 // HotspotDetailedViewToggle is the finder for the hotspot toggle in Hotspot detailed view in Quick Settings.
 var HotspotDetailedViewToggle = nodewith.Name("Toggle hotspot").Role(role.Switch)
