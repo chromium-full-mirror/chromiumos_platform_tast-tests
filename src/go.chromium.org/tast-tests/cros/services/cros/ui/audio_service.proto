@@ -34,6 +34,10 @@ service AudioService {
   // key press with Accel().
   rpc KeyboardAccel (AudioServiceRequest) returns (google.protobuf.Empty) {}
 
+  // AudioCrasSelectedInputDevice will return selected audio device name
+  // and audio device type.
+  rpc AudioCrasSelectedInputDevice (google.protobuf.Empty) returns (AudioServiceResponse) {}
+
   // AudioCrasSelectedOutputDevice will return selected audio device name
   // and audio device type.
   rpc AudioCrasSelectedOutputDevice (google.protobuf.Empty) returns (AudioServiceResponse) {}

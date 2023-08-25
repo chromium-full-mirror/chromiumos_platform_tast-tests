@@ -144,6 +144,21 @@ func (as *AudioService) KeyboardAccel(ctx context.Context, req *ui.AudioServiceR
 	return &empty.Empty{}, nil
 }
 
+// AudioCrasSelectedInputDevice will return selected audio device name
+// and audio device type.
+func (as *AudioService) AudioCrasSelectedInputDevice(ctx context.Context, req *empty.Empty) (*ui.AudioServiceResponse, error) {
+	// Get Current active node.
+	cras, err := audio.NewCras(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create Cras object")
+	}
+	inDeviceName, inDeviceType, err := cras.SelectedInputDevice(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get the selected audio device")
+	}
+	return &ui.AudioServiceResponse{DeviceName: inDeviceName, DeviceType: inDeviceType}, nil
+}
+
 // AudioCrasSelectedOutputDevice will return selected audio device name
 // and audio device type.
 func (as *AudioService) AudioCrasSelectedOutputDevice(ctx context.Context, req *empty.Empty) (*ui.AudioServiceResponse, error) {

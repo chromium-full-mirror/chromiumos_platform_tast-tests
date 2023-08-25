@@ -218,16 +218,23 @@ func NbsWarning(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to reconnect and select BT mic: ", err)
 		}
 
+		audioDevice, err := adSvc.AudioCrasSelectedInputDevice(ctx, &emptypb.Empty{})
+		if err != nil {
+			s.Fatal("Failed to get input audio device info: ", err)
+		}
+
+		expectWarning := audioDevice.DeviceType == "BLUETOOTH_NB_MIC"
+
 		// verify if warning is shown as expected
-		err := testing.Poll(ctx, func(ctx context.Context) error {
+		err = testing.Poll(ctx, func(ctx context.Context) error {
 			res, checkErr := qsSvc.IsNBSWarningShown(ctx, &emptypb.Empty{})
 			if checkErr != nil {
 				return checkErr
 			}
-			if enableWBS && res.GetIsNbsWarningShown() {
+			if !expectWarning && res.GetIsNbsWarningShown() {
 				return errors.New("the NBS warning should not be shown in Quick Settings")
 			}
-			if !enableWBS && !res.GetIsNbsWarningShown() {
+			if expectWarning && !res.GetIsNbsWarningShown() {
 				return errors.New("the NBS warning should be shown in Quick Settings")
 			}
 			return nil
