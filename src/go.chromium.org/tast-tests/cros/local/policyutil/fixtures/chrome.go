@@ -109,12 +109,12 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromePolicyLoggedInARC,
-		Desc:     "Logged into a user session with ARC support",
+		Name:     fixture.ChromePolicyLoggedInARCFilesUXEnabled,
+		Desc:     "Logged into a user session with ARC support and files new policy UX enabled",
 		Contacts: []string{"aidazolic@google.com", "chromeos-commercial-remote-management@google.com"},
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(),
+				return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.EnableFeatures("NewFilesPolicyUX"),
 					chrome.ExtraArgs(arc.DisableSyncFlags()...)}, nil
 			},
 			waitForARC: true,

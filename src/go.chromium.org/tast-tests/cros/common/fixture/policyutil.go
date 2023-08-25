@@ -39,8 +39,8 @@ const (
 	ChromePolicyLoggedInFeatureJourneys = "chromePolicyLoggedInFeatureJourneys"
 	// ChromePolicyLoggedInFeatureChromeLabs is a fixture name.
 	ChromePolicyLoggedInFeatureChromeLabs = "chromePolicyLoggedInFeatureChromeLabs"
-	// ChromePolicyLoggedInARC is a fixture name.
-	ChromePolicyLoggedInARC = "chromePolicyLoggedInARC"
+	// ChromePolicyLoggedInARCFilesUXEnabled is a fixture name.
+	ChromePolicyLoggedInARCFilesUXEnabled = "chromePolicyLoggedInARCFilesUXEnabled"
 	// ChromePolicyLoggedInARCTrashFilesUXEnabled is a fixture name.
 	ChromePolicyLoggedInARCTrashFilesUXEnabled = "chromePolicyLoggedInARCTrashFilesUXEnabled"
 	// ChromePolicyLoggedInFilesUXEnabled is a fixture name.
