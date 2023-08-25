@@ -160,7 +160,7 @@ func init() {
 				drmLogMsg:           "HDCP2.2 is enabled. Type 1",
 				hdcpVer:             "HDCP2.2",
 				typeVal:             "Type1=1",
-				displayInfoReString: `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
+				displayInfoReString: `\[CONNECTOR:[0-9]+:DP-[0-9]+\]: status: connected`,
 				is4KDisplay:         true,
 				contentUrls:         []string{urlconst.HEVCCBCS, urlconst.HEVCclip},
 				proxyURL:            urlconst.ProxyHDCPV2},
@@ -293,6 +293,19 @@ func VerifyVideoContents(ctx context.Context, s *testing.State) {
 		// Check if audio is coming while video playback.
 		if err := videoConn.PlayVideo(ctx); err != nil {
 			s.Fatal("Failed to play video: ", err)
+		}
+		_, deviceType, err := cras.SelectedOutputDevice(ctx)
+		if err != nil {
+			s.Fatal("Failed to get the selected audio device: ", err)
+		}
+		if deviceType != expectedAudioNode {
+			if err := cras.SetActiveNodeByType(ctx, expectedAudioNode); err != nil {
+				s.Fatalf("Failed to select active device %s: %v", expectedAudioNode, err)
+			}
+			_, deviceType, err = cras.SelectedOutputDevice(ctx)
+			if err != nil {
+				s.Fatal("Failed to get the selected audio device: ", err)
+			}
 		}
 		if err := videoConn.VerifyVideoPlayWithDuration(ctx, 11, cras, expectedAudioNode); err != nil {
 			s.Fatal("Failed to play verify video or audio routing: ", err)
