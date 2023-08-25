@@ -68,27 +68,13 @@ func createPrinter(ctx context.Context, s *testing.State, cr *chrome.Chrome, tco
 	defer kb.Close(ctx)
 
 	// Open OS Settings and navigate to the Printing page.
-	entryFinder := uitools.PrintersFinder.Ancestor(ossettings.WindowFinder)
-	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, uitools.SettingsPageName, ui.Exists(entryFinder)); err != nil {
+	if err := uitools.NavigateToPrintersSettingsPage(ctx, tconn, cr, ui); err != nil {
 		s.Fatal("Failed to launch Settings page: ", err)
 	}
 
-	// Open add settings dialog
-	addPrinterButton := uitools.AddPrinterFinder.Ancestor(ossettings.WindowFinder)
-	if err := uiauto.Combine("click add printer button",
-		ui.WithTimeout(10*time.Second).WaitUntilExists(entryFinder),
-		ui.DoDefault(entryFinder),
-		ui.WithTimeout(10*time.Second).WaitUntilExists(addPrinterButton),
-	)(ctx); err != nil {
-		s.Fatal("Failed to open settings dialog: ", err)
-	}
-
-	// Click add printer button
-	if err := uiauto.Combine("click add printer button",
-		ui.WithTimeout(10*time.Second).WaitUntilEnabled(addPrinterButton),
-		ui.DoDefault(addPrinterButton),
-	)(ctx); err != nil {
-		s.Fatal("Failed to add printer - network offline: ", err)
+	// Open the Add Printers dialog.
+	if err := uitools.OpenAddPrinterDialog(ctx, ui); err != nil {
+		s.Fatal("Failed to open the Add Printers dialog: ", err)
 	}
 
 	// Input basic parameters

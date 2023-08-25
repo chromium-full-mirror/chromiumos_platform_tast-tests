@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printmanagementapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -93,8 +92,7 @@ func Print(ctx context.Context, s *testing.State) {
 
 	// Open OS Settings and navigate to the Printing page.
 	ui := uiauto.New(tconn)
-	entryFinder := uitools.PrintersFinder.Ancestor(ossettings.WindowFinder)
-	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, uitools.SettingsPageName, ui.Exists(entryFinder)); err != nil {
+	if err := uitools.NavigateToPrintersSettingsPage(ctx, tconn, cr, ui); err != nil {
 		s.Fatal("Failed to launch Settings page: ", err)
 	}
 

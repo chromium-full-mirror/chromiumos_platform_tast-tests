@@ -82,9 +82,9 @@ func OsPrinterSettings(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	// Open OS Settings and navigate to the Printing page.
-	ui := uiauto.New(tconn)
 	entryFinder := uitools.PrintersFinder.Ancestor(ossettings.WindowFinder)
-	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, uitools.SettingsPageName, ui.Exists(entryFinder)); err != nil {
+	ui := uiauto.New(tconn)
+	if err := uitools.NavigateToPrintersSettingsPage(ctx, tconn, cr, ui); err != nil {
 		s.Fatal("Failed to launch Settings page: ", err)
 	}
 
