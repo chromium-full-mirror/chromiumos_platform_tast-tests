@@ -46,6 +46,14 @@ const (
 	CcdServoSnk3 GpioStrap = "CCD_SERVO_SNK3"
 )
 
+const (
+	// ServoMicroDisconnected represents simulating that a Servo Micro is not connected.
+	ServoMicroDisconnected GpioStrap = "SERVO_MICRO_DISCONNECTED"
+
+	// ServoMicroConnected represents simulating that a Servo Micro is connected.
+	ServoMicroConnected GpioStrap = "SERVO_MICRO_CONNECTED"
+)
+
 // All well known gpio names for ti50 image
 const (
 	// GpioTi50ResetL is reset pin to GSC (active low)

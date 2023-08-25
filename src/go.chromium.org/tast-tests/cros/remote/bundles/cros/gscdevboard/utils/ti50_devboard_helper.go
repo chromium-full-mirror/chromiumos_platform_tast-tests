@@ -202,11 +202,24 @@ type monitorFinishOutput struct {
 	Events []gpioEvent `json:"events"`
 }
 
+// GpioMonitorRead retrieves the list of events so far the specified gpio monitoring session, the
+// monitoring continues, and must be eventually stopped by a call to GpioMonitorFinish.
+func (h DevboardHelper) GpioMonitorRead(ctx context.Context, session GpioMonitorSession) (events GpioEvents) {
+	return h.gpioMonitorRead(ctx, session, false)
+}
+
 // GpioMonitorFinish finishes gpio monitoring for the specified session
 func (h DevboardHelper) GpioMonitorFinish(ctx context.Context, session GpioMonitorSession) (events GpioEvents) {
+	return h.gpioMonitorRead(ctx, session, true)
+}
+
+func (h DevboardHelper) gpioMonitorRead(ctx context.Context, session GpioMonitorSession, finish bool) (events GpioEvents) {
 	args := make([]string, 2)
 	args[0] = "monitoring"
 	args[1] = "read"
+	if !finish {
+		args = append(args, "--continue-monitoring")
+	}
 	// opentitantool requires that the pin names be given in exactly the same order as they
 	// were to `monitoring start`.
 	for i := range session.Gpios {
@@ -214,12 +227,12 @@ func (h DevboardHelper) GpioMonitorFinish(ctx context.Context, session GpioMonit
 	}
 	readOutput, err := h.PlainCommand(ctx, "gpio", args...)
 	if err != nil {
-		h.Fatalf("failed to stop gpio monitoring: %s. %s", args, err)
+		h.Fatalf("gpio monitoring error: %s", err)
 	}
 
 	output := monitorFinishOutput{}
 	if err := json.Unmarshal(readOutput, &output); err != nil {
-		h.Fatalf("failed to parse stop gpio monitoring output: %s. %s", string(readOutput), err)
+		h.Fatalf("failed to parse gpio monitoring output: %s. %s", string(readOutput), err)
 	}
 
 	events.Events = make(map[ti50.GpioName][]GpioEvent)
