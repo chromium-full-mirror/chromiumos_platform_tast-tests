@@ -13,6 +13,10 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 )
 
+// NB: If modifying any of the test parameters, be sure to regenerate the test
+// code by running the following in a CrOS SDK chroot:
+// TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/video
+
 func toProfile(codec string) string {
 	switch codec {
 	case "h264":
