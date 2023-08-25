@@ -21,9 +21,29 @@ import (
 
 // TestParameters contains all the data needed to run a single test iteration.
 type testParameters struct {
-	Playback bool
-	Capture  bool
+	Playback       bool
+	Capture        bool
+	CaptureEffects string
 }
+
+const (
+	effectsNone    = ""
+	effectsCrasAec = "0x01"
+	effectsDspAec  = "0x11"
+)
+
+var unstableModelsPlaybackCapture = []string{
+	// TODO(b/261363619): Undo skip after fix.
+	"beetley",
+	// TODO(b/261361770): Undo skip after fix.
+	"akali", "akali360", "bard", "pantheon", "sona", "syndra", "vayne",
+	// TODO(b/198322358): Undo skip after fix.
+	"ekko", "nautilus", "nautiluslte", "soraka",
+}
+
+// The list of models supporting AEC on DSP, which is manually specified now since there are just a few.
+// Consider detecting the support in hardware layer in the future.
+var modelsSupportDspAec = []string{"redrix", "gimble", "anahera", "yaviks", "yavikso"}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -37,29 +57,47 @@ func init() {
 			{
 				Name: "playback",
 				Val: testParameters{
-					Playback: true,
-					Capture:  false,
+					Playback:       true,
+					Capture:        false,
+					CaptureEffects: effectsNone,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.Speaker()),
 			},
 			{
 				Name: "capture",
 				Val: testParameters{
-					Playback: false,
-					Capture:  true,
+					Playback:       false,
+					Capture:        true,
+					CaptureEffects: effectsNone,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.Microphone()),
 			},
 			{
 				Name: "playback_capture",
 				Val: testParameters{
-					Playback: true,
-					Capture:  true,
+					Playback:       true,
+					Capture:        true,
+					CaptureEffects: effectsNone,
 				},
-				// b/261363619: Skip "beetley" before b/261363619 is fixed.
-				// b/261361770: Skip "akali", "akali360", "bard", "pantheon", "sona", "syndra", "vayne" before b/261361770 is fixed.
-				// b/198322358: Skip "nautilus", "nautiluslte", "soraka", "ekko" before b/198322358 is fixed.
-				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel("beetley", "akali", "akali360", "bard", "pantheon", "sona", "syndra", "vayne", "ekko", "nautilus", "nautiluslte", "soraka")),
+				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
+			},
+			{
+				Name: "playback_capture_cras_aec",
+				Val: testParameters{
+					Playback:       true,
+					Capture:        true,
+					CaptureEffects: effectsCrasAec,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
+			},
+			{
+				Name: "playback_capture_dsp_aec",
+				Val: testParameters{
+					Playback:       true,
+					Capture:        true,
+					CaptureEffects: effectsDspAec,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...), hwdep.Model(modelsSupportDspAec...)),
 			},
 		},
 	})
@@ -98,13 +136,17 @@ func crasPerfOneIteration(ctx context.Context, s *testing.State, pid int, pv *pe
 	playbackCommand := crastestclient.PlaybackCommand(runCtx, int(commandDuration.Seconds()), blocksize)
 	captureCommand := crastestclient.CaptureCommand(runCtx, int(commandDuration.Seconds()), blocksize)
 
+	if param.CaptureEffects != effectsNone {
+		captureCommand.Args = append(captureCommand.Args, "--effects="+param.CaptureEffects)
+	}
+
 	if param.Capture {
 		captureCommand.Start()
 	}
 
 	if param.Capture && param.Playback {
-		// Wait one second to simulate WebRTC creating an output
-		// stream about 1 seconds after creating an input stream.
+		// GoBigSleepLint: Wait one second to simulate WebRTC creating an output
+		//                 stream about 1 seconds after creating an input stream.
 		if err := testing.Sleep(ctx, 1*time.Second); err != nil {
 			s.Fatal("Timed out on sleep: ", err)
 		}
@@ -114,9 +156,9 @@ func crasPerfOneIteration(ctx context.Context, s *testing.State, pid int, pv *pe
 		playbackCommand.Start()
 	}
 
-	// Wait one second for audio processing stream to be ready.
-	// TODO(b/165995912) remove the sleep once we can query
-	// stream state from CRAS.
+	// GoBigSleepLint: Wait one second for audio processing stream to be ready.
+	//                 TODO(b/165995912) remove the sleep once we can query
+	//                 stream state from CRAS.
 	if err := testing.Sleep(ctx, 1*time.Second); err != nil {
 		s.Fatal("Timed out on sleep: ", err)
 	}
@@ -185,9 +227,9 @@ func crasPerfOneIteration(ctx context.Context, s *testing.State, pid int, pv *pe
 		s.Log("Finished one iteration")
 	}()
 
-	// Record for perfDuration seconds.
-	// This is to make sure that audio is being used during whole
-	// perf recording.
+	// GoBigSleepLint: Record for perfDuration seconds.
+	//                 This is to make sure that audio is being used during whole
+	//                 perf recording.
 	if err := testing.Sleep(ctx, perfDuration); err != nil {
 		s.Fatal("Timed out on sleep: ", err)
 	}
