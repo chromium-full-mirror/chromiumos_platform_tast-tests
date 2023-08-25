@@ -6,16 +6,14 @@ package crostini
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos/apps"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 
@@ -95,8 +93,7 @@ func init() {
 }
 func AppVscodeFromFileManager(ctx context.Context, s *testing.State) {
 	const (
-		tmpFilename   = "testfile.txt"
-		vscodeAppName = "Visual Studio Code"
+		tmpFilename = "testfile.txt"
 	)
 
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
@@ -123,21 +120,20 @@ func AppVscodeFromFileManager(ctx context.Context, s *testing.State) {
 	}
 
 	// Right click and launch vscode through context menu
-	vscodeWindow := nodewith.NameRegex(regexp.MustCompile(vscodeAppName)).Role(role.Window).First()
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
 
 	// Open tmp file with vscode.
 	if err := uiauto.Combine("open tmp file with vscode via files app",
 		filesApp.OpenLinuxFiles(),
-		filesApp.ClickContextMenuItemRegex(tmpFilename, filesapp.OpenWith, vscodeAppName),
+		filesApp.ClickContextMenuItemRegex(tmpFilename, filesapp.OpenWith, apps.VSCode.AppName),
 		// Wait until the window is stable.
-		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(vscodeWindow).First()),
+		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(apps.VSCode.WindowFinder).First()),
 		// Left click the app window to focus.
-		ui.LeftClick(vscodeWindow),
+		ui.LeftClick(apps.VSCode.WindowFinder),
 		// Press ctrl+Q to exit window.
 		keyboard.AccelAction("ctrl+Q"),
-		ui.WaitUntilGone(vscodeWindow),
+		ui.WaitUntilGone(apps.VSCode.WindowFinder),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open and close tmp file in the vscode: ", err)
 	}

@@ -8,11 +8,11 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/crostiniapps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/imetestutil"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos/apps"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
@@ -75,26 +75,26 @@ func AppVSCodeEmoji(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
 
-	if err := crostiniapps.InitialiseVSCode(ctx, cont, uda, ui, terminalApp, keyboard); err != nil {
+	if err := apps.InitialiseVSCode(ctx, apps.VSCode, cont, uda, ui, terminalApp, keyboard); err != nil {
 		s.Fatal("Failed to open vscode: ", err)
 	}
 
 	const inputEmoji = "🤪"
 	// Open the VSCode again, this time, it won't open the Get Started tab.
 	if err := uiauto.Combine("create and compose file with VSCode",
-		crostiniapps.LaunchVSCodeForFile(uda, ui, terminalApp, keyboard, crostiniapps.VSCodeTestFile),
+		apps.LaunchVSCodeForFile(apps.VSCode, uda, ui, terminalApp, keyboard, apps.VSCodeTestFile),
 		// VSCode will read the first keypress as English input, even when the input method is set otherwise.
 		// Enter two backspaces first so that the testing string is entered correctly.
 		// TODO(b/274709150): Remove the following 2 lines after this bug is fixed.
 		keyboard.AccelAction("Backspace"),
 		keyboard.AccelAction("Backspace"),
 		imetestutil.OpenEmojiPickerAndInputEmoji(ctx, cr, keyboard, tconn, inputEmoji),
-		crostiniapps.SaveFileAndCloseVSCode(ui, keyboard, crostiniapps.VSCodeTestFile))(ctx); err != nil {
+		apps.SaveFileAndCloseVSCode(apps.VSCode, ui, keyboard, apps.VSCodeTestFile))(ctx); err != nil {
 		s.Fatal("Failed to open file and enter emoji: ", err)
 	}
 
 	// Check the content of the test file.
-	if err := cont.CheckFileContent(ctx, crostiniapps.VSCodeTestFile, inputEmoji); err != nil {
+	if err := cont.CheckFileContent(ctx, apps.VSCodeTestFile, inputEmoji); err != nil {
 		s.Fatal("Failed to verify the content of the file: ", err)
 	}
 

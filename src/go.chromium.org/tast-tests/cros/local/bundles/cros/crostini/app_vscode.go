@@ -6,24 +6,15 @@ package crostini
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/crostiniapps"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/crostini"
-	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/guestos/apps"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
-	"go.chromium.org/tast-tests/cros/local/uidetection"
-	"go.chromium.org/tast-tests/cros/local/vm"
 
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -108,6 +99,9 @@ func AppVscode(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
+
 	// Open Terminal app.
 	terminalApp, err := terminalapp.Launch(ctx, tconn)
 	if err != nil {
@@ -115,56 +109,7 @@ func AppVscode(ctx context.Context, s *testing.State) {
 	}
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
 
-	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
-	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
-	s.AttachErrorHandlers(handler, handler)
-	if err := testCreateFileWithVSCode(ctx, terminalApp, keyboard, tconn, cont, d); err != nil {
+	if err := apps.TestCreateFileWithVSCode(ctx, apps.VSCode, terminalApp, keyboard, tconn, cont, d); err != nil {
 		s.Fatal("Failed to create file with Visual Studio Code in Terminal: ", err)
 	}
-}
-
-func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, cont *vm.Container, d screenshot.Differ) error {
-	const testString = "//This is a test string."
-
-	ui := uiauto.New(tconn)
-	uda := uidetection.NewDefault(tconn)
-	appWindowSaved := nodewith.NameStartingWith(fmt.Sprintf("%s - Visual Studio Code", crostiniapps.VSCodeTestFile)).Role(role.Window).First()
-
-	if err := crostiniapps.InitialiseVSCode(ctx, cont, uda, ui, terminalApp, keyboard); err != nil {
-		return err
-	}
-
-	saveAsWindow := nodewith.Name("Save As").HasClass("Widget").Role(role.Window)
-	// UI interaction to save file.
-	// File -> Save As -> Type file name -> Save.
-	// This corresponds to step 5 at https://testtracker.googleplex.com/testplans/testcase/detail/4163083?id=18920&revision=232.
-	saveFile := uiauto.Combine("save file from save as... dialogue",
-		uda.LeftClick(uidetection.Word("File").WithinA11yNode(crostiniapps.VSCodeWindow)),
-		// "Save Workspace As...", "Save", and "Save As..." match the criteria, choose the third one.
-		uda.LeftClick(uidetection.Word("Save").Nth(2)),
-		uda.WaitUntilExists(uidetection.Word("Desktop").WithinA11yNode(saveAsWindow)),
-		keyboard.AccelAction("ctrl+A"),
-		keyboard.TypeAction(crostiniapps.VSCodeTestFile),
-		uda.LeftClick(uidetection.Word("Save").WithinA11yNode(saveAsWindow)),
-	)
-
-	// Open the VSCode again, this time, it won't open the Get Started tab.
-	if err := uiauto.Combine("create file with VSCode",
-		crostiniapps.LaunchVSCodeForFile(uda, ui, terminalApp, keyboard, crostiniapps.VSCodeNewFile),
-		keyboard.TypeAction(testString),
-		saveFile,
-		ui.WaitUntilExists(appWindowSaved),
-		screenshot.DiffWindow(ctx, d, "vscode", screenshot.Retries(5), screenshot.RetryInterval(5*time.Second)),
-		// Press ctrl+Q to exit window.
-		keyboard.AccelAction("ctrl+Q"),
-		ui.WaitUntilGone(appWindowSaved))(ctx); err != nil {
-		return err
-	}
-
-	// Check the content of the test file.
-	if err := cont.CheckFileContent(ctx, crostiniapps.VSCodeTestFile, testString); err != nil {
-		return errors.Wrap(err, "failed to verify the content of the file")
-	}
-
-	return nil
 }

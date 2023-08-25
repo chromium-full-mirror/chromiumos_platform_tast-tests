@@ -8,11 +8,11 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/crostiniapps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/imetestutil"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos/apps"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
@@ -73,12 +73,12 @@ func AppVSCodeNonalphanumericInput(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
 
-	if err := crostiniapps.InitialiseVSCode(ctx, cont, uda, ui, terminalApp, keyboard); err != nil {
+	if err := apps.InitialiseVSCode(ctx, apps.VSCode, cont, uda, ui, terminalApp, keyboard); err != nil {
 		s.Fatal("Failed to open VSCode app from terminal and initialise settings: ", err)
 	}
 
 	// Open the VSCode again, this time, it won't open the Get Started tab.
-	if err := crostiniapps.LaunchVSCodeForFile(uda, ui, terminalApp, keyboard, crostiniapps.VSCodeTestFile)(ctx); err != nil {
+	if err := apps.LaunchVSCodeForFile(apps.VSCode, uda, ui, terminalApp, keyboard, apps.VSCodeTestFile)(ctx); err != nil {
 		s.Fatal("Failed to re-open VSCode for entering test input: ", err)
 	}
 
@@ -87,7 +87,7 @@ func AppVSCodeNonalphanumericInput(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to type string and do basic editing: ", err)
 	}
 
-	if err := crostiniapps.SaveFileAndCloseVSCode(ui, keyboard, crostiniapps.VSCodeTestFile)(ctx); err != nil {
+	if err := apps.SaveFileAndCloseVSCode(apps.VSCode, ui, keyboard, apps.VSCodeTestFile)(ctx); err != nil {
 		s.Fatal("Failed to save and close VSCode: ", err)
 	}
 }
