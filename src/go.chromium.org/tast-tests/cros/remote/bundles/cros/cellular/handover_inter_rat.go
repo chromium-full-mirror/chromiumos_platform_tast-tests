@@ -31,17 +31,17 @@ func init() {
 			"jstanko@google.com",
 		},
 		BugComponent: "b:167157",
-		Attr:         []string{"group:cellular", "cellular_callbox", "cellular_cmw_callbox", "cellular_run_isolated", "cellular_handover"},
+		Attr:         []string{"group:cellular", "cellular_callbox", "cellular_run_isolated", "cellular_handover"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "callboxManagedFixture",
 		Timeout:      12 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name: "lte_wcdma",
+				Name:      "lte_wcdma",
+				ExtraAttr: []string{"cellular_cmw_callbox"},
 				Val: interRatTestCase{
 					startingOptions: &manager.ConfigureCallboxRequestBody{
-						Hardware:     manager.CallboxHardwareCMW,
 						CellularType: manager.CellularTechnologyLTE,
 						Parameters: []manager.CellConfiguration{
 							manager.NewLteCellConfiguration(
@@ -70,13 +70,145 @@ func init() {
 					},
 				},
 			},
+			{
+				Name:      "nsa_lte",
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				Val: interRatTestCase{
+					startingOptions: &manager.ConfigureCallboxRequestBody{
+						CellularType: manager.CellularTechnologyNR5GNSA,
+						Parameters: []manager.CellConfiguration{
+							manager.NewLteCellConfiguration(
+								manager.BandOption(1),
+								manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+							),
+							manager.New5GNSACellConfiguration(
+								manager.NBandOption(78),
+								manager.SchedulingOption(100, 100, 4, 4),
+								manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+							),
+							manager.NewLteCellConfiguration(
+								manager.BandOption(3),
+								manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+								manager.TrackingAreaOption(2),
+							),
+						},
+					},
+					handovers: []manager.HandoverRequestBody{
+						manager.HandoverRequestBody{
+							Destination: manager.CellularTechnologyLTE,
+							Band:        3,
+							Channel:     1575,
+							Bandwidth:   15,
+						},
+						manager.HandoverRequestBody{
+							Destination:        manager.CellularTechnologyNR5GNSA,
+							Band:               1,
+							Channel:            300,
+							Bandwidth:          20,
+							SecondaryBand:      78,
+							SecondaryChannel:   633696,
+							SecondaryBandwidth: 20,
+						},
+					},
+				},
+			},
+			{
+				// NSA -> NSA is technically Inter-RAT since it's really NSA -> LTE -> NSA
+				Name:      "nsa_nsa",
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				Val: interRatTestCase{
+					startingOptions: &manager.ConfigureCallboxRequestBody{
+						CellularType: manager.CellularTechnologyNR5GNSA,
+						Parameters: []manager.CellConfiguration{
+							manager.NewLteCellConfiguration(
+								manager.BandOption(1),
+								manager.SchedulingOption(50, 50, 4, 4),
+								manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+							),
+							manager.New5GNSACellConfiguration(
+								manager.NBandOption(78),
+								manager.SchedulingOption(100, 100, 4, 4),
+								manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+							),
+							manager.NewLteCellConfiguration(
+								manager.BandOption(1),
+								manager.SchedulingOption(50, 50, 4, 4),
+								manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+								manager.TrackingAreaOption(2),
+							),
+							manager.New5GNSACellConfiguration(
+								manager.NBandOption(78),
+								manager.SchedulingOption(100, 100, 4, 4),
+								manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+								manager.TrackingAreaOption(2),
+							),
+						},
+					},
+					handovers: []manager.HandoverRequestBody{
+						manager.HandoverRequestBody{
+							Destination:        manager.CellularTechnologyNR5GNSA,
+							Band:               1,
+							Channel:            300,
+							Bandwidth:          20,
+							SecondaryBand:      78,
+							SecondaryChannel:   633696,
+							SecondaryBandwidth: 20,
+						},
+						manager.HandoverRequestBody{
+							Destination:        manager.CellularTechnologyNR5GNSA,
+							Band:               1,
+							Channel:            300,
+							Bandwidth:          20,
+							SecondaryBand:      78,
+							SecondaryChannel:   633696,
+							SecondaryBandwidth: 20,
+						},
+					},
+				},
+			},
+			{
+				Name:      "nr5gsa_lte",
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				Val: interRatTestCase{
+					startingOptions: &manager.ConfigureCallboxRequestBody{
+						CellularType: manager.CellularTechnologyNR5GSA,
+						Parameters: []manager.CellConfiguration{
+							manager.New5GNSACellConfiguration(
+								manager.NBandOption(78),
+								manager.SchedulingOption(100, 100, 4, 4),
+							),
+							manager.NewLteCellConfiguration(
+								manager.BandOption(3),
+								manager.SchedulingOption(50, 50, 4, 4),
+								manager.TrackingAreaOption(2),
+							),
+						},
+					},
+					handovers: []manager.HandoverRequestBody{
+						manager.HandoverRequestBody{
+							Destination: manager.CellularTechnologyLTE,
+							Band:        3,
+							Channel:     1575,
+							Bandwidth:   15,
+						},
+						manager.HandoverRequestBody{
+							Destination: manager.CellularTechnologyNR5GSA,
+							Band:        78,
+							Channel:     633696,
+							Bandwidth:   100,
+						},
+					},
+				},
+			},
 		},
 	})
 }
 
 var ratMap = map[manager.CellularTechnology]string{
-	manager.CellularTechnologyLTE:   shillconst.CellularNetworkTechnologyLTE,
-	manager.CellularTechnologyWCDMA: shillconst.CellularNetworkTechnologyUMTS,
+	manager.CellularTechnologyLTE:     shillconst.CellularNetworkTechnologyLTE,
+	manager.CellularTechnologyWCDMA:   shillconst.CellularNetworkTechnologyUMTS,
+	manager.CellularTechnologyNR5GNSA: shillconst.CellularNetworkTechnology5GNR,
+	manager.CellularTechnologyNR5GSA:  shillconst.CellularNetworkTechnology5GNR,
 }
 
 func HandoverInterRat(ctx context.Context, s *testing.State) {

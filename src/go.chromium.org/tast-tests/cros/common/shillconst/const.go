@@ -244,6 +244,7 @@ const (
 const (
 	CellularNetworkTechnologyLTE  = "LTE"
 	CellularNetworkTechnologyUMTS = "UMTS"
+	CellularNetworkTechnology5GNR = "5GNR"
 )
 
 // Roam state values defined in dbus-constants.h

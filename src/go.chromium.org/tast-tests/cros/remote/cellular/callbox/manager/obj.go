@@ -209,6 +209,7 @@ type CellConfiguration struct {
 	UplinkResourceBlocks   int               `json:"ul_rbs,omitempty"`
 	DownlinkMCS            int               `json:"dlmcs,omitempty"`
 	UplinkMCS              int               `json:"ulmcs,omitempty"`
+	TrackingAreaCode       int               `json:"tracking_area,omitempty"`
 }
 
 // CellOption represents a configuration option for a base station cell/component carrier.
@@ -279,6 +280,13 @@ func SchedulingOption(dlRB, ulRB, dlMCS, ulMCS int) CellOption {
 		opt.UplinkResourceBlocks = ulRB
 		opt.DownlinkMCS = dlMCS
 		opt.UplinkMCS = ulMCS
+	}
+}
+
+// TrackingAreaOption configures the cells tracking area.
+func TrackingAreaOption(tac int) CellOption {
+	return func(opt *CellConfiguration) {
+		opt.TrackingAreaCode = tac
 	}
 }
 
@@ -519,9 +527,12 @@ type CloseTxMeasurementRequestBody struct {
 
 // HandoverRequestBody is the request body for an inter/intra-RAT handover.
 type HandoverRequestBody struct {
-	Callbox     string             `json:"callbox,omitempty"`
-	Band        int                `json:"band,omitempty"`
-	Channel     int                `json:"channel,omitempty"`
-	Bandwidth   float64            `json:"bw,omitempty"`
-	Destination CellularTechnology `json:"technology,omitempty"`
+	Callbox            string             `json:"callbox,omitempty"`
+	Band               int                `json:"band,omitempty"`
+	Channel            int                `json:"channel,omitempty"`
+	Bandwidth          float64            `json:"bw,omitempty"`
+	SecondaryBand      int                `json:"secondary_band,omitempty"`
+	SecondaryChannel   int                `json:"secondary_channel,omitempty"`
+	SecondaryBandwidth float64            `json:"secondary_bw,omitempty"`
+	Destination        CellularTechnology `json:"technology,omitempty"`
 }
