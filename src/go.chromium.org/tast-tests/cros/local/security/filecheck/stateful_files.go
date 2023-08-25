@@ -70,6 +70,7 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 		NewPattern(Path("encrypted/var/lib/cras"), Users("cras"), Groups("cras"), Mode(0755)),                 // directory itself
 		NewPattern(Tree("encrypted/var/lib/cras"), Users("cras"), Groups("cras"), Mode(0644), SkipChildren()), // children
 		NewPattern(Tree("encrypted/var/lib/chaps/database"), Users("chaps"), Groups("chronos-access"), NotMode(027)),
+		NewPattern(Tree("encrypted/var/lib/device_management"), Users("device_management"), Groups("device_management"), NotMode(022)),
 		NewPattern(Path("encrypted/var/lib/dhcpcd"), Users("dhcp"), Groups("dhcp"), Mode(0775)),
 		NewPattern(Tree("encrypted/var/lib/dhcpcd"), Users("dhcp"), Groups("dhcp"), NotMode(0113)),
 		NewPattern(Path("encrypted/var/lib/gentoo"), Users("root"), NotMode(022), SkipChildren()),
