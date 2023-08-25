@@ -1,0 +1,6 @@
+# This is the local list of words excluded from the keyword_check.
+#
+# See repohooks/README.md for more details.
+
+# Required for setting up virtual usb devices, but blocked because it contains the word "dummy".
+dummy_hcd

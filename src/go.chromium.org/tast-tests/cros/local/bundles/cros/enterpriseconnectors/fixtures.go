@@ -145,6 +145,7 @@ func CreateFixture(user, pw string) testing.FixtureImpl {
 			lacrosfixt.ChromeOptions(
 				chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
 				chrome.ProdPolicy(),
+				chrome.EnableFeatures("FileTransferEnterpriseConnector", "FileTransferEnterpriseConnectorUI", "NewFilesPolicyUX"),
 			),
 		).Opts()
 	})
