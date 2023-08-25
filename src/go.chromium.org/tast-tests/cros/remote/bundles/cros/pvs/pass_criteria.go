@@ -61,14 +61,13 @@ func PassCriteria(ctx context.Context, s *testing.State) {
 		})
 		pvsutils.CountTestCases(s, output, []pvsutils.RepeatedWord{
 			{Pattern: pvsutils.RequirementLevelMust, Count: 2},
-			{Pattern: pvsutils.TestResultPattern("stub_PassServer", pvsutils.PrintedResultFail), Count: 1},
+			{Pattern: pvsutils.TestResultPattern("stub_PassServer", pvsutils.PrintedResultPass), Count: 1},
 			{Pattern: pvsutils.TestResultPattern("stub_FailServer", pvsutils.PrintedResultFail), Count: 1},
-			{Pattern: pvsutils.TestResultPattern("power_Resume.freeze", pvsutils.PrintedResultFail), Count: 2},
+			{Pattern: pvsutils.TestResultPattern("power_UiResume.freeze", pvsutils.PrintedResultFail), Count: 2},
 			{Pattern: pvsutils.PrintedResultNotRun, Count: 0},
-			{Pattern: pvsutils.PrintedResultFail, Count: 4},
-			{Pattern: pvsutils.PrintedResultPass, Count: 0},
-			{Pattern: "passcriteria-default.textproto", Count: 1},
-			{Pattern: "exceeds upper bound", Count: 3},
+			{Pattern: pvsutils.PrintedResultFail, Count: 3},
+			{Pattern: pvsutils.PrintedResultPass, Count: 1},
+			{Pattern: "exceeds upper bound", Count: 2},
 		})
 	})
 
@@ -82,13 +81,13 @@ func PassCriteria(ctx context.Context, s *testing.State) {
 
 		pvsutils.CountTestCases(s, output, []pvsutils.RepeatedWord{
 			{Pattern: pvsutils.RequirementLevelMust, Count: 2},
-			{Pattern: pvsutils.TestResultPattern("stub_PassServer", pvsutils.PrintedResultFail), Count: 1},
+			{Pattern: pvsutils.TestResultPattern("stub_PassServer", pvsutils.PrintedResultPass), Count: 1},
 			{Pattern: pvsutils.TestResultPattern("stub_FailServer", pvsutils.PrintedResultFail), Count: 1},
-			{Pattern: pvsutils.TestResultPattern("power_Resume.freeze", pvsutils.PrintedResultFail), Count: 2},
+			{Pattern: pvsutils.TestResultPattern("power_UiResume.freeze", pvsutils.PrintedResultFail), Count: 2},
 			{Pattern: pvsutils.PrintedResultNotRun, Count: 0},
-			{Pattern: pvsutils.PrintedResultFail, Count: 4},
-			{Pattern: pvsutils.PrintedResultPass, Count: 0},
-			{Pattern: "exceeds upper bound", Count: 3},
+			{Pattern: pvsutils.PrintedResultFail, Count: 3},
+			{Pattern: pvsutils.PrintedResultPass, Count: 1},
+			{Pattern: "exceeds upper bound", Count: 2},
 		})
 	})
 }

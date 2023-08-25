@@ -12,7 +12,7 @@ mappings {
 	requirement_id: "boot-perf-0008-v01"
 	tests {
           source: "tauto"
-          name: "power_Resume.freeze"
+          name: "power_UiResume.freeze"
         }
 	tests {
           source: "tauto"
@@ -23,7 +23,7 @@ mappings {
 	requirement_id: "boot-perf-0009-v01"
 	tests {
           source: "tauto"
-          name: "power_Resume.freeze"
+          name: "power_UiResume.freeze"
         }
 	tests {
           source: "tauto"
