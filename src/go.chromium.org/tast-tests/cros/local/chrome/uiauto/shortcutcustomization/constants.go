@@ -14,6 +14,9 @@ import (
 // SearchResultFinder is a finder of all possible search results if they exist.
 var SearchResultFinder = nodewith.NameRegex(regexp.MustCompile(fmt.Sprintf(`(Search result \d+ of \d+: .*)`))).Onscreen()
 
+// WarnMessageNoSearch is the warning message user will get when non search shortcut is input.
+var WarnMessageNoSearch = "Shortcut without search key might conflict with some app's shortcut. Press this shortcut again to continue using it, or press a new shortcut using the search key."
+
 // ShortcutsSearchQueryAndExpectation is a struct that encapsulates a search query and
 // the expected description of at least one of the results. If no results are
 // expected, `expectedDescriptionRegex` should be empty and `expectNoResults`
