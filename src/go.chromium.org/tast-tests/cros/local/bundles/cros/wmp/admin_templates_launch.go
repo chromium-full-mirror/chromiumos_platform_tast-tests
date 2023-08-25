@@ -150,12 +150,14 @@ func AdminTemplatesLaunch(ctx context.Context, s *testing.State) {
 			}
 
 			// Check that the admin template is there.
-			if err := uiauto.Combine(
-				"check that it is an admin template",
-				ac.Exists(nodewith.ClassName("SavedDeskNameView").Name(adminDeskTemplateName)),
-				ac.Exists(nodewith.Name("Shared by your administrator")),
-			)(ctx); err != nil {
-				s.Fatal("Failed to find an admin desk template")
+			savedDeskIndex, err := ash.GetSavedDeskIndexForName(ctx, ac, adminDeskTemplateName)
+			if err != nil {
+				s.Fatal("Failed to find saved desks: ", err)
+			}
+
+			savedDeskItemView := nodewith.ClassName("SavedDeskItemView").Nth(savedDeskIndex)
+			if err := ac.Exists(nodewith.Name("Shared by your administrator").Ancestor(savedDeskItemView))(ctx); err != nil {
+				s.Fatalf("Failed to find an admin desk template with the name %s", adminDeskTemplateName)
 			}
 
 			// Launch the admin template.

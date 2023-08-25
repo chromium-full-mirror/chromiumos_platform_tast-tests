@@ -189,6 +189,22 @@ func GetDesksInfo(ctx context.Context, tconn *chrome.TestConn) (DesksInfo, error
 	return desks, err
 }
 
+// GetSavedDeskIndexForName returns the index of the saved desk for savedDeskName.
+func GetSavedDeskIndexForName(ctx context.Context, ac *uiauto.Context, savedDeskName string) (int, error) {
+	savedDeskNameView := nodewith.ClassName("SavedDeskNameView")
+	savedDeskNameViewInfo, err := ac.NodesInfo(ctx, savedDeskNameView)
+	if err != nil {
+		return -1, errors.Wrap(err, "failed to find saved desks")
+	}
+
+	for i, info := range savedDeskNameViewInfo {
+		if info.Value == savedDeskName {
+			return i, nil
+		}
+	}
+	return -1, errors.Errorf("failed to find index for saved desk with name %s", savedDeskName)
+}
+
 // FindDeskMiniViews returns a list of DeskMiniView nodes.
 func FindDeskMiniViews(ctx context.Context, ac *uiauto.Context) ([]uiauto.NodeInfo, error) {
 	deskMiniViews := nodewith.ClassName("DeskMiniView")
@@ -341,9 +357,15 @@ func FindSavedDesks(ctx context.Context, ac *uiauto.Context) ([]uiauto.NodeInfo,
 // This assumes library page is live now.
 func LaunchSavedDesk(ctx context.Context, ac *uiauto.Context, savedDeskName string, index int) error {
 	savedDesk := nodewith.ClassName("SavedDeskItemView").Nth(index)
-	savedDeskNameView := nodewith.ClassName("SavedDeskNameView").Name(savedDeskName)
 	savedDeskMiniView :=
 		nodewith.ClassName("DeskMiniView").Name(fmt.Sprintf("Desk: %s", savedDeskName))
+
+	savedDeskIndex, err := GetSavedDeskIndexForName(ctx, ac, savedDeskName)
+	if err != nil {
+		return errors.Wrap(err, "failed to find saved desks")
+	}
+
+	savedDeskNameView := nodewith.ClassName("SavedDeskItemView").Nth(savedDeskIndex)
 
 	// Launch the saved desk.
 	if err := uiauto.Combine(
@@ -390,8 +412,8 @@ func VerifySavedDesk(ctx context.Context, ac *uiauto.Context, savedDeskNames []s
 		return errors.Wrapf(err, "found inconsistent number of saved desk(s): got %v, want %v", len(savedDeskNameViewInfo), len(savedDeskNames))
 	}
 	for i, info := range savedDeskNameViewInfo {
-		if info.Name != savedDeskNames[i] {
-			return errors.Wrapf(err, "found inconsistent saved desk name at index %v: got %s, want %s", i, info.Name, savedDeskNames[i])
+		if info.Value != savedDeskNames[i] {
+			return errors.Wrapf(err, "found inconsistent saved desk name at index %v: got %s, want %s", i, info.Value, savedDeskNames[i])
 		}
 	}
 
@@ -441,22 +463,12 @@ func DeleteAllSavedDesks(ctx context.Context, ac *uiauto.Context, tconn *chrome.
 
 // DeleteDeskTemplateByName deletes desk template with savedDeskName.
 func DeleteDeskTemplateByName(ctx context.Context, ac *uiauto.Context, tconn *chrome.TestConn, savedDeskName string) error {
-	savedDeskNameView := nodewith.ClassName("SavedDeskNameView")
-	savedDeskNameViewInfo, err := ac.NodesInfo(ctx, savedDeskNameView)
+	savedDeskIndex, err := GetSavedDeskIndexForName(ctx, ac, savedDeskName)
 	if err != nil {
 		return errors.Wrap(err, "failed to find saved desks")
 	}
-	savedDeskIndex := -1
-	for i, info := range savedDeskNameViewInfo {
-		if info.Name == savedDeskName {
-			savedDeskIndex = i
-		}
-	}
-	if savedDeskIndex == -1 {
-		return errors.Errorf("cannot find index for saved desk with name %s", savedDeskName)
-	}
 
-	savedDesk := nodewith.ClassName("SavedDeskNameView").Name(savedDeskName)
+	savedDesk := nodewith.ClassName("SavedDeskNameView").Nth(savedDeskIndex)
 	closeButton := nodewith.ClassName("IconButton").Name("Delete").Nth(savedDeskIndex)
 	deleteDialog := DeskDialog(ctx, ac, "Delete")
 
