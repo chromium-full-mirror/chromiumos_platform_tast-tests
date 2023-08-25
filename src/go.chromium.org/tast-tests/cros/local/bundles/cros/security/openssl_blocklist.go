@@ -33,7 +33,6 @@ func init() {
 			"openssl_blocklist_cert.pem",
 			"openssl_blocklist_bogus_blocklist",
 			"openssl_blocklist_serial_blocklist",
-			"openssl_blocklist_sha1_blocklist",
 			"openssl_blocklist_sha256_blocklist",
 		},
 		Attr: []string{"group:mainline"},
@@ -53,7 +52,6 @@ func OpenSSLBlocklist(ctx context.Context, s *testing.State) {
 	)
 	blocklists := []string{
 		s.DataPath("openssl_blocklist_serial_blocklist"),
-		s.DataPath("openssl_blocklist_sha1_blocklist"),
 		s.DataPath("openssl_blocklist_sha256_blocklist"),
 	}
 
@@ -114,6 +112,7 @@ func OpenSSLBlocklist(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return fetch(ctx, nullBlocklist)
 	}, nil); err != nil {
+		defer srvCmd.DumpLog(ctx)
 		s.Fatal("Failed waiting for server to be ready: ", err)
 	}
 
