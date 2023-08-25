@@ -41,17 +41,10 @@ func init() {
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "lacros-tast@google.com", "hyungtaekim@chromium.org"},
 		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "lacros"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"lacros_stable"},
-			// Only run on a subset of devices since it downloads from omaha and it will not use our lab's caching mechanisms. We don't want to overload our lab.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("kasumi", "vilboz" /* amd64 */, "krane" /* arm */)),
-		}, {
-			Name:              "unstable",
-			ExtraSoftwareDeps: []string{"lacros_unstable"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("lazor" /* arm64 */)),
-		}},
-		Timeout: 4 * time.Minute,
+		SoftwareDeps: []string{"chrome", "lacros", "lacros_stable"},
+		// Only run on a subset of devices since it downloads from omaha and it will not use our lab's caching mechanisms. We don't want to overload our lab.
+		HardwareDeps: hwdep.D(hwdep.Model("kasumi", "vilboz" /* amd64 */, "krane" /* arm */, "lazor" /* arm64 */)),
+		Timeout:      4 * time.Minute,
 	})
 }
 
@@ -176,6 +169,8 @@ func ShelfLaunchOmaha(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Failed to start Chrome: ", err)
 			}
+			defer cr.Close(cleanupCtx)
+
 			tconn, err := cr.TestAPIConn(ctx)
 			if err != nil {
 				s.Fatal("Failed to connect to test API: ", err)
