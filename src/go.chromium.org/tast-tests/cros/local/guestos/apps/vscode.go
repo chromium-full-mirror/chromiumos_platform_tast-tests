@@ -53,6 +53,14 @@ var VSCode = VSCodeConfig{
 	WindowFinder: nodewith.NameContaining("Visual Studio Code").Role(role.Window).First(),
 }
 
+// VSCodium is a community distribution - https://vscodium.com/
+var VSCodium = VSCodeConfig{
+	Name:         "codium",
+	AppName:      "VSCodium",
+	ConfigDir:    "VSCodium",
+	WindowFinder: nodewith.NameContaining("VSCodium").Role(role.Window).First(),
+}
+
 var (
 	// VSCodeNewFile is the name of the file used to open VSCode for the first time.
 	VSCodeNewFile = "new.go"
