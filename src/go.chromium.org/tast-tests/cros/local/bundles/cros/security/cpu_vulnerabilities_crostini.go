@@ -62,6 +62,11 @@ func CPUVulnerabilitiesCrostini(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to list vulnerability files: ", err)
 	}
 	for _, f := range fileList {
+		// We are leaving "spec_rstack_overflow" unmitigated on
+		// some boards: b/297466181
+		if f == "spec_rstack_overflow" {
+			continue
+		}
 		contents, err := cont.ReadFile(ctx, filepath.Join(vulnDir, f))
 		if err != nil {
 			s.Fatal("Can't read vulnerability file: ", err)

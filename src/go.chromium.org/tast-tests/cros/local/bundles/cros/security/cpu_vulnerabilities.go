@@ -35,6 +35,11 @@ func CPUVulnerabilities(ctx context.Context, s *testing.State) {
 	}
 	for _, f := range fileList {
 		fName := f.Name()
+		// We are leaving "spec_rstack_overflow" unmitigated on
+		// some boards: b/297466181
+		if fName == "spec_rstack_overflow" {
+			continue
+		}
 		contents, err := ioutil.ReadFile(filepath.Join(vulnDir, fName))
 		if err != nil {
 			s.Fatal("Can't read vulnerability file: ", err)
