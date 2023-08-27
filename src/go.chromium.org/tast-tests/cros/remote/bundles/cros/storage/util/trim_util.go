@@ -6,6 +6,7 @@ package util
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -27,7 +28,9 @@ type TrimComparisonFunc func(context.Context, *dut.DUT, string, uint64) (bool, e
 
 // RunTrim calls the ioctl trim command.
 func RunTrim(ctx context.Context, dut *dut.DUT, diskPath string, offset, size uint64) error {
-	_, err := RunCmdWithOutputSilent(ctx, dut, "blkdiscard", "-f", "-o", strconv.FormatUint(offset*TrimChunkSize, 10), "-l", strconv.FormatUint(size, 10), diskPath)
+	cmdTmpl := "blkdiscard -f -o %d -l %d %s"
+	cmd := fmt.Sprintf(cmdTmpl, offset*TrimChunkSize, size, diskPath)
+	_, err := RunCmdWithOutputSilent(ctx, dut, "bash", "-c", cmd)
 	if err != nil {
 		return errors.Wrap(err, "failed to execute trim")
 	}
@@ -52,7 +55,8 @@ func RunTrimForRatio(ctx context.Context, dut *dut.DUT, diskpath string, chunkCo
 
 // WriteRandomData writes random data to a specified file.
 func WriteRandomData(ctx context.Context, dut *dut.DUT, filepath string, chunkCount uint64) error {
-	cmd := "dd if=/dev/urandom of=" + filepath + " bs=" + strconv.FormatUint(TrimChunkSize, 10) + " count=" + strconv.FormatUint(chunkCount, 10)
+	cmdTmpl := "dd if=/dev/urandom of=%s bs=%d count=%d"
+	cmd := fmt.Sprintf(cmdTmpl, filepath, TrimChunkSize, chunkCount)
 	out, err := RunCmdWithStringOutput(ctx, dut, "bash", "-c", cmd)
 	if err != nil {
 		return errors.Wrap(err, "failed to write random data")
@@ -75,7 +79,8 @@ func GetCurrentHashes(ctx context.Context, dut *dut.DUT, filename string, chunkC
 
 // GetCurrentHash calculates hash values for the chunk of the specified file.
 func GetCurrentHash(ctx context.Context, dut *dut.DUT, filename string, chunk uint64) (hash string, err error) {
-	cmd := "dd if=" + filename + " bs=" + strconv.FormatUint(TrimChunkSize, 10) + " count=1 skip=" + strconv.FormatUint(chunk, 10) + " status=none | sha256sum"
+	cmdTmpl := "dd if=%s bs=%d count=1 skip=%d status=none | sha256sum"
+	cmd := fmt.Sprintf(cmdTmpl, filename, TrimChunkSize, chunk)
 	buf, err := RunCmdWithStringOutputSilent(ctx, dut, "bash", "-c", cmd)
 	if err != nil {
 		return "", errors.Wrapf(err, " error reading from: %s", filename)
@@ -85,7 +90,8 @@ func GetCurrentHash(ctx context.Context, dut *dut.DUT, filename string, chunk ui
 
 // CompareToZero compares the chunk of the specified file to all zeroes.
 func CompareToZero(ctx context.Context, dut *dut.DUT, filename string, chunk uint64) (bool, error) {
-	cmd := "dd if=" + filename + " bs=" + strconv.FormatUint(TrimChunkSize, 10) + " count=1 skip=" + strconv.FormatUint(chunk, 10) + " status=none | cmp - /dev/zero 2>&1"
+	cmdTmpl := "dd if=%s bs=%d count=1 skip=%d status=none | cmp -n %d - /dev/zero 2>&1"
+	cmd := fmt.Sprintf(cmdTmpl, filename, TrimChunkSize, chunk, TrimChunkSize)
 	out, err := RunCmdWithStringOutputSilent(ctx, dut, "bash", "-c", cmd)
 	if err != nil {
 		return false, errors.Wrapf(err, " error reading from: %s", filename)
@@ -95,15 +101,13 @@ func CompareToZero(ctx context.Context, dut *dut.DUT, filename string, chunk uin
 		return false, nil
 	}
 
-	if !strings.Contains(out, "cmp: EOF on -") {
-		return false, errors.Wrapf(err, "unexpected comparison termination: %s", out)
-	}
 	return true, nil
 }
 
 // CompareToOne compares the chunk of the specified file to 0xff.
 func CompareToOne(ctx context.Context, dut *dut.DUT, filename string, chunk uint64) (bool, error) {
-	cmd := "dd if=" + filename + " bs=" + strconv.FormatUint(TrimChunkSize, 10) + " count=1 skip=" + strconv.FormatUint(chunk, 10) + " status=none | cmp - <(tr '\000' '\377' < /dev/zero) 2>&1"
+	cmdTmpl := "dd if=%s bs=%d count=1 skip=%d status=none | cmp -n %d - <(tr '\000' '\377' < /dev/zero) 2>&1"
+	cmd := fmt.Sprintf(cmdTmpl, filename, TrimChunkSize, chunk, TrimChunkSize)
 	out, err := RunCmdWithStringOutputSilent(ctx, dut, "bash", "-c", cmd)
 	if err != nil {
 		return false, errors.Wrapf(err, " error reading from: %s", filename)
@@ -113,9 +117,6 @@ func CompareToOne(ctx context.Context, dut *dut.DUT, filename string, chunk uint
 		return false, nil
 	}
 
-	if !strings.Contains(out, "cmp: EOF on -") {
-		return false, errors.Wrapf(err, "unexpected comparison termination: %s", out)
-	}
 	return true, nil
 }
 
