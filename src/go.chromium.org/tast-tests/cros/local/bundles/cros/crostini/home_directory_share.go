@@ -77,11 +77,11 @@ func HomeDirectoryShare(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
-	if err := guestos.FilesAppToGuest(ctx, filesApp, kb, cont, filesapp.Linuxfiles); err != nil {
+	if err := guestos.FilesAppToGuest(ctx, filesApp, kb, cont, filesapp.Linuxfiles, "."); err != nil {
 		s.Fatal("Files app to guest failed: ", err)
 	}
 
-	if err := guestos.GuestToFilesApp(ctx, filesApp, cont, filesapp.Linuxfiles); err != nil {
+	if err := guestos.GuestToFilesApp(ctx, filesApp, cont, filesapp.Linuxfiles, "."); err != nil {
 		s.Fatal("Guest to Files app failed: ", err)
 	}
 }

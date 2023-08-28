@@ -6,6 +6,7 @@ package guestos
 
 import (
 	"context"
+	"path"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -16,26 +17,26 @@ import (
 )
 
 // FilesAppToGuest tests that file operations in the Files app are reflected in the guest.
-func FilesAppToGuest(ctx context.Context, filesApp *filesapp.FilesApp, keyboard *input.KeyboardEventWriter, guest vm.Guest, dirName string) error {
+func FilesAppToGuest(ctx context.Context, filesApp *filesapp.FilesApp, keyboard *input.KeyboardEventWriter, guest vm.Guest, hostDirName, guestDirName string) error {
 	const testName = "test_folder"
 	const testRename = "another_test_folder"
 
 	if err := uiauto.Combine("Test Files app to guest",
 		// Open the right folder.
-		filesApp.OpenDir(dirName, filesapp.FilesTitlePrefix+dirName),
+		filesApp.OpenDir(hostDirName, filesapp.FilesTitlePrefix+hostDirName),
 
 		// Files app doesn't have a way to directly create a file, but
 		// we can create a folder, which is just as good.
 		filesApp.CreateFolder(keyboard, testName),
-		WaitForFile(guest, ".", testName),
+		WaitForFile(guest, guestDirName, testName),
 
 		// Rename the test folder.
 		filesApp.RenameFile(keyboard, testName, testRename),
-		WaitForFile(guest, ".", testRename),
+		WaitForFile(guest, guestDirName, testRename),
 
 		// Delete the test folder.
 		filesApp.DeleteFileOrFolder(keyboard, testRename),
-		WaitForFileGone(guest, ".", testRename),
+		WaitForFileGone(guest, guestDirName, testRename),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "operations in Files app not reflected in guest")
 	}
@@ -44,24 +45,24 @@ func FilesAppToGuest(ctx context.Context, filesApp *filesapp.FilesApp, keyboard 
 }
 
 // GuestToFilesApp tests that file operations in the guest are reflected in the Files app.
-func GuestToFilesApp(ctx context.Context, filesApp *filesapp.FilesApp, guest vm.Guest, dirName string) error {
+func GuestToFilesApp(ctx context.Context, filesApp *filesapp.FilesApp, guest vm.Guest, hostDirName, guestDirName string) error {
 	const testName = "test_file"
 	const testRename = "another_test_file"
 
 	if err := uiauto.Combine("Test guest to Files app",
 		// Open the right folder.
-		filesApp.OpenDir(dirName, filesapp.FilesTitlePrefix+dirName),
+		filesApp.OpenDir(hostDirName, filesapp.FilesTitlePrefix+hostDirName),
 
 		// Create file in container.
-		commandAction(guest, "touch", testName),
+		commandAction(guest, "touch", path.Join(guestDirName, testName)),
 		filesApp.WaitForFile(testName),
 
 		// Rename file in container.
-		commandAction(guest, "mv", testName, testRename),
+		commandAction(guest, "mv", path.Join(guestDirName, testName), path.Join(guestDirName, testRename)),
 		filesApp.WaitForFile(testRename),
 
 		// Delete file in container.
-		commandAction(guest, "rm", testRename),
+		commandAction(guest, "rm", path.Join(guestDirName, testRename)),
 		filesApp.WaitUntilFileGone(testRename),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "operations in guest not reflected in Files app")
