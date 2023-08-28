@@ -28,4 +28,4 @@ maximum), use the flag:
 $ tast run -var "power.test_duration=<minutes>" <DUT_IP> ...
 ```
 
-[manual_ui.go]: (https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/manual_ui.go)
+[manual_ui.go]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/manual_ui.go
