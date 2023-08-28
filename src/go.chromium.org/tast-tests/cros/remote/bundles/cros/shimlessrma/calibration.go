@@ -75,7 +75,7 @@ func Calibration(ctx context.Context, s *testing.State) {
 	dut := firmwareHelper.DUT
 	key := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
-	defer rmaweb.CleanupStateFile(cleanupCtx, dut)
+	defer rmaweb.CleanupShimlessFiles(cleanupCtx, dut)
 
 	if err := firmwareHelper.RequireServo(ctx); err != nil {
 		s.Fatal("Fail to init servo: ", err)

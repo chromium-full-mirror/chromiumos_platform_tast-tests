@@ -93,7 +93,7 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	enroll := p.enroll
 	destination := p.destination
 
-	defer rmaweb.CleanupStateFile(cleanupCtx, dut)
+	defer rmaweb.CleanupShimlessFiles(cleanupCtx, dut)
 
 	if err := firmwareHelper.RequireServo(ctx); err != nil {
 		s.Fatal("Fail to init servo: ", err)
@@ -146,7 +146,7 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for reboot start.
-        // TODO(chenghan): Replace testing.Sleep with testing.Poll.
+	// TODO(chenghan): Replace testing.Sleep with testing.Poll.
 	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
 		s.Error("Fail to sleep: ", err)
 	}
