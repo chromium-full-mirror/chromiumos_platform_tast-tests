@@ -5,12 +5,14 @@
 package personalization
 
 import (
+	"regexp"
+
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 )
 
 // PersonalizationHubWindow is the finder to find the Personalization Hub window in the UI.
-var PersonalizationHubWindow = nodewith.NameContaining("Wallpaper & style").Role(role.Window).First()
+var PersonalizationHubWindow = nodewith.NameRegex(regexp.MustCompile("Wallpaper (&|and) style")).Role(role.Window).First()
 
 // SetPersonalizationMenu is the finder to find the Set Wallpaper & Style menu item after
 // right click from desktop.
