@@ -93,7 +93,7 @@ func AddCustomAcceleratorAndReset(ctx context.Context, s *testing.State) {
 
 	// Verify the widget is still open as the new shortcut will not close it.
 	if err := ui.WaitUntilExists(widgetNode)(ctx); err != nil {
-		s.Fatal("Failed to find the widget as must have go closed : ", err)
+		s.Fatal("Failed to find the widget as must have got closed : ", err)
 	}
 
 	// Closing widget with default shortcut.
@@ -118,16 +118,9 @@ func AddCustomAcceleratorAndReset(ctx context.Context, s *testing.State) {
 	// Capture the default shortcut node based on possible values.
 	defaultShortcut := nodewith.NameRegex(defaultShortcutRegex).Role(role.GenericContainer).First()
 
-	// Capture the name of the node for shortcut.
-	shortcutNodeInfo, err := ui.Info(ctx, defaultShortcut)
-	if err != nil {
-		s.Fatal("Failed to find the default shortcut keys")
-	}
-	shortcutName := shortcutNodeInfo.Name
-
-	// Verify default shortcut is present in the key shortcuts UI.
-	if err := sc.VerifyShortcuts(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: shortcutName, Role: role.GenericContainer}); err != nil {
-		s.Fatal("Failed to find the Open Quick Settings shortcut: ", err)
+	// Verify shortcut is present in the shortcut app ui.
+	if err := sc.VerifyShortcutsRegex(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "meta (search|launcher) c", Role: role.GenericContainer}); err != nil {
+		s.Fatal("Failed to find the default shortcut search or launcher c for the shortcut: ", err)
 	}
 
 	// Click the edit button for the shortcut.
@@ -136,33 +129,9 @@ func AddCustomAcceleratorAndReset(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find edit button: ", err)
 	}
 
-	// Verify the edit dialog is opened correctly.
-	editDialog := nodewith.Name("Open/close calendar").Role(role.Dialog)
-	if err := ui.WaitUntilExists(editDialog)(ctx); err != nil {
-		s.Fatal("Failed to find the Edit dialog: ", err)
-	}
-
-	// Verify the default shortcut is present.
-	defaultAccel := nodewith.NameRegex(defaultShortcutRegex).Role(role.GenericContainer)
-	if err := ui.WaitUntilExists(defaultAccel)(ctx); err != nil {
-		s.Fatal("Failed to find default accel for the action: ", err)
-	}
-
-	// Click Add shortcut button.
-	addItemButton := nodewith.Name("Add shortcut").Role(role.Button)
-	if err := ui.LeftClick(addItemButton)(ctx); err != nil {
-		s.Fatal("Failed to find Add item: ", err)
-	}
-
-	// Input the new shortcut.
-	if err := kb.Accel(ctx, "ctrl+alt+m"); err != nil {
-		s.Fatal("Failed to input the accel: ", err)
-	}
-
-	// Close the edit dialog by clicking the done button.
-	doneButton := nodewith.Name("Done").Role(role.Button)
-	if err := ui.LeftClick(doneButton)(ctx); err != nil {
-		s.Fatal("Failed to find Done button and close the dialog : ", err)
+	// Add custom shortcut for open/close calendar.
+	if err := sc.AddCustomShortcut(ctx, ui, kb, "Open/close calendar", "ctrl+alt+m", sc.WarnMessageNoSearch); err != nil {
+		s.Fatal("Failed to add the ctrl alt m for the shortcut: ", err)
 	}
 
 	// Verify the new accel is now available in the shortcut app.
@@ -198,13 +167,13 @@ func AddCustomAcceleratorAndReset(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify original shortcut available after reset.
-	if err := sc.VerifyShortcuts(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: shortcutName, Role: role.GenericContainer}); err != nil {
-		s.Fatal("Failed to find the default shortcut alt shift s: ", err)
+	if err := sc.VerifyShortcutsRegex(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "meta (search|launcher) c", Role: role.GenericContainer}); err != nil {
+		s.Fatal("Failed to find the default shortcut after resetting: ", err)
 	}
 
 	// Verify the edited accelator is not available anymore in UI.
 	if err := sc.VerifyShortcuts(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "ctrl alt m", Role: role.GenericContainer}); err == nil {
-		s.Fatal("Failed to reset the shortcut: ", err)
+		s.Fatal("Failed to reset the shortcut as the custom shortcut still found: ", err)
 	}
 
 	// Verify edited accelator combo does not work any more as reset.
