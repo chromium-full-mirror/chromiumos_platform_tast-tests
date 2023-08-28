@@ -137,7 +137,7 @@ func AudioCaptureAllowedUrls(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to click Record button: ", err)
 			}
 
-			permissionWindow := nodewith.HasClass("PermissionPromptBubbleView").Role(role.Window)
+			permissionWindow := nodewith.HasClass("PermissionPromptBubbleBaseView").Role(role.Window)
 			if param.expectAskPermission {
 				if err = uiauto.Combine("wait for dialog pop-up and ask for permission",
 					ui.WaitUntilExists(permissionWindow),
@@ -149,7 +149,7 @@ func AudioCaptureAllowedUrls(ctx context.Context, s *testing.State) {
 				if err := uiauto.Combine("verify no prompts shows and permission is granted automatically",
 					// The 15 seconds duration is an arbitrary picked timeout, should be long enough to verify no prompt will appear.
 					ui.EnsureGoneFor(permissionWindow, 15*time.Second),
-					ui.WaitUntilExists(nodewith.Name("This page is accessing your microphone.").Role(role.Button)),
+					ui.WaitUntilExists(nodewith.Name("AudioCaptureAllowedUrls - Camera or microphone recording").Role(role.Tab)),
 				)(ctx); err != nil {
 					s.Fatal("Failed to complete all actions: ", err)
 				}
