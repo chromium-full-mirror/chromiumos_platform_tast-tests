@@ -1,5 +1,5 @@
 {
   "sha256sum": "bcc26e93f84d798b514e53bfa6429336f087a7b66157be25d2adb0c063ad2f3e",
   "size": 384498018,
-  "url": "gs://chromiumos-test-assets-public/tast/cros/video/encode//fallout4-1280x720_600frames_20230703.vp9.webm"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/encode/fallout4-1280x720_600frames_20230703.vp9.webm"
 }

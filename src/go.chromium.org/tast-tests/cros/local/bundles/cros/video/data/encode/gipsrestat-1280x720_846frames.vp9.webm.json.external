@@ -1,5 +1,5 @@
 {
   "sha256sum": "3813e12c4fe66354a9ed77b13ddfc2596b3b0ba003187e74d3700f55592c7f9e",
   "size": 108,
-  "url": "gs://chromiumos-test-assets-public/tast/cros/video/encode//gipsrestat-1280x720_846frames_20230704.vp9.webm.json"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/encode/gipsrestat-1280x720_846frames_20230704.vp9.webm.json"
 }

@@ -1,5 +1,5 @@
 {
   "sha256sum": "2e39ace7502b08c2aaa227cd29f926e782f2afd5be16425345a985c3a2023beb",
   "size": 99968815,
-  "url": "gs://chromiumos-test-assets-public/tast/cros/video/encode//crowd_run-1920x1080_60frames_20230703.vp9.webm"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/encode/crowd_run-1920x1080_60frames_20230703.vp9.webm"
 }
