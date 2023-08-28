@@ -135,6 +135,8 @@ func EditDefaultAcceleratorForUnlockedAction(ctx context.Context, s *testing.Sta
 		ui.WaitUntilExists(nodewith.Name(shortcutName).Role(role.GenericContainer)),
 		ui.LeftClick(nodewith.ClassName("clickable-button").Ancestor(editDialog).First()),
 		kb.AccelAction("ctrl+alt+m"),
+		ui.WaitUntilExists(nodewith.Name(sc.WarnMessageNoSearch).Role(role.StaticText)),
+		kb.AccelAction("ctrl+alt+m"),
 		ui.LeftClick(nodewith.Name("Done").Role(role.Button)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to edit the default shortcut: ", err)
