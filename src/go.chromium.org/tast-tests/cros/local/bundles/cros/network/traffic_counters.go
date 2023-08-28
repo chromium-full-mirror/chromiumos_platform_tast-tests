@@ -19,6 +19,7 @@ import (
 	"time"
 
 	pp "chromiumos/system_api/patchpanel_proto"
+
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -127,6 +128,14 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to restore portal detection on ethernet: ", err)
 		}
 	}()
+
+	if param.arc {
+		restoreEthernet, err := arc.HideUnusedEthernet(ctx, mgr)
+		if err != nil {
+			s.Fatal("Failed to hide unused ethernet: ", err)
+		}
+		defer restoreEthernet(cleanupCtx)
+	}
 
 	pc, err := patchpanel.New(ctx)
 	if err != nil {
