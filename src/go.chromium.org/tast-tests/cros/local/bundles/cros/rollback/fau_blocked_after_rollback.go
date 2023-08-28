@@ -38,6 +38,17 @@ func init() {
 		BugComponent: "b:261430340",
 		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},
 		Fixture:      fixture.UpdateEngineCleanOwnership,
+		SearchFlags: []*testing.StringPair{
+			{
+				Key: "feature_id",
+				// Configure "Roll back to target version" in Admin Console
+				// policy to a version older than latest FAU and ensure that
+				// supported devices correctly roll back and stay on that
+				// version.
+				// COM_FOUND_CUJ13_TASK7_WF1
+				Value: "screenplay-71c595e4-c8e4-41b2-ab1d-1c4e3459e7b5",
+			},
+		},
 	})
 }
 
