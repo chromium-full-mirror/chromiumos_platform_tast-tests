@@ -81,6 +81,9 @@ func init() {
 			Name: "has_secure_wifi_connection",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHasSecureWifiConnection),
 		}, {
+			// Cannot be added to DiagnosticsPass.* since that requires the
+			// routine to be run in a good network environment. The
+			// DiagnosticsPass.* counterpart will be flaky in a normal lab.
 			Name: "dns_latency",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDNSLatency),
 		}, {

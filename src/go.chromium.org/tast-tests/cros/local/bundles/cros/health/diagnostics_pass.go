@@ -89,10 +89,6 @@ func init() {
 			Name: "dns_resolver_present",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
 		}, {
-			Name:      "dns_latency",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineDNSLatency),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
-		}, {
 			Name: "dns_resolution",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
 		}, {
