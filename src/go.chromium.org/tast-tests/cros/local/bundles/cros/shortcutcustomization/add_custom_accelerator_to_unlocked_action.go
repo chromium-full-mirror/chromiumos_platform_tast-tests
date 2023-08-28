@@ -118,16 +118,9 @@ func AddCustomAcceleratorToUnlockedAction(ctx context.Context, s *testing.State)
 	// Capture the default shortcut node based on possible values.
 	defaultShortcut := nodewith.NameRegex(defaultShortcutRegex).Role(role.GenericContainer).First()
 
-	// Capture the name of the node for shortcut.
-	shortcutNodeInfo, err := ui.Info(ctx, defaultShortcut)
-	if err != nil {
-		s.Fatal("Failed to find the default shortcut keys")
-	}
-	shortcutName := shortcutNodeInfo.Name
-
 	// Verify shortcut is present in the shortcut app ui.
-	if err := sc.VerifyShortcuts(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: shortcutName, Role: role.GenericContainer}); err != nil {
-		s.Fatal("Failed to find the shortcut: ", err)
+	if err := sc.VerifyShortcutsRegex(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "meta (search|launcher) ctrl s", Role: role.GenericContainer}); err != nil {
+		s.Fatal("Failed to find the ctrl alt m for the shortcut: ", err)
 	}
 
 	// Verify to click edit button to input the new shortcut.
@@ -136,33 +129,9 @@ func AddCustomAcceleratorToUnlockedAction(ctx context.Context, s *testing.State)
 		s.Fatal("Failed to find edit button: ", err)
 	}
 
-	// Verify the edit dialog is open.
-	editDialog := nodewith.Name("Open/close calendar").Role(role.Dialog)
-	if err := ui.WaitUntilExists(editDialog)(ctx); err != nil {
-		s.Fatal("Failed to find the Edit dialog: ", err)
-	}
-
-	//Verify the default accel in the dialog window
-	defaultAccel := nodewith.Name(shortcutName).Role(role.GenericContainer)
-	if err := ui.WaitUntilExists(defaultAccel)(ctx); err != nil {
-		s.Fatal("Failed to find default accel for Open notifications: ", err)
-	}
-
-	// Click Add shortcut button.
-	addItemButton := nodewith.Name("Add shortcut").Role(role.Button)
-	if err := ui.LeftClick(addItemButton)(ctx); err != nil {
-		s.Fatal("Failed to find Add item: ", err)
-	}
-
-	// Input the new accel in the shortcut app.
-	if err := kb.Accel(ctx, "ctrl+alt+m"); err != nil {
-		s.Fatal("Failed to input the accel: ", err)
-	}
-
-	// Close the edit dialog.
-	doneButton := nodewith.Name("Done").Role(role.Button)
-	if err := ui.LeftClick(doneButton)(ctx); err != nil {
-		s.Fatal("Failed to find Done button and close the dialog : ", err)
+	// Add custom shortcut for open/close calendar.
+	if err := sc.AddCustomShortcut(ctx, ui, kb, "Open/close calendar", "ctrl+alt+m", sc.WarnMessageNoSearch); err != nil {
+		s.Fatal("Failed to add the ctrl alt m for the shortcut: ", err)
 	}
 
 	// Verify the new accel is now available in the shortcut app.
