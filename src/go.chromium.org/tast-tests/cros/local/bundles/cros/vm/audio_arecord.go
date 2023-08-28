@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/audioutils"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/dlc"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const runAudioArecord string = "run-arecord.sh"
@@ -38,6 +39,8 @@ func init() {
 		Data:         []string{runAudioArecord},
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
+		// TODO(b/288063328): Fix frequent "Failed to install DLC" error on these models
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("pujjoteen", "steelix", "rusty", "vorticon", "bobba")),
 		Fixture:      "vmDLC",
 		Params: []testing.Param{
 			{
