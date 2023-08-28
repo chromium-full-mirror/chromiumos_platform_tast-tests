@@ -347,9 +347,12 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 			[]pp.TrafficCounter_Source{pp.TrafficCounter_ARC},
 			func() error {
 				// Use dumpsys to generate some traffic to/from the HTTP server.
+				// "host_default" to force using the default network on the host since
+				// the network selection in ARC might not be the same as the host on T+.
+				// See b/265877162.
 				args := []string{
 					"wifi",
-					"tools", "http",
+					"tools", "http", "host_default",
 					targetURL,
 				}
 				return a.Command(ctx, "dumpsys", args...).Run(testexec.DumpLogOnError)
