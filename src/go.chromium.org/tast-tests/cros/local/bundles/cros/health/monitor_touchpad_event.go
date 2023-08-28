@@ -91,10 +91,7 @@ func verifyConnectedEvent(eventLine string) error {
 	if event.MaxY == 0 {
 		return errors.New("the max_y for connected event should be non-zero")
 	}
-	// Pressure should be supported on all ChromeOS devices.
-	if event.MaxPressure == 0 {
-		return errors.New("the max_pressure for connected event should be non-zero")
-	}
+	// TODO(b/297848185): Verify the maximum pressure on non-reven boards.
 
 	return nil
 }
