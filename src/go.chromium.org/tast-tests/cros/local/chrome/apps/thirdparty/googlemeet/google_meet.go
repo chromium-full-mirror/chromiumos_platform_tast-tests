@@ -490,7 +490,7 @@ func InstallPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) err
 		defer func() {
 			if retErr != nil {
 				targetsToClose := func(t *chrome.Target) bool {
-					return t.Title == "Google Meet"
+					return strings.Contains(t.Title, "Google Meet")
 				}
 				if err := cr.CloseTargets(ctx, targetsToClose); err != nil {
 					testing.ContextLog(ctx, "Failed to close targets: ", err)
