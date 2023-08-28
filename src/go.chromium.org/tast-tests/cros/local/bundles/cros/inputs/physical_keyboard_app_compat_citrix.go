@@ -29,11 +29,11 @@ type citrixTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PhysicalKeyboardCitrixTyping,
+		Func:         PhysicalKeyboardAppCompatCitrix,
 		Desc:         "Checks that physical keyboard can perform typing in citrix",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:244259740",
-		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
+		Attr:         []string{"group:mainline", "group:input-tools", "informational", "group:vdi_limited"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		Timeout:      5 * time.Minute,
@@ -54,7 +54,7 @@ func init() {
 	})
 }
 
-func PhysicalKeyboardCitrixTyping(ctx context.Context, s *testing.State) {
+func PhysicalKeyboardAppCompatCitrix(ctx context.Context, s *testing.State) {
 	uidetector := s.FixtValue().(fixture.CitrixNotepadFixtData).UIDetector
 	uc := s.FixtValue().(fixture.CitrixNotepadFixtData).UserContext
 	kb := s.FixtValue().(fixture.CitrixNotepadFixtData).Keyboard
