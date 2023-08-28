@@ -132,7 +132,7 @@ func SpeakOnMutePower(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot open browser: ", err)
 	}
 
-	r := power.NewRecorder(ctx, time.Second, s.OutDir(), s.TestName())
+	r := power.NewRecorder(ctx, 5*time.Second, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
