@@ -448,6 +448,58 @@ func collectPackagePerformanceCounters(ctx context.Context, interval time.Durati
 	return counters, nil
 }
 
+// MeasureI915IRQs measures the average amount of Intel i915 interrupts per
+// second seen during the test payload execution.
+func MeasureI915IRQs(ctx context.Context, t time.Duration, p *perf.Values) error {
+	const i915File = "/sys/devices/i915/events/interrupts"
+	if _, err := os.Stat(i915File); err != nil {
+		// Not an Intel GPU or i915 IRQ rate not supported, return nil with no error.
+		testing.ContextLog(ctx, "i915 IRQ rate collection not supported on this platform")
+		return nil
+	}
+	testing.ContextLog(ctx, "Measuring i915 IRQ rate for ", t)
+
+	// Run the command e.g. `perf stat -e i915/interrupts/ -- sleep 2`
+	cmd := testexec.CommandContext(ctx,
+		"/usr/bin/perf", "stat", "-e", "i915/interrupts/", "--", "sleep",
+		strconv.FormatInt(int64(t/time.Second), 10))
+	_, stderr, err := cmd.SeparatedOutput()
+	if err != nil {
+		return errors.Wrap(err, "error while measuring perf counters")
+	}
+	perfOutput := string(stderr)
+
+	// A sample multiple counter output perfOutput could be e.g.:
+	// Performance counter stats for 'system wide':
+	//              2251      i915/interrupts/
+	//
+	//      25.003069232 seconds time elapsed
+	regexps := make(map[string]*regexp.Regexp)
+	regexps["irqs"] = regexp.MustCompile(`([0-9]+)\s*i915/interrupts/`)
+	// Add and extra regexp for the overall time elapsed.
+	regexps["total"] = regexp.MustCompile("([0-9]+[.][0-9]+) seconds time elapsed")
+	counters := make(map[string]float64)
+
+	perfLines := strings.Split(perfOutput, "\n")
+	for _, line := range perfLines {
+		for name, r := range regexps {
+			submatch := r.FindStringSubmatch(line)
+			if submatch == nil {
+				continue
+			}
+			counters[name], err = strconv.ParseFloat(submatch[1], 64)
+			if err != nil {
+				return errors.Wrap(err, "error parsing perf output")
+			}
+		}
+	}
+	irqsPerSecond := counters["irqs"] / counters["total"]
+	testing.ContextLogf(ctx, "i915 IRQ rate: %f/s", irqsPerSecond)
+	reportMetric("irqs", "irqsPerSecond", irqsPerSecond, perf.SmallerIsBetter, p)
+
+	return nil
+}
+
 func reportMetric(name, unit string, value float64, direction perf.Direction, p *perf.Values) {
 	p.Set(perf.Metric{
 		Name:      name,

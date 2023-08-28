@@ -201,12 +201,16 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	}
 
 	var roughness float64
-	var gpuErr, cStateErr, cpuErr, fdErr, wakeupErr, dramErr, batErr, roughnessErr error
+	var gpuErr, i915IRQErr, cStateErr, cpuErr, fdErr, wakeupErr, dramErr, batErr, roughnessErr error
 	var wg sync.WaitGroup
-	wg.Add(7)
+	wg.Add(8)
 	go func() {
 		defer wg.Done()
 		gpuErr = graphics.MeasureGPUCounters(ctx, measurementDuration, p)
+	}()
+	go func() {
+		defer wg.Done()
+		i915IRQErr = graphics.MeasureI915IRQs(ctx, measurementDuration, p)
 	}()
 	go func() {
 		defer wg.Done()
@@ -255,6 +259,9 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	wg.Wait()
 	if gpuErr != nil {
 		return errors.Wrap(gpuErr, "failed to measure GPU counters")
+	}
+	if i915IRQErr != nil {
+		return errors.Wrap(i915IRQErr, "failed to measure i915 IRQs/s")
 	}
 	if cStateErr != nil {
 		return errors.Wrap(cStateErr, "failed to measure Package C-State residency")
