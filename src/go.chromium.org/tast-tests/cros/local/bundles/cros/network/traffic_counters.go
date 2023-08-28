@@ -172,11 +172,11 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	// provided.
 	getCounters := func(keys map[string]bool) map[string]*counters {
 		ctrs := make(map[string]*counters)
-		// Ensure the counters are flushed. There is some marginal delay in when the
-		// updated values are ready; and while 5 seconds is an arbitrary duration,
-		// it should be the case that this much time is more than enough.
-		// The alternative to sleeping here is polling and managing errors.
-		// This is much simpler to maintain and understand.
+		// GoBigSleepLint: Ensure the counters are flushed. There is some marginal
+		// delay in when the updated values are ready; and while 5 seconds is an
+		// arbitrary duration, it should be the case that this much time is more
+		// than enough. The alternative to sleeping here is polling and managing
+		// errors. This is much simpler to maintain and understand.
 		testing.Sleep(ctx, 5*time.Second)
 		resp, err := pc.GetTrafficCounters(ctx, []string{})
 		if err != nil {
