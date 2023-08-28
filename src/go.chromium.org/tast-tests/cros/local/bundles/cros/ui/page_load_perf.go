@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -34,6 +35,7 @@ func init() {
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10*time.Minute + cujrecorder.CooldownTimeout,
+		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
 			{
 				Val:     browser.TypeAsh,
@@ -93,6 +95,8 @@ func PageLoadPerf(ctx context.Context, s *testing.State) {
 		s.Log("Failed to add screenshot recorder: ", err)
 	}
 
+	perfettoCfgPath := s.DataPath(cujrecorder.SystemTraceConfigFile)
+
 	// Pick URLs that have already been cached by the TabSwitchCUJ WPR.
 	pages := []struct {
 		url    string
@@ -117,6 +121,21 @@ func PageLoadPerf(ctx context.Context, s *testing.State) {
 				)),
 				perfutil.StoreAll(perf.SmallerIsBetter, "ms", ""),
 			)
+
+			// Use the recorder to navigate to the page an additional time to
+			// capture a perfetto trace. Capture loading and blink trace
+			// data alongside the recorder default categories.
+			if err := recorder.StartTracingWithExtraCategories(ctx, s.OutDir(), page.prefix+".data.gz", perfettoCfgPath, "loading", "blink"); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+
+			if err := navigateToPage(ctx, conn, page.url, recorder)(ctx); err != nil {
+				return err
+			}
+
+			if err := recorder.StopTracing(ctx); err != nil {
+				return errors.Wrap(err, "failed to stop tracing")
+			}
 		}
 		return nil
 	}); err != nil {
@@ -131,6 +150,10 @@ func PageLoadPerf(ctx context.Context, s *testing.State) {
 
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to save the perf data: ", err)
+	}
+
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 }
 

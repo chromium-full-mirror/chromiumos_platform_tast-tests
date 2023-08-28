@@ -721,7 +721,7 @@ func (r *Recorder) Reset(ctx context.Context) error {
 //	}
 func (r *Recorder) StartTracing(ctx context.Context, outDir, perfettoCfgPath string) error {
 	// trace.data.gz is the default trace file name.
-	return r.StartTracingWithName(ctx, outDir, "trace.data.gz", perfettoCfgPath)
+	return r.StartTracingWithExtraCategories(ctx, outDir, "trace.data.gz", perfettoCfgPath)
 }
 
 // StartTracingWithName starts a new system tracing session with a custom trace file name.
@@ -737,6 +737,12 @@ func (r *Recorder) StartTracing(ctx context.Context, outDir, perfettoCfgPath str
 //		s.Fatal("Failed to save trace files: ", err)
 //	}
 func (r *Recorder) StartTracingWithName(ctx context.Context, outDir, traceName, perfettoCfgPath string) error {
+	return r.StartTracingWithExtraCategories(ctx, outDir, traceName, perfettoCfgPath)
+}
+
+// StartTracingWithExtraCategories is like StartTracingWithName, with
+// |extraCategories| added to the perfetto config.
+func (r *Recorder) StartTracingWithExtraCategories(ctx context.Context, outDir, traceName, perfettoCfgPath string, categories ...string) error {
 	tracePath := filepath.Join(outDir, traceName)
 	if _, exists := r.sessions[tracePath]; exists {
 		return errors.New("trace session for the given tracePath already exists")
@@ -747,8 +753,10 @@ func (r *Recorder) StartTracingWithName(ctx context.Context, outDir, traceName, 
 
 	// If cujrecorder.extraChromeCategoriesForTracing is not empty, add
 	// those categories to the perfetto config.
-	if extraChromeCategoriesForTracing.Value() != "" {
-		cleanup, configPath, err := addExtraChromeTraceCategories(ctx, perfettoCfgPath, extraChromeCategoriesForTracing.Value())
+	extraCategories := extraChromeCategoriesForTracing.Value() + strings.Join(categories, ",")
+	testing.ContextLog(ctx, "Adding the following extra categories to the perfetto trace config: ", extraCategories)
+	if extraCategories != "" {
+		cleanup, configPath, err := addExtraChromeTraceCategories(ctx, perfettoCfgPath, extraCategories)
 		if err != nil {
 			return err
 		}
