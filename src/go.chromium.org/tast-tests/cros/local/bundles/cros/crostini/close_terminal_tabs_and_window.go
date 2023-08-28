@@ -112,8 +112,8 @@ func CloseTerminalTabsAndWindow(ctx context.Context, s *testing.State) {
 	// 2. Press Ctrl+d.
 	// 3. Click "Shut down Linux" from context menu on shelf.
 	if err := uiauto.Combine("close all tabs",
-		terminalApp.ClickNthTabCloseButton(1),
-		terminalApp.WaitForTabsCount(3 /*nonTmuxTabs*/, 0 /*tmuxTabs*/),
+		ui.RetryUntil(terminalApp.ClickNthTabCloseButton(1),
+			terminalApp.WaitForTabsCount(3 /*nonTmuxTabs*/, 0 /*tmuxTabs*/)),
 		terminalApp.ClickNthTabUntilNodeExists(1, terminalapp.Prompt),
 		kb.AccelAction("Ctrl+d"),
 		terminalApp.WaitForTabsCount(2 /*nonTmuxTabs*/, 0 /*tmuxTabs*/),
