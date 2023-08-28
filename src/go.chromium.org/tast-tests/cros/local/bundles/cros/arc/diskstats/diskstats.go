@@ -160,6 +160,31 @@ func CollectDiskStats(ctx context.Context) (DiskStatMap, error) {
 	return result, nil
 }
 
+// Sub returns a diff DiskStatMap of m-statsToSub.
+func (m DiskStatMap) Sub(statsToSub DiskStatMap) (DiskStatMap, error) {
+	if len(m) != len(statsToSub) {
+		return nil, errors.Errorf("length of %v and %v do not match", m, statsToSub)
+	}
+
+	result := map[disk][]int{}
+	for d, fields := range m {
+		fieldsToSub, ok := statsToSub[d]
+		if !ok {
+			return nil, errors.Errorf("disk %s exists in %v but does not in %v", d, m, statsToSub)
+		}
+		if len(fields) != len(fieldsToSub) {
+			return nil, errors.Errorf("length of %v and %v do not match", fields, fieldsToSub)
+		}
+		var sub []int
+		for i, fieldToSub := range fieldsToSub {
+			sub = append(sub, fields[i]-fieldToSub)
+		}
+		result[d] = sub
+	}
+
+	return result, nil
+}
+
 // AppendPerfMetrics appends the disk stats calculated from the StatMap to perfValues.
 func (m DiskStatMap) AppendPerfMetrics(perfValues *perf.Values, suffix string) {
 	for d, stats := range m {
