@@ -1,0 +1,55 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package shimlessrma
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/shimlessrma/fixture"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         IwaExtensionConnection,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Check if IWA can send message to extension and get response",
+		Contacts: []string{
+			"chromeos-shimless-eng@google.com",
+		},
+		// ChromeOS > Platform > Enablement > Serviceability > Shimless RMA
+		BugComponent: "b:1002147",
+		Attr:         []string{"group:shimless_rma"},
+		Fixture:      fixture.InstallIWA,
+		SoftwareDeps: []string{"chrome"},
+		Timeout:      5 * time.Minute,
+	})
+}
+
+func IwaExtensionConnection(ctx context.Context, s *testing.State) {
+	// Note: If you modify the fixture/data/iwa or fixture/data/extension,
+	// you have to rebuild them by running build_iwa_ext.sh.
+	v := s.FixtValue().(*fixture.Value)
+	ui := uiauto.New(v.Tconn)
+
+	checkExtensionButton := nodewith.NameContaining("Check extension").Role(role.Button)
+	textAreaFinder := nodewith.HasClass("check-extension-textarea")
+	if err := uiauto.Combine("send request to extension",
+		ui.LeftClick(checkExtensionButton),
+		ui.WaitUntilExists(textAreaFinder),
+	)(ctx); err != nil {
+		s.Fatal("Failed to click the button: ", err)
+	}
+
+	if node, err := ui.Info(ctx, textAreaFinder); err != nil {
+		s.Fatal("Failed to get node info: ", err)
+	} else if node.Value != "\"Extension sample message\"" {
+		s.Fatal("Failed to get correct response from extension")
+	}
+}

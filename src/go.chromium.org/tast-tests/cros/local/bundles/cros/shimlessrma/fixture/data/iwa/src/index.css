@@ -1,0 +1,17 @@
+#content {
+  border:1px solid black;
+}
+#content > div {
+  height:100px;
+  box-sizing:border-box;
+  -moz-box-sizing:border-box;
+}
+#left {
+  float:left;
+  width: 50%;
+  border-right:1px solid black;
+}
+#right {
+  float:right;
+  width: 50%;
+}

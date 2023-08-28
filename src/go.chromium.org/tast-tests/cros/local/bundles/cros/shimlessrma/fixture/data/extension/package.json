@@ -1,0 +1,20 @@
+{
+  "name": "extension",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "prebuild": "rm -rf build/",
+    "build": "webpack",
+    "postbuild": "cp -R public/** build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "webpack": "^5.88.1",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "chrome-extensions-id": "^1.0.0"
+  }
+}

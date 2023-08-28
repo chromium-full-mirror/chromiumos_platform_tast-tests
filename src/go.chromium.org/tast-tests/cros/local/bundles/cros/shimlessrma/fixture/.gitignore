@@ -1,0 +1,6 @@
+data/extension/node_modules/
+data/extension/package-lock.json
+
+data/iwa/dist/app.js
+data/iwa/node_modules/
+data/iwa/package-lock.json

@@ -1,0 +1,24 @@
+{
+  "name": "Chrome OS Diagnostics Companion Extension",
+  "version": "1.9.0",
+  "description": "The companion extension for the ChromeOS Diagnostics App.",
+  "manifest_version": 3,
+  "chromeos_system_extension": {},
+  "icons": {},
+  "permissions": [
+    "os.telemetry",
+    "os.attached_device_info",
+    "os.diagnostics",
+    "os.events",
+    "os.telemetry.serial_number",
+    "os.telemetry.network_info"
+  ],
+  "background": {
+    "service_worker": "sw.js"
+  },
+  "externally_connectable": {
+    "matches": [
+      "isolated-app://dq3a4dcgjchwfaqrgxqrvvdbcdzrkmn4rgh6iwvyl7ouysgqykwqaaic/*"
+    ]
+  }
+}
