@@ -395,7 +395,7 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 	}
 
 	for _, stats := range diskStats {
-		stats.AppendPerfMetrics(perfValues)
+		stats.AppendPerfMetrics(perfValues, "")
 	}
 
 	// Outputs comma separated results to the log.

@@ -161,7 +161,7 @@ func CollectDiskStats(ctx context.Context) (DiskStatMap, error) {
 }
 
 // AppendPerfMetrics appends the disk stats calculated from the StatMap to perfValues.
-func (m DiskStatMap) AppendPerfMetrics(perfValues *perf.Values) {
+func (m DiskStatMap) AppendPerfMetrics(perfValues *perf.Values, suffix string) {
 	for d, stats := range m {
 		diskStat := newDiskStat(stats)
 		for op := opRead; op <= opDiscard; op++ {
@@ -169,34 +169,34 @@ func (m DiskStatMap) AppendPerfMetrics(perfValues *perf.Values) {
 				continue
 			}
 			perfValues.Append(perf.Metric{
-				Name:      fmt.Sprintf("%s_ios_%s", op, d),
+				Name:      fmt.Sprintf("%s_ios_%s%s", op, d, suffix),
 				Unit:      "count",
 				Direction: perf.SmallerIsBetter,
 				Multiple:  true,
 			}, float64(diskStat.ios[op]))
 			if op != opFlush { // Flush doesn't have size.
 				perfValues.Append(perf.Metric{
-					Name:      fmt.Sprintf("%s_size_%s", op, d),
+					Name:      fmt.Sprintf("%s_size_%s%s", op, d, suffix),
 					Unit:      "kilobytes",
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 				}, float64(diskStat.size[op]))
 			}
 			perfValues.Append(perf.Metric{
-				Name:      fmt.Sprintf("%s_ticks_%s", op, d),
+				Name:      fmt.Sprintf("%s_ticks_%s%s", op, d, suffix),
 				Unit:      "milliseconds",
 				Direction: perf.SmallerIsBetter,
 				Multiple:  true,
 			}, float64(diskStat.ticks[op].Milliseconds()))
 		}
 		perfValues.Append(perf.Metric{
-			Name:      fmt.Sprintf("total_wait_%s", d),
+			Name:      fmt.Sprintf("total_wait_%s%s", d, suffix),
 			Unit:      "milliseconds",
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
 		}, float64(diskStat.totalWait.Milliseconds()))
 		perfValues.Append(perf.Metric{
-			Name:      fmt.Sprintf("disk_active_%s", d),
+			Name:      fmt.Sprintf("disk_active_%s%s", d, suffix),
 			Unit:      "milliseconds",
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,

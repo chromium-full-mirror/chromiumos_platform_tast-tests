@@ -105,7 +105,7 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 		if bootMetrics.appKills != nil {
 			bootMetrics.appKills.AppendPerfMetrics(perfValues, "")
 		}
-		bootMetrics.diskStats.AppendPerfMetrics(perfValues)
+		bootMetrics.diskStats.AppendPerfMetrics(perfValues, "")
 	}
 
 	if err := perfValues.Save(s.OutDir()); err != nil {
