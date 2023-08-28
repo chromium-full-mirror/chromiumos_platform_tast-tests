@@ -7,9 +7,11 @@ package chrome
 import (
 	"context"
 	"path/filepath"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
+	"go.chromium.org/tast-tests/cros/local/screenshot/cliscreenshot"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -482,6 +484,8 @@ func (f *loggedInFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	opts = append(opts, crOpts...)
 
+	defer screenshotOnError(ctx, s.HasError)
+
 	cr, err := New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
@@ -527,5 +531,29 @@ func (f *loggedInFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 			s.Log("Failed to store per-test log data: ", err)
 		}
 		f.logMarker = nil
+	}
+}
+
+func screenshotOnError(ctx context.Context, hasError func() bool) {
+	if !hasError() {
+		return
+	}
+
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok || dir == "" {
+		testing.ContextLog(ctx, "Output directory is unavailable")
+		return
+	}
+
+	path := filepath.Join(dir, "fixture_failure.png")
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Ensure that we can try multiple times even if the call gets stuck.
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		return cliscreenshot.Capture(ctx, path)
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: time.Second}); err != nil {
+		testing.ContextLog(ctx, "Failed to take a screenshot: ", err)
 	}
 }

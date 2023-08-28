@@ -17,32 +17,24 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/action"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/coords"
+	"go.chromium.org/tast-tests/cros/local/screenshot/cliscreenshot"
 	"go.chromium.org/tast/core/errors"
 )
 
 // Capture takes a screenshot and saves it as a PNG image to the specified file
 // path. It will use the CLI screenshot command to perform the screen capture.
 func Capture(ctx context.Context, path string) error {
-	cmd := testexec.CommandContext(ctx, "screenshot", path)
-	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
-		return errors.Errorf("failed running %q", strings.Join(cmd.Args, " "))
-	}
-	return nil
+	return cliscreenshot.Capture(ctx, path)
 }
 
 // CaptureWithStderr differs from Capture in that it returns the stderr when
 // capturing a screenshot fails. This is useful for verification on whether turning display
 // on/off is successful by matching with the message, "CRTC not found. Is the screen on?".
 func CaptureWithStderr(ctx context.Context, path string) error {
-	_, stderr, err := testexec.CommandContext(ctx, "screenshot", path).SeparatedOutput()
-	if err != nil {
-		return errors.Wrapf(err, "failed running %q", stderr)
-	}
-	return nil
+	return cliscreenshot.CaptureWithStderr(ctx, path)
 }
 
 // CaptureChrome takes a screenshot of the primary display and saves it as a PNG
