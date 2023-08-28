@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/clipboard"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/dragdrop"
@@ -36,6 +37,11 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+type mixedBrowsersParams struct {
+	Source      dragdrop.AppName
+	Destination dragdrop.AppName
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DataLeakPreventionRulesListClipboardMixedTypeBrowsers,
@@ -47,16 +53,31 @@ func init() {
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome", "lacros"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:hw_agnostic"},
 		Data:         []string{"text_1.html", "editable_text_box.html"},
-		Fixture:      "lacrosPolicyLoggedIn",
+		Fixture:      fixture.LacrosPolicyLoggedIn,
 		Timeout:      3 * time.Minute,
+		Params: []testing.Param{{
+			Name:      "blocked_ash_to_lacros",
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			Val: mixedBrowsersParams{
+				Source:      dragdrop.FileManager,
+				Destination: dragdrop.Chrome,
+			},
+		}, {
+			Name:      "blocked_lacros_to_ash",
+			ExtraAttr: []string{"group:golden_tier"},
+			Val: mixedBrowsersParams{
+				Source:      dragdrop.Chrome,
+				Destination: dragdrop.Settings,
+			},
+		}},
 	})
 }
 
 func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+	params := s.Param().(mixedBrowsersParams)
 
 	srcServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer srcServer.Close()
@@ -80,252 +101,193 @@ func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, 
 	}
 	defer keyboard.Close(ctx)
 
-	for _, param := range []struct {
-		name              string
-		copyAllowed       bool
-		src               dragdrop.AppName
-		dst               dragdrop.AppName
-		expectBlockBubble bool
-	}{
-		{
-			name:              "blockedAshToLacros",
-			copyAllowed:       false,
-			src:               dragdrop.FileManager,
-			dst:               dragdrop.Chrome,
-			expectBlockBubble: true,
-		},
-		{
-			name:              "blockedLacrosToAsh",
-			copyAllowed:       false,
-			src:               dragdrop.Chrome,
-			dst:               "os-settings",
-			expectBlockBubble: true,
-		},
-		{
-			name:              "blockedLacrosToAshNoNotification",
-			copyAllowed:       false,
-			src:               dragdrop.Chrome,
-			dst:               dragdrop.FileManager,
-			expectBlockBubble: false,
-		},
-		{
-			name:              "allowedAshToLacros",
-			copyAllowed:       true,
-			src:               dragdrop.FileManager,
-			dst:               dragdrop.Chrome,
-			expectBlockBubble: true,
-		},
-		{
-			name:              "allowedLacrosToAsh",
-			copyAllowed:       true,
-			src:               dragdrop.Chrome,
-			dst:               "os-settings",
-			expectBlockBubble: true,
-		},
-	} {
-		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
-			dstMatch := dstServer.URL
-			if param.dst != dragdrop.Chrome {
-				dstMatch = param.dst.String()
-			}
+	dstMatch := dstServer.URL
+	if params.Destination != dragdrop.Chrome {
+		dstMatch = params.Destination.String()
+	}
 
-			srcMatch := srcServer.URL
-			if param.src != dragdrop.Chrome {
-				srcMatch = param.src.String()
-			}
+	srcMatch := srcServer.URL
+	if params.Source != dragdrop.Chrome {
+		srcMatch = params.Source.String()
+	}
 
-			// Reserve time for cleanup.
-			cleanupCtx := ctx
-			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-			defer cancel()
+	// Reserve time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
-			// Perform cleanup.
-			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
-				s.Fatal("Failed to clean up: ", err)
-			}
+	// Perform cleanup.
+	if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
+		s.Fatal("Failed to clean up: ", err)
+	}
 
-			if param.copyAllowed {
-				dstMatch = dstMatch + "/not_match"
-			}
+	if err := policyutil.ServeAndVerify(ctx, fdms, cr, policy.PopulateDLPPolicyForClipboard(srcMatch, dstMatch)); err != nil {
+		s.Fatal("Failed to serve and verify the DLP policy: ", err)
+	}
 
-			if err := policyutil.ServeAndVerify(ctx, fdms, cr, policy.PopulateDLPPolicyForClipboard(srcMatch, dstMatch)); err != nil {
-				s.Fatal("Failed to serve and verify the DLP policy: ", err)
-			}
+	if params.Source == dragdrop.Chrome {
+		parsedSrcURL, err := url.Parse(srcServer.URL)
+		if err != nil {
+			s.Fatalf("Could not parse the source url %s: %v", srcServer.URL, err)
+		}
+		srcMatch = parsedSrcURL.Hostname()
+	}
 
-			if param.src == dragdrop.Chrome {
-				parsedSrcURL, err := url.Parse(srcServer.URL)
-				if err != nil {
-					s.Fatalf("Could not parse the source url %s: %v", srcServer.URL, err)
-				}
-				srcMatch = parsedSrcURL.Hostname()
-			}
+	s.Log("Waiting for chrome.clipboard API to become available")
+	if err := tconn.WaitForExpr(ctx, "chrome.clipboard"); err != nil {
+		s.Fatal("Failed to wait for chrome.clipboard API to become available: ", err)
+	}
 
-			s.Log("Waiting for chrome.clipboard API to become available")
-			if err := tconn.WaitForExpr(ctx, "chrome.clipboard"); err != nil {
-				s.Fatal("Failed to wait for chrome.clipboard API to become available: ", err)
-			}
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
-			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
+	var dstWin *ash.Window
+	var srcWin *ash.Window
+	var filesApp *filesapp.FilesApp
+	var settingsApp *ossettings.OSSettings
 
-			var dstWin *ash.Window
-			var srcWin *ash.Window
-			var filesApp *filesapp.FilesApp
-			var settingsApp *ossettings.OSSettings
-
-			// Start ash app.
-			launchAppSetWin := func(appName dragdrop.AppName, isSrc bool) {
-				switch appName {
-				case dragdrop.FileManager:
-					filesApp, err = filesapp.Launch(ctx, tconn)
-					if err != nil {
-						s.Fatal("Failed to open Files app: ", err)
-					}
-				case dragdrop.Settings:
-					settingsApp, err = ossettings.Launch(ctx, tconn)
-					if err != nil {
-						s.Fatal("Failed to open settings app: ", err)
-					}
-				}
-				activeWin, err := ash.GetActiveWindow(ctx, tconn)
-				if err != nil {
-					s.Fatalf("Failed to get active Window for %s: %v", appName, err)
-				}
-				if isSrc {
-					srcWin = activeWin
-				} else {
-					dstWin = activeWin
-				}
-			}
-
-			if param.src == dragdrop.FileManager || param.dst == dragdrop.FileManager {
-				launchAppSetWin(dragdrop.FileManager, param.src == dragdrop.FileManager)
-				defer filesApp.Close(cleanupCtx)
-			}
-
-			if param.src == dragdrop.Settings || param.dst == dragdrop.Settings {
-				launchAppSetWin(dragdrop.Settings, param.src == dragdrop.Settings)
-				defer settingsApp.Close(cleanupCtx)
-			}
-
-			// Start browser.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeLacros)
+	// Start ash app.
+	launchAppSetWin := func(appName dragdrop.AppName, isSrc bool) {
+		switch appName {
+		case dragdrop.FileManager:
+			filesApp, err = filesapp.Launch(ctx, tconn)
 			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
+				s.Fatal("Failed to open Files app: ", err)
 			}
-			defer func(ctx context.Context) {
-				if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
-					// The Lacros browser is not closed in other places in the test.
-					s.Error("The Lacros browser probably crashed: ", err)
-				}
-			}(cleanupCtx)
-
-			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_after_browser_open_"+param.name)
-
-			if param.src == dragdrop.Chrome {
-				srcWin, err = ash.GetActiveWindow(ctx, tconn)
-				if err != nil {
-					s.Fatal("Failed to set source window to lacros: ", err)
-				}
-			}
-			if param.dst == dragdrop.Chrome {
-				dstWin, err = ash.GetActiveWindow(ctx, tconn)
-				if err != nil {
-					s.Fatal("Failed to set destination window to lacros: ", err)
-				}
-			}
-			ui := uiauto.New(tconn)
-
-			// Setup source app.
-
-			if err := srcWin.ActivateWindow(ctx, tconn); err != nil {
-				s.Fatal("Cannot activate source window: ", err)
-			}
-			if param.src == dragdrop.Chrome {
-				conn, err := br.NewConn(ctx, srcURL)
-				if err != nil {
-					s.Fatalf("Failed to open page %q: %v", srcURL, err)
-				}
-				defer conn.Close()
-
-				if err := webutil.WaitForQuiescence(ctx, conn, 10*time.Second); err != nil {
-					s.Fatalf("Failed to wait for %q to achieve quiescence: %v", srcURL, err)
-				}
-
-				if err := uiauto.Combine("copy all text from source website",
-					keyboard.AccelAction("Ctrl+A"),
-					keyboard.AccelAction("Ctrl+C"))(ctx); err != nil {
-					s.Fatal("Failed to copy text from source browser: ", err)
-				}
-
-			} else {
-				if err := uiauto.Combine("Type text into search field and cut it",
-					keyboard.AccelAction("Ctrl+F"),
-					keyboard.TypeAction("Text to copy"),
-					keyboard.AccelAction("Ctrl+A"),
-					keyboard.AccelAction("Ctrl+X"))(ctx); err != nil {
-					s.Fatal("Failed to type and copy text: ", err)
-				}
-			}
-
-			copiedString, err := clipboard.GetClipboardContent(ctx, tconn)
+		case dragdrop.Settings:
+			settingsApp, err = ossettings.Launch(ctx, tconn)
 			if err != nil {
-				s.Fatal("Failed to get clipboard content: ", err)
+				s.Fatal("Failed to open settings app: ", err)
 			}
+		}
+		activeWin, err := ash.GetActiveWindow(ctx, tconn)
+		if err != nil {
+			s.Fatalf("Failed to get active Window for %s: %v", appName, err)
+		}
+		if isSrc {
+			srcWin = activeWin
+		} else {
+			dstWin = activeWin
+		}
+	}
 
-			// Setup destination app.
+	if params.Source == dragdrop.FileManager || params.Destination == dragdrop.FileManager {
+		launchAppSetWin(dragdrop.FileManager, params.Source == dragdrop.FileManager)
+		defer filesApp.Close(cleanupCtx)
+	}
 
-			if err := dstWin.ActivateWindow(ctx, tconn); err != nil {
-				s.Fatal("Cannot activate destination window: ", err)
-			}
-			if param.dst == dragdrop.Chrome {
-				dstConn, err := br.NewConn(ctx, dstURL)
-				if err != nil {
-					s.Fatalf("Failed to open page %q: %v", dstURL, err)
-				}
-				defer dstConn.Close()
+	if params.Source == dragdrop.Settings || params.Destination == dragdrop.Settings {
+		launchAppSetWin(dragdrop.Settings, params.Source == dragdrop.Settings)
+		defer settingsApp.Close(cleanupCtx)
+	}
 
-				if err := webutil.WaitForQuiescence(ctx, dstConn, 10*time.Second); err != nil {
-					s.Fatalf("Failed to wait for %q to achieve quiescence: %v", dstURL, err)
-				}
+	// Start browser.
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeLacros)
+	if err != nil {
+		s.Fatal("Failed to open the browser: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
+			// The Lacros browser is not closed in other places in the test.
+			s.Error("The Lacros browser probably crashed: ", err)
+		}
+	}(cleanupCtx)
 
-				textBoxNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).First()
-				if err := uiauto.Combine("pasting into text box",
-					ui.WaitUntilExists(textBoxNode.Visible()),
-					ui.LeftClick(textBoxNode),
-					ui.WaitUntilExists(textBoxNode.Focused()),
-					keyboard.AccelAction("Ctrl+V"),
-				)(ctx); err != nil {
-					s.Fatal("Failed to paste into text box: ", err)
-				}
-			} else {
-				if err := uiauto.Combine("Paste text into search",
-					keyboard.AccelAction("Ctrl+F"),
-					keyboard.AccelAction("Ctrl+V"))(ctx); err != nil {
-					s.Fatal("Failed paste text: ", err)
-				}
-			}
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_after_browser_open_error")
 
-			notifError := clipboard.CheckClipboardBubble(ctx, ui, srcMatch)
+	if params.Source == dragdrop.Chrome {
+		srcWin, err = ash.GetActiveWindow(ctx, tconn)
+		if err != nil {
+			s.Fatal("Failed to set source window to lacros: ", err)
+		}
+	}
+	if params.Destination == dragdrop.Chrome {
+		dstWin, err = ash.GetActiveWindow(ctx, tconn)
+		if err != nil {
+			s.Fatal("Failed to set destination window to lacros: ", err)
+		}
+	}
+	ui := uiauto.New(tconn)
 
-			if !param.copyAllowed && param.expectBlockBubble && notifError != nil {
-				s.Error("Expected notification but found an error: ", notifError)
-			}
+	// Setup source app.
 
-			if (param.copyAllowed || !param.expectBlockBubble) && notifError == nil {
-				s.Error("Didn't expect notification but one was found")
-			}
+	if err := srcWin.ActivateWindow(ctx, tconn); err != nil {
+		s.Fatal("Cannot activate source window: ", err)
+	}
+	if params.Source == dragdrop.Chrome {
+		conn, err := br.NewConn(ctx, srcURL)
+		if err != nil {
+			s.Fatalf("Failed to open page %q: %v", srcURL, err)
+		}
+		defer conn.Close()
 
-			// Check pasted content.
-			pastedError := clipboard.CheckPastedContent(ctx, ui, copiedString)
+		if err := webutil.WaitForQuiescence(ctx, conn, 10*time.Second); err != nil {
+			s.Fatalf("Failed to wait for %q to achieve quiescence: %v", srcURL, err)
+		}
 
-			if param.copyAllowed && pastedError != nil {
-				s.Error("Checked pasted content but found an error: ", pastedError)
-			}
+		if err := uiauto.Combine("copy all text from source website",
+			keyboard.AccelAction("Ctrl+A"),
+			keyboard.AccelAction("Ctrl+C"))(ctx); err != nil {
+			s.Fatal("Failed to copy text from source browser: ", err)
+		}
 
-			if !param.copyAllowed && pastedError == nil {
-				s.Error("Content was pasted but should have been blocked")
-			}
-		})
+	} else {
+		if err := uiauto.Combine("Type text into search field and cut it",
+			keyboard.AccelAction("Ctrl+F"),
+			keyboard.TypeAction("Text to copy"),
+			keyboard.AccelAction("Ctrl+A"),
+			keyboard.AccelAction("Ctrl+X"))(ctx); err != nil {
+			s.Fatal("Failed to type and copy text: ", err)
+		}
+	}
+
+	copiedString, err := clipboard.GetClipboardContent(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get clipboard content: ", err)
+	}
+
+	// Setup destination app.
+
+	if err := dstWin.ActivateWindow(ctx, tconn); err != nil {
+		s.Fatal("Cannot activate destination window: ", err)
+	}
+	if params.Destination == dragdrop.Chrome {
+		dstConn, err := br.NewConn(ctx, dstURL)
+		if err != nil {
+			s.Fatalf("Failed to open page %q: %v", dstURL, err)
+		}
+		defer dstConn.Close()
+
+		if err := webutil.WaitForQuiescence(ctx, dstConn, 10*time.Second); err != nil {
+			s.Fatalf("Failed to wait for %q to achieve quiescence: %v", dstURL, err)
+		}
+
+		textBoxNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).First()
+		if err := uiauto.Combine("pasting into text box",
+			ui.WaitUntilExists(textBoxNode.Visible()),
+			ui.LeftClick(textBoxNode),
+			ui.WaitUntilExists(textBoxNode.Focused()),
+			keyboard.AccelAction("Ctrl+V"),
+		)(ctx); err != nil {
+			s.Fatal("Failed to paste into text box: ", err)
+		}
+	} else {
+		if err := uiauto.Combine("Paste text into search",
+			keyboard.AccelAction("Ctrl+F"),
+			keyboard.AccelAction("Ctrl+V"))(ctx); err != nil {
+			s.Fatal("Failed paste text: ", err)
+		}
+	}
+
+	notifError := clipboard.CheckClipboardBubble(ctx, ui, srcMatch)
+
+	if notifError != nil {
+		s.Error("Expected notification but found an error: ", notifError)
+	}
+
+	// Check pasted content.
+	pastedError := clipboard.CheckPastedContent(ctx, ui, copiedString)
+	if pastedError == nil {
+		s.Error("Content was pasted but should have been blocked")
 	}
 }
 
