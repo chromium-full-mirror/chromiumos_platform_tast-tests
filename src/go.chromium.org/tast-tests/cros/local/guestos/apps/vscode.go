@@ -11,8 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -200,6 +202,36 @@ func TestCreateFileWithVSCode(ctx context.Context, cfg VSCodeConfig, terminalApp
 	// Check the content of the test file.
 	if err := guest.CheckFileContent(ctx, VSCodeTestFile, testString); err != nil {
 		return errors.Wrap(err, "failed to verify the content of the file")
+	}
+
+	return nil
+}
+
+func OpenVscodeFromFileManager(ctx context.Context, cfg VSCodeConfig, filesApp *filesapp.FilesApp, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, guest vm.Guest, dirName string) error {
+	const tmpFilename = "testfile.txt"
+
+	// Create a file in guest.
+	if err := guest.Command(ctx, "touch", tmpFilename).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to create a file in the guest")
+	}
+
+	// Right click and launch vscode through context menu.
+	ui := uiauto.New(tconn)
+	uda := uidetection.NewDefault(tconn)
+
+	// Open tmp file with vscode.
+	if err := uiauto.Combine("open tmp file with vscode via files app",
+		filesApp.OpenDir(dirName, filesapp.FilesTitlePrefix+dirName),
+		filesApp.ClickContextMenuItemRegex(tmpFilename, filesapp.OpenWith, cfg.AppName),
+		// Wait until the window is stable.
+		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(cfg.WindowFinder).First()),
+		// Left click the app window to focus.
+		ui.LeftClick(cfg.WindowFinder),
+		// Press ctrl+Q to exit window.
+		keyboard.AccelAction("ctrl+Q"),
+		ui.WaitUntilGone(cfg.WindowFinder),
+	)(ctx); err != nil {
+		return err
 	}
 
 	return nil

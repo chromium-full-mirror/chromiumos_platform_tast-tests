@@ -8,14 +8,11 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/guestos/apps"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
-	"go.chromium.org/tast-tests/cros/local/uidetection"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -92,10 +89,6 @@ func init() {
 	})
 }
 func AppVscodeFromFileManager(ctx context.Context, s *testing.State) {
-	const (
-		tmpFilename = "testfile.txt"
-	)
-
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
@@ -105,36 +98,17 @@ func AppVscodeFromFileManager(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
+	s.AttachErrorHandlers(handler, handler)
+
 	// Open Files app.
 	filesApp, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to open Files app: ", err)
 	}
 	defer filesApp.Close(cleanupCtx)
-	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
-	s.AttachErrorHandlers(handler, handler)
 
-	// Create a file in container.
-	if err := cont.Command(ctx, "touch", tmpFilename).Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to create a file in the container: ", err)
-	}
-
-	// Right click and launch vscode through context menu
-	ui := uiauto.New(tconn)
-	uda := uidetection.NewDefault(tconn)
-
-	// Open tmp file with vscode.
-	if err := uiauto.Combine("open tmp file with vscode via files app",
-		filesApp.OpenLinuxFiles(),
-		filesApp.ClickContextMenuItemRegex(tmpFilename, filesapp.OpenWith, apps.VSCode.AppName),
-		// Wait until the window is stable.
-		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(apps.VSCode.WindowFinder).First()),
-		// Left click the app window to focus.
-		ui.LeftClick(apps.VSCode.WindowFinder),
-		// Press ctrl+Q to exit window.
-		keyboard.AccelAction("ctrl+Q"),
-		ui.WaitUntilGone(apps.VSCode.WindowFinder),
-	)(ctx); err != nil {
-		s.Fatal("Failed to open and close tmp file in the vscode: ", err)
+	if err := apps.OpenVscodeFromFileManager(ctx, apps.VSCode, filesApp, keyboard, tconn, cont, filesapp.Linuxfiles); err != nil {
+		s.Fatal("Failed to open file: ", err)
 	}
 }
