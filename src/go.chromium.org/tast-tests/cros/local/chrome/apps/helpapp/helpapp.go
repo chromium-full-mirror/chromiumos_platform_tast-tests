@@ -55,6 +55,9 @@ var (
 
 var searchInputFinder = nodewith.Name("Search").Role(role.TextField).Ancestor(RootFinder)
 
+// BaseURL is the default URL of the Help app. Also refers to the "Home" tab.
+const BaseURL = "chrome://help-app/"
+
 // WaitForApp waits for the app to be shown and rendered.
 // It can be slow when the app is auto-launched after OOBE.
 func (hc *HelpContext) WaitForApp() uiauto.Action {
@@ -116,7 +119,7 @@ func (hc *HelpContext) UIConn(ctx context.Context) (*chrome.Conn, error) {
 // It has more privileges to access browser functions same as other SWAs.
 // The caller should close the returned connection. e.g. defer trustedConn.Close().
 func (hc *HelpContext) TrustedUIConn(ctx context.Context) (*chrome.Conn, error) {
-	return hc.helpConn(ctx, "chrome://help-app/")
+	return hc.helpConn(ctx, BaseURL)
 }
 
 func (hc *HelpContext) helpConn(ctx context.Context, urlPrefix string) (*chrome.Conn, error) {
@@ -198,4 +201,15 @@ func (hc *HelpContext) NavigateToSearchPage() uiauto.Action {
 // ClickSearchInputAndWaitForActive clicks search input field and waits for active.
 func (hc *HelpContext) ClickSearchInputAndWaitForActive() uiauto.Action {
 	return hc.ui.LeftClickUntil(searchInputFinder, hc.ui.WaitUntilExists(searchInputFinder.Focused()))
+}
+
+// HasURL checks that the Help app has the supplied URL.
+func (hc *HelpContext) HasURL(url string) uiauto.Action {
+	return func(ctx context.Context) error {
+		matcher := chrome.MatchTargetURL(url)
+		if exists, err := hc.cr.IsTargetAvailable(ctx, matcher); !exists || err != nil {
+			return errors.Wrapf(err, "failed to find help app with URL %s", url)
+		}
+		return nil
+	}
 }

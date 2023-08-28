@@ -122,12 +122,13 @@ func checkUpdate(settings *ossettings.OSSettings) uiauto.Action {
 }
 
 func checkHelpApp(resource *chromeOSPageInfo) uiauto.Action {
-	helpApp := helpapp.NewContext(resource.cr, resource.tconn)
+	helpAppCtx := helpapp.NewContext(resource.cr, resource.tconn)
 
 	return uiauto.Combine("Open and close help app",
 		resource.settings.LaunchHelpApp(),
-		helpApp.WaitForApp(),
-		helpApp.Close(),
+		helpAppCtx.WaitForApp(),
+		helpAppCtx.HasURL(helpapp.BaseURL),
+		helpAppCtx.Close(),
 		resource.ui.WaitUntilGone(helpapp.RootFinder),
 	)
 }
