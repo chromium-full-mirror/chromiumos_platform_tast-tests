@@ -145,14 +145,8 @@ func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected 
 		return errors.Wrap(err, "verify connection of USB audio")
 	}
 
-	if isConnected {
-		if err := FindInterface(ctx, dut, dockingEth); err != nil {
-			return errors.Wrap(err, "find docking station Ethernet")
-		}
-	} else {
-		if err := FindInterface(ctx, dut, dockingEth); err == nil {
-			return errors.New("expect the ethernet interface in the dock is not connected; however it is still found")
-		}
+	if err := VerifyNetworkState(testingCtx, dut, dockingEth, isConnected); err == nil {
+		return errors.Wrap(err, "verify connection of dock ethernet")
 	}
 
 	if err := VerifyTypeADevicesCount(testingCtx, dut, expectUSBTypeADeviceNum); err != nil {
