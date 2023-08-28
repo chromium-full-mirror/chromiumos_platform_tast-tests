@@ -56,17 +56,18 @@ func init() {
 		},
 		Data: []string{"manifest.json", "background.js", "content.js", "text_1.html", "text_2.html", "editable_text_box.html"},
 		Params: []testing.Param{{
-			Name:      "ash",
+			Name:      "ash_blocked",
 			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
 			Val:       browser.TypeAsh,
 		}, {
-			Name:              "lacros",
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			Name:              "lacros_blocked",
+			ExtraAttr:         []string{"group:golden_tier"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               browser.TypeLacros,
 		}},
 	})
 }
+
 func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.State) {
 	fakeDMS := s.FixtValue().(*fakedms.FakeDMS)
 	bt := s.Param().(browser.Type)
@@ -112,20 +113,17 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 	defer closeBrowser(ctx)
 
 	bgURL := chrome.ExtensionBackgroundPageURL(extID)
-	conn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
+	targetConn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
 	if err != nil {
 		s.Fatalf("Failed to connect to background page at %v: %v", bgURL, err)
 	}
-	defer conn.Close()
+	defer targetConn.Close()
 
 	// Connect to Test API.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
-
-	allowedServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer allowedServer.Close()
 
 	blockedServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer blockedServer.Close()
@@ -157,103 +155,78 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 	displayWidth := int(info.Bounds.Width)
 	displayHeight := int(info.Bounds.Height)
 
-	// Check extension access with restricted and non-restricted site.
+	// Check extension access with a restricted site.
 	// See RestrictiveDLPPolicyForClipboard function in policy package for more details.
-	for _, param := range []struct {
-		name          string
-		sourceURL     string
-		accessAllowed bool
-	}{
-		{
-			name:          "accessAllowed",
-			sourceURL:     allowedServer.URL + "/text_2.html",
-			accessAllowed: true,
-		},
-		{
-			name:          "accessDenied",
-			sourceURL:     blockedServer.URL + "/text_1.html",
-			accessAllowed: false,
-		},
-	} {
-		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
-			conn, err := br.NewConn(ctx, param.sourceURL)
-			if err != nil {
-				s.Fatalf("Failed to open page %q: %v", param.sourceURL, err)
-			}
-			defer conn.Close()
+	sourceURL := blockedServer.URL + "/text_1.html"
+	sourceConn, err := br.NewConn(ctx, sourceURL)
+	if err != nil {
+		s.Fatalf("Failed to open page %q: %v", sourceURL, err)
+	}
+	defer sourceConn.Close()
 
-			if err := webutil.WaitForQuiescence(ctx, conn, 10*time.Second); err != nil {
-				s.Fatalf("Failed to wait for %q to be loaded and achieve quiescence: %s", param.sourceURL, err)
-			}
+	if err := webutil.WaitForQuiescence(ctx, sourceConn, 10*time.Second); err != nil {
+		s.Fatalf("Failed to wait for %q to be loaded and achieve quiescence: %s", sourceURL, err)
+	}
 
-			ui := uiauto.New(tconn)
-			if err := uiauto.Combine("copy all text from source website",
-				keyboard.AccelAction("Ctrl+A"),
-				keyboard.AccelAction("Ctrl+C"))(ctx); err != nil {
-				s.Fatal("Failed to copy text from source browser: ", err)
-			}
+	ui := uiauto.New(tconn)
+	if err := uiauto.Combine("copy all text from source website",
+		keyboard.AccelAction("Ctrl+A"),
+		keyboard.AccelAction("Ctrl+C"))(ctx); err != nil {
+		s.Fatal("Failed to copy text from source browser: ", err)
+	}
 
-			destURL := destServer.URL + "/editable_text_box.html"
-			destConn, err := br.NewConn(ctx, destURL)
-			if err != nil {
-				s.Fatal("Failed to open page: ", err)
-			}
-			defer destConn.Close()
+	destURL := destServer.URL + "/editable_text_box.html"
+	destConn, err := br.NewConn(ctx, destURL)
+	if err != nil {
+		s.Fatal("Failed to open page: ", err)
+	}
+	defer destConn.Close()
 
-			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
-			if err := webutil.WaitForQuiescence(ctx, destConn, 10*time.Second); err != nil {
-				s.Fatalf("Failed to wait for %q to achieve quiescence: %v", destURL, err)
-			}
+	if err := webutil.WaitForQuiescence(ctx, destConn, 10*time.Second); err != nil {
+		s.Fatalf("Failed to wait for %q to achieve quiescence: %v", destURL, err)
+	}
 
-			if err := uiauto.Combine("Select tab and press Ctrl+Z",
-				// Select tab for the extension.
-				ui.MouseClickAtLocation(0, coords.Point{X: displayWidth / 2, Y: displayHeight / 2}),
-				// A custom command to which DLP extension listens and then reads clipboard data.
-				keyboard.AccelAction("Ctrl+Z"))(ctx); err != nil {
-				s.Fatal("Failed to select tab and press Ctrl+Z: ", err)
-			}
+	if err := uiauto.Combine("Select tab and press Ctrl+Z",
+		// Select tab for the extension.
+		ui.MouseClickAtLocation(0, coords.Point{X: displayWidth / 2, Y: displayHeight / 2}),
+		// A custom command to which DLP extension listens and then reads clipboard data.
+		keyboard.AccelAction("Ctrl+Z"))(ctx); err != nil {
+		s.Fatal("Failed to select tab and press Ctrl+Z: ", err)
+	}
 
-			expectedTitle := "Extension Restricted"
-			if param.accessAllowed {
-				expectedTitle = "Extension Access"
-			}
-			var actualTitle string
+	expectedTitle := "Extension Restricted"
+	var actualTitle string
 
-			// This can be too fast, so poll till the extension updates the webpage title.
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				if err := destConn.Eval(ctx, "document.title", &actualTitle); err != nil {
-					return errors.Wrap(err, "failed to get the webpage title")
-				}
+	// This can be too fast, so poll till the extension updates the webpage title.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := destConn.Eval(ctx, "document.title", &actualTitle); err != nil {
+			return errors.Wrap(err, "failed to get the webpage title")
+		}
 
-				if expectedTitle != actualTitle {
-					return errors.New("Page title not as expected")
-				}
+		if expectedTitle != actualTitle {
+			return errors.New("Page title not as expected")
+		}
 
-				return nil
-			}, &testing.PollOptions{
-				Timeout:  5 * time.Second,
-				Interval: 1 * time.Second,
-			}); err != nil {
-				s.Fatalf("Found page title %s, expected %s: %s", actualTitle, expectedTitle, err)
-			}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  5 * time.Second,
+		Interval: 1 * time.Second,
+	}); err != nil {
+		s.Fatalf("Found page title %s, expected %s: %s", actualTitle, expectedTitle, err)
+	}
 
-			parsedSourceURL, err := url.Parse(blockedServer.URL)
-			if err != nil {
-				s.Fatalf("Failed to parse blocked server URL %s: %s", blockedServer.URL, err)
-			}
+	parsedSourceURL, err := url.Parse(blockedServer.URL)
+	if err != nil {
+		s.Fatalf("Failed to parse blocked server URL %s: %s", blockedServer.URL, err)
+	}
 
-			err = clipboard.CheckClipboardBubble(ctx, ui, parsedSourceURL.Hostname())
-			// Clipboard DLP bubble is not expected when access allowed.
-			if err == nil && param.accessAllowed {
-				s.Error("Notification found, expected none")
-			}
+	err = clipboard.CheckClipboardBubble(ctx, ui, parsedSourceURL.Hostname())
 
-			// Clipboard DLP bubble is expected when access not allowed.
-			if err != nil && !param.accessAllowed {
-				s.Error("Notification not found, expected DLP clipboard notification")
-			}
-		})
+	// Clipboard DLP bubble is expected when access not allowed.
+	if err != nil {
+		s.Error("Notification not found, expected DLP clipboard notification")
 	}
 }
 
