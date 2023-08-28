@@ -342,7 +342,8 @@ func init() {
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_t"},
 			// x86-64 ARC: kohaku(hatch-Intel), jinlon(hatch-Intel)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "jinlon")),
+			// arm64 ARC: steelix(corsola), magneton(corsola)
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "jinlon", "steelix", "magneton")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-tm",
@@ -350,7 +351,7 @@ func init() {
 				uploadPackagesReference:       true,
 				uprevBranch:                   true,
 				dexOptCacheGen:                true,
-				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "arm64-native"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
