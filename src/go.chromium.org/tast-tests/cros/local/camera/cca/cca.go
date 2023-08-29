@@ -206,6 +206,38 @@ func Init(ctx context.Context, cr *chrome.Chrome, outDir string, appLauncher tes
 		}
 	}
 
+	// TODO(b:296013012): For debugging test flakiness, remove this after the
+	// flakiness is gone.
+	if tb.CameraType == testutil.UseFakeHALCamera {
+		if err := cr.StartTracing(ctx, []string{"disabled-by-default-android camera"}); err != nil {
+			testing.ContextLog(ctx, "Failed to enable tracing: ", err)
+		}
+
+		cleanupCtx := ctx
+		shortenCtx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+		defer cancel()
+
+		ctx = shortenCtx
+
+		defer func(cleanupCtx context.Context) {
+			tr, err := cr.StopTracing(cleanupCtx)
+			if err != nil {
+				testing.ContextLog(cleanupCtx, "Failed to disable tracing: ", err)
+				return
+			}
+
+			if retErr == nil {
+				return
+			}
+
+			filename := fmt.Sprintf("trace_%d.tar.gz", time.Now().UnixNano())
+			path := filepath.Join(outDir, filename)
+			if err := chrome.SaveTraceToFile(cleanupCtx, tr, path); err != nil {
+				testing.ContextLog(cleanupCtx, "Failed to save tracing: ", err)
+			}
+		}(cleanupCtx)
+	}
+
 	conn, appWindow, err := testutil.LaunchApp(ctx, cr, tb, appLauncher)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed when launching app")
