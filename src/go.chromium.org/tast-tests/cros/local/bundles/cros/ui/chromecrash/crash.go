@@ -883,34 +883,29 @@ func (ct *CrashTester) KillAndGetCrashFiles(ctx context.Context) ([]string, erro
 	return files, nil
 }
 
-// KillCrashpad kills all ash-Chrome chrome_crashpad_handler processes running
-// in the system. It returns when there are no more ash-Chrome
-// chrome_crashpad_handler processes running.
-func KillCrashpad(ctx context.Context) error {
-	testing.ContextLog(ctx, "Hunting and killing chrome_crashpad_handler proceesses")
+// KillCrashpad kills all chrome_crashpad_handler processes running
+// in the system (for either ash-Chrome or Lacros, depending on ct.browser). It
+// returns when there are no more chrome_crashpad_handler processes running for
+// the indicated browser type.
+func (ct *CrashTester) KillCrashpad(ctx context.Context) error {
+	testing.ContextLog(ctx, "Hunting and killing chrome_crashpad_handler processes")
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		all, err := process.ProcessesWithContext(ctx)
+		processes, err := ct.crashpadHandlerProcesses()
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "could not get list of processes"))
 		}
+		if len(processes) == 0 {
+			return nil
+		}
 
-		foundCrashpadProcess := false
-		for _, process := range all {
-			if exe, err := process.Exe(); err == nil && exe == ashChromeCrashpadExecPath {
-				foundCrashpadProcess = true
-				testing.ContextLog(ctx, "Sending SIGKILL to chrome_crashpad_handler process ", process.Pid)
-				if err = unix.Kill(int(process.Pid), unix.SIGKILL); err != nil {
-					return errors.Wrap(err, "failed to kill chrome_crashpad_handler process")
-				}
+		for _, process := range processes {
+			testing.ContextLog(ctx, "Sending SIGKILL to chrome_crashpad_handler process ", process.Pid)
+			if err = unix.Kill(int(process.Pid), unix.SIGKILL); err != nil {
+				// Mostly ignore the error. If a process exited, we want to keep going.
+				testing.ContextLog(ctx, "Failed to kill chrome_crashpad_handler process: ", err, "; continuing anyways")
 			}
-			// else ignore the error. If a process exited, or we otherwise can't
-			// get its executable path, we want to keep going and looking for
-			// chrome_crashpad_handler processes.
 		}
 
-		if foundCrashpadProcess {
-			return errors.New("Some chrome_crashpad_handler processes still alive")
-		}
-		return nil
+		return errors.New("some chrome_crashpad_handler processes were still alive; rescanning to ensure all have died before continuing")
 	}, nil)
 }
