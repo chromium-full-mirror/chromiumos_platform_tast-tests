@@ -200,6 +200,10 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		"EFIVAR_FS",
 		// HIBERNATION is enabled for brya devices and will be enabled on more later.
 		"HIBERNATION",
+		// PM_STD_PARTITION isn't a partition type like the others. It is a string
+		// reflecting the default name of the partition to be used to store the suspended
+		// disk image.
+		"PM_STD_PARTITION",
 	}
 	missing := []string{
 		// Never going to optimize to this CPU.
