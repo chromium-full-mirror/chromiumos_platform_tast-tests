@@ -39,7 +39,20 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_usb"},
 		Vars:         []string{"firmware.skipFlashUSB"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipCPUSocFamily("amd")),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipCPUSocFamily("amd"), hwdep.SkipOnModel(
+			// Jacuzzi boards do not have the RECOVERY_MRC_CACHE section, instead has a different section named RW_DDR_TRAINING.
+			// TODO(tij@): Determine if RW_DDR_TRAINING can be tested similarly.
+			"burnet",
+			"cozmo",
+			"damu",
+			"esche",
+			"fennel",
+			"fennel14",
+			"juniper",
+			"kappa",
+			"pico",
+			"willow",
+		)),
 		Params: []testing.Param{
 			{
 				Name:      "normal",
