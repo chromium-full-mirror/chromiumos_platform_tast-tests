@@ -76,26 +76,12 @@ func init() {
 		}},
 		Params: []testing.Param{{
 			Name:      "ash_blocked",
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:golden_tier"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: clipboardTestParams{
 				name:        "blocked",
 				restriction: restrictionlevel.Blocked,
 				copyAllowed: false,
-				browserType: browser.TypeAsh,
-			},
-		}, {
-			Name: "ash_allowed",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val: clipboardTestParams{
-				name:        "allowed",
-				restriction: restrictionlevel.Allowed,
-				copyAllowed: true,
 				browserType: browser.TypeAsh,
 			},
 		}, {
@@ -109,13 +95,9 @@ func init() {
 				browserType: browser.TypeAsh,
 			},
 		}, {
-			Name: "ash_warn_cancelled",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_warn_cancelled",
+			ExtraAttr: []string{"group:golden_tier"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: clipboardTestParams{
 				name:        "warn_cancelled",
 				restriction: restrictionlevel.WarnCancelled,
@@ -124,7 +106,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_blocked",
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:golden_tier"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: clipboardTestParams{
@@ -134,23 +116,8 @@ func init() {
 				browserType: browser.TypeLacros,
 			},
 		}, {
-			Name: "lacros_allowed",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val: clipboardTestParams{
-				name:        "allowed",
-				restriction: restrictionlevel.Allowed,
-				copyAllowed: true,
-				browserType: browser.TypeLacros,
-			},
-		}, {
 			Name:              "lacros_warn_proceeded",
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:golden_tier"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: clipboardTestParams{
@@ -162,10 +129,7 @@ func init() {
 		}, {
 			Name: "lacros_warn_cancelled",
 			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
+				"group:golden_tier"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: clipboardTestParams{
