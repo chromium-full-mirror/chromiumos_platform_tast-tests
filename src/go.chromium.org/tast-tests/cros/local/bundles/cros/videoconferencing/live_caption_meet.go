@@ -31,7 +31,7 @@ const credsVarName = "ui.bond_credentials"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MeetLiveCaption,
+		Func:         LiveCaptionMeet,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks on-device live caption works in Google Meet",
 		Contacts: []string{
@@ -92,7 +92,7 @@ func init() {
 	})
 }
 
-func MeetLiveCaption(ctx context.Context, s *testing.State) {
+func LiveCaptionMeet(ctx context.Context, s *testing.State) {
 	const addBotTimeout = 100 * time.Second
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
