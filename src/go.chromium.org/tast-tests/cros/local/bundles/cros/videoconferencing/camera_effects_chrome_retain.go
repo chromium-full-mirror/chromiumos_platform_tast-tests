@@ -103,7 +103,6 @@ func CameraEffectsChromeRetain(ctx context.Context, s *testing.State) {
 		}
 		defer closeBrowser(cleanupCtx)
 		defer conn.Close()
-		defer conn.CloseTarget(cleanupCtx)
 
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
@@ -129,7 +128,6 @@ func CameraEffectsChromeRetain(ctx context.Context, s *testing.State) {
 	}
 	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
