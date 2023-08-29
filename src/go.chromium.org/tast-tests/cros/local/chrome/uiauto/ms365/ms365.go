@@ -32,13 +32,6 @@ const (
 	officePWAInstallURL = "https://www.microsoft365.com/?from=Homescreen"
 )
 
-func log(msg string) uiauto.Action {
-	return func(ctx context.Context) error {
-		testing.ContextLog(ctx, msg)
-		return nil
-	}
-}
-
 // Ms365 represents an instance of the Microsoft 365 app UI.
 type Ms365 struct {
 	ui       *uiauto.Context
@@ -139,7 +132,7 @@ func (ms *Ms365) LoginToMicrosoft365(setupCompleteDialogFinder *nodewith.Finder,
 		ms.InputUserName(ms.UserName),
 		func(ctx context.Context) error {
 			if skipPassword {
-				log("Skipping password")(ctx)
+				testing.ContextLog(ctx, "Skipping password")
 				return nil
 			}
 			return uiauto.Combine("Input password and stay signed in",

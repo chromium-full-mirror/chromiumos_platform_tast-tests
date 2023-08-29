@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -17,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/filesconsts"
 	"go.chromium.org/tast-tests/cros/local/onedrive"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -60,10 +62,16 @@ func OdfsManageInSettings(ctx context.Context, s *testing.State) {
 	data := s.FixtValue().(*onedrive.FixtureData)
 	tconn := data.TestAPIConn
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	filesApp, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to open Files App: ", err)
 	}
+	defer filesApp.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, data.Chrome, "odfs_manage_in_settings")
 
 	ms365, err := ms365.App(ctx, tconn, accountPool)
 	if err != nil {

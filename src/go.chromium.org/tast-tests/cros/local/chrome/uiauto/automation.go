@@ -160,6 +160,15 @@ func Repeat(n int, fn Action) Action {
 	}
 }
 
+// Log returns a functions that utilize the `testing.ContextLog` to log
+// something.
+func Log(msg string) Action {
+	return func(ctx context.Context) error {
+		testing.ContextLog(ctx, msg)
+		return nil
+	}
+}
+
 // ScopedAutoRelease allows the automation tree to be released when not used for
 // some time. It is needed for perf tests (such as ui.MeetCUJ) to reduce cpu and
 // power usage.
