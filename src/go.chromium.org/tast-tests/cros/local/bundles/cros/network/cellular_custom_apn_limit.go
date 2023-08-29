@@ -58,6 +58,9 @@ func CellularCustomApnLimit(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 	defer func(ctx context.Context) {
+		if err := helper.ClearCustomAPNList(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to clear cellular.CustomAPNList: ", err)
+		}
 		if errs := helper.ResetShill(ctx); errs != nil {
 			s.Fatal("Failed to reset shill: ", errs)
 		}
@@ -103,11 +106,6 @@ func CellularCustomApnLimit(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to add custom APN with name: %s, err: %v", apnName, err)
 		}
 	}
-	defer func(ctx context.Context) {
-		if err := helper.ClearCustomAPNList(ctx); err != nil {
-			s.Fatal("Failed to clear custom APN list in shill: ", err)
-		}
-	}(ctx)
 
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("Verify New APN button is disabled and show tooltip",
