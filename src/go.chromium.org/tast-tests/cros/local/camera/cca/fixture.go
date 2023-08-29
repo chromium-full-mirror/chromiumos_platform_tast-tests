@@ -404,6 +404,13 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 				// The content of the scene can be dynamically changed during tests.
 				"--use-file-for-fake-video-capture="+f.cameraScene))
 		}
+	} else if f.useCameraType == testutil.UseFakeHALCamera {
+		// Enable device event logs logging to Chrome log to help debugging
+		// b:296013012, since device event logs includes camera VCD logs which can
+		// be helpful while debugging.
+		// TODO(b:297989063): Only collect camera logs, and only collect them when
+		// tast fails to reduce noise.
+		chromeOpts = append(chromeOpts, chrome.ExtraArgs("--vmodule=device_event_log*=1"))
 	}
 	if f.guestMode {
 		chromeOpts = append(chromeOpts, chrome.GuestLogin())
