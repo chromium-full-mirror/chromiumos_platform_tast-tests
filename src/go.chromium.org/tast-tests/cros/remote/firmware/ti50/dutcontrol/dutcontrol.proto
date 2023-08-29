@@ -165,6 +165,9 @@ message GetApFlashInfoResponse {
     // The name of the flash chip, e.g. "GD25Q256D/GD25Q256E".
     string chip_name = 1;
 
+    // The vendor of the flash chip, e.g. "GigaDevice"
+    string chip_vendor = 3;
+
     // Empty indicates no error.
     string err = 2;
 }

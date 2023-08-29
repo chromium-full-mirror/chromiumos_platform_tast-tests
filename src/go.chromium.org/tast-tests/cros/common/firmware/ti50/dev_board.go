@@ -58,6 +58,8 @@ type DevBoard interface {
 	Close(ctx context.Context) error
 	// GSCToolCommand executes gsctool.
 	GSCToolCommand(ctx context.Context, image string, args ...string) (output []byte, err error)
+	// FetchApFlashInfo fetches the name and vendor of the SPI flash chip connected to the devboard.
+	FetchApFlashInfo(ctx context.Context) (output *ApFlashInfo, err error)
 	// Executes TCG tests.
 	RunTcgTests(ctx context.Context, outdir, testSuite string) error
 	// PhysicalUart allows reading/writing data to a physical UART of the GSC under test.
@@ -82,6 +84,12 @@ type SerialChannel interface {
 	WriteSerial(ctx context.Context, bytes []byte) error
 	// ClearInput clears any pending input that hasn't been read yet.
 	ClearInput(ctx context.Context) error
+}
+
+// ApFlashInfo contains info about the AP flash that the DUT would have access to.
+type ApFlashInfo struct {
+	Name   string
+	Vendor string
 }
 
 // TestbedType represents a kind of testbed, including which GSC devboard, debugger and wiring.

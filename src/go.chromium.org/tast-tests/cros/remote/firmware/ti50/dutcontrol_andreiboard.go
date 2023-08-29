@@ -370,3 +370,15 @@ func (a *DUTControlAndreiboard) CcdSerialInterface(name common.UartName, readTim
 	}
 	return common.NewBufferedConsole("", 2048, uartOpener)
 }
+
+// FetchApFlashInfo fetches the name and vendor of the SPI flash chip connected to the devboard.
+func (a *DUTControlAndreiboard) FetchApFlashInfo(ctx context.Context) (info *common.ApFlashInfo, err error) {
+	resp, err := a.client.GetApFlashInfo(ctx, &dutcontrol.GetApFlashInfoRequest{})
+	if err != nil {
+		return nil, errors.Wrap(err, "GetApFlashInfo request")
+	}
+	if resp.Err != "" {
+		return nil, errors.Errorf("GetApFlashInfo response: %s", resp.Err)
+	}
+	return &common.ApFlashInfo{Name: resp.ChipName, Vendor: resp.ChipVendor}, nil
+}
