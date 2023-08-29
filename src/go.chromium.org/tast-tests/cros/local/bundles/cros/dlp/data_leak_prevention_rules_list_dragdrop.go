@@ -36,6 +36,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const content = "Sample text about random things."
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DataLeakPreventionRulesListDragdrop,
@@ -47,18 +49,16 @@ func init() {
 		},
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
-			"group:hw_agnostic"},
-		Data: []string{"text_1.html", "text_2.html", "editable_text_box.html"},
+		Attr:         []string{"group:hw_agnostic"},
+		Data:         []string{"text_1.html", "text_2.html", "editable_text_box.html"},
 		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
+			Name:      "ash_blocked",
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
+			Val:       browser.TypeAsh,
 		}, {
-			Name:              "lacros",
+			Name:              "lacros_blocked",
+			ExtraAttr:         []string{"group:golden_tier"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
@@ -79,6 +79,7 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 
 	blockedServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer blockedServer.Close()
+	srcURL := blockedServer.URL + "/text_1.html"
 
 	dstServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer dstServer.Close()
@@ -106,145 +107,114 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 	defer keyboard.Close(ctx)
 
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
-	for _, param := range []struct {
-		name        string
-		wantAllowed bool
-		srcURL      string
-		content     string
-	}{
-		{
-			name:        "dropBlocked",
-			wantAllowed: false,
-			srcURL:      blockedServer.URL + "/text_1.html",
-			content:     "Sample text about random things.",
-		},
-		{
-			name:        "dropAllowed",
-			wantAllowed: true,
-			srcURL:      allowedServer.URL + "/text_2.html",
-			content:     "Here is a random piece of text for testing things.",
-		},
-	} {
-		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+	if err := cr.ResetState(ctx); err != nil {
+		s.Fatal("Failed to reset the Chrome: ", err)
+	}
 
-			if err := cr.ResetState(ctx); err != nil {
-				s.Fatal("Failed to reset the Chrome: ", err)
-			}
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	if err != nil {
+		s.Fatal("Failed to open the destination browser: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
+			// The Lacros browser is not closed in other places in the test.
+			s.Error("The Lacros browser probably crashed: ", err)
+		}
+	}(cleanupCtx)
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-			if err != nil {
-				s.Fatal("Failed to open the destination browser: ", err)
-			}
-			defer func(ctx context.Context) {
-				if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
-					// The Lacros browser is not closed in other places in the test.
-					s.Error("The Lacros browser probably crashed: ", err)
-				}
-			}(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
-			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
+	dstURL := dstServer.URL + "/editable_text_box.html"
+	dstConn, err := br.NewConn(ctx, dstURL)
+	if err != nil {
+		s.Fatalf("Failed to open page %q: %v", dstURL, err)
+	}
+	defer dstConn.Close()
 
-			dstURL := dstServer.URL + "/editable_text_box.html"
-			dstConn, err := br.NewConn(ctx, dstURL)
-			if err != nil {
-				s.Fatalf("Failed to open page %q: %v", dstURL, err)
-			}
-			defer dstConn.Close()
+	if err := webutil.WaitForQuiescence(ctx, dstConn, 10*time.Second); err != nil {
+		s.Fatalf("Failed to wait for %q to achieve quiescence: %v", dstURL, err)
+	}
 
-			if err := webutil.WaitForQuiescence(ctx, dstConn, 10*time.Second); err != nil {
-				s.Fatalf("Failed to wait for %q to achieve quiescence: %v", dstURL, err)
-			}
+	srcConn, err := br.NewConn(ctx, srcURL, browser.WithNewWindow())
+	if err != nil {
+		s.Fatalf("Failed to open page %q: %v", srcURL, err)
+	}
+	defer srcConn.Close()
 
-			srcConn, err := br.NewConn(ctx, param.srcURL, browser.WithNewWindow())
-			if err != nil {
-				s.Fatalf("Failed to open page %q: %v", param.srcURL, err)
-			}
-			defer srcConn.Close()
+	if err := webutil.WaitForQuiescence(ctx, srcConn, 10*time.Second); err != nil {
+		s.Fatalf("Failed to wait for %q to achieve quiescence: %v", srcURL, err)
+	}
 
-			if err := webutil.WaitForQuiescence(ctx, srcConn, 10*time.Second); err != nil {
-				s.Fatalf("Failed to wait for %q to achieve quiescence: %v", param.srcURL, err)
-			}
+	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
+		s.Fatal("Failed to enter into the overview mode: ", err)
+	}
 
-			if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
-				s.Fatal("Failed to enter into the overview mode: ", err)
-			}
+	// Snap the source window to the right.
+	w1, err := ash.FindFirstWindowInOverview(ctx, tconn)
+	if err != nil {
+		s.Fatalf("Failed to find the %s window in the overview mode: %v", srcURL, err)
+	}
 
-			// Snap the param.srcURL window to the right.
-			w1, err := ash.FindFirstWindowInOverview(ctx, tconn)
-			if err != nil {
-				s.Fatalf("Failed to find the %s window in the overview mode: %v", param.srcURL, err)
-			}
+	if err := ash.SetWindowStateAndWait(ctx, tconn, w1.ID, ash.WindowStateSecondarySnapped); err != nil {
+		s.Fatalf("Failed to snap the %s window to the right: %v", srcURL, err)
+	}
 
-			if err := ash.SetWindowStateAndWait(ctx, tconn, w1.ID, ash.WindowStateSecondarySnapped); err != nil {
-				s.Fatalf("Failed to snap the %s window to the right: %v", param.srcURL, err)
-			}
+	// Snap the destination window to the left.
+	w2, err := ash.FindFirstWindowInOverview(ctx, tconn)
+	if err != nil {
+		s.Fatalf("Failed to find the %s window in the overview mode: %v", dstURL, err)
+	}
 
-			// Snap the destination window to the left.
-			w2, err := ash.FindFirstWindowInOverview(ctx, tconn)
-			if err != nil {
-				s.Fatalf("Failed to find the %s window in the overview mode: %v", dstURL, err)
-			}
+	if err := ash.SetWindowStateAndWait(ctx, tconn, w2.ID, ash.WindowStatePrimarySnapped); err != nil {
+		s.Fatalf("Failed to snap the %s window to the left: %v", dstURL, err)
+	}
 
-			if err := ash.SetWindowStateAndWait(ctx, tconn, w2.ID, ash.WindowStatePrimarySnapped); err != nil {
-				s.Fatalf("Failed to snap the %s window to the left: %v", dstURL, err)
-			}
+	// Activate the drag destination window so coordinates get updates.
+	if err := w2.ActivateWindow(ctx, tconn); err != nil {
+		s.Fatalf("Failed to activate the %s window: %v", srcURL, err)
+	}
 
-			// Activate the drag destination window so coordinates get updates.
-			if err := w2.ActivateWindow(ctx, tconn); err != nil {
-				s.Fatalf("Failed to activate the %s window: %v", param.srcURL, err)
-			}
+	if err := dragdrop.WaitForStableCoordinates(ctx, tconn); err != nil {
+		s.Fatal("Failed to wait for the coordinates for the drop textfield gets stable: ", err)
+	}
 
-			if err := dragdrop.WaitForStableCoordinates(ctx, tconn); err != nil {
-				s.Fatal("Failed to wait for the coordinates for the drop textfield gets stable: ", err)
-			}
+	// Activate the drag source window.
+	if err := w1.ActivateWindow(ctx, tconn); err != nil {
+		s.Fatalf("Failed to activate the %s window: %v", srcURL, err)
+	}
 
-			// Activate the drag source (param.srcURL) window.
-			if err := w1.ActivateWindow(ctx, tconn); err != nil {
-				s.Fatalf("Failed to activate the %s window: %v", param.srcURL, err)
-			}
+	if err = keyboard.Accel(ctx, "Ctrl+A"); err != nil {
+		s.Fatal("Failed to press Ctrl+A to select all content: ", err)
+	}
 
-			if err = keyboard.Accel(ctx, "Ctrl+A"); err != nil {
-				s.Fatal("Failed to press Ctrl+A to select all content: ", err)
-			}
+	s.Log("Draging and dropping content")
+	// Root node of the frame with the title "Editable Text Box" in ash or lacros.
+	browserRoot := nodewith.ClassNameRegex(regexp.MustCompile("(BrowserFrame)|(ExoShellSurface-.*)")).NameRegex(regexp.MustCompile(".*Editable Text Box.*"))
+	dstNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).Ancestor(browserRoot)
+	if err := dragdrop.DragDrop(ctx, tconn, content, dstNode); err != nil {
+		s.Error("Failed to drag drop content: ", err)
+	}
 
-			s.Log("Draging and dropping content")
-			// Root node of the frame with the title "Editable Text Box" in ash or lacros.
-			browserRoot := nodewith.ClassNameRegex(regexp.MustCompile("(BrowserFrame)|(ExoShellSurface-.*)")).NameRegex(regexp.MustCompile(".*Editable Text Box.*"))
-			dstNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).Ancestor(browserRoot)
-			if err := dragdrop.DragDrop(ctx, tconn, param.content, dstNode); err != nil {
-				s.Error("Failed to drag drop content: ", err)
-			}
+	s.Log("Checking notification")
+	ui := uiauto.New(tconn)
 
-			s.Log("Checking notification")
-			ui := uiauto.New(tconn)
+	// Verify notification bubble.
+	parsedSrcURL, err := url.Parse(blockedServer.URL)
+	if err != nil {
+		s.Fatalf("Failed to parse blocked server URL %s: %v", blockedServer.URL, err)
+	}
 
-			// Verify notification bubble.
-			parsedSrcURL, err := url.Parse(blockedServer.URL)
-			if err != nil {
-				s.Fatalf("Failed to parse blocked server URL %s: %v", blockedServer.URL, err)
-			}
+	notifError := clipboard.CheckClipboardBubble(ctx, ui, parsedSrcURL.Hostname())
 
-			notifError := clipboard.CheckClipboardBubble(ctx, ui, parsedSrcURL.Hostname())
+	if notifError != nil {
+		s.Error("Expected notification but found an error: ", notifError)
+	}
 
-			if !param.wantAllowed && notifError != nil {
-				s.Error("Expected notification but found an error: ", notifError)
-			}
+	// Check dropped content.
+	contentNode := nodewith.NameContaining(content).Role(role.InlineTextBox).State(state.Editable, true).First()
+	dropError := ui.WaitUntilExists(contentNode)(ctx)
 
-			if param.wantAllowed && notifError == nil {
-				s.Error("Didn't expect notification but one was found: ")
-			}
-
-			// Check dropped content.
-			contentNode := nodewith.NameContaining(param.content).Role(role.InlineTextBox).State(state.Editable, true).First()
-			dropError := ui.WaitUntilExists(contentNode)(ctx)
-
-			if param.wantAllowed && dropError != nil {
-				s.Error("Checked pasted content but found an error: ", dropError)
-			}
-
-			if !param.wantAllowed && dropError == nil {
-				s.Error("Content was pasted but should have been blocked")
-			}
-		})
+	if dropError == nil {
+		s.Error("Content was pasted but should have been blocked")
 	}
 }
