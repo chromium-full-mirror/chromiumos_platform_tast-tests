@@ -211,6 +211,14 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 			}
 
 			if param.shouldFindAnnotation {
+				// For lacros, the permission panel occasionally shows up again. Click "allow" if needed.
+				if s.Param().(browser.Type) == browser.TypeLacros {
+					if param.name == "ask_allow" {
+						if err := ui.DoDefault(allowButton)(ctx); err != nil {
+							s.Log("Failed to click additional allow button in lacros: ", err)
+						}
+					}
+				}
 				// Verify the status text has been replaced.
 				if err := ui.WaitUntilGone(statusText)(ctx); err != nil {
 					s.Fatal("Got unexpected Status text: ", err)
