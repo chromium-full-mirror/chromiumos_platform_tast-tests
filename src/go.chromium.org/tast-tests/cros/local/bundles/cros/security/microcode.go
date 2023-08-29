@@ -81,7 +81,7 @@ func Microcode(ctx context.Context, s *testing.State) {
 		microcode, ok := fwmap[fwname]
 		if !ok {
 			// Test failure here indicates that no microcode that matches the processor
-			// ID is bundled in the kernel. Make sure that cros-kernel2.eclass includes
+			// ID is bundled in the kernel. Make sure that cros-kernel.eclass includes
 			// the appropriate microcode in CONFIG_EXTRA_FIRMWARE.
 			s.Errorf("No built-in microcode for id %s", id)
 			continue
@@ -120,7 +120,7 @@ func Microcode(ctx context.Context, s *testing.State) {
 			// Test failure here indicates that while microcode for the processor ID is
 			// present, it doesn't appear compatible with the CPU. To fix this, make
 			// sure the correct microcode gets built into the kernel image by
-			// cros-kernel2.eclass. If correct microcode appears to be present and get
+			// cros-kernel.eclass. If correct microcode appears to be present and get
 			// loaded correctly, this may be because a bug in the test code, e.g.
 			// because of disagreement between test test code and the kernel a microcode
 			// image is compatible.
