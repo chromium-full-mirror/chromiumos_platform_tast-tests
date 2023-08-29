@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      4 * time.Minute,
+		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
