@@ -1,0 +1,45 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.floatingworkspace;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/floatingworkspace";
+
+// FloatingWorkspaceService allows users to restore remote desk template from
+// the last used device when switching devices.
+service TemplateSyncService {
+  // NewChromeLogin logs into a Chrome session as a fake user with the
+  // FloatingWorkspace flag enabled.
+  // Close must be called later to clean up the associated resources.
+  rpc NewChromeLogin(CrOSLoginRequest) returns (google.protobuf.Empty) {}
+
+  // Close releases the resources obtained by New.
+  rpc CloseChrome(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Wait for floating workspace capture.
+  rpc WaitForFloatingWorkspaceCapture(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Sign out of current user session.option.
+  rpc Signout(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Sign back in after sign out.
+  rpc SignBackIn(CrOSLoginRequest) returns (google.protobuf.Empty) {}
+
+  // Verify floating workspace is synced to the other device.
+  rpc VerifyFloatingWorkspace(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+// CrOSLoginRequest to login to Chrome with configurable GAIA credentials.
+message CrOSLoginRequest {
+  string username = 1;
+  string password = 2;
+  string sign_in_option = 3;
+  bool keep_state = 4;
+  repeated string enabled_flags = 5;
+  repeated string disabled_flags = 6;
+}

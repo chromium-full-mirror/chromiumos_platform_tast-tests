@@ -35,6 +35,7 @@ func init() {
 			"ui.signinProfileTestExtensionManifestKey",
 			"ui.gaiaPoolDefault",
 		},
+		Vars:    []string{"floatingworkspace.cros_username", "floatingworkspace.cros_password"},
 		Timeout: 2*chrome.GAIALoginTimeout + userutil.TakingOwnershipTimeout + time.Minute,
 	})
 }
@@ -45,7 +46,7 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 
 	// Log in and log out to create a user pod on the login screen.
 	func() {
-		cr, err := chrome.New(ctx, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+		cr, err := chrome.New(ctx, chrome.GAIALogin(chrome.Creds{User: s.RequiredVar("floatingworkspace.cros_username"), Pass: s.RequiredVar("floatingworkspace.cros_password")}), chrome.TryReuseSession())
 		if err != nil {
 			s.Fatal("Chrome login failed: ", err)
 		}

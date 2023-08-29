@@ -21,6 +21,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/filemanager"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
+	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/floatingworkspace"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/hardware"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/hotspot"
