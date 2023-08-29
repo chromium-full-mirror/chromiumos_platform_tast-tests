@@ -19,7 +19,7 @@
 	},
 	{
 		"driver": "i915(CONFIG_DRM_I915)",
-		"boards": ["octopus", "nautilus", "dedede"],
+		"boards": ["octopus", "nautilus", "dedede", "nissa"],
 		"startup_cmds": ["rm -rf /dev/i915 && ln -s /dev/dri/card0 /dev/i915"],
 		"syscalls": [
 			"openat$i915",
