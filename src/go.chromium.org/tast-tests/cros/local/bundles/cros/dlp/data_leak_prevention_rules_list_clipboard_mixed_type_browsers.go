@@ -37,11 +37,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type mixedBrowsersParams struct {
-	Source      dragdrop.AppName
-	Destination dragdrop.AppName
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DataLeakPreventionRulesListClipboardMixedTypeBrowsers,
@@ -59,14 +54,14 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "blocked_ash_to_lacros",
 			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
-			Val: mixedBrowsersParams{
+			Val: dragdrop.MixedBrowsersParams{
 				Source:      dragdrop.FileManager,
 				Destination: dragdrop.Chrome,
 			},
 		}, {
 			Name:      "blocked_lacros_to_ash",
 			ExtraAttr: []string{"group:golden_tier"},
-			Val: mixedBrowsersParams{
+			Val: dragdrop.MixedBrowsersParams{
 				Source:      dragdrop.Chrome,
 				Destination: dragdrop.Settings,
 			},
@@ -77,7 +72,7 @@ func init() {
 func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	params := s.Param().(mixedBrowsersParams)
+	params := s.Param().(dragdrop.MixedBrowsersParams)
 
 	srcServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer srcServer.Close()

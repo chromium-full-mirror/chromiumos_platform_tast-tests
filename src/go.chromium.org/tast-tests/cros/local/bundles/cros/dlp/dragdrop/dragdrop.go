@@ -27,12 +27,20 @@ const (
 	Chrome AppName = "chrome"
 	// Settings to be used as source or destination.
 	Settings AppName = "os-settings"
-	//FileManager to be used as source or destination.
+	// FileManager to be used as source or destination.
 	FileManager AppName = "file-manager"
 )
 
 func (app AppName) String() string {
 	return string(app)
+}
+
+// MixedBrowsersParams is used to identify source and destination apps for mixed browsers tests.
+type MixedBrowsersParams struct {
+	// Source app name.
+	Source AppName
+	// Destination app name.
+	Destination AppName
 }
 
 // DragDrop drags the content specified from a source website to a text box.
