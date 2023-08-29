@@ -12,6 +12,8 @@ package lacros
 import (
 	"context"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/chromeproc"
@@ -95,6 +97,16 @@ func ResetState(ctx context.Context, tconn *driver.TestConn) error {
 	}
 
 	if err := os.RemoveAll(UserDataDir); err != nil {
+		dir, ok := testing.ContextOutDir(ctx)
+		if ok && dir != "" {
+			f, err := os.Create(filepath.Join(dir, "ls-lacros-user-data-dir.txt"))
+			if err == nil {
+				defer f.Close()
+				cmd := exec.Command("ls", "-lR", UserDataDir)
+				cmd.Stdout = f
+				cmd.Run()
+			}
+		}
 		return errors.Wrap(err, "failed to delete Lacros user data directory")
 	}
 

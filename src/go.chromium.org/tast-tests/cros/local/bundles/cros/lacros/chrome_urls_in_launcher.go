@@ -28,7 +28,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Opens various chrome:// and os:// URLs via the ChromeOS launcher search",
 		Contacts: []string{
-			"lacros-fundamentals@google.com",
+			"lacros-tast@google.com",
 			"neis@chromium.org",
 		},
 		BugComponent: "crbug:OS>LaCrOS",
@@ -75,7 +75,7 @@ func ChromeURLsInLauncher(ctx context.Context, s *testing.State) {
 		windowMatcher: matchLacrosWindow("Experiments"),
 	}, {
 		url:           "os://flags",
-		windowMatcher: matchSWAWindow("Flags"), // FLAGS SWA
+		windowMatcher: matchSWAWindow("Flags - Experiments"), // FLAGS SWA
 	}, {
 		url:           "chrome://crashes",
 		windowMatcher: matchSWAWindow("ChromeOS-URLs - Crashes"), // OS_URL_HANDLER SWA
