@@ -43,7 +43,7 @@ func init() {
 		TearDownTimeout: 2 * time.Minute,
 		PreTestTimeout:  2 * time.Minute,
 		PostTestTimeout: 1 * time.Minute,
-		Vars:            []string{"pvs.git_cookies", "pvs.service_account", "pvs.shop_ref", "pvs.image_tag", "pvs.chromeos_version"},
+		Vars:            []string{"pvs.git_cookies", "pvs.service_account", "pvs.shop_ref", "pvs.image_tag", "pvs.chromeos_version", "pvs.skip_teardown"},
 	})
 
 }
@@ -125,6 +125,11 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 }
 
 func (f *pvsFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	// skip teardown if specified so logs can be inspected
+	if _, ok := s.Var("pvs.skip_teardown"); ok {
+		return
+	}
+
 	// Remove pvs output dir created during tests
 	dut := s.DUT().Conn()
 	if _, err := removeAsRoot(ctx, dut, pvsOutputDir); err != nil {
