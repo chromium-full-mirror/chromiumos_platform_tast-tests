@@ -22,7 +22,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filepicker/vars"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/filesconsts"
@@ -723,4 +725,46 @@ func (f *FilesApp) Unmount(cr *chrome.Chrome, volumeID string) uiauto.Action {
 
 		return nil
 	}
+}
+
+// ConnectToOneDrive connects Files app with OneDrive through the Settings and makes
+// sure the ODFS shows in the Files's directory tree.
+func (f *FilesApp) ConnectToOneDrive(ctx context.Context, ms365App *ms365.Ms365) error {
+	settingsApp := ossettings.New(f.tconn)
+	cloudUpload := cloudupload.App(f.tconn, filesconsts.OneDrive)
+
+	oneDriveDisconnectedLink := nodewith.Name("OneDrive Disconnected").Role(role.Link)
+	connectAccountButton := nodewith.Name("Connect account").Role(role.Button)
+	return uiauto.Combine("Connect to OneDrive via the Files settings page",
+		f.ClickMoreMenuItem("Files settings"),
+		settingsApp.WaitUntilExists(oneDriveDisconnectedLink),
+		settingsApp.LeftClickUntil(oneDriveDisconnectedLink, settingsApp.Exists(connectAccountButton)),
+		settingsApp.LeftClick(connectAccountButton),
+		cloudUpload.WaitConnectToOneDriveDialogAndClick(cloudupload.Next),
+		ms365App.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog, false /*=skipPassword*/),
+		cloudUpload.WaitOneDriveConnectedDialogAndClickClose(),
+		settingsApp.Close,
+		f.WaitUntilExists(nodewith.Name(OneDrive).Role(role.TreeItem)),
+	)(ctx)
+}
+
+// GetOdfsFuseboxToken executes JS directly in the Files app to get the fusebox token for the ODFS.
+// Note: this function doesn't wait for the ODFS/fusebox volume to exist in the Files app,
+// the caller should wait for that first before calling this function.
+func (f *FilesApp) GetOdfsFuseboxToken(ctx context.Context, cr *chrome.Chrome) (string, error) {
+	conn, err := cr.NewConnForTarget(ctx, func(t *target.Info) bool { return t.URL == FilesAppURL })
+	if err != nil {
+		return "", errors.Wrap(err, "failed to connect to the DevTool for Files")
+	}
+
+	jsCode := fmt.Sprintf(`
+	  const volumes = fileManager.store_.getState().volumes;
+		const odfsVolumeId = Object.keys(volumes).find(volumeId => volumes[volumeId].diskFileSystemType === "fusebox" && volumes[volumeId].label === "%s");
+		odfsVolumeId ? odfsVolumeId.replace("fuseboxprovided:", "") : "";
+	`, OneDrive)
+	var odfsFuseboxToken string
+	if err := conn.Eval(ctx, jsCode, &odfsFuseboxToken); err != nil {
+		return "", errors.Wrap(err, "failed to execute JS code to get ODFS token")
+	}
+	return odfsFuseboxToken, nil
 }

@@ -6,8 +6,6 @@ package onedrive
 
 import (
 	"context"
-	"fmt"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
+	"go.chromium.org/tast-tests/cros/local/filemanager"
 	"go.chromium.org/tast-tests/cros/local/filesconsts"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/errors"
@@ -147,17 +146,9 @@ type fixture struct {
 	srcFiles map[string]string
 }
 
-// generateTestFileName generates a unique-ish file name based on a provided
-// prefix, the current time, and a random number.
-func generateTestFileName(fName string) string {
-	ext := filepath.Ext(fName)
-	baseName := strings.TrimSuffix(fName, ext)
-	return fmt.Sprintf("%s-%d-%d%s", baseName, time.Now().UnixNano(), rand.Intn(10000), ext)
-}
-
 // prepareOfficeFile copies the test file to a sub-folder of downloads with a unique name.
 func prepareOfficeFile(srcPath, targetFolder string) (testFile TestFile, err error) {
-	testFile.FileName = generateTestFileName(filepath.Base(srcPath))
+	testFile.FileName = filemanager.GenerateTestFileName(filepath.Base(srcPath))
 	testFile.SrcFile = srcPath
 	testFile.FileType = strings.Replace(filepath.Ext(testFile.FileName), ".", "", 1)
 
