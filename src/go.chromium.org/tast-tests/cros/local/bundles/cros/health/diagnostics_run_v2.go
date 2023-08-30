@@ -44,11 +44,6 @@ func init() {
 			Name:              "ufs_lifetime",
 			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineUFSLifetime},
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
-		}, {
-			Name: "floating_point_v2",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineFloatingPointV2},
-			// TODO(b/295481052): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}}})
 }
 
