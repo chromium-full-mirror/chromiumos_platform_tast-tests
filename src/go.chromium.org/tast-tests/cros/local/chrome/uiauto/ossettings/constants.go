@@ -188,6 +188,9 @@ var ActiveCellularRows = nodewith.NameRegex(regexp.MustCompile("^Network [0-9] o
 // ActiveCellularBtn is the finder for the button to access the details view of the active cellular network in the Mobile data subpage.
 var ActiveCellularBtn = nodewith.HasClass("subpage-arrow").Role(role.Button).Ancestor(ActiveCellularRows.First()).Focusable()
 
+// APNSubpageButton is the finder for the button on the details view of a cellular network that navigates to the APN details view for the network.
+var APNSubpageButton = nodewith.NameContaining("Access point name").Role(role.Link).First()
+
 // Elements in "Cellular detail page"
 var (
 	// MoreActionsBtn is the finder for the more actions button on an eSIM profile detail view.

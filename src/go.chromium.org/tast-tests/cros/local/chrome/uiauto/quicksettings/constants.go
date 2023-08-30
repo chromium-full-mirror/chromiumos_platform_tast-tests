@@ -166,6 +166,9 @@ const (
 // AddCellularButton is the finder for adding new SIM profiles in Quick Settings.
 var AddCellularButton = nodewith.Name("Add eSIM").Role(role.Button)
 
+// APNSubpageButton is the finder for the button on the details view of a cellular network that navigates to the APN details view for the network.
+var APNSubpageButton = nodewith.NameContaining("Access point name").Role(role.Button).First()
+
 // HotspotDetailedViewToggle is the finder for the hotspot toggle in Hotspot detailed view in Quick Settings.
 var HotspotDetailedViewToggle = nodewith.Name("Toggle hotspot").Role(role.Switch)
 

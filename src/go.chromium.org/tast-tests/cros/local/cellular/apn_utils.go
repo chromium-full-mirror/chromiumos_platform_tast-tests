@@ -6,11 +6,16 @@
 package cellular
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -167,6 +172,23 @@ func GetCarrier(operatorID string) (Carrier, error) {
 		}
 	}
 	return carrier, nil
+}
+
+// CheckThatApnListIsEmpty is used to navigate to the APN details page and check that the APN list is empty.
+// This method expects to be called from the details page of a cellular network and is safe to call regardless of login state.
+func CheckThatApnListIsEmpty(ctx context.Context, tconn *chrome.TestConn, apnSubpageButtonNode, lastGoodApnNode *nodewith.Finder) error {
+	ui := uiauto.New(tconn)
+
+	apnNotConnectedText := nodewith.NameContaining("You are not connected yet").Role(role.StaticText)
+	if err := uiauto.Combine("Navigate to the APN subpage and verify no APN information is shown",
+		ui.WaitUntilExists(apnSubpageButtonNode),
+		ui.DoDefault(apnSubpageButtonNode),
+		ui.WaitUntilGone(lastGoodApnNode),
+		ui.WaitUntilExists(apnNotConnectedText),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to navigate to the APN subpage and verify no APN information is shown")
+	}
+	return nil
 }
 
 // GetAPNForModemManager removes any keys not recognized by MM from ApnInfo and replaces

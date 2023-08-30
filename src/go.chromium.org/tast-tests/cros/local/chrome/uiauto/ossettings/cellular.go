@@ -401,7 +401,6 @@ func VerifyAPNMoreActionsMenuItemsPresent(ctx context.Context, tconn *chrome.Tes
 // VerifyApnIsVisibleInSubtext will verify that the APN shows in the subtext of cellular details page.
 func (s *OSSettings) VerifyApnIsVisibleInSubtext(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, apn string) error {
 	ui := uiauto.New(tconn)
-	apnSubpageButton := nodewith.NameContaining("Access point name").Role(role.Link)
 
 	expr := `var node = shadowPiercingQuery(
 		'cr-link-row#apnSubpageButton div#subLabel');
@@ -419,7 +418,7 @@ func (s *OSSettings) VerifyApnIsVisibleInSubtext(ctx context.Context, tconn *chr
 		return errors.Errorf("failed to find APN name of %q in sublabel; shows %q instead", apn, sublabelText)
 	}
 
-	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(apnSubpageButton)(ctx); err != nil {
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(APNSubpageButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find APN in subtext")
 	}
 	return nil
