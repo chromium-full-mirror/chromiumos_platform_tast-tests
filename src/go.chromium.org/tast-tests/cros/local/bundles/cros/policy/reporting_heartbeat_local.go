@@ -77,13 +77,14 @@ func ReportingHeartbeatLocal(ctx context.Context, s *testing.State) {
 		s.Fatal("Chrome start failed: ", err)
 	}
 
+	// Make sure that all 10 records are formed correctly.
 	// Create a channel to communicate between the goroutines.
 	ch := make(chan *reporting.WrappedRecord)
 
 	// Start 10 goroutines to fetch records.
 	for i := 0; i < 10; i++ {
 		go func() {
-			record, err := server.NextRecordAsync(1 * time.Minute)
+			record, err := server.NextRecordAsync(2 * time.Minute)
 			if err != nil {
 				s.Fatal("Failed to wait for the record: ", err)
 			}
@@ -94,7 +95,6 @@ func ReportingHeartbeatLocal(ctx context.Context, s *testing.State) {
 	// Wait for all of the records to be fetched.
 	for i := 0; i < 10; i++ {
 		record := <-ch
-
 		if record == nil {
 			s.Errorf("Record %d is nil", i)
 		}

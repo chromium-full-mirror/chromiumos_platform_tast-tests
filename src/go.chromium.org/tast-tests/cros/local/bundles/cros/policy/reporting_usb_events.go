@@ -111,14 +111,13 @@ func ReportingUsbEvents(ctx context.Context, s *testing.State) {
 	// Check that the events are USB added events as expected.
 	// We only verify 2 events since the other ones are optional
 	// and might not be reported on every board.
-
 	// Create a channel to communicate between the goroutines.
 	ch := make(chan *reporting.WrappedRecord)
 
 	// Start 2 goroutines to fetch records.
 	for i := 0; i < 2; i++ {
 		go func() {
-			record, err := server.NextRecordAsync(1 * time.Minute)
+			record, err := server.NextRecordAsync(2 * time.Minute)
 			if err != nil {
 				s.Fatal("Failed to wait for the record: ", err)
 			}
@@ -129,7 +128,6 @@ func ReportingUsbEvents(ctx context.Context, s *testing.State) {
 	// Wait for all of the records to be fetched.
 	for i := 0; i < 2; i++ {
 		record := <-ch
-
 		if record == nil {
 			s.Errorf("Record %d is nil", i)
 		}

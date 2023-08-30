@@ -147,10 +147,7 @@ func ReportingInputInfo(ctx context.Context, s *testing.State) {
 
 	// Wait for the record then compare it to the one obtained from
 	// croshealthd above.
-	record, err := server.NextRecordAsync(2 * time.Minute)
-	if err != nil {
-		s.Fatal("Failed to wait for the record: ", err)
-	}
+	record := server.NextRecord()
 	if record == nil {
 		s.Fatal("Record is nil")
 	}

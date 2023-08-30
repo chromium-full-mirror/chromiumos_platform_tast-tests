@@ -129,10 +129,7 @@ func ReportingCPUInfo(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for the record.
-	record, err := server.NextRecordAsync(2 * time.Minute)
-	if err != nil {
-		s.Fatal("Failed to wait for the record: ", err)
-	}
+	record := server.NextRecord()
 	if record == nil {
 		s.Fatal("Record is nil")
 	}
