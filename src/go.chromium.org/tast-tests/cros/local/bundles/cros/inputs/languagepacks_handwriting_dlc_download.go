@@ -68,6 +68,7 @@ func LanguagepacksHandwritingDlcDownload(ctx context.Context, s *testing.State) 
 		// ime mapping: src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/chrome/ime/input_method.go
 		"ar":    ime.Arabic,
 		"es":    ime.SpanishSpain,
+		"de":    ime.German,
 		"fr":    ime.FrenchFrance,
 		"it":    ime.Italian,
 		"ja":    ime.Japanese,

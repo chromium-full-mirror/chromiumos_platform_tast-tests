@@ -20,6 +20,7 @@ const (
 	LanguageCa      Language = "Catalan"
 	LanguageCs      Language = "Czech"
 	LanguageDa      Language = "Danish"
+	LanguageDe      Language = "German"
 	LanguageEl      Language = "Greek"
 	LanguageEn      Language = "English"
 	LanguageEs      Language = "Spanish"

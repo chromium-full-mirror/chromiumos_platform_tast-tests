@@ -309,6 +309,14 @@ var Georgian = InputMethod{
 	VoiceLanguage:       LanguageKa,
 }
 
+// German represents the input method of German (Germany).
+var German = InputMethod{
+	Name:                "German",
+	ID:                  "xkb:de::ger",
+	HandwritingLanguage: LanguageDe,
+	VoiceLanguage:       LanguageDe,
+}
+
 // GreekTransliteration represents the input method of Greek Transliteration.
 var GreekTransliteration = InputMethod{
 	Name:                "GreekTransliteration",
@@ -707,6 +715,7 @@ var inputMethods = []InputMethod{
 	Danish,
 	Finnish,
 	Georgian,
+	German,
 	GreekTransliteration,
 	Gujarati,
 	Hebrew,
