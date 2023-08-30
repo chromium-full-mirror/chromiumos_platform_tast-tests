@@ -120,6 +120,15 @@ func GetBuildDescriptorRemotely(ctx context.Context, dut *dut.DUT, vmEnabled boo
 		return nil, errors.Errorf("ro.product.cpu.abi is not found in %q", buildPropStr)
 	}
 
+	// ro.product.cpu.abilist32 has higher priority however some boards may not have it set.
+	mCPUAbi32 := regexp.MustCompile(`(\n|^)ro.product.cpu.abilist32=(.*)(\n|$)`).FindStringSubmatch(buildPropStr)
+	if mCPUAbi32 == nil {
+		mCPUAbi32 = regexp.MustCompile(`(\n|^)ro.system.product.cpu.abilist32=(.*)(\n|$)`).FindStringSubmatch(buildPropStr)
+		if mCPUAbi32 == nil {
+			return nil, errors.Errorf("ro[.system].product.cpu.abilist32 is not found in %q", buildPropStr)
+		}
+	}
+
 	mModelType := regexp.MustCompile(`(\n|^)ro.product(\.[a-z]+)?.model=(.+)(\n|$)`).FindStringSubmatch(buildPropStr)
 	if mModelType == nil {
 		return nil, errors.Errorf("ro.product*.model is not found in %q", buildPropStr)
@@ -176,6 +185,16 @@ func GetBuildDescriptorRemotely(ctx context.Context, dut *dut.DUT, vmEnabled boo
 	abi, ok := abiMap[mCPUAbi[2]]
 	if !ok {
 		return nil, errors.Errorf("failed to map ABI %q", mCPUAbi[2])
+	}
+
+	if mCPUAbi32[2] == "" {
+		if abi == "arm64" {
+			abi = "arm64only"
+		} else if abi == "x86_64" {
+			abi = "x64only"
+		} else {
+			return nil, errors.Errorf("arc-64bit-only is not supported for %q", mCPUAbi[2])
+		}
 	}
 
 	hostUreadaheadAbi, err := getHostUreadaheadAbi(ctx, dut)
