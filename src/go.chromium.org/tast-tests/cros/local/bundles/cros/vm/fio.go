@@ -18,6 +18,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/storage"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/disk"
+	"go.chromium.org/tast-tests/cros/local/media/cpu"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -319,6 +321,11 @@ func init() {
 }
 
 func Fio(ctx context.Context, s *testing.State) {
+	// Reserve 5 seconds for clean up
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	// Create a temporary directory that shared with the guest so the guest can put test logs.
 	td, err := ioutil.TempDir("/usr/local/tmp", "tast.vm.Fio.")
 	if err != nil {
@@ -347,6 +354,14 @@ func Fio(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create storage option: ", err)
 	}
+
+	// Disables CPU frequency scaling and thermal throttling
+	// to have more stable results
+	cleanup, err := cpu.SetUpBenchmark(ctx)
+	if err != nil {
+		s.Fatal("Failed to perform setUpBenchmark: ", err)
+	}
+	defer cleanup(cleanupCtx)
 
 	scriptArgs := []string{
 		opt.Kind,
