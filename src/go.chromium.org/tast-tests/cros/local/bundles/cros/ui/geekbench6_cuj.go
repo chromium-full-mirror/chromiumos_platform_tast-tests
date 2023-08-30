@@ -30,7 +30,10 @@ func init() {
 			"geekbench6_x86_64",
 			"geekbench6-workload.plar",
 		},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{
+			"chrome",
+			"amd64",
+		},
 		Vars: []string{
 			"keepState",
 			"ui.gaiaPoolDefault",

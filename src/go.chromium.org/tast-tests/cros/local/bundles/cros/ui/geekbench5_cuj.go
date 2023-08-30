@@ -29,7 +29,10 @@ func init() {
 			"geekbench5.plar",
 			"geekbench5_x86_64",
 		},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{
+			"chrome",
+			"amd64",
+		},
 		Vars: []string{
 			"keepState",
 			"ui.gaiaPoolDefault",

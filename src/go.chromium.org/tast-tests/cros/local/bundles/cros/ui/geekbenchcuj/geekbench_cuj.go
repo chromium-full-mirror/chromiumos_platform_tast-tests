@@ -89,11 +89,6 @@ func Run(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get executable name: ", err)
 	}
 
-	// We do not have access to publicly available ARM binaries.
-	if gbInfo.needLicense && (strings.Contains(execName, "aarch64") || strings.Contains(execName, "armv7")) {
-		s.Fatal("Failed to validate architecture, ARM architecture not supported for public automation")
-	}
-
 	execFilePath := filepath.Join(gbDir.path, execName)
 	resultPath := filepath.Join(gbDir.path, resultFileName)
 
