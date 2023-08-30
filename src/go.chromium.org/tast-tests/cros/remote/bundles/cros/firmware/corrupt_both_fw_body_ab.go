@@ -31,26 +31,27 @@ func init() {
 			"pf@semihalf.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
+		Attr:         []string{"group:firmware", "firmware_usb"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      50 * time.Minute,
 		Vars:         []string{"firmware.skipFlashUSB"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		Params: []testing.Param{
 			{
-				Name:    "normal_mode",
-				Fixture: fixture.NormalMode,
-				Val:     "normal",
+				Name:              "normal_mode",
+				Fixture:           fixture.NormalMode,
+				Val:               "normal",
+				ExtraAttr:         []string{"firmware_bios"},
+				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 			},
-			/* Disabled due to <1% pass rate over 30 days. See b/246820226
 			{
-				Name:    "dev_mode",
-				Fixture: fixture.DevMode,
-				Val:     "developer",
-			}
-			*/
+				Name:      "dev_mode",
+				Fixture:   fixture.DevMode,
+				Val:       "developer",
+				ExtraAttr: []string{"firmware_unstable"},
+			},
 		},
 	})
 }
