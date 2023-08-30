@@ -84,7 +84,8 @@ func Run(ctx context.Context, s *testing.State) {
 	}
 	defer gbDir.rmDir(ctx)
 
-	execName, err := getExecutableFileName(ctx, false /*ignoreARMBitWidth*/, gbInfo.version)
+	// Crostini VM is always 64-bit.
+	execName, err := getExecutableFileName(ctx, gbInfo.name == "crostini" /* ignoreARMBitWidth */, gbInfo.version)
 	if err != nil {
 		s.Fatal("Failed to get executable name: ", err)
 	}
