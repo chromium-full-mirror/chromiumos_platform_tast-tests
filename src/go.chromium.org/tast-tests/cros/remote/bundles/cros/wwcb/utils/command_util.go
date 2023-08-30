@@ -122,7 +122,7 @@ func VerifyTypeADevicesCount(ctx context.Context, dut *dut.DUT, expectUSBTypeADe
 
 // VerifyPeripheralsConnection verifies whether the peripherals are connected or not.
 // It checks the following peripherals: power, external display, USB audio, Ethernet, USB Type-A devices.
-func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected bool, dockingEth string, expectUSBTypeADeviceNum int) error {
+func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected bool, expectUSBTypeADeviceNum int) error {
 	testing.ContextLog(ctx, "Starting verifying peripherals")
 
 	testingCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
@@ -145,8 +145,8 @@ func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected 
 		return errors.Wrap(err, "verify connection of USB audio")
 	}
 
-	if err := VerifyNetworkState(testingCtx, dut, dockingEth, isConnected); err == nil {
-		return errors.Wrap(err, "verify connection of dock ethernet")
+	if err := VerifyEthernetState(testingCtx, dut, isConnected); err != nil {
+		return errors.Wrap(err, "verify connection of Ethernet")
 	}
 
 	if err := VerifyTypeADevicesCount(testingCtx, dut, expectUSBTypeADeviceNum); err != nil {
@@ -178,21 +178,55 @@ func VerifyNetworkState(ctx context.Context, dut *dut.DUT, network string, expec
 	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
 }
 
-// VerifyEthState verifies the state of the ethernets are as expected or not.
-func VerifyEthState(ctx context.Context, dut *dut.DUT, expectedState bool) error {
-	networks, err := ListEthernets(ctx, dut)
-	if err != nil {
-		return errors.Wrap(err, "list network interface")
-	}
+// VerifyEthernetState verifies whether the ethernet states are as expected or not.
+// After the DUT restarts, the order of the ethernet interfaces may change,
+// so it's inappropriate to check the assigning network.
+// Change to list ethernet states to determine the state of docking station.
+func VerifyEthernetState(ctx context.Context, dut *dut.DUT, isDockEthConnected bool) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		networks, err := ListNetworks(ctx, dut)
+		if err != nil {
+			return errors.Wrap(err, "list networks interface")
+		}
 
-	for _, network := range networks {
-		if strings.Contains(network, "eth") {
-			if err := VerifyNetworkState(ctx, dut, network, expectedState); err != nil {
-				return errors.Wrapf(err, "verify the state of %s internet", network)
+		ethStates := make(map[string]string)
+		for _, network := range networks {
+			if strings.Contains(network, "eth") {
+				out, err := dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/net/"+network+"/operstate").Output()
+				if err != nil {
+					return errors.Wrap(err, "retrieve ethernet operstate")
+				}
+				ethStates[network] = strings.TrimSpace(string(out))
 			}
 		}
+
+		// One is from servo, the other is from docking station.
+		if len(ethStates) != 2 {
+			return errors.Errorf("unexpect number of Ethernet detected; got %d, want 2", len(ethStates))
+		}
+
+		allUP := true
+		for _, state := range ethStates {
+			if state != "up" {
+				allUP = false
+				break
+			}
+		}
+
+		if allUP != isDockEthConnected {
+			return errors.Errorf("unexpected ethernet states while the dock eth connection is %t; got %v,", isDockEthConnected, ethStates)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
+}
+
+// ListNetworks returns the list of network interface.
+func ListNetworks(ctx context.Context, dut *dut.DUT) ([]string, error) {
+	out, err := dut.Conn().CommandContext(ctx, "ls", "/sys/class/net").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "execute ls command")
 	}
-	return nil
+	return strings.Fields(string(out)), err
 }
 
 // ListEthernets returns ethernet interface name array.
