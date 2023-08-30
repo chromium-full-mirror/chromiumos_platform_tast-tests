@@ -710,7 +710,7 @@ func (ds *GPUUsageDataSource) gpuClientProcesses(ctx context.Context) (map[strin
 			continue
 		}
 		// Read the "clients" file under each DRM's directory.
-		if gpuDriClients(path.Join(driDebugPath, d.Name(), "clients"), clients) != nil {
+		if err := gpuDriClients(path.Join(driDebugPath, d.Name(), "clients"), clients); err != nil {
 			return nil, errors.Wrapf(err, "failed to get dri clients for %s", d.Name())
 		}
 	}
