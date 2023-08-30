@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DeviceMouseScrollAcceleration,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test to add a new mouse",
+		Desc:         "Test mouse scroll acceleration control exists",
 		Contacts: []string{
 			"cros-peripherals@google.com",
 			"zhangwenyu@google.com",
