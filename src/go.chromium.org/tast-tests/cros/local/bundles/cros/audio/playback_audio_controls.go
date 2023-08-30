@@ -38,18 +38,8 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:intel-nda"},
 		Fixture:      "chromeLoggedInQsRevampEnabled",
-		Params: []testing.Param{
-			{
-				ExtraSoftwareDeps: []string{"audio_stable"},
-				ExtraAttr:         []string{"group:intel-nda"},
-			}, {
-				Name:              "unstable_platform",
-				ExtraSoftwareDeps: []string{"audio_unstable"},
-				ExtraAttr:         []string{"informational"},
-			},
-		},
 	})
 }
 
