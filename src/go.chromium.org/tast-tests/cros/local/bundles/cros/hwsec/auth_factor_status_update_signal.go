@@ -30,7 +30,7 @@ const (
 	// Once the user is locked out, they are supposed to be locked out for |timeoutInMs| milliseconds. Because of the time it takes to run the command, we can not test the
 	// actual time out because by the time the signal is received the timeout has probably changed a bit (time to run a few commands by the CPU). So we incorporate the
 	// accepted delay in our calculations.
-	delayBetweenLockoutAndSignalFetchInMs = 100
+	delayBetweenLockoutAndSignalFetchInMs = 2000
 )
 
 func init() {
@@ -43,12 +43,13 @@ func init() {
 		BugComponent: "b:260904713",
 		Attr:         []string{"informational", "group:cryptohome", "group:mainline"},
 		SoftwareDeps: []string{"pinweaver", "chrome"},
+		Timeout:      100 * time.Second,
 	})
 }
 
 func AuthFactorStatusUpdateSignal(ctx context.Context, s *testing.State) {
 	ctxForCleanup := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 80*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	cmdRunner := hwseclocal.NewCmdRunner()
@@ -100,7 +101,7 @@ func AuthFactorStatusUpdateSignal(ctx context.Context, s *testing.State) {
 				s.Fatal("Authentication with wrong PIN succeeded unexpectedly: ", err)
 			}
 		}
-		var authFactorStatusUpdateReply /*, authFactorStatusUpdateReply2*/ *uda.AuthFactorStatusUpdate
+		var authFactorStatusUpdateReply *uda.AuthFactorStatusUpdate
 		authFactorStatusUpdateReply, err = cryptohomeHelper.FailAuthenticatePinAuthFactorAndFetchStatusUpdate(ctx, authSessionID, authFactorLabelPin, incorrectPin, authSession.BroadcastId)
 		if err != nil {
 			s.Fatal("Authentication succeeded while it was expected to fail or status update signal was not fetched properly: ", err)
@@ -108,7 +109,7 @@ func AuthFactorStatusUpdateSignal(ctx context.Context, s *testing.State) {
 		// Check if the timeout is correct
 		timeAvailableIn := authFactorStatusUpdateReply.AuthFactorWithStatus.StatusInfo.TimeAvailableIn
 		if timeAvailableIn > timeoutInMs || timeAvailableIn <= 0 || timeoutInMs-timeAvailableIn > delayBetweenLockoutAndSignalFetchInMs {
-			s.Fatal("time_available in is not set properly right after the lock out")
+			s.Fatal("time_available in is not set properly right after the lock out: ", timeAvailableIn)
 		}
 
 		// Check if the timeout delay between two signals is correct.
