@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
 )
@@ -386,6 +387,16 @@ func (c *cryptohomeBinary) relabelAuthFactor(ctx context.Context, authSessionID,
 		"--auth_session_id=" + authSessionID,
 		"--key_label=" + label,
 		"--new_key_label=" + newLabel}
+	return c.call(ctx, args...)
+}
+
+// replacePasswordAuthFactor calls "cryptohome --action=replace_auth_factor".
+func (c *cryptohomeBinary) replacePasswordAuthFactor(ctx context.Context, authSessionID, label, newKeyLabel, password string) ([]byte, error) {
+	args := []string{"--action=replace_auth_factor",
+		"--auth_session_id=" + authSessionID,
+		"--key_label=" + label,
+		"--new_key_label=" + newKeyLabel,
+		"--password=" + password}
 	return c.call(ctx, args...)
 }
 

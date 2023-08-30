@@ -22,6 +22,7 @@ import (
 
 	cpb "chromiumos/system_api/cryptohome_proto"
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -1083,6 +1084,12 @@ func (u *CryptohomeClient) UpdatePinAuthFactor(ctx context.Context, authSessionI
 // RelabelAuthFactor relabels an auth factor for the user.
 func (u *CryptohomeClient) RelabelAuthFactor(ctx context.Context, authSessionID, label, newLabel string) error {
 	_, err := u.binary.relabelAuthFactor(ctx, authSessionID, label, newLabel)
+	return err
+}
+
+// ReplacePasswordAuthFactor replace an existing auth factor with a new one with given password.
+func (u *CryptohomeClient) ReplacePasswordAuthFactor(ctx context.Context, authSessionID, label, newKeyLabel, password string) error {
+	_, err := u.binary.replacePasswordAuthFactor(ctx, authSessionID, label, newKeyLabel, password)
 	return err
 }
 
