@@ -41,7 +41,7 @@ func init() {
 			"ypitsishin@google.org",
 		},
 		BugComponent: "b:280365665",
-		Attr:         []string{"group:launcher_search_quality_daily"},
+		Attr:         []string{"group:launcher_image_search_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{localPictureName},
 		Timeout:      10 * time.Minute,
