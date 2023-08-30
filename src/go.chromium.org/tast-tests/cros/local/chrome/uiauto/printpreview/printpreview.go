@@ -73,6 +73,14 @@ func SelectPrinter(ctx context.Context, tconn *chrome.TestConn, printerName stri
 		return err
 	}
 
+	// Find and click the menu item corresponding to `printerName` if it exists.
+	// Note that if it does not exist, the desired printer may be behind the
+	// "See more..." menu item, requiring additional clicks on behalf of the user.
+	menuItem := nodewith.Name(printerName).Role(role.MenuItem)
+	if err := ui.WithTimeout(1 * time.Second).LeftClick(menuItem)(ctx); err == nil {
+		return nil
+	}
+
 	// Find and click the See more... menu item.
 	seeMore := nodewith.Name("See more destinations").Role(role.MenuItem)
 	if err := uiauto.Combine("find and click See more... menu item",
