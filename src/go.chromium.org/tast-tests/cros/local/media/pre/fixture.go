@@ -26,7 +26,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -43,7 +43,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -60,7 +60,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -79,7 +79,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -96,7 +96,7 @@ func init() {
 				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...))).Opts()
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -114,7 +114,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -131,7 +131,7 @@ func init() {
 				chrome.LacrosExtraArgs(chromeSuppressNotificationsArgs...))).Opts()
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -148,7 +148,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -164,7 +164,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -181,7 +181,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -198,7 +198,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -215,7 +215,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -233,7 +233,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -249,7 +249,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -265,7 +265,7 @@ func init() {
 				chrome.ExtraArgs("--enable-hardware-overlays=\"\""))).Opts()
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -281,7 +281,7 @@ func init() {
 				chrome.LacrosExtraArgs("--enable-hardware-overlays=\"\""))).Opts()
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -297,7 +297,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -314,7 +314,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -331,7 +331,7 @@ func init() {
 				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...))).Opts()
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -348,7 +348,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -366,7 +366,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -385,7 +385,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -403,7 +403,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -420,7 +420,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -439,7 +439,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -457,7 +457,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -473,7 +473,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -491,7 +491,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -508,7 +508,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -525,7 +525,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -541,7 +541,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -557,7 +557,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -574,7 +574,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -593,7 +593,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -611,7 +611,7 @@ func init() {
 				chrome.LacrosExtraArgs("--disable-accelerated-video-encode"))).Opts()
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -628,7 +628,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -645,7 +645,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -663,7 +663,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -679,7 +679,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -696,7 +696,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -713,7 +713,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -730,7 +730,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -747,7 +747,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -765,7 +765,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -781,7 +781,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -797,7 +797,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -814,7 +814,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -832,7 +832,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -851,7 +851,7 @@ func init() {
 				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...))).Opts()
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -869,7 +869,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -888,7 +888,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -906,7 +906,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -925,7 +925,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -943,7 +943,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -962,7 +962,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -978,7 +978,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})

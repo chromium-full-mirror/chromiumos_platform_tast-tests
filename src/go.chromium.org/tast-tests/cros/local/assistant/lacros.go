@@ -30,7 +30,7 @@ func init() {
 				chrome.ExtraArgs(arc.DisableSyncFlags()...),
 			)).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})

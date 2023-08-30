@@ -41,7 +41,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return s.ParentValue().(wpr.FixtValue).FOpt()(ctx, s)
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Parent:          "tabSwitchCUJWPR",
@@ -64,7 +64,7 @@ func init() {
 			}
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Parent:          "tabSwitchCUJWPR",
@@ -85,7 +85,7 @@ func init() {
 			opts = append(opts, chrome.ExtraArgs("enable-field-trial-config"))
 			return opts, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Parent:          "tabSwitchCUJWPR",

@@ -68,7 +68,7 @@ func init() {
 			}
 			return opts, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"keepState"},
@@ -109,7 +109,7 @@ func init() {
 			}
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"keepState"},
@@ -124,7 +124,7 @@ func init() {
 			opts = append(opts, chrome.ARCDisabled())
 			return opts, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"keepState"},
@@ -268,7 +268,7 @@ func init() {
 			opts = append(opts, chrome.EnableFeatures("CrostiniUseLxd5"))
 			return opts, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"keepState"},
@@ -323,7 +323,7 @@ func init() {
 			}
 			return opts, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"keepState"},

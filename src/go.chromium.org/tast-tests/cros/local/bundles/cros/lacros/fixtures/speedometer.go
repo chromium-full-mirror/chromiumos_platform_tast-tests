@@ -41,7 +41,7 @@ func init() {
 			opts = append(opts, chrome.DisableFeatures("FirmwareUpdaterApp"))
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Parent:          "speedometerWPR",
@@ -62,7 +62,7 @@ func init() {
 			opts = append(opts, chrome.DisableFeatures("FirmwareUpdaterApp"))
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Parent:          "speedometerWPR",

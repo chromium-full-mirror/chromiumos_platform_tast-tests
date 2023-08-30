@@ -104,7 +104,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("RgbKeyboard")}, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -119,7 +119,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("RgbKeyboard", "MultiZoneRgbKeyboard")}, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -161,7 +161,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("AvatarsCloudMigration")}, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -214,7 +214,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{getTimeOfDayOption()}, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})

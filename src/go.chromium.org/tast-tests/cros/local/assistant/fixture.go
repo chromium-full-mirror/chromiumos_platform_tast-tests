@@ -63,7 +63,7 @@ func init() {
 				chrome.ExtraArgs(arc.DisableSyncFlags()...),
 			}, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -88,7 +88,7 @@ func init() {
 				chrome.EnableFeatures("QsRevamp"),
 			}, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -108,7 +108,7 @@ func init() {
 				chrome.ExtraArgs(arc.DisableSyncFlags()...),
 			}, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -180,7 +180,7 @@ func init() {
 				chrome.ExtraArgs(arc.DisableSyncFlags()...),
 			}, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -342,7 +342,7 @@ func init() {
 				ashNoNudgesExtraArg(),
 			}, nil
 		}),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})

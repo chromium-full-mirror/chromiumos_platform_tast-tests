@@ -23,7 +23,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl:            fixtureImplWithFeatures([]string{"QsRevamp"}, []string{"Floss"}, false),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -35,7 +35,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl:            fixtureImplWithFeatures([]string{"QsRevamp", "Floss"}, []string{}, false),
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -48,7 +48,7 @@ func init() {
 		},
 		Impl:            fixtureImplWithFeatures([]string{"QsRevamp"}, []string{"Floss"}, true),
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -61,7 +61,7 @@ func init() {
 		},
 		Impl:            fixtureImplWithFeatures([]string{"QsRevamp", "Floss"}, []string{}, true),
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
-		SetUpTimeout:    chrome.LoginTimeout,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})

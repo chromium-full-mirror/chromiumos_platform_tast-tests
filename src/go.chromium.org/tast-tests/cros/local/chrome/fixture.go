@@ -13,9 +13,16 @@ import (
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/screenshot/cliscreenshot"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+// screenshotTimeout is the time allocated to capture a screenshot upon fixture SetUp failure.
+const screenshotTimeout = 15 * time.Second
+
+// FixtureSetUpTimeout includes 15 seconds for screenshot capture on failure.
+const FixtureSetUpTimeout = LoginTimeout + screenshotTimeout
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -25,7 +32,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return nil, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -37,7 +44,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{ExtraArgs("--disable-sync")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -49,7 +56,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{ExtraArgs("--disable-sync"), ExtraArgs("--disable-features=FirmwareUpdaterApp")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -61,7 +68,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{GuestLogin()}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -74,7 +81,7 @@ func init() {
 			return nil, nil
 		}),
 		Parent:          "install100Apps",
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -93,7 +100,7 @@ func init() {
 			}, nil
 		}),
 		Parent:          "install100Apps",
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -107,7 +114,7 @@ func init() {
 			return []Option{EnableFeatures("DefaultPassthroughCommandDecoder")}, nil
 		}),
 		Parent:          "install100Apps",
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -121,7 +128,7 @@ func init() {
 			return []Option{GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")), EnableFeatures("CalendarView", "QsRevamp")}, nil
 		}),
 		Vars:            []string{"calendar.googleCalendarAccountPool"},
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -135,7 +142,7 @@ func init() {
 			return []Option{GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")), EnableFeatures("PrivacyIndicators", "QsRevamp")}, nil
 		}),
 		Vars:            []string{"calendar.googleCalendarAccountPool"},
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -149,7 +156,7 @@ func init() {
 			return []Option{GAIALoginPool(s.RequiredVar("calendar.upcomingEventsAccountPool")), EnableFeatures("CalendarJelly", "QsRevamp")}, nil
 		}),
 		Vars:            []string{"calendar.upcomingEventsAccountPool"},
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -163,7 +170,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("QsRevamp")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -177,7 +184,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{DisableFeatures("QsRevamp")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -190,7 +197,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -203,7 +210,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{DeferLogin(), LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey"))}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -215,7 +222,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("OsFeedback", "SkipSendingFeedbackReportInTastTests")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -227,7 +234,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("ProductivityLauncher:enable_continue/true")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -239,7 +246,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{DontSkipOOBEAfterLogin()}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -251,7 +258,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("OsFeedback", "SkipSendingFeedbackReportInTastTests", "OsFeedbackSaveReportToLocalForE2ETesting")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -266,7 +273,7 @@ func init() {
 				ExtraArgs("--oobe-show-accessibility-button-on-marketing-opt-in-for-testing"),
 			}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -278,7 +285,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableStackSampledMetrics(), ExtraArgs("--metrics-recording-only")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -290,7 +297,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("AutocompleteExtendedSuggestions")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -302,7 +309,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("OsFeedback, OsSettingsSearchFeedback")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -314,7 +321,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{GuestLogin(), EnableFeatures("OsFeedback, OsSettingsSearchFeedback")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -326,7 +333,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("PrintManagementSetupAssistance", "PrintPreviewDiscoveredPrinters", "PrintPreviewSetupAssistance", "PrintSettingsRevamp", "PrintSettingsPrinterStatus", "Jelly")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -338,7 +345,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{ExtraArgs("--vmodule=*stats_reporting_controller*=1,*autotest_private_api*=1,*owner_pending_setting_controller*=1")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -350,7 +357,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("PasspointARCEnabled")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -362,7 +369,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("InputDeviceSettingsSplit", "AllowScrollSettings")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -374,7 +381,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("ShortcutCustomizationApp", "SearchInShortcutsApp", "OnlyShowNewShortcutsApp")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -386,7 +393,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{ExtraArgs("--drm-virtual-connector-is-external")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -398,7 +405,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("Jelly")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -410,7 +417,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{FieldTrialConfig(FieldTrialConfigEnable)}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -422,7 +429,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{FieldTrialConfig(FieldTrialConfigDisable)}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -435,7 +442,7 @@ func init() {
 			return []Option{FieldTrialConfig(FieldTrialConfigEnable),
 				ExtraArgs("--vmodule=*stats_reporting_controller*=1,*autotest_private_api*=1,*owner_pending_setting_controller*=1")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -448,7 +455,7 @@ func init() {
 			return []Option{FieldTrialConfig(FieldTrialConfigDisable),
 				ExtraArgs("--vmodule=*stats_reporting_controller*=1,*autotest_private_api*=1,*owner_pending_setting_controller*=1")}, nil
 		}),
-		SetUpTimeout:    LoginTimeout,
+		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -472,6 +479,12 @@ func NewLoggedInFixture(fOpt OptionsCallback) testing.FixtureImpl {
 }
 
 func (f *loggedInFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	// Reserve 15 seconds for screenshot capture,
+	// so it has time even if the New() function times out.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
+
 	var opts []Option
 	// If there's a parent fixture and the fixture supplies extra options, use them.
 	if extraOpts, ok := s.ParentValue().([]Option); ok {
@@ -484,7 +497,7 @@ func (f *loggedInFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	opts = append(opts, crOpts...)
 
-	defer screenshotOnError(ctx, s.HasError)
+	defer screenshotOnError(cleanupCtx, s.HasError)
 
 	cr, err := New(ctx, opts...)
 	if err != nil {
@@ -553,7 +566,7 @@ func screenshotOnError(ctx context.Context, hasError func() bool) {
 		defer cancel()
 
 		return cliscreenshot.Capture(ctx, path)
-	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: screenshotTimeout, Interval: time.Second}); err != nil {
 		testing.ContextLog(ctx, "Failed to take a screenshot: ", err)
 	}
 }

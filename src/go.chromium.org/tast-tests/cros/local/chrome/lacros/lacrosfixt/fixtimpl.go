@@ -25,7 +25,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig().Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 1*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -44,7 +44,7 @@ func init() {
 					chrome.ExtraArgs("--arc-availability=none"),                    // Make sure ARC++ is not running.
 					chrome.ExtraArgs("--disable-features=FirmwareUpdaterApp"))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 1*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -57,7 +57,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(chrome.EnableFeatures("QsRevamp"))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 1*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -72,7 +72,7 @@ func init() {
 			// Disable the FirmwareUpdaterApp feature.
 			return NewConfig(ChromeOptions(chrome.DisableFeatures("FirmwareUpdaterApp"))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 1*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -87,7 +87,7 @@ func init() {
 			return NewConfig(ChromeOptions(chrome.ExtraArgs("--enable-hardware-overlays=\"\""),
 				chrome.DisableFeatures("FirmwareUpdaterApp"))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -103,7 +103,7 @@ func init() {
 				chrome.LacrosDisableFeatures("DelegatedCompositing"),
 				chrome.DisableFeatures("FirmwareUpdaterApp"))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -122,7 +122,7 @@ func init() {
 				chrome.LacrosExtraArgs("--use-fake-ui-for-media-stream"),
 				chrome.LacrosExtraArgs("--autoplay-policy=no-user-gesture-required"))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -137,7 +137,7 @@ func init() {
 			return NewConfig().Opts()
 		}),
 		Parent:          "install100LacrosApps",
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -152,7 +152,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(Selection(lacros.Omaha)).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -165,7 +165,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(chrome.ExtraArgs("--disable-sync"))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 1*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -179,7 +179,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(chrome.EnableFeatures("LacrosResourcesFileSharing"))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 1*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -193,7 +193,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(KeepAlive(true)).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -215,7 +215,7 @@ func init() {
 				chrome.LacrosExtraArgs("--fake-variations-channel="+channel),
 				chrome.LacrosExtraArgs("--variations-server-url=https://clients4.google.com/chrome-variations/seed"))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -230,7 +230,7 @@ func init() {
 			return NewConfig(ChromeOptions(
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -246,7 +246,7 @@ func init() {
 			return NewConfig(ChromeOptions(
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -260,7 +260,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(chrome.EnableFeatures("OsFeedback", "SkipSendingFeedbackReportInTastTests"))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -272,7 +272,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(chrome.EnableStackSampledMetrics())).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 1*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -284,7 +284,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(chrome.EnableFeatures("Jelly"))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -301,7 +301,7 @@ func init() {
 				chrome.EnableFeatures("PrintManagementSetupAssistance", "PrintPreviewDiscoveredPrinters", "PrintSettingsRevamp", "PrintSettingsPrinterStatus", "Jelly"),
 				chrome.LacrosEnableFeatures("PrintPreviewSetupAssistance"))).Opts()
 		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
