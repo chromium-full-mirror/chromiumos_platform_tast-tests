@@ -29,7 +29,7 @@ func init() {
 			"ribalda@chromium.org",
 		},
 		BugComponent: "b:1093480",
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:camera-stability"},
+		Attr:         []string{"group:mainline", "group:camera-stability"},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
 		SoftwareDeps: []string{caps.BuiltinUSBCamera},
 	})
