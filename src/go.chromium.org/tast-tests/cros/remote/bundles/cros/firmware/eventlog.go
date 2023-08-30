@@ -44,7 +44,7 @@ func init() {
 		Desc: "Ensure that eventlog is written on boot and suspend/resume",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"gredelston@google.com",
+			"jbettis@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4"},
