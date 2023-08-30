@@ -483,7 +483,7 @@ func verifyTable(decodedSSDT []byte, tableType sarTableType, geoTables []geoSART
 						geoOffset = geoTable.chainBOffset2g
 					} else if index < 17 {
 						geoOffset = geoTable.chainBOffset5g
-					} else if index < 21 {
+					} else if index <= 21 {
 						geoOffset = geoTable.chainBOffset6g
 					}
 				}
