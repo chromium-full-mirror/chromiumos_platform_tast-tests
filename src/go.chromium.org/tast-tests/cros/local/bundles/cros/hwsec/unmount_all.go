@@ -77,6 +77,19 @@ func UnmountAll(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for TPM to be owned: ", err)
 	}
 
+	// Reset the system state before the test starts, we don't care if the reset succeeds.
+	if err := utility.UnmountAll(ctx); err != nil {
+		s.Log("Failed to unmount all vault before the test: ", err)
+	}
+	if _, err := utility.RemoveVault(ctx, util.FirstUsername); err != nil {
+		// The system is clean as in the first user doesn't exist when the test started, which is absolutely normal.
+		s.Log("Failed te remove first user's vault before the test, this may be normal if the system is clean: ", err)
+	}
+	if _, err := utility.RemoveVault(ctx, util.SecondUsername); err != nil {
+		// The system is clean as in the second user doesn't exist when the test started, which is absolutely normal.
+		s.Log("Failed te remove second user's vault before the test, this may be normal if the system is clean: ", err)
+	}
+
 	// We check Unmount() works correctly whether the 2 vault is mounted during creation or subsequent remount.
 	// Create 2 User/Vault -> Write Test File -> Unmount -> Remount -> Unmount
 	// At each of the Unmount(), we check that it's correctly unmounted through IsMounted() and existence of test file.
