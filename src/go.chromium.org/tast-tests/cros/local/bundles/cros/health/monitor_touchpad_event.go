@@ -118,6 +118,18 @@ func verifyTouchpointEvent(eventLine string) error {
 }
 
 func MonitorTouchpadEvent(ctx context.Context, s *testing.State) {
+	// Log tablet mode information for debugging b/296182230.
+	if tabletModeAngle, err := testexec.CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle").Output(testexec.DumpLogOnError); err != nil {
+		s.Log("Failed to read tablet_mode_angle: ", err)
+	} else {
+		s.Log("Tablet mode angle: ", string(tabletModeAngle))
+	}
+	if lidAngle, err := testexec.CommandContext(ctx, "ectool", "motionsense", "lid_angle").Output(testexec.DumpLogOnError); err != nil {
+		s.Log("Failed to read lid_angle: ", err)
+	} else {
+		s.Log("Lid angle: ", string(lidAngle))
+	}
+
 	// Run monitor command in background.
 	monitorCmd := testexec.CommandContext(ctx, "cros-health-tool", "event", "--category=touchpad", "--length_seconds=10")
 	stdoutPipe, err := monitorCmd.StdoutPipe()
