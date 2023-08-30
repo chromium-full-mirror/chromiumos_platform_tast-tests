@@ -23,7 +23,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ConnServiceGRPC,
 		Desc:         "Check basic functionalities of UI ConnService",
-		Contacts:     []string{"chromeos-engprod-syd@google.com", "ythjkt@google.com"},
+		Contacts:     []string{"lacros-team@google.com", "ythjkt@google.com"},
 		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Apps
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
