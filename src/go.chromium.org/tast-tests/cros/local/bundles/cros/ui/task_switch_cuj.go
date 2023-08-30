@@ -83,6 +83,16 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 			},
+			// TODO(b/298151007): Remove when sufficient data is collected.
+			{
+				Name:      "hrtimer_off",
+				ExtraAttr: []string{"cuj_experimental"},
+				Fixture:   "loggedInToCUJUserARCSupportedWithHighResTimerOff",
+				Val: taskswitchcuj.TaskSwitchTest{
+					BrowserType: browser.TypeAsh,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
+			},
 		},
 	})
 }

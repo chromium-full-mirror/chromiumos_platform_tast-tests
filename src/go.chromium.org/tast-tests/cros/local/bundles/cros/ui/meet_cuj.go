@@ -471,6 +471,24 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingAndBatterySaver",
 			},
+			// TODO(b/298151007): Remove when sufficient data is collected.
+			{
+				// Variant of 4p with presenting and notes split with hrtimer off.
+				Name:      "4p_present_notes_split_hrtimer_off",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					bots:        []int{3},
+					layout:      googlemeet.TiledLayout,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingAndHighResTimerOff",
+				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
+			},
 
 			// Inactive variants. No group should be specified for these tests.
 			{

@@ -52,6 +52,14 @@ func init() {
 				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithBatterySaver",
 			},
+			// TODO(b/298151007): Remove when sufficient data is collected.
+			{
+				Name:              "hrtimer_off",
+				ExtraAttr:         []string{"cuj_experimental"},
+				Val:               browser.TypeAsh,
+				Fixture:           "loggedInToCUJUserWithHighResTimerOff",
+				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
+			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya and volteer.
 			{
 				Name:              "vulkan",
