@@ -98,6 +98,10 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper) error {
 	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 		return err
 	}
+	testing.ContextLog(ctx, "Setting DFP mode")
+	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %s", err)
+	}
 	testing.ContextLogf(ctx, "Sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)
 	// GoBigSleepLint: Sleep for model specific time.
 	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
@@ -142,14 +146,16 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper) error {
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 		return errors.Wrap(err, "failed to enable the USB to DUT")
 	}
-	testing.ContextLog(ctx, "Sleeping for 2 secs to ensure rec invalid screen appears")
+	testing.ContextLogf(ctx, "Sleeping for %s to ensure rec invalid screen appears", h.Config.RecInvalidScreen)
 	// GoBigSleepLint: This sleep is necessary to accommodate for the delay
 	// that the DUT takes in recognizing the USB as a valid/invalid device.
 	// If the delay was too short, the rec invalid screen might not appear.
 	// If the delay was too long, the firmware log might get over flooded.
 	// When leasing a few duts and running this test remotely, we found a
-	// duration of two seconds to be the most promising.
-	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+	// duration of two seconds to be the most promising for most of the boards,
+	// and five seconds for boards, such as sarien, coral, octopus, eve, nami
+	// and grunt.
+	if err := testing.Sleep(ctx, h.Config.RecInvalidScreen); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}
 	return nil

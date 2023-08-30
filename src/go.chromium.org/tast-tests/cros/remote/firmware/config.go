@@ -109,6 +109,7 @@ type Config struct {
 	RawShutdownTimeout               float64 `json:"shutdown_timeout"`
 	RawSoftwareSyncUpdate            float64 `json:"software_sync_update"`
 	RawUSBPlug                       float64 `json:"usb_plug"`
+	RawRecInvalidScreen              float64 `json:"rec_invalid_screen"`
 	RawMiniOSScreen                  float64 `json:"minios_screen"`
 
 	// Actual duration fields are populated during NewConfig based on raw JSON duration values, defined above.
@@ -121,6 +122,7 @@ type Config struct {
 	HoldPwrButtonPowerOn          time.Duration
 	KeypressDelay                 time.Duration
 	SerialFirmwareBootDelay       time.Duration
+	RecInvalidScreen              time.Duration
 	MiniOSScreen                  time.Duration
 	// Shutdown is supposed to be the time the DUT takes to power off.
 	//
@@ -235,6 +237,7 @@ func NewConfig(cfgFilepath, board, model string) (*Config, error) {
 	cfg.ShutdownTimeout = toSeconds(cfg.RawShutdownTimeout)
 	cfg.SoftwareSyncUpdate = toSeconds(cfg.RawSoftwareSyncUpdate)
 	cfg.USBPlug = toSeconds(cfg.RawUSBPlug)
+	cfg.RecInvalidScreen = toSeconds(cfg.RawRecInvalidScreen)
 	cfg.MiniOSScreen = toSeconds(cfg.RawMiniOSScreen)
 
 	// Parse list of raw json objects into go structs
