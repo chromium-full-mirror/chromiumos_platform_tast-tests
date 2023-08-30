@@ -122,6 +122,9 @@ func (t *Tester) PreHibernateSteps(ctx context.Context) {
 		if err := t.login(ctxCycle, false, false); err != nil {
 			t.logger.Fatal("Failed to login: ", err)
 		}
+
+		// Wait for 'hiberman resume' to complete.
+		t.waitHibermanResumeDone(ctxCycle)
 	}
 
 	// Check the kernel log for entries that indicate file system corruption.
@@ -433,6 +436,21 @@ func (t *Tester) waitForDutToBoot(ctx context.Context) {
 	defer cancel()
 	if err := t.dut.WaitConnect(waitConnectCtx); err != nil {
 		t.logger.Fatal("Failed to reconnect: ", err)
+	}
+}
+
+func (t *Tester) waitHibermanResumeDone(ctx context.Context) {
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		err := t.dut.Conn().CommandContext(ctx, "pidof", "hiberman").Run()
+		if err == nil {
+			return errors.New("hiberman resume is still running")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second})
+
+	if err != nil {
+		t.logger.Fatal(err)
 	}
 }
 
