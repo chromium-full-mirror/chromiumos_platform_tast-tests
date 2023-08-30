@@ -29,7 +29,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UserAvatarImage,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of the UserAvatarImage policy when the PersonalizationHub flag is enabled: verify that the user cannot change the device account image when the policy is set, otherwise, the user can change it",
+		Desc:         "Test that users cannot change avatar if managed by enterprise policy",
 		Contacts: []string{
 			"assistive-eng@google.com",
 			"pzliu@google.com",
