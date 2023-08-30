@@ -1881,10 +1881,16 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	if err := webRTCInternalsWindow.ActivateWindow(ctx, tconn); err != nil {
 		s.Fatal("Failed to activate the WebRTC-internals window: ", err)
 	}
+	// Some DUTs need more time to wait for quiescence. Add log for debugging
+	// loading duration.
+	startTime := time.Now()
+	if err := webutil.WaitForQuiescence(ctx, webrtcInternals, 2*time.Minute); err != nil {
+		s.Fatal("Failed to wait for quiescence: ", err)
+	}
+	testing.ContextLog(ctx, "Loading page took: ", time.Since(startTime))
 
 	// Report info from chrome://webrtc-internals.
-	webRTCUI := ui.WithTimeout(3 * time.Minute)
-	if path, err := cuj.DumpWebRTCInternals(ctx, tconn, webRTCUI, cr.NormalizedUser()); err != nil {
+	if path, err := cuj.DumpWebRTCInternals(ctx, tconn, ui, cr.NormalizedUser()); err != nil {
 		s.Error("Failed to download dump from chrome://webrtc-internals: ", err)
 		// Take a screenshot with the chrome://webrtc-internals tab in
 		// the foreground, to facilitate investigation of b/255343902.
@@ -1935,7 +1941,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	if err := meetWindow.CloseWindow(closeCtx, tconn); err != nil {
 		s.Error("Failed to close the meeting: ", err)
 	}
-	if err := webRTCUI.WaitUntilGone(nodewith.NameContaining("VideoStream").First())(ctx); err != nil {
+	if err := ui.WaitUntilGone(nodewith.NameContaining("VideoStream").First())(ctx); err != nil {
 		s.Error("Failed to wait for video stream info to disappear: ", err)
 	}
 	if hists, err := webRTCMetricsRecorder.Histogram(ctx, tconn); err != nil {
