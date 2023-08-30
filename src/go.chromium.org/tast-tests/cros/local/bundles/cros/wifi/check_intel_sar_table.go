@@ -459,37 +459,51 @@ func verifyTable(decodedSSDT []byte, tableType sarTableType, geoTables []geoSART
 	if geoTables != nil {
 		for index, realSARValue := range realSARValues {
 			for _, geoTable := range geoTables {
-				var geoOffset int64
+				var geoOffset, geoMax int64
 				if geoTable.version == 0 {
 					// SAR table format: [0 = 2G_A, 1-4 = 5G_A, 5=2G_B, 6-9=5G_B]
 					if index == 0 {
 						geoOffset = geoTable.chainAOffset2g
+						geoMax = geoTable.max2g
 					} else if index < 5 {
 						geoOffset = geoTable.chainAOffset5g
+						geoMax = geoTable.max5g
 					} else if index == 5 {
 						geoOffset = geoTable.chainBOffset2g
+						geoMax = geoTable.max2g
 					} else {
 						geoOffset = geoTable.chainBOffset5g
+						geoMax = geoTable.max5g
 					}
 				} else if geoTable.version == 2 {
 					// SAR table format: [0 = 2G_A, 1-5 = 5G_A, 6-10 = 6G_A, 11=2G_B, 12-16=5G_B, 17-21 = 6G_B]
 					if index == 0 {
 						geoOffset = geoTable.chainAOffset2g
+						geoMax = geoTable.max2g
 					} else if index < 6 {
 						geoOffset = geoTable.chainAOffset5g
+						geoMax = geoTable.max5g
 					} else if index < 11 {
 						geoOffset = geoTable.chainAOffset6g
+						geoMax = geoTable.max6g
 					} else if index == 11 {
 						geoOffset = geoTable.chainBOffset2g
+						geoMax = geoTable.max2g
 					} else if index < 17 {
 						geoOffset = geoTable.chainBOffset5g
+						geoMax = geoTable.max5g
 					} else if index <= 21 {
 						geoOffset = geoTable.chainBOffset6g
+						geoMax = geoTable.max6g
 					}
 				}
 				// Actual Geo SAR values are 1/8 * the stored ints.
 				realGeoOffset := float64(geoOffset) / 8.0
+				realGeoMax := float64(geoMax) / 8.0
 				geoAdjustedSARValue := realSARValue + realGeoOffset
+				if geoAdjustedSARValue > realGeoMax {
+					geoAdjustedSARValue = realGeoMax
+				}
 				if geoAdjustedSARValue < sarSoftMin || geoAdjustedSARValue > sarSoftMax {
 					exceedsSoftLimits = true
 				}
