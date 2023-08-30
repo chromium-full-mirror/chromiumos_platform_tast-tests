@@ -65,10 +65,11 @@ func NetworkManipulate(ctx context.Context, s *testing.State) {
 		proxy.SetHar(true).SetOutDir(s.OutDir())
 	}
 
-	if err := cr.LaunchAndApplyProxy(ctx, proxy); err != nil {
+	cleanup, err := cr.LaunchAndApplyProxy(ctx, proxy)
+	if err != nil {
 		s.Fatal("Failed to launch and apply proxy: ", err)
 	}
-	defer proxy.Close(cleanupCtx)
+	defer cleanup(cleanupCtx)
 
 	if !isDumpOnly {
 		ruleFile := s.DataPath(s.Param().(string))

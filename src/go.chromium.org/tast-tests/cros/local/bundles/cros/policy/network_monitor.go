@@ -47,10 +47,11 @@ func NetworkMonitor(ctx context.Context, s *testing.State) {
 	mp := mitmproxy.New()
 	mp.SetBinaryPath(s.DataPath(mitmdumpBinFile)).SetDumpDir(s.OutDir())
 
-	if err := cr.LaunchAndApplyProxy(ctx, mp); err != nil {
+	cleanup, err := cr.LaunchAndApplyProxy(ctx, mp)
+	if err != nil {
 		s.Fatal("Failed to launch and apply proxy: ", err)
 	}
-	defer mp.Close(cleanupCtx)
+	defer cleanup(cleanupCtx)
 
 	// TODO: Add test logic here to monitor network traffic.
 	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://www.google.com")
