@@ -35,7 +35,7 @@ func init() {
 			"arthur.chuang@cienet.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
+		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.DevModeGBB,
 		SoftwareDeps: []string{"crossystem"},

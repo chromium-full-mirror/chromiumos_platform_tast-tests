@@ -40,7 +40,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.ui.ScreenLockService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		Vars:         []string{"servo"},
-		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
+		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable", "group:intel-nda"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,

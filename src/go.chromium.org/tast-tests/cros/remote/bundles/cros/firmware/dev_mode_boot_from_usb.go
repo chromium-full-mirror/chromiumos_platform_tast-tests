@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Verify the functionality of Ctrl+U while on the dev screen",
 		Contacts:     []string{"chromeos-faft@google.com", "cienet-firmware@cienet.corp-partner.google.com"},
 		BugComponent: "b:792402",
-		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
+		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"crossystem"},
 		Vars:         []string{"firmware.skipFlashUSB"},

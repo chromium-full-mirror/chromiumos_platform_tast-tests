@@ -26,7 +26,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: CCDCapabilitiesFlashEC,
 		Desc: "Test to verify FlashEC CCD capability",
-		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
+		// TODO: When stable, change firmware_unstable to a different attr.
 		// TODO(b:240149552): Reenable this test by adding the proper groups
 		// once we have a stable way to verify this CCD capability
 		Attr: []string{},

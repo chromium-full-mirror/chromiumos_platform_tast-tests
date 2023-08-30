@@ -43,7 +43,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.ui.ScreenLockService"},
 		Vars:         []string{"servo"},
 		// TODO(b/199674322): Add back to firmware_unstable once this test actually works.
-		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
+		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		LacrosStatus: testing.LacrosVariantUnneeded,

@@ -98,7 +98,7 @@ func init() {
 				resetAfterBoot: true,
 				resetType:      firmware.ColdReset,
 			},
-			// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
+			// TODO: When stable, change firmware_unstable to a different attr.
 			ExtraAttr: []string{"firmware_usb", "firmware_unstable"},
 			Timeout:   60 * time.Minute,
 		}, {
@@ -138,7 +138,7 @@ func init() {
 			Val: bootModeTestParams{
 				bootToMode: fwCommon.BootModeDev,
 			},
-			// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
+			// TODO: When stable, change firmware_unstable to a different attr.
 			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
 			Timeout:   60 * time.Minute,
 		}, {
@@ -147,7 +147,7 @@ func init() {
 			Val: bootModeTestParams{
 				bootToMode: fwCommon.BootModeRecovery,
 			},
-			// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
+			// TODO: When stable, change firmware_unstable to a different attr.
 			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
 			Timeout:   60 * time.Minute,
 		}, {
@@ -157,7 +157,7 @@ func init() {
 				bootToMode:    fwCommon.BootModeDev,
 				allowGBBForce: true,
 			},
-			// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
+			// TODO: When stable, change firmware_unstable to a different attr.
 			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
 			Timeout:   60 * time.Minute,
 		}, {
@@ -181,7 +181,7 @@ func init() {
 				resetType:           firmware.ColdReset,
 				resetAfterBoot:      true,
 			},
-			// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
+			// TODO: When stable, change firmware_unstable to a different attr.
 			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
 			Timeout:   2 * time.Hour,
 		}},

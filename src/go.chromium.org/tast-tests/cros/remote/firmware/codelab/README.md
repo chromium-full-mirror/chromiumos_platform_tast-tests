@@ -50,7 +50,7 @@ func init() {
 			"me@chromium.org",          // Test author
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, move to firmware_ec and add linto@chromium.org to gerrit review.
+		// TODO: When stable, move to firmware_ec.
 		Attr: []string{"group:firmware", "firmware_unstable"},
 	})
 }
@@ -82,7 +82,6 @@ The `firmware_experimental` attribute is for tests that are particularly unstabl
 This mitigates the risk of accidentally putting a DUT into into a state that would cause other tests to fail.
 `firmware_unstable` is similar, in that it won't be run as part of qualifications, but will run on all duts.
 If we find that our test is stable enough, then we can promote it to another attribute, like `firmware_ec` (or smoke, cr50, slow, ccd as appropriate).
-Please add linto@chromium.org to the gerrit review when moving to a stable suite.
 
 [attr.go]: https://chromium.googlesource.com/chromiumos/platform/tast/+/refs/heads/main/src/go.chromium.org/tast/core/internal/testing/attr.go
 [go/effective-cq]: http://goto.google.com/effective-cq

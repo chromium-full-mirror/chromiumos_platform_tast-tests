@@ -23,7 +23,7 @@ func init() {
 			"keithshort@chromium.org",  // Test author
 		},
 		BugComponent: "b:194910842", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, move to firmware_pd and add linto@chromium.org to gerrit review.
+		// TODO: When stable, move to firmware_pd.
 		Data:         []string{firmware.ConfigFile},
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Vars:         []string{"servo"},
