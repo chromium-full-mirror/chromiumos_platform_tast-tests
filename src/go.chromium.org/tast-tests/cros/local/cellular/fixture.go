@@ -335,7 +335,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		if _, err := helper.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyCellular); err != nil {
 			s.Fatal("Unable to disable Cellular: ", err)
 		}
-		if err := upstart.RestartJob(ctx, modemmanager.JobName); err != nil {
+		if err := upstart.RestartJob(ctx, modemmanager.JobName, GetMMUpstartArgsForVerboseLogging()...); err != nil {
 			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", modemmanager.JobName, err)
 		}
 		// Wait for MM to export the modem after restart
