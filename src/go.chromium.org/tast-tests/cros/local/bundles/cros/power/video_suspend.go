@@ -100,7 +100,7 @@ func suspendForSeconds(ctx context.Context, seconds int32) error {
 // VideoSuspend suspends while video is playing then makes sure video is still
 // playing after we resume.
 func VideoSuspend(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()

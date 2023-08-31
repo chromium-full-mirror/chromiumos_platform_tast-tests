@@ -42,7 +42,7 @@ func init() {
 // DeviceSwapPrimaryMouseButton tests if the primary mouse button
 // can be swapped from left button to right button.
 func DeviceSwapPrimaryMouseButton(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

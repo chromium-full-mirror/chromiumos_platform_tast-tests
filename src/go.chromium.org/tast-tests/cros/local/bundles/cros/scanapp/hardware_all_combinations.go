@@ -89,7 +89,7 @@ func init() {
 }
 
 func HardwareAllCombinations(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	fileContents, err := ioutil.ReadFile(s.DataPath(s.Param().(string)))
 	if err != nil {

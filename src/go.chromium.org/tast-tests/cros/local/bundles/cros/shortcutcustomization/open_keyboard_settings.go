@@ -47,7 +47,7 @@ func init() {
 // OpenKeyboardSettings verifies clicking keyboard settings link from shortcut
 // customization app will navigate to keyboard subpage of device setting page.
 func OpenKeyboardSettings(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

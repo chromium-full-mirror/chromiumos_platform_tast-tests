@@ -34,7 +34,7 @@ func init() {
 
 // ShowUpNext verifies that the up next view is shown correctly for any upcoming meetings.
 func ShowUpNext(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

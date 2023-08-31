@@ -88,7 +88,7 @@ func VideoRenderingPower(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, cleanTime)
 	defer cancel()
 
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	video := s.Param().(string)
 
 	// setup.New configures a DUT for a test, and cleans up after.

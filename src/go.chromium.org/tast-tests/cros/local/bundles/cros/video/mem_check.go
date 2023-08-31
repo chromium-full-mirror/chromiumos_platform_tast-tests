@@ -117,7 +117,7 @@ func init() {
 // memory leaks by comparing its usage before, during and after.
 func MemCheck(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(memCheckParams)
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	const unmutePlayer = false
 
 	testPlay := func() error {

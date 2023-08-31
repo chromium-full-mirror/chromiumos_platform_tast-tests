@@ -57,7 +57,7 @@ func init() {
 // VerifyCategoryTag verifies the category_tag value in the report. Open Feedback
 // app from the Camera app, the category_tag in the report should be chromeos-camera-app.
 func VerifyCategoryTag(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

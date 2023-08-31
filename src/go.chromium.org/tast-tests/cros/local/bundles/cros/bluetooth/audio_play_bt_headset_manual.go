@@ -41,7 +41,7 @@ var expectedAudioNode = "BLUETOOTH"
 // AudioPlayBtHeadsetManual plays audio file over BT Headset.
 // Manual step: bluetooth.btHeadset bluetooth device has to be set to pairing mode before executing test-script.
 func AudioPlayBtHeadsetManual(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

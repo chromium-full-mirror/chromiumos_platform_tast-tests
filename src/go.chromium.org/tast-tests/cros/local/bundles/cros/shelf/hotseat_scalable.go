@@ -38,7 +38,7 @@ func init() {
 
 // HotseatScalable verifies the launcher icon, pinned apps and status menu should be displayed in clamshell mode.
 func HotseatScalable(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

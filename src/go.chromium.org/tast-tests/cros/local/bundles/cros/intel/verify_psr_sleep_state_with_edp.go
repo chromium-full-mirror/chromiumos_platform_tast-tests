@@ -38,7 +38,7 @@ func init() {
 }
 
 func VerifyPsrSleepStateWithEdp(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	videoStatus := "No video is playing"
 	if err := psrCompatibleStatus(ctx, "", videoStatus, true); err != nil {

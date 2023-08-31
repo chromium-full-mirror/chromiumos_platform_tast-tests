@@ -399,13 +399,13 @@ func init() {
 func HardwarePrintCombinations(ctx context.Context, s *testing.State) {
 	param := s.Param().(*testParam)
 
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, s.FixtValue().(*chrome.Chrome),
+	br, closeBrowser, err := browserfixt.SetUp(ctx, s.FixtValue().(chrome.HasChrome).Chrome(),
 		param.browserType)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)

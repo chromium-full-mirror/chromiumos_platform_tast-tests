@@ -40,7 +40,7 @@ func init() {
 // AudioPlaybackVolumeSliderManual tests the volume slider works fine for audio playback on Bluetooth headset.
 func AudioPlaybackVolumeSliderManual(ctx context.Context, s *testing.State) {
 	Headset := s.RequiredVar("bluetooth.btHeadset")
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	expectedAudioNode := "BLUETOOTH"
 

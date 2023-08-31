@@ -61,7 +61,7 @@ func init() {
 
 // GetDisplayMedia verifies that the homonymous API works as expected.
 func GetDisplayMedia(ctx context.Context, s *testing.State) {
-	if err := getdisplaymedia.RunGetDisplayMedia(ctx, s, s.FixtValue().(*chrome.Chrome), s.Param().(string)); err != nil {
+	if err := getdisplaymedia.RunGetDisplayMedia(ctx, s, s.FixtValue().(chrome.HasChrome).Chrome(), s.Param().(string)); err != nil {
 		s.Fatal("TestPlay failed: ", err)
 	}
 }

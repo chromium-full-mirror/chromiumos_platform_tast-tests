@@ -109,7 +109,7 @@ func takePhotoOrVideoAsAvatar(ctx context.Context, ui *uiauto.Context, mediaType
 
 func SelectAvatarFromCamera(ctx context.Context, s *testing.State) {
 	mediaType := s.Param().(string)
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

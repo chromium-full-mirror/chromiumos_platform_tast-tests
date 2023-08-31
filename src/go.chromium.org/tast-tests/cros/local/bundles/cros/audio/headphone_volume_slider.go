@@ -137,7 +137,7 @@ func unlockScreen(ctx context.Context, tconn *chrome.TestConn, password string) 
 
 // HeadphoneVolumeSlider verifies volume slider, mute/unmute works fine for audio playback in 3.5mm Jack in lockscreen.
 func HeadphoneVolumeSlider(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	password := cr.Creds().Pass // Required to unlock screen.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

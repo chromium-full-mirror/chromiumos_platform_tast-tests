@@ -34,7 +34,7 @@ func init() {
 
 // BrowserEndProcessDisabled verifies that "Browser" cannot be killed from Task Manager.
 func BrowserEndProcessDisabled(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

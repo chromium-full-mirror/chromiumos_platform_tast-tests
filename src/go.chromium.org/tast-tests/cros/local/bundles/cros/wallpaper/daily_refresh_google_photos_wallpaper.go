@@ -68,7 +68,7 @@ func DailyRefreshGooglePhotosWallpaper(ctx context.Context, s *testing.State) {
 	// Google Photos library with specific photos/albums present. Note that sync
 	// is disabled to prevent flakiness caused by wallpaper cross device sync.
 
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()

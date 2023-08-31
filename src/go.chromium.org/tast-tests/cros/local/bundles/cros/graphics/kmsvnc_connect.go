@@ -33,7 +33,7 @@ func init() {
 
 // KmsvncConnect launches the kmsvnc server, connects to it, and verifies server parameters.
 func KmsvncConnect(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	k, err := kmsvnc.NewKmsvnc(ctx, true)
 	if err != nil {

@@ -43,7 +43,7 @@ func init() {
 	})
 }
 func SelectToSpeakGoogleDocs(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	ed := tts.GoogleTTSEngine()
 	html := "<p>placeholder</p>"

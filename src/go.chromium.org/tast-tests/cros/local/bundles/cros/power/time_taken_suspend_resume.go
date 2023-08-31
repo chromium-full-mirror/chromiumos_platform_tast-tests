@@ -44,7 +44,7 @@ func init() {
 }
 
 func TimeTakenSuspendResume(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	const (
 		slpS0Cmd           = "cat /sys/kernel/debug/pmc_core/slp_s0_residency_usec"

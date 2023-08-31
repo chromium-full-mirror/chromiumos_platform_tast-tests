@@ -61,7 +61,7 @@ func init() {
 
 // HTMLReload verifies video playback functionalities after reloading webpage.
 func HTMLReload(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

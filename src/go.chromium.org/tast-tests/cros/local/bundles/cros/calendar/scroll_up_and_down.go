@@ -39,7 +39,7 @@ func init() {
 
 // ScrollUpAndDown verifies that we can open the calendar, and scroll up/down then back to today correctly.
 func ScrollUpAndDown(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
