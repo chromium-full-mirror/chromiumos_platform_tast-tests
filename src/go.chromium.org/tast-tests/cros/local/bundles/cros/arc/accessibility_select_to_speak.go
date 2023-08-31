@@ -7,32 +7,31 @@ package arc
 import (
 	"context"
 	"regexp"
-	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/a11y/sts"
+	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	arca11y "go.chromium.org/tast-tests/cros/local/bundles/cros/arc/a11y"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AccessibilityTextLocation,
+		Func:         AccessibilitySelectToSpeak,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks AutomationNode.boundsForRange API works for Android apps",
+		Desc:         "Checks Select-to-Speak works on ARC windows",
 		Contacts:     []string{"arc-framework+tast@google.com", "hirokisato@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Accessibility
 		BugComponent: "b:165222",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedWithoutUIAutomator",
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
+			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
@@ -40,7 +39,7 @@ func init() {
 	})
 }
 
-func AccessibilityTextLocation(ctx context.Context, s *testing.State) {
+func AccessibilitySelectToSpeak(ctx context.Context, s *testing.State) {
 	d := s.FixtValue().(*arc.PreData)
 	a := d.ARC
 	cr := d.Chrome
@@ -54,53 +53,34 @@ func AccessibilityTextLocation(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating test API connection failed: ", err)
 	}
 
-	_, cleanup, err := arca11y.SetUpSelectToSpeak(ctx, s, cr, a, tconn)
+	_, cleanupS2S, err := arca11y.SetUpSelectToSpeak(ctx, s, cr, a, tconn)
 	if err != nil {
 		s.Fatal("Failed to setup SelectToSpeak: ", err)
 	}
-	defer cleanup(cleanupCtx)
+	defer cleanupS2S(cleanupCtx)
 
 	arca11y.AttachFaillog(ctx, s, tconn, "faillog")
-
 	cleanupAct, err := arca11y.StartActivityWithSelectToSpeak(ctx, s, a, tconn, arca11y.MainActivity)
 	if err != nil {
-		s.Fatal("Failed to setup: ", err)
+		s.Fatal("Failed to setup activity with S2S: ", err)
 	}
 	defer cleanupAct(cleanupCtx)
 
-	ui := uiauto.New(tconn)
+	sm, err := tts.RelevantSpeechMonitor(ctx, cr, tconn, tts.GoogleTTSEngine())
+	if err != nil {
+		s.Fatal("Failed to connect to the TTS background page: ", err)
+	}
+	defer sm.Close()
 
 	appRoot := nodewith.Name(arca11y.MainActivity.Title).Role(role.Application)
 
-	buttonFinder := nodewith.
-		NameRegex(regexp.MustCompile("(CLICK TO SHOW TOAST|Click to show toast)")).
+	buttonRegexp := "(?i)ANNOUNCE"
+	textNode := nodewith.
+		NameRegex(regexp.MustCompile(buttonRegexp)).
 		Role(role.Button).
 		Ancestor(appRoot)
-	nodeBounds, err := ui.Location(ctx, buttonFinder)
-	if err != nil {
-		s.Fatal("Failed to get the location: ", err)
-	}
-
-	start := 0
-	var lastBounds *coords.Rect
-	for _, f := range strings.Fields("Click to show toast") {
-		end := start + len(f)
-		bounds, err := ui.BoundsForRange(ctx, buttonFinder, start, end)
-		if err != nil {
-			s.Fatalf("Failed to get the range(%d, %d): %v", start, end, err)
-		}
-
-		// Quick bounds validations.
-		if !nodeBounds.Contains(*bounds) {
-			s.Errorf("text bounds should be contained within the node. "+
-				"nodeBounds=%v, boundsForRange=%v", nodeBounds, bounds)
-		}
-		if lastBounds != nil && lastBounds.Right() >= bounds.Left {
-			s.Errorf("text bounds should be aligned from left to right without overlap. "+
-				"lastBounds=%v, boundsForRange=%v", lastBounds, bounds)
-		}
-
-		start = end + 1
-		lastBounds = bounds
+	expectations := []tts.SpeechExpectation{tts.NewRegexExpectation(buttonRegexp)}
+	if err := sts.ClickAndDragToActivate(ctx, cr, textNode, sm, expectations); err != nil {
+		s.Fatal("Failed to drag and activate with S2S: ", err)
 	}
 }

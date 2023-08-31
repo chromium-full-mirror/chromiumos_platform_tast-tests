@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -287,6 +288,43 @@ func StartActivityWithChromeVox(ctx context.Context, s *testing.State, a *arc.AR
 	appRoot := nodewith.Name(activity.Title).Role(role.Application)
 	if err = cvconn.WaitForFocusedNode(ctx, tconn, appRoot); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for initial ChromeVox focus")
+	}
+
+	return tdh.tearDown, nil
+}
+
+// StartActivityWithSelectToSpeak launches the activity and wait for ready to run tests with SelectToSpeak.
+func StartActivityWithSelectToSpeak(ctx context.Context, s *testing.State, a *arc.ARC, tconn *chrome.TestConn, activity TestActivity) (_ func(context.Context), e error) {
+	tdh := tearDownHelper{}
+	defer func(ctx context.Context) {
+		if e != nil {
+			tdh.tearDown(ctx)
+		}
+	}(ctx)
+
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	act, err := arc.NewActivity(a, PackageName, activity.Name)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create new activity")
+	}
+	tdh.append(func(ctx context.Context) error {
+		act.Close(ctx)
+		return nil
+	})
+
+	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to start activity")
+	}
+	tdh.append(func(ctx context.Context) error {
+		return act.Stop(ctx, tconn)
+	})
+
+	appRoot := nodewith.Name(activity.Title).Role(role.Application)
+	ui := uiauto.New(tconn)
+	if err = ui.WaitUntilExists(appRoot)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for application window node appears")
 	}
 
 	return tdh.tearDown, nil

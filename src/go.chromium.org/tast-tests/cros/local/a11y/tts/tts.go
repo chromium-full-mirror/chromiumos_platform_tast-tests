@@ -247,6 +247,32 @@ func ensureTTSEngineLoaded(ctx context.Context, tconn *chrome.TestConn, engineDa
 		return errors.Wrap(err, "failed to wait for the TTS engine to load")
 	}
 
+	expr := fmt.Sprintf(`new Promise((resolve, reject) => {
+		chrome.tts.speak('wakeUp', {
+			extensionId: %q,
+			onEvent: function(event) {
+				if (event.type === chrome.tts.EventType.START) {
+					// START suggests that TTS extension is fully ready.
+					// It's okay to return at this point.
+					resolve();
+				} else if (event.type === chrome.tts.EventType.ERROR) {
+					reject(new Error(event.errorMessage));
+				} else if (event.type === chrome.tts.EventType.CANCELLED ||
+				           event.type === chrome.tts.EventType.INTERRUPTED) {
+					reject(new Error("Unexpected event type: " + event.type));
+				}
+				// not interested in other event types.
+			}},
+			function()  {
+				if (chrome.runtime.lastError) {
+					reject(new Error(chrome.runtime.lastError.message));
+				}
+			});
+	})`, engineData.ExtID)
+	if err := tconn.Eval(ctx, expr, nil); err != nil {
+		return errors.Wrap(err, "failed to wake up TTS engine")
+	}
+
 	return nil
 }
 
