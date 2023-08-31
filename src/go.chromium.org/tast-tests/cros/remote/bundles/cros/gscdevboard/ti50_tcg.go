@@ -25,7 +25,7 @@ func init() {
 			"granaghan@google.com",     // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_image_ti50"},
+		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50"},
 		Fixture:      fixture.Ti50CcdOpen,
 		Params: []testing.Param{{
 			Name: "se__test_simulated_smart_card",
