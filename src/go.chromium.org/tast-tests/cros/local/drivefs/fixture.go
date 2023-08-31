@@ -35,7 +35,7 @@ func init() {
 		Desc:            "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
 		Contacts:        []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
 		Impl:            &fixture{bt: browser.TypeAsh},
-		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
 		ResetTimeout:    driveFsSetupAndTearDownTimeout,
 		TearDownTimeout: time.Hour,
 		Vars: []string{
@@ -49,7 +49,7 @@ func init() {
 		Desc:            "Lacros variant of driveFsStarted",
 		Contacts:        []string{"chromeos-files-syd@chromium.org"},
 		Impl:            &fixture{bt: browser.TypeLacros},
-		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
 		ResetTimeout:    driveFsSetupAndTearDownTimeout,
 		TearDownTimeout: time.Hour,
 		Vars: []string{
@@ -66,7 +66,7 @@ func init() {
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("FilesTrash")},
 			bt:            browser.TypeAsh,
 		},
-		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
 		ResetTimeout:    driveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
 		Vars: []string{
@@ -83,7 +83,7 @@ func init() {
 			enableBulkPinning: true,
 			bt:                browser.TypeAsh,
 		},
-		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
 		ResetTimeout:    driveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
 		Vars: []string{
@@ -99,7 +99,7 @@ func init() {
 		Impl: &fixture{drivefsOptions: map[string]string{
 			"switchblade_dss": "true",
 		}, bt: browser.TypeAsh},
-		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
 		ResetTimeout:    driveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
 		Vars: []string{
@@ -115,7 +115,7 @@ func init() {
 		Impl: &fixture{drivefsOptions: map[string]string{
 			"switchblade_dss": "true",
 		}, bt: browser.TypeLacros},
-		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
 		ResetTimeout:    driveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
 		Vars: []string{
@@ -133,7 +133,7 @@ func init() {
 			drivefsOptions: map[string]string{
 				"switchblade_dss": "true",
 			}, bt: browser.TypeLacros},
-		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
 		ResetTimeout:    driveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
 		Vars: []string{
@@ -150,7 +150,7 @@ func init() {
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync")},
 			bt:            browser.TypeAsh,
 		},
-		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
 		ResetTimeout:    driveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
 		Vars: []string{
@@ -167,7 +167,7 @@ func init() {
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud")},
 			bt:            browser.TypeLacros,
 		},
-		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
 		ResetTimeout:    driveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
 		Vars: []string{
@@ -262,7 +262,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			opts = append(opts, chrome.EnableFeatures("FeatureManagementDriveFsBulkPinning"))
 		}
 
-		ctx, cancel := context.WithTimeout(ctx, chrome.LoginTimeout)
+		ctx, cancel := context.WithTimeout(ctx, chrome.GAIALoginTimeout)
 		defer cancel()
 
 		var err error
