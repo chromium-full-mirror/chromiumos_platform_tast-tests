@@ -7,7 +7,7 @@ package firmware
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -53,6 +53,14 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 	}
 
 	setFWMP := func(ctx context.Context, flags string) error {
+		// TODO(b/273767236): Some models failed in holding the FWMP flags
+		// without a 30 secs delay after boot-up.
+		s.Logf("Sleeping for %s", 30*time.Second)
+		// GoBigSleepLint: This is a temporary sleep until a better solution can be found.
+		if err := testing.Sleep(ctx, 30*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
+
 		// Set FWMP flags in a poll to increase the chances of success.
 		s.Log("Setting firmware management parameters")
 		reOwnerPassword := regexp.MustCompile(`flags:\s*(0|1)`)
@@ -134,7 +142,7 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to read firmware log: ", err)
 		}
 		destPath := filepath.Join(s.OutDir(), "firmware.log")
-		if err := ioutil.WriteFile(destPath, []byte(output), 0666); err != nil {
+		if err := os.WriteFile(destPath, []byte(output), 0666); err != nil {
 			s.Fatal("Failed to write firmware log: ", err)
 		}
 	}(cleanupCtx)
