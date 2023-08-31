@@ -16,7 +16,6 @@ import (
 	"time"
 
 	fp "go.chromium.org/tast-tests/cros/common/fingerprint"
-	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint/rpcdut"
@@ -443,27 +442,15 @@ func FlashRWFirmware(ctx context.Context, d *rpcdut.RPCDUT, firmwareFile string)
 		return errors.Errorf("file does not exist: %q", firmwareFile)
 	}
 
-	var flashromConfig flashrom.Config
-	flashromInstance, ctx, shutdown, _, err := flashromConfig.
-		FlashromInit(flashrom.VerbosityDebug).
-		ProgrammerInit(flashrom.ProgrammerEc, "type=fp").
-		SetDut(d.DUT()).
-		Probe(ctx)
-	defer func() {
-		if err := shutdown(); err != nil {
-			if retErr == nil {
-				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
-			} else {
-				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
-			}
-		}
-	}()
-	if err != nil {
-		return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+	cmdArgs := []string{
+		"/opt/sbin/crosec-legacy-drv",
+		"-p", "ec:type=fp",
+		"-i", "EC_RW",
+		"-w", firmwareFile,
 	}
-
-	if output, err := flashromInstance.Write(ctx, firmwareFile, true, false, "", []string{"EC_RW"}); err != nil {
-		return errors.Wrapf(err, "flashrom failed: %q", output)
+	cmd := d.Conn().CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
+	if err := cmd.Run(ssh.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "error while writing crosec-legacy-drv with arguments %v", cmdArgs)
 	}
 
 	return nil
