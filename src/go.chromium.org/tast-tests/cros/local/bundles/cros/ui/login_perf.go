@@ -68,9 +68,8 @@ const (
 
 // Supported ARC modes
 const (
-	noarc        = "noarc"
-	arcenabled   = "arcenabled"
-	arcsupported = "arcsupported"
+	noarc      = "noarc"
+	arcenabled = "arcenabled"
 )
 
 type loginPerfTestParam struct {
@@ -107,9 +106,9 @@ func init() {
 			ExtraAttr: []string{"group:cuj"},
 			Timeout:   90 * time.Minute,
 			Val: loginPerfTestParam{
-				[]int{2, 8}, // windows
-				[]string{noarc, arcenabled, arcsupported}, // arcmodes
-				true, // checkTabletMode
+				[]int{2, 8},                 // windows
+				[]string{noarc, arcenabled}, // arcmodes
+				true,                        // checkTabletMode
 				browser.TypeAsh,
 				lacros.NotSelected,
 				false, // preloadLacros
@@ -151,7 +150,7 @@ func init() {
 			Timeout:           90 * time.Minute,
 			Val: loginPerfTestParam{
 				[]int{2, 8},
-				[]string{noarc, arcenabled, arcsupported},
+				[]string{noarc, arcenabled},
 				true, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
@@ -243,7 +242,7 @@ func init() {
 			Timeout:           90 * time.Minute,
 			Val: loginPerfTestParam{
 				[]int{2, 8},
-				[]string{noarc, arcenabled, arcsupported},
+				[]string{noarc, arcenabled},
 				true, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Omaha,
@@ -1024,8 +1023,6 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 			case noarc:
 			case arcenabled:
 				arcOpt = []chrome.Option{chrome.ARCEnabled()}
-			case arcsupported:
-				arcOpt = []chrome.Option{chrome.ARCSupported()}
 			default:
 				s.Fatal("Unknown arcMode value=", arcMode)
 			}
