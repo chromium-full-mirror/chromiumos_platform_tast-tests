@@ -43,12 +43,14 @@ func init() {
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.PrivacyScreen()),
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
+			Name:      "ash_blocked",
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
+			Val:       browser.TypeAsh,
 		}, {
-			Name:              "lacros",
+			Name:              "lacros_blocked",
+			ExtraAttr:         []string{"group:golden_tier"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
@@ -66,6 +68,8 @@ func DataLeakPreventionRulesListPrivacyScreen(ctx context.Context, s *testing.St
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Hello DLP client you navigated to ", r.URL.Path)
@@ -109,93 +113,62 @@ func DataLeakPreventionRulesListPrivacyScreen(ctx context.Context, s *testing.St
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	for _, param := range []struct {
-		name        string
-		wantAllowed bool
-		url         string
-	}{
-		{
-			name:        "blocked",
-			wantAllowed: false,
-			url:         server.URL + "/blocked",
-		},
-		{
-			name:        "allowed",
-			wantAllowed: true,
-			url:         server.URL + "/allowed",
-		},
-	} {
-		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer func(ctx context.Context) {
-				if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
-					// The Lacros browser is not closed in other places in the test.
-					s.Error("The Lacros browser probably crashed: ", err)
-				}
-			}(cleanupCtx)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	if err != nil {
+		s.Fatal("Failed to open the browser: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
+			// The Lacros browser is not closed in other places in the test.
+			s.Error("The Lacros browser probably crashed: ", err)
+		}
+	}(cleanupCtx)
 
-			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
+	ui := uiauto.New(tconn)
 
-			ui := uiauto.New(tconn)
+	conn, err := br.NewConn(ctx, server.URL+"/blocked")
+	if err != nil {
+		s.Fatal("Failed to open page: ", err)
+	}
+	defer conn.Close()
 
-			conn, err := br.NewConn(ctx, param.url)
-			if err != nil {
-				s.Fatal("Failed to open page: ", err)
-			}
-			defer conn.Close()
+	if err := checkPrivacyScreenOnBubble(ctx, ui); err != nil {
+		s.Error("Couldn't check for notification: ", err)
+	}
 
-			if err := checkPrivacyScreenOnBubble(ctx, ui, param.wantAllowed); err != nil {
-				s.Error("Couldn't check for notification: ", err)
-			}
+	value, err := privacyScreenValue(ctx)
+	if err != nil {
+		s.Fatal("Couldn't check value for privacy screen prop: ", err)
+	}
 
-			value, err := privacyScreenValue(ctx)
-			if err != nil {
-				s.Fatal("Couldn't check value for privacy screen prop: ", err)
-			}
+	if !value {
+		s.Errorf("Privacy screen prop value: got %v; want true", value)
+	}
 
-			if !param.wantAllowed && !value {
-				s.Errorf("Privacy screen prop value: got %v; want true", value)
-			}
+	// Verify that by opening the allowed page, the privacy screen will get disabled.
+	destURL := server.URL + "/allowed"
+	if _, err := br.NewConn(ctx, destURL); err != nil {
+		s.Error("Failed to open page: ", err)
+	}
 
-			if param.wantAllowed && value {
-				s.Errorf("Privacy screen prop value: got %v; want false", value)
-			}
+	// GoBigSleepLint - Wait for privacy screen to be disabled.
+	if err := testing.Sleep(ctx, time.Second); err != nil {
+		s.Fatal("Failed to sleep: ", err)
+	}
 
-			// Verify that by opening the allowed page, the privacy screen will get disabled.
-			destURL := server.URL + "/allowed"
-			if _, err := br.NewConn(ctx, destURL); err != nil {
-				s.Error("Failed to open page: ", err)
-			}
-
-			// GoBigSleepLint - Wait for privacy screen to be disabled.
-			if err := testing.Sleep(ctx, time.Second); err != nil {
-				s.Fatal("Failed to sleep: ", err)
-			}
-
-			value, err = privacyScreenValue(ctx)
-			// Privacy screen should be disabled.
-			if value {
-				s.Errorf("Privacy screen prop value: got %v; want false", value)
-			}
-		})
+	value, err = privacyScreenValue(ctx)
+	// Privacy screen should be disabled.
+	if value {
+		s.Errorf("Privacy screen prop value: got %v; want false", value)
 	}
 }
 
-func checkPrivacyScreenOnBubble(ctx context.Context, ui *uiauto.Context, wantAllowed bool) error {
+func checkPrivacyScreenOnBubble(ctx context.Context, ui *uiauto.Context) error {
 	// Message name - IDS_ASH_STATUS_TRAY_PRIVACY_SCREEN_TOAST_ACCESSIBILITY_TEXT
 	bubbleMessage := nodewith.NameContaining("Privacy screen is on. Enforced by your administrator").First()
 
-	err := ui.WaitUntilExists(bubbleMessage)(ctx)
-
-	if err != nil && !wantAllowed {
+	if err := ui.WaitUntilExists(bubbleMessage)(ctx); err != nil {
 		return errors.Wrap(err, "failed to check for privacy screen on bubble")
-	}
-
-	if err == nil && wantAllowed {
-		return errors.New("Privacy screen on bubble found expected none")
 	}
 
 	return nil
