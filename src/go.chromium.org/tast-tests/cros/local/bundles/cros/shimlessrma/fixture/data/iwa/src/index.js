@@ -30,3 +30,21 @@ document.getElementById('check-extension').addEventListener('click', event => {
   const request = {};
   make_request(request, 'check-extension-textarea');
 });
+
+const diag_categories = [
+  "audio_driver",
+]
+
+function listener(type, category, event) {
+  const request = { type: type, category: category };
+  make_request(request, `${type}-${category}-textarea`);
+}
+
+for (category of diag_categories) {
+  buttonsDiv = document.getElementById("buttons");
+  button = document.createElement("button");
+  button.setAttribute("class", `diagnostics-${category}-button`);
+  button.addEventListener('click',
+      listener.bind(null, 'diagnostics', category));
+  buttonsDiv.appendChild(button);
+}

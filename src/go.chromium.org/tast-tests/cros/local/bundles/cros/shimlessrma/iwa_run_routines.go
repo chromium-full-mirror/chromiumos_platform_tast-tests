@@ -6,20 +6,20 @@ package shimlessrma
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/shimlessrma/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IWAExtensionConnection,
+		Func:         IWARunRoutines,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check if IWA(Isolated Web App) can send message to extension and get response",
+		Desc:         "Run healthd routines from IWA(Isolated Web App)",
 		Contacts: []string{
 			"chromeos-shimless-eng@google.com",
 		},
@@ -30,19 +30,24 @@ func init() {
 		Fixture:      fixture.InstallIWA,
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
+		Params: []testing.Param{{
+			Name: "audio_driver",
+			Val:  "audio_driver",
+		}},
 	})
 }
 
-func IWAExtensionConnection(ctx context.Context, s *testing.State) {
+func IWARunRoutines(ctx context.Context, s *testing.State) {
 	// Note: If you modify the fixture/data/iwa or fixture/data/extension,
 	// you have to rebuild them by running build_iwa_ext.sh.
 	v := s.FixtValue().(*fixture.Value)
 	ui := uiauto.New(v.Tconn)
+	routine := s.Param().(string)
 
-	checkExtensionButton := nodewith.NameContaining("Check extension").Role(role.Button)
-	textAreaFinder := nodewith.HasClass("check-extension-textarea")
-	if err := uiauto.Combine("send request to extension",
-		ui.LeftClick(checkExtensionButton),
+	routineButton := nodewith.HasClass("diagnostics-" + routine + "-button")
+	textAreaFinder := nodewith.HasClass("diagnostics-" + routine + "-textarea")
+	if err := uiauto.Combine("send request to healthd",
+		ui.LeftClick(routineButton),
 		ui.WaitUntilExists(textAreaFinder),
 	)(ctx); err != nil {
 		s.Fatal("Failed to click the button: ", err)
@@ -50,7 +55,7 @@ func IWAExtensionConnection(ctx context.Context, s *testing.State) {
 
 	if node, err := ui.Info(ctx, textAreaFinder); err != nil {
 		s.Fatal("Failed to get node info: ", err)
-	} else if node.Value != "\"Extension sample message\"" {
-		s.Fatal("Failed to get correct response from extension")
+	} else if !strings.Contains(node.Value, "\"status\": \"passed\"") {
+		s.Fatal("Routine result is not passed, result: ", node.Value)
 	}
 }
