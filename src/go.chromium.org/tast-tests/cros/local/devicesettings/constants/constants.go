@@ -21,8 +21,8 @@ var (
 	TrackPointRow = nodewith.Name("TrackPoint").Role(role.GenericContainer)
 	// CustomizeKeyboardKeys is a finder for the built-in keyboard Remap keys subpage in
 	// the keyboard settings page.
-	CustomizeKeyboardKeys = nodewith.NameContaining(
-		"Customize keyboard keys").Role(role.Link).Nth(1)
+	CustomizeKeyboardKeys = nodewith.ClassName(
+		"hr bottom-divider remap-keyboard-keys-row-internal").Role(role.GenericContainer)
 )
 
 // List of modifier keys.
