@@ -23,7 +23,7 @@ func init() {
 			"cros-connectivity@google.com",
 			"nikhilcn@chromium.org",
 		},
-		BugComponent: "b:1226026",
+		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.NoCellular()),
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},

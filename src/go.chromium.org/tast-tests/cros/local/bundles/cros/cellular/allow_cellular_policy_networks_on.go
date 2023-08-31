@@ -30,7 +30,7 @@ func init() {
 			"cros-connectivity@google.com",
 			"nikhilcn@google.com",
 		},
-		BugComponent: "b:1226026",
+		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim", "cellular_e2e"},
 		Fixture:      "cellularWithFakeDMSEnrolledAndTestSIM",
