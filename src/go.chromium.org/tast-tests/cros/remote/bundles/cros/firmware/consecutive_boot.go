@@ -7,6 +7,7 @@ package firmware
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -111,21 +112,23 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	shutdownWithPowerButton := func() {
+	shutdownWithPowerButton := func() error {
 		s.Log("Pressing power key until device shuts down")
 		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOff)); err != nil {
-			s.Fatal("Failed to press power key: ", err)
+			return errors.Wrap(err, "failed to press power key")
 		}
+		return nil
 	}
 
-	shutdownWithShutdownCmd := func() {
+	shutdownWithShutdownCmd := func() error {
 		s.Log("Sending `/sbin/shutdown -P now` to shutdown dut")
 		if err := h.DUT.Conn().CommandContext(ctx, "/sbin/shutdown", "-P", "now").Start(); err != nil {
-			s.Fatal("Failed to run `/sbin/shutdown -P now` cmd: ", err)
+			return errors.Wrap(err, "failed to run `/sbin/shutdown -P now` cmd")
 		}
+		return nil
 	}
 
-	var shutdownFunc func()
+	var shutdownFunc func() error
 	if testArgs.bootMethod == consecutiveBootWithPowerBtn {
 		shutdownFunc = shutdownWithPowerButton
 	} else if testArgs.bootMethod == consecutiveBootWithShutdownCmd {
@@ -139,6 +142,10 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		hasCustomCmd = true
 	}
 
+	expectECReboot := false
+	if h.Config.Platform == "kukui" || h.Config.Platform == "jacuzzi" {
+		expectECReboot = true
+	}
 	getTime := func(ctx context.Context) (int64, error) {
 		result, err := h.Servo.RunECCommandGetOutput(ctx, "gettime", []string{`Time:\s+0x(\S+)\s`})
 		if err != nil {
@@ -165,62 +172,135 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get boot id: ", err)
 	}
 
+	// Counters to track points of failure.
+	shutdownFuncFailed := 0
+	failToGetG3 := 0
+	failToPressPowerKey := 0
+	failToConnectToDUT := 0
+	incorrectBootMode := 0
+	badBootID := 0
+	unexpectedECReboot := 0
+	customCmdFailed := 0
+	powerdFailed := 0
+
+	failures := make(map[int][]error, numIters)
+	for i := 0; i < numIters; i++ {
+		failures[i] = []error{}
+	}
+	logFailure := func(err error, iter int, errCount *int) {
+		s.Logf("Iter %d -- %v", iter+1, err)
+		failures[iter] = append(failures[iter], err)
+		if errCount != nil {
+			*errCount = *errCount + 1
+		}
+	}
+
 	for i := 0; i < numIters; i++ {
 		s.Logf("Running iteration %d out of %d ", i+1, numIters)
-		shutdownFunc()
+		if err := shutdownFunc(); err != nil {
+			logFailure(errors.Wrap(err, "error in shutdown func"), i, &shutdownFuncFailed)
+		}
 
 		s.Log("Check for G3 powerstate")
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
-			s.Fatal("Failed to get G3 powerstate: ", err)
+			logFailure(errors.Wrap(err, "failed to get G3 powerstate"), i, &failToGetG3)
 		}
 
 		s.Log("Pressing power key until device boots")
 		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
-			s.Fatal("Failed to press power key: ", err)
+			logFailure(errors.Wrap(err, "failed to press power key"), i, &failToPressPowerKey)
 		}
 
 		s.Log("Check for S0 powerstate")
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
-			s.Fatal("Failed to get S0 powerstate: ", err)
+			logFailure(errors.Wrap(err, "failed to get S0 powerstate"), i, nil)
 		}
 
-		s.Log("Wait for DUT to connect")
-		if err := h.WaitConnect(ctx); err != nil {
-			s.Fatal("Failed to wait for device to connect: ", err)
-		}
+		// Wrap in func so ctx cancel defer executes immediately after this block.
+		func() {
+			s.Log("Wait for DUT to connect")
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx); err != nil {
+				logFailure(errors.Wrap(err, "failed to wait for device to connect"), i, &failToConnectToDUT)
+			}
+		}()
 
 		// Make sure boot mode is preserved over reboot.
 		s.Log("Verifying boot mode is ", testArgs.bootMode)
 		if err := verifyBootMode(testArgs.bootMode); err != nil {
-			s.Fatal("Failed boot mode check: ", err)
+			logFailure(errors.Wrap(err, "failed boot mode check"), i, &incorrectBootMode)
 		}
 
 		s.Log("Verifying boot id changed over reboot")
-		newBootID, err := h.Reporter.BootID(ctx)
-		if err != nil {
-			s.Fatal("Failed to get boot id: ", err)
+		if newBootID, err := h.Reporter.BootID(ctx); err != nil {
+			logFailure(errors.Wrap(err, "failed to get boot id"), i, &badBootID)
+		} else if newBootID == bootID {
+			logFailure(errors.Wrap(err, "unexpectedly got same boot id over reboot"), i, &badBootID)
+		} else {
+			bootID = newBootID
 		}
-		if newBootID == bootID {
-			s.Fatal("Unexpectedly got same boot id over reboot")
-		}
-		bootID = newBootID
 
-		ecTime, err := getTime(ctx)
-		if err != nil {
-			s.Fatal("Failed to read EC clock: ", err)
+		if !expectECReboot {
+			if ecTime, err := getTime(ctx); err != nil {
+				logFailure(errors.Wrap(err, "failed to read EC clock"), i, &unexpectedECReboot)
+			} else if ecTime < priorECTime {
+				logFailure(
+					errors.Wrapf(err, "EC reboot detected. Clock was %v but now is %v", priorECTime, ecTime),
+					i, &unexpectedECReboot,
+				)
+			} else {
+				priorECTime = ecTime
+			}
 		}
-		if ecTime < priorECTime {
-			s.Fatalf("EC reboot detected. Clock was %v but now is %v", priorECTime, ecTime)
-		}
-		priorECTime = ecTime
 
 		if hasCustomCmd {
 			s.Logf("Running provided custom command %q after reboot #%d", customCmd, i+1)
 			if out, err := h.DUT.Conn().CommandContext(ctx, "sh", "-c", customCmd).CombinedOutput(ssh.DumpLogOnError); err != nil {
-				s.Log("Error running custom cmd: ", err)
+				logFailure(errors.Wrap(err, "error running custom cmd"), i, &customCmdFailed)
 			} else {
 				s.Log("cmd output:", string(out))
 			}
 		}
+
+		if testArgs.bootMethod == consecutiveBootWithPowerBtn {
+			// Wait for powerd to be running so power key press will be recognized.
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				out, err := h.DUT.Conn().CommandContext(ctx, "status", "powerd").Output(ssh.DumpLogOnError)
+				if err != nil {
+					return errors.Wrap(err, "failed to get powerd status")
+				}
+				if !strings.Contains(string(out), "powerd start/running") {
+					return errors.Errorf("expected powerd to be running, actual status was %q", string(out))
+				}
+				return nil
+
+			}, &testing.PollOptions{
+				Timeout:  15 * time.Second,
+				Interval: 2 * time.Second,
+			}); err != nil {
+				logFailure(errors.Wrap(err, "failed to wait for powerd to start"), i, &powerdFailed)
+			}
+		}
+	}
+
+	numFails := 0
+	for _, errors := range failures {
+		numFails += len(errors)
+	}
+	if numFails > 0 {
+		s.Logf("Encountered %d errors during execution of stress test:", numFails)
+		s.Logf("\tFailed to shutdown:........%d", shutdownFuncFailed)
+		s.Logf("\tFailed to reach G3:........%d", failToGetG3)
+		s.Logf("\tPower key failed:..........%d", failToPressPowerKey)
+		s.Logf("\tFailed to connect to DUT:..%d", failToConnectToDUT)
+		s.Logf("\tGot incorrect bootmode:....%d", incorrectBootMode)
+		s.Logf("\tBootID did not change:.....%d", badBootID)
+		s.Logf("\tUnexpected EC reboot:......%d", unexpectedECReboot)
+		s.Logf("\tCustom cmd failed:.........%d", customCmdFailed)
+		s.Logf("\tPowerd was not running:....%d", powerdFailed)
+		s.Fatalf("ConsecutiveBoot test had %d errors, see logs for details", numFails)
+	} else {
+		s.Log("No errors encountered")
 	}
 }
