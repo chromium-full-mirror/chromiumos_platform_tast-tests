@@ -1659,3 +1659,24 @@ func (h *Helper) ApplyCarrierLockConfig(ctx context.Context,
 	}
 	return nil
 }
+
+// GetKnownApns gets a list of the known APNs for the the operator of the current SIM.
+func GetKnownApns(ctx context.Context) ([]KnownAPN, error) {
+	modem, err := modemmanager.NewModemWithSim(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create new modem with SIM")
+	}
+
+	operatorID, err := modem.GetOperatorIdentifier(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get operator ID")
+	}
+	testing.ContextLog(ctx, "operatorID: ", operatorID)
+
+	knownAPNs, err := GetKnownAPNsForOperator(operatorID)
+	if err != nil {
+		return nil, errors.Errorf("there are no APNs for operator %q", operatorID)
+	}
+	testing.ContextLog(ctx, "knownAPNs: ", knownAPNs)
+	return knownAPNs, nil
+}

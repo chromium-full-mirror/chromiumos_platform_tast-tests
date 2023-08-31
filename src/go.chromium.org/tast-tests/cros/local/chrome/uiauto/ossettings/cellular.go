@@ -227,6 +227,13 @@ func EnterPreRevampOtherAPNDetails(ctx context.Context, tconn *chrome.TestConn, 
 		return errors.Wrap(err, "could not click APN input")
 	}
 
+	maxApnLength := 255
+	clearTextFieldViaClickingBackspace(kb, maxApnLength)
+
+	if err := ui.LeftClick(AccessPointNameInput)(ctx); err != nil {
+		return errors.Wrap(err, "could not click APN input 2")
+	}
+
 	if err := kb.Type(ctx, apn); err != nil {
 		return errors.Wrap(err, "failed to type username")
 	}
@@ -341,7 +348,7 @@ func (s *OSSettings) VerifyAPNSubpageConnectedApnUI(ctx context.Context, tconn *
 	}
 
 	if !strings.Contains(strings.ToUpper(connectedNodeInnterText), strings.ToUpper(apn)) {
-		return errors.Errorf("failed to show APN name %q in connected APN row text; shows %q instead", connectedNodeInnterText, apn)
+		return errors.Errorf("failed to show APN name %q in connected APN row text; shows %q instead", apn, connectedNodeInnterText)
 	}
 
 	// If the APN is automatically detected, it is provided by the modb.
@@ -569,4 +576,12 @@ func VerifyCelluarNetworkExistInList(ctx context.Context, tconn *chrome.TestConn
 	}
 
 	return nil
+}
+
+func clearTextFieldViaClickingBackspace(kb *input.KeyboardEventWriter, times int) {
+	var keySequence = []string{}
+	for i := 1; i <= times; i++ {
+		keySequence = append(keySequence, "Backspace")
+	}
+	kb.TypeSequenceAction(keySequence)
 }
