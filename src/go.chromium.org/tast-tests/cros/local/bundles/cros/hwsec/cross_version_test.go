@@ -32,7 +32,8 @@ var milestoneConfigs = map[int]milestoneConfig{
 	// * Long-term Support (LTS) version - R108.
 	// * the first version with USS enabled - R110.
 	// * the first version with USS migration - R112.
-	// * the latest version and Long-term Support (LTS) version - R114.
+	// * Long-term Support (LTS) version - R114.
+	// * the latest version - R116.
 	88:  {critical: true},
 	91:  {critical: true},
 	93:  {critical: true},
@@ -42,6 +43,7 @@ var milestoneConfigs = map[int]milestoneConfig{
 	110: {critical: true},
 	112: {critical: true},
 	114: {critical: true},
+	116: {critical: true},
 	// Other versions that are not tested in CQ
 	89:  {critical: false},
 	90:  {critical: false},
@@ -60,6 +62,7 @@ var milestoneConfigs = map[int]milestoneConfig{
 	109: {critical: false},
 	111: {critical: false},
 	113: {critical: false},
+	115: {critical: false},
 	// There is no R95 for ChromeOS
 	95: {ignore: true},
 }
@@ -76,17 +79,17 @@ var tpmVersions = []tpmVersion{
 		name:           "ti50",
 		softwareDeps:   []string{"no_tpm_dynamic", "gsc"},
 		milestoneBegin: 112,
-		milestoneEnd:   114,
+		milestoneEnd:   116,
 	}, {
 		name:           "tpm2",
 		softwareDeps:   []string{"no_tpm_dynamic", "no_gsc"},
 		milestoneBegin: 88,
-		milestoneEnd:   114,
+		milestoneEnd:   116,
 	}, {
 		name:           "tpm_dynamic",
 		softwareDeps:   []string{"tpm_dynamic", "no_gsc"},
 		milestoneBegin: 96,
-		milestoneEnd:   114,
+		milestoneEnd:   116,
 	},
 }
 
