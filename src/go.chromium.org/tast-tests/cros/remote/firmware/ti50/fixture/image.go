@@ -330,6 +330,8 @@ func gsURLExists(ctx context.Context, url string) bool {
 func imageDirectory(t ti50.TestbedType, i ImageType) (string, error) {
 	switch t {
 	case "gsc_dt_ab":
+		fallthrough
+	case "gsc_dt_shield":
 		return "andreiboard-" + string(i), nil
 	case "gsc_ot_fpga_cw310":
 		return "opentitan-" + string(i), nil
@@ -343,6 +345,8 @@ func imageDirectory(t ti50.TestbedType, i ImageType) (string, error) {
 func defaultConfigPath(testbedType ti50.TestbedType, imageType ImageType) (string, error) {
 	switch testbedType {
 	case "gsc_dt_ab":
+		fallthrough
+	case "gsc_dt_shield":
 		return "/mnt/host/source/src/platform/ti50/common/ports/dauntless/software/tools/" + string(imageType) + "_dauntless.json", nil
 	case "gsc_ot_fpga_cw310":
 		return "/mnt/host/source/src/platform/ti50/common/ports/opentitan/software/tools/" + string(imageType) + "_opentitan.json", nil

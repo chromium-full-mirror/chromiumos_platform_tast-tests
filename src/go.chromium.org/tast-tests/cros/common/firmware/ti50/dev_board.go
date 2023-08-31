@@ -94,6 +94,9 @@ const (
 	// https://docs.google.com/spreadsheets/d/1youX_Yh2A6-Zd2T98ShjH_O8M9CZexDB9DCHpegNMvE
 	GscDauntlessAndreiboard TestbedType = "gsc_dt_ab"
 
+	// GscDauntlessShield is a small board on top of HyperDebug.
+	GscDauntlessShield TestbedType = "gsc_dt_shield"
+
 	// GscOpentitanCw310Fpga is a ChipWhisperer 310 FPGA board connected via ribbon cables to
 	// a "swizzle board" on top of HyperDebug.
 	GscOpentitanCw310Fpga TestbedType = "gsc_ot_fpga_cw310"
