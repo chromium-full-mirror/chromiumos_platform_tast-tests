@@ -33,7 +33,7 @@ import (
 	webrtc "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/webrtclogupload"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -93,13 +93,10 @@ func init() {
 			pci.SearchFlag(&policy.UserAvatarCustomizationSelectorsEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.UserFeedbackAllowed{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.WallpaperGooglePhotosIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
-			// TODO(b/281982842): Add WebRtcEventLogCollectionAllowed
-			// and WebRtcTextLogCollectionAllowed after fixing the failures caused
-			// by bot's attempt to join the Meet client in Lacros mode.
-			// pci.SearchFlag(&policy.WebRtcEventLogCollectionAllowed{}, pci.VerifiedValue),
-			// pci.SearchFlag(&policy.WebRtcTextLogCollectionAllowed{}, pci.VerifiedValue),
+			pci.SearchFlag(&policy.WebRtcEventLogCollectionAllowed{}, pci.VerifiedValue),
+			pci.SearchFlag(&policy.WebRtcTextLogCollectionAllowed{}, pci.VerifiedValue),
 		},
-		Timeout: 8 * time.Minute,
+		Timeout: 10 * time.Minute,
 	})
 }
 
@@ -234,9 +231,7 @@ func optionalServices() []optionalService {
 			trigger:   wallpapergooglephotos.TriggerWallpaperGooglePhotosIntegration,
 			dataFiles: []string{},
 		},
-		// TODO(b/281982842): Re-enable the test after fixing the failures caused
-		// by bot's attempt to join the Meet client in Lacros mode.
-		/*{
+		{
 			name: "webrtc_event_and_text_log_collection",
 			associatedAnnotations: []string{
 				webrtc.EventLogCollectionHashID,
@@ -246,7 +241,7 @@ func optionalServices() []optionalService {
 				&policy.WebRtcTextLogCollectionAllowed{Val: false}},
 			trigger:   webrtc.TriggerWebRTCLogUploads,
 			dataFiles: []string{},
-		},*/
+		},
 		// Note: user_avatar_customization should be kept last in this list to avoid
 		// issues with other test cases.
 		{
@@ -311,11 +306,13 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		chrome.KeepEnrollment(),                              // Required when restarting Chrome for device policy tests.
 		chrome.LacrosExtraArgs("--force-devtools-available"), // Enable developer tools for extensions.
 	}
+
+	browserType := s.Param().(browser.Type)
 	// Add args to start net export on startup.
-	opts = append(opts, netexport.CommandLineArgs(s.Param().(browser.Type))...)
+	opts = append(opts, netexport.CommandLineArgs(browserType)...)
 
 	// If browser type is lacros, handle differently.
-	if s.Param().(browser.Type) == browser.TypeLacros {
+	if browserType == browser.TypeLacros {
 		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		if err != nil {
 			s.Fatal("Failed to compute lacros chrome options: ", err)
@@ -372,15 +369,32 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// Setup the browser for lacros tests after the policy was set.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
+	// Setup the browser and get lacros object after the policy was set.
+	var br *browser.Browser
+	var lacrosSession *lacros.Lacros
+	switch browserType {
+	case browser.TypeLacros:
+		lacrosSession, err = lacros.Launch(ctx, tconn)
+		if err != nil {
+			s.Fatal("Failed to launch lacros-chrome: ", err)
+		}
+		br = lacrosSession.Browser()
+		defer lacrosSession.Close(cleanupCtx)
+	case browser.TypeAsh:
+		br = cr.Browser()
+	default:
+		s.Fatalf("Unrecognized browser type %s", browserType)
 	}
-	defer closeBrowser(cleanupCtx)
 
 	// Setup credential for a test bond user to join Meet call.
 	webrtc.SetBondCredentials(s.RequiredVar("ui.bond_credentials"))
+
+	// Setup connection source for webrtc Meet operations.
+	if browserType == browser.TypeLacros {
+		webrtc.SetConnSource(lacrosSession)
+	} else {
+		webrtc.SetConnSource(cr)
+	}
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_network_request_monitor")
 
@@ -398,7 +412,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 
 	// Get net export session.
-	netExport, err := netexport.FromCommandLineArg(s.Param().(browser.Type))
+	netExport, err := netexport.FromCommandLineArg(browserType)
 	if err != nil {
 		s.Fatal("Failed to get net export session: ", err)
 	}

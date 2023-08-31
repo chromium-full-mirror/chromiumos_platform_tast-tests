@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/annotations"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -61,6 +62,12 @@ var creds string
 // to join the meeting.
 func SetBondCredentials(bondCreds string) {
 	creds = bondCreds
+}
+
+// SetConnSource assigns a connection from either chrome or lacros object.
+// ConnSource helps to perform Meet operations with hrTelemetryApi.
+func SetConnSource(cs ash.ConnSource) {
+	connSource = cs
 }
 
 // NetLogAnnotationTest starts and stops net export, trigger WebRTC logs and
@@ -145,15 +152,9 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 }
 
 // TriggerWebRTCLogUploads is used to create a Meet client and trigger feedback to create WebRTC logs.
-func TriggerWebRTCLogUploads(ctx context.Context, cr *chrome.Chrome, _ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, _ int) (errr error) {
+func TriggerWebRTCLogUploads(ctx context.Context, cr *chrome.Chrome, _ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, _ networkrequestmonitor.PolicySetting) (errr error) {
 	const meetTimeout = 10 * time.Minute
 	closeCtx := ctx
-
-	// Setup ConnSource so that Chrome can connect to hrTelemetryAPI
-	// for sending commands to Meet client.
-	if connSource == nil {
-		connSource = cr
-	}
 
 	// Ensure that we close the Meet window at the end of the test in case
 	// the test fails.
