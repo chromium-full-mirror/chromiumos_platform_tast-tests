@@ -7,6 +7,7 @@ package arc
 import (
 	"context"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -528,15 +529,29 @@ func captureOutputAndReadData(ctx context.Context, output audio.TestRawData) ([]
 	}
 
 	testing.ContextLog(ctx, "Capture output to ", output.Path)
-	if err := crastestclient.CaptureFileCommand(
-		ctx, output.Path,
-		output.Duration,
-		output.Channels,
-		output.Rate).Run(testexec.DumpLogOnError); err != nil {
+
+	// Capture to arecord to bypass all processing in CRAS.
+	if err := testexec.CommandContext(ctx,
+		"arecord",
+		"-Dhw:Loopback,1",
+		fmt.Sprintf("--channels=%d", output.Channels),
+		fmt.Sprintf("--duration=%d", output.Duration),
+		"--format=S16_LE",
+		output.Path+".wav",
+	).Run(testexec.DumpLogOnError); err != nil {
 		return nil, errors.Wrap(err, "failed to capture data")
 	}
 
 	// Read file
+	// TODO(b/298468964): Deal with wav directly.
+	if err := testexec.CommandContext(ctx,
+		"sox",
+		output.Path+".wav",
+		fmt.Sprintf("--rate=%d", output.Rate),
+		output.Path,
+	).Run(testexec.DumpLogOnError); err != nil {
+		return nil, errors.Wrap(err, "failed to convert to RAW")
+	}
 	f, err := os.Open(output.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open file")
