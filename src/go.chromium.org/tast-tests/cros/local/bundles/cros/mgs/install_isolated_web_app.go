@@ -27,7 +27,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks if the isolated web apps can be installed for the MGS",
 		Contacts: []string{
-			"chromeos-kiosk-eng+TAST@google.com",
+			"pwa-commercial@google.com",
 			"peletskyi@google.com", // Test author
 		},
 		BugComponent: "b:1311568", // ChromeOS > Software > Commercial (Enterprise) > App Platforms > Coralfish
