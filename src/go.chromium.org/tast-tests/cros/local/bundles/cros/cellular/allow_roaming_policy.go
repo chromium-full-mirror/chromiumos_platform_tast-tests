@@ -28,8 +28,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the carrier name on connected esim",
 		Contacts: []string{
-			"nikhilcn@google.com",
 			"cros-connectivity@google.com",
+			"nikhilcn@google.com",
 		},
 		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},

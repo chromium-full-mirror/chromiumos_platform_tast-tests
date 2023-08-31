@@ -17,9 +17,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Bluetooth can be enabled and disabled using Mojo API",
 		Contacts: []string{
+			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",
 			"shijinabraham@google.com",
-			"cros-connectivity@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:bluetooth", "bluetooth_flaky"},
