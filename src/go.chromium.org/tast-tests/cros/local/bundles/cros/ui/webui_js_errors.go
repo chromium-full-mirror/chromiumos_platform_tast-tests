@@ -228,7 +228,6 @@ func WebUIJSErrors(ctx context.Context, s *testing.State) {
 
 	const vModuleFlags = "--vmodule=chrome_js_error_report_processor=3,web_ui_impl=3,web_ui_main_frame_observer=3,webui_js_error_ui=3"
 	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, s.Param().(browser.Type), lacrosfixt.NewConfig(),
-		chrome.EnableFeatures("SendWebUIJavaScriptErrorReports"),
 		chrome.ExtraArgs(vModuleFlags))
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
