@@ -338,65 +338,6 @@ type TestFixture struct {
 	powerCleanup    func(context.Context) error
 }
 
-// connectCompanion dials SSH connection to companion device with the auth key of DUT.
-func (tf *TestFixture) connectCompanion(ctx context.Context, hostname string, retryDNSNotFound bool) (*ssh.Conn, error) {
-	var sopt ssh.Options
-	ssh.ParseTarget(hostname, &sopt)
-	// Assumption is, that the key will be shared between DUTs.
-	sopt.KeyDir = tf.duts[DefaultDUT].dut.KeyDir()
-	sopt.KeyFile = tf.duts[DefaultDUT].dut.KeyFile()
-	var conn *ssh.Conn
-
-	if tf.hostUsers != nil {
-		if username, ok := tf.hostUsers[hostname]; ok {
-			testing.ContextLogf(ctx, "Using ssh username override %q for host %q", username, hostname)
-			sopt.User = username
-		}
-	}
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		var err error
-		var dnsErr *net.DNSError
-
-		conn, err = ssh.New(ctx, &sopt)
-		if !retryDNSNotFound && errors.As(err, &dnsErr) && dnsErr.IsNotFound {
-			// Don't retry DNS not found case.
-			return testing.PollBreak(err)
-		}
-		return err
-	}, &testing.PollOptions{
-		Timeout: 5 * time.Minute,
-	}); err != nil {
-		return nil, err
-	}
-
-	return conn, nil
-}
-
-// setupNetCertStore sets up tf.netCertStore for EAP-related tests.
-func (tf *TestFixture) setupNetCertStore(ctx context.Context, dutIdx DutIdx) error {
-	if tf.duts[dutIdx].netCertStore != nil {
-		// Nothing to do if it was set up.
-		return nil
-	}
-
-	runner := hwsec.NewCmdRunner(tf.duts[dutIdx].dut)
-	var err error
-	tf.duts[dutIdx].netCertStore, err = netcertstore.CreateStore(ctx, runner)
-	return err
-}
-
-// resetNetCertStore nullifies tf.netCertStore.
-func (tf *TestFixture) resetNetCertStore(ctx context.Context, dutIdx DutIdx) error {
-	if tf.duts[dutIdx].netCertStore == nil {
-		// Nothing to do if it was not set up.
-		return nil
-	}
-
-	err := tf.duts[dutIdx].netCertStore.Cleanup(ctx)
-	tf.duts[dutIdx].netCertStore = nil
-	return err
-}
-
 // NewTestFixture creates a TestFixture.
 // The TestFixture contains a gRPC connection to the DUT and a SSH connection to the router.
 // The method takes two context: ctx and daemonCtx, the first one is the context for the operation and
@@ -483,7 +424,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 			if err != nil {
 				return nil, err
 			}
-			if err := setLoggingConfig(ctx, d.wifiClient, tf.logLevel, tf.logTags); err != nil {
+			if err := tf.setLoggingConfig(ctx, d.wifiClient, tf.logLevel, tf.logTags); err != nil {
 				return nil, err
 			}
 		}
@@ -518,7 +459,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 			return nil, errors.Wrapf(err, "failed to connect to the router %s", rt.target)
 		}
 		rt.host = routerHost
-		routerObj, err := newRouter(ctx, daemonCtx, rt.host, rt.target)
+		routerObj, err := tf.newRouter(ctx, daemonCtx, rt.host, rt.target)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create a router object")
 		}
@@ -582,7 +523,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 				return nil, errors.Wrap(err, "failed to connect to pcap")
 			}
 		} else {
-			routerObj, err := newRouter(ctx, daemonCtx, tf.pcap.host, tf.pcap.target)
+			routerObj, err := tf.newRouter(ctx, daemonCtx, tf.pcap.host, tf.pcap.target)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to create a router object for pcap")
 			}
@@ -622,146 +563,95 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 	return tf, nil
 }
 
-// NumberOfDUTs returns number of DUTs handled by this fixture.
-func (tf *TestFixture) NumberOfDUTs() int {
-	return len(tf.duts)
-}
+// connectCompanion dials SSH connection to companion device with the auth key of DUT.
+func (tf *TestFixture) connectCompanion(ctx context.Context, hostname string, retryDNSNotFound bool) (*ssh.Conn, error) {
+	var sopt ssh.Options
+	ssh.ParseTarget(hostname, &sopt)
+	// Assumption is, that the key will be shared between DUTs.
+	sopt.KeyDir = tf.duts[DefaultDUT].dut.KeyDir()
+	sopt.KeyFile = tf.duts[DefaultDUT].dut.KeyFile()
+	var conn *ssh.Conn
 
-// DUT returns particular DUT.
-func (tf *TestFixture) DUT(dutIdx DutIdx) *dut.DUT {
-	return tf.duts[dutIdx].dut
-}
-
-// DUTConn returns connection object to particular DUT.
-func (tf *TestFixture) DUTConn(dutIdx DutIdx) *ssh.Conn {
-	return tf.duts[dutIdx].dut.Conn()
-}
-
-// P2PGOIface returns the p2p GO interface name.
-func (tf *TestFixture) P2PGOIface() string {
-	return tf.p2pGOIface
-}
-
-// P2PGOConn returns connection object to the p2pGO.
-func (tf *TestFixture) P2PGOConn() *ssh.Conn {
-	return tf.p2pGO.Conn()
-}
-
-// APConn returns connection object to the first AP.
-// Currently, the test fixture only requires to control the first (0th) AP.
-func (tf *TestFixture) APConn() *ssh.Conn {
-	if len(tf.routers) == 0 {
-		return nil
-	}
-	return tf.routers[0].host
-}
-
-// ReserveForClose returns a shorter ctx and cancel function for tf.Close().
-func (tf *TestFixture) ReserveForClose(ctx context.Context) (context.Context, context.CancelFunc) {
-	return ctxutil.Shorten(ctx, 10*time.Second)
-}
-
-// CollectLogs downloads related log files to OutDir.
-func (tf *TestFixture) CollectLogs(ctx context.Context) error {
-	var firstErr error
-	for _, rt := range tf.routers {
-		// Assert router can collect logs
-		r, ok := rt.object.(support.Logs)
-		if !ok {
-			return errors.Errorf("router type %q does not support Logs", rt.object.RouterType().String())
-		}
-		err := r.CollectLogs(ctx)
-		if err != nil {
-			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to collect logs"))
+	if tf.hostUsers != nil {
+		if username, ok := tf.hostUsers[hostname]; ok {
+			testing.ContextLogf(ctx, "Using ssh username override %q for host %q", username, hostname)
+			sopt.User = username
 		}
 	}
-	return firstErr
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		var dnsErr *net.DNSError
+
+		conn, err = ssh.New(ctx, &sopt)
+		if !retryDNSNotFound && errors.As(err, &dnsErr) && dnsErr.IsNotFound {
+			// Don't retry DNS not found case.
+			return testing.PollBreak(err)
+		}
+		return err
+	}, &testing.PollOptions{
+		Timeout: 5 * time.Minute,
+	}); err != nil {
+		return nil, err
+	}
+
+	return conn, nil
 }
 
-// ReserveForCollectLogs returns a shorter ctx and cancel function for tf.CollectRouterFileLogs.
-func (tf *TestFixture) ReserveForCollectLogs(ctx context.Context) (context.Context, context.CancelFunc) {
-	return ctxutil.Shorten(ctx, time.Second)
-}
-
-// Close closes the connections created by TestFixture.
-func (tf *TestFixture) Close(ctx context.Context) error {
-	ctx, st := timing.Start(ctx, "tf.Close")
+// newRouter connects to and initializes the router via SSH then returns the router object.
+// This method takes two context: ctx and daemonCtx, the first is the context for the NewRouter
+// method and daemonCtx is for the spawned background daemons.
+// After getting a Server instance, d, the caller should call r.Close() at the end, and use the
+// shortened ctx (provided by d.ReserveForClose()) before r.Close() to reserve time for it to run.
+func (tf *TestFixture) newRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (router.Base, error) {
+	ctx, st := timing.Start(ctx, "NewRouter")
 	defer st.End()
 
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
-	defer cancel()
+	name = strings.ReplaceAll(name, ":", "_")
 
-	var firstErr error
-	for i := range tf.duts {
-		if err := tf.resetNetCertStore(ctx, DutIdx(i)); err != nil {
-			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to reset the NetCertStore"))
-		}
+	rtype, err := tf.resolveRouterTypeFromHost(ctx, host)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to resolve router type from host")
 	}
+	testing.ContextLogf(ctx, "Resolved host router type to be %q", rtype)
 
-	if tf.attenuator != nil {
-		tf.attenuator.Close()
-		tf.attenuator = nil
+	switch rtype {
+	case support.LegacyT:
+		return legacy.NewRouter(ctx, daemonCtx, host, name)
+	case support.AxT:
+		return ax.NewRouter(ctx, daemonCtx, host, name)
+	case support.OpenWrtT:
+		return openwrt.NewRouter(ctx, daemonCtx, host, name)
+	case support.UbuntuT:
+		return ubuntu.NewRouter(ctx, daemonCtx, host, name)
+	case support.UnknownT:
+		return nil, errors.New("unable to resolve specific router type from host")
+	default:
+		return nil, errors.Errorf("unexpected routerType, got %v", rtype)
 	}
+}
 
-	// Check if one of routers was used in dual-purpose (router&pcap) mode.
-	if tf.pcap.object != nil {
-		for i := range tf.routers {
-			rt := tf.routers[i]
-			if tf.pcap.object == rt.object {
-				// Don't close it, it will be closed while handling routers.
-				tf.pcap.object = nil
-				tf.pcap.host = nil
-				break
-			}
-		}
+func (tf *TestFixture) resolveRouterTypeFromHost(ctx context.Context, host *ssh.Conn) (support.RouterType, error) {
+	if isLegacy, err := legacy.HostIsLegacyRouter(ctx, host); err != nil {
+		return -1, err
+	} else if isLegacy {
+		return support.LegacyT, nil
 	}
-	// If pcap was created specifically for this purpose, close it.
-	if tf.pcap.object != nil {
-		if err := tf.pcap.object.Close(ctx); err != nil {
-			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to close pcap"))
-		}
-		if err := tf.pcap.host.Close(ctx); err != nil {
-			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to close pcap ssh"))
-		}
-		tf.pcap.object = nil
+	if isOpenWrt, err := openwrt.HostIsOpenWrtRouter(ctx, host); err != nil {
+		return -1, err
+	} else if isOpenWrt {
+		return support.OpenWrtT, nil
 	}
-	// Close all created routers.
-	for i := range tf.routers {
-		router := tf.routers[i]
-		if router.object != nil {
-			if err := router.object.Close(ctx); err != nil {
-				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to close router %s", router.target))
-			}
-		}
-		router.object = nil
-		if router.host != nil {
-			if err := router.host.Close(ctx); err != nil {
-				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to close router %s ssh", router.target))
-			}
-		}
-		router.host = nil
+	if isAx, err := ax.HostIsAXRouter(ctx, host); err != nil {
+		return -1, err
+	} else if isAx {
+		return support.AxT, nil
 	}
-	for _, d := range tf.duts {
-		if d.wifiClient != nil {
-			if tf.setLogging {
-				if err := setLoggingConfig(ctx, d.wifiClient, d.originalLogLevel, d.originalLogTags); err != nil {
-					utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to tear down test state"))
-				}
-			}
-			if _, err := d.wifiClient.TearDown(ctx, &empty.Empty{}); err != nil {
-				utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to tear down test state"))
-			}
-			d.wifiClient = nil
-		}
-		if d.rpc != nil {
-			// Ignore the error of rpc.Close as aborting rpc daemon will always have error.
-			d.rpc.Close(ctx)
-			d.rpc = nil
-		}
+	if isUbuntu, err := ubuntu.HostIsUbuntuRouter(ctx, host); err != nil {
+		return -1, err
+	} else if isUbuntu {
+		return support.UbuntuT, nil
 	}
-
-	// Do not close DUT, it'll be closed by the framework.
-	return firstErr
+	return support.UnknownT, nil
 }
 
 // Reinit re-initializes the TestFixture by calling both ReinitDUT and
@@ -884,13 +774,121 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 	testing.ContextLogf(ctx, "Reconnected to %s", routerMsgName)
 
 	testing.ContextLogf(ctx, "Reinitializing %s", routerMsgName)
-	routerObject, err := newRouter(ctx, ctx, rd.host, routerName)
+	routerObject, err := tf.newRouter(ctx, ctx, rd.host, routerName)
 	if err != nil {
 		return errors.Wrapf(err, "failed to reinitialize %s", routerMsgName)
 	}
 	rd.object = routerObject
 	testing.ContextLogf(ctx, "Reconnected to %s with new router controller after reboot", routerMsgName)
 	return nil
+}
+
+// Close closes the connections created by TestFixture.
+func (tf *TestFixture) Close(ctx context.Context) error {
+	ctx, st := timing.Start(ctx, "tf.Close")
+	defer st.End()
+
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+
+	var firstErr error
+	for i := range tf.duts {
+		if err := tf.resetNetCertStore(ctx, DutIdx(i)); err != nil {
+			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to reset the NetCertStore"))
+		}
+	}
+
+	if tf.attenuator != nil {
+		tf.attenuator.Close()
+		tf.attenuator = nil
+	}
+
+	// Check if one of routers was used in dual-purpose (router&pcap) mode.
+	if tf.pcap.object != nil {
+		for i := range tf.routers {
+			rt := tf.routers[i]
+			if tf.pcap.object == rt.object {
+				// Don't close it, it will be closed while handling routers.
+				tf.pcap.object = nil
+				tf.pcap.host = nil
+				break
+			}
+		}
+	}
+	// If pcap was created specifically for this purpose, close it.
+	if tf.pcap.object != nil {
+		if err := tf.pcap.object.Close(ctx); err != nil {
+			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to close pcap"))
+		}
+		if err := tf.pcap.host.Close(ctx); err != nil {
+			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to close pcap ssh"))
+		}
+		tf.pcap.object = nil
+	}
+	// Close all created routers.
+	for i := range tf.routers {
+		router := tf.routers[i]
+		if router.object != nil {
+			if err := router.object.Close(ctx); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to close router %s", router.target))
+			}
+		}
+		router.object = nil
+		if router.host != nil {
+			if err := router.host.Close(ctx); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to close router %s ssh", router.target))
+			}
+		}
+		router.host = nil
+	}
+	for _, d := range tf.duts {
+		if d.wifiClient != nil {
+			if tf.setLogging {
+				if err := tf.setLoggingConfig(ctx, d.wifiClient, d.originalLogLevel, d.originalLogTags); err != nil {
+					utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to tear down test state"))
+				}
+			}
+			if _, err := d.wifiClient.TearDown(ctx, &empty.Empty{}); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to tear down test state"))
+			}
+			d.wifiClient = nil
+		}
+		if d.rpc != nil {
+			// Ignore the error of rpc.Close as aborting rpc daemon will always have error.
+			d.rpc.Close(ctx)
+			d.rpc = nil
+		}
+	}
+
+	// Do not close DUT, it'll be closed by the framework.
+	return firstErr
+}
+
+// ReserveForClose returns a shorter ctx and cancel function for tf.Close().
+func (tf *TestFixture) ReserveForClose(ctx context.Context) (context.Context, context.CancelFunc) {
+	return ctxutil.Shorten(ctx, 10*time.Second)
+}
+
+// CollectLogs downloads related log files to OutDir.
+func (tf *TestFixture) CollectLogs(ctx context.Context) error {
+	var firstErr error
+	for _, rt := range tf.routers {
+		// Assert router can collect logs
+		r, ok := rt.object.(support.Logs)
+		if !ok {
+			return errors.Errorf("router type %q does not support Logs", rt.object.RouterType().String())
+		}
+		err := r.CollectLogs(ctx)
+		if err != nil {
+			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to collect logs"))
+		}
+	}
+	return firstErr
+}
+
+// ReserveForCollectLogs returns a shorter ctx and cancel function for tf.CollectRouterFileLogs.
+func (tf *TestFixture) ReserveForCollectLogs(ctx context.Context) (context.Context, context.CancelFunc) {
+	return ctxutil.Shorten(ctx, time.Second)
 }
 
 // UniqueAPName returns a unique ID string for each AP as their name, so that related
@@ -1034,12 +1032,6 @@ func (tf *TestFixture) StartWPAMonitor(ctx context.Context, dutIdx DutIdx) (wpaM
 	return wpaMonitor, stop, newCtx, nil
 }
 
-// Capturer returns the auto-spawned Capturer for the APIface instance.
-func (tf *TestFixture) Capturer(ap *APIface) (*pcap.Capturer, bool) {
-	capturer, ok := tf.capturers[ap]
-	return capturer, ok
-}
-
 // ConnectWifi is backwards-compatible version of ConnectWifiFromDUT. Deprecated.
 // TODO(b/234845693): remove after stabilizing period.
 func (tf *TestFixture) ConnectWifi(ctx context.Context, ssid string, options ...dutcfg.ConnOption) (*wifi.ConnectResponse, error) {
@@ -1097,6 +1089,31 @@ func (tf *TestFixture) ConnectWifiFromDUT(ctx context.Context, dutIdx DutIdx, ss
 		return nil, errors.Wrapf(err, "client failed to connect to WiFi network with SSID %q", c.Ssid)
 	}
 	return response, nil
+}
+
+// setupNetCertStore sets up tf.netCertStore for EAP-related tests.
+func (tf *TestFixture) setupNetCertStore(ctx context.Context, dutIdx DutIdx) error {
+	if tf.duts[dutIdx].netCertStore != nil {
+		// Nothing to do if it was set up.
+		return nil
+	}
+
+	runner := hwsec.NewCmdRunner(tf.duts[dutIdx].dut)
+	var err error
+	tf.duts[dutIdx].netCertStore, err = netcertstore.CreateStore(ctx, runner)
+	return err
+}
+
+// resetNetCertStore nullifies tf.netCertStore.
+func (tf *TestFixture) resetNetCertStore(ctx context.Context, dutIdx DutIdx) error {
+	if tf.duts[dutIdx].netCertStore == nil {
+		// Nothing to do if it was not set up.
+		return nil
+	}
+
+	err := tf.duts[dutIdx].netCertStore.Cleanup(ctx)
+	tf.duts[dutIdx].netCertStore = nil
+	return err
 }
 
 // ConnectWifiAPFromDUT asks the given DUT to connect to the WiFi provided by the given AP.
@@ -1378,121 +1395,6 @@ func (tf *TestFixture) AssertNoDisconnect(ctx context.Context, dutIdx DutIdx, f 
 	return nil
 }
 
-// RouterByID returns the respective router object in the fixture.
-func (tf *TestFixture) RouterByID(idx int) router.Base {
-	return tf.routers[idx].object
-}
-
-// Router returns the router with id 0 in the fixture as the generic router.Base.
-func (tf *TestFixture) Router() router.Base {
-	return tf.RouterByID(0)
-}
-
-// StandardRouter returns the Router as a router.Standard.
-func (tf *TestFixture) StandardRouter() (router.Standard, error) {
-	r, ok := tf.Router().(router.Standard)
-	if !ok {
-		return nil, errors.New("router is not a standard router")
-	}
-	return r, nil
-}
-
-// StandardRouterWithFrameSenderSupport returns the Router as a router.StandardWithFrameSender.
-func (tf *TestFixture) StandardRouterWithFrameSenderSupport() (router.StandardWithFrameSender, error) {
-	r, ok := tf.Router().(router.StandardWithFrameSender)
-	if !ok {
-		return nil, errors.New("router is not a standard router with frame sender support")
-	}
-	return r, nil
-}
-
-// StandardRouterWithBridgeAndVethSupport returns the Router as a router.StandardWithBridgeAndVeth.
-func (tf *TestFixture) StandardRouterWithBridgeAndVethSupport() (router.StandardWithBridgeAndVeth, error) {
-	r, ok := tf.Router().(router.StandardWithBridgeAndVeth)
-	if !ok {
-		return nil, errors.New("router is not a standard router with bridge and veth support")
-	}
-	return r, nil
-}
-
-// Pcap returns the pcap device in the fixture.
-func (tf *TestFixture) Pcap() router.Base {
-	return tf.pcap.object
-}
-
-// StandardPcap returns the Pcap as a router.Standard.
-func (tf *TestFixture) StandardPcap() (router.Standard, error) {
-	r, ok := tf.Pcap().(router.Standard)
-	if !ok {
-		return nil, errors.New("pcap is not a standard router")
-	}
-	return r, nil
-}
-
-// Attenuator returns the Attenuator object in the fixture.
-func (tf *TestFixture) Attenuator() *attenuator.Attenuator {
-	return tf.attenuator
-}
-
-// WifiClient is a backwards-compatible version of DUTWifiClient. Deprecated.
-// TODO(b/234845693): remove after stabilizing period.
-func (tf *TestFixture) WifiClient() *WifiClient {
-	return tf.DUTWifiClient(DefaultDUT)
-}
-
-// DUTWifiClient returns the gRPC ShillServiceClient of the given DUT.
-func (tf *TestFixture) DUTWifiClient(dutIdx DutIdx) *WifiClient {
-	return tf.duts[dutIdx].wifiClient
-}
-
-// DUTCellularClient returns the gRPC ShillServiceClient of the given DUT.
-func (tf *TestFixture) DUTCellularClient(dutIdx DutIdx) cellular.RemoteCellularServiceClient {
-	return tf.duts[dutIdx].cellularClient
-}
-
-// RPC returns the gRPC connection of the default DUT. Deprecated.
-// TODO(b/234845693): remove after stabilizing period.
-func (tf *TestFixture) RPC() *rpc.Client {
-	return tf.DUTRPC(DefaultDUT)
-}
-
-// DUTRPC returns the gRPC connection of the given DUT.
-func (tf *TestFixture) DUTRPC(dutIdx DutIdx) *rpc.Client {
-	return tf.duts[dutIdx].rpc
-}
-
-// DefaultOpenNetworkAPOptions returns the Options for an common 802.11n open wifi.
-// The function is useful to allow common logic shared between the default setting
-// and customized setting.
-func DefaultOpenNetworkAPOptions() []hostapd.Option {
-	return []hostapd.Option{
-		hostapd.Mode(hostapd.Mode80211nPure),
-		hostapd.Channel(48),
-		hostapd.HTCaps(hostapd.HTCapHT20),
-	}
-}
-
-// DefaultOpenNetworkAP configures the router to provide an 802.11n open wifi.
-func (tf *TestFixture) DefaultOpenNetworkAP(ctx context.Context) (*APIface, error) {
-	return tf.ConfigureAP(ctx, DefaultOpenNetworkAPOptions(), nil)
-}
-
-// DefaultOpenNetworkAPwithDNSHTTP configures the router to provide an 802.11n open wifi and
-// enables DNS server and HTTP server on router.
-func (tf *TestFixture) DefaultOpenNetworkAPwithDNSHTTP(ctx context.Context) (*APIface, error) {
-	return tf.ConfigureAPOnRouterID(ctx, 0, DefaultOpenNetworkAPOptions(), nil, true, true)
-}
-
-// ClientInterface is a backwards-compatible version of DUTClientInterface. Deprecated.
-func (tf *TestFixture) ClientInterface(ctx context.Context) (string, error) {
-	return tf.DUTWifiClient(DefaultDUT).Interface(ctx)
-}
-
-// DUTClientInterface returns the client interface name of the given DUT.
-func (tf *TestFixture) DUTClientInterface(ctx context.Context, dutIdx DutIdx) (string, error) {
-	return tf.DUTWifiClient(dutIdx).Interface(ctx)
-}
-
 // VerifyConnection is backwards-compatible version of VerifyConnectionFromDUT. Deprecated.
 // TODO(b/234845693): remove after stabilizing period.
 func (tf *TestFixture) VerifyConnection(ctx context.Context, ap *APIface) error {
@@ -1662,7 +1564,7 @@ func (tf *TestFixture) DisablePowersaveMode(ctx context.Context, dutIdx DutIdx) 
 }
 
 // setLoggingConfig configures the logging setting with the specified values (level and tags).
-func setLoggingConfig(ctx context.Context, wc *WifiClient, level int, tags []string) error {
+func (tf *TestFixture) setLoggingConfig(ctx context.Context, wc *WifiClient, level int, tags []string) error {
 	testing.ContextLogf(ctx, "Configuring logging level: %d, tags: %v", level, tags)
 	_, err := wc.SetLoggingConfig(ctx, &wifi.SetLoggingConfigRequest{DebugLevel: int32(level), DebugTags: tags})
 	return err
@@ -1681,63 +1583,6 @@ func (tf *TestFixture) getLoggingConfig(ctx context.Context, wc *WifiClient) (in
 // DEPRECATED: Use tf.WifiClient().SetWakeOnWifi instead.
 func (tf *TestFixture) SetWakeOnWifi(ctx context.Context, ops ...SetWakeOnWifiOption) (shortenCtx context.Context, cleanupFunc func() error, retErr error) {
 	return tf.WifiClient().SetWakeOnWifi(ctx, ops...)
-}
-
-// newRouter connects to and initializes the router via SSH then returns the router object.
-// This method takes two context: ctx and daemonCtx, the first is the context for the NewRouter
-// method and daemonCtx is for the spawned background daemons.
-// After getting a Server instance, d, the caller should call r.Close() at the end, and use the
-// shortened ctx (provided by d.ReserveForClose()) before r.Close() to reserve time for it to run.
-func newRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (router.Base, error) {
-	ctx, st := timing.Start(ctx, "NewRouter")
-	defer st.End()
-
-	name = strings.ReplaceAll(name, ":", "_")
-
-	rtype, err := resolveRouterTypeFromHost(ctx, host)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to resolve router type from host")
-	}
-	testing.ContextLogf(ctx, "Resolved host router type to be %q", rtype)
-
-	switch rtype {
-	case support.LegacyT:
-		return legacy.NewRouter(ctx, daemonCtx, host, name)
-	case support.AxT:
-		return ax.NewRouter(ctx, daemonCtx, host, name)
-	case support.OpenWrtT:
-		return openwrt.NewRouter(ctx, daemonCtx, host, name)
-	case support.UbuntuT:
-		return ubuntu.NewRouter(ctx, daemonCtx, host, name)
-	case support.UnknownT:
-		return nil, errors.New("unable to resolve specific router type from host")
-	default:
-		return nil, errors.Errorf("unexpected routerType, got %v", rtype)
-	}
-}
-
-func resolveRouterTypeFromHost(ctx context.Context, host *ssh.Conn) (support.RouterType, error) {
-	if isLegacy, err := legacy.HostIsLegacyRouter(ctx, host); err != nil {
-		return -1, err
-	} else if isLegacy {
-		return support.LegacyT, nil
-	}
-	if isOpenWrt, err := openwrt.HostIsOpenWrtRouter(ctx, host); err != nil {
-		return -1, err
-	} else if isOpenWrt {
-		return support.OpenWrtT, nil
-	}
-	if isAx, err := ax.HostIsAXRouter(ctx, host); err != nil {
-		return -1, err
-	} else if isAx {
-		return support.AxT, nil
-	}
-	if isUbuntu, err := ubuntu.HostIsUbuntuRouter(ctx, host); err != nil {
-		return -1, err
-	} else if isUbuntu {
-		return support.UbuntuT, nil
-	}
-	return support.UnknownT, nil
 }
 
 // WaitWifiConnected waits until WiFi is connected to the SHILL profile with specific GUID.
@@ -2177,6 +2022,16 @@ func (tf *TestFixture) P2PDeconfigureClient(ctx context.Context) error {
 	return firstErr
 }
 
+// P2PGOIface returns the p2p GO interface name.
+func (tf *TestFixture) P2PGOIface() string {
+	return tf.p2pGOIface
+}
+
+// P2PGOConn returns connection object to the p2pGO.
+func (tf *TestFixture) P2PGOConn() *ssh.Conn {
+	return tf.p2pGO.Conn()
+}
+
 // ReserveForDeconfigP2P returns a shorter ctx and cancel function for tf.P2PDeconfigureGO() or tf.P2PDeconfigureClient().
 func (tf *TestFixture) ReserveForDeconfigP2P(ctx context.Context) (context.Context, context.CancelFunc) {
 	return ctxutil.Shorten(ctx, 10*time.Second)
@@ -2400,7 +2255,7 @@ func (tf *TestFixture) RebootDUT(ctx context.Context, dutIdx DutIdx) (retErr err
 	tf.duts[dutIdx].wifiClient = &WifiClient{ShillServiceClient: wifi.NewShillServiceClient(tf.duts[dutIdx].rpc.Conn)}
 
 	if tf.setLogging {
-		if err := setLoggingConfig(ctx, tf.duts[dutIdx].wifiClient, tf.logLevel, tf.logTags); err != nil {
+		if err := tf.setLoggingConfig(ctx, tf.duts[dutIdx].wifiClient, tf.logLevel, tf.logTags); err != nil {
 			return err
 		}
 	}
@@ -2487,4 +2342,149 @@ func (tf *TestFixture) ConnectCompanionDUTToHotspot(ctx context.Context, cdDutId
 			testing.ContextLogf(ctx, "Failed to disconnect from hotspot, err: %s", err)
 		}
 	}, nil
+}
+
+// NumberOfDUTs returns number of DUTs handled by this fixture.
+func (tf *TestFixture) NumberOfDUTs() int {
+	return len(tf.duts)
+}
+
+// DUT returns particular DUT.
+func (tf *TestFixture) DUT(dutIdx DutIdx) *dut.DUT {
+	return tf.duts[dutIdx].dut
+}
+
+// DUTConn returns connection object to particular DUT.
+func (tf *TestFixture) DUTConn(dutIdx DutIdx) *ssh.Conn {
+	return tf.duts[dutIdx].dut.Conn()
+}
+
+// APConn returns connection object to the first AP.
+// Currently, the test fixture only requires to control the first (0th) AP.
+func (tf *TestFixture) APConn() *ssh.Conn {
+	if len(tf.routers) == 0 {
+		return nil
+	}
+	return tf.routers[0].host
+}
+
+// RouterByID returns the respective router object in the fixture.
+func (tf *TestFixture) RouterByID(idx int) router.Base {
+	return tf.routers[idx].object
+}
+
+// Router returns the router with id 0 in the fixture as the generic router.Base.
+func (tf *TestFixture) Router() router.Base {
+	return tf.RouterByID(0)
+}
+
+// StandardRouter returns the Router as a router.Standard.
+func (tf *TestFixture) StandardRouter() (router.Standard, error) {
+	r, ok := tf.Router().(router.Standard)
+	if !ok {
+		return nil, errors.New("router is not a standard router")
+	}
+	return r, nil
+}
+
+// StandardRouterWithFrameSenderSupport returns the Router as a router.StandardWithFrameSender.
+func (tf *TestFixture) StandardRouterWithFrameSenderSupport() (router.StandardWithFrameSender, error) {
+	r, ok := tf.Router().(router.StandardWithFrameSender)
+	if !ok {
+		return nil, errors.New("router is not a standard router with frame sender support")
+	}
+	return r, nil
+}
+
+// StandardRouterWithBridgeAndVethSupport returns the Router as a router.StandardWithBridgeAndVeth.
+func (tf *TestFixture) StandardRouterWithBridgeAndVethSupport() (router.StandardWithBridgeAndVeth, error) {
+	r, ok := tf.Router().(router.StandardWithBridgeAndVeth)
+	if !ok {
+		return nil, errors.New("router is not a standard router with bridge and veth support")
+	}
+	return r, nil
+}
+
+// Pcap returns the pcap device in the fixture.
+func (tf *TestFixture) Pcap() router.Base {
+	return tf.pcap.object
+}
+
+// StandardPcap returns the Pcap as a router.Standard.
+func (tf *TestFixture) StandardPcap() (router.Standard, error) {
+	r, ok := tf.Pcap().(router.Standard)
+	if !ok {
+		return nil, errors.New("pcap is not a standard router")
+	}
+	return r, nil
+}
+
+// Capturer returns the auto-spawned Capturer for the APIface instance.
+func (tf *TestFixture) Capturer(ap *APIface) (*pcap.Capturer, bool) {
+	capturer, ok := tf.capturers[ap]
+	return capturer, ok
+}
+
+// Attenuator returns the Attenuator object in the fixture.
+func (tf *TestFixture) Attenuator() *attenuator.Attenuator {
+	return tf.attenuator
+}
+
+// WifiClient is a backwards-compatible version of DUTWifiClient. Deprecated.
+// TODO(b/234845693): remove after stabilizing period.
+func (tf *TestFixture) WifiClient() *WifiClient {
+	return tf.DUTWifiClient(DefaultDUT)
+}
+
+// DUTWifiClient returns the gRPC ShillServiceClient of the given DUT.
+func (tf *TestFixture) DUTWifiClient(dutIdx DutIdx) *WifiClient {
+	return tf.duts[dutIdx].wifiClient
+}
+
+// DUTCellularClient returns the gRPC ShillServiceClient of the given DUT.
+func (tf *TestFixture) DUTCellularClient(dutIdx DutIdx) cellular.RemoteCellularServiceClient {
+	return tf.duts[dutIdx].cellularClient
+}
+
+// RPC returns the gRPC connection of the default DUT. Deprecated.
+// TODO(b/234845693): remove after stabilizing period.
+func (tf *TestFixture) RPC() *rpc.Client {
+	return tf.DUTRPC(DefaultDUT)
+}
+
+// DUTRPC returns the gRPC connection of the given DUT.
+func (tf *TestFixture) DUTRPC(dutIdx DutIdx) *rpc.Client {
+	return tf.duts[dutIdx].rpc
+}
+
+// DefaultOpenNetworkAPOptions returns the Options for an common 802.11n open wifi.
+// The function is useful to allow common logic shared between the default setting
+// and customized setting.
+func DefaultOpenNetworkAPOptions() []hostapd.Option {
+	return []hostapd.Option{
+		hostapd.Mode(hostapd.Mode80211nPure),
+		hostapd.Channel(48),
+		hostapd.HTCaps(hostapd.HTCapHT20),
+	}
+}
+
+// DefaultOpenNetworkAP configures the router to provide an 802.11n open wifi.
+func (tf *TestFixture) DefaultOpenNetworkAP(ctx context.Context) (*APIface, error) {
+	return tf.ConfigureAP(ctx, DefaultOpenNetworkAPOptions(), nil)
+}
+
+// DefaultOpenNetworkAPwithDNSHTTP configures the router to provide an 802.11n open wifi and
+// enables DNS server and HTTP server on router.
+func (tf *TestFixture) DefaultOpenNetworkAPwithDNSHTTP(ctx context.Context) (*APIface, error) {
+	return tf.ConfigureAPOnRouterID(ctx, 0, DefaultOpenNetworkAPOptions(), nil, true, true)
+}
+
+// ClientInterface is a backwards-compatible version of DUTClientInterface. Deprecated.
+func (tf *TestFixture) ClientInterface(ctx context.Context) (string, error) {
+	return tf.DUTWifiClient(DefaultDUT).Interface(ctx)
+}
+
+// DUTClientInterface returns the client interface name of the given DUT.
+func (tf *TestFixture) DUTClientInterface(ctx context.Context, dutIdx DutIdx) (string, error) {
+	return tf.DUTWifiClient(dutIdx).Interface(ctx)
 }
