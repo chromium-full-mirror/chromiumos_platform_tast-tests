@@ -165,8 +165,24 @@ func waitForEnrollmentLoginScreen(ctx context.Context, cfg *config.Config, sess 
 	testing.ContextLog(ctx, "Waiting for enrollment login screen")
 
 	// Wait for the enrollment OOBE page to disappear.
-	if err := waitForPageWithPrefixToBeDismissed(ctx, sess, "chrome://oobe/oobe"); err != nil {
-		return errors.Wrap(err, "enrollment OOBE screen did not disappear")
+	enrollmentOobeURLPrefix := "chrome://oobe/oobe"
+	if waitErr := waitForPageWithPrefixToBeDismissed(ctx, sess, enrollmentOobeURLPrefix); waitErr != nil {
+		baseErrorMsg := "enrollment OOBE screen did not disappear"
+		// Get the error message from the enrollment screen.
+		enrollmentOobeConn, err := WaitForOOBEConnectionWithPrefix(ctx, sess, enrollmentOobeURLPrefix)
+		if err != nil {
+			return errors.Errorf("%s: could not find OOBE connection for enrollment: %v: %v", baseErrorMsg, err, waitErr)
+		}
+
+		enrollmentScreenErrorMsg, err := getEnrollmentScreenErrorMsg(ctx, enrollmentOobeConn)
+		if err != nil {
+			return errors.Errorf("%s: could not get the error message from the enrollment screen: %v: %v", baseErrorMsg, err, waitErr)
+		}
+		if enrollmentScreenErrorMsg == "" {
+			return errors.Errorf("%s: could not get the error message from the enrollment screen: %v", baseErrorMsg, waitErr)
+		}
+
+		return errors.Errorf("%s: %s: %v", baseErrorMsg, enrollmentScreenErrorMsg, waitErr)
 	}
 
 	// Wait for the signin OOBE page to appear.
@@ -203,6 +219,16 @@ func waitForEnrollmentLoginScreen(ctx context.Context, cfg *config.Config, sess 
 		return errors.Wrap(sess.Watcher().ReplaceErr(err), "failed to find the enterprise sign-in GAIA webview")
 	}
 	return nil
+}
+
+// getEnrollmentScreenErrorMsg gets the error message from the enrollment screen.
+func getEnrollmentScreenErrorMsg(ctx context.Context, enrollmentOobeConn *driver.Conn) (string, error) {
+	var enrollmentScreenErrorMsg string
+	if err := enrollmentOobeConn.Eval(ctx, "OobeAPI.screens.EnterpriseEnrollmentScreen.errorStep.getErrorMsg()", &enrollmentScreenErrorMsg); err != nil {
+		return "", err
+	}
+
+	return enrollmentScreenErrorMsg, nil
 }
 
 // performFakeEnrollment performs enterprise enrollment with a fake, local
@@ -351,11 +377,11 @@ func performGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cfg
 			}
 
 			if !canRetry {
-				var enrollmentErrorMsg string
-				if err := oobeConn.Eval(ctx, "OobeAPI.screens.EnterpriseEnrollmentScreen.errorStep.getErrorMsg()", &enrollmentErrorMsg); err != nil {
+				enrollmentScreenErrorMsg, err := getEnrollmentScreenErrorMsg(ctx, oobeConn)
+				if err != nil {
 					return errors.Wrap(err, "failed to get unretriable enrollment error msg")
 				}
-				return errors.Errorf("enrollment hit an unrecoverable error: %v", enrollmentErrorMsg)
+				return errors.Errorf("enrollment hit an unrecoverable error: %v", enrollmentScreenErrorMsg)
 			}
 
 			return nil
