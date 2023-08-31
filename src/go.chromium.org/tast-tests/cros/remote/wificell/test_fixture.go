@@ -869,17 +869,13 @@ func (tf *TestFixture) ConfigureAPOnRouterID(ctx context.Context, idx int, ops [
 		if err != nil {
 			return nil, err
 		}
-		p, ok := tf.pcap.object.(support.Capture)
-		if !ok {
-			return nil, errors.Errorf("pcap device with router type %q does not have log capture support", tf.pcap.object.RouterType().String())
-		}
-		capturer, err = p.StartCapture(ctx, name, config.Channel, freqOps)
+		capturer, err = tf.PcapRouter().StartCapture(ctx, name, config.Channel, freqOps)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to start capturer")
 		}
 		defer func() {
 			if retErr != nil {
-				p.StopCapture(ctx, capturer)
+				tf.PcapRouter().StopCapture(ctx, capturer)
 			}
 		}()
 	}
@@ -914,34 +910,25 @@ func (tf *TestFixture) ReserveForDeconfigAP(ctx context.Context, ap *APIface) (c
 		// Also reserve time for stopping the capturer if it exists.
 		// Noted that CancelFunc returned here is dropped as we rely on its
 		// parent's cancel() being called.
-		if p, ok := tf.pcap.object.(support.Capture); ok {
-			ctx, _ = p.ReserveForStopCapture(ctx, capturer)
-		}
+		ctx, _ = tf.PcapRouter().ReserveForStopCapture(ctx, capturer)
 	}
 	return ctx, cancel
 }
 
 // DeconfigAP stops the WiFi service on router.
-func (tf *TestFixture) DeconfigAP(ctx context.Context, ap *APIface) error {
+func (tf *TestFixture) DeconfigAP(ctx context.Context, ap *APIface) (firstErr error) {
 	ctx, st := timing.Start(ctx, "tf.DeconfigAP")
 	defer st.End()
-	p, ok := tf.pcap.object.(support.Capture)
-	if !ok {
-		return errors.Errorf("router type %q does not support Capture", tf.pcap.object.RouterType().String())
-	}
-	var firstErr error
-
 	capturer := tf.capturers[ap]
 	delete(tf.capturers, ap)
 	if err := ap.Stop(ctx); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop APIface"))
 	}
 	if capturer != nil {
-		if err := p.StopCapture(ctx, capturer); err != nil {
+		if err := tf.PcapRouter().StopCapture(ctx, capturer); err != nil {
 			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop capturer"))
 		}
 	}
-	delete(tf.aps, ap)
 	return firstErr
 }
 
@@ -2104,10 +2091,6 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 
 	var capturer *pcap.Capturer
 	if tf.options.EnablePacketCapture {
-		if tf.pcap.host == nil {
-			// This will happen only when running the test maunally.
-			return nil, nil, errors.New("missing pcap, perhaps you forgot to add -var=pcap=<host> argument")
-		}
 		apOptions := []ap.Option{ap.Channel(int(resp.Channel))}
 		// Pick the maximum available standard per band (assuming Gale capabilities).
 		if resp.Channel <= 14 {
@@ -2133,18 +2116,14 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 		if err != nil {
 			return nil, nil, err
 		}
-		p, ok := tf.pcap.object.(support.Capture)
-		if !ok {
-			return nil, nil, errors.Errorf("pcap device with router type %q does not have packet capture support", tf.pcap.object.RouterType().String())
-		}
-		capturer, err = p.StartCapture(ctx, tf.UniqueAPName(), config.Channel, freqOps)
+		capturer, err = tf.PcapRouter().StartCapture(ctx, tf.UniqueAPName(), config.Channel, freqOps)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "failed to start capturer")
 		}
 		tf.tetheringCapturer = capturer
 		defer func() {
 			if retErr != nil {
-				p.StopCapture(ctx, capturer)
+				tf.PcapRouter().StopCapture(ctx, capturer)
 			}
 		}()
 	}
@@ -2156,11 +2135,9 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx, c *tethering.Config) (*wifi.TetheringResponse, error) {
 	ctx, st := timing.Start(ctx, "tf.StopTethering")
 	defer st.End()
-
 	resp, err := tf.duts[dutIdx].wifiClient.StopTethering(ctx, &wifi.StopTetheringRequest{UseWpaCliApi: tf.useWpaCliAPI, PriIface: c.PriIface})
 	if tf.tetheringCapturer != nil {
-		p := tf.pcap.object.(support.Capture)
-		p.StopCapture(ctx, tf.tetheringCapturer)
+		tf.PcapRouter().StopCapture(ctx, tf.tetheringCapturer)
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "client failed to stop tethering session")
@@ -2169,7 +2146,6 @@ func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx, c *teth
 	if err := tf.DUTWifiClient(dutIdx).SetWifiEnabled(ctx, true); err != nil {
 		return nil, errors.Wrap(err, "DUT: failed to enable the wifi")
 	}
-
 	return resp, nil
 }
 
@@ -2354,14 +2330,14 @@ func (tf *TestFixture) StandardRouterWithBridgeAndVethSupport() (router.Standard
 	return r, nil
 }
 
-// Pcap returns the pcap device in the fixture.
-func (tf *TestFixture) Pcap() router.Base {
-	return tf.pcap.object
+// PcapRouter returns the pcap router in the fixture as a support.Capture.
+func (tf *TestFixture) PcapRouter() support.Capture {
+	return tf.pcap.object.(support.Capture)
 }
 
-// StandardPcap returns the Pcap as a router.Standard.
-func (tf *TestFixture) StandardPcap() (router.Standard, error) {
-	r, ok := tf.Pcap().(router.Standard)
+// StandardPcapRouter returns the PcapRouter as a router.Standard.
+func (tf *TestFixture) StandardPcapRouter() (router.Standard, error) {
+	r, ok := tf.PcapRouter().(router.Standard)
 	if !ok {
 		return nil, errors.New("pcap is not a standard router")
 	}

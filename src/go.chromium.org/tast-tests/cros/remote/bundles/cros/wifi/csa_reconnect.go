@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
-	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -54,10 +53,7 @@ func CSAReconnect(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Setup capture at the destination channel (The channel the AP is on after CSA).
-	pcapPrimCh, ok := tf.Pcap().(support.Capture)
-	if !ok {
-		s.Fatalf("Router type %q does not have sufficient support for this test", ap.Router().RouterType().String())
-	}
+	pcapPrimCh := tf.PcapRouter()
 
 	freqOps, err := ap.Config().PcapFreqOptions()
 	if err != nil {

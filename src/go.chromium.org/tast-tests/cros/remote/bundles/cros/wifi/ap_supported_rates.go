@@ -124,7 +124,7 @@ func APSupportedRates(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get pcap freqency options: ", err)
 	}
-	standardPcap, err := tf.StandardPcap()
+	standardPcap, err := tf.StandardPcapRouter()
 	if err != nil {
 		s.Fatal("Unable to get standard pcap: ", err)
 	}

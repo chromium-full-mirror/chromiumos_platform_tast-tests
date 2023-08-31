@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
-	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -142,11 +141,7 @@ func MARBSSIDRoam(ctx context.Context, s *testing.State) {
 
 	// We want control over capturer start/stop so we don't use fixture with
 	// pcap but spawn it here and use manually.
-	pcapDevice, ok := tf.Pcap().(support.Capture)
-	if !ok {
-		s.Fatal("Device without capture support - device type: ", tf.Pcap().RouterType())
-	}
-
+	pcapDevice := tf.PcapRouter()
 	freqOpts, err := ap1.Config().PcapFreqOptions()
 	if err != nil {
 		s.Fatal("Failed to get Freq Opts: ", err)

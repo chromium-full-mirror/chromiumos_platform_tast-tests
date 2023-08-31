@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
-	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -77,10 +76,7 @@ func ConnectRandomizeMAC(ctx context.Context, s *testing.State) {
 
 	// We want control over capturer start/stop so we don't use fixture with
 	// pcap but spawn it here and use manually.
-	pcapRouter, ok := tf.Pcap().(support.Capture)
-	if !ok {
-		s.Fatal("Device without capture support - device type: ", tf.Pcap().RouterType().String())
-	}
+	pcapRouter := tf.PcapRouter()
 
 	// Get the MAC address of WiFi interface.
 	iface, err := tf.ClientInterface(ctx)
@@ -119,7 +115,7 @@ func ConnectRandomizeMAC(ctx context.Context, s *testing.State) {
 	connectAndGetConnData := func(ctx context.Context, ap *wificell.APIface, name string) (macAddr net.HardwareAddr, pcapPath, servicePath string) {
 		freqOps, err := ap.Config().PcapFreqOptions()
 		if err != nil {
-			s.Fatal("Failed to get frequency options for Pcap: ", err)
+			s.Fatal("Failed to get frequency options for PcapRouter: ", err)
 		}
 		action := func(ctx context.Context) error {
 			configProps := map[string]interface{}{

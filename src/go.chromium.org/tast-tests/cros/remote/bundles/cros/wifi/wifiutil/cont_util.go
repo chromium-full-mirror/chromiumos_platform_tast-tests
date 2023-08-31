@@ -187,12 +187,7 @@ func ContinuityTestInitialSetup(ctx context.Context, s *testing.State, tf *wific
 	if err != nil {
 		s.Fatal("Failed to get router: ", err)
 	}
-	var ok bool
-	ct.pcap, ok = tf.Pcap().(support.Capture)
-	if !ok {
-		s.Fatal("Failed as device type doesn't have capture support: ", tf.Pcap().RouterType().String())
-	}
-
+	ct.pcap = tf.PcapRouter()
 	ct.veth[0], ct.veth[1], err = ct.r.NewVethPair(ctx)
 	if err != nil {
 		s.Fatal("Failed to get a veth pair: ", err)
