@@ -26,11 +26,6 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
-			Name: "memory_v2",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineMemoryV2},
-			// TODO(b/295498872): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
-		}, {
 			Name:    "cpu_stress_v2",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
 			Timeout: 5 * time.Minute,
