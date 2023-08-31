@@ -104,7 +104,7 @@ func init() {
 			Name: "memory",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
 			// TODO(b/279849842): Promote to critical.
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "sensitive_sensor",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor),
