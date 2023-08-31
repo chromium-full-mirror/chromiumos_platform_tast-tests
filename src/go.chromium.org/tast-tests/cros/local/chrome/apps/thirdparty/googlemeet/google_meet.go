@@ -489,6 +489,14 @@ func InstallPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) err
 	if err := uiauto.Retry(3, func(ctx context.Context) (retErr error) {
 		defer func() {
 			if retErr != nil {
+				meetConn, _ := br.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix("https://apps.google.com"))
+				if meetConn != nil {
+					testing.ContextLog(ctx, "Close https://apps.google.com")
+					meetConn.CloseTarget(ctx)
+					meetConn.Close()
+					return
+				}
+
 				targetsToClose := func(t *chrome.Target) bool {
 					return strings.Contains(t.Title, "Google Meet")
 				}
