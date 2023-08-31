@@ -336,7 +336,10 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		opts = append(opts, fOpts...)
 	}
 
-	cr, err := browserfixt.NewChrome(ctx, f.browserType, lacrosfixt.NewConfig(), opts...)
+	// keep-alive for lacros extension apps. A no-op for ash extensions.
+	cr, err := browserfixt.NewChrome(ctx, f.browserType, lacrosfixt.NewConfig(
+		lacrosfixt.KeepAlive(true),
+	), opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
