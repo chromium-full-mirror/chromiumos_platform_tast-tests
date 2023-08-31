@@ -543,17 +543,7 @@ func (h *Helper) SyncTastFilesToDUT(ctx context.Context) error {
 	return nil
 }
 
-// SetupUSBKey prepares the USB disk for a test. (Borrowed from Tauto's firmware_test.py)
-// It checks the setup of USB disk and a valid ChromeOS test image inside.
-// Downloads the test image if the image isn't the right version.
-// Will break the DUT if it is currently booted off the USB drive in recovery mode.
-//
-// CAUTION: You must set ephemeraldevserver='false' in your control file in order to flash usb drives.
-func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudStorage, opts ...SetupUSBOption) (retErr error) {
-	usbdev, err := h.CheckUSBOnServoHost(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to check the usb device on servo host")
-	}
+func (h *Helper) validateUSBImage(ctx context.Context, usbdev string, cloudStorage *testing.CloudStorage, opts ...SetupUSBOption) (bool, error) {
 	testing.ContextLog(ctx, "Checking ChromeOS image name on usbkey")
 	mountPath := fmt.Sprintf("/media/servo_usb/%d", h.ServoProxy.GetPort())
 	// Unmount whatever might be mounted.
@@ -563,11 +553,12 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	kernelPart := usbdev + "2"
 	// ChromeOS root fs is in /dev/sdx3.
 	mountSrc := usbdev + "3"
-	if err = h.ServoProxy.RunCommand(ctx, true, "mkdir", "-p", mountPath); err != nil {
-		return errors.Wrapf(err, "mkdir failed at %q", mountPath)
+	if err := h.ServoProxy.RunCommand(ctx, true, "mkdir", "-p", mountPath); err != nil {
+		return false, errors.Wrapf(err, "mkdir failed at %q", mountPath)
 	}
 	var lsb map[string]string
 	// Failures here are a bad USB image, so don't fail, just write the new image.
+	var err error
 	err = func() error {
 		if output, err := h.ServoProxy.OutputCommand(ctx, true, "dd", fmt.Sprintf("if=%s", kernelPart), "bs=8", "count=1"); err != nil {
 			return errors.Wrap(err, "failed to read kernel magic")
@@ -590,26 +581,27 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	}()
 	if err != nil {
 		if cloudStorage == nil {
-			return errors.Wrap(err, "bad USB image, and requested no USB image download")
+			return false, errors.Wrap(err, "bad USB image, and requested no USB image download")
 		}
 		testing.ContextLog(ctx, "Bad USB image: ", err)
 	}
+
 	releaseBuilderPath := lsb[lsbrelease.BuilderPath]
 	dutBuilderPath, err := h.Reporter.BuilderPath(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get DUT builder path")
+		return false, errors.Wrap(err, "failed to get DUT builder path")
 	}
 	if strings.Contains(dutBuilderPath, "-postsubmit") {
 		testing.ContextLogf(ctx, "Current build on DUT (%s) is not a release image, using %s from USB stick", dutBuilderPath, releaseBuilderPath)
 		if releaseBuilderPath == "" {
-			return errors.New("did not find release image path on the USB")
+			return false, errors.New("did not find release image path on the USB")
 		}
-		return nil
+		return true, nil
 	}
 
 	if !strings.Contains(lsb[lsbrelease.ReleaseTrack], "test") {
 		if cloudStorage == nil {
-			return errors.New("the image on usbkey is not a test image")
+			return false, errors.New("the image on usbkey is not a test image")
 		}
 		testing.ContextLog(ctx, "The image on usbkey is not a test image")
 		releaseBuilderPath = ""
@@ -620,24 +612,46 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 			releaseMilestone := lsb[lsbrelease.Milestone]
 			dutMilestone, err := h.Reporter.Milestone(ctx)
 			if err != nil {
-				return errors.Wrap(err, "failed to get DUT milestone")
+				return false, errors.Wrap(err, "failed to get DUT milestone")
 			}
 			if releaseMilestone == dutMilestone {
 				testing.ContextLog(ctx, "USB image contains the same milestone as the one running on the DUT")
-				return nil
+				return true, nil
 			}
 		}
 	}
 
 	if releaseBuilderPath == dutBuilderPath {
-		return nil
+		testing.ContextLogf(ctx, "Current build on USB (%s) matches DUT (%s), no need to download", releaseBuilderPath, dutBuilderPath)
+		return true, nil
 	}
 
 	if cloudStorage == nil {
 		testing.ContextLogf(ctx, "User requested no USB image download, using %s even though it differs from DUT %s", releaseBuilderPath, dutBuilderPath)
-		return nil
+		return true, nil
 	}
 	testing.ContextLogf(ctx, "Current build on USB (%s) differs from DUT (%s), proceed with download", releaseBuilderPath, dutBuilderPath)
+	return false, nil
+}
+
+// SetupUSBKey prepares the USB disk for a test. (Borrowed from Tauto's firmware_test.py)
+// It checks the setup of USB disk and a valid ChromeOS test image inside.
+// Downloads the test image if the image isn't the right version.
+// Will break the DUT if it is currently booted off the USB drive in recovery mode.
+//
+// CAUTION: You must set ephemeraldevserver='false' in your control file in order to flash usb drives.
+func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudStorage, opts ...SetupUSBOption) (retErr error) {
+	usbdev, err := h.CheckUSBOnServoHost(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to check the usb device on servo host")
+	}
+
+	if valid, err := h.validateUSBImage(ctx, usbdev, cloudStorage, opts...); valid && err == nil {
+		return nil
+	} else if err != nil {
+		return errors.Wrap(err, "failed to validate USB image")
+	}
+
 	// Sometimes servod loses the CCD connection while we are flashing the USB drive.
 	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		return errors.Wrap(err, "failed to remove ccd watchdog")
@@ -649,7 +663,7 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	// It would be nicer if CloudStorage had a method ExtractURL(ctx, gsPath, filename) that returned the extract url.
 	dataURL, err := cloudStorage.Stage(ctx, testImageURL)
 	if err != nil {
-		return errors.Wrapf(err, "failed to download test image %s", dutBuilderPath)
+		return errors.Wrapf(err, "failed to download test image from %s", testImageURL)
 	}
 	if dataURL.Scheme != "http" && dataURL.Scheme != "https" {
 		return errors.Errorf("CloudStorage url is not http(s): %q", dataURL)
@@ -684,8 +698,13 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 		}
 		return errors.Wrapf(err, "failed to flash os image %q to USB %q from url %q", testImageURL, usbdev, dataURL.String())
 	}
-	testing.ContextLogf(ctx, "Successfully flashed %q from %q", usbdev, testImageURL)
-	return nil
+
+	// ensure that image was successfully flashed by reading back OS version
+	if valid, err := h.validateUSBImage(ctx, usbdev, cloudStorage, opts...); valid && err == nil {
+		testing.ContextLogf(ctx, "Successfully flashed %q from %q", usbdev, testImageURL)
+		return nil
+	}
+	return errors.Wrap(err, "failed to validate USB image after flashing")
 }
 
 // CorruptUSBKey makes a minimal change to the USB key to prevent it from booting. Use RestoreUSBKey to repair it afterwards.
@@ -1430,7 +1449,7 @@ func (h *Helper) FormatUSB(ctx context.Context, usbdev string) error {
 		testing.ContextLog(ctx, "Failed to get info about usb: ", err)
 	}
 	testing.ContextLog(ctx, "Formatting the USB device")
-	if _, stderr, err := h.ServoProxy.SeparatedOutputCommand(ctx, true, "mkfs.ext4", "-F", usbdev); err != nil {
+	if _, stderr, err := h.ServoProxy.SeparatedOutputCommand(ctx, true, "dd", "if=/dev/zero", fmt.Sprintf("of=%s", usbdev), "bs=1M", "count=16", "conv=fdatasync"); err != nil {
 		if strings.Contains(string(stderr), "Read-only file system") {
 			return errors.Errorf("found usb device as read-only file system, got usb model: %s, serial number: %s", modelName, serialNumber)
 		}
