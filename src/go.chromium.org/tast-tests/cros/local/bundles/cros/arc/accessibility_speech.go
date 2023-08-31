@@ -8,12 +8,10 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	arca11y "go.chromium.org/tast-tests/cros/local/bundles/cros/arc/a11y"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -214,40 +212,60 @@ func AccessibilitySpeech(ctx context.Context, s *testing.State) {
 		},
 	}
 
-	testActivities := []arca11y.TestActivity{arca11y.MainActivity, arca11y.LiveRegionActivity, arca11y.ActionActivity}
+	d := s.FixtValue().(*arc.PreData)
+	a := d.ARC
+	cr := d.Chrome
 
-	speechTestSteps := map[arca11y.TestActivity][]axSpeechTestStep{
-		arca11y.MainActivity:       MainActivityTestSteps,
-		arca11y.LiveRegionActivity: LiveRegionActivityTestSteps,
-		arca11y.ActionActivity:     ActionActivityTestSteps,
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Creating test API connection failed: ", err)
 	}
 
-	testFunc := func(ctx context.Context, cvconn *chromevox.Conn, tconn *chrome.TestConn, currentActivity arca11y.TestActivity) error {
-		if err := tts.SetRate(ctx, tconn, 5.0); err != nil {
-			s.Fatal("Failed to change TTS rate: ", err)
-		}
-		defer tts.SetRate(ctx, tconn, 1.0)
+	cvconn, cleanup, err := arca11y.SetUpChromeVox(ctx, s, cr, a, tconn)
+	if err != nil {
+		s.Fatal("Failed to setup ChromeVox: ", err)
+	}
+	defer cleanup(cleanupCtx)
 
-		if err := cvconn.SetVoice(ctx, tts.VoiceData{
-			ExtID:  tts.GoogleTTSExtensionID,
-			Locale: "en-US",
-		}); err != nil {
-			return errors.Wrap(err, "failed to set the ChromeVox voice")
-		}
+	for _, test := range []struct {
+		activity arca11y.TestActivity
+		steps    []axSpeechTestStep
+	}{
+		{arca11y.MainActivity, MainActivityTestSteps},
+		{arca11y.LiveRegionActivity, LiveRegionActivityTestSteps},
+		{arca11y.ActionActivity, ActionActivityTestSteps},
+	} {
+		s.Run(ctx, test.activity.Name, func(ctx context.Context, s *testing.State) {
+			arca11y.AttachFaillog(ctx, s, tconn, test.activity.Name)
 
-		sm, err := tts.RelevantSpeechMonitor(ctx, s.FixtValue().(*arc.PreData).Chrome, tconn, tts.EngineData{ExtID: tts.GoogleTTSExtensionID, UseOnSpeakWithAudioStream: false})
-		if err != nil {
-			return errors.Wrap(err, "failed to connect to the TTS background page")
-		}
-		defer sm.Close()
-
-		testSteps := speechTestSteps[currentActivity]
-		for _, testStep := range testSteps {
-			if err := tts.PressKeysAndConsumeExpectations(ctx, sm, []string{testStep.keys}, testStep.expectations); err != nil {
-				return errors.Wrapf(err, "failure on the step %+v", testStep)
+			cleanup, err = arca11y.StartActivityWithChromeVox(ctx, s, a, tconn, cvconn, test.activity)
+			if err != nil {
+				s.Fatal("Failed to setup: ", err)
 			}
-		}
-		return nil
+			defer cleanup(cleanupCtx)
+
+			if err := cvconn.SetVoice(ctx, tts.VoiceData{
+				ExtID:  tts.GoogleTTSExtensionID,
+				Locale: "en-US",
+			}); err != nil {
+				s.Fatal("Failed to set the ChromeVox voice: ", err)
+			}
+
+			sm, err := tts.RelevantSpeechMonitor(ctx, s.FixtValue().(*arc.PreData).Chrome, tconn, tts.GoogleTTSEngine())
+			if err != nil {
+				s.Fatal("Failed to connect to the TTS background page: ", err)
+			}
+			defer sm.Close()
+
+			for _, step := range test.steps {
+				if err := tts.PressKeysAndConsumeExpectations(ctx, sm, []string{step.keys}, step.expectations); err != nil {
+					s.Fatalf("Failure on the step %+v: %v", step, err)
+				}
+			}
+		})
 	}
-	arca11y.RunTest(ctx, s, testActivities, testFunc)
 }

@@ -8,20 +8,19 @@ package a11y
 
 import (
 	"context"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
+	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -67,6 +66,25 @@ var LiveRegionActivity = TestActivity{".LiveRegionActivity", "Live Region Activi
 // ActionActivity is the struct for the action activity used in test cases.
 var ActionActivity = TestActivity{".ActionActivity", "Action Activity"}
 
+// tearDownHelper is a helper struct to accumulate clean up functions.
+// TODO(hirokisato): consider to use a11y.TearDownHelper
+type tearDownHelper struct {
+	funcs []func(context.Context) error
+}
+
+func (h *tearDownHelper) tearDown(ctx context.Context) {
+	for i := len(h.funcs) - 1; i >= 0; i-- {
+		if err := h.funcs[i](ctx); err != nil {
+			testing.ContextLog(ctx, "Error during tear down: ", err)
+		}
+	}
+	h.funcs = nil
+}
+
+func (h *tearDownHelper) append(f func(context.Context) error) {
+	h.funcs = append(h.funcs, f)
+}
+
 // IsEnabledAndroid checks if accessibility is enabled in Android.
 func IsEnabledAndroid(ctx context.Context, a *arc.ARC) (bool, error) {
 	res, err := a.Command(ctx, "settings", "--user", "0", "get", "secure", "accessibility_enabled").Output(testexec.DumpLogOnError)
@@ -85,118 +103,155 @@ func EnabledAndroidAccessibilityServices(ctx context.Context, a *arc.ARC) ([]str
 	return strings.Split(strings.TrimSpace(string(res)), ":"), nil
 }
 
-// waitForSpokenFeedbackReady enables spoken feedback.
-// A connection to the ChromeVox extension background page is returned, and this will be
-// closed by the calling function.
-func waitForSpokenFeedbackReady(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) (*chromevox.Conn, error) {
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
+// waitAndroidAccessibilityReady waits for android accessibility settings is enabled.
+func waitAndroidAccessibilityReady(ctx context.Context, a *arc.ARC) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
 		if res, err := IsEnabledAndroid(ctx, a); err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to check whether accessibility is enabled in Android"))
 		} else if !res {
 			return errors.New("accessibility not enabled")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-		return nil, errors.Wrap(err, "failed to ensure accessibility is enabled")
-	}
-
-	cvconn, err := chromevox.NewConn(ctx, cr)
-	if err != nil {
-		return nil, errors.Wrap(err, "creating connection to ChromeVox extension failed")
-	}
-
-	return cvconn, nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
 }
 
-// RunTest installs the ArcAccessibilityTestApplication, launches it, and waits
-// for ChromeVox to be ready. It requires an array activities containing the list of activities
-// to run the test cases over, and the currently running activity is passed as a string to f().
-func RunTest(ctx context.Context, s *testing.State, activities []TestActivity, f func(context.Context, *chromevox.Conn, *chrome.TestConn, TestActivity) error) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+// prepareFeature prepares to run ARC tests with the specified accessibility feature enabled.
+func prepareFeature(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, tconn *chrome.TestConn, feature a11y.Feature) (cleanup func(context.Context), e error) {
+	tdh := tearDownHelper{}
+	defer func(ctx context.Context) {
+		if e != nil {
+			tdh.tearDown(ctx)
+		}
+	}(ctx)
+
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
 	if err := crastestclient.Mute(ctx); err != nil {
-		s.Fatal("Failed to mute device: ", err)
+		return nil, errors.Wrap(err, "failed to mute device")
 	}
-	defer crastestclient.Unmute(cleanupCtx)
-
-	d := s.FixtValue().(*arc.PreData)
-	a := d.ARC
-	cr := d.Chrome
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Creating test API connection failed: ", err)
-	}
+	tdh.append(func(ctx context.Context) error {
+		return crastestclient.Unmute(ctx)
+	})
 
 	if err := a.WaitIntentHelper(ctx); err != nil {
-		s.Fatal("Failed to wait for ArcIntentHelper: ", err)
+		return nil, errors.Wrap(err, "failed to wait for ArcIntentHelper")
 	}
 
-	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
-		s.Fatal("Failed to enable spoken feedback: ", err)
+	if err := a11y.SetFeatureEnabled(ctx, tconn, feature, true); err != nil {
+		return nil, errors.Wrap(err, "failed to enable spoken feedback")
 	}
-	defer func() {
-		if err := a11y.ClearFeature(cleanupCtx, tconn, a11y.SpokenFeedback); err != nil {
-			s.Fatal("Failed to disable spoken feedback: ", err)
-		}
-	}()
+	tdh.append(func(ctx context.Context) error {
+		return a11y.ClearFeature(ctx, tconn, feature)
+	})
 
-	cvconn, err := waitForSpokenFeedbackReady(ctx, cr, a)
-	if err != nil {
-		s.Fatal(err) // NOLINT: adb/ui returns loggable errors
+	if err := waitAndroidAccessibilityReady(ctx, a); err != nil {
+		return nil, errors.Wrap(err, "failed to enable spoken feedback")
 	}
-	defer cvconn.Close()
 
 	s.Log("Installing and starting test app")
 	if err := a.Install(ctx, arc.APKPath(ApkName)); err != nil {
-		s.Fatal("Failed to install the APK: ", err)
+		return nil, errors.Wrap(err, "failed to install the APK")
 	}
 
-	for _, activity := range activities {
-		s.Run(ctx, activity.Name, func(ctx context.Context, s *testing.State) {
-			// It takes some time for ArcServiceManager to be ready, so make the timeout longer.
-			// TODO(b/150734712): Move this out of each subtest once bug has been addressed.
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.setArcTouchMode)", true); err != nil {
-					return err
-				}
-				return nil
-			}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
-				s.Fatal("Timed out waiting for touch mode: ", err)
-			}
-
-			act, err := arc.NewActivity(a, packageName, activity.Name)
-			if err != nil {
-				s.Fatal("Failed to create new activity: ", err)
-			}
-			defer act.Close(ctx)
-
-			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
-				s.Fatal("Failed to start activity: ", err)
-			}
-			defer act.Stop(cleanupCtx, tconn)
-			defer faillog.DumpUITreeOnErrorToFile(cleanupCtx, s.OutDir(), s.HasError, tconn, "ui_tree"+activity.Name)
-
-			if err := func() error {
-				application := nodewith.Name(activity.Title).Role(role.Application)
-				if err = cvconn.WaitForFocusedNode(ctx, tconn, application); err != nil {
-					return errors.Wrap(err, "failed to wait for initial ChromeVox focus")
-				}
-
-				return f(ctx, cvconn, tconn, activity)
-			}(); err != nil {
-				// TODO(crbug.com/1044446): Take faillog on testing.State.Fatal() invocation.
-				screenshotFilename := "screenshot-with-chromevox" + activity.Name + ".png"
-				path := filepath.Join(s.OutDir(), screenshotFilename)
-				if err := screenshot.CaptureChrome(ctx, cr, path); err != nil {
-					s.Error("Failed to capture screenshot: ", err)
-				} else {
-					testing.ContextLogf(ctx, "Saved screenshot to %s", screenshotFilename)
-				}
-				s.Fatal("Failed to run the test: ", err)
-			}
-		})
+	// To speedup test run.
+	if err := tts.SetRate(ctx, tconn, 5.0); err != nil {
+		return nil, errors.Wrap(err, "failed to change TTS rate")
 	}
+	tdh.append(func(ctx context.Context) error {
+		return tts.SetRate(ctx, tconn, 1.0)
+	})
+
+	return tdh.tearDown, nil
+}
+
+// SetUpChromeVox runs preparations to run ARC tests with ChromeVox enabled.
+// Caller is responsible to run cleanup function after tests finish.
+func SetUpChromeVox(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, tconn *chrome.TestConn) (_ *chromevox.Conn, cleanup func(context.Context), e error) {
+	tdh := tearDownHelper{}
+	defer func(ctx context.Context) {
+		if e != nil {
+			tdh.tearDown(ctx)
+		}
+	}(ctx)
+
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	cleanupFeature, err := prepareFeature(ctx, s, cr, a, tconn, a11y.SpokenFeedback)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to enable SpokenFeedback")
+	}
+	tdh.append(func(ctx context.Context) error {
+		cleanupFeature(ctx)
+		return nil
+	})
+
+	cvconn, err := chromevox.NewConn(ctx, cr)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to create connection to ChromeVox extension")
+	}
+	tdh.append(func(ctx context.Context) error {
+		cvconn.Close()
+		return nil
+	})
+
+	return cvconn, tdh.tearDown, nil
+}
+
+// AttachFaillog sets an error handler to the given testing.State struct.
+// In the handler, UI dump and screenshot is saved on error with a given prefix filename.
+func AttachFaillog(ctx context.Context, s *testing.State, tconn *chrome.TestConn, prefix string) {
+	handler := func(msg string) {
+		faillog.DumpUITreeWithScreenshotWithTestAPIOnError(ctx, s.OutDir(), s.HasError, tconn, prefix)
+	}
+	s.AttachErrorHandlers(handler, handler)
+}
+
+// StartActivityWithChromeVox launches the activity and wait for ready to run tests with ChromeVox.
+// Caller is responsible to run cleanup function after tests finish.
+func StartActivityWithChromeVox(ctx context.Context, s *testing.State, a *arc.ARC, tconn *chrome.TestConn, cvconn *chromevox.Conn, activity TestActivity) (cleanup func(context.Context), e error) {
+	tdh := tearDownHelper{}
+	defer func(ctx context.Context) {
+		if e != nil {
+			tdh.tearDown(ctx)
+		}
+	}(ctx)
+
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	// It takes some time for ArcServiceManager to be ready, so make the timeout longer.
+	// TODO(b/150734712): Move this out of each subtest once bug has been addressed.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.setArcTouchMode)", true); err != nil {
+			return err
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
+		return nil, errors.Wrap(err, "timed out waiting for touch mode")
+	}
+
+	act, err := arc.NewActivity(a, packageName, activity.Name)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create new activity")
+	}
+	tdh.append(func(ctx context.Context) error {
+		act.Close(ctx)
+		return nil
+	})
+
+	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to start activity")
+	}
+	tdh.append(func(ctx context.Context) error {
+		return act.Stop(ctx, tconn)
+	})
+
+	appRoot := nodewith.Name(activity.Title).Role(role.Application)
+	if err = cvconn.WaitForFocusedNode(ctx, tconn, appRoot); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for initial ChromeVox focus")
+	}
+
+	return tdh.tearDown, nil
 }

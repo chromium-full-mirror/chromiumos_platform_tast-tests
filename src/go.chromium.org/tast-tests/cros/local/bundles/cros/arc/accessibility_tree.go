@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
-	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	arca11y "go.chromium.org/tast-tests/cros/local/bundles/cros/arc/a11y"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -342,31 +342,54 @@ func AccessibilityTree(ctx context.Context, s *testing.State) {
 		},
 	}
 
-	trees := map[arca11y.TestActivity]*axTreeNode{
-		arca11y.MainActivity:       MainActivityTree,
-		arca11y.EditTextActivity:   EditTextActivityTree,
-		arca11y.LiveRegionActivity: LiveRegionActivityTree,
-		arca11y.ActionActivity:     ActionActivityTree,
+	d := s.FixtValue().(*arc.PreData)
+	a := d.ARC
+	cr := d.Chrome
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Creating test API connection failed: ", err)
 	}
 
-	testActivities := []arca11y.TestActivity{
-		arca11y.MainActivity, arca11y.EditTextActivity, arca11y.LiveRegionActivity, arca11y.ActionActivity,
+	cvconn, cleanup, err := arca11y.SetUpChromeVox(ctx, s, cr, a, tconn)
+	if err != nil {
+		s.Fatal("Failed to setup ChromeVox: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
-	testFunc := func(ctx context.Context, cvconn *chromevox.Conn, tconn *chrome.TestConn, currentActivity arca11y.TestActivity) error {
-		expectedTree := trees[currentActivity]
-		var appRoot *a11y.Node
-		var err error
-		// Find the root node of Android application.
-		if appRoot, err = a11y.FindWithTimeout(ctx, tconn, expectedTree.findParams(), 10*time.Second); err != nil {
-			return errors.Wrap(err, "failed to get Android root from accessibility tree")
-		}
-		defer appRoot.Release(ctx)
+	for _, test := range []struct {
+		activity arca11y.TestActivity
+		tree     *axTreeNode
+	}{
+		{arca11y.MainActivity, MainActivityTree},
+		{arca11y.EditTextActivity, EditTextActivityTree},
+		{arca11y.LiveRegionActivity, LiveRegionActivityTree},
+		{arca11y.ActionActivity, ActionActivityTree},
+	} {
+		s.Run(ctx, test.activity.Name, func(ctx context.Context, s *testing.State) {
+			arca11y.AttachFaillog(ctx, s, tconn, test.activity.Name)
 
-		if matched, err := matchTree(ctx, appRoot, expectedTree); err != nil || !matched {
-			return errors.Wrap(err, "accessibility tree did not match")
-		}
-		return nil
+			cleanup, err = arca11y.StartActivityWithChromeVox(ctx, s, a, tconn, cvconn, test.activity)
+			if err != nil {
+				s.Fatal("Failed to setup: ", err)
+			}
+			defer cleanup(cleanupCtx)
+
+			var appRoot *a11y.Node
+			var err error
+			// Find the root node of Android application.
+			if appRoot, err = a11y.FindWithTimeout(ctx, tconn, test.tree.findParams(), 10*time.Second); err != nil {
+				s.Fatal("Failed to get Android root from accessibility tree: ", err)
+			}
+			defer appRoot.Release(ctx)
+
+			if matched, err := matchTree(ctx, appRoot, test.tree); err != nil || !matched {
+				s.Fatal("Accessibility tree did not match: ", err)
+			}
+		})
 	}
-	arca11y.RunTest(ctx, s, testActivities, testFunc)
 }

@@ -11,12 +11,14 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	arca11y "go.chromium.org/tast-tests/cros/local/bundles/cros/arc/a11y"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -267,15 +269,24 @@ func AccessibilityEvent(ctx context.Context, s *testing.State) {
 		},
 	}
 
-	testActivities := []arca11y.TestActivity{
-		arca11y.MainActivity, arca11y.EditTextActivity, arca11y.LiveRegionActivity,
+	d := s.FixtValue().(*arc.PreData)
+	a := d.ARC
+	cr := d.Chrome
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Creating test API connection failed: ", err)
 	}
 
-	testSteps := map[arca11y.TestActivity][]axEventTestStep{
-		arca11y.MainActivity:       MainActivityTestSteps,
-		arca11y.EditTextActivity:   EditTextActivityTestSteps,
-		arca11y.LiveRegionActivity: LiveRegionActivityTestSteps,
+	cvconn, cleanup, err := arca11y.SetUpChromeVox(ctx, s, cr, a, tconn)
+	if err != nil {
+		s.Fatal("Failed to setup ChromeVox: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
 	ew, err := input.Keyboard(ctx)
 	if err != nil {
@@ -283,13 +294,28 @@ func AccessibilityEvent(ctx context.Context, s *testing.State) {
 	}
 	defer ew.Close(ctx)
 
-	testFunc := func(ctx context.Context, cvconn *chromevox.Conn, tconn *chrome.TestConn, currentActivity arca11y.TestActivity) error {
-		for i, test := range testSteps[currentActivity] {
-			if err := runTestStep(ctx, cvconn, tconn, ew, test, i == 0); err != nil {
-				return errors.Wrapf(err, "failed to run a test step %+v", test)
+	for _, test := range []struct {
+		activity arca11y.TestActivity
+		steps    []axEventTestStep
+	}{
+		{arca11y.MainActivity, MainActivityTestSteps},
+		{arca11y.EditTextActivity, EditTextActivityTestSteps},
+		{arca11y.LiveRegionActivity, LiveRegionActivityTestSteps},
+	} {
+		s.Run(ctx, test.activity.Name, func(ctx context.Context, s *testing.State) {
+			arca11y.AttachFaillog(ctx, s, tconn, test.activity.Name)
+
+			cleanup, err = arca11y.StartActivityWithChromeVox(ctx, s, a, tconn, cvconn, test.activity)
+			if err != nil {
+				s.Fatal("Failed to setup: ", err)
 			}
-		}
-		return nil
+			defer cleanup(cleanupCtx)
+
+			for i, step := range test.steps {
+				if err := runTestStep(ctx, cvconn, tconn, ew, step, i == 0); err != nil {
+					s.Fatalf("Failed to run a test step %+v: %v", step, err)
+				}
+			}
+		})
 	}
-	arca11y.RunTest(ctx, s, testActivities, testFunc)
 }
