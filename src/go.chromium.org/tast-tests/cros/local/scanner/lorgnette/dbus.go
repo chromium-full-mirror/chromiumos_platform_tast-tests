@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	lpb "chromiumos/system_api/lorgnette_proto"
+
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
@@ -27,9 +28,9 @@ const (
 // For detailed spec of each D-Bus method, please review
 // src/platform2/lorgnette/dbus_bindings/org.chromium.lorgnette.Manager.xml
 type Lorgnette struct {
-	conn    *dbus.Conn
-	obj     dbus.BusObject
-	signals *dbusutil.SignalWatcher
+	conn              *dbus.Conn
+	obj               dbus.BusObject
+	scanStatusWatcher *dbusutil.SignalWatcher
 }
 
 // New connects to lorgnette via D-Bus and returns a Lorgnette object.  The
@@ -48,12 +49,98 @@ func New(ctx context.Context) (*Lorgnette, error) {
 		Interface: dbusInterface,
 		Member:    "ScanStatusChanged",
 	}
-	signals, err := dbusutil.NewSignalWatcher(ctx, conn, spec)
+	scanStatusWatcher, err := dbusutil.NewSignalWatcher(ctx, conn, spec)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to register for signals from lorgnette")
+		return nil, errors.Wrap(err, "failed to register for ScanStatusChanged signals from lorgnette")
 	}
 
-	return &Lorgnette{conn, obj, signals}, nil
+	return &Lorgnette{conn, obj, scanStatusWatcher}, nil
+}
+
+// StartScannerDiscovery calls lorgnette's StartScannerDiscovery method and returns the remote response.
+func (l *Lorgnette) StartScannerDiscovery(ctx context.Context, request *lpb.StartScannerDiscoveryRequest) (*lpb.StartScannerDiscoveryResponse, error) {
+	marshalled, err := proto.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal StartScannerDiscoveryRequest")
+	}
+
+	var buf []byte
+	if err := l.obj.CallWithContext(ctx, dbusInterface+".StartScannerDiscovery", 0, marshalled).Store(&buf); err != nil {
+		return nil, errors.Wrap(err, "failed to call StartScannerDiscovery")
+	}
+
+	response := &lpb.StartScannerDiscoveryResponse{}
+	if err = proto.Unmarshal(buf, response); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal StartScannerDiscoveryResponse")
+	}
+
+	return response, nil
+}
+
+// StopScannerDiscovery calls lorgnette's StopScannerDiscovery method and returns the remote response.
+func (l *Lorgnette) StopScannerDiscovery(ctx context.Context, request *lpb.StopScannerDiscoveryRequest) (*lpb.StopScannerDiscoveryResponse, error) {
+	marshalled, err := proto.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal StopScannerDiscoveryRequest")
+	}
+
+	var buf []byte
+	if err := l.obj.CallWithContext(ctx, dbusInterface+".StopScannerDiscovery", 0, marshalled).Store(&buf); err != nil {
+		return nil, errors.Wrap(err, "failed to call StopScannerDiscovery")
+	}
+
+	response := &lpb.StopScannerDiscoveryResponse{}
+	if err = proto.Unmarshal(buf, response); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal StopScannerDiscoveryResponse")
+	}
+
+	return response, nil
+}
+
+// AccumulateDiscoveredScanners waits for ScannerListChangedSignal signals and accumulates a list of added scanners.  It returns when a ENUM_COMPLETE event is received.
+func (l *Lorgnette) AccumulateDiscoveredScanners(ctx context.Context, session string) ([]*lpb.ScannerInfo, error) {
+	spec := dbusutil.MatchSpec{
+		Type:      "signal",
+		Path:      dbusPath,
+		Interface: dbusInterface,
+		Member:    "ScannerListChanged",
+	}
+	scannerListWatcher, err := dbusutil.NewSignalWatcher(ctx, l.conn, spec)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to register for ScannerListChanged signals from lorgnette")
+	}
+
+	var scanners []*lpb.ScannerInfo
+	for {
+		select {
+		case sig := <-scannerListWatcher.Signals:
+			var buf []byte
+			if err := dbus.Store(sig.Body, &buf); err != nil {
+				return nil, errors.Wrap(err, "failed to extract ScannerListChangedSignal body")
+			}
+			signal := lpb.ScannerListChangedSignal{}
+			if err := proto.Unmarshal(buf, &signal); err != nil {
+				return nil, errors.Wrap(err, "failed to unmarshal ScannerListChangedSignal")
+			}
+
+			if signal.SessionId != session {
+				continue
+			}
+
+			switch signal.EventType {
+			case lpb.ScannerListChangedSignal_SCANNER_ADDED:
+				scanners = append(scanners, signal.Scanner)
+			case lpb.ScannerListChangedSignal_SESSION_ENDING:
+				return nil, errors.New("discovery session ended before ENUM_COMPLETE received")
+			case lpb.ScannerListChangedSignal_ENUM_COMPLETE:
+				return scanners, nil
+			}
+
+		case <-ctx.Done():
+			return nil, errors.Wrap(ctx.Err(), "did not receive ENUM_COMPLETE event")
+
+		}
+	}
 }
 
 // StartScan calls lorgnette's StartScan method and returns the remote response.
@@ -101,7 +188,7 @@ func (l *Lorgnette) GetNextImage(ctx context.Context, request *lpb.GetNextImageR
 func (l *Lorgnette) WaitForScanCompletion(ctx context.Context, uuid string) error {
 	for {
 		select {
-		case sig := <-l.signals.Signals:
+		case sig := <-l.scanStatusWatcher.Signals:
 			var buf []byte
 			if err := dbus.Store(sig.Body, &buf); err != nil {
 				return errors.Wrap(err, "failed to extract ScanStatusChangedSignal body")

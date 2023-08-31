@@ -9,8 +9,10 @@ import (
 	"regexp"
 
 	lpb "chromiumos/system_api/lorgnette_proto"
+
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
 	"go.chromium.org/tast-tests/cros/local/scanner/lorgnette"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -22,6 +24,10 @@ type scannerInfo struct {
 }
 
 var ippUsbFormat = regexp.MustCompile("^ippusb:escl:.*:(....)_(....)/.*")
+
+type enumParams struct {
+	AsyncDiscovery bool // Use an asynchronous discovery session instead of ListScanners.
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -38,6 +44,17 @@ func init() {
 		},
 		SoftwareDeps: []string{"virtual_usb_printer", "cups", "chrome"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
+		Params: []testing.Param{{
+			Val: &enumParams{
+				AsyncDiscovery: false,
+			},
+		}, {
+			Name:      "async",
+			ExtraAttr: []string{"informational"},
+			Val: &enumParams{
+				AsyncDiscovery: true,
+			},
+		}},
 	})
 }
 
@@ -50,10 +67,53 @@ func isMatchingScanner(scanner *lpb.ScannerInfo, devInfo usbprinter.DevInfo) boo
 	return false
 }
 
+func getScannersSync(ctx context.Context, l *lorgnette.Lorgnette) ([]*lpb.ScannerInfo, error) {
+	scanners, err := l.ListScanners(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to call ListScanners")
+	}
+
+	return scanners, nil
+}
+
+func getScannersAsync(ctx context.Context, l *lorgnette.Lorgnette) ([]*lpb.ScannerInfo, error) {
+	startDiscoveryRequest := &lpb.StartScannerDiscoveryRequest{
+		ClientId:       "EnumerateIPPUSB",
+		DownloadPolicy: lpb.BackendDownloadPolicy_DOWNLOAD_NEVER,
+		LocalOnly:      true,
+		PreferredOnly:  false,
+	}
+	startDiscoveryResponse, err := l.StartScannerDiscovery(ctx, startDiscoveryRequest)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to send StartScannerDiscovery request")
+	}
+	if !startDiscoveryResponse.Started {
+		return nil, errors.New("scanner discovery did not start")
+	}
+	scanners, err := l.AccumulateDiscoveredScanners(ctx, startDiscoveryResponse.SessionId)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get ScannerListChanged events")
+	}
+	stopDiscoveryRequest := &lpb.StopScannerDiscoveryRequest{
+		SessionId: startDiscoveryResponse.SessionId,
+	}
+	stopDiscoveryResponse, err := l.StopScannerDiscovery(ctx, stopDiscoveryRequest)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to send StopScannerDiscovery request")
+	}
+	if !stopDiscoveryResponse.Stopped {
+		return nil, errors.New("scanner discovery did not stop")
+	}
+
+	return scanners, nil
+}
+
 // runEnumerationTest sets up virtual-usb-printer to emulate the device specified in info,
 // calls lorgnette's ListScanners, and checks to see if the device was listed in the response.
 func runEnumerationTest(ctx context.Context, s *testing.State, info scannerInfo) {
 	s.Logf("Checking if %s is listed", info.name)
+
+	testOpt := s.Param().(*enumParams)
 
 	printer, err := usbprinter.Start(ctx, info.options...)
 	if err != nil {
@@ -65,7 +125,7 @@ func runEnumerationTest(ctx context.Context, s *testing.State, info scannerInfo)
 		}
 	}(ctx)
 
-	s.Log("Requesting scanner list")
+	s.Log("Connecting to lorgnette")
 	l, err := lorgnette.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to lorgnette: ", err)
@@ -75,9 +135,17 @@ func runEnumerationTest(ctx context.Context, s *testing.State, info scannerInfo)
 		// affecting subsequent tests.
 		lorgnette.StopService(ctx)
 	}()
-	scanners, err := l.ListScanners(ctx)
+
+	var scanners []*lpb.ScannerInfo
+	if testOpt.AsyncDiscovery {
+		s.Log("Requesting scanner list with async discovery")
+		scanners, err = getScannersAsync(ctx, l)
+	} else {
+		s.Log("Requesting scanner list with ListScanners")
+		scanners, err = getScannersSync(ctx, l)
+	}
 	if err != nil {
-		s.Fatal("Failed to call ListScanners: ", err)
+		s.Fatal("Failed to get scanner list: ", err)
 	}
 
 	found := false
