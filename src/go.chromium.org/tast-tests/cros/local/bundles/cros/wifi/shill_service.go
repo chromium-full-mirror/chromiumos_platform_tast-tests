@@ -61,6 +61,8 @@ func init() {
 		Register: func(srv *grpc.Server, s *testing.ServiceState) {
 			wifi.RegisterShillServiceServer(srv, &ShillService{s: s})
 		},
+		// GuaranteeCompatibility allows non-Tast test harness clients to call this service.
+		GuaranteeCompatibility: true,
 	})
 }
 
