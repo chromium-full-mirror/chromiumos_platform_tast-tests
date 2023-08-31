@@ -41,10 +41,8 @@ func init() {
 			// TODO(b/281766836): Promote tast to critical
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name: "ufs_lifetime",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineUFSLifetime},
-			// TODO(b/283724445): Promote tast to critical.
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			Name:              "ufs_lifetime",
+			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineUFSLifetime},
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 		}, {
 			Name: "floating_point_v2",
