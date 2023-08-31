@@ -41,20 +41,6 @@ func init() {
 				Fixture:           "loggedInToCUJUserLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
-
-			// TODO (b/277656113): Remove the two variants after GPU collection
-			// performance is analyzed.
-			{
-				Name:    "gpuusage",
-				Val:     browser.TypeAsh,
-				Fixture: "loggedInToCUJUser",
-			}, {
-				Name:              "lacros_gpuusage",
-				Val:               browser.TypeLacros,
-				Fixture:           "loggedInToCUJUserLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-
 			// Experimental variants.
 			{
 				Name:      "field_trials",
