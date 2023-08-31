@@ -92,9 +92,8 @@ var loadwxAllowlist []string
 func loadDLCs(ctx context.Context) error {
 	criticalDLCs := []string{"pita"}
 	for _, dlc := range criticalDLCs {
-		metadataPath := filepath.Join("/opt/google/dlc", dlc)
 		// Load the DLC if metadata exists for it as it should be preloadable on test images.
-		if _, err := os.Stat(metadataPath); err == nil {
+		if err := testexec.CommandContext(ctx, "dlc_metadata_util", "--get", "--id="+dlc).Run(testexec.DumpLogOnError); err == nil {
 			if err := testexec.CommandContext(ctx, "dlcservice_util", "--install", "--id="+dlc, "--omaha_url=").Run(testexec.DumpLogOnError); err != nil {
 				return errors.Wrapf(err, "failed in loading %s DLC", dlc)
 			}
