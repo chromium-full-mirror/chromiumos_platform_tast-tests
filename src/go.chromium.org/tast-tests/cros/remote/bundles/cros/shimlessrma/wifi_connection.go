@@ -56,12 +56,13 @@ func WifiConnection(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Wifi config start")
-	var tfOpts []wificell.TFOption
+	tfOpts := wificell.NewTFOptionsBuilder()
+	tfOpts.DutTarget(dut, s.RPCHint())
 	if router, ok := s.Var("router"); ok && router != "" {
-		tfOpts = append(tfOpts, wificell.TFRouter(router))
+		tfOpts.PrimaryRouterTargets(router)
 	}
 	// TODO(b/279663413): Tests should not manually initialize the wifi test fixture class.
-	tf, err := wificell.NewTestFixture(ctx, ctx, dut, s.RPCHint(), tfOpts...)
+	tf, err := wificell.NewTestFixture(ctx, ctx, tfOpts.Build())
 	if err != nil {
 		s.Fatal("Failed to set up test fixture: ", err)
 	}

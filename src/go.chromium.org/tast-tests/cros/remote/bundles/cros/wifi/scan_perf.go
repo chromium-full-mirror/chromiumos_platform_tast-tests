@@ -155,12 +155,13 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 
 	// TODO(b/260276685): Shared fixture among test variants causes a longer 1st bg when dtim config is different from the last subtest.
 	// Create a new test fixture for each test variant. Use shared |wificellFixt| when fixed.
-	var tfOps []wificell.TFOption
+	tfOps := wificell.NewTFOptionsBuilder()
+	tfOps.DutTarget(s.DUT(), s.RPCHint())
 	if router, ok := s.Var("router"); ok && router != "" {
-		tfOps = append(tfOps, wificell.TFRouter(router))
+		tfOps.PrimaryRouterTargets(router)
 	}
 	// TODO(b/279663413): Tests should not manually initialize the wifi test fixture class.
-	tf, err := wificell.NewTestFixture(ctx, ctx, s.DUT(), s.RPCHint(), tfOps...)
+	tf, err := wificell.NewTestFixture(ctx, ctx, tfOps.Build())
 	if err != nil {
 		s.Fatal("Failed to set up test fixture: ", err)
 	}

@@ -234,7 +234,8 @@ type axSimpleConnectTestcase struct {
 }
 
 func AxSimpleConnect(ctx context.Context, s *testing.State) {
-	var tfOps []wificell.TFOption
+	tfOps := wificell.NewTFOptionsBuilder()
+	tfOps.DutTarget(s.DUT(), s.RPCHint())
 	router, ok := s.Var("router")
 	if !ok || router == "" {
 		var err error
@@ -245,10 +246,10 @@ func AxSimpleConnect(ctx context.Context, s *testing.State) {
 		}
 		testing.ContextLogf(ctx, "Using default router name %q for %s router", router, support.AxT.String())
 	}
-	tfOps = append(tfOps, wificell.TFRouter(router))
-	tfOps = append(tfOps, wificell.TFHostUsers(map[string]string{
+	tfOps.PrimaryRouterTargets(router)
+	tfOps.HostUserOverrides(map[string]string{
 		router: "admin",
-	}))
+	})
 
 	// Parse the router's model.
 	var axType ax.DeviceType
@@ -263,17 +264,9 @@ func AxSimpleConnect(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	var tfRouterType support.RouterType
-	if axType != ax.Unknown {
-		tfRouterType = support.AxT
-	} else {
-		tfRouterType = support.UnknownT
-	}
-	tfOps = append(tfOps, wificell.TFRouterType(tfRouterType))
-
 	// Assert WiFi is up.
 	// TODO(b/279663413): Tests should not manually initialize the wifi test fixture class.
-	tf, err := wificell.NewTestFixture(ctx, ctx, s.DUT(), s.RPCHint(), tfOps...)
+	tf, err := wificell.NewTestFixture(ctx, ctx, tfOps.Build())
 	if err != nil {
 		s.Fatal("Failed to set up test fixture: ", err)
 	}

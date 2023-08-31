@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -146,126 +146,6 @@ const (
 	ChromeFeatureHotspot = "Hotspot"
 )
 
-// TFOption is the function signature used to modify TextFixutre.
-type TFOption func(*TestFixture)
-
-// TFRouter sets the router hostname for the test fixture.
-// Format: hostname[:port]
-func TFRouter(targets ...string) TFOption {
-	return func(tf *TestFixture) {
-		tf.routers = make([]*routerData, len(targets))
-		for i := range targets {
-			tf.routers[i] = &routerData{
-				target: targets[i],
-			}
-		}
-	}
-}
-
-// TFPcap sets the pcap hostname for the test fixture.
-// Format: hostname[:port]
-func TFPcap(target string) TFOption {
-	return func(tf *TestFixture) {
-		tf.pcap.target = target
-	}
-}
-
-// TFCapture sets if the test fixture should spawn packet capturer in ConfigureAP.
-func TFCapture(b bool) TFOption {
-	return func(tf *TestFixture) {
-		tf.option.packetCapture = b
-	}
-}
-
-// TFAttenuator sets the attenuator hostname to use in the test fixture.
-func TFAttenuator(target string) TFOption {
-	return func(tf *TestFixture) {
-		tf.attenuatorTarget = target
-	}
-}
-
-// TFRouterAsCapture sets if the router should be used as a capturer. If there
-// are multiple routers, the first one is used.
-func TFRouterAsCapture() TFOption {
-	return func(tf *TestFixture) {
-		tf.option.routerAsCapture = true
-	}
-}
-
-// TFWithUI sets if the test fixture should not skip stopping UI.
-// This option is useful for tests with UI settings + basic WiFi functionality,
-// where the interference of UI (e.g. trigger scans) does not matter much.
-func TFWithUI() TFOption {
-	return func(tf *TestFixture) {
-		tf.option.withUI = true
-	}
-}
-
-// TFSetLogging sets if wants
-func TFSetLogging(b bool) TFOption {
-	return func(tf *TestFixture) {
-		tf.setLogging = b
-	}
-}
-
-// TFLogTags sets the logging tags to use in the test fixture.
-func TFLogTags(tags []string) TFOption {
-	return func(tf *TestFixture) {
-		tf.logTags = tags
-	}
-}
-
-// TFLogLevel sets the logging level to use in the test fixture.
-func TFLogLevel(level int) TFOption {
-	return func(tf *TestFixture) {
-		tf.logLevel = level
-	}
-}
-
-// TFRouterRequired defines if the router is required for the test fixture.
-func TFRouterRequired(req bool) TFOption {
-	return func(tf *TestFixture) {
-		tf.option.routerRequired = req
-	}
-}
-
-// TFRouterType sets the router type used in the test fixture.
-func TFRouterType(rtype support.RouterType) TFOption {
-	return func(tf *TestFixture) {
-		tf.routerType = rtype
-	}
-}
-
-// TFCellular defines if the cellular is required for the test fixture.
-func TFCellular() TFOption {
-	return func(tf *TestFixture) {
-		tf.option.cellularRequired = true
-	}
-}
-
-// TFPcapType sets the router type of the pcap capturing device. The pcap device in our testbeds is a router.
-func TFPcapType(rtype support.RouterType) TFOption {
-	return func(tf *TestFixture) {
-		tf.pcapType = rtype
-	}
-}
-
-// TFHostUsers saves the mapping of hostname to username. This is used to figure
-// out what username to log in with for a given hostname. If a username entry is
-// not found for a given hostname, the default username, root, will be used.
-func TFHostUsers(hostUsers map[string]string) TFOption {
-	return func(tf *TestFixture) {
-		tf.hostUsers = hostUsers
-	}
-}
-
-// TFCompanionDUT sets the companion DUT to use in the test fixture.
-func TFCompanionDUT(cd *dut.DUT, h *testing.RPCHint) TFOption {
-	return func(tf *TestFixture) {
-		tf.duts = append(tf.duts, &dutData{dut: cd, rpcHint: h})
-	}
-}
-
 // TODO(b/234845693): make that an independent structure.
 type routerData struct {
 	target string
@@ -290,21 +170,15 @@ type dutData struct {
 
 // TestFixture sets up the context for a basic WiFi test.
 type TestFixture struct {
+	options *TFOptions
+
+	// Wificell devices.
+	// Duts and the pcap must always be initialized, but routers may be empty if
+	// TFOptions.RequirePrimaryRouter is false in options.
 	duts       []*dutData
-	hostUsers  map[string]string
 	routers    []*routerData
-	routerType support.RouterType
-	pcapType   support.RouterType
-
-	pcap *routerData
-
-	attenuatorTarget string
-	attenuator       *attenuator.Attenuator
-
-	useWpaCliAPI bool
-	setLogging   bool
-	logLevel     int
-	logTags      []string
+	pcap       *routerData
+	attenuator *attenuator.Attenuator
 
 	// The following parameters (with prefix p2p*) are used with P2P tests.
 	p2pGO              *dut.DUT
@@ -315,19 +189,11 @@ type TestFixture struct {
 	p2pClientIface     string
 	p2pClientNetID     int
 
-	// Group simple option flags here as they started to grow.
-	option struct {
-		packetCapture    bool
-		withUI           bool
-		routerAsCapture  bool
-		routerRequired   bool
-		cellularRequired bool
-	}
-
 	apID              int
 	seederIface       *APIface
 	capturers         map[*APIface]*pcap.Capturer
 	tetheringCapturer *pcap.Capturer
+	useWpaCliAPI      bool
 
 	// aps is a set of APs useful for deconfiguring all APs, which some tests require.
 	aps map[*APIface]struct{}
@@ -342,7 +208,6 @@ type TestFixture struct {
 // The TestFixture contains a gRPC connection to the DUT and a SSH connection to the router.
 // The method takes two context: ctx and daemonCtx, the first one is the context for the operation and
 // daemonCtx is for the spawned daemons.
-// Noted that if routerHostname is empty, it uses the default router hostname based on the DUT's hostname.
 // After the caller gets the TestFixture instance, it should reserve time for Close() the TestFixture:
 //
 //	tf, err := NewTestFixture(ctx, ...)
@@ -351,33 +216,21 @@ type TestFixture struct {
 //	ctx, cancel := tf.ReserveForClose(ctx)
 //	defer cancel()
 //	...
-func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *testing.RPCHint, ops ...TFOption) (ret *TestFixture, retErr error) {
+func NewTestFixture(fullCtx, daemonCtx context.Context, options *TFOptions) (ret *TestFixture, retErr error) {
 	fullCtx, st := timing.Start(fullCtx, "NewTestFixture")
 	defer st.End()
 
-	tf := &TestFixture{
-		duts:      []*dutData{{dut: d, rpcHint: rpcHint}},
-		capturers: make(map[*APIface]*pcap.Capturer),
-		aps:       make(map[*APIface]struct{}),
-		// Set the router's default router type.
-		routerType: support.UnknownT,
-		// Set the pcap capture device's default router type.
-		pcapType: support.UnknownT,
-		// Set the debug values on the DUT by default.
-		setLogging: true,
-		// Default log level used in WiFi tests.
-		logLevel: -2,
-		// Default log tags used in WiFi tests. Example of other tags that can be added.
-		// (connection + dbus + device + link + manager + portal + service)
-		logTags:      []string{"wifi"},
-		useWpaCliAPI: true,
-		pcap:         &routerData{},
+	// Initialize fixture with provided options.
+	testing.ContextLogf(fullCtx, "Fixture options: %s", options)
+	if err := options.Validate(); err != nil {
+		return nil, errors.Wrap(err, "invalid fixture options")
 	}
-	// By default we require router presence.
-	tf.option.routerRequired = true
-
-	for _, op := range ops {
-		op(tf)
+	tf := &TestFixture{
+		options:      options,
+		duts:         append(make([]*dutData, 0), options.duts...),
+		capturers:    make(map[*APIface]*pcap.Capturer),
+		aps:          make(map[*APIface]struct{}),
+		useWpaCliAPI: true,
 	}
 
 	defer func() {
@@ -411,20 +264,20 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 		}
 
 		// TODO(crbug.com/728769): Make sure if we need to turn off powersave.
-		if _, err := d.wifiClient.InitDUT(ctx, &wifi.InitDUTRequest{WithUi: tf.option.withUI}); err != nil {
+		if _, err := d.wifiClient.InitDUT(ctx, &wifi.InitDUTRequest{WithUi: tf.options.EnableDutUI}); err != nil {
 			return nil, errors.Wrap(err, "failed to InitDUT")
 		}
 
-		if tf.option.cellularRequired && DutIdx(idx) == DefaultDUT {
+		if tf.options.EnableCellular && DutIdx(idx) == DefaultDUT {
 			d.cellularClient = cellular.NewRemoteCellularServiceClient(d.rpc.Conn)
 		}
 
-		if tf.setLogging {
+		if tf.options.SetDutWifiLogging {
 			d.originalLogLevel, d.originalLogTags, err = tf.getLoggingConfig(ctx, d.wifiClient)
 			if err != nil {
 				return nil, err
 			}
-			if err := tf.setLoggingConfig(ctx, d.wifiClient, tf.logLevel, tf.logTags); err != nil {
+			if err := tf.setLoggingConfig(ctx, d.wifiClient, tf.options.DutWifiLogLevel, tf.options.DutWifiLogTags); err != nil {
 				return nil, err
 			}
 		}
@@ -441,7 +294,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 		// Check if the router is accessible at all.
 		_, err = net.LookupIP(name)
 		// Report error only when router presence is required.
-		if err != nil && tf.option.routerRequired {
+		if err != nil && tf.options.RequirePrimaryRouter {
 			return nil, errors.Errorf("could not resolve IP for host %s", name)
 		}
 		// If default router is present, add it.
@@ -466,7 +319,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 		testing.ContextLogf(ctx, "Successfully instantiated %s router controller for router[%d]", routerObj.RouterType().String(), i)
 		rt.object = routerObj
 	}
-	if tf.option.routerAsCapture && len(tf.routers) > 0 {
+	if tf.options.UseFirstRouterAsPcap && len(tf.routers) > 0 {
 		testing.ContextLog(ctx, "Using router as pcap")
 		tf.pcap.target = tf.routers[0].target
 	}
@@ -543,11 +396,11 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 		tf.pcap.object = tf.routers[0].object
 	}
 
-	if tf.attenuatorTarget != "" && len(tf.routers) > 0 {
-		testing.ContextLog(ctx, "Opening Attenuator: ", tf.attenuatorTarget)
+	if tf.options.AttenuatorTarget != "" && len(tf.routers) > 0 {
+		testing.ContextLog(ctx, "Opening Attenuator: ", tf.options.AttenuatorTarget)
 		var err error
 		// openWrtRouter #0 should always be present, thus we use it as a proxy.
-		tf.attenuator, err = attenuator.Open(ctx, tf.attenuatorTarget, tf.routers[0].host)
+		tf.attenuator, err = attenuator.Open(ctx, tf.options.AttenuatorTarget, tf.routers[0].host)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to open attenuator")
 		}
@@ -572,8 +425,8 @@ func (tf *TestFixture) connectCompanion(ctx context.Context, hostname string, re
 	sopt.KeyFile = tf.duts[DefaultDUT].dut.KeyFile()
 	var conn *ssh.Conn
 
-	if tf.hostUsers != nil {
-		if username, ok := tf.hostUsers[hostname]; ok {
+	if tf.options.HostUserOverrides != nil {
+		if username, ok := tf.options.HostUserOverrides[hostname]; ok {
 			testing.ContextLogf(ctx, "Using ssh username override %q for host %q", username, hostname)
 			sopt.User = username
 		}
@@ -593,7 +446,6 @@ func (tf *TestFixture) connectCompanion(ctx context.Context, hostname string, re
 	}); err != nil {
 		return nil, err
 	}
-
 	return conn, nil
 }
 
@@ -843,7 +695,7 @@ func (tf *TestFixture) Close(ctx context.Context) error {
 	}
 	for _, d := range tf.duts {
 		if d.wifiClient != nil {
-			if tf.setLogging {
+			if tf.options.SetDutWifiLogging {
 				if err := tf.setLoggingConfig(ctx, d.wifiClient, d.originalLogLevel, d.originalLogTags); err != nil {
 					utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to tear down test state"))
 				}
@@ -926,7 +778,7 @@ func (tf *TestFixture) ConfigureAPOnRouterID(ctx context.Context, idx int, ops [
 	}
 
 	var capturer *pcap.Capturer
-	if tf.option.packetCapture {
+	if tf.options.EnablePacketCapture {
 		freqOps, err := config.PcapFreqOptions()
 		if err != nil {
 			return nil, err
@@ -971,7 +823,6 @@ func (tf *TestFixture) ReserveForDeconfigAP(ctx context.Context, ap *APIface) (c
 	if len(tf.routers) == 0 {
 		return ctx, func() {}
 	}
-
 	ctx, cancel := ap.ReserveForStop(ctx)
 	if capturer, ok := tf.capturers[ap]; ok {
 		// Also reserve time for stopping the capturer if it exists.
@@ -2166,7 +2017,7 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 	testing.ContextLogf(ctx, "Tethering started on channel %v, width: %v", resp.Channel, resp.ChannelWidth)
 
 	var capturer *pcap.Capturer
-	if tf.option.packetCapture {
+	if tf.options.EnablePacketCapture {
 		if tf.pcap.host == nil {
 			// This will happen only when running the test maunally.
 			return nil, nil, errors.New("missing pcap, perhaps you forgot to add -var=pcap=<host> argument")
@@ -2254,8 +2105,8 @@ func (tf *TestFixture) RebootDUT(ctx context.Context, dutIdx DutIdx) (retErr err
 	}
 	tf.duts[dutIdx].wifiClient = &WifiClient{ShillServiceClient: wifi.NewShillServiceClient(tf.duts[dutIdx].rpc.Conn)}
 
-	if tf.setLogging {
-		if err := tf.setLoggingConfig(ctx, tf.duts[dutIdx].wifiClient, tf.logLevel, tf.logTags); err != nil {
+	if tf.options.SetDutWifiLogging {
+		if err := tf.setLoggingConfig(ctx, tf.duts[dutIdx].wifiClient, tf.options.DutWifiLogLevel, tf.options.DutWifiLogTags); err != nil {
 			return err
 		}
 	}

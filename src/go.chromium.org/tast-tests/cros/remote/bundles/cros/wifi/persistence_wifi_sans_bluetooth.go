@@ -91,16 +91,18 @@ func PersistenceWifiSansBluetooth(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Initialize TestFixture Options.
-	var tfOps []wificell.TFOption
+	tfOpsBuilder := wificell.NewTFOptionsBuilder()
+	tfOpsBuilder.DutTarget(s.DUT(), s.RPCHint())
 	if router, ok := s.Var("router"); ok && router != "" {
-		tfOps = append(tfOps, wificell.TFRouter(router))
+		tfOpsBuilder.PrimaryRouterTargets(router)
 	}
-	tfOps = append(tfOps, wificell.TFWithUI())
+	tfOpsBuilder.EnableDutUI(true)
+	originalTfOps := tfOpsBuilder.Build()
 
 	func(ctx context.Context) {
 		// Assert WiFi is up.
 		// TODO(b/279663413): Tests should not manually initialize the wifi test fixture class.
-		tf, err := wificell.NewTestFixture(ctx, ctx, s.DUT(), s.RPCHint(), tfOps...)
+		tf, err := wificell.NewTestFixture(ctx, ctx, originalTfOps)
 		if err != nil {
 			s.Fatal("Failed to set up test fixture: ", err)
 		}
@@ -188,7 +190,11 @@ func PersistenceWifiSansBluetooth(ctx context.Context, s *testing.State) {
 
 	// Assert WiFi is up.
 	// TODO(b/279663413): Tests should not manually initialize the wifi test fixture class.
-	tf, err := wificell.NewTestFixture(ctx, ctx, d, s.RPCHint(), tfOps...)
+	tfOpsBuilder = wificell.NewTFOptionsBuilder()
+	tfOpsBuilder.DutTarget(d, s.RPCHint())
+	tfOpsBuilder.PrimaryRouterTargets(originalTfOps.PrimaryRouterTargets...)
+	tfOpsBuilder.EnableDutUI(originalTfOps.EnableDutUI)
+	tf, err := wificell.NewTestFixture(ctx, ctx, tfOpsBuilder.Build())
 	if err != nil {
 		s.Fatal("Failed to set up test fixture: ", err)
 	}

@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
-	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast-tests/cros/remote/wificell/wifiutil"
 	"go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast-tests/cros/services/cros/power"
@@ -45,29 +44,26 @@ const (
 
 // Fixture vars.
 const (
-	// fixtureVarRouter is the fixture var for configuring the router hostname.
-	// Will use <dut>-router as the router hostname when not set.
+	// fixtureVarRouter is the fixture var for setting
+	// TFOptions.PrimaryRouterTargets with a single router when fixtures do
+	// not have the TFFeaturesRouters feature.
 	fixtureVarRouter = "router"
 
-	// fixtureVarRouters is the fixture var for configuring the hostnames of
-	// multiple routers the testbed. Expects comma-separated hostnames.
+	// fixtureVarRoutersMultiple is the fixture var for setting
+	// TFOptions.PrimaryRouterTargets with a multiple routers when fixtures
+	// have the TFFeaturesRouters feature.
+	//
+	// Expects comma-separated hostnames.
 	fixtureVarRoutersMultiple = "routers"
 
-	// fixtureVarPcap is the fixture var for configuring the pcap hostname.
-	// Will use <dut>-pcap as the router hostname when not set.
+	// fixtureVarPcap is the fixture var for setting TFOptions.PcapRouterTarget
+	// for all fixtures.
 	fixtureVarPcap = "pcap"
 
-	// fixtureVarPcap is the fixture var for configuring the attenuator.
-	// Will use <dut>-attenuator as the attenuator hostname when not set.
+	// fixtureVarAttenuator is the fixture var for setting
+	// TFOptions.AttenuatorTarget for fixtures that have the TFFeaturesAttenuator
+	// feature.
 	fixtureVarAttenuator = "attenuator"
-
-	// fixtureVarRouterType is the fixture var for overriding the auto router type
-	// resolution to use a specific router type instead for routers.
-	fixtureVarRouterType = "routertype"
-
-	// fixtureVarPcapType is the fixture var for overriding the auto router type
-	// resolution to use a specific router type instead for the pcap.
-	fixtureVarPcapType = "pcaptype"
 )
 
 func init() {
@@ -104,11 +100,7 @@ func init() {
 			PostTestTimeout: postTestTimeout,
 			TearDownTimeout: tearDownTimeout,
 			ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
-			Vars: []string{
-				fixtureVarPcap,
-				fixtureVarPcapType,
-				fixtureVarRouterType,
-			},
+			Vars:            []string{fixtureVarPcap},
 		}
 
 		// Typical fixture extensions.
@@ -400,86 +392,54 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	// Create TestFixture.
-	var ops []TFOption
-	// Read router/pcap variable. If not available or empty, NewTestFixture
-	// will fall back to Default{Router,Pcap}Host.
+	ops := NewTFOptionsBuilder()
+	ops.DutTarget(s.DUT(), s.RPCHint())
+
+	// Read fixture vars for router host(s) identification.
 	if f.features&TFFeaturesRouters != 0 {
-		if routers, ok := s.Var(fixtureVarRoutersMultiple); ok && routers != "" {
-			testing.ContextLog(ctx, "routers: ", routers)
-			slice := strings.Split(routers, ",")
-			if len(slice) < 2 {
+		if routersStr, ok := s.Var(fixtureVarRoutersMultiple); ok && routersStr != "" {
+			testing.ContextLog(ctx, "routers: ", routersStr)
+			routers := strings.Split(routersStr, ",")
+			if len(routers) < 2 {
 				s.Fatal("Must provide at least two router names when Routers feature is enabled")
 			}
-			ops = append(ops, TFRouter(slice...))
+			ops.PrimaryRouterTargets(routers...)
 		} else {
 			var routers []string
 			for _, suffix := range []string{utils.CompanionSuffixRouter, utils.CompanionSuffixPcap} {
 				routers = append(routers, f.companionName(s, suffix))
-
 			}
-			testing.ContextLog(ctx, "companion routers: ", routers)
-			ops = append(ops, TFRouter(routers...))
+			ops.PrimaryRouterTargets(routers...)
 		}
 	} else {
 		router, ok := s.Var(fixtureVarRouter)
 		if ok && router != "" {
-			testing.ContextLog(ctx, "router: ", router)
-			ops = append(ops, TFRouter(router))
+			ops.PrimaryRouterTargets(router)
 		} // else: let TestFixture resolve the name.
 	}
-	pcap, ok := s.Var(fixtureVarPcap)
-	if ok && pcap != "" {
-		testing.ContextLog(ctx, "pcap: ", pcap)
-		ops = append(ops, TFPcap(pcap))
-	} // else: let TestFixture resolve the name.
-	if f.features&TFFeaturesRouterAsCapture != 0 {
-		testing.ContextLog(ctx, "using router as pcap")
-		ops = append(ops, TFRouterAsCapture())
+
+	// Read fixture vars and configures settings related to packet capturing.
+	if f.features&TFFeaturesCapture != 0 {
+		ops.EnablePacketCapture(true)
 	}
-	// Read attenuator variable.
+	if f.features&TFFeaturesRouterAsCapture != 0 {
+		ops.UseFirstRouterAsPcap(true)
+	} else {
+		pcap, ok := s.Var(fixtureVarPcap)
+		if ok && pcap != "" {
+			ops.PcapRouterTarget(pcap)
+		} // else: let TestFixture resolve the name.
+	}
+
+	// Read fixture var for attenuator host.
 	if f.features&TFFeaturesAttenuator != 0 {
 		atten, ok := s.Var(fixtureVarAttenuator)
 		if !ok || atten == "" {
 			// Attenuator is not typical companion, so we synthesize its name here.
 			atten = f.companionName(s, "-attenuator")
 		}
-		testing.ContextLog(ctx, "attenuator: ", atten)
-		ops = append(ops, TFAttenuator(atten))
+		ops.AttenuatorTarget(atten)
 	}
-	// Enable capturing.
-	if f.features&TFFeaturesCapture != 0 {
-		ops = append(ops, TFCapture(true))
-	}
-
-	// Allow for setting router type
-	var routerType support.RouterType
-	if rTypeStr, ok := s.Var(fixtureVarRouterType); !ok || rTypeStr == "" {
-		// Default to unknown so that it may be automatically determined with host
-		routerType = support.UnknownT
-	} else {
-		var err error
-		routerType, err = support.ParseRouterType(rTypeStr)
-		if err != nil {
-			s.Fatalf("Failed to parse routertype %q: ", err)
-		}
-	}
-	testing.ContextLog(ctx, "routertype: ", routerType.String())
-	ops = append(ops, TFRouterType(routerType))
-
-	// Allow for setting pcap type
-	var pcapType support.RouterType
-	if rTypeStr, ok := s.Var(fixtureVarPcapType); !ok || rTypeStr == "" {
-		// Default to unknown so that it may be automatically determined with host
-		pcapType = support.UnknownT
-	} else {
-		var err error
-		pcapType, err = support.ParseRouterType(rTypeStr)
-		if err != nil {
-			s.Fatalf("Failed to parse pcaptype %q: ", err)
-		}
-	}
-	testing.ContextLog(ctx, "pcaptype: ", pcapType.String())
-	ops = append(ops, TFPcapType(pcapType))
 
 	// Read companion DUT.
 	if f.features&TFFeaturesCompanionDUT != 0 {
@@ -487,18 +447,18 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 		if cd == nil {
 			s.Fatal("Failed to get companion DUT cd1")
 		}
-		ops = append(ops, TFRouterRequired(false))
-		ops = append(ops, TFCompanionDUT(cd, s.RPCHint()))
+		ops.RequirePrimaryRouter(false)
+		ops.DutTarget(cd, s.RPCHint())
 		if err := f.recoverUnhealthyDUT(ctx, cd, s); err != nil {
 			s.Fatal("Failed to recover unhealthy DUT: ", err)
 		}
 	}
 
 	if f.features&TFFeaturesCellular != 0 {
-		ops = append(ops, TFCellular())
+		ops.EnableCellular(true)
 	}
 
-	tf, err := NewTestFixture(ctx, s.FixtContext(), s.DUT(), s.RPCHint(), ops...)
+	tf, err := NewTestFixture(ctx, s.FixtContext(), ops.Build())
 	if err != nil {
 		s.Fatal("Failed to set up test fixture: ", err)
 	}
