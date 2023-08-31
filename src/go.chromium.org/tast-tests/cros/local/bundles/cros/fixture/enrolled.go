@@ -17,10 +17,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Indicator test for the enrolled fixture",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
+			"chromeos-commercial-remote-management@google.com",
+			"vsavu@google.com",
 			"gabormagda@google.com", // Test author
 		},
-		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
+		BugComponent: "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Params: []testing.Param{{
 			Name:      "golden",
 			ExtraAttr: []string{"group:golden_tier"},
@@ -36,6 +37,13 @@ func init() {
 		}},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.Enrolled,
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Enroll an unmanaged device by entering credentials manually to
+			// ensure it enrolls with user interaction.
+			// COM_FOUND_CUJ26_TASK3_WF1
+			Value: "screenplay-e3feb0c8-a73b-4974-acf6-310348498e62",
+		}},
 	})
 }
 
