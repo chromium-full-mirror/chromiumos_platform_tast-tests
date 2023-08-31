@@ -181,15 +181,9 @@ type Param struct {
 	// MinimalSet to add bullseye coverage.
 	NoBusterInTestName bool
 
-	// TestIME controls whether the test case tests IME support.
-	// If yes, the crostiniBullseyeLargeContainerClamshellWithIME will be used.
-	// When setting this to True always set the IMEName field as well.
-	// TODO(b/272366776): Remove this field along with the above fixtures after the
-	// Crostini IME flag is enabled by default.
-	TestIME bool
-
 	// IMEName is used to specify the name of the input method being tested.
 	// This name will be used in naming the test and as a test Val.
+	// A non-empty value implies NoBusterTest=true and devicemode.ClamshellMode.
 	// If no additional input_method is used, set as empty string.
 	IMEName string
 
@@ -260,7 +254,6 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 	}
 
 	var itLacros = []iterator{{debianVersion: vm.DebianBullseye, stable: true}}
-	var itIME = []iterator{{debianVersion: vm.DebianBullseye, stable: true}, {debianVersion: vm.DebianBullseye, stable: false}}
 
 	for _, testCase := range baseCases {
 		// Check here if it's possible for any iteration of
@@ -274,8 +267,12 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			}
 		}
 
-		iterate := func(i iterator, bt browser.Type, isIME bool, IMEName string) {
+		if testCase.IMEName != "" {
+			testCase.NoBusterTest = true
+			testCase.DeviceMode = devicemode.ClamshellMode
+		}
 
+		iterate := func(i iterator, bt browser.Type) {
 			if (testCase.IsNotMainline || testCase.OnlyStableBoards) && !i.stable {
 				// The stable/unstable distinction is only important for mainline tests
 				return
@@ -308,8 +305,8 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				name = combineName(name, testCase.DeviceMode.String())
 			}
 
-			if isIME && IMEName != "" {
-				name = combineName(name, IMEName)
+			if testCase.IMEName != "" {
+				name = combineName(name, testCase.IMEName)
 			}
 
 			if !testCase.IsNotMainline && !testCase.OnlyStableBoards {
@@ -367,8 +364,6 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			if testCase.UseFixture {
 				if testCase.SelfManagedInstall {
 					fixture = ""
-				} else if isIME {
-					fixture = "\"crostiniBullseyeLargeContainerClamshellWithIME\""
 				} else if testCase.UseLargeContainer {
 					suffix := ""
 					if testCase.DeviceMode == devicemode.TabletMode {
@@ -438,18 +433,12 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			result = append(result, testParam)
 		}
 
-		if testCase.TestIME {
-			for _, i := range itIME {
-				iterate(i, "", true /* isIME */, testCase.IMEName)
-			}
-		} else {
-			for _, i := range itChrome {
-				iterate(i, "", false /* isIME */, "")
-			}
+		for _, i := range itChrome {
+			iterate(i, "")
 		}
 		if testCase.TestLacros {
 			for _, i := range itLacros {
-				iterate(i, browser.TypeLacros, false /* isIME */, "")
+				iterate(i, browser.TypeLacros)
 			}
 		}
 	}

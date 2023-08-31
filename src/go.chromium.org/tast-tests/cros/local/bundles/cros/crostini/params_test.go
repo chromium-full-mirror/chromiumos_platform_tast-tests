@@ -284,6 +284,13 @@ var appClamshellOnlyTests = []string{
 	"app_emacs_window_operations.go",
 	"app_firefox_window_operations.go",
 	"app_vscode_window_operations.go",
+	"app_firefox_emoji.go",
+	"app_gedit_emoji.go",
+	"app_vscode_emoji.go",
+	"app_firefox_nonalphanumeric_input.go",
+	"app_gedit_nonalphanumeric_input.go",
+	"app_vscode_nonalphanumeric_input.go",
+	"app_gedit_switch_ime.go",
 }
 
 func TestAppClamshellOnlyTestParams(t *testing.T) {
@@ -297,6 +304,7 @@ func TestAppClamshellOnlyTestParams(t *testing.T) {
 				UseLargeContainer:   true,
 				UseFixture:          true,
 				DeviceMode:          devicemode.ClamshellMode,
+				NoBusterTest:        true,
 			}})
 		genparams.Ensure(t, filename, params)
 	}
@@ -355,43 +363,12 @@ func TestAppIMELanguageTestParams(t *testing.T) {
 			ExtraSoftwareDeps:   []string{"crostini_app"},
 			UseLargeContainer:   true,
 			UseFixture:          true,
-			DeviceMode:          devicemode.ClamshellMode,
-			TestIME:             true,
 			IMEName:             imeName,
 			Val:                 "\"" + imeName + "\"",
 		})
 	}
 	for _, filename := range appIMELanguageTests {
 		params := crostini.MakeTestParamsFromList(t, imeParams)
-		genparams.Ensure(t, filename, params)
-	}
-}
-
-// TODO(b/272366776) move to clamshell only when the flag is enabled by default.
-var appIMEFlagTests = []string{
-	"app_firefox_emoji.go",
-	"app_gedit_emoji.go",
-	"app_vscode_emoji.go",
-	"app_firefox_nonalphanumeric_input.go",
-	"app_gedit_nonalphanumeric_input.go",
-	"app_vscode_nonalphanumeric_input.go",
-	"app_gedit_switch_ime.go",
-}
-
-func TestAppIMEFlagTestParams(t *testing.T) {
-	for _, filename := range appIMEFlagTests {
-		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
-			{
-				Timeout:             15 * time.Minute,
-				StableHardwareDep:   "crostini.CrostiniAppStable",
-				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
-				ExtraSoftwareDeps:   []string{"crostini_app"},
-				UseLargeContainer:   true,
-				UseFixture:          true,
-				DeviceMode:          devicemode.ClamshellMode,
-				TestIME:             true,
-				IMEName:             "",
-			}})
 		genparams.Ensure(t, filename, params)
 	}
 }

@@ -73,20 +73,6 @@ func init() {
 		Data:            []string{GetContainerMetadataArtifact("bullseye", true), GetContainerRootfsArtifact("bullseye", true)},
 	})
 
-	//  Tablet mode is not supported with IME enabled for now, so only Clamshell fixtures are available.
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBullseyeLargeContainerClamshellWithIME",
-		Desc:            "Install Crostini with Bullseye in large container with apps installed in clamshell mode, with IME support enabled",
-		Contacts:        []string{"clumptini@google.com", "sophialin@google.com"},
-		Impl:            &crostiniAppsFixture{deviceMode: devicemode.ClamshellMode},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout + restartCrostiniTimeout,
-		Parent:          "crostiniBullseyeLargeContainerWithIME",
-		Vars:            append([]string{"keepState"}, screenshot.ScreenDiffVars...),
-		Data:            []string{GetContainerMetadataArtifact("bullseye", true), GetContainerRootfsArtifact("bullseye", true)},
-	})
-
 }
 
 // crostiniAppsFixture holds the runtime state of the fixture.
