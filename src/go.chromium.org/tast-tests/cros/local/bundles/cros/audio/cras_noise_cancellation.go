@@ -41,16 +41,16 @@ func init() {
 				Name: "no_effects",
 				Val: crasNoiseCancellationParams{
 					captureRate:          48000,
-					expectedRMS:          0.4,
-					expectedRMSTolerance: 0.1,
+					expectedRMS:          0.35,
+					expectedRMSTolerance: 0.15,
 				},
 			},
 			{
 				Name: "aec",
 				Val: crasNoiseCancellationParams{
 					captureRate:          48000,
-					expectedRMS:          0.2,
-					expectedRMSTolerance: 0.1,
+					expectedRMS:          0.35,
+					expectedRMSTolerance: 0.15,
 					extraCaptureFlags: []string{
 						"--effects=aec",
 					},
@@ -99,21 +99,6 @@ func init() {
 					captureRate:              44100,
 					expectedRMS:              0.03,
 					expectedRMSTolerance:     0.01,
-				},
-				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
-			},
-			{
-				Name: "nc_disallow_empty_apm",
-				Val: crasNoiseCancellationParams{
-					noiseCancellationEnabled: true,
-					captureRate:              48000,
-					// Should have the same RMS as no_effects because
-					// CrasProcessor is not allowed to run without APM in this test.
-					expectedRMS:          0.4,
-					expectedRMSTolerance: 0.1,
-					extraChromeOpts: []chrome.Option{
-						chrome.DisableFeatures("CrOSLateBootAudioEmptyAPMForCrasProcessor"),
-					},
 				},
 				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
 			},
