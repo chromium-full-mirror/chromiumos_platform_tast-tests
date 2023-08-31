@@ -109,6 +109,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_60"},
 				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264.mp4"},
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly", "group:crosbolt", "crosbolt_fsi_check"},
 				Fixture:           "chromeVideo",
 			},
 			{
@@ -344,6 +345,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60"},
 				ExtraData:         []string{"perf/vp9/1080p_60fps_600frames.vp9.webm"},
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly", "group:crosbolt", "crosbolt_fsi_check"},
 				Fixture:           "chromeVideo",
 			},
 			{

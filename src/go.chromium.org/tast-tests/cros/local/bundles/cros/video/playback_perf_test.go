@@ -92,6 +92,7 @@ type playbackParamData struct {
 	Data         []string
 	Attr         []string
 	Fixture      string
+	ExtraAttr    []string
 }
 
 func genPlaybackParam(codec, file string, resolution, fps int, dec, nameSuffix, fixture string, extendDeps []string) playbackParamData {
@@ -129,7 +130,11 @@ func genPlaybackParam(codec, file string, resolution, fps int, dec, nameSuffix, 
 	if len(extendDeps) > 0 {
 		deps = append(deps, extendDeps...)
 	}
-
+	// FSI folks only want h264_1080p_60fps_hw and vp9_1080p_60fps_hw.
+	var extraAttr []string
+	if (codec == "h264" || codec == "vp9") && resolution == 1080 && fps == 60 && dec == "hw" && fixture == "chromeVideo" {
+		extraAttr = []string{"group:graphics", "graphics_video", "graphics_nightly", "group:crosbolt", "crosbolt_fsi_check"}
+	}
 	return playbackParamData{
 		Name:         testName,
 		File:         file,
@@ -138,6 +143,7 @@ func genPlaybackParam(codec, file string, resolution, fps int, dec, nameSuffix, 
 		SoftwareDeps: deps,
 		Data:         []string{file},
 		Fixture:      fixture,
+		ExtraAttr:    extraAttr,
 	}
 }
 
@@ -354,7 +360,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 						// More than 10 videos in parallel is too much for Grunt, see b/290637628.
 						param.HardwareDeps = "hwdep.SkipGPUFamily(\"stoney\")"
 					}
-					param.Attr = []string{"group:graphics", "graphics_video", "graphics_nightly"}
+					param.ExtraAttr = []string{"group:graphics", "graphics_video", "graphics_nightly"}
 					params = append(params, param)
 				}
 			}
@@ -401,8 +407,8 @@ func TestPlaybackPerfParams(t *testing.T) {
 		ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},
 		{{ end }}
 		ExtraData: {{ .Data | fmt }},
-		{{ if .Attr }}
-		ExtraAttr: {{ .Attr | fmt }},
+		{{ if .ExtraAttr }}
+		ExtraAttr: {{ .ExtraAttr | fmt }},
 		{{ end }}
 		Fixture: {{ .Fixture | fmt }},
 	},
