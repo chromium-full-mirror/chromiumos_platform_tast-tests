@@ -33,17 +33,18 @@ func init() {
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
-		Timeout:      1 * time.Minute,
 		Params: []testing.Param{{
 			Name: "oobe",
 			Val: testParam{
 				login: false,
 			},
+			Timeout: 1 * time.Minute,
 		}, {
 			Name: "login",
 			Val: testParam{
 				login: true,
 			},
+			Timeout: chrome.GAIALoginTimeout + 30*time.Second,
 		},
 		},
 	})
