@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -19,6 +20,20 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+type testCase struct {
+	// user is the username to log in.
+	user      string
+	isManaged bool
+	// pass is the password used to log in - only used if isManaged is set.
+	pass            string
+	enabledFeatures []string
+	// whether glanceables are hidden if the policy value is not set
+	showBubblesWithoutPolicy bool
+	showStudentBubble        bool
+	showTeacherBubble        bool
+	showTaskBubble           bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -45,6 +60,107 @@ func init() {
 			"glanceables.Smoke.regularUsername",
 			"glanceables.Smoke.regularPassword",
 		},
+		VarDeps: []string{"ui.gaiaPoolDefault"},
+		Params: []testing.Param{{
+			Name: "student",
+			Val: testCase{
+				isManaged:         true,
+				user:              "glanceables.Smoke.studentUsername",
+				pass:              "glanceables.Smoke.studentPassword",
+				enabledFeatures:   []string{"GlanceablesV2"},
+				showStudentBubble: true,
+				showTeacherBubble: false,
+				showTaskBubble:    true,
+			},
+		}, {
+			Name: "student_trusted_tester",
+			Val: testCase{
+				isManaged:         true,
+				user:              "glanceables.Smoke.studentUsername",
+				pass:              "glanceables.Smoke.studentPassword",
+				enabledFeatures:   []string{"GlanceablesV2TrustedTesters"},
+				showStudentBubble: true,
+				showTeacherBubble: false,
+				showTaskBubble:    true,
+			},
+		}, {
+			Name: "teacher",
+			Val: testCase{
+				isManaged:         true,
+				user:              "glanceables.Smoke.teacherUsername",
+				pass:              "glanceables.Smoke.teacherPassword",
+				enabledFeatures:   []string{"GlanceablesV2,GlanceablesV2ClassroomTeacherView"},
+				showStudentBubble: false,
+				showTeacherBubble: true,
+				showTaskBubble:    true,
+			},
+		}, {
+			Name: "teacher_trusted_tester",
+			Val: testCase{
+				isManaged:         true,
+				user:              "glanceables.Smoke.teacherUsername",
+				pass:              "glanceables.Smoke.teacherPassword",
+				enabledFeatures:   []string{"GlanceablesV2TrustedTesters"},
+				showStudentBubble: false,
+				showTeacherBubble: false,
+				showTaskBubble:    true,
+			},
+		}, {
+			Name: "teacher_trusted_tester_with_teacher_view",
+			Val: testCase{
+				isManaged:         true,
+				user:              "glanceables.Smoke.teacherUsername",
+				pass:              "glanceables.Smoke.teacherPassword",
+				enabledFeatures:   []string{"GlanceablesV2TrustedTesters,GlanceablesV2ClassroomTeacherView"},
+				showStudentBubble: false,
+				showTeacherBubble: true,
+				showTaskBubble:    true,
+			},
+		}, {
+			Name: "managed",
+			Val: testCase{
+				isManaged:         true,
+				user:              "glanceables.Smoke.regularUsername",
+				pass:              "glanceables.Smoke.regularPassword",
+				enabledFeatures:   []string{"GlanceablesV2"},
+				showStudentBubble: false,
+				showTeacherBubble: false,
+				showTaskBubble:    true,
+			},
+		}, {
+			Name: "managed_trusted_tester",
+			Val: testCase{
+				isManaged:         true,
+				user:              "glanceables.Smoke.regularUsername",
+				pass:              "glanceables.Smoke.regularPassword",
+				enabledFeatures:   []string{"GlanceablesV2TrustedTesters"},
+				showStudentBubble: false,
+				showTeacherBubble: false,
+				showTaskBubble:    true,
+			},
+		}, {
+			Name: "regular",
+			Val: testCase{
+				isManaged:         false,
+				user:              "",
+				pass:              "",
+				enabledFeatures:   []string{"GlanceablesV2"},
+				showStudentBubble: false,
+				showTeacherBubble: false,
+				showTaskBubble:    true,
+			},
+		}, {
+			Name: "regular_trusted_tester_flag",
+			Val: testCase{
+				isManaged:         false,
+				user:              "",
+				pass:              "",
+				enabledFeatures:   []string{"GlanceablesV2TrustedTesters"},
+				showStudentBubble: false,
+				showTeacherBubble: false,
+				showTaskBubble:    false,
+			},
+		}},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.ManagedUserLoginTimeout + 5*time.Minute,
 	})
@@ -56,151 +172,111 @@ func Smoke(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	teacherView := nodewith.ClassName("ClassroomBubbleTeacherView")
-	studentView := nodewith.ClassName("ClassroomBubbleStudentView")
-	tasksView := nodewith.ClassName("TasksBubbleView")
-	policies := []policy.Policy{&policy.GlanceablesEnabled{Val: true}}
+	param := s.Param().(testCase)
 
-	for _, param := range []struct {
-		// name is the subtest name.
-		name string
-		// user is the username to log in.
-		user string
-		// pass is the password used to log in.
-		pass              string
-		enabledFeatures   []string
-		showStudentBubble bool
-		showTeacherBubble bool
-		showTaskBubble    bool
-	}{
-		{
-			name:              "student",
-			user:              s.RequiredVar("glanceables.Smoke.studentUsername"),
-			pass:              s.RequiredVar("glanceables.Smoke.studentPassword"),
-			enabledFeatures:   []string{"GlanceablesV2"},
-			showStudentBubble: true,
-			showTeacherBubble: false,
-			showTaskBubble:    true,
-		},
-		{
-			name:              "teacher",
-			user:              s.RequiredVar("glanceables.Smoke.teacherUsername"),
-			pass:              s.RequiredVar("glanceables.Smoke.teacherPassword"),
-			enabledFeatures:   []string{"GlanceablesV2", "GlanceablesV2ClassroomTeacherView"},
-			showStudentBubble: false,
-			showTeacherBubble: true,
-			showTaskBubble:    true,
-		},
-		{
-			name:              "managed",
-			user:              s.RequiredVar("glanceables.Smoke.regularUsername"),
-			pass:              s.RequiredVar("glanceables.Smoke.regularPassword"),
-			enabledFeatures:   []string{"GlanceablesV2"},
-			showStudentBubble: false,
-			showTeacherBubble: false,
-			showTaskBubble:    true,
-		},
-	} {
-		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
-			fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), param.user, policies)
-			if err != nil {
-				s.Fatal("Failed to setup fake policy server: ", err)
-			}
-			defer fdms.Stop(cleanupCtx)
+	var opts []chrome.Option
+	var policies []policy.Policy
+	var fdms *fakedms.FakeDMS
+	if param.isManaged {
+		policies = []policy.Policy{&policy.GlanceablesEnabled{Val: true}}
 
-			opts := []chrome.Option{
-				chrome.EnableFeatures(param.enabledFeatures...),
-				chrome.GAIALogin(chrome.Creds{User: param.user, Pass: param.pass}),
-				chrome.DMSPolicy(fdms.URL),
-			}
+		fdmsLocal, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), s.RequiredVar(param.user), policies)
+		if err != nil {
+			s.Fatal("Failed to setup fake policy server: ", err)
+		}
+		fdms = fdmsLocal
+		defer fdms.Stop(cleanupCtx)
 
-			cr, err := chrome.New(ctx, opts...)
-			if err != nil {
-				s.Fatal("Chrome login failed: ", err)
-			}
-			defer cr.Close(ctx)
-
-			tconn, err := cr.TestAPIConn(ctx)
-			if err != nil {
-				s.Fatal("Failed to create Test API connection: ", err)
-			}
-
-			// Ensure chrome://policy shows correct GlanceablesEnabled value.
-			if err := policyutil.Verify(ctx, tconn, policies); err != nil {
-				s.Fatal("Failed to verify the value of GlanceablesEnabled policy: ", err)
-			}
-
-			ui := uiauto.New(tconn)
-
-			if err := openGlanceablesBubble(ctx, ui); err != nil {
-				s.Fatal("Failed to open the glanceables bubble: ", err)
-			}
-			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
-
-			isUIElementVisible, err := isGlanceablesBubbleVisible(ctx, ui, studentView)
-			if err != nil {
-				s.Fatal("Failed to check visibility of glanceables student bubble: ", err)
-			}
-			if isUIElementVisible != param.showStudentBubble {
-				s.Fatalf("Unexpected glanceables student bubble visibility state: got %t expected %t", isUIElementVisible, param.showStudentBubble)
-			}
-
-			isUIElementVisible, err = isGlanceablesBubbleVisible(ctx, ui, teacherView)
-			if err != nil {
-				s.Fatal("Failed to check visibility of glanceables teacher bubble: ", err)
-			}
-			if isUIElementVisible != param.showTeacherBubble {
-				s.Fatalf("Unexpected glanceables teacher bubble visibility state: got %t expected %t", isUIElementVisible, param.showTeacherBubble)
-			}
-
-			isUIElementVisible, err = isGlanceablesBubbleVisible(ctx, ui, tasksView)
-			if err != nil {
-				s.Fatal("Failed to check visibility of glanceables tasks bubble: ", err)
-			}
-			if isUIElementVisible != param.showTaskBubble {
-				s.Fatalf("Unexpected glanceables tasks bubble visibility state: got %t expected %t", isUIElementVisible, param.showStudentBubble)
-			}
-
-			// Close the date tray.
-			dateTray := nodewith.HasClass("DateTray")
-			if err := ui.DoDefault(dateTray)(ctx); err != nil {
-				s.Fatal("Failed to close the date tray: ", err)
-			}
-
-			// Serve disabled policy and refresh policies to trigger the UI update.
-			if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{&policy.GlanceablesEnabled{Val: false}}); err != nil {
-				s.Fatal("Failed to reset policies in Chrome: ", err)
-			}
-
-			if err := openGlanceablesBubble(ctx, ui); err != nil {
-				s.Fatal("Failed to open the glanceables bubble: ", err)
-			}
-
-			isUIElementVisible, err = isGlanceablesBubbleVisible(ctx, ui, studentView)
-			if err != nil {
-				s.Fatal("Failed to check visibility of glanceables student bubble: ", err)
-			}
-			if isUIElementVisible != false {
-				s.Fatalf("Unexpected glanceables student bubble visibility state: got %t expected %t", isUIElementVisible, false)
-			}
-
-			isUIElementVisible, err = isGlanceablesBubbleVisible(ctx, ui, teacherView)
-			if err != nil {
-				s.Fatal("Failed to check visibility of glanceables teacher bubble: ", err)
-			}
-			if isUIElementVisible != false {
-				s.Fatalf("Unexpected glanceables teacher bubble visibility state: got %t expected %t", isUIElementVisible, false)
-			}
-
-			isUIElementVisible, err = isGlanceablesBubbleVisible(ctx, ui, tasksView)
-			if err != nil {
-				s.Fatal("Failed to check visibility of glanceables tasks bubble: ", err)
-			}
-			if isUIElementVisible != false {
-				s.Fatalf("Unexpected glanceables tasks bubble visibility state: got %t expected %t", isUIElementVisible, false)
-			}
-		})
+		opts = []chrome.Option{
+			chrome.EnableFeatures(param.enabledFeatures...),
+			chrome.GAIALogin(chrome.Creds{User: s.RequiredVar(param.user), Pass: s.RequiredVar(param.pass)}),
+			chrome.DMSPolicy(fdms.URL),
+		}
+	} else {
+		opts = []chrome.Option{
+			chrome.EnableFeatures(param.enabledFeatures...),
+			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		}
 	}
+
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		s.Fatal("Chrome login failed: ", err)
+	}
+	defer cr.Close(cleanupCtx)
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
+	}
+
+	if param.isManaged {
+		// Ensure chrome://policy shows correct GlanceablesEnabled value.
+		if err := policyutil.Verify(ctx, tconn, policies); err != nil {
+			s.Fatal("Failed to verify the value of GlanceablesEnabled policy: ", err)
+		}
+	}
+
+	ui := uiauto.New(tconn)
+
+	if err := verifyGlanceableBubblesVisibility(ctx, ui, param.showTaskBubble, param.showStudentBubble, param.showTeacherBubble); err != nil {
+		s.Fatal("Failed verifying bubbles with initial glanceables policy: ", err)
+	}
+
+	if param.isManaged {
+		// Serve disabled policy and refresh policies to trigger the UI update.
+		if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{&policy.GlanceablesEnabled{Val: false}}); err != nil {
+			s.Fatal("Failed to reset policies in Chrome: ", err)
+		}
+
+		if err := verifyGlanceableBubblesVisibility(ctx, ui, false, false, false); err != nil {
+			s.Fatal("Failed verifying bubbles with glanceables disabled by policy: ", err)
+		}
+	}
+}
+
+// verifyGlanceableBubblesVisibility shows time management surface by pressing date tray, and verifies visibility of different bubbles within the UI surface.
+func verifyGlanceableBubblesVisibility(ctx context.Context, ui *uiauto.Context, showTaskBubble, showStudentBubble, showTeacherBubble bool) error {
+	if err := openGlanceablesBubble(ctx, ui); err != nil {
+		return errors.Wrap(err, "failed to open the glanceables bubble")
+	}
+
+	studentView := nodewith.ClassName("ClassroomBubbleStudentView")
+	isUIElementVisible, err := isGlanceablesBubbleVisible(ctx, ui, studentView)
+	if err != nil {
+		return errors.Wrap(err, "failed to check visibility of glanceables student bubble")
+	}
+	if isUIElementVisible != showStudentBubble {
+		return errors.Wrapf(err, "unexpected glanceables student bubble visibility state: got %t expected %t", isUIElementVisible, showStudentBubble)
+	}
+
+	teacherView := nodewith.ClassName("ClassroomBubbleTeacherView")
+	isUIElementVisible, err = isGlanceablesBubbleVisible(ctx, ui, teacherView)
+	if err != nil {
+		return errors.Wrap(err, "failed to check visibility of glanceables teacher bubble")
+	}
+	if isUIElementVisible != showTeacherBubble {
+		return errors.Wrapf(err, "unexpected glanceables teacher bubble visibility state: got %t expected %t", isUIElementVisible, showTeacherBubble)
+	}
+
+	tasksView := nodewith.ClassName("TasksBubbleView")
+	isUIElementVisible, err = isGlanceablesBubbleVisible(ctx, ui, tasksView)
+	if err != nil {
+		return errors.Wrap(err, "failed to check visibility of glanceables tasks bubble")
+	}
+	if isUIElementVisible != showTaskBubble {
+		return errors.Wrapf(err, "unexpected glanceables tasks bubble visibility state: got %t expected %t", isUIElementVisible, showTaskBubble)
+	}
+
+	// Close the date tray.
+	dateTray := nodewith.HasClass("DateTray")
+	if err := ui.DoDefault(dateTray)(ctx); err != nil {
+		return errors.Wrap(err, "failed to close the date tray")
+	}
+
+	return nil
 }
 
 // openGlanceablesBubble Opens the glanceables bubble by clicking on the shelf date tray and waits until the calendar view shows.
