@@ -9,11 +9,17 @@ import (
 )
 
 // TestMetrics returns a slice of metrics that should be used for power tests.
+// Some DUTs have no ChromeEC, do ChromeECSupported check before adding TestMetrics.
 func TestMetrics() []perf.TimelineDatasource {
+	return append(TestMetricsWithoutBatteryInfo(), NewSysfsBatteryMetrics())
+}
+
+// TestMetricsWithoutBatteryInfo returns a slice of metrics that should be used
+// for power metrics without battery metrics.
+func TestMetricsWithoutBatteryInfo() []perf.TimelineDatasource {
 	return []perf.TimelineDatasource{
 		NewCpuidleStateMetrics(),
 		NewRAPLPowerMetrics(),
-		NewSysfsBatteryMetrics(),
 		NewSysfsThermalMetrics(),
 		NewPackageCStatesMetrics(),
 		NewProcfsCPUMetrics(),

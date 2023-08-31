@@ -32,6 +32,7 @@ import (
 	perfSrc "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -1048,8 +1049,18 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		}
 
 		// Create a power timeline aligned with r.startedAtTm.
+		// Some DUTs have no ChromeEC which cannot support battery metrics collecting.
+		// Assign different metrics accordingly by checking whether /dev/cros exists.
+		var powerTestMetrics []perf.TimelineDatasource
+		if util.ChromeECInfo(ctx) != nil {
+			testing.ContextLog(ctx, "Device has ChromeEC")
+			powerTestMetrics = power.TestMetrics()
+		} else {
+			testing.ContextLog(ctx, "Device has no ChromeEC")
+			powerTestMetrics = power.TestMetricsWithoutBatteryInfo()
+		}
 		r.powerTimeline, err = perf.NewTimeline(ctx,
-			power.TestMetrics(),
+			powerTestMetrics,
 			perf.Interval(checkInterval), perf.Prefix(powerMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create power timeline")

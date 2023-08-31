@@ -13,8 +13,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/util"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -61,13 +61,8 @@ func NewBatteryInfoTracker(ctx context.Context, metricPrefix string) (*BatteryIn
 		return nil, nil
 	}
 
-	// Drallion does not support automated power testing (see b/277659498#comment4).
-	model, err := crosconfig.Get(ctx, "/", "name")
-	if err != nil {
-		return nil, errors.Wrap(err, "could not find model name")
-	}
-	if strings.Contains(model, "drallion") {
-		testing.ContextLog(ctx, "Drallion does not support automated power testing, continuing the test without battery info")
+	if util.ChromeECInfo(ctx) == nil {
+		testing.ContextLog(ctx, "DUT does not support ChromeEC, continue the test without battery info")
 		return nil, nil
 	}
 

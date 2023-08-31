@@ -77,17 +77,27 @@ func GetFirmwareVersion(ctx context.Context) string {
 	return strings.TrimSpace(string(readResult))
 }
 
-// GetECVersion returns the EC version.
-func GetECVersion(ctx context.Context) string {
-	const path = "/dev/cros_ec"
-	f, err := os.ReadFile(path)
+const crosECPath = "/dev/cros_ec"
+
+// ChromeECInfo returns EC info and it would be nil if the DUT has no ChromeEC.
+func ChromeECInfo(ctx context.Context) []byte {
+	f, err := os.ReadFile(crosECPath)
 	if err != nil {
 		testing.ContextLog(ctx, "Device does not have a chromium EC")
+		return nil
+	}
+	return f
+}
+
+// GetECVersion returns the EC version.
+func GetECVersion(ctx context.Context) string {
+	f := ChromeECInfo(ctx)
+	if f == nil {
 		return getWilcoECVersion(ctx)
 	}
 	ecInfo := strings.Split(strings.TrimSpace(string(f)), "\n")
 	if len(ecInfo) != 4 {
-		testing.ContextLogf(ctx, "Failed to parse EC dev file: %s has %d lines", path, len(ecInfo))
+		testing.ContextLogf(ctx, "Failed to parse EC dev file: %s has %d lines", crosECPath, len(ecInfo))
 		return ""
 	}
 	activeCopy := ecInfo[3]
