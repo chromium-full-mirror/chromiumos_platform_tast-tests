@@ -466,14 +466,9 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	// devices after initial experiments are conducted on local and vm-tm configs.
 	useDevCaches := (tmpCachesDir != "" && (!param.upload || param.androidPackage == "android-vm-tm"))
 	if useDevCaches {
-		if err := dututils.RemoveAllRemote(ctx, d, tmpCachesDir); err != nil {
-			s.Fatalf("Failed to cleanup temp cache dir %q:  %v", tmpCachesDir, err)
-		}
-		if err := dututils.MkdirRemote(ctx, d, tmpCachesDir); err != nil {
-			s.Fatalf("Failed to create temp cache dir %q:  %v", tmpCachesDir, err)
-		}
+		// Make sure we clean up after ureadahead generation is finished using dev caches.
+		defer dututils.RemoveAllRemote(ctx, d, tmpCachesDir)
 	}
-	defer dututils.RemoveAllRemote(ctx, d, tmpCachesDir)
 
 	genUreadaheadPack := func() (retErr error) {
 		service := arc.NewUreadaheadPackServiceClient(cl.Conn)
@@ -627,6 +622,13 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		}
 
 		if useDevCaches {
+			if err := dututils.RemoveAllRemote(ctx, d, tmpCachesDir); err != nil {
+				s.Fatalf("Failed to cleanup temp cache dir %q:  %v", tmpCachesDir, err)
+			}
+			if err := dututils.MkdirRemote(ctx, d, tmpCachesDir); err != nil {
+				s.Fatalf("Failed to create temp cache dir %q:  %v", tmpCachesDir, err)
+			}
+
 			if err := decompressSystemImage(ctx, d, param.vmEnabled, tempDir); err != nil {
 				s.Fatal("Failed to decompress system image: ", err)
 			}
