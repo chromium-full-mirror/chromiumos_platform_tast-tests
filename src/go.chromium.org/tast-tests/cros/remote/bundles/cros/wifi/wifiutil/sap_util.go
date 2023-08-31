@@ -201,14 +201,13 @@ func ValidateResourceInfo(ctx context.Context, ri1, ri2 ResourceInfo, thr Resour
 
 // SAPAssocStressRound connects peer DUT to the softAP on the main DUT, then confirms connection by running a short ping burst.
 func SAPAssocStressRound(ctx context.Context, tf *wificell.TestFixture, tetheringConf *tethering.Config) (retErr error) {
-	cdIdx := wificell.DutIdx(1)
-	_, err := tf.ConnectWifiFromDUT(ctx, cdIdx, tetheringConf.SSID, dutcfg.ConnSecurity(tetheringConf.SecConf))
+	_, err := tf.ConnectWifiFromDUT(ctx, wificell.PeerDUT1, tetheringConf.SSID, dutcfg.ConnSecurity(tetheringConf.SecConf))
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to Soft AP")
 	}
 	// Defer disconnect just in case something breaks.
 	defer func(ctx context.Context) {
-		err = tf.DisconnectDUTFromWifi(ctx, cdIdx)
+		err = tf.DisconnectDUTFromWifi(ctx, wificell.PeerDUT1)
 		if retErr != nil {
 			// We can't overwrite ret value.
 			if err != nil {
@@ -236,7 +235,7 @@ func SAPAssocStressRound(ctx context.Context, tf *wificell.TestFixture, tetherin
 	if err != nil {
 		return errors.Wrapf(err, "failed to parse IP address %s", addrsResp.Ipv4[0])
 	}
-	res, err := tf.PingFromSpecificDUT(ctx, cdIdx, addr.String(), ping.Interval(0.1), ping.Count(3))
+	res, err := tf.PingFromSpecificDUT(ctx, wificell.PeerDUT1, addr.String(), ping.Interval(0.1), ping.Count(3))
 	if err != nil {
 		return errors.Wrap(err, "failed to ping from Companion DUT to DUT")
 	}

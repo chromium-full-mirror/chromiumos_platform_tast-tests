@@ -119,7 +119,7 @@ func EnableHotspotWithQuickSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify no devices connected message in hotspot detailed page: ", err)
 	}
 
-	disconnectDUT, err := tf.ConnectCompanionDUTToHotspot(ctx, wificell.PeerDUT, wificell.DefaultDUT)
+	disconnectDUT, err := tf.ConnectCompanionDUTToHotspot(ctx, wificell.PeerDUT1, wificell.DefaultDUT)
 	if err != nil {
 		s.Fatal("Failed to connect companion DUT to hotspot: ", err)
 	}

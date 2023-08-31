@@ -374,13 +374,12 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 		defer cancel()
 		s.Log("Tethering session started")
 
-		cdIdx := wificell.DutIdx(1)
-		_, err = tf.ConnectWifiFromDUT(ctx, cdIdx, tetheringConf.SSID, dutcfg.ConnSecurity(tetheringConf.SecConf))
+		_, err = tf.ConnectWifiFromDUT(ctx, wificell.PeerDUT1, tetheringConf.SSID, dutcfg.ConnSecurity(tetheringConf.SecConf))
 		if err != nil {
 			s.Fatal("Failed to connect to Soft AP, err: ", err)
 		}
 		defer func(ctx context.Context) {
-			if err := tf.DisconnectDUTFromWifi(ctx, cdIdx); err != nil {
+			if err := tf.DisconnectDUTFromWifi(ctx, wificell.PeerDUT1); err != nil {
 				s.Error("Failed to disconnect from Soft AP, err: ", err)
 			}
 		}(ctx)

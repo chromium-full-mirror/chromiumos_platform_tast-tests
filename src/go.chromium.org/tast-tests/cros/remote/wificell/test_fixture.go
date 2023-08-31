@@ -235,11 +235,6 @@ const (
 
 	// ChromeFeatureHotspot is the name of the hotspot feature flag
 	ChromeFeatureHotspot = "Hotspot"
-
-	// DefaultDUT is the default DUT index (0).
-	DefaultDUT = 0
-	// PeerDUT is the peer DUT index (1).
-	PeerDUT = 1
 )
 
 // TODO(b/234845693): make that an independent structure.
@@ -274,8 +269,19 @@ const (
 	// TODO(b/231261132): add Android phones as GO/Client options.
 )
 
-// DutIdx is the type used for DUT Index.
+// DutIdx is the type used for DUT index in TestFixture.duts.
+//
+// Use one of the known constants below rather than initializing this directly.
 type DutIdx int
+
+// Known DutIdx values.
+const (
+	// DefaultDUT is the DutIdx of the default dut.
+	DefaultDUT DutIdx = 0
+
+	// PeerDUT1 is the DutIdx of the first peer/companion dut.
+	PeerDUT1 DutIdx = 1
+)
 
 // TestFixture sets up the context for a basic WiFi test.
 type TestFixture struct {
@@ -463,7 +469,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 			return nil, errors.Wrap(err, "failed to InitDUT")
 		}
 
-		if tf.option.cellularRequired && idx == DefaultDUT {
+		if tf.option.cellularRequired && DutIdx(idx) == DefaultDUT {
 			d.cellularClient = cellular.NewRemoteCellularServiceClient(d.rpc.Conn)
 		}
 
@@ -1780,7 +1786,7 @@ func (tf *TestFixture) P2PDeviceConn(ctx context.Context, device P2PDevice) (*du
 	case P2PDeviceDUT:
 		return tf.duts[DefaultDUT].dut, nil
 	case P2PDeviceCompanionDUT:
-		return tf.duts[PeerDUT].dut, nil
+		return tf.duts[PeerDUT1].dut, nil
 	}
 	return nil, errors.Errorf("unexpected P2P device type: %d", device)
 }
@@ -1859,7 +1865,7 @@ func (tf *TestFixture) P2PConfigureClient(ctx context.Context, device P2PDevice)
 
 	wpar := remotewpacli.NewRemoteRunner(tf.p2pClient.Conn())
 
-	if err := wpar.DiscoverNetwork(ctx, tf.duts[PeerDUT].dut.Conn(), tf.p2pGroupSSID); err != nil {
+	if err := wpar.DiscoverNetwork(ctx, tf.duts[PeerDUT1].dut.Conn(), tf.p2pGroupSSID); err != nil {
 		return err
 	}
 	tf.p2pClientNetID, err = wpar.P2PAddGONetwork(ctx, tf.p2pGroupSSID, tf.p2pGroupPassphrase)
@@ -2065,12 +2071,12 @@ func (tf *TestFixture) SAPPerf(ctx context.Context, protocol iperf.Protocol, rev
 		return nil, errors.New("no AP IP address returned")
 	}
 	apIP := strings.Split(addrsRespAP.Ipv4[0], "/")[0]
-	ifResp, err := tf.DUTWifiClient(DutIdx(1)).GetInterface(ctx, &emptypb.Empty{})
+	ifResp, err := tf.DUTWifiClient(PeerDUT1).GetInterface(ctx, &emptypb.Empty{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get interface name")
 	}
 	addrsReq.InterfaceName = ifResp.GetName()
-	addrsRespAP, err = tf.DUTWifiClient(DutIdx(1)).GetIPv4Addrs(ctx, addrsReq)
+	addrsRespAP, err = tf.DUTWifiClient(PeerDUT1).GetIPv4Addrs(ctx, addrsReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get the IPv4 addresses")
 	}
@@ -2083,13 +2089,13 @@ func (tf *TestFixture) SAPPerf(ctx context.Context, protocol iperf.Protocol, rev
 	var serverConn, clientConn *ssh.Conn
 	if reverse {
 		// Configuring AP as an iperf client and STA as an iperf server.
-		serverConn = tf.DUT(DutIdx(1)).Conn()
+		serverConn = tf.DUT(PeerDUT1).Conn()
 		clientConn = tf.DUT(DefaultDUT).Conn()
 		perfConfig, err = iperf.NewConfig(protocol, apIP, staIP, opts...)
 	} else {
 		// Configuring AP as an iperf server and STA as an iperf client.
 		serverConn = tf.DUT(DefaultDUT).Conn()
-		clientConn = tf.DUT(DutIdx(1)).Conn()
+		clientConn = tf.DUT(PeerDUT1).Conn()
 		perfConfig, err = iperf.NewConfig(protocol, staIP, apIP, opts...)
 	}
 	if err != nil {
@@ -2145,7 +2151,7 @@ func (tf *TestFixture) P2PDeconfigureGO(ctx context.Context) error {
 func (tf *TestFixture) P2PDeconfigureClient(ctx context.Context) error {
 	var firstErr error
 
-	iface, err := tf.DUTWifiClient(PeerDUT).Interface(ctx)
+	iface, err := tf.DUTWifiClient(PeerDUT1).Interface(ctx)
 	if err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to get the WiFi interface"))
 	}

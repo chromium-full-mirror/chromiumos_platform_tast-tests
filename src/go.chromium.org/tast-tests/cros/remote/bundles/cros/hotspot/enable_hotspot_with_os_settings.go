@@ -168,7 +168,7 @@ func EnableHotspotWithOSSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("WiFi should be turned off after turning on hotspot")
 	}
 
-	disconnectDUT, err := tf.ConnectCompanionDUTToHotspot(ctx, wificell.PeerDUT, wificell.DefaultDUT)
+	disconnectDUT, err := tf.ConnectCompanionDUTToHotspot(ctx, wificell.PeerDUT1, wificell.DefaultDUT)
 	if err != nil {
 		s.Fatal("Failed to connect companion DUT to hotspot: ", err)
 	}
