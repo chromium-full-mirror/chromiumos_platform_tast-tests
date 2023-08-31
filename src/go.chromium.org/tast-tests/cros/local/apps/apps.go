@@ -564,15 +564,17 @@ func InstallPWAForURL(ctx context.Context, tconn *chrome.TestConn, br *browser.B
 
 	ui := uiauto.New(tconn).WithInterval(2 * time.Second)
 	installIcon := nodewith.ClassName("PwaInstallView").Role(role.Button)
-	installButton := nodewith.Name("Install").Role(role.Button)
+	installAppDialog := nodewith.NameStartingWith("Install app").Role(role.AlertDialog).HasClass("Widget")
+	installButton := nodewith.Name("Install").Role(role.Button).Ancestor(installAppDialog)
 
-	return uiauto.Combine("Install PWA through omnibox",
+	return uiauto.NamedCombine("install PWA through omnibox",
 		// The installability checks occur asynchronously for PWAs.
 		// Wait for the Install button to appear in the Chrome omnibox before installing.
 		ui.WithTimeout(timeout).WaitUntilExists(installIcon),
-		ui.LeftClickUntil(installIcon,
-			ui.WithTimeout(5*time.Second).WaitUntilExists(installButton)),
-		ui.LeftClick(installButton))(ctx)
+		// Low-end DUTs may take longer to wait for the dialog to pop up.
+		ui.WithTimeout(2*time.Minute).LeftClickUntil(installIcon, ui.WaitUntilExists(installAppDialog)),
+		ui.LeftClick(installButton),
+	)(ctx)
 }
 
 // LaunchChromeByShortcut launches a new Chrome window in either normal user mode by shortcut `Ctl+N`
