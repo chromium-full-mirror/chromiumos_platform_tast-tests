@@ -24,7 +24,7 @@ func init() {
 		Fixture:      "gpuWatchDog",
 		Params: []testing.Param{{
 			Val:       false,
-			ExtraAttr: []string{"group:cq-medium"},
+			ExtraAttr: []string{"group:cq-medium", "group:crosbolt", "crosbolt_fsi_check"},
 		}, {
 			Name:      "informational",
 			Val:       true,

@@ -78,6 +78,7 @@ func init() {
 			Name:      "1000_fishes",
 			Fixture:   "chromeGraphics",
 			ExtraData: []string{webGlAquarium},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_fsi_check"},
 			Val: aquariumParamData{
 				fishCount:   1000,
 				browserType: browser.TypeAsh,
