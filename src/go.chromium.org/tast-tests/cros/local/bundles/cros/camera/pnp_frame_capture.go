@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -32,34 +33,31 @@ const (
 	traceTime          = 20 * time.Second
 )
 
+type functionMetric struct {
+	FunctionName string `json:"function_name"`
+	MetricName   string `json:"metric_name"`
+	Unit         string `json:"unit"`
+	Value        int64  `json:"value"`
+	Direction    bool   `json:"direction"`
+}
+
 type traceMetrics struct {
 	CameraCoreMetrics struct {
 		Sessions []struct {
-			Sid                 int   `json:"sid"`
-			OpenDeviceLatencyUs int64 `json:"open_device_latency_us"`
-			InitializeLatencyUs int64 `json:"initialize_latency_us"`
-			StreamMetrics       []struct {
-				E2EConfigureStreamsLatencyUs int64 `json:"e2e_configure_streams_latency_us"`
-				HalConfigureStreamsLatencyUs int64 `json:"hal_configure_streams_latency_us"`
-				MinE2ERequestLatencyUs       int64 `json:"min_e2e_request_latency_us"`
-				AvgE2ERequestLatencyUs       int64 `json:"avg_e2e_request_latency_us"`
-				MaxE2ERequestLatencyUs       int64 `json:"max_e2e_request_latency_us"`
-				MinHalRequestLatencyUs       int64 `json:"min_hal_request_latency_us"`
-				AvgHalRequestLatencyUs       int64 `json:"avg_hal_request_latency_us"`
-				MaxHalRequestLatencyUs       int64 `json:"max_hal_request_latency_us"`
-				ResultBufferMetrics          []struct {
+			Sid             int              `json:"sid"`
+			FunctionMetrics []functionMetric `json:"function_metrics"`
+			StreamMetrics   []struct {
+				FunctionMetrics     []functionMetric `json:"function_metrics"`
+				ResultBufferMetrics []struct {
 					Stream struct {
 						StreamID int64 `json:"stream_id"`
 						Width    int   `json:"width"`
 						Height   int   `json:"height"`
 						Format   int   `json:"format"`
 					} `json:"stream"`
-					MinE2ELatencyUs int64 `json:"min_e2e_latency_us"`
-					AvgE2ELatencyUs int64 `json:"avg_e2e_latency_us"`
-					MaxE2ELatencyUs int64 `json:"max_e2e_latency_us"`
+					FunctionMetrics []functionMetric `json:"function_metrics"`
 				} `json:"result_buffer_metrics"`
 			} `json:"stream_metrics"`
-			CloseDeviceLatencyUs int64 `json:"close_device_latency_us"`
 		} `json:"sessions"`
 	} `json:"camera_core_metrics"`
 }
@@ -78,12 +76,26 @@ func init() {
 	})
 }
 
-func setMetric(pv *perf.Values, name, unit string, value float64) {
+func setMetric(pv *perf.Values, name, unit string, value float64, direction bool) {
+	// perf.Values valid metric names only allow "^[a-zA-Z0-9._-]{1,256}$"
+	name = strings.Replace(name, "::", "-", -1)
+	name = strings.Replace(name, "~", "Destructor-", -1)
+	perfDirection := perf.SmallerIsBetter
+	if direction {
+		perfDirection = perf.BiggerIsBetter
+	}
+
 	pv.Set(perf.Metric{
 		Name:      name,
 		Unit:      unit,
-		Direction: perf.SmallerIsBetter,
+		Direction: perfDirection,
 	}, value)
+}
+
+func setMetricFromFunction(pv *perf.Values, fm functionMetric, prefix string) {
+	setMetric(
+		pv, fmt.Sprintf("%s%s_%s", prefix, fm.FunctionName, fm.MetricName),
+		fm.Unit, float64(fm.Value), fm.Direction)
 }
 
 func parseMetrics(ctx context.Context, pv *perf.Values, traceDataAbsPath, outDir string) error {
@@ -112,31 +124,25 @@ func parseMetrics(ctx context.Context, pv *perf.Values, traceDataAbsPath, outDir
 	// If there are multiple camera sessions, only use the last session to
 	// exclude preparation time for redoing OpenDevice().
 	session := metrics.CameraCoreMetrics.Sessions[len(metrics.CameraCoreMetrics.Sessions)-1]
-	setMetric(pv, "openDeviceLatencyUs", "microsec", float64(session.OpenDeviceLatencyUs))
-	setMetric(pv, "initializeLatencyUs", "microsec", float64(session.InitializeLatencyUs))
-	setMetric(pv, "closeDeviceLatencyUs", "microsec", float64(session.CloseDeviceLatencyUs))
+	for _, functionMetric := range session.FunctionMetrics {
+		setMetricFromFunction(pv, functionMetric, "")
+	}
 
 	// If there are multiple configurations, only use the last subsession to
 	// exclude preparation time for redoing ConfigureStream().
 	stream := session.StreamMetrics[len(session.StreamMetrics)-1]
-	setMetric(pv, "e2eConfigureStreamsLatencyUs", "microsec", float64(stream.E2EConfigureStreamsLatencyUs))
-	setMetric(pv, "halConfigureStreamsLatencyUs", "microsec", float64(stream.HalConfigureStreamsLatencyUs))
-	setMetric(pv, "minE2ERequestLatencyUs", "microsec", float64(stream.MinE2ERequestLatencyUs))
-	setMetric(pv, "e2eConfigureStreamsLatencyUs", "microsec", float64(stream.E2EConfigureStreamsLatencyUs))
-	setMetric(pv, "avgE2ERequestLatencyUs", "microsec", float64(stream.AvgE2ERequestLatencyUs))
-	setMetric(pv, "maxE2ERequestLatencyUs", "microsec", float64(stream.MaxE2ERequestLatencyUs))
-	setMetric(pv, "minHalRequestLatencyUs", "microsec", float64(stream.MinHalRequestLatencyUs))
-	setMetric(pv, "avgHalRequestLatencyUs", "microsec", float64(stream.AvgHalRequestLatencyUs))
-	setMetric(pv, "maxHalRequestLatencyUs", "microsec", float64(stream.MaxHalRequestLatencyUs))
+	for _, functionMetric := range stream.FunctionMetrics {
+		setMetricFromFunction(pv, functionMetric, "")
+	}
 
 	for i, resultBuffer := range stream.ResultBufferMetrics {
-		setMetric(pv, fmt.Sprintf("resultBuffer_%d_streamID", i), "id", float64(resultBuffer.Stream.StreamID))
-		setMetric(pv, fmt.Sprintf("resultBuffer_%d_width", i), "pix", float64(resultBuffer.Stream.Width))
-		setMetric(pv, fmt.Sprintf("resultBuffer_%d_height", i), "pix", float64(resultBuffer.Stream.Height))
-		setMetric(pv, fmt.Sprintf("resultBuffer_%d_format", i), "category", float64(resultBuffer.Stream.Format))
-		setMetric(pv, fmt.Sprintf("resultBuffer_%d_minE2ELatencyUs", i), "microsec", float64(resultBuffer.MinE2ELatencyUs))
-		setMetric(pv, fmt.Sprintf("resultBuffer_%d_avgE2ELatencyUs", i), "microsec", float64(resultBuffer.AvgE2ELatencyUs))
-		setMetric(pv, fmt.Sprintf("resultBuffer_%d_maxE2ELatencyUs", i), "microsec", float64(resultBuffer.MaxE2ELatencyUs))
+		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_streamID", i), "id", float64(resultBuffer.Stream.StreamID), false)
+		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_width", i), "pix", float64(resultBuffer.Stream.Width), false)
+		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_height", i), "pix", float64(resultBuffer.Stream.Height), false)
+		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_format", i), "category", float64(resultBuffer.Stream.Format), false)
+		for _, functionMetric := range session.FunctionMetrics {
+			setMetricFromFunction(pv, functionMetric, fmt.Sprintf("ResultBuffer_%d_", i))
+		}
 	}
 
 	return pv.Save(outDir)
