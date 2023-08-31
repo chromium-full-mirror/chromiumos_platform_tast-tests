@@ -198,10 +198,8 @@ func (f *FilesApp) Close(ctx context.Context) error {
 	return f.ui.WithTimeout(time.Minute).WaitUntilGone(WindowFinder(f.appID))(ctx)
 }
 
-// OpenDir returns a function that opens one of the directories shown in the navigation tree.
-// An error is returned if dir is not found or does not open.
-func (f *FilesApp) OpenDir(dirName, expectedTitle string) uiauto.Action {
-	dir := nodewith.Name(dirName).Role(role.TreeItem).First()
+// windowFinderWithTitle returns the Files window finder with specified title.
+func (f *FilesApp) windowFinderWithTitle(title string) *nodewith.Finder {
 	roleType := role.RootWebArea
 	if f.appID == apps.FilesSWA.ID {
 		roleType = role.Window
@@ -210,8 +208,21 @@ func (f *FilesApp) OpenDir(dirName, expectedTitle string) uiauto.Action {
 		// For the picker and saver, we check that the button in the header exists.
 		roleType = role.Button
 	}
+	return nodewith.Name(title).Role(roleType).First()
+}
+
+// WaitForTitle waits for the Files app with the specified title to exist.
+func (f *FilesApp) WaitForTitle(expectedTitle string) uiauto.Action {
+	return f.WaitUntilExists(f.windowFinderWithTitle(expectedTitle))
+}
+
+// OpenDir returns a function that opens one of the directories shown in the navigation tree.
+// An error is returned if dir is not found or does not open.
+func (f *FilesApp) OpenDir(dirName, expectedTitle string) uiauto.Action {
+	dir := nodewith.Name(dirName).Role(role.TreeItem).First()
+
 	return f.LeftClickUntil(nodewith.Name(dirName).Role(role.StaticText).Ancestor(dir),
-		f.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Name(expectedTitle).Role(roleType).First()))
+		f.Exists(f.windowFinderWithTitle(expectedTitle)))
 }
 
 // FormatDevice returns a function that formats USB drive with the default options.
@@ -456,6 +467,10 @@ func (f *FilesApp) OpenPath(expectedTitle, dirName string, path ...string) uiaut
 	// Open folders in the path.
 	for _, folder := range path {
 		steps = append(steps, f.OpenFile(folder))
+	}
+	if len(path) > 0 {
+		// Wait for the title to be the last path.
+		steps = append(steps, f.WaitForTitle(FilesTitlePrefix+path[len(path)-1]))
 	}
 	return uiauto.Combine(fmt.Sprintf("OpenPath(%s, %s, %s)", expectedTitle, dirName, path), steps...)
 }
