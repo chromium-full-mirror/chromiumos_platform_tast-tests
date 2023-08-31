@@ -214,6 +214,14 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 
 	enabledFeatures := cfg.EnableFeatures()
 	disabledFeatures := cfg.DisableFeatures()
+
+	// Disable downloading of the optimization guide model unless the test has
+	// explicitly enabled it. This can take a long time to download and represents
+	// a browser feature that is not tested via tast tests. b/297948089
+	if !contains(enabledFeatures, "OptimizationGuideModelDownloading") {
+		disabledFeatures = append(disabledFeatures, "OptimizationGuideModelDownloading")
+	}
+
 	// Force QsRevamp on unless the test has explicitly disabled it. We force
 	// the new quick settings UI because many tests have been updated to rely on
 	// the new UI to enable and disable features. In general, the tests aren't
