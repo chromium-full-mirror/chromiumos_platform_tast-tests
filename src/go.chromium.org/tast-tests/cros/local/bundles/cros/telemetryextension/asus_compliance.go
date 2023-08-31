@@ -63,6 +63,6 @@ func ASUSCompliance(ctx context.Context, s *testing.State) {
 	if got, err := crosconfig.Get(ctx, "/cros-healthd/cached-vpd", "has-sku-number"); err != nil {
 		s.Error("Failed to get has-sku-number value from cros config: ", err)
 	} else if want := "true"; got != want {
-		s.Errorf("Unexpected vendor name = got %q, want %q", got, want)
+		s.Errorf("Unexpected has-sku-number = got %q, want %q", got, want)
 	}
 }
