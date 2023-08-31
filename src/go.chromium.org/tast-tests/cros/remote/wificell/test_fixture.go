@@ -63,14 +63,38 @@ import (
 	"go.chromium.org/tast/core/timing"
 )
 
-// The allowed packets loss percentage for the ping command.
-const pingLossThreshold float64 = 20
+// Tast service name constants.
+const (
+	// ShillServiceName is the service needed by TestFixture and any test that
+	// uses the shill service directly.
+	ShillServiceName = "tast.cros.wifi.ShillService"
 
-// The allowed packets loss percentage for the arping command.
-const arpingLossThreshold float64 = 30
+	// BluetoothServiceName is the name of the bluetooth service needed by
+	// TestFixture.
+	BluetoothServiceName = "tast.cros.bluetooth.BluetoothService"
 
-// The amount of time to wait before reconnecting after a router reboot.
-const routerPostRebootWaitTime = 5 * time.Second
+	// PowerServiceName is the name of the power measurement service needed by
+	// TestFixture.
+	PowerServiceName = "tast.cros.power.MetricsService"
+
+	// CellularServiceName is the name of the cellular service needed by TestFixture.
+	CellularServiceName = "tast.cros.cellular.RemoteCellularService"
+
+	// AutomationServiceName is the name of the automation service.
+	AutomationServiceName = "tast.cros.ui.AutomationService"
+
+	// BrowserChromeServiceName is the name of the browser chrome service.
+	BrowserChromeServiceName = "tast.cros.browser.ChromeService"
+
+	// OsSettingsServiceName is the name of the os settings service.
+	OsSettingsServiceName = "tast.cros.chrome.uiauto.ossettings.OsSettingsService"
+
+	// QuickSettingsServiceName is the name of the quick settings service.
+	QuickSettingsServiceName = "tast.cros.chrome.uiauto.quicksettings.QuickSettingsService"
+
+	// ChromeUIServiceName is the name of the chrome ui service.
+	ChromeUIServiceName = "tast.cros.ui.ChromeUIService"
+)
 
 // TODO(b/232150137): Using a different subnet than other ip addrs in Tast.
 // Move all hardcoded ip addresses to one file to avoid collision.
@@ -79,8 +103,48 @@ const (
 	p2pClientIPAddress string = "192.160.0.2"
 )
 
-// Set to false for tethering setup using Shill.
-const useWpaCliAPI = true
+// P2PDevice is used as p2p device type.
+type P2PDevice int32
+
+// P2P devices (options for Group Owner (GO) and client).
+const (
+	P2PDeviceDUT P2PDevice = iota
+	P2PDeviceCompanionDUT
+	// TODO(b/231261132): add Android phones as GO/Client options.
+)
+
+// DutIdx is the type used for DUT index in TestFixture.duts.
+//
+// Use one of the known constants below rather than initializing this directly.
+type DutIdx int
+
+// Known DutIdx values.
+const (
+	// DefaultDUT is the DutIdx of the default dut.
+	DefaultDUT DutIdx = 0
+
+	// PeerDUT1 is the DutIdx of the first peer/companion dut.
+	PeerDUT1 DutIdx = 1
+)
+
+// Other miscellaneous constants.
+const (
+	// The allowed packets loss percentage for the ping command.
+	pingLossThreshold float64 = 20
+
+	// The allowed packets loss percentage for the arping command.
+	arpingLossThreshold float64 = 30
+
+	// The amount of time to wait before reconnecting after a router reboot.
+	routerPostRebootWaitTime = 5 * time.Second
+
+	// DUTRebootTimeout specifies the time duration of a DUT is ready for testing after the reboot triggers.
+	// It could take up to 5 minutes to reboot a DUT, especially for low-end devices.
+	DUTRebootTimeout = 5 * time.Minute
+
+	// ChromeFeatureHotspot is the name of the hotspot feature flag
+	ChromeFeatureHotspot = "Hotspot"
+)
 
 // TFOption is the function signature used to modify TextFixutre.
 type TFOption func(*TestFixture)
@@ -202,41 +266,6 @@ func TFCompanionDUT(cd *dut.DUT, h *testing.RPCHint) TFOption {
 	}
 }
 
-const (
-	// ShillServiceName is the service needed by TestFixture and any test that
-	// uses the shill service directly.
-	ShillServiceName = "tast.cros.wifi.ShillService"
-
-	// BluetoothServiceName is the name of the bluetooth service needed by
-	// TestFixture.
-	BluetoothServiceName = "tast.cros.bluetooth.BluetoothService"
-
-	// PowerServiceName is the name of the power measurement service needed by
-	// TestFixture.
-	PowerServiceName = "tast.cros.power.MetricsService"
-
-	// CellularServiceName is the name of the cellular service needed by TestFixture.
-	CellularServiceName = "tast.cros.cellular.RemoteCellularService"
-
-	// AutomationServiceName is the name of the automation service.
-	AutomationServiceName = "tast.cros.ui.AutomationService"
-
-	// BrowserChromeServiceName is the name of the browser chrome service.
-	BrowserChromeServiceName = "tast.cros.browser.ChromeService"
-
-	// OsSettingsServiceName is the name of the os settings service.
-	OsSettingsServiceName = "tast.cros.chrome.uiauto.ossettings.OsSettingsService"
-
-	// QuickSettingsServiceName is the name of the quick settings service.
-	QuickSettingsServiceName = "tast.cros.chrome.uiauto.quicksettings.QuickSettingsService"
-
-	// ChromeUIServiceName is the name of the chrome ui service.
-	ChromeUIServiceName = "tast.cros.ui.ChromeUIService"
-
-	// ChromeFeatureHotspot is the name of the hotspot feature flag
-	ChromeFeatureHotspot = "Hotspot"
-)
-
 // TODO(b/234845693): make that an independent structure.
 type routerData struct {
 	target string
@@ -258,30 +287,6 @@ type dutData struct {
 	// netCertStore is initialized lazily in ConnectWifi() when needed because it takes about 7 seconds to set up and only a few tests need it.
 	netCertStore *netcertstore.Store
 }
-
-// P2PDevice is used as p2p device type.
-type P2PDevice int32
-
-// P2P devices (options for Group Owner (GO) and client).
-const (
-	P2PDeviceDUT P2PDevice = iota
-	P2PDeviceCompanionDUT
-	// TODO(b/231261132): add Android phones as GO/Client options.
-)
-
-// DutIdx is the type used for DUT index in TestFixture.duts.
-//
-// Use one of the known constants below rather than initializing this directly.
-type DutIdx int
-
-// Known DutIdx values.
-const (
-	// DefaultDUT is the DutIdx of the default dut.
-	DefaultDUT DutIdx = 0
-
-	// PeerDUT1 is the DutIdx of the first peer/companion dut.
-	PeerDUT1 DutIdx = 1
-)
 
 // TestFixture sets up the context for a basic WiFi test.
 type TestFixture struct {
@@ -424,7 +429,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 		// Default log tags used in WiFi tests. Example of other tags that can be added.
 		// (connection + dbus + device + link + manager + portal + service)
 		logTags:      []string{"wifi"},
-		useWpaCliAPI: useWpaCliAPI,
+		useWpaCliAPI: true,
 		pcap:         &routerData{},
 	}
 	// By default we require router presence.
@@ -1017,11 +1022,10 @@ func (tf *TestFixture) DeconfigAllAPs(ctx context.Context) error {
 	return firstErr
 }
 
-const wpaMonitorStopTimeout = 10 * time.Second
-
 // StartWPAMonitor configures and starts wpa_supplicant events monitor
 // newCtx is ctx shortened for the stop function, which should be deferred by the caller.
 func (tf *TestFixture) StartWPAMonitor(ctx context.Context, dutIdx DutIdx) (wpaMonitor *wpacli.WPAMonitor, stop func(), newCtx context.Context, retErr error) {
+	const wpaMonitorStopTimeout = 10 * time.Second
 	wpaMonitor = new(wpacli.WPAMonitor)
 	stop, newCtx, err := wpaMonitor.StartWPAMonitor(ctx, tf.duts[dutIdx].dut.Conn(), wpaMonitorStopTimeout)
 	if err != nil {
@@ -2381,10 +2385,6 @@ func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx, c *teth
 func (tf *TestFixture) ReserveForStopTethering(ctx context.Context) (context.Context, context.CancelFunc) {
 	return ctxutil.Shorten(ctx, 15*time.Second)
 }
-
-// DUTRebootTimeout specifies the time duration of a DUT is ready for testing after the reboot triggers.
-// It could take up to 5 minutes to reboot a DUT, especially for low-end devices.
-const DUTRebootTimeout = 5 * time.Minute
 
 // RebootDUT reboots DUT and re-establishes wifiClient for the given DUT.
 // re-esablish wifiClient is required after rebooting due to the RPC client will be closed.
