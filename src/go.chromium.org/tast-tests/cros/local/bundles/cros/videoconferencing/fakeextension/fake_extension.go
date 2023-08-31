@@ -97,7 +97,11 @@ func (extUI *ExtensionUI) StopVideo(ctx context.Context) error {
 
 // StartAudio clicks on "Start Audio" button to activate microphone.
 func (extUI *ExtensionUI) StartAudio(ctx context.Context) error {
-	return extUI.ui.DoDefault(startAudioButton)(ctx)
+	return uiauto.Combine("start audio",
+		extUI.ui.DoDefault(startAudioButton),
+		// Add a short sleep after starting audio. Refer to b/298280544 for more details.
+		uiauto.Sleep(100*time.Millisecond),
+	)(ctx)
 }
 
 // StopAudio clicks on "Stop Audio" button to deactivate microphone.

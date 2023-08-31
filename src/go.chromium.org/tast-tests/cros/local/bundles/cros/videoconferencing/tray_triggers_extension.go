@@ -39,7 +39,8 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Params: []testing.Param{
 			{
-				Fixture: fixture.LoggedInWithFakeVCExtension,
+				Fixture:   fixture.LoggedInWithFakeVCExtension,
+				ExtraAttr: []string{"video_conference_cq_critical"},
 			},
 			{
 				Name:              "lacros",
