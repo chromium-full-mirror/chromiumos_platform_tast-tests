@@ -29,7 +29,6 @@ func init() {
 		Contacts: []string{
 			"arc-framework+tast@google.com",
 			"chromeos-dlp@google.com",
-			"vishal38785@gmail.com", // Test author
 		},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
