@@ -334,7 +334,10 @@ var preTestDataBullseyeLC = &preTestData{
 
 // Differ returns an instance implementing the interface screenshot.Differ.
 func (f FixtureData) Differ() screenshot.Differ {
-	return *f.Screendiffer.differ
+	if f.Screendiffer != nil {
+		return *f.Screendiffer.differ
+	}
+	return nil
 }
 
 func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
