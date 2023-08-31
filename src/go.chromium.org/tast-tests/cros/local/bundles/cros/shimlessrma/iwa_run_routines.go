@@ -33,6 +33,9 @@ func init() {
 		Params: []testing.Param{{
 			Name: "audio_driver",
 			Val:  "audio_driver",
+		}, {
+			Name: "cpu_floating_point_accuracy",
+			Val:  "cpu_floating_point_accuracy",
 		}},
 	})
 }

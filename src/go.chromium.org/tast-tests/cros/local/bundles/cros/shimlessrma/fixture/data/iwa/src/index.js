@@ -33,6 +33,7 @@ document.getElementById('check-extension').addEventListener('click', event => {
 
 const diag_categories = [
   "audio_driver",
+  "cpu_floating_point_accuracy",
 ]
 
 function listener(type, category, event) {

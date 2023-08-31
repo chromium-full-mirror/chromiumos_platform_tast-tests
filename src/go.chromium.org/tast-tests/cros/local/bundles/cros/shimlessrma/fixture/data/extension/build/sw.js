@@ -41,6 +41,11 @@ const handleDiagnostics = async (category) => {
     case 'audio_driver':
       resp = await chrome.os.diagnostics.runAudioDriverRoutine()
       break;
+    case 'cpu_floating_point_accuracy':
+      param = { length_seconds: 3 }
+      resp = await chrome.os.diagnostics.runCpuFloatingPointAccuracyRoutine(
+          param)
+      break;
   }
 
   return await process_and_poll_continuous(resp.id)
