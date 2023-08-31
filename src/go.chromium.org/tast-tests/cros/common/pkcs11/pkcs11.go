@@ -590,7 +590,7 @@ var SHA1RSAPKCSPSS = MechanismInfo{
 	toolExtraParam:             []string{"--mgf", "MGF1-SHA1"},
 	toolSignInputFileProcessor: NoOpFileProcessor,
 	opensslDgstParam:           "-sha1",
-	opensslDgstExtraParam:      []string{"-sigopt", "rsa_padding_mode:pss", "-sigopt", "digest:sha1"},
+	opensslDgstExtraParam:      []string{"-sigopt", "rsa_padding_mode:pss"},
 }
 
 // SHA256RSAPKCSPSS represents the MechanismInfo that is a signing scheme that uses SHA256 for hashing and RSA PSS for signing.
@@ -600,7 +600,7 @@ var SHA256RSAPKCSPSS = MechanismInfo{
 	toolExtraParam:             []string{"--mgf", "MGF1-SHA256"},
 	toolSignInputFileProcessor: NoOpFileProcessor,
 	opensslDgstParam:           "-sha256",
-	opensslDgstExtraParam:      []string{"-sigopt", "rsa_padding_mode:pss", "-sigopt", "digest:sha256"},
+	opensslDgstExtraParam:      []string{"-sigopt", "rsa_padding_mode:pss"},
 }
 
 // GenericRSAPKCSPSSWithSHA1 represents the MechanismInfo that uses generic RSA PSS signature scheme with SHA1.
@@ -613,7 +613,7 @@ var GenericRSAPKCSPSSWithSHA1 = MechanismInfo{
 		return HashFileProcessor(ctx, r, input, "sha1")
 	},
 	opensslDgstParam:      "-sha1",
-	opensslDgstExtraParam: []string{"-sigopt", "rsa_padding_mode:pss", "-sigopt", "digest:sha1"},
+	opensslDgstExtraParam: []string{"-sigopt", "rsa_padding_mode:pss"},
 }
 
 // GenericRSAPKCSPSSWithSHA256 represents the MechanismInfo that uses generic RSA PSS signature scheme with SHA256.
@@ -626,7 +626,7 @@ var GenericRSAPKCSPSSWithSHA256 = MechanismInfo{
 		return HashFileProcessor(ctx, r, input, "sha256")
 	},
 	opensslDgstParam:      "-sha256",
-	opensslDgstExtraParam: []string{"-sigopt", "rsa_padding_mode:pss", "-sigopt", "digest:sha256"},
+	opensslDgstExtraParam: []string{"-sigopt", "rsa_padding_mode:pss"},
 }
 
 // ECDSASHA1 represents the MechanismInfo that uses ECDSA signature scheme with SHA1.
@@ -658,11 +658,14 @@ func (p *Chaps) Verify(ctx context.Context, key *KeyInfo, input, signaturePath s
 	// Verify with OpenSSL.
 	args := append([]string{"dgst", mechanism.opensslDgstParam, "-verify", key.pubKeyPath, "-keyform", "der"}, mechanism.opensslDgstExtraParam...)
 	args = append(args, "-signature", signaturePath, input)
-	binaryMsg, err := p.runner.Run(ctx, "openssl", args...)
-	if err != nil {
-		return errors.Wrapf(err, "failed to verify the signature of %s", mechanism.Name)
+	binaryMsg, err := p.runner.RunWithCombinedOutput(ctx, "openssl", args...)
+	msg := ""
+	if binaryMsg != nil {
+		msg = string(binaryMsg)
 	}
-	msg := string(binaryMsg)
+	if err != nil {
+		return errors.Wrapf(err, "failed to verify the signature of %s: %s", mechanism.Name, msg)
+	}
 	if msg != "Verified OK\n" {
 		return errors.Errorf("failed to verify the signature of %s, because message mismatch, unexpected %q", mechanism.Name, msg)
 	}
