@@ -351,11 +351,11 @@ func CheckOneGoogleBar(ctx context.Context, tconn *chrome.TestConn, br *browser.
 	return nil
 }
 
-// OpenOneGoogleBar opens google.com page in the browser and clicks on the One Google Bar.
+// OpenOneGoogleBar opens chrome://new-tab-page in the browser and clicks on the One Google Bar.
 func OpenOneGoogleBar(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser) error {
-	conn, err := br.NewConn(ctx, "chrome://newtab")
+	conn, err := br.NewConn(ctx, "chrome://new-tab-page")
 	if err != nil {
-		return errors.Wrap(err, "failed to create connection to chrome://newtab")
+		return errors.Wrap(err, "failed to create connection to chrome://new-tab-page")
 	}
 	defer conn.Close()
 
