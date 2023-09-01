@@ -12,6 +12,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	"go.chromium.org/tast-tests/cros/local/network/multicast"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
@@ -135,6 +136,16 @@ func MulticastForwarder(ctx context.Context, s *testing.State) {
 
 	isWifi := s.Param().(multicastForwarderTestCase).isWifi
 	var ifnames []string
+
+	// Hide the additional Ethernet interface (except for the one for SSH) if
+	// there is any, since ARC doesn't support the 3rd interface.
+	if !isWifi {
+		restoreEthernet, err := arc.HideUnusedEthernet(ctx, manager)
+		if err != nil {
+			s.Fatal("Failed to hide unused ethernet: ", err)
+		}
+		defer restoreEthernet(cleanupCtx)
+	}
 
 	// If this test is for testing WiFi mutlicast traffic, use simulated WiFi interface.
 	// If not, use ethernet interface.
