@@ -44,10 +44,6 @@ func CellularMigrateInvalidApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
-	serviceLastGoodAPN, err := helper.GetCellularLastGoodAPN(ctx)
-	serviceLastGoodAPNInfoApnName := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]
-	serviceLastGoodAPNInfoApnSource := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnSource]
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -113,6 +109,17 @@ func CellularMigrateInvalidApn(ctx context.Context, s *testing.State) {
 	if err := ossettings.GoToActiveNetworkApnSubpage(ctx, tconn, false); err != nil {
 		s.Fatal("Failed to go to APN subpage: ", err)
 	}
+
+	serviceLastGoodAPN, err := helper.GetCellularLastGoodAPN(ctx)
+	if err != nil {
+		s.Fatal("Failed to get last good APN: ", err)
+	}
+
+	var serviceLastGoodAPNInfoApnName = serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]
+	if serviceLastGoodAPNInfoApnName == "" {
+		serviceLastGoodAPNInfoApnName = serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
+	}
+	serviceLastGoodAPNInfoApnSource := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnSource]
 
 	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, serviceLastGoodAPNInfoApnName, serviceLastGoodAPNInfoApnSource); err != nil {
 		s.Fatal("Failed to verify connected APN UI: ", err)
