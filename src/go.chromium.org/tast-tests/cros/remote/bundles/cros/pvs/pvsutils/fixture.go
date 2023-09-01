@@ -43,9 +43,16 @@ func init() {
 		TearDownTimeout: 2 * time.Minute,
 		PreTestTimeout:  2 * time.Minute,
 		PostTestTimeout: 1 * time.Minute,
-		Vars:            []string{"pvs.git_cookies", "pvs.service_account", "pvs.shop_ref", "pvs.image_tag", "pvs.chromeos_version", "pvs.skip_teardown"},
+		Vars: []string{
+			"pvs.git_cookies",
+			"pvs.service_account",
+			"pvs.shop_ref",
+			"pvs.image_tag",
+			"pvs.chromeos_version",
+			"pvs.skip_teardown",
+			"pvs.simulated_mode",
+		},
 	})
-
 }
 
 type pvsFixture struct {
@@ -54,7 +61,6 @@ type pvsFixture struct {
 
 func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	pvsHost := s.DUT().Conn()
-	dutHostname := s.CompanionDUT("dut").HostName()
 
 	// Change owner of shop install dir to chronos
 	// TODO(b/276726105): remove chronos permissions issue is resolved
@@ -103,7 +109,13 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 	}
 
 	// Run shop unpack
-	shopUnpack := fmt.Sprintf(`SHOP_REF=%s PVS_IMAGE_TAG=%s FORCE_DLM_SKU_ID=0 shop unpack --dut %v`, shopRef, pvsImageTag, dutHostname)
+	shopUnpack := fmt.Sprintf(`SHOP_REF=%s PVS_IMAGE_TAG=%s FORCE_DLM_SKU_ID=0 shop unpack`, shopRef, pvsImageTag)
+	if _, ok := s.Var("pvs.simulated_mode"); ok {
+		shopUnpack = fmt.Sprintf(`SIMULATED_DUT=1 SIMULATED_TEST_RUNNER=1 %v`, shopUnpack)
+	} else {
+		dutHostname := s.CompanionDUT("dut").HostName()
+		shopUnpack = fmt.Sprintf(`%v --dut %v`, shopUnpack, dutHostname)
+	}
 	pvsChromeOSVersion, foundPVSChromeOSVersion := s.Var("pvs.chromeos_version")
 	if foundPVSChromeOSVersion {
 		shopUnpack += fmt.Sprintf(" --chromeos-version %s", pvsChromeOSVersion)

@@ -37,8 +37,9 @@ func InvalidTestName(ctx context.Context, s *testing.State) {
 		Dut:         dut,
 		ContainerID: s.FixtValue().(string),
 		Env: pvsutils.PVSRuntimeEnv{
-			ReuseTLEDir:   pvsutils.TmpReuseTLEDir,
-			ForceDlmSkuID: "0",
+			ReuseTLEDir:            pvsutils.TmpReuseTLEDir,
+			ForceDlmSkuID:          "0",
+			SimulatedTestsNoResult: "stub_PassServer",
 		},
 	}
 

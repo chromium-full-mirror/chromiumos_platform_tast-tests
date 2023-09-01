@@ -67,15 +67,16 @@ type PVSRunner struct {
 // PVSRuntimeEnv represents the environment variables that will be set during
 // an execution of the PVS CLI.
 type PVSRuntimeEnv struct {
-	ReuseTLEDir         string
-	ForceDlmSkuID       string
-	SimulatedDut        bool
-	SimulatedTestRunner bool
-	SimulatedDutInfo    string
-	SimulatedTestsSkip  string
-	SimulatedTestsError string
-	SimulatedTestsFail  string
-	SimulatedTestKeyval string
+	ReuseTLEDir            string
+	ForceDlmSkuID          string
+	SimulatedDut           bool
+	SimulatedTestRunner    bool
+	SimulatedDutInfo       string
+	SimulatedTestsSkip     string
+	SimulatedTestsError    string
+	SimulatedTestsNoResult string
+	SimulatedTestsFail     string
+	SimulatedTestKeyval    string
 }
 
 // EnsurePass runs the given subtest and fatally errors if it fails.
@@ -138,6 +139,9 @@ func (p PVSRuntimeEnv) generateEnvMap() map[string]string {
 	}
 	if p.SimulatedTestsError != "" {
 		env["SIMULATED_TESTS_ERROR"] = p.SimulatedTestsError
+	}
+	if p.SimulatedTestsNoResult != "" {
+		env["SIMULATED_TESTS_NO_RESULT"] = p.SimulatedTestsNoResult
 	}
 	if p.SimulatedTestsFail != "" {
 		env["SIMULATED_TESTS_FAIL"] = p.SimulatedTestsFail
