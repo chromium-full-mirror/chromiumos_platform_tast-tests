@@ -136,7 +136,7 @@ func ResolvConfConfigUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check resolv.conf value: ", err)
 	}
 
-	// Network update through StaticIPConfig is only triggered for IPv4.
+	// TODO(b/298565265): Network update through StaticIPConfig is currently only triggered when IPv4 is available.
 	if !params.ipv4 {
 		return
 	}
@@ -146,14 +146,15 @@ func ResolvConfConfigUpdate(ctx context.Context, s *testing.State) {
 		IPv4Nameservers:      []string{"2.2.2.1", "2.2.2.2"},
 		IPv4DomainSearchList: []string{"test2-1.com", "test2-2.com"},
 	}
+	staticIPConfigNameServers := newConfig.IPv4Nameservers
 	if params.ipv6 {
+		newConfig.IPv6Nameservers = []string{"2222::2221", "2222::2222"}
 		// StaticIPConfig does not differentiate between IPv4 and IPv6.
-		ipv6Nameservers := []string{"2222::2221", "2222::2222"}
-		newConfig.IPv4Nameservers = append(newConfig.IPv4Nameservers, ipv6Nameservers...)
+		staticIPConfigNameServers = append(staticIPConfigNameServers, newConfig.IPv6Nameservers...)
 	}
 	svcStaticIPConfig := map[string]interface{}{
 		shillconst.IPConfigPropertySearchDomains: newConfig.IPv4DomainSearchList,
-		shillconst.IPConfigPropertyNameServers:   newConfig.IPv4Nameservers,
+		shillconst.IPConfigPropertyNameServers:   staticIPConfigNameServers,
 	}
 	testing.ContextLogf(ctx, "Configuring %v on the test interface", svcStaticIPConfig)
 	if err := svc.SetProperty(ctx, shillconst.ServicePropertyStaticIPConfig, svcStaticIPConfig); err != nil {
@@ -168,14 +169,10 @@ func ResolvConfConfigUpdate(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// StaticIPConfig only overrides IPv4 nameservers. Keep the old IPv6 nameservers.
-	expectedConfig := newConfig
-	expectedConfig.IPv6Nameservers = append(expectedConfig.IPv6Nameservers, baseConfig.IPv6Nameservers...)
-
 	// Assert /etc/resolv.conf content after the network is updated.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return dns.VerifyResolvConfContents(ctx, expectedConfig, params.dnsProxyEnabled)
+		return dns.VerifyResolvConfContents(ctx, newConfig, params.dnsProxyEnabled)
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-		s.Fatal("Failed to check resolv.conf value after removing the new network: ", err)
+		s.Fatal("Failed to check resolv.conf value after applying the StaticIPConfig: ", err)
 	}
 }

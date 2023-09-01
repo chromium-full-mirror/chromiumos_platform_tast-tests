@@ -14,7 +14,6 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -738,13 +737,7 @@ func VerifyResolvConfContents(ctx context.Context, config Config, proxyEnabled b
 	if proxyEnabled {
 		nameservers = expectedNameserversWithDNSProxy(ctx, config)
 	} else {
-		// Check if DNS proxy is managing resolv.conf.
-		l, err := os.Readlink(ResolvConfPath)
-		if err != nil {
-			return errors.Wrap(err, "failed to get resolv.conf link")
-		}
-		dnsProxyManaged := strings.HasPrefix(l, proxyRunPath)
-		nameservers = expectedNameserversWithoutDNSProxy(ctx, config, dnsProxyManaged)
+		nameservers = expectedNameserversWithoutDNSProxy(ctx, config)
 	}
 
 	// Build the expected /etc/resolv.conf data.
@@ -754,7 +747,7 @@ func VerifyResolvConfContents(ctx context.Context, config Config, proxyEnabled b
 	}
 	b := &bytes.Buffer{}
 	template.Must(template.New("").Parse(resolvConfTemplate)).Execute(b, vals)
-	re := regexp.MustCompile(b.String())
+	re := regexp.MustCompile("^" + b.String() + "$")
 
 	// Read the actual /etc/resolv.conf data.
 	d, err := os.ReadFile(ResolvConfPath)
@@ -768,18 +761,13 @@ func VerifyResolvConfContents(ctx context.Context, config Config, proxyEnabled b
 }
 
 // expectedNameserversWithoutDNSProxy gets the expected /etc/resolv.conf nameservers without DNS proxy overwriting it.
-// For dual-stack networks, when /etc/resolv.conf is managed by shill (and not DNS proxy),
-// only IPv4 nameservers are used (b/265680125#comment11).
-// The behavior is a limitation of shill.
-func expectedNameserversWithoutDNSProxy(ctx context.Context, config Config, dnsProxyManaged bool) []template.HTML {
+func expectedNameserversWithoutDNSProxy(ctx context.Context, config Config) []template.HTML {
 	var nss []template.HTML
-	for _, ns := range config.IPv4Nameservers {
+	for _, ns := range config.IPv6Nameservers {
 		nss = append(nss, template.HTML(ns))
 	}
-	if dnsProxyManaged || len(nss) == 0 {
-		for _, ns := range config.IPv6Nameservers {
-			nss = append(nss, template.HTML(ns))
-		}
+	for _, ns := range config.IPv4Nameservers {
+		nss = append(nss, template.HTML(ns))
 	}
 	return nss
 }
