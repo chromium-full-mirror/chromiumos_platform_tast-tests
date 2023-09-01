@@ -6,8 +6,10 @@ package fixture
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
@@ -51,3 +53,32 @@ func (uiStoppedFixture) Reset(ctx context.Context) error {
 func (uiStoppedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
 
 func (uiStoppedFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+
+var parameterizedChromeStartedID int
+
+// ChromeStarted is a ParameterizedFixture which starts Chrome with the given config.
+type parameterizedChrome struct {
+	opts []chrome.Option
+}
+
+var _ ParameterizedFixture = parameterizedChrome{}
+
+func (pf parameterizedChrome) Instance() string {
+	parameterizedChromeStartedID++
+	return maybeRegisterFixture(&testing.Fixture{
+		Name:     fmt.Sprintf("parameterizedChromeStarted%d", parameterizedChromeStartedID),
+		Desc:     "Starts Chrome with the given config",
+		Contacts: []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return pf.opts, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+}
+
+// Chrome returns the name of the chrome.LoggedInFixture to start Chrome with the given options.
+func Chrome(opts ...chrome.Option) string {
+	return parameterizedChrome{opts: opts}.Instance()
+}
