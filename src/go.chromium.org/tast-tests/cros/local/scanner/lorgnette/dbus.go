@@ -240,3 +240,83 @@ func (l *Lorgnette) ListScanners(ctx context.Context) ([]*lpb.ScannerInfo, error
 
 	return response.Scanners, nil
 }
+
+// OpenScanner calls lorgnette's OpenScanner method and returns the remote response.
+func (l *Lorgnette) OpenScanner(ctx context.Context, request *lpb.OpenScannerRequest) (*lpb.OpenScannerResponse, error) {
+	marshalled, err := proto.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal OpenScannerRequest")
+	}
+
+	var buf []byte
+	if err := l.obj.CallWithContext(ctx, dbusInterface+".OpenScanner", 0, marshalled).Store(&buf); err != nil {
+		return nil, errors.Wrap(err, "failed to call OpenScanner")
+	}
+
+	response := &lpb.OpenScannerResponse{}
+	if err := proto.Unmarshal(buf, response); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal OpenScannerResponse")
+	}
+
+	return response, nil
+}
+
+// CloseScanner calls lorgnette's CloseScanner method and returns the remote response.
+func (l *Lorgnette) CloseScanner(ctx context.Context, request *lpb.CloseScannerRequest) (*lpb.CloseScannerResponse, error) {
+	marshalled, err := proto.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal CloseScannerRequest")
+	}
+
+	var buf []byte
+	if err := l.obj.CallWithContext(ctx, dbusInterface+".CloseScanner", 0, marshalled).Store(&buf); err != nil {
+		return nil, errors.Wrap(err, "failed to call CloseScanner")
+	}
+
+	response := &lpb.CloseScannerResponse{}
+	if err := proto.Unmarshal(buf, response); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal CloseScannerResponse")
+	}
+
+	return response, nil
+}
+
+// StartPreparedScan calls lorgnette's StartPreparedScan method and returns the remote response.
+func (l *Lorgnette) StartPreparedScan(ctx context.Context, request *lpb.StartPreparedScanRequest) (*lpb.StartPreparedScanResponse, error) {
+	marshalled, err := proto.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal StartPreparedScanRequest")
+	}
+
+	var buf []byte
+	if err := l.obj.CallWithContext(ctx, dbusInterface+".StartPreparedScan", 0, marshalled).Store(&buf); err != nil {
+		return nil, errors.Wrap(err, "failed to call StartPreparedScan")
+	}
+
+	response := &lpb.StartPreparedScanResponse{}
+	if err := proto.Unmarshal(buf, response); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal StartPreparedScanResponse")
+	}
+
+	return response, nil
+}
+
+// CancelScan calls lorgnette's CancelScan method and returns the remote response.
+func (l *Lorgnette) CancelScan(ctx context.Context, request *lpb.CancelScanRequest) (*lpb.CancelScanResponse, error) {
+	marshalled, err := proto.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal CancelScanRequest")
+	}
+
+	var buf []byte
+	if err := l.obj.CallWithContext(ctx, dbusInterface+".CancelScan", 0, marshalled).Store(&buf); err != nil {
+		return nil, errors.Wrap(err, "failed to call CancelScan")
+	}
+
+	response := &lpb.CancelScanResponse{}
+	if err := proto.Unmarshal(buf, response); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal CancelScanResponse")
+	}
+
+	return response, nil
+}
