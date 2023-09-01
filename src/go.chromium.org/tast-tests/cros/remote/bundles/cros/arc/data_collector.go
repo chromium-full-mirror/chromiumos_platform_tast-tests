@@ -323,9 +323,9 @@ func init() {
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_r"},
 			// x86-64 ARC: kohaku(hatch-Intel), eve(eve-Intel), gimble(brya-Intel), dewatt(guybrush-AMD), nipperkin(guybrush-AMD)
-			// arm64 ARC: hoglin(herobrine), steelix(corsola), krane(kukui)
-			// TODO(b/293665738): Update ARM models since hoglin is no longer scheduled and krane is scarcely scheduled.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "eve", "gimble", "dewatt", "nipperkin", "steelix", "hoglin", "krane")),
+			// arm ARC: kodama(kukui), katsu(kukui)
+			// arm64 ARC: pompom(trogdor), pazquel(trogdor)
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "eve", "gimble", "dewatt", "nipperkin", "kodama", "katsu", "pompom", "pazquel")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-rvc",
@@ -333,7 +333,7 @@ func init() {
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				dexOptCacheGen:                false,
-				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "x86_64-ndk", "arm64-native"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "x86_64-ndk", "arm64-native", "arm-native"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
