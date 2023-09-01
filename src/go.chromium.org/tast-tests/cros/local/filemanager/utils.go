@@ -26,6 +26,15 @@ func GenerateTestFileName(fName string) string {
 	return fmt.Sprintf("%s-%d-%d%s", baseName, time.Now().UnixNano(), rand.Intn(10000), ext)
 }
 
+// GetCopiedName returns the file name with the number suffix, which is the default
+// rule of how Files app generate new file name if the one copied already exists.
+// For example, a.txt -> a (1).txt
+func GetCopiedName(fileName string, suffix int) string {
+	ext := filepath.Ext(fileName)
+	baseName := strings.TrimSuffix(fileName, ext)
+	return fmt.Sprintf("%s (%d)%s", baseName, suffix, ext)
+}
+
 // CreateFileInFusebox creates a file in the fusebox volume identified by the fuseboxToken.
 // This function returns the full path of the newly created file.
 func CreateFileInFusebox(fuseboxToken, fileName, fileContent string) (string, error) {

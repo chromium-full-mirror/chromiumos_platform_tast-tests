@@ -88,7 +88,7 @@ func OdfsFileCrud(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get ODFS key: ", err)
 	}
-	fileName := "odfs_test.txt"
+	fileName := "_odfs_test.txt"
 	uniqueFileName := filemanager.GenerateTestFileName(fileName)
 	fileContent := "test"
 	fullPath, err := filemanager.CreateFileInFusebox(odfsToken, uniqueFileName, fileContent)

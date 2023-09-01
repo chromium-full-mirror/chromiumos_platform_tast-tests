@@ -365,6 +365,11 @@ func (f *FilesApp) CopyFileToClipboard(fileName string) uiauto.Action {
 	return f.ClickContextMenuItem(fileName, Copy)
 }
 
+// CutFileToClipboard returns a function that cuts the file and store it in the clipboard.
+func (f *FilesApp) CutFileToClipboard(fileName string) uiauto.Action {
+	return f.ClickContextMenuItem(fileName, Cut)
+}
+
 // PasteFileFromClipboard returns a function that pastes a file from the clipboard to the current directory.
 func (f *FilesApp) PasteFileFromClipboard(kb *input.KeyboardEventWriter) uiauto.Action {
 	return uiauto.Combine("PasteFromClipboard()",

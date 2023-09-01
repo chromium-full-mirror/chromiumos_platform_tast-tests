@@ -82,7 +82,7 @@ func OdfsFolderCrud(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a folder in ODFS.
-	dirName := "_folder_crud"
+	dirName := "_odfs_crud"
 	uniqueDirName := filemanager.GenerateTestFileName(dirName)
 
 	kb, err := input.Keyboard(ctx)
