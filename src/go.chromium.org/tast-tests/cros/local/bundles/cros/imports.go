@@ -134,6 +134,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/ui"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/uidetection"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/usbip"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/uwb"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/vdi"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/video"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing"
