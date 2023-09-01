@@ -9,6 +9,7 @@ import (
 	"time"
 
 	pmpb "chromiumos/system_api/power_manager_proto"
+
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -19,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type testType int
@@ -42,6 +44,7 @@ func init() {
 		BugComponent: "b:1253115",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Chromebox)),
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -109,6 +112,8 @@ func TabletModePowerOffMenu(ctx context.Context, s *testing.State) {
 	if err := emitter.EmitInputEvent(ctx, &pmpb.InputEvent{Type: &eventType}); err != nil {
 		s.Fatal("Send POWER_BUTTON_DOWN failed: ", err)
 	}
+
+	// GoBigSleepLint: Sleep to press power button.
 	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 		s.Fatal("Failed to long press power button: ", err)
 	}
