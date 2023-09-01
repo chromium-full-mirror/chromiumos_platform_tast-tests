@@ -67,13 +67,6 @@ func ShutdownDUTWithExternalDisplay(ctx context.Context, s *testing.State) {
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
-	// Open IP power to supply docking power.
-	ipPowerPorts := []int{1}
-	if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
-		s.Fatal("Failed to power on docking station: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
-
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)
