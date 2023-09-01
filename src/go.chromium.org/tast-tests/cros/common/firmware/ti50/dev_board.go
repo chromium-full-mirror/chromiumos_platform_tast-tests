@@ -107,6 +107,9 @@ type ApFlash interface {
 	// EnableApWriteProtect enables HW write protection on the SPI flash chip with the given
 	// start address and length.
 	EnableApWriteProtect(ctx context.Context, startAddr, len uint32) error
+
+	// WriteApFlash writes `contents` to the SPI flash chip connected to the devboard.
+	WriteApFlash(ctx context.Context, contents []byte) error
 }
 
 // ApFlashInfo contains info about the AP flash that the DUT would have access to.

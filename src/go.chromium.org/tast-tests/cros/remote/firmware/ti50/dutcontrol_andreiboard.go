@@ -424,6 +424,24 @@ func (a *andreiboardApFlash) FetchApFlashInfo(ctx context.Context) (info *common
 	return &common.ApFlashInfo{Name: resp.ChipName, Vendor: resp.ChipVendor}, nil
 }
 
+// WriteApFlash writes `contents` to the SPI flash chip connected to the devboard.
+func (a *andreiboardApFlash) WriteApFlash(ctx context.Context, contents []byte) error {
+	resp, err := a.ab.client.WriteApFlash(ctx, &dutcontrol.WriteApFlashRequest{
+		RegionContents: []*dutcontrol.ApFlashRegionContents{
+			&dutcontrol.ApFlashRegionContents{
+				Contents: contents,
+			},
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "WriteApFlash request")
+	}
+	if resp.Err != "" {
+		return errors.Errorf("WriteApFlash response: %s", resp.Err)
+	}
+	return nil
+}
+
 // EnableApWriteProtect enables HW write protection on the SPI flash chip with the given
 // start address and length.
 func (a *andreiboardApFlash) EnableApWriteProtect(ctx context.Context, startAddr, len uint32) error {
