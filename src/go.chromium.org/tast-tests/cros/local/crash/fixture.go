@@ -162,7 +162,7 @@ func init() {
 		Desc:            "Mock consent enabled with field trial config on",
 		Contacts:        []string{"cros-telemetry@google.com", "mutexlox@chromium.org"},
 		Impl:            newFixture(true, MockConsent, chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable)),
-		SetUpTimeout:    setUpTimeoutMockConsent,
+		SetUpTimeout:    setUpTimeoutRealConsent, // not using real consent, but still must start chrome
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
 	})
@@ -171,7 +171,7 @@ func init() {
 		Desc:            "Mock consent enabled with field trial config off",
 		Contacts:        []string{"cros-telemetry@google.com", "mutexlox@chromium.org"},
 		Impl:            newFixture(true, MockConsent, chrome.FieldTrialConfig(chrome.FieldTrialConfigDisable)),
-		SetUpTimeout:    setUpTimeoutMockConsent,
+		SetUpTimeout:    setUpTimeoutRealConsent, // not using real consent, but still must start chrome
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
 	})
@@ -194,15 +194,20 @@ func newFixture(consentEnabled bool, consentType ConsentType, chromeOpts ...chro
 
 // SetUp sets up the fixture, before any tests in it run.
 func (f *Fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	if f.ConsentType == RealConsent {
-		opts := append(f.opts, chrome.ExtraArgs(ChromeVerboseConsentFlags))
+	if f.ConsentType == RealConsent || len(f.opts) != 0 {
+		opts := f.opts
+		if f.ConsentType == RealConsent {
+			opts = append(opts, chrome.ExtraArgs(ChromeVerboseConsentFlags))
+		}
 		cr, err := chrome.New(ctx, opts...)
 		if err != nil {
 			s.Fatal("Failed to start chrome: ", err)
 		}
 		f.Cr = cr
+	}
+	if f.ConsentType == RealConsent {
 		if err := SetConsent(ctx, f.Cr, f.ConsentEnabled); err != nil {
-			s.Fatal("Failed to disable consent: ", err)
+			s.Fatalf("Failed to set consent to %t: %v", f.ConsentEnabled, err)
 		}
 	} else if f.ConsentType == MockConsent {
 		if err := setMockConsent(false, crashTestInProgressDir, rebootPersistDir); err != nil {

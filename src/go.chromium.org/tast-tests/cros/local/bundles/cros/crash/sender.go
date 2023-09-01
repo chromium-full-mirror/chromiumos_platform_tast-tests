@@ -30,12 +30,13 @@ func init() {
 		},
 		BugComponent: "b:1032705",
 		// We only care about crash_sender on internal builds.
-		SoftwareDeps: []string{"cros_internal"},
+		// Chrome is needed either for real consent or for metrics_consent.
+		SoftwareDeps: []string{"cros_internal", "chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			Name:              "real_consent",
 			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
+			ExtraSoftwareDeps: []string{"metrics_consent"},
 			Fixture:           crash.LoggedInRealConsent,
 		}, {
 			Name:    "mock_consent_fieldtrial_testing_config_off",
