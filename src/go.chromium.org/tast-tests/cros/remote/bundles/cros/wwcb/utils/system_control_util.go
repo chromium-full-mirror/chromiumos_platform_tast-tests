@@ -50,9 +50,6 @@ func SuspendDUT(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy) error {
 
 // PowerOnDUT performs power normal press to wake DUT.
 func PowerOnDUT(ctx context.Context, pxy *servo.Proxy, dut *dut.DUT) error {
-	if dut.Connected(ctx) {
-		return nil
-	}
 	testing.ContextLog(ctx, "Performing power on DUT")
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		waitCtx, cancel := context.WithTimeout(ctx, time.Minute)
