@@ -38,7 +38,7 @@ func init() {
 			"cienet-development@googlegroups.com",
 			"edgar.chang@cienet.com",
 		},
-		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
+		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		ServiceDeps: []string{

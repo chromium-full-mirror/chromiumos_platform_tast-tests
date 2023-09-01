@@ -32,7 +32,7 @@ func init() {
 			"cj.tsai@cienet.com",
 			"bossan.fang@cienet.com",
 		},
-		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
+		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 		ServiceDeps: []string{
 			wificell.ProxyFixtServiceDepsProxySetting,

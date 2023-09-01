@@ -26,7 +26,7 @@ func init() {
 			"cros-connectivity@google.com",
 			"tjohnsonkanu@chromium.org",
 		},
-		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
+		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInQsRevampEnabled",

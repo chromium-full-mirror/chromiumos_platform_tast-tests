@@ -30,7 +30,7 @@ func init() {
 			"cros-connectivity@google.com",
 			"crisguerrero@chromium.com", // Test author
 		},
-		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
+		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

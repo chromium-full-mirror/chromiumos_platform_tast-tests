@@ -44,7 +44,7 @@ func init() {
 			"shijinabraham@google.com",
 			"chadduffin@chromium.org",
 		},
-		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
+		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		Attr:         []string{"group:network", "network_e2e"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
