@@ -39,7 +39,7 @@ func init() {
 		}, {
 			Name:      "urandom",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineURandom),
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:              "smartctl_check",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineSmartctlCheck),
@@ -58,7 +58,7 @@ func init() {
 		}, {
 			Name:      "floating_point_accuracy",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineFloatingPointAccurary),
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:              "nvme_self_test",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineNVMESelfTest),
@@ -77,7 +77,7 @@ func init() {
 		}, {
 			Name:      "prime_search",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutinePrimeSearch),
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "lan_connectivity",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineLanConnectivity),
