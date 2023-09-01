@@ -983,6 +983,40 @@ func ToggleMic(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
 	return nil
 }
 
+var noiseCancellationToggle = nodewith.
+	ClassName("HoverHighlightView").
+	Role(role.CheckBox).
+	NameContaining("Noise cancellation").
+	Ancestor(nodewith.ClassName("AudioDetailedView"))
+
+// NoiseCancellationEnabled returns whether noise cancellation is enabled in quick settings.
+func NoiseCancellationEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
+	cleanup, err := ensureVisible(ctx, tconn)
+	if err != nil {
+		return false, err
+	}
+	defer cleanup(ctx)
+
+	if err := OpenAudioSettings(ctx, tconn); err != nil {
+		return false, errors.Wrap(err, "failed to OpenAudioSettings")
+	}
+	return IsToggleOptionEnabled(ctx, tconn, noiseCancellationToggle)
+}
+
+// ToggleNoiseCancellation sets the noise cancellation state in quick settings.
+func ToggleNoiseCancellation(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
+	cleanup, err := ensureVisible(ctx, tconn)
+	if err != nil {
+		return err
+	}
+	defer cleanup(ctx)
+
+	if err := OpenAudioSettings(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to OpenAudioSettings")
+	}
+	return ToggleOption(ctx, tconn, noiseCancellationToggle, enable)
+}
+
 // SelectAudioOption selects the first audio device with the given name from the audio settings page.
 func SelectAudioOption(ctx context.Context, tconn *chrome.TestConn, device string) error {
 	return SelectNthAudioOption(ctx, tconn, device, 0)
