@@ -101,21 +101,15 @@ func init() {
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor),
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name:      "fingerprint",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
-			ExtraAttr: []string{"informational"},
-			// Enabling this routine needs to configure the
-			// cros_config. At this moment, only jinlon and drobit
-			// are enabled.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("jinlon", "drobit")),
+			Name:              "fingerprint",
+			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
+			ExtraAttr:         []string{"informational"},
+			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 		}, {
-			Name:      "fingerprint_alive",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
-			ExtraAttr: []string{"informational"},
-			// Enabling this routine needs to configure the
-			// cros_config. At this moment, only jinlon and drobit
-			// are enabled.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("jinlon", "drobit")),
+			Name:              "fingerprint_alive",
+			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
+			ExtraAttr:         []string{"informational"},
+			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 		}, {
 			Name:              "emmc_lifetime",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),

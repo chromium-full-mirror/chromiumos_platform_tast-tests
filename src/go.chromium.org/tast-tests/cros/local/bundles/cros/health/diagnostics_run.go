@@ -111,21 +111,15 @@ func init() {
 			// TODO(b/280388091): Promote to critical.
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name: "fingerprint",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
-			// Enabling this routine needs to configure the
-			// cros_config. At this moment, only jinlon and drobit
-			// are enabled.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("jinlon", "drobit")),
+			Name:              "fingerprint",
+			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
+			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 			// TODO(b/279374234): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
-			Name: "fingerprint_alive",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
-			// Enabling this routine needs to configure the
-			// cros_config. At this moment, only jinlon and drobit
-			// are enabled.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("jinlon", "drobit")),
+			Name:              "fingerprint_alive",
+			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
+			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 			// TODO(b/279374234): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
