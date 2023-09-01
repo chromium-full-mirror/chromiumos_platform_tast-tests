@@ -216,49 +216,18 @@ message WriteApFlashResponse {
     string err = 1;
 }
 
-// A specific status register on the AP flash chip, used for write protection
-// configuration.
-enum ApFlashStatusRegister {
-    UNKNOWN_STATUS_REGISTER = 0;
-    REGISTER_1 = 1;
-    REGISTER_2 = 2;
-    REGISTER_3 = 3;
+// Request to enable SW WP on the SPI chip connected to the devboard.
+message EnableApWriteProtectRequest {
+    // The byte offset of the start of the protected region.
+    uint32 start = 1;
+
+    // The length of the protected region in bytes.
+    uint32 len = 2;
 }
 
-// Request to read a specific AP flash status register.
-message ReadApFlashStatusRegisterRequest {
-    // Which register to request the contents of.
-    ApFlashStatusRegister register = 1;
-}
-
-// The contents of the requested AP flash status register.
-message ReadApFlashStatusRegisterResponse {
-    // The register that was requested.
-    ApFlashStatusRegister register = 1;
-
-    // The contents of the read register. This is a single octet 0-255.
-    uint32 contents = 2;
-
+message EnableApWriteProtectResponse {
     // Empty indicates no error.
-    string err = 3;
-}
-
-// Request to write a specific AP flash status register.
-message WriteApFlashStatusRegisterRequest {
-    // Which register to write to.
-    ApFlashStatusRegister register = 1;
-
-    // The contents to write to the register. This is a single octet 0-255.
-    uint32 contents = 2;
-}
-
-// The contents of the requested AP flash status register.
-message WriteApFlashStatusRegisterResponse {
-    // The register that was requested.
-    ApFlashStatusRegister register = 1;
-
-    // Empty indicates no error.
-    string err = 2;
+    string err = 1;
 }
 
 // Interface to connect to the TPM with.
@@ -335,13 +304,9 @@ service DutControl {
     // Writes to AP flash.
     rpc WriteApFlash(WriteApFlashRequest) returns (WriteApFlashResponse);
 
-    // Reads the contents of a specific AP flash status register.
-    rpc ReadApFlashStatusRegister(ReadApFlashStatusRegisterRequest)
-        returns (ReadApFlashStatusRegisterResponse);
-
-    // Writes a new value for a specific AP flash status register.
-    rpc WriteApFlashStatusRegister(WriteApFlashStatusRegisterRequest)
-        returns (WriteApFlashStatusRegisterResponse);
+    // Enable HW WP on the AP flash chip with the given protected region.
+    rpc EnableApWriteProtect(EnableApWriteProtectRequest)
+        returns (EnableApWriteProtectResponse);
 
     rpc RunTcgTests(RunTcgTestsRequest) returns (stream RunTcgTestsResponse);
 }

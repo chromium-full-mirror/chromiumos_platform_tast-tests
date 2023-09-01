@@ -103,6 +103,10 @@ type SerialChannel interface {
 type ApFlash interface {
 	// FetchApFlashInfo fetches the name and vendor of the SPI flash chip connected to the devboard.
 	FetchApFlashInfo(ctx context.Context) (output *ApFlashInfo, err error)
+
+	// EnableApWriteProtect enables HW write protection on the SPI flash chip with the given
+	// start address and length.
+	EnableApWriteProtect(ctx context.Context, startAddr, len uint32) error
 }
 
 // ApFlashInfo contains info about the AP flash that the DUT would have access to.

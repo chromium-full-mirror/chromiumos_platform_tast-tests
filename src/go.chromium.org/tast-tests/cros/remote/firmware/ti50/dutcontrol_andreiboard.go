@@ -423,3 +423,19 @@ func (a *andreiboardApFlash) FetchApFlashInfo(ctx context.Context) (info *common
 	}
 	return &common.ApFlashInfo{Name: resp.ChipName, Vendor: resp.ChipVendor}, nil
 }
+
+// EnableApWriteProtect enables HW write protection on the SPI flash chip with the given
+// start address and length.
+func (a *andreiboardApFlash) EnableApWriteProtect(ctx context.Context, startAddr, len uint32) error {
+	resp, err := a.ab.client.EnableApWriteProtect(ctx, &dutcontrol.EnableApWriteProtectRequest{
+		Start: startAddr,
+		Len:   len,
+	})
+	if err != nil {
+		return errors.Wrap(err, "EnableApWriteProtect request")
+	}
+	if resp.Err != "" {
+		return errors.Errorf("EnableApWriteProtect response: %s", resp.Err)
+	}
+	return nil
+}
