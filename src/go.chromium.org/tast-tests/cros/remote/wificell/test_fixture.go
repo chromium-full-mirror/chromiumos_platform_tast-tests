@@ -759,24 +759,32 @@ func (tf *TestFixture) Close(ctx context.Context) (firstErr error) {
 	// Close all routers, starting with the pcap.
 	if !tf.pcapIsRouter && tf.pcap != nil {
 		rd := tf.pcap
-		routerDescription := fmt.Sprintf("pcap router %q", rd.object.RouterName())
+		routerDescription := fmt.Sprintf("pcap router target %q", rd.target)
 		testing.ContextLogf(ctx, "Closing %s", routerDescription)
-		if err := rd.object.Close(ctx); err != nil {
-			utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to close router controller for %s", routerDescription))
+		if rd.object != nil {
+			if err := rd.object.Close(ctx); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to close router controller for %s", routerDescription))
+			}
 		}
-		if err := rd.host.Close(ctx); err != nil {
-			utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to close ssh connection to %s", routerDescription))
+		if rd.host != nil {
+			if err := rd.host.Close(ctx); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to close ssh connection to %s", routerDescription))
+			}
 		}
 		testing.ContextLogf(ctx, "Closed %s", routerDescription)
 	}
 	for i, rd := range tf.routers {
-		routerDescription := fmt.Sprintf("primary router[%d] %q", i, rd.object.RouterName())
+		routerDescription := fmt.Sprintf("primary router[%d] target %q", i, rd.target)
 		testing.ContextLogf(ctx, "Closing %s", routerDescription)
-		if err := rd.object.Close(ctx); err != nil {
-			utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to close router controller for %s", routerDescription))
+		if rd.object != nil {
+			if err := rd.object.Close(ctx); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to close router controller for %s", routerDescription))
+			}
 		}
-		if err := rd.host.Close(ctx); err != nil {
-			utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to close ssh connection to %s", routerDescription))
+		if rd.host != nil {
+			if err := rd.host.Close(ctx); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to close ssh connection to %s", routerDescription))
+			}
 		}
 		testing.ContextLogf(ctx, "Closed %s", routerDescription)
 	}
