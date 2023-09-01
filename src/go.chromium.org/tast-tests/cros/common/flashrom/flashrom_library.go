@@ -129,7 +129,7 @@ const (
 	ProgrammerDummyflasher   Programmer = "dummy"
 	ProgrammerEc             Programmer = "ec"
 	ProgrammerFt2232spi      Programmer = "ft2232_spi"
-	ProgrammerHost           Programmer = "host"
+	ProgrammerHost           Programmer = "internal"
 	ProgrammerRaidenDebugSpi Programmer = "raiden_debug_spi"
 )
 
