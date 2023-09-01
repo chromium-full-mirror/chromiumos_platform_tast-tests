@@ -28,8 +28,8 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		SoftwareDeps: []string{"wilco"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      20 * time.Minute,
@@ -100,13 +100,11 @@ func WilcoNormalToDev(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to read the firmware log from the DUT: ", err)
 	}
-	defer func() {
-		// Save the firmware log for debugging purposes.
-		firmwareLogDestPath := filepath.Join(s.OutDir(), "firmware.log")
-		if err := ioutil.WriteFile(firmwareLogDestPath, []byte(firmwareLogOutput), 0666); err != nil {
-			s.Fatal("Failed to write firmware log: ", err)
-		}
-	}()
+	// Save the firmware log for debugging purposes.
+	firmwareLogDestPath := filepath.Join(s.OutDir(), "firmware.log")
+	if err := ioutil.WriteFile(firmwareLogDestPath, []byte(firmwareLogOutput), 0666); err != nil {
+		s.Fatal("Failed to write firmware log: ", err)
+	}
 
 	var (
 		developerWarning         = 0x101

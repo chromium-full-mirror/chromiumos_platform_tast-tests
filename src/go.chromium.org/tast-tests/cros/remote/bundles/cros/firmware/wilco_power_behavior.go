@@ -35,22 +35,25 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware"},
 		SoftwareDeps: []string{"wilco"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
 			// Verify that Wilco doesn't turn on from S5 (off) by opening the lid.
+			// TODO: When stable, change firmware_unstable to a different attr.
 			Name: "lid_close_open",
 			Val: wilcoPowerBehaviorTestParams{
 				checkLidState: true,
 			},
+			ExtraAttr: []string{"firmware_unstable"},
 		}, {
 			// Verify that Wilco wakes from pressing power, but not from AC.
 			Val: wilcoPowerBehaviorTestParams{
 				checkCharger: true,
 			},
+			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+			ExtraAttr:         []string{"firmware_bios"},
 		}},
 	})
 }
@@ -82,14 +85,6 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 		}
 		if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 			s.Fatal("Failed to remove watchdog main: ", err)
-		}
-	}
-	if tc.checkLidState {
-		// Lid emulations are only possible via servo micro.
-		if hasMicroOrC2D2, err := h.Servo.PreferDebugHeader(ctx); err != nil {
-			s.Fatal("PreferDebugHeader: ", err)
-		} else if !hasMicroOrC2D2 {
-			s.Fatal("No servo micro found for lid emulations")
 		}
 	}
 
