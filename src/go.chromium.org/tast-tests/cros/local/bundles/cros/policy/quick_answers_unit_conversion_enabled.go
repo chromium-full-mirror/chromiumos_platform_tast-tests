@@ -36,7 +36,11 @@ func init() {
 			"chiav@google.com",
 		},
 		BugComponent: "b:1129862",
-		Attr:         []string{"group:golden_tier"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:mainline",
+			"informational",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Data:         policyquickanswers.GetDataFiles(),
 		SearchFlags: []*testing.StringPair{
