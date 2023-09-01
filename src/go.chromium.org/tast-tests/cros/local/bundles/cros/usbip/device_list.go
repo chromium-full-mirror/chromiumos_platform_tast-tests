@@ -22,7 +22,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify device listing works",
 		Contacts: []string{
-			"chromeos-engprod-sydney@google.com",
+			"chromeos-engprod-syd@google.com",
 			"ashpakov@google.com",
 		},
 		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Developer

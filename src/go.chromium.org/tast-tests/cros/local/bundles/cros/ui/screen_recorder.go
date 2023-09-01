@@ -24,7 +24,7 @@ func init() {
 		Func:         ScreenRecorder,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the screen recorder Tast API works",
-		Contacts:     []string{"chromeos-engprod-sydney@google.com", "alvinjia@google.com", "mattlui@google.com"},
+		Contacts:     []string{"chromeos-engprod-syd@google.com", "alvinjia@google.com", "mattlui@google.com"},
 		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Apps
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
@@ -67,6 +67,8 @@ func ScreenRecorder(ctx context.Context, s *testing.State) {
 	if err := recorder.Start(ctx, tconn); err != nil {
 		s.Fatal("Failed to start screen recorder: ", err)
 	}
+
+	// GoBigSleepLint: Allow the screen recording to run for a short period.
 	testing.Sleep(ctx, 10*time.Second)
 
 	if err := recorder.Stop(ctx); err != nil {
