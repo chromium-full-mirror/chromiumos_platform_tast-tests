@@ -697,7 +697,7 @@ func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context, opts ...ModeSw
 // Include opts CopyTastFiles if grpc services are needed after booting to usb,
 // SkipModeCheckAfterReboot to skip verifying DUT is in recovery mode after boot,
 // SkipWaitConnect to skip waiting for ssh connection to DUT (this will also skip mode check).
-func (ms *ModeSwitcher) WarmResetToRecovery(ctx context.Context, forceRecovery bool, opts ...ModeSwitchOption) (errReturn error) {
+func (ms *ModeSwitcher) WarmResetToRecovery(ctx context.Context, fromMode fwCommon.BootMode, opts ...ModeSwitchOption) (errReturn error) {
 	h := ms.Helper
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "requiring servo")
@@ -728,24 +728,22 @@ func (ms *ModeSwitcher) WarmResetToRecovery(ctx context.Context, forceRecovery b
 	}
 	h.DisconnectDUT(ctx)
 
-	if !forceRecovery {
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-			return errors.Wrap(err, "setting power state to warm reset")
-		}
-
-		testing.ContextLogf(ctx, "Sleeping for %s waiting for no good screen", h.Config.FirmwareScreen)
-		// GoBigSleepLint: Need to wait for firmware screen, there's nothing to poll for to see if it's there yet.
-		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-			return errors.Wrap(err, "waiting for firmware screen")
-		}
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+		return errors.Wrap(err, "setting power state to warm reset")
 	}
 
-	// Some older models will automatically boot from USB when inserted at the no good screen.
-	// For newer models, we need to go to recovery mode then insert usb to boot from it.
-	// On the older models, this process will result in the recovery reason being set to 2 (RO_MANUAL),
-	// in newer models rec reason will be preserved.
-	// forceRecovery flag forces this anyway at the cost of potentially losing the expected recovery reason in crossystem.
-	if forceRecovery || h.Config.BrokenFirmwareScreenRequiresRecovery {
+	testing.ContextLogf(ctx, "Sleeping for %s to wait for broken screen", h.Config.FirmwareScreen)
+	// GoBigSleepLint: Need to wait for firmware screen, there's nothing to poll for to see if it's there yet.
+	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+		return errors.Wrap(err, "waiting for firmware screen")
+	}
+
+	// Some older boards, such as glados, gale, oak, gru, reef, eve, coral and
+	// fizz, will boot to recovery screen instead of broken screen when dev
+	// switch is enabled. For newer boards, sending power_state:rec is required
+	// to boot the DUT to recovery screen from broken screen. Inserting a valid
+	// USB at recovery screen will boot the DUT from the USB.
+	if fromMode != fwCommon.BootModeDev || !h.Config.NoBrokenScreenInDev {
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
 			return errors.Wrap(err, "going to rec mode")
 		}
@@ -763,7 +761,7 @@ func (ms *ModeSwitcher) WarmResetToRecovery(ctx context.Context, forceRecovery b
 	}
 
 	if !msOptsContain(opts, SkipWaitConnect) {
-		testing.ContextLog(ctx, "Reconnect to DUT")
+		testing.ContextLog(ctx, "Reconnecting to DUT")
 		connectCtx, cancel := context.WithTimeout(ctx, h.Config.USBImageBootTimeout)
 		defer cancel()
 		testing.ContextLogf(ctx, "Waiting upto %s for DUT to boot from usb", h.Config.USBImageBootTimeout)
@@ -771,13 +769,11 @@ func (ms *ModeSwitcher) WarmResetToRecovery(ctx context.Context, forceRecovery b
 			return errors.Wrap(err, "failed to reconnect to DUT after booting to recovery mode")
 		}
 
-		if !forceRecovery {
-			testing.ContextLog(ctx, "Verifying boot mode is recovery")
-			if curr, err := h.Reporter.CurrentBootMode(ctx); err != nil {
-				return errors.Wrap(err, "checking boot mode after recovery boot")
-			} else if curr != fwCommon.BootModeRecovery && !msOptsContain(opts, SkipModeCheckAfterReboot) {
-				return errors.Errorf("incorrect boot mode after recovery boot got %s; want %s", curr, fwCommon.BootModeRecovery)
-			}
+		testing.ContextLog(ctx, "Verifying boot mode is recovery")
+		if curr, err := h.Reporter.CurrentBootMode(ctx); err != nil {
+			return errors.Wrap(err, "checking boot mode after recovery boot")
+		} else if curr != fwCommon.BootModeRecovery && !msOptsContain(opts, SkipModeCheckAfterReboot) {
+			return errors.Errorf("incorrect boot mode after recovery boot got %s; want %s", curr, fwCommon.BootModeRecovery)
 		}
 	}
 

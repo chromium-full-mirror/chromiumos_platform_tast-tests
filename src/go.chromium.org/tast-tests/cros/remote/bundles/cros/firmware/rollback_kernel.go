@@ -262,7 +262,7 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reduce KERN-B version by 1: ", err)
 	}
 
-	if err := ms.WarmResetToRecovery(ctx, false, firmware.CopyTastFiles); err != nil {
+	if err := ms.WarmResetToRecovery(ctx, bootMode, firmware.CopyTastFiles); err != nil {
 		s.Fatal("Failed to perform recovery boot to USB")
 	}
 

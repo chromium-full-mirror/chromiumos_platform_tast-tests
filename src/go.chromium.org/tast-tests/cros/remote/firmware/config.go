@@ -88,7 +88,7 @@ type Config struct {
 	GSCCanWakeECWithReset                bool              `json:"gsc_can_wake_ec_with_reset"`
 	LidWakeFromPowerOff                  bool              `json:"lid_wake_from_power_off"`
 	RecForceMRC                          bool              `json:"rec_force_mrc"`
-	BrokenFirmwareScreenRequiresRecovery bool              `json:"broken_firmware_screen_requires_recovery"`
+	NoBrokenScreenInDev                  bool              `json:"no_broken_screen_in_dev"`
 	MiniDiagEnabled                      bool              `json:"minidiag_enabled"`
 	MiniOSEnabled                        bool              `json:"minios_enabled"`
 
