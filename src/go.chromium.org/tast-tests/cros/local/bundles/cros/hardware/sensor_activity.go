@@ -27,7 +27,6 @@ func init() {
 		Contacts: []string{
 			"chromeos-sensors-eng@google.com",
 			"gwendal@chromium.com",
-			"chingkang@chromium.org", // Test author
 		},
 		Attr:         []string{"group:sensors"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
