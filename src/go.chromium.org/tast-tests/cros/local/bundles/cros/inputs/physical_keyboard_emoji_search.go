@@ -31,7 +31,14 @@ func init() {
 		Attr:         []string{"group:input-tools", "group:mainline", "group:input-tools-upstream", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...), hwdep.SkipOnModel("kefka")),
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.DefaultInputMethod},
+			[]string{
+				"screenplay-31aca7e6-f437-4016-901c-519b7d455559",
+				"screenplay-7064b776-c8b5-4e1e-a344-02f6f3570886",
+				"screenplay-48fd8e95-731f-49a3-9658-e0388692cb98",
+				"screenplay-b8443fd1-891d-4b3b-8f0d-f3be50b46dc7",
+			}),
 		Params: []testing.Param{
 			{
 				Fixture: fixture.ClamshellNonVK,

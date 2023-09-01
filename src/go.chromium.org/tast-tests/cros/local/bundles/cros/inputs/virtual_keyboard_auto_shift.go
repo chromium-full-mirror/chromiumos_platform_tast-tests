@@ -37,8 +37,17 @@ func init() {
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
-		Timeout:      5 * time.Minute,
+		// SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.EnglishUS},
+			[]string{
+				"screenplay-a83e066d-03d4-4c93-983c-896c6e6fcb90",
+				"screenplay-bc31f54b-9523-44be-a47a-c88752c72548",
+				"screenplay-35a7f668-cf5a-4f6a-aecb-0553c8a7049e",
+				"screenplay-a39885bd-ddc1-489e-a61e-a79c8d3f1081",
+				"screenplay-315ad39b-3173-476e-a708-0d6f4c6726dd",
+			}),
+		Timeout: 5 * time.Minute,
 		Params: []testing.Param{
 			{
 				// Auto-shift is primarily designed for tablet mode.

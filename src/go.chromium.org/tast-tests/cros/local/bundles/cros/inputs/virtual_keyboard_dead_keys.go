@@ -44,7 +44,13 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
-		Timeout:      5 * time.Minute,
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-1dff4cf7-e5df-4037-a698-82af3960a3d5",
+			},
+		},
+		Timeout: 5 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:              "french",

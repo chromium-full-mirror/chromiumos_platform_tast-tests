@@ -34,6 +34,12 @@ func init() {
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      5 * time.Minute,
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-f5823415-b90a-4ff8-aad2-2a362980afab",
+			},
+		},
 		Params: []testing.Param{
 			{
 				Name:             "us",
@@ -109,10 +115,10 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 	// Focus on the input field and wait for a small duration.
 	// This is needed as the Japanese IME has a bug where typing immediately after
 	// a new focus will leave the first character unconverted.
-	// TODO(b/191213378): Remove this once the bug is fixed.
 	if err := its.ClickFieldAndWaitForActive(inputField)(ctx); err != nil {
 		s.Fatal("Failed to wait for input field to activate: ", err)
 	}
+	//GoBigSleepLint: Remove this once the bug (b/191213378) is fixed.
 	if err := testing.Sleep(ctx, 1*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

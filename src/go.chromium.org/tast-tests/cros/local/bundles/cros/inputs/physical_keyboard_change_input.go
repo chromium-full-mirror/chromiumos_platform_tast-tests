@@ -32,8 +32,13 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod, ime.EnglishUK, ime.ChinesePinyin}),
-		Timeout:      3 * time.Minute,
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.DefaultInputMethod, ime.EnglishUK, ime.ChinesePinyin},
+			[]string{
+				"screenplay-36dacf68-4559-473d-a936-7a44acc579b8",
+				"screenplay-1a03f485-f795-43dd-8822-e55da1c368fc",
+			}),
+		Timeout: 3 * time.Minute,
 		Params: []testing.Param{
 			{
 				Fixture:           fixture.ClamshellNonVK,

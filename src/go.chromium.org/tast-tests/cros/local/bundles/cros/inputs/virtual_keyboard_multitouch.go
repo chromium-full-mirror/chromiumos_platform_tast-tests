@@ -37,8 +37,15 @@ func init() {
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard}),
-		Timeout:      5 * time.Minute,
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard},
+			[]string{
+				"screenplay-e6e0f446-6e57-4058-9a13-d4d84754fba0",
+				"screenplay-6826842d-a2b4-4061-83b6-25b28fe746b9",
+				"screenplay-8f8898d3-ecc4-454c-9b11-7365379f61ff",
+				"screenplay-bbe796e7-250a-4850-8007-351fc172c62a",
+			}),
+		Timeout: 5 * time.Minute,
 		Params: []testing.Param{
 			{
 				Fixture: fixture.TabletVK,

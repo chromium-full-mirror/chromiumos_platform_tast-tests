@@ -33,6 +33,40 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-11bf794d-58d7-44c3-aaa2-c14f950b253a",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-c7277b01-71b3-4ffd-8b6a-82b79919c50f",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-28b36ee6-76e3-40fd-a563-507209bd268e",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-e0c8dac2-c03a-445a-8190-9f2713c8a728",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-23d2ef74-24d5-44f8-8d6e-18ae5403cc3e",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-1c2e667a-627c-4301-bca0-70c4308a8bd5",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-634673f4-92d9-4695-b624-80b5133143ff",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-c5475fa1-b92d-4ae5-8d00-5bf75d854ca6",
+			},
+		},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{

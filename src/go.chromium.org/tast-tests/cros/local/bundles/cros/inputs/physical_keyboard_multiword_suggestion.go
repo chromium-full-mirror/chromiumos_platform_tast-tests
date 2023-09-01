@@ -32,7 +32,7 @@ func init() {
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
+		SearchFlags:  util.SearchFlagsWithIMEAndScreenPlay([]ime.InputMethod{ime.EnglishUS}, []string{"screenplay-d72ccf01-4e0f-451e-83fd-040151fc9722"}),
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "ondevice_text_suggestions"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{

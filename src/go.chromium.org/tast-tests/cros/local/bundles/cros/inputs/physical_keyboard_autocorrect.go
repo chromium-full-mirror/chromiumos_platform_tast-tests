@@ -35,7 +35,12 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.EnglishUS},
+			[]string{
+				"screenplay-0c72a440-b472-4375-a30d-d9985b193e7c",
+				"screenplay-104f9d3e-b4cd-4cdb-82e5-c177484961b3",
+			}),
 		Timeout:      5 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...)),
 		Params: []testing.Param{

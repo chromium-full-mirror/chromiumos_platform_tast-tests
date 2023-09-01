@@ -39,8 +39,15 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-bd19bdd3-ae1e-4361-8683-fe2bdac03af0",
+			},
+		},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      5 * time.Minute,
+
 		Params: []testing.Param{
 			{
 				Name:    "french",

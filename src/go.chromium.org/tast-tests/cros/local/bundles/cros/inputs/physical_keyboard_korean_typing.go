@@ -34,7 +34,13 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Korean}),
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.Korean},
+			[]string{
+				"screenplay-dc243599-567a-4a93-babd-6182072afc73",
+				"screenplay-f6fa7916-fa0b-4f89-b090-2bcdba6b54e7",
+				"screenplay-06f14078-48c8-4fa4-8350-444f06eb4555",
+			}),
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      8 * time.Minute,
 		Params: []testing.Param{

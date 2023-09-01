@@ -35,7 +35,7 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.FrenchFrance}),
+		SearchFlags:  util.SearchFlagsWithIMEAndScreenPlay([]ime.InputMethod{ime.FrenchFrance}, []string{"screenplay-379978c8-df8e-4d52-91a2-38246640a340"}),
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{

@@ -35,7 +35,14 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.DefaultInputMethod},
+			[]string{
+				"screenplay-635feda2-f278-4f00-94a7-b25c849a57fd",
+				"screenplay-1187c2a2-f40a-4f0c-9cfa-b235085fb37f",
+				"screenplay-f58d2b39-4a8d-45ec-88a3-3c7a6b015bbb",
+				"screenplay-0b77f4bd-6b19-4723-8428-62c414453364",
+			}),
 		Params: []testing.Param{
 			{
 				Fixture:           fixture.ClamshellNonVK,

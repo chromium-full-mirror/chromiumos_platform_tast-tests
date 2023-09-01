@@ -38,6 +38,20 @@ func init() {
 		BugComponent: "b:95887",
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-4451894e-72db-4963-b119-58ba5c1b0928",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-c97f0c54-292d-4826-900b-9a388dbfe5c6",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-2b8c7da3-a356-4d0f-8e38-9a925aea5e7a",
+			},
+		},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      time.Duration(3 * time.Minute),
 		Params: []testing.Param{
@@ -186,8 +200,7 @@ func VirtualKeyboardGlideTyping(ctx context.Context, s *testing.State) {
 
 	// Define glide typing user action including validating the result.
 	glideTypingUserAction := func(testScenario string, inputField testserver.InputField, isGlideTypingEnabled bool) uiauto.Action {
-		// Wait for the glide typing engine to be ready.
-		// The wait is required for the betty boards.
+		//GoBigSleepLint: Wait for the glide typing engine to be ready. The wait is required for the betty boards.
 		testing.Sleep(ctx, 2*time.Second)
 		// Define result validation function.
 		// Should submit the last key if glide typing disabled.

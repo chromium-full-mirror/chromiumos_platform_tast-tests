@@ -39,6 +39,16 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-30b60831-2298-4013-ad58-b4c78e9651c8",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-ef700837-d99e-41fa-983e-b3b34b28502a",
+			},
+		},
 		Timeout:      5 * time.Minute,
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Params: []testing.Param{

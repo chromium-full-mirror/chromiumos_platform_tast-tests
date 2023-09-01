@@ -36,7 +36,7 @@ func init() {
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		VarDeps:      []string{"inputs.signinProfileTestExtensionManifestKey"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
+		SearchFlags:  util.SearchFlagsWithIMEAndScreenPlay([]ime.InputMethod{ime.EnglishUS}, []string{"screenplay-fae0c5ee-7dae-44f1-a785-4e2e8fc06171"}),
 	})
 }
 

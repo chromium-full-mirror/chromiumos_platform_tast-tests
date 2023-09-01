@@ -33,7 +33,16 @@ func init() {
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      5 * time.Minute,
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.ChineseZhuyin}),
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.ChineseZhuyin},
+			[]string{
+				"screenplay-a104f9b2-da18-4375-8cb7-752579971c93",
+				"screenplay-e8acb895-5a5f-4e65-86b5-ea5afc8c63b2",
+				"screenplay-bacf731f-c78c-4bbc-9ac5-6af8df05eabe",
+				"screenplay-600abea3-4e23-4fdc-8cb3-af39082ecae7",
+				"screenplay-72b289de-af77-45c1-82f4-dddedbb020e3",
+				"screenplay-af2ec3b0-f5d7-433f-a324-89a1c30c66c2",
+			}),
 		Params: []testing.Param{
 			{
 				Fixture: fixture.ClamshellNonVK,

@@ -33,8 +33,14 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
-		Timeout:      5 * time.Minute,
+		// SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.EnglishUS},
+			[]string{
+				"screenplay-acdad816-f5d7-4f02-88a2-a766a1efd82a",
+				"screenplay-e34be29f-5528-4b9c-8a4d-5a7d82a08c91",
+			}),
+		Timeout: 5 * time.Minute,
 		Params: []testing.Param{
 			{
 				Fixture:           fixture.TabletVKRestart,

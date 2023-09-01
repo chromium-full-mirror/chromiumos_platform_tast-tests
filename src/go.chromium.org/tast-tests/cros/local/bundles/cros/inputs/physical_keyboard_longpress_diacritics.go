@@ -34,7 +34,14 @@ func init() {
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		Timeout:      2 * time.Minute,
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.EnglishUS},
+			[]string{
+				"screenplay-83bc7d24-4370-4c51-92a0-b63d961c483d",
+				"screenplay-3cd04977-4eaf-403a-a4da-4d59e4069338",
+				"screenplay-739015bc-416f-4da4-8703-410b9f7f1926",
+				"screenplay-26c40157-cf25-4cd7-a315-dbba94391197",
+			}),
 		Params: []testing.Param{
 			{
 				Fixture:           fixture.ClamshellNonVKWithDiacriticsOnPKLongpress,

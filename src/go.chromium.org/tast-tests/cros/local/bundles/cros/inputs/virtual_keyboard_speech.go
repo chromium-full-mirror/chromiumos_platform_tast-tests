@@ -51,7 +51,7 @@ func init() {
 		BugComponent: "b:95887",
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		Attr:         []string{"group:mainline", "group:input-tools", "group:input-tools-upstream"},
-		SearchFlags:  util.IMESearchFlags(voiceTestIMEs),
+		SearchFlags:  util.SearchFlagsWithIMEAndScreenPlay(voiceTestIMEs, []string{"screenplay-83e4e9bd-e3be-4c32-8f28-5ac8a64f1838"}),
 		Data:         data.ExtractExternalFiles(voiceTestMessages, append(voiceTestIMEs, voiceTestIMEsNewData...)),
 		Timeout:      time.Duration(len(voiceTestIMEs)+len(voiceTestIMEsNewData)) * time.Duration(len(voiceTestMessages)) * time.Minute,
 		Params: []testing.Param{

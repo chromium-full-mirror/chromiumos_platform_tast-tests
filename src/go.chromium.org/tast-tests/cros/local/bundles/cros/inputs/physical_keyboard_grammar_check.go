@@ -34,7 +34,14 @@ func init() {
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.EnglishUS},
+			[]string{
+				"screenplay-2cd47f7e-d963-423a-b92a-eef52e736177",
+				"screenplay-15702e6d-8e69-4090-9638-2649f020d2c2",
+				"screenplay-ddd03365-9c5a-4620-a435-8a751f15e094",
+				"screenplay-ae4c4f71-db57-4adf-8e95-39a56bc8369d",
+			}),
 		HardwareDeps: hwdep.D(hwdep.Model(pre.GrammarEnabledModels...)),
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "ondevice_grammar"},
 		Params: []testing.Param{

@@ -40,7 +40,7 @@ func init() {
 			"ui.gaiaPoolDefault",
 			"ui.signinProfileTestExtensionManifestKey",
 		},
-		SearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay([]ime.InputMethod{ime.EnglishUS}, []string{"screenplay-79dbd617-95bd-484b-89fe-8921fb9178c6"}),
 		Timeout:     3 * time.Minute,
 		Params: []testing.Param{
 			{

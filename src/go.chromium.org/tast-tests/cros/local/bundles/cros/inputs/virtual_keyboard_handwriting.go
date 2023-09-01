@@ -50,9 +50,14 @@ func init() {
 		BugComponent: "b:95887",
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		Attr:         []string{"group:mainline", "group:input-tools"},
-		SearchFlags:  util.IMESearchFlags(hwTestIMEs),
-		Data:         data.ExtractExternalFiles(hwTestMessages, append(hwTestIMEs, hwTestIMEsUpstream...)),
-		Timeout:      2 * time.Duration(len(hwTestIMEs)+len(hwTestIMEsUpstream)) * time.Duration(len(hwTestMessages)) * time.Minute,
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			hwTestIMEs,
+			[]string{
+				"screenplay-d772e633-aa54-46d6-8bb1-4b7ccc5dfe3c",
+				"screenplay-e8d31a67-b9cb-403b-962f-58e2a1cd411f",
+			}),
+		Data:    data.ExtractExternalFiles(hwTestMessages, append(hwTestIMEs, hwTestIMEsUpstream...)),
+		Timeout: 2 * time.Duration(len(hwTestIMEs)+len(hwTestIMEsUpstream)) * time.Duration(len(hwTestMessages)) * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:              "docked",

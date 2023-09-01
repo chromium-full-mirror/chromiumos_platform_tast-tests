@@ -34,7 +34,16 @@ func init() {
 		BugComponent: "b:95887",
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.EnglishUS},
+			[]string{
+				"screenplay-6abbc898-0eb4-4a74-8ce8-c256f9af6773",
+				"screenplay-01e80f4f-423b-43d5-8392-a71a82a3f7ef",
+				"screenplay-1e8cfd3e-22b6-4bce-be2e-9e470d3ac969",
+				"screenplay-9158e01d-34aa-48ed-ab88-42034d7f40a7",
+				"screenplay-831e152b-12af-488c-94cc-ce4d61f8f479",
+				"screenplay-162fdfb4-f54e-4fb1-bdbd-7a69133d5e5b",
+			}),
 		Params: []testing.Param{
 			{
 				Fixture:           fixture.TabletVK,

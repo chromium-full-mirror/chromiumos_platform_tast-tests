@@ -40,6 +40,16 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-b1d60b3a-c343-4838-a371-6d96af1700b3",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-07b677a5-dde6-4f77-a69e-89a243032ee3",
+			},
+		},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{

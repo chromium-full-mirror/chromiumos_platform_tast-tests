@@ -38,7 +38,13 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
+		// SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.EnglishUS},
+			[]string{
+				"screenplay-a5a2d90f-88b4-47d6-ace9-c76003cd65bb",
+				"screenplay-bdff0b9e-bfff-4ea4-836b-406901e04463",
+			}),
 		Params: []testing.Param{
 			{
 				ExtraAttr:         []string{"group:input-tools-upstream"},
@@ -164,7 +170,7 @@ func physicalKeyboardEmojiSuggestion(ctx context.Context, s *testing.State) {
 					)(ctx)
 				}
 				// Otherwise check emoji suggestion window does not appear in 1s.
-				// Sleep is necessary here, otherwise it immediately returns success because of UI reflection delay.
+				// GoBigSleepLint: Sleep is necessary here, otherwise it immediately returns success because of UI reflection delay.
 				testing.Sleep(ctx, time.Second)
 				return uiauto.Combine("continue to input without emoji suggestion",
 					ui.WaitUntilGone(emojiCandidateWindowFinder),

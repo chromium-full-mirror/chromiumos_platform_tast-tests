@@ -50,7 +50,7 @@ func init() {
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
-		SearchFlags:  util.IMESearchFlags(inputFieldTestIMEs),
+		SearchFlags:  util.SearchFlagsWithIMEAndScreenPlay(inputFieldTestIMEs, []string{"screenplay-d0e5c2d9-4c60-43a2-9cb3-80061ab0c7c4"}),
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		Timeout:      time.Duration(len(inputFieldTestIMEs)) * time.Duration(len(inputFieldToMessage)) * time.Minute,
 		Params: []testing.Param{

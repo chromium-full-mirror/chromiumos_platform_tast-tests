@@ -44,9 +44,15 @@ func init() {
 		BugComponent: "b:95887",
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "google_virtual_keyboard"},
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
-		Data:         data.ExtractExternalFiles(testMessages, []ime.InputMethod{ime.DefaultInputMethod}),
-		Timeout:      5 * time.Minute,
+		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
+			[]ime.InputMethod{ime.DefaultInputMethod},
+			[]string{
+				"screenplay-e5f1d945-6b71-4011-994f-9f7a2c75f81d",
+				"screenplay-3d7cd04b-6f65-4667-ab65-5991602b7b8a",
+				"screenplay-7eb022ee-5490-4196-a8b5-ae23c9673a1f",
+			}),
+		Data:    data.ExtractExternalFiles(testMessages, []ime.InputMethod{ime.DefaultInputMethod}),
+		Timeout: 5 * time.Minute,
 		Params: []testing.Param{
 			{
 				Fixture:           fixture.ClamshellNonVKStereoAloopLoaded,
