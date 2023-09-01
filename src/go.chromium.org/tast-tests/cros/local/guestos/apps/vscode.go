@@ -75,7 +75,15 @@ const vsCodeStartupTimeout = 2 * time.Minute
 
 // InitialiseVSCode configures VS Code for testing by disabling cursor
 // blinking, notifications, updates, and removing the "Getting Started" page.
-func InitialiseVSCode(ctx context.Context, cfg VSCodeConfig, guest vm.Guest, uda *uidetection.Context, ui *uiauto.Context, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter) error {
+func InitialiseVSCode(ctx context.Context, cfg VSCodeConfig, guest vm.Guest, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn) error {
+	uda := uidetection.NewDefault(tconn)
+	ui := uiauto.New(tconn)
+
+	// Skip initialisation if a settings file already exists.
+	if err := guest.Command(ctx, "sh", "-c", fmt.Sprintf("[ -e .config/%s/User/settings.json ]", cfg.ConfigDir)).Run(); err == nil {
+		return nil
+	}
+
 	// Cursor blinking and vscode updates break screenshots.
 	guest.WriteFile(ctx, fmt.Sprintf(".config/%s/User/settings.json", cfg.ConfigDir), `{"editor.cursorBlinking": "solid", "editor.unicodeHighlight.nonBasicASCII": "false", "workbench.startupEditor": "none", "update.mode": "none", "workbench.editor.untitled.hint": "hidden"}`)
 
@@ -85,48 +93,39 @@ func InitialiseVSCode(ctx context.Context, cfg VSCodeConfig, guest vm.Guest, uda
 	}
 	testing.ContextLogf(ctx, "VS Code version: %s", string(version))
 
-	if err := disableVSCodeNotifications(ctx, cfg, guest); err != nil {
-		return err
+	// Sudo is required because the file the command modifies is owned by root.
+	cmd := guest.Command(ctx, "sudo", "sh", "-c", fmt.Sprintf(disableNotificationsCommand, cfg.Name))
+	if _, err := cmd.Output(); err != nil {
+		return errors.Wrapf(err, "failed to run %v", strings.Join(cmd.Args, " "))
 	}
 
 	if cfg.Name == "code" {
 		// Even with the workbench.startupEditor set to None,
 		// it still opens the Get Started tab when it is opened for the first time.
 		// Therefore, open it and close it firstly.
-		if err := launchAndCloseVSCode(cfg, uda, ui, terminalApp, keyboard)(ctx); err != nil {
+		cmd := guest.Command(ctx, cfg.Name, "--disable-extensions")
+		if _, err := cmd.Output(); err != nil {
+			return errors.Wrapf(err, "failed to start %q", cfg.Name)
+		}
+		if err := uiauto.Combine("open VSCode for the first time",
+			// Waiting for the welcome page, it always shows when opening the app for the first time.
+			uda.WithTimeout(vsCodeStartupTimeout).WaitUntilExists(uidetection.Word("Welcome").WithinA11yNode(cfg.WindowFinder).First()),
+			// Left click the app window header to focus.
+			// Do not click the center of the app window, which may unexpectedly.
+			// set the theme, see http://b/264336806.
+			ui.LeftClick(nodewith.HasClass("HeaderView").Ancestor(cfg.WindowFinder)),
+			// Press ctrl+W to close the welcome screen.
+			keyboard.AccelAction("ctrl+W"),
+			// Wait for welcome screen to close.
+			uda.WaitUntilGone(uidetection.Word("Welcome").WithinA11yNode(cfg.WindowFinder).First()),
+			// Press ctrl+Q to exit window.
+			keyboard.AccelAction("ctrl+Q"),
+			ui.WaitUntilGone(cfg.WindowFinder))(ctx); err != nil {
 			return err
 		}
 	}
 
 	return nil
-}
-
-// disableVSCodeNotifications will disable VS Code notifications. It should be
-// called before VS Code is launched.
-func disableVSCodeNotifications(ctx context.Context, cfg VSCodeConfig, guest vm.Guest) error {
-	// Sudo is required because the file the command modifies is read-only.
-	cmd := guest.Command(ctx, "sudo", "sh", "-c", fmt.Sprintf(disableNotificationsCommand, cfg.Name))
-	if _, err := cmd.Output(); err != nil {
-		return errors.Wrapf(err, "failed to run %v", strings.Join(cmd.Args, " "))
-	}
-	return nil
-}
-
-// launchAndCloseVSCode will Launch the VS Code app from the terminal and close
-// it without editing. This is used to dismiss the "Welcome" page.
-func launchAndCloseVSCode(cfg VSCodeConfig, uda *uidetection.Context, ui *uiauto.Context, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter) uiauto.Action {
-	return uiauto.Combine("open VSCode for the first time",
-		// Launch Visual Studio Code.
-		terminalApp.RunCommand(keyboard, fmt.Sprintf("%s --disable-extensions", cfg.Name)),
-		// Waiting for the welcome page, it always shows when opening the app for the first time.
-		uda.WithTimeout(vsCodeStartupTimeout).WaitUntilExists(uidetection.Word("Welcome").WithinA11yNode(cfg.WindowFinder).First()),
-		// Left click the app window header to focus.
-		// Do not click the center of the app window, which may unexpectedly.
-		// set the theme, see http://b/264336806.
-		ui.LeftClick(nodewith.HasClass("HeaderView").Ancestor(cfg.WindowFinder)),
-		// Press ctrl+Q to exit window.
-		keyboard.AccelAction("ctrl+Q"),
-		ui.WaitUntilGone(cfg.WindowFinder))
 }
 
 // LaunchVSCodeForFile will launch the VS Code app from the terminal with the
@@ -168,7 +167,7 @@ func TestCreateFileWithVSCode(ctx context.Context, cfg VSCodeConfig, terminalApp
 	uda := uidetection.NewDefault(tconn)
 	appWindowSaved := nodewith.NameStartingWith(fmt.Sprintf("%s - %s", VSCodeTestFile, cfg.AppName)).Role(role.Window).First()
 
-	if err := InitialiseVSCode(ctx, cfg, guest, uda, ui, terminalApp, keyboard); err != nil {
+	if err := InitialiseVSCode(ctx, cfg, guest, keyboard, tconn); err != nil {
 		return err
 	}
 

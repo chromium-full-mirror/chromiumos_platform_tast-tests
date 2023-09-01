@@ -121,7 +121,7 @@ func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalAp
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
 
-	if err := apps.InitialiseVSCode(ctx, apps.VSCode, cont, uda, ui, terminalApp, keyboard); err != nil {
+	if err := apps.InitialiseVSCode(ctx, apps.VSCode, cont, keyboard, tconn); err != nil {
 		return err
 	}
 

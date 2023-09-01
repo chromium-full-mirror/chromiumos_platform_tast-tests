@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
@@ -99,62 +97,4 @@ func TakeAppScreenshot(appName string) uiauto.Action {
 		}
 		return nil
 	}
-}
-
-// Maximize returns an action that clicks the maximize button in the window
-// title and waits until the restore button exists.
-func Maximize(tconn *chrome.TestConn, windowFinder *nodewith.Finder) uiauto.Action {
-	maximizeButton := nodewith.Name("Maximize").Role(role.Button).Ancestor(windowFinder)
-	restoreButton := nodewith.Name("Restore").Role(role.Button).Ancestor(windowFinder)
-	ui := uiauto.New(tconn)
-	return ui.LeftClickUntil(
-		maximizeButton,
-		ui.WithTimeout(2*time.Second).WaitUntilExists(restoreButton),
-	)
-}
-
-// RestoreFromMaximize returns an action that clicks the restore button in the
-// window title and waits until the maximize button exists.
-func RestoreFromMaximize(tconn *chrome.TestConn, windowFinder *nodewith.Finder) uiauto.Action {
-	maximizeButton := nodewith.Name("Maximize").Role(role.Button).Ancestor(windowFinder)
-	restoreButton := nodewith.Name("Restore").Role(role.Button).Ancestor(windowFinder)
-	ui := uiauto.New(tconn)
-	return ui.LeftClickUntil(
-		restoreButton,
-		ui.WithTimeout(2*time.Second).WaitUntilExists(maximizeButton),
-	)
-}
-
-// Minimize returns an action that clicks the minimize button in the window
-// title and waits until the app window becomes invisible.
-func Minimize(tconn *chrome.TestConn, windowFinder *nodewith.Finder) uiauto.Action {
-	minimizeButton := nodewith.Name("Minimize").Role(role.Button).Ancestor(windowFinder)
-	ui := uiauto.New(tconn)
-	return ui.LeftClickUntil(
-		minimizeButton,
-		ui.WithTimeout(2*time.Second).WaitUntilGone(windowFinder.Visible()),
-	)
-}
-
-// ShowFromShelf returns an action that clicks the app icon in the Shelf to
-// restore an app from minimized state.
-func ShowFromShelf(tconn *chrome.TestConn, windowFinder *nodewith.Finder, appShelfName string) uiauto.Action {
-	shelf := nodewith.Name("Shelf").Role(role.Toolbar).HasClass("ShelfView")
-	appShelfButton := nodewith.NameContaining(appShelfName).Role(role.Button).Visible().Ancestor(shelf)
-	ui := uiauto.New(tconn)
-	return ui.LeftClickUntil(
-		appShelfButton,
-		ui.WithTimeout(2*time.Second).WaitUntilExists(windowFinder.Visible()),
-	)
-}
-
-// Close returns an action that clicks the close button in the window title and
-// waits until the app window is gone.
-func Close(tconn *chrome.TestConn, windowFinder *nodewith.Finder) uiauto.Action {
-	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(windowFinder)
-	ui := uiauto.New(tconn)
-	return ui.LeftClickUntil(
-		closeButton,
-		ui.WithTimeout(2*time.Second).WaitUntilGone(windowFinder),
-	)
 }

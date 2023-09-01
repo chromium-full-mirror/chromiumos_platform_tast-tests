@@ -280,7 +280,10 @@ func TestAppNoBusterTestParams(t *testing.T) {
 }
 
 var appClamshellOnlyTests = []string{
-	"app_maximize_restore_minimize_close.go",
+	"app_audacity_window_operations.go",
+	"app_emacs_window_operations.go",
+	"app_firefox_window_operations.go",
+	"app_vscode_window_operations.go",
 }
 
 func TestAppClamshellOnlyTestParams(t *testing.T) {

@@ -20,6 +20,19 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
+// SetupEmacs configures emacs for testing.
+func SetupEmacs(ctx context.Context, guest vm.Guest) error {
+	// Anything animated like blinking cursors will break screendiffs.
+	// Set the window title to "GNU Emacs" so it can be identified
+	// regardless of emacs version.
+	// Avoid opening the splash screen since it means the screenshot will
+	// contain data like CPU architecture, which is terrible for screen
+	// diffing.
+	return guest.WriteFile(ctx, "~/.emacs", `(blink-cursor-mode 0)
+(setq-default frame-title-format '("GNU Emacs"))
+(setq inhibit-startup-message t)`)
+}
+
 // CreateFileWithEmacs opens the terminal, then launches GUI emacs and sends
 // keystrokes to it in order to type something into a file, then verifies what
 // was written.
@@ -29,16 +42,12 @@ func CreateFileWithEmacs(ctx context.Context, keyboard *input.KeyboardEventWrite
 		testString = "This is a test string"
 	)
 
-	// Anything animated like blinking cursors will break screendiffs.
-	// Set the window title to "GNU Emacs" so it can be identified
-	// regardless of emacs version.
-	guest.WriteFile(ctx, "~/.emacs", `(blink-cursor-mode 0)
-(setq-default frame-title-format '("GNU Emacs"))`)
+	if err := SetupEmacs(ctx, guest); err != nil {
+		return errors.Wrap(err, "failed to setup emacs for testing")
+	}
 
 	// Open emacs in Terminal.
-	// Avoid opening the splash screen since it means the screenshot will contain data like CPU architecture,
-	// which is terrible for screen diffing.
-	if err := terminal.RunCommand(keyboard, fmt.Sprintf("emacs --no-splash %s", testFile))(ctx); err != nil {
+	if err := terminal.RunCommand(keyboard, fmt.Sprintf("emacs %s", testFile))(ctx); err != nil {
 		return errors.Wrap(err, "failed to run command 'emacs' in Terminal window")
 	}
 

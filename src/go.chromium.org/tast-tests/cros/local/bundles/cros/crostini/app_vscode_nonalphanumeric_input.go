@@ -73,7 +73,7 @@ func AppVSCodeNonalphanumericInput(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
 
-	if err := apps.InitialiseVSCode(ctx, apps.VSCode, cont, uda, ui, terminalApp, keyboard); err != nil {
+	if err := apps.InitialiseVSCode(ctx, apps.VSCode, cont, keyboard, tconn); err != nil {
 		s.Fatal("Failed to open VSCode app from terminal and initialise settings: ", err)
 	}
 
