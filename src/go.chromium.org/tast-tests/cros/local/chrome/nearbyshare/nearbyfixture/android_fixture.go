@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android"
-	"go.chromium.org/tast-tests/cros/common/android/adb"
 	nearbycommon "go.chromium.org/tast-tests/cros/common/cros/nearbyshare"
 	"go.chromium.org/tast-tests/cros/local/chrome/crossdevice"
 	"go.chromium.org/tast-tests/cros/local/chrome/nearbyshare/nearbysnippet"
@@ -67,7 +66,7 @@ func init() {
 		Name: "nearbyShareAndroidSetup",
 		Desc: "Set up Android device for Nearby Share with default settings (Data usage offline, All Contacts)",
 		Impl: NewNearbyShareAndroid(nearbysnippet.NearbySharingDataUsage_DATA_USAGE_OFFLINE, nearbysnippet.NearbySharingVisibility_VISIBILITY_ALL_CONTACTS, modulefood),
-		Data: []string{nearbysnippet.ZipName, crossdevice.AccountUtilZip, crossdevice.GmsCoreProdPiApk, crossdevice.GmsCoreProdRvcApk, crossdevice.GmsCoreProdScApk},
+		Data: []string{nearbysnippet.ZipName, crossdevice.AccountUtilZip},
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 		},
@@ -89,7 +88,7 @@ func init() {
 		Name: "nearbyShareAndroidSetupDev",
 		Desc: "Set up Android device for Nearby Share with default settings (Data usage offline, All Contacts), using the dev version of Nearby",
 		Impl: NewNearbyShareAndroid(nearbysnippet.NearbySharingDataUsage_DATA_USAGE_OFFLINE, nearbysnippet.NearbySharingVisibility_VISIBILITY_ALL_CONTACTS, dev),
-		Data: []string{nearbysnippet.ZipName, crossdevice.AccountUtilZip, crossdevice.GmsCoreProdPiApk, crossdevice.GmsCoreProdRvcApk, crossdevice.GmsCoreProdScApk},
+		Data: []string{nearbysnippet.ZipName, crossdevice.AccountUtilZip},
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 		},
@@ -111,7 +110,7 @@ func init() {
 		Name: "nearbyShareAndroidSetupProd",
 		Desc: "Set up Android device for Nearby Share with default settings (Data usage offline, All Contacts), using the prod version of Nearby",
 		Impl: NewNearbyShareAndroid(nearbysnippet.NearbySharingDataUsage_DATA_USAGE_OFFLINE, nearbysnippet.NearbySharingVisibility_VISIBILITY_ALL_CONTACTS, prod),
-		Data: []string{nearbysnippet.ZipName, crossdevice.AccountUtilZip, crossdevice.GmsCoreProdPiApk, crossdevice.GmsCoreProdRvcApk, crossdevice.GmsCoreProdScApk},
+		Data: []string{nearbysnippet.ZipName, crossdevice.AccountUtilZip},
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 		},
@@ -213,32 +212,6 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		if err := crossdevice.GAIALogin(ctx, adbDevice, accountUtilZip, androidUsername, androidPassword); err != nil {
 			s.Fatal("Failed to log in on the Android device: ", err)
 		}
-	}
-
-	// Update GMS Core with the version that's stored in the Tast test data GS bucket.
-	// TODO(b/255660878): Remove this once GMSCore provisioning is rolled out to the lab.
-	androidVersion, err := adbDevice.AndroidVersion(ctx)
-	if err != nil {
-		s.Fatal("Failed to get Android OS version for GMS Core update: ", err)
-	}
-	gmsVersion, ok := crossdevice.GmsCoreVersionMap[androidVersion]
-	if !ok {
-		s.Fatalf("Unable to get GMS Core version corresponding to Android OS version %v: %v", androidVersion, err)
-	}
-	gmsApkPath := s.DataPath(gmsVersion)
-	s.Log("Installing GMS Core APK ", gmsVersion)
-	if err := adbDevice.Install(ctx, gmsApkPath, adb.InstallOptionReplaceApp, adb.InstallOptionAllowVersionDowngrade); err != nil {
-		s.Fatalf("Failed to install GMS Core %v: %v", gmsVersion, err)
-	}
-
-	// Check that GMSCore has been installed.
-	gmsVersions, err := adbDevice.GMSCoreVersions(ctx)
-	if err != nil {
-		s.Fatal("Failed to get GMSCore versions: ", err)
-	}
-	s.Log("GMS Core versions: ", gmsVersions)
-	if len(gmsVersions) < 2 {
-		s.Fatal("Failed to install GMS Core, device is still on OS-bundled GMS Core version")
 	}
 
 	tags := []string{

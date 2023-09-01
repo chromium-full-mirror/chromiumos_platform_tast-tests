@@ -69,7 +69,7 @@ func init() {
 		Name: "crossdeviceAndroidSetupPhoneHub",
 		Desc: "Set up Android device for CrOS crossdevice testing",
 		Impl: NewCrossDeviceAndroid(Feature{Name: PhoneHub}),
-		Data: []string{AccountUtilZip, MultideviceSnippetZipName, GmsCoreProdPiApk, GmsCoreProdRvcApk, GmsCoreProdScApk},
+		Data: []string{AccountUtilZip, MultideviceSnippetZipName},
 		Contacts: []string{
 			"kyleshima@chromium.org",
 			"chromeos-sw-engprod@google.com",
@@ -108,7 +108,7 @@ func init() {
 		Name: "crossdeviceAndroidSetupPhoneHubRerun",
 		Desc: "Reset and Retry fixture for crossdeviceAndroidSetupPhoneHub",
 		Impl: NewCrossDeviceAndroid(Feature{Name: PhoneHub}),
-		Data: []string{AccountUtilZip, MultideviceSnippetZipName, GmsCoreProdPiApk, GmsCoreProdRvcApk, GmsCoreProdScApk},
+		Data: []string{AccountUtilZip, MultideviceSnippetZipName},
 		Contacts: []string{
 			"jasonrhee@google.com",
 			"chromeos-sw-engprod@google.com",
@@ -147,7 +147,7 @@ func init() {
 		Name: "crossdeviceAndroidSetupSmartLock",
 		Desc: "Set up Android device for CrOS crossdevice testing of Smart Lock",
 		Impl: NewCrossDeviceAndroid(Feature{Name: SmartLock}),
-		Data: []string{AccountUtilZip, MultideviceSnippetZipName, GmsCoreProdPiApk, GmsCoreProdRvcApk, GmsCoreProdScApk},
+		Data: []string{AccountUtilZip, MultideviceSnippetZipName},
 		Contacts: []string{
 			"kyleshima@chromium.org",
 			"chromeos-sw-engprod@google.com",
@@ -258,32 +258,6 @@ func (f *crossdeviceAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		} else {
 			s.Fatal("Cannot log in on Android on an unrooted phone")
 		}
-	}
-
-	// Update GMS Core with the version that's stored in the Tast test data GS bucket.
-	// TODO(b/255660878): Remove this once GMSCore provisioning is rolled out to the lab.
-	androidVersion, err := adbDevice.AndroidVersion(ctx)
-	if err != nil {
-		s.Fatal("Failed to get Android OS version for GMS Core update: ", err)
-	}
-	gmsVersion, ok := GmsCoreVersionMap[androidVersion]
-	if !ok {
-		s.Fatalf("Unable to get GMS Core version corresponding to Android OS version %v: %v", androidVersion, err)
-	}
-	gmsApkPath := s.DataPath(gmsVersion)
-	s.Log("Installing GMS Core APK ", gmsVersion)
-	if err := adbDevice.Install(ctx, gmsApkPath, adb.InstallOptionReplaceApp, adb.InstallOptionAllowVersionDowngrade); err != nil {
-		s.Fatalf("Failed to install GMS Core %v: %v", gmsVersion, err)
-	}
-
-	// Check that GMSCore has been installed.
-	gmsVersions, err := adbDevice.GMSCoreVersions(ctx)
-	if err != nil {
-		s.Fatal("Failed to get GMSCore versions: ", err)
-	}
-	s.Log("GMS Core versions: ", gmsVersions)
-	if len(gmsVersions) < 2 {
-		s.Fatal("Failed to install GMS Core, device is still on OS-bundled GMS Core version")
 	}
 
 	// Prepare the Multidevice Snippet.
