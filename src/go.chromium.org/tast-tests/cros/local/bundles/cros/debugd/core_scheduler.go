@@ -25,7 +25,6 @@ func init() {
 			"cros-debugd@google.com",
 			"aashay@google.com",
 			"jorgelo@google.com",
-			"vapier@google.com",
 		},
 		// ChromeOS > Software > System Services > debugd
 		BugComponent: "b:1309999",
