@@ -75,12 +75,29 @@ func (c *Chrome) importRootCertificate(ctx context.Context, proxy proxy.Proxy) e
 	}
 
 	cmd := testexec.CommandContext(ctx, "certutil", "-d", fmt.Sprintf("sql:%s/.pki/nssdb", userHome),
-		"-A", "-t", "C,C,C", "-n", "martian.proxy", "-i", certFile)
+		"-A", "-t", "C,C,C", "-n", "test.proxy", "-i", certFile)
 	if err := cmd.Run(); err != nil {
 		cmd.DumpLog(ctx)
 		return errors.Wrap(err, "failed to import certificate")
 	}
 	return nil
+}
+
+// removeRootCertificate removes the proxy root certificate from the current Chrome user.
+func (c *Chrome) removeRootCertificate(ctx context.Context) error {
+	userHome, err := cryptohome.UserPath(ctx, c.NormalizedUser())
+	if err != nil {
+		return errors.Wrap(err, "failed to get user path")
+	}
+
+	cmd := testexec.CommandContext(ctx, "certutil", "-d", fmt.Sprintf("sql:%s/.pki/nssdb", userHome),
+		"-D", "-n", "test.proxy")
+	if err := cmd.Run(); err != nil {
+		cmd.DumpLog(ctx)
+		return errors.Wrap(err, "failed to remove certificate")
+	}
+	return nil
+
 }
 
 // LaunchAndApplyProxy launches defined Martian proxy and apply to current Chrome.
@@ -99,7 +116,8 @@ func (c *Chrome) LaunchAndApplyProxy(ctx context.Context, proxy proxy.Proxy) (fu
 	cleanup := func(ctx context.Context) error {
 		err1 := c.UnsetProxy(ctx)
 		err2 := proxy.Close(ctx)
-		returnErr := errors.Join(err1, err2)
+		err3 := c.removeRootCertificate(ctx)
+		returnErr := errors.Join(err1, err2, err3)
 		if returnErr != nil {
 			return errors.Wrap(returnErr, "failed to cleanup proxy")
 		}

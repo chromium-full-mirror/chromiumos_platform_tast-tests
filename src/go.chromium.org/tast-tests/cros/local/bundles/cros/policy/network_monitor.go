@@ -31,7 +31,7 @@ func init() {
 		},
 		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      15 * time.Minute,
+		Timeout:      3 * time.Minute,
 		Data:         []string{mitmdumpBinFile},
 		Fixture:      fixture.ChromeLoggedIn,
 	})
