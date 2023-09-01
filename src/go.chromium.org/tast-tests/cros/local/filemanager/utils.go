@@ -15,6 +15,9 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
+// FuseboxDirPath is the path to the directory containing all the fusebox mounts.
+const FuseboxDirPath = "/media/fuse/fusebox"
+
 // GenerateTestFileName generates a unique-ish file/folder name based on a provided
 // prefix, the current time, and a random number.
 func GenerateTestFileName(fName string) string {
@@ -26,7 +29,7 @@ func GenerateTestFileName(fName string) string {
 // CreateFileInFusebox creates a file in the fusebox volume identified by the fuseboxToken.
 // This function returns the full path of the newly created file.
 func CreateFileInFusebox(fuseboxToken, fileName, fileContent string) (string, error) {
-	fullPath := fmt.Sprintf("/media/fuse/fusebox/%s/%s", fuseboxToken, fileName)
+	fullPath := filepath.Join(FuseboxDirPath, fuseboxToken, fileName)
 	file, err := os.Create(fullPath)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to create file %q", fullPath)
@@ -36,6 +39,16 @@ func CreateFileInFusebox(fuseboxToken, fileName, fileContent string) (string, er
 	}
 	if err := file.Close(); err != nil {
 		return "", errors.Wrapf(err, "failed to close file %q", fullPath)
+	}
+	return fullPath, nil
+}
+
+// CreateFolderInFusebox creates a folder in the fusebox volume identified by the fuseboxToken.
+// This function returns the full path of the newly created folder.
+func CreateFolderInFusebox(fuseboxToken, folderName string) (string, error) {
+	fullPath := filepath.Join(FuseboxDirPath, fuseboxToken, folderName)
+	if err := os.Mkdir(fullPath, 0755); err != nil {
+		return "", errors.Wrapf(err, "failed to create folder %q", fullPath)
 	}
 	return fullPath, nil
 }

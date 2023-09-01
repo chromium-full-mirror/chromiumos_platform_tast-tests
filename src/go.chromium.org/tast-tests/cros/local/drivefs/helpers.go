@@ -218,3 +218,27 @@ func VerifySourceDestinationMD5SumMatch(driveFsClient *DriveFs, srcFilePath, fil
 		return nil
 	}
 }
+
+// RemoveDriveFsFileViaAPI sends a request to the Drive API to remove the file
+// inside the DriveFS mount at `driveFilePath`. This is more reliable than
+// just deleting the file at the filesystem level as it doesn't need to wait
+// for DriveFS to sync the deletion with the server.
+func RemoveDriveFsFileViaAPI(driveFsClient *DriveFs, apiClient *APIClient, driveFilePath string) uiauto.Action {
+	return func(ctx context.Context) error {
+		file, err := driveFsClient.NewFile(driveFsClient.MyDrivePath(driveFilePath))
+		if err != nil {
+			return errors.Wrap(err, "could not open test office file in Drive")
+		}
+		if err := file.CloudIDCreatedAction()(ctx); err != nil {
+			return errors.Wrapf(err, "failed to wait for cloud id of test office file in DriveFS %q", driveFilePath)
+		}
+		id, err := file.ItemID()
+		if err != nil {
+			return errors.Wrapf(err, "failed to get the cloud id of test office file in DriveFS %q", driveFilePath)
+		}
+		if err := apiClient.RemoveFileByID(ctx, id); err != nil {
+			return errors.Wrapf(err, "failed to remove file %q from Drive", driveFilePath)
+		}
+		return nil
+	}
+}

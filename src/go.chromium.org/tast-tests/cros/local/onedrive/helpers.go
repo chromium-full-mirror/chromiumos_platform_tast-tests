@@ -20,8 +20,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// FindFilesOlderThanOneDay returns files older than 1 day in the `dir`.
-func FindFilesOlderThanOneDay(dir string) (infos []os.FileInfo, err error) {
+// findEntriesOlderThanOneDay returns files and folders older than 1 day in the `dir`.
+func findEntriesOlderThanOneDay(dir string) (infos []os.FileInfo, err error) {
 	dirEntries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func FindFilesOlderThanOneDay(dir string) (infos []os.FileInfo, err error) {
 	oneDayAgo := time.Now().Add(-24 * time.Hour)
 	for _, e := range dirEntries {
 		info, err := e.Info()
-		if (err == nil) && info.Mode().IsRegular() && (info.ModTime().Compare(oneDayAgo) < 0) {
+		if err == nil && (info.ModTime().Compare(oneDayAgo) < 0) {
 			infos = append(infos, info)
 		}
 	}
@@ -47,20 +47,21 @@ func DeleteOldRemoteFiles(ctx context.Context, dstFileName string) {
 	}
 	file := dstFile[0]
 	dir := filepath.Dir(file)
-	files, err := FindFilesOlderThanOneDay(dir)
+	files, err := findEntriesOlderThanOneDay(dir)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to list old files: ", err)
 		return
 	}
 
 	testFileName, _ := regexp.Compile(`Sample_(DOCX|PPTX|XLSX)_file.*$`)
+	testDirName, _ := regexp.Compile(`^_odfs_.*$`)
 	for _, f := range files {
-		if !testFileName.MatchString(f.Name()) {
+		if !testFileName.MatchString(f.Name()) && !testDirName.MatchString(f.Name()) {
 			continue
 		}
 
 		testing.ContextLog(ctx, "Deleting old file: ", f.Name())
-		if err := os.Remove(filepath.Join(dir, f.Name())); err != nil {
+		if err := os.RemoveAll(filepath.Join(dir, f.Name())); err != nil {
 			testing.ContextLogf(ctx, "Failed to remove file: %q - %v", f.Name(), err)
 		}
 	}
