@@ -40,6 +40,7 @@ func init() {
 			"group:golden_tier",
 			"group:mainline",
 			"informational",
+			"group:criticalstaging",
 		},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
