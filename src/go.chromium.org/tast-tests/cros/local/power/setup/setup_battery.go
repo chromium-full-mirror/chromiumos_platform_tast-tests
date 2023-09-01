@@ -137,14 +137,14 @@ func DisableBatteryCharging(ctx context.Context) error {
 // PrepareBattery charges or drains the battery to reach the specified
 // range. Upon completion, the DUT would be allowed to resume charging or
 // being forced to discharge as specified.
-func PrepareBattery(ctx context.Context, minPercentage, maxPercentage float64, dischargeOnCompletion, isPowerQual bool) error {
-	if minPercentage < 0.0 || minPercentage > 100.0 {
+func PrepareBattery(ctx context.Context, cp power.ChargeParams) error {
+	if cp.MinChargePercentage < 0.0 || cp.MinChargePercentage > 100.0 {
 		return errors.New("invalid min percentage, it should be within [0.0, 100.0]")
 	}
-	if maxPercentage < 0.0 || maxPercentage > 100.0 {
+	if cp.MaxChargePercentage < 0.0 || cp.MaxChargePercentage > 100.0 {
 		return errors.New("invalid max percentage, it should be within [0.0, 100.0]")
 	}
-	if maxPercentage < minPercentage {
+	if cp.MaxChargePercentage < cp.MinChargePercentage {
 		return errors.New("invalid battery range, max percentage is smaller than min percentage")
 	}
 
@@ -155,24 +155,24 @@ func PrepareBattery(ctx context.Context, minPercentage, maxPercentage float64, d
 
 	currentPercentage := status.BatteryPercent
 	testing.ContextLogf(ctx, "Current battery charge is %.2f%%", currentPercentage)
-	testing.ContextLogf(ctx, "Acceptable battery range is [%.2f%%, %.2f%%]", minPercentage, maxPercentage)
+	testing.ContextLogf(ctx, "Acceptable battery range is [%.2f%%, %.2f%%]", cp.MinChargePercentage, cp.MaxChargePercentage)
 
-	if currentPercentage > minPercentage && currentPercentage < maxPercentage {
+	if currentPercentage > cp.MinChargePercentage && currentPercentage < cp.MaxChargePercentage {
 		testing.ContextLog(ctx, "Current battery charge is within the acceptable range")
 		err = nil
-	} else if currentPercentage < minPercentage {
+	} else if currentPercentage < cp.MinChargePercentage {
 		testing.ContextLog(ctx, "Current battery charge is below the acceptable range")
-		err = chargeBattery(ctx, minPercentage, isPowerQual)
+		err = chargeBattery(ctx, cp.MinChargePercentage, cp.IsPowerQual)
 	} else {
 		testing.ContextLog(ctx, "Current battery charge is above the acceptable range")
-		err = drainBattery(ctx, maxPercentage)
+		err = drainBattery(ctx, cp.MaxChargePercentage)
 	}
 
 	if err != nil {
 		return err
 	}
 
-	if dischargeOnCompletion {
+	if cp.DischargeOnCompletion {
 		return DisableBatteryCharging(ctx)
 	}
 

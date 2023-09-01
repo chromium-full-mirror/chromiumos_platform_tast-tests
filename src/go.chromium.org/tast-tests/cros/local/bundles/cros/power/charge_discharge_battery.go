@@ -44,7 +44,7 @@ func init() {
 			},
 			Timeout: 3 * time.Hour,
 		}, {
-			Name: "charging_measurement_prep",
+			Name: "charge_qual_prep",
 			Val: power.ChargeParams{
 				MinChargePercentage:   7.5,
 				MaxChargePercentage:   8.0,
@@ -69,36 +69,31 @@ func ChargeDischargeBattery(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	var err error
-	var minPercent, maxPercent float64
+	var chargeParam = s.Param().(power.ChargeParams)
 
-	if s.Param().(power.ChargeParams).IsCustomized {
+	if chargeParam.IsCustomized {
 		minChargePercentStr, ok := s.Var("min_charge_percent")
 		if !ok {
 			s.Fatal("The min_charge_percent is not provided")
 		}
 
-		minPercent, err = strconv.ParseFloat(strings.TrimSpace(string(minChargePercentStr)), 64)
+		minPercent, err := strconv.ParseFloat(strings.TrimSpace(string(minChargePercentStr)), 64)
 		if err != nil {
 			s.Fatalf("Failed to parse min_charge_percent percentage from %q", minChargePercentStr)
 		}
-
 		maxChargePercentStr, ok := s.Var("max_charge_percent")
 		if !ok {
 			s.Fatal("The max_charge_percent is not provided")
 		}
 
-		maxPercent, err = strconv.ParseFloat(strings.TrimSpace(string(maxChargePercentStr)), 64)
+		maxPercent, err := strconv.ParseFloat(strings.TrimSpace(string(maxChargePercentStr)), 64)
 		if err != nil {
 			s.Fatalf("Failed to parse max_charge_percent percentage from %q", maxChargePercentStr)
 		}
-	} else {
-		minPercent = s.Param().(power.ChargeParams).MinChargePercentage
-		maxPercent = s.Param().(power.ChargeParams).MaxChargePercentage
-	}
 
-	dischargeOnCompletion := s.Param().(power.ChargeParams).DischargeOnCompletion
-	isPowerQual := s.Param().(power.ChargeParams).IsPowerQual
+		chargeParam.MinChargePercentage = float64(minPercent)
+		chargeParam.MaxChargePercentage = float64(maxPercent)
+	}
 
 	r := power.NewRecorder(ctx, 20*time.Second, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
@@ -107,7 +102,7 @@ func ChargeDischargeBattery(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
 
-	if err := setup.PrepareBattery(ctx, float64(minPercent), float64(maxPercent), dischargeOnCompletion, isPowerQual); err != nil {
+	if err := setup.PrepareBattery(ctx, chargeParam); err != nil {
 		s.Fatal("Failed to charge/discharge DUT: ", err)
 	}
 

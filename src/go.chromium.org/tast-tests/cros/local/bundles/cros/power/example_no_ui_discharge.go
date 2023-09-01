@@ -28,6 +28,14 @@ func init() {
 	})
 }
 
+var exampleChargeParam = power.ChargeParams{
+	MinChargePercentage:   74.0,
+	MaxChargePercentage:   76.0,
+	DischargeOnCompletion: true,
+	IsCustomized:          false,
+	IsPowerQual:           false,
+}
+
 // ExampleNoUIDischarge is the test func to show how to use PrepareBattery() to discharge
 func ExampleNoUIDischarge(ctx context.Context, s *testing.State) {
 	// Reserve some time to cleanup, even if it fails due to ctx timeout.
@@ -37,7 +45,7 @@ func ExampleNoUIDischarge(ctx context.Context, s *testing.State) {
 
 	// Ensure the battery is between [74, 76] percent charge and then set the
 	// battery to discharge on function completion.
-	if err := setup.PrepareBattery(ctx, 74.0, 76.0, true, false); err != nil {
+	if err := setup.PrepareBattery(ctx, exampleChargeParam); err != nil {
 		s.Fatal("Failed to prepare battery: ", err)
 	}
 

@@ -15,7 +15,7 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-var chargingParam = power.ChargeParams{
+var qualChargeParam = power.ChargeParams{
 	MinChargePercentage:   99.0,
 	MaxChargePercentage:   100.0,
 	DischargeOnCompletion: false,
@@ -63,7 +63,7 @@ func BatteryChargeQual(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
 
-	if err := setup.PrepareBattery(ctx, float64(chargingParam.MinChargePercentage), float64(chargingParam.MaxChargePercentage), chargingParam.DischargeOnCompletion, chargingParam.IsPowerQual); err != nil {
+	if err := setup.PrepareBattery(ctx, qualChargeParam); err != nil {
 		s.Fatal("Failed to charge DUT: ", err)
 	}
 
