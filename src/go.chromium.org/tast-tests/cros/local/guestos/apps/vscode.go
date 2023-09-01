@@ -207,6 +207,8 @@ func TestCreateFileWithVSCode(ctx context.Context, cfg VSCodeConfig, terminalApp
 	return nil
 }
 
+// OpenVscodeFromFileManager tests opening VS code from the context menu of a
+// file in the files app.
 func OpenVscodeFromFileManager(ctx context.Context, cfg VSCodeConfig, filesApp *filesapp.FilesApp, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, guest vm.Guest, dirName string) error {
 	const tmpFilename = "testfile.txt"
 
