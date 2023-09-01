@@ -41,13 +41,11 @@ func init() {
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineSmartctlCheck),
 			ExtraSoftwareDeps: []string{"smartctl"},
 		}, {
-			Name:    "cpu_cache",
-			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineCPUCache),
-			Timeout: 5 * time.Minute,
+			Name: "cpu_cache",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineCPUCache),
 		}, {
-			Name:    "cpu_stress",
-			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineCPUStress),
-			Timeout: 5 * time.Minute,
+			Name: "cpu_stress",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineCPUStress),
 		}, {
 			Name: "floating_point_accuracy",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineFloatingPointAccurary),

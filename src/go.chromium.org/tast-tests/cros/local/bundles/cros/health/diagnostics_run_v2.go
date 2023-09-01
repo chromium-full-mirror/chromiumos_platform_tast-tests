@@ -8,7 +8,6 @@ package health
 
 import (
 	"context"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast/core/testing"
@@ -26,18 +25,16 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
-			Name:    "cpu_stress_v2",
-			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
-			Timeout: 5 * time.Minute,
+			Name: "cpu_stress_v2",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
 			// TODO(b/295497926): Promote tast to critical
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "audio_driver",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
 		}, {
-			Name:    "cpu_cache_v2",
-			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
-			Timeout: 5 * time.Minute,
+			Name: "cpu_cache_v2",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
 			// TODO(b/281766836): Promote tast to critical
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {

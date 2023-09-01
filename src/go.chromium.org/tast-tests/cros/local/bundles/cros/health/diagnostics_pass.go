@@ -49,12 +49,10 @@ func init() {
 			Name:      "cpu_cache",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCPUCache),
 			ExtraAttr: []string{"informational"},
-			Timeout:   5 * time.Minute,
 		}, {
 			Name:      "cpu_stress",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCPUStress),
 			ExtraAttr: []string{"informational"},
-			Timeout:   5 * time.Minute,
 		}, {
 			Name:      "floating_point_accuracy",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineFloatingPointAccurary),
