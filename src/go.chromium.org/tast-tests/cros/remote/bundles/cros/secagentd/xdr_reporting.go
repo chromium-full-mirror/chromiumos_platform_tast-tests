@@ -12,6 +12,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	"go.chromium.org/tast-tests/cros/remote/reportingutil"
@@ -39,7 +41,7 @@ func init() {
 		},
 		// ChromeOS > Security > ChromeOS Enterprise Security
 		BugComponent: "b:1208373",
-		Attr:         []string{"group:mainline", "informational", "group:dmserver-enrollment-daily", "group:enterprise-reporting"},
+		Attr:         []string{"group:mainline", "informational", "group:dmserver-enrollment-daily", "group:enterprise-reporting", "group:hw_agnostic"},
 		Timeout:      xdrReportingTimeout,
 		SoftwareDeps: []string{"bpf", "reboot", "chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
@@ -61,6 +63,9 @@ func init() {
 			reportingutil.ManagedChromeCustomerIDPath,
 			reportingutil.EventsAPIKeyPath,
 			tape.ServiceAccountVar,
+		},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceReportXDREvents{}, pci.VerifiedValue),
 		},
 	})
 }
@@ -123,13 +128,16 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set the policy: ", err)
 	}
 
+	// Enroll the device with the tape account and login. Login is
+	// unfortunately required for the VerifyPolicyStatus call below because it
+	// relies on a chrome extension.
 	if _, err := pc.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
 		Username:           acc.Username,
 		Password:           acc.Password,
 		DmserverUrl:        reportingutil.DmServerURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
 		EnabledFeatures:    "EncryptedReportingPipeline",
-		SkipLogin:          true,
+		SkipLogin:          false,
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
@@ -138,6 +146,23 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 	c, err := pc.ClientID(ctx, &empty.Empty{})
 	if err != nil {
 		s.Fatal("Failed to grab client ID from device: ", err)
+	}
+	s.Logf("ClientID: %s", c.ClientId)
+
+	pJSON, err := policy.MarshalList([]policy.Policy{
+		&policy.DeviceReportXDREvents{Stat: policy.StatusSet, Val: param.reportingEnabled},
+	})
+	if err != nil {
+		s.Fatal("Failed to marshall expected XDR policy for verification: ", err)
+	}
+	// Wait some time for the policy to propagate.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := pc.VerifyPolicyStatus(ctx, &ps.VerifyPolicyStatusRequest{
+			Policies: pJSON,
+		})
+		return err
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
+		s.Error("Failed to verify XDR policy: ", err)
 	}
 
 	// Stop secagentd from emitting events until test starts.
@@ -153,14 +178,6 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 		"SET_HEARTBEAT_PERIOD_S_FOR_TESTING=5", "PLUGIN_BATCH_INTERVAL_S_FOR_TESTING=5").Output()
 	if err != nil {
 		s.Fatal("Failed to start secagentd")
-	}
-
-	// Give time for events to show up when reporting disabled.
-	// Sleep is required because events are not enqueued immediately.
-	if !param.reportingEnabled {
-		if err := testing.Sleep(ctx, 25*time.Second); err != nil {
-			s.Fatal("Failed to sleep: ", err)
-		}
 	}
 
 	// Agent Events.
@@ -183,7 +200,7 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 		}
 		return nil
 	}, &testing.PollOptions{
-		Timeout:  60 * time.Second,
+		Timeout:  80 * time.Second,
 		Interval: 20 * time.Second,
 	}); err != nil {
 		s.Errorf("Failed to validate agent events: %v:", err)
