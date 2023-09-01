@@ -234,8 +234,8 @@ func validateTHP(ctx context.Context, newGameMode uint8) error {
 	if err != nil {
 		return errors.Wrap(err, "cannot obtain memory info")
 	}
-	// THP tuning is enabled for boards with total memory > 4GiB.
-	if memInfo.Total <= kernelmeter.NewMemSizeMiB(5*1024) {
+	// THP tuning is enabled for boards with total memory > 8GiB.
+	if memInfo.Total <= kernelmeter.NewMemSizeMiB(9*1024) {
 		testing.ContextLog(ctx, "THP tuning is not enabled on this device, skip the validation of THP tuning")
 		return nil
 	}
