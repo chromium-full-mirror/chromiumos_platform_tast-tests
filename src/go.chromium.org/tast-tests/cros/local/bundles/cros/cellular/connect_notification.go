@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Checks that a notification is shown when the user connects to cellular the first time",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"ejcaruso@chromium.org",
+			"ejcaruso@google.com",
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},
