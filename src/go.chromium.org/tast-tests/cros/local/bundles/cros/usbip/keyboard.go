@@ -33,7 +33,7 @@ func init() {
 			"ashpakov@google.com",
 		},
 		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Developer
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Fixture:      "usbipServer",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      2 * time.Minute,

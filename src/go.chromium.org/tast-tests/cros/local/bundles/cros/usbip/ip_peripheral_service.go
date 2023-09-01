@@ -27,8 +27,7 @@ func init() {
 			"joshuapius@google.com", // Test author
 		},
 		BugComponent: "b:543707", // Communications > Video (Meet) > Platforms > Rooms > Core Devices (OS & Hardware)
-
-		Attr: []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 	})
 }
 
