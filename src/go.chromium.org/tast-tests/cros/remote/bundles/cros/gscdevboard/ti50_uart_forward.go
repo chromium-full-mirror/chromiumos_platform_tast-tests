@@ -36,7 +36,7 @@ func init() {
 func Ti50UartForward(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f, s)
-	i := ti50.NewCrOSImage(b)
+	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
 	gscProps := b.GscProperties()
 
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}

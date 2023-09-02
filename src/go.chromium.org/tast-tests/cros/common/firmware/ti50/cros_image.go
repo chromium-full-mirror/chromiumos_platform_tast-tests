@@ -86,10 +86,29 @@ type CrOSImage struct {
 	*CommandImage
 }
 
+// Fatal facilitates failing a test or test fixture.
+type Fatal interface {
+	Fatalf(format string, args ...interface{})
+}
+
 // NewCrOSImage creates a new CrOSImage.
-func NewCrOSImage(board DevBoard) *CrOSImage {
+// ctx is used as the context for opening necessary ports.
+func NewCrOSImage(ctx context.Context, board DevBoard) (*CrOSImage, error) {
+	i, err := NewCommandImage(ctx, board, "\n", "^(\\[[ 0-9.]+.\\] )?> ")
+	if err != nil {
+		return nil, err
+	}
 	// Allow for timestamp to be present before prompt "[ 999999.999 C] > " or just "> "
-	return &CrOSImage{CommandImage: NewCommandImage(board, "\n", "^(\\[[ 0-9.]+.\\] )?> ")}
+	return &CrOSImage{CommandImage: i}, nil
+}
+
+// MustOpenNewCrOSImage is shorthand for NewCrOSImage that will Fatalf the test/fixture if failed.
+func MustOpenNewCrOSImage(ctx context.Context, board DevBoard, failWith Fatal) *CrOSImage {
+	i, err := NewCrOSImage(ctx, board)
+	if err != nil {
+		failWith.Fatalf("New CrOS Image: %v", err)
+	}
+	return i
 }
 
 // WaitUntilBooted waits until the image is fully booted.
