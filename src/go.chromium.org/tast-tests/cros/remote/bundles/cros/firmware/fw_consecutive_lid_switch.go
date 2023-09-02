@@ -106,6 +106,8 @@ func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to close lid: ", err)
 		}
 
+		h.CloseRPCConnection(ctx)
+
 		// GoBigSleepLint: DuT operation dependency
 		if err := testing.Sleep(ctx, sleepDelay); err != nil {
 			s.Fatal("Failed to sleep during closed lid delay: ", err)
@@ -114,8 +116,6 @@ func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 		if err := h.DUT.WaitUnreachable(ctx); err != nil {
 			s.Fatal("Failed to make DUT unreachable: ", err)
 		}
-
-		h.CloseRPCConnection(ctx)
 
 		if err := h.Servo.OpenLid(ctx); err != nil {
 			s.Fatal("Failed to open lid: ", err)
