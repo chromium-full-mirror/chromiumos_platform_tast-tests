@@ -13,12 +13,11 @@ fn main() {
         panic!("Too few argumetns");
     }
 
-    let mut metrics = match MetricsLibrary::new() {
-        Ok(lib) => lib,
-        Err(e) => {
-            panic!("MetricsLibrary::new() failed: {}", e);
-        }
-    };
+    let metrics_mutex = MetricsLibrary::get().expect("MetricsLibrary::get() returned None.");
+
+    let mut metrics = metrics_mutex
+        .lock()
+        .expect("Failed to lock the MetricsLibrary object");
 
     let command = args[1].as_str();
     let result = match command {
