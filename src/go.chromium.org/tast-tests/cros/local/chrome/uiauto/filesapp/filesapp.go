@@ -234,6 +234,12 @@ func (f *FilesApp) FormatDevice() uiauto.Action {
 	)
 }
 
+// OpenMyFiles returns a function that opens the "My files" folder in the Files App.
+// An error is returned if "My files" is not found or does not open.
+func (f *FilesApp) OpenMyFiles() uiauto.Action {
+	return f.OpenDir(MyFiles, FilesTitlePrefix+MyFiles)
+}
+
 // OpenDownloads returns a function that opens the Downloads folder in the Files App.
 // An error is returned if Downloads is not found or does not open.
 func (f *FilesApp) OpenDownloads() uiauto.Action {
@@ -782,4 +788,15 @@ func (f *FilesApp) GetOdfsFuseboxToken(ctx context.Context, cr *chrome.Chrome) (
 		return "", errors.Wrap(err, "failed to execute JS code to get ODFS token")
 	}
 	return odfsFuseboxToken, nil
+}
+
+// DisableBanners executes JS directly in the Files app to disable banners.
+func (f *FilesApp) DisableBanners(cr *chrome.Chrome) uiauto.Action {
+	return func(ctx context.Context) error {
+		conn, err := cr.NewConnForTarget(ctx, func(t *target.Info) bool { return t.URL == FilesAppURL })
+		if err != nil {
+			return err
+		}
+		return conn.Call(ctx, nil, "fileManager.ui.banners.disableBannersForTesting")
+	}
 }

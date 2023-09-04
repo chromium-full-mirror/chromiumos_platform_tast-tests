@@ -155,6 +155,11 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		s.Fatal("Launching the Files App failed: ", err)
 	}
 	defer files.Close(cleanupCtx)
+	if err = uiauto.Combine("disable banners",
+		files.DisableBanners(pre.Chrome),
+		files.OpenMyFiles())(ctx); err != nil {
+		s.Fatal("Failed to disable banners: ", err)
+	}
 	filesWindow, err := setWindowState(ctx, tconn, "Files - My files", ash.WindowStatePrimarySnapped)
 	if err != nil {
 		s.Fatal("Failed to set Files App left-snapped: ", err)
