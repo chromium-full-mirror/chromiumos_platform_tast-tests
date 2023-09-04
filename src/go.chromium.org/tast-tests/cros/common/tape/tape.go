@@ -26,6 +26,8 @@ import (
 const tapeURL = "https://tape-307412.ey.r.appspot.com/"
 const tapeAudience = "770216225211-ihjn20dlehf94m9l4l5h0b0iilvd1vhc.apps.googleusercontent.com"
 const callTimeout = 30 * time.Second
+const requestAccountTimeout = 10 * time.Second
+const deprovisionTimeout = 1 * time.Minute
 
 // client is created with NewClient and holds a *http.Client struct with an oauth token
 // for authentication against the TAPE GCP.
@@ -79,7 +81,7 @@ func NewClient(ctx context.Context, credsJSON []byte) (*client, error) {
 }
 
 // sendRequestWithTimeout makes a call to the specified REST endpoint of TAPE with the given http method and payload.
-func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint string, timeout time.Duration, payloadBytes []byte) (*http.Response, error) {
+func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint string, timeout time.Duration, retries int, payloadBytes []byte) (*http.Response, error) {
 	// Set the timeout of the http client and return to the original after.
 	originalTimeout := c.httpClient.Timeout
 	c.httpClient.Timeout = timeout
@@ -88,11 +90,10 @@ func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint st
 	}()
 
 	var err error
-	// Try to make the call 3 times as a call might fail occasionally.
 	var req *http.Request
 	var response *http.Response
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < retries+1; i++ {
 		// Create a request.
 		payload := bytes.NewReader(payloadBytes)
 		req, err = http.NewRequestWithContext(ctx, method, tapeURL+endpoint, payload)
@@ -110,6 +111,7 @@ func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint st
 		// Check if the call was successful.
 		if response.StatusCode != 200 {
 			testing.ContextLogf(ctx, "%s at %s returned %s", method, endpoint, response.Status)
+			testing.Sleep(ctx, 5*time.Second) // GoBigSleepLint: wait a few seconds before the retry as we just spam the server otherwise.
 			continue
 		}
 		break
@@ -148,7 +150,7 @@ func (c *client) requestAccount(ctx context.Context, endpoint string, params int
 		return nil, errors.Wrap(err, "failed to marshal data")
 	}
 
-	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, callTimeout, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, requestAccountTimeout, 4, payloadBytes)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to make request")
 	}
@@ -168,7 +170,7 @@ func (c *client) releaseAccount(ctx context.Context, account interface{}, endpoi
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
-	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, callTimeout, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, requestAccountTimeout, 4, payloadBytes)
 	if err != nil {
 		return errors.Wrap(err, "failed to make request")
 	}
@@ -368,7 +370,7 @@ func (c *client) SetPolicy(ctx context.Context, policySchema PolicySchema, updat
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
-	response, err := c.sendRequestWithTimeout(ctx, "POST", "Policies/setPolicy", callTimeout, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Policies/setPolicy", callTimeout, 0, payloadBytes)
 	if err != nil {
 		return errors.Wrap(err, "failed to make REST call")
 	}
@@ -393,7 +395,7 @@ func (c *client) Deprovision(ctx context.Context, deviceID, customerID string) e
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
-	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/deprovision", 60*time.Second, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/deprovision", deprovisionTimeout, 2, payloadBytes)
 	if err != nil {
 		return errors.Wrap(err, "failed to make REST call")
 	}
@@ -420,7 +422,7 @@ func (c *client) ListDevices(ctx context.Context, orgUnitPath, customerID string
 	if err != nil {
 		return "", errors.Wrap(err, "failed to marshal data")
 	}
-	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/listDevices", callTimeout, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/listDevices", callTimeout, 2, payloadBytes)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to make REST call")
 	}
@@ -454,7 +456,7 @@ func (c *client) Deprovisioned(ctx context.Context, deviceID, orgUnitPath, custo
 	if err != nil {
 		return false, errors.Wrap(err, "failed to marshal data")
 	}
-	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/isDeprovisioned", callTimeout, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/isDeprovisioned", callTimeout, 2, payloadBytes)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to make REST call")
 	}
@@ -488,7 +490,7 @@ func (c *client) MoveDevicesToOU(ctx context.Context, deviceIDs []string, orgUni
 	if err != nil {
 		return "", errors.Wrap(err, "failed to marshal data")
 	}
-	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/moveDevicesToOU", callTimeout, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/moveDevicesToOU", callTimeout, 0, payloadBytes)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to make REST call")
 	}
