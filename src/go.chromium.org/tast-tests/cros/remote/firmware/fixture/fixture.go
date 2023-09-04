@@ -444,7 +444,7 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Fatal("DUT is offline after test end: ", err)
 	}
 	// Restarting UI logs out any potential chrome sessions logged in during a test.
-	if err := i.value.Helper.DUT.Conn().CommandContext(ctx, "restart", "ui").Run(ssh.DumpLogOnError); err != nil {
+	if err := i.value.Helper.RestartUI(ctx); err != nil {
 		s.Fatal("Failed to restart ui after test end: ", err)
 	}
 }

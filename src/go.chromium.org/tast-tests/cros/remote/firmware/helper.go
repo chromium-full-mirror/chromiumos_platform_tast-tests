@@ -1717,3 +1717,27 @@ func (h *Helper) ScanLastBootFwLog(ctx context.Context, data ProcessLastBootFwLo
 	}
 	return nil
 }
+
+// RestartUI logs out any potential chrome sessions.
+func (h *Helper) RestartUI(ctx context.Context) error {
+	cmd := h.DUT.Conn().CommandContext(ctx, "restart", "ui")
+	stderr, _ := cmd.StderrPipe()
+
+	if err := cmd.Start(); err != nil {
+		return errors.Wrapf(err, "failed to restart ui")
+	}
+	scanner := bufio.NewScanner(stderr)
+	errMsg := ""
+	for scanner.Scan() {
+		errMsg = scanner.Text()
+	}
+	if err := cmd.Wait(); err != nil {
+		testing.ContextLog(ctx, "Error while restarting ui: ", errMsg)
+		if strings.Contains(errMsg, "Unknown instance") || strings.Contains(errMsg, "Job has already been stopped") {
+			if err := h.DUT.Conn().CommandContext(ctx, "start", "ui").Run(); err != nil {
+				return errors.Wrap(err, "failed to start ui")
+			}
+		}
+	}
+	return nil
+}
