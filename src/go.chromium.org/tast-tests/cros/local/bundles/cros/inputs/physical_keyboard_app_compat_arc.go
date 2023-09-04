@@ -68,7 +68,7 @@ func PhysicalKeyboardAppCompatArc(ctx context.Context, s *testing.State) {
 		validateAction := uiauto.Combine("validate pk typing in playstore",
 			util.ClearTextFieldViaClickingBackspace(kb, data.LongestInputLength),
 			kb.TypeSequenceAction(subtest.LocationKeySeq),
-			ud.WaitUntilExists(uidetection.TextBlock(strings.Split(subtest.ExpectedText, " "))),
+			ud.WaitUntilExists(uidetection.TextBlock(strings.Split(subtest.ExpectedText, " ")).First()),
 		)
 
 		s.Run(ctx, subtest.Description, func(ctx context.Context, s *testing.State) {
