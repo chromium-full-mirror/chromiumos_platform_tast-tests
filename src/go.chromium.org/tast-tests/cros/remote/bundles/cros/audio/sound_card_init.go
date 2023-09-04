@@ -15,6 +15,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"go.chromium.org/tast-tests/cros/common/audio"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/audio/internal"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint/rpcdut"
@@ -44,9 +45,7 @@ func init() {
 		Func:         SoundCardInit,
 		Desc:         "Verifies sound_card_init finishes successfully at boot time",
 		SoftwareDeps: []string{"reboot"},
-		// Skips atlas, nocturne, lindar, lillipup as they don't use sound_card_init to initialized their smart amps.
-		// Skip volteer2 as it's a reference design device not an official launched device.
-		HardwareDeps: hwdep.D(hwdep.SmartAmp(), hwdep.SkipOnModel("atlas", "nocturne", "volteer2", "lindar", "lillipup", "helios")),
+		HardwareDeps: hwdep.D(audio.SoundCardInitConditions()...),
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},

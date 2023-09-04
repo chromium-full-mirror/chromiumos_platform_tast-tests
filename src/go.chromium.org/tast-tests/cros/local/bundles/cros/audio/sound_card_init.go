@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	commonaudio "go.chromium.org/tast-tests/cros/common/audio"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/soundcardinit"
@@ -23,7 +24,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SoundCardInit,
 		Desc:         "Verifies sound_card_init boot time calibration logic",
-		HardwareDeps: hwdep.D(audio.SoundCardInitConditions()...),
+		HardwareDeps: hwdep.D(commonaudio.SoundCardInitConditions()...),
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
@@ -159,7 +160,7 @@ func recentReboot(ctx context.Context, soundCardID string) error {
 	).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to run sound_card_init")
 	}
-	//Wait for sound_card_init completion.
+	// GoBigSleepLint: Wait for sound_card_init completion.
 	testing.Sleep(ctx, soundCardInitTimeout)
 
 	// Verify calib files still do not exist after sound_card_init completion.

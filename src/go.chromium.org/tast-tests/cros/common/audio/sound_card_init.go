@@ -10,8 +10,13 @@ import "go.chromium.org/tast/core/testing/hwdep"
 func SoundCardInitConditions() []hwdep.Condition {
 	return []hwdep.Condition{
 		hwdep.SmartAmp(),
-		hwdep.SkipOnModel("atlas", "nocturne", "volteer2", "helios",
+		hwdep.SkipOnModel(
+			// These don't use sound_card_init to initialize their smart amps.
+			"atlas", "nocturne", "lindar", "lillipup", "helios",
+			// Skip volteer2 as it's a reference design device not an official launched device.
+			"volteer2",
 			// TODO(b/283089078)
-			"geralt"),
+			"geralt",
+		),
 	}
 }
