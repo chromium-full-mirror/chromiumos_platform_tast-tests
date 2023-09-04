@@ -8,7 +8,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -190,11 +189,9 @@ func PlaybackAudioControls(ctx context.Context, s *testing.State) {
 
 		// Maximize window on first iteration, to ensure all buttons exist.
 		if i == 1 {
-			window, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
-				return strings.HasPrefix(w.Title, "Gallery - ")
-			})
+			window, err := ash.WaitForAppWindow(ctx, tconn, apps.Gallery.ID)
 			if err != nil {
-				s.Fatal("Failed to find the Gallery app window: ", err)
+				s.Fatal("Failed to wait for Gallery app to be visible: ", err)
 			}
 			if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateMaximized); err != nil {
 				s.Fatal("Failed to maximize the Gallery app window: ", err)
