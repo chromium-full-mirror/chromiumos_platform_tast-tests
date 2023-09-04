@@ -448,7 +448,7 @@ func FlashRWFirmware(ctx context.Context, d *rpcdut.RPCDUT, firmwareFile string)
 		"-i", "EC_RW",
 		"-w", firmwareFile,
 	}
-	cmd := d.Conn().CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
+	cmd := d.DUT().Conn().CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
 	if err := cmd.Run(ssh.DumpLogOnError); err != nil {
 		return errors.Wrapf(err, "error while writing crosec-legacy-drv with arguments %v", cmdArgs)
 	}
