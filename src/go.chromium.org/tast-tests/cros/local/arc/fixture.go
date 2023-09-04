@@ -522,7 +522,7 @@ func init() {
 
 	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.BootTimeout = BootTimeout + swap.UnrestrictedTimeout
-	fixtureConfig.ArcvmConfig = "SKIP_SWAP_TBW_MANAGEMENT=true"
+	fixtureConfig.ArcvmConfig = "SKIP_SWAP_POLICY=true"
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		return []chrome.Option{
 			chrome.ARCEnabled(),
