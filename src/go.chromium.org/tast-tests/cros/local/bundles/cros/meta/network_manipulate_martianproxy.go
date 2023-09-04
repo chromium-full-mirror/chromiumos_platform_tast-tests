@@ -24,10 +24,11 @@ const (
 )
 
 func init() {
+	// TODO(b/299023313): Deprecate martian proxy later.
 	testing.AddTest(&testing.Test{
-		Func:         NetworkManipulate,
+		Func:         NetworkManipulateMartianproxy,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that manipulating network traffic with proxy",
+		Desc:         "Verifies that manipulating network traffic with martian proxy",
 		Contacts: []string{
 			"shengjun@google.com",
 			"yanghenry@google.com",
@@ -52,7 +53,7 @@ func init() {
 	})
 }
 
-func NetworkManipulate(ctx context.Context, s *testing.State) {
+func NetworkManipulateMartianproxy(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()

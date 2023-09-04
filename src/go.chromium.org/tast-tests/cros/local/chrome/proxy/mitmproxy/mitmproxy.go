@@ -43,8 +43,9 @@ type MitmProxy struct {
 	confDir      string
 	compressDump bool
 	cmd          *testexec.Cmd
-	isRunning    bool // Is the proxy running? It is set to true on starting proxy.
-	removeCert   bool // Should remove cert after test is completed?
+	isRunning    bool   // Is the proxy running? It is set to true on starting proxy.
+	removeCert   bool   // Should remove cert after test is completed?
+	scriptPath   string // Addon script used by mitmproxy
 }
 
 // New creates a new MitmDump instance with default configuration.
@@ -62,6 +63,12 @@ func New() *MitmProxy {
 // SetRemoveCert sets whether to remove cert.
 func (mp *MitmProxy) SetRemoveCert(removeCert bool) *MitmProxy {
 	mp.removeCert = removeCert
+	return mp
+}
+
+// SetScriptPath sets the path of addon script.
+func (mp *MitmProxy) SetScriptPath(scriptPath string) *MitmProxy {
+	mp.scriptPath = scriptPath
 	return mp
 }
 
@@ -112,10 +119,17 @@ func (mp *MitmProxy) Start(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to create %q for mitmdump dumping", mp.dumpDir)
 	}
 
-	cmd := testexec.CommandContext(ctx, mp.binaryPath,
+	args := []string{
 		"--set", fmt.Sprintf("listen_port=%d", mp.port),
 		"--set", fmt.Sprintf("confdir=%s", mp.confDir),
-		"-w", dumpFilePath)
+		"-w", dumpFilePath,
+	}
+
+	if len(mp.scriptPath) > 0 {
+		args = append(args, "-s", mp.scriptPath)
+	}
+
+	cmd := testexec.CommandContext(ctx, mp.binaryPath, args...)
 
 	if err := cmd.Start(); err != nil {
 		return errors.Wrap(err, "failed to launch proxy server")
