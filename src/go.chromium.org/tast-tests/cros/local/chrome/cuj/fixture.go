@@ -239,7 +239,10 @@ func init() {
 		},
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts:   []chrome.Option{chrome.ExtraArgs(webRTCEventLogCommandFlag)},
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
 			bt:                browser.TypeAsh,
 			useEnterprisePool: true,
 			docsBlocker:       true,
@@ -608,9 +611,12 @@ func init() {
 		},
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{chrome.ExtraArgs(webRTCEventLogCommandFlag)},
-			bt:              browser.TypeAsh,
-			docsBlocker:     true,
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt:          browser.TypeAsh,
+			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -629,9 +635,12 @@ func init() {
 		},
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{chrome.LacrosExtraArgs(webRTCEventLogCommandFlag)},
-			bt:              browser.TypeLacros,
-			docsBlocker:     true,
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt:          browser.TypeLacros,
+			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -651,7 +660,7 @@ func init() {
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("OneGroupPerRenderer"),
+				chrome.EnableFeatures("OneGroupPerRenderer", "PreferConstantFrameRate"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
 			bt:          browser.TypeAsh,
@@ -676,7 +685,7 @@ func init() {
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("MainThreadCompositingPriority"),
+				chrome.EnableFeatures("MainThreadCompositingPriority", "PreferConstantFrameRate"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
 			bt:          browser.TypeAsh,
@@ -704,6 +713,7 @@ func init() {
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 				chrome.EnableFeatures(
+					"PreferConstantFrameRate",
 					"CrOSLateBootAudioAPNoiseCancellation",
 					"CrOSLateBootAudioFlexibleLoopback",
 					"ShowLiveCaptionInVideoConferenceTray",
@@ -800,6 +810,7 @@ func init() {
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
 				chrome.ExtraArgs("--enable-field-trial-config"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
@@ -980,7 +991,11 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-				chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
+				chrome.EnableFeatures(
+					"CrosBatterySaver",
+					"CrosBatterySaverAlwaysOn",
+					"PreferConstantFrameRate",
+				),
 			},
 			bt:          browser.TypeAsh,
 			docsBlocker: true,
