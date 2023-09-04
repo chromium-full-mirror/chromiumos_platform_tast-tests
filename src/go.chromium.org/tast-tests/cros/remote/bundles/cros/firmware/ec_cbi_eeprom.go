@@ -156,10 +156,11 @@ func setECWriteProtect(ctx context.Context, h *firmware.Helper, enable bool) err
 		}
 	}
 
-	testing.ContextLog(ctx, "Rebooting DUT")
-	if err := h.DUT.Reboot(ctx); err != nil {
-		return errors.Wrap(err, "failed to reboot DUT")
+	testing.ContextLog(ctx, "Rebooting the DUT with cold reset")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		return errors.Wrap(err, "failed to reboot the DUT with cold reset")
 	}
+
 	if err := h.WaitConnect(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for DUT to reconnect")
 	}
