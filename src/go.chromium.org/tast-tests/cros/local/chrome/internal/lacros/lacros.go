@@ -12,9 +12,9 @@ package lacros
 import (
 	"context"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"time"
+
+	"github.com/shirou/gopsutil/v3/process"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/chromeproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
@@ -70,6 +70,40 @@ func Snapshot(ctx context.Context, tconn *driver.TestConn) (*Info, error) {
 	return &info, nil
 }
 
+func killLacros(ctx context.Context, lacrosExecPath string) error {
+	var procs []*process.Process
+
+	browserProc, err := chromeproc.Root(lacrosExecPath)
+	if err == procutil.ErrNotFound {
+		// Nothing to kill.
+	} else if err != nil {
+		return errors.Wrap(err, "failed to search for browser process")
+	} else {
+		testing.ContextLog(ctx, "Lacros is still running, terminating it now")
+		browserProc.Terminate()
+		procs = append(procs, browserProc)
+	}
+
+	// Also wait for utility processes, which may live a bit longer and still write files.
+	utilityProcs, err := chromeproc.UtilityProcesses(lacrosExecPath)
+	if err == procutil.ErrNotFound {
+		// Nothing else to wait for.
+	} else if err != nil {
+		return errors.Wrap(err, "failed to search for utility processes")
+	} else {
+		procs = append(procs, utilityProcs...)
+	}
+
+	testing.ContextLogf(ctx, "Waiting for %d processes", len(procs))
+	for _, proc := range procs {
+		if err := procutil.WaitForTerminated(ctx, proc, 3*time.Second); err != nil {
+			return errors.Wrap(err, "failed to wait for process termination")
+		}
+	}
+
+	return nil
+}
+
 // ResetState terminates Lacros and removes its user data directory, unless KeepAlive is enabled.
 func ResetState(ctx context.Context, tconn *driver.TestConn) error {
 	info, err := Snapshot(ctx, tconn)
@@ -81,32 +115,15 @@ func ResetState(ctx context.Context, tconn *driver.TestConn) error {
 		return nil
 	}
 
-	if len(info.LacrosPath) != 0 {
-		lacrosProc, err := chromeproc.Root(info.LacrosPath + "/chrome")
-		if err == procutil.ErrNotFound {
-			// Lacros just terminated.
-		} else if err != nil {
-			return errors.Wrap(err, "failed to get Lacros process")
-		} else {
-			testing.ContextLog(ctx, "Lacros is still running, trying to terminate it now")
-			lacrosProc.Terminate()
-			if err := procutil.WaitForTerminated(ctx, lacrosProc, 3*time.Second); err != nil {
-				return errors.Wrap(err, "failed to wait for process termination")
-			}
+	if len(info.LacrosPath) == 0 {
+		testing.ContextLog(ctx, "Got empty lacros path")
+	} else {
+		if err := killLacros(ctx, info.LacrosPath+"/chrome"); err != nil {
+			return errors.Wrap(err, "failed to kill Lacros")
 		}
 	}
 
 	if err := os.RemoveAll(UserDataDir); err != nil {
-		dir, ok := testing.ContextOutDir(ctx)
-		if ok && dir != "" {
-			f, err := os.Create(filepath.Join(dir, "ls-lacros-user-data-dir.txt"))
-			if err == nil {
-				defer f.Close()
-				cmd := exec.Command("ls", "-lR", UserDataDir)
-				cmd.Stdout = f
-				cmd.Run()
-			}
-		}
 		return errors.Wrap(err, "failed to delete Lacros user data directory")
 	}
 
