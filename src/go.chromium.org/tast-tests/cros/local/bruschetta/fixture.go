@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/bruschetta/constants"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
@@ -227,6 +228,7 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 			s.Fatal("Failed to remove VM after setup failure: ", err)
 		}
 	}(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "ui_tree")
 
 	s.Log("VM installer booted, waiting for VM to stop")
 
