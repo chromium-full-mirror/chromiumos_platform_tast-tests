@@ -195,6 +195,9 @@ func (r *Resolution) AspectRatio() float64 {
 // until its AppWindow interactable. The returned App instance must be closed
 // when the test is finished.
 func Init(ctx context.Context, cr *chrome.Chrome, outDir string, appLauncher testutil.AppLauncher, tb *testutil.TestBridge) (_ *App, retErr error) {
+	if tb == nil {
+		return nil, errors.New("test bridge is nil, resetTestBridge failed?")
+	}
 	// Since we don't use "cros-camera" service for fake camera, there is no need
 	// to ensure it is running.
 	if tb.CameraType != testutil.UseFakeVCDCamera {

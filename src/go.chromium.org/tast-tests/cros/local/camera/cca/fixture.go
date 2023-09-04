@@ -737,14 +737,16 @@ func (f *fixture) runTestWithApp(ctx context.Context, testFunc TestWithAppFunc, 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
-	defer f.resetTestBridge(cleanupCtx)
-	defer func(cleanupCtx context.Context) {
+	defer func(ctx context.Context) {
 		hasError := retErr != nil
 		stopFunc := f.stopApp
 		if params.StopAppOnlyIfExist {
 			stopFunc = f.stopAppIfExist
 		}
-		if err := stopFunc(cleanupCtx, hasError); err != nil {
+		if err := stopFunc(ctx, hasError); err != nil {
+			retErr = errors.Wrap(retErr, err.Error())
+		}
+		if err := f.resetTestBridge(ctx); err != nil {
 			retErr = errors.Wrap(retErr, err.Error())
 		}
 	}(cleanupCtx)
