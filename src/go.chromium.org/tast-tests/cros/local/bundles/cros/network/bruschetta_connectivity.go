@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Checks IPv4 and IPv6 connectivity inside Bruschetta VM",
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com", "clumptini@google.com"},
 		BugComponent: "b:156085",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
 		Fixture:      bruschetta.BruschettaFixture,
