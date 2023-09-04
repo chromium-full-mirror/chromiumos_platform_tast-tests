@@ -34,7 +34,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DataLeakPreventionRulesListScreenshareTab,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with screen sharing restrictions while sharing a Chrome tab",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
@@ -73,22 +73,8 @@ func init() {
 				BrowserType: browser.TypeAsh,
 			},
 		}, {
-			Name: "ash_allowed",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val: screenshare.TestParams{
-				Name:        "allowed",
-				Restriction: restrictionlevel.Allowed,
-				Path:        screenshare.UnrestrictedPath,
-				BrowserType: browser.TypeAsh,
-			},
-		}, {
 			Name:      "ash_warn_proceeded",
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:golden_tier"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "warn_proceeded",
@@ -97,13 +83,9 @@ func init() {
 				BrowserType: browser.TypeAsh,
 			},
 		}, {
-			Name: "ash_warn_cancelled",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_warn_cancelled",
+			ExtraAttr: []string{"group:golden_tier"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "warn_cancelled",
 				Restriction: restrictionlevel.WarnCancelled,

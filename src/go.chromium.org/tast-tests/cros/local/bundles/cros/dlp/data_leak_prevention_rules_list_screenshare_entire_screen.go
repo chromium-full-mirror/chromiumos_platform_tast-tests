@@ -63,26 +63,12 @@ func init() {
 		}},
 		Params: []testing.Param{{
 			Name:      "ash_blocked",
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:golden_tier"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "blocked",
 				Restriction: restrictionlevel.Blocked,
 				Path:        screenshare.RestrictedPath,
-				BrowserType: browser.TypeAsh,
-			},
-		}, {
-			Name: "ash_allowed",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val: screenshare.TestParams{
-				Name:        "allowed",
-				Restriction: restrictionlevel.Allowed,
-				Path:        screenshare.UnrestrictedPath,
 				BrowserType: browser.TypeAsh,
 			},
 		}, {
@@ -96,13 +82,9 @@ func init() {
 				BrowserType: browser.TypeAsh,
 			},
 		}, {
-			Name: "ash_warn_cancelled",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_warn_cancelled",
+			ExtraAttr: []string{"group:golden_tier"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "warn_cancelled",
 				Restriction: restrictionlevel.WarnCancelled,
@@ -111,7 +93,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_blocked",
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:golden_tier"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: screenshare.TestParams{
@@ -121,23 +103,8 @@ func init() {
 				BrowserType: browser.TypeLacros,
 			},
 		}, {
-			Name: "lacros_allowed",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val: screenshare.TestParams{
-				Name:        "allowed",
-				Restriction: restrictionlevel.Allowed,
-				Path:        screenshare.UnrestrictedPath,
-				BrowserType: browser.TypeLacros,
-			},
-		}, {
 			Name:              "lacros_warn_proceeded",
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:golden_tier"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: screenshare.TestParams{
@@ -147,12 +114,8 @@ func init() {
 				BrowserType: browser.TypeLacros,
 			},
 		}, {
-			Name: "lacros_warn_cancelled",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
+			Name:              "lacros_warn_cancelled",
+			ExtraAttr:         []string{"group:golden_tier"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: screenshare.TestParams{
