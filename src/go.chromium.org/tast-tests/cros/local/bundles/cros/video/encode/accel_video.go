@@ -196,6 +196,10 @@ func layersOfSVCMode(svcMode string) (int, int, error) {
 		if _, err := fmt.Sscanf(svcMode, "L%dT%d_KEY", &spatialLayers, &temporalLayers); err != nil {
 			return -1, -1, errors.Wrap(err, "unknown svc mode")
 		}
+	} else if strings.HasPrefix(svcMode, "S") {
+		if _, err := fmt.Sscanf(svcMode, "S%dT%d", &spatialLayers, &temporalLayers); err != nil {
+			return -1, -1, errors.Wrap(err, "unknown svc mode")
+		}
 	} else {
 		if _, err := fmt.Sscanf(svcMode, "L%dT%d", &spatialLayers, &temporalLayers); err != nil {
 			return -1, -1, errors.Wrap(err, "unknown svc mode")
@@ -351,7 +355,7 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 		}
 	}
 	if opts.TestType&Quality != None {
-		if err := runAccelVideoQualityPerfTest(ctx, s, testArgs, opts.WebMName, spatialLayers, temporalLayers, p); err != nil {
+		if err := runAccelVideoQualityPerfTest(ctx, s, testArgs, opts.WebMName, opts.SVCMode, spatialLayers, temporalLayers, p); err != nil {
 			return err
 		}
 	}
@@ -477,7 +481,7 @@ func runAccelVideoSpeedPerfTest(ctx context.Context, s *testing.State, testArgs 
 	return nil
 }
 
-func runAccelVideoQualityPerfTest(ctx context.Context, s *testing.State, testArgs []string, webMName string, spatialLayers, temporalLayers int, p *perf.Values) error {
+func runAccelVideoQualityPerfTest(ctx context.Context, s *testing.State, testArgs []string, webMName, svcMode string, spatialLayers, temporalLayers int, p *perf.Values) error {
 	const (
 		// Name of the bitstream quality test.
 		qualityTestname = "MeasureProducedBitstreamQuality"
@@ -510,7 +514,12 @@ func runAccelVideoQualityPerfTest(ctx context.Context, s *testing.State, testArg
 	if temporalLayers > 1 || spatialLayers > 1 {
 		for sID := 1; sID <= spatialLayers; sID++ {
 			for tID := 1; tID <= temporalLayers; tID++ {
-				scalabilityMode := fmt.Sprintf("L%dT%d", sID, tID)
+				var scalabilityMode string
+				if strings.HasPrefix(svcMode, "S") {
+					scalabilityMode = fmt.Sprintf("S%dT%d", sID, tID)
+				} else {
+					scalabilityMode = fmt.Sprintf("L%dT%d", sID, tID)
+				}
 				if err := addQualityMetrics(qualityJSONPath, scalabilityMode, p); err != nil {
 					return errors.Wrapf(err, "failed to parse quality performance metrics for %v", scalabilityMode)
 				}

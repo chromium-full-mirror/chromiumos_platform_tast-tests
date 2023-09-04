@@ -423,6 +423,18 @@ func init() {
 				ExtraData:         []string{"encode/desktop2-960x540_850frames.vp9.webm", "encode/desktop2-960x540_850frames.vp9.webm.json"},
 			},
 			{
+				Name: "vp9_540p_s2t3",
+				Val: encode.TestOptions{
+					WebMName:      "encode/desktop2-960x540_850frames.vp9.webm",
+					Profile:       videotype.VP9Prof,
+					PSNRThreshold: 27.5,
+					SVCMode:       "S2T3",
+					BitrateMode:   "cbr",
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "vaapi"},
+				ExtraData:         []string{"encode/desktop2-960x540_850frames.vp9.webm", "encode/desktop2-960x540_850frames.vp9.webm.json"},
+			},
+			{
 				Name: "vp9_720p_l1t2",
 				Val: encode.TestOptions{
 					WebMName:      "encode/desktop2-1280x720_850frames.vp9.webm",
@@ -465,6 +477,30 @@ func init() {
 					Profile:       videotype.VP9Prof,
 					PSNRThreshold: 25,
 					SVCMode:       "L3T3_KEY",
+					BitrateMode:   "cbr",
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "vaapi"},
+				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
+			},
+			{
+				Name: "vp9_720p_s2t3",
+				Val: encode.TestOptions{
+					WebMName:      "encode/desktop2-1280x720_850frames.vp9.webm",
+					Profile:       videotype.VP9Prof,
+					PSNRThreshold: 29.8,
+					SVCMode:       "S2T3",
+					BitrateMode:   "cbr",
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "vaapi"},
+				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
+			},
+			{
+				Name: "vp9_720p_s3t3",
+				Val: encode.TestOptions{
+					WebMName:      "encode/desktop2-1280x720_850frames.vp9.webm",
+					Profile:       videotype.VP9Prof,
+					PSNRThreshold: 25,
+					SVCMode:       "S3T3",
 					BitrateMode:   "cbr",
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "vaapi"},

@@ -160,12 +160,16 @@ func psnrThresholdSVC(codec string, height int, svcMode string) float32 {
 				"l1t3":     32.7,
 				"l2t3_key": 27.5,
 				"l3t3_key": 25.0,
+				"s2t3":     27.5,
+				"s3t3":     25.0,
 			},
 			720: {
 				"l1t2":     35.5,
 				"l1t3":     36.0,
 				"l2t3_key": 29.8,
 				"l3t3_key": 25,
+				"s2t3":     29.8,
+				"s3t3":     25,
 			},
 		},
 	}
@@ -240,8 +244,8 @@ func TestEncodeAccelParams(t *testing.T) {
 		{"h264", 720, []string{"l1t2", "l1t3"}},
 		{"vp8", 720, []string{"l1t2", "l1t3"}},
 		{"vp8", 1080, []string{"l1t2", "l1t3"}},
-		{"vp9", 540, []string{"l2t3_key", "l3t3_key"}},
-		{"vp9", 720, []string{"l1t2", "l1t3", "l2t3_key", "l3t3_key"}},
+		{"vp9", 540, []string{"l2t3_key", "l3t3_key", "s2t3"}},
+		{"vp9", 720, []string{"l1t2", "l1t3", "l2t3_key", "l3t3_key", "s2t3", "s3t3"}},
 	} {
 		codec := p.codec
 		height := p.height
