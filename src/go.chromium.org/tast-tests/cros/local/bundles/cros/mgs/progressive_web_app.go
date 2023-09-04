@@ -29,7 +29,6 @@ func init() {
 		Desc:         "Verify that Progressive Web Apps (PWA) are working in a managed guest session by trying to install and start a test PWA",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
-			"mpolzer@google.com", // Test author
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		SoftwareDeps: []string{"reboot", "chrome"},

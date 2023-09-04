@@ -26,7 +26,6 @@ func init() {
 		Desc:         "Verify that managed guest session (MGS) is ephermeral by checking that a toggled setting is lost upon session exit",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
-			"mpolzer@google.com", // Test author
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		SoftwareDeps: []string{"reboot", "chrome"},

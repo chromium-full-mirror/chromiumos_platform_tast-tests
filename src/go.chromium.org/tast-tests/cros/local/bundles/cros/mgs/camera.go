@@ -23,7 +23,6 @@ func init() {
 		Desc:         "Verify that the camera is working in managed guest sessions",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
-			"mpolzer@google.com", // Test author
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		SoftwareDeps: []string{"reboot", "camera_app", "chrome", caps.BuiltinOrVividCamera},
