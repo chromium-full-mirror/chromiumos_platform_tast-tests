@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/cros/ui/setup"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/quickcheckcuj"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -65,16 +64,6 @@ func init() {
 					browserType: browser.TypeLacros,
 				},
 			}, {
-				Name:              "basic_unlock_crosbolt",
-				Fixture:           "loggedInAndKeepState",
-				Timeout:           5 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				Val: quickCheckParam{
-					tier:     cuj.Basic,
-					scenario: quickcheckcuj.Lock,
-				},
-			}, {
 				Name:    "basic_wakeup",
 				Fixture: "loggedInAndKeepState",
 				Timeout: 5 * time.Minute,
@@ -92,16 +81,6 @@ func init() {
 					scenario:    quickcheckcuj.Suspend,
 					browserType: browser.TypeLacros,
 				},
-			}, {
-				Name:              "basic_wakeup_crosbolt",
-				Fixture:           "loggedInAndKeepState",
-				Timeout:           5 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				Val: quickCheckParam{
-					tier:     cuj.Basic,
-					scenario: quickcheckcuj.Suspend,
-				},
 			},
 		},
 	})
@@ -118,6 +97,7 @@ func QuickCheckCUJ2(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to convert the ui.QuickCheckCUJ2_wait_time to integer: ", err)
 		}
 		s.Logf("Given %d seconds for the system to stablize", waitTime)
+		// GoBigSleepLint: Wait for the system to stabilize.
 		if err := testing.Sleep(ctx, time.Duration(waitTime)*time.Second); err != nil {
 			s.Fatalf("Failed to sleep for %d seconds: %v", waitTime, err)
 		}

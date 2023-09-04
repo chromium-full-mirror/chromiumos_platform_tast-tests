@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/cros/ui/setup"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	et "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/everydaymultitaskingcuj"
@@ -67,16 +66,6 @@ func init() {
 					appName:     et.YoutubeMusicAppName,
 					enableBT:    false,
 					browserType: browser.TypeLacros,
-				},
-			}, {
-				Name:              "basic_ytmusic_crosbolt",
-				Fixture:           "loggedInAndKeepStateARCSupported",
-				Timeout:           20 * time.Minute,
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				Val: multiTaskingParam{
-					tier:     cuj.Basic,
-					appName:  et.YoutubeMusicAppName,
-					enableBT: false,
 				},
 			}, {
 				Name:    "basic_ytmusic_bluetooth",
@@ -157,16 +146,6 @@ func init() {
 					appName:     et.YoutubeMusicAppName,
 					enableBT:    false,
 					browserType: browser.TypeLacros,
-				},
-			}, {
-				Name:              "plus_ytmusic_crosbolt",
-				Fixture:           "loggedInAndKeepStateARCSupported",
-				Timeout:           30 * time.Minute,
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				Val: multiTaskingParam{
-					tier:     cuj.Plus,
-					appName:  et.YoutubeMusicAppName,
-					enableBT: false,
 				},
 			}, {
 				Name:    "plus_ytmusic_bluetooth",

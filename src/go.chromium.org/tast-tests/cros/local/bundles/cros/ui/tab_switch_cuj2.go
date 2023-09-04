@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/cros/ui/setup"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/tabswitchcuj"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -18,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/wpr"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type tabSwitchParam struct {
@@ -73,14 +71,6 @@ func init() {
 				Fixture:           "loggedInAndKeepStateLacros",
 				ExtraSoftwareDeps: []string{"lacros", "arc"},
 			}, {
-				Name:              "basic_noproxy_crosbolt",
-				Timeout:           35 * time.Minute,
-				Val:               tabSwitchParam{tier: cuj.Basic, wprProxy: false},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-				Fixture:           "loggedInAndKeepState",
-				ExtraSoftwareDeps: []string{"arc"},
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-			}, {
 				Name:              "plus_noproxy",
 				Timeout:           40 * time.Minute,
 				Val:               tabSwitchParam{tier: cuj.Plus, wprProxy: false},
@@ -92,14 +82,6 @@ func init() {
 				Val:               tabSwitchParam{tier: cuj.Plus, wprProxy: false, browserType: browser.TypeLacros},
 				Fixture:           "loggedInAndKeepStateLacros",
 				ExtraSoftwareDeps: []string{"lacros", "arc"},
-			}, {
-				Name:              "plus_noproxy_crosbolt",
-				Timeout:           40 * time.Minute,
-				Val:               tabSwitchParam{tier: cuj.Plus, wprProxy: false},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-				Fixture:           "loggedInAndKeepState",
-				ExtraSoftwareDeps: []string{"arc"},
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
 			}, {
 				Name:    "premium_noproxy",
 				Timeout: 45 * time.Minute,
@@ -114,14 +96,6 @@ func init() {
 
 				Fixture:           "loggedInAndKeepStateLacros",
 				ExtraSoftwareDeps: []string{"lacros", "arc"},
-			}, {
-				Name:              "premium_noproxy_crosbolt",
-				Timeout:           45 * time.Minute,
-				Val:               tabSwitchParam{tier: cuj.Premium, wprProxy: false},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-				Fixture:           "loggedInAndKeepState",
-				ExtraSoftwareDeps: []string{"arc"},
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
 			},
 		},
 	})

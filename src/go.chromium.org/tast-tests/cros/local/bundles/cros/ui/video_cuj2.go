@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/cros/ui/setup"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
@@ -66,16 +65,6 @@ func init() {
 					browserType: browser.TypeLacros,
 				},
 			}, {
-				Name:              "basic_youtube_web_crosbolt",
-				Fixture:           "loggedInAndKeepState",
-				Timeout:           10 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				Val: videoCUJParam{
-					tier: cuj.Basic,
-					app:  youtube.YoutubeWeb,
-				},
-			}, {
 				Name:    "premium_youtube_web",
 				Fixture: "loggedInAndKeepState",
 				Timeout: 12 * time.Minute,
@@ -92,16 +81,6 @@ func init() {
 					tier:        cuj.Premium,
 					app:         youtube.YoutubeWeb,
 					browserType: browser.TypeLacros,
-				},
-			}, {
-				Name:              "plus_youtube_web_crosbolt",
-				Fixture:           "loggedInAndKeepState",
-				Timeout:           10 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				Val: videoCUJParam{
-					tier: cuj.Plus,
-					app:  youtube.YoutubeWeb,
 				},
 			}, {
 				Name:    "basic_youtube_app",
@@ -122,16 +101,6 @@ func init() {
 					browserType: browser.TypeLacros,
 				},
 			}, {
-				Name:              "basic_youtube_app_crosbolt",
-				Fixture:           "loggedInAndKeepStateARCSupported",
-				Timeout:           10 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				Val: videoCUJParam{
-					tier: cuj.Basic,
-					app:  youtube.YoutubeApp,
-				},
-			}, {
 				Name:    "premium_youtube_app",
 				Fixture: "loggedInAndKeepStateARCSupported",
 				Timeout: 10 * time.Minute,
@@ -148,16 +117,6 @@ func init() {
 					tier:        cuj.Premium,
 					app:         youtube.YoutubeApp,
 					browserType: browser.TypeLacros,
-				},
-			}, {
-				Name:              "plus_youtube_app_crosbolt",
-				Fixture:           "loggedInAndKeepStateARCSupported",
-				Timeout:           10 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				Val: videoCUJParam{
-					tier: cuj.Plus,
-					app:  youtube.YoutubeApp,
 				},
 			},
 		},
