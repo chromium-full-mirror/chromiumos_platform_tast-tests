@@ -8,6 +8,7 @@ package extensioninstall
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -107,6 +108,16 @@ func triggerExtensionInstallReturnStatus(ctx context.Context, tconn *chrome.Test
 		return errors.New("failed to determine the outcome")
 	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
 		return false, err
+	}
+
+	// The new Chrome Web Store In Preview experience adds a toast message
+	// so check for that before concluding the extension is allowed.
+	blockedDivXPathSelector := fmt.Sprintf(`//div[text()="Your admin has blocked this item (ID: %s)"]`, ExtensionID)
+	if allowInstall {
+		blockedDiv := fmt.Sprintf("document.evaluate('%s', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE).singleNodeValue", blockedDivXPathSelector)
+		if err := conn.WaitForExprWithTimeout(ctx, fmt.Sprintf("%s != null", blockedDiv), time.Second); err == nil {
+			allowInstall = false
+		}
 	}
 
 	return allowInstall, nil
