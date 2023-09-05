@@ -94,6 +94,10 @@ func LaunchAppFromSettings(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
+	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.waitForSystemWebAppsInstall)"); err != nil {
+		s.Fatal("Failed to wait for all system web apps to be installed: ", err)
+	}
+
 	ui := uiauto.New(tconn)
 	entryFinder := nodewith.Name(params.menuLabel).Role(role.Link).Ancestor(ossettings.WindowFinder)
 	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, params.settingsPage, ui.Exists(entryFinder)); err != nil {
