@@ -143,6 +143,7 @@ const (
 	CtrlRefresh  KeypressControl = "ctrl_refresh_key"
 	ImaginaryKey KeypressControl = "imaginary_key"
 	SysRQX       KeypressControl = "sysrq_x"
+	SysRQR       KeypressControl = "sysrq_r"
 	PowerKey     KeypressControl = "power_key"
 	Pwrbutton    KeypressControl = "pwr_button"
 	USBEnter     KeypressControl = "usb_keyboard_enter_key"
