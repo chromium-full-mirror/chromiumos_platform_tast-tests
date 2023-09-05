@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -31,14 +32,14 @@ const (
 const (
 	defaultConfDir = "/usr/local/tmp/mitmproxy"
 	certFile       = "mitmproxy-ca-cert.pem"
-	defaultDumpDir = "/usr/local/tmp/mitmproxy"
+	defaultOutDir  = "/usr/local/tmp/mitmproxy"
 )
 
 // MitmProxy represents a structure of mitmproxy.
 type MitmProxy struct {
 	binaryPath   string
 	port         int
-	dumpDir      string
+	outDir       string
 	dumpFileName string
 	confDir      string
 	compressDump bool
@@ -54,7 +55,7 @@ func New() *MitmProxy {
 		binaryPath:   DefaultBinaryPath,
 		port:         DefaultListenPort,
 		confDir:      defaultConfDir,
-		dumpDir:      defaultDumpDir,
+		outDir:       defaultOutDir,
 		compressDump: true,
 		removeCert:   true,
 	}
@@ -89,9 +90,10 @@ func (mp *MitmProxy) ListenPort() int {
 	return mp.port
 }
 
-// SetDumpDir sets the traffic dumping path.
-func (mp *MitmProxy) SetDumpDir(path string) *MitmProxy {
-	mp.dumpDir = path
+// SetOutDir sets the mitmproxy output path.
+// Output includes dump and log.
+func (mp *MitmProxy) SetOutDir(path string) *MitmProxy {
+	mp.outDir = path
 	return mp
 }
 
@@ -110,13 +112,16 @@ func (mp *MitmProxy) IsRunning() bool {
 func (mp *MitmProxy) Start(ctx context.Context) error {
 	nowStr := time.Now().Format("20230731-150405")
 	dumpFileName := fmt.Sprintf("mitmproxy_%s.dump", nowStr)
-	dumpFilePath := filepath.Join(mp.dumpDir, dumpFileName)
+	dumpFilePath := filepath.Join(mp.outDir, dumpFileName)
+
+	logFileName := fmt.Sprintf("mitmproxy_%s.log", nowStr)
+	logFilePath := filepath.Join(mp.outDir, logFileName)
 
 	if err := os.MkdirAll(mp.confDir, 0700); err != nil {
 		return errors.Wrapf(err, "failed to create %q for mitmdump config", mp.confDir)
 	}
-	if err := os.MkdirAll(mp.dumpDir, 0700); err != nil {
-		return errors.Wrapf(err, "failed to create %q for mitmdump dumping", mp.dumpDir)
+	if err := os.MkdirAll(mp.outDir, 0700); err != nil {
+		return errors.Wrapf(err, "failed to create %q for mitmdump output dir", mp.outDir)
 	}
 
 	args := []string{
@@ -129,7 +134,12 @@ func (mp *MitmProxy) Start(ctx context.Context) error {
 		args = append(args, "-s", mp.scriptPath)
 	}
 
-	cmd := testexec.CommandContext(ctx, mp.binaryPath, args...)
+	// We redirect mitmproxy output to file.
+	// We run proxy in a non-block way, so we cannot print logs until cmd is killed.
+	// To avoid any log loss, we rediret log to file to make debug easier.
+	proxyStart := fmt.Sprintf("%s %s > %s", mp.binaryPath, strings.Join(args, " "), logFilePath)
+	testing.ContextLogf(ctx, "command to start proxy is %s", proxyStart)
+	cmd := testexec.CommandContext(ctx, "bash", "-c", proxyStart)
 
 	if err := cmd.Start(); err != nil {
 		return errors.Wrap(err, "failed to launch proxy server")
@@ -221,7 +231,7 @@ func (mp *MitmProxy) Close(ctx context.Context) error {
 	}
 
 	var cleanupErrs []error
-	dumpFilePath := filepath.Join(mp.dumpDir, mp.dumpFileName)
+	dumpFilePath := filepath.Join(mp.outDir, mp.dumpFileName)
 
 	// Terminate mitmproxy.
 	if err := mp.cmd.Kill(); err != nil {
@@ -233,7 +243,7 @@ func (mp *MitmProxy) Close(ctx context.Context) error {
 	// Compress dump file.
 	if mp.compressDump {
 		targetTar := dumpFilePath + ".tar.gz"
-		if err := testexec.CommandContext(ctx, "tar", "-czf", targetTar, "-C", mp.dumpDir, mp.dumpFileName, "--remove-files").Run(testexec.DumpLogOnError); err != nil {
+		if err := testexec.CommandContext(ctx, "tar", "-czf", targetTar, "-C", mp.outDir, mp.dumpFileName, "--remove-files").Run(testexec.DumpLogOnError); err != nil {
 			cleanupErrs = append(cleanupErrs, errors.Wrap(err, "failed to compress mitmproxy dump"))
 		}
 	}

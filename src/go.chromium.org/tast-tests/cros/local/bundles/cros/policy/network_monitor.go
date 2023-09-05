@@ -45,7 +45,7 @@ func NetworkMonitor(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	mp := mitmproxy.New()
-	mp.SetBinaryPath(s.DataPath(mitmdumpBinFile)).SetDumpDir(s.OutDir())
+	mp.SetBinaryPath(s.DataPath(mitmdumpBinFile)).SetOutDir(s.OutDir())
 
 	cleanup, err := cr.LaunchAndApplyProxy(ctx, mp)
 	if err != nil {

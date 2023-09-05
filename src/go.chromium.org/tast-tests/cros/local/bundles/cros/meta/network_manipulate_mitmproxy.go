@@ -66,7 +66,7 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 	proxy := mitmproxy.New()
 
 	// TODO(b/298126986): Use binary in test image.
-	proxy.SetBinaryPath(s.DataPath(mitmdumpBinFile)).SetDumpDir(s.OutDir())
+	proxy.SetBinaryPath(s.DataPath(mitmdumpBinFile)).SetOutDir(s.OutDir())
 
 	if redirectCase {
 		proxy.SetScriptPath(s.DataPath(httpRedirect))
