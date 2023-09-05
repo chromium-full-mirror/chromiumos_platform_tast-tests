@@ -83,7 +83,7 @@ func (svc *NotificationService) WaitForNotification(ctx context.Context, req *pb
 
 		notification, err := ash.WaitForNotification(ctx, tconn, time.Duration(req.TimeoutSecs)*time.Second, predicates...)
 		if err != nil {
-			return &pb.WaitForNotificationResponse{}, nil
+			return &pb.WaitForNotificationResponse{}, err
 		}
 		return &pb.WaitForNotificationResponse{Notification: toNotificationPB(notification)}, nil
 	})
