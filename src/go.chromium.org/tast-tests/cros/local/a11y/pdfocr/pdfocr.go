@@ -33,14 +33,23 @@ import (
 
 // Strings used in go.chromium.org/tast-tests/cros/local/bundles/cros/a11y/pdfocr*.go
 const (
-	// Status node message when PDF OCR finished converting image to text
-	StatusReadyMessage = "Image converted to text"
+	// Status node message when PDF OCR finished converting image to text. This
+	// must be synced with `IDS_PDF_OCR_COMPLETED` defined in the Chromium repo.
+	StatusReadyMessage = "This PDF is inaccessible. Text extracted, powered by Google AI"
 	// Subpage url in the Settings
 	SettingsSubPageURL = "textToSpeech"
-	// Toggle menu name in the Settings
-	SettingsToggleName = "Convert PDF images to text"
-	// Menu entry name in the context menu
-	ContextMenuName = "Convert image to text"
+	// Toggle menu name in the Settings. This must be synced with
+	// `IDS_SETTINGS_PDF_OCR_TITLE` defined in the Chromium repo.
+	SettingsToggleName = "Extract text from PDF"
+	// Menu entry name in the context menu. This must be synced with
+	// `IDS_CONTENT_CONTEXT_PDF_OCR_MENU_OPTION` defined in the Chromium repo.
+	ContextMenuName = "Extract text from PDF"
+	// Disclaimer message added to the beginning of extracted text. This must be
+	// sycned with `IDS_PDF_OCR_RESULT_BEGIN` defined in the Chromium repo.
+	DisclaimerMessageStart = "Start of extracted text"
+	// Disclaimer message added to the end of extracted text. This must be sycned
+	// with `IDS_PDF_OCR_RESULT_END` defined in the Chromium repo.
+	DisclaimerMessageEnd = "End of extracted text"
 	// Testing PDF's filename
 	TestPDFName = "inaccessible-text.pdf"
 	// Inaccessible text embedded in an image in the testing PDF file

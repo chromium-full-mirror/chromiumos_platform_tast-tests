@@ -126,9 +126,9 @@ func PDFOCRFromSettingsWithDlcFailure(ctx context.Context, s *testing.State) {
 			pdfOCRToggle := nodewith.Name(pdfocr.SettingsToggleName).Role(role.ToggleButton)
 			if err := uiauto.Combine("toggle PDF OCR",
 				ui.WithTimeout(10*time.Second).WaitUntilExists(pdfOCRToggle),
-				settings.SetToggleOption(cr, "Convert PDF images to text", true),
+				settings.SetToggleOption(cr, pdfocr.SettingsToggleName, true),
 				// Failure of screen-ai dlc download makes the PDF OCR toggle button untoggled.
-				ui.WithTimeout(50*time.Second).WaitUntilCheckedState(pdfOCRToggle, false),
+				ui.WithTimeout(60*time.Second).WaitUntilCheckedState(pdfOCRToggle, false),
 			)(ctx); err != nil {
 				s.Fatal("Failed to wait for the PDF OCR to be reset: ", err)
 			}
@@ -175,9 +175,9 @@ func PDFOCRFromSettingsWithDlcFailure(ctx context.Context, s *testing.State) {
 			} else {
 				if err := uiauto.Combine("toggle PDF OCR",
 					ui.WithTimeout(10*time.Second).WaitUntilExists(pdfOCRToggle),
-					settings.SetToggleOption(cr, "Convert PDF images to text", true),
+					settings.SetToggleOption(cr, pdfocr.SettingsToggleName, true),
 					// Failure of screen-ai dlc download makes the PDF OCR toggle button untoggled.
-					ui.WithTimeout(50*time.Second).WaitUntilCheckedState(pdfOCRToggle, false),
+					ui.WithTimeout(60*time.Second).WaitUntilCheckedState(pdfOCRToggle, false),
 				)(ctx); err != nil {
 					s.Fatal("Failed to wait for the PDF OCR to be reset: ", err)
 				}

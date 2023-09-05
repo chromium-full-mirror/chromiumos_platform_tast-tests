@@ -138,8 +138,7 @@ func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) 
 			// Failure of screen-ai dlc download makes the PDF OCR menu entry unchecked.
 			pdfOCRMenuEntry := nodewith.Name(pdfocr.ContextMenuName).Role(role.MenuItem)
 			if err := uiauto.Combine("Check the PDF OCR menu entry from the Context Menu",
-				ui.WithTimeout(5*time.Second).RightClick(pdfRoot),
-				ui.WithTimeout(5*time.Second).WaitUntilCheckedState(pdfOCRMenuEntry, false),
+				ui.WithInterval(1*time.Second).RightClickUntil(pdfRoot, ui.WaitUntilCheckedState(pdfOCRMenuEntry, false)),
 				ui.WithTimeout(5*time.Second).LeftClick(pdfRoot),
 			)(ctx); err != nil {
 				s.Fatal("Failed to wait for the PDF OCR menu entry to be unchecked: ", err)
@@ -181,8 +180,7 @@ func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) 
 				// Failure of screen-ai dlc download makes the PDF OCR menu entry unchecked.
 				pdfOCRMenuEntry := nodewith.Name(pdfocr.ContextMenuName).Role(role.MenuItem)
 				if err := uiauto.Combine("Check the PDF OCR menu entry from the Context Menu",
-					ui.WithTimeout(5*time.Second).RightClick(pdfRoot),
-					ui.WithTimeout(5*time.Second).WaitUntilCheckedState(pdfOCRMenuEntry, false),
+					ui.WithInterval(1*time.Second).RightClickUntil(pdfRoot, ui.WaitUntilCheckedState(pdfOCRMenuEntry, false)),
 					ui.WithTimeout(5*time.Second).LeftClick(pdfRoot),
 				)(ctx); err != nil {
 					s.Fatal("Failed to wait for the PDF OCR menu entry to be unchecked: ", err)

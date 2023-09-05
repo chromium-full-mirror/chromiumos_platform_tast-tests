@@ -132,7 +132,7 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 		// Text extracted from each page is surrouned by a pair of disclaimer nodes.
 		readingOrder = append(readingOrder, pdfocr.TestStep{
 			KeyCommands:  []string{chromevox.NextLandmark},
-			Expectations: []tts.SpeechExpectation{tts.NewStringExpectation("Start of converted text")},
+			Expectations: []tts.SpeechExpectation{tts.NewStringExpectation(pdfocr.DisclaimerMessageStart)},
 		})
 		expected := page.Expected
 		for _, expectedLine := range expected {
@@ -143,7 +143,7 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 		}
 		readingOrder = append(readingOrder, pdfocr.TestStep{
 			KeyCommands:  []string{chromevox.NextLandmark},
-			Expectations: []tts.SpeechExpectation{tts.NewStringExpectation("End of converted text")},
+			Expectations: []tts.SpeechExpectation{tts.NewStringExpectation(pdfocr.DisclaimerMessageEnd)},
 		})
 	}
 
