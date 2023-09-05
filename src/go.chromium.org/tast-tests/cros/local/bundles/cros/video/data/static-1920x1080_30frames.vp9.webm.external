@@ -1,5 +1,0 @@
-{
-  "url": "gs://chromiumos-test-assets-public/tast/cros/video/static-1920x1080_30frames_20230511.vp9.webm",
-  "size": 2913942,
-  "sha256sum": "cb89c73570ba556920fd2766889aca25e216506dc2bd710223cdf1bc1b17875a"
-}

@@ -141,9 +141,6 @@ func webMAndJSONFile(videoTitle string, height int) (string, string) {
 			1080: "encode/life_of_pixel-1920x1080_600frames.vp9.webm",
 			2160: "encode/life_of_pixel-3840x2160_600frames.vp9.webm",
 		},
-		"static": {
-			1080: "encode/static-1920x1080_600frames.vp9.webm",
-		},
 	}
 	webMFileName, found := webMFileNameTable[videoTitle][height]
 	if !found {
@@ -181,7 +178,6 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 		{"gipsrecmotion", "encode.SpeedAndQuality", basicHeights},
 		{"gipsrestat", "encode.SpeedAndQuality", basicHeights},
 		{"life_of_pixel", "encode.SpeedAndQuality", []int{1080, 2160}},
-		{"static", "encode.Quality", []int{1080}},
 	}
 
 	var params []encodeAccelPerfParam

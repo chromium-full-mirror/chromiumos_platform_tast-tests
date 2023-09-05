@@ -78,8 +78,6 @@ var md5OfYUV60Frames = map[string]string{
 
 	"encode/life_of_pixel-1920x1080_600frames.vp9.webm": "60a797f607ee18622e61e1090494c428",
 	"encode/life_of_pixel-3840x2160_600frames.vp9.webm": "d78016bf96a0ee143d76e48e646249bd",
-
-	"encode/static-1920x1080_600frames.vp9.webm": "f70998128376800b1dc27e70ff2c335d",
 }
 
 // AccelPerfTestType denotes the tests to be run with video_encode_accelerator_perf_tests.

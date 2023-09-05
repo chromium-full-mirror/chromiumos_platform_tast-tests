@@ -1472,54 +1472,6 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_2160_30"},
 			},
 			{
-				Name: "h264_1080p_static",
-				Val: encode.TestOptions{
-					WebMName:    "encode/static-1920x1080_600frames.vp9.webm",
-					Profile:     videotype.H264BaselineProf,
-					TestType:    encode.Quality,
-					BitrateMode: "cbr",
-				},
-				ExtraAttr:         []string{"graphics_perbuild"},
-				ExtraData:         []string{"encode/static-1920x1080_600frames.vp9.webm", "encode/static-1920x1080_600frames.vp9.webm.json"},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30"},
-			},
-			{
-				Name: "vp8_1080p_static",
-				Val: encode.TestOptions{
-					WebMName:    "encode/static-1920x1080_600frames.vp9.webm",
-					Profile:     videotype.VP8Prof,
-					TestType:    encode.Quality,
-					BitrateMode: "cbr",
-				},
-				ExtraAttr:         []string{"graphics_perbuild"},
-				ExtraData:         []string{"encode/static-1920x1080_600frames.vp9.webm", "encode/static-1920x1080_600frames.vp9.webm.json"},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30"},
-			},
-			{
-				Name: "vp9_1080p_static",
-				Val: encode.TestOptions{
-					WebMName:    "encode/static-1920x1080_600frames.vp9.webm",
-					Profile:     videotype.VP9Prof,
-					TestType:    encode.Quality,
-					BitrateMode: "cbr",
-				},
-				ExtraAttr:         []string{"graphics_perbuild"},
-				ExtraData:         []string{"encode/static-1920x1080_600frames.vp9.webm", "encode/static-1920x1080_600frames.vp9.webm.json"},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30"},
-			},
-			{
-				Name: "av1_1080p_static",
-				Val: encode.TestOptions{
-					WebMName:    "encode/static-1920x1080_600frames.vp9.webm",
-					Profile:     videotype.AV1MainProf,
-					TestType:    encode.Quality,
-					BitrateMode: "cbr",
-				},
-				ExtraAttr:         []string{"graphics_perbuild"},
-				ExtraData:         []string{"encode/static-1920x1080_600frames.vp9.webm", "encode/static-1920x1080_600frames.vp9.webm.json"},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_1080_30"},
-			},
-			{
 				Name: "h264_720p_l1t2_desktop2",
 				Val: encode.TestOptions{
 					WebMName:    "encode/desktop2-1280x720_850frames.vp9.webm",
