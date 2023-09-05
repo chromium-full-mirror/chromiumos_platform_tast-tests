@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"regexp"
 	"time"
+	"unicode/utf8"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -140,9 +141,7 @@ func WaitForAuthError(ctx context.Context, tconn *chrome.TestConn, timeout time.
 	return uiauto.New(tconn).WithTimeout(timeout).WaitUntilExists(AuthErrorFinder)(ctx)
 }
 
-// TypePassword enters the given password (without submitting). Refer to PasswordFieldFinder for username options.
-// It doesn't make any assumptions about the password being correct, so callers should verify the login/lock state afterwards.
-func TypePassword(ctx context.Context, tconn *chrome.TestConn, username, password string, kb *input.KeyboardEventWriter) error {
+func typePasswordAndVerify(ctx context.Context, tconn *chrome.TestConn, username, password string, submit bool, kb *input.KeyboardEventWriter) error {
 	if st, err := WaitState(ctx, tconn, func(st State) bool { return st.ReadyForPassword }, 3*uiTimeout); err != nil {
 		return errors.Wrapf(err, "failed to wait for screen to be ready for password (last status %+v)", st)
 	}
@@ -164,12 +163,43 @@ func TypePassword(ctx context.Context, tconn *chrome.TestConn, username, passwor
 	if err := kb.Type(ctx, password); err != nil {
 		return errors.Wrap(err, "failed to type password")
 	}
+	enteredPass, err := UserPassword(ctx, tconn, username, false /*pin*/)
+	if err != nil {
+		return errors.Wrap(err, "failed to read password")
+	}
+	// We have to use RuneCount instead of len because password is concealed and all characters are
+	// replaced by the bullet character, which is more than one byte in utf8.
+	enteredLen := utf8.RuneCountInString(enteredPass.Value)
+	// Verify whether the entered password is correct.
+	if len(password) != enteredLen {
+		if err := ShowPassword(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to click the Show password button for verification")
+		}
+		enteredRevealedPass, err := UserPassword(ctx, tconn, username, false /*pin*/)
+		if err != nil {
+			return errors.Wrap(err, "failed to read password for verification")
+		}
+		return errors.Errorf("failed to enter password, got %s, want %s", enteredRevealedPass.Value, password)
+	}
+	if !submit {
+		return nil
+	}
+
+	if err := kb.Type(ctx, "\n"); err != nil {
+		return errors.Wrap(err, "failed to submit password")
+	}
 	return nil
+}
+
+// TypePassword enters the given password (without submitting). Refer to PasswordFieldFinder for username options.
+// It doesn't make any assumptions about the password being correct, so callers should verify the login/lock state afterwards.
+func TypePassword(ctx context.Context, tconn *chrome.TestConn, username, password string, kb *input.KeyboardEventWriter) error {
+	return typePasswordAndVerify(ctx, tconn, username, password, false /*submit*/, kb)
 }
 
 // EnterPassword types password with carriage return at the end.
 func EnterPassword(ctx context.Context, tconn *chrome.TestConn, username, password string, kb *input.KeyboardEventWriter) error {
-	return TypePassword(ctx, tconn, username, password+"\n", kb)
+	return typePasswordAndVerify(ctx, tconn, username, password, true /*submit*/, kb)
 }
 
 // Lock locks the screen.
