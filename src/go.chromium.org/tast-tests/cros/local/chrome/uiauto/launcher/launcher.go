@@ -75,6 +75,12 @@ var SearchResultListLabelFinder = nodewith.HasClass("Label")
 // ReorderEducationNudgeFinder is the finder of the reorder education nudge.
 var ReorderEducationNudgeFinder = nodewith.HasClass("Label").Name("Sort your apps by name or color")
 
+// ImageSearchPowerTestRepeatTimes is the number of steps to repeat in image search power test.
+var ImageSearchPowerTestRepeatTimes = 50
+
+// ImageSearchPowerTestPictureName is the base file name for image search power test.
+const ImageSearchPowerTestPictureName = "search_local_image.png"
+
 // TestCase describes modes in which the launcher UI can be shown, and by which launcher test should generally be parameterized.
 // Use a struct because it makes the individual test cases more readable.
 type TestCase struct {

@@ -71,6 +71,9 @@ const (
 	// Without Charge Limit
 	PowerAshAdaptiveCharging = "powerAshAdaptiveCharging"
 	PowerNoChargeLimit       = "powerNoChargeLimit"
+
+	// Launcher Image search
+	PowerImageSearchWithFlagOn = "powerImageSearchWithFlagOn"
 )
 
 // PowerFixtureOptions describes options used by the fixture only.
@@ -562,6 +565,32 @@ func init() {
 			ChargeLimit: DisableChargeLimit,
 			Powerd:      DoNotChangePowerd,
 		}),
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: PowerImageSearchWithFlagOn,
+		Desc: "Fixture with image search flags turned on",
+		Contacts: []string{
+			"launcher-search-notify@google.com",
+			"dgrebenyuk@google.com",
+			"xiuwen@google.com",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, PowerFixtureOptions{BrowserType: browser.TypeAsh,
+			BrowserExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("ProductivityLauncherImageSearch"),
+				chrome.EnableFeatures("LauncherImageSearch"),
+				chrome.EnableFeatures("LauncherImageSearchOcr"),
+				chrome.EnableFeatures("LauncherImageSearchIca"),
+			}}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
