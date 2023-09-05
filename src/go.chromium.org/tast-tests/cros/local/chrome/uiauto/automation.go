@@ -674,8 +674,9 @@ func (ac *Context) IsNodeFound(ctx context.Context, finder *nodewith.Finder) (bo
 // BoundsForRange returns the location of the text within the node specified by startIndex and endIndex, inclusively.
 // The bounds are clipped to ancestors.
 // Refer to https://developer.chrome.com/docs/extensions/reference/automation/#type-AutomationNode.
-// Note: This function only works on node with role "inlineTextBox" according to the API implementation.
-// http://cs/eureka_internal/chromium/src/extensions/renderer/api/automation/automation_internal_custom_bindings.cc?l=995
+// Note: This function only works on a node with role "inlineTextBox" or a node supports asynchronous getTextLocation.
+// https://source.chromium.org/chromium/chromium/src/+/main:ui/accessibility/platform/automation/automation_tree_manager_owner.cc;l=730;drc=1187260c8a04c6608f6605d6d25678399c7e467f
+// https://source.chromium.org/chromium/chromium/src/+/main:extensions/renderer/resources/automation/automation_node.js;l=731;drc=33977a1cc8b4400f659dd9c8a4270bafca126668
 func (ac *Context) BoundsForRange(ctx context.Context, finder *nodewith.Finder, startIndex, endIndex int) (*coords.Rect, error) {
 	cleanupCtx := ctx
 	deadline, ok := ctx.Deadline()
@@ -700,12 +701,10 @@ func (ac *Context) BoundsForRange(ctx context.Context, finder *nodewith.Finder, 
 		async function() {
 			await this.execute();
 			let node = this.node;
-			if(node.role !== "inlineTextBox"){
+			if(node.role !== "inlineTextBox" && !node.supportsTextLocation) {
 				throw new Error("BoundsForRange only works on node with Role inlineTextBox.");
 			}
-			let bounds;
-			node.boundsForRange(%d, %d, (res) => {bounds = res;});
-			return bounds;
+			return await tast.promisify(tast.bind(node, "boundsForRange"))(%d, %d)
 		}
 	`, startIndex, endIndex)
 
