@@ -187,6 +187,10 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to look up agent events")
 		}
+		err = reportingutil.ChronoSortEvents(events)
+		if err != nil {
+			return errors.Wrap(err, "failed to sort events")
+		}
 		if !param.reportingEnabled && len(events) > 0 {
 			return testing.PollBreak(errors.New("agent events found when reporting is disabled"))
 		}
@@ -213,6 +217,10 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to look up process events")
 		}
+		err = reportingutil.ChronoSortEvents(events)
+		if err != nil {
+			return errors.Wrap(err, "failed to sort events")
+		}
 		if !param.reportingEnabled && len(events) > 0 {
 			return testing.PollBreak(errors.New("process events found when reporting is disabled"))
 		}
@@ -222,7 +230,6 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 			}
 			firstProcessTime, err = strconv.ParseInt(events[0].APIEvent.ReportingRecordEvent.Time, 0, 64)
 		}
-
 		return nil
 	}, &testing.PollOptions{
 		Timeout:  40 * time.Second,
@@ -232,8 +239,9 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that process events are only sent after agent.
-	s.Log(agentStartTime)
-	s.Log(firstProcessTime)
+	s.Logf("Test start time: %d", testStartTime.UnixMicro())
+	s.Logf("Agent start time: %d", agentStartTime)
+	s.Logf("First process time: %d", firstProcessTime)
 	if agentStartTime > firstProcessTime {
 		s.Fatal("Process Events without Agent Start")
 	}
