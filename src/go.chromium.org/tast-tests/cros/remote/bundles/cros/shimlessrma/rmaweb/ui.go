@@ -640,6 +640,9 @@ func (uiHelper *UIHelper) waitAndClickButton(label string, timeInSecond int32) a
 				Label:            label,
 				DurationInSecond: timeInSecond,
 			})
+			if err == nil {
+				testing.ContextLogf(ctx, "Found button %q enabled in %d seconds", label, timeInSecond)
+			}
 			return err
 		},
 		uiHelper.clickButton(label),
@@ -651,6 +654,9 @@ func (uiHelper *UIHelper) clickButton(label string) action.Action {
 		_, err := uiHelper.Client.LeftClickButton(ctx, &pb.LeftClickButtonRequest{
 			Label: label,
 		})
+		if err == nil {
+			testing.ContextLogf(ctx, "Clicked button %q", label)
+		}
 		return err
 	}
 }
@@ -660,6 +666,9 @@ func (uiHelper *UIHelper) clickToggleButton(label string) action.Action {
 		_, err := uiHelper.Client.LeftClickToggleButton(ctx, &pb.LeftClickToggleButtonRequest{
 			Label: label,
 		})
+		if err == nil {
+			testing.ContextLogf(ctx, "Clicked toggle button %q", label)
+		}
 		return err
 	}
 }
@@ -670,6 +679,9 @@ func (uiHelper *UIHelper) waitForPageToLoad(title string, timeInSecond int32) ac
 			Title:            title,
 			DurationInSecond: timeInSecond,
 		})
+		if err == nil {
+			testing.ContextLogf(ctx, "Found page titled %q in %d seconds", title, timeInSecond)
+		}
 		return err
 	}
 }
@@ -679,6 +691,9 @@ func (uiHelper *UIHelper) clickRadioButton(label string) action.Action {
 		_, err := uiHelper.Client.LeftClickRadioButton(ctx, &pb.LeftClickRadioButtonRequest{
 			Label: label,
 		})
+		if err == nil {
+			testing.ContextLogf(ctx, "Clicked radio button %q", label)
+		}
 		return err
 	}
 }
@@ -688,6 +703,9 @@ func (uiHelper *UIHelper) clickLink(label string) action.Action {
 		_, err := uiHelper.Client.LeftClickLink(ctx, &pb.LeftClickLinkRequest{
 			Label: label,
 		})
+		if err == nil {
+			testing.ContextLogf(ctx, "Clicked link %q", label)
+		}
 		return err
 	}
 }
@@ -728,6 +746,9 @@ func (uiHelper *UIHelper) enterIntoTextInput(content, textInputName string) acti
 			TextInputName: textInputName,
 			Content:       content,
 		})
+		if err == nil {
+			testing.ContextLogf(ctx, "Inputted %q in field %q", content, textInputName)
+		}
 		return err
 	}
 }
