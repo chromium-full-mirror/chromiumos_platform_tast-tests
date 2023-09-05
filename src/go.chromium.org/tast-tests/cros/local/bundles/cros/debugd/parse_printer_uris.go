@@ -8,7 +8,6 @@ import (
 	"context"
 	"io/ioutil"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/debugd"
 	"go.chromium.org/tast-tests/cros/local/printing/printer"
 	"go.chromium.org/tast/core/testing"
@@ -42,9 +41,8 @@ func init() {
 			"paper-io_printing",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome", "cups"},
+		SoftwareDeps: []string{"cups"},
 		Data:         []string{"GenericPostScript.ppd.gz"},
-		Pre:          chrome.LoggedIn(),
 	})
 }
 

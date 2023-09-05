@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/debugd"
 	"go.chromium.org/tast-tests/cros/local/printing/printer"
 	"go.chromium.org/tast/core/errors"
@@ -27,9 +26,8 @@ func init() {
 		},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
-		SoftwareDeps: []string{"chrome", "cups"},
+		SoftwareDeps: []string{"cups"},
 		Data:         []string{"GenericPostScript.ppd.gz"},
-		Pre:          chrome.LoggedIn(),
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",
