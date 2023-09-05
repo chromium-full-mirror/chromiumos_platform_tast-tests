@@ -99,7 +99,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_trial"},
-		Vars:         []string{"board", "model"},
+		Vars:         []string{"firmware_branch", "ro_versions"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      90 * time.Minute, // 1hr30min.
 		SoftwareDeps: []string{"chrome"},
@@ -215,13 +215,26 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	*/
 	// The json file was manually deposited as internal data under 'firmware/data'.
 
-	// Read from the 'shipped-firmwares.json' file.
-	jsonFilePath := s.DataPath("shipped-firmwares.json")
-	shippedFwVersions, err := collectShippedFws(h, jsonFilePath)
-	if err != nil {
-		s.Fatal("While collecting the shipped fw versions: ", err)
+	var shippedFwVersions []jsonFwInfo
+	fwBranchVar, fwBranchVarOk := s.Var("firmware_branch")
+	roVersions, roVersionsOk := s.Var("ro_versions")
+	if roVersionsOk && fwBranchVarOk {
+		for _, ro := range strings.Split(roVersions, ",") {
+			shippedFwVersions = append(shippedFwVersions, jsonFwInfo{
+				FwID:   ro,
+				Branch: fwBranchVar,
+			})
+		}
+		s.Log("SHIPPED firmwares manually set from command line")
+	} else {
+		// Read from the 'shipped-firmwares.json' file.
+		jsonFilePath := s.DataPath("shipped-firmwares.json")
+		shippedFwVersions, err = collectShippedFws(h, jsonFilePath)
+		if err != nil {
+			s.Fatal("While collecting the shipped fw versions: ", err)
+		}
+		s.Logf("SHIPPED firmwares found for model %s:", h.Model)
 	}
-	s.Logf("SHIPPED firmwares found for model %s:", h.Model)
 	for i := range shippedFwVersions {
 		s.Log(shippedFwVersions[i].FwID)
 	}
