@@ -27,21 +27,34 @@ is limited.
 
 ## How to use PrepareBattery for Test?
 
-TODO(jingmuli): Update `PrepareBattery` function signature and description.
-s
 The [setup] package provides [PrepareBattery] function to help you charge or
 drain the DUT's battery to a specified range. The function has a signature as
-shown below.
+shown below, where [ChargeParams] defines parameters used for a charge test:
 
 ```go
-PrepareBattery(ctx context.Context, minPercentage, maxPercentage float64,
-	dischargeOnCompletion bool)
+PrepareBattery(ctx context.Context, cp power.ChargeParams)
 ```
 
-The function charges or drains the battery to a range between
-`minPercentage` and `maxPercentage`. Once the range is reached, it sets the
-charging state to charge or discharge base on the argument
-`dischargeOnCompletion`.
+The function charges or drains the battery to a range between `cp.MinChargePercentage`
+and `cp.MaxChargePercentage`. Once the range is reached, it sets the charging
+state to charge or discharge base on the argument `cp.DischargeOnCompletion`.
+
+A `chargeParams`` currently has the following fields to control a charge test
+behavior:
+- `MinChargePercentage` and `MaxChargePercentage`: two floats that indicate the
+battery lower and upper bound.
+- `DischargeOnCompletion`: if set to true then AC power will be forced to be
+temporarily disconnected to prevent battery from being charged after the test.
+This is done via `ectool`, not through a physical disconnection.
+- `IsCustomized`: if set to true, then a customized charge range should be
+provided by the test run. How to enforce the customization behavior depends on
+your use case. In [ChargeDischargeBattery], we enforce the customization
+behavior by throwing an error if either min or max is not provided. To run the test,
+we do `tast run -var="min_charge_percent=50" -var="max_charge_percent=65" <DUT>`
+`power.ChargeDischargeBattery.customization_prep`.
+- `IsPowerQual`: if set to true, it indicates the charge test is part of the power qual
+tests, which is used to measure the charging speed of a device. In this case, the screen
+will be set to default screen brightness instead of 0 for speed charging.
 
 Note that the `battery_percent` metric is used to check if the battery is within
 range, which is slightly different from the `battery_display_percentage`.
@@ -49,11 +62,9 @@ Therefore, the battery charge shown on the UI may indicate the DUT has not reach
 the specified range but the function still finishes successfully. This is
 expected and not a concern.
 
-## Example
+## Examples
 
-TODO(jingmuli): Update `PrepareBattery` function signature, explanation and usage.
-
-This example is based on the [ExampleNoUIDischarge] test.
+### [ExampleNoUIDischarge]
 
 Assuming we want the battery to be around 75% charge and the DUT is fully
 charged to begin with, we can usually expect about 60 minutes to drain the DUT
@@ -70,22 +81,30 @@ func init() {
 	})
 }
 ```
-
-In the test body, you can use the `PrepareBattery` function to
-charge or drain the battery to the expected range. Usually we want to have 1 to
-2 percent of uncertainty when preparing the battery due to the accuracy of reading
-battery percentage. Therefore, if we want the battery to be around 75%, we want
-to set the minimum and maximum battery charge to be 74% and 76%.
+Usually we want to have 1 to 2 percent of margin when preparing the battery
+due to the accuracy of reading battery percentage. Therefore, if we want the battery
+to be around 75%, we want to set the minimum and maximum battery charge to be 74%
+and 76%. As the battery is already discharging as a result of using the `PowerNoUINoWiFi`
+fixture, we want to make sure the battery continues to discharge after we prepared
+the battery. Thus we can define a charge params struct like this:
 
 ```go
-	if err := setup.PrepareBattery(ctx, 74.0, 76.0, true, false); err != nil {
+var exampleChargeParam = power.ChargeParams{
+	MinChargePercentage:   74.0,
+	MaxChargePercentage:   76.0,
+	DischargeOnCompletion: true,
+	IsCustomized:          false,
+	IsPowerQual:           false,
+}
+```
+In the test body, you can use the `PrepareBattery` function to
+charge or drain the battery to the expected range.
+
+```go
+	if err := setup.PrepareBattery(ctx, exampleChargeParam); err != nil {
 		s.Fatal("Failed to prepare battery: ", err)
 	}
 ```
-
-Because the battery is already discharging before the `PrepareBattery` call as
-a result of using the `PowerNoUINoWiFi` fixture, we want to make sure the
-battery continues to discharge after we prepared the battery.
 
 When you want to prepare battery for **measuring the power usage** of your
 feature, you should consider whether to place the `PrepareBattery` function
@@ -101,8 +120,35 @@ power, the starting state of your power recording should remain consistent.
 Once the battery charge is within the specified range, we can start recording
 the power metrics.
 
-TODO(jingmuli): Add a second charging test.
+### [BatteryChargeQual]
+
+For battery charge qual test, the purpose is to measure how long it takes to charge
+the battery to full from a very low percentage. `DischargeOnCompletion` can be set to
+either false or true and this shouldn't affect subsequent tests setup as batteries will
+be charged/drained again for subsequent tests as needed. So we define the charge
+param qualChargeParam like below:
+
+```go
+var qualChargeParam = power.ChargeParams{
+	MinChargePercentage:   99.0,
+	MaxChargePercentage:   100.0,
+	DischargeOnCompletion: false,
+	IsCustomized:          false,
+	IsPowerQual:           true,
+}
+```
+In the test body, we simply call the [PrepareBattery] function to charge the battery
+to full.
+
+```go
+if err := setup.PrepareBattery(ctx, qualChargeParam); err != nil {
+s.Fatal("Failed to charge DUT: ", err)
+}
+```
 
 [setup]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/power/setup/
 [PrepareBattery]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/power/setup/setup_battery.go?q=PrepareBattery
-[ExampleNoUIDischarge]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/example_no_ui_discarge.go
+[ChargeParams]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/power/params.go;l=17
+[ChargeDischargeBattery]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/charge_discharge_battery.go
+[ExampleNoUIDischarge]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/example_no_ui_discharge.go
+[BatteryChargeQual]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/battery_charge_qual.go

@@ -22,12 +22,12 @@ type ChargeParams struct {
 	MaxChargePercentage float64
 
 	// If set to true then AC power will be forced to be temporarily
-	// disconnected to prevent battery from being charged.
+	// disconnected via "ectool" to prevent battery from being charged.
 	DischargeOnCompletion bool
 
 	// Indicates if the charge test is customiezed or not; for a customized
 	// charging test, both min and max percentage need to be provided via
-	// `tast run -var="min_charge_percent=XX" -var=max_charge_percent=XX"`.
+	// `tast run -var="min_charge_percent=XX" -var="max_charge_percent=XX"`.
 	IsCustomized bool
 
 	// Indicates if the charge test is a power qual test; for a power qual
