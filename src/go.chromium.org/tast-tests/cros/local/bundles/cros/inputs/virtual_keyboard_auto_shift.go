@@ -37,7 +37,6 @@ func init() {
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
-		// SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
 		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
 			[]ime.InputMethod{ime.EnglishUS},
 			[]string{
@@ -46,6 +45,7 @@ func init() {
 				"screenplay-35a7f668-cf5a-4f6a-aecb-0553c8a7049e",
 				"screenplay-a39885bd-ddc1-489e-a61e-a79c8d3f1081",
 				"screenplay-315ad39b-3173-476e-a708-0d6f4c6726dd",
+				"screenplay-b490f01c-aa6c-4b62-a00a-ac85ed19769b",
 			}),
 		Timeout: 5 * time.Minute,
 		Params: []testing.Param{
