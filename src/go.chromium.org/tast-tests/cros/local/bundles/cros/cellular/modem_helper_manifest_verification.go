@@ -20,7 +20,6 @@ func init() {
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl"},
-		Fixture:      "cellular",
 		SoftwareDeps: []string{"modemfwd"},
 	})
 }
