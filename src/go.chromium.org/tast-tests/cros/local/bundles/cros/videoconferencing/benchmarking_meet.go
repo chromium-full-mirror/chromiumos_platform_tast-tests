@@ -12,10 +12,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/bond"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/effects"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -298,13 +296,6 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "Initial Memory usage: ", initMemUsage)
 	}
 
-	testing.ContextLog(ctx, "Opening Meet")
-	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.NewTabURL)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer cleanup(closeCtx)
-
 	// Create a new meeting with bots.
 	var gm *googlemeet.GoogleMeet
 	if param.botCount > 0 {
@@ -331,7 +322,7 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 			}
 		}()
 
-		gm, err = googlemeet.JoinMeeting(ctx, cr, br, conn, meetingCode,
+		gm, err = googlemeet.JoinMeetingUsingBrowser(ctx, cr, browser.TypeAsh, meetingCode,
 			map[string]string{
 				"e": "ForceSegmentationModelVariant::GpuMid",
 			}, googlemeet.WithAllPermissions)
@@ -340,7 +331,7 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		}
 
 	} else {
-		gm, err = googlemeet.StartNewMeeting(ctx, cr, br, conn,
+		gm, err = googlemeet.StartNewMeetingUsingBrowser(ctx, cr, browser.TypeAsh,
 			map[string]string{
 				"e": "ForceSegmentationModelVariant::GpuMid",
 			}, googlemeet.WithAllPermissions)

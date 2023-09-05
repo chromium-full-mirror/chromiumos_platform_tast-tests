@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -110,22 +109,14 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 
 	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
-
 	var gm *googlemeet.GoogleMeet
 
 	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
-		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, br, googlemeet.WithAllPermissions)
+		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, browserType, googlemeet.WithAllPermissions)
 	} else {
 		// Meet can dynamically switch between different segmentation models.
 		// Force the same model the platform effects use with the experiment ?e=ForceSegmentationModelVariant::GpuMid.
-		gm, err = googlemeet.StartNewMeeting(ctx, cr, br, conn,
+		gm, err = googlemeet.StartNewMeetingUsingBrowser(ctx, cr, browserType,
 			map[string]string{
 				"e": "ForceSegmentationModelVariant::GpuMid",
 			}, googlemeet.WithAllPermissions)
