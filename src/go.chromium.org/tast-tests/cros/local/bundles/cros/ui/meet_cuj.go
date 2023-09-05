@@ -2132,8 +2132,7 @@ func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string,
 		expectedConns = 2
 		expectedScreenshareConns = 1
 	}
-	var unexpectedError error
-	var hasExpectedInboundData bool
+	var inCountError, outCountErr error
 	numPeerConns := 0
 	numScreenshareConns := 0
 	pv := perf.NewValues()
@@ -2161,7 +2160,10 @@ func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string,
 			return nil, errors.Errorf("unexpected number of inbound-rtp screenshare video streams in peer connection %v; got %d, want 0", connID, inScreenshareCount)
 		}
 		if outTotalCount == 0 {
-			return nil, errors.Errorf("found no outbound-rtp video streams in peer connection %v", connID)
+			outCountErr = errors.Errorf("found no outbound-rtp video streams in peer connection %v", connID)
+			continue
+		} else {
+			outCountErr = nil
 		}
 		expectedInTotalCount := 0
 		switch outScreenshareCount {
@@ -2170,9 +2172,9 @@ func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string,
 			// Return failure only if none of the connections have correct inbound video data.
 			expectedInTotalCount = numBots
 			if inTotalCount != expectedInTotalCount {
-				unexpectedError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
+				inCountError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
 			} else {
-				hasExpectedInboundData = true
+				inCountError = nil
 			}
 		case outTotalCount: // This is the screen share connection.
 			numScreenshareConns++
@@ -2183,8 +2185,11 @@ func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string,
 			return nil, errors.Errorf("found %d screenshare(s) among %d outbound-rtp video streams in peer connection %v, expected all or none", outScreenshareCount, outTotalCount, connID)
 		}
 	}
-	if !hasExpectedInboundData {
-		return nil, unexpectedError
+	if outCountErr != nil {
+		return nil, outCountErr
+	}
+	if inCountError != nil {
+		return nil, inCountError
 	}
 	if numPeerConns < expectedConns {
 		return nil, errors.Errorf("unexpected number of peer connections; got %d, want %d", numPeerConns, expectedConns)
