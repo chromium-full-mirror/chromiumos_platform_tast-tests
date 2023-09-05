@@ -12,8 +12,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/services/cros/typec"
 	"go.chromium.org/tast/core/rpc"
-	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -21,32 +21,32 @@ func init() {
 		Func:         TypecLogin,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Processes login and enables data peripheral access setting (when mode set to complete) to enable TBT/USB4",
-		Contacts:     []string{
-                        "chromeos-power@google.com",
-                        "rajat.khandelwal@intel.com",
-                },
+		Contacts: []string{
+			"chromeos-usb@google.com",
+			"rajat.khandelwal@intel.com",
+		},
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"testcert.p12"},
-                BugComponent: "b:958036",
+		BugComponent: "b:958036",
 
 		Params: []testing.Param{
 			// To login and change mode without enabling data peripheral access
 			{
-				Name:      "normal",
-				Val:       false,
+				Name: "normal",
+				Val:  false,
 			},
 			// To login and enable data peripheral access
 			{
-				Name:      "complete",
-				Val:       true,
+				Name: "complete",
+				Val:  true,
 			}},
 	})
 }
+
 // TypecLogin does the following:
 // If normal, login happens as per the default behavior in Chrome.
 // If complete, data peripheral access is also enabled.
-//
 func TypecLogin(ctx context.Context, s *testing.State) {
 	dut := s.DUT()
 	if !dut.Connected(ctx) {

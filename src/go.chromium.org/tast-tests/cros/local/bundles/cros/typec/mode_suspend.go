@@ -19,7 +19,7 @@ func init() {
 		Func:         ModeSuspend,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks USB Type C mode switch behaviour with a Thunderbolt dock during suspend/resume",
-		Contacts:     []string{"pmalani@chromium.org", "chromeos-power@google.com"},
+		Contacts:     []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"chrome"},
