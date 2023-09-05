@@ -310,6 +310,7 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		batErr = graphics.MeasureSystemPowerConsumption(ctx, tconn, cpuMeasuring, p)
 	}()
 
+	wg.Wait()
 	if gpuErr != nil {
 		return errors.Wrap(gpuErr, "failed to measure GPU counters")
 	}
