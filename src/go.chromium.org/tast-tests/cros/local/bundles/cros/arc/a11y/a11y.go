@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
+	"go.chromium.org/tast-tests/cros/local/a11y/sts"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
@@ -31,8 +32,9 @@ const (
 	ArcAccessibilityHelperService = "org.chromium.arc.accessibilityhelper/org.chromium.arc.accessibilityhelper.ArcAccessibilityHelperService"
 
 	// ApkName is the name of apk which is used in ARC++ accessibility tests.
-	ApkName     = "ArcAccessibilityTest.apk"
-	packageName = "org.chromium.arc.testapp.accessibilitytest"
+	ApkName = "ArcAccessibilityTest.apk"
+	// PackageName is the Android package name which is used in ARC++ accessibility tests.
+	PackageName = "org.chromium.arc.testapp.accessibilitytest"
 
 	// CheckBox class name.
 	CheckBox = "android.widget.CheckBox"
@@ -199,6 +201,40 @@ func SetUpChromeVox(ctx context.Context, s *testing.State, cr *chrome.Chrome, a 
 	return cvconn, tdh.tearDown, nil
 }
 
+// SetUpSelectToSpeak runs preparations to run ARC tests with SelectToSpeak enabled.
+// Caller is responsible to run cleanup function after tests finish.
+func SetUpSelectToSpeak(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, tconn *chrome.TestConn) (_ *sts.Conn, cleanup func(context.Context), e error) {
+	tdh := tearDownHelper{}
+	defer func(ctx context.Context) {
+		if e != nil {
+			tdh.tearDown(ctx)
+		}
+	}(ctx)
+
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	cleanupFeature, err := prepareFeature(ctx, s, cr, a, tconn, a11y.SelectToSpeak)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to enable SelectToSpeak")
+	}
+	tdh.append(func(ctx context.Context) error {
+		cleanupFeature(ctx)
+		return nil
+	})
+
+	stsconn, err := sts.NewConn(ctx, cr)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to create connection to SelectToSpeak extension")
+	}
+	tdh.append(func(ctx context.Context) error {
+		stsconn.Close()
+		return nil
+	})
+
+	return stsconn, tdh.tearDown, nil
+}
+
 // AttachFaillog sets an error handler to the given testing.State struct.
 // In the handler, UI dump and screenshot is saved on error with a given prefix filename.
 func AttachFaillog(ctx context.Context, s *testing.State, tconn *chrome.TestConn, prefix string) {
@@ -232,7 +268,7 @@ func StartActivityWithChromeVox(ctx context.Context, s *testing.State, a *arc.AR
 		return nil, errors.Wrap(err, "timed out waiting for touch mode")
 	}
 
-	act, err := arc.NewActivity(a, packageName, activity.Name)
+	act, err := arc.NewActivity(a, PackageName, activity.Name)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create new activity")
 	}
