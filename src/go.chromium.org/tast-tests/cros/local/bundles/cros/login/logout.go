@@ -145,7 +145,7 @@ func Logout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to re-establish test API connection")
 	}
 
-	if _, err := lockscreen.WaitState(ctx, tconn, func(st lockscreen.State) bool { return st.ReadyForPassword }, 10*time.Second); err != nil {
+	if err := lockscreen.WaitForPasswordEntry(ctx, tconn, 10*time.Second); err != nil {
 		s.Fatal("Failed to wait for login screen: ", err)
 	}
 
