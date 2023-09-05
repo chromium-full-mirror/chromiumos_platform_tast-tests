@@ -301,66 +301,29 @@ func TestPlaybackPerfParams(t *testing.T) {
 		params = append(params, param)
 	}
 
-	// multi-playback
-	type taskRunnerType int
-	const (
-		oneThreadPoolSequenceSharedByAllDecoders taskRunnerType = iota
-		oneThreadPoolThreadSharedByAllDecoders
-		oneDedicatedThreadSharedByAllDecoders
-		oneThreadPoolThreadPerDecoder
-	)
 	for _, codec := range []string{"h264", "vp9"} {
 		// 1080p x 2 ~= 2K, 480p x 9  ~= 2K, 360p x 16 ~= 2K, 180p x 49 ~= 1260p
 		// TODO(b/237600904): Add {180, 7, 7} once the issue is resolved.
 		for _, resGrid := range [][3]int{{1080, 2, 1}, {480, 3, 3}, {360, 4, 4}} {
 			resolution, gridW, gridH := resGrid[0], resGrid[1], resGrid[2]
 			numVideos := gridW * gridH
-			for _, enableMediaServiceSequence := range []bool{true, false} {
-				for _, decoderTaskRunnerType := range []taskRunnerType{
-					oneThreadPoolSequenceSharedByAllDecoders,
-					oneThreadPoolThreadSharedByAllDecoders,
-					oneDedicatedThreadSharedByAllDecoders,
-					oneThreadPoolThreadPerDecoder} {
-					fps, dec := 30, "hw"
-					testNameSuffix := fmt.Sprintf("x%d", numVideos)
-					var fixtureName string
-					switch decoderTaskRunnerType {
-					case oneThreadPoolThreadPerDecoder:
-						testNameSuffix += "_1dedicatedthreadperdecoder"
-						fixtureName = "chromeVideoWithGlobalVaapiLockDisabled"
-					case oneDedicatedThreadSharedByAllDecoders:
-						testNameSuffix += "_1dedicatedthreadsharedbyalldecoders"
-						fixtureName = "chromeVideoWithGlobalVaapiLockDisabledAndOneDedicatedThreadSharedByAllDecoders"
-					case oneThreadPoolThreadSharedByAllDecoders:
-						testNameSuffix += "_1poolthreadsharedbyalldecoders"
-						fixtureName = "chromeVideoWithGlobalVaapiLockDisabledAndOneThreadPoolThreadSharedByAllDecoders"
-					case oneThreadPoolSequenceSharedByAllDecoders:
-						testNameSuffix += "_1poolsequencesharedbyalldecoders"
-						fixtureName = "chromeVideoWithGlobalVaapiLockDisabledAndOneThreadPoolSequenceSharedByAllDecoders"
-					}
-					if enableMediaServiceSequence {
-						testNameSuffix += "_mediaservicesequence"
-						fixtureName += "AndMediaServiceSequence"
-					} else {
-						testNameSuffix += "_mediasinglethread"
-					}
-					param := genPlaybackParam(codec,
-						genPlaybackPerfDataPath(codec, resolution, fps),
-						resolution, fps, dec, testNameSuffix, fixtureName, nil)
-					param.GridWidth = gridW
-					param.GridHeight = gridH
-					param.PerfTracing = true
-					if numVideos > 10 {
-						// More than 10 videos in parallel is too much for Grunt, see b/290637628.
-						param.HardwareDeps = "hwdep.SkipGPUFamily(\"stoney\")"
-					}
-					param.ExtraAttr = []string{"group:graphics", "graphics_video", "graphics_nightly"}
-					params = append(params, param)
-				}
+			fps, dec := 30, "hw"
+			testNameSuffix := fmt.Sprintf("x%d", numVideos)
+			param := genPlaybackParam(codec,
+				genPlaybackPerfDataPath(codec, resolution, fps),
+				resolution, fps, dec, testNameSuffix, "", nil)
+			param.GridWidth = gridW
+			param.GridHeight = gridH
+			param.PerfTracing = true
+			if numVideos > 10 {
+				// More than 10 videos in parallel is too much for Grunt, see b/290637628.
+				param.HardwareDeps = "hwdep.SkipGPUFamily(\"stoney\")"
 			}
+			param.ExtraAttr = []string{"group:graphics", "graphics_video", "graphics_nightly"}
+			params = append(params, param)
+
 		}
 	}
-
 	for _, codec := range []string{"h264", "vp9", "av1"} {
 		resolution, fps, dec := 1080, 30, "hw"
 		file := playbackPerfLongFile[codec]
