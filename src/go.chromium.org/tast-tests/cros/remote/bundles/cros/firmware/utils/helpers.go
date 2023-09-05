@@ -112,16 +112,22 @@ func CheckRecReason(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSw
 		return errors.Wrap(err, "failed to remove watchdog for ccd")
 	}
 
+	if err := h.CloseRPCConnection(ctx); err != nil {
+		return errors.Wrap(err, "failed to close RPC connection")
+	}
+
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		return errors.Wrap(err, "failed to warm reset DUT")
 	}
 
-	if err := h.RequireServo(ctx); err != nil {
-		return errors.Wrap(err, "failed to init servo")
+	testing.ContextLog(ctx, "Sleeping 60 seconds to let DUT reboot and record recovery reason")
+	// GoBigSleepLint: Give DUT time to reboot into recovery mode
+	if err := testing.Sleep(ctx, 1*time.Minute); err != nil {
+		return err
 	}
 
-	if err := h.CloseRPCConnection(ctx); err != nil {
-		return errors.Wrap(err, "failed to close RPC connection")
+	if err := h.RequireServo(ctx); err != nil {
+		return errors.Wrap(err, "failed to init servo")
 	}
 
 	// Recovery mode requires the DUT to boot the image on the USB.
