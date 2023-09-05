@@ -7,7 +7,6 @@ package network
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -32,7 +31,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/network/netconfig"
 	"go.chromium.org/tast-tests/cros/services/cros/network"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -51,111 +49,60 @@ func init() {
 
 // ProxySettingsService implements tast.cros.network.ProxySettingsService.
 type ProxySettingsService struct {
-	sharedObject  *common.SharedObjectsForService
-	serviceState  *testing.ServiceState
-	kb            *input.KeyboardEventWriter
-	proxySettings *proxysettings.ProxySettings
+	sharedObject *common.SharedObjectsForService
+	serviceState *testing.ServiceState
 }
 
-// Initialize initializes the resources proxy settings service needs.
-// Call Close to close the resources and the proxy-settings page.
-func (s *ProxySettingsService) Initialize(ctx context.Context, _ *emptypb.Empty) (_ *emptypb.Empty, retErr error) {
+// ResetConnectionType resets the proxy setting connection type, can be used to cleanup the proxy settings.
+func (s *ProxySettingsService) ResetConnectionType(ctx context.Context, req *network.ResetConnectionTypeRequest) (_ *emptypb.Empty, retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
-		return &emptypb.Empty{}, errors.Wrap(err, "failed to get keyboard")
+		return nil, err
 	}
-	s.kb = kb
+	defer kb.Close(cleanupCtx)
 
-	return &emptypb.Empty{}, nil
-}
-
-// New starts up a new proxy setting service instance.
-// Close must be called later to clean up the associated resources.
-// Deprecated: use Initialize instead.
-func (s *ProxySettingsService) New(ctx context.Context, _ *network.NewRequest) (_ *emptypb.Empty, retErr error) {
-	return &emptypb.Empty{}, errors.New("rpc: tast.cros.network.ProxySettingService/New is deprecated, use tast.cros.network.ProxySettingService/Initialize instead")
-}
-
-// Close releases the resources obtained by New and closes the proxy-settings page.
-func (s *ProxySettingsService) Close(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
-	if s.proxySettings != nil {
-		tconn, err := s.testAPIConn(ctx)
-		if err != nil {
-			return &emptypb.Empty{}, err
-		}
-
-		s.proxySettings.Close(ctx, tconn, s.kb)
-		s.proxySettings = nil
-	}
-
-	if s.kb != nil {
-		if err := s.kb.Close(ctx); err != nil {
-			return &emptypb.Empty{}, errors.Wrap(err, "failed to close keyboard")
-		}
-		s.kb = nil
-	}
-	return &emptypb.Empty{}, nil
-}
-
-// ResetConnectionType resets the proxy settings by setting connection type to default value.
-func (s *ProxySettingsService) ResetConnectionType(ctx context.Context, req *network.ResetConnectionTypeRequest) (*emptypb.Empty, error) {
-	tconn, err := s.testAPIConn(ctx)
+	_, tconn, ps, err := s.initRuntimeResources(ctx, req.GetNetworkInfo())
 	if err != nil {
-		return &emptypb.Empty{}, err
+		return nil, err
 	}
+	defer ps.Close(cleanupCtx, tconn, kb)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_reset_connection_type")
 
-	if err := s.openProxySettingsPage(ctx, tconn, req.NetworkInfo); err != nil {
-		return &emptypb.Empty{}, err
-	}
-
-	return &emptypb.Empty{}, s.proxySettings.SetDirectConnection(ctx, uiauto.New(tconn))
-}
-
-func (s *ProxySettingsService) testAPIConn(ctx context.Context) (*chrome.TestConn, error) {
-	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*chrome.TestConn, error) {
-		return tconn, nil
-	})
-}
-
-// dumpUITreeToFile dumps the UI tree to a specified file when there is an error.
-func (s *ProxySettingsService) dumpUITreeToFile(ctx context.Context, hasError func() bool, nameSuffix string) {
-	outDir, ok := testing.ContextOutDir(ctx)
-	if !ok {
-		s.serviceState.Log("Failed to get output dir")
-		return
-	}
-	tconn, err := s.testAPIConn(ctx)
-	if err != nil {
-		s.serviceState.Log("Failed to get Test API connection: ", err)
-		return
-	}
-	faillog.DumpUITreeOnError(ctx, filepath.Join(outDir, "proxy_settings_service_"+nameSuffix), hasError, tconn)
+	return &emptypb.Empty{}, ps.SetDirectConnection(ctx, uiauto.New(tconn))
 }
 
 // Setup sets up proxy values.
 // Not specifying the SameHost/SamePort will ensure the toggle button "Use the same proxy for all protocols" being disabled.
 // Note: It can not include other proxies when specifying the SameHost/SamePort.
 func (s *ProxySettingsService) Setup(ctx context.Context, req *network.ProxyConfigs) (_ *emptypb.Empty, retErr error) {
-	tconn, err := s.testAPIConn(ctx)
-	if err != nil {
-		return &emptypb.Empty{}, err
-	}
-
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-	defer s.dumpUITreeToFile(cleanupCtx, func() bool { return retErr != nil }, "ui_dump_setup")
 
-	if err := s.openProxySettingsPage(ctx, tconn, req.NetworkInfo); err != nil {
-		return &emptypb.Empty{}, err
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return nil, err
 	}
+	defer kb.Close(cleanupCtx)
+
+	_, tconn, ps, err := s.initRuntimeResources(ctx, req.GetNetworkInfo())
+	if err != nil {
+		return nil, err
+	}
+	defer ps.Close(cleanupCtx, tconn, kb)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_setup")
+
 	switch req.ProxyConnectionType {
 	case network.ProxyConnectionType_ManualProxyConfiguration:
-		if err := s.proxySettings.SetManualConfig(ctx, tconn, s.kb, parseProxyConfigs(req)); err != nil {
+		if err := ps.SetManualConfig(ctx, tconn, kb, parseProxyConfigs(req)); err != nil {
 			return &emptypb.Empty{}, errors.Wrap(err, "failed to setup the contents for proxy fields")
 		}
 	case network.ProxyConnectionType_DirectInternetConnection:
-		if err := s.proxySettings.SetDirectConnection(ctx, uiauto.New(tconn)); err != nil {
+		if err := ps.SetDirectConnection(ctx, uiauto.New(tconn)); err != nil {
 			return &emptypb.Empty{}, errors.Wrap(err, "failed to set connection type")
 		}
 	default:
@@ -167,6 +114,23 @@ func (s *ProxySettingsService) Setup(ctx context.Context, req *network.ProxyConf
 
 // FetchProxySettings returns proxy configurations.
 func (s *ProxySettingsService) FetchProxySettings(ctx context.Context, req *network.FetchProxySettingsRequest) (_ *network.ProxyConfigs, retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer kb.Close(cleanupCtx)
+
+	cr, tconn, ps, err := s.initRuntimeResources(ctx, req.GetNetworkInfo())
+	if err != nil {
+		return nil, err
+	}
+	defer ps.Close(cleanupCtx, tconn, kb)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_fetch_config")
+
 	result := &network.ProxyConfigs{NetworkInfo: &network.NetworkInfo{}}
 	var networkName string
 	switch val := req.NetworkInfo.Value.(type) {
@@ -180,27 +144,26 @@ func (s *ProxySettingsService) FetchProxySettings(ctx context.Context, req *netw
 		return nil, errors.Errorf("unknown network info: %+v", val)
 	}
 
-	tconn, err := s.testAPIConn(ctx)
+	var fetchFunc func(context.Context, *chrome.Chrome, *chrome.TestConn, *proxysettings.ProxySettings, string) (*network.ProxyConfigs, error)
+	switch fetchSource := req.GetFetchSource(); fetchSource {
+	case network.FetchProxySettingsRequest_CrosNetworkConfig:
+		fetchFunc = s.fetchFromCrosNetworkConfig
+	case network.FetchProxySettingsRequest_OSSettings:
+		fetchFunc = s.fetchFromOSSettings
+	default:
+		return nil, errors.Errorf("unrecognized fetch source %v", fetchSource)
+	}
+
+	configs, err := fetchFunc(ctx, cr, tconn, ps, networkName)
 	if err != nil {
 		return nil, err
 	}
+	configs.NetworkInfo = req.GetNetworkInfo()
 
-	if req.FetchSource == network.FetchProxySettingsRequest_CrosNetworkConfig {
-		return s.fetchFromCrosNetworkConfig(ctx, tconn, result, networkName)
-	}
-	return s.fetchFromOSSettings(ctx, tconn, result, req.NetworkInfo)
+	return configs, nil
 }
 
-func (s *ProxySettingsService) fetchFromOSSettings(ctx context.Context, tconn *chrome.TestConn, result *network.ProxyConfigs, networkInfo *network.NetworkInfo) (_ *network.ProxyConfigs, retErr error) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-	defer s.dumpUITreeToFile(cleanupCtx, func() bool { return retErr != nil }, "ui_dump_fetch_config")
-
-	if err := s.openProxySettingsPage(ctx, tconn, networkInfo); err != nil {
-		return nil, err
-	}
-
+func (s *ProxySettingsService) fetchFromOSSettings(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, ps *proxysettings.ProxySettings, _ string) (_ *network.ProxyConfigs, retErr error) {
 	ui := uiauto.New(tconn)
 	if err := ui.WaitUntilExists(ossettings.ProxyDropDownMenu)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to wait until drop down menu exists")
@@ -210,6 +173,8 @@ func (s *ProxySettingsService) fetchFromOSSettings(ctx context.Context, tconn *c
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get the value of proxy drop down menu")
 	}
+
+	result := &network.ProxyConfigs{}
 
 	// Proxy settings is available only when the connection type is 'Manual proxy configuration'.
 	switch dropDownMenu.Value {
@@ -223,14 +188,14 @@ func (s *ProxySettingsService) fetchFromOSSettings(ctx context.Context, tconn *c
 	}
 
 	protocols := []proxysettings.Protocol{proxysettings.HTTP, proxysettings.HTTPS, proxysettings.Socks}
-	if enable, err := s.proxySettings.IsUseSameProxyToggleOptionEnabled(ctx, tconn); err != nil {
+	if enable, err := ps.IsUseSameProxyToggleOptionEnabled(ctx, tconn); err != nil {
 		return nil, err
 	} else if enable {
 		protocols = []proxysettings.Protocol{proxysettings.SameProxy}
 	}
 
 	for _, protocol := range protocols {
-		c, err := s.proxySettings.ManualConfigContent(ctx, tconn, protocol)
+		c, err := ps.ManualConfigContent(ctx, tconn, protocol)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to acquire proxy configuration of %s", protocol.Name())
 		}
@@ -252,26 +217,13 @@ func (s *ProxySettingsService) fetchFromOSSettings(ctx context.Context, tconn *c
 	return result, nil
 }
 
-// FetchConfigurations returns proxy hosts and ports.
-// Deprecated: use FetchProxySettings instead.
-func (s *ProxySettingsService) FetchConfigurations(ctx context.Context, _ *emptypb.Empty) (*network.ProxyConfigs, error) {
-	return nil, errors.New("rpc: tast.cros.network.ProxySettingService/New is deprecated, use tast.cros.network.ProxySettingService/FetchProxySettings instead")
-}
-
-func (s *ProxySettingsService) fetchFromCrosNetworkConfig(ctx context.Context, tconn *chrome.TestConn, result *network.ProxyConfigs, networkName string) (_ *network.ProxyConfigs, retErr error) {
-	s.sharedObject.ChromeMutex.Lock()
-	defer s.sharedObject.ChromeMutex.Unlock()
-
-	if s.sharedObject.Chrome == nil {
-		return nil, errors.New("Chrome is not instantiated")
-	}
-
+func (s *ProxySettingsService) fetchFromCrosNetworkConfig(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, manager *proxysettings.ProxySettings, networkName string) (_ *network.ProxyConfigs, retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
 	createCrosNetconfig := netconfig.CreateLoggedInCrosNetworkConfig
-	if s.sharedObject.Chrome.LoginMode() == "NoLogin" {
+	if cr.LoginMode() == "NoLogin" {
 		createCrosNetconfig = netconfig.CreateOobeCrosNetworkConfig
 	}
 
@@ -287,6 +239,8 @@ func (s *ProxySettingsService) fetchFromCrosNetworkConfig(ctx context.Context, t
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get network state list")
 	}
+
+	result := &network.ProxyConfigs{}
 
 	for _, networkProperties := range networkStateList {
 		if networkProperties.Name != networkName {
@@ -323,17 +277,19 @@ func (s *ProxySettingsService) SetException(ctx context.Context, req *network.Se
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-	defer s.dumpUITreeToFile(cleanupCtx, func() bool { return retErr != nil }, "ui_dump_setup_exception")
 
-	tconn, err := s.testAPIConn(ctx)
+	kb, err := input.Keyboard(ctx)
 	if err != nil {
-		s.serviceState.Log("Failed to get Test API connection: ", err)
 		return &emptypb.Empty{}, err
 	}
+	defer kb.Close(cleanupCtx)
 
-	if err := s.openProxySettingsPage(ctx, tconn, req.NetworkInfo); err != nil {
-		return nil, err
+	_, tconn, ps, err := s.initRuntimeResources(ctx, req.GetNetworkInfo())
+	if err != nil {
+		return &emptypb.Empty{}, err
 	}
+	defer ps.Close(cleanupCtx, tconn, kb)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_set_exception")
 
 	ui := uiauto.New(tconn)
 	removeURLName := fmt.Sprintf("Remove exception for %s", req.Host)
@@ -349,7 +305,7 @@ func (s *ProxySettingsService) SetException(ctx context.Context, req *network.Se
 	}
 	return &empty.Empty{}, uiauto.Combine("add an exception domain",
 		ui.EnsureFocused(nodewith.Role(role.TextField).Name("Host or domain to exclude")),
-		s.kb.TypeAction(req.Host),
+		kb.TypeAction(req.Host),
 		ui.LeftClick(nodewith.Role(role.Button).Name("Add exception")),
 		ui.WaitUntilExists(removeURL),
 		saveSettings(ui),
@@ -357,16 +313,23 @@ func (s *ProxySettingsService) SetException(ctx context.Context, req *network.Se
 }
 
 // FetchException returns exception settings.
-func (s *ProxySettingsService) FetchException(ctx context.Context, req *network.FetchExceptionRequest) (*network.FetchExceptionResponse, error) {
-	tconn, err := s.testAPIConn(ctx)
-	if err != nil {
-		s.serviceState.Log("Failed to get Test API connection: ", err)
-		return nil, err
-	}
+func (s *ProxySettingsService) FetchException(ctx context.Context, req *network.FetchExceptionRequest) (_ *network.FetchExceptionResponse, retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
-	if err := s.openProxySettingsPage(ctx, tconn, req.NetworkInfo); err != nil {
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
 		return nil, err
 	}
+	defer kb.Close(cleanupCtx)
+
+	_, tconn, ps, err := s.initRuntimeResources(ctx, req.GetNetworkInfo())
+	if err != nil {
+		return nil, err
+	}
+	defer ps.Close(cleanupCtx, tconn, kb)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_fetch_exception")
 
 	ui := uiauto.New(tconn)
 	if err := ui.WaitUntilExists(nodewith.Role(role.TextField).Name("Host or domain to exclude"))(ctx); err != nil {
@@ -389,20 +352,22 @@ func (s *ProxySettingsService) FetchException(ctx context.Context, req *network.
 
 // AllowProxiesForSharedNetwork allows or disallows proxies for shared networks by toggling the "Allow proxies for shared networks" toggle button.
 func (s *ProxySettingsService) AllowProxiesForSharedNetwork(ctx context.Context, req *network.AllowProxiesForSharedNetworkRequest) (_ *empty.Empty, retErr error) {
-	tconn, err := s.testAPIConn(ctx)
-	if err != nil {
-		return &emptypb.Empty{}, err
-	}
-
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-	defer s.dumpUITreeToFile(cleanupCtx, func() bool { return retErr != nil }, "allow_proxies_for_shared_network_ui_dump")
 
-	if err := s.openProxySettingsPage(ctx, tconn, req.NetworkInfo); err != nil {
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
 		return nil, err
 	}
-	defer s.proxySettings.Close(cleanupCtx, tconn, s.kb)
+	defer kb.Close(cleanupCtx)
+
+	_, tconn, ps, err := s.initRuntimeResources(ctx, req.GetNetworkInfo())
+	if err != nil {
+		return nil, err
+	}
+	defer ps.Close(cleanupCtx, tconn, kb)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_allow_proxies_for_shared_network")
 
 	if err := proxysettings.AllowProxiesForSharedNetwork(ctx, tconn, req.Allow); err != nil {
 		return &emptypb.Empty{}, err
@@ -415,15 +380,17 @@ func (s *ProxySettingsService) AllowProxiesForSharedNetwork(ctx context.Context,
 // checking the restriction state of a dropdown menu within the proxy settings section.
 // This method should be called when DUT is Logged in.
 func (s *ProxySettingsService) IsProxySettingsRestricted(ctx context.Context, req *network.IsProxySettingsRestrictedRequest) (_ *wrapperspb.BoolValue, retErr error) {
-	tconn, err := s.testAPIConn(ctx)
+	tconn, err := common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*chrome.TestConn, error) {
+		return tconn, nil
+	})
 	if err != nil {
-		return &wrapperspb.BoolValue{}, err
+		return nil, err
 	}
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
-	defer s.dumpUITreeToFile(cleanupCtx, func() bool { return retErr != nil }, "is_proxy_restricted_ui_dump")
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_is_proxy_restricted")
 
 	s.sharedObject.ChromeMutex.Lock()
 	defer s.sharedObject.ChromeMutex.Unlock()
@@ -464,41 +431,34 @@ func (s *ProxySettingsService) IsProxySettingsRestricted(ctx context.Context, re
 	return &wrapperspb.BoolValue{Value: info.Restriction != restriction.Disabled}, nil
 }
 
-// openProxySettingsPage opens proxy settings page of the specified network.
-func (s *ProxySettingsService) openProxySettingsPage(ctx context.Context, tconn *chrome.TestConn, networkInfo *network.NetworkInfo) error {
-	s.sharedObject.ChromeMutex.Lock()
-	defer s.sharedObject.ChromeMutex.Unlock()
-
-	cr := s.sharedObject.Chrome
-	if cr == nil {
-		return errors.New("Chrome has not been started")
+func (s *ProxySettingsService) initRuntimeResources(ctx context.Context, networkInfo *network.NetworkInfo) (*chrome.Chrome, *chrome.TestConn, *proxysettings.ProxySettings, error) {
+	if s.sharedObject.Chrome == nil {
+		return nil, nil, nil, errors.New("Chrome is not instantiated")
 	}
 
-	if s.proxySettings != nil {
-		return nil
-	}
-
-	if networkInfo == nil {
-		return errors.New("missing 'NetworkInfo' field")
+	tconn, err := common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*chrome.TestConn, error) {
+		return tconn, nil
+	})
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
 	isLoggedin := s.sharedObject.Chrome.LoginMode() != "NoLogin"
 
-	var err error
+	var ps *proxysettings.ProxySettings
 	switch val := networkInfo.Value.(type) {
 	case *network.NetworkInfo_Ethernet:
-		s.proxySettings, err = proxysettings.CollectEthernet(ctx, tconn, isLoggedin)
+		ps, err = proxysettings.CollectEthernet(ctx, tconn, isLoggedin)
 	case *network.NetworkInfo_WifiSsid:
-		s.proxySettings, err = proxysettings.CollectWifi(ctx, cr, tconn, val.WifiSsid, isLoggedin)
+		ps, err = proxysettings.CollectWifi(ctx, s.sharedObject.Chrome, tconn, val.WifiSsid, isLoggedin)
 	default:
 		err = errors.Errorf("unknown network info: %+v", val)
 	}
 	if err != nil {
-		s.proxySettings = nil
-		return err
+		return nil, nil, nil, err
 	}
 
-	return nil
+	return s.sharedObject.Chrome, tconn, ps, nil
 }
 
 // parseProxyConfigs parses ProxyConfig from network grpc service into local proxysettings config.
@@ -526,4 +486,34 @@ func saveSettings(ui *uiauto.Context) uiauto.Action {
 			ui.WithInterval(time.Second).LeftClickUntil(saveButton, ui.CheckRestriction(saveButton, restriction.Disabled)),
 		)(ctx)
 	}
+}
+
+// Initialize initializes the resources proxy settings service needs.
+// Call Close to close the resources and the proxy-settings page.
+//
+// Deprecated: this RPC is deprecated.
+func (s *ProxySettingsService) Initialize(ctx context.Context, _ *emptypb.Empty) (_ *emptypb.Empty, retErr error) {
+	return nil, errors.New("rpc: tast.cros.network.ProxySettingService/Initialize is deprecated")
+}
+
+// New starts up a new proxy setting service instance.
+// Close must be called later to clean up the associated resources.
+//
+// Deprecated: this RPC is deprecated.
+func (s *ProxySettingsService) New(ctx context.Context, _ *network.NewRequest) (_ *emptypb.Empty, retErr error) {
+	return nil, errors.New("rpc: tast.cros.network.ProxySettingService/New is deprecated")
+}
+
+// Close releases the resources obtained by New and closes the proxy-settings page.
+//
+// Deprecated: this RPC is deprecated.
+func (s *ProxySettingsService) Close(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, errors.New("rpc: tast.cros.network.ProxySettingService/Close is deprecated")
+}
+
+// FetchConfigurations returns proxy hosts and ports.
+//
+// Deprecated: use FetchProxySettings instead.
+func (s *ProxySettingsService) FetchConfigurations(ctx context.Context, _ *emptypb.Empty) (*network.ProxyConfigs, error) {
+	return nil, errors.New("rpc: tast.cros.network.ProxySettingService/New is deprecated, use tast.cros.network.ProxySettingService/FetchProxySettings instead")
 }

@@ -18,6 +18,7 @@ import (
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -31,6 +32,9 @@ func init() {
 			"chromeos-connectivity-engprod@google.com",
 			"shijinabraham@google.com",
 			"chadduffin@chromium.org",
+			"cienet-development@googlegroups.com",
+			"chromeos-connectivity-cienet-external@google.com",
+			"alfredyu@cienet.com",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		// TODO(b/275127708): Move this test to network suite.
@@ -49,15 +53,28 @@ func init() {
 	})
 }
 
+// resetProxyTimeout defines the timeout to reset proxy config since it's a combination of UI actions and could take a while.
+const resetProxyTimeout = 35 * time.Second
+
 // ProxyRetainAfterReboot tests that the proxy values remain the same after DUT reboots.
 func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 	manifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 	proxyConfigs := wificell.DefaultProxyConfigForEthernet()
 
+	resetProxyConfig := func(ctx context.Context, rpcClient *rpc.Client) error {
+		proxySettingSvc := network.NewProxySettingServiceClient(rpcClient.Conn)
+		_, err := proxySettingSvc.ResetConnectionType(ctx, &network.ResetConnectionTypeRequest{
+			NetworkInfo: &network.NetworkInfo{
+				Value: &network.NetworkInfo_Ethernet{},
+			},
+		})
+		return err
+	}
+
 	setUpBeforeReboot := func(ctx context.Context) error {
 		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		ctx, cancel := ctxutil.Shorten(ctx, resetProxyTimeout)
 		defer cancel()
 
 		rpcClient := tf.DUTRPC(wificell.DefaultDUT)
@@ -69,17 +86,9 @@ func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 		defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
 
 		proxySettingSvc := network.NewProxySettingServiceClient(rpcClient.Conn)
-		if _, err := proxySettingSvc.Initialize(ctx, &empty.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to create a new proxy setting service")
-		}
 		defer func(ctx context.Context) {
 			if s.HasError() {
-				proxySettingSvc.ResetConnectionType(ctx, &network.ResetConnectionTypeRequest{
-					NetworkInfo: &network.NetworkInfo{
-						Value: &network.NetworkInfo_Ethernet{},
-					},
-				})
-				proxySettingSvc.Close(ctx, &empty.Empty{})
+				resetProxyConfig(ctx, rpcClient)
 			}
 		}(cleanupCtx)
 
@@ -98,7 +107,7 @@ func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 	}
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, resetProxyTimeout)
 	defer cancel()
 
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
@@ -110,15 +119,7 @@ func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 	defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
 
 	proxySettingSvc := network.NewProxySettingServiceClient(rpcClient.Conn)
-	if _, err := proxySettingSvc.Initialize(ctx, &empty.Empty{}); err != nil {
-		s.Fatal("Failed to create a new proxy setting service: ", err)
-	}
-	defer proxySettingSvc.Close(cleanupCtx, &empty.Empty{})
-	defer proxySettingSvc.ResetConnectionType(cleanupCtx, &network.ResetConnectionTypeRequest{
-		NetworkInfo: &network.NetworkInfo{
-			Value: &network.NetworkInfo_Ethernet{},
-		},
-	})
+	defer resetProxyConfig(cleanupCtx, rpcClient)
 
 	returnedConfigs, err := proxySettingSvc.FetchProxySettings(ctx, &network.FetchProxySettingsRequest{
 		NetworkInfo: &network.NetworkInfo{Value: &network.NetworkInfo_Ethernet{}},

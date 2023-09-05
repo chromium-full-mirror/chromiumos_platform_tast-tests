@@ -113,10 +113,6 @@ type ProxyFixtureData struct {
 
 // Reboot reboots the DUT and manage/re-establishes the resources for proxy tests.
 func (f *ProxyFixtureData) Reboot(ctx context.Context, manifestKey string) error {
-	if _, err := f.ProxySettingsSvc.Close(ctx, &emptypb.Empty{}); err != nil {
-		testing.ContextLog(ctx, "Failed to close proxy settings service: ", err)
-	}
-
 	if _, err := f.CrSvc.Close(ctx, &emptypb.Empty{}); err != nil {
 		testing.ContextLog(ctx, "Failed to close Chrome service: ", err)
 	}
@@ -136,9 +132,6 @@ func (f *ProxyFixtureData) Reboot(ctx context.Context, manifestKey string) error
 	}
 
 	f.ProxySettingsSvc = network.NewProxySettingServiceClient(f.WifiTestFixture.DUTRPC(DefaultDUT).Conn)
-	if _, err := f.ProxySettingsSvc.Initialize(ctx, &empty.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to create proxy settings service")
-	}
 
 	return nil
 }
@@ -197,11 +190,7 @@ func (f *proxyFixtureImpl) Reset(ctx context.Context) error {
 // PreTest performs the action before each proxy test.
 // It initiates proxy settings service client, configures an AP and connects to the AP.
 func (f *proxyFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	proxySettingsSvc := network.NewProxySettingServiceClient(f.data.WifiTestFixture.DUTRPC(DefaultDUT).Conn)
-	if _, err := proxySettingsSvc.Initialize(ctx, &empty.Empty{}); err != nil {
-		s.Fatal("Failed to create proxy settings service: ", err)
-	}
-	f.data.ProxySettingsSvc = proxySettingsSvc
+	f.data.ProxySettingsSvc = network.NewProxySettingServiceClient(f.data.WifiTestFixture.DUTRPC(DefaultDUT).Conn)
 
 	ap, err := f.data.WifiTestFixture.DefaultOpenNetworkAP(ctx)
 	if err != nil {
@@ -221,10 +210,6 @@ func (f *proxyFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState
 // PostTest performs the action after each proxy test.
 // It closes the proxy-settings service, note that the network AP shall be cleanup by parent fixture.
 func (f *proxyFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	if _, err := f.data.ProxySettingsSvc.Close(ctx, &emptypb.Empty{}); err != nil {
-		s.Log("Failed to close proxy settings: ", err)
-	}
-
 	if err := f.data.WifiTestFixture.CleanDisconnectDUTFromWifi(ctx, DefaultDUT); err != nil {
 		s.Log("Failed to clean and disconnect network: ", err)
 	}

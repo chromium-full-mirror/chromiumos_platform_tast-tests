@@ -176,7 +176,7 @@ func proxySettingsRestricted(ctx context.Context, rpcClient *rpc.Client, ssids [
 			},
 		}); err != nil {
 			errors.Wrapf(err, "failed to check if proxy settings of network %q is restricted", ssid)
-		} else if resp.Value != false {
+		} else if !resp.Value {
 			return errors.New("proxy settings is not restricted")
 		}
 	}
@@ -192,10 +192,11 @@ func setProxyAndVerify(ctx context.Context, rpcClient *rpc.Client, helper *netwo
 	defer cancel()
 
 	proxySvc := network.NewProxySettingServiceClient(rpcClient.Conn)
-	if _, err := proxySvc.Initialize(ctx, &emptypb.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to initialize the proxy settings service")
-	}
-	defer proxySvc.Close(cleanupCtx, &emptypb.Empty{})
+	defer proxySvc.ResetConnectionType(cleanupCtx, &network.ResetConnectionTypeRequest{
+		NetworkInfo: &network.NetworkInfo{
+			Value: &network.NetworkInfo_WifiSsid{WifiSsid: ssid},
+		},
+	})
 
 	proxyConfig.NetworkInfo.Value = &network.NetworkInfo_WifiSsid{WifiSsid: ssid}
 	if _, err := proxySvc.Setup(ctx, proxyConfig); err != nil {
@@ -253,14 +254,6 @@ func newNetworksHelper(rpcClient *rpc.Client, tf *wificell.TestFixture) *network
 	}
 }
 
-func (helper *networksHelper) allSharedNetworkSSID() []string {
-	return []string{helper.aps[sharedAndActive].Config().SSID, helper.aps[shared].Config().SSID}
-}
-
-func (helper *networksHelper) allNonSharedNetworkSSID() []string {
-	return []string{helper.aps[nonShared].Config().SSID}
-}
-
 func (helper *networksHelper) allNetworkSSID() []string {
 	return []string{helper.aps[sharedAndActive].Config().SSID, helper.aps[shared].Config().SSID, helper.aps[nonShared].Config().SSID}
 }
@@ -316,17 +309,11 @@ func (helper *networksHelper) connectTo(ctx context.Context, ssid string) error 
 }
 
 func (helper *networksHelper) toggleAllowProxiesForSharedNetworks(ctx context.Context, rpcClient *rpc.Client, isAllow bool) error {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
 	// The "Allow proxies for shared networks" is a shared option across all shared networks,
 	// toggling it in one network will allow/disallow proxies for all shared networks.
 	ssid := helper.aps[sharedAndActive].Config().SSID
 
 	proxySvc := network.NewProxySettingServiceClient(rpcClient.Conn)
-	defer proxySvc.Close(cleanupCtx, &emptypb.Empty{})
-
 	if _, err := proxySvc.AllowProxiesForSharedNetwork(ctx, &network.AllowProxiesForSharedNetworkRequest{
 		Allow: isAllow,
 		NetworkInfo: &network.NetworkInfo{

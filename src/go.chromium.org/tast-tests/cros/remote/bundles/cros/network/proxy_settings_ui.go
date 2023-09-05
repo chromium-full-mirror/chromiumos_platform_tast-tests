@@ -374,13 +374,6 @@ func persistentAfterSuspendOOBE(ctx context.Context, data *proxySettingsUITestDa
 // reopenProxySettingsAndVerify reopens the proxy settings page and verifies the proxy settings is as expected.
 func reopenProxySettingsAndVerify(ctx context.Context, data *proxySettingsUITestData, expectedProxyValue *network.ProxyConfigs) error {
 	proxySettingsSvc := data.ProxySettingsSvc
-	if _, err := proxySettingsSvc.Close(ctx, &empty.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to close the proxy settings service")
-	}
-
-	if _, err := proxySettingsSvc.Initialize(ctx, &empty.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to start the proxy settings service")
-	}
 
 	resp, err := proxySettingsSvc.FetchProxySettings(ctx, &network.FetchProxySettingsRequest{NetworkInfo: data.networkInfo})
 	if err != nil {
@@ -396,13 +389,6 @@ func reopenProxySettingsAndVerify(ctx context.Context, data *proxySettingsUITest
 // reopenProxySettingsAndVerifyException reopens the proxy settings page and verifies the exception is as expected.
 func reopenProxySettingsAndVerifyException(ctx context.Context, data *proxySettingsUITestData, expectedException []string) error {
 	proxySettingsSvc := data.ProxySettingsSvc
-	if _, err := proxySettingsSvc.Close(ctx, &empty.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to close the proxy settings service")
-	}
-
-	if _, err := proxySettingsSvc.Initialize(ctx, &empty.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to start the proxy settings service")
-	}
 
 	resp, err := proxySettingsSvc.FetchException(ctx, &network.FetchExceptionRequest{NetworkInfo: data.networkInfo})
 	if err != nil {

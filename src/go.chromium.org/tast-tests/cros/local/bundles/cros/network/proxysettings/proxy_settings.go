@@ -416,16 +416,6 @@ func (ps *ProxySettings) ManualConfigContent(ctx context.Context, tconn *chrome.
 	return proxy, nil
 }
 
-// setConnectionType sets proxy connection type to expected type.
-func setConnectionType(ctx context.Context, ui *uiauto.Context, connectionType ConnectionType) error {
-	option := nodewith.Name(string(connectionType)).Role(role.ListBoxOption)
-	return uiauto.Combine(fmt.Sprintf("setup proxy to %q", connectionType),
-		ui.LeftClickUntil(ossettings.ProxyDropDownMenu, ui.WithTimeout(3*time.Second).WaitUntilExists(option)),
-		ui.LeftClick(option),
-		ui.WaitUntilGone(option),
-	)(ctx)
-}
-
 // IsUseSameProxyToggleOptionEnabled checks whether the toggle option 'Use the same proxy for all protocols' is enabled or not.
 func (ps *ProxySettings) IsUseSameProxyToggleOptionEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
 	ui := uiauto.New(tconn)
@@ -440,4 +430,14 @@ func (ps *ProxySettings) IsUseSameProxyToggleOptionEnabled(ctx context.Context, 
 		return false, errors.Wrap(err, "failed to get node info")
 	}
 	return info.Checked == checked.True, nil
+}
+
+// setConnectionType sets proxy connection type to expected type.
+func setConnectionType(ctx context.Context, ui *uiauto.Context, connectionType ConnectionType) error {
+	option := nodewith.Name(string(connectionType)).Role(role.ListBoxOption)
+	return uiauto.Combine(fmt.Sprintf("setup proxy to %q", connectionType),
+		ui.LeftClickUntil(ossettings.ProxyDropDownMenu, ui.WithTimeout(3*time.Second).WaitUntilExists(option)),
+		ui.LeftClick(option),
+		ui.WaitUntilGone(option),
+	)(ctx)
 }
