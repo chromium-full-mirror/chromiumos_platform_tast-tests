@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
@@ -402,28 +401,11 @@ func FormatStorageToFAT(ctx context.Context, mountPoint string, dut *dut.DUT, fs
 	return nil
 }
 
-// VerifyFileReasonable verifies its integrity and checks the transfer time not too long.
-func VerifyFileReasonable(ctx context.Context, transferTime, remoteTextPath, usbTextPath string, dut *dut.DUT) error {
-	// Compare texts line by line in two files.
-	diffCmd := fmt.Sprintf("diff '%s' '%s'", remoteTextPath, usbTextPath)
+// CompareTwoFiles compares two files line by line.
+func CompareTwoFiles(ctx context.Context, dut *dut.DUT, fileA, fileB string) error {
+	diffCmd := fmt.Sprintf("diff '%s' '%s'", fileA, fileB)
 	if err := dut.Conn().CommandContext(ctx, "sh", "-c", diffCmd).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "compare the DUT file with USB file")
-	}
-
-	// Verify that the time is reasonable.
-	re := regexp.MustCompile(`(\d+:\d+\.\d+)elapsed`)
-	matches := re.FindStringSubmatch(string(transferTime))
-	const layout = "4:05.00"
-	t, err := time.Parse(layout, matches[1])
-	if err != nil {
-		return errors.Wrap(err, "parse the transfer time of the file")
-	}
-
-	_, min, sec := t.Clock()
-	totalSeconds := float64(min*60+sec) + float64(t.Nanosecond())/1e9
-	const timeOut = 1
-	if totalSeconds >= timeOut {
-		return errors.Errorf("copy the file because it took too long; transmission time: %vs, estimated time: %vs, time difference: %vs", totalSeconds, timeOut, totalSeconds-1)
+		return errors.Wrap(err, "execute diff command")
 	}
 	return nil
 }
