@@ -161,7 +161,7 @@ func CrasNoiseCancellationPower(ctx context.Context, s *testing.State) {
 	param.crasSetUp(ctx, s)
 
 	const (
-		interval     = 1 * time.Second // Power metrics collect interval.
+		interval     = 5 * time.Second // Power metrics collect interval.
 		testDuration = 5 * time.Minute
 		blockSize    = 480
 	)
