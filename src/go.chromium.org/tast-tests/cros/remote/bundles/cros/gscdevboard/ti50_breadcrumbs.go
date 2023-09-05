@@ -87,6 +87,7 @@ func Ti50Breadcrumbs(ctx context.Context, s *testing.State) {
 
 	s.Log("Waiting for GSC to reset")
 	th.MustSucceed(i.WaitUntilRoBoot(ctx, 15*time.Second), "reset key combo")
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Release all GSC reset keys
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
