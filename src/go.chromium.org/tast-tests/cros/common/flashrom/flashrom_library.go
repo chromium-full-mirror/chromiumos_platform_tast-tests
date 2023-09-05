@@ -319,7 +319,7 @@ func (c *Config) Probe(ctx context.Context) (*Instance, context.Context, func() 
 				return nil, ctx, shutdown, nil, errors.Wrapf(err, "no serial in %v", device)
 			}
 			if strings.HasPrefix(stringType, "ccd") {
-				c.params.servoSPIControl = servo.CCDCPUFWSPI
+				c.params.servoSPIControl = servo.OnOffControl(fmt.Sprintf("%s.%s", stringType, servo.CCDCPUFWSPI))
 				c.params.programmer = ProgrammerRaidenDebugSpi
 				c.params.programmerParam = fmt.Sprintf("target=AP,custom_rst=true,serial=%s", deviceSerial)
 				// Don't break, continue to see if we can find a better choice than CCD.
