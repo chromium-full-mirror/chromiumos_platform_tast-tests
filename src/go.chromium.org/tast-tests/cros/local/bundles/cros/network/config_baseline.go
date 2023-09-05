@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Use the CrosNetworkConfig API during OOBE and after login to configure a basic network and check it is set as expected",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"crisguerrero@chromium.com", // Test author
+			"crisguerrero@chromium.org", // Test author
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		SoftwareDeps: []string{"chrome"},

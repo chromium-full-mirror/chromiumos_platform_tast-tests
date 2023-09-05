@@ -25,7 +25,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-wm-corexp@google.com",
 			"chromeos-sw-engprod@google.com",
-			"michelefan@chromium.com",
+			"michelefan@chromium.org",
 		},
 		// ChromeOS > Software > ScreenCapture
 		BugComponent: "b:1253115",

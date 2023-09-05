@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Tests that accelerometer sensors can be read and give valid data",
 		Contacts: []string{
 			"chromeos-sensors-eng@google.com",
-			"gwendal@chromium.com",
+			"gwendal@chromium.org",
 		},
 		Attr: []string{"group:mainline", "group:cq-medium"},
 	})

@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Tests that iioservice provides sensors' samples properly",
 		Contacts: []string{
 			"chromeos-sensors-eng@google.com",
-			"gwendal@chromium.com",
+			"gwendal@chromium.org",
 			"chenghaoyang@chromium.org", // Test author
 		},
 		Attr:         []string{"group:sensors"},

@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Tests that all sensors defined in model.yaml are present in the system",
 		Contacts: []string{
 			"chromeos-sensors-eng@google.com",
-			"gwendal@chromium.com",
+			"gwendal@chromium.org",
 			"mathewk@chromium.org", // Test author
 			"jettrink@chromium.org",
 		},

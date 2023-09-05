@@ -26,7 +26,7 @@ func init() {
 			// DO NOT modify these tests without approval from a test contact.
 			"chromeos-commercial-remote-management@google.com",
 			"mpolzer@google.com", // Test author
-			"crisguerrero@chromium.com",
+			"crisguerrero@chromium.org",
 		},
 		BugComponent: "b:1031231",
 		Attr: []string{

@@ -22,7 +22,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-sensors-eng@google.com",
 			"chenghaoyang@chromium.org", // Test author
-			"gwendal@chromium.com",
+			"gwendal@chromium.org",
 		},
 		Attr:         []string{"group:sensors"},
 		SoftwareDeps: []string{"iioservice"},

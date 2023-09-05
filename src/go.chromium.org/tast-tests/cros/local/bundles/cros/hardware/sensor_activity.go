@@ -26,7 +26,8 @@ func init() {
 		Desc:         "Tests that activity sensors can be read and give proximity event",
 		Contacts: []string{
 			"chromeos-sensors-eng@google.com",
-			"gwendal@chromium.com",
+			"gwendal@chromium.org",
+			"chingkang@chromium.org", // Test author
 		},
 		Attr:         []string{"group:sensors"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

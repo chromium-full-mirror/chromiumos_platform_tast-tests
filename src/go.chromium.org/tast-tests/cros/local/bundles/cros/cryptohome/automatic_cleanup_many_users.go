@@ -32,7 +32,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-disk-cleanup@google.com",
 			"vsavu@google.com",     // Test author
-			"gwendal@chromium.com", // Lead for ChromeOS Storage
+			"gwendal@chromium.org", // Lead for ChromeOS Storage
 		},
 		Params: []testing.Param{{
 			Name: "5_users",
