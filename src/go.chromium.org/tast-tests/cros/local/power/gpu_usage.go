@@ -1051,8 +1051,9 @@ func gpuDriClients(path string, clients map[string]string) error {
 			return errors.Errorf("dri clients file %s contains malformed line %s", path, line)
 		}
 		if i == 0 {
-			if words[1] != "tgid" {
-				return errors.Errorf("dri clients file %s doesn't have tgid in column 2", path)
+			// Look for "tgid" or "pid" in column 2 of the header line.
+			if words[1] != "tgid" && words[1] != "pid" {
+				return errors.Errorf("dri clients file %s doesn't have tgid or pid in column 2; got %s", path, words[1])
 			}
 			continue
 		}
