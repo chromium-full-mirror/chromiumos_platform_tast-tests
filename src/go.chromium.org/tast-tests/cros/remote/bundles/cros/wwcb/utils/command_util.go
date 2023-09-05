@@ -105,23 +105,23 @@ func GetUSBDevice(ctx context.Context, dut *dut.DUT) ([]string, error) {
 	return strings.Split(strings.TrimSpace(string(lsusbInfo)), "\n"), err
 }
 
-// VerifyTypeADevicesCount verifies number of USB devices is as expected.
-func VerifyTypeADevicesCount(ctx context.Context, dut *dut.DUT, expectUSBTypeADeviceNum int) error {
+// VerifyUSBDevicesCount verifies whether number of USB devices is as expected or not.
+func VerifyUSBDevicesCount(ctx context.Context, dut *dut.DUT, expectUSBDevices []string) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		current, err := GetUSBDevice(ctx, dut)
+		devices, err := GetUSBDevice(ctx, dut)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "get USB devices")
 		}
-		if len(current) != expectUSBTypeADeviceNum {
-			return errors.Errorf("unexpected number of USB devices, got: %d, want: %d", len(current), expectUSBTypeADeviceNum)
+		if len(devices) != len(expectUSBDevices) {
+			return errors.Errorf("unexpected number of USB devices, \ngot: %v, \nwant: %v", strings.Join(devices, "\n"), strings.Join(expectUSBDevices, "\n"))
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
 }
 
 // VerifyPeripheralsConnection verifies whether the peripherals are connected or not.
-// It checks the following peripherals: power, external display, USB audio, Ethernet, USB Type-A devices.
-func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected bool, expectUSBTypeADeviceNum int) error {
+// It checks the following peripherals: power, external display, USB audio, Ethernet, USB devices.
+func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected bool, expectUSBDevices []string) error {
 	testing.ContextLog(ctx, "Starting verifying peripherals")
 
 	testingCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
@@ -148,8 +148,8 @@ func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected 
 		return errors.Wrap(err, "verify connection of Ethernet")
 	}
 
-	if err := VerifyTypeADevicesCount(testingCtx, dut, expectUSBTypeADeviceNum); err != nil {
-		return errors.Wrap(err, "verify connection of USB Type-A devices")
+	if err := VerifyUSBDevicesCount(testingCtx, dut, expectUSBDevices); err != nil {
+		return errors.Wrap(err, "verify connection of USB devices")
 	}
 	return nil
 }
