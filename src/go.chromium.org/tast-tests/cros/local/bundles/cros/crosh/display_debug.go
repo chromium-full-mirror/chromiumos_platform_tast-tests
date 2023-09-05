@@ -46,7 +46,7 @@ func init() {
 		// ChromeOS > Platform > Graphics > Display
 		BugComponent: "b:188154",
 		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"chrome", "drm_trace"},
+		SoftwareDeps: []string{"drm_trace"},
 	})
 }
 
