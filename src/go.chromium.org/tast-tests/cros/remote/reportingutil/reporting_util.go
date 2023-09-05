@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -70,6 +71,23 @@ func PruneEvents(ctx context.Context, events []InputEvent, correctEventType Veri
 	}
 
 	return prunedEvents, nil
+}
+
+// ChronoSortEvents sorts events in-place in the chronologically ascending order.
+func ChronoSortEvents(events []InputEvent) error {
+	sortErr := error(nil)
+	getTime := func(e InputEvent) int64 {
+		t, err := strconv.ParseInt(e.APIEvent.ReportingRecordEvent.Time, 0, 64)
+		if err != nil {
+			sortErr = err
+		}
+		return t
+	}
+	less := func(i, j int) bool {
+		return getTime(events[i]) < getTime(events[j])
+	}
+	sort.Slice(events, less)
+	return sortErr
 }
 
 // LookupEventsByRequestPath calls the Reporting API Server's ChromeReportingDebugService.LookupEvents
