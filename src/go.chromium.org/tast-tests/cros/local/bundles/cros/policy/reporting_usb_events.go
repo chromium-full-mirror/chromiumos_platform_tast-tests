@@ -117,7 +117,7 @@ func ReportingUsbEvents(ctx context.Context, s *testing.State) {
 	// Start 2 goroutines to fetch records.
 	for i := 0; i < 2; i++ {
 		go func() {
-			record, err := server.NextRecordAsync(2 * time.Minute)
+			record, err := server.NextRecordAsync(2*time.Minute, true /*expectEvents*/)
 			if err != nil {
 				s.Fatal("Failed to wait for the record: ", err)
 			}

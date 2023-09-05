@@ -318,8 +318,10 @@ func (erpserver *ErpServer) NextRecord() *reporting.WrappedRecord {
 	}
 }
 
-// NextRecordAsync waits for receiving a new record asynchronously and will timeout if it takes more than the specified timeout.
-func (erpserver *ErpServer) NextRecordAsync(timeout time.Duration) (*reporting.WrappedRecord, error) {
+// NextRecordAsync waits for receiving a new record asynchronously and will
+// timeout if it takes more than the specified timeout. If `expectEvents` is
+// true, timeout will result in an error.
+func (erpserver *ErpServer) NextRecordAsync(timeout time.Duration, expectEvents bool) (*reporting.WrappedRecord, error) {
 	// Create a channel to communicate between the server's main thread and the thread that is responsible for receiving new records.
 	recordChan := make(chan *recordData, 1)
 
@@ -362,7 +364,10 @@ func (erpserver *ErpServer) NextRecordAsync(timeout time.Duration) (*reporting.W
 		// Return the record.
 		return record.record, nil
 	case <-time.After(timeout):
-		return nil, errors.New("timed out waiting for new record")
+		if expectEvents {
+			return nil, errors.New("timed out waiting for new record")
+		}
+		return nil, nil
 	}
 }
 
