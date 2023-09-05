@@ -59,6 +59,10 @@ func init() {
 			Key: "feature_id",
 			// CUJ: require the same authentication across services.
 			Value: "screenplay-64702801-83b5-4994-8dad-08afda61e58c",
+		}, {
+			Key: "feature_id",
+			// CUJ: I want to authenticate as rarely as possible.
+			Value: "screenplay-a7b53e2f-1883-48b6-a08b-0f91063da34a",
 		}},
 		Vars: []string{
 			tape.ServiceAccountVar,
