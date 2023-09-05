@@ -38,7 +38,7 @@ func init() {
 		},
 		Timeout:      6 * time.Minute,
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting
-		SoftwareDeps: []string{"chrome", "intel_psr"},
+		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{
@@ -62,6 +62,8 @@ type systemResult struct {
 	PsrInfo runtimeCountersResult `json:"psr_info"`
 }
 
+// verifyRuntimeCounters verifies that the runtime counters record meets the
+// expectation.
 func verifyRuntimeCounters(reportedRuntimeCounters *reporting.RuntimeCountersTelemetry, actualRuntimeCounters *runtimeCountersResult) error {
 	uptimeSeconds, err := strconv.ParseUint(actualRuntimeCounters.UptimeSeconds, 10, 32)
 	if err != nil {
@@ -95,6 +97,19 @@ func verifyRuntimeCounters(reportedRuntimeCounters *reporting.RuntimeCountersTel
 	}
 	if reportedRuntimeCounters.GetCounterEnterPoweroff() != int64(CounterEnterPoweroff) {
 		return errors.New("CounterEnterPoweroff does not match")
+	}
+	return nil
+}
+
+// verifyNoRuntimeCounters verifies that there's no runtime counters record
+// within a given time limit.
+func verifyNoRuntimeCounters(server *erpserver.ErpServer) error {
+	record, err := server.NextRecordAsync(3*time.Minute, false /*expectEvents*/)
+	if err != nil {
+		return errors.Wrap(err, "failed to get next ERP server record async")
+	}
+	if record != nil {
+		return errors.Errorf("Expect no record, but received %+v", record)
 	}
 	return nil
 }
@@ -177,10 +192,16 @@ func ReportingRuntimeCountersTelemetry(ctx context.Context, s *testing.State) {
 
 	if !expectedRuntimeCountersResult.IsSupported {
 		s.Log("PSR is unsupported. No record expected")
+		if err := verifyNoRuntimeCounters(server); err != nil {
+			s.Fatal("Failed to verify no runtime counters: ", err)
+		}
 		return
 	}
 	if expectedRuntimeCountersResult.LogState != "Started" {
 		s.Log("PSR logging is not running. No record expected")
+		if err := verifyNoRuntimeCounters(server); err != nil {
+			s.Fatal("Failed to verify no runtime counters: ", err)
+		}
 		return
 	}
 
