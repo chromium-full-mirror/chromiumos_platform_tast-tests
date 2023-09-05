@@ -28,7 +28,7 @@ func init() {
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"chrome", "tpm2"},
+		SoftwareDeps: []string{"tpm2"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
 			Fixture:           "ussAuthSessionFixture",

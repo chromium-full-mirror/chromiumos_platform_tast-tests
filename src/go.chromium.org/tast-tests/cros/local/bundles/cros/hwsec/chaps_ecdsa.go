@@ -28,7 +28,7 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline", "group:chaps"},
-		SoftwareDeps: []string{"chrome", "tpm2"},
+		SoftwareDeps: []string{"tpm2"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
 			Fixture:           "ussAuthSessionFixture",
