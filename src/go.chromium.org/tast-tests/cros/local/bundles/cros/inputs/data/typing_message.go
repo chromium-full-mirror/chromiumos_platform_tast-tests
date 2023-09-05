@@ -138,9 +138,9 @@ var TypingMessageHello = typingMessage{
 		ExpectedText:    "ไทย",
 	},
 	ime.VietnameseTelex: {
-		CharacterKeySeq: strings.Split("tranaf ajs aeiouy bcdfghjklmnpqrstvwxz 0123456789-=[]\\;',./", ""),
-		LocationKeySeq:  strings.Split("tranaf ajs aeiouy bcdfghjklmnpqrstvwxz 0123456789-=[]\\;',./", ""),
-		ExpectedText:    "trần á aeiouy bcdfghjklmnpqrstvwxz 0123456789-=[]\\;',./",
+		CharacterKeySeq: strings.Split("tranaf ajs aeiouy bcdfghjklmnpqrstvxz w 0123456789-=[]\\;',./", ""),
+		LocationKeySeq:  strings.Split("tranaf ajs aeiouy bcdfghjklmnpqrstvxz w 0123456789-=[]\\;',./", ""),
+		ExpectedText:    "trần á aeiouy bcdfghjklmnpqrstvxz ư 0123456789-=[]\\;',./",
 	},
 	ime.VietnameseVNI: {
 		CharacterKeySeq: strings.Split("tran62 a31 abcdefghijklmnopqrstuvwxyz 0123456789-=[]\\;',./", ""),
