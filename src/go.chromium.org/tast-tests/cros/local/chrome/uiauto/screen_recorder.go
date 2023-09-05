@@ -151,9 +151,9 @@ func ChooseScreenRecorder(ctx context.Context, tconn *chrome.TestConn) error {
 	shareButton := nodewith.Name("Share").Role(role.Button).Ancestor(shareScreenDialog).Focusable()
 
 	return Combine("start screen recorder through ui",
-		ui.WithInterval(500*time.Millisecond).LeftClickUntil(entireScreenTab, ui.Exists(firstDisplay)),
-		ui.WithInterval(500*time.Millisecond).LeftClickUntil(firstDisplay, ui.Exists(shareButton)),
-		ui.LeftClickUntil(shareButton, ui.WithTimeout(time.Second).WaitUntilGone(shareButton)),
+		ui.WithInterval(500*time.Millisecond).DoDefaultUntil(entireScreenTab, ui.Exists(firstDisplay)),
+		ui.WithInterval(500*time.Millisecond).DoDefaultUntil(firstDisplay, ui.Exists(shareButton)),
+		ui.DoDefaultUntil(shareButton, ui.WithTimeout(time.Second).WaitUntilGone(shareButton)),
 	)(ctx)
 }
 
