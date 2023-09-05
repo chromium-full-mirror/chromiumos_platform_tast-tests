@@ -12,6 +12,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/localstate"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -103,4 +106,45 @@ func WaitForOwnership(ctx context.Context, cr *chrome.Chrome) error {
 
 		return nil
 	}, pollOpts)
+}
+
+// RemoveUserOnLoginScreen finds the user pod on login screen and removes it.
+func RemoveUserOnLoginScreen(ctx context.Context, tLoginConn *chrome.TestConn, cr *chrome.Chrome, user string) error {
+	ui := uiauto.New(tLoginConn)
+	// Wait for user pods to be available.
+	// Remove user pod by clicking remove button twice.
+	// Check that user pod was deleted.
+	if err := uiauto.Combine("Remove user from using their pod",
+		ui.WaitUntilExists(nodewith.Name(user).Role(role.Button)),
+		ui.LeftClick(nodewith.Name("Open remove dialog for "+user).Role(role.Button)),
+		ui.LeftClick(nodewith.Name("Remove account").Role(role.Button)),
+		ui.LeftClick(nodewith.Name("Remove account").Role(role.Button)),
+		ui.WaitUntilGone(nodewith.Name(user).Role(role.Button)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click 'Back' and 'OK' to refresh the iframe")
+	}
+	return nil
+}
+
+// CheckDeviceOwnerIsNotRemoved finds the user pod on login screen
+// and checks to see that remove button is not there.
+func CheckDeviceOwnerIsNotRemoved(ctx context.Context, tLoginConn *chrome.TestConn, cr *chrome.Chrome, user string) error {
+	ui := uiauto.New(tLoginConn)
+	// try to delete device owner - it should not be possible
+	if err := ui.WaitUntilExists(nodewith.Name(user).Role(role.Button))(ctx); err != nil {
+		return errors.Wrap(err, "user pod not available after wait")
+
+	}
+	if err := ui.LeftClick(nodewith.Name(user).Role(role.Button))(ctx); err != nil {
+		return errors.Wrap(err, "could not click on user pod")
+	}
+
+	removeButtonFound, err := ui.IsNodeFound(ctx, nodewith.Name("Open remove dialog for "+user).Role(role.Button))
+	if err != nil {
+		return errors.Wrap(err, "removed button could not be looked up")
+	}
+	if removeButtonFound {
+		return errors.Wrap(err, "removed user pod is unexpectedly found for device owner")
+	}
+	return nil
 }

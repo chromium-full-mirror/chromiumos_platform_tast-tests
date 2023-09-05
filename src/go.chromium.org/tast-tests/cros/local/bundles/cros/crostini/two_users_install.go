@@ -9,11 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	cui "go.chromium.org/tast-tests/cros/local/crostini/ui"
-	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -163,29 +161,11 @@ func cleanup(ctx context.Context, opts ...chrome.Option) error {
 }
 
 func installAndShutDown(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, iOptions *cui.InstallationOptions) error {
-	// Install Crostini.
-	if _, err := cui.InstallCrostini(ctx, tconn, cr, iOptions); err != nil {
-		return errors.Wrapf(err, "failed to install Crostini for user %s", iOptions.UserName)
-	}
-
-	// TerminalApp always automatically launches after the installation.
-	// Close it before proceeding to ensure a clean env.
-	if err := apps.Close(ctx, tconn, apps.Terminal.ID); err != nil {
-		return errors.Wrap(err, "failed to close Terminal app after installing Linux")
-	}
-
-	terminalApp, err := terminalapp.Launch(ctx, tconn)
+	// Install Crostini
+	cont, terminalApp, err := crostini.InstallCrostini(ctx, tconn, cr, iOptions)
 	if err != nil {
-		return errors.Wrapf(err, "failed to launch terminal after installing Crostini for user %s", iOptions.UserName)
+		return errors.Wrap(err, "failed to install crostini")
 	}
-	defer terminalApp.Close()(ctx)
-
-	// Get the container.
-	cont, err := vm.DefaultContainer(ctx, iOptions.UserName)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to the container after installing Crostini")
-	}
-
 	// Shutdown Crostini.
 	if err := terminalApp.ShutdownCrostini(cont)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to shutdown Crostini after installing it for user %s", iOptions.UserName)
