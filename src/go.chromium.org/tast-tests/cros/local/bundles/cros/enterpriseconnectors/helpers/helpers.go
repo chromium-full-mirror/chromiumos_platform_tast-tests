@@ -270,8 +270,13 @@ func WaitForDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *browser.
 			if (innerHTML.includes("UNKNOWN")) {
 				return "UNKNOWN detected in row.";
 			}
-			if (table.innerHTML.includes("UNKNOWN")) {
-				return "UNKNOWN detected in table.";
+			// UNKNOWN is allowed to be present in the left column (as reason
+			// when getting an fcm token), so we loop over the right column
+			// (UNKNOWNs in the right column indicate an error).
+			for (i=0; i<table.rows.length; i++) {
+				if (table.rows[i].cells[1].innerHTML.includes("UNKNOWN")) {
+					return "UNKNOWN detected in table.";
+				}
 			}
 			throw "Scanning not yet complete";
 			})()`, &failureReason); err != nil {
