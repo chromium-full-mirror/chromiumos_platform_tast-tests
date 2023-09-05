@@ -92,7 +92,7 @@ func RunTest(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bT
 // measurePerformance collects video playback performance playing a video with
 // either SW or HW decoder.
 func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, videoName string,
-	decoderType DecoderType, gridWidth, gridHeight int, perfTracing, measureSteadyStateMetrics bool, measureRoughness bool, outDir string) error {
+	decoderType DecoderType, gridWidth, gridHeight int, perfTracing, measureSteadyStateMetrics, measureRoughness bool, outDir string) error {
 	server := httptest.NewServer(http.FileServer(fileSystem))
 	defer server.Close()
 
@@ -201,8 +201,7 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	}
 
 	var roughness float64
-	var gpuCSStat, gpuMainCSStat contextSwitchStat
-	var gpuErr, cStateErr, cpuErr, fdErr, wakeupErr, dramErr, batErr, roughnessErr, traceErr error
+	var gpuErr, cStateErr, cpuErr, fdErr, wakeupErr, dramErr, batErr, roughnessErr error
 	var wg sync.WaitGroup
 	wg.Add(7)
 	go func() {
@@ -252,13 +251,6 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 			roughness, roughnessErr = devtools.GetVideoPlaybackRoughness(ctx, observer, url)
 		}()
 	}
-	if perfTracing {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			gpuCSStat, gpuMainCSStat, traceErr = measureContextSwitch(ctx, s, measurementDuration)
-		}()
-	}
 
 	wg.Wait()
 	if gpuErr != nil {
@@ -285,9 +277,6 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	if roughnessErr != nil {
 		return errors.Wrap(roughnessErr, "failed to measure playback roughness")
 	}
-	if traceErr != nil {
-		return errors.Wrap(traceErr, "failed to measure CPU sched events")
-	}
 
 	if err := graphics.UpdatePerfMetricFromHistogram(ctx, bTconn, decodeHistogram, initDecodeHistogram, p, "video_decode_delay"); err != nil {
 		return errors.Wrap(err, "failed to calculate Decode perf metric")
@@ -312,6 +301,11 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	}
 
 	if perfTracing {
+		gpuCSStat, gpuMainCSStat, traceErr := measureContextSwitch(ctx, s, measurementDuration)
+		if traceErr != nil {
+			return errors.Wrap(traceErr, "failed to measure CPU sched events")
+		}
+
 		p.Set(perf.Metric{
 			Name:      "context_switches_in_gpu_process_cnt",
 			Unit:      "count",
