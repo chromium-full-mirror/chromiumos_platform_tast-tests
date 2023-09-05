@@ -557,7 +557,11 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 	}
 	v.bootTime = float64(tInit.Sub(tPreStart).Milliseconds())
 
-	v.appKills, err = arc.GetAppKills(ctx, tconn)
+	// TODO(b/299182092) GetAppKills hangs for Grunt R-container.
+	// Wait up to 5 seconds and don't treat this as stop error.
+	appKillCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	v.appKills, err = arc.GetAppKills(appKillCtx, tconn)
 	if err != nil {
 		s.Log("Failed to collect ARC app kill counts: ", err)
 	}
