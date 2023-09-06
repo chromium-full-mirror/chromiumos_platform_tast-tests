@@ -1,0 +1,5 @@
+{
+  "sha256sum": "b8e4570e158c42dcb1e8d755c82912b1b3ddf5b734a87b79f51e882801756ba8",
+  "size": 109,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/encode/desktop2-1920x1080_490frames_20230906.vp9.webm.json"
+}

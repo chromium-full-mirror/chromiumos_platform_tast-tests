@@ -1,0 +1,5 @@
+{
+  "sha256sum": "6b32aa0a90d05e9d39e50f7c3abb893bb93b84f865414bdec7e5af602990f118",
+  "size": 418975296,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/encode/fallout4-3840x2160_100frames_20230906.vp9.webm"
+}

@@ -204,8 +204,8 @@ func TestEncodeAccelParams(t *testing.T) {
 		// 540p is only used in VP9 SVC cases.
 		540:  "encode/desktop2-960x540_850frames.vp9.webm",
 		720:  "encode/desktop2-1280x720_850frames.vp9.webm",
-		1080: "encode/desktop2-1920x1080_850frames.vp9.webm",
-		2160: "encode/desktop2-3840x2160_430frames.vp9.webm",
+		1080: "encode/desktop2-1920x1080_490frames.vp9.webm",
+		2160: "encode/desktop2-3840x2160_170frames.vp9.webm",
 	}
 
 	var params []encodeAccelParam
