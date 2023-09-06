@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
+	"go.chromium.org/tast-tests/cros/local/filemanager"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -62,7 +63,7 @@ func DrivefsBlobUpload(ctx context.Context, s *testing.State) {
 	defer driveFsClient.SaveLogsOnError(cleanupCtx, s.HasError)
 
 	// Create a random file locally
-	testFileName := drivefs.GenerateTestFileName(s.TestName()) + ".txt"
+	testFileName := filemanager.GenerateTestFileName(s.TestName() + ".txt")
 	testFilePath := driveFsClient.MyDrivePath(testFileName)
 	if err := fsutil.CopyFile(s.DataPath("test_1KB.txt"), testFilePath); err != nil {
 		s.Fatal("Failed to copy test file: ", err)

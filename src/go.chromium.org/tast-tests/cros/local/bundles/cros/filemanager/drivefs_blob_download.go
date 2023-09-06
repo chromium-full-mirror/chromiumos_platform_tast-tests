@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
+	"go.chromium.org/tast-tests/cros/local/filemanager"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -60,7 +61,7 @@ func DrivefsBlobDownload(ctx context.Context, s *testing.State) {
 	defer driveFsClient.SaveLogsOnError(cleanupCtx, s.HasError)
 
 	// Create the test file with the Drive API
-	testFileName := drivefs.GenerateTestFileName(s.TestName()) + ".txt"
+	testFileName := filemanager.GenerateTestFileName(s.TestName() + ".txt")
 	driveFile, err := apiClient.CreateFileFromLocalFile(ctx,
 		testFileName, "root", s.DataPath("test_1KB.txt"))
 	if err != nil {

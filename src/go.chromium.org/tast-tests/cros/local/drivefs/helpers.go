@@ -9,7 +9,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
@@ -90,12 +89,6 @@ func saveDriveLogs(ctx context.Context, homeDir, persistableToken string) {
 			testing.ContextLogf(ctx, "Could not copy %q to %q: %v", filePath, outputFilePath, err)
 		}
 	}
-}
-
-// GenerateTestFileName generates a unique-ish file name based on a provided
-// prefix, the current time, and a random number.
-func GenerateTestFileName(prefix string) string {
-	return fmt.Sprintf("%s-%d-%d", prefix, time.Now().UnixNano(), rand.Intn(10000))
 }
 
 // MD5SumFile generates an MD5 sum of a file at `path`.

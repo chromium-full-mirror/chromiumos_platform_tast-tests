@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
+	"go.chromium.org/tast-tests/cros/local/filemanager"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -56,7 +57,7 @@ func DrivefsGoogleDoc(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Create a blank Google doc in the root GDrive directory.
-	testDocFileName := drivefs.GenerateTestFileName(s.TestName())
+	testDocFileName := filemanager.GenerateTestFileName(s.TestName())
 	file, err := APIClient.CreateBlankGoogleDoc(ctx, testDocFileName, []string{"root"})
 	if err != nil {
 		s.Fatal("Failed creating blank google doc: ", err)

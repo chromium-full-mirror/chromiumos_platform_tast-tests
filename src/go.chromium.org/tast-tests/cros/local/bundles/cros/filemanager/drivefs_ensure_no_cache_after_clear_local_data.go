@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
+	"go.chromium.org/tast-tests/cros/local/filemanager"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -64,7 +65,7 @@ func DrivefsEnsureNoCacheAfterClearLocalData(ctx context.Context, s *testing.Sta
 	defer driveFsClient.SaveLogsOnError(cleanupCtx, s.HasError)
 
 	// Create a random file locally and ensure it gets uploaded.
-	testFileName := drivefs.GenerateTestFileName(s.TestName()) + ".txt"
+	testFileName := filemanager.GenerateTestFileName(s.TestName() + ".txt")
 	driveFile, err := apiClient.CreateFileFromLocalFile(ctx,
 		testFileName, "root", s.DataPath("test_1KB.txt"))
 	if err != nil {
@@ -116,7 +117,7 @@ func readFileAndCompare(path, want string) error {
 	if got, err := os.ReadFile(path); err != nil {
 		return errors.Wrapf(err, "failed to open %q", path)
 	} else if string(got) != string(want) {
-		return errors.Errorf("Unexpected output, got = %q, want %q", string(got), string(want))
+		return errors.Errorf("unexpected output, got = %q, want %q", string(got), string(want))
 	}
 	return nil
 }
