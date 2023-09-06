@@ -218,9 +218,12 @@ func getUSBPorts(ctx context.Context, h *firmware.Helper) ([]firmware.USBEnableP
 		gpioName := firmware.GpioName(pin.Name)
 		if !pin.Ioex {
 			// Probe pin to verify it actually exists.
-			_, err := ec.FindBaseGpio(ctx, []firmware.GpioName{gpioName})
+			gpios, err := ec.FindGPIOs(ctx, []firmware.GpioName{gpioName})
 			if err != nil {
-				return enablePins, errors.Wrapf(err, "GPIO pin %q defined in fw testing configs but not found in gpio, update configs to reflect this", pin.Name)
+				return enablePins, errors.Wrapf(err, "failed to probe for gpio %q", pin.Name)
+			}
+			if len(gpios) == 0 {
+				return enablePins, errors.Errorf("GPIO pin %q defined in fw testing configs but not found in gpio, update configs to reflect this", pin.Name)
 			}
 		} else {
 			matchList := []string{fmt.Sprintf(reECUSBPortGet, pin.Name)}
@@ -250,15 +253,18 @@ func getUSBPorts(ctx context.Context, h *firmware.Helper) ([]firmware.USBEnableP
 	for i := 1; i <= portsToCheck; i++ {
 		name := fmt.Sprintf("USB%d_ENABLE", i)
 		testing.ContextLogf(ctx, "Probing port %q with gpioget", name)
-		_, err := ec.FindBaseGpio(ctx, []firmware.GpioName{firmware.GpioName(name)})
-		if err != nil && *h.Config.USBAPortCount >= i {
-			// If port i doesn't exist (regex fails) but it is expected to exist (0 < i <= h.Config.USBAPortCount), raise an error.
-			return enablePins, errors.Errorf("explicit port count is %d; expected port %d to exist but it does not", h.Config.USBAPortCount, i)
-		} else if err == nil {
+		gpios, err := ec.FindGPIOs(ctx, []firmware.GpioName{firmware.GpioName(name)})
+		if err != nil {
+			return enablePins, errors.Wrapf(err, "failed to probe for gpio %q", name)
+		}
+		if len(gpios) > 0 {
 			testing.ContextLogf(ctx, "Found usb port: %q with gpioget", name)
 			enablePins = append(enablePins, firmware.USBEnablePin{Name: name, Ioex: false})
+		} else if *h.Config.USBAPortCount >= i {
+			// If port i doesn't exist (regex fails) but it is expected to exist (0 < i <= h.Config.USBAPortCount), raise an error.
+			return enablePins, errors.Errorf("explicit port count is %d; expected port %d to exist but it does not", h.Config.USBAPortCount, i)
 		} else {
-			testing.ContextLogf(ctx, "Did not find port %q with gpioget, got err: %v", name, err)
+			testing.ContextLogf(ctx, "Did not find port %q with gpioget", name)
 		}
 	}
 	return enablePins, nil

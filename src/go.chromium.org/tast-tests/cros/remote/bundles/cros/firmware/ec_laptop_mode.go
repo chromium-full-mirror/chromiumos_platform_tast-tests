@@ -135,8 +135,12 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 		// out, explicitly log base-pogo pin's gpio value.
 		possibleNames := []firmware.GpioName{firmware.ENBASE, firmware.ENPP3300POGO}
 		cmd := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain)
-		if _, err := cmd.FindBaseGpio(ctx, possibleNames); err != nil {
+		if gpios, err := cmd.FindGPIOs(ctx, possibleNames); err != nil {
 			s.Logf("While looking for %q: %v", possibleNames, err)
+		} else if len(gpios) == 0 {
+			s.Logf("Did not find gpios %q", possibleNames)
+		} else {
+			s.Log("Found gpios: ", gpios)
 		}
 	}
 	if args.formFactor != "clamshell" {

@@ -220,27 +220,24 @@ const (
 	ECBLENOD GpioName = "EC_BL_EN_OD"
 )
 
-// FindBaseGpio iterates through a passed in list of gpios, relevant to control on a detachable base,
-// and checks if any one of them exists.
-func (ec *ECTool) FindBaseGpio(ctx context.Context, gpios []GpioName) (map[GpioName]string, error) {
+// FindGPIOs iterates through a passed in list of gpios, and returns the state of the gpios that exist.
+func (ec *ECTool) FindGPIOs(ctx context.Context, gpios []GpioName) (map[GpioName]string, error) {
 	// Create a local map to save the gpios found and their current values from the passed in list.
 	results := make(map[GpioName]string)
 	for _, name := range gpios {
 		reFoundGpio := regexp.MustCompile(fmt.Sprintf(`GPIO\s*%s\s*=\s*(\d+)`, string(name)))
+		// ectool gpioget fails with EC result 2, and exit code 1 when the gpio is not found.
 		out, err := ec.Command(ctx, "gpioget", string(name)).CombinedOutput()
-		if err != nil {
-			testing.ContextLogf(ctx, "running 'ectool gpioget %s' on DUT failed: %v, and received: %v", name, err, strings.TrimSpace(string(out)))
-		}
-		if match := reFoundGpio.FindStringSubmatch(string(out)); match == nil {
-			testing.ContextLogf(ctx, "Did not find gpio with name %s", string(name))
-		} else {
+		if err == nil {
+			match := reFoundGpio.FindStringSubmatch(string(out))
+			if match == nil {
+				return nil, errors.Errorf("failed to find gpio %q in %s", name, strings.TrimSpace(string(out)))
+			}
 			gpioVal := match[1]
-			testing.ContextLogf(ctx, "Found gpio with name %s, and value: %s", string(name), gpioVal)
 			results[name] = gpioVal
+		} else if !strings.HasPrefix(string(out), "EC result") {
+			return nil, errors.Wrapf(err, "ectool failed: %s", string(out))
 		}
-	}
-	if len(results) == 0 {
-		return nil, errors.New("Unable to find any of the gpios passed in. Consider expanding on the list")
 	}
 	return results, nil
 }

@@ -437,9 +437,9 @@ func getBaseStateSetter(ctx context.Context, ecTool *firmware.ECTool) (baseState
 	// be used in setting base state attached/detached.
 	// If no GPIO matched, use ECTool as base state setter.
 	baseGpioNames := []firmware.GpioName{firmware.ENBASE, firmware.ENPP3300POGO, firmware.PP3300DXBASE}
-	foundNames, err := ecTool.FindBaseGpio(ctx, baseGpioNames)
+	foundNames, err := ecTool.FindGPIOs(ctx, baseGpioNames)
 	if err != nil {
-		return ecTool, nil
+		return nil, errors.Wrap(err, "FindGPIOs failed")
 	}
 
 	for _, name := range baseGpioNames {
@@ -447,7 +447,7 @@ func getBaseStateSetter(ctx context.Context, ecTool *firmware.ECTool) (baseState
 			return &gpioBaseStateSetter{name: string(name), ecTool: ecTool}, nil
 		}
 	}
-	return nil, errors.New("cannot find base GPIO pin")
+	return ecTool, nil
 }
 
 func hammerdProcessID(ctx context.Context, hammerdLog string, dut *dut.DUT) (string, error) {

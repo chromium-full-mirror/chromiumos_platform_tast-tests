@@ -661,9 +661,9 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 	possibleNames := []firmware.GpioName{
 		firmware.ECEDPBLEN, firmware.BLDISABLEL, firmware.ENBLOD, firmware.ENABLEBACKLIGHT, firmware.ECBLENOD}
 	cmd := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain)
-	foundNames, err := cmd.FindBaseGpio(ctx, possibleNames)
+	foundNames, err := cmd.FindGPIOs(ctx, possibleNames)
 	if err != nil {
-		s.Logf("While looking for %q: %v", possibleNames, err)
+		s.Fatalf("While looking for %q: %v", possibleNames, err)
 	} else {
 		str := &screenGpio
 		for _, name := range possibleNames {
