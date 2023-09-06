@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/wav"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
@@ -40,7 +39,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Data:         []string{data.SpeechInputFile},
 		BugComponent: "b:187682",
-		Timeout:      4*time.Minute + power.RecorderTimeout,
+		Timeout:      10*time.Minute + power.RecorderTimeout,
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		Fixture:      "powerAshGAIAWithSpeakOnMute",
 		Params: []testing.Param{
@@ -115,15 +114,12 @@ func SpeakOnMutePower(ctx context.Context, s *testing.State) {
 		waitForNudge = ui.WithTimeout(nudgeWaitDuration).WaitUntilExists(common.SpeakOnMuteNudge)
 	}
 
-	// There is 60 second cool down after mute.
-	coolDownWaitDuration := 1 * time.Minute
 	muteAndWaitForNudge := uiauto.Combine("mute and speak",
 		vcTray.ToggleAVDevice(vctray.DevMicrophone, false),
-		action.Sleep(coolDownWaitDuration-5*time.Second),
 		waitForNudge,
 	)
 
-	const testDuration = 2 * time.Minute
+	const testDuration = 5 * time.Minute
 
 	extendedSpeechWav := filepath.Join(s.OutDir(), "speech.wav")
 	if err := wav.RepeatForDuration(ctx, s.DataPath(data.SpeechInputFile), extendedSpeechWav, testDuration); err != nil {
@@ -136,7 +132,7 @@ func SpeakOnMutePower(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot open browser: ", err)
 	}
 
-	r := power.NewRecorder(ctx, time.Second, s.OutDir(), s.TestName())
+	r := power.NewRecorder(ctx, 5*time.Second, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
@@ -181,6 +177,12 @@ func SpeakOnMutePower(ctx context.Context, s *testing.State) {
 			ui.WaitUntilGone(common.SpeakOnMuteNudge),
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify unmute: ", err)
+		}
+
+		// Nudge time frame should reset by unmute.
+		// Mute and speak again should trigger the Nudge.
+		if err := muteAndWaitForNudge(ctx); err != nil {
+			s.Fatal("Failed to input audio and wait for nudge after reset: ", err)
 		}
 
 		s.Log("Waiting for playback to complete")

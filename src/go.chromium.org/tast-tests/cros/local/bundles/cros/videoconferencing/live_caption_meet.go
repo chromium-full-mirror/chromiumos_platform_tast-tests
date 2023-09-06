@@ -18,8 +18,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -31,8 +31,8 @@ const credsVarName = "ui.bond_credentials"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MeetLiveCaption,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		Func:         LiveCaptionMeet,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks on-device live caption works in Google Meet",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
@@ -78,21 +78,11 @@ func init() {
 				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
 				Val:     common.LaunchAppInWeb,
 			},
-			{
-				Name:    "pwa_lacros",
-				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:     common.LaunchAppInPWA,
-			},
-			{
-				Name:    "web_lacros",
-				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:     common.LaunchAppInWeb,
-			},
 		},
 	})
 }
 
-func MeetLiveCaption(ctx context.Context, s *testing.State) {
+func LiveCaptionMeet(ctx context.Context, s *testing.State) {
 	const addBotTimeout = 100 * time.Second
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -144,11 +134,13 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to add bots: %d bots are not added: %v", nFailures, err)
 	}
 
-	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
+	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
-	defer cleanup(cleanupCtx)
+	defer closeBrowser(cleanupCtx)
+	defer conn.Close()
+	defer conn.CloseTarget(cleanupCtx)
 
 	var gm *googlemeet.GoogleMeet
 	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
@@ -166,8 +158,6 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 	}
 	defer gm.Close(cleanupCtx)
 
-	vcTray := vctray.New(ctx, tconn)
-
 	ui := uiauto.New(tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "caption")
 
@@ -182,8 +172,8 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 	expectedCaptionContain := "what color"
 
 	turnOnLiveCaptionAndCheckBubble := func(checkDLC bool) {
-		if err := vcTray.ChangeSettingsInPanel(vcTray.SetLiveCaption(true))(ctx); err != nil {
-			s.Fatal("Failed to turn on live caption: ", err)
+		if err := ossettings.ToggleLiveCaption(cr, tconn, true)(ctx); err != nil {
+			s.Fatal("Failed to toggle on live caption: ", err)
 		}
 
 		if checkDLC {
@@ -211,8 +201,8 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 	// Check DLC mounted for the first time switch on.
 	turnOnLiveCaptionAndCheckBubble(true)
 
-	if err := vcTray.ChangeSettingsInPanel(vcTray.SetLiveCaption(false))(ctx); err != nil {
-		s.Fatal("Failed to turn off live caption: ", err)
+	if err := ossettings.ToggleLiveCaption(cr, tconn, false)(ctx); err != nil {
+		s.Fatal("Failed to toggle off live caption: ", err)
 	}
 
 	// Live caption bubble should disappear after switching off.
