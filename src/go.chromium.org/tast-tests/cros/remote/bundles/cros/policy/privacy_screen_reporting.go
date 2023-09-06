@@ -10,6 +10,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	"go.chromium.org/tast-tests/cros/remote/reportingutil"
@@ -77,6 +79,9 @@ func init() {
 		VarDeps: []string{
 			reportingutil.EventsAPIKeyPath,
 			tape.ServiceAccountVar,
+		},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ReportDeviceGraphicsStatus{}, pci.VerifiedValue),
 		},
 	})
 }
@@ -194,6 +199,22 @@ func PrivacyScreenReporting(ctx context.Context, s *testing.State) {
 	c, err := pc.ClientID(ctx, &empty.Empty{})
 	if err != nil {
 		s.Fatal("Failed to grab client ID from device: ", err)
+	}
+
+	pJSON, err := policy.MarshalList([]policy.Policy{
+		&policy.ReportDeviceGraphicsStatus{Stat: policy.StatusSet, Val: param.reportingEnabled},
+	})
+	if err != nil {
+		s.Fatal("Failed to marshall expected graphics policy for verification: ", err)
+	}
+	// Wait some time for the policy to propagate.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := pc.VerifyPolicyStatus(ctx, &ps.VerifyPolicyStatusRequest{
+			Policies: pJSON,
+		})
+		return err
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
+		s.Error("Failed to verify graphics policy: ", err)
 	}
 
 	// Events sent from the metric reporting manager won't be reported for the first minute.
