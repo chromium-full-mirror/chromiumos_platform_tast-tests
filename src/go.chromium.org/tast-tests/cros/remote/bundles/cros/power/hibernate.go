@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Verifies that system comes back after hibernation",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-platform-power@google.com", "vovoy@google.com"},
-		SoftwareDeps: []string{"reboot", "no_qemu"},
+		SoftwareDeps: []string{"hibernate", "reboot", "no_qemu"},
 		// Allow for a larger number of cycles for stress testing. In case of a hang the
 		// test will time out on one of the shorter context specific timeouts.
 		Timeout: 24 * time.Hour,
