@@ -36,6 +36,10 @@ func init() {
 			"group:mainline",
 			"informational",
 		},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-71a93fd0-c626-4d4c-9434-3544261d46ce",
+		}},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromeLoggedInWithGaia,

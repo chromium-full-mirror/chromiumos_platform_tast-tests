@@ -24,6 +24,10 @@ func init() {
 			"informational",
 			"group:hw_agnostic",
 		},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-88389e23-2fbb-49c6-8e93-7b61070e9cbe",
+		}},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "assistantOOBEUsedVMReady",
 	})

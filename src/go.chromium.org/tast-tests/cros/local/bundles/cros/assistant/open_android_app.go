@@ -29,6 +29,10 @@ func init() {
 			"informational",
 			"group:hw_agnostic",
 		},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-175332b6-9163-4913-b4f0-eca92143fa3f",
+		}},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "assistantWithArc",
 		Timeout:      3 * time.Minute,
