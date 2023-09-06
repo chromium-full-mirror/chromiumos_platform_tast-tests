@@ -6,7 +6,6 @@ package lacros
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -17,11 +16,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/cdputil"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
-	"go.chromium.org/tast-tests/cros/local/chrome/internal/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/jslog"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosinfo"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -76,29 +73,19 @@ func (l *Lacros) CloseResources(ctx context.Context) {
 }
 
 // Close closes all lacros chrome targets and the dev session.
-func (l *Lacros) Close(ctx context.Context) error {
-	// Save lacros.log* to outDir.
-	if outDir, ok := testing.ContextOutDir(ctx); ok {
-		dstDir := filepath.Join(outDir, "lacros_logs")
-		if err := os.MkdirAll(dstDir, 0755); err != nil {
-			testing.ContextLog(ctx, "Error creating lacros log directory: ", err)
+func (l *Lacros) Close(ctx context.Context) (retErr error) {
+	// Things that we want to happen even when returning an error.
+	defer func() {
+		if outDir, ok := testing.ContextOutDir(ctx); ok {
+			l.agg.SaveWithTimestampInPath(filepath.Join(outDir, "jslog-lacros-"), ".txt")
+		} else {
+			testing.ContextLog(ctx, "No output directory exists, not saving Lacros jslog")
 		}
 
-		pattern := filepath.Join(lacros.UserDataDir, "lacros*.log*")
-		if files, err := filepath.Glob(pattern); err != nil {
-			testing.ContextLogf(ctx, "Failed to list files with pattern %v: %v", pattern, err)
-		} else {
-			for _, file := range files {
-				if err := fsutil.CopyFile(file, filepath.Join(dstDir, filepath.Base(file))); err != nil {
-					testing.ContextLogf(ctx, "Failed to save %s to %s: %v", file, dstDir, err)
-				} else {
-					testing.ContextLogf(ctx, "%s saved to %s", file, dstDir)
-				}
-			}
-		}
-	} else {
-		testing.ContextLog(ctx, "No output directory exists, not saving lacros log file")
-	}
+		// The browser may already be terminated by the time we try to close the
+		// dev session, so ignore any error.
+		l.CloseResources(ctx)
+	}()
 
 	info, err := lacrosinfo.Snapshot(ctx, l.ctconn)
 	if err != nil {
@@ -157,10 +144,6 @@ func (l *Lacros) Close(ctx context.Context) error {
 			return errors.Wrap(sessErr, "lacros unexpectedly not yet stopped")
 		}
 	}
-
-	// The browser may already be terminated by the time we try to close the
-	// dev session, so ignore any error.
-	l.CloseResources(ctx)
 
 	return nil
 }
