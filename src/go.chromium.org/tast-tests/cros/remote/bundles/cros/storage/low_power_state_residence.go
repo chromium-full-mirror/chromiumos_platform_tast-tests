@@ -32,10 +32,10 @@ func init() {
 			"chromeos-storage@google.com",
 			"dlunev@google.com", // Test author
 		},
-		//TODO(dlunev): run the test in the lab for regression testing.
 		//TODO(dlunev): should it report percent high power time to crosbolt?
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Attr:         []string{"group:mainline", "informational"},
 		Requirements: []string{
 			tdreq.StorageLPST,
 		},
