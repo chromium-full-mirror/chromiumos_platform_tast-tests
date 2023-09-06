@@ -29,7 +29,7 @@ func init() {
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "vm_host", "arc", "dlc", "no_kernel_upstream"},
-		Data:         []string{crostini.GetContainerMetadataArtifact("buster", false), crostini.GetContainerRootfsArtifact("buster", false), digExecutable()},
+		Data:         []string{crostini.GetContainerMetadataArtifact("bullseye", false), crostini.GetContainerRootfsArtifact("bullseye", false), digExecutable()},
 		Pre:          multivm.ArcCrostiniStarted(),
 		HardwareDeps: crostini.CrostiniStable,
 		Timeout:      5 * time.Minute,

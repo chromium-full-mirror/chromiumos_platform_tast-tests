@@ -65,8 +65,8 @@ func init() {
 			Val:               &lifecycleShiftingParam{inCrostini: true, inHost: true, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraData: []string{
-				crostini.GetContainerMetadataArtifact("buster", false),
-				crostini.GetContainerRootfsArtifact("buster", false),
+				crostini.GetContainerMetadataArtifact("bullseye", false),
+				crostini.GetContainerRootfsArtifact("bullseye", false),
 				memoryuser.AllocPageFilename,
 				memoryuser.JavascriptFilename,
 			},

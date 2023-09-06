@@ -72,8 +72,8 @@ func init() {
 			Pre:  multivm.CrostiniStarted(),
 			Val:  &lifecycleParam{inCrostini: true, browserType: browser.TypeAsh},
 			ExtraData: []string{
-				crostini.GetContainerMetadataArtifact("buster", false),
-				crostini.GetContainerRootfsArtifact("buster", false),
+				crostini.GetContainerMetadataArtifact("bullseye", false),
+				crostini.GetContainerRootfsArtifact("bullseye", false),
 			},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 			ExtraSoftwareDeps: []string{"vm_host"},

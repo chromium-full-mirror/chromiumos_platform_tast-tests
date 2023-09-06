@@ -39,7 +39,7 @@ func init() {
 			Pre:               multivm.ArcStarted(),
 		}, {
 			Name:              "with_bg_crostini",
-			ExtraData:         []string{crostini.GetContainerMetadataArtifact("buster", false), crostini.GetContainerRootfsArtifact("buster", false)},
+			ExtraData:         []string{crostini.GetContainerMetadataArtifact("bullseye", false), crostini.GetContainerRootfsArtifact("bullseye", false)},
 			ExtraSoftwareDeps: []string{"vm_host"},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 			Pre:               multivm.CrostiniStarted(),
@@ -52,7 +52,7 @@ func init() {
 			Pre:               multivm.ArcLacrosStarted(),
 		}, {
 			Name:              "with_bg_crostini_lacros",
-			ExtraData:         []string{crostini.GetContainerMetadataArtifact("buster", false), crostini.GetContainerRootfsArtifact("buster", false)},
+			ExtraData:         []string{crostini.GetContainerMetadataArtifact("bullseye", false), crostini.GetContainerRootfsArtifact("bullseye", false)},
 			ExtraSoftwareDeps: []string{"vm_host", "lacros"},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 			Pre:               multivm.CrostiniLacrosStarted(),

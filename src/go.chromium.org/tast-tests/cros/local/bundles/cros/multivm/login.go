@@ -34,7 +34,7 @@ func init() {
 		}, {
 			Name:              "arc_crostini",
 			Pre:               multivm.ArcCrostiniStarted(),
-			ExtraData:         []string{crostini.GetContainerMetadataArtifact("buster", false), crostini.GetContainerRootfsArtifact("buster", false)},
+			ExtraData:         []string{crostini.GetContainerMetadataArtifact("bullseye", false), crostini.GetContainerRootfsArtifact("bullseye", false)},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 			ExtraSoftwareDeps: []string{"vm_host", "android_vm"},
 		}, {
@@ -54,7 +54,7 @@ func init() {
 		}, {
 			Name:              "crostini",
 			Pre:               multivm.CrostiniStarted(),
-			ExtraData:         []string{crostini.GetContainerMetadataArtifact("buster", false), crostini.GetContainerRootfsArtifact("buster", false)},
+			ExtraData:         []string{crostini.GetContainerMetadataArtifact("bullseye", false), crostini.GetContainerRootfsArtifact("bullseye", false)},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 			ExtraSoftwareDeps: []string{"vm_host"},
 		}, {

@@ -33,7 +33,7 @@ var DefaultARCOptions = ARCOptions{}
 // DefaultCrostiniOptions defines the default options for starting Crostini.
 var DefaultCrostiniOptions = CrostiniOptions{
 	LargeContainer: false,
-	DebianVersion:  vm.DebianBuster,
+	DebianVersion:  vm.DebianBullseye,
 }
 
 var noVMStartedPre = NewMultiVMPrecondition(
