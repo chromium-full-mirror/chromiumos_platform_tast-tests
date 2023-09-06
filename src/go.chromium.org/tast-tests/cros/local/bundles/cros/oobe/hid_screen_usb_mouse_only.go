@@ -30,9 +30,9 @@ func init() {
 			"ui.signinProfileTestExtensionManifestKey",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:cr_oobe", "cr_oobe_chromebox_chromebase"},
 		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebox, hwdep.Chromebit)),
+		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebox)),
 		Fixture:      "chromeEnterOobeHidDetectionServoOff",
 		Timeout:      time.Second * 60,
 	})

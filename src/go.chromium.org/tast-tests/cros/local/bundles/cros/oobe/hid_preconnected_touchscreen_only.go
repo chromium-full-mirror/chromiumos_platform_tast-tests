@@ -26,7 +26,7 @@ func init() {
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:cr_oobe", "cr_oobe_chromebox_chromebase"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebase), hwdep.SkipOnModel("kalista", "karma")),
 		Fixture:      "chromeEnterOobeHidDetectionServoOff",
