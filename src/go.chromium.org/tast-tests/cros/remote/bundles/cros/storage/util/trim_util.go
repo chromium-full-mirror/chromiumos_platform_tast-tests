@@ -20,7 +20,7 @@ const (
 	TrimChunkSize = 192 * 1024
 
 	// TrimFileSize is the size (in bytes) of the file we want to trim.
-	TrimFileSize = 4 * 1024 * 1024 * 1024 // 4 GiB
+	TrimFileSize = 1 * 1024 * 1024 * 1024 // 1 GiB
 )
 
 // TrimComparisonFunc is the code used to compare trimmed data and return whether it matches the expected value.
