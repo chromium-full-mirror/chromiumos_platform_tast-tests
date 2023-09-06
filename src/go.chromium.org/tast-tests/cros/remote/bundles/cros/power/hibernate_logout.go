@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Verify that the 'hiberimage' DM device is torn down when the user logs out",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-platform-power@google.com", "mka@google.com"},
-		SoftwareDeps: []string{"reboot", "no_qemu"},
+		SoftwareDeps: []string{"hibernate", "reboot", "no_qemu"},
 		Timeout:      5 * time.Minute,
 		VarDeps:      []string{tape.ServiceAccountVar},
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService"},
