@@ -26,12 +26,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks the terms of service link is clickable within help page",
 		Contacts: []string{
+			"cros-settings@google.com",
 			"chromeos-sw-engprod@google.com",
-			"awendy@google.com",
 		},
 		// OS > Systems > Settings
 		BugComponent: "b:1246072",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 	})

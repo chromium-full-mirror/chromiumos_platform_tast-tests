@@ -46,13 +46,17 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Search with keywords and verify the related results from OS Settings",
 		Contacts: []string{
+			"cros-settings@google.com",
 			"chromeos-sw-engprod@google.com",
-			"awendy@google.com",
 		},
 		// ChromeOS > Software > Settings
 		BugComponent: "b:1246072",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "arc"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-8cd33196-24d6-4541-aec7-3b21bd827990",
+		}},
 		Params: []testing.Param{
 			{
 				Name: "normal_options",

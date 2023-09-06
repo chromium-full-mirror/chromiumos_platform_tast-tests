@@ -25,7 +25,6 @@ func init() {
 		Contacts: []string{
 			"cros-settings@google.com",
 			"chromeos-sw-engprod@google.com",
-			"wesokuhara@google.com",
 		},
 		// ChromeOS > Software > Settings
 		BugComponent: "b:1246072",

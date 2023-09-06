@@ -32,12 +32,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that settings about time zone can only be changed by users and not guest",
 		Contacts: []string{
+			"cros-settings@google.com",
 			"chromeos-sw-engprod@google.com",
-			"awendy@google.com",
 		},
 		// OS > Systems > Settings
 		BugComponent: "b:1246072",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 	})

@@ -28,12 +28,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check if it is able to add and remove language",
 		Contacts: []string{
+			"cros-settings@google.com",
 			"chromeos-sw-engprod@google.com",
-			"awendy@google.com",
 		},
 		// OS > Systems > Settings
 		BugComponent: "b:1246072",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "chromeLoggedIn",
 	})
