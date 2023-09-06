@@ -41,7 +41,7 @@ func init() {
 		// TODO(b/194910939): Add back to firmware_unstable once this test actually works.
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{},
-		Fixture:      fixture.DevMode,
+		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
