@@ -108,8 +108,14 @@ func GetTestFileParams() []TestFileParams {
 // This is done by downloading unknown_malware.zip from `download.html`.
 // This function fails if scanning is disabled.
 func WaitForDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *chrome.TestConn, server *httptest.Server, downloadsPath string) error {
+	retryNumber := 0
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return checkDMTokenRegistered(ctx, br, tconnAsh, server, downloadsPath)
+		canRetry, err := checkDMTokenRegistered(ctx, br, tconnAsh, server, downloadsPath, retryNumber)
+		retryNumber++
+		if canRetry {
+			return err
+		}
+		return testing.PollBreak(err)
 	}, &testing.PollOptions{Timeout: DmTokenTimeOut, Interval: 5 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to wait for dm token to be registered")
 	}
@@ -117,15 +123,15 @@ func WaitForDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh
 }
 
 // checkDMTokenRegistered checks that a dm token is registered.
-// This function has to be called from a poll.
-func checkDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *chrome.TestConn, server *httptest.Server, downloadsPath string) error {
+// Returns a bool and an error. The bool indicates whether the check can be retried.
+func checkDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *chrome.TestConn, server *httptest.Server, downloadsPath string, retryNumber int) (bool, error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	dconnSafebrowsing, err := br.NewConn(ctx, "chrome://safe-browsing/#tab-deep-scan")
 	if err != nil {
-		return testing.PollBreak(errors.Wrap(err, "failed to connect to chrome"))
+		return false, errors.Wrap(err, "failed to connect to chrome")
 	}
 	defer dconnSafebrowsing.Close()
 	defer dconnSafebrowsing.CloseTarget(cleanupCtx)
@@ -136,17 +142,17 @@ func checkDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *
 
 	// Close all prior notifications.
 	if err := ash.CloseNotifications(ctx, tconnAsh); err != nil {
-		return testing.PollBreak(errors.Wrap(err, "failed to close notifications"))
+		return false, errors.Wrap(err, "failed to close notifications")
 	}
 
 	if err := dconn.Eval(ctx, `document.getElementById("unknown_malware.zip").click()`, nil); err != nil {
-		return testing.PollBreak(errors.Wrap(err, "failed to click on link to download file"))
+		return false, errors.Wrap(err, "failed to click on link to download file")
 	}
 
 	// Check for notification (this might take some time in case of throttling).
 	downloadBubbleState, err := WaitForDownloadViaDownloadBubble(ctx, tconnAsh, "unknown_malware.zip")
 	if err != nil {
-		return testing.PollBreak(errors.Wrap(err, "failed to wait for download via download bubble UI"))
+		return false, errors.Wrap(err, "failed to wait for download via download bubble UI")
 	}
 
 	if downloadBubbleState == DownloadBubbleStateUnavailable {
@@ -157,13 +163,40 @@ func checkDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *
 			ash.WaitIDContains("notification-ui-manager"),
 			ash.WaitTitleOrMessageContains("unknown_malware.zip"),
 		); err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to wait for notification"))
+			return false, errors.Wrap(err, "failed to wait for notification")
 		}
 	}
 
 	// Remove file if it was downloaded.
 	defer os.Remove(filepath.Join(downloadsPath, "unknown_malware.zip"))
 
+	// Check that scanning was at least initiated within 10s after download.
+	// A row with a non-empty left column is added when scanning is initiated.
+	// Once scanning is done, the right column is filled.
+	var unusedVariable string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := dconnSafebrowsing.Eval(ctx, `(async () => {
+			const table = document.getElementById("deep-scan-list");
+			if (table.rows.length == 0) {
+				// If there is no entry, scanning is not yet initiated.
+				throw "Scanning not yet initiated.";
+			}
+			return ""
+			})()`, &unusedVariable); err != nil {
+			return err
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 2 * time.Second}); err != nil {
+		testing.ContextLog(ctx, "scanning didn't initiate: ", err)
+		// If scanning wasn't initiated within 10s, some initialization probably didn't happen yet.
+		// Allow to retry it only twice, as the initialization shouldn't take very long.
+		if retryNumber > 1 {
+			return false, errors.Wrap(err, "scanning didn't initiate after the second retry")
+		}
+		return true, errors.Wrap(err, "scanning didn't initiate within 10s")
+	}
+
+	// Verify verdict.
 	var failedToGetToken bool
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := dconnSafebrowsing.Eval(ctx, `(async () => {
@@ -196,15 +229,17 @@ func checkDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: ScanningTimeOut, Interval: 5 * time.Second}); err != nil {
-		return testing.PollBreak(errors.Wrap(err, "failed to wait for dm token registration"))
+		return false, errors.Wrap(err, "failed to wait for dm token registration")
 	}
 
 	if failedToGetToken {
+		// If FAILED_TO_GET_TOKEN is detected, we allow retries.
 		testing.ContextLog(ctx, "FAILED_TO_GET_TOKEN detected")
-		return errors.New("FAILED_TO_GET_TOKEN detected")
+		return true, errors.New("FAILED_TO_GET_TOKEN detected")
 	}
 
-	return nil
+	// Returning nil as error, will stop a poll.
+	return true, nil
 }
 
 // WaitForDownloadViaDownloadBubble waits for a download via the download bubble UI.
