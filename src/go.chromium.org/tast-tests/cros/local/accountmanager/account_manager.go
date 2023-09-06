@@ -119,7 +119,7 @@ func AddAnotherAccountButton() *nodewith.Finder {
 // GetChromeProfileWindow returns a nodewith.Finder to the Chrome window which
 // matches the provided condition.
 func GetChromeProfileWindow(ctx context.Context, tconn *chrome.TestConn, condition func(uiauto.NodeInfo) bool) (*nodewith.Finder, error) {
-	profileWindow := nodewith.NameContaining("Google Chrome").Role(role.Window).HasClass("BrowserRootView")
+	profileWindow := nodewith.NameContaining("Google Chrome").Role(role.Window).HasClass("Widget")
 	ui := uiauto.New(tconn).WithTimeout(DefaultUITimeout)
 
 	var result *nodewith.Finder
