@@ -27,9 +27,8 @@ func init() {
 			"chromeos-gfx@google.com",
 			"syedfaaiz@google.com",
 		},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeGraphics",
-		Timeout:      1 * time.Minute,
+		Fixture: "chromeGraphics",
+		Timeout: 1 * time.Minute,
 	})
 }
 
