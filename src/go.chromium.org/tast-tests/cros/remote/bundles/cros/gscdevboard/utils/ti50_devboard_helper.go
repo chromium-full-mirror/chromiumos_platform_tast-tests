@@ -678,3 +678,27 @@ func (h DevboardHelper) I2CDeviceGetStatus(ctx context.Context, bus ti50.I2cBusN
 	output.ReadStatus = outputJSON.ReadStatus
 	return output
 }
+
+const (
+	// Ina231ShuntLsbVolts represents "one count" of the least significant bit of the shunt
+	// measuring port of INA231.  See https://www.ti.com/lit/ds/symlink/ina231.pdf
+	Ina231ShuntLsbVolts = 0.0000025
+
+	// DauntlessShieldShuntOhms is the resistance of the shunt resistor.
+	DauntlessShieldShuntOhms = 0.5
+)
+
+// ReadGscTotalMilliAmps measures the current consumed by the GSC across all power rails.
+func (h DevboardHelper) ReadGscTotalMilliAmps(ctx context.Context) float32 {
+	// This implementation works for the Dauntless shield, and will have to be adapted for
+	// other current sensing chips and power rails on other shields.
+	output, err := h.OpenTitanToolCommand(ctx, "i2c", "--bus", "INA", "raw-write-read", "--hexdata=01", "-n2")
+	if err != nil {
+		h.Fatalf("i2c error: %s", err)
+	}
+	reading, err := strconv.ParseUint(output["hexdata"].(string), 16, 64)
+	if err != nil {
+		h.Fatalf("decoding response '%s' from INA231: %v", output["hexdata"].(string), err)
+	}
+	return float32(reading) * Ina231ShuntLsbVolts / DauntlessShieldShuntOhms * 1000.0
+}
