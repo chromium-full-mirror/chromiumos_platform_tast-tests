@@ -39,7 +39,7 @@ func init() {
 		}, {
 			Name:              "tablet_mode",
 			Val:               standardizedtestutil.GetTabletTest(runStandardizedKeyboardCopyPasteTest),
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
 		}, {
 			Name:              "vm",

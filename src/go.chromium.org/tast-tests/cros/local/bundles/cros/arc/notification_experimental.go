@@ -71,7 +71,7 @@ func init() {
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
 			Fixture:           "arcBooted",
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
 			Fixture:           "arcBooted",

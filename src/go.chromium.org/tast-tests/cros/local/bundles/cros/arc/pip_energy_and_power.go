@@ -55,7 +55,7 @@ func init() {
 		}, {
 			Name:              "small_lacros",
 			Val:               arcPIPEnergyAndPowerTestParams{bigPIP: false, browserType: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
+			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Fixture:           "lacrosWithArcBooted",
 		}, {
 			Name:              "big_lacros",
