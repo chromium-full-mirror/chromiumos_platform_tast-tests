@@ -18,7 +18,7 @@ func init() {
 		Func:         StartSlimRootfs,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Starts a Linux VM with a slim rootfs",
-		Contacts:     []string{"crosvm-core@google.com", "abhishekbh@google.com"},
+		Contacts:     []string{"cros-virt-devices-guests@google.com", "uekawa@google.com"},
 		BugComponent: "b:1248538", // ChromeOS > Platform > Virtualization > Device and Guests
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		Attr:         []string{"group:mainline", "informational"},
