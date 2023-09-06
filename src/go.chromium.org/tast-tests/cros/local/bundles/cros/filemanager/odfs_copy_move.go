@@ -125,7 +125,7 @@ func OdfsCopyMove(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get ODFS key: ", err)
 	}
-	odfsFuseboxPath := filepath.Join("/media/fuse/fusebox", odfsToken)
+	odfsFuseboxPath := filepath.Join(filemanager.FuseboxDirPath, odfsToken)
 
 	subTests := []copyMoveTestOptions{
 		{
@@ -193,10 +193,11 @@ func OdfsCopyMove(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to prepare source: ", err)
 			}
 			defer cleanup()
-			targetDirPath, err := prepareTarget(test, odfsFuseboxPath)
+			targetDirPath, cleanup, err := prepareTarget(test, odfsFuseboxPath)
 			if err != nil {
 				s.Fatal("Failed to prepare target: ", err)
 			}
+			defer cleanup()
 			isSameDir := !test.isMove && test.source == test.target
 			if test.isMove {
 				if err := moveFileOrFolder(files, kb, sourceName, sourceDirPath, targetDirPath)(ctx); err != nil {
@@ -207,6 +208,8 @@ func OdfsCopyMove(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to copy file or folder: ", err)
 				}
 			}
+			// Source file cleanup is already handled by the above 2 cleanup calls.
+			defer cleanupTargetAfterCopyOrMove(sourceName, test.target, isSameDir, downloadsPath, odfsFuseboxPath)
 		}
 		if !s.Run(ctx, test.name, subTest) {
 			s.Errorf("Failed to run subtest %s", test.name)
@@ -248,7 +251,7 @@ func prepareSource(options copyMoveTestOptions, srcFile, downloadsPath, odfsFuse
 
 // prepareTarget returns the target folder based on the test options, it also creates
 // additional folder if needed.
-func prepareTarget(options copyMoveTestOptions, odfsFuseboxPath string) ([]string, error) {
+func prepareTarget(options copyMoveTestOptions, odfsFuseboxPath string) ([]string, func(), error) {
 	var targetDirPath []string
 	if options.target == local {
 		targetDirPath = []string{filesapp.Downloads}
@@ -258,13 +261,14 @@ func prepareTarget(options copyMoveTestOptions, odfsFuseboxPath string) ([]strin
 	// Move within OneDrive requires creating a additional folder as the target folder.
 	needAdditionalFolder := options.isMove && options.source == oneDrive && options.source == options.target
 	if needAdditionalFolder {
-		additionalDirName, _, err := createFolder(odfsFuseboxPath, options.target)
+		additionalDirName, cleanup, err := createFolder(odfsFuseboxPath, options.target)
 		if err != nil {
-			return []string{}, errors.Wrap(err, "failed to create additional folder for moving")
+			return []string{}, func() {}, errors.Wrap(err, "failed to create additional folder for moving")
 		}
 		targetDirPath = append(targetDirPath, additionalDirName)
+		return targetDirPath, cleanup, nil
 	}
-	return targetDirPath, nil
+	return targetDirPath, func() {}, nil
 }
 
 // createFile create a file and return the full path and the cleanup function.
@@ -278,10 +282,12 @@ func createFile(basePath, srcFile string, location locationType) (string, func()
 		cleanupFunc := func() { os.Remove(testFilePath) }
 		return testFileName, cleanupFunc, nil
 	} else if location == oneDrive {
-		if _, err := filemanager.CreateFileInFusebox(basePath, testFileName, "test"); err != nil {
+		testFilePath, err := filemanager.CreateFileInFusebox(basePath, testFileName, "test")
+		if err != nil {
 			return "", func() {}, errors.Wrap(err, "failed to create test file in OneDrive")
 		}
-		return testFileName, func() {}, nil
+		cleanupFunc := func() { os.Remove(testFilePath) }
+		return testFileName, cleanupFunc, nil
 	}
 	return "", func() {}, errors.Errorf("location type %q is not supported", location)
 }
@@ -293,8 +299,8 @@ func createFolder(basePath string, location locationType) (string, func(), error
 	if err := os.MkdirAll(testDirPath, 0755); err != nil {
 		return "", func() {}, errors.Wrap(err, "failed to create folder")
 	}
+	cleanupFunc := func() { os.RemoveAll(testDirPath) }
 	if location == local {
-		cleanupFunc := func() { os.Remove(testDirPath) }
 		// The folders must be owned by `chronous` to ensure it can be deleted by
 		// `filesapp` through UI control.
 		if err := os.Chown(testDirPath, int(sysutil.ChronosUID), int(sysutil.ChronosGID)); err != nil {
@@ -303,8 +309,7 @@ func createFolder(basePath string, location locationType) (string, func(), error
 		return testDirName, cleanupFunc, nil
 	} else if location == oneDrive {
 		// Fusebox file doesn't support Chown operation.
-		// We don't cleanup OneDrive folder.
-		return testDirName, func() {}, nil
+		return testDirName, cleanupFunc, nil
 	}
 	return "", func() {}, errors.Errorf("location type %q is not supported", location)
 }
@@ -340,4 +345,17 @@ func moveFileOrFolder(filesApp *filesapp.FilesApp, kb *input.KeyboardEventWriter
 		filesApp.OpenPath(filesapp.FilesTitlePrefix+sourceDirPath[0], sourceDirPath[0], sourceDirPath[1:]...),
 		filesApp.WaitUntilFileGone(sourceName),
 	)
+}
+
+// cleanupTargetAfterCopyOrMove deletes the copied/moved file/folder after copy/move.
+func cleanupTargetAfterCopyOrMove(fileName string, targetLocation locationType, isSameDir bool, downloadsPath, odfsFuseboxPath string) {
+	parentDirPath := downloadsPath
+	if targetLocation == oneDrive {
+		parentDirPath = odfsFuseboxPath
+	}
+	targetName := fileName
+	if isSameDir {
+		targetName = filemanager.GetCopiedName(fileName, 1)
+	}
+	os.RemoveAll(filepath.Join(parentDirPath, targetName))
 }

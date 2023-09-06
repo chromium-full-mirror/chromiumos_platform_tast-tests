@@ -16,6 +16,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/filemanager"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -78,7 +79,7 @@ func Fusebox(ctx context.Context, s *testing.State) {
 	// Poll until the "fuse_status" file shows up. The "fuse_status" and "ok\n"
 	// magic strings are defined in "platform2/fusebox/built_in.cc".
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		const fuseStatusFilename = "/media/fuse/fusebox/built_in/fuse_status"
+		fuseStatusFilename := filepath.Join(filemanager.FuseboxDirPath, "built_in/fuse_status")
 		if got, err := os.ReadFile(fuseStatusFilename); err != nil {
 			return err
 		} else if want := "ok\n"; string(got) != want {
@@ -325,13 +326,11 @@ func readFileAt(filename string, offset, size int64) ([]byte, error) {
 }
 
 func exerciseFuseboxFSP(ctx context.Context, s *testing.State) {
-	const fuseboxDirName = "/media/fuse/fusebox"
-
 	// Find the "/media/fuse/fusebox/fsp.1234etc" directory for the FSP-using
 	// Chrome extension.
 	fspDirName := ""
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		dirEntries, err := os.ReadDir(fuseboxDirName)
+		dirEntries, err := os.ReadDir(filemanager.FuseboxDirPath)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to read fusebox dir"))
 		}
@@ -343,9 +342,9 @@ func exerciseFuseboxFSP(ctx context.Context, s *testing.State) {
 			if !strings.HasPrefix(name, "fsp.") {
 				continue
 			}
-			filename := filepath.Join(fuseboxDirName, name, "this-is-the-fusebox-fsp-extension.txt")
+			filename := filepath.Join(filemanager.FuseboxDirPath, name, "this-is-the-fusebox-fsp-extension.txt")
 			if _, err := os.Stat(filename); err == nil {
-				fspDirName = filepath.Join(fuseboxDirName, name)
+				fspDirName = filepath.Join(filemanager.FuseboxDirPath, name)
 				return nil
 			}
 		}

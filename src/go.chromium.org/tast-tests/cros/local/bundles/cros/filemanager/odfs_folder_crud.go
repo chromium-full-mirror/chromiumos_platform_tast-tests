@@ -6,6 +6,8 @@ package filemanager
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -81,6 +83,11 @@ func OdfsFolderCrud(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to OneDrive: ", err)
 	}
 
+	odfsToken, err := files.GetOdfsFuseboxToken(ctx, cr)
+	if err != nil {
+		s.Fatal("Failed to get ODFS key: ", err)
+	}
+
 	// Create a folder in ODFS.
 	dirName := "_odfs_crud"
 	uniqueDirName := filemanager.GenerateTestFileName(dirName)
@@ -96,6 +103,7 @@ func OdfsFolderCrud(ctx context.Context, s *testing.State) {
 	)(ctx); err != nil {
 		s.Fatal("Failed to create folder in ODFS: ", err)
 	}
+	defer os.Remove(filepath.Join(filemanager.FuseboxDirPath, odfsToken, uniqueDirName))
 
 	// Check if we can navigate into the newly created folder.
 	if err := files.OpenPath(filesapp.FilesTitlePrefix+filesapp.OneDrive, filesapp.OneDrive, uniqueDirName)(ctx); err != nil {
@@ -113,6 +121,7 @@ func OdfsFolderCrud(ctx context.Context, s *testing.State) {
 	)(ctx); err != nil {
 		s.Fatal("Failed to rename the folder: ", err)
 	}
+	defer os.Remove(filepath.Join(filemanager.FuseboxDirPath, odfsToken, renamedDirName))
 
 	// Delete folder.
 	if err := uiauto.Combine("Delete the folder",

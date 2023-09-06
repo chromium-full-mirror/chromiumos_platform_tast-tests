@@ -241,7 +241,7 @@ func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	// NOTE: The deletion below fails if the files are still open in the UI (Office 365 PWA).
 	for _, testFile := range f.cleanUpFiles {
 		name := testFile.FileName
-		files, err := filepath.Glob("/media/fuse/fusebox/fsp.*/" + name)
+		files, err := filepath.Glob(filemanager.FuseboxDirPath + "/fsp.*/" + name)
 		if err != nil {
 			s.Logf("Failed cleaning up file: %s. %v", name, err)
 		} else {

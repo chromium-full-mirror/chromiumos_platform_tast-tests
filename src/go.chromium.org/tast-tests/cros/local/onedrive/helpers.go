@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
+	"go.chromium.org/tast-tests/cros/local/filemanager"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -40,7 +41,7 @@ func findEntriesOlderThanOneDay(dir string) (infos []os.FileInfo, err error) {
 // DeleteOldRemoteFiles deletes test files older than 1 day that are siblings of dstFileName.
 func DeleteOldRemoteFiles(ctx context.Context, dstFileName string) {
 	// We don't know the fsp.?? directory name, so we use the `dstFileName` to find the file and find its parent.
-	dstFile, err := filepath.Glob("/media/fuse/fusebox/fsp.*/" + dstFileName)
+	dstFile, err := filepath.Glob(filemanager.FuseboxDirPath + "/fsp.*/" + dstFileName)
 	if err != nil || len(dstFile) < 1 {
 		testing.ContextLogf(ctx, "Failed to list old files directory: %s. %v", dstFileName, err)
 		return

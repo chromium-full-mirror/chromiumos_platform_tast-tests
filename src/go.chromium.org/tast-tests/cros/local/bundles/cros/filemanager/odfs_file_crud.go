@@ -7,6 +7,7 @@ package filemanager
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -95,6 +96,7 @@ func OdfsFileCrud(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create file in ODFS: ", err)
 	}
+	defer os.Remove(filepath.Join(filemanager.FuseboxDirPath, odfsToken, uniqueFileName))
 
 	// Check file existence and file content.
 	if err := uiauto.Combine("Check the file is available in Files app",
@@ -109,7 +111,7 @@ func OdfsFileCrud(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		contentGot, err := os.ReadFile(fullPath)
 		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to get content of the newly created file"))
+			return errors.Wrap(err, "failed to get content of the newly created file")
 		}
 		if fileContent == string(contentGot) {
 			return nil
@@ -131,6 +133,7 @@ func OdfsFileCrud(ctx context.Context, s *testing.State) {
 	)(ctx); err != nil {
 		s.Fatal("Failed to rename the file: ", err)
 	}
+	defer os.Remove(filepath.Join(filemanager.FuseboxDirPath, odfsToken, renamedFileName))
 
 	// Delete file.
 	if err := files.DeleteFileOrFolder(kb, renamedFileName)(ctx); err != nil {
