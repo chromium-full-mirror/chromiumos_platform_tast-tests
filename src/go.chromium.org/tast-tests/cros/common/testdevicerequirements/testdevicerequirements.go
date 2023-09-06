@@ -302,9 +302,6 @@ const (
 	// StorageFFU with Storage device firmware MUST support Field Firmware Update (FFU) according to the applicable interface type standard.
 	StorageFFU = "store-storagedev-0004-v01"
 
-	// StorageLVFS with Storage vendor MUST provide firmware updates with LVFS/FWUPD compatible packages.
-	StorageLVFS = "store-storagedev-0005-v01"
-
 	// StorageHealthReport with Storage device MUST provide health information according to the applicable interface type standard.
 	StorageHealthReport = "store-storagedev-0006-v01"
 
@@ -348,12 +345,6 @@ const (
 
 	// EmmcStorageDeviceHS with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device MUST support HS400-ES mode.
 	EmmcStorageDeviceHS = "store-emmc-0008-v01"
-
-	// EmmcStorageDeviceFFU with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device MUST support FFU according to sections 6.6.18 and A.12 of JESD84-B51
-	EmmcStorageDeviceFFU = "store-emmc-0009-v01"
-
-	// EmmcStorageDeviceExtCsd with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device MUST provide health info via ExtCsd.
-	EmmcStorageDeviceExtCsd = "store-emmc-0010-v01"
 
 	// EmmcStorageSeqReadTp with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device MUST support >= 50 MB/second sequential read operations.
 	EmmcStorageSeqReadTp = "store-emmc-0011-v01"
