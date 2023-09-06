@@ -6,27 +6,13 @@ package holdingspace
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"os"
-	"path/filepath"
-	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/android/ui"
-	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/arc/optin"
-	"go.chromium.org/tast-tests/cros/local/arc/playstore"
-	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/arc/arcdownload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/holdingspace"
-	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -40,9 +26,12 @@ func init() {
 			"tote-eng@google.com",
 			"cros-system-ui-eng@google.com",
 			"chromeos-sw-engprod@google.com",
+			"angusmclean@google.com",
 			"dmblack@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      "arcBooted",
+		Data:         []string{"light_resistance.txt"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		SearchFlags: []*testing.StringPair{{
@@ -56,164 +45,55 @@ func init() {
 // ArcDownload verifies that ARC downloads are shown in holding space.
 // TODO(crbug.com/1347600): Replace "Chrome (Beta)" app usage to avoid flakes.
 func ArcDownload(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(
-		ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-		chrome.ARCSupported(),
-		chrome.UnRestrictARCCPU(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...),
+	const (
+		filename        = "light_resistance.txt"
+		targetPath      = "/storage/emulated/0/Download/" + filename
+		localServerPort = 8080
 	)
-	if err != nil {
-		s.Fatal("Failed to connect to Chrome: ", err)
-	}
-	defer cr.Close(ctx)
+
+	sourcePath := s.DataPath(filename)
+
+	a := s.FixtValue().(*arc.PreData).ARC
+	d := s.FixtValue().(*arc.PreData).UIDevice
+	cr := s.FixtValue().(*arc.PreData).Chrome
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	// Opt in to Play Store.
-	maxAttempts := 2
-	if err = optin.PerformWithRetry(ctx, cr, maxAttempts); err != nil {
-		s.Fatal("Failed to opt in to Play Store: ", err)
-	}
-	if err = optin.WaitForPlayStoreShown(ctx, tconn, time.Minute); err != nil {
-		s.Fatal("Failed to show Play Store: ", err)
-	}
-
-	// Launch ARC and handle error logging.
-	arc, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to start ARC by user policy: ", err)
-	}
-	defer arc.Close(ctx)
-	defer func() {
-		if s.HasError() {
-			ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-			defer cancel()
-			if err := arc.Command(ctx, "uiautomator", "dump").
-				Run(testexec.DumpLogOnError); err != nil {
-				s.Error("Failed to dump UIAutomator: ", err)
-			} else if err := arc.PullFile(ctx, "/sdcard/window_dump.xml",
-				filepath.Join(s.OutDir(), "uiautomator_dump.xml")); err != nil {
-				s.Error("Failed to pull UIAutomator dump: ", err)
+	didDownloadFile := false
+	defer func(ctx context.Context) {
+		if didDownloadFile {
+			if err := a.RemoveAll(ctx, targetPath); err != nil {
+				s.Fatalf("Failed to remove %s: %v", targetPath, err)
 			}
 		}
-	}()
+	}(ctx)
 
-	// Ensure the tray does not exist prior to adding anything to holding space.
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_dump")
+
+	if err := holdingspace.ResetHoldingSpace(ctx, tconn, holdingspace.ResetHoldingSpaceOptions{}); err != nil {
+		s.Fatal("Failed to reset holding space: ", err)
+	}
+
 	uia := uiauto.New(tconn)
 	err = uia.EnsureGoneFor(holdingspace.FindTray(), 5*time.Second)(ctx)
 	if err != nil {
 		s.Fatal("Tray exists: ", err)
 	}
 
-	downloadPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to get download path: ", err)
+	if err := arcdownload.DownloadTestFile(ctx, cr, a, d, sourcePath, targetPath); err != nil {
+		s.Fatal("Failed to download test file from arc: ", err)
 	}
 
-	downloadName := "download.txt"
-	defer os.Remove(filepath.Join("/storage/emulated/0/Download/", downloadName))
-	defer os.Remove(filepath.Join(downloadPath, downloadName))
-
-	// This is placed here to make sure that, in the event of an error, it is
-	// evaluated before the file is deleted, so we get a more useful log and
-	// screenshot.
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_dump")
-
-	// Create a local server. Respond to all calls with a text file marked as an
-	// attachment to ensure it is downloaded, not shown in browser.
-	server := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Add("Content-Type", "text/plain")
-			w.Header().Add("Content-Disposition",
-				"attachment; filename="+downloadName)
-			fmt.Fprintf(w, "Hic sunt leones\n")
-		}))
-	defer server.Close()
-
-	srvURL, err := url.Parse(server.URL)
-	if err != nil {
-		s.Fatal("Failed to parse test server URL: ", err)
-	}
-
-	hostPort, err := strconv.Atoi(srvURL.Port())
-	if err != nil {
-		s.Fatal("Failed to parse test server port: ", err)
-	}
-
-	// By default, the apps inside ARC can't see our test server. `ReverseTCP`
-	// forwards the traffic.
-	androidPort, err := arc.ReverseTCP(ctx, hostPort)
-	if err != nil {
-		s.Fatal("Failed to start reverse port forwarding: ", err)
-	}
-	defer arc.RemoveReverseTCP(ctx, androidPort)
-
-	dlURL := "http://127.0.0.1:" + strconv.Itoa(androidPort)
-
-	// Create a new android UI device so we can interact with ui elements in ARC.
-	uid, err := arc.NewUIDevice(ctx)
-	if err != nil {
-		s.Fatal("Failed to create new UI Device: ", err)
-	}
-	if err := apps.Launch(ctx, tconn, apps.PlayStore.ID); err != nil {
-		s.Fatal("Failed to launch Play Store: ", err)
-	}
-
-	// Install the beta version of Chrome as a way to download a file inside ARC.
-	// The production version is not allowed by ARC.
-	packageName := "com.chrome.beta"
-	if err := playstore.InstallApp(ctx, arc, uid, packageName,
-		&playstore.Options{InstallationTimeout: 180 * time.Second}); err != nil {
-		s.Fatal("Failed to install chrome from play store: ", err)
-	}
-
-	// Open the download URL in Chrome Beta. Sending the specific package prevents
-	// ARC from offerring to forward it to ash/lacros chrome.
-	if err := arc.Command(ctx, "am", "start", "-a", "android.intent.action.VIEW",
-		"-p", packageName, "-d", dlURL).Run(); err != nil {
-		s.Fatal("Failed to send intent to open Chrome Beta: ", err)
-	}
-
-	defaultUITimeout := 5 * time.Second
-
-	// Get past "Welcome to Chrome" dialogue, if it shows.
-	acceptButton := uid.Object(ui.ClassName("android.widget.Button"),
-		ui.TextMatches("(?i)"+"Accept.+"))
-	if err := acceptButton.WaitForExists(ctx, defaultUITimeout); err == nil {
-		if err := acceptButton.Click(ctx); err != nil {
-			s.Fatal("Failed to click accept button: ", err)
-		}
-	}
-
-	// Click the "No thanks" button on the sync dialogue for the sake of speed.
-	noThanksButton := uid.Object(ui.ClassName("android.widget.Button"),
-		ui.TextMatches("(?i)"+"No thanks"))
-	if err := noThanksButton.WaitForExists(ctx, defaultUITimeout); err != nil {
-		s.Fatal("Failed to find no thanks button: ", err)
-	}
-	if err := noThanksButton.Click(ctx); err != nil {
-		s.Fatal("Failed to click no thanks button: ", err)
-	}
-
-	// Click the "Download" button to start the download.
-	downloadButton := uid.Object(ui.ClassName("android.widget.Button"),
-		ui.TextMatches("(?i)"+"Download"))
-	if err := downloadButton.WaitForExists(ctx, defaultUITimeout); err != nil {
-		s.Fatal("Failed to find download button: ", err)
-	}
-	if err := downloadButton.Click(ctx); err != nil {
-		s.Fatal("Failed to click download button: ", err)
-	}
+	didDownloadFile = true
 
 	if err := uiauto.Combine("check for download chip",
 		// Left click the tray to open the bubble.
 		uia.LeftClick(holdingspace.FindTray()),
 		// Verify that the ARC download exists in holding space.
-		uia.WaitUntilExists(holdingspace.FindDownloadChip().Name(downloadName)),
+		uia.WaitUntilExists(holdingspace.FindDownloadChip().Name(filename)),
 	)(ctx); err != nil {
 		s.Fatal("Download chip not found: ", err)
 	}
