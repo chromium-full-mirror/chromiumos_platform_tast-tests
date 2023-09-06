@@ -76,7 +76,7 @@ func LaunchFeedbackFromPowerButton(ctx context.Context, s *testing.State) {
 
 		// Start Chrome on the DUT.
 		cs := ui.NewChromeServiceClient(cl.Conn)
-		loginReq := &ui.NewRequest{EnableFeatures: []string{"OsFeedback"}}
+		loginReq := &ui.NewRequest{}
 		if _, err := cs.New(ctx, loginReq, grpc.WaitForReady(true)); err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}

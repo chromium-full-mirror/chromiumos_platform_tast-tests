@@ -220,7 +220,7 @@ func init() {
 		Desc:     "Logged into a user session with OS Feedback enabled",
 		Contacts: []string{"michaelcheco@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("OsFeedback", "SkipSendingFeedbackReportInTastTests")}, nil
+			return []Option{EnableFeatures("SkipSendingFeedbackReportInTastTests")}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -256,7 +256,7 @@ func init() {
 		Desc:     "Logged into a user session with OS Feedback and OsFeedbackSaveReportToLocalForE2ETesting enabled",
 		Contacts: []string{"wangdanny@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("OsFeedback", "SkipSendingFeedbackReportInTastTests", "OsFeedbackSaveReportToLocalForE2ETesting")}, nil
+			return []Option{EnableFeatures("SkipSendingFeedbackReportInTastTests", "OsFeedbackSaveReportToLocalForE2ETesting")}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -307,7 +307,7 @@ func init() {
 		Desc:     "Logged into a user session with searchFeedbackEnabled flag enabled",
 		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("OsFeedback, OsSettingsSearchFeedback")}, nil
+			return []Option{EnableFeatures("OsSettingsSearchFeedback")}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -319,7 +319,7 @@ func init() {
 		Desc:     "Logged into a guest user session with searchFeedbackEnabled flag enabled",
 		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{GuestLogin(), EnableFeatures("OsFeedback, OsSettingsSearchFeedback")}, nil
+			return []Option{GuestLogin(), EnableFeatures("OsSettingsSearchFeedback")}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,

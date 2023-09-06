@@ -63,8 +63,7 @@ func UserFeedbackServiceGRPC(ctx context.Context, s *testing.State) {
 	cs := uipb.NewChromeServiceClient(cl.Conn)
 	// Specify chrome options to skip sending user feedback reports to the server.
 	loginReq := &uipb.NewRequest{
-		EnableFeatures: []string{"OsFeedback",
-			"SkipSendingFeedbackReportInTastTests",
+		EnableFeatures: []string{"SkipSendingFeedbackReportInTastTests",
 			"OsFeedbackSaveReportToLocalForE2ETesting"},
 	}
 
