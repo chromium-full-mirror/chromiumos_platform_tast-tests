@@ -27,6 +27,8 @@ type Aggregator struct {
 
 	logCh chan *entry   // log entries from workers are sent via this channel
 	finCh chan struct{} // a message is sent to stop the background goroutine
+
+	startTime time.Time
 }
 
 // target accumulates formatted text logs for a target.
@@ -65,9 +67,10 @@ func (e *entry) writeTo(w io.Writer) {
 // the background goroutine.
 func NewAggregator() *Aggregator {
 	agg := &Aggregator{
-		targets: make(map[string]*target),
-		logCh:   make(chan *entry),
-		finCh:   make(chan struct{}),
+		targets:   make(map[string]*target),
+		logCh:     make(chan *entry),
+		finCh:     make(chan struct{}),
+		startTime: time.Now(),
 	}
 	go agg.run()
 	return agg
@@ -115,6 +118,14 @@ func (a *Aggregator) Save(path string) error {
 		s.buf.Reset()
 	}
 	return nil
+}
+
+// SaveWithTimestampInPath behaves like Save except that it constructs the file path by putting
+// the aggregation start time in between the given prefix and suffix. The timestamp has format
+// "YYYYMMDD-HHMMSS" and is in UTC.
+func (a *Aggregator) SaveWithTimestampInPath(pathPrefix, pathSuffix string) error {
+	path := pathPrefix + a.startTime.UTC().Format("20060102-150405") + pathSuffix
+	return a.Save(path)
 }
 
 // run is executed on a background goroutine to collect logs from workers.
