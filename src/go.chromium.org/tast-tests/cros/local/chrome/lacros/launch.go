@@ -160,17 +160,16 @@ func LaunchWithURL(ctx context.Context, tconn *chrome.TestConn, url string) (*La
 		return nil, nil, errors.Wrap(err, "failed to launch Lacros")
 	}
 
-	// Get all pages.
-	ts, err := l.FindTargets(ctx, chrome.MatchAllPages())
+	// Get all tabs.
+	tabs, err := l.Browser().CurrentTabs(ctx)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to find pages")
+		return nil, nil, errors.Wrap(err, "failed to get tabs")
+	}
+	if len(tabs) != 1 {
+		return nil, nil, errors.Wrapf(err, "expected only one opened tab, got %v", tabs)
 	}
 
-	if len(ts) != 1 {
-		return nil, nil, errors.Wrapf(err, "expected only one page target, got %v", ts)
-	}
-
-	conn, err := l.NewConnForTarget(ctx, chrome.MatchTargetID(ts[0].TargetID))
+	conn, err := l.NewConnForTarget(ctx, chrome.MatchTargetURL(tabs[0].URL))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to connect to target")
 	}
