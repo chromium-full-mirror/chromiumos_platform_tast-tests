@@ -29,7 +29,7 @@ func init() {
 			"dp-chromeos-eng@google.com",
 			"sugandhagoyal@google.com",
 		},
-		BugComponent: "b:280639023",
+		BugComponent: "b:1129862",
 		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.bond_credentials"},

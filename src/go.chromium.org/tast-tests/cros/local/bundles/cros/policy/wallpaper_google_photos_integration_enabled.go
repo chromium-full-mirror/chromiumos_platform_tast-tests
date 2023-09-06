@@ -34,7 +34,7 @@ func init() {
 			"dp-chromeos-eng@google.com",
 			"crmullins@google.com",
 		},
-		BugComponent: "b:4617222",
+		BugComponent: "b:1129862",
 		Attr: []string{
 			"group:golden_tier",
 			"group:hardware"},
