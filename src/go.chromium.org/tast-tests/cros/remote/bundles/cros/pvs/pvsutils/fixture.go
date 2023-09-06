@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"path"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/testing"
@@ -24,6 +25,8 @@ const containerPVSOutputDir = "/home/pvs/.pvs"
 var pvsOutputDir = path.Join(chronosHome, ".pvs")
 var pvsResultsDir = path.Join(pvsOutputDir, "results")
 var gitCookiesPath = path.Join(chronosHome, ".gitcookies")
+var pvsConfigDir = path.Join(pvsOutputDir, "config")
+var featureFlagsPath = path.Join(pvsConfigDir, "featureflags.textproto")
 var uploadConfigDir = path.Join(pvsOutputDir, "upload_config")
 var serviceAccountPath = path.Join(uploadConfigDir, ".service_account.json")
 var uploadConfigJSONPath = path.Join(uploadConfigDir, "upload_config.json")
@@ -51,6 +54,7 @@ func init() {
 			"pvs.chromeos_version",
 			"pvs.skip_teardown",
 			"pvs.simulated_mode",
+			"pvs.feature_flags",
 		},
 	})
 }
@@ -106,6 +110,27 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 	}
 	if _, err := writeToFileAsChronos(ctx, pvsHost, uploadConfigJSON, uploadConfigJSONPath); err != nil {
 		s.Fatal("Error occured when populating upload config : ", err)
+	}
+
+	// set feature flags file
+	flagsString, ok := s.Var("pvs.feature_flags")
+	if ok {
+		featureFlagFileText := ""
+		for _, flagKeyValue := range strings.Split(flagsString, ",") {
+			parsed := strings.Split(flagKeyValue, "=")
+			if len(parsed) != 2 {
+				s.Fatalf("Error parsing: %q feature flag key value, correct format is 'flag1=value1,flag2=value2,...'", flagKeyValue)
+			}
+			featureFlagFileText += fmt.Sprintf("flags { key: %q value: %q }\n", parsed[0], parsed[1])
+		}
+		// write feature flags to config file
+		createConfigDir := fmt.Sprintf(`mkdir -p %v`, pvsConfigDir)
+		if _, err := RunAsChronos(ctx, pvsHost, createConfigDir); err != nil {
+			s.Fatal("Error occured when creating config dir: ", err)
+		}
+		if _, err := writeToFileAsChronos(ctx, pvsHost, featureFlagFileText, featureFlagsPath); err != nil {
+			s.Fatal("Error occured when populating git cookies: ", err)
+		}
 	}
 
 	// Run shop unpack
