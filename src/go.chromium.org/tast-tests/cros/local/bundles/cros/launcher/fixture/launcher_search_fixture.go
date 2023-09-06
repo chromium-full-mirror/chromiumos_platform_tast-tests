@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -20,6 +22,7 @@ const (
 	launcherSearchSetUpTestTimeout = 40 * time.Second
 	launcherSearchPreTestTimeout   = 10 * time.Second
 	launcherSearchPostTestTimeout  = 10 * time.Second
+	arcOptinTimeout                = 3 * time.Minute
 )
 
 // fixture's name
@@ -29,6 +32,7 @@ const (
 	LauncherImageSearchIca       = "launcherImageSearchIca"
 	LauncherImageSearch          = "launcherImageSearch"
 	NormalLauncherSearch         = "normalLauncherSearch"
+	NormalLauncherSearchWithArc  = "normalLauncherSearchWithArc"
 )
 
 // launcherSearchFixtureImpl implements testing.FixtureImpl.
@@ -38,6 +42,7 @@ type launcherSearchFixtureImpl struct {
 	cr           *chrome.Chrome
 	kb           *input.KeyboardEventWriter
 	recorder     *uiauto.ScreenRecorder
+	ARCSupported bool
 }
 
 // LauncherSearchFixtData is the data returned by SetUp and passed to tests.
@@ -108,12 +113,31 @@ func init() {
 		PreTestTimeout:  launcherSearchPreTestTimeout,
 		PostTestTimeout: launcherSearchPostTestTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: NormalLauncherSearchWithArc,
+		Desc: "Normal launcher search",
+		Contacts: []string{
+			"xiuwen@google.com",
+			"ml-service-team@google.com",
+		},
+		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{}, ARCSupported: true},
+		SetUpTimeout:    launcherSearchSetUpTestTimeout + arcOptinTimeout,
+		PreTestTimeout:  launcherSearchPreTestTimeout,
+		PostTestTimeout: launcherSearchPostTestTimeout,
+		Vars:            []string{"ui.gaiaPoolDefault"},
+	})
 
 }
 
 func (f *launcherSearchFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var opts []chrome.Option
 	opts = append(opts, chrome.EnableFeatures(f.featureFlags...))
+
+	if f.ARCSupported {
+		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+		opts = append(opts, chrome.ARCSupported())
+		opts = append(opts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
+	}
 
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
@@ -132,6 +156,12 @@ func (f *launcherSearchFixtureImpl) SetUp(ctx context.Context, s *testing.FixtSt
 		s.Fatal("Failed to find keyboard: ", err)
 	}
 	f.kb = kb
+
+	if f.ARCSupported {
+		if err = optin.PerformAndClose(ctx, cr, f.tconn); err != nil {
+			s.Fatal("Failed to optin to Play Store and Close: ", err)
+		}
+	}
 
 	return LauncherSearchFixtData{Chrome: f.cr, TestAPIConn: f.tconn, Keyboard: kb}
 }
