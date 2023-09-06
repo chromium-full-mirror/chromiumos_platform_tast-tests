@@ -358,8 +358,13 @@ func (service *DataLeakPreventionService) Screenshot(ctx context.Context, req *p
 	}
 	defer keyboard.Close(ctx)
 
+	layout, err := input.KeyboardTopRowLayout(ctx, keyboard)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to retrieve keyboard top row layout")
+	}
+
 	// Take a screenshot using hotkey (Ctrl+F5)
-	if err := keyboard.Accel(ctx, "Ctrl+F5"); err != nil {
+	if err := keyboard.Accel(ctx, "Ctrl+"+layout.SelectTask); err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to type screenshot hotkey")
 	}
 
