@@ -10,8 +10,11 @@ import (
 	"strconv"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/mgs"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -71,12 +74,14 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CyclicBench,
+		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Benchmarks for scheduling latency with cyclictest binary",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "eddyhsu@chromium.org", "paulhsia@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		SoftwareDeps: []string{"cras"},
+		SoftwareDeps: []string{"cras", "chrome"},
 		Timeout:      3 * time.Minute,
+		Fixture:      fixture.FakeDMSEnrolled,
 		Params: []testing.Param{
 			{
 				Name: "rr12_1thread_10ms",
@@ -282,6 +287,18 @@ func (a affinity) String() string {
 }
 
 func CyclicBench(ctx context.Context, s *testing.State) {
+	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+	mgs, _, err := mgs.New(
+		ctx,
+		fdms,
+		mgs.DefaultAccount(),
+		mgs.AutoLaunch(mgs.MgsAccountID),
+	)
+	if err != nil {
+		s.Fatal("Failed to start MGS: ", err)
+	}
+	defer mgs.Close(ctx)
+
 	param := s.Param().(cyclicTestParameters)
 
 	cmdStr := []string{"cyclic_bench.py",
