@@ -22,7 +22,7 @@ func init() {
 		Func:         SurfaceInsets,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test to handle SurfaceInsets not to exceed android window frame",
-		Contacts:     []string{"hirokisato@google.com", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "hirokisato@google.com"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
