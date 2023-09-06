@@ -94,6 +94,7 @@ func verifyLacrosProfile(ctx context.Context, s *testing.State, kb *input.Keyboa
 	if err != nil {
 		s.Fatal("Failed to launch lacros: ", err)
 	}
+	defer l.Close(ctx)
 
 	if err := migrate.VerifyProfileData(ctx, cr, s, l.Browser(), page); err != nil {
 		s.Fatal("Failed to verify: ", err)
