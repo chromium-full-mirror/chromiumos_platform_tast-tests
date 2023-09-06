@@ -85,7 +85,7 @@ func (s *Servo) GetDualRole(ctx context.Context, port int) (bool, error) {
 	if err != nil {
 		return false, errors.Wrap(err, "EC pd command failed")
 	}
-	testing.ContextLog(ctx, "DualRole reply: ", out)
+	testing.ContextLog(ctx, "DualRole reply: ", out[0][1])
 
-	return out[0][0] == onResponse, nil
+	return out[0][1] == onResponse, nil
 }
