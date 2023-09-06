@@ -48,8 +48,7 @@ type entry struct {
 
 // writeTo writes a formatted log to w.
 func (e *entry) writeTo(w io.Writer) {
-	const format = "2006-01-02 15:04:05"
-	fmt.Fprintf(w, "%s [%s] %s\n", e.ts.Local().Format(format), e.typ, e.msg)
+	fmt.Fprintf(w, "%s [%s] %s\n", e.ts.UTC().Format(time.RFC3339), e.typ, e.msg)
 	if e.stack != nil {
 		for _, f := range e.stack.CallFrames {
 			fn := f.FunctionName

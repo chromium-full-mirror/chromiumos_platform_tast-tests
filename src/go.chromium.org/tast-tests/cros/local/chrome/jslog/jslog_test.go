@@ -87,7 +87,7 @@ func TestLogger(t *testing.T) {
 	w2 := agg.NewWorker("bar", "barURL", ev2)
 
 	go func() {
-		ts := time.Date(2018, 10, 26, 19, 20, 28, 0, time.Local)
+		ts := time.Date(2018, 10, 26, 19, 20, 28, 0, time.UTC)
 
 		msg1 := "message1"
 		ev1.send(&runtime.ConsoleAPICalledReply{
@@ -112,10 +112,10 @@ func TestLogger(t *testing.T) {
 	w2.Close()
 
 	const exp = `================================================================== fooURL
-2018-10-26 19:20:28 [type] message1
+2018-10-26T19:20:28Z [type] message1
 
 ================================================================== barURL
-2018-10-26 19:20:28 [type] message2
+2018-10-26T19:20:28Z [type] message2
 
 `
 	verifyLog(t, agg, exp)
@@ -145,7 +145,7 @@ func TestLogger_ClearOnSave(t *testing.T) {
 	w := agg.NewWorker("foo", "fooURL", ev)
 
 	go func() {
-		ts := time.Date(2018, 10, 26, 19, 20, 28, 0, time.Local)
+		ts := time.Date(2018, 10, 26, 19, 20, 28, 0, time.UTC)
 		msg := "message"
 		ev.send(&runtime.ConsoleAPICalledReply{
 			Type:       "type",
@@ -174,7 +174,7 @@ func TestLogger_ErrorStackTrace(t *testing.T) {
 	w := agg.NewWorker("foo", "fooURL", ev)
 
 	go func() {
-		ts := time.Date(2018, 10, 26, 19, 20, 28, 0, time.Local)
+		ts := time.Date(2018, 10, 26, 19, 20, 28, 0, time.UTC)
 		msg := "message"
 		ev.send(&runtime.ConsoleAPICalledReply{
 			Type:      "error",
@@ -203,7 +203,7 @@ func TestLogger_ErrorStackTrace(t *testing.T) {
 	w.Close()
 
 	const exp = `================================================================== fooURL
-2018-10-26 19:20:28 [error] message
+2018-10-26T19:20:28Z [error] message
 	at foo (chrome://foo [11:22])
 	at bar (chrome://bar [33:44])
 
@@ -219,7 +219,7 @@ func TestLogger_InfoStackTrace(t *testing.T) {
 	w := agg.NewWorker("foo", "fooURL", ev)
 
 	go func() {
-		ts := time.Date(2018, 10, 26, 19, 20, 28, 0, time.Local)
+		ts := time.Date(2018, 10, 26, 19, 20, 28, 0, time.UTC)
 		msg := "message"
 		ev.send(&runtime.ConsoleAPICalledReply{
 			Type:      "info", // info logs do not record stack traces
@@ -248,7 +248,7 @@ func TestLogger_InfoStackTrace(t *testing.T) {
 	w.Close()
 
 	const exp = `================================================================== fooURL
-2018-10-26 19:20:28 [info] message
+2018-10-26T19:20:28Z [info] message
 
 `
 	verifyLog(t, agg, exp)
