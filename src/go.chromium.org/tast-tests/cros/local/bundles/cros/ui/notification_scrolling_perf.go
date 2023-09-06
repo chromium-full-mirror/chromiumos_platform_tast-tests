@@ -182,21 +182,21 @@ func NotificationScrollingPerf(ctx context.Context, s *testing.State) {
 	}
 
 	ac := uiauto.New(atconn)
-	statusArea := nodewith.ClassName("ash/StatusAreaWidgetDelegate")
+	notificationCenterTray := nodewith.ClassName("NotificationCenterTray")
 	messageCenter := nodewith.ClassName("NotificationCenterView")
 
 	// Note that ash-chrome (cr and atconn) is passed in to take traces and metrics from ash-chrome.
 	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(atconn, func(ctx context.Context) error {
 		if err := uiauto.Combine(
-			"open the uber tray, scroll up and down the notification list, then close it",
-			ac.LeftClick(statusArea),
+			"open the notification bubble, scroll up and down the notification list, then close it",
+			ac.LeftClick(notificationCenterTray),
 			ac.WaitUntilExists(messageCenter),
 			ac.MouseMoveTo(messageCenter, 0),
 			swipeScrollUp,
 			swipeScrollUp,
 			swipeScrollDown,
 			swipeScrollDown,
-			ac.LeftClick(statusArea),
+			ac.LeftClick(notificationCenterTray),
 			ac.WaitUntilGone(messageCenter),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to open the uber tray, scroll the notification list, then close")
