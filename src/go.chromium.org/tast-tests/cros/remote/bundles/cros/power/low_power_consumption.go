@@ -94,6 +94,25 @@ func LowPowerConsumption(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("Suspend duration %s", duration)
 
+	// Check both channels for CPD and modify the prefix if necessary
+	cpdChannelPrefix := "ft4232h_generic.CPD_VBAT"
+	mv, err := h.Servo.GetFloat(ctx, servo.FloatControl(cpdChannelPrefix+"_mv"))
+	if err != nil {
+		s.Fatal("Failed to probe CPD_VBAT: ", err)
+	}
+	if mv == 0.0 {
+		cpdChannelPrefix = cpdChannelPrefix + "_ALT"
+
+		// Check the votlage on the alt channel
+		mv, err := h.Servo.GetFloat(ctx, servo.FloatControl(cpdChannelPrefix+"_mv"))
+		if err != nil {
+			s.Fatal("Failed to probe CPD_VBAT_ALT: ", err)
+		}
+		if mv == 0.0 {
+			s.Fatal("VBAT not present on either standard or alternate channels")
+		}
+	}
+
 	// Get target state for entrance map
 	targetState := s.Param().(string)
 
@@ -121,7 +140,7 @@ func LowPowerConsumption(ctx context.Context, s *testing.State) {
 	// loop and get accumulator output every 5 seconds, get accumulated mw
 	// and calc approx avg mA from the output
 	endTime := time.Now().Add(duration)
-	err = h.Servo.SetInt(ctx, "ft4232h_generic.CPD_VBAT_acc_clear", 1)
+	err = h.Servo.SetInt(ctx, servo.IntControl(cpdChannelPrefix+"_acc_clear"), 1)
 	if err != nil {
 		s.Fatalf("Failed to clear accumulator: %s", err)
 	}
@@ -130,15 +149,15 @@ func LowPowerConsumption(ctx context.Context, s *testing.State) {
 	lifetimes := make([]float64, 0)
 	sampleCount := make([]int64, 0)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		mw, err := h.Servo.GetFloat(ctx, "ft4232h_generic.CPD_VBAT_avg_mw")
+		mw, err := h.Servo.GetFloat(ctx, servo.FloatControl(cpdChannelPrefix+"_avg_mw"))
 		if err != nil {
 			return errors.Errorf("failed to get mw from servo instance: %s", err)
 		}
-		mv, err := h.Servo.GetFloat(ctx, "ft4232h_generic.CPD_VBAT_mv")
+		mv, err := h.Servo.GetFloat(ctx, servo.FloatControl(cpdChannelPrefix+"_mv"))
 		if err != nil {
 			return errors.Errorf("failed to get mv from servo instance: %s", err)
 		}
-		samples, err := h.Servo.GetString(ctx, "ft4232h_generic.CPD_VBAT_acc_count_reg")
+		samples, err := h.Servo.GetString(ctx, servo.StringControl(cpdChannelPrefix+"_acc_count_reg"))
 		if err != nil {
 			return errors.Errorf("failed to get acc count from servo instance: %s", err)
 		}
@@ -150,7 +169,7 @@ func LowPowerConsumption(ctx context.Context, s *testing.State) {
 
 		// clear the accumulator at the end of the loop, so that during
 		// the interval we're accumulating
-		err = h.Servo.SetInt(ctx, "ft4232h_generic.CPD_VBAT_acc_clear", 1)
+		err = h.Servo.SetInt(ctx, servo.IntControl(cpdChannelPrefix+"_acc_clear"), 1)
 		if err != nil {
 			return errors.Errorf("failed to clear accumulator: %s", err)
 		}
