@@ -75,6 +75,26 @@ func GetTestSheetsURL(ctx context.Context) (string, error) {
 	})
 }
 
+// GetTestSheetsViewerURL is similar to GetTestSheetsURL, but it returns a
+// Google Sheets link in viewer mode.
+//
+// The link is a copy of the following document:
+// https://docs.google.com/spreadsheets/d/1I9jmmdWkBaH6Bdltc2j5KVSyrJYNAhwBqMmvTdmVOgM/edit
+func GetTestSheetsViewerURL(ctx context.Context) (string, error) {
+	return getDriveURL(ctx, "spreadsheets", []string{
+		"1GpCahLvVDdx3UPLBxnHecr1RbrWHsSteJOIU-0sasWM",
+		"1K-0dQd_aoIF168FdKawdjnRkmtUmGUv0v-bZNYv8xTU",
+		"1p7oxRkh1ikJvhHyMmCuLQqUAuCNlCE0jAX1Il85E5mk",
+		"13O2iHzUP5XiJdGjMd6tNY_xT7i-NB1DGt2GGBcC52X8",
+		"1lJ1aRHRnlhWKonjjs-LQv0XAXzlcyv_K_RpLJzhohNA",
+		"1y6u5kcyOsBiHpOalOHniryxoy3-_YOvbspsJ-AetKCo",
+		"1u04HJRRzYOgcc-OndU2oCou0tCqNyrhfQqrx78pFsTA",
+		"1OoTFOGkIEXZeOznBi6GJIl1VjviaFXqNlG6gqvgAEZQ",
+		"1Rw3InRXK33slA3XV1NicPv-BiNEK51pzVrrCTJflX8w",
+		"1Z-yd3k2VJZnqGT_JQ3fJCA2zVYXdERFcDbnqAVoYJPk",
+	})
+}
+
 // getDriveURL constructs a drive link in the following format:
 // https://docs.google.com/<|fileType|>/d/<random id from |ids|>/edit
 // The "random id from ids" is deterministic for each model, and random

@@ -1851,7 +1851,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			sheetsURL, err := cuj.GetTestSheetsURL(ctx)
+			sheetsURL, err := cuj.GetTestSheetsViewerURL(ctx)
 			if err != nil {
 				return errors.Wrap(err, "failed to get Google Sheets URL")
 			}
