@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
+	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	pb "go.chromium.org/tast-tests/cros/services/cros/shimlessrma"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -493,6 +494,17 @@ func CleanupShimlessFiles(cleanupCtx context.Context, dut *dut.DUT) error {
 	}
 
 	return dut.Reboot(cleanupCtx)
+}
+
+// CreateErrorHandler creates error handler.
+func CreateErrorHandler(ctx context.Context, uiHelper **UIHelper, testname string) func(string) {
+	return func(errMsg string) {
+		screenshotService := graphics.NewScreenshotServiceClient((*uiHelper).RPCClient.Conn)
+
+		if _, err := screenshotService.CaptureScreenshot(ctx, &graphics.CaptureScreenshotRequest{FilePrefix: testname}); err != nil {
+			testing.ContextLogf(ctx, "Failed to take screenshot: %s", err)
+		}
+	}
 }
 
 func (uiHelper *UIHelper) deleteLogsIfExisting(ctx context.Context) error {

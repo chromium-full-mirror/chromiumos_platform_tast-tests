@@ -53,6 +53,7 @@ func init() {
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.shimlessrma.AppService",
+			"tast.cros.graphics.ScreenshotService",
 		},
 		Fixture: fixture.NormalMode,
 		Timeout: 10 * time.Minute,
@@ -85,6 +86,8 @@ func Calibration(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
+	errorHandler := rmaweb.CreateErrorHandler(ctx, &uiHelper, s.TestName())
+	s.AttachErrorHandlers(errorHandler, errorHandler)
 
 	if err := uiHelper.SetupInitStatus(ctx, false); err != nil {
 		s.Fatal("Fail to setup init status: ", err)

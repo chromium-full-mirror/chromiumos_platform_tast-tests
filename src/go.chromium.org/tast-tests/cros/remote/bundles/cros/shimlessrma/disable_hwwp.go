@@ -41,9 +41,13 @@ func init() {
 		Vars:         []string{"firmware.skipFlashUSB"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.shimlessrma.AppService"},
-		Fixture:      fixture.NormalMode,
-		Timeout:      150 * time.Minute,
+		ServiceDeps: []string{
+			"tast.cros.browser.ChromeService",
+			"tast.cros.shimlessrma.AppService",
+			"tast.cros.graphics.ScreenshotService",
+		},
+		Fixture: fixture.NormalMode,
+		Timeout: 150 * time.Minute,
 		Params: []testing.Param{{
 			ExtraAttr: []string{"shimless_rma_normal"},
 			Name:      "unenroll_sameuser_manual",
@@ -125,6 +129,8 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
 	// Restart will dispose resources, so don't dispose resources explicitly.
+	errorHandler := rmaweb.CreateErrorHandler(ctx, &uiHelper, s.TestName())
+	s.AttachErrorHandlers(errorHandler, errorHandler)
 
 	if err := uiHelper.SetupInitStatus(ctx, enroll); err != nil {
 		s.Fatal("Fail to setup init status: ", err)
