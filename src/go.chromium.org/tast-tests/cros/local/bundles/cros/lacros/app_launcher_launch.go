@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
@@ -25,13 +26,24 @@ func init() {
 		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Fixture:      "lacros",
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"lacros_stable"},
+			Fixture:           "lacros",
 		}, {
 			Name:              "unstable",
 			ExtraSoftwareDeps: []string{"lacros_unstable"},
 			ExtraAttr:         []string{"informational"},
+			Fixture:           "lacros",
+		}, {
+			Name:              "enrolled",
+			ExtraSoftwareDeps: []string{"lacros_stable"},
+			ExtraAttr:         []string{"informational"},
+			Fixture:           fixture.LacrosEnrolledLoggedIn,
+		}, {
+			Name:              "enrolled_unstable",
+			ExtraSoftwareDeps: []string{"lacros_unstable"},
+			ExtraAttr:         []string{"informational"},
+			Fixture:           fixture.LacrosEnrolledLoggedIn,
 		}},
 	})
 }
