@@ -42,7 +42,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Timeout: 15*time.Minute + cujrecorder.CooldownTimeout,
-				Fixture: "loggedInToCUJUserWithoutCooldown",
+				Fixture: "chromeLoggedInDisableSync",
 				Val:     geekbenchcuj.GetGBInfo("native", 5, true /*needLicense*/),
 			},
 			{
