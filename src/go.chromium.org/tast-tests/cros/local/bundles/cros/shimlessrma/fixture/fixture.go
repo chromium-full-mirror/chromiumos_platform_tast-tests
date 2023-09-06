@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -17,9 +18,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/shimlessrmaapp"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -30,10 +31,11 @@ const (
 )
 
 const (
-	cleanupTimeout = chrome.ResetTimeout + 20*time.Second
-	testFile       = "/var/lib/rmad/.test"
-	iwaFile        = "iwa/dist/diag.swbn"
-	extensionFile  = "extension/diag.crx"
+	cleanupTimeout   = chrome.ResetTimeout + 20*time.Second
+	iwaFile          = "iwa/dist/diag.swbn"
+	extensionFile    = "extension/diag.crx"
+	virtualUSBFile   = "/tmp/virtual_usb_file"
+	tmpUsbMountPoint = "/tmp/virtual_usb"
 )
 
 func init() {
@@ -89,10 +91,6 @@ func (f *installIWAFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	if err := shimlessrmaapp.CreateEmptyStateFile(); err != nil {
 		s.Fatal("Failed to create empty state file for rmad, err: ", err)
 	}
-	// Enable rmad test mode.
-	if _, err := os.Create(testFile); err != nil {
-		s.Fatal("Failed to create .test file, err: ", err)
-	}
 
 	// Open Chrome with Shimless RMA enabled.
 	cr, err := chrome.New(ctx, chrome.EnableFeatures("ShimlessRMAFlow"),
@@ -115,14 +113,19 @@ func (f *installIWAFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	}
 	f.v.Tconn = tconn
 
+	// Start to create a virtual USB mass storage device.
+	if err := f.setupVirtualUSB(ctx); err != nil {
+		s.Fatal("Failed to set up virtual USB, err: ", err)
+	}
+
 	// Move extension and IWA to target directory.
 	for _, file := range extFiles() {
-		target := filepath.Join("/tmp", filepath.Base(file))
+		target := filepath.Join(tmpUsbMountPoint, filepath.Base(file))
 		if err := fsutil.CopyFile(s.DataPath(file), target); err != nil {
 			s.Fatal("Failed to copy file to /tmp, err: ", err)
 		}
-		if err := os.Chown(target, int(sysutil.ChronosUID), int(sysutil.ChronosGID)); err != nil {
-			s.Fatal("Failed to chown, err: ", err)
+		if err := os.Chmod(target, 0777); err != nil {
+			s.Fatal("Failed to chmod, err: ", err)
 		}
 	}
 
@@ -171,8 +174,21 @@ func (f *installIWAFixture) TearDown(ctx context.Context, s *testing.FixtState) 
 		f.cr = nil
 	}
 	shimlessrmaapp.RemoveStateFile()
-	testexec.CommandContext(ctx, "stop", "rmad").Run()
-	os.Remove(testFile)
+	upstart.StopJob(ctx, "rmad")
+
+	// Clean up virtual USB mass storage device.
+	// Stop ui to prevent opening files under the mount point. If we fail to stop ui, then we can't umount it as well.
+	// TODO(b/297155775) We don't need to restart ui after the rmad installation implementation is completed.
+	if err := upstart.RestartJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to restart ui, err: ", err)
+	}
+	if err := testexec.CommandContext(ctx, "umount", tmpUsbMountPoint).Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to umount USB, err: ", err)
+	}
+	testexec.CommandContext(ctx, "modprobe", "g_mass_storage", "-r").Run()
+	testexec.CommandContext(ctx, "modprobe", "dummy_hcd", "-r").Run()
+	os.Remove(virtualUSBFile)
+	os.RemoveAll(tmpUsbMountPoint)
 }
 
 func (f *installIWAFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
@@ -182,5 +198,63 @@ func (f *installIWAFixture) PostTest(ctx context.Context, s *testing.FixtTestSta
 }
 
 func (f *installIWAFixture) Reset(ctx context.Context) error {
+	return nil
+}
+
+func (f *installIWAFixture) findUSBDevicePath(ctx context.Context) (string, error) {
+	partUUID, err := testexec.CommandContext(ctx, "sfdisk", "--part-uuid", virtualUSBFile, "1").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", err
+	}
+
+	return "/dev/disk/by-partuuid/" + strings.ToLower(strings.TrimSuffix(string(partUUID), "\n")), nil
+}
+
+func (f *installIWAFixture) setupVirtualUSB(ctx context.Context) error {
+	// Create the virtual root hub.
+	if err := testexec.CommandContext(ctx, "modprobe", "dummy_hcd").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to load dummy_hcd module")
+	}
+	// Create the backing file for 10MB space.
+	os.Remove(virtualUSBFile)
+	if err := testexec.CommandContext(ctx, "fallocate", "--length=10M", virtualUSBFile).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to create virtual USB file")
+	}
+	// Set disk label type.
+	if err := testexec.CommandContext(ctx, "parted", virtualUSBFile, "mklabel", "gpt").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to set disk label type")
+	}
+	// Create partition. It actually works without this step, but it means there is no /dev/sdX1, rmad will hit a bug here because they assume the final path is /dev/sdXn.
+	if err := testexec.CommandContext(ctx, "parted", "-s", virtualUSBFile, "mkpart", "primary", "0%", "4MB").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to create partition")
+	}
+
+	// Create the virtual USB by using the backing file.
+	if err := testexec.CommandContext(ctx, "modprobe", "g_mass_storage", "file="+virtualUSBFile, "removable=1").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to create virtual USB storage")
+	}
+
+	// Find the USB device path.
+	usbPath, err := f.findUSBDevicePath(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to find the USB device path")
+	}
+
+	// Format the file system. We use polling here because there is a delay after modprobe.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return testexec.CommandContext(ctx, "mkfs.fat", usbPath).Run(testexec.DumpLogOnError)
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 5 * time.Second}); err != nil {
+		return err
+	}
+
+	// Mount the USB.
+	os.RemoveAll(tmpUsbMountPoint)
+	if err := os.MkdirAll(tmpUsbMountPoint, 0777); err != nil {
+		return errors.Wrap(err, "failed to create the temporary USB mount point")
+	}
+	if err := testexec.CommandContext(ctx, "mount", usbPath, tmpUsbMountPoint).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to mount USB")
+	}
+
 	return nil
 }
