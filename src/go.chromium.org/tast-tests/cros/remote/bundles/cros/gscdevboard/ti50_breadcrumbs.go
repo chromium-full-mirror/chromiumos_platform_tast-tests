@@ -40,7 +40,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"ti50-core@google.com",
-			"ecg@google.com",
+			"ecgh@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
