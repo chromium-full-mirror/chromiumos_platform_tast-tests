@@ -23,7 +23,7 @@ func init() {
 		BugComponent: "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
-			"joelhockey@google.org",
+			"joelhockey@chromium.org",
 		},
 		Timeout: time.Hour,
 	})
