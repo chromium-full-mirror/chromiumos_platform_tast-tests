@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -286,7 +287,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	s.Logf("Setting RW ID = %s, from section = %s as the to-be-qualified RW_new firmware", rwNewID, sectionNames[testArgs.imageSectionRW])
 
 	// Get the RO firmware version ID available on the DUT.
-	roNewID, err = getOnlyID(ctx, h, reporters.CrossystemParamRoFwid)
+	roNewID, err = fwUtils.GetFwVersion(ctx, h, reporters.CrossystemParamRoFwid)
 	if err != nil {
 		s.Fatal("Failed to get AP RO ID: ", err)
 	}
@@ -330,7 +331,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		if err = verifyFwIDs(ctx, h, roNewID, initialRwFwid); err != nil {
+		if err = fwUtils.VerifyFwIDs(ctx, h, roNewID, initialRwFwid); err != nil {
 			s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
 		}
 	}(cleanupCtx, roNewID, initialRwFwid, initialActSection, initialFwFromDUT, testArgs)
@@ -342,7 +343,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 	// Verify RO/RW firmware versions are the latest shipped firmware after flashing.
 	// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-	if err = verifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1].FwID, shippedFwVersions[len(shippedFwVersions)-1].FwID); err != nil {
+	if err = fwUtils.VerifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1].FwID, shippedFwVersions[len(shippedFwVersions)-1].FwID); err != nil {
 		s.Fatalf("After flashing RO_old + RW_old ( %s + %s ): %v", shippedFwVersions[len(shippedFwVersions)-1], shippedFwVersions[len(shippedFwVersions)-1], err)
 	}
 
@@ -373,7 +374,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 
 		// Verify that the RO firmware has not been modified and RW has the RW_new after the flashing process.
-		if err := verifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1].FwID, rwNewID); err != nil {
+		if err := fwUtils.VerifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1].FwID, rwNewID); err != nil {
 			s.Fatalf("After flashing RO_old + RW_new ( %s + %s ): %v", shippedFwVersions[len(shippedFwVersions)-1], rwNewID, err)
 		}
 
@@ -407,7 +408,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Verifying the firmware versions after flash")
-		if err := verifyFwIDs(ctx, h, shippedFwVersions[i].FwID, rwNewID); err != nil {
+		if err := fwUtils.VerifyFwIDs(ctx, h, shippedFwVersions[i].FwID, rwNewID); err != nil {
 			s.Fatalf("After flashing RO_old-%d + RW_new ( %s + %s): %v", len(shippedFwVersions)-i-1, shippedFwVersions[i], rwNewID, err)
 		}
 
@@ -433,7 +434,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Verifying the firmware versions are the to-be-qualified new RO/RW after flash")
-		if err := verifyFwIDs(ctx, h, roNewID, rwNewID); err != nil {
+		if err := fwUtils.VerifyFwIDs(ctx, h, roNewID, rwNewID); err != nil {
 			s.Fatalf("After flashing RO_new + RW_new ( %s + %s): %v", roNewID, rwNewID, err)
 		}
 
@@ -584,36 +585,6 @@ func safeReboot(ctx context.Context, h *firmware.Helper) error {
 	}
 
 	return nil
-}
-
-// verifyFwIDs will show in logs the current firmware version and compare it to expected ones if they are provided.
-func verifyFwIDs(ctx context.Context, h *firmware.Helper, exVersion ...string) error {
-	sections := []reporters.CrossystemParam{reporters.CrossystemParamRoFwid, reporters.CrossystemParamFwid}
-	for i := range sections {
-		currentID, err := getOnlyID(ctx, h, sections[i])
-		if err != nil {
-			return err
-		}
-		testing.ContextLogf(ctx, "Current %s: %s", sections[i], currentID)
-		if i < len(exVersion) {
-			if exVersion[i] != currentID {
-				return errors.Errorf("got %s=%s, but expected %s", sections[i], currentID, exVersion[i])
-			}
-		}
-	}
-	return nil
-}
-
-// getOnlyID accepts 'crossystem' params (i.e., CrossystemParamFwid & CrossystemParamRoFwid),
-// splits the outputs from them and only returns the version numbers.
-func getOnlyID(ctx context.Context, h *firmware.Helper, param reporters.CrossystemParam) (string, error) {
-	fwid, err := h.Reporter.CrossystemParam(ctx, param)
-	if err != nil {
-		return "", errors.Wrapf(err, "failed to get only the fw id from crossystem: %v", param)
-	}
-	splitout := strings.Split(fwid, ".")
-	onlyID := splitout[1] + "." + splitout[2] + "." + splitout[3]
-	return onlyID, err
 }
 
 // speedTest performs the speedometer2 test.
