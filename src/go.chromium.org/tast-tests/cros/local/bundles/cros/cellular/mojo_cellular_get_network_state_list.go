@@ -22,7 +22,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensure that CrosNetworkConfig.GetNetworkStateList matches properties in Shill ",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "khegde@google.com"},
-		BugComponent: "b:287520870",
+		BugComponent: "b:1166446",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e"},
 		Timeout:      10 * time.Minute,
