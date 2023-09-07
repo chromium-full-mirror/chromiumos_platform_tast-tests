@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/VtsHalKeymasterV3_0TargetTest_x86_20200129",
+  "url": "gs://chromeos-test-assets-private/tast/cros/int/arc/VtsHalKeymasterV3_0TargetTest_x86_20200129",
   "size": 1763228,
   "sha256sum": "176a449aac89a2e288770f4648cc4a944b99296cc594edc767ece6091afd0b50"
 }
