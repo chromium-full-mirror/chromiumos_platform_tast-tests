@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/internal/login"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -192,7 +193,7 @@ func NavigateEduCoexistenceFlow(ctx context.Context, cr *chrome.Chrome, tconn *c
 		return errors.Wrap(err, "failed to click next on school email page")
 	}
 
-	if err := InsertFieldVal(ctx, gaiaConn, "input[name=password]", secondPass); err != nil {
+	if err := InsertFieldVal(ctx, gaiaConn, login.GaiaPasswordFieldFinder, secondPass); err != nil {
 		return errors.Wrap(err, "failed to fill in school password")
 	}
 	if err := ui.LeftClick(nextButton)(ctx); err != nil {
