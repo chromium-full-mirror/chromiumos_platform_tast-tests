@@ -34,7 +34,7 @@ const (
 	waitForInstallAttributesTimeout = 2 * time.Minute
 	testAttributesUndefined         = "Naproxen"
 	tamperedAttributes              = "Methadone"
-	databasePath                    = "/home/.shadow/install_attributes.pb"
+	databasePath                    = "/var/lib/device_management/install_attributes.pb"
 )
 
 var testAttributes = [...]string{"Ibuprofen", "Acetaminophen", "Acetylsalicylic Acid"}
