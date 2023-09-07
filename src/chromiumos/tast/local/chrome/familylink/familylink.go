@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/internal/login"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -27,6 +28,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
+
 )
 
 // shortUITimeout is the timeout duration of trying various UI actions.
@@ -192,7 +194,7 @@ func NavigateEduCoexistenceFlow(ctx context.Context, cr *chrome.Chrome, tconn *c
 		return errors.Wrap(err, "failed to click next on school email page")
 	}
 
-	if err := InsertFieldVal(ctx, gaiaConn, "input[name=password]", secondPass); err != nil {
+	if err := InsertFieldVal(ctx, gaiaConn, login.GaiaPasswordFieldFinder, secondPass); err != nil {
 		return errors.Wrap(err, "failed to fill in school password")
 	}
 	if err := ui.LeftClick(nextButton)(ctx); err != nil {

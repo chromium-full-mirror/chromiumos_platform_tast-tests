@@ -23,6 +23,10 @@ import (
 // cryptohome instead.
 const localPassword = "test0000"
 
+// GaiaPasswordFieldFinder is the query selector to find the password field
+// from the Gaia login page.
+const GaiaPasswordFieldFinder = "input[type=password]"
+
 // errLoginRetry is used to indicate the GAIA login procedure is currently
 // at the retry page and should be retried.
 var errLoginRetry = errors.New("login needs retry")
@@ -246,7 +250,7 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 		if creds.Pass == "" {
 			return errors.New("please supply a password with chrome.Auth()")
 		}
-		if err := insertGAIAField(ctx, gaiaConn, "input[name=password]", creds.Pass); err != nil {
+		if err := insertGAIAField(ctx, gaiaConn, GaiaPasswordFieldFinder, creds.Pass); err != nil {
 			return errors.Wrap(err, "failed to fill in password field")
 		}
 	} else if authType == config.ContactAuth {
@@ -427,7 +431,7 @@ func performUnicornParentLogin(ctx context.Context, cfg *config.Config, sess *dr
 	}
 
 	testing.ContextLog(ctx, "Typing parent password")
-	if err := insertGAIAField(ctx, gaiaConn, "input[name=password]", creds.ParentPass); err != nil {
+	if err := insertGAIAField(ctx, gaiaConn, GaiaPasswordFieldFinder, creds.ParentPass); err != nil {
 		return err
 	}
 	if err := oobeConn.Call(ctx, nil, "Oobe.clickGaiaPrimaryButtonForTesting"); err != nil {
