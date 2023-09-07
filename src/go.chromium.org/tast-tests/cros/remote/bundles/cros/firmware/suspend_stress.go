@@ -34,15 +34,31 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Vars:         []string{"firmware.suspendStressIters", "firmware.suspendStressFailFast"},
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Vars:         []string{"firmware.suspendStressFailFast"},
+		Attr:         []string{"group:firmware"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService", "tast.cros.firmware.TPMService"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.NormalMode,
-		Timeout:      30 * time.Minute, // Timeout might need to be adjusted depending on number of iterations.
+		Params: []testing.Param{
+			{
+				Name:      "short",
+				Timeout:   30 * time.Minute,
+				Val:       25,
+				ExtraAttr: []string{"firmware_stress"},
+			},
+			{
+				Name:    "medium",
+				Timeout: 300 * time.Minute,
+				Val:     250,
+			},
+			{
+				Name:    "long",
+				Timeout: 3000 * time.Minute,
+				Val:     2500,
+			},
+		},
 	})
 }
 
@@ -64,15 +80,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	}
 
 	// Number of iterations to run stress test for.
-	numIters := 25
-	if numItersStr, ok := s.Var("firmware.suspendStressIters"); ok {
-		numItersInt, err := strconv.Atoi(numItersStr)
-		if err != nil {
-			s.Fatalf("Invalid value for var firmware.suspendStressIters: got %q, expected int", numItersStr)
-		} else {
-			numIters = numItersInt
-		}
-	}
+	numIters := s.Param().(int)
 
 	// If fail fast is set to true, fails immediately at first error, otherwise collects errors over all iterations.
 	failFast := false
