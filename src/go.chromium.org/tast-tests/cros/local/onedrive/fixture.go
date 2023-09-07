@@ -31,13 +31,15 @@ import (
 )
 
 func init() {
+	var opts = []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync", "--vmodule=cloud_upload*=3")}
+
 	testing.AddFixture(&testing.Fixture{
 		Name:     "onedrive",
 		Desc:     "Sets up 3 office files docx, pptx and xlsx. At tear down tries to remove them from the remote service via ODFS",
 		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
 		Impl: &fixture{
 			bt:            browser.TypeAsh,
-			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync")},
+			chromeOptions: opts,
 			provider:      filesconsts.OneDrive,
 		},
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -54,7 +56,7 @@ func init() {
 		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
 		Impl: &fixture{
 			bt:            browser.TypeLacros,
-			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync")},
+			chromeOptions: opts,
 			provider:      filesconsts.OneDrive,
 		},
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -164,6 +166,13 @@ func prepareOfficeFile(srcPath, targetFolder string) (testFile TestFile, err err
 	return testFile, nil
 }
 
+// Run unpacked version of ODFS instead of the version from Web Store.
+var odfsUnpackedLocation = testing.RegisterVarString(
+	"onedrive.OdfsUnpackedLocation",
+	"",
+	"ODFS unpacked extension location",
+)
+
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var cr *chrome.Chrome
 	var err error
@@ -177,12 +186,21 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		driveAPIClient = s.ParentValue().(*drivefs.FixtureData).APIClient
 	} else if f.provider == filesconsts.OneDrive {
 		opts := f.chromeOptions
+		odfsDevPath := odfsUnpackedLocation.Value()
+		isOdfsDev := len(odfsDevPath) > 0
 
 		if f.bt == browser.TypeLacros {
+			if isOdfsDev {
+				opts = append(opts, chrome.LacrosUnpackedExtension(odfsDevPath))
+			}
 			var err error
 			opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 			if err != nil {
 				s.Fatal("Failed to get lacros options: ", err)
+			}
+		} else {
+			if isOdfsDev {
+				opts = append(opts, chrome.UnpackedExtension(odfsDevPath))
 			}
 		}
 
