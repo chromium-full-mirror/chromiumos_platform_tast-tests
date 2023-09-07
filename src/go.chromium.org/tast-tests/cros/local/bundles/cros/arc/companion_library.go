@@ -109,8 +109,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test all ARC++ companion library",
 		Contacts:     []string{"arc-framework+tast@google.com", "sstan@google.com", "yhanada@chromium.org"},
-		// ChromeOS > Software > ARC++ > Framework > Developer Support
-		BugComponent: "b:537247",
+		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
+		BugComponent: "b:537221",
 		// ARC team decide move this test out of mainline, since:
 		// (1) The tested feature already deprecated in ChromeOS.
 		// (2) P and R WM related features has done, R is the last support version.
@@ -1147,6 +1147,7 @@ func testMaximize(ctx context.Context, _ *arc.ARC, _ *chrome.Chrome, tconn *chro
 		return errors.Wrap(err, "failed to click window caption the first time")
 	}
 
+	// GoBigSleepLint: should be written with mouse.DoubleClick
 	if err := testing.Sleep(ctx, doubleClickGap); err != nil {
 		return errors.Wrap(err, "failed to wait for the gap between the double click")
 	}
