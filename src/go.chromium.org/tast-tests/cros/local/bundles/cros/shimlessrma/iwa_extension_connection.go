@@ -25,7 +25,8 @@ func init() {
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Shimless RMA
 		BugComponent: "b:1002147",
-		Attr:         []string{"group:shimless_rma"},
+		// These attributes make the test suite to run on the shimless supported models.
+		Attr:         []string{"group:shimless_rma", "shimless_rma_normal"},
 		Fixture:      fixture.InstallIWA,
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
