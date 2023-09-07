@@ -110,13 +110,7 @@ func genPlaybackParam(codec, file string, resolution, fps int, dec, nameSuffix, 
 	}
 	if fixture == "" {
 		if dec == "hw" {
-			if codec == "av1" {
-				// TODO(hiroh): Remove this as av1 hw decoder has been enabled
-				// for a long time.
-				fixture = "chromeVideoWithHWAV1Decoding"
-			} else {
-				fixture = "chromeVideo"
-			}
+			fixture = "chromeVideo"
 		} else {
 			fixture = "chromeVideoWithSWDecoding"
 		}

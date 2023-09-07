@@ -45,7 +45,7 @@ func init() {
 			},
 			ExtraAttr: []string{"group:graphics", "graphics_video", "graphics_perbuild", "group:cq-medium"},
 			ExtraData: []string{"bear-320x240.av1.mp4"},
-			Fixture:   "chromeVideoWithHWAV1Decoding",
+			Fixture:   "chromeVideo",
 		}, {
 			Name: "h264",
 			Val: playParams{
@@ -169,7 +169,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"bear-320x240.av1.mp4"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
-			Fixture:           "chromeVideoWithHWAV1Decoding",
+			Fixture:           "chromeVideo",
 		}, {
 			Name: "av1_hw_odd_dimension",
 			Val: playParams{
@@ -181,7 +181,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"bear-321x241.av1.mp4"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
-			Fixture:           "chromeVideoWithHWAV1Decoding",
+			Fixture:           "chromeVideo",
 		}, {
 			Name: "h264_hw",
 			Val: playParams{
@@ -391,7 +391,7 @@ func init() {
 			},
 			ExtraAttr: []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData: []string{"bear-320x240.av1.mp4"},
-			Fixture:   "chromeVideoWithGuestLoginAndHWAV1Decoding",
+			Fixture:   "chromeVideoWithGuestLogin",
 		}, {
 			Name: "h264_guest",
 			Val: playParams{
@@ -437,7 +437,7 @@ func init() {
 			},
 			ExtraAttr: []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData: []string{"bear-320x240.av1.mp4"},
-			Fixture:   "chromeVideoWithHWAV1Decoding",
+			Fixture:   "chromeVideo",
 		}, {
 			Name: "h264_unmuted",
 			Val: playParams{

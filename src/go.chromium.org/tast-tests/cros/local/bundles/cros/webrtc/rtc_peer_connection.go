@@ -179,7 +179,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
-			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			// This is an encoding test of 3 temporal layers test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
@@ -194,7 +194,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
-			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name: "vp9_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
@@ -257,7 +257,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			// This is a decoding test of 3 temporal layers test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
@@ -272,7 +272,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			// This is a decoding test of 3 spatial layers, 3 temporal layers (each) k-SVC test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
@@ -288,7 +288,7 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
-			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name: "av1_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
@@ -466,7 +466,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
-			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabledWithHWVp8TemporalLayerEncoding",
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			// This is an encoding test of 3 temporal layers test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
@@ -481,7 +481,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
-			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabledWithHWVp8TemporalLayerEncoding",
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name: "vp9_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
@@ -557,7 +557,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
-			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			// This is an encoding test of 3 temporal layers test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
@@ -572,7 +572,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
-			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			// This is an encoding test of 3 spatial layers, 3 temporal layers (each) k-SVC test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
@@ -587,7 +587,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
-			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name: "av1_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{

@@ -46,7 +46,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"720_av1.mp4"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
-			Fixture:           "chromeVideoWithHWAV1Decoding",
+			Fixture:           "chromeVideo",
 		}, {
 			Name: "h264",
 			Val: seekTest{
@@ -135,7 +135,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"smpte_bars_resolution_ladder.av1.webm"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
-			Fixture:           "chromeVideoWithHWAV1Decoding",
+			Fixture:           "chromeVideo",
 		}, {
 			Name: "switch_h264",
 			Val: seekTest{
@@ -203,7 +203,7 @@ func init() {
 			ExtraData:         []string{"720_av1.mp4"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
 			Timeout:           20 * time.Minute,
-			Fixture:           "chromeVideoWithHWAV1Decoding",
+			Fixture:           "chromeVideo",
 		}, {
 			Name: "stress_vp8",
 			Val: seekTest{

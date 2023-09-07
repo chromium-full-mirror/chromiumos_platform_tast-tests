@@ -41,7 +41,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         []string{"720_av1.mp4"},
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeAV1},
-			Fixture:           "chromeVideoWithGuestLoginAndHWAV1Decoding",
+			Fixture:           "chromeVideoWithGuestLogin",
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "h264_hw",
@@ -90,7 +90,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         append(play.MSEDataFiles(), "dash_smpte_av1.mp4.mpd", "dash_smpte_144.av1.mp4", "dash_smpte_240.av1.mp4"),
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeAV1},
-			Fixture:           "chromeVideoWithGuestLoginAndHWAV1Decoding",
+			Fixture:           "chromeVideoWithGuestLogin",
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "h264_hw_switch",

@@ -409,76 +409,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndSVCEnabled",
-		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but allowing use of the Web SVC API",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeFakeWebcamArgs...),
-				chrome.ExtraArgs("--enable-blink-features=RTCSvcScalabilityMode"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	// TODO(b/202926617): Remove once vp8 hardware temporal layer encoding is enabled by default.
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndSVCEnabledWithHWVp8TemporalLayerEncoding",
-		Desc:     "Similar to chromeVideoWithFakeWebcamAndSVCEnabled but enabling vp8 hardware temporal layer encoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeFakeWebcamArgs...),
-				chrome.ExtraArgs("--enable-blink-features=RTCSvcScalabilityMode"),
-				chrome.ExtraArgs("--enable-features=VaapiVp8TemporalLayerEncoding"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndSVCEnabledAndSWEncoding",
-		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but allowing use of the Web SVC API and disabling hardware encoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeFakeWebcamArgs...),
-				chrome.ExtraArgs("--enable-blink-features=RTCSvcScalabilityMode"),
-				chrome.ExtraArgs("--disable-accelerated-video-encode"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndEnableVaapiVideoMinResolution",
-		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but enable VaapiVideoMinResolutionForPerformance feature",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgsWithEnablingVaapiVEAMinResolution...),
-				chrome.ExtraArgs(chromeFakeWebcamArgs...),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithFakeWebcamAndNoHwAcceleration",
 		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but with both hardware decoding and encoding disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
@@ -684,23 +614,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	// TODO(b/202926617): Remove once vp8 hardware temporal layer encoding is enabled by default.
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithHWVp8TemporalLayerEncoding",
-		Desc:     "Similar to chromeVideo but also enables vp8 hardware temporal layer encoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs("--enable-features=VaapiVp8TemporalLayerEncoding"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	// TODO(b/236546408): Remove once hardware variable bitrate encoding is enabled by default.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithHWVBREncoding",
@@ -710,40 +623,6 @@ func init() {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs("--enable-features=ChromeOSHWVBREncoding"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	// TODO(b/255626192): Remove these *HWAV1Decoding preconditions once the hardware av1 decoder feature is enabled by default.
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithHWAV1Decoding",
-		Desc:     "Similar to chromeVideo fixture but also enables hardware accelerated av1 decoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs("--enable-features=ChromeOSHWAV1Decoder"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithGuestLoginAndHWAV1Decoding",
-		Desc:     "Similar to chromeVideoWithGuestLogin fixture but also enables hardware accelerated av1 decoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs("--enable-features=ChromeOSHWAV1Decoder"),
-				chrome.GuestLogin(),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
@@ -778,22 +657,6 @@ func init() {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs(chromeSuppressNotificationsArgs...),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeFakeCameraPerf",
-		Desc:     "Logged into a user session with fake video/audio capture device (a.k.a. 'fake webcam', see https://webrtc.org/testing), without asking for user permission, and without verboselogging that can affect the performance. This fixture should be used only used for performance tests",
-		Contacts: []string{"chromeos-camera-eng@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
@@ -1012,33 +875,6 @@ var chromeVideoArgs = []string{
 	"--disable-gpu-driver-bug-workarounds",
 }
 
-var chromeVideoArgsWithEnablingVaapiVEAMinResolution = []string{
-	// Enable verbose log messages for video components.
-	"--vmodule=" + strings.Join([]string{
-		"*/media/gpu/chromeos/*=2",
-		"*/media/gpu/vaapi/*=2",
-		"*/media/gpu/v4l2/*=2"}, ","),
-	// The Renderer video stack might have a policy of not using hardware
-	// accelerated decoding for certain small resolutions (see crbug.com/684792).
-	// Disable that for testing.
-	"--disable-features=ResolutionBasedDecoderPriority",
-	// VA-API HW decoder and encoder might reject small resolutions for
-	// performance (see crbug.com/1008491 and b/171041334).
-	// Disable that for testing.
-	"--disable-features=VaapiEnforceVideoMinMaxResolution",
-	// Allow media autoplay. <video> tag won't automatically play upon loading the source unless this flag is set.
-	"--autoplay-policy=no-user-gesture-required",
-	// Do not show message center notifications.
-	"--suppress-message-center-popups",
-	// Make sure ARC++ is not running.
-	"--arc-availability=none",
-	// Disable firmware update to stop chrome from executing fwupd that restarts powerd.
-	"--disable-features=FirmwareUpdaterApp",
-	// Ignore the list of blocked per-GPU functionality (e.g. VP8 accelerated
-	// decoding on Intel Jasper Lake).
-	"--disable-gpu-driver-bug-workarounds",
-}
-
 var chromeBypassPermissionsArgs = []string{
 	// Avoid the need to grant camera/microphone permissions.
 	"--use-fake-ui-for-media-stream",
@@ -1062,7 +898,3 @@ var chromeAllowDistinctiveIdentifierArgs = []string{
 	// allow a distinctive identifier for localhost which is where we server the
 	// DRM content from in the test.
 	"--unsafely-allow-protected-media-identifier-for-domain=127.0.0.1"}
-
-var chromeWebCodecsArgs = []string{
-	"--enable-blink-features=WebCodecs",
-}

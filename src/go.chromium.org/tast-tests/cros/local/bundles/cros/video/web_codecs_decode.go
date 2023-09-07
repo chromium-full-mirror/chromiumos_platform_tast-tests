@@ -36,7 +36,7 @@ func init() {
 			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.av1.mp4", Acceleration: webcodecs.PreferHardware},
 			ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
 			ExtraData:         []string{"bear-320x240.av1.mp4", "bear-320x240.av1.mp4.json"},
-			Fixture:           "chromeVideoWithHWAV1Decoding",
+			Fixture:           "chromeVideo",
 		}, {
 			Name:              "h264_sw",
 			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.h264.mp4", Acceleration: webcodecs.PreferSoftware},

@@ -125,7 +125,7 @@ func init() {
 			Name:              "vp8_hw_l1t3",
 			Val:               webcodecs.TestEncodeArgs{Codec: videotype.VP8, Acceleration: webcodecs.PreferHardware, ScalabilityMode: "L1T3", BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 1},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "vaapi"},
-			Fixture:           "chromeVideoWithHWVp8TemporalLayerEncoding",
+			Fixture:           "chromeVideo",
 		}, {
 			Name:    "vp8_sw_vbr",
 			Val:     webcodecs.TestEncodeArgs{Codec: videotype.VP8, Acceleration: webcodecs.PreferSoftware, BitrateMode: "variable", BrowserType: browser.TypeAsh, NumOfEncoders: 1},

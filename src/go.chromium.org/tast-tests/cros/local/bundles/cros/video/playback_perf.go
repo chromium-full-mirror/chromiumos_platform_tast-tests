@@ -452,7 +452,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
 				ExtraData:         []string{"perf/av1/720p_30fps_300frames.av1.mp4"},
-				Fixture:           "chromeVideoWithHWAV1Decoding",
+				Fixture:           "chromeVideo",
 			},
 			{
 				Name: "av1_720p_30fps_sw",
@@ -473,7 +473,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
 				ExtraData:         []string{"perf/av1/1080p_30fps_300frames.av1.mp4"},
-				Fixture:           "chromeVideoWithHWAV1Decoding",
+				Fixture:           "chromeVideo",
 			},
 			{
 				Name: "av1_1080p_30fps_sw",
@@ -494,7 +494,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60"},
 				ExtraData:         []string{"perf/av1/1080p_60fps_600frames.av1.mp4"},
-				Fixture:           "chromeVideoWithHWAV1Decoding",
+				Fixture:           "chromeVideo",
 			},
 			{
 				Name: "av1_1080p_60fps_sw",
@@ -515,7 +515,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60"},
 				ExtraData:         []string{"perf/av1/1080p_120fps_1200frames.av1.mp4"},
-				Fixture:           "chromeVideoWithHWAV1Decoding",
+				Fixture:           "chromeVideo",
 			},
 			{
 				Name: "av1_1080p_120fps_sw",
@@ -536,7 +536,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_30"},
 				ExtraData:         []string{"perf/av1/2160p_30fps_300frames.av1.mp4"},
-				Fixture:           "chromeVideoWithHWAV1Decoding",
+				Fixture:           "chromeVideo",
 			},
 			{
 				Name: "av1_2160p_30fps_sw",
@@ -557,7 +557,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_60"},
 				ExtraData:         []string{"perf/av1/2160p_60fps_600frames.av1.mp4"},
-				Fixture:           "chromeVideoWithHWAV1Decoding",
+				Fixture:           "chromeVideo",
 			},
 			{
 				Name: "av1_2160p_60fps_sw",
@@ -859,7 +859,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/av1_1080p_30fps.mp4"},
-				Fixture:           "chromeVideoWithHWAV1Decoding",
+				Fixture:           "chromeVideo",
 			},
 			{
 				Name: "av1_1080p_30fps_sw_long",
@@ -1046,7 +1046,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
 				ExtraData:         []string{"perf/av1/720p_30fps_300frames.av1.mp4"},
-				Fixture:           "chromeVideoWithHWAV1Decoding",
+				Fixture:           "chromeVideo",
 			},
 			{
 				Name: "h264_720p_30fps_hw_lacros",
