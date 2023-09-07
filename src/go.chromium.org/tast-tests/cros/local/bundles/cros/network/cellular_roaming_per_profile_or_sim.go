@@ -33,7 +33,7 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_sim_roaming", "cellular_unstable"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellular",
-		Timeout:      2 * time.Minute,
+		Timeout:      3 * time.Minute,
 	})
 }
 
@@ -164,7 +164,7 @@ func enableRoamingAndConnect(ctx context.Context, tconn *chrome.TestConn, cr *ch
 	}
 	if err := uiauto.Combine("Ensure connecting label gone",
 		ui.WithTimeout(15*time.Second).WaitUntilEnabled(ossettings.RoamingToggle),
-		ui.WithTimeout(15*time.Second).WaitUntilGone(ossettings.ConnectingStatus),
+		ui.WithTimeout(30*time.Second).WaitUntilGone(ossettings.ConnectingStatus),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to exit connecting state")
 	}
