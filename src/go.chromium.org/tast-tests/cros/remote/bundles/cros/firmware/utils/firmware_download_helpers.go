@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -119,7 +120,7 @@ func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType 
 			testing.ContextLogf(ctx, "WARNING! failed to untar the image with the name %q: %v", filename, err)
 			continue
 		}
-		return filename, nil
+		return filepath.Join(tmpDir, filename), nil
 	}
 	return "", errors.Wrap(err, "failed to untar fw bin file from the downloaded tar file")
 }

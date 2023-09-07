@@ -10,9 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -58,7 +56,7 @@ type apROBootabilityPerformanceArgs struct {
 }
 
 const (
-	// firmwareFileName contains the name of the file to be downloaded from chromeos-image-archive.
+	// firmwareFileName contains the name of the file when downloaded.
 	firmwareFileName = "firmware_from_source.tar.bz2"
 
 	// fileOnDUTToFlash contains the path on the DUT, under which the firmware file to be tested
@@ -229,21 +227,16 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a new directory to store the downloaded files.
-	tmpDir, err := ioutil.TempDir("", "firmware-APROBootabilityPerformance")
+	tmpDir, err := os.MkdirTemp("", "firmware-APROBootabilityPerformance")
 	if err != nil {
 		s.Fatal("Failed to create a new directory for the test: ", err)
 	}
 	defer os.RemoveAll(tmpDir)
 
 	// Download the latest shipped firmware.
-	if err := downloadFirmwareFile(ctx, s, tmpDir, shippedFwVersions[len(shippedFwVersions)-1]); err != nil {
-		s.Fatal("Failed while downloading file: ", err)
-	}
-
-	// Untar the binary file with respect to the model name found in 'crossystem fwid'.
-	binToFlash, err := fwUtils.UntarUnknownFileName(ctx, tmpDir, fwidModel, fwUtils.APFirmware)
+	binToFlash, err := downloadAndUntarFwFile(ctx, s, tmpDir, fwidModel, shippedFwVersions[len(shippedFwVersions)-1])
 	if err != nil {
-		s.Fatal("Failed to untar file: ", err)
+		s.Fatal("Failed while downloading file: ", err)
 	}
 
 	// Back up a copy of the current AP firmware running on the DUT.
@@ -266,7 +259,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	// Create initialFwFromDUT on the host machine, and copy the
 	// DUT's currently running firmware to this file. This firmware
 	// is also referred to as the to-be-qualified RO_new/RW_new firmware.
-	initialFwFromDUT, err := ioutil.TempFile(tmpDir, "")
+	initialFwFromDUT, err := os.CreateTemp(tmpDir, "")
 	if err != nil {
 		s.Fatal("Failed to create a file to store the backup on host: ", err)
 	}
@@ -337,7 +330,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}(cleanupCtx, roNewID, initialRwFwid, initialActSection, initialFwFromDUT, testArgs)
 
 	// Flash the latest shipped RO and RW firmware.
-	if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), filepath.Join(tmpDir, binToFlash), fwpb.ImageSection_EmptyImageSection, testArgs.targetProgrammer); err != nil {
+	if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), binToFlash, fwpb.ImageSection_EmptyImageSection, testArgs.targetProgrammer); err != nil {
 		s.Fatalf("Failed to flash RO_old + RW_old ( %s + %s ): %v", shippedFwVersions[len(shippedFwVersions)-1], shippedFwVersions[len(shippedFwVersions)-1], err)
 	}
 
@@ -393,17 +386,13 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	// Repeat steps for older RO firmware versions (i.e., RO_old-n + RW_new).
 	for i := len(shippedFwVersions) - 2; i >= 0; i-- {
 		s.Log("Downloading an older shipped firmware file")
-		if err := downloadFirmwareFile(ctx, s, tmpDir, shippedFwVersions[i]); err != nil {
+		binToFlash, err := downloadAndUntarFwFile(ctx, s, tmpDir, fwidModel, shippedFwVersions[i])
+		if err != nil {
 			s.Fatal("Failed while downloading file: ", err)
 		}
 
-		s.Log("Untaring file")
-		if err := testexec.CommandContext(ctx, "tar", "-xvf", filepath.Join(tmpDir, firmwareFileName), "-C", tmpDir, binToFlash).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to untar file: ", err)
-		}
-
 		s.Log("Flashing the older RO 'shipped' firmware")
-		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), filepath.Join(tmpDir, binToFlash), testArgs.imageSectionRO, testArgs.targetProgrammer); err != nil {
+		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), binToFlash, testArgs.imageSectionRO, testArgs.targetProgrammer); err != nil {
 			s.Fatalf("Failed to flash RO_old-%d + RW_new ( %s + %s ): %v", len(shippedFwVersions)-i-1, shippedFwVersions[i], rwNewID, err)
 		}
 
@@ -451,89 +440,109 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 }
 
-// downloadFirmwareFile will download a tar file from cloud and save to a temporary directory,
-// based on the shipped firmware version passed in for test.
-func downloadFirmwareFile(ctx context.Context, s *testing.State, tmpDir string, fwToTest jsonFwInfo) error {
-	// Split fwid into separate components.
-	splitout := strings.Split(fwToTest.FwID, ".")
-	if len(splitout) != 3 {
-		return errors.Errorf("unexpected fw id format: %s", fwToTest.FwID)
+// downloadAndUntarFwFile downloads and untars a firmware source file from the cloud,
+// using the given model name and shipped firmware version. It returns the path to the
+// untarred firmware binary on the host.
+func downloadAndUntarFwFile(ctx context.Context, s *testing.State, tmpDir, fwidModel string, fwToTest jsonFwInfo) (string, error) {
+	// getValidURL runs 'gsutil ls' and returns the valid url containing the firmware source.
+	getValidURL := func(path string) (string, error) {
+		out, stderr, err := testexec.CommandContext(ctx, "gsutil", "ls", path).SeparatedOutput(testexec.DumpLogOnError)
+		if err != nil {
+			if !strings.Contains(string(stderr), "One or more URLs matched no objects.") {
+				return "", errors.Wrapf(err, "failed to run 'gsutil ls %s' to find the complete path: %s", path, stderr)
+			}
+			testing.ContextLogf(ctx, "Path not found for board %q", fwToTest.Board)
+			return "", nil
+		}
+
+		// Regular expression to match for the required firmware id.
+		re := regexp.MustCompile(`[R].*-` + fwToTest.FwID)
+		releasedFWid := re.FindString(string(out))
+		if releasedFWid == "" {
+			testing.ContextLogf(ctx, "No matches found for firmware id: %s board: %s", fwToTest.FwID, fwToTest.Board)
+			return "", nil
+		}
+
+		// There may be different URL patterns, under which the firmware file sits,
+		// from model to model, and from version to version for the same model.
+		var completeURL string
+		if path == "gs://chromeos-releases/canary-channel/"+fwToTest.Board+"/"+fwToTest.FwID+"/" {
+			partialFirmwareFileName := "ChromeOS-firmware-" + releasedFWid + "-" + fwToTest.Board
+			completeURL = path + partialFirmwareFileName + ".tar.bz2"
+		} else {
+			// Identify if there is a sub-directory with the name of the board.
+			out, stderr, err = testexec.CommandContext(ctx, "gsutil", "ls", path+"/"+releasedFWid).SeparatedOutput(testexec.DumpLogOnError)
+			if err != nil {
+				return "", errors.Wrapf(err, "failed to run 'gsutil ls' to check for sub-directories: %s:", stderr)
+			}
+			re = regexp.MustCompile(`.*` + releasedFWid + `/` + fwToTest.Board)
+			completeURL = re.FindString(string(out))
+			if completeURL == "" {
+				completeURL = path + "/" + releasedFWid + "/" + firmwareFileName
+			} else {
+				completeURL = completeURL + "/" + firmwareFileName
+			}
+		}
+		return completeURL, nil
+	}
+
+	// downloadFwFromURL stages and downloads the firmware file from the given URL.
+	downloadFwFromURL := func(url string) bool {
+		cs := s.CloudStorage()
+		r, err := cs.Stage(ctx, url)
+		if err != nil {
+			testing.ContextLog(ctx, "Failed to stage: ", err)
+			return false
+		}
+
+		if err = testexec.CommandContext(ctx, "wget", "-O", tmpDir+"/"+firmwareFileName, r.String()).Run(ssh.DumpLogOnError); err != nil {
+			testing.ContextLog(ctx, "Failed to download the file: ", err)
+			return false
+		}
+		return true
 	}
 
 	// List of possible paths that contain the firmware_from_source.tar.bz2 file.
 	pathsPool := []string{
 		/*
-			Use the branch name obtained from the json file as the first source to download the firmware file:
-			gs://chromeos-image-archive/firmware-kukui-12573.B-branch-firmware/R79-12573.342.0/
-		*/
-		"gs://chromeos-image-archive/" + fwToTest.Branch + "-branch-firmware",
-
-		/*
-			This format is one of the most commonly found:
+			Optional path to get firmware files:
 			gs://chromeos-image-archive/zork-firmware/R87-13434.635.0/
 		*/
 		"gs://chromeos-image-archive/" + fwToTest.Board + "-firmware",
 
 		/*
-			We've also seen the following on some models:
-			gs://chromeos-image-archive/firmware-zork-13434.B-branch-firmware/R87-13434.636.0/
+			Use the branch name obtained from the json file to download the firmware file:
+			gs://chromeos-image-archive/firmware-kukui-12573.B-branch-firmware/R79-12573.342.0/
 		*/
-		"gs://chromeos-image-archive/firmware-" + fwToTest.Board + "-" + splitout[0] + ".B-branch-firmware",
+		"gs://chromeos-image-archive/" + fwToTest.Branch + "-branch-firmware",
+
+		/*
+			Drawper, drawcia, drawlat and drawman firmware file for release R89-13606.485.0 can be downloaded from:
+			gs://chromeos-releases/canary-channel/dedede/13606.485.0/
+		*/
+		"gs://chromeos-releases/canary-channel/" + fwToTest.Board + "/" + fwToTest.FwID + "/",
 	}
 
-	// Regular expression to match the required firmware id.
-	re := regexp.MustCompile(`\/[R].*-` + fwToTest.FwID)
-
-	var releasedFWid, dir string
-	for _, dir = range pathsPool {
-		out, stderr, err := testexec.CommandContext(ctx, "gsutil", "ls", dir).SeparatedOutput(testexec.DumpLogOnError)
+	for _, path := range pathsPool {
+		testing.ContextLogf(ctx, "Using path: %s", path)
+		url, err := getValidURL(path)
 		if err != nil {
-			if !strings.Contains(string(stderr), "One or more URLs matched no objects.") {
-				return errors.Wrapf(err, "failed to run 'gsutil ls' to find the complete path: %s", stderr)
-			}
-			testing.ContextLogf(ctx, "WARNING! Model %q doesn't have the following path: %s", fwToTest.Board, dir)
-		} else {
-			releasedFWid = re.FindString(string(out))
-			if releasedFWid != "" {
-				break
+			return "", err
+		}
+
+		if url != "" {
+			if downloadFwFromURL(url) {
+				binToFlash, err := fwUtils.UntarUnknownFileName(ctx, tmpDir, fwidModel, fwUtils.APFirmware)
+				if err != nil {
+					testing.ContextLogf(ctx, "Unable to untar the firmware file for board: %s, model: %s, firmware ID: %s", fwToTest.Board, fwToTest.Model, fwToTest.FwID)
+				} else {
+					return binToFlash, nil
+				}
 			}
 		}
 	}
-	if releasedFWid == "" {
-		return errors.Errorf("no matches found for firmware id: %s board: %s in known paths", fwToTest.FwID, fwToTest.Board)
-	}
 
-	// Identify if there is a sub-directory with the name of the board.
-	out, stderr, err := testexec.CommandContext(ctx, "gsutil", "ls", dir+releasedFWid).SeparatedOutput(testexec.DumpLogOnError)
-	if err != nil {
-		return errors.Wrapf(err, "failed to run 'gsutil ls' to check for sub-directories: %s", stderr)
-	}
-	re = regexp.MustCompile(`.*` + releasedFWid + `/` + fwToTest.Board)
-	url := re.FindString(string(out))
-	if url == "" {
-		url = dir + releasedFWid + "/" + firmwareFileName
-	} else {
-		url = url + "/" + firmwareFileName
-	}
-
-	// Stage the complete path.
-	cs := s.CloudStorage()
-	r, err := cs.Stage(ctx, url)
-	if err != nil {
-		return errors.Wrapf(err, "failed to stage file for board %q", fwToTest.Board)
-	}
-
-	// Download the file.
-	if err := testexec.CommandContext(ctx, "wget", "-P", tmpDir, r.String()).Run(ssh.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to download the file")
-	}
-
-	// Rename the file.
-	if err := testexec.CommandContext(ctx, "mv", tmpDir+"/firmware_from_source.tar.bz2?gs_bucket=chromeos-image-archive", tmpDir+"/"+firmwareFileName).Run(ssh.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to rename the file")
-	}
-
-	return nil
+	return "", errors.Errorf("unable to get firmware file for board: %s, model: %s, firmware ID: %s", fwToTest.Board, fwToTest.Model, fwToTest.FwID)
 }
 
 // flashDUTAndReboot will send the bin files to a directory in the DUT, flash the files into the DUT with the bios service 'WriteImageFromMultiSectionFile'
@@ -674,7 +683,7 @@ func checkDeviation(ctx context.Context, h *firmware.Helper, baseline, result fl
 
 // collectShippedFws will parse the firmware IDs from the json file.
 func collectShippedFws(h *firmware.Helper, filepath string) ([]jsonFwInfo, error) {
-	out, err := ioutil.ReadFile(filepath)
+	out, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read JSON file")
 	}

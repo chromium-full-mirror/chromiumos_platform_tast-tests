@@ -259,7 +259,7 @@ func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 	ecBinToFlash := downloadFirmwareFromGCS(ctx, s, tmpDir, firmwarePathVal, fwidModel, fwUtils.ECFirmware)
 	s.Log("EC Firmware to Flash: ", ecBinToFlash)
 
-	if err := h.ServoProxy.PutFiles(ctx, false, map[string]string{fmt.Sprintf("%s/%s", tmpDir, ecBinToFlash): fmt.Sprintf("%s/%s", servoTmpDir, ecFirmwareFileToFlash)}); err != nil {
+	if err := h.ServoProxy.PutFiles(ctx, false, map[string]string{ecBinToFlash: fmt.Sprintf("%s/%s", servoTmpDir, ecFirmwareFileToFlash)}); err != nil {
 		s.Fatal("Failed to copy files to servo host: ", err)
 	}
 
@@ -287,7 +287,7 @@ func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 	apBinToFlash := downloadFirmwareFromGCS(ctx, s, tmpDir, firmwarePathVal, fwidModel, fwUtils.APFirmware)
 	s.Log("AP Firmware to Flash: ", apBinToFlash)
 
-	if err := h.ServoProxy.PutFiles(ctx, false, map[string]string{fmt.Sprintf("%s/%s", tmpDir, apBinToFlash): fmt.Sprintf("%s/%s", servoTmpDir, apFirmwareFileToFlash)}); err != nil {
+	if err := h.ServoProxy.PutFiles(ctx, false, map[string]string{apBinToFlash: fmt.Sprintf("%s/%s", servoTmpDir, apFirmwareFileToFlash)}); err != nil {
 		s.Fatal("Failed to copy files to servo host: ", err)
 	}
 
