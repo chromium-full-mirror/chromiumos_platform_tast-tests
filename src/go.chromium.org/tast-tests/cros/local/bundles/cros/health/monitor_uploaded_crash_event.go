@@ -146,8 +146,9 @@ func MonitorUploadedCrashEvent(ctx context.Context, s *testing.State) {
 	// meta files. However, occasionally `cros-health-tool` already has
 	// started subscribing while the *.meta file hasn't been created yet.
 	// Wait for crash files to be ready.
-	if crashFiles, err := crash.WaitForCrashFiles(ctx, crash.GetAllCrashDirs(ctx), []string{`coreutils\.[\d\.]+\.meta`}); err != nil {
-		s.Fatal("Failed to wait for crash files: ", err)
+	crashDirs := crash.GetAllCrashDirs(ctx)
+	if crashFiles, err := crash.WaitForCrashFiles(ctx, crashDirs, []string{`coreutils\.[\d\.]+\.meta`}); err != nil {
+		s.Fatalf("Failed to wait for crash files from %v: %s", crashDirs, err)
 	} else {
 		for _, files := range crashFiles {
 			for _, file := range files {
