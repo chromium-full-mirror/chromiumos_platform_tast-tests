@@ -19,7 +19,7 @@ func init() {
 		Func: FirmwareManagementParameters,
 		Desc: "Verifies that FirmwareManagementParameters are working correctly",
 		Contacts: []string{
-			"crow-hwsec@google.com",
+			"cros-hwsec@google.com",
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",
