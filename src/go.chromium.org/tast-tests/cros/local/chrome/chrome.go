@@ -299,9 +299,30 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	ctx, cancel := context.WithTimeout(origCtx, timeout)
 	defer cancel()
 
+	// Check whether ctx is long enough.
+	deadline, _ := ctx.Deadline()
+	remaining := time.Until(deadline)
+	cxtMayBeShort := remaining < timeout
+
 	// In case chrome.New fails for a deadline error, which might be caused
 	// by a browser hang, take minidump snapshots for diagnosis.
 	defer func(ctx context.Context) {
+		/**
+		* "context deadline exceeded" is not clear and people may be misled. See 2 examples:
+		* - b/267295043
+		* - b/257471572
+		* I propose that: if retErr contains "context deadline exceeded"
+		* and the ctx deadline duration is less than recommendation,
+		* a reminder message will be added.
+		* Here is a error message sample:
+		* "Failed to start Chrome: context deadline duration 14.999971871s exceed,
+		* it's better to have at least 4m0s: login failed: failed to finish user login:
+		* waiting for cryptohome failed: failed to wait for user mount and validate type:
+		* failed to get user home path: failed to call cryptohome-path user: context deadline exceeded"
+		 */
+		if retErr != nil && strings.Contains(retErr.Error(), "context deadline exceeded") && cxtMayBeShort {
+			retErr = errors.Wrapf(retErr, "context deadline duration %v exceed, it's better to have at least %v", remaining, timeout)
+		}
 		if retErr == nil || ctx.Err() == nil || origCtx.Err() != nil {
 			return
 		}
