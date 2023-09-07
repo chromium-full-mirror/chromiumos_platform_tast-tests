@@ -10,6 +10,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // RecoveryReasonValue represents recovery_reason attributes.
@@ -159,5 +160,7 @@ func (r *Reporter) ContainsRecoveryReason(ctx context.Context, expectedReasons [
 			return true, nil
 		}
 	}
+	testing.ContextLogf(ctx, "Recovery reason was %q", recoveryReasonCodesMap[RecoveryReasonValue(csRecReason)])
+
 	return false, nil
 }
