@@ -112,7 +112,7 @@ func OdfsAskBeforeMoving(ctx context.Context, s *testing.State) {
 	// Disable "Ask before moving" for OneDrive in Settings.
 	settingsApp := ossettings.New(tconn)
 	ms365Link := nodewith.Role(role.Link).Name("Microsoft 365 Open Word, Excel, and PowerPoint files")
-	toggleOptionName := "Ask before moving Microsoft files to OneDrive"
+	toggleOptionName := "Ask before copying or moving Microsoft files to Microsoft OneDrive"
 	if err := uiauto.Combine("Disable 'Ask before moving' for OneDrive in Settings",
 		files.ClickMoreMenuItem("Files settings"),
 		settingsApp.WaitUntilExists(ms365Link),

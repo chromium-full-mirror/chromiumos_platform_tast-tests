@@ -759,8 +759,8 @@ func (f *FilesApp) ConnectToOneDrive(ctx context.Context, ms365App *ms365.Ms365)
 	settingsApp := ossettings.New(f.tconn)
 	cloudUpload := cloudupload.App(f.tconn, filesconsts.OneDrive)
 
-	oneDriveDisconnectedLink := nodewith.Name("OneDrive Disconnected").Role(role.Link)
-	connectAccountButton := nodewith.Name("Connect account").Role(role.Button)
+	oneDriveDisconnectedLink := nodewith.Name("OneDrive Add your Microsoft account").Role(role.Link)
+	connectAccountButton := nodewith.Name("Add").Role(role.Button)
 	return uiauto.Combine("Connect to OneDrive via the Files settings page",
 		f.ClickMoreMenuItem("Files settings"),
 		settingsApp.WaitUntilExists(oneDriveDisconnectedLink),
