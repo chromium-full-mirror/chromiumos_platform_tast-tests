@@ -329,6 +329,11 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				testCase.DeviceMode == devicemode.TabletMode ||
 				(i.debianVersion == vm.DebianBuster && !testCase.MinimalSet)) {
 				extraAttr = append(extraAttr, "informational")
+
+				// TODO(b/269175095): Promote Lacros tests to critical after stabilizing for two weeks.
+				if bt == browser.TypeLacros {
+					extraAttr = append(extraAttr, "group:criticalstaging")
+				}
 			}
 
 			var extraSoftwareDeps []string

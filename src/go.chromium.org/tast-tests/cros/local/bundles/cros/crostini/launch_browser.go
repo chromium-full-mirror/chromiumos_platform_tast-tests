@@ -59,7 +59,7 @@ func init() {
 				Val:               browser.TypeAsh,
 			}, {
 				Name:              "bullseye_stable_lacros",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc", "lacros"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBullseyeWithLacros",

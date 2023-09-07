@@ -4,10 +4,11 @@
 
 package crostini
 
-// To update test parameters after modifying this file, run:
+// To update test parameters after modifying this file, run inside cros_sdk:
 // TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/
 
-// See src/go.chromium.org/tast-tests/cros/local/crostini/params.go for more documentation
+// For more documentation, see:
+// https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/crostini/params.go
 
 import (
 	"sort"
