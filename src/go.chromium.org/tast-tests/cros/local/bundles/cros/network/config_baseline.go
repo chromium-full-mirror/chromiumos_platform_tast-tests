@@ -38,7 +38,7 @@ func init() {
 			Val: testParam{
 				login: false,
 			},
-			Timeout: 1 * time.Minute,
+			Timeout: chrome.LoginTimeout + 40*time.Second,
 		}, {
 			Name: "login",
 			Val: testParam{
