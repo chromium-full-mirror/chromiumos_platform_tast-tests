@@ -236,6 +236,9 @@ service ShillService {
 
   // GetNetworksForGeolocation returns the GetNetworksForGeolocation manager property value.
   rpc GetNetworksForGeolocation(google.protobuf.Empty) returns (GetNetworksForGeolocationResponse) {}
+
+  // SetBSSIDRequested sets the BSSIDRequested service property value.
+  rpc SetBSSIDRequested(SetBSSIDRequestedRequest) returns (google.protobuf.Empty) {}
 }
 
 message ConnectRequest {
@@ -667,4 +670,9 @@ message GetTetheringConfigResponse {
   string upstream_technology = 5;
   string band = 6;
   bool mar = 7;
+}
+
+message SetBSSIDRequestedRequest {
+  string service_path = 1;
+  string bssid = 2;
 }

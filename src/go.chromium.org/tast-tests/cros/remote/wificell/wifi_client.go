@@ -563,3 +563,18 @@ func (cli *WifiClient) RequestScan(ctx context.Context) error {
 	}
 	return nil
 }
+
+// SetBSSIDRequested sets the BSSIDRequested service property in shill
+func (cli *WifiClient) SetBSSIDRequested(ctx context.Context, bssid string) error {
+	service, err := cli.ShillServiceClient.SelectedService(ctx, &empty.Empty{})
+	if err != nil {
+		return errors.Wrap(err, "failed to get selected service")
+	}
+	if _, err := cli.ShillServiceClient.SetBSSIDRequested(ctx, &wifi.SetBSSIDRequestedRequest{
+		ServicePath: service.ServicePath,
+		Bssid:       bssid,
+	}); err != nil {
+		return errors.Wrap(err, "failed to set BSSIDRequested")
+	}
+	return nil
+}

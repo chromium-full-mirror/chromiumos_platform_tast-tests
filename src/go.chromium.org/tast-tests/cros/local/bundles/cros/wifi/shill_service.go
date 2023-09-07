@@ -3574,3 +3574,18 @@ func (s *ShillService) RequestScan(ctx context.Context, _ *empty.Empty) (*empty.
 	}
 	return &empty.Empty{}, nil
 }
+
+// SetBSSIDRequested sets the BSSIDRequested service property in shill
+func (s *ShillService) SetBSSIDRequested(ctx context.Context, req *wifi.SetBSSIDRequestedRequest) (*empty.Empty, error) {
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+
+	service, err := shill.NewService(ctx, dbus.ObjectPath(req.ServicePath))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create service object")
+	}
+	if err := service.SetProperty(ctx, shillconst.ServicePropertyWiFiBSSIDRequested, req.Bssid); err != nil {
+		return nil, errors.Wrapf(err, "failed to set BSSIDRequested to %s", req.Bssid)
+	}
+	return &empty.Empty{}, nil
+}
