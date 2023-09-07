@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/dropdown"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	oss "go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -104,18 +105,13 @@ func verifyActiveInputNodeChanged(ctx context.Context, tconn *chrome.TestConn) e
 
 	ui := uiauto.New(tconn).WithTimeout(2 * time.Second)
 
-	// Verify UI also shows expected input node.
-	dropdownLabelEquals := func(label string) error {
-		if info, err := ui.Info(ctx, oss.OSAudioSettingsInputDeviceDropdown); err != nil {
-			return errors.Wrap(err, "failed to get input dropdown info")
-		} else if info.Value != label {
-			return errors.Wrapf(err, "failed match (device: %q != expected: %q)", info.Value, label)
-		}
-		return nil
+	// Verify the selected value matches the expected audio node label.
+	isSelected, err := dropdown.IsSelected(ctx, tconn, oss.OSAudioSettingsInputDeviceDropdown, microphoneLabel)
+	if err != nil {
+		return errors.Wrap(err, "failed to lookup initial selection")
 	}
-
-	if err := dropdownLabelEquals(microphoneLabel); err != nil {
-		return errors.Wrap(err, "failed to confirm active input device")
+	if !isSelected {
+		return errors.Errorf("failed to verify option with label: (%q) is selected", microphoneLabel)
 	}
 
 	// Change active node to loopback mic.
@@ -138,8 +134,12 @@ func verifyActiveInputNodeChanged(ctx context.Context, tconn *chrome.TestConn) e
 	}
 
 	// Confirm UI updated to show loopback as active node.
-	if err := dropdownLabelEquals(loopbackLabel); err != nil {
-		return errors.Wrap(err, "failed to confirm active input device")
+	isSelected, err = dropdown.IsSelected(ctx, tconn, oss.OSAudioSettingsInputDeviceDropdown, loopbackLabel)
+	if err != nil {
+		return errors.Wrap(err, "failed to lookup dropdown selection")
+	}
+	if !isSelected {
+		return errors.Errorf("failed to verify option with label: (%q) is selected", loopbackLabel)
 	}
 
 	loopbackNode, err := cras.GetNodeByMatcher(ctx, audio.MatchNodeTypeDirection{
@@ -150,7 +150,7 @@ func verifyActiveInputNodeChanged(ctx context.Context, tconn *chrome.TestConn) e
 		return errors.Wrap(err, "failed to get ALSA_LOOPBACK node")
 	}
 	if !loopbackNode.Active {
-		return errors.Wrap(err, "failed to verify selected node active in CRAS")
+		return errors.New("failed to verify ALSA_LOOPBACK node active in CRAS")
 	}
 	testing.ContextLogf(ctx, "Active input node set to: %q", loopbackNode.Type)
 	return nil
