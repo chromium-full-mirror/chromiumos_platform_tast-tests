@@ -41,8 +41,8 @@ const (
 func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 	var curPowerRole string
 	var nowPowerRole string
+
 	h := s.FixtValue().(*fixture.Value).Helper
-	port := 0 // TODO: Figure out which port to use
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -50,6 +50,12 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 	// PD tests require both a servo V4 connection and servo debug connection.
 	if err := h.Servo.RequirePDTester(ctx); err != nil {
 		s.Fatal("Servo configuration does not support PD testing: ", err)
+	}
+
+	port, err := h.Servo.GetPdPort(ctx)
+
+	if err != nil {
+		s.Fatal("Error in getting PD port: ", err)
 	}
 
 	if dualRole, err := h.Servo.GetDualRole(ctx, port); dualRole == false {

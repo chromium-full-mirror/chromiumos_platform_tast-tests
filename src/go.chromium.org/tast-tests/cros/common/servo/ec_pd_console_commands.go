@@ -17,6 +17,8 @@ const (
 	reEcPdRecv         string = `RECV\s([\w]+)`
 	// PdControlMsgMask -- bitmask for PD control messages
 	PdControlMsgMask int = 0x1f
+	// MaxPorts -- Max number of ports on EC
+	MaxPorts int = 4
 )
 
 // GetPDState Returns PD state console output
@@ -88,4 +90,30 @@ func (s *Servo) GetDualRole(ctx context.Context, port int) (bool, error) {
 	testing.ContextLog(ctx, "DualRole reply: ", out[0][1])
 
 	return out[0][1] == onResponse, nil
+}
+
+// GetPdPort returns enabled PD port number on EC
+func (s *Servo) GetPdPort(ctx context.Context) (int, error) {
+
+	pdPort := MaxPorts
+	numFound := 0
+
+	for port := 0; port < MaxPorts; port++ {
+		if out, err := s.GetPDState(ctx, port); err == nil {
+			testing.ContextLog(ctx, "PD state out: ", out)
+			if out[0][2] == "Enable" {
+				pdPort = port
+				numFound++
+			}
+		}
+	}
+
+	if numFound == 0 {
+		return pdPort, errors.New("no PD ports found")
+	} else if numFound > 1 {
+		return pdPort, errors.New("more than one PD port found")
+	}
+	testing.ContextLog(ctx, "Found PD port: ", pdPort)
+
+	return pdPort, nil
 }
