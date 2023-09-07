@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/cpu"
@@ -38,6 +39,8 @@ func init() {
 		Desc:            "Check if there any GPU related hangs during a test in an enrolled device",
 		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
 		Impl:            &gpuWatchHangsFixture{},
+		SetUpTimeout:    1 * time.Minute,
+		TearDownTimeout: 1 * time.Minute,
 		PreTestTimeout:  2 * time.Minute,
 		PostTestTimeout: 2 * time.Minute,
 		Parent:          fixture.Enrolled,
@@ -48,6 +51,8 @@ func init() {
 		Desc:            "Check if there any GPU related hangs during a test",
 		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
 		Impl:            &gpuWatchHangsFixture{},
+		SetUpTimeout:    1 * time.Minute,
+		TearDownTimeout: 1 * time.Minute,
 		PreTestTimeout:  2 * time.Minute,
 		PostTestTimeout: 2 * time.Minute,
 	})
@@ -239,27 +244,49 @@ type gpuWatchHangsFixture struct {
 	tearDownFunc []func(ctx context.Context) error
 }
 
+func modifyHangCheckTimer(ctx context.Context) (func(context.Context) error, error) {
+	hangCheckTimer, err := GetHangCheckTimer(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get hangcheck timer")
+	}
+	testing.ContextLog(ctx, "Hangcheck timer: ", hangCheckTimer)
+	return func(ctx context.Context) error {
+		testing.ContextLog(ctx, "Set hangcheck timer back to ", hangCheckTimer)
+		if err := SetHangCheckTimer(ctx, hangCheckTimer); err != nil {
+			return errors.Wrapf(err, "failed to set hangcheck timer back to %v", hangCheckTimer)
+		}
+		return nil
+	}, nil
+}
+
+func modifyDrmLogVerbosity(ctx context.Context) (func(context.Context) error, error) {
+	// 0xe should contains DRM_UT_DRIVER, DRM_UT_KMS, DRM_UT_PRIME but no DRM_UT_CORE as it is too spammy.
+	setDrmCommand := "echo 0xe > /sys/module/drm/parameters/debug"
+	if err := testexec.CommandContext(ctx, "sh", "-c", setDrmCommand).Run(); err != nil {
+		return nil, errors.Wrap(err, "failed to set drm debug verbosity")
+	}
+	return func(ctx context.Context) error {
+		unsetDrmCommand := "echo 0 > /sys/module/drm/parameters/debug"
+		if err := testexec.CommandContext(ctx, "sh", "-c", unsetDrmCommand).Run(); err != nil {
+			return errors.Wrap(err, "failed to unset drm debug verbosity")
+		}
+		return nil
+	}, nil
+}
+
 func (f *gpuWatchHangsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	if hangCheckTimer, err := GetHangCheckTimer(ctx); err != nil {
-		testing.ContextLog(ctx, "Warning: failed to get hangcheck timer. This is normal for kernels that doesn't support hangcheck timer configuration: ", err)
+	hangCheckCleanup, err := modifyHangCheckTimer(ctx)
+	if err != nil {
+		s.Log("Failed to set hangcheck timer, which is normal for kernels that doesn't support hangcheck timer configuration: ", err)
 	} else {
-		testing.ContextLog(ctx, "Hangcheck timer: ", hangCheckTimer)
-		// Only tries to check the hangcheck timer if we successfully get the timer.
-		f.tearDownFunc = append(f.tearDownFunc, func(ctx context.Context) error {
-			tTimer, err := GetHangCheckTimer(ctx)
-			if err != nil {
-				return errors.Wrap(err, "failed to get hangcheck timer")
-			}
-			testing.ContextLogf(ctx, "Original hangcheck timer: %v, current hangcheck timer: %v", hangCheckTimer, tTimer)
-			if tTimer == hangCheckTimer {
-				return nil
-			}
-			testing.ContextLog(ctx, "The hangcheck timer is not the same. Tries to set it back to ", hangCheckTimer)
-			if err := SetHangCheckTimer(ctx, hangCheckTimer); err != nil {
-				return errors.Wrap(err, "failed to set hangcheck timer back")
-			}
-			return nil
-		})
+		f.tearDownFunc = append(f.tearDownFunc, hangCheckCleanup)
+	}
+
+	drmLogCleanup, err := modifyDrmLogVerbosity(ctx)
+	if err != nil {
+		s.Log("Failed to modify drm log verbosity: ", err)
+	} else {
+		f.tearDownFunc = append(f.tearDownFunc, drmLogCleanup)
 	}
 	return nil
 }
