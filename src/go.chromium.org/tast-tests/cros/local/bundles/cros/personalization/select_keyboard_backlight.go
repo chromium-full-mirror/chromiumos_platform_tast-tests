@@ -32,6 +32,10 @@ func init() {
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-6b2d1b1d-3977-431c-a8b3-b1b9c41f6d44",
+		}},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model(personalization.RgbSupportedModels...)),
 		Timeout:      3 * time.Minute,

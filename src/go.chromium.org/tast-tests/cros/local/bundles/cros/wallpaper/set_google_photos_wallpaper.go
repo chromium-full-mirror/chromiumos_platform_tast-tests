@@ -41,7 +41,11 @@ func init() {
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-5d88ff46-9f09-4e3c-aef2-df56852ead57",
+		}},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Fixture:      "personalizationWithGooglePhotosWallpaper",

@@ -32,7 +32,11 @@ func init() {
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-2502e146-d4a3-4251-baba-d3cd24f18b45",
+		}},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"unicorn.wallpaperCategory", "unicorn.wallpaperName"},
 		Fixture:      "familyLinkUnicornLogin",
