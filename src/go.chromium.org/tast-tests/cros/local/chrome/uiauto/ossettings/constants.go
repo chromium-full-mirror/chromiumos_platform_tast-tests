@@ -69,8 +69,8 @@ var (
 // Files is a subpage link.
 var Files = nodewith.Name("Files").Role(role.Link).HasClass("item").Focusable()
 
-// PrintAndScan is a subpage link.
-var PrintAndScan = nodewith.Name("Print and scan").Role(role.Link).HasClass("item").Focusable()
+// PrintersAndScanners is a subpage link.
+var PrintersAndScanners = nodewith.Name("Printers and Scanners").Role(role.Link).HasClass("item").Focusable()
 
 // Developers is a subpage link.
 var Developers = nodewith.Name("Developers").Role(role.Link).HasClass("item").Focusable()

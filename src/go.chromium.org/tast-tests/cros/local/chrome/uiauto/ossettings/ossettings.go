@@ -526,7 +526,7 @@ func CommonSections(advanceExpanded bool) map[string]*nodewith.Finder {
 		sections["Date And Time"] = DateAndTime
 		sections["Languages And Inputs"] = LanguagesAndInputs
 		sections["Files"] = Files
-		sections["Print And Scan"] = PrintAndScan
+		sections["Printers and Scanners"] = PrintersAndScanners
 		sections["Developers"] = Developers
 		sections["Accessibility"] = Accessibility
 		sections["Reset Settings"] = ResetSettings
