@@ -179,6 +179,7 @@ func (s *StateManager) Activate(ctx context.Context, st StateManagerTestingState
 	// Chrome.
 	defer func() {
 		if errRet != nil && s.cr != nil {
+			chrome.Unlock()
 			s.cr.Close(ctx)
 		}
 	}()
