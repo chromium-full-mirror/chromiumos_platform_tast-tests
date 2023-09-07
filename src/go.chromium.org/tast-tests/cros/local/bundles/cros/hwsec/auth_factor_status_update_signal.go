@@ -10,6 +10,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -40,7 +41,7 @@ func init() {
 			"cryptohome-core@google.com",
 			"behnoodm@chromium.org", // Test author
 		},
-		BugComponent: "b:260904713",
+		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		Attr:         []string{"informational", "group:cryptohome", "group:mainline"},
 		SoftwareDeps: []string{"pinweaver", "chrome"},
 		Timeout:      100 * time.Second,
