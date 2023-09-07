@@ -854,6 +854,16 @@ func (im InputMethod) WaitUntilRemoved(tconn *chrome.TestConn) action.Action {
 // Activate sets the input method to use via Chrome API.
 // It does nothing if the IME is already in use.
 func (im InputMethod) Activate(tconn *chrome.TestConn) action.Action {
+	return uiauto.NamedCombine(fmt.Sprintf("activating input method %q", im.Name),
+		im.SetCurrentInputMethod(tconn),
+		im.WaitUntilActivated(tconn),
+	)
+}
+
+// SetCurrentInputMethod sets the current input method to use via Chrome API.
+// Note: The IME might still need sometime to warm up after this.
+// It's recommended to use im.Activate for input functional testing.
+func (im InputMethod) SetCurrentInputMethod(tconn *chrome.TestConn) action.Action {
 	f := func(ctx context.Context, fullyQualifiedIMEID string) error {
 		activeIME, err := ActiveInputMethod(ctx, tconn)
 		if err != nil {
@@ -863,10 +873,7 @@ func (im InputMethod) Activate(tconn *chrome.TestConn) action.Action {
 			return nil
 		}
 
-		if err := tconn.Call(ctx, nil, `chrome.inputMethodPrivate.setCurrentInputMethod`, fullyQualifiedIMEID); err != nil {
-			return errors.Wrapf(err, "failed to set current input method to %q", fullyQualifiedIMEID)
-		}
-		return im.WaitUntilActivated(tconn)(ctx)
+		return tconn.Call(ctx, nil, `chrome.inputMethodPrivate.setCurrentInputMethod`, fullyQualifiedIMEID)
 	}
 	return im.actionWithFullyQualifiedID(tconn, f)
 }
