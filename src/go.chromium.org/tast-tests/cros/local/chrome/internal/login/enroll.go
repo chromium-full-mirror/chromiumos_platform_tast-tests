@@ -481,7 +481,7 @@ func submitGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cfg 
 // authenticateWithGAIA authenticates by entering the password into the
 // corresponding GAIA field.
 func authenticateWithGAIA(ctx context.Context, oobeConn, gaiaConn *driver.Conn, creds credconfig.Creds) error {
-	if err := insertGAIAField(ctx, gaiaConn, "input[name=password]", creds.Pass); err != nil {
+	if err := insertGAIAField(ctx, gaiaConn, GaiaPasswordFieldFinder, creds.Pass); err != nil {
 		return errors.Wrap(err, "failed to fill in password field")
 	}
 
