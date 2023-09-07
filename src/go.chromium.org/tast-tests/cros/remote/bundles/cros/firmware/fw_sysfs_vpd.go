@@ -13,9 +13,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -38,9 +35,8 @@ func init() {
 			"js@semihalf.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO(b/194910939): Add back to firmware_unstable once this test actually works.
 		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{},
+		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
@@ -79,70 +75,6 @@ func FWSysfsVPD(ctx context.Context, s *testing.State) {
 		s.Fatal("Firmware version is below 8846, cannot continue: ", fwidMajor)
 	}
 
-	s.Log("Backing up current RW_VPD region for safety")
-	rwvpdPath, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
-		Programmer: pb.Programmer_BIOSProgrammer,
-		Section:    pb.ImageSection_RWVPDImageSection,
-	})
-	if err != nil {
-		s.Fatal("Failed to backup current RW_VPD region: ", err)
-	}
-	s.Log("RW_VPD region backup is stored at: ", rwvpdPath.Path)
-
-	s.Log("Backing up current RO_VPD region for safety")
-	rovpdPath, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
-		Programmer: pb.Programmer_BIOSProgrammer,
-		Section:    pb.ImageSection_ROVPDImageSection,
-	})
-	if err != nil {
-		s.Fatal("Failed to backup current RO_VPD region: ", err)
-	}
-	s.Log("RO_VPD region backup is stored at: ", rovpdPath.Path)
-
-	defer func(ctx context.Context) {
-		s.Log("Wait for DUT to reconnect")
-		if err = h.DUT.WaitConnect(ctx); err != nil {
-			s.Fatal("Failed to reconnect to DUT: ", err)
-		}
-
-		s.Log("Reconnecting to RPC services on DUT")
-		if err := h.RequireRPCClient(ctx); err != nil {
-			s.Fatal("Failed to reconnect to the RPC service on DUT: ", err)
-		}
-
-		s.Log("Reconnecting to BiosService on DUT")
-		if err := h.RequireBiosServiceClient(ctx); err != nil {
-			s.Fatal("Failed to reconnect to BiosServiceClient on DUT: ", err)
-		}
-
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to ensure the DUT is booted")
-		}
-
-		s.Log("Restoring RW_VPD image")
-		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, rwvpdPath); err != nil {
-			s.Error("Failed to restore RW_VPD image: ", err)
-		}
-
-		s.Log("Restoring RO_VPD image")
-		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, rovpdPath); err != nil {
-			s.Error("Failed to restore RO_VPD image: ", err)
-		}
-
-		s.Log("Removing VPD image backups from DUT")
-		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", rwvpdPath.Path).Output(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to delete RW_VPD image from DUT: ", err)
-		}
-
-		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", rovpdPath.Path).Output(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to delete RO_VPD image from DUT: ", err)
-		}
-	}(ctx)
-
-	// Shorten the deadline for everything to save some time for the restore.
-	ctx, cancel := ctxutil.Shorten(ctx, 60*time.Second)
-	defer cancel()
-
 	s.Log("Generating random strings for VPD values")
 	roSectionString := generateRandomString()
 	rwSectionString := generateRandomString()
@@ -163,6 +95,21 @@ func FWSysfsVPD(ctx context.Context, s *testing.State) {
 
 	s.Log("RW_TEST value: ", rwSectionString)
 	s.Log("RO_TEST value: ", roSectionString)
+
+	defer func(ctx context.Context) {
+		s.Log("Removing keys from RW_VPD")
+		h.EnsureDUTBooted(ctx)
+		err = h.DUT.Conn().CommandContext(ctx, "vpd", "-i", "RW_VPD", "-d", "RW_TEST").Run()
+		if err != nil {
+			s.Error("Failed to delete random RW_VPD value: ", err)
+		}
+
+		s.Log("Removing keys from RO_VPD")
+		err = h.DUT.Conn().CommandContext(ctx, "vpd", "-i", "RO_VPD", "-d", "RO_TEST").Run()
+		if err != nil {
+			s.Fatal("Failed to delete random RO_VPD value: ", err)
+		}
+	}(ctx)
 
 	s.Log("Writing RO_VPD value")
 	err = h.DUT.Conn().CommandContext(ctx, "vpd", "-i", "RO_VPD", "-s", fmt.Sprintf("RO_TEST=%s", roSectionString)).Run()
@@ -202,17 +149,5 @@ func FWSysfsVPD(ctx context.Context, s *testing.State) {
 
 	if string(newVPDRWout) != rwSectionString {
 		s.Fatalf("RO_VPD section mismtch! (expected: %s, got: %s)", rwSectionString, newVPDRWout)
-	}
-
-	s.Log("Removing keys form RW_VPD")
-	err = h.DUT.Conn().CommandContext(ctx, "vpd", "-i", "RW_VPD", "-d", "RW_TEST").Run()
-	if err != nil {
-		s.Fatal("Failed to delete random RW_VPD value: ", err)
-	}
-
-	s.Log("Removing keys from RO_VPD")
-	err = h.DUT.Conn().CommandContext(ctx, "vpd", "-i", "RO_VPD", "-d", "RO_TEST").Run()
-	if err != nil {
-		s.Fatal("Failed to delete random RO_VPD value: ", err)
 	}
 }
