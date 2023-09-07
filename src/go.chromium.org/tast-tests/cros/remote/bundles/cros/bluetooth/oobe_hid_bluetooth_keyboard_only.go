@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast/core/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
@@ -16,6 +17,7 @@ import (
 	util "go.chromium.org/tast-tests/cros/remote/bundles/cros/bluetooth/bluetoothutil"
 	crui "go.chromium.org/tast-tests/cros/remote/cros/ui"
 	oobeui "go.chromium.org/tast-tests/cros/remote/cros/ui/oobeui"
+	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -41,6 +43,7 @@ func init() {
 		ServiceDeps: []string{
 			"tast.cros.ui.AutomationService",
 			"tast.cros.ui.ChromeUIService",
+			"tast.cros.bluetooth.BluetoothService",
 		},
 		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),
 		Params: []testing.Param{
@@ -56,7 +59,7 @@ func init() {
 				ExtraAttr:         []string{"bluetooth_floss_flaky"},
 			},
 		},
-		Timeout: time.Minute * 5,
+		Timeout: time.Minute * 10,
 	})
 }
 
@@ -101,6 +104,29 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to configure btpeer as a %s device: %s", keyboardDevice.DeviceType(), err)
 	}
 
+	pollForPairedDevice := func() {
+		testing.ContextLog(ctx, "Waiting for Bluetooth keyboard device to be paired")
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			resp, err := fv.BluetoothService.DeviceIsPaired(ctx, &bts.DeviceIsPairedRequest{
+				DeviceAddress: keyboardDevice.LocalBluetoothAddress(),
+			})
+			if err != nil {
+				return errors.Wrap(err, " failed to check if keyboard device is paired")
+			}
+			if !resp.DeviceIsPaired {
+				return errors.Wrap(err, " keyboard device not paired as expected")
+			}
+			return nil
+		}, &testing.PollOptions{
+			Timeout:  30 * time.Second,
+			Interval: 5000 * time.Millisecond,
+		}); err != nil {
+			s.Fatal("Keyboard device not paired: ", err)
+		}
+	}
+
+	pollForPairedDevice()
+
 	pairedNodeName := fmt.Sprintf("\"%s Keyboard\" paired", keyboardDevice.AdvertisedName())
 
 	// Verify keyboard device is pairing.
@@ -108,6 +134,8 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, pairedNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
+
+	testing.ContextLog(ctx, "Turning off Bluetooth adapter")
 
 	if _, err := keyboardDevice.RPC().AdapterPowerOff(ctx); err != nil {
 		s.Fatal("Failed to turn of btpeer adapter: ", err)
@@ -117,24 +145,42 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find node: ", err)
 	}
 
-	// Discover btpeer as a keyboard.
-	keyboardDevice, err = bluetooth.NewEmulatedBTPeerDevice(ctx, fv.BTPeers[0], &bluetooth.EmulatedBTPeerDeviceConfig{
-		DeviceType: cbt.DeviceTypeKeyboard,
-	})
-	if err != nil {
-		s.Fatalf("Failed to configure btpeer as a %s device: %s", keyboardDevice.DeviceType(), err)
+	testing.ContextLog(ctx, "Turning on Bluetooth adapter")
+
+	// Turn Bluetooth adapter on.
+	if _, err := keyboardDevice.RPC().AdapterPowerOn(ctx); err != nil {
+		s.Fatal("Failed to turn of btpeer adapter: ", err)
 	}
 
-	// Verify keyboard device is pairing.
+	pollForPairedDevice()
+
+	testing.ContextLog(ctx, "Checking that paired Bluetooth keyboard node is found")
+
+	// Verify keyboard device is paired.
 	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, pairedNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
-	if res, err := uiautoSvc.Info(
-		ctx, &ui.InfoRequest{Finder: oobeui.ContinueButtonFinder}); err != nil {
-		s.Fatal("Failed to get restriction of continue button: ", err)
-	} else {
-		testing.ContextLog(ctx, "Continue button has restriction: ", res.NodeInfo.Restriction)
+	testing.ContextLog(ctx, "Checking that Bluetooth keyboard is paired")
+
+	pollForPairedDevice()
+
+	testing.ContextLog(ctx, "Checking that continue button is enabled")
+
+	// Wait for continue button to become enabled.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if res, err := uiautoSvc.Info(
+			ctx, &ui.InfoRequest{Finder: oobeui.ContinueButtonFinder}); err != nil {
+			return errors.Wrap(err, " failed to get restriction of continue button")
+		} else if res.NodeInfo.Restriction != ui.Restriction_RESTRICTION_NONE {
+			return errors.Wrap(err, " continue button is disabled")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  15 * time.Second,
+		Interval: 1000 * time.Millisecond,
+	}); err != nil {
+		s.Fatal("Continue button is not enabled: ", err)
 	}
 
 	testing.ContextLog(ctx, "Clicking the continue button")

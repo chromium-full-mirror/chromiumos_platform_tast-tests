@@ -21,9 +21,9 @@ const PairingKeyboardNodeName = "Pairing with"
 // for an element indicating DUT is looking for a mouse device to connect to.
 const SearchingForPointerNodeName = "Searching for pointing device"
 
-// FoundPointerNodeName part of a node name in OOBE HID detection page,
+// BluetoothMousePairedNodeName part of a node name in OOBE HID detection page,
 // for an element indicating a mouse is paired to DUT.
-const FoundPointerNodeName = "Pointing device connected"
+const BluetoothMousePairedNodeName = "Bluetooth mouse paired"
 
 // ContinueButtonFinder is the continue button in OOBE HID detection screen.
 var ContinueButtonFinder = &ui.Finder{
