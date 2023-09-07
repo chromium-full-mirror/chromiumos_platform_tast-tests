@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/security/selinux"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -22,9 +21,8 @@ func init() {
 		},
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
-		SoftwareDeps: []string{"chrome", "selinux"},
+		SoftwareDeps: []string{"selinux"},
 		Attr:         []string{"group:mainline"},
-		Pre:          chrome.LoggedIn(),
 	})
 }
 
