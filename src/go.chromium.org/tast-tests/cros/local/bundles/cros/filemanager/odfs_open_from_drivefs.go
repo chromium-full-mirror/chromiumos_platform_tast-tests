@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
@@ -86,17 +87,19 @@ func OdfsOpenFromDrivefs(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to launch files app to the test folder in My Drive: ", err)
 	}
+	defer filesApp.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, data.Chrome, "ui_tree")
 
 	for _, testFile := range data.GeneratedFiles {
 		if err := fsutil.CopyFile(filepath.Join(testDataFolder, testFile.FileName), driveFsClient.MyDrivePath(uniqueDriveFolderName, testFile.FileName)); err != nil {
-			s.Fatalf("Failed to copy test file %q to My Drive: %s", testFile.FileName, err)
+			s.Fatalf("Failed to copy test file %q to My Drive: %v", testFile.FileName, err)
 		}
 	}
 
 	// Wait for one of the files to appear. This may take longer than the usual
 	// 15 second timeout, so do this separately with a bigger timeout.
 	if err := filesApp.WithTimeout(30 * time.Second).WaitForFile(data.GeneratedFiles[0].FileName)(ctx); err != nil {
-		s.Fatalf("Failed to wait for office file %q to appear: %s", data.GeneratedFiles[0].FileName, err)
+		s.Fatalf("Failed to wait for office file %q to appear: %v", data.GeneratedFiles[0].FileName, err)
 	}
 
 	ms365App, err := ms365.App(ctx, tconn, accountPool)
@@ -107,7 +110,7 @@ func OdfsOpenFromDrivefs(ctx context.Context, s *testing.State) {
 	for i, testFile := range data.GeneratedFiles {
 		cloudUpload, err := filesApp.OpenOfficeFile(ctx, "", testFile.FileName, filesconsts.OneDrive)
 		if err != nil {
-			s.Fatalf("Failed to open office file %q: %s", testFile.FileName, err)
+			s.Fatalf("Failed to open office file %q: %v", testFile.FileName, err)
 		}
 
 		var setupActions []uiauto.Action
