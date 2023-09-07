@@ -1972,41 +1972,41 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			}
 
 			info := cujrecorder.WebRTCMetricInfo[hist.Name]
+			pv.Set(perf.Metric{
+				Name:      hist.Name,
+				Unit:      info.Unit,
+				Direction: info.Direction,
+			}, float64(hist.Sum))
+
 			var bucketMinima []float64
 			var bucketMaxima []float64
 			for _, bucket := range hist.Buckets {
+				// Only report the bucket max + mins if there's more than 1
+				// element in the bucket.
+				if bucket.Count <= 1 {
+					continue
+				}
+
 				for i := int64(0); i < bucket.Count; i++ {
 					bucketMinima = append(bucketMinima, float64(bucket.Min))
 					bucketMaxima = append(bucketMaxima, float64(bucket.Max))
 				}
+
+				pv.Set(perf.Metric{
+					Name:      hist.Name,
+					Variant:   "bucket_minima",
+					Unit:      info.Unit,
+					Direction: info.Direction,
+					Multiple:  true,
+				}, bucketMinima...)
+				pv.Set(perf.Metric{
+					Name:      hist.Name,
+					Variant:   "bucket_maxima",
+					Unit:      info.Unit,
+					Direction: info.Direction,
+					Multiple:  true,
+				}, bucketMaxima...)
 			}
-			total := float64(hist.Sum)
-			pv.Set(perf.Metric{
-				Name:      hist.Name,
-				Variant:   "bucket_minima",
-				Unit:      info.Unit,
-				Direction: info.Direction,
-				Multiple:  true,
-			}, bucketMinima...)
-			pv.Set(perf.Metric{
-				Name:      hist.Name,
-				Variant:   "bucket_maxima",
-				Unit:      info.Unit,
-				Direction: info.Direction,
-				Multiple:  true,
-			}, bucketMaxima...)
-			pv.Set(perf.Metric{
-				Name:      hist.Name,
-				Variant:   "total",
-				Unit:      info.Unit,
-				Direction: info.Direction,
-			}, total)
-			pv.Set(perf.Metric{
-				Name:      hist.Name,
-				Variant:   "mean",
-				Unit:      info.Unit,
-				Direction: info.Direction,
-			}, total/float64(count))
 		}
 	}
 
