@@ -34,7 +34,6 @@ func init() {
 		Contacts: []string{
 			"baseos-perf@google.com",
 			"chinglinyu@chromium.org",
-			"baseos-perf@google.com",
 		},
 		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
 		SoftwareDeps: []string{"chrome"},
@@ -47,7 +46,7 @@ func init() {
 			Val:               browser.TypeLacros,
 			Fixture:           "lacros",
 			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:              "lacros_unstable",
 			Val:               browser.TypeLacros,
