@@ -27,7 +27,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DualSimAreServicesUp,
 		Desc:         "Verifies that Shill receives SimSlot information from ModemManager and can set the primary sim slot",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health@google.com", "stevenjb@google.com", "pholla@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "stevenjb@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_dual_active", "cellular_ota_avl"},
 		Fixture:      "cellular",

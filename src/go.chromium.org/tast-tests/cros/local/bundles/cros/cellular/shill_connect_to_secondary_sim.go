@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShillConnectToSecondarySim,
 		Desc:         "Verifies that Shill can connect to a service in a different slot",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health@google.com", "stevenjb@google.com", "pholla@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "stevenjb@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_dual_active", "cellular_ota_avl"},
 		Fixture:      "cellular",
