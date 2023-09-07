@@ -576,22 +576,47 @@ func wmRC13(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 // wmRC14 covers resizable/clamshell: snap to half screen
 // Expected behavior is defined in: go/arc-wm-r RC14: resizable/clamshell: snap to half screen.
 func wmRC14(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device) error {
+	// Start a new activity.
+	act, err := arc.NewActivity(a, wm.Pkg24, wm.ResizableUnspecifiedActivity)
+	if err != nil {
+		return errors.Wrap(err, "failed to create new activity")
+	}
+	defer act.Close(ctx)
+
+	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to start new activity")
+	}
+	defer act.Stop(ctx, tconn)
+
+	if err := wm.WaitUntilActivityIsReady(ctx, tconn, act, d); err != nil {
+		return errors.Wrap(err, "failed to wait until activity is ready")
+	}
+
+	if _, err := d.WaitForWindowUpdate(ctx, wm.Pkg24, time.Second); err != nil {
+		return errors.Wrap(err, "failed to wait for activity window updated")
+	}
+
+	// On small displays, the app gets launched in a maximized state although the test assumes the app is in a freeform mode.
+	if err := wm.RestoreARCWindowIfMaximized(ctx, tconn, wm.Pkg24); err != nil {
+		return errors.Wrap(err, "failed to restore window if maximized")
+	}
+
 	// Snap to half by long pressing on the maximize caption button and drag to the right.
-	if err := snapToHalfHelper(ctx, tconn, a, d, false, false); err != nil {
+	if err := snapToHalfHelper(ctx, tconn, a, d, act, false, false); err != nil {
 		return errors.Wrap(err, "snap to half by long pressing on the maximize caption button and drag to the right failed")
 	}
 
 	// Snap to half by long pressing on the maximize caption button and drag to the left.
-	if err := snapToHalfHelper(ctx, tconn, a, d, false, true); err != nil {
+	if err := snapToHalfHelper(ctx, tconn, a, d, act, false, true); err != nil {
 		return errors.Wrap(err, "snap to half by long pressing on the maximize caption button and drag to the left failed")
 	}
 
 	// Snap to half by dragging the activity to the top right corner.
-	if err := snapToHalfHelper(ctx, tconn, a, d, true, false); err != nil {
+	if err := snapToHalfHelper(ctx, tconn, a, d, act, true, false); err != nil {
 		return errors.Wrap(err, "snap to half by dragging the activity to the top right corner failed")
 	}
 	// Snap to half by dragging the activity to the top left corner.
-	if err := snapToHalfHelper(ctx, tconn, a, d, true, true); err != nil {
+	if err := snapToHalfHelper(ctx, tconn, a, d, act, true, true); err != nil {
 		return errors.Wrap(err, "snap to half by dragging the activity to the top left corner failed")
 	}
 	return nil
@@ -830,34 +855,7 @@ func wmRC22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 // snapToHalfHelper runs snap to half test cases by either
 // long pressing on the maximize caption button (dragTheActivity = false)  and drag to the left (isLeft = true) or right (isLeft = false),
 // or by dragging the activity (dragTheActivity = true) to the top left (isLeft = true) or right (isLeft = false) corner of the screen.
-func snapToHalfHelper(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, dragTheActivity, isLeft bool) error {
-	// Start a new activity.
-	act, err := arc.NewActivity(a, wm.Pkg24, wm.ResizableUnspecifiedActivity)
-	if err != nil {
-		return errors.Wrap(err, "failed to create new activity")
-	}
-	defer act.Close(ctx)
-
-	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to start new activity")
-	}
-	defer func(ctx context.Context) {
-		act.Stop(ctx, tconn)
-	}(ctx)
-
-	if err := wm.WaitUntilActivityIsReady(ctx, tconn, act, d); err != nil {
-		return errors.Wrap(err, "failed to wait until activity is ready")
-	}
-
-	if _, err := d.WaitForWindowUpdate(ctx, wm.Pkg24, time.Second); err != nil {
-		return errors.Wrap(err, "failed to wait for activity window updated")
-	}
-
-	// On small displays, the app gets launched in a maximized state although the test assumes the app is in a freeform mode.
-	if err := wm.RestoreARCWindowIfMaximized(ctx, tconn, wm.Pkg24); err != nil {
-		return errors.Wrap(err, "failed to restore window if maximized")
-	}
-
+func snapToHalfHelper(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, act *arc.Activity, dragTheActivity, isLeft bool) error {
 	dInfo, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to get primary display info")
@@ -866,9 +864,9 @@ func snapToHalfHelper(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d
 		return errors.New("failed to find primary display info")
 	}
 
-	if dragTheActivity {
-		pc := pointer.NewMouse(tconn)
+	pc := pointer.NewMouse(tconn)
 
+	if dragTheActivity {
 		if err := wm.DragCaptionToSnap(ctx, tconn, pc, dInfo, act, isLeft); err != nil {
 			return errors.Wrap(err, "failed to drag caption bar to corner of screen")
 		}
@@ -885,7 +883,7 @@ func snapToHalfHelper(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d
 		left = dInfo.WorkArea.Width / 2
 	}
 
-	return testing.Poll(ctx, func(ctx context.Context) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		snpInfo, err := ash.GetARCAppWindowInfo(ctx, tconn, wm.Pkg24)
 		if err != nil {
 			return errors.Wrap(err, "failed to get arc app window info")
@@ -898,7 +896,18 @@ func snapToHalfHelper(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second})
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		return err
+	}
+
+	if err := wm.DragCaptionToUnsnap(ctx, tconn, pc, dInfo, act); err != nil {
+		return errors.Wrap(err, "failed to drag caption bar to unsnap")
+	}
+	if err := wm.WaitForArcAndAshWindowState(ctx, tconn, d, act, arc.WindowStateNormal); err != nil {
+		return errors.Wrap(err, "failed to wait until window state changes to unsnapped")
+	}
+
+	return nil
 }
 
 // rcDisplaySizeChangeTestsHelper is used for Tast-tests that are testing resolution change and its effects on an activity.
