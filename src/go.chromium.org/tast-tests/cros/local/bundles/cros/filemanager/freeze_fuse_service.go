@@ -109,36 +109,50 @@ func (f *FreezeFUSEService) TestMountZipAndSuspend(ctx context.Context, request 
 
 	files, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not launch the Files App")
+		lastErr = errors.Wrap(err, "could not launch the Files App")
+		testing.ContextLog(ctx, lastErr)
+		return nil, lastErr
 	}
 	defer files.Close(cleanupCtx)
 
 	if err := files.OpenDownloads()(ctx); err != nil {
-		return nil, errors.Wrap(err, "could not open Downloads folder")
+		lastErr = errors.Wrap(err, "could not open Downloads folder")
+		testing.ContextLog(ctx, lastErr)
+		return nil, lastErr
 	}
 
 	// Wait for the zip file to show up in the UI.
 	if err := files.WithTimeout(3 * time.Minute).WaitForFile(zipFile)(ctx); err != nil {
-		return nil, errors.Wrap(err, "Waiting for test ZIP file failed")
+		lastErr = errors.Wrap(err, "Waiting for test ZIP file failed")
+		testing.ContextLog(ctx, lastErr)
+		return nil, lastErr
 	}
 
 	if err := files.OpenFile(zipFile)(ctx); err != nil {
-		return nil, errors.Wrap(err, "Opening ZIP file failed")
+		lastErr = errors.Wrap(err, "Opening ZIP file failed")
+		testing.ContextLog(ctx, lastErr)
+		return nil, lastErr
 	}
 
 	node := nodewith.Name("Files - " + zipFile).Role(role.RootWebArea)
 	if err := files.WithTimeout(time.Minute).WaitUntilExists(node)(ctx); err != nil {
-		return nil, errors.Wrapf(err, "Mounting ZIP file %q failed", zipFile)
+		lastErr = errors.Wrapf(err, "Mounting ZIP file %q failed", zipFile)
+		testing.ContextLog(ctx, lastErr)
+		return nil, lastErr
 	}
 
 	if err := cmd.Start(); err != nil {
-		return nil, errors.Wrap(err, "Unable to start archive stress script")
+		lastErr = errors.Wrap(err, "Unable to start archive stress script")
+		testing.ContextLog(ctx, lastErr)
+		return nil, lastErr
 	}
 
 	for i := int32(1); i <= request.Iterations; i++ {
 		successfulSuspends, err := readSuccessfulSuspends(ctx)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to read successful suspends before suspend attempt")
+			lastErr = errors.Wrap(err, "failed to read successful suspends before suspend attempt")
+			testing.ContextLog(ctx, lastErr)
+			return nil, lastErr
 		}
 
 		// Suspend for 20 seconds since the stress script slows us down. Freeze of userspace happens before setting the
@@ -146,22 +160,30 @@ func (f *FreezeFUSEService) TestMountZipAndSuspend(ctx context.Context, request 
 		testing.ContextLogf(ctx, "Attempting suspend iteration %d", i)
 		if _, err := suspend.Request(ctx, suspend.Delay(0*time.Second), suspend.WithoutRetries(),
 			suspend.For(20*time.Second), suspend.Timeout(30*time.Second)); err != nil {
-			return nil, errors.Wrap(err, "DUT failed to properly suspend")
+			lastErr = errors.Wrap(err, "DUT failed to properly suspend")
+			testing.ContextLog(ctx, lastErr)
+			return nil, lastErr
 		}
 
 		successfulSuspendsAfter, err := readSuccessfulSuspends(ctx)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to read successful suspends after suspend attempt")
+			lastErr = errors.Wrap(err, "failed to read successful suspends after suspend attempt")
+			testing.ContextLog(ctx, lastErr)
+			return nil, lastErr
 		}
 		if successfulSuspendsAfter != successfulSuspends+1 {
-			return nil, errors.Errorf("successful suspends did not increase by 1. Before: %d, After: %d", successfulSuspends, successfulSuspendsAfter)
+			lastErr = errors.Errorf("successful suspends did not increase by 1. Before: %d, After: %d", successfulSuspends, successfulSuspendsAfter)
+			testing.ContextLog(ctx, lastErr)
+			return nil, lastErr
 		}
 
 		if err := shill.WaitForOnlineAfterResume(ctx); err != nil {
-			return nil, errors.Wrap(err, "timed out waiting for the network to connect after resume")
+			lastErr = errors.Wrap(err, "timed out waiting for the network to connect after resume")
+			testing.ContextLog(ctx, lastErr)
+			return nil, lastErr
 		}
 
-		// Allow some time for the server to connect to the DUT.
+		// GoBigSleepLint: Allow some time for the server to connect to the DUT.
 		testing.Sleep(ctx, 5*time.Second)
 	}
 
