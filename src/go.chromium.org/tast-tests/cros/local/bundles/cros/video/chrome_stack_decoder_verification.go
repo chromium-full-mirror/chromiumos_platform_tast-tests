@@ -1105,7 +1105,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_comprehensive",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8ComprehensiveFiles),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1118,7 +1118,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_inter",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8InterFiles),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1131,7 +1131,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_inter_multi_coeff",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8InterMultiCoeffFiles),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1144,7 +1144,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_inter_segment",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8InterSegmentFiles),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1157,7 +1157,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_intra",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8IntraFiles),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1170,7 +1170,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_intra_multi_coeff",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8IntraMultiCoeffSegmentFiles),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1183,7 +1183,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_intra_segment",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8IntraSegmentFiles),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1196,7 +1196,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp9_0_group1_buf",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp90Group1Buf),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1209,7 +1209,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp9_0_group1_gf_dist",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp90Group1GfDist),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1222,7 +1222,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp9_0_group1_odd_size",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp90Group1OddSize),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1235,7 +1235,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp9_0_group1_sub8x8",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp90Group1Sub8x8),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1248,7 +1248,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_main",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(h264Files["main"]),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1261,7 +1261,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_baseline",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(h264Files["baseline"]),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1274,7 +1274,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_high",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(h264Files["high"]),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -1287,7 +1287,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_first_mb_in_slice",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(h264Files["first_mb_in_slice"]),
 				Val: chromeStackDecoderVerificationTestParam{
