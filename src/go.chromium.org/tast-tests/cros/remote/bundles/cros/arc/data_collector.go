@@ -630,6 +630,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 				s.Fatalf("Failed to create temp cache dir %q:  %v", tmpCachesDir, err)
 			}
 
+			testing.ContextLog(ctx, "Decompressing system image")
 			if err := decompressSystemImage(ctx, d, param.vmEnabled, tempDir); err != nil {
 				s.Fatal("Failed to decompress system image: ", err)
 			}
@@ -666,6 +667,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			if err = os.Mkdir(vendorDstDir, 0744); err != nil {
 				s.Fatalf("Failed to create %q: %v", vendorDstDir, err)
 			}
+			testing.ContextLog(ctx, "Decompressing vendor image")
 			if err := decompressVendorImage(ctx, d, param.vmEnabled, vendorDstDir); err != nil {
 				s.Fatal("Failed to decompress vendor image: ", err)
 			}
@@ -1004,35 +1006,57 @@ func decompressVendorImage(ctx context.Context, d *dut.DUT, vmEnabled bool, dstD
 }
 
 func decompressImage(ctx context.Context, d *dut.DUT, vmEnabled bool, imageName, dstDir string) error {
+	dutImagePath := filepath.Join(getAndroidPath(vmEnabled), imageName)
+
+	isErofsImage := d.Conn().CommandContext(ctx, "unsquashfs", "-s", dutImagePath).Run() != nil &&
+		d.Conn().CommandContext(ctx, "dump.erofs", dutImagePath).Run() == nil
+
+	// If the remote image is an EROFS image, repack it as a Squashfs image on DUT
+	// before transferring. This is a temporary workaround until b/293823961 is resolved.
+	if isErofsImage {
+		testing.ContextLogf(ctx, "%s is an EROFS image. Repacking it as a Squashfs image", imageName)
+
+		repackedImagePath := "/tmp/data_collector_repacked." + imageName
+		if err := repackErofsImageAsSquashfs(ctx, d, dutImagePath, repackedImagePath); err != nil {
+			return errors.Wrapf(err, "failed to repack EROFS image %s", dutImagePath)
+		}
+		defer dututils.RemoveAllRemote(ctx, d, repackedImagePath)
+
+		dutImagePath = repackedImagePath
+	}
+
+	testing.ContextLogf(ctx, "Transferring remote image %s to local", dutImagePath)
 	localImg := filepath.Join(dstDir, imageName)
 	if err := linuxssh.GetFile(
 		ctx, d.Conn(),
-		filepath.Join(getAndroidPath(vmEnabled), imageName), localImg,
+		dutImagePath, localImg,
 		linuxssh.PreserveSymlinks); err != nil {
 		return errors.Wrapf(err, "failed to get %q from the device", imageName)
 	}
 
-	// Temporary check for fsck.erofs until b/293823961 is resolved.
-	// TODO(niwa): Remove this once we confirm that fsck.erofs is executable from this test in CFT container.
-	if err := testexec.CommandContext(ctx, "fsck.erofs", "-V").Run(testexec.DumpLogOnError); err != nil {
-		testing.ContextLog(ctx, "fsck.erofs is not available: ", err)
-	} else {
-		testing.ContextLog(ctx, "fsck.erofs is available")
+	if err := testexec.CommandContext(ctx, "unsquashfs", "-no-xattrs", "-f", "-d", dstDir, localImg).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "failed to decompress Squashfs image: %v", imageName)
 	}
 
-	// Detect image type with `unsquashfs -s`.
-	if err := testexec.CommandContext(ctx, "unsquashfs", "-s", localImg).Run(); err == nil {
-		// Decompress Squashfs image with `unsquashfs`.
-		if err := testexec.CommandContext(ctx, "unsquashfs", "-no-xattrs", "-f", "-d", dstDir, localImg).Run(testexec.DumpLogOnError); err != nil {
-			return errors.Wrapf(err, "failed to decompress Squashfs image: %v", imageName)
-		}
-	} else {
-		// Decompress EROFS image with `fsck.erofs --extract`.
-		if err := testexec.CommandContext(ctx, "fsck.erofs", "--extract="+dstDir, localImg).Run(testexec.DumpLogOnError); err != nil {
-			return errors.Wrapf(err, "failed to decompress EROFS image: %v", imageName)
-		}
-	}
+	return nil
+}
 
+// repackErofsImageAsSquashfs remotely repacks an EROFS image at |srcImagePath| as a Squashfs image at |dstImagePath| on DUT.
+func repackErofsImageAsSquashfs(ctx context.Context, d *dut.DUT, srcImagePath, dstImagePath string) error {
+	const extractDir = "/tmp/data_collector_extracted"
+
+	if err := dututils.MkdirRemote(ctx, d, extractDir); err != nil {
+		return errors.Wrapf(err, "failed to create %s", extractDir)
+	}
+	defer dututils.RemoveAllRemote(ctx, d, extractDir)
+
+	if err := d.Conn().CommandContext(ctx, "fsck.erofs", "--extract="+extractDir, srcImagePath).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "failed to decompress %s", srcImagePath)
+	}
+	if err := d.Conn().CommandContext(ctx, "mksquashfs", extractDir, dstImagePath).Run(testexec.DumpLogOnError); err != nil {
+		dututils.RemoveAllRemote(ctx, d, dstImagePath)
+		return errors.Wrapf(err, "failed to recompress %s", srcImagePath)
+	}
 	return nil
 }
 
