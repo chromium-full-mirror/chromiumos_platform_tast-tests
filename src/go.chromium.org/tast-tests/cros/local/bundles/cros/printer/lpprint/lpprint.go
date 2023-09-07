@@ -47,7 +47,7 @@ func Run(ctx context.Context, ppdFilePath, toPrintFilePath, options string) ([]b
 	if result, err := d.CupsAddManuallyConfiguredPrinter(ctx, printerID, "socket://localhost:9101", ppd); err != nil {
 		return nil, errors.Wrap(err, "debugd.CupsAddManuallyConfiguredPrinter failed")
 	} else if result != debugd.CUPSSuccess {
-		return nil, errors.Errorf("could not set up a printer: %d", result)
+		return nil, errors.Errorf("could not set up a printer: %v", result)
 	}
 
 	testing.ContextLog(ctx, "Issuing print request")

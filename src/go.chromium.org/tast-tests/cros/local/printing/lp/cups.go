@@ -68,7 +68,7 @@ func CupsAddPrinter(ctx context.Context, printerName, uri, ppd string) error {
 	if result, err := d.CupsAddManuallyConfiguredPrinter(ctx, printerName, uri, ppdContents); err != nil {
 		return errors.Wrap(err, "debugd.CupsAddManuallyConfiguredPrinter failed")
 	} else if result != debugd.CUPSSuccess {
-		return errors.Errorf("could not set up a printer: %d", result)
+		return errors.Errorf("could not set up a printer: %v", result)
 	}
 	return nil
 }
