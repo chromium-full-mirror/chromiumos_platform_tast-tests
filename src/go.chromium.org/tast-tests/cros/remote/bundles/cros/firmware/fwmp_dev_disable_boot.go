@@ -178,7 +178,40 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 			s.Fatal("Unexpected error occurred while attempting to boot DUT: ", err)
 		}
 
-		s.Log("Found DUT stuck at DeveloperToNorm screen, attempting boot into normal mode")
+		s.Log("Found DUT stuck at DeveloperToNorm screen")
+		if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher {
+			s.Log("Verifying if 'Cancel' option is available")
+			navigate, err := firmware.NewMenuNavigator(ctx, h)
+			if err != nil {
+				s.Fatal("Failed to create a new menu navigator: ", err)
+			}
+
+			s.Log("Moving to the topmost option")
+			if err := firmware.MoveTo(ctx, h, navigate, 3, 0); err != nil {
+				s.Fatal("Failed to move to the topmost option: ", err)
+			}
+
+			s.Log("Moving two options down")
+			if err := firmware.MoveTo(ctx, h, navigate, 0, 2); err != nil {
+				s.Fatal("Failed to move two options down: ", err)
+			}
+
+			if err := navigate.SelectOption(ctx); err != nil {
+				s.Fatal("Failed to select option: ", err)
+			}
+
+			// If 'Cancel' option is available, moving two options down navigates to 'Power Off'
+			// If 'Cancel' option is disabled, moving two options down navigates to 'Language'
+			if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
+				if !errors.As(err, &context.DeadlineExceeded) {
+					s.Fatal("Unexpected error when expecting the DUT at S0: ", err)
+				}
+			} else {
+				s.Fatal("Got DUT at G3, the 'Cancel' option was found present unexpectedly")
+			}
+		}
+
+		s.Log("Attempting boot into normal mode")
 		if err := confirmContinueToNorm(ctx, h, ms); err != nil {
 			s.Fatal("Failed to confirm continue to norm: ", err)
 		}
