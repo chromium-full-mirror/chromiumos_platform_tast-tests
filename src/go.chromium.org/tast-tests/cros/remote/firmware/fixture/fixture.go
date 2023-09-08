@@ -470,8 +470,10 @@ func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
 		i.origGBBFlags = nil
 	}(ctx)
 
-	// Close the servo to reset pd role, watchdogs, etc.
-	i.value.Helper.CloseServo(ctx)
+	// Close the servo to reset pd role, watchdogs, etc. unless we are booted from USB as resetting the pd role will make the dut reboot.
+	if i.value.BootMode != common.BootModeRecovery && i.value.BootMode != common.BootModeUSBDev {
+		i.value.Helper.CloseServo(ctx)
+	}
 	// Close the RPC client in case the DUT rebooted at some point, and it doesn't recover well.
 	i.value.Helper.CloseRPCConnection(ctx)
 
