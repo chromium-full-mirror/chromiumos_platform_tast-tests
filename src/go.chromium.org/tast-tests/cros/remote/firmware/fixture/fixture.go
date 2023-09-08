@@ -429,6 +429,19 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		if i.copyTastFiles && mode == *i.origBootMode {
 			opts = append(opts, firmware.CopyTastFiles)
 		}
+
+		if i.value.BootMode == common.BootModeRecovery {
+			// Read the hardware WP state, and disable if necessary
+			if val, err := i.value.Helper.Servo.GetString(ctx, servo.FWWPState); err != nil {
+				s.Fatal("Failed to query write protect: ", err)
+			} else if val == "on" || val == string(servo.FWWPStateOn) {
+				s.Log("Disabling write protect to allow PD negotiation in EC-RO")
+				if err := i.value.Helper.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+					s.Fatal("Failed to disable write protect: ", err)
+				}
+			}
+		}
+
 		if err := rebootToMode(ctx, i.value.Helper, i.value.BootMode, opts...); err != nil {
 			s.Fatalf("Failed to reboot to mode %q: %s", i.value.BootMode, err)
 		}
