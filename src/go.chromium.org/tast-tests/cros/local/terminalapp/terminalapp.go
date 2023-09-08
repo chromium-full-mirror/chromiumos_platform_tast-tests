@@ -27,6 +27,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/vm"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -74,14 +75,18 @@ type TerminalApp struct {
 }
 
 func launch(ctx context.Context, tconn *chrome.TestConn, link, tab *nodewith.Finder) (*TerminalApp, error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	// Launch the Terminal App.
 	if err := apps.Launch(ctx, tconn, apps.Terminal.ID); err != nil {
 		return nil, errors.Wrap(err, "failed to launch the Terminal App through package apps")
 	}
 	ta, err := find(ctx, tconn, link, tab)
 	if err != nil {
-		if closeErr := apps.Close(ctx, tconn, apps.Terminal.ID); closeErr != nil {
-			testing.ContextLog(ctx, "Error closing terminal app: ", closeErr)
+		if closeErr := apps.Close(cleanupCtx, tconn, apps.Terminal.ID); closeErr != nil {
+			testing.ContextLog(cleanupCtx, "Error closing terminal app: ", closeErr)
 		}
 		return nil, errors.Wrap(err, "failed to find the Terminal App")
 	}
