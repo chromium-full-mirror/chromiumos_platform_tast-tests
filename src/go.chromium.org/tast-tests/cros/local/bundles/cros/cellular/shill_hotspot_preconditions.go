@@ -36,7 +36,7 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
 	defer cancel()
 	defer func(ctx context.Context) {
-		cellular.CheckIfl850VerizonAndFixDefaultAPN(ctx)
+		cellular.CheckIfL850VerizonAndFixDefaultAPN(ctx)
 		// Restart shill after test to unload the tethering modb.
 		if errs := helper.ResetShill(ctx); errs != nil {
 			s.Fatal("Failed to reset shill: ", errs)

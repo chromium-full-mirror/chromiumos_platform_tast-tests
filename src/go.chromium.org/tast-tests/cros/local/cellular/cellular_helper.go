@@ -190,10 +190,10 @@ func CheckIfVilbozVerizonAndFixAttachAPN(ctx context.Context) {
 	}
 }
 
-// CheckIfl850VerizonAndFixDefaultAPN checks if the device has a L850GL modem with a verizon SIM card,
+// CheckIfL850VerizonAndFixDefaultAPN checks if the device has a L850GL modem with a verizon SIM card,
 // and tries to fix the default APN in the modem. This is needed because there are 2 bugs
 // in the modem FW that causes the modem to report the last used APN as provisioned by the carrier(b/289540816, b/289530609).
-func CheckIfl850VerizonAndFixDefaultAPN(ctx context.Context) {
+func CheckIfL850VerizonAndFixDefaultAPN(ctx context.Context) {
 	modemType, err := GetModemType(ctx)
 	if err != nil || modemType != cellularconst.ModemTypeL850 {
 		return
@@ -221,6 +221,15 @@ func CheckIfl850VerizonAndFixDefaultAPN(ctx context.Context) {
 	if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
 		testing.ContextLog(ctx, "Failed to disconnect: ", err)
 	}
+	// Disable/Enable the modem to ensure shill gets the new modem profiles, otherwise shill will
+	// use the previous value on the next connection attempt and it will override it again.
+	if err := modem.Disable(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to disable: ", err)
+	}
+	if err := modem.Enable(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to enable: ", err)
+	}
+	return
 }
 
 // WaitForEnabledState polls for the specified enable state for cellular.
