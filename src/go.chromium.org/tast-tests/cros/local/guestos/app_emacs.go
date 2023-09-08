@@ -38,7 +38,7 @@ func SetupEmacs(ctx context.Context, guest vm.Guest) error {
 // was written.
 func CreateFileWithEmacs(ctx context.Context, keyboard *input.KeyboardEventWriter, terminal *terminalapp.TerminalApp, tconn *chrome.TestConn, guest vm.Guest, d screenshot.Differ) error {
 	const (
-		testFile   = "test.txt"
+		testFile   = "app_emacs.txt"
 		testString = "This is a test string"
 	)
 

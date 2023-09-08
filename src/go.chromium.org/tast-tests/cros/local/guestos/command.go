@@ -24,7 +24,7 @@ func CommandVim(ctx context.Context, terminal *terminalapp.TerminalApp, keyboard
 	}
 
 	const (
-		testFile   = "test.txt"
+		testFile   = "command_vim.txt"
 		testString = "This is a test string."
 	)
 
