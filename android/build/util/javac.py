@@ -30,8 +30,6 @@ def javac(sources, android_sdk_platform, output_dir):
       'javac',
       '-XDskipDuplicateBridges=true',
       '-XDstringConcat=inline',
-      '-source', '1.8',
-      '-target', '1.8',
       '-Xlint',
       '-d',
       output_dir,
