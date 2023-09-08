@@ -42,7 +42,7 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),
 		},
-		Fixture: "crostiniBusterPolicy",
+		Fixture: "crostiniBullseyePolicy",
 		Data: []string{
 			"download.html",
 			"data.txt",

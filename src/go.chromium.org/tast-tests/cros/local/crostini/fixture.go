@@ -289,10 +289,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "crostiniBusterPolicy",
-		Desc:     "Install Crostini with Buster, with Chrome logged in with policy",
+		Name:     "crostiniBullseyePolicy",
+		Desc:     "Install Crostini with Bullseye, with Chrome logged in with policy",
 		Contacts: []string{"clumptini+oncall@google.com", "aidazolic@google.com"},
-		Impl: &crostiniFixture{preData: preTestDataBuster,
+		Impl: &crostiniFixture{preData: preTestDataBullseye,
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.EnableFeatures("NewFilesPolicyUX")}, nil
 			},
@@ -303,9 +303,8 @@ func init() {
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          fixture.ChromePolicyLoggedIn,
 		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("buster", false), GetContainerRootfsArtifact("buster", false)},
+		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
 	})
-
 }
 
 // preTestData contains the data to set up the fixture.
