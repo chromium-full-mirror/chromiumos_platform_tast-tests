@@ -152,6 +152,10 @@ func Wait(ctx context.Context, systemServicesTimeout time.Duration) error {
 			} else if hasTPM(ctx) {
 				if err := ensureTPMInitialized(ctx); err != nil {
 					testing.ContextLog(ctx, "Failed ensuring that TPM is initialized: ", err)
+					testing.ContextLog(ctx, "Run this on DUT may fix the bad TPM state (NOTE: it clobbers stateful partition):")
+					testing.ContextLog(ctx, "\techo 'clobber' > /mnt/stateful_partition/.update_available && ",
+						"crossystem clear_tpm_owner_request=1 && ",
+						"reboot")
 				}
 				checkEnterpriseOwned(ctx)
 			} else {
