@@ -30,7 +30,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
-		Fixture:      bruschetta.BruschettaFixture,
+		Fixture:      bruschetta.BruschettaFixtureClamshell,
 		Timeout:      15 * time.Minute,
 	})
 }

@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/bruschetta/constants"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/devicemode"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -50,6 +51,8 @@ const (
 
 	// BruschettaFixture is the name of the fixture with ash.
 	BruschettaFixture = "bruschettaReferenceVM"
+	// BruschettaFixtureClamshell is the name of the fixture with ash, only in clamshell mode.
+	BruschettaFixtureClamshell = "bruschettaReferenceVMClamshell"
 	// BruschettaFixtureWithLacros is the name of the fixture with lacros.
 	BruschettaFixtureWithLacros = "bruschettaReferenceVMWithLacros"
 
@@ -75,6 +78,18 @@ func init() {
 		TearDownTimeout: uninstallationTimeout,
 		Data:            []string{referenceVMInstaller, referenceVMInstallerHash, referenceVMPflash, referenceVMPflashHash},
 		Parent:          fixture.ChromePolicyLoggedInBruschetta,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            BruschettaFixtureClamshell,
+		Desc:            "Set up reference VM in clamshell mode",
+		Contacts:        []string{"sidereal@google.com", "jamesye@google.com", "clumptini+oncall@google.com"},
+		Impl:            &bruschettaAppsFixture{deviceMode: devicemode.ClamshellMode},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Data:            []string{referenceVMInstaller, referenceVMInstallerHash, referenceVMPflash, referenceVMPflashHash},
+		Parent:          BruschettaFixture,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            BruschettaFixtureWithLacros,
@@ -106,6 +121,12 @@ type bruschettaFixture struct {
 	logOffset    int
 	bruschettaVM *vm.BruschettaVM
 	kb           *input.KeyboardEventWriter
+}
+
+type bruschettaAppsFixture struct {
+	tconn            *chrome.TestConn
+	deviceMode       devicemode.DeviceMode
+	revertDeviceMode func(ctx context.Context) error
 }
 
 // FixtureData is the data returned by SetUp and passed to tests.
@@ -331,6 +352,35 @@ func (f *bruschettaFixture) saveLogs(ctx context.Context, outdir, suffix string)
 		return errors.Wrap(err, "failed to write to log file")
 	}
 
+	return nil
+}
+
+func (f *bruschettaAppsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	p := s.ParentValue().(FixtureData)
+	f.tconn = p.Tconn
+
+	revert, err := devicemode.EnsureDeviceMode(ctx, f.tconn, f.deviceMode)
+	if err != nil {
+		s.Fatalf("Failed to set device mode to %s: %s", f.deviceMode, err)
+	}
+	f.revertDeviceMode = revert
+
+	return p
+}
+
+func (f *bruschettaAppsFixture) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
+func (f *bruschettaAppsFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+
+func (f *bruschettaAppsFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if f.revertDeviceMode != nil {
+		if err := f.revertDeviceMode(ctx); err != nil {
+			s.Log("Failed to reset device mode: ", err)
+		}
+		f.revertDeviceMode = nil
+	}
+}
+
+func (f *bruschettaAppsFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
