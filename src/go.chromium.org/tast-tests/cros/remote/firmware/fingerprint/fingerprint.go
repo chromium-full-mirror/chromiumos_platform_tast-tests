@@ -446,6 +446,7 @@ func FlashRWFirmware(ctx context.Context, d *rpcdut.RPCDUT, firmwareFile string)
 		"/opt/sbin/crosec-legacy-drv",
 		"-p", "ec:type=fp",
 		"-i", "EC_RW",
+		"-N",
 		"-w", firmwareFile,
 	}
 	cmd := d.DUT().Conn().CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
