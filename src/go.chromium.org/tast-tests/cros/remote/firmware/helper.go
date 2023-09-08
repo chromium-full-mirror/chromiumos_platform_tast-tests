@@ -849,12 +849,25 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 		}
 	}
 	testing.ContextLogf(ctx, "Waiting for %s to connect", h.DUT.HostName())
+	dfpFailures := 0
 	for {
 		// SetDUTPDDataRole would fail when DUT is still in the process
 		// of waking up from hibernation.
 		if !wcOptsContain(opts, FromHibernation) {
 			if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
-				testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %s", err)
+				testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
+				dfpFailures++
+				if dfpFailures == 3 {
+					ok, err := h.Servo.HasControl(ctx, string(servo.PDRole))
+					if err != nil {
+						testing.ContextLogf(ctx, "Failed to check for %q control: %s", servo.PDRole, err)
+					} else if ok {
+						err = h.Servo.SetPDRole(ctx, servo.PDRoleSnk)
+						if err != nil {
+							testing.ContextLogf(ctx, "Failed to set pd role to %q: %s", servo.PDRoleSnk, err)
+						}
+					}
+				}
 			}
 		}
 		err := func(ctx context.Context) error {
