@@ -23,6 +23,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -89,7 +91,7 @@ func init() {
 		},
 		Data: []string{
 			"download.html", // download.html required for CheckDMTokenRegistered.
-			"file_input.html",
+			"7ssns.txt",
 			"10ssns.txt",
 			"allowed.txt",
 			"content.exe",
@@ -221,7 +223,7 @@ func TestFileTransfer(ctx context.Context, s *testing.State) {
 	}
 	defer closeFilesApp(cleanupCtx)
 
-	for _, testFileParams := range helpers.GetTestFileParams() {
+	for _, testFileParams := range helpers.GetTestFileParamsWithWarn() {
 		if succeeded := s.Run(ctx, testFileParams.TestName, func(ctx context.Context, s *testing.State) {
 			subTestCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 			defer cancel()
@@ -264,6 +266,9 @@ func testFileTransferForFile(
 			shouldBlockTransfer = testFileParams.IsBad
 		}
 	}
+
+	shouldWarnTransfer := testParams.ScansEnabled && !testParams.AllowsImmediateDelivery && !shouldBlockTransfer && testFileParams.IsWarn
+
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error")
@@ -325,7 +330,7 @@ func testFileTransferForFile(
 			s.Fatal("Failed to wait for deep scanning verdict: ", err)
 		}
 		if !testFileParams.IsUnscannable {
-			if err := helpers.VerifyDeepScanningVerdict(ctx, dconnSafebrowsing, testFileParams.IsBad); err != nil {
+			if err := helpers.VerifyDeepScanningVerdict(ctx, dconnSafebrowsing, testFileParams.IsBad, testFileParams.IsWarn); err != nil {
 				s.Fatal("Failed to verify deep scanning verdict: ", err)
 			}
 		}
@@ -335,6 +340,10 @@ func testFileTransferForFile(
 	if shouldBlockTransfer {
 		if err := waitForFileTransferBlocked(ctx, testFileParams, filesApp); err != nil {
 			s.Fatal("Failed to verify that file was blocked: ", err)
+		}
+	} else if shouldWarnTransfer {
+		if err := waitForFileTransferWarnedAndProceed(ctx, testFileParams, filesApp); err != nil {
+			s.Fatal("Failed to verify that file was warned and proceed the warning: ", err)
 		}
 	} else {
 		if err := filesApp.WithTimeout(10 * time.Second).WaitForFile(fileName)(ctx); err != nil {
@@ -352,6 +361,75 @@ func waitForFileTransferBlocked(
 	if err := filesApp.EnsureFileGone(fileName, 5*time.Second)(ctx); err != nil {
 		return errors.Wrap(err, "failed to verify that file didn't appear")
 	}
+
+	filesFeedbackWindow := nodewith.Role(role.Complementary).Name("Files feedback window").First()
+	if err := filesApp.Exists(filesFeedbackWindow)(ctx); err != nil {
+		return errors.Wrap(err, "couldn't verify that files feedback window exists")
+	}
+
+	blockedTitle := nodewith.Role(role.StaticText).Name("File blocked from copying").Ancestor(filesFeedbackWindow).First()
+	if err := filesApp.Exists(blockedTitle)(ctx); err != nil {
+		return errors.Wrap(err, "couldn't verify that the right primary block message is shown")
+	}
+
+	secondaryText := nodewith.Role(role.StaticText).Name(fileName + " was blocked because of content").Ancestor(filesFeedbackWindow).First()
+	if err := filesApp.Exists(secondaryText)(ctx); err != nil {
+		return errors.Wrap(err, "couldn't verify that the right secondary block message is shown")
+	}
+
+	dismissButton := nodewith.Role(role.Button).Name("Dismiss").Ancestor(filesFeedbackWindow).First()
+	if err := uiauto.Combine("Click dismiss button",
+		filesApp.WaitUntilExists(dismissButton),
+		filesApp.DoDefault(dismissButton),
+		filesApp.WithTimeout(3*time.Second).WaitUntilGone(filesFeedbackWindow),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "couldn't dismiss the files feedback window")
+	}
+
+	return nil
+}
+
+func waitForFileTransferWarnedAndProceed(
+	ctx context.Context,
+	testFileParams helpers.TestFileParams,
+	filesApp *filesapp.FilesApp,
+) error {
+	fileName := testFileParams.FileName
+
+	// If a file is warned, it shouldn't be copied yet.
+	if err := filesApp.EnsureFileGone(fileName, 5*time.Second)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify that file didn't appear")
+	}
+
+	filesFeedbackWindow := nodewith.Role(role.Complementary).Name("Files feedback window").First()
+	if err := filesApp.Exists(filesFeedbackWindow)(ctx); err != nil {
+		return errors.Wrap(err, "couldn't verify that files feedback window exists")
+	}
+
+	warnedTitle := nodewith.Role(role.StaticText).Name("Review is required before copying").Ancestor(filesFeedbackWindow).First()
+	if err := filesApp.Exists(warnedTitle)(ctx); err != nil {
+		return errors.Wrap(err, "couldn't verify that the right primary warn message is shown")
+	}
+
+	secondaryText := nodewith.Role(role.StaticText).Name(fileName + " may contain sensitive content").Ancestor(filesFeedbackWindow).First()
+	if err := filesApp.Exists(secondaryText)(ctx); err != nil {
+		return errors.Wrap(err, "couldn't verify that the right secondary warn message is shown")
+	}
+
+	proceedButton := nodewith.Role(role.Button).Name("Copy anyway").Ancestor(filesFeedbackWindow).First()
+	if err := uiauto.Combine("Click proceed button",
+		filesApp.WaitUntilExists(proceedButton),
+		filesApp.DoDefault(proceedButton),
+		// A successful copy will dismiss the files feedback window after 4s, we wait until it's gone.
+		filesApp.WithTimeout(10*time.Second).WaitUntilGone(filesFeedbackWindow),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "couldn't proceed with the transfer")
+	}
+
+	if err := filesApp.WithTimeout(3 * time.Second).WaitForFile(fileName)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify that file was transferred")
+	}
+
 	return nil
 }
 

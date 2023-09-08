@@ -42,6 +42,7 @@ type TestFileParams struct {
 	UlBlockLabel  string
 	IsBad         bool
 	IsUnscannable bool
+	IsWarn        bool
 }
 
 // DownloadBubbleState indicates the download state indicated by the download bubble (see launch/4200678).
@@ -72,6 +73,7 @@ func GetTestFileParams() []TestFileParams {
 			UlBlockLabel:  "This file is encrypted. Ask its owner to decrypt.",
 			IsBad:         true,
 			IsUnscannable: true,
+			IsWarn:        false,
 		},
 		{
 			TestName:      "Unknown malware",
@@ -79,6 +81,7 @@ func GetTestFileParams() []TestFileParams {
 			UlBlockLabel:  "This file or your device doesn’t meet some of your organization’s security policies. Check with your admin on what needs to be fixed.",
 			IsBad:         true,
 			IsUnscannable: false,
+			IsWarn:        false,
 		},
 		{
 			TestName:      "Known malware",
@@ -86,6 +89,7 @@ func GetTestFileParams() []TestFileParams {
 			UlBlockLabel:  "This file or your device doesn’t meet some of your organization’s security policies. Check with your admin on what needs to be fixed.",
 			IsBad:         true,
 			IsUnscannable: false,
+			IsWarn:        false,
 		},
 		{
 			TestName:      "DLP clear text",
@@ -93,6 +97,8 @@ func GetTestFileParams() []TestFileParams {
 			UlBlockLabel:  "This file or your device doesn’t meet some of your organization’s security policies. Check with your admin on what needs to be fixed.",
 			IsBad:         true,
 			IsUnscannable: false,
+			// 10ssns.txt also triggers the warning rule, so expect both a warn and a block verdict.
+			IsWarn: true,
 		},
 		{
 			TestName:      "Allowed file",
@@ -100,8 +106,21 @@ func GetTestFileParams() []TestFileParams {
 			UlBlockLabel:  "",
 			IsBad:         false,
 			IsUnscannable: false,
+			IsWarn:        false,
 		},
 	}
+}
+
+// GetTestFileParamsWithWarn returns the list of parameters for the files that should be tested including a file that should be warned.
+func GetTestFileParamsWithWarn() []TestFileParams {
+	return append(GetTestFileParams(), TestFileParams{
+		TestName:      "Warned file",
+		FileName:      "7ssns.txt",
+		UlBlockLabel:  "",
+		IsBad:         false,
+		IsUnscannable: false,
+		IsWarn:        true,
+	})
 }
 
 // WaitForDMTokenRegistered waits until a valid DM token exists.
@@ -331,9 +350,9 @@ func WaitForDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *browser.
 	}, &testing.PollOptions{Timeout: timeout, Interval: 5 * time.Second})
 }
 
-// VerifyDeepScanningVerdict verifies that the deep scanning verdict corresponds to shouldBlock.
-func VerifyDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *browser.Conn, shouldBlock bool) error {
-	var isBlocked bool
+// VerifyDeepScanningVerdict verifies that the deep scanning verdict corresponds to shouldBlock and shouldWarn.
+func VerifyDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *browser.Conn, shouldBlock, shouldWarn bool) error {
+	data := make(map[string]bool)
 	if err := dconnSafebrowsing.Eval(ctx, `(async () => {
 		const table = document.getElementById("deep-scan-list");
 		if (table.rows.length == 0) {
@@ -343,21 +362,31 @@ func VerifyDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *browser.C
 		if (table.rows[table.rows.length - 1].cells[1].innerHTML.length == 0) {
 			throw 'Invalid empty response detected';
 		}
-		// We check if the last entry includes a block message.
-		return table.rows[table.rows.length - 1].cells[1].innerHTML.includes("BLOCK");
-		})()`, &isBlocked); err != nil {
+		// We check if the last entry includes a block or warn message.
+		const state = new Map();
+		state["blocked"] = table.rows[table.rows.length - 1].cells[1].innerHTML.includes("BLOCK");
+		state["warned"] = table.rows[table.rows.length - 1].cells[1].innerHTML.includes("WARN");
+		return state;
+		})()`, &data); err != nil {
 		var tableHTML string
 		if err := dconnSafebrowsing.Eval(ctx, `document.getElementById("deep-scan-list").outerHTML`, &tableHTML); err != nil {
 			return errors.Wrap(err, "failed to get html of table")
 		}
 		return errors.Wrapf(err, "failed to check deep-scan-list entry. Html of table: %v", tableHTML)
 	}
-	if isBlocked != shouldBlock {
+	if data["blocked"] != shouldBlock {
 		var tableHTML string
 		if err := dconnSafebrowsing.Eval(ctx, `document.getElementById("deep-scan-list").outerHTML`, &tableHTML); err != nil {
-			return errors.Wrapf(err, "block state (%v) doesn't match expectation (%v). Failed to get html of table", isBlocked, shouldBlock)
+			return errors.Wrapf(err, "block state (%v) doesn't match expectation (%v). Failed to get html of table", data["blocked"], shouldBlock)
 		}
-		return errors.Errorf("block state (%v) doesn't match expectation (%v). Html of table: %v", isBlocked, shouldBlock, tableHTML)
+		return errors.Errorf("block state (%v) doesn't match expectation (%v). Html of table: %v", data["blocked"], shouldBlock, tableHTML)
+	}
+	if data["warned"] != shouldWarn {
+		var tableHTML string
+		if err := dconnSafebrowsing.Eval(ctx, `document.getElementById("deep-scan-list").outerHTML`, &tableHTML); err != nil {
+			return errors.Wrapf(err, "warn state (%v) doesn't match expectation (%v). Failed to get html of table", data["warned"], shouldWarn)
+		}
+		return errors.Errorf("warn state (%v) doesn't match expectation (%v). Html of table: %v", data["warned"], shouldWarn, tableHTML)
 	}
 	return nil
 }

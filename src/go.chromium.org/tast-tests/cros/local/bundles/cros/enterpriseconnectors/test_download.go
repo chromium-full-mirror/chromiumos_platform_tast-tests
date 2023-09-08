@@ -327,7 +327,7 @@ func TestDownload(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to wait for deep scanning verdict: ", err)
 				}
 				if !params.IsUnscannable {
-					if err := helpers.VerifyDeepScanningVerdict(ctx, dconnSafebrowsing, params.IsBad); err != nil {
+					if err := helpers.VerifyDeepScanningVerdict(ctx, dconnSafebrowsing, params.IsBad, params.IsWarn); err != nil {
 						s.Fatal("Failed to verify deep scanning verdict: ", err)
 					}
 				}

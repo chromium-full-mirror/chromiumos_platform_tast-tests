@@ -120,3 +120,8 @@ func (f *FilesApp) EnsureFocused(finder *nodewith.Finder) uiauto.Action {
 func (f *FilesApp) RetryUntil(action, condition uiauto.Action) uiauto.Action {
 	return f.ui.RetryUntil(action, condition)
 }
+
+// DoDefault calls ui.DoDefault scoping the finder to the Files App.
+func (f *FilesApp) DoDefault(finder *nodewith.Finder) uiauto.Action {
+	return f.ui.DoDefault(finder.FinalAncestor(WindowFinder(f.appID)))
+}
