@@ -229,6 +229,9 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}
 
+	// b/289540816: Ensure the APN in the modem doesn't contain a leftover value from a manual test.
+	CheckIfL850VerizonAndFixDefaultAPN(ctx)
+
 	// Ensure that the primary SIM slot has a valid SIM.
 	if !(f.useTestESIM || f.restartMM || sfish != nil) {
 		if err := modem.EnsureValidSIM(ctx); err != nil {
