@@ -28,7 +28,7 @@ func init() {
 		},
 		BugComponent: "b:1087262", // ChromeOS > Data > Engineering > Metrics
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 	})
 }
 
