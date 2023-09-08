@@ -61,7 +61,6 @@ func init() {
 func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 	tc := s.Param().(wilcoPowerBehaviorTestParams)
 	h := s.FixtValue().(*fixture.Value).Helper
-	d := s.DUT()
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -86,18 +85,27 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 		if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 			s.Fatal("Failed to remove watchdog main: ", err)
 		}
+		s.Logf("Pressing power button for %s to put DUT in deep sleep", h.Config.HoldPwrButtonPowerOff)
+		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOff)); err != nil {
+			s.Fatal("Failed to hold power button: ", err)
+		}
 	}
-
-	s.Logf("Pressing power button for %s to put DUT in deep sleep", h.Config.HoldPwrButtonPowerOff)
-	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOff)); err != nil {
-		s.Fatal("Failed to hold power button: ", err)
+	if tc.checkLidState {
+		defer func() {
+			if err := h.Servo.OpenLid(ctx); err != nil {
+				s.Fatal("Failed to ensure lid open at the end of test: ", err)
+			}
+		}()
+		if err := h.Servo.CloseLid(ctx); err != nil {
+			s.Fatal("Failed to set lid_open to no: ", err)
+		}
 	}
 
 	s.Log("Waiting for DUT to power OFF")
 	waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancelUnreachable()
 
-	if err := d.WaitUnreachable(waitUnreachableCtx); err != nil {
+	if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
 		s.Fatal("DUT did not power down: ", err)
 	}
 
@@ -107,95 +115,51 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 	// after DUT awakened, and verify that its value has changed
 	// from 0 to 1.
 	checkTPMRSTLState := false
+	// Increase timeout in getting response from cr50 uart.
+	if err := h.Servo.SetString(ctx, "cr50_uart_timeout", "10"); err != nil {
+		s.Fatal("Failed to set cr50 uart timeout: ", err)
+	}
+	defer func() {
+		s.Log("Restoring cr50 uart timeout to the default value of 3 seconds")
+		if err := h.Servo.SetString(ctx, "cr50_uart_timeout", "3"); err != nil {
+			s.Fatal("Failed to restore default cr50 uart timeout: ", err)
+		}
+	}()
+
+	s.Log("Verifying DUT's AP is off")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		apState, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccdstate", []string{`AP:(\s+\w+)`})
+		if err != nil {
+			return errors.Wrap(err, "failed to run cr50 command")
+		}
+
+		if strings.TrimSpace(apState[0][1]) != "off" {
+			return errors.Wrapf(err, "unexpected AP state: %s", strings.TrimSpace(apState[0][1]))
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+		if !strings.Contains(err.Error(), "Client.Timeout exceeded while awaiting headers") {
+			s.Fatal("Failed to verify DUT's AP is off: ", err)
+		}
+		s.Log("Cr50 not responsive, check for TPM_RST_L state after rebooting the DUT")
+		checkTPMRSTLState = true
+	}
 	if tc.checkCharger {
-		// Increase timeout in getting response from cr50 uart.
-		if err := h.Servo.SetString(ctx, "cr50_uart_timeout", "10"); err != nil {
-			s.Fatal("Failed to set cr50 uart timeout: ", err)
-		}
-		defer func() {
-			s.Log("Restoring cr50 uart timeout to the default value of 3 seconds")
-			if err := h.Servo.SetString(ctx, "cr50_uart_timeout", "3"); err != nil {
-				s.Fatal("Failed to restore default cr50 uart timeout: ", err)
-			}
-		}()
-
-		s.Log("Verifying DUT's AP is off")
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			apState, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccdstate", []string{`AP:(\s+\w+)`})
-			if err != nil {
-				return errors.Wrap(err, "failed to run cr50 command")
-			}
-
-			if strings.TrimSpace(apState[0][1]) != "off" {
-				return errors.Wrapf(err, "unexpected AP state: %s", strings.TrimSpace(apState[0][1]))
-			}
-			return nil
-		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
-			if !strings.Contains(err.Error(), "Client.Timeout exceeded while awaiting headers") {
-				s.Fatal("Failed to verify DUT's AP is off: ", err)
-			}
-			s.Log("Cr50 not responsive, check for TPM_RST_L state after rebooting the DUT")
-			checkTPMRSTLState = true
-		}
 		s.Log("Connecting charger")
 		if err := h.SetDUTPower(ctx, true); err != nil {
 			s.Fatal("Unable to connect charger: ", err)
 		}
 	}
 	if tc.checkLidState {
-		defer func() {
-			if err := h.Servo.OpenLid(ctx); err != nil {
-				s.Fatal("Failed to ensure lid open at the end of test: ", err)
-			}
-		}()
-		// Close and then open DUT's lid.
-		for _, expState := range []string{"no", "yes"} {
-			s.Logf("Setting lid open to %s and checking for lid state", expState)
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				if err := h.Servo.SetStringAndCheck(ctx, servo.LidOpen, expState); err != nil {
-					return errors.Wrapf(err, "failed to set lid open to %s", expState)
-				}
-				return nil
-			}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-				// On a number of lab sarien devices from dut_pool_quota, we saw that
-				// the lid_open control did not return the correct state that it was
-				// set to. Specifically, lid_open was set to 'no', but the checked value
-				// was 'yes'. A similar situation was mentioned in ticket b:134830532.
-				// To avoid mistakenly failing the test, attempt a press on the power
-				// button. If in reality the lid was closed, the dut would not wake up.
-				if expState == "no" {
-					currentState, err := h.Servo.GetString(ctx, servo.LidOpen)
-					if err != nil {
-						s.Fatal("Failed to get lid open state: ", err)
-					}
-					if currentState == "yes" {
-						s.Logf("Pressing power button for %s seconds to wake DUT", servo.Dur(h.Config.HoldPwrButtonPowerOn))
-						if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
-							s.Fatal("Failed to press power button: ", err)
-						}
-						waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 3*time.Minute)
-						defer cancelWaitConnect()
-
-						s.Log("Checking if DUT woke up from a press on power button")
-						err := h.WaitConnect(waitConnectCtx)
-						if err == nil {
-							s.Fatal("DUT woke up unexpectedly")
-						}
-						if strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
-							s.Log("Found DUT disconnected, continuing the test")
-							continue
-						}
-					}
-				}
-				s.Fatal("While setting and checking for the lid state: ", err)
-			}
+		if err := h.Servo.OpenLid(ctx); err != nil {
+			s.Fatal("Failed to set lid_open to yes: ", err)
 		}
 	}
 
 	// Check that when Wilco devices are in deep sleep, or at the off state,
 	// waking it would not be possible either by AC, or by opening lid.
 	// Expect a timeout in waiting for DUT to reconnect.
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1*time.Minute)
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
 	err = h.WaitConnect(waitConnectCtx)
 	switch err.(type) {
@@ -206,6 +170,9 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 			s.Fatal("DUT woke up unexpectedly")
 		}
 	default:
+		if h.Config.LidWakeFromPowerOff && tc.checkLidState {
+			s.Fatal("Found DUT disconnected, but expected it to wake from opening lid")
+		}
 		if !strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
 			s.Fatal("Unexpected error occurred: ", err)
 		}
@@ -216,7 +183,7 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to press power key via servo: ", err)
 		}
 
-		waitConnectFromPressPowerCtx, cancelWaitConnectFromPressPower := context.WithTimeout(ctx, 2*time.Minute)
+		waitConnectFromPressPowerCtx, cancelWaitConnectFromPressPower := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancelWaitConnectFromPressPower()
 		s.Log("Checking that DUT wakes up from a press on power button")
 		if err := h.WaitConnect(waitConnectFromPressPowerCtx); err != nil {
