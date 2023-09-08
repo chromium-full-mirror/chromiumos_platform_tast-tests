@@ -26,13 +26,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:    Ti50ValidStraps,
 		Desc:    "Test Ti50 strap configuration using a dev board",
-		Timeout: 30 * time.Second,
+		Timeout: 60 * time.Second,
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"ti50-core@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.Ti50CcdOpen,
 		Params: []testing.Param{{
 			Name: "spi_tablet",
