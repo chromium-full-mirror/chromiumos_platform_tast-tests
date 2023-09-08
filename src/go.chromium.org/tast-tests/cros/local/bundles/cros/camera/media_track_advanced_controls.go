@@ -632,7 +632,7 @@ func init() {
 				Val:               browser.TypeLacros,
 			},
 		},
-		BugComponent: "b:167281",
+		BugComponent: "b:978428",
 	})
 }
 

@@ -36,7 +36,7 @@ func init() {
 			"wtlee@google.com",
 			"eariassoto@google.com", // Test author
 		},
-		BugComponent: "b:167281",
+		BugComponent: "b:978428",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{

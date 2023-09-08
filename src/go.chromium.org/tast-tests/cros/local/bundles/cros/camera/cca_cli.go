@@ -27,7 +27,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
-		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App
+		BugComponent: "b:978428",
 	})
 }
 

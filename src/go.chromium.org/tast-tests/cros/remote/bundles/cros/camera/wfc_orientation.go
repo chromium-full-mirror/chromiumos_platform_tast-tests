@@ -41,7 +41,7 @@ func init() {
 				Val:       pb.Facing_FACING_FRONT,
 			},
 		},
-		BugComponent: "b:267586717",
+		BugComponent: "b:167281",
 	})
 }
 

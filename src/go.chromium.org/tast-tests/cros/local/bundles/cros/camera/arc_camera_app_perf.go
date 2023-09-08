@@ -49,7 +49,7 @@ func init() {
 		Data:         []string{arcapp.CameraAppApk},
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Timeout:      20 * time.Minute,
-		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App
+		BugComponent: "b:978428",
 	})
 }
 
