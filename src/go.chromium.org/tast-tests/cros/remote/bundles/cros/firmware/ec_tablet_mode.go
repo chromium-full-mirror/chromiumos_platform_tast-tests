@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
@@ -90,13 +91,22 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 
 	// Run EC command to put DUT in tablet mode.
 	args := s.Param().(tabletModeTestParams)
+	cmd := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain)
 	if args.hasLid {
-		if err := h.Servo.RunECCommand(ctx, args.tabletModeOn); err != nil {
-			s.Fatal("Failed to set DUT into tablet mode: ", err)
+		if _, err := h.Servo.CheckAndRunTabletModeCommand(ctx, args.tabletModeOn); err != nil {
+			s.Logf("Failed to run %s, attempting rotation angles with ectool instead", args.tabletModeOn)
+			// Setting tabletModeAngle to 0 will force DUT into tablet mode.
+			if err := cmd.ForceTabletModeAngle(ctx, "0", "0"); err != nil {
+				s.Fatal("Failed to set tablet mode angle: ", err)
+			}
 		}
 		defer func() {
-			if err := h.Servo.RunECCommand(ctx, args.tabletModeOff); err != nil {
-				s.Fatal("Failed to restore DUT's tabletmode to off: ", err)
+			if _, err := h.Servo.CheckAndRunTabletModeCommand(ctx, args.tabletModeOff); err != nil {
+				s.Logf("Failed to run %s, attempting rotation angles with ectool instead", args.tabletModeOff)
+				// Setting tabletModeAngle to 360 will force DUT into clamshell mode.
+				if err := cmd.ForceTabletModeAngle(ctx, "360", "0"); err != nil {
+					s.Fatal("Failed to set tablet mode angle: ", err)
+				}
 			}
 		}()
 	}
