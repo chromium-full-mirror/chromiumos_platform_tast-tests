@@ -2098,7 +2098,7 @@ func stopPresenting(ctx context.Context, ui *uiauto.Context) error {
 	stopPresenting := nodewith.Name("Stop presenting").Role(role.Button)
 	return uiauto.NamedCombine("stop presenting",
 		ui.LeftClick(stopPresenting),
-		ui.WaitUntilGone(stopPresenting),
+		ui.WithTimeout(30*time.Second).WaitUntilGone(stopPresenting),
 	)(ctx)
 }
 
