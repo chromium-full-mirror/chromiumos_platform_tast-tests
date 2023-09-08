@@ -372,8 +372,6 @@ func (k *Kiosk) RestartChromeWithOptions(ctx context.Context, opts ...chrome.Opt
 // Ctrl+Alt+S.
 //
 // See kiosk.WaitLaunchLogs to wait for launch.
-//
-// TODO(b/230840565): Extract and extend this function to support MGS.
 func LaunchAppManually(ctx context.Context, tconn *chrome.TestConn, name string) error {
 	testing.ContextLogf(ctx, "Kiosk mode: Starting Kiosk app from signin screen %q", name)
 	ui := uiauto.New(tconn)
