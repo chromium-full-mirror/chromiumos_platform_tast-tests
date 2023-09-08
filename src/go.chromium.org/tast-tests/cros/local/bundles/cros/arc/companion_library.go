@@ -1143,16 +1143,9 @@ func testMaximize(ctx context.Context, _ *arc.ARC, _ *chrome.Chrome, tconn *chro
 	middleCaptionLoc := coords.NewPoint(
 		int(float64(bounds.Top+5)/dispMode.DeviceScaleFactor),
 		int(float64(bounds.Left+bounds.Width/2)/dispMode.DeviceScaleFactor))
-	if err := mouse.Click(tconn, middleCaptionLoc, mouse.LeftButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click window caption the first time")
-	}
 
-	// GoBigSleepLint: should be written with mouse.DoubleClick
-	if err := testing.Sleep(ctx, doubleClickGap); err != nil {
-		return errors.Wrap(err, "failed to wait for the gap between the double click")
-	}
-	if err := mouse.Click(tconn, middleCaptionLoc, mouse.LeftButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click window caption the second time")
+	if err := mouse.DoubleClick(tconn, middleCaptionLoc, doubleClickGap)(ctx); err != nil {
+		return errors.Wrap(err, "failed to double-click window caption")
 	}
 
 	if state, err := act.GetWindowState(ctx); err != nil {
