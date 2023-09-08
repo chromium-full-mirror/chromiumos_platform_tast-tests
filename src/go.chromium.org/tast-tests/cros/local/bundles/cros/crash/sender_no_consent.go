@@ -29,9 +29,8 @@ func init() {
 		// We only care about crash_sender on internal builds.
 		SoftwareDeps: []string{"chrome", "cros_internal", "metrics_consent"},
 		Params: []testing.Param{{
-			Name:      "fieldtrial_testing_config_on",
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
-			Fixture:   crash.LoggedInNoConsentFieldTrialConfigEnable,
+			Name:    "fieldtrial_testing_config_on",
+			Fixture: crash.LoggedInNoConsentFieldTrialConfigEnable,
 		}, {
 			Name:    "fieldtrial_testing_config_off",
 			Fixture: crash.LoggedInNoConsentFieldTrialConfigDisable,
