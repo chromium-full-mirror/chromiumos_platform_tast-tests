@@ -193,33 +193,64 @@ func (uda *Context) WithOptions(optionList ...Option) *Context {
 	return c
 }
 
+// click attempts to locate and click on an element.
 func (uda *Context) click(s *Finder, button mouse.Button) uiauto.Action {
-	// TODO(b/205235148): Consolidate uiauto for UI tree based finder and image based finder.
+	return func(ctx context.Context) error {
+		loc, err := uda.Location(ctx, s)
+		if err != nil {
+			return errors.Wrapf(err, "failed to find the location of %q", s.desc)
+		}
+
+		// Move the mouse over a short duration of time. This fixes the issue where
+		// the implementation of `mouse.Click` moves the mouse to the desired location immediately,
+		// which prevents applications from registering the move properly. This is especially
+		// important in ARC++ applications, which exhibited behavior where two
+		// simultaneous clicks needed to be sent since the first would not be
+		// registered correctly.
+		if err := mouse.Move(uda.tconn, loc.CenterPoint(), 250*time.Millisecond)(ctx); err != nil {
+			return errors.Wrap(err, "failed to move the mouse into position")
+		}
+
+		return mouse.Click(uda.tconn, loc.CenterPoint(), button)(ctx)
+	}
+}
+
+// attemptClickUntilSuccess repeatedly attempts to locate and click on an
+// element until it successfully performs a click on the element.
+func (uda *Context) attemptClickUntilSuccess(s *Finder, button mouse.Button) uiauto.Action {
 	return action.Retry(uda.options.Retries, func(ctx context.Context) error {
 		return testing.Poll(ctx, func(ctx context.Context) error {
-			loc, err := uda.Location(ctx, s)
-			if err != nil {
-				return errors.Wrapf(err, "failed to find the location of %q", s.desc)
-			}
-
-			// Move the mouse over a short duration of time. This fixes the issue where
-			// the implementation of `mouse.Click` moves the mouse to the desired location immediately,
-			// which prevents applications from registering the move properly. This is especially
-			// important in ARC++ applications, which exhibited behavior where two
-			// simultaneous clicks needed to be sent since the first would not be
-			// registered correctly.
-			if err := mouse.Move(uda.tconn, loc.CenterPoint(), 250*time.Millisecond)(ctx); err != nil {
-				return errors.Wrap(err, "failed to move the mouse into position")
-			}
-
-			return mouse.Click(uda.tconn, loc.CenterPoint(), button)(ctx)
+			return uda.click(s, button)(ctx)
 		}, &uda.pollOpts)
 	}, uda.options.RetryInterval)
 }
 
+// clickUntil returns a function that uses the specified mouse button on the
+// finder until the condition returns no error.
+func (uda *Context) clickUntil(finder *Finder, condition func(context.Context) error, button mouse.Button) uiauto.Action {
+	return func(ctx context.Context) error {
+		if err := uda.click(finder, button)(ctx); err != nil {
+			return errors.Wrap(err, "failed to initially click the element")
+		}
+		// GoBigSleepLint: Wait a little bit before polling `condition`.
+		if err := testing.Sleep(ctx, uda.pollOpts.Interval); err != nil {
+			return err
+		}
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			if err := condition(ctx); err != nil {
+				if err := uda.click(finder, button)(ctx); err != nil {
+					return errors.Wrap(err, "failed to click the element")
+				}
+				return errors.Wrap(err, "click may not have been received yet")
+			}
+			return nil
+		}, &uda.pollOpts)
+	}
+}
+
 // LeftClick returns an action that left-clicks a finder.
 func (uda *Context) LeftClick(s *Finder) uiauto.Action {
-	return uda.click(s, mouse.LeftButton)
+	return uda.attemptClickUntilSuccess(s, mouse.LeftButton)
 }
 
 // LeftClickUntil returns a function that repeatedly left clicks the finder
@@ -227,29 +258,12 @@ func (uda *Context) LeftClick(s *Finder) uiauto.Action {
 // there is no indication of whether the element is ready to receive clicks.
 // It uses the polling options from the Context.
 func (uda *Context) LeftClickUntil(finder *Finder, condition func(context.Context) error) uiauto.Action {
-	return func(ctx context.Context) error {
-		if err := uda.LeftClick(finder)(ctx); err != nil {
-			return errors.Wrap(err, "failed to initially click the element")
-		}
-		// GoBigSleepLint: Wait a little bit before polling `condition`.
-		if err := testing.Sleep(ctx, uda.pollOpts.Interval); err != nil {
-			return err
-		}
-		return testing.Poll(ctx, func(ctx context.Context) error {
-			if err := condition(ctx); err != nil {
-				if err := uda.LeftClick(finder)(ctx); err != nil {
-					return errors.Wrap(err, "failed to click the element")
-				}
-				return errors.Wrap(err, "click may not have been received yet")
-			}
-			return nil
-		}, &uda.pollOpts)
-	}
+	return uda.clickUntil(finder, condition, mouse.LeftButton)
 }
 
 // RightClick returns an action that right-clicks a finder.
 func (uda *Context) RightClick(s *Finder) uiauto.Action {
-	return uda.click(s, mouse.RightButton)
+	return uda.attemptClickUntilSuccess(s, mouse.RightButton)
 }
 
 // RightClickUntil returns a function that repeatedly right clicks the finder
@@ -257,24 +271,7 @@ func (uda *Context) RightClick(s *Finder) uiauto.Action {
 // there is no indication of whether the element is ready to receive clicks.
 // It uses the polling options from the Context.
 func (uda *Context) RightClickUntil(finder *Finder, condition func(context.Context) error) uiauto.Action {
-	return func(ctx context.Context) error {
-		if err := uda.RightClick(finder)(ctx); err != nil {
-			return errors.Wrap(err, "failed to initially click the element")
-		}
-		// GoBigSleepLint: Wait a little bit before polling `condition`.
-		if err := testing.Sleep(ctx, uda.pollOpts.Interval); err != nil {
-			return err
-		}
-		return testing.Poll(ctx, func(ctx context.Context) error {
-			if err := condition(ctx); err != nil {
-				if err := uda.RightClick(finder)(ctx); err != nil {
-					return errors.Wrap(err, "failed to click the element")
-				}
-				return errors.Wrap(err, "click may not have been received yet")
-			}
-			return nil
-		}, &uda.pollOpts)
-	}
+	return uda.clickUntil(finder, condition, mouse.RightButton)
 }
 
 // DoubleClick returns an action that double-clicks a finder.
