@@ -121,6 +121,7 @@ type bruschettaFixture struct {
 	logOffset    int
 	bruschettaVM *vm.BruschettaVM
 	kb           *input.KeyboardEventWriter
+	concierge    *vm.Concierge
 }
 
 type bruschettaAppsFixture struct {
@@ -214,8 +215,9 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	if err != nil {
 		s.Fatal("Failed to get concierge: ", err)
 	}
+	f.concierge = concierge
 
-	newVM, err := vm.NewSystemRecognizedVM(concierge, false, 0, vm.Bruschetta)
+	newVM, err := vm.NewSystemRecognizedVM(f.concierge, false, 0, vm.Bruschetta)
 	if err != nil {
 		s.Fatal("Failed to get VM object: ", err)
 	}
@@ -253,7 +255,7 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 
 	s.Log("VM installer booted, waiting for VM to stop")
 
-	if err := concierge.WaitForVMStop(ctx, f.vm); err != nil {
+	if err := f.concierge.WaitForVMStop(ctx, f.vm); err != nil {
 		s.Fatal("Failed to wait for VM to finish installing: ", err)
 	}
 
@@ -269,7 +271,7 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		s.Fatal("Failed to close terminal app: ", err)
 	}
 
-	if err := concierge.GetVMInfo(ctx, f.vm); err != nil {
+	if err := f.concierge.GetVMInfo(ctx, f.vm); err != nil {
 		s.Fatal("Failed to get running VM info: ", err)
 	}
 
@@ -301,6 +303,10 @@ func (f *bruschettaFixture) Reset(ctx context.Context) error {
 	if err = apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
 		return errors.Wrap(err, "failed to close terminal app")
 	}
+	// Refresh VM info for new ContextID if the VM was shut down.
+	if err := f.concierge.GetVMInfo(ctx, f.vm); err != nil {
+		return errors.Wrap(err, "failed to get VM info")
+	}
 
 	return nil
 }
@@ -312,6 +318,13 @@ func (f *bruschettaFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 func (f *bruschettaFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	if err := f.saveLogs(ctx, s.OutDir(), "post_test"); err != nil {
 		s.Error("Failed to save VM logs from test: ", err)
+	}
+
+	// Restart the VM if a test failed. This ensuress all VM windows are closed.
+	if s.HasError() {
+		if err := f.vm.Stop(ctx); err != nil {
+			s.Fatal("Failed to shut down VM: ", err)
+		}
 	}
 }
 
