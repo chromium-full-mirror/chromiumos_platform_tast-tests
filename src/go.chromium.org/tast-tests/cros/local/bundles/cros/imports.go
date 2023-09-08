@@ -77,6 +77,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/meta"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/metrics"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/mgs"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/mlbenchmark"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/mlservice"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/mojo"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/mtbf"
