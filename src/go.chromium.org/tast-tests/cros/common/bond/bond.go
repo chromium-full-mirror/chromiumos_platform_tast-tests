@@ -40,9 +40,9 @@ const (
 
 const (
 	// Most of the Bond API requests will be completed within the defaultSendTimeout.
-	// longerSendTimeout is used when the Bond API needs a longer time to complete the request.
+	// longerSendTimeout is the Bond API server-side timeout value.
 	defaultSendTimeout = 8 * time.Second
-	longerSendTimeout  = 30 * time.Second
+	longerSendTimeout  = 120 * time.Second
 )
 
 type newClientOption struct {
@@ -202,9 +202,9 @@ func (c *Client) CreateConference(ctx context.Context) (string, error) {
 		},
 	}
 	resp := conferenceResponse{}
-	// createConferenceTimeout(100s) would allow 3 longerSendTimeout(30s)
+	// createConferenceTimeout(370s) would allow 3 longerSendTimeout(120s)
 	// attempts to request the bond server to create conference.
-	const createConferenceTimeout = 100 * time.Second
+	const createConferenceTimeout = 370 * time.Second
 	sCtx, cancel := context.WithTimeout(ctx, createConferenceTimeout)
 	defer cancel()
 	if err := c.sendWithRetry(sCtx, http.MethodPost, c.endpoint+"/v1/conferences:create", req, &resp, longerSendTimeout); err != nil {
