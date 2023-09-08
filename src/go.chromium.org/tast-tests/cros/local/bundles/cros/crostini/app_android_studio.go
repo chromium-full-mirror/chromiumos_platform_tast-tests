@@ -139,7 +139,8 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 		ud.LeftClick(uidetection.Word("O?K", uidetection.RegexMode(true)).First()),
 		// The initialization process may take longer than the default timeout 60s.
 		ud.WithTimeout(2*time.Minute).LeftClick(uidetection.TextBlock(strings.Split("Don't send", " "), uidetection.MaxEditDistance(2))),
-		ud.LeftClick(nextButton),
+		// The download of lists of the available SDKs may take longer than the default timeout 60s on slow network.
+		ud.WithTimeout(2*time.Minute).LeftClick(nextButton),
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Install Type", " "), uidetection.MaxEditDistance(2))),
 		ud.LeftClick(nextButton),
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Select UI Theme", " "))),
