@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -148,7 +149,7 @@ func runDeskButtonSubtest(ctx context.Context, s *testing.State,
 			"Ash.Desks.DeskButton.DeskBar.Enter.PresentationTime",
 			"Ash.Desks.DeskButton.DeskBar.Exit.PresentationTime",
 		)),
-		perfutil.StoreLatency)
+		perfutil.StoreAll(perf.SmallerIsBetter, "ms", name))
 
 	return nil
 }

@@ -160,7 +160,7 @@ func runOverviewWithExpandedDesksBarSubtest(ctx context.Context, s *testing.Stat
 			"Ash.Overview.Enter.PresentationTime",
 			"Ash.Overview.Exit.PresentationTime",
 		)),
-		perfutil.StoreAllWithHeuristics(""))
+		perfutil.StoreAllWithHeuristics(name))
 
 	return nil
 }

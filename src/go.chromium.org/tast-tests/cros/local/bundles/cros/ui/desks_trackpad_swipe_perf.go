@@ -211,7 +211,7 @@ func runDesksTrackpadSwipeSubtest(ctx context.Context, s *testing.State,
 			},
 			histogramNames...,
 		)),
-		perfutil.StoreAllWithHeuristics(""))
+		perfutil.StoreAllWithHeuristics(testName))
 
 	return nil
 }

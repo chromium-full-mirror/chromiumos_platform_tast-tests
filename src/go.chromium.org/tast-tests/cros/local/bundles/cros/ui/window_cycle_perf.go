@@ -7,16 +7,13 @@ package ui
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/perf"
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/input"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
@@ -180,28 +177,8 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 				"Ash.WindowCycleView.AnimationSmoothness.Show",
 				"Ash.WindowCycleView.AnimationSmoothness.Container",
 				"Ash.WindowCycleController.Enter.PresentationTime")),
-				func(ctx context.Context, pv *perfutil.Values, hists []*metrics.Histogram) error {
-					for _, hist := range hists {
-						mean, err := hist.Mean()
-						if err != nil {
-							continue
-						}
-						name := hist.Name + "." + suffix
-						testing.ContextLog(ctx, name, " = ", mean)
-						unit := "ms"
-						direction := perf.SmallerIsBetter
-						if strings.Contains(hist.Name, "AnimationSmoothness") {
-							unit = "percent"
-							direction = perf.BiggerIsBetter
-						}
-						pv.Append(perf.Metric{
-							Name:      name,
-							Unit:      unit,
-							Direction: direction,
-						}, mean)
-					}
-					return nil
-				})
+				perfutil.StoreAllWithHeuristics(suffix))
+
 		}
 		return nil
 	}); err != nil {
