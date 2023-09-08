@@ -21,7 +21,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies chrome login functionality across the version",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"chingkang@google.com",
 		},
 		// ChromeOS > Platform > System > Hardware Security > HwSec AP
