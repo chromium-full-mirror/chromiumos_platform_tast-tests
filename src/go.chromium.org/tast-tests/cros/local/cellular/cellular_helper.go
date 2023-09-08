@@ -527,7 +527,7 @@ func (h *Helper) Connect(ctx context.Context) (*shill.Service, error) {
 	}
 
 	// Wait up to 1 minute for the service state to become connected and online.
-	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, time.Minute); err != nil {
+	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, longTimeout); err != nil {
 		return nil, errors.Wrapf(err, "default service %q connected but failed to become online", name)
 	}
 

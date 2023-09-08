@@ -75,9 +75,9 @@ func ShillAutoconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("ScanAndConnectToBestServices call failed: ", err)
 	}
 
-	timeout := 1 * time.Minute
-	s.Logf("Waiting for %v for online state", timeout)
-	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, timeout); err != nil {
-		s.Fatalf("Service not online after %v, error: %v", timeout, err)
+	timeout := 2 * time.Minute
+	s.Logf("Waiting for %v for IsCOnnected = true", timeout)
+	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyIsConnected, true, timeout); err != nil {
+		s.Fatalf("Service not connected after %v, error: %v", timeout, err)
 	}
 }
