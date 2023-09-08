@@ -7,11 +7,10 @@ package fixture
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
+	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -20,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/loginstatus"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -40,8 +40,6 @@ const (
 
 	noLoggedIn = "noLoggedInForVideoConferencing"
 )
-
-var fakeVCExtension = "fake_vc_extension.zip"
 
 const (
 	resetTimeout    = 30 * time.Second
@@ -246,7 +244,7 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
 		},
-		Data:            []string{fakeVCExtension},
+		Data:            fakeVCExtensionFiles,
 		Impl:            baseSetupFixtureWithFakeExtension(browser.TypeAsh, nil),
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -263,7 +261,7 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
 		},
-		Data:            []string{fakeVCExtension},
+		Data:            fakeVCExtensionFiles,
 		Impl:            baseSetupFixtureWithFakeExtension(browser.TypeLacros, nil),
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -272,6 +270,13 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+}
+
+var fakeVCExtensionFiles = []string{
+	"fake_vc_extension/camera.png",
+	"fake_vc_extension/manifest.json",
+	"fake_vc_extension/popup.html",
+	"fake_vc_extension/popup.js",
 }
 
 func baseSetupFixture(browserType browser.Type, fOpts chrome.OptionsCallback) testing.FixtureImpl {
@@ -309,18 +314,19 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 
 	if f.installExt {
 		s.Log("Copying extension to temp directory")
-		extDir, err := ioutil.TempDir("", "videoconferencing")
+		extPath, err := os.MkdirTemp(s.OutDir(), "vc_extension")
 		if err != nil {
-			s.Fatal("Failed to create temp dir: ", err)
+			s.Fatal("Failed to create temp extension dir: ", err)
 		}
-		defer os.RemoveAll(extDir)
+		// Files can be removed after installation.
+		defer os.RemoveAll(extPath)
 
-		if err := testexec.CommandContext(ctx, "unzip", s.DataPath(fakeVCExtension), "-d", extDir).Run(testexec.DumpLogOnError); err != nil {
-			s.Fatal("Failed to unzip fake extension : ", err)
+		for _, filePath := range fakeVCExtensionFiles {
+			if err := fsutil.CopyFile(s.DataPath(filePath), filepath.Join(extPath, filepath.Base(filePath))); err != nil {
+				s.Fatalf("Failed to copy file %q: %v", filePath, err)
+			}
 		}
 
-		extPath := extDir + "/vc_extension"
-		// Set option to install unpacked extension.
 		if f.browserType == browser.TypeAsh {
 			opts = append(opts, chrome.UnpackedExtension(extPath))
 		} else {

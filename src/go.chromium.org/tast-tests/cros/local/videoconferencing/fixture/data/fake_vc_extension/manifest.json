@@ -1,0 +1,15 @@
+{
+    "name": "VcTester",
+    "version": "0.1.0",
+    "description": "Used for VC testing",
+    "action": {
+      "default_icon": {
+        "16": "camera.png",
+        "24": "camera.png",
+        "32": "camera.png"
+      },
+      "default_title": "VcTester",
+      "default_popup": "popup.html"
+    },
+    "manifest_version": 3
+}
