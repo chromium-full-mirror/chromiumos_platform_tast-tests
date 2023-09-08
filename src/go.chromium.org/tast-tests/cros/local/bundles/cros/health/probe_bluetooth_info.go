@@ -36,33 +36,21 @@ type deviceInfo struct {
 	Class             *jsontypes.Uint32 `json:"bluetooth_class"`
 }
 
-type capabilitiesInfo struct {
-	MaxAdvLen    uint8 `json:"max_adv_len"`
-	MaxScnRspLen uint8 `json:"max_scn_rsp_len"`
-	MaxTxPower   int16 `json:"max_tx_power"`
-	MinTxPower   int16 `json:"min_tx_power"`
-}
-
 type adapterInfo struct {
-	Address               string            `json:"address"`
-	Name                  string            `json:"name"`
-	NumConnectedDevices   jsontypes.Uint32  `json:"num_connected_devices"`
-	Powered               bool              `json:"powered"`
-	ConnectedDevices      []deviceInfo      `json:"connected_devices"`
-	Discoverable          bool              `json:"discoverable"`
-	Discovering           bool              `json:"discovering"`
-	UUIDs                 []string          `json:"uuids"`
-	Modalias              string            `json:"modalias"`
-	ServiceAllowList      []string          `json:"service_allow_list"`
-	SupportedCapabilities *capabilitiesInfo `json:"supported_capabilities"`
+	Address             string           `json:"address"`
+	Name                string           `json:"name"`
+	NumConnectedDevices jsontypes.Uint32 `json:"num_connected_devices"`
+	Powered             bool             `json:"powered"`
+	ConnectedDevices    []deviceInfo     `json:"connected_devices"`
+	Discoverable        bool             `json:"discoverable"`
+	Discovering         bool             `json:"discovering"`
+	UUIDs               []string         `json:"uuids"`
+	Modalias            string           `json:"modalias"`
+	ServiceAllowList    []string         `json:"service_allow_list"`
 }
 
 type bluetoothInfo struct {
 	Adapters []adapterInfo `json:"adapters"`
-}
-
-type bluetoothInfoTestParams struct {
-	SkipSupportedCapabilities bool
 }
 
 func init() {
@@ -76,19 +64,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
 		HardwareDeps: hwdep.D(hwdep.Bluetooth()),
-		Params: []testing.Param{{
-			Name: "",
-			Val: bluetoothInfoTestParams{
-				SkipSupportedCapabilities: true,
-			},
-		}, {
-			Name: "supported_capabilities",
-			Val: bluetoothInfoTestParams{
-				SkipSupportedCapabilities: false,
-			},
-			// TODO(b/280387742): Merge this back to the main test.
-			ExtraAttr: []string{"informational"},
-		}},
 	})
 }
 
@@ -118,7 +93,7 @@ func initiateBluetoothAdapterData(ctx context.Context) error {
 	return nil
 }
 
-func validateBluetoothAdapterData(ctx context.Context, info *bluetoothInfo, skipSupportedCapabilities bool) error {
+func validateBluetoothAdapterData(ctx context.Context, info *bluetoothInfo) error {
 	// Get Bluetooth adapter values to compare to the output of cros_healthd.
 	adapters, err := bluez.Adapters(ctx)
 	if err != nil {
@@ -141,12 +116,6 @@ func validateBluetoothAdapterData(ctx context.Context, info *bluetoothInfo, skip
 
 	if err := validateAdminPolicy(ctx, info, adapters[0]); err != nil {
 		return err
-	}
-
-	if !skipSupportedCapabilities {
-		if err := validateAdvertising(ctx, info, adapters[0]); err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -207,31 +176,6 @@ func validateAdminPolicy(ctx context.Context, info *bluetoothInfo, adapter *blue
 		return errors.Errorf("unexpected allowed services count: got %d; want %d", len(serviceAllowList), len(targetAllowedServices))
 	} else if len(set.DiffStringSlice(info.Adapters[0].ServiceAllowList, serviceAllowList)) != 0 {
 		return errors.Errorf("invalid serviceAllowList value: got %v; want %v", info.Adapters[0].ServiceAllowList, serviceAllowList)
-	}
-
-	return nil
-}
-
-// validateAdvertising validate the data from LEAdvertisingManager1 interface.
-func validateAdvertising(ctx context.Context, info *bluetoothInfo, adapter *bluez.Adapter) error {
-	supportedCapabilities, err := adapter.SupportedCapabilities(ctx)
-	if err != nil {
-		// Pass if neither cros_healthd nor D-Bus has supportedCapabilities.
-		if info.Adapters[0].SupportedCapabilities == nil {
-			return nil
-		}
-		return err
-	}
-
-	if info.Adapters[0].SupportedCapabilities == nil {
-		return errors.Errorf("invalid supportedCapabilities value: got nil; want %v", supportedCapabilities)
-	}
-
-	if info.Adapters[0].SupportedCapabilities.MaxAdvLen != supportedCapabilities.MaxAdvLen ||
-		info.Adapters[0].SupportedCapabilities.MaxScnRspLen != supportedCapabilities.MaxScnRspLen ||
-		info.Adapters[0].SupportedCapabilities.MaxTxPower != supportedCapabilities.MaxTxPower ||
-		info.Adapters[0].SupportedCapabilities.MinTxPower != supportedCapabilities.MinTxPower {
-		return errors.Errorf("invalid supportedCapabilities value: got %v; want %v", info.Adapters[0].SupportedCapabilities, supportedCapabilities)
 	}
 
 	return nil
@@ -340,8 +284,6 @@ func validateConnectedDevices(ctx context.Context, got []deviceInfo) error {
 
 // ProbeBluetoothInfo is the main function of this tast test.
 func ProbeBluetoothInfo(ctx context.Context, s *testing.State) {
-	skipSupportedCapabilities := s.Param().(bluetoothInfoTestParams).SkipSupportedCapabilities
-
 	if err := initiateBluetoothAdapterData(ctx); err != nil {
 		s.Fatal("Failed to initiate bluetooth adapter data: ", err)
 	}
@@ -359,7 +301,7 @@ func ProbeBluetoothInfo(ctx context.Context, s *testing.State) {
 		if len(info.Adapters) == 0 {
 			return errors.New("failed to get Bluetooth adapter data: empty adapters slice")
 		}
-		return validateBluetoothAdapterData(ctx, &info, skipSupportedCapabilities)
+		return validateBluetoothAdapterData(ctx, &info)
 	}, &testing.PollOptions{Interval: 3 * time.Second, Timeout: 15 * time.Second}); err != nil {
 		s.Fatal("Failed to validate bluetooth adapter data: ", err)
 	}
