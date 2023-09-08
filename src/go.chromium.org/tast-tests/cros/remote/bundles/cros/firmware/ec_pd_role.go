@@ -62,10 +62,10 @@ func ECPDRole(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to EC reset DUT: ", err)
 	}
 
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 8*time.Minute)
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
 
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		s.Fatal("Failed to reconnect DUT: ", err)
 	}
 
@@ -88,16 +88,6 @@ func ECPDRole(ctx context.Context, s *testing.State) {
 		if !currentDutState.lidOpen {
 			if err := h.Servo.OpenLid(ctx); err != nil {
 				s.Fatal("Failed to open lid: ", err)
-			}
-		}
-		if currentDutState.suspend {
-			wakeupKey := servo.Enter
-			if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher {
-				wakeupKey = servo.PowerKey
-			}
-			testing.ContextLogf(ctx, "Waking DUT from suspend by %s", wakeupKey)
-			if err := h.Servo.KeypressWithDuration(ctx, wakeupKey, servo.DurPress); err != nil {
-				s.Fatal("Failed to wake DUT from suspend: ", err)
 			}
 		}
 	}(cleanupCtx)
@@ -135,7 +125,19 @@ func ECPDRole(ctx context.Context, s *testing.State) {
 			}); err != nil {
 				s.Fatal("Failed to create new Chrome at login: ", err)
 			}
-			defer chromeService.Close(ctx, &empty.Empty{})
+			defer func(ctx context.Context) {
+				if currentDutState.suspend {
+					wakeupKey := servo.Enter
+					if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher {
+						wakeupKey = servo.PowerKey
+					}
+					testing.ContextLogf(ctx, "Waking DUT from suspend by %s", wakeupKey)
+					if err := h.Servo.KeypressWithDuration(ctx, wakeupKey, servo.DurPress); err != nil {
+						s.Fatal("Failed to wake DUT from suspend: ", err)
+					}
+				}
+				chromeService.Close(ctx, &empty.Empty{})
+			}(cleanupCtx)
 		}
 
 		if step.expectStatus == servo.USBPdDualRoleSink {
@@ -236,10 +238,10 @@ func usbPdOpenLid(ctx context.Context, h *firmware.Helper, dut *dutState) error 
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
 		return errors.Wrap(err, "failed to get power state at S0")
 	}
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 8*time.Minute)
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
 
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		return errors.Wrap(err, "failed to reconnect to DUT")
 	}
 	return nil
