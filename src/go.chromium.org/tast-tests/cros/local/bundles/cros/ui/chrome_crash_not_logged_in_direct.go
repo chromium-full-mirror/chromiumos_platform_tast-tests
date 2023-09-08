@@ -24,7 +24,7 @@ func init() {
 		Func:         ChromeCrashNotLoggedInDirect,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Chrome writes crash dumps while not logged in; old version that does not invoke crash_reporter",
-		Contacts:     []string{"cros-telemetry@google.com", "iby@chromium.org", "chromeos-ui@google.com"},
+		Contacts:     []string{"cros-telemetry@google.com", "iby@chromium.org"},
 		BugComponent: "b:1032705",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
