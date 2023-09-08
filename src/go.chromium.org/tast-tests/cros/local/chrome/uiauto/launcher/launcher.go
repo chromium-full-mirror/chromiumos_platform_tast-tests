@@ -612,7 +612,7 @@ func TriggerAppListSortAndWaitForUndoButtonExist(ctx context.Context, ui *uiauto
 
 	sortContextMenuItem := nodewith.Name(sortMenuName).HasClass("MenuItemView")
 	reorderContextMenuItem := nodewith.Name("Sort by").HasClass("MenuItemView")
-	undoButton := nodewith.Name(GetUndoButtonNameForSortType(sortType)).HasClass("PillButton")
+	undoButton := nodewith.Name(GetUndoButtonNameForSortType(sortType)).Role(role.Button)
 
 	if err := uiauto.Combine("sort app list items through the context menu",
 		ui.RightClick(item),
@@ -1458,11 +1458,11 @@ func DismissSortNudgeIfExists(ctx context.Context, tconn *chrome.TestConn) error
 	}
 
 	if sortNudgeFound {
-		dismissButton := nodewith.Name("OK").HasClass("PillButton")
+		dismissButton := nodewith.Name("OK").Role(role.Button)
 		if err := uiauto.Combine("Click on the dismiss button",
 			ui.WaitUntilExists(dismissButton),
 			ui.WaitForLocation(dismissButton),
-			ui.LeftClick(dismissButton),
+			ui.DoDefault(dismissButton),
 			ui.WaitUntilGone(sortNudge),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click on the OK button")
@@ -1476,7 +1476,7 @@ func DismissSortNudgeIfExists(ctx context.Context, tconn *chrome.TestConn) error
 func DismissPrivacyNotice(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
 	continueSection := nodewith.HasClass("ContinueSectionView")
-	privacyNoticeButton := nodewith.Ancestor(continueSection).HasClass("PillButton").Name("OK")
+	privacyNoticeButton := nodewith.Ancestor(continueSection).Role(role.Button).Name("OK")
 	if err := uiauto.Combine("Click on privacy notice OK button",
 		ui.WaitUntilExists(privacyNoticeButton),
 		ui.WaitForLocation(privacyNoticeButton),

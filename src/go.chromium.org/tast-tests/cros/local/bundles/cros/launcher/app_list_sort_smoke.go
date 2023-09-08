@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -170,7 +171,7 @@ func AppListSortSmoke(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify fake apps order: ", err)
 	}
 
-	undoButton := nodewith.Name(launcher.GetUndoButtonNameForSortType(testParam.SortMethod)).ClassName("PillButton")
+	undoButton := nodewith.Name(launcher.GetUndoButtonNameForSortType(testParam.SortMethod)).Role(role.Button)
 	if err := uiauto.Combine("undo alphabetical sorting",
 		ui.LeftClick(undoButton),
 		ui.WaitUntilGone(undoButton),

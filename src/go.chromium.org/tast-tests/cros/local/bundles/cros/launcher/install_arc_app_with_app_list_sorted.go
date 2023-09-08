@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -238,7 +239,7 @@ func InstallArcAppWithAppListSorted(ctx context.Context, s *testing.State) {
 	// Verify that app installation under temporary sort should commit the sort order, which means:
 	// 1. App list items are sorted in order
 	// 2. The undo button disappears
-	undoButton := nodewith.Name("Undo").ClassName("PillButton")
+	undoButton := nodewith.Name("Undo").Role(role.Button)
 	installedApp := nodewith.ClassName(launcher.ExpandedItemsClass).Ancestor(appsGrid).Name("InstallAppWithAppListSortedMockApp")
 	if err := uiauto.Combine("undo alphabetical sorting",
 		ui.WaitUntilGone(undoButton),

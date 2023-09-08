@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
@@ -154,7 +155,7 @@ func RemoveContinueSectionTask(ctx context.Context, s *testing.State) {
 	}
 
 	// Click on the button to confirm the privacy notice if its shown.
-	privacyNoticeButton := nodewith.Ancestor(continueSection).ClassName("PillButton")
+	privacyNoticeButton := nodewith.Ancestor(continueSection).Role(role.Button)
 	privacyNoticeFound, err := ui.IsNodeFound(ctx, privacyNoticeButton)
 	if err != nil {
 		s.Fatal("Failed to search for privacy toast: ", err)
