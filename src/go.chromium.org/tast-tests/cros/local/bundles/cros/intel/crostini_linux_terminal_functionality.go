@@ -33,7 +33,7 @@ func init() {
 		Attr:         []string{"group:intel-nda"},
 		SoftwareDeps: []string{"chrome", "vm_host", "dlc"},
 		HardwareDeps: crostini.CrostiniStable,
-		Fixture:      "crostiniBullseyeRestart",
+		Fixture:      "crostiniBullseye",
 		Timeout:      5 * time.Minute,
 	})
 }

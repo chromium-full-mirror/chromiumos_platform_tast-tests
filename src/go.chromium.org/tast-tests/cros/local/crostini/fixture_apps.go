@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
-	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/testing"
 )
@@ -170,20 +169,6 @@ func (f *crostiniAppsFixture) PostTest(ctx context.Context, s *testing.FixtTestS
 	}
 	if f.screenRecorder != nil {
 		f.screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
-	}
-
-	// Restart Crostini in case of test failures to leave a clean env for the
-	// following tests. This ensures all open apps are closed.
-	if s.HasError() {
-		// Open Terminal app.
-		terminalApp, err := terminalapp.Launch(ctx, f.tconn)
-		if err != nil {
-			s.Log("Failed to open Terminal app: ", err)
-		} else {
-			if err := terminalApp.RestartCrostini(f.kb, f.cont, f.cr.NormalizedUser())(ctx); err != nil {
-				s.Log("Failed to restart Crostini: ", err)
-			}
-		}
 	}
 }
 
