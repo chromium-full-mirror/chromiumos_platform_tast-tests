@@ -23,7 +23,7 @@ func init() {
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
-		BugComponent: "b:194910821", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
