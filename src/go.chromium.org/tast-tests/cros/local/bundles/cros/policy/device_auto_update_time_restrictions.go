@@ -55,7 +55,7 @@ func init() {
 		Func:         DeviceAutoUpdateTimeRestrictions,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that update engine requests updates according to DeviceAutoUpdateTimeRestrictions policy",
-		BugComponent: "b:263361362",
+		BugComponent: "b:1031231", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"igorcov@chromium.org", // Test author

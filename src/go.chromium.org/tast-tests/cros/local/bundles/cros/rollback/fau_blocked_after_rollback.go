@@ -35,7 +35,7 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 			"igorcov@google.com",
 		},
-		BugComponent: "b:261430340",
+		BugComponent: "b:1031231", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
 		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},
 		Fixture:      fixture.UpdateEngineCleanOwnership,
 		SearchFlags: []*testing.StringPair{
