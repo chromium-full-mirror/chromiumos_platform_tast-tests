@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Tests that the cros_healthd diagnostic routines can pass",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
-		SoftwareDeps: []string{"chrome", "diagnostics"},
+		SoftwareDeps: []string{"diagnostics"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      "crosHealthdRunning",
 		// TODO(b/277548688): Monitor test results and promote stable tests to critical.

@@ -52,7 +52,7 @@ func init() {
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"chrome", "diagnostics"},
+		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",
 		// crash_sender (invoked by cros_healthd) needs more time to run
 		// because crash_sender would hold off for 30 seconds if the

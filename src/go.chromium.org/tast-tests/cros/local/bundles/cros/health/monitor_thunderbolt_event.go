@@ -29,7 +29,7 @@ func init() {
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline", "group:intel-nda"},
-		SoftwareDeps: []string{"chrome", "diagnostics"},
+		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",
 	})
 }
