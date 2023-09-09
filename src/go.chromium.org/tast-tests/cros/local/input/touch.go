@@ -613,6 +613,35 @@ func (tw *TouchEventWriter) moveMultipleTouches(ctx context.Context, pointsPerTo
 	return nil
 }
 
+// performPinch performs a pinch using the provided coordinates. The two
+// fingers will move simultaneously from their each start position to
+// their end position in `t` amount of time.
+func (tw *TouchEventWriter) performPinch(ctx context.Context, leftFingerStart, leftFingerEnd, rightFingerStart, rightFingerEnd coords.Point, t time.Duration) error {
+	if len(tw.touches) < 2 {
+		return errors.New("must have at least two touches to perform a zoom")
+	}
+
+	// Perform the zoom over a series of steps.
+	steps := int(t/touchFrequency) + 1
+	leftFingerPoints := getPointsBetweenCoords(tw.tsw, TouchCoord(leftFingerStart.X), TouchCoord(leftFingerStart.Y), TouchCoord(leftFingerEnd.X), TouchCoord(leftFingerEnd.Y), steps)
+	rightFingerPoints := getPointsBetweenCoords(tw.tsw, TouchCoord(rightFingerStart.X), TouchCoord(rightFingerStart.Y), TouchCoord(rightFingerEnd.X), TouchCoord(rightFingerEnd.Y), steps)
+	return tw.moveMultipleTouches(ctx, leftFingerPoints, rightFingerPoints)
+}
+
+// Pinch performs a two-fingered pinch by specifying both the start and end
+// position of the two fingers. This is different from zoom in that it does
+// not necessarily use the center point as the beginning or the end of the
+// gesture.
+func (tw *TouchEventWriter) Pinch(ctx context.Context, leftStartX, leftStartY, leftEndX, leftEndY, rightStartX, rightStartY, rightEndX, rightEndY TouchCoord, t time.Duration) error {
+	// Perform the zoom over a series of steps.
+	leftStart := coords.NewPoint(int(leftStartX), int(leftStartY))
+	leftEnd := coords.NewPoint(int(leftEndX), int(leftEndY))
+	rightStart := coords.NewPoint(int(rightStartX), int(rightStartY))
+	rightEnd := coords.NewPoint(int(rightEndX), int(rightEndY))
+
+	return tw.performPinch(ctx, leftStart, leftEnd, rightStart, rightEnd, t)
+}
+
 // performPinchZoom performs a pinch zoom using the provided coordinates.
 // A zoom in will start at the center and move points to the bottomLeft,
 // and topRight. A zoom out will do the inverse.
