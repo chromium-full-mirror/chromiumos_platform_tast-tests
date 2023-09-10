@@ -10,10 +10,10 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/oobeutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/oobe"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -59,7 +59,7 @@ func OobeArc(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 	ui := uiauto.New(tconn)
 
-	if err := oobeutil.CompleteOnboardingFlow(ctx, ui); err != nil {
+	if err := oobe.CompleteOnboardingFlow(ctx, ui); err != nil {
 		s.Fatal("Failed to go through the oobe flow: ", err)
 	}
 

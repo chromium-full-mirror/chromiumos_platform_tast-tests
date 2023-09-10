@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/oobe"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -23,6 +24,7 @@ const (
 	launcherSearchPreTestTimeout   = 10 * time.Second
 	launcherSearchPostTestTimeout  = 10 * time.Second
 	arcOptinTimeout                = 3 * time.Minute
+	oobeTimeout                    = 2 * time.Minute
 )
 
 // fixture's name
@@ -33,6 +35,7 @@ const (
 	LauncherImageSearch          = "launcherImageSearch"
 	NormalLauncherSearch         = "normalLauncherSearch"
 	NormalLauncherSearchWithArc  = "normalLauncherSearchWithArc"
+	NormalLauncherSearchWithOOBE = "normalLauncherSearchWithOOBE"
 )
 
 // launcherSearchFixtureImpl implements testing.FixtureImpl.
@@ -43,6 +46,7 @@ type launcherSearchFixtureImpl struct {
 	kb           *input.KeyboardEventWriter
 	recorder     *uiauto.ScreenRecorder
 	ARCSupported bool
+	CompleteOOBE bool
 }
 
 // LauncherSearchFixtData is the data returned by SetUp and passed to tests.
@@ -109,13 +113,14 @@ func init() {
 			"ml-service-team@google.com",
 		},
 		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{}},
-		SetUpTimeout:    launcherSearchSetUpTestTimeout,
+		SetUpTimeout:    launcherSearchSetUpTestTimeout + arcOptinTimeout,
 		PreTestTimeout:  launcherSearchPreTestTimeout,
 		PostTestTimeout: launcherSearchPostTestTimeout,
+		Vars:            []string{"ui.gaiaPoolDefault"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: NormalLauncherSearchWithArc,
-		Desc: "Normal launcher search",
+		Desc: "Normal launcher search with Acr++ turn on",
 		Contacts: []string{
 			"xiuwen@google.com",
 			"ml-service-team@google.com",
@@ -126,12 +131,31 @@ func init() {
 		PostTestTimeout: launcherSearchPostTestTimeout,
 		Vars:            []string{"ui.gaiaPoolDefault"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: NormalLauncherSearchWithOOBE,
+		Desc: "Normal launcher search with complete OOBE onboarding",
+		Contacts: []string{
+			"xiuwen@google.com",
+			"ml-service-team@google.com",
+		},
+		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{}, CompleteOOBE: true},
+		SetUpTimeout:    launcherSearchSetUpTestTimeout + oobeTimeout,
+		PreTestTimeout:  launcherSearchPreTestTimeout,
+		PostTestTimeout: launcherSearchPostTestTimeout,
+		Vars:            []string{"ui.gaiaPoolDefault"},
+	})
 
 }
 
 func (f *launcherSearchFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var opts []chrome.Option
 	opts = append(opts, chrome.EnableFeatures(f.featureFlags...))
+
+	if f.CompleteOOBE {
+		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+		opts = append(opts, chrome.DontSkipOOBEAfterLogin())
+		opts = append(opts, chrome.EnableFeatures("HelpAppLauncherSearch"))
+	}
 
 	if f.ARCSupported {
 		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
@@ -149,6 +173,13 @@ func (f *launcherSearchFixtureImpl) SetUp(ctx context.Context, s *testing.FixtSt
 	f.tconn, err = cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get test API connection: ", err)
+	}
+
+	if f.CompleteOOBE {
+		ui := uiauto.New(f.tconn)
+		if err := oobe.CompleteOnboardingFlow(ctx, ui); err != nil {
+			s.Fatal("Failed to go through the oobe flow: ", err)
+		}
 	}
 
 	kb, err := input.Keyboard(ctx)

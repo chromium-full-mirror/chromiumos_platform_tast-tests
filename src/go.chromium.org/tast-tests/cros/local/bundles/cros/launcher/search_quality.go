@@ -44,12 +44,13 @@ func init() {
 		BugComponent: "b:1257106",
 		Attr:         []string{"group:launcher_search_quality_daily"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      fixture.NormalLauncherSearch,
+		Timeout:      10 * time.Minute,
 
 		Params: []testing.Param{
 			// --- Answer card test cases. ---
 			{
-				Name: "answer_card_calculator",
+				Name:    "answer_card_calculator",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "45+45",
 					useRegex:       false,
@@ -60,7 +61,8 @@ func init() {
 			},
 			// See details in: https://bugs.chromium.org/p/chromium/issues/detail?id=1432692.
 			{
-				Name: "answer_card_calculator_large_number",
+				Name:    "answer_card_calculator_large_number",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "1234+5678",
 					useRegex:       false,
@@ -70,7 +72,8 @@ func init() {
 				},
 			},
 			{
-				Name: "answer_card_caps_lock",
+				Name:    "answer_card_caps_lock",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "caps lock",
 					useRegex:       false,
@@ -79,7 +82,8 @@ func init() {
 				},
 			},
 			{
-				Name: "answer_card_screen_rotate",
+				Name:    "answer_card_screen_rotate",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "screen rotate",
 					useRegex:       false,
@@ -88,7 +92,8 @@ func init() {
 				},
 			},
 			{
-				Name: "answer_card_weather",
+				Name:    "answer_card_weather",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "canberra weather",
 					useRegex:       true,
@@ -100,7 +105,8 @@ func init() {
 
 			// --- Best match test cases. ---
 			{
-				Name: "best_match_app_chrome",
+				Name:    "best_match_app_chrome",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "chrome",
 					useRegex:       false,
@@ -109,7 +115,8 @@ func init() {
 				},
 			},
 			{
-				Name: "best_match_apps_files",
+				Name:    "best_match_apps_files",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "files",
 					useRegex:       false,
@@ -118,7 +125,8 @@ func init() {
 				},
 			},
 			{
-				Name: "best_match_apps_settings",
+				Name:    "best_match_apps_settings",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "settings",
 					useRegex:       false,
@@ -127,7 +135,8 @@ func init() {
 				},
 			},
 			{
-				Name: "best_match_apps_snapchat",
+				Name:    "best_match_apps_chrome",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "chrome",
 					useRegex:       false,
@@ -136,7 +145,8 @@ func init() {
 				},
 			},
 			{
-				Name: "best_match_files_downloads",
+				Name:    "best_match_files_downloads",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "downloads",
 					useRegex:       false,
@@ -144,18 +154,19 @@ func init() {
 					category:       "Best Match",
 				},
 			},
-			// TODO(b/286171481): Unsupported, we need to enabled showoff launcher search feature flag.
 			{
-				Name: "best_match_help_manage_account",
+				Name:    "best_match_help_manage_account",
+				Fixture: fixture.NormalLauncherSearchWithOOBE,
 				Val: searchQualityTestCase{
 					query:          "manage account",
 					useRegex:       false,
 					expectedResult: "Manage Google Accounts on your Chromebook, Help",
-					category:       "Best Match",
+					category:       "Help",
 				},
 			},
 			{
-				Name: "best_match_settings_bluetooth",
+				Name:    "best_match_settings_bluetooth",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "bluetooth",
 					useRegex:       false,
@@ -164,7 +175,8 @@ func init() {
 				},
 			},
 			{
-				Name: "best_match_settings_display_size",
+				Name:    "best_match_settings_display_size",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "display size",
 					useRegex:       false,
@@ -173,7 +185,8 @@ func init() {
 				},
 			},
 			{
-				Name: "best_match_settings_language",
+				Name:    "best_match_settings_language",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "language",
 					useRegex:       false,
@@ -182,7 +195,8 @@ func init() {
 				},
 			},
 			{
-				Name: "best_match_settings_reverse_scroll",
+				Name:    "best_match_settings_reverse_scroll",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "reverse scroll",
 					useRegex:       false,
@@ -193,7 +207,8 @@ func init() {
 
 			// --- Apps test cases. ---
 			{
-				Name: "apps_keyboard_shortcut",
+				Name:    "apps_keyboard_shortcut",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "keyboard shortcut",
 					useRegex:       false,
@@ -204,7 +219,8 @@ func init() {
 
 			// --- Help app test cases. ---
 			{
-				Name: "help_new_tab",
+				Name:    "help_new_tab",
+				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "new tab",
 					useRegex:       false,
@@ -214,9 +230,9 @@ func init() {
 			},
 
 			// --- Play store test cases. ---
-			// TODO(b/286171481): Unsupported, we need to change fixture to support arc++ app search.
 			{
-				Name: "play_store_snapchat",
+				Name:    "play_store_snapchat",
+				Fixture: fixture.NormalLauncherSearchWithArc,
 				Val: searchQualityTestCase{
 					query:          "snapchat",
 					useRegex:       false,
