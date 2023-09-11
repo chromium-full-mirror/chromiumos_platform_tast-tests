@@ -44,6 +44,10 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-cbd2ebb4-8f09-4902-a7ae-9eb7619f7409",
+		}},
 		Params: []testing.Param{{
 			Name: "ash",
 			Val: printToPdfParams{

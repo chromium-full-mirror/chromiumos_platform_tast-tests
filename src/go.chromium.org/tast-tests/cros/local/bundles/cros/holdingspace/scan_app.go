@@ -33,7 +33,11 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"virtual_usb_printer", "cups", "chrome"},
-		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-0d908149-1273-41b3-8c06-cb4ebf70892b",
+		}},
+		Fixture: "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 	})
 }
 

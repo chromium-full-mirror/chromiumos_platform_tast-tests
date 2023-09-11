@@ -46,6 +46,10 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-d1cdf1fd-1bf3-42ee-acef-5858f9ceb074",
+		}},
 		Params: []testing.Param{{
 			Name:    "single_file",
 			Fixture: "chromeLoggedIn",

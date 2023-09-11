@@ -61,6 +61,10 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-8735ae91-8339-4836-9771-f11731dcaa7f",
+		}},
 		Params: []testing.Param{{
 			Name: "ash",
 			Val: clipboardHistoryTestParam{browser.TypeAsh,

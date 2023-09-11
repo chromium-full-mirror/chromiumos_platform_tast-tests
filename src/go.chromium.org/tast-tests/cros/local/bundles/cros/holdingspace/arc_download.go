@@ -45,7 +45,11 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
-		Timeout:      5 * time.Minute,
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-cbd2ebb4-8f09-4902-a7ae-9eb7619f7409",
+		}},
+		Timeout: 5 * time.Minute,
 	})
 }
 

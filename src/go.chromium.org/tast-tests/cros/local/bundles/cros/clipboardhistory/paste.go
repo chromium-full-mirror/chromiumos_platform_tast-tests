@@ -40,6 +40,10 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-8bcf8422-65f2-44c9-8a12-c1ebf9807271",
+		}},
 		Params: []testing.Param{{
 			Name: "click_ash",
 			Val: pasteTestParams{
