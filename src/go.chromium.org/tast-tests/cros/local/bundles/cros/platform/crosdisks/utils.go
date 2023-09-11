@@ -205,12 +205,15 @@ func verifyDirectoryContents(ctx context.Context, dir string, expectedContent Di
 			next = time.Now().Add(time.Second)
 		}
 
-		if v.Data != nil {
-			data, err := ioutil.ReadFile(filepath.Join(dir, k))
+		if want := v.Data; want != nil {
+			got, err := ioutil.ReadFile(filepath.Join(dir, k))
 			if err != nil {
-				return errors.Wrapf(err, "could not read file %q", k)
+				return errors.Wrapf(err, "cannot read file %q", k)
 			}
-			if bytes.Compare(v.Data, data) != 0 {
+			if len(got) != len(want) {
+				return errors.Errorf("length of file %q does not match expected one: got %d bytes, want %d bytes", k, len(got), len(want))
+			}
+			if bytes.Compare(want, got) != 0 {
 				return errors.Errorf("content of file %q does not match expected one", k)
 			}
 		}
