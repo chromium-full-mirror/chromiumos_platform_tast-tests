@@ -18,6 +18,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"go.chromium.org/tast-tests/cros/common/commonautoupdate"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	ue "go.chromium.org/tast-tests/cros/common/updateengine"
 	"go.chromium.org/tast-tests/cros/local/updateengine"
@@ -238,26 +239,13 @@ func (u *UpdateService) InstalledLSBReleaseContent(ctx context.Context, req *emp
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	alternativePartitionMap := map[string]string{
-		"/dev/nvme0n1p3": "/dev/nvme0n1p5",
-		"/dev/nvme0n1p5": "/dev/nvme0n1p3",
-		"/dev/mmcblk0p3": "/dev/mmcblk0p5",
-		"/dev/mmcblk0p5": "/dev/mmcblk0p3",
-		"/dev/mmcblk1p3": "/dev/mmcblk1p5",
-		"/dev/mmcblk1p5": "/dev/mmcblk1p3",
-		"/dev/mmcblk2p3": "/dev/mmcblk2p5",
-		"/dev/mmcblk2p5": "/dev/mmcblk2p3",
-		"/dev/sda3":      "/dev/sda5",
-		"/dev/sda5":      "/dev/sda3",
-	}
-
 	result, err := testexec.CommandContext(ctx, "rootdev", "-s").Output(testexec.DumpLogOnError)
 	if err != nil {
 		return nil, err
 	}
 
 	currentPartition := strings.TrimSpace(string(result))
-	alternativePartition, ok := alternativePartitionMap[currentPartition]
+	alternativePartition, ok := commonautoupdate.AlternativeRootPartitionMap[currentPartition]
 	if !ok {
 		return nil, errors.Errorf("unknown root partition %q", currentPartition)
 	}

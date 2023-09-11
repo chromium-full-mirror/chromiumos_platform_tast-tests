@@ -12,6 +12,7 @@ import (
 	"math/rand"
 	"net"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"go.chromium.org/tast-tests/cros/common/commonautoupdate"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	dutpkg "go.chromium.org/tast-tests/cros/remote/dut"
 	aupb "go.chromium.org/tast-tests/cros/services/cros/autoupdate"
@@ -403,23 +405,104 @@ func bucketContentToFile(ctx context.Context, gsFolder, logPath string) error {
 }
 
 // VerifyInvalidatedUpdate verifies that an update is invalidated by checking
-// that the root and the firmware partitions are reset to pre-update states.
-// Also verifies that the appropriate firmware flags are correctly reset.
-func VerifyInvalidatedUpdate(ctx context.Context, dut *dut.DUT, preUpdateFwAct, preUpdateRootSlot string) error {
+// that the current kernel partition has the highest boot priority and
+// that the appropriate firmware flags are correctly reset.
+func VerifyInvalidatedUpdate(ctx context.Context, dut *dut.DUT, preUpdateFwAct string) error {
 	if err := VerifyInvalidatedFirmwareUpdate(ctx, dut, preUpdateFwAct); err != nil {
 		return err
 	}
 
-	// Verify that the root partition is properly reset.
-	rootdev, err := dut.Conn().CommandContext(ctx, "rootdev", "-s").Output()
-	if err != nil {
+	if err := VerifyCurrentKernelPartitionHasHighestPriority(ctx, dut); err != nil {
 		return err
-	}
-	if string(rootdev) != preUpdateRootSlot {
-		return errors.New("Root partition is not invalidated")
 	}
 
 	return nil
+}
+
+// VerifyCurrentKernelPartitionHasHighestPriority verifies that
+// the current kernel partition has the highest boot priority.
+func VerifyCurrentKernelPartitionHasHighestPriority(ctx context.Context, dut *dut.DUT) error {
+	// Get the current and the alternative root partitions paths.
+	// Read https://chromium.googlesource.com/chromiumos/docs/+/HEAD/disk_format.md
+	// about the disk layout and the partition information.
+	currentRootPartitionBytes, err := dut.Conn().CommandContext(ctx, "rootdev", "-s").Output()
+	if err != nil {
+		return err
+	}
+	currentRootPartition := strings.TrimSpace(string(currentRootPartitionBytes))
+
+	alternativeRootPartition, ok := commonautoupdate.AlternativeRootPartitionMap[currentRootPartition]
+	if !ok {
+		return errors.Errorf("unknown root partition %q", currentRootPartition)
+	}
+
+	currentKernelPriority, err := getKernelPartitionPriority(ctx, dut, currentRootPartition)
+	if err != nil {
+		return err
+	}
+
+	alternativeKernelPriority, err := getKernelPartitionPriority(ctx, dut, alternativeRootPartition)
+	if err != nil {
+		return err
+	}
+
+	if currentKernelPriority <= alternativeKernelPriority {
+		return errors.New("alternative kernel has higher priority than current kernel")
+	}
+
+	return nil
+}
+
+// getKernelPartitionPriority gets a priority of a kernel partition given
+// its adjacent root partition path.
+func getKernelPartitionPriority(ctx context.Context, dut *dut.DUT, rootPartition string) (int, error) {
+	partitionNumber, err := getKernelPartitionNumber(rootPartition)
+	if err != nil {
+		return 0, err
+	}
+
+	// Get a drive path.
+	driveBytes, err := dut.Conn().CommandContext(ctx, "rootdev", "-d").Output()
+	if err != nil {
+		return 0, err
+	}
+	drive := strings.TrimSpace(string(driveBytes))
+
+	priority, err := getPartitionPriority(ctx, dut, drive, partitionNumber)
+	if err != nil {
+		return 0, err
+	}
+
+	return priority, nil
+}
+
+// getKernelPartitionNumber calculates a kernel partition number.
+// A kernel partition number is calculated as the number of its adjacent
+// root partition - 1.
+// More information about the partition numbers here
+// https://chromium.googlesource.com/chromiumos/docs/+/HEAD/disk_format.md#drive-partitions.
+func getKernelPartitionNumber(rootPartition string) (int, error) {
+	// Root partition number is the last number in the root partition path.
+	rootPartitionNumber, err := strconv.Atoi(rootPartition[len(rootPartition)-1:])
+	if err != nil {
+		return 0, err
+	}
+
+	return rootPartitionNumber - 1, nil
+}
+
+// getPartitionPriority gets a priority of a partition using cgpt.
+func getPartitionPriority(ctx context.Context, dut *dut.DUT, drive string, partitionNumber int) (int, error) {
+	priorityBytes, err := dut.Conn().CommandContext(ctx, "cgpt", "show", drive, "-i", strconv.Itoa(partitionNumber), "-P").Output()
+	if err != nil {
+		return 0, err
+	}
+	priority, err := strconv.Atoi(strings.TrimSpace(string(priorityBytes)))
+	if err != nil {
+		return 0, err
+	}
+
+	return priority, nil
 }
 
 // VerifyUpdateInvalidationPostReboot checks that a device still in a valid state

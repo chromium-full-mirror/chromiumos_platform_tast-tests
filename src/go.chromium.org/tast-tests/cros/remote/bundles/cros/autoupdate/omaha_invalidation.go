@@ -151,13 +151,6 @@ func OmahaInvalidation(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// Save current root and firmware partition information
-	// to verify the invalidation later.
-	rootdev, err := s.DUT().Conn().CommandContext(ctx, "rootdev", "-s").Output()
-	if err != nil {
-		s.Fatal("Failed to get current root partition: ", err)
-	}
-
 	mainFWAct, err := updateutil.GetCrossystemFlag(ctx, s.DUT(), updateutil.MainFWActFlag)
 	if err != nil {
 		s.Fatal("Failed to get current firmware partition: ", err)
@@ -225,7 +218,7 @@ func OmahaInvalidation(ctx context.Context, s *testing.State) {
 	})
 
 	// Verify that the update is invalidated.
-	if err := updateutil.VerifyInvalidatedUpdate(ctx, s.DUT(), mainFWAct, string(rootdev)); err != nil {
+	if err := updateutil.VerifyInvalidatedUpdate(ctx, s.DUT(), mainFWAct); err != nil {
 		s.Fatal("Failed to verify the update invalidation: ", err)
 	}
 
