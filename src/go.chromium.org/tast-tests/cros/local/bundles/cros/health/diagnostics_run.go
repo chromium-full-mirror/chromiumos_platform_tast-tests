@@ -115,13 +115,13 @@ func init() {
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 			// TODO(b/279374234): Promote to critical.
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:              "fingerprint_alive",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 			// TODO(b/279374234): Promote to critical.
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:              "emmc_lifetime",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
