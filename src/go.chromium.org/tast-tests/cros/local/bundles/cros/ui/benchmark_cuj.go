@@ -200,54 +200,6 @@ func init() {
 					RecorderMode:  cujrecorder.Benchmark,
 				},
 			},
-
-			// Experimental tests to verify cujrecorder overhead.
-			// TODO(b/284006052) remove these tests after overhead has been
-			// determined.
-			{
-				Name:      "speedometer_perf_mode",
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
-					RecorderMode:  cujrecorder.Perf,
-				},
-			},
-			{
-				Name:      "speedometer_without_dptf_powerd_mode",
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
-					RecorderMode:  cujrecorder.BenchmarkDisableDPTFPowerd,
-				},
-			},
-			{
-				Name:      "motionmark_perf_mode",
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
-					RecorderMode:  cujrecorder.Perf,
-				},
-			},
-			{
-				Name:      "motionmark_without_dptf_powerd_mode",
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
-					RecorderMode:  cujrecorder.BenchmarkDisableDPTFPowerd,
-				},
-			},
 		},
 	})
 }
