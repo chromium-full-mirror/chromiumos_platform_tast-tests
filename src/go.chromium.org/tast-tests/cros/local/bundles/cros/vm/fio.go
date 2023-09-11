@@ -193,6 +193,14 @@ func init() {
 				},
 			},
 			{
+				Name:      "block_packed_randwrite",
+				ExtraData: []string{"fio_randwrite.job"},
+				Val: param{
+					kind: "block_packed",
+					job:  "fio_randwrite.job",
+				},
+			},
+			{
 				Name:      "virtiofs_randwrite",
 				ExtraData: []string{"fio_randwrite.job"},
 				Val: param{
