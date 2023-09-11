@@ -27,10 +27,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test behavior of ScreenBrightnessPercent policy: check if the screen brightness matches the value of the policy",
 		Contacts: []string{
-			"agawronska@google.com",     // Test owner
-			"alexanderhartl@google.com", // Test author
+			"cros-demo-mode-eng@google.com",
+			"llin@google.com",
+			"xiqiruan@google.com",
 		},
-		BugComponent: "b:1079167",
+		// ChromeOS > Software > Consumer > Demo Mode
+		BugComponent: "b:812312",
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		// no_qemu: VMs don't support brightness control.
 		SoftwareDeps: []string{"chrome", "no_qemu"},
