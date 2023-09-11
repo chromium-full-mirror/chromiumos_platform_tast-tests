@@ -24,6 +24,8 @@ const ResetTimeout = 30 * time.Second
 
 // PreData holds information made available to tests that specify preconditions.
 type PreData struct {
+	// parentState is the parent state that provides extra functionality, such as multi display toggling.
+	parentState interface{}
 	// Chrome is a connection to an already-started Chrome instance.
 	// It cannot be closed by tests.
 	Chrome *chrome.Chrome

@@ -8,6 +8,8 @@ package fixture
 const (
 	// Logged into a user session.
 	ChromeLoggedIn = "chromeLoggedIn"
+	// Logged into a user session with multi display enabled.
+	ChromeLoggedInMultiDisplay = "chromeLoggedInMultiDisplay"
 	// Logged into a user session with --disable-sync flag.
 	ChromeLoggedInDisableSync = "chromeLoggedInDisableSync"
 	// Logged into a user session with --disable-sync flag and firmware updates disabled.

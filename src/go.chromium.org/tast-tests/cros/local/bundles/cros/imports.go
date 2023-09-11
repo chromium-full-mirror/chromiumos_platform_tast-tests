@@ -139,6 +139,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/vdi"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/video"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/virtualmultidisplay"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/vm"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/wallpaper"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/webrtc"

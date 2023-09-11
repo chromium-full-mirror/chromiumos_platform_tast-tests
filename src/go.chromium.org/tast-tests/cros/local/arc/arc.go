@@ -58,6 +58,11 @@ const (
 	ARCVMPath = "/opt/google/vms/android"
 
 	virtioBlkDataPropName = "ro.boot.arcvm_virtio_blk_data"
+
+	// ArcBooted is a fixture that logs in and boots arc before running the test.
+	ArcBooted = "arcBooted"
+	// ArcBootedMultiDisplay same as ArcBooted but also loads the virtual multi display driver for betty tests.
+	ArcBootedMultiDisplay = "arcBootedMultiDisplay"
 )
 
 // DisableSyncFlags is the default flags for disabling ARC content sync and background activities when using GAIA accounts.

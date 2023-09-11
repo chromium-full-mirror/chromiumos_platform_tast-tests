@@ -548,6 +548,8 @@ func init() {
 }
 
 type bootedFixture struct {
+	parentStateProvider func(s *testing.FixtState) interface{}
+
 	cr   *chrome.Chrome
 	arc  *ARC
 	d    *ui.Device
@@ -561,6 +563,14 @@ type bootedFixture struct {
 	fOpt chrome.OptionsCallback // Function to return chrome options.
 }
 
+// ParentState for chrome.HasParentState.
+func (f *PreData) ParentState() interface{} {
+	return f.parentState
+}
+
+// ParentStateProviderFn is a function signature that provides parent state in ArcBootedFixtureConfig
+type ParentStateProviderFn = func(s *testing.FixtState) interface{}
+
 // BootedFixtureConfig configures the fixture in NewArcBootedFixture
 type BootedFixtureConfig struct {
 	// OptionsCallback function to provide functions to chrome.
@@ -569,6 +579,8 @@ type BootedFixtureConfig struct {
 	ArcvmConfig string
 	// Timeout to wait for ARC boot to complete.
 	BootTimeout time.Duration
+	// A factory provider that returns the parent fixture state (via a closure, generally).
+	ParentStateProvider ParentStateProviderFn
 	// Whether or not to enable UI automator.
 	EnableUIAutomator bool
 	// Whether or not to opt into the play store.
@@ -584,6 +596,7 @@ func DefaultBootedFixtureConfig() BootedFixtureConfig {
 		// specified config appended to arcvm_dev.conf.
 		ArcvmConfig:       "",
 		BootTimeout:       BootTimeout,
+		ParentStateProvider: nil,
 		EnableUIAutomator: true,
 		PlayStoreOptin:    false,
 	}
@@ -596,10 +609,11 @@ func DefaultBootedFixtureConfig() BootedFixtureConfig {
 // and works for fake logins.
 func NewArcBootedFixture(arcBootedFixtureConfig BootedFixtureConfig) testing.FixtureImpl {
 	return &bootedFixture{
-		enableUIAutomator: arcBootedFixtureConfig.EnableUIAutomator,
-		arcvmConfig:       arcBootedFixtureConfig.ArcvmConfig,
-		playStoreOptin:    arcBootedFixtureConfig.PlayStoreOptin,
-		bootTimeout:       arcBootedFixtureConfig.BootTimeout,
+		parentStateProvider: arcBootedFixtureConfig.ParentStateProvider,
+		enableUIAutomator:   arcBootedFixtureConfig.EnableUIAutomator,
+		arcvmConfig:         arcBootedFixtureConfig.ArcvmConfig,
+		playStoreOptin:      arcBootedFixtureConfig.PlayStoreOptin,
+		bootTimeout:         arcBootedFixtureConfig.BootTimeout,
 		fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts, err := arcBootedFixtureConfig.FOpts(ctx, s)
 			if err != nil {
@@ -640,6 +654,11 @@ func (f *bootedFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 			}
 		}
 	}()
+
+	var parentState interface{}
+	if f.parentStateProvider != nil {
+		parentState = f.parentStateProvider(s)
+	}
 
 	opts, err := f.fOpt(ctx, s)
 	if err != nil {
@@ -718,9 +737,10 @@ func (f *bootedFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 	f.init = init
 	success = true
 	return &PreData{
-		Chrome:   cr,
-		ARC:      arc,
-		UIDevice: d,
+		parentState: parentState,
+		Chrome:      cr,
+		ARC:         arc,
+		UIDevice:    d,
 	}
 }
 
