@@ -45,6 +45,10 @@ func init() {
 			"informational",
 		},
 		Fixture: "onedriveAndGoogleDrive",
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-40938f8a-adf8-4c3d-a0c0-cc12c09df410",
+		}},
 	})
 }
 

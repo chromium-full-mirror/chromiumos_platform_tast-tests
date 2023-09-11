@@ -52,6 +52,10 @@ func init() {
 			Fixture:           "onedriveAndGoogleDriveLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-f3b76a6e-e081-4954-921c-65e0988177b0",
+		}},
 	})
 }
 

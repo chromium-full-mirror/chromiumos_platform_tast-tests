@@ -55,6 +55,10 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               browser.TypeLacros,
 		}},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-7d517dd5-a921-44b4-88b7-20a51a22a1ef",
+		}},
 	})
 }
 
