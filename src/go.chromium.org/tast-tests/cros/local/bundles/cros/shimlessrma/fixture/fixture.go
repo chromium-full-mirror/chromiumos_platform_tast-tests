@@ -32,8 +32,8 @@ const (
 
 const (
 	cleanupTimeout   = chrome.ResetTimeout + 20*time.Second
-	iwaFile          = "iwa/dist/diag.swbn"
-	extensionFile    = "extension/diag.crx"
+	iwaFile          = "iwa/dist/diagnostics_app.swbn"
+	extensionFile    = "extension/diagnostics_app.crx"
 	virtualUSBFile   = "/tmp/virtual_usb_file"
 	tmpUsbMountPoint = "/tmp/virtual_usb"
 )
@@ -129,6 +129,14 @@ func (f *installIWAFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		}
 	}
 
+	// There is a strange thing, we can mount the device as RW but fail to mount it as RO.
+	// However, re-create the device as RO can solve this problem.
+	// Set the virtual USB as read-only so rmad can mount it successfully.
+	// TODO(b/299851049) Investigate the root cause.
+	if err := f.setupVirtualUSBAsRO(ctx); err != nil {
+		s.Fatal("Failed to set up virtual USB as RO, err: ", err)
+	}
+
 	// Trigger the installation flow.
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
@@ -178,13 +186,6 @@ func (f *installIWAFixture) TearDown(ctx context.Context, s *testing.FixtState) 
 
 	// Clean up virtual USB mass storage device.
 	// Stop ui to prevent opening files under the mount point. If we fail to stop ui, then we can't umount it as well.
-	// TODO(b/297155775) We don't need to restart ui after the rmad installation implementation is completed.
-	if err := upstart.RestartJob(ctx, "ui"); err != nil {
-		s.Fatal("Failed to restart ui, err: ", err)
-	}
-	if err := testexec.CommandContext(ctx, "umount", tmpUsbMountPoint).Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to umount USB, err: ", err)
-	}
 	testexec.CommandContext(ctx, "modprobe", "g_mass_storage", "-r").Run()
 	testexec.CommandContext(ctx, "modprobe", "dummy_hcd", "-r").Run()
 	os.Remove(virtualUSBFile)
@@ -254,6 +255,20 @@ func (f *installIWAFixture) setupVirtualUSB(ctx context.Context) error {
 	}
 	if err := testexec.CommandContext(ctx, "mount", usbPath, tmpUsbMountPoint).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to mount USB")
+	}
+
+	return nil
+}
+
+func (f *installIWAFixture) setupVirtualUSBAsRO(ctx context.Context) error {
+	if err := testexec.CommandContext(ctx, "umount", tmpUsbMountPoint).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to umount USB")
+	}
+	if err := testexec.CommandContext(ctx, "modprobe", "g_mass_storage", "-r").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to remove g_mass_storage module")
+	}
+	if err := testexec.CommandContext(ctx, "modprobe", "g_mass_storage", "file="+virtualUSBFile, "removable=1", "ro=1").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to create virtual USB storage as RO device")
 	}
 
 	return nil

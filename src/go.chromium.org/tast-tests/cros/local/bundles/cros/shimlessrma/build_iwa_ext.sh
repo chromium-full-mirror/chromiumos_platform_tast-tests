@@ -18,4 +18,4 @@ npm install
 # Pack extension.
 /usr/bin/google-chrome --pack-extension=./build \
                        --pack-extension-key=private_key.pem
-mv build.crx diag.crx
+mv build.crx diagnostics_app.crx

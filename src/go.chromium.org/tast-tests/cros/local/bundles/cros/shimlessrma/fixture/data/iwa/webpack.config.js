@@ -26,7 +26,7 @@ module.exports = async () => {
       new WebBundlePlugin({
         baseURL: new WebBundleId(key).serializeWithIsolatedWebAppOrigin(),
         static: { dir: path.resolve(__dirname, 'src') },
-        output: 'diag.swbn',
+        output: 'diagnostics_app.swbn',
         integrityBlockSign: {
           strategy: new NodeCryptoSigningStrategy(key),
         },
