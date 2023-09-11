@@ -34,8 +34,10 @@ func InitializeAllowedEntries() []AllowedEntry {
 		{"patchpaneld", "shill_client.cc", ".*Can't retrieve properties for device.*", 0},
 		{"patchpaneld", "shill_client.cc", ".*Empty interface name for shill Device \\/device\\/eth\\d.*", 0},
 		{"patchpaneld", "shill_client.cc", ".*Failed to obtain service.*GetProperties.*signature.*doesn't exist.*", 0},
-		{"patchpaneld", "shill_client.cc", ".*Unable to get manager properties.*", 0},
+		{"patchpaneld", "shill_client.cc", ".*Unable to get Manager properties.*", 0}, // b/257637872
 		{"patchpaneld", "shill_client.cc", ".*Unknown interface name eth\\d.*", 0},
+		{"patchpaneld", "shill_client.cc", ".*Unable to get shill Device properties for \\/device\\/eth\\d.*", 0},                 // b/299130290
+		{"patchpaneld", "shill_client.cc", ".*Failed to update properties of Device \\/device\\/eth\\d.*", 0},                     // b/299130290
 		{"shill", "dbus_method_invoker.h", ".*CallMethodAndBlockWithTimeout.*", 0},                                                // b/210893108
 		{"shill", "dbus_properties_proxy.cc", ".*GetAll failed on org.freedesktop.ModemManager1.*", 0},                            // b/215373366
 		{"shill", "device_info.cc", ".*Add link message does not have IFLA_ADDRESS, link: rmnet_ipa0, Technology: ethernet.*", 0}, // b/208654528
@@ -47,6 +49,7 @@ func InitializeAllowedEntries() []AllowedEntry {
 		{"shill", "http_request.cc", ".*Failed to start DNS client.*", 0},                                                         // b/211000413
 		{"dnsproxyd", "object_proxy.cc", ".*Failed to call method: .*flimflam.Manager.ClearDNSProxyAddresses.*", 0},               // b/239574927
 		{"dnsproxyd", "object_proxy.cc", ".*Failed to call method: .*flimflam.Manager.GetProperties.*", 0},                        // b/239574927
+		{"dnsproxyd", "object_proxy.cc", ".*Failed to call method: .*flimflam.Manager.SetDNSProxyAddresses.*", 0},                 // b/299130808
 		{"dnsproxyd", "client.cc", ".*Unable to get shill Manager properties.*", 0},                                               // b/239574927
 		{"shill", "netlink_manager.cc", ".*OnNetlinkMessageError.*Device or resource busy.*", 0},                                  // b/239582086
 		{"shill", "network.cc", ".*IP flag write failed:.*", 0},                                                                   // b/243403055
