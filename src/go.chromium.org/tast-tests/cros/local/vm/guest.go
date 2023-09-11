@@ -53,9 +53,9 @@ func containerCommand(ctx context.Context, vmName, containerName, ownerID string
 // readFile reads the content of file using command cat and returns it as a string.
 func readFile(ctx context.Context, guest Guest, filePath string) (content string, err error) {
 	cmd := guest.Command(ctx, "cat", filePath)
-	result, err := cmd.Output()
+	result, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to cat the content of %s", filePath)
+		return "", errors.Wrapf(err, "failed to cat %q", filePath)
 	}
 
 	return string(result), nil
@@ -66,10 +66,10 @@ func readFile(ctx context.Context, guest Guest, filePath string) (content string
 func checkFileContent(ctx context.Context, guest Guest, filePath, testString string) error {
 	content, err := guest.ReadFile(ctx, filePath)
 	if err != nil {
-		return errors.Wrapf(err, "failed to cat the result %s", filePath)
+		return err
 	}
 	if content != testString {
-		return errors.Wrapf(err, "want %s, got %q", testString, content)
+		return errors.Wrapf(err, "want %q, got %q", testString, content)
 	}
 	return nil
 }
@@ -107,8 +107,7 @@ exec socat stdio vsock-connect:%d:%d
 		"container", // This is ignored by the sftp adapter script
 	}
 	cmd := testexec.CommandContext(ctx, "sftp", sftpArgs...)
-	if err := cmd.Run(); err != nil {
-		cmd.DumpLog(ctx)
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrapf(err, "failed to execute %q with sftp command %q", strings.Join(cmd.Args, " "), sftpCmd)
 	}
 	return nil
@@ -162,7 +161,7 @@ func getFile(ctx context.Context, containerName string, vm *VM, containerPath, l
 // getFileList returns a list of the files in the given path in the container.
 func getFileList(ctx context.Context, guest Guest, path string) (fileList []string, err error) {
 	// Get files in the path in guest.
-	result, err := guest.Command(ctx, "ls", "-1", path).Output()
+	result, err := guest.Command(ctx, "ls", "-1", path).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to run 'ls %s' in guest", path)
 	}

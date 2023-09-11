@@ -72,7 +72,7 @@ func BackupRestore(ctx context.Context, s *testing.State) {
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
@@ -89,8 +89,8 @@ func BackupRestore(ctx context.Context, s *testing.State) {
 		copyName        = "penguin-tast-crostini-BackupRestore"
 	)
 
-	// We delete most files before backup and restore to speed the process.
-	// Create an lxc copy before we change anything, then restore at the end.
+	// Restoring from settings UI does not restore snapshots. Copy the
+	// instance with its snapshots and restore it at the end.
 	lxc := func(ctx context.Context, args ...string) {
 		_, err := cont.VM.LXCCommand(ctx, args...)
 		if err != nil {
@@ -99,12 +99,12 @@ func BackupRestore(ctx context.Context, s *testing.State) {
 	}
 	lxc(ctx, "copy", vm.DefaultContainerName, copyName)
 	defer func(ctx context.Context) {
+		if err := cont.Stop(ctx); err != nil {
+			s.Fatal("Error stopping container: ", err)
+		}
 		lxc(ctx, "delete", "-f", vm.DefaultContainerName)
 		lxc(ctx, "rename", copyName, vm.DefaultContainerName)
-		// We must restart the VM and container.
-		if err := cont.VM.Stop(ctx); err != nil {
-			s.Fatal("Error stopping VM: ", err)
-		}
+
 		terminalApp, err := terminalapp.Launch(ctx, tconn)
 		if err != nil {
 			s.Fatal("Error restarting container: ", err)
@@ -113,8 +113,6 @@ func BackupRestore(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to exit Terminal window: ", err)
 		}
 	}(cleanupCtx)
-	ctx, cancel = ctxutil.Shorten(ctx, 60*time.Second)
-	defer cancel()
 
 	if err := cont.WriteFile(ctx, testFileName, testFileContent); err != nil {
 		s.Fatalf("Failed to write file %v in container: %v", testFileName, err)
@@ -148,7 +146,7 @@ func BackupRestore(ctx context.Context, s *testing.State) {
 	}
 
 	if err := cont.CheckFileContent(ctx, testFileName, testFileContent); err != nil {
-		s.Fatalf("Wrong file content for %v: %v", testFileContent, err)
+		s.Fatal("Failed to verify file contents: ", err)
 	}
 
 	out, err := cont.Command(ctx, "getfacl", testFileName).CombinedOutput(testexec.DumpLogOnError)
