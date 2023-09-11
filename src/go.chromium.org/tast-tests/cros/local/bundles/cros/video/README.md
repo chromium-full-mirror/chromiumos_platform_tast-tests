@@ -9,11 +9,12 @@ To get a list of all available video tests run:
 
     tast list $HOST video.*
 
-All video tests can be found in the [tast video folder](https://chromium.googlesource.com/chromiumos/platform/tast-tests/+/refs/heads/main/src/go.chromium.org/tast-tests/cros/local/bundles/cros/video/).
+All video tests can be found in the [tast video folder].
+
+[tast video folder]: https://chromium.googlesource.com/chromiumos/platform/tast-tests/+/refs/heads/main/src/go.chromium.org/tast-tests/cros/local/bundles/cros/video/
 
 [TOC]
 
-[tast video folder]:
 
 ## Test layering
 
