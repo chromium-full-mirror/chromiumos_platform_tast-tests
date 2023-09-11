@@ -167,7 +167,7 @@ func ReportingRuntimeCountersTelemetry(ctx context.Context, s *testing.State) {
 		chrome.DMSPolicy(fdms.URL),
 		chrome.EncryptedReportingAddr(server.URL()),
 		chrome.EnableFeatures(missiveFeature),
-		chrome.EnableFeatures("EnableRuntimeCounters"),
+		chrome.EnableFeatures("EnableRuntimeCountersTelemetry"),
 		chrome.KeepEnrollment())
 	if err != nil {
 		s.Fatal("Chrome start failed: ", err)
