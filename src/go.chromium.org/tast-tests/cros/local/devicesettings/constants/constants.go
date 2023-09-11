@@ -44,3 +44,11 @@ const (
 	DeleteAltShortcut    = "alt + backspace"
 	Off                  = "Off"
 )
+
+// Fkey constants.
+const (
+	F11              = "F11"
+	F11ShiftShortcut = "shift + back"
+	F12              = "F12"
+	F12AltShortcut   = "alt + forward"
+)
