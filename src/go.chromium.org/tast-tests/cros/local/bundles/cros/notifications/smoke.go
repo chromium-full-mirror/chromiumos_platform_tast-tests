@@ -38,6 +38,13 @@ func init() {
 		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-b07d14ae-c58d-4b7d-9108-faeaee45af4c",
+		}, {
+			Key:   "feature_id",
+			Value: "screenplay-39d4666a-39dc-40ed-a918-75acf57335a0",
+		}},
 		Params: []testing.Param{{
 			Fixture: "chromeLoggedInQsRevampEnabled",
 			Val:     browser.TypeAsh,

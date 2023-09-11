@@ -33,6 +33,10 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-e5592965-ad75-451b-8d24-3d1a5662ef7a",
+		}},
 	})
 }
 

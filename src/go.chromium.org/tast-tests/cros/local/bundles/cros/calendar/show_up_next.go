@@ -28,7 +28,11 @@ func init() {
 		BugComponent: "b:1246126", // ChromeOS > Software > System UI Surfaces > Status Area > Calendar
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInWithUpcomingCalendarEvents",
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-fed70290-27e6-403a-8956-d3ba9671fc90",
+		}},
+		Fixture: "chromeLoggedInWithUpcomingCalendarEvents",
 	})
 }
 

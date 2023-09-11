@@ -31,7 +31,11 @@ func init() {
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-39d4666a-39dc-40ed-a918-75acf57335a0",
+		}},
+		Vars: []string{"ui.signinProfileTestExtensionManifestKey"},
 		Params: []testing.Param{
 			{
 				Name: "battery",

@@ -28,7 +28,11 @@ func init() {
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInQsRevampEnabled",
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-39d4666a-39dc-40ed-a918-75acf57335a0",
+		}},
+		Fixture: "chromeLoggedInQsRevampEnabled",
 		// kakadu audio is currently broken: https://crbug.com/1153016
 		// atlas is flaky: b/189732223
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.SkipOnModel("kakadu", "atlas")),

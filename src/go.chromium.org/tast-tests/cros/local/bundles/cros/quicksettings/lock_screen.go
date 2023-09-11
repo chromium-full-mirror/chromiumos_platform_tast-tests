@@ -34,6 +34,10 @@ func init() {
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-39d4666a-39dc-40ed-a918-75acf57335a0",
+		}},
 		Params: []testing.Param{{
 			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 			Val:               true,

@@ -39,6 +39,10 @@ func init() {
 		BugComponent: "b:1246021",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-1f4894b3-96dd-44f1-a8c5-800eb7aedcbd",
+		}},
 		Params: []testing.Param{{
 			Fixture: "chromeLoggedIn",
 			Val:     browser.TypeAsh,

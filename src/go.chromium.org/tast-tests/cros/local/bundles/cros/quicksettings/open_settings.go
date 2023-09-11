@@ -30,6 +30,10 @@ func init() {
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-39d4666a-39dc-40ed-a918-75acf57335a0",
+		}},
 		Params: []testing.Param{
 			{
 				Name:    "qs_revamp_enabled",

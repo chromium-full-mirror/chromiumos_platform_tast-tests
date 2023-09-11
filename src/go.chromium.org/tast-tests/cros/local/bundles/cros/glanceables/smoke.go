@@ -50,7 +50,10 @@ func init() {
 		BugComponent: "b:1362950",
 		Attr:         []string{"group:mainline", "informational"},
 		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.GlanceablesEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.GlanceablesEnabled{}, pci.VerifiedFunctionalityOS), {
+				Key:   "feature_id",
+				Value: "screenplay-ace3b729-5402-40cd-b2bf-d488bc95b7e2",
+			},
 		},
 		Vars: []string{
 			"glanceables.Smoke.studentUsername",

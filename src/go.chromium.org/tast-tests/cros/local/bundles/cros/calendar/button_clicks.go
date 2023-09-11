@@ -27,7 +27,11 @@ func init() {
 		BugComponent: "b:1246126", // ChromeOS > Software > System UI Surfaces > Status Area > Calendar
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInWithCalendarView",
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-e5592965-ad75-451b-8d24-3d1a5662ef7a",
+		}},
+		Fixture: "chromeLoggedInWithCalendarView",
 	})
 }
 
