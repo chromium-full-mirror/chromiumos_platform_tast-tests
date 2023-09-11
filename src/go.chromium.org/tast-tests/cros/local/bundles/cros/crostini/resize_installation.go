@@ -148,13 +148,15 @@ func verifyDiskSize(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chro
 	// Run commands in terminal, which should be visible and functional.
 	runInTerminal := func(cmd, outputFile string) error {
 		// Open Terminal app.
-		terminalApp, err := terminalapp.Find(ctx, tconn)
+		terminalApp, err := terminalapp.Launch(ctx, tconn)
 		if err != nil {
 			return errors.Wrap(err, "failed to find Terminal app")
 		}
 		return uiauto.Combine("running '"+cmd+"'",
 			terminalApp.RunCommand(keyboard, fmt.Sprintf("%s > %s 2>&1", cmd, outputFile)),
-			terminalApp.WaitForPrompt())(ctx)
+			terminalApp.WaitForPrompt(),
+			terminalApp.Exit(keyboard),
+		)(ctx)
 	}
 	// Check the df results in terminal
 	const (

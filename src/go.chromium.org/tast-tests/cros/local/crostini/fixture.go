@@ -419,12 +419,6 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		f.values.Save(s.OutDir())
 	}
 
-	// TerminalApp always automatically launches after the installation.
-	// Close it before proceeding to ensure a clean env.
-	if err = apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
-		s.Log("Failed to close Terminal app after installing Linux: ", err)
-	}
-
 	f.cont, err = vm.DefaultContainer(ctx, f.cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to connect to running container: ", err)
@@ -433,6 +427,18 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	// Report disk size again after successful install.
 	if err := reportDiskUsage(ctx); err != nil {
 		s.Log("Failed to gather disk usage: ", err)
+	}
+
+	if err := verifyAutoUpdatesDisabled(ctx, f.cont); err != nil {
+		s.Fatal("Failed to verify automatic updates are disabled: ", err)
+	}
+
+	// If the wayland backend is used, the fonctconfig cache will be
+	// generated the first time the app starts. On a low-end device, this
+	// can take a long time and timeout the app executions below.
+	testing.ContextLog(ctx, "Generating fontconfig cache")
+	if err := f.cont.Command(ctx, "fc-cache").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to generate fontconfig cache: ", err)
 	}
 
 	// Disable cursor blinking for GTK apps.
@@ -629,4 +635,22 @@ func generateChromeOpts(s *testing.FixtState) []chrome.Option {
 	}
 
 	return opts
+}
+
+func verifyAutoUpdatesDisabled(ctx context.Context, cont *vm.Container) error {
+	for _, unit := range []string{"apt-daily.timer", "apt-daily-upgrade.timer"} {
+		if err := cont.Command(ctx, "sh", "-c", fmt.Sprintf("! systemctl is-active %s", unit)).Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrapf(err, "error checking %q", unit)
+		}
+	}
+
+	if err := cont.Command(ctx, "grep", "-q", "^DisableAutomaticCrosPackageUpdates=true$", ".config/cros-garcon.conf").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "error checking automatic cros package updates")
+	}
+
+	if err := cont.Command(ctx, "grep", "-q", "^DisableAutomaticSecurityUpdates=true$", ".config/cros-garcon.conf").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "error checking automatic security updates")
+	}
+
+	return nil
 }

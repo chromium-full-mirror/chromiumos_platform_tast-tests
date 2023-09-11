@@ -9,14 +9,13 @@ package ui
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -24,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/crostini/lxd"
 	"go.chromium.org/tast-tests/cros/local/crostini/ui/settings"
+	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast-tests/cros/local/vm"
 
@@ -247,31 +247,19 @@ func InstallCrostini(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chr
 		return 0, errors.Wrap(err, "failed to install Crostini from UI")
 	}
 
-	// Get the container.
-	cont, err := vm.DefaultContainer(ctx, iOptions.UserName)
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to connect to running container")
+	// Terminal always automatically launches after installation.
+	// Close it before proceeding to ensure a clean env.
+	if _, err := terminalapp.Find(ctx, tconn); err != nil {
+		return 0, errors.Wrap(err, "failed to find Crostini in terminal app")
+	}
+
+	if err := apps.Close(ctx, tconn, apps.Terminal.ID); err != nil {
+		return 0, errors.Wrap(err, "failed to close Terminal app")
 	}
 
 	// The VM should now be running, check that all the host daemons are also running to catch any errors in our init scripts etc.
 	if err = checkDaemonsRunning(ctx); err != nil {
 		return 0, errors.Wrap(err, "failed to check VM host daemons state")
-	}
-
-	if err := stopAptDaily(ctx, cont); err != nil {
-		return 0, errors.Wrap(err, "failed to stop apt-daily")
-	}
-
-	if err := disableGarconPackageUpdates(ctx, cont); err != nil {
-		return 0, errors.Wrap(err, "failed to stop garcon from auto-updating packages")
-	}
-
-	// If the wayland backend is used, the fonctconfig cache will be
-	// generated the first time the app starts. On a low-end device, this
-	// can take a long time and timeout the app executions below.
-	testing.ContextLog(ctx, "Generating fontconfig cache")
-	if err := cont.Command(ctx, "fc-cache").Run(testexec.DumpLogOnError); err != nil {
-		return 0, errors.Wrap(err, "failed to generate fontconfig cache")
 	}
 
 	return resultDiskSize, nil
@@ -314,36 +302,4 @@ func checkDaemonsRunning(ctx context.Context) error {
 		return errors.Wrap(err, "failed to check Daemon running for crosdns")
 	}
 	return nil
-}
-
-// stopAptDaily stops apt-daily systemd.
-func stopAptDaily(ctx context.Context, cont *vm.Container) error {
-	// Stop and disable the apt-daily systemd timers since they may end up
-	// running while we are executing the tests and cause failures due to
-	// resource contention or violation of test hermeticity.
-	for _, t := range []string{"apt-daily", "apt-daily-upgrade"} {
-		testing.ContextLogf(ctx, "Disabling service: %s", t)
-		cmd := cont.Command(ctx, "sudo", "systemctl", "disable", "--now", t+".timer")
-		if err := cmd.Run(); err != nil {
-			cmd.DumpLog(ctx)
-			return errors.Wrapf(err, "failed to stop %s timer", t)
-		}
-	}
-	return nil
-}
-
-// disableGarconPackageUpdates stops garcon from updating packages, which can mess with some tests.
-func disableGarconPackageUpdates(ctx context.Context, cont *vm.Container) error {
-	const (
-		garconConfig = `DisableAutomaticCrosPackageUpdates=true
-                                DisableAutomaticSecurityUpdates=true`
-		configPath = ".config/cros-garcon.conf"
-		localPath  = "/tmp/cros-garcon.conf"
-	)
-	testing.ContextLog(ctx, "Disabling garcon package updates")
-	if err := ioutil.WriteFile(localPath, []byte(garconConfig), 0666); err != nil {
-		return err
-	}
-	defer os.Remove(localPath)
-	return cont.PushFile(ctx, localPath, configPath)
 }
