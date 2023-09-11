@@ -164,7 +164,8 @@ func startAddAccount(ctx context.Context, kb *input.KeyboardEventWriter, ui *uia
 	okButton := nodewith.NameRegex(regexp.MustCompile("(OK|Continue)")).Role(role.Button).Ancestor(root)
 	if err := uiauto.Combine("Click on OK and proceed",
 		ui.WaitUntilExists(okButton),
-		ui.LeftClickUntil(okButton, ui.Gone(okButton)),
+		ui.DoDefault(okButton),
+		ui.WaitUntilGone(okButton),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click OK. Is Account addition dialog open?")
 	}
@@ -184,7 +185,7 @@ func startAddAccount(ctx context.Context, kb *input.KeyboardEventWriter, ui *uia
 	if err := ui.Retry(2, func(ctx context.Context) error {
 		if err := uiauto.Combine("Click on Username",
 			ui.WaitUntilExists(emailField),
-			ui.LeftClickUntil(emailField, ui.Exists(emailField.Focused())),
+			ui.EnsureFocused(emailField),
 		)(ctx); err == nil {
 			// The email field input is found, the test can proceed.
 			return nil
@@ -195,9 +196,9 @@ func startAddAccount(ctx context.Context, kb *input.KeyboardEventWriter, ui *uia
 		// Note: This should be fast because it will just hide and show the webview/iframe node, but will not reload the webpage.
 		if err := uiauto.Combine("Click 'Back' and 'OK' to refresh the iframe",
 			ui.WaitUntilExists(backButton),
-			ui.LeftClick(backButton),
+			ui.DoDefault(backButton),
 			ui.WaitUntilExists(okButton),
-			ui.LeftClick(okButton),
+			ui.DoDefault(okButton),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click 'Back' and 'OK' to refresh the iframe")
 		}
@@ -285,12 +286,10 @@ func AddAccountSAML(ctx context.Context, tconn *chrome.TestConn, email, password
 		// Enter the User Name.
 		kb.TypeAction(email+"\n"),
 		// Enter the User Name on the SAML page.
-		ui.WaitUntilExists(samlEmailField),
-		ui.LeftClickUntil(samlEmailField, ui.Exists(samlEmailField.Focused())),
+		ui.EnsureFocused(samlEmailField),
 		kb.TypeAction(email+"\n"),
 		// Enter the Password.
-		ui.WaitUntilExists(passwordField),
-		ui.LeftClickUntil(passwordField, ui.Exists(passwordField.Focused())),
+		ui.EnsureFocused(passwordField),
 		kb.TypeAction(password+"\n"),
 		// On "Stay signed in?" screen select "No".
 		ui.WaitUntilExists(noButton),
@@ -391,7 +390,8 @@ func openOGB(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration)
 	addAccount := AddAnotherAccountButton()
 	if err := uiauto.Combine("Click OGB",
 		ui.WaitUntilExists(ogb),
-		ui.WithInterval(time.Second).LeftClickUntil(ogb, ui.Exists(addAccount)),
+		ui.DoDefault(ogb),
+		ui.WaitUntilExists(addAccount),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find and click OGB")
 	}
@@ -482,8 +482,9 @@ func RemoveAccountFromOSSettings(ctx context.Context, tconn *chrome.TestConn, cr
 		// Open OS Settings again.
 		OpenAccountManagerSettingsAction(tconn, cr),
 		// Find and click "More actions, <email>" button.
-		ui.FocusAndWait(moreActionsButton),
-		ui.LeftClickUntil(moreActionsButton, ui.Exists(RemoveActionButton())),
+		ui.EnsureFocused(moreActionsButton),
+		ui.DoDefault(moreActionsButton),
+		ui.WaitUntilExists(RemoveActionButton()),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click More actions button")
 	}
@@ -503,7 +504,7 @@ func removeSelectedAccountFromOSSettings(ctx context.Context, tconn *chrome.Test
 	removeAccountButton := RemoveActionButton()
 	if err := uiauto.Combine("Click Remove account",
 		ui.WaitUntilExists(removeAccountButton),
-		ui.LeftClick(removeAccountButton),
+		ui.DoDefault(removeAccountButton),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to to click Remove account")
 	}
@@ -558,7 +559,7 @@ func TestCleanup(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome)
 		// Find and click "More actions, <email>" button.
 		if err := uiauto.Combine("Click More actions",
 			ui.WaitUntilExists(accountMoreActionsButton),
-			ui.LeftClick(accountMoreActionsButton),
+			ui.DoDefault(accountMoreActionsButton),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click More actions button")
 		}
