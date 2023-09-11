@@ -9,6 +9,7 @@ package uitools
 import (
 	"context"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -18,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // List of strings that are used in the UI.
@@ -107,19 +109,25 @@ func OpenAddPrinterDialog(ctx context.Context, ui *uiauto.Context) error {
 	// Search for the other available printers button. This button is not
 	// presented in the old UI versions.
 	otherAvailablePrintersButton := OtherAvailablePrintersFinder.Ancestor(ossettings.WindowFinder)
-	nodeFound, err := ui.IsNodeFound(ctx, otherAvailablePrintersButton)
-	if err != nil {
-		return errors.Wrap(err, "an error occured during searching for the collapsed other available printers button")
-	}
-	if nodeFound {
+
+	if err := ui.WithTimeout(1 * time.Second).WaitUntilExists(otherAvailablePrintersButton)(ctx); err != nil {
+		if strings.Contains(err.Error(), nodewith.ErrNotFound) {
+			// We are on an older build that does not have this button.  Just continue.
+			testing.ContextLog(ctx, OtherAvailablePrintersName+" button does not exist")
+		} else {
+			return errors.Wrap(err, "failed looking for "+OtherAvailablePrintersName+" button")
+		}
+	} else {
+		testing.ContextLog(ctx, "Found "+OtherAvailablePrintersName+" button")
 		// Expand the other available printers dialog if it's collapsed.
 		nodeInfo, err := ui.Info(ctx, otherAvailablePrintersButton)
 		if err != nil {
-			return errors.Wrap(err, "failed to get info of other available printers button")
+			return errors.Wrap(err, "failed to get info of "+OtherAvailablePrintersName+" button")
 		}
 		if nodeInfo.State[state.Collapsed] {
+			testing.ContextLog(ctx, "Expanding "+OtherAvailablePrintersName)
 			if err := ui.DoDefault(otherAvailablePrintersButton)(ctx); err != nil {
-				return errors.Wrap(err, "error while expanding the other available printers button")
+				return errors.Wrap(err, "error while expanding the "+OtherAvailablePrintersName+" button")
 			}
 		}
 	}
