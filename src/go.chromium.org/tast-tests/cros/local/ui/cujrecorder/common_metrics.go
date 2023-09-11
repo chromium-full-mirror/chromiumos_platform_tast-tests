@@ -24,8 +24,6 @@ func AshCommonMetricConfigs() []MetricConfig {
 
 		// Smoothness.
 		NewCustomMetricConfig("Ash.Smoothness.PercentDroppedFrames_1sWindow2", "percent", perf.SmallerIsBetter),
-		// TODO(b/271121813): Deprecate after M116.
-		NewCustomMetricConfig("Ash.Smoothness.PercentDroppedFrames_1sWindow", "percent", perf.SmallerIsBetter),
 		NewSmoothnessMetricConfig("Apps.PaginationTransition.AnimationSmoothness.ClamshellMode"),
 		NewSmoothnessMetricConfig("Apps.StateTransition.AnimationSmoothness"),
 		NewSmoothnessMetricConfig("Apps.StateTransition.AnimationSmoothness.Close.ClamshellMode"),
