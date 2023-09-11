@@ -48,6 +48,12 @@ func HostToARCVPN(ctx context.Context, s *testing.State) {
 			s.Error("Failed to clean up host VPN: ", err)
 		}
 	}()
+	defer func() {
+		if err := arcvpn.ForceStopARCVPN(cleanupCtx, a); err != nil {
+			s.Error("Failed to clean up ARC VPN: ", err)
+		}
+	}()
+
 	if err := conn.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to VPN server: ", err)
 	}

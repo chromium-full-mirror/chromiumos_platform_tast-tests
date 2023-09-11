@@ -36,7 +36,7 @@ func ARCVPNConnect(ctx context.Context, s *testing.State) {
 	// If the main body of the test times out, we still want to reserve a
 	// few seconds to allow for our cleanup code to run.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, 3*time.Second)
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 5*time.Second)
 	defer cancel()
 
 	a := s.FixtValue().(*arc.PreData).ARC
@@ -45,7 +45,16 @@ func ARCVPNConnect(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to setup host VPN: ", err)
 	}
-	defer conn.Cleanup(cleanupCtx)
+	defer func() {
+		if err := conn.Cleanup(cleanupCtx); err != nil {
+			s.Error("Failed to clean up host VPN: ", err)
+		}
+	}()
+	defer func() {
+		if err := arcvpn.ForceStopARCVPN(cleanupCtx, a); err != nil {
+			s.Error("Failed to clean up ARC VPN: ", err)
+		}
+	}()
 
 	// Verify ArcHostVpnService can connect and disconnect properly following the host VPN
 	// lifecycle events.

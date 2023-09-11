@@ -8,13 +8,11 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcvpn"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -41,7 +39,7 @@ func ARCVPNCrash(ctx context.Context, s *testing.State) {
 	// If the main body of the test times out, we still want to reserve a
 	// few seconds to allow for our cleanup code to run.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, 3*time.Second)
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 5*time.Second)
 	defer cancel()
 
 	a := s.FixtValue().(*arc.PreData).ARC
@@ -50,7 +48,16 @@ func ARCVPNCrash(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to setup host VPN: ", err)
 	}
-	defer conn.Cleanup(cleanupCtx)
+	defer func() {
+		if err := conn.Cleanup(cleanupCtx); err != nil {
+			s.Error("Failed to clean up host VPN: ", err)
+		}
+	}()
+	defer func() {
+		if err := arcvpn.ForceStopARCVPN(cleanupCtx, a); err != nil {
+			s.Error("Failed to clean up ARC VPN: ", err)
+		}
+	}()
 
 	// Check that if ArcHostVpnService is stopped unexpectedly (simulating some sort
 	// of error), the host VPN is still reachable from within ARC.
@@ -66,7 +73,7 @@ func ARCVPNCrash(ctx context.Context, s *testing.State) {
 	if err := arc.ExpectPingSuccess(ctx, a, "vpn", conn.Server.OverlayIPv4); err != nil {
 		s.Fatalf("Failed to ping from ARC %s: %v", conn.Server.OverlayIPv4, err)
 	}
-	if err := crashARCVPN(ctx, a); err != nil {
+	if err := arcvpn.ForceStopARCVPN(ctx, a); err != nil {
 		s.Fatal("Failed to crash ArcHostVpnService: ", err)
 	}
 	if err := arcvpn.WaitForARCServiceState(ctx, a, arcvpn.FacadeVPNPkg, arcvpn.FacadeVPNSvc, false); err != nil {
@@ -86,19 +93,4 @@ func ARCVPNCrash(ctx context.Context, s *testing.State) {
 	if err := arc.ExpectPingSuccess(ctx, a, network, conn.Server.OverlayIPv4); err != nil {
 		s.Fatalf("Failed to ping %s from ARC over %q: %v", conn.Server.OverlayIPv4, network, err)
 	}
-}
-
-// crashARCVPN force-stops the ArcHostVpnService to simulate an unexpected stop (e.g. crash). This
-// doesn't exercise normal ArcNetworkService->ArcHostVpnService service disconnection flows.
-func crashARCVPN(ctx context.Context, a *arc.ARC) error {
-	testing.ContextLog(ctx, "Stopping ArcHostVpnService")
-	cmd := a.Command(ctx, "am", "force-stop", arcvpn.FacadeVPNPkg)
-	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to execute 'am force-stop' commmand")
-	}
-
-	if err := arcvpn.WaitForARCServiceState(ctx, a, arcvpn.FacadeVPNPkg, arcvpn.FacadeVPNSvc, false); err != nil {
-		return errors.Wrapf(err, "failed to stop %s", arcvpn.FacadeVPNSvc)
-	}
-	return nil
 }

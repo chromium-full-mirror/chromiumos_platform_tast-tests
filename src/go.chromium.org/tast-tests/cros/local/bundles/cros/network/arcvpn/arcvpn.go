@@ -90,3 +90,19 @@ func WaitForARCServiceState(ctx context.Context, a *arc.ARC, pkg, svc string, ex
 	}
 	return nil
 }
+
+// ForceStopARCVPN will forcibly terminate ArcHostVpnService, which also appears like a crash. This
+// doesn't exercise normal ArcNetworkService->ArcHostVpnService service disconnection flows. If
+// ArcHostVpnService isn't running, then this is a no-op.
+func ForceStopARCVPN(ctx context.Context, a *arc.ARC) error {
+	testing.ContextLog(ctx, "Sending am force-stop to ArcHostVpnService")
+	cmd := a.Command(ctx, "am", "force-stop", FacadeVPNPkg)
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to execute 'am force-stop' commmand")
+	}
+
+	if err := WaitForARCServiceState(ctx, a, FacadeVPNPkg, FacadeVPNSvc, false); err != nil {
+		return errors.Wrapf(err, "failed to stop %s", FacadeVPNSvc)
+	}
+	return nil
+}

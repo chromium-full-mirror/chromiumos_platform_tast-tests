@@ -44,7 +44,7 @@ func ARCVPNConfigs(ctx context.Context, s *testing.State) {
 	a := s.FixtValue().(*arc.PreData).ARC
 
 	// Connect with our first config and verify values.
-	if err := verifyVPNWithTestCase(ctx, a, arcVPNConfigsTestCase{
+	if err := verifyVPNWithTestCase(ctx, s, a, arcVPNConfigsTestCase{
 		metered:       false,
 		searchDomains: []string{"foo1", "bar1"},
 		mtu:           576,
@@ -55,7 +55,7 @@ func ARCVPNConfigs(ctx context.Context, s *testing.State) {
 	// Connect with a different config and verify values. Use values that are different from
 	// the first connection's config's values to ensure we didn't just get lucky with some
 	// default values.
-	if err := verifyVPNWithTestCase(ctx, a, arcVPNConfigsTestCase{
+	if err := verifyVPNWithTestCase(ctx, s, a, arcVPNConfigsTestCase{
 		metered:       true,
 		searchDomains: []string{"foo2", "bar2"},
 		mtu:           1280,
@@ -64,7 +64,7 @@ func ARCVPNConfigs(ctx context.Context, s *testing.State) {
 	}
 }
 
-func verifyVPNWithTestCase(ctx context.Context, a *arc.ARC, tc arcVPNConfigsTestCase) error {
+func verifyVPNWithTestCase(ctx context.Context, s *testing.State, a *arc.ARC, tc arcVPNConfigsTestCase) error {
 	// If the main body of the function times out, we still want to reserve a few
 	// seconds to allow for our cleanup code to run.
 	cleanupCtx := ctx
@@ -84,7 +84,17 @@ func verifyVPNWithTestCase(ctx context.Context, a *arc.ARC, tc arcVPNConfigsTest
 	if err != nil {
 		return errors.Wrap(err, "failed to setup host VPN")
 	}
-	defer conn.Cleanup(cleanupCtx)
+	defer func() {
+		if err := conn.Cleanup(cleanupCtx); err != nil {
+			s.Error("Failed to clean up host VPN: ", err)
+		}
+	}()
+	defer func() {
+		if err := arcvpn.ForceStopARCVPN(cleanupCtx, a); err != nil {
+			s.Error("Failed to clean up ARC VPN: ", err)
+		}
+	}()
+
 	if err := conn.Connect(ctx); err != nil {
 		return errors.Wrap(err, "failed to connect to VPN server")
 	}

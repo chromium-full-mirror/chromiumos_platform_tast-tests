@@ -49,6 +49,11 @@ func ARCToHostVPN(ctx context.Context, s *testing.State) {
 			s.Error("Failed to clean up host VPN: ", err)
 		}
 	}()
+	defer func() {
+		if err := arcvpn.ForceStopARCVPN(cleanupCtx, a); err != nil {
+			s.Error("Failed to clean up ARC VPN: ", err)
+		}
+	}()
 
 	// Install and start the test app.
 	testing.ContextLog(ctx, "Installing ArcVpnTest.apk")
