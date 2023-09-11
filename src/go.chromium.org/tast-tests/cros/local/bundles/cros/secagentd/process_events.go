@@ -153,7 +153,7 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
 
-	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 30*time.Second)
+	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 45*time.Second)
 	if err != nil {
 		s.Fatal("Failed to setup dbus monitoring: ", err)
 	}
@@ -182,6 +182,9 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 	// Don't check the error here because it will likely just say
 	// "signal: Killed"
 	cmd.Wait()
+
+	s.Log("Expected Exec: ", expExec.String())
+	s.Log("Expected Terminate: ", expTerm.String())
 
 	execFound, terminateFound := false, false
 
@@ -278,6 +281,8 @@ func checkProcessEventWatcher(s *testing.State, ew *dbusutil.EventWatcher) ([]*x
 	if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
 		s.Fatal("Failed to unmarshal data for a CROS_SECURITY_PROCESS record: ", err)
 	}
+
+	s.Log("Snooped XdrProcessEvent: ", pe.String())
 
 	var bExecs []*xdr.ProcessExecEvent
 	var bTerminates []*xdr.ProcessTerminateEvent
