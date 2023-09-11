@@ -83,8 +83,11 @@ func init() {
 	})
 }
 
-func startIPPEverywherePrinter(ctx context.Context, name string, arg ...string) (*testexec.Cmd, int, error) {
-	ippeveprinter := testexec.CommandContext(ctx, name, arg...)
+func startIPPEverywherePrinter(ctx context.Context, attributesFile string) (*testexec.Cmd, int, error) {
+	// `-r off` turns off DNS-SD service advertisements. We do this to make the
+	// printer undiscoverable outside the device that this test is running on, to
+	// avoid interfering with other tests.
+	ippeveprinter := testexec.CommandContext(ctx, "stdbuf", "-o0", "ippeveprinter", "ippeveprinter_test", "-a", attributesFile, "-r", "off")
 	stderr, err := ippeveprinter.StderrPipe()
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "failed to fetch stderr")
@@ -149,7 +152,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 
 	// `ipp_conf_finishings.txt` is a modified ipp attributes file fetched from
 	// ippeveprinter with default parameters so that finishing printing features are supported
-	ippeveprinter, printerPort, err := startIPPEverywherePrinter(ctx, "stdbuf", "-o0", "ippeveprinter", "ippeveprinter_test", "-a", s.DataPath("ipp_conf_finishings.txt"))
+	ippeveprinter, printerPort, err := startIPPEverywherePrinter(ctx, s.DataPath("ipp_conf_finishings.txt"))
 	if err != nil {
 		s.Fatal("Failed to start IPPEverywherePrinter: ", err)
 	}

@@ -101,8 +101,11 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 	const printerDisplayName = "expiredCert"
 
 	// Start virtual printer with expired certificate.
+	// `-r off` turns off DNS-SD service advertisements. We do this to make the
+	// printer undiscoverable outside the device that this test is running on, to
+	// avoid interfering with other tests.
 	ippeveprinter := testexec.CommandContext(ctx, "ippeveprinter", "-A",
-		"-K", tmpDir, "-p", printerPort, "-n", "localhost", printerDisplayName)
+		"-K", tmpDir, "-p", printerPort, "-n", "localhost", printerDisplayName, "-r", "off")
 
 	if err := ippeveprinter.Start(); err != nil {
 		s.Fatal("Failed to start ippeveprinter")

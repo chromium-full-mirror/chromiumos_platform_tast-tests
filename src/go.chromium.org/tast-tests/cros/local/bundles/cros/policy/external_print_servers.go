@@ -111,7 +111,10 @@ func waitForPort(ctx context.Context, port string, timeout time.Duration) error 
 }
 
 func startPrinter(ctx context.Context) (*testexec.Cmd, string, error) {
-	cmd, err := startProcess(ctx, "ippeveprinter", "-p", "4444", "anyname")
+	// `-r off` turns off DNS-SD service advertisements. We do this to make the
+	// printer undiscoverable outside the device that this test is running on, to
+	// avoid interfering with other tests.
+	cmd, err := startProcess(ctx, "ippeveprinter", "-p", "4444", "anyname", "-r", "off")
 	if err != nil {
 		return cmd, "", errors.Wrap(err, "failed to start ippeveprinter")
 	}
