@@ -272,5 +272,10 @@ func (t *TestBridge) TearDown(ctx context.Context) error {
 	if err := RemoveTestConfig(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to remove test config: ", err)
 	}
+	// TODO(b/300023562): Currently fake HAL doesn't watch for the config removal,
+	// so restarting cros-camera is required.
+	if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
+		testing.ContextLog(ctx, "Failed to restart cros-camera during TearDown: ", err)
+	}
 	return nil
 }
