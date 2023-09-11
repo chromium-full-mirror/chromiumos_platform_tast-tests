@@ -45,6 +45,7 @@ func init() {
 		Desc:         "Monitors the touchpad event detected properly or not",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
+		// TODO(b/298304858): Promote to critical.
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		HardwareDeps: hwdep.D(hwdep.Touchpad()),
