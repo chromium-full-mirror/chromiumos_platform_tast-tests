@@ -32,16 +32,18 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests scrolling in the bubble launcher",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
-			"jamescook@chromium.org",
-			"tbarzic@chromium.org",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInWith100FakeApps",
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-90e4fecc-d2ea-40dc-b9db-eb9d61089e22",
+		}},
+		Fixture: "chromeLoggedInWith100FakeApps",
 	})
 }
 

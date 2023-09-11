@@ -37,15 +37,17 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests to verify app installation with app list sorted",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
-			"andrewxu@chromium.org",
-			"tbarzic@chromium.org",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Data:         fakeAppInfoForAppInstallWithAppListSortedTest.IconFileNames,
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-90e4fecc-d2ea-40dc-b9db-eb9d61089e22",
+		}},
+		Data: fakeAppInfoForAppInstallWithAppListSortedTest.IconFileNames,
 		Params: []testing.Param{
 			{
 				Name: "clamshell_alphabetical_androidp",

@@ -103,15 +103,17 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Searches for sections in OS Settings using Launcher search, and checks that the correct pages are opened",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"anastasiian@chromium.org",
-			"tbarzic@chromium.org",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-fd3faffe-194b-44e1-b829-eddc3ec07639",
+		}},
+		Fixture: "chromeLoggedIn",
 		Params: []testing.Param{{
 			Name:      "clamshel_mode",
 			ExtraAttr: []string{"informational"},

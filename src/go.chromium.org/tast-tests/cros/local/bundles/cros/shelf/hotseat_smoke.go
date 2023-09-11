@@ -21,15 +21,17 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the basic features of hotseat",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"andrewxu@chromium.org",
-			"newcomer@chromium.org",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		// ChromeOS > Software > System UI Surfaces > Shelf
 		BugComponent: "b:1288352",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-a64ba692-0294-456d-a714-5c4226b9c93c",
+		}},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SkipOnModel("magister")),
 		Pre:          chrome.LoggedIn(),
 	})

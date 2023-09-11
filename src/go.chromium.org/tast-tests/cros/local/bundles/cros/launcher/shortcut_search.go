@@ -30,14 +30,16 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that searching for queries associated with a keyhboard shortcut returns a keyboard shortcut result",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"tbarzic@chromium.org",
-			"yulunwu@chromium.org",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-c7b23296-4a15-4460-afaf-c0203dc2c224",
+		}},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
 			Fixture: "chromeLoggedIn",

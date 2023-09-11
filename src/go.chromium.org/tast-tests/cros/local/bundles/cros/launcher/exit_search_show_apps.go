@@ -25,13 +25,16 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks for best match search results in the launcher",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"yulunwu@chromium.org",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-90e4fecc-d2ea-40dc-b9db-eb9d61089e22",
+		}},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
 			Fixture: "chromeLoggedIn",

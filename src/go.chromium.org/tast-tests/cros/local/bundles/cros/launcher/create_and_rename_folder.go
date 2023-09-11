@@ -27,14 +27,19 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Renaming Folder In Launcher",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"seewaifu@chromium.org",
-			"tbarzic@chromium.org",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-c6476142-1c4a-4e51-8e9b-bb5eaad4bba7",
+		}, {
+			Key:   "feature_id",
+			Value: "screenplay-0fb6c066-83b5-4a53-a425-ba245fb896d5",
+		}},
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  launcher.TestCase{TabletMode: false},

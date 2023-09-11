@@ -34,14 +34,17 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that different types of apps show in the recent apps section",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"anasalazar@chromium.org",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-90e4fecc-d2ea-40dc-b9db-eb9d61089e22",
+		}},
+		VarDeps: []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{
 			{
 				Name:              "androidp_clamshell",

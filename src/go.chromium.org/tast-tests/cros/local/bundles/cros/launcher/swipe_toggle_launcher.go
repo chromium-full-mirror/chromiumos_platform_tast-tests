@@ -29,8 +29,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify the swipe gesture to show and hide bubble launcher",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"anasalazar@chromium.org",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350", // ChromeOS > Software > System UI Surfaces > Launcher

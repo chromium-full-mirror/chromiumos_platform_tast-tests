@@ -36,15 +36,18 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "App Launcher Search: Google Document in Drive",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"yulunwu@chromium.org",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "drivefs", "chrome_internal"},
-		Fixture:      "driveFsStarted",
-		Timeout:      2*time.Minute + driveSyncTimeout,
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-fd3faffe-194b-44e1-b829-eddc3ec07639",
+		}},
+		Fixture: "driveFsStarted",
+		Timeout: 2*time.Minute + driveSyncTimeout,
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  launcher.TestCase{TabletMode: false},

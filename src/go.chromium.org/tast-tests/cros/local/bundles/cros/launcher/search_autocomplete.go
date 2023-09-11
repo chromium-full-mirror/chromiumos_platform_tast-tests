@@ -37,13 +37,16 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks Autocomplete behavior in Launcher Search",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
-			"yulunwu@chromium.org",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-fd3faffe-194b-44e1-b829-eddc3ec07639",
+		}},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode_isaac_newto",
 			Fixture: "chromeLoggedInExtendedAutocomplete",

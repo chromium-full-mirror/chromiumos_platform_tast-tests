@@ -26,12 +26,16 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test removing items from a folder in the launcher",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"mmourgos@chromium.org",
-			"chromeos-sw-engprod@google.com"},
+			"chromeos-launcher@google.com",
+			"chromeos-sw-engprod@google.com",
+		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-c6476142-1c4a-4e51-8e9b-bb5eaad4bba7",
+		}},
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  launcher.TestCase{TabletMode: false},

@@ -24,14 +24,17 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Launches a built-in app through the launcher",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"tbarzic@chromium.org",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-fd3faffe-194b-44e1-b829-eddc3ec07639",
+		}},
+		Fixture: "chromeLoggedIn",
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  launcher.TestCase{TabletMode: false},

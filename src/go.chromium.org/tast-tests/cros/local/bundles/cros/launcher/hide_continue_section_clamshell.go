@@ -25,9 +25,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the clamshell launcher continue section can be hidden",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
-			"jamescook@chromium.org",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},

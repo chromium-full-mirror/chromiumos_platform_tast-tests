@@ -24,14 +24,17 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Basic smoke tests for the bubble launcher",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"tbarzic@chromium.org",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-90e4fecc-d2ea-40dc-b9db-eb9d61089e22",
+		}},
+		Fixture: "chromeLoggedIn",
 	})
 }
 

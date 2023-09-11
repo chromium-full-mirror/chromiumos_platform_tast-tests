@@ -28,12 +28,15 @@ func init() {
 		Func: AppDragAndDrop,
 		Desc: "Test the functionality of dragging and dropping on app icons",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"tbarzic@chromium.org",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-90e4fecc-d2ea-40dc-b9db-eb9d61089e22",
+		}},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
 			Val:     launcher.TestCase{TabletMode: false},

@@ -28,14 +28,20 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Install apps from CWS and verify that it appears in the launcher",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"yulunwu@chromium.org",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      3*time.Minute + cws.InstallationTimeout,
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-fd3faffe-194b-44e1-b829-eddc3ec07639",
+		}, {
+			Key:   "feature_id",
+			Value: "screenplay-90e4fecc-d2ea-40dc-b9db-eb9d61089e22",
+		}},
+		Timeout: 3*time.Minute + cws.InstallationTimeout,
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
 			Val:     launcher.TestCase{TabletMode: false},

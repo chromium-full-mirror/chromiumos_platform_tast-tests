@@ -35,14 +35,17 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the bubble launcher closes when opening an app",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
-			"jamescook@chromium.org",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-90e4fecc-d2ea-40dc-b9db-eb9d61089e22",
+		}},
+		Fixture: "chromeLoggedIn",
 	})
 }
 

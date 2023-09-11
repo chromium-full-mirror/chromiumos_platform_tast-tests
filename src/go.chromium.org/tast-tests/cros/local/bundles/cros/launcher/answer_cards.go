@@ -37,8 +37,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks for omnibox answer cards in the launcher",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"yulunwu@chromium.org",
+			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",

@@ -26,14 +26,17 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Launches an Android app through the launcher",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
-			"tbarzic@chromium.org",
-			"cros-system-ui-eng@google.com",
+			"chromeos-launcher@google.com",
+			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      5 * time.Minute,
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-fd3faffe-194b-44e1-b829-eddc3ec07639",
+		}},
+		Timeout: 5 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "clamshell_mode",
 			ExtraSoftwareDeps: []string{"android_p"},
