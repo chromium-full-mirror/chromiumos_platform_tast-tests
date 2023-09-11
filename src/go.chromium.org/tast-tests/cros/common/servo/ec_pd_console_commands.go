@@ -13,7 +13,16 @@ import (
 )
 
 const (
-	reEcPdStateCommand string = `Port C(\d+) CC(\d+), (\S+) - Role: (\w+)-(\w+) TC State: ([\w\.]+), Flags: 0x([A-Fa-f0-9]+) PE State: (\w+), Flags: 0x([A-Fa-f0-9]+)[\r\n]`
+	// reEcPdStateCommand -- TCPM v1 and v2 compatible regex for pd <port> state output
+	//   Example: Port C0 CC3, Enable - Role: SRC-DFP TC State: Attached.SRC, Flags: 0x9002 PE State: PE_SRC_Ready, Flags: 0x0201
+	//   Match Index:
+	//      0 - Full match
+	//      1 - Port number  -- 0
+	//      2 - Polarity     -- 3
+	//      3 - Comm Status  -- Enable
+	//      4 - Power role   -- SRC
+	//      5 - Data role    -- DFP
+	reEcPdStateCommand string = `Port\s+C(\d+)\s+CC(\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)(.*)[\r\n]`
 	reEcPdRecv         string = `RECV\s([\w]+)`
 	// PdControlMsgMask -- bitmask for PD control messages
 	PdControlMsgMask int = 0x1f
@@ -100,8 +109,8 @@ func (s *Servo) GetPdPort(ctx context.Context) (int, error) {
 
 	for port := 0; port < MaxPorts; port++ {
 		if out, err := s.GetPDState(ctx, port); err == nil {
-			testing.ContextLog(ctx, "PD state out: ", out)
-			if out[0][2] == "Enable" {
+			testing.ContextLog(ctx, "PD state out[0][3]: ", out[0][3])
+			if out[0][3] == "Enable" {
 				pdPort = port
 				numFound++
 			}
