@@ -42,18 +42,18 @@ func TestPowerVideoEncodePerfParamsAreGenerated(t *testing.T) {
 		const arcBooted = "arc.Booted()"
 		for _, arcType := range []struct {
 			name  string
-			swdep string
+			swdep []string
 			pre   string
 			attr  []string
 		}{
 			{
-				swdep: "android_p",
+				swdep: []string{"android_p", "arc_hw_encoder"},
 				pre:   arcBooted,
 				attr:  []string{"group:crosbolt", "crosbolt_nightly"},
 			},
 			{
 				name:  "vm",
-				swdep: "android_vm",
+				swdep: []string{"android_vm"},
 				pre:   arcBooted,
 			},
 		} {
@@ -64,7 +64,7 @@ func TestPowerVideoEncodePerfParamsAreGenerated(t *testing.T) {
 			})
 			p := paramData{
 				Name:         string(name),
-				SoftwareDeps: []string{arcType.swdep},
+				SoftwareDeps: arcType.swdep,
 				HardwareDeps: []string{batteryMode.hwdep},
 				Pre:          arcType.pre,
 				Val: append([]valMember{
