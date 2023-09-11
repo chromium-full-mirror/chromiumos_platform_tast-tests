@@ -33,11 +33,11 @@ func init() {
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{
 			Name:              "mock_consent",
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val:               crash.MockConsent,
 		}, {
 			Name:              "real_consent",
-			ExtraSoftwareDeps: []string{"android_p", "metrics_consent"},
+			ExtraSoftwareDeps: []string{"android_container", "metrics_consent"},
 			Val:               crash.RealConsent,
 		}, {
 			Name:              "vm_mock_consent",
