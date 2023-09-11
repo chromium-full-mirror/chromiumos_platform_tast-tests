@@ -13,8 +13,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/swap"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
-	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -63,8 +64,12 @@ func SwapNotification(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for swap to be enabled: ", err)
 	}
 
+	if err := arc.EnsureNotificationPermission(ctx, a, swap.Pkg); err != nil {
+		s.Fatal("Failed to ensure the permission: ", err)
+	}
+
 	// Create a notification and make sure it shows up.
-	if _, err := a.BroadcastIntent(ctx, swap.ReceiverAction, "--include-stopped-packages"); err != nil {
+	if _, err := a.BroadcastIntent(ctx, swap.ReceiverAction, "--include-stopped-packages", swap.Pkg); err != nil {
 		s.Fatal("Failed to send broadcast: ", err)
 	}
 
@@ -95,11 +100,13 @@ func SwapNotification(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to show quick settings: ", err)
 	}
 
-	ud := uidetection.NewDefault(tconn)
-	notificationView := uidetection.TextBlock([]string{swap.Pkg})
-	if err := uiauto.Combine("minimize ARC window",
-		ud.WaitUntilExists(notificationView),
-		ud.LeftClick(notificationView))(ctx); err != nil {
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
+
+	ui := uiauto.New(tconn)
+	notificationView := nodewith.HasClass("ArcNotificationContentView").First()
+	if err := uiauto.Combine("Click notification",
+		ui.WaitUntilExists(notificationView),
+		ui.LeftClick(notificationView))(ctx); err != nil {
 		s.Fatal("Failed to click on Notifications: ", err)
 	}
 
