@@ -85,7 +85,12 @@ func stopProcess(ctx context.Context, cmd *testexec.Cmd) error {
 		return errors.Wrap(err, "failed to send SIGTERM to command")
 	}
 	if err := cmd.Wait(); err != nil {
-		return errors.Wrap(err, "failed to wait for command termination")
+		// We're expecting the exit status to be non-zero if the process was killed by SIGTERM.
+		// Anything else indicates a problem.
+		if ws, ok := testexec.GetWaitStatus(err); !ok || ws.Signal() != unix.SIGTERM {
+			cmd.DumpLog(ctx)
+			return errors.Wrap(err, "failed to wait for command termination")
+		}
 	}
 	return nil
 }
@@ -94,11 +99,11 @@ func startSocat(ctx context.Context) (*testexec.Cmd, error) {
 	return startProcess(ctx, "socat", "TCP4-LISTEN:631,fork", "/run/cups/cups.sock")
 }
 
-func waitPort(ctx context.Context, port string, timeout time.Duration) error {
+func waitForPort(ctx context.Context, port string, timeout time.Duration) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		netcat := testexec.CommandContext(ctx, "nc", "-z", "localhost", port)
 		err := netcat.Run()
-		if _, ok := testexec.GetWaitStatus(err); !ok {
+		if code, ok := testexec.ExitCode(err); !ok || code != 0 {
 			return err
 		}
 		return nil
@@ -113,7 +118,7 @@ func startPrinter(ctx context.Context) (*testexec.Cmd, string, error) {
 
 	// Wait until printer is listening on port.
 	// It starts very quickly so 5 seconds is plenty of time to wait.
-	if err := waitPort(ctx, "4444", time.Second*5); err != nil {
+	if err := waitForPort(ctx, "4444", time.Second*5); err != nil {
 		return cmd, "", errors.Wrap(err, "timed out waiting for ippeveprinter to start")
 	}
 
@@ -166,14 +171,22 @@ func ExternalPrintServers(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Could not run 'socat' to map cupsd socket to a TCP port: ", err)
 	}
-	defer stopProcess(cleanupCtx, socat)
+	defer func(ctx context.Context) {
+		if err := stopProcess(ctx, socat); err != nil {
+			s.Fatal("Failed to stop 'socat': ", err)
+		}
+	}(cleanupCtx)
 
 	// Run a fake printer.
 	printerProcess, printerURI, err := startPrinter(ctx)
 	if err != nil {
 		s.Fatal("Could not start fake printer: ", err)
 	}
-	defer stopProcess(cleanupCtx, printerProcess)
+	defer func(ctx context.Context) {
+		if err := stopProcess(ctx, printerProcess); err != nil {
+			s.Fatal("Failed to stop fake printer: ", err)
+		}
+	}(cleanupCtx)
 
 	// Set up the fake printer with CUPS.
 	// Note: This does not make the printer available to chrome because it's not set up in chrome.
