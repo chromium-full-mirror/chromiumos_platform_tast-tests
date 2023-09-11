@@ -96,7 +96,7 @@ func stopProcess(ctx context.Context, cmd *testexec.Cmd) error {
 }
 
 func startSocat(ctx context.Context) (*testexec.Cmd, error) {
-	return startProcess(ctx, "socat", "TCP4-LISTEN:631,fork", "/run/cups/cups.sock")
+	return startProcess(ctx, "socat", "TCP4-LISTEN:631,fork,reuseaddr", "/run/cups/cups.sock")
 }
 
 func waitForPort(ctx context.Context, port string, timeout time.Duration) error {
