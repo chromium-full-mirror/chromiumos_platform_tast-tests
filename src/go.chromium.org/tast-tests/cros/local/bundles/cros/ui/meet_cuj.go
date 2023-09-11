@@ -2033,12 +2033,14 @@ func navigate(ctx context.Context, conn *chrome.Conn, br *browser.Browser, url s
 	}
 
 	// Some DUTs need more time to wait for quiescence. Add log for debugging
-	// loading duration.
+	// loading duration. If waiting for the page to quiesce fails, just print
+	// the log.
 	startTime := time.Now()
 	if err := webutil.WaitForQuiescence(ctx, conn, 2*time.Minute); err != nil {
-		return errors.Wrap(err, "failed to wait for quiescence")
+		testing.ContextLog(ctx, "Ignoring waiting for page to quiesce: ", err)
+	} else {
+		testing.ContextLog(ctx, "Loading page took: ", time.Since(startTime))
 	}
-	testing.ContextLog(ctx, "Loading page took: ", time.Since(startTime))
 
 	targets, err := br.FindTargets(ctx, chrome.MatchTargetURLPrefix(url))
 	if err != nil || len(targets) == 0 {
@@ -2074,6 +2076,7 @@ func startPresenting(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context,
 	// Select the tab to present. Avoid directly tapping on the screen
 	// due to miscalculated node bounds for Lacros tablet devices.
 	waitForPresentTabFocus := ui.WithTimeout(5 * time.Second).WaitUntilExists(nodewith.NameContaining(presentTabTitle).HasClass("AXVirtualView").Focused())
+	stopPresenting := nodewith.Name("Stop presenting").Role(role.Button)
 	if err := uiauto.NamedCombine(fmt.Sprintf("select tab %q to screenshare", presentTabTitle),
 		ui.EnsureFocused(nodewith.Name("Chrome Tab").Role(role.ListGrid)),
 		// If the presenting tab is not focused, press the down
@@ -2086,12 +2089,19 @@ func startPresenting(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context,
 			),
 		),
 		kw.AccelAction("Enter"),
+		// Some low-end DUTs may take a long time to actually get to
+		// the presenting page. Wait for the "Stop presenting" to appear
+		// to ensure the page is being shared.
+		ui.WithTimeout(time.Minute).WaitUntilExists(stopPresenting),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to select the tab to share")
 	}
 
+	startTime := time.Now()
 	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
-		return errors.Wrap(err, "failed to wait for quiescence")
+		testing.ContextLog(ctx, "Ignoring waiting for page to quiesce: ", err)
+	} else {
+		testing.ContextLog(ctx, "Loading page took: ", time.Since(startTime))
 	}
 
 	return nil
