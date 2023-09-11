@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdupstart"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 
@@ -26,27 +25,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/proto"
 )
-
-type processEventsParams struct {
-	name             string
-	expCoalescedTerm bool
-	enableFeatures   []string
-	disableFeatures  []string
-}
-
-var processEventsTestParams = []processEventsParams{
-	{
-		name:             "coalesce_terminate_disabled",
-		expCoalescedTerm: false,
-		disableFeatures:  []string{"CrOSLateBootSecagentdCoalesceTerminates"},
-	},
-	{
-		name:             "coalesce_terminate_enabled",
-		expCoalescedTerm: true,
-		enableFeatures: []string{
-			"CrOSLateBootSecagentdCoalesceTerminates"},
-	},
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -60,8 +38,8 @@ func init() {
 		// ChromeOS > Security > ChromeOS Enterprise Security
 		BugComponent: "b:1208373",
 		Attr:         []string{"group:mainline", "group:enterprise-reporting"},
-		Timeout:      time.Duration(len(processEventsTestParams)) * 4 * time.Minute,
-		SoftwareDeps: []string{"bpf", "chrome"},
+		Timeout:      4 * time.Minute,
+		SoftwareDeps: []string{"bpf"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
@@ -128,16 +106,57 @@ func copyUUID(from, to *xdr.Process) {
 	}
 }
 
-func testOneProcessEventsParams(ctx context.Context, s *testing.State, param processEventsParams) {
-	// Restart chrome with the new set of features.
-	cr, err := chrome.New(ctx, chrome.EnableFeatures(param.enableFeatures...), chrome.DisableFeatures(param.disableFeatures...))
-	if err != nil {
-		s.Fatal("Failed to restart chrome: ", err)
+func checkProcessEventWatcher(s *testing.State, ew *dbusutil.EventWatcher) ([]*xdr.ProcessExecEvent, []*xdr.ProcessTerminateEvent) {
+	event, ok := <-ew.Events()
+	if !ok {
+		s.Fatal("Timed out waiting for expected events")
 	}
+	if len(event.Arguments) == 0 {
+		return nil, nil
+	}
+	arg, ok := event.Arguments[0].([]byte)
+	if !ok {
+		return nil, nil
+	}
+	enq := &rep.EnqueueRecordRequest{}
+	if err := proto.Unmarshal(arg, enq); err != nil {
+		s.Fatal("Failed to unmarshal an EnqueueRecordRequest: ", err)
+	}
+
+	if enq.GetRecord().GetDestination() != rep.Destination_CROS_SECURITY_PROCESS {
+		return nil, nil
+	}
+	pe := &xdr.XdrProcessEvent{}
+	if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
+		s.Fatal("Failed to unmarshal data for a CROS_SECURITY_PROCESS record: ", err)
+	}
+
+	var bExecs []*xdr.ProcessExecEvent
+	var bTerminates []*xdr.ProcessTerminateEvent
+	for _, v := range pe.GetBatchedEvents() {
+		if v.GetProcessExec() != nil {
+			bExecs = append(bExecs, v.GetProcessExec())
+		}
+		if v.GetProcessTerminate() != nil {
+			bTerminates = append(bTerminates, v.GetProcessTerminate())
+		}
+
+		if err := secagentdcommon.CheckCommon(v.GetCommon()); err != nil {
+			s.Error("Invalid common field: ", err)
+		}
+	}
+
+	return bExecs, bTerminates
+}
+
+// ProcessEvents runs a toy program, scrapes expected process and ancestral
+// information from procfs, and verifies it against the events emitted by
+// secagentd over dbus.
+func ProcessEvents(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer func(ctx context.Context) {
-		cr.Close(cleanupCtx)
+		secagentdupstart.RestartSecagentd(ctx)
 		cancel()
 	}(cleanupCtx)
 
@@ -201,9 +220,6 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 					copyUUID(exec.GetParentProcess(), expExec.ParentProcess)
 					// Copy over the terminate timestamp if present.
 					if exec.TerminateTimestampUs != nil {
-						if !param.expCoalescedTerm {
-							s.Errorf("Unexpected terminate timestamp found in ProcessExec event for pid %d", expPid)
-						}
 						expExec.TerminateTimestampUs = proto.Int64(exec.GetTerminateTimestampUs())
 					}
 					// The spawned process is guaranteed to be seen for the first
@@ -239,7 +255,7 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 				}
 			}
 		}
-		if execFound && (param.expCoalescedTerm || terminateFound) {
+		if execFound {
 			break
 		}
 	}
@@ -247,75 +263,10 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 	if !execFound {
 		s.Errorf("Failed to find a matching ProcessExec event for pid %d", expPid)
 	}
-	if !param.expCoalescedTerm && !terminateFound {
-		s.Errorf("Failed to find a matching ProcessExit event for pid %d", expPid)
-	}
-	if param.expCoalescedTerm && terminateFound {
+
+	if terminateFound {
 		// Coalescing is best effort and based on timing. Err on the
 		// side of not flaking the test.
 		s.Logf("Found uncoalesced ProcessExit event for pid %d", expPid)
-	}
-}
-
-func checkProcessEventWatcher(s *testing.State, ew *dbusutil.EventWatcher) ([]*xdr.ProcessExecEvent, []*xdr.ProcessTerminateEvent) {
-	event, ok := <-ew.Events()
-	if !ok {
-		s.Fatal("Timed out waiting for expected events")
-	}
-	if len(event.Arguments) == 0 {
-		return nil, nil
-	}
-	arg, ok := event.Arguments[0].([]byte)
-	if !ok {
-		return nil, nil
-	}
-	enq := &rep.EnqueueRecordRequest{}
-	if err := proto.Unmarshal(arg, enq); err != nil {
-		s.Fatal("Failed to unmarshal an EnqueueRecordRequest: ", err)
-	}
-
-	if enq.GetRecord().GetDestination() != rep.Destination_CROS_SECURITY_PROCESS {
-		return nil, nil
-	}
-	pe := &xdr.XdrProcessEvent{}
-	if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
-		s.Fatal("Failed to unmarshal data for a CROS_SECURITY_PROCESS record: ", err)
-	}
-
-	s.Log("Snooped XdrProcessEvent: ", pe.String())
-
-	var bExecs []*xdr.ProcessExecEvent
-	var bTerminates []*xdr.ProcessTerminateEvent
-	for _, v := range pe.GetBatchedEvents() {
-		if v.GetProcessExec() != nil {
-			bExecs = append(bExecs, v.GetProcessExec())
-		}
-		if v.GetProcessTerminate() != nil {
-			bTerminates = append(bTerminates, v.GetProcessTerminate())
-		}
-
-		if err := secagentdcommon.CheckCommon(v.GetCommon()); err != nil {
-			s.Error("Invalid common field: ", err)
-		}
-	}
-
-	return bExecs, bTerminates
-}
-
-// ProcessEvents runs a toy program, scrapes expected process and ancestral
-// information from procfs, and verifies it against the events emitted by
-// secagentd over dbus.
-func ProcessEvents(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
-	defer func(ctx context.Context) {
-		secagentdupstart.RestartSecagentd(ctx)
-		cancel()
-	}(cleanupCtx)
-
-	for _, param := range processEventsTestParams {
-		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
-			testOneProcessEventsParams(ctx, s, param)
-		})
 	}
 }
