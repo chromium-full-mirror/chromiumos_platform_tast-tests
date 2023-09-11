@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -408,4 +409,64 @@ func CompareTwoFiles(ctx context.Context, dut *dut.DUT, fileA, fileB string) err
 		return errors.Wrap(err, "execute diff command")
 	}
 	return nil
+}
+
+// GetMountPoints gets the mount point information.
+func GetMountPoints(ctx context.Context, dut *dut.DUT) ([]string, error) {
+	lsblkOutput, err := dut.Conn().CommandContext(ctx, "sh", "-c", "lsblk -l -o mountpoint | grep removable").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "received an incorrect result when using lsblk in the command")
+	}
+	return strings.Split(strings.TrimSpace(string(lsblkOutput)), "\n"), nil
+}
+
+// GetDeviceWritableStatus gets the read-write protection status of the device.
+func GetDeviceWritableStatus(ctx context.Context, dut *dut.DUT, mountPoint string) (bool, error) {
+	const writeProtectionFlag = "1\n"
+	output, err := dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("df | grep '%s' | awk '{print $1}' | head -n 1", mountPoint)).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return false, errors.Wrap(err, "can't get device node")
+	}
+	deviceNode := strings.TrimSpace(string(output))
+	output, err = dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("sudo blockdev --getro %s", deviceNode)).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return false, errors.Wrap(err, "can't get usb read-write mode")
+	}
+	if string(output) != writeProtectionFlag {
+		return true, nil
+	}
+	return false, nil
+}
+
+// CopyFileToExternalStorage copies the file to external storage and ensures write protection is functioning properly.
+func CopyFileToExternalStorage(ctx context.Context, dut *dut.DUT, mountPoint string, remoteTextPath string) error {
+	mountPointStatus, err := GetDeviceWritableStatus(ctx, dut, mountPoint)
+	if err != nil {
+		return errors.Wrap(err, "can't get the read-write status of the device")
+	}
+	usbTextPath := filepath.Join(mountPoint, "sample.txt")
+	testing.ContextLogf(ctx, "Copy file to %s", usbTextPath)
+	// Copy file to USB.
+	copyCmd := fmt.Sprintf("cp '%s' '%s'", remoteTextPath, usbTextPath)
+	err = dut.Conn().CommandContext(ctx, "sh", "-c", copyCmd).Run(testexec.DumpLogOnError)
+	if mountPointStatus == true && err != nil {
+		return errors.Wrap(err, "an error occurred while copying the file to the USB")
+	} else if mountPointStatus == false && err == nil {
+		return errors.Wrap(err, "should not successfully copy the file to the device")
+	}
+	return nil
+}
+
+// VerifyUSBDeviceConnectionChangeCount Verifies the count of USB devices after a connection change.
+func VerifyUSBDeviceConnectionChangeCount(ctx context.Context, dut *dut.DUT, before int, expectedCount int) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		after, err := GetUSBDevice(ctx, dut)
+		if err != nil {
+			return errors.Wrap(err, "get USB devices")
+		}
+		if (len(after) - before) != expectedCount {
+			return errors.Wrapf(err, "unexpected change in the number of usb devices detected; expect: %d, actual: %d (from %d to %d)", expectedCount, (len(after) - before), before, len(after))
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
 }
