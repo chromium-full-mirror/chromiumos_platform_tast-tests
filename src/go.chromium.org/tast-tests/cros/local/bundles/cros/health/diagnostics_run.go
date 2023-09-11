@@ -34,9 +34,6 @@ func init() {
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryHealth),
 			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 		}, {
-			Name: "urandom",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineURandom),
-		}, {
 			Name:              "smartctl_check",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineSmartctlCheck),
 			ExtraSoftwareDeps: []string{"smartctl"},
@@ -46,9 +43,6 @@ func init() {
 		}, {
 			Name: "cpu_stress",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineCPUStress),
-		}, {
-			Name: "floating_point_accuracy",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineFloatingPointAccurary),
 		}, {
 			Name:              "nvme_self_test",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineNVMESelfTest),
@@ -62,9 +56,6 @@ func init() {
 			// are only currently defined for wilco devices.
 			ExtraSoftwareDeps: []string{"nvme", "wilco"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
-		}, {
-			Name: "prime_search",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutinePrimeSearch),
 		}, {
 			// Cannot be added to DiagnosticsPass.* since the result would be
 			// "Not run" in lab's network. See b/286497166.

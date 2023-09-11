@@ -37,9 +37,8 @@ func init() {
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 		}, {
-			Name:      "urandom",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineURandom),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name: "urandom",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineURandom),
 		}, {
 			Name:              "smartctl_check",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineSmartctlCheck),
@@ -54,9 +53,8 @@ func init() {
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCPUStress),
 			ExtraAttr: []string{"informational"},
 		}, {
-			Name:      "floating_point_accuracy",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineFloatingPointAccurary),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name: "floating_point_accuracy",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineFloatingPointAccurary),
 		}, {
 			Name:              "nvme_self_test",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineNVMESelfTest),
@@ -73,9 +71,8 @@ func init() {
 			ExtraSoftwareDeps: []string{"nvme", "wilco"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 		}, {
-			Name:      "prime_search",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutinePrimeSearch),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name: "prime_search",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutinePrimeSearch),
 		}, {
 			Name: "lan_connectivity",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineLanConnectivity),
