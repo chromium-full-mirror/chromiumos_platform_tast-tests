@@ -41,9 +41,14 @@ func init() {
 
 func StoreInterfaceEarlyBoot(ctx context.Context, s *testing.State) {
 	d := s.DUT()
-	hostStoreBeforeReboot := filepath.Join(s.OutDir(), "original-store")
+
+	// Check if store exists.
+	if out, err := d.Conn().CommandContext(ctx, "ls", "-l", dutStorePath).CombinedOutput(); err != nil {
+		s.Logf("Store does not exist on host: %s. %s", err, out)
+	}
 
 	// Copy store.
+	hostStoreBeforeReboot := filepath.Join(s.OutDir(), "original-store")
 	if err := linuxssh.GetFile(ctx, d.Conn(), dutStorePath, hostStoreBeforeReboot, linuxssh.PreserveSymlinks); err != nil {
 		s.Fatal("Failed to copy store file to Host: ", err)
 	}
