@@ -152,7 +152,8 @@ func DataLeakPreventionRulesListArcClipboard(ctx context.Context, s *testing.Sta
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
-			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
+			handler := faillog.DumpUITreeWithScreenshotHandler(ctx, tconn, "ui_tree_"+param.name)
+			s.AttachErrorHandlers(handler, handler)
 
 			conn, err := cr.NewConn(ctx, "https://"+param.url)
 			if err != nil {
