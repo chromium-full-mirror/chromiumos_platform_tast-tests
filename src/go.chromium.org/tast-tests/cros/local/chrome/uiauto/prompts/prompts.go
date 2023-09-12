@@ -31,7 +31,8 @@ type Prompt struct {
 var (
 	showNotificationsPromptFinder = nodewith.NameContaining("Show notifications").HasClass("RootView").Role(role.AlertDialog)
 	avPermPromptFinder            = nodewith.NameRegex(regexp.MustCompile(".*Use your (microphone|camera).*")).HasClass("RootView").Role(role.AlertDialog).First()
-	avMeetPermPromptFinder        = nodewith.NameContaining("hear you in the meeting").Role(role.Dialog).First()
+	avMeetPermPromptReg           = regexp.MustCompile("(see|hear) you in the meeting")
+	avMeetPermPromptFinder        = nodewith.NameRegex(avMeetPermPromptReg).Role(role.Dialog).First()
 	leaveSitePromptFinder         = nodewith.Name("Leave site?").ClassName("RootView").Role(role.Dialog).First()
 )
 
@@ -40,7 +41,7 @@ var (
 	// There are multiple buttons that contain the "Allow" string.
 	// To distinguish multiple buttons, the regular expression must contain
 	// all possible strings and NameContaining("Allow") can't be used.
-	AllowAVButtonRe     = regexp.MustCompile("^(Allow|Allow this time|Allow microphone and camera|Allow microphone)$")
+	AllowAVButtonRe     = regexp.MustCompile("^(Allow|Allow this time|Allow microphone and camera|Allow microphone|Allow camera)$")
 	AllowAVButtonFinder = nodewith.NameRegex(AllowAVButtonRe).Role(role.Button)
 	AllowButtonFinder   = nodewith.Name("Allow").Role(role.Button)
 	DismissButtonFinder = nodewith.Name("Dismiss").Role(role.Button)
