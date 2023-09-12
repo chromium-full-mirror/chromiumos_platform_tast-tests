@@ -74,6 +74,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onStop() {
+        mExecutor.shutdown();
         // Wait up to 5 seconds for the remaining jobs in the queue to finish.
         try {
             mExecutor.awaitTermination(5, TimeUnit.SECONDS);
