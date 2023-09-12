@@ -37,8 +37,7 @@ func init() {
 			"cros-lurs@google.com",
 			"awendy@google.com",
 		},
-		// ChromeOS > Software > Commercial (Enterprise) > Identity > LURS > Login and Unlock
-		BugComponent: "b:1277575",
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",
