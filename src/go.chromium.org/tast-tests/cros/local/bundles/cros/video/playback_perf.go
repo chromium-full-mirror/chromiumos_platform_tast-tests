@@ -1932,6 +1932,45 @@ func init() {
 				ExtraData:         []string{"crosvideo/av1_1080p_30fps.mp4"},
 				Fixture:           "chromeVideoWithIntelMediaCompression",
 			},
+			{
+				Name: "h264_1080p_30fps_hw_v4l2_flat_stateful_decoder",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080.mp4",
+					decoderType:      0,
+					browserType:      browser.TypeAsh,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "v4l2_codec"},
+				ExtraData:         []string{"crosvideo/1080.mp4"},
+				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+			},
+			{
+				Name: "vp8_1080p_30fps_hw_v4l2_flat_stateful_decoder",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080_vp8.webm",
+					decoderType:      0,
+					browserType:      browser.TypeAsh,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30", "v4l2_codec"},
+				ExtraData:         []string{"crosvideo/1080_vp8.webm"},
+				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+			},
+			{
+				Name: "vp9_1080p_30fps_hw_v4l2_flat_stateful_decoder",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080.webm",
+					decoderType:      0,
+					browserType:      browser.TypeAsh,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "v4l2_codec"},
+				ExtraData:         []string{"crosvideo/1080.webm"},
+				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+			},
 		},
 	})
 }

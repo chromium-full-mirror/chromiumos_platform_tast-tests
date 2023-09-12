@@ -372,6 +372,18 @@ func TestPlaybackPerfParams(t *testing.T) {
 		params = append(params, param)
 	}
 
+	// V4L2 Flat stateful decoder
+	for _, codec := range []string{"h264", "vp8", "vp9"} {
+		resolution, fps, dec := 1080, 30, "hw"
+		file := playbackPerfLongFile[codec]
+		param := genPlaybackParam(codec, file, resolution, fps, dec,
+			"v4l2_flat_stateful_decoder", "chromeVideoWithV4L2FlatStatefulDecoder",
+			[]string{"v4l2_codec"})
+		param.HardwareDeps = "hwdep.SupportsV4L2FlatStatefulVideoDecoding()"
+		param.MeasureRoughness = true
+		params = append(params, param)
+	}
+
 	code := genparams.Template(t, `{{ range . }}{
 		Name: {{ .Name | fmt }},
 		Val:  playbackPerfParams{
