@@ -1116,7 +1116,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				heuristicsHistograms := []string{
 					"Ash.LoginAnimation.Smoothness" + suffix,
 					"Ash.LoginAnimation.Jank" + suffix,
-					"Ash.LoginAnimation.Duration" + suffix,
+					"Ash.LoginAnimation.Duration2" + suffix,
 				}
 
 				allHistograms := []string{
