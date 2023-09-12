@@ -315,36 +315,49 @@ func GatherTimeMetrics(ctx context.Context, results *platform.GetBootPerfMetrics
 	return nil
 }
 
-// parseDiskstat returns sectors read since boot for a bootstat event.
+// parseDiskstat for a bootstat event and return requested field.
 func parseDiskstat(eventName, bootstatDir string, index int) (float64, error) {
 	eventFile := filepath.Join(bootstatDir, diskPrefix+eventName)
-	val, err := parseBootstat(eventFile, 2)
+	val, err := parseBootstat(eventFile, index)
 	if err != nil {
 		return 0.0, err
 	}
-	return val[index], nil
+	return val[0], nil
 }
 
 // GatherDiskMetrics reads and reports disk read metrics.
-// It reads "sectors read since kernel startup" from the bootstat files for the
-// events named in |eventMetrics|, converts the values to "bytes read since
-// boot", and stores the values as perf metrics. The following metrics are
-// recorded:
+// It reads "sectors read since kernel startup" and "sectors written since
+// kernel startup" from the bootstat files for the events named in
+// |eventMetrics|, converts the values to "bytes read/written since boot",
+// and stores the values as perf metrics. The following metrics are recorded:
 //   - rdbytes_kernel_to_startup
 //   - rdbytes_kernel_to_startup_done
 //   - rdbytes_kernel_to_chrome_exec
 //   - rdbytes_kernel_to_chrome_main
 //   - rdbytes_kernel_to_login
+//   - wrbytes_kernel_to_startup
+//   - wrbytes_kernel_to_startup_done
+//   - wrbytes_kernel_to_chrome_exec
+//   - wrbytes_kernel_to_chrome_main
+//   - wrbytes_kernel_to_login
 //
 // Disk statistics are reported in units of 512 byte sectors; we convert the
 // metrics to bytes so that downstream consumers don't have to ask "How big is
 // a sector?".
 func GatherDiskMetrics(results *platform.GetBootPerfMetricsResponse) {
-	// We expect an error when reading disk statistics for the "chrome-main" event because Chrome (not bootstat) generates that event, and it doesn't include the disk statistics.
-	// We get around that by ignoring all errors.
+	// We expect an error when reading disk statistics for the "chrome-main"
+	// event because Chrome (not bootstat) generates that event, and it
+	// doesn't include the disk statistics. We get around that by ignoring
+	// all errors.
 	for _, k := range eventMetrics {
 		key := "rdbytes_" + k.MetricName
-		val, err := parseDiskstat(k.EventName, bootstatCurrentDir, 0)
+		val, err := parseDiskstat(k.EventName, bootstatCurrentDir, 2)
+		if err == nil {
+			results.Metrics[key] = val * sectorSize
+		} // else skip the error and continue.
+
+		key = "wrbytes_" + k.MetricName
+		val, err = parseDiskstat(k.EventName, bootstatCurrentDir, 6)
 		if err == nil {
 			results.Metrics[key] = val * sectorSize
 		} // else skip the error and continue.
