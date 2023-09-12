@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -79,7 +78,7 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 // GetDataFiles returns the list of data files needed to be copied to the dut
 // for running tests related to spell check.
 func GetDataFiles() []string {
-	return []string{"spell_checking.html", mitmproxy.MitmdumpBinFile}
+	return []string{"spell_checking.html"}
 }
 
 // TriggerSpellCheck attempts to trigger spellcheck and verifies if the policy works as defined in the TestCase param.

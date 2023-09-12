@@ -27,8 +27,6 @@ const (
 	DefaultListenPort = 4040
 	// DefaultBinaryPath is the default binary path to be used.
 	DefaultBinaryPath = "/usr/local/bin/mitmdump"
-	// MitmdumpBinFile is the name of mitmdump binary.
-	MitmdumpBinFile = "mitmdump_bin"
 )
 
 const (

@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 
@@ -98,14 +97,6 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
 				s.Fatal("Failed to start logging: ", err)
 			}
-
-			mp := mitmproxy.New()
-			mp.SetBinaryPath(s.DataPath(mitmproxy.MitmdumpBinFile)).SetOutDir(s.OutDir())
-			cleanup, err := cr.LaunchAndApplyProxy(ctx, mp)
-			if err != nil {
-				s.Fatal("Failed to launch and apply proxy: ", err)
-			}
-			defer cleanup(cleanupCtx)
 
 			if err := spellcheck.TriggerSpellCheck(ctx, cr, br, server, tconn, key); err != nil {
 				s.Fatal("Failed to trigger and verify spellcheck: ", err)

@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -41,7 +40,6 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
-		Data:         []string{mitmproxy.MitmdumpBinFile},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityOS),
@@ -98,14 +96,6 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start net export: ", err)
 			}
 			defer netExport.Cleanup(cleanupCtx)
-
-			mp := mitmproxy.New()
-			mp.SetBinaryPath(s.DataPath(mitmproxy.MitmdumpBinFile)).SetOutDir(s.OutDir())
-			cleanup, err := cr.LaunchAndApplyProxy(ctx, mp)
-			if err != nil {
-				s.Fatal("Failed to launch and apply proxy: ", err)
-			}
-			defer cleanup(cleanupCtx)
 
 			if err := calendarintegration.TriggerCalendarIntegration(ctx, cr, br, nil, tconn, key); err != nil {
 				s.Fatal("Failed to trigger and verify calendar integration: ", err)
