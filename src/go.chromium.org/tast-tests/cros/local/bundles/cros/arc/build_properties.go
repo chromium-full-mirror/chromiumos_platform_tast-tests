@@ -16,6 +16,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -173,20 +174,34 @@ func BuildProperties(ctx context.Context, s *testing.State) {
 	}
 	device = match[1]
 
-	expectedFirstAPILevel := getProperty(propertySDKVersion)
-	if overwrite, ok := expectedFirstAPILevelMap[device]; ok {
-		expectedFirstAPILevel = strconv.Itoa(overwrite)
+	lsb, err := lsbrelease.Load()
+	if err != nil {
+		s.Fatal("Failed to read /etc/lsb-release: ", err)
 	}
+	// Note: lsbBoard (/etc/lsb-release) and propertyBoard (ro.product.board) may have different values.
+	// e.g. lsbBoard=corsola-arc-t v.s. propertyBoard=steelix-arc-t
+	lsbBoard := lsb[lsbrelease.Board]
 
-	firstAPILevel := getProperty(propertyFirstAPILevel)
-	if _, skip := skipFirstAPILevelCheckMap[device]; !skip && firstAPILevel != expectedFirstAPILevel {
-		if props, err := a.Command(ctx, "getprop").Output(testexec.DumpLogOnError); err != nil {
-			s.Log("Failed to read properties: ", err)
-		} else if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "props.txt"), props, 0644); err != nil {
-			s.Log("Failed to dump properties: ", err)
+	// Skipping first_api_level check for betty* and corsola-arc-t.
+	// They are for dev purposes only and are not being shipped.
+	skipFirstAPILevelCheck := device == "betty" || lsbBoard == "corsola-arc-t"
+	if skipFirstAPILevelCheck {
+		s.Logf("Skipping first_api_level check for %s", lsbBoard)
+	} else {
+		expectedFirstAPILevel := getProperty(propertySDKVersion)
+		if overwrite, ok := expectedFirstAPILevelMap[device]; ok {
+			expectedFirstAPILevel = strconv.Itoa(overwrite)
 		}
-		s.Errorf("Unexpected %v property (see props.txt for details): got %q; want %q", propertyFirstAPILevel,
-			firstAPILevel, expectedFirstAPILevel)
+		firstAPILevel := getProperty(propertyFirstAPILevel)
+		if firstAPILevel != expectedFirstAPILevel {
+			if props, err := a.Command(ctx, "getprop").Output(testexec.DumpLogOnError); err != nil {
+				s.Log("Failed to read properties: ", err)
+			} else if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "props.txt"), props, 0644); err != nil {
+				s.Log("Failed to dump properties: ", err)
+			}
+			s.Errorf("Unexpected %v property (see props.txt for details): got %q; want %q", propertyFirstAPILevel,
+				firstAPILevel, expectedFirstAPILevel)
+		}
 	}
 
 	// Verify that ro.serialno and ro.boot.serialno has same value and not empty.
@@ -327,11 +342,4 @@ var expectedFirstAPILevelMap = map[string]int{
 	"skyrim":    arc.SDKR,
 	// Note: This test is public. Do not add new boards unless the board's
 	// overlay already exists in src/overlays/overlay-<board>/.
-}
-
-// skipFirstAPILevelCheckMap is the set of devices to skip the first API level check.
-// These devices are for dev purposes only and are not being shipped.
-var skipFirstAPILevelCheckMap = map[string]struct{}{
-	"betty":  {},
-	"novato": {},
 }
