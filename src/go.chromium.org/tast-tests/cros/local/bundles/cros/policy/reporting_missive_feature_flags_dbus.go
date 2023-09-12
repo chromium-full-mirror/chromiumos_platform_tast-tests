@@ -92,10 +92,12 @@ func ReportingMissiveFeatureFlagsDbus(ctx context.Context, s *testing.State) {
 	containsMessage := func(e *syslog.Entry) bool {
 		// Verify:
 		// 1. Missive is the function caller
+		// 2. The function call failed
 		// 2. Feature API is the function callee
 		// 3. DBus error is directly related to retrieving features
 		return strings.Contains(e.Program, "missived") &&
-			strings.Contains(e.Content, "Failed to call method:org.chromium.ChromeFeaturesServiceInterface.GetFeatureParams") &&
+			strings.Contains(e.Content, "Failed to call method") &&
+			strings.Contains(e.Content, "org.chromium.ChromeFeaturesServiceInterface.GetFeatureParams") &&
 			strings.Contains(e.Content, "org.freedesktop.DBus.Error.InvalidArgs")
 	}
 
