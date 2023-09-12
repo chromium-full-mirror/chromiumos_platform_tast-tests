@@ -123,8 +123,10 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 			s.Fatal("USBKey not working: ", err)
 		}
 
-		if err := h.CopyTastFilesFromDUT(ctx); err != nil {
-			s.Fatal("Copying Tast files to Host failed: ", err)
+		if !h.DoesServerHaveTastHostFiles() {
+			if err := h.CopyTastFilesFromDUT(ctx); err != nil {
+				s.Fatal("Copying Tast files to Host failed: ", err)
+			}
 		}
 		s.Log("Copying kernel back up to host")
 		if err := linuxssh.GetFile(ctx, h.DUT.Conn(), kernelBackup.KernA.BackupPath, kernAHostBackup.Name(), linuxssh.PreserveSymlinks); err != nil {
