@@ -17,11 +17,13 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
 )
 
 var (
 	serialRe = regexp.MustCompile("^serial[0-9]+$")
+	memoryRe = regexp.MustCompile(`(?P<kernel_free_memory>\d+)K/(?P<kernel_memory>\d+)K available \((?P<kernel_code>\d+)K kernel code, (?P<kernel_rwdata>\d+)K rwdata, (?P<kernel_rodata>\d+)K rodata, (?P<kernel_init>\d+)K init, (?P<kernel_bss>\d+)K bss, (?P<kernel_reserved>\d+)K reserved, (?P<kernel_cma_reserved>\d+)K cma-reserved`)
 )
 
 const sysBus = "/sys/bus/"
@@ -47,6 +49,7 @@ func Bloat(ctx context.Context, s *testing.State) {
 
 	findUnusedDriversAndDevices(ctx, s, pv)
 	measureKernelText(ctx, s, pv)
+	measureKernelData(ctx, s, pv)
 }
 
 // findUnusedDriversAndDevices find modules, drivers, and sometimes even
@@ -262,5 +265,35 @@ func measureKernelText(ctx context.Context, s *testing.State, pv *perf.Values) {
 				Multiple:  false,
 			},
 			float64(endText-startText))
+	}
+}
+
+// measureKernelData measures the number of KBytes for the kernel data sections.
+func measureKernelData(ctx context.Context, s *testing.State, pv *perf.Values) {
+	out, err := testexec.CommandContext(ctx, "croslog", "--boot=0", "--identifier=kernel", "--no-show-cursor", "--grep=Memory:").Output()
+	if err != nil {
+		s.Fatal("Failed to get kernel memory info from croslog: ", err)
+	}
+
+	for _, line := range strings.Split(string(out), "\n") {
+		if match := memoryRe.FindStringSubmatch(line); match != nil {
+			for i, name := range memoryRe.SubexpNames() {
+				if name == "" {
+					continue
+				}
+				kb, err := strconv.ParseUint(match[i], 10, 64)
+				if err != nil {
+					s.Fatalf("Failed to parse %v: %v", name, err)
+				}
+				pv.Set(
+					perf.Metric{
+						Name:      name,
+						Unit:      "KiB",
+						Direction: perf.SmallerIsBetter,
+						Multiple:  false,
+					},
+					float64(kb))
+			}
+		}
 	}
 }
