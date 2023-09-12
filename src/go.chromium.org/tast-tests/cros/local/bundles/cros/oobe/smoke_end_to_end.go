@@ -160,9 +160,14 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for the user creation screen to be visible: ", err)
 		}
 
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.UserCreationScreen.selectPersonalUser()", nil); err != nil {
+			s.Fatal("Failed to select personal account: ", err)
+		}
+
+		nextButton := nodewith.Name("Next").Role(role.Button)
 		if err := uiauto.Combine("click next on the user creation screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
+			ui.WaitUntilEnabled(nextButton),
+			ui.LeftClick(nextButton),
 		)(ctx); err != nil {
 			s.Fatal("Failed to click user creation screen next button: ", err)
 		}
