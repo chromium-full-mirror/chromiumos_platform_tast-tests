@@ -6,6 +6,7 @@ package oobe
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -34,19 +35,47 @@ func init() {
 	})
 }
 
-// expectedTextColor executes JS code on the Theme Selection screen page to
-// fetch current page header text color.
-func expectedTextColor(ctx context.Context, oobeConn *chrome.Conn, darkMode bool) (string, error) {
-	colorQuery := "getComputedStyle(document.documentElement).getPropertyValue('--cros-text-color-primary-%s').trim();"
-	formattedQuery := fmt.Sprintf(colorQuery, "light")
-	if darkMode {
-		formattedQuery = fmt.Sprintf(colorQuery, "dark")
+// convertHexToRGB tries to convert hex string that is returned from JS to a
+// string in the "rgb(R,G,B)" format. Hex strings starts with a #.
+func convertHexToRGB(colorHex string) (string, error) {
+	if len(colorHex) == 0 {
+		return "", errors.New("length of the color string should not be 0")
 	}
+	if colorHex[0] != '#' {
+		return "", errors.Errorf("color hex string in a wrong format, '#' expected as a first character, got %s", colorHex)
+	}
+	// Remove # from the beginning.
+	colorHex = colorHex[1:]
+	convertedColors, err := hex.DecodeString(colorHex)
+	if err != nil {
+		return "", errors.Errorf("can't decode string %s", colorHex)
+	}
+	if len(convertedColors) < 3 {
+		return "", errors.Errorf("length of the parsed color hex slice should be at least 3, got %d", len(convertedColors))
+	}
+	return fmt.Sprintf("rgb(%d,%d,%d)",
+		convertedColors[0], convertedColors[1], convertedColors[2]), nil
+}
+
+// expectedTextColor executes JS code on the Theme Selection screen page to
+// fetch expected color value for a currently enabled color mode.
+func expectedTextColor(ctx context.Context, oobeConn *chrome.Conn) (string, error) {
+	const colorQuery = "getComputedStyle(document.documentElement).getPropertyValue('--oobe-header-text-color').trim();"
 	var colorData string
-	if err := oobeConn.Eval(ctx, formattedQuery, &colorData); err != nil {
+	if err := oobeConn.Eval(ctx, colorQuery, &colorData); err != nil {
 		return "", err
 	}
-	return colorData, nil
+	return convertHexToRGB(colorData)
+}
+
+// headerTextColor executes JS code on the Theme Selection screen page to
+// fetch current page header text color.
+func headerTextColor(ctx context.Context, oobeConn *chrome.Conn) (string, error) {
+	var headerTextColor string
+	if err := oobeConn.Eval(ctx, queryThemeScreen("getHeaderTextColor()"), &headerTextColor); err != nil {
+		return "", err
+	}
+	return headerTextColor, nil
 }
 
 // nameOfSelectedTheme queries OobeApi to fetch selected value of a theme
@@ -70,19 +99,19 @@ func nameOfSelectedTheme(ctx context.Context, oobeConn *chrome.Conn) (string, er
 // applied to the UI. It should break polling and return an error if we fail to
 // execute JS calls, otherwise it waits until expected colors are present on the
 // screen.
-func waitForColorUpdate(ctx context.Context, oobeConn *chrome.Conn, darkMode bool) error {
+func waitForColorUpdate(ctx context.Context, oobeConn *chrome.Conn, previousHeaderTextColor string) error {
 	var pollOpts = &testing.PollOptions{Interval: 50 * time.Millisecond, Timeout: 20 * time.Second}
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		var headerTextColor string
-		if err := oobeConn.Eval(ctx, queryThemeScreen("getHeaderTextColor()"), &headerTextColor); err != nil {
+		headerTextColor, err := headerTextColor(ctx, oobeConn)
+		if err != nil {
 			// Break polling if we received any error from the OobeAPI.
 			return testing.PollBreak(errors.Wrap(err, "failed to get color of the text header"))
 		}
 
-		expectedTextColor, err := expectedTextColor(ctx, oobeConn, darkMode)
+		expectedTextColor, err := expectedTextColor(ctx, oobeConn)
 		if err != nil {
 			// Break polling if we failed to query JS on the screen.
-			return testing.PollBreak(errors.Wrap(err, "failed to get color of the text header"))
+			return testing.PollBreak(errors.Wrap(err, "failed to get expected color of the text header"))
 		}
 
 		// We try to unify color strings in the rgb(x,y,z) format by removing
@@ -91,6 +120,13 @@ func waitForColorUpdate(ctx context.Context, oobeConn *chrome.Conn, darkMode boo
 		// inside them, so we want to mitigate this risk here.
 		headerTextColor = strings.ReplaceAll(headerTextColor, " ", "")
 		expectedTextColor = strings.ReplaceAll(expectedTextColor, " ", "")
+		previousHeaderTextColor = strings.ReplaceAll(previousHeaderTextColor, " ", "")
+
+		// Check that color indeed changed when we switch from one color mode to other.
+		// Skip it in case it's the first color mode that we check during the test.
+		if len(previousHeaderTextColor) != 0 && previousHeaderTextColor == headerTextColor {
+			return errors.Errorf("header color (%s) still has same value as a previous one (%s)", headerTextColor, previousHeaderTextColor)
+		}
 		if headerTextColor != expectedTextColor {
 			return errors.Errorf("header color (%s) doesn't match expected color (%s)", headerTextColor, expectedTextColor)
 		}
@@ -148,6 +184,8 @@ func ThemeSelection(ctx context.Context, s *testing.State) {
 		s.Fatal("Device should be in the auto theme mode by default")
 	}
 
+	previousHeaderTextColor := ""
+
 	// We can combine testing for light and dark modes as they do same steps.
 	for _, theme := range []string{lightTheme, darkTheme} {
 		selectFuncCall := "selectLightTheme()"
@@ -167,8 +205,13 @@ func ThemeSelection(ctx context.Context, s *testing.State) {
 			s.Fatalf("Device should be in the %s theme mode after we select it", theme)
 		}
 
-		if err = waitForColorUpdate(ctx, oobeConn, theme == darkTheme /*darkMode*/); err != nil {
+		if err = waitForColorUpdate(ctx, oobeConn, previousHeaderTextColor); err != nil {
 			s.Fatal(fmt.Sprintf("Failed to wait until colors update to %s theme: ", theme), err)
+		}
+
+		previousHeaderTextColor, err = headerTextColor(ctx, oobeConn)
+		if err != nil {
+			s.Fatal("Failed to get color of the text header: ", err)
 		}
 	}
 }
