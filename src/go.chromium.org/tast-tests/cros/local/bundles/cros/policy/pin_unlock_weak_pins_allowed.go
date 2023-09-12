@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -116,42 +115,19 @@ func PinUnlockWeakPinsAllowed(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// Open the Lockscreen page where we can set a PIN.
-			conn, err := apps.LaunchOSSettings(ctx, cr, "chrome://os-settings/osPrivacy/lockScreen")
-			if err != nil {
-				s.Fatal("Failed to connect to the settings page: ", err)
+			// Open the Lockscreen page and enter a PIN.
+			if err := policyutil.OSSettingsPageWithPassword(ctx, cr, "osPrivacy/lockScreen", fixtures.Password).
+				// Enter the PIN, which is very easy to guess.
+				SetUpPin(ctx, pin, false /*completeSetup*/).
+				Verify(); err != nil {
+				s.Fatal("Failed to setup pin: ", err)
 			}
-			defer conn.Close()
 
 			ui := uiauto.New(tconn)
 
-			// Find and enter the password in the pop up window.
-			if err := ui.LeftClick(nodewith.Name("Password").Role(role.TextField))(ctx); err != nil {
-				s.Fatal("Could not find the password field: ", err)
-			}
-			if err := kb.Type(ctx, fixtures.Password+"\n"); err != nil {
-				s.Fatal("Failed to type password: ", err)
-			}
-
-			if err := uiauto.Combine("switch to PIN or password and wait for PIN dialog",
-				// Find and click on radio button "PIN or password".
-				ui.LeftClick(nodewith.Name("PIN or password").Role(role.RadioButton)),
-				// Find and click on "Set up PIN" button.
-				ui.LeftClick(nodewith.Name("Set up PIN").Role(role.Button)),
-				// Wait for the PIN pop up window to appear.
-				ui.WaitUntilExists(nodewith.Name("Enter your PIN").Role(role.StaticText)),
-			)(ctx); err != nil {
-				s.Fatal("Failed to open PIN dialog: ", err)
-			}
-
-			// Enter the PIN, which is very easy to guess. The warning message "PIN
-			// may be easy to guess" will appear in any case, but if weak passwords
-			// are forbidden, the Continue button will stay disabled.
-			if err := uiauto.Combine("enter PIN",
-				kb.TypeAction(pin),
-				// Wait until all 6 digits are in, and UI is refreshed.
-				ui.WaitUntilExists(nodewith.Name(pinHidden).Role(role.InlineTextBox)),
-			)(ctx); err != nil {
+			// The warning message "PIN may be easy to guess" will appear in any case,
+			// but if weak passwords are forbidden, the Continue button will stay disabled.
+			if err := ui.WaitUntilExists(nodewith.Name(pinHidden).Role(role.InlineTextBox))(ctx); err != nil {
 				s.Fatal("Failed to enter PIN: ", err)
 			}
 

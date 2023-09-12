@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -96,6 +97,60 @@ func CurrentPage(cr *chrome.Chrome) *openedPage {
 	}
 
 	return page
+}
+
+// SetUpPin opens the PIN setup dialog, and enters provided pin.
+// The lock screen page must already be opened (e.g. by calling
+// `OSSettingsPageWithPassword` with "osPrivacy/lockScreen" param).
+// If `completeSetup` is `false`, the PIN will be entered once, and "Continue" button will not be clicked.
+// Otherwise, the PIN will be entered twice, and the dialog with the new PIN will be submitted.
+func (page *openedPage) SetUpPin(ctx context.Context, pin string, completeSetup bool) *nodeChecker {
+	checker := &nodeChecker{}
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		checker.err = errors.Wrap(err, "failed to get keyboard")
+		return checker
+	}
+	defer kb.Close(ctx)
+
+	tconn, err := page.cr.TestAPIConn(ctx)
+	if err != nil {
+		checker.err = errors.Wrap(err, "failed to create Test API connection")
+		return checker
+	}
+	ui := uiauto.New(tconn)
+
+	if err := uiauto.Combine("open PIN dialog and type PIN",
+		// Find and click on "Set up" button.
+		ui.LeftClick(nodewith.Name("Set up").Role(role.Button)),
+		// Wait for the PIN pop up window to appear.
+		ui.WaitUntilExists(nodewith.Name("Enter your PIN").Role(role.StaticText)),
+		kb.TypeAction(pin),
+	)(ctx); err != nil {
+		checker.err = errors.Wrap(err, "failed to open PIN dialog and type PIN")
+		return checker
+	}
+
+	if !completeSetup {
+		return checker
+	}
+
+	continueButton := nodewith.Name("Continue").Role(role.Button)
+	confirmButton := nodewith.Name("Confirm").Role(role.Button)
+	if err := uiauto.Combine("confirm PIN",
+		ui.WaitUntilExists(continueButton),
+		ui.LeftClick(continueButton),
+		ui.WaitUntilExists(nodewith.Name("Confirm your PIN").Role(role.StaticText)),
+		kb.TypeAction(pin),
+		ui.LeftClick(confirmButton),
+		ui.WaitUntilGone(nodewith.Name("Confirm your PIN").Role(role.StaticText)),
+	)(ctx); err != nil {
+		checker.err = errors.Wrap(err, "failed to confirm PIN")
+		return checker
+	}
+
+	return checker
 }
 
 // SelectNode creates a nodeChecker from the selected node.
