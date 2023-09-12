@@ -65,7 +65,7 @@ func init() {
 		BugComponent: "b:488493",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		// TODO(b/210155681) enable this for ARCVM once supported.
-		SoftwareDeps: []string{"chrome", "chrome_internal", "android_p"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "android_container"},
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
 			Name: "whole_data",
