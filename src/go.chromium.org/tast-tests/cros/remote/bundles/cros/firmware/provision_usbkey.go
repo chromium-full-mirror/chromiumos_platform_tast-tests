@@ -20,7 +20,7 @@ func init() {
 		Contacts: []string{
 			"peep-fleet-infra-sw@google.com",
 		},
-		BugComponent: "b:292137648", // Chrome Operations > Fleet > ChromeOS Fleet Reliability
+		BugComponent: "b:1296600", // Chrome Operations > Fleet > ChromeOS Fleet Reliability
 		Fixture:      fixture.NormalMode,
 		VarDeps:      []string{"servo"},
 	})
