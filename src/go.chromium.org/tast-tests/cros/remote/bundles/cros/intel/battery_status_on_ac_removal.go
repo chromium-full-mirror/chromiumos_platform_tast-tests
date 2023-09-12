@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package intel
 
 import (
 	"context"
@@ -133,7 +133,7 @@ func BatteryStatusOnACRemoval(ctx context.Context, s *testing.State) {
 	for i := 1; i <= iterations; i++ {
 		s.Logf("Iteration: %d/%d", i, iterations)
 		//Checking initial battery charge.
-		initialCharge, err := getChargePercentage(ctx, h)
+		initialCharge, err := getChargePercent(ctx, h)
 		if err != nil {
 			s.Fatal("Failed to get battery level: ", err)
 		}
@@ -189,7 +189,7 @@ func BatteryStatusOnACRemoval(ctx context.Context, s *testing.State) {
 		// Charging the DUT for 3%.
 		s.Logf("Waiting for battery to reach %d%%", targetCharge)
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			pct, err := getChargePercentage(ctx, h)
+			pct, err := getChargePercent(ctx, h)
 			if err != nil {
 				// Failed to get battery level so stop trying.
 				return testing.PollBreak(err)
@@ -259,8 +259,8 @@ func isBatteryCharging(ctx context.Context, h *firmware.Helper) (bool, error) {
 	return strings.TrimSpace(matches[1]) != "Discharging", nil
 }
 
-// getChargePercentage returns battery charge percentage.
-func getChargePercentage(ctx context.Context, h *firmware.Helper) (int, error) {
+// getChargePercent returns battery charge percentage.
+func getChargePercent(ctx context.Context, h *firmware.Helper) (int, error) {
 	var err error = nil
 	currentMAH := 0
 	maxMAH := 0

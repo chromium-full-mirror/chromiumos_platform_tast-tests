@@ -86,6 +86,7 @@ func ShutdownWithCommandBatteryCutoff(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "Waiting for EC to boot")
 		defer func() {
 			s.Log("Waiting for boot to finish")
+			// GoBigSleepLint: Sleep to wait for boot.
 			if err := testing.Sleep(ctx, 20*time.Second); err != nil {
 				s.Fatal("Failed to sleep: ", err)
 			}

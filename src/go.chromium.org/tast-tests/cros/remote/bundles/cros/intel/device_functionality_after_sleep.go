@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package intel
 
 import (
 	"context"
@@ -287,7 +287,7 @@ func setPowerPolicy(ctx context.Context, h *firmware.Helper) error {
 		}
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if brightness, err := systemBrightness(ctx, h); err != nil {
+			if brightness, err := getSystemBrightness(ctx, h); err != nil {
 				return errors.Wrap(err, "failed to get system current brightness in idle state")
 			} else if brightness != 0 {
 				return errors.Wrap(err, "failed to go to idle state")
@@ -325,8 +325,8 @@ func resetPowerPolicy(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-// systemBrightness returns system display brightness value.
-func systemBrightness(ctx context.Context, h *firmware.Helper) (int, error) {
+// getSystemBrightness returns system display brightness value.
+func getSystemBrightness(ctx context.Context, h *firmware.Helper) (int, error) {
 	bnsOut, err := h.DUT.Conn().CommandContext(ctx, "backlight_tool", "--get_brightness").Output()
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to execute backlight_tool command")
