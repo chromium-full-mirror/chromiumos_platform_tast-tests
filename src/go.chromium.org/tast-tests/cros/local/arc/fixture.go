@@ -607,25 +607,6 @@ func NewArcBootedFixture(arcBootedFixtureConfig BootedFixtureConfig) testing.Fix
 	}
 }
 
-// NewArcBootedWithPlayStoreFixture returns a FixtureImpl for ARC
-// ARCSupported() will always be added to the Chrome options returned by OptionsCallback,
-// which enables using the Play Store in tests.
-func NewArcBootedWithPlayStoreFixture(arcBootedFixtureConfig BootedFixtureConfig) testing.FixtureImpl {
-	return &bootedFixture{
-		enableUIAutomator: arcBootedFixtureConfig.EnableUIAutomator,
-		arcvmConfig:       arcBootedFixtureConfig.ArcvmConfig,
-		playStoreOptin:    arcBootedFixtureConfig.PlayStoreOptin,
-		bootTimeout:       arcBootedFixtureConfig.BootTimeout,
-		fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			opts, err := arcBootedFixtureConfig.FOpts(ctx, s)
-			if err != nil {
-				return nil, err
-			}
-			return append(opts, chrome.ARCSupported(), chrome.ExtraArgs("--disable-features=ArcResizeLock")), nil
-		},
-	}
-}
-
 // NewMtbfArcBootedFixture returns a FixtureImpl with a OptionsCallback function provided for MTBF ARC++ tests.
 func NewMtbfArcBootedFixture(fOpts chrome.OptionsCallback) testing.FixtureImpl {
 	return &bootedFixture{
