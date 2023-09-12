@@ -121,10 +121,18 @@ func MonitorUploadedCrashEvent(ctx context.Context, s *testing.State) {
 	// problem for the test because there is no subscriber at the beginning
 	// of this test and healthD doesn't invoke crash_sender --dry_run in
 	// this case.
-	crash.SetUpCrashTest(ctx, crash.WithMockConsent())
-	defer crash.TearDownCrashTest(ctxForCleanUpCrashSetup)
+	if err := crash.SetUpCrashTest(ctx, crash.WithMockConsent()); err != nil {
+		s.Fatal("Could not set up crash test: ", err)
+	}
+	defer func() {
+		if err := crash.TearDownCrashTest(ctxForCleanUpCrashSetup); err != nil {
+			s.Log("Failed to tear down crash test: ", err)
+		}
+	}()
 	// Don't actually upload crashes.
-	crash.EnableMockSending(true)
+	if err := crash.EnableMockSending(true); err != nil {
+		s.Fatal("Could not enable mock sending: ", err)
+	}
 
 	// Trigger unuploaded crash event: Run the sleep command and crash it.
 	sleepCmd := testexec.CommandContext(ctx, "sleep", "100")
