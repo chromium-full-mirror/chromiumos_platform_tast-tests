@@ -53,7 +53,7 @@ func init() {
 				Val: heartbeatTestParams{
 					IsUserEvent: true,
 					// Enable the reporting pipeline, user heartbeat events, reporting from unmanaged device, and enable multigenerational storage for FAST_BATCH priority (i.e. exclude FAST_BATCH from legacy_storage_enabled list).
-					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestUserHeartbeatEvent, EnableReportingFromUnmanagedDevices, CrOSLateBootMissiveStorage:legacy_storage_enabled/IMMEDIATE,SLOW_BATCH,BACKGROUND_BATCH,MANUAL_BATCH,SECURITY,MANUAL_BATCH_LACROS",
+					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestUserHeartbeatEvent, EnableReportingFromUnmanagedDevices, ClientAutomatedTest, CrOSLateBootMissiveStorage:legacy_storage_enabled/IMMEDIATE,SLOW_BATCH,BACKGROUND_BATCH,MANUAL_BATCH,SECURITY,MANUAL_BATCH_LACROS",
 				},
 			},
 			{
@@ -61,7 +61,7 @@ func init() {
 				Val: heartbeatTestParams{
 					IsUserEvent: false,
 					// Enable the reporting pipeline, device heartbeat events.
-					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent",
+					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent, ClientAutomatedTest",
 				},
 			},
 			{
@@ -69,7 +69,7 @@ func init() {
 				Val: heartbeatTestParams{
 					IsUserEvent: false,
 					// Enable the reporting pipeline, device heartbeat events, and multigenerational storage for FAST_BATCH priority (i.e. exclude FAST_BATCH from legacy_storage_enabled list).
-					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent, CrOSLateBootMissiveStorage:legacy_storage_enabled/IMMEDIATE,SLOW_BATCH,BACKGROUND_BATCH,MANUAL_BATCH,SECURITY,MANUAL_BATCH_LACROS",
+					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent, ClientAutomatedTest, CrOSLateBootMissiveStorage:legacy_storage_enabled/IMMEDIATE,SLOW_BATCH,BACKGROUND_BATCH,MANUAL_BATCH,SECURITY,MANUAL_BATCH_LACROS",
 				},
 			},
 		},
@@ -163,31 +163,6 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 	// Gather device info for device events
 	var clientID string
 
-	if !params.IsUserEvent {
-		c, err := policyClient.ClientID(ctx, &empty.Empty{})
-		clientID = c.ClientId
-		if err != nil {
-			s.Fatalf("Failed to grab client ID from device: %v:", err)
-		}
-
-		// TODO(b/296398085) : Remove once server solution is in place.
-		// Check if the device is marked as deprovisioned on the
-		// server, if it was then exit the test since the server
-		// won't allow any events coming from this device.
-		// Trying to get an idea of how many errors where coming from
-		// this failure, will remove once a better solution is in place.
-		currentAccount := accManager.Accounts[0]
-		isDeprovisioned, err := tapeClient.Deprovisioned(ctx, clientID, currentAccount.OrgUnitPath, currentAccount.CustomerID)
-		if err != nil {
-			s.Fatal("Failed to check if device is deprovisioned: ", err)
-		}
-		if isDeprovisioned {
-			testing.ContextLog(ctx, "Device is deprovisioned - not checking events")
-			return
-		}
-
-	}
-
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		var events []reportingutil.InputEvent
 		var err error
@@ -197,6 +172,11 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 			events, err = reportingutil.LookupUserEvents(ctx, reportingutil.ReportingServerURL, customerID, APIKey, "HEARTBEAT_EVENTS", acc.Username, testStartTime)
 		} else {
 			// Look up device events using client id.
+			c, err := policyClient.ClientID(ctx, &empty.Empty{})
+			clientID = c.ClientId
+			if err != nil {
+				s.Fatalf("Failed to grab client ID from device: %v:", err)
+			}
 			events, err = reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerID, clientID, APIKey, "HEARTBEAT_EVENTS", testStartTime)
 		}
 		if err != nil {

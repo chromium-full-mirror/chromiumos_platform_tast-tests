@@ -221,7 +221,7 @@ func LoginLogoutPolicyReporting(ctx context.Context, s *testing.State) {
 		Password:           pass,
 		DmserverUrl:        reportingutil.DmServerURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
-		EnabledFeatures:    "EncryptedReportingPipeline, EnableTelemetryTestingRates, OobeConsolidatedConsent",
+		EnabledFeatures:    "EncryptedReportingPipeline, EnableTelemetryTestingRates, OobeConsolidatedConsent, ClientAutomatedTest",
 		SkipLogin:          false,
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
@@ -232,22 +232,6 @@ func LoginLogoutPolicyReporting(ctx context.Context, s *testing.State) {
 	c, err := pc.ClientID(ctx, &empty.Empty{})
 	if err != nil {
 		s.Fatal("Failed to grab client ID from device: ", err)
-	}
-
-	// TODO(b/296398085) : Remove once server solution is in place.
-	// Check if the device is marked as deprovisioned on the
-	// server, if it was then exit the test since the server
-	// won't allow any events coming from this device.
-	// Trying to get an idea of how many errors where coming from
-	// this failure, will remove once a better solution is in place.
-	currentAccount := accManager.Accounts[0]
-	isDeprovisioned, err := tapeClient.Deprovisioned(ctx, c.ClientId, currentAccount.OrgUnitPath, currentAccount.CustomerID)
-	if err != nil {
-		s.Fatal("Failed to check if device is deprovisioned: ", err)
-	}
-	if isDeprovisioned {
-		s.Log("Device is deprovisioned - not checking events")
-		return
 	}
 
 	pJSON, err := policy.MarshalList([]policy.Policy{
