@@ -32,7 +32,6 @@ func init() {
 			"bchikhaoui@google.com",
 			"bohdanty@google.com",
 			"chromeos-sw-engprod@google.com",
-			"cros-oac@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "informational"},

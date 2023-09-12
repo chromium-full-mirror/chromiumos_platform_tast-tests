@@ -20,7 +20,6 @@ func init() {
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"bohdanty@google.com",
-			"cros-oac@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
