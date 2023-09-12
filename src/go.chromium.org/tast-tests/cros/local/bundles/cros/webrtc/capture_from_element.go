@@ -42,7 +42,7 @@ func init() {
 // CaptureFromElement verifies that the homonymous API works as expected.
 func CaptureFromElement(ctx context.Context, s *testing.State) {
 	const noMeasurement = 0 * time.Second
-	if err := capturefromelement.RunCaptureStream(ctx, s, s.FixtValue().(chrome.HasChrome).Chrome(), s.Param().(capturefromelement.CanvasSource), noMeasurement); err != nil {
+	if err := capturefromelement.RunCaptureStream(ctx, s, s.FixtValue().(*chrome.Chrome), s.Param().(capturefromelement.CanvasSource), noMeasurement); err != nil {
 		s.Fatal("RunCaptureStream failed: ", err)
 	}
 }

@@ -96,7 +96,7 @@ func YoutubeScreenRotate(ctx context.Context, s *testing.State) {
 	s.Logf("Selected audio device name: %s", deviceName)
 	s.Logf("Selected audio device type: %s", deviceType)
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Creating test API connection failed: ", err)

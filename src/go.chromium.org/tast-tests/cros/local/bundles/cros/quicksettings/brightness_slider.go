@@ -34,7 +34,7 @@ func init() {
 
 // BrightnessSlider tests that the brightness slider can be adjusted up and down.
 func BrightnessSlider(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)

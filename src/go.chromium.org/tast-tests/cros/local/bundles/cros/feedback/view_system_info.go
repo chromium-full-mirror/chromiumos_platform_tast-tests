@@ -114,7 +114,7 @@ func validatePerfData(ctx context.Context, ui *uiauto.Context) error {
 
 // ViewSystemInfo verifies user can click and view system info.
 func ViewSystemInfo(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

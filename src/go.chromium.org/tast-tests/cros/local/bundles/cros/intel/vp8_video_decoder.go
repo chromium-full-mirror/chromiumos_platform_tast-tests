@@ -32,7 +32,7 @@ func init() {
 }
 
 func VP8VideoDecoder(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer srv.Close()

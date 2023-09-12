@@ -41,7 +41,7 @@ func init() {
 
 // ToggleAdvanced tests that we can toggle the Advanced Settings section.
 func ToggleAdvanced(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)

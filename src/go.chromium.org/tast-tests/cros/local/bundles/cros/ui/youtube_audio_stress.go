@@ -77,7 +77,7 @@ func YoutubeAudioStress(ctx context.Context, s *testing.State) {
 	}
 
 	duration := s.Param().(videoDuration)
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

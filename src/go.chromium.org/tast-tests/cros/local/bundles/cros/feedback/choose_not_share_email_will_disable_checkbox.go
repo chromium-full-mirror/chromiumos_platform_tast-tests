@@ -46,7 +46,7 @@ func init() {
 // ChooseNotShareEmailWillDisableCheckbox verifies if users choose not to share
 // email, they won't be able to check the consent checkbox.
 func ChooseNotShareEmailWillDisableCheckbox(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

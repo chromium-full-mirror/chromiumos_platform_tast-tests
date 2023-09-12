@@ -45,7 +45,7 @@ func init() {
 // VerifySystemInfoAndAppAndMetricsCheckboxState verifies system info and app and
 // metrics checkbox is checked by default.
 func VerifySystemInfoAndAppAndMetricsCheckboxState(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

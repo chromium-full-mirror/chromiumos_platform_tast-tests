@@ -45,7 +45,7 @@ func init() {
 // SubmitFeedbackAndCloseApp verifies the user can submit a report and
 // close Feedback app.
 func SubmitFeedbackAndCloseApp(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

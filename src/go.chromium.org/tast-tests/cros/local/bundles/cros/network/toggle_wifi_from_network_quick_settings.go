@@ -38,7 +38,7 @@ func init() {
 // toggle the WiFi state using the toggle in the detailed Network view
 // within the Quick Settings.
 func ToggleWifiFromNetworkQuickSettings(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

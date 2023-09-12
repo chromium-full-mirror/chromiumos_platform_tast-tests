@@ -33,7 +33,7 @@ func init() {
 
 // ButtonClicks verifies that we can open the calendar, and click all (up/down, today, and settings) buttons correctly.
 func ButtonClicks(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

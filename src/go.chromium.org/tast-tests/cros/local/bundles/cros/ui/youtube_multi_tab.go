@@ -88,7 +88,7 @@ func YoutubeMultiTab(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to set the audio node type: got %q; want %q", wantDevType, expectedAudioNode)
 	}
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Creating test API connection failed: ", err)

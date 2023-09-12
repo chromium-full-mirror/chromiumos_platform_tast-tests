@@ -40,7 +40,7 @@ func init() {
 
 // AllSections goes through all main sections of OS settings.
 func AllSections(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

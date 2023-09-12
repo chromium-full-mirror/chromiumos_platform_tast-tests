@@ -48,7 +48,7 @@ func SetDailyRefreshDLWallpaper(ctx context.Context, s *testing.State) {
 	// Dark mode wallpaper title includes "Dark" word but light mode wallpaper title doesn't.
 	darkRegex := regexp.MustCompile(`Currently set Daily Refresh .*\sDark\s.*`)
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

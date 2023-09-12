@@ -141,7 +141,7 @@ func HotseatAnimation(ctx context.Context, s *testing.State) {
 
 		defer cr.Close(cleanupCtx)
 	} else {
-		cr = s.FixtValue().(chrome.HasChrome).Chrome()
+		cr = s.FixtValue().(*chrome.Chrome)
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)

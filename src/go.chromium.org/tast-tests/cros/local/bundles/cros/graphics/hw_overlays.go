@@ -233,7 +233,7 @@ func HwOverlays(ctx context.Context, s *testing.State) {
 	params := s.Param().(pageTestParams)
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 	url := path.Join(server.URL, params.file)
 	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(
 		ctx, s.FixtValue().(chrome.HasChrome).Chrome(), s.Param().(pageTestParams).browserType, url)

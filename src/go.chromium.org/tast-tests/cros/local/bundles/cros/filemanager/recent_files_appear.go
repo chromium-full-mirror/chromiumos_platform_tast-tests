@@ -46,7 +46,7 @@ func init() {
 
 // RecentFilesAppear checks the edited files are shown in Recent tab.
 func RecentFilesAppear(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	// Get Test API connection.
 	tconn, err := cr.TestAPIConn(ctx)

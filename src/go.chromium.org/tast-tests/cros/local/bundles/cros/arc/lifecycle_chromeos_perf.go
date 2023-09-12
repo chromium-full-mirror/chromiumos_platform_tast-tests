@@ -72,15 +72,12 @@ func LifecycleChromeOSPerf(ctx context.Context, s *testing.State) {
 	tasks = append(tasks, memoryuser.NewStillAliveMetricTask(tabsAliveTasks, "tabs_alive"))
 
 	var a *arc.ARC
-	var cr *chrome.Chrome
-	if hasChrome, ok := s.FixtValue().(chrome.HasChrome); !ok {
+	cr, ok := s.FixtValue().(*chrome.Chrome)
+	if !ok {
 		pre := s.FixtValue().(*arc.PreData)
 		cr = pre.Chrome
 		a = pre.ARC
-	} else {
-		cr = hasChrome.Chrome()
 	}
-
 	rp := &memoryuser.RunParameters{
 		ExistingChrome: cr,
 		ExistingARC:    a,

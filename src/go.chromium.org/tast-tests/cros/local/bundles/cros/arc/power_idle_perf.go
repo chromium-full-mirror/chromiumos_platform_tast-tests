@@ -180,18 +180,14 @@ func PowerIdlePerf(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	var cr *chrome.Chrome
-	hasChrome, ok := s.FixtValue().(chrome.HasChrome)
+	cr, ok := s.FixtValue().(*chrome.Chrome)
 	hasarc := !ok
 	if !ok {
 		cr = s.FixtValue().(*arc.PreData).Chrome
 		if cr == nil {
 			s.Fatal("Failed to get Chrome from FixtValue")
 		}
-	} else {
-		cr = hasChrome.Chrome()
 	}
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)

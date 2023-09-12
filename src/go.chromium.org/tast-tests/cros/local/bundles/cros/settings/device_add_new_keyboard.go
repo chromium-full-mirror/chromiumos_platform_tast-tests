@@ -42,7 +42,7 @@ func init() {
 // DeviceAddNewKeyboard tests if a new keyboard appear in the keyboard subpage
 // when adding a new keyboard.
 func DeviceAddNewKeyboard(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

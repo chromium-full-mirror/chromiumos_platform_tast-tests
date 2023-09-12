@@ -73,7 +73,7 @@ func init() {
 
 // ViewPolicy verifies the user is able to view policy, legal help and terms of service.
 func ViewPolicy(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

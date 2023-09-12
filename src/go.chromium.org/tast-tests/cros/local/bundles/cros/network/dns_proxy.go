@@ -139,7 +139,7 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 
 	params := s.Param().(dnsProxyTestParams)
 	if params.chrome {
-		cr = s.FixtValue().(chrome.HasChrome).Chrome()
+		cr = s.FixtValue().(*chrome.Chrome)
 	} else if params.arc {
 		a = s.FixtValue().(*arc.PreData).ARC
 		cr = s.FixtValue().(*arc.PreData).Chrome

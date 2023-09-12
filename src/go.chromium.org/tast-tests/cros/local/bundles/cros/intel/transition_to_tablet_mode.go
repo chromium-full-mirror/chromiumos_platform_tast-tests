@@ -53,7 +53,7 @@ func init() {
 func TransitionToTabletMode(ctx context.Context, s *testing.State) {
 	// TransitionToTabletMode function verifies Touch navigation, On-board keyboard, External peripherals, Power, volume
 	// button works or not when dut is transitioned from laptop mode.
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()

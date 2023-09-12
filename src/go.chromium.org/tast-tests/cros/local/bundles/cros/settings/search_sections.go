@@ -248,7 +248,7 @@ func SearchSections(ctx context.Context, s *testing.State) {
 	if params.arc {
 		cr = s.FixtValue().(*arc.PreData).Chrome
 	} else {
-		cr = s.FixtValue().(chrome.HasChrome).Chrome()
+		cr = s.FixtValue().(*chrome.Chrome)
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)

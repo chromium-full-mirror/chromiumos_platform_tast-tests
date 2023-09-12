@@ -39,7 +39,7 @@ func init() {
 
 // TermsLinkClickable checks the chrome://terms link is clickable within 'About ChromeOS' and chrome://help.
 func TermsLinkClickable(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

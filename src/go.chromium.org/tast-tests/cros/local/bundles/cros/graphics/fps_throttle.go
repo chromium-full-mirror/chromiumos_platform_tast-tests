@@ -96,7 +96,7 @@ func FPSThrottle(ctx context.Context, s *testing.State) {
 	defer server.Close()
 	testURL := server.URL + "/fps.html"
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)

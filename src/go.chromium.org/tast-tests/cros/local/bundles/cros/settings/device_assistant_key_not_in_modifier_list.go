@@ -43,7 +43,7 @@ func init() {
 // doesn't display the assistant key row when the device doesn't support
 // assistant key.
 func DeviceAssistantKeyNotInModifierList(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome().Chrome()
+	cr := s.FixtValue().(*chrome.Chrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

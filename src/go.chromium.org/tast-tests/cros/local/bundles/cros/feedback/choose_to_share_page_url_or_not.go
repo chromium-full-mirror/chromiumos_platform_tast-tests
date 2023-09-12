@@ -54,7 +54,7 @@ const tabLink = "chrome://newtab/"
 
 // ChooseToSharePageURLOrNot verifies user can choose to share page url or not.
 func ChooseToSharePageURLOrNot(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

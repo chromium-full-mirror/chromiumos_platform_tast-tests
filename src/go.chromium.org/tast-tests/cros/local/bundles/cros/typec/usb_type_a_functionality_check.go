@@ -215,7 +215,7 @@ func init() {
 // 1. DUT --> C-Switch(device that performs hot plug-unplug) --> type-C Adapter --> type-A devices.
 // 2. DUT --> C-Switch(device that performs hot plug-unplug) --> type-C keyboard.
 func USBTypeAFunctionalityCheck(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	testParms := s.Param().(usbTestParams)
 	// IP address of Tqc server hosting device.

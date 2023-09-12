@@ -35,7 +35,7 @@ func init() {
 }
 
 func CopyFiles(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	const (
 		GB       = 1024 * 1024 * 1024 // 1 GigaByte size.

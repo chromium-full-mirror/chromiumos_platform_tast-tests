@@ -41,7 +41,7 @@ func init() {
 
 // DeviceAddNewTouchpad tests if a new touchpad appear in the touchpad subpage when adding a new touchpad.
 func DeviceAddNewTouchpad(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

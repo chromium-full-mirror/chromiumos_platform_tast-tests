@@ -53,7 +53,7 @@ type exitSearchShowAppsTestCase struct {
 // ExitSearchShowApps checks that exiting the productivity launcher search UI
 // transitions the user back to the app list UI.
 func ExitSearchShowApps(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

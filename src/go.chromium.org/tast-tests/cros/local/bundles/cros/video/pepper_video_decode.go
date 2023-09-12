@@ -72,7 +72,7 @@ func PepperVideoDecode(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	ctconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

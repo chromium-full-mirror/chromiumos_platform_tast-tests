@@ -43,7 +43,7 @@ func init() {
 // CaptureFromElementPerf collects perf metrics for the homonymous API.
 func CaptureFromElementPerf(ctx context.Context, s *testing.State) {
 	const measurementDuration = 25 * time.Second
-	if err := capturefromelement.RunCaptureStream(ctx, s, s.FixtValue().(chrome.HasChrome).Chrome(), s.Param().(capturefromelement.CanvasSource), measurementDuration); err != nil {
+	if err := capturefromelement.RunCaptureStream(ctx, s, s.FixtValue().(*chrome.Chrome), s.Param().(capturefromelement.CanvasSource), measurementDuration); err != nil {
 		s.Fatal("RunCaptureStream failed: ", err)
 	}
 }

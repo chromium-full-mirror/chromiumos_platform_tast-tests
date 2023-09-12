@@ -47,7 +47,7 @@ func init() {
 // LaunchFeedbackFromHelpApp verifies launching the Feedback app from
 // the Help app.
 func LaunchFeedbackFromHelpApp(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

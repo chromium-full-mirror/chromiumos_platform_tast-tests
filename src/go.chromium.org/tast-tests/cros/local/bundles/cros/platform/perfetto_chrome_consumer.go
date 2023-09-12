@@ -86,7 +86,7 @@ func PerfettoChromeConsumer(ctx context.Context, s *testing.State) {
 		// Trace using lacros-chrome.
 		tracer = l
 	} else {
-		cr := s.FixtValue().(chrome.HasChrome).Chrome()
+		cr := s.FixtValue().(*chrome.Chrome)
 		if _, err := cr.TestAPIConn(ctx); err != nil {
 			s.Fatal("Failed to connect Test API: ", err)
 		}

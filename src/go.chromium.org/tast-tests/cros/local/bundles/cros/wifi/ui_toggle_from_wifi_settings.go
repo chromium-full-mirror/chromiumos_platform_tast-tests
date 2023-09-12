@@ -34,7 +34,7 @@ func init() {
 
 // UIToggleFromWIFISettings tests enabling/disabling WiFi from the WiFi settings UI in ChromeOS settings.
 func UIToggleFromWIFISettings(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx

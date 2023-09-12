@@ -46,7 +46,7 @@ func init() {
 // SubmitFeedbackAgain verifies the user can submit a report then
 // create a new one and submit it.
 func SubmitFeedbackAgain(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

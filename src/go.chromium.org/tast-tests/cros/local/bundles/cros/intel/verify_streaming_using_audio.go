@@ -35,7 +35,7 @@ func init() {
 }
 
 func VerifyStreamingUsingAudio(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx

@@ -49,7 +49,7 @@ func SelectKeyboardBacklight(ctx context.Context, s *testing.State) {
 		backlightColor2 = "Rainbow"
 		backlightColor3 = "Wallpaper color"
 	)
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

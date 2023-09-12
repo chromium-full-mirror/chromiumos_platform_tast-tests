@@ -43,7 +43,7 @@ func init() {
 }
 
 func ScreenshotCLI(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 	err := sshot.SShot(ctx, s, cr, func(ctx context.Context, path string) error {
 		return screenshot.Capture(ctx, path)
 	})

@@ -58,7 +58,7 @@ var backFlippedTests = []scanning.TestingStruct{
 }
 
 func ScanBackFlipped(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	var scannerParams = scanning.ScannerStruct{
 		Descriptors: scanning.FlipTestDescriptors,

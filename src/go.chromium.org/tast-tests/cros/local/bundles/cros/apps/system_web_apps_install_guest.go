@@ -31,7 +31,7 @@ func init() {
 
 // SystemWebAppsInstallGuest tests that system web apps are installed on a guest profile.
 func SystemWebAppsInstallGuest(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

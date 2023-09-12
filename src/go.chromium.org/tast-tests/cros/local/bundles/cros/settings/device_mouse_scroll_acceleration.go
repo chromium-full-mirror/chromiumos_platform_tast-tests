@@ -41,7 +41,7 @@ func init() {
 
 // DeviceMouseScrollAcceleration tests mouse scroll acceleration enablement and scrolling speed slider.
 func DeviceMouseScrollAcceleration(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

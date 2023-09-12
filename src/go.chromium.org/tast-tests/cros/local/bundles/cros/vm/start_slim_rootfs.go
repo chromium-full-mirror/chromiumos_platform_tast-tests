@@ -28,7 +28,7 @@ func init() {
 }
 
 func StartSlimRootfs(ctx context.Context, s *testing.State) {
-	concierge, err := vm.NewConcierge(ctx, s.FixtValue().(chrome.HasChrome).Chrome().NormalizedUser())
+	concierge, err := vm.NewConcierge(ctx, s.FixtValue().(*chrome.Chrome).NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to get concierge instance: ", err)
 	}

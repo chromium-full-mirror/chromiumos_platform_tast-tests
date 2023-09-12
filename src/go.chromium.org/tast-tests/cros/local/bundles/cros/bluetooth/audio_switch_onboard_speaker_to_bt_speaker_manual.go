@@ -43,7 +43,7 @@ func init() {
 // bluetooth device is connected to DUT.
 // Manual step: bluetooth.btDeviceName bluetooth device has to be set to pairing mode before executing test-script.
 func AudioSwitchOnboardSpeakerToBTSpeakerManual(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

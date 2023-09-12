@@ -138,7 +138,7 @@ func VTSwitch(ctx context.Context, s *testing.State) {
 	s.Logf("No. of iterations: %d", iterations)
 	numErrors := 0
 
-	_ = s.FixtValue().(chrome.HasChrome).Chrome()
+	_ = s.FixtValue().(*chrome.Chrome)
 
 	defer func(ctx context.Context) {
 		if err := graphics.OpenVT1(ctx); err != nil {

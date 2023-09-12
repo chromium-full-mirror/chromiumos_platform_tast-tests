@@ -51,7 +51,7 @@ func init() {
 
 func WebstoreAppInstallUninstall(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(appsParams)
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cr := s.FixtValue().(*chrome.Chrome)
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
