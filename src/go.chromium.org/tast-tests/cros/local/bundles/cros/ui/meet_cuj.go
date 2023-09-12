@@ -719,7 +719,11 @@ func init() {
 //   - Record and save metrics.
 func MeetCUJ(ctx context.Context, s *testing.State) {
 	const (
-		addBotTimeout  = 100 * time.Second
+		// The addBotTimeout allows 3 2-minute BondAPI request retries by the
+		// Bond lib.
+		addBotTimeout = 6*time.Minute + 10*time.Second
+		// addBotRetries is the local retry number for adding bots.
+		addBotRetries  = 3
 		defaultDocsURL = "https://docs.new/"
 		jamboardURL    = "https://jamboard.google.com"
 		newTabTitle    = "New Tab"
@@ -819,8 +823,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Created a room with the code ", meetingCode)
 
-	// addBotTimeout(100s) would allow 3 bond.longerSendTimeout(30s) attempts
-	// to request the bond server to add bots.
 	sctx, cancel := context.WithTimeout(ctx, addBotTimeout)
 	defer cancel()
 	defer func(ctx context.Context) {
@@ -853,27 +855,29 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			return nil
 		}
 
+		botsToAdd := numBots
 		wait := 100 * time.Millisecond
-		for i := 0; i < 3; i++ {
+		for i := 0; i < addBotRetries; i++ {
 			// GoBigSleepLint: A short sleep before next call to Bond API.
 			if err := testing.Sleep(ctx, wait); err != nil {
 				s.Errorf("Failed to sleep for %v: %v", wait, err)
 			}
-			// Exponential backoff. The wait time is 0.1s, 1s and 10s before each retry.
-			wait *= 10
 			// Add 30 minutes to the bot duration, to ensure that the bots stay long
 			// enough for the test to get info from chrome://webrtc-internals.
-			botList, numFailures, err := bc.AddBots(sctx, meetingCode, numBots, meetTimeout+30*time.Minute, meet.botsOptions...)
+			botList, numFailures, err := bc.AddBots(sctx, meetingCode, botsToAdd, meetTimeout+30*time.Minute, meet.botsOptions...)
 			if err != nil {
-				s.Fatalf("Failed to create %d bots: %v", numBots, err)
+				s.Fatalf("Failed to create %d bots: %v", botsToAdd, err)
 			}
 			s.Logf("%d bots started, %d bots failed", len(botList), numFailures)
-			if numFailures == 0 {
+			botsToAdd -= len(botList)
+			if botsToAdd <= 0 {
 				break
 			}
-			numBots -= len(botList)
 		}
 
+		if botsToAdd > 0 {
+			return errors.Errorf("failed to add all %d bots to the call; %d to be added after %d retries", numBots, botsToAdd, addBotRetries)
+		}
 		return nil
 	}
 
