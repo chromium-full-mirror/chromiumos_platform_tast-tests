@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -131,6 +132,9 @@ func VideoSuspend(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "Reconnecting to our browser tab")
 	conn, err = cr.NewConnForTarget(ctx, chrome.MatchAllPages())
+	defer conn.Close()
+	defer conn.CloseTarget(ctx)
+
 	if err != nil {
 		s.Fatal("Failed to reconnect to browser tab")
 	}
@@ -138,5 +142,9 @@ func VideoSuspend(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Checking if video is still playing")
 	if err := checkVideoIsPlaying(ctx, conn); err != nil {
 		s.Fatal("Video not playing after suspend: ", err)
+	}
+
+	if err := shill.WaitForOnlineAfterResume(ctx); err != nil {
+		s.Fatal("Network failed to comeback after resuming: ", err)
 	}
 }

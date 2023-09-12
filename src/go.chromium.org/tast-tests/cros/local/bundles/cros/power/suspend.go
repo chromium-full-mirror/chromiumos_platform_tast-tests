@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
+	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -34,5 +35,9 @@ func Suspend(ctx context.Context, s *testing.State) {
 	_, err := suspend.ForDuration(ctx, 10*time.Second)
 	if err != nil {
 		s.Fatal("Failed to suspend: ", err)
+	}
+
+	if err := shill.WaitForOnlineAfterResume(ctx); err != nil {
+		s.Fatal("Network failed to comeback after resuming: ", err)
 	}
 }
