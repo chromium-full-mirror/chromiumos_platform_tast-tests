@@ -579,7 +579,7 @@ type BootedFixtureConfig struct {
 func DefaultBootedFixtureConfig() BootedFixtureConfig {
 	return BootedFixtureConfig{
 		FOpts: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU()}, nil
+			return []chrome.Option{chrome.UnRestrictARCCPU()}, nil
 		},
 		// specified config appended to arcvm_dev.conf.
 		ArcvmConfig:       "",
@@ -590,7 +590,10 @@ func DefaultBootedFixtureConfig() BootedFixtureConfig {
 }
 
 // NewArcBootedFixture returns a FixtureImpl for ARC
-// ARCEnabled() will always be added to the Chrome options returned by OptionsCallback.
+// ARCSupported() will be appended to the fixture if playStoreOptin is specified,
+// since it is necessary to use this option to enable the Play Store. Otherwise,
+// ARCEnabled() will be appended, which will enable ARC without the Play Store
+// and works for fake logins.
 func NewArcBootedFixture(arcBootedFixtureConfig BootedFixtureConfig) testing.FixtureImpl {
 	return &bootedFixture{
 		enableUIAutomator: arcBootedFixtureConfig.EnableUIAutomator,
@@ -602,7 +605,12 @@ func NewArcBootedFixture(arcBootedFixtureConfig BootedFixtureConfig) testing.Fix
 			if err != nil {
 				return nil, err
 			}
-			return append(opts, chrome.ARCEnabled(), chrome.ExtraArgs("--disable-features=ArcResizeLock")), nil
+			if arcBootedFixtureConfig.PlayStoreOptin {
+				opts = append(opts, chrome.ARCSupported())
+			} else {
+				opts = append(opts, chrome.ARCEnabled())
+			}
+			return append(opts, chrome.ExtraArgs("--disable-features=ArcResizeLock")), nil
 		},
 	}
 }
