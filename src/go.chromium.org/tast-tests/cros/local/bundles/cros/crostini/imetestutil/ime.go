@@ -75,11 +75,32 @@ func setHiraganaMode(ui *uiauto.Context) uiauto.Action {
 	// The IME menu tray should exist by default when a new IMEs are added.
 	imeMenuTrayButtonFinder := nodewith.Name("IME menu button").Role(role.Button)
 	hiraganaOptionFinder := nodewith.Name("Hiragana").Role(role.CheckBox)
-	return uiauto.Combine("set Japanese input to hiragana mode via IME tray",
-		ui.DoDefault(imeMenuTrayButtonFinder),
-		ui.DoDefault(hiraganaOptionFinder),
-		ui.WithTimeout(time.Second).WaitUntilGone(hiraganaOptionFinder),
+	// Set and check the hiragana mode is set.
+	return uiauto.Combine("set hiragana mode",
+		uiauto.IfFailThen(
+			// If Hiragana is selected, skip to next step.
+			uiauto.Combine("check that hiragana option is selected in the IME tray",
+				ui.DoDefault(imeMenuTrayButtonFinder),
+				ui.WaitUntilCheckedState(hiraganaOptionFinder, true),
+			),
+			// If Hiragana is not selected, attempt to select it a few times.
+			uiauto.Retry(5,
+				uiauto.Combine("set Japanese input to hiragana mode, and retry 5 times or until successful",
+					ui.DoDefault(hiraganaOptionFinder),
+					ui.WithTimeout(time.Second).WaitUntilGone(hiraganaOptionFinder),
+					// Open and check again.
+					ui.DoDefault(imeMenuTrayButtonFinder),
+					ui.WaitUntilCheckedState(hiraganaOptionFinder, true),
+				),
+			),
+		),
+		// Hiragana is selected now, so click the menu to close the options.
+		uiauto.Combine("close the input options",
+			ui.DoDefault(imeMenuTrayButtonFinder),
+			ui.WithTimeout(time.Second).WaitUntilGone(hiraganaOptionFinder),
+		),
 	)
+
 }
 
 // ResetToDefaultIME can be called to reset the input method back to default (EnglishUS) at the end of a test. If it fails, it will only log the error, and not return an error so the test will NOT fail.
