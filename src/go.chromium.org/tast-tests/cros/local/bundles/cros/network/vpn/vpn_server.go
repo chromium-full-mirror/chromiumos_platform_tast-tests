@@ -23,8 +23,10 @@ const logName = "vpnlogs.txt"
 
 // Constants that used by the L2TP/IPsec and IKEv2 server.
 const (
-	caCertFile            = "etc/swanctl/x509ca/ca.cert"
-	charonCommand         = "/usr/libexec/ipsec/charon"
+	caCertFile = "etc/swanctl/x509ca/ca.cert"
+	// OPENSSL_CONF=/etc/ssl/openssl.cnf.compat is set so charon can use MD4 for
+	// MSCHAPV2.
+	charonCommand         = "sh -c 'OPENSSL_CONF=/etc/ssl/openssl.cnf.compat exec /usr/libexec/ipsec/charon'"
 	charonLogFile         = "var/log/charon.log"
 	charonPidFile         = "run/ipsec/charon.pid"
 	chapUser              = "chapuser"
