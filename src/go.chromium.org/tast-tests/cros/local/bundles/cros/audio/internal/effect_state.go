@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -40,8 +41,8 @@ func (s EffectState) String() string {
 	}
 }
 
-func amixerCget(ctx context.Context, arg string) (EffectState, error) {
-	bout, berr, err := testexec.CommandContext(ctx, "amixer", "-c0", "cget", arg).SeparatedOutput()
+func amixerCget(ctx context.Context, cardID, arg string) (EffectState, error) {
+	bout, berr, err := testexec.CommandContext(ctx, "amixer", "-c"+cardID, "cget", arg).SeparatedOutput()
 	stdout := string(bout)
 	stderr := string(berr)
 	if err != nil {
@@ -65,16 +66,29 @@ func amixerCget(ctx context.Context, arg string) (EffectState, error) {
 
 // DSPNoiseCancellationState tells whether DSP effects are active.
 func DSPNoiseCancellationState(ctx context.Context) (EffectState, error) {
-	// Control used by redrix and friends.
-	result, err := amixerCget(ctx, "name='RTNR10.0 rtnr_enable_10'")
+	cards, err := audio.GetSoundCards()
 	if err != nil {
-		return result, err
+		return EffectUnavailable, errors.Wrap(err, "failed to GetSoundCards()")
 	}
-	if result == EffectUnavailable {
-		// Try again for dojo.
-		result, err = amixerCget(ctx, "name='RTNR3.0 rtnr_enable_3'")
+
+	hasCardID := func(id string) bool {
+		for _, card := range cards {
+			if card.ID == id {
+				return true
+			}
+		}
+		return false
 	}
-	return result, err
+
+	// Control used by redrix and friends.
+	if id := "sofrt5682"; hasCardID(id) {
+		return amixerCget(ctx, id, "name='RTNR10.0 rtnr_enable_10'")
+	}
+	// Control used by dojo.
+	if id := "sofm8195m983905"; hasCardID(id) {
+		return amixerCget(ctx, id, "name='RTNR3.0 rtnr_enable_3'")
+	}
+	return EffectUnavailable, err
 }
 
 // CrasProcessingMonitor monitors the state of audio processing in CRAS.
