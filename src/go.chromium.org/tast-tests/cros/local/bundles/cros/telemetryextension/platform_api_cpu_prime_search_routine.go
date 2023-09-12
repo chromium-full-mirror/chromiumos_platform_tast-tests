@@ -89,7 +89,7 @@ func PlatformAPICPUPrimeSearchRoutine(ctx context.Context, s *testing.State) {
 		// "error", "cancelled", etc.) because we can't make assumptions about the DUT's
 		// state. "passed", and "failed" signal that the request successfully reached cros_healthd.
 		if resp.Status != "passed" && resp.Status != "failed" {
-			return errors.Errorf(`unexpected routine status: got %q; want "passed" or "failed" or "unsupported"`, resp.Status)
+			return errors.Errorf(`unexpected routine status: got %q; want "passed" or "failed"`, resp.Status)
 		}
 
 		return nil
