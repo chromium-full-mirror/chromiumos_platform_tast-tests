@@ -94,13 +94,18 @@ func NotificationImageDrag(ctx context.Context, s *testing.State) {
 	}
 	defer vkb.Close(ctx)
 
+	layout, err := input.KeyboardTopRowLayout(ctx, vkb)
+	if err != nil {
+		s.Fatal("Failed to get the keyboard top row layout: ", err)
+	}
+
 	ui := uiauto.New(tconn)
 	notificationImage := nodewith.ClassName("LargeImageView")
 
 	// Generate a screen capture notification then drag the notification image
 	// to the browser window.
 	if err := uiauto.Combine("drag the notification image to the browser",
-		vkb.AccelAction("Ctrl+F5"),
+		vkb.AccelAction("Ctrl+"+layout.SelectTask),
 		ui.WithTimeout(30*time.Second).WaitUntilExists(notificationImage),
 		ui.MousePress(mouse.LeftButton, notificationImage),
 		ui.MouseMoveTo(nodewith.ClassName("ContentsWebView").Role(role.WebView), 500*time.Millisecond),
