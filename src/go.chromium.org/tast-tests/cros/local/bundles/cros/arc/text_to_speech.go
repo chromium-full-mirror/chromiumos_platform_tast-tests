@@ -98,7 +98,7 @@ func TextToSpeech(ctx context.Context, s *testing.State) {
 				}
 				if (event.type === chrome.tts.EventType.CANCELLED ||
 				    event.type === chrome.tts.EventType.INTERRUPTED) {
-					reject(new Error("Unexpected event typpe: " + event.type));
+					reject(new Error("Unexpected event type: " + event.type));
 				}
 			}},
 			function()  {
