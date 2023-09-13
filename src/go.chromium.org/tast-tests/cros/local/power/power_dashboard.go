@@ -427,7 +427,7 @@ func CreatePowerLogDict(ctx context.Context, testName string, powerDict map[stri
 		// 	},
 		"timestamp": time.Now().Unix(),
 		"test":      testName,
-		"dut":       GetDeviceInfo(ctx, args...),
+		"dut":       FormatDeviceInfoForPowerLog(GetDeviceInfo(ctx, args...)),
 		"power":     powerDict,
 	}
 

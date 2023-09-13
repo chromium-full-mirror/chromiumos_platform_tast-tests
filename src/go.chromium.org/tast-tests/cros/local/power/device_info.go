@@ -10,83 +10,138 @@ import (
 	"strconv"
 	"strings"
 
+	pb "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 
 	"go.chromium.org/tast/core/testing"
 )
 
-// GetDeviceInfo returns a map that contains the information of the DUT.
-func GetDeviceInfo(ctx context.Context, args ...OptionalRecorderArg) map[string]interface{} {
-	board := util.GetBoard()
-	platform := util.GetPlatform(ctx)
+// GetDeviceInfo returns a struct that contains the information of the DUT.
+func GetDeviceInfo(ctx context.Context, args ...OptionalRecorderArg) *pb.DeviceInfo {
+	devInfo := new(pb.DeviceInfo)
+	*devInfo = pb.DeviceInfo{
+		Board:                    util.GetBoard(),
+		Platform:                 util.GetPlatform(ctx),
+		HasHammer:                util.HasHammer(ctx),
+		HardwareRevision:         util.GetHardwareRevision(ctx),
+		ChromeosReleaseMilestone: util.GetChromeOSReleaseMilestone(),
+		ChromeosReleaseVersion:   util.GetChromeOSReleaseVersion(),
+		FirmwareVersion:          util.GetFirmwareVersion(ctx),
+		EcVersion:                util.GetECVersion(ctx),
+		KernelVersion:            util.GetKernelVersion(ctx),
+		DashboardNote:            getNote(args),
+		CpuName:                  util.GetCPUName(ctx),
+		MemorySize:               util.GetMemTotalGB(ctx),
+		DiskSize:                 util.GetDiskSizeGB(ctx, util.GetRootDevice(ctx)),
+		ScreenResolution:         util.GetScreenResolution(ctx),
+		HardwareId:               util.GetHardwareID(ctx),
+		CpuCount:                 util.GetCPUNum(),
+		CoreCount:                util.GetCPUCore(ctx),
+		ThreadCountPerCpu:        util.GetCPUThreads(ctx),
+		CpuVendor:                util.GetCPUVendor(ctx),
+		CpuCacheSize:             util.GetCPUCacheSize(ctx),
+		GpuModel:                 util.GetGPUModel(ctx),
+		MemoryType:               util.GetMemoryType(ctx),
+		MemoryFrequency:          util.GetMemoryFrequency(ctx),
+		StorageType:              util.GetStorageType(ctx),
+		ScreenSize:               util.GetScreenSize(ctx),
+		ScreenRefreshRate:        util.GetScreenRefreshRate(ctx),
+	}
+
+	if path, err := SysfsBatteryPath(ctx); err == nil {
+		if val, err := LowBatteryShutdownPercent(ctx); err == nil {
+			devInfo.BatteryShutdownPercent = new(float64)
+			*devInfo.BatteryShutdownPercent = val
+		} else {
+			testing.ContextLog(ctx, "Invalid battery_shutdown_percent: ", err)
+		}
+
+		if val, err := ReadBatteryDesignEnergySize(ctx, path); err == nil {
+			devInfo.BatterySize = new(float64)
+			*devInfo.BatterySize = val
+		} else {
+			testing.ContextLog(ctx, "Invalid battery_size: ", err)
+		}
+	}
+
+	if val := util.GetChromeOSChannel(); val != "" {
+		devInfo.ChromeosChannel = new(string)
+		*devInfo.ChromeosChannel = val
+	}
+
+	return devInfo
+}
+
+// FormatDeviceInfoForPowerLog create a map with specific keys used by power dashboard.
+func FormatDeviceInfoForPowerLog(devInfo *pb.DeviceInfo) map[string]interface{} {
+	board := devInfo.Board
+	platform := devInfo.Platform
+
 	if !strings.HasPrefix(platform, board) {
 		board += "_" + platform
 	}
-	if util.HasHammer(ctx) {
+	if devInfo.HasHammer {
 		board += "_hammer"
+	}
+
+	versionMap := map[string]interface{}{
+		"hw":        devInfo.HardwareRevision,
+		"milestone": devInfo.ChromeosReleaseMilestone,
+		"os":        devInfo.ChromeosReleaseVersion,
+		"channel":   nil,
+		"firmware":  devInfo.FirmwareVersion,
+		"ec":        devInfo.EcVersion,
+		"kernel":    devInfo.KernelVersion,
+	}
+
+	if devInfo.ChromeosChannel != nil {
+		versionMap["channel"] = *devInfo.ChromeosChannel
+	}
+
+	skuMap := map[string]interface{}{
+		"cpu":                      devInfo.CpuName,
+		"memory_size":              devInfo.MemorySize,
+		"storage_size":             devInfo.DiskSize,
+		"display_resolution":       devInfo.ScreenResolution,
+		"hwid":                     devInfo.HardwareId,
+		"cpu_count":                devInfo.CpuCount,
+		"cpu_cores":                devInfo.CoreCount,
+		"cpu_threads":              devInfo.ThreadCountPerCpu,
+		"cpu_vendor":               devInfo.CpuVendor,
+		"cpu_cache":                devInfo.CpuCacheSize,
+		"gpu":                      devInfo.GpuModel,
+		"memory_type":              devInfo.MemoryType,
+		"memory_frequency":         devInfo.MemoryFrequency,
+		"storage_type":             devInfo.StorageType,
+		"screen_size":              devInfo.ScreenSize,
+		"screen_refresh_rate":      devInfo.ScreenRefreshRate,
+		"battery_shutdown_percent": nil,
+		"battery_size":             nil,
+	}
+
+	if devInfo.BatteryShutdownPercent != nil {
+		skuMap["battery_shutdown_percent"] = *devInfo.BatteryShutdownPercent
+	}
+
+	if devInfo.BatterySize != nil {
+		skuMap["battery_size"] = *devInfo.BatterySize
+	}
+
+	inaMap := map[string]interface{}{
+		"version": 0,
+		// TODO: Add 'ina' : power_rails.
 	}
 
 	// When you add keys to this schema, please also make sure the corresponding
 	// unit test is covered in DeviceInfoUtilCheck().
-	deviceInfo := map[string]interface{}{
-		"board": board,
-		"version": map[string]interface{}{
-			"hw":        util.GetHardwareRevision(ctx),
-			"milestone": util.GetChromeOSReleaseMilestone(),
-			"os":        util.GetChromeOSReleaseVersion(),
-			"firmware":  util.GetFirmwareVersion(ctx),
-			"ec":        util.GetECVersion(ctx),
-			"kernel":    util.GetKernelVersion(ctx),
-		},
-		"ina": map[string]interface{}{
-			"version": 0,
-			// TODO: Add 'ina' : power_rails.
-		},
-		// pdash_note: note to annotate results on the dashboard.
-		"note": getNote(args),
+	return map[string]interface{}{
+		"board":   board,
+		"version": versionMap,
+		"sku":     skuMap,
+		"ina":     inaMap,
+		// note: note to annotate results on the dashboard.
+		"note": devInfo.DashboardNote,
 	}
-
-	channel := util.GetChromeOSChannel()
-	if channel == "" {
-		deviceInfo["version"].(map[string]interface{})["channel"] = nil
-	} else {
-		deviceInfo["version"].(map[string]interface{})["channel"] = channel
-	}
-
-	skuMap := map[string]interface{}{
-		"cpu":                 util.GetCPUName(ctx),
-		"memory_size":         util.GetMemTotalGB(ctx),
-		"storage_size":        util.GetDiskSizeGB(ctx, util.GetRootDevice(ctx)),
-		"display_resolution":  util.GetScreenResolution(ctx),
-		"hwid":                util.GetHardwareID(ctx),
-		"cpu_count":           util.GetCPUNum(),
-		"cpu_cores":           util.GetCPUCore(ctx),
-		"cpu_threads":         util.GetCPUThreads(ctx),
-		"cpu_vendor":          util.GetCPUVendor(ctx),
-		"cpu_cache":           util.GetCPUCacheSize(ctx),
-		"gpu":                 util.GetGPUModel(ctx),
-		"memory_type":         util.GetMemoryType(ctx),
-		"memory_frequency":    util.GetMemoryFrequency(ctx),
-		"storage_type":        util.GetStorageType(ctx),
-		"screen_size":         util.GetScreenSize(ctx),
-		"screen_refresh_rate": util.GetScreenRefreshRate(ctx),
-	}
-
-	if batteryPath, err := SysfsBatteryPath(ctx); err == nil {
-		shutdownPercent, err := LowBatteryShutdownPercent(ctx)
-		if err != nil {
-			testing.ContextLog(ctx, "Invalid battery_shutdown_percent: ", err)
-		}
-		skuMap["battery_shutdown_percent"] = shutdownPercent
-
-		batterySize, err := ReadBatteryDesignEnergySize(ctx, batteryPath)
-		if err != nil {
-			testing.ContextLog(ctx, "Invalid battery_size: ", err)
-		}
-		skuMap["battery_size"] = batterySize
-	}
-	deviceInfo["sku"] = skuMap
-	return deviceInfo
 }
 
 // DeviceInfoUtilCheck is a unit test for power/util. Return a list of util reads that
@@ -118,7 +173,7 @@ func DeviceInfoUtilCheck(ctx context.Context) []string {
 	numberCheck := []string{"cpu_count", "cpu_cores", "cpu_cores", "cpu_threads",
 		"memory_size", "storage_size"}
 
-	deviceInfo := GetDeviceInfo(ctx)
+	deviceInfo := FormatDeviceInfoForPowerLog(GetDeviceInfo(ctx))
 
 	// board name should not be empty.
 	const boardPattern = `\S+`
@@ -149,9 +204,9 @@ func DeviceInfoUtilCheck(ctx context.Context) []string {
 	// read check for numbers.
 	for _, key := range numberCheck {
 		if readResult, ok := deviceInfo["sku"].(map[string]interface{})[key]; ok {
-			// readResult as an interface{} could be int, int64 or float64.
-			if num, typeOk := readResult.(int); typeOk && num <= 0 {
-				failed = append(failed, key+": "+strconv.Itoa(num))
+			// readResult as an interface{} could be int32, int64 or float64.
+			if num, typeOk := readResult.(int32); typeOk && num <= 0 {
+				failed = append(failed, key+": "+strconv.FormatInt(int64(num), 10))
 			}
 			if num, typeOk := readResult.(int64); typeOk && num <= 0 {
 				failed = append(failed, key+": "+strconv.FormatInt(num, 10))
@@ -174,9 +229,9 @@ func DeviceInfoUtilCheck(ctx context.Context) []string {
 		if !re.MatchString(readResult) {
 			failed = append(failed, "screen_size"+": "+readResult)
 		}
-		rate := deviceInfo["sku"].(map[string]interface{})["screen_refresh_rate"].(int)
+		rate := deviceInfo["sku"].(map[string]interface{})["screen_refresh_rate"].(int32)
 		if rate <= 0 {
-			failed = append(failed, "screen_refresh_rate"+": "+strconv.Itoa(rate))
+			failed = append(failed, "screen_refresh_rate"+": "+strconv.FormatInt(int64(rate), 10))
 		}
 	}
 

@@ -381,13 +381,13 @@ func GetCPUName(ctx context.Context) string {
 }
 
 // GetCPUNum returns the number of CPUs.
-func GetCPUNum() int {
-	return runtime.NumCPU()
+func GetCPUNum() int32 {
+	return int32(runtime.NumCPU())
 }
 
 // GetCPUCore returns the number of cores per CPU according to lscpu.
 // A returning of 0 means invalid.
-func GetCPUCore(ctx context.Context) int {
+func GetCPUCore(ctx context.Context) int32 {
 	const cmd1 = "lscpu | grep 'Core(s)' | cut -d ':' -f 2"
 	const cmd2 = "lscpu | grep 'Socket(s)' | cut -d ':' -f 2"
 	readResult1, err1 := testexec.CommandContext(ctx, "bash", "-c", cmd1).Output()
@@ -411,12 +411,12 @@ func GetCPUCore(ctx context.Context) int {
 		}
 		sum += singleCoresPerSocket * singleSocket
 	}
-	return int(sum)
+	return int32(sum)
 }
 
 // GetCPUThreads return the threads per CPU.
 // Minimum return is 1.
-func GetCPUThreads(ctx context.Context) int {
+func GetCPUThreads(ctx context.Context) int32 {
 	path := "/sys/devices/system/cpu/present"
 	readResult, err := testexec.CommandContext(ctx, "cat", path).Output()
 	if err != nil {
@@ -434,7 +434,7 @@ func GetCPUThreads(ctx context.Context) int {
 		testing.ContextLog(ctx, "Failed to parse thread numbers")
 		return 1
 	}
-	return int(num + 1)
+	return int32(num + 1)
 }
 
 // GetCPUVendor returns the vendor of CPU.
@@ -517,7 +517,7 @@ func GetMemoryType(ctx context.Context) string {
 }
 
 // GetMemoryFrequency returns the memory frequency in MT/s.
-func GetMemoryFrequency(ctx context.Context) int {
+func GetMemoryFrequency(ctx context.Context) int32 {
 	cmd := "dmidecode --type memory | grep $'\tSpeed:' | uniq | cut -d ':' -f 2"
 	readResult, err := testexec.CommandContext(ctx, "bash", "-c", cmd).Output()
 	if err != nil || !strings.Contains(string(readResult), "MT") {
@@ -530,7 +530,7 @@ func GetMemoryFrequency(ctx context.Context) int {
 		testing.ContextLog(ctx, "Failed to parse memory frequency")
 		return 0
 	}
-	return int(num)
+	return int32(num)
 }
 
 // GetStorageType returns the storage type according to rootdev.
@@ -578,7 +578,7 @@ func min(a, b int) int {
 }
 
 // GetScreenRefreshRate returns the screen refresh rate in Hz.
-func GetScreenRefreshRate(ctx context.Context) int {
+func GetScreenRefreshRate(ctx context.Context) int32 {
 	if !HasScreen(ctx) {
 		return 0
 	}
@@ -610,7 +610,7 @@ func GetScreenRefreshRate(ctx context.Context) int {
 				testing.ContextLog(ctx, "Failed to get screen refresh rate")
 				return 0
 			}
-			return int(math.Round(findResult))
+			return int32(math.Round(findResult))
 		}
 	}
 	testing.ContextLog(ctx, "Failed to get screen refresh rate")
