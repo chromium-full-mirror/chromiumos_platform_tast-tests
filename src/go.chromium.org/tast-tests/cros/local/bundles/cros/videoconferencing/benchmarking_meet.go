@@ -28,17 +28,19 @@ import (
 )
 
 type meetParams struct {
-	appBlur              bool
-	appLiveCaptions      bool
-	appRelight           bool
-	platformBlur         bool
-	platformLiveCaptions bool
-	platformRelight      bool
-	platformFraming      bool
-	muteAudio            bool
-	modelType            effects.ModelType
-	botCount             int
-	botsOptions          []bond.AddBotsOption
+	appBlur                   bool
+	appLiveCaptions           bool
+	appRelight                bool
+	platformBlur              bool
+	platformLiveCaptions      bool
+	platformRelight           bool
+	platformFraming           bool
+	platformNoiseCancellation bool
+	muteAudio                 bool
+	enableMic                 bool
+	modelType                 effects.ModelType
+	botCount                  int
+	botsOptions               []bond.AddBotsOption
 }
 
 const botDuration = 7 * time.Minute
@@ -194,6 +196,13 @@ func init() {
 					platformFraming: true,
 				},
 			},
+			{
+				Name: "platform_noise_cancellation_720p",
+				Val: meetParams{
+					platformNoiseCancellation: true,
+					enableMic:                 true,
+				},
+			},
 		},
 	})
 }
@@ -309,19 +318,30 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 	}
 
 	if param.platformFraming {
-		s.Log("Toggling platform level effects from vctray")
+		s.Log("Enabling Platform Framing from vctray")
 		vct := vctray.New(ctx, tconn)
 		if err := vct.ChangeSettingsInPanel(
 			vct.SetCameraFraming(param.platformFraming),
 		)(ctx); err != nil {
-			s.Fatal("Failed to configure platform VC effects: ", err)
+			s.Fatal("Failed to enable Platform Framing: ", err)
 		}
 	}
+
+	if param.platformNoiseCancellation {
+		s.Log("Enabling Noise Cancellation from vctray")
+		vct := vctray.New(ctx, tconn)
+		if err := vct.ChangeSettingsInPanel(
+			vct.SetNoiseCancellation(param.platformNoiseCancellation),
+		)(ctx); err != nil {
+			s.Fatal("Failed to enable Noise Cancellation: ", err)
+		}
+	}
+
 	defer gm.Close(closeCtx)
 
 	// Configure Meeting.
 	if err := uiauto.Combine("Configure Google Meet",
-		gm.MuteIfMicAvailable,
+		gm.SwitchMicrophone(param.enableMic),
 		gm.SwitchCaptions(param.appLiveCaptions),
 		gm.ChangeSettings(
 			gm.SetLeaveEmptyCalls(false),
