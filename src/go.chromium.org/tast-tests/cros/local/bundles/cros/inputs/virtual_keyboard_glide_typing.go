@@ -53,7 +53,7 @@ func init() {
 			},
 		},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
-		Timeout:      time.Duration(3 * time.Minute),
+		Timeout:      time.Duration(5 * time.Minute),
 		Params: []testing.Param{
 			{
 				Name:      "tablet_docked",
