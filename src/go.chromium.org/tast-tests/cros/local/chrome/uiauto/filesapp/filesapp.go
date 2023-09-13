@@ -161,8 +161,9 @@ func App(ctx context.Context, tconn *chrome.TestConn, appID string) (*FilesApp, 
 		caller.Check(2, []string{"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filepicker"})
 	}
 
-	// Create a uiauto.Context with default timeout.
-	ui := uiauto.New(tconn).WithInterval(500 * time.Millisecond)
+	// Create a uiauto.Context with double timeout, since web app (like Files.app)
+	// is slow on slow builders (eg. debug builder, dcheck builder)..
+	ui := uiauto.New(tconn).WithInterval(500 * time.Millisecond).WithTimeout(120 * time.Second)
 
 	// The child folders of My Files in the navigation tree are loaded in
 	// asynchronously meaning any clicks in the navigation tree at startup
