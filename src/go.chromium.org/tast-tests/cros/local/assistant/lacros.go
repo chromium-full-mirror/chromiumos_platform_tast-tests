@@ -45,7 +45,7 @@ func init() {
 		Parent: "assistantLacrosBase",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
-				Chrome: s.ParentValue().(*chrome.Chrome),
+				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
 			}
 		}),
 		PreTestTimeout:  preTestTimeout,

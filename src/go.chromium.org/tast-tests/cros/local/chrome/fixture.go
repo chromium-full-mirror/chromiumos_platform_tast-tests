@@ -468,14 +468,47 @@ type OptionsCallback func(ctx context.Context, s *testing.FixtState) ([]Option, 
 // If the parent is specified, and the parent returns a value of []Option, it
 // will also add those options when starting Chrome.
 type loggedInFixture struct {
-	cr        *Chrome
-	fOpt      OptionsCallback  // Function to generate Chrome Options
-	logMarker *logsaver.Marker // Marker for per-test log.
+	parentState func(s *testing.FixtState) interface{}
+	cr          *Chrome
+	fOpt        OptionsCallback  // Function to generate Chrome Options
+	logMarker   *logsaver.Marker // Marker for per-test log.
 }
 
-// NewLoggedInFixture returns a FixtureImpl with a OptionsCallback function to provide Chrome options.
+type loggedInFixtureState struct {
+	parentState interface{}
+	cr          *Chrome
+}
+
+// HasParentState allows for the retrieval of some state provided by parent
+// fixture.
+type HasParentState interface {
+	// ParentState returns the fixture state of the parent fixture.
+	ParentState() interface{}
+}
+
+// Chrome function, part of HasChrome, returns the Chrome object.
+func (f *loggedInFixtureState) Chrome() *Chrome {
+	return f.cr
+}
+
+// ParentState, implementation of HasParentState, returns the parent fixture
+// state.
+func (f *loggedInFixtureState) ParentState() interface{} {
+	return f.parentState
+}
+
+// NewLoggedInFixture returns a FixtureImpl with a OptionsCallback function to
+// provide Chrome options.
 func NewLoggedInFixture(fOpt OptionsCallback) testing.FixtureImpl {
 	return &loggedInFixture{fOpt: fOpt}
+}
+
+// NewLoggedInFixtureWithParentState returns a FixtureImpl with a OptionsCallback function to provide Chrome options, as well as some state provided by the parent fixture.
+func NewLoggedInFixtureWithParentState(ps func(s *testing.FixtState) interface{}, fOpt OptionsCallback) testing.FixtureImpl {
+	return &loggedInFixture{
+		parentState: ps,
+		fOpt:        fOpt,
+	}
 }
 
 func (f *loggedInFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -489,6 +522,11 @@ func (f *loggedInFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	// If there's a parent fixture and the fixture supplies extra options, use them.
 	if extraOpts, ok := s.ParentValue().([]Option); ok {
 		opts = append(opts, extraOpts...)
+	}
+
+	var parentState interface{}
+	if f.parentState != nil {
+		parentState = f.parentState(s)
 	}
 
 	crOpts, err := f.fOpt(ctx, s)
@@ -505,7 +543,10 @@ func (f *loggedInFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	Lock()
 	f.cr = cr
-	return cr
+	return &loggedInFixtureState{
+		parentState: parentState,
+		cr:          cr,
+	}
 }
 
 func (f *loggedInFixture) TearDown(ctx context.Context, s *testing.FixtState) {

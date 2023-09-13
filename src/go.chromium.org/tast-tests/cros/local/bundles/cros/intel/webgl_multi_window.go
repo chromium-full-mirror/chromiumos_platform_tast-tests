@@ -59,7 +59,7 @@ func init() {
 }
 
 func WebGLMultiWindow(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	t := s.Param().(int)
 
 	tconn, err := cr.TestAPIConn(ctx)

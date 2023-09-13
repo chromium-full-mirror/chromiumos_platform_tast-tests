@@ -127,7 +127,7 @@ func init() {
 		Parent:          "chromeLoggedInWithPasspoint",
 		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
 			return ShillSimulatedWiFi{
-				Chrome: s.ParentValue().(*chrome.Chrome),
+				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
 			}
 		}),
 	})

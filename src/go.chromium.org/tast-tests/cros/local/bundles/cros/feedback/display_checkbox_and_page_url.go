@@ -47,7 +47,7 @@ func init() {
 // DisplayCheckboxAndPageURL verifies the url matches the current website from where
 // user opens the Feedback app and the checkbox should be checked by default.
 func DisplayCheckboxAndPageURL(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

@@ -116,7 +116,7 @@ var testSetups = []scanning.TestingStruct{
 }
 
 func LargePaperScans(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	var scannerParams = scanning.ScannerStruct{
 		Descriptors: scanning.Descriptors,

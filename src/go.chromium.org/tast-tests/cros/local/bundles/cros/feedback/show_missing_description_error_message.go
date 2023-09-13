@@ -46,7 +46,7 @@ func init() {
 // ShowMissingDescriptionErrorMessage verifies the user click continue button
 // with no issue description will show error message. Now enter text, error message will disappear.
 func ShowMissingDescriptionErrorMessage(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

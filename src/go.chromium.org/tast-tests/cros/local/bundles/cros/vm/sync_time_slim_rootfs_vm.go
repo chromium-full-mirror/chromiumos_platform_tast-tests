@@ -28,7 +28,7 @@ func init() {
 }
 
 func SyncTimeSlimRootfsVM(ctx context.Context, s *testing.State) {
-	concierge, err := vm.NewConcierge(ctx, s.FixtValue().(*chrome.Chrome).NormalizedUser())
+	concierge, err := vm.NewConcierge(ctx, s.FixtValue().(chrome.HasChrome).Chrome().NormalizedUser())
 	if err != nil {
 		s.Error("Failed to get concierge instance: ", err)
 	}

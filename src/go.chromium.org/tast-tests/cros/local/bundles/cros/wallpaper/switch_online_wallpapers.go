@@ -45,7 +45,7 @@ func init() {
 // SwitchOnlineWallpapers tests the flow of rapidly switching online wallpapers from the same
 // collection and make sure the correct one is displayed.
 func SwitchOnlineWallpapers(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

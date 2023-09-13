@@ -49,7 +49,7 @@ func init() {
 
 // LaunchAppFromGuestSession verifies launching an app from guest mode.
 func LaunchAppFromGuestSession(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// Attempt to open the Test API connection.
 	tconn, err := cr.TestAPIConn(ctx)

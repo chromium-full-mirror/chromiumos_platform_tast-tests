@@ -64,7 +64,7 @@ func SelinuxViolation(ctx context.Context, s *testing.State) {
 	opt := crash.WithMockConsent()
 	useConsent := s.Param().(crash.ConsentType)
 	if useConsent == crash.RealConsent {
-		opt = crash.WithConsent(s.FixtValue().(*chrome.Chrome))
+		opt = crash.WithConsent(s.FixtValue().(chrome.HasChrome).Chrome())
 	}
 	if err := crash.SetUpCrashTest(ctx, opt); err != nil {
 		s.Fatal("SetUpCrashTest failed: ", err)

@@ -81,7 +81,7 @@ func (f *dlcFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 	terminaDLCDir := infoList[0].RootMount
 
 	return FixtData{
-		Chrome: s.ParentValue().(*chrome.Chrome),
+		Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
 		Kernel: filepath.Join(terminaDLCDir, "vm_kernel"),
 		Rootfs: filepath.Join(terminaDLCDir, "vm_rootfs.img"),
 	}

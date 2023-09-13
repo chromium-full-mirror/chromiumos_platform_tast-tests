@@ -47,7 +47,7 @@ func init() {
 // VerifyUserEmailIsDisplayedAndSelectedByDefault verifies user email is
 // displayed and selected by default.
 func VerifyUserEmailIsDisplayedAndSelectedByDefault(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

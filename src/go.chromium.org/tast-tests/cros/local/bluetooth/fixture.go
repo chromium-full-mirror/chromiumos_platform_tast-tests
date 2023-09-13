@@ -195,7 +195,7 @@ func (*bluetoothEnabledFixt) PostTest(ctx context.Context, s *testing.FixtTestSt
 
 // SetUp is called before any tests using this fixture are run to perform fixture setup.
 func (f *bluetoothEnabledFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	f.chrome = s.ParentValue().(*chrome.Chrome)
+	f.chrome = s.ParentValue().(chrome.HasChrome).Chrome()
 
 	getTestAPIConn := f.chrome.TestAPIConn
 	if f.isOobe {

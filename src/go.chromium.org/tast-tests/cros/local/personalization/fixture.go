@@ -240,7 +240,7 @@ type clamshellFixture struct {
 }
 
 func (f *clamshellFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	cr := s.ParentValue().(*chrome.Chrome)
+	cr := s.ParentValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

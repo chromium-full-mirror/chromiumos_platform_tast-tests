@@ -47,7 +47,7 @@ func init() {
 
 // ShortcutOnKeyboardPluggedIn verifies shortcut will change when an external keyboard is plugged in.
 func ShortcutOnKeyboardPluggedIn(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

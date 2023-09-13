@@ -42,7 +42,7 @@ func init() {
 // DeviceTrackpointEnabled verifies the trackpoint row exists in device page
 // when the chromebook has trackpoint enabled.
 func DeviceTrackpointEnabled(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome).Chrome()
+	cr := s.FixtValue().(chrome.HasChrome).Chrome().Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

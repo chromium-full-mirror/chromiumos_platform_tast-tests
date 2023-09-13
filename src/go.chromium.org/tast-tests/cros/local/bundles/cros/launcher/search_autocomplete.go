@@ -87,7 +87,7 @@ func init() {
 // SearchAutocomplete checks launcher search box behavior for autocompleting
 // for highest ranked result.
 func SearchAutocomplete(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

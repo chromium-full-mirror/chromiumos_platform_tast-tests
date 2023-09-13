@@ -195,7 +195,7 @@ func init() {
 		Parent: "assistantBase",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
-				Chrome: s.ParentValue().(*chrome.Chrome),
+				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
 			}
 		}),
 		PreTestTimeout:  preTestTimeout,
@@ -212,7 +212,7 @@ func init() {
 		Parent: "assistantBaseQsRevampEnabledWithGaia",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
-				Chrome: s.ParentValue().(*chrome.Chrome),
+				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
 			}
 		}),
 		PreTestTimeout:  preTestTimeout,
@@ -229,7 +229,7 @@ func init() {
 		Parent: "assistantBaseWithStartAudioDecoderOnDemand",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
-				Chrome: s.ParentValue().(*chrome.Chrome),
+				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
 			}
 		}),
 		PreTestTimeout:  preTestTimeout,
@@ -302,7 +302,7 @@ func init() {
 		Parent: "assistantBaseWithHotword",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
-				Chrome: s.ParentValue().(*chrome.Chrome),
+				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
 			}
 		}),
 		PreTestTimeout:  preTestTimeout,
@@ -357,7 +357,7 @@ func init() {
 		Parent: "assistantBaseWithGaia",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
-				Chrome: s.ParentValue().(*chrome.Chrome),
+				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
 			}
 		}),
 		PreTestTimeout:  preTestTimeout,

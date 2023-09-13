@@ -79,7 +79,7 @@ func muteUnmuteVolume(ctx context.Context, tconn *chrome.TestConn, vh *audio.Hel
 
 // VolumeSlider tests that the volume slider can be adjusted up and down.
 func VolumeSlider(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)

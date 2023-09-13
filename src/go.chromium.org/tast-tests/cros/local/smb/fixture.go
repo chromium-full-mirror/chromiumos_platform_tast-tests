@@ -76,7 +76,7 @@ type fixture struct {
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	success := false
 	if f.startChrome {
-		f.cr = s.ParentValue().(*chrome.Chrome)
+		f.cr = s.ParentValue().(chrome.HasChrome).Chrome()
 	}
 	defer func() {
 		if !success {

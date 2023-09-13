@@ -45,7 +45,7 @@ func init() {
 // VerifyScreenshotCheckboxStateChange verifies the default state for screenshot checkbox
 // is unchecked and user can check it to change the state.
 func VerifyScreenshotCheckboxStateChange(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

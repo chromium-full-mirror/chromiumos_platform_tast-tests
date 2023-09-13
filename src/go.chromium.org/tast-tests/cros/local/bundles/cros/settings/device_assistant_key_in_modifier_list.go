@@ -42,7 +42,7 @@ func init() {
 // DeviceAssistantKeyInModifierList verifies the keyboard modifier remapping
 // displays the assistant key row when device supports assistant key.
 func DeviceAssistantKeyInModifierList(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome).Chrome()
+	cr := s.FixtValue().(chrome.HasChrome).Chrome().Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

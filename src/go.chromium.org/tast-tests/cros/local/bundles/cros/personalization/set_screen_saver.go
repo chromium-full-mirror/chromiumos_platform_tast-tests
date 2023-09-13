@@ -84,7 +84,7 @@ func init() {
 }
 
 func SetScreenSaver(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	testParams := s.Param().(ambient.TestParams)
 	if err := ambient.SetScreenSaverHelper(ctx, cr, testParams, s.OutDir(), s.HasError); err != nil {
 		s.Fatal("Fail to set screen saver: ", err)

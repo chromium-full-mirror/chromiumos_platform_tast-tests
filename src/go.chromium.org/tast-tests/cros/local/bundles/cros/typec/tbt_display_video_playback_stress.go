@@ -88,7 +88,7 @@ func TBTDisplayVideoPlaybackStress(ctx context.Context, s *testing.State) {
 		playingState      = 1 // Playing state of the Youtube player.
 	)
 
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	// Config file which contains expected values of USB4/TBT parameters.
 	const testConfig = "test_config.json"
 	// TBT port ID in the DUT.

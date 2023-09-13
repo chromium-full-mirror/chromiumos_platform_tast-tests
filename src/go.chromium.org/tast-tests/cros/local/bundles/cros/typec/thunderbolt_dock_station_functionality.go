@@ -64,7 +64,7 @@ func ThunderboltDockStationFunctionality(ctx context.Context, s *testing.State) 
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// Config file which contains expected values of USB4/TBT parameters.
 	const testConfig = "test_config.json"

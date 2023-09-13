@@ -83,7 +83,7 @@ func init() {
 
 func WebCodecsDecode(ctx context.Context, s *testing.State) {
 	args := s.Param().(webcodecs.TestDecodeArgs)
-	if err := webcodecs.RunDecodeTest(ctx, s.FixtValue().(*chrome.Chrome),
+	if err := webcodecs.RunDecodeTest(ctx, s.FixtValue().(chrome.HasChrome).Chrome(),
 		s.DataFileSystem(), args, s.DataPath(args.VideoFile+".json"), s.OutDir()); err != nil {
 		s.Error("Test failed: ", err)
 	}

@@ -43,7 +43,7 @@ func init() {
 
 // ShowEvents verifies that we can show the calendar event list view correctly.
 func ShowEvents(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

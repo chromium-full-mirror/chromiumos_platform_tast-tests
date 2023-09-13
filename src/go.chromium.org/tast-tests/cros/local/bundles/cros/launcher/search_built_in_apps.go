@@ -48,7 +48,7 @@ func init() {
 
 // SearchBuiltInApps searches for the Settings app in the Launcher.
 func SearchBuiltInApps(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	app := apps.Settings
 
 	cleanupCtx := ctx

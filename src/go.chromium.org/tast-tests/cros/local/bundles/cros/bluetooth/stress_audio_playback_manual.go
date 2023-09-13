@@ -62,7 +62,7 @@ func init() {
 // StressAudioPlaybackManual plays audio file over BT speaker for long duration.
 // Manual step: bluetooth.btDeviceName bluetooth device has to be set to pairing mode before executing test-script.
 func StressAudioPlaybackManual(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	testOpt := s.Param().(audioStress)
 
 	tconn, err := cr.TestAPIConn(ctx)

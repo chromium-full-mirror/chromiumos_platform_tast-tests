@@ -61,7 +61,7 @@ type FixtureData struct {
 }
 
 func (f *fixtureInstallPwa) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	f.cr = s.ParentValue().(*chrome.Chrome)
+	f.cr = s.ParentValue().(chrome.HasChrome).Chrome()
 	cr := f.cr
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
