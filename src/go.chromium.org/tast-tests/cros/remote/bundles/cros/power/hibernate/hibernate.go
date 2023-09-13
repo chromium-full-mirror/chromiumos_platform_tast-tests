@@ -127,8 +127,7 @@ func (t *Tester) PreHibernateSteps(ctx context.Context) {
 		t.waitHibermanResumeDone(ctxCycle)
 	}
 
-	// Check the kernel log for entries that indicate file system corruption.
-	t.checkForFileSystemCorruptions(ctxCycle)
+	t.checkForFileSystemCorruptions(ctx, t.getKernelLog(ctx))
 }
 
 // Logout logs a signed in user out of the system.
@@ -218,16 +217,21 @@ func (t *Tester) resumeFromHibernate(ctx context.Context) {
 }
 
 func (t *Tester) postResumeSteps(ctx context.Context) {
+	// Check the kernel log for entries that indicate file system corruption. Additionally,
+	// we will check for integrity errors. We do these checks first because we want to
+	// ensure that the original cause is found early rather than failing later
+	// due to a mismatched cycle id.
+	kernelLog := t.getKernelLog(ctx)
+	t.checkForFileSystemCorruptions(ctx, kernelLog)
+	t.checkforHibernateImageErrors(ctx, kernelLog)
+
 	// Verify that the hibernate cycle id that we wrote earlier to
 	// tmpfs can be read back.
 	t.verifyCycleID(ctx)
 
 	// Verify that the kernel log contains the expected entries for
 	// a hibernate/resume cycle
-	t.verifyKernelHibernateRestoreLogs(ctx)
-
-	// Check the kernel log for entries that indicate file system corruption.
-	t.checkForFileSystemCorruptions(ctx)
+	t.verifyKernelHibernateRestoreLogs(ctx, kernelLog)
 }
 
 func (t *Tester) loginToResume(ctx context.Context) {
@@ -279,7 +283,7 @@ func (t *Tester) reconnectDUT(ctx context.Context) {
 	}
 }
 
-func (t *Tester) checkForFileSystemCorruptions(ctx context.Context) {
+func (t *Tester) checkForFileSystemCorruptions(ctx context.Context, kernelLog string) {
 	fileCorruptionPatterns := []string{
 		"space map common: bitmap check failed:",
 		"sm_bitmap validator check failed",
@@ -300,8 +304,6 @@ func (t *Tester) checkForFileSystemCorruptions(ctx context.Context) {
 		"blk_update_request: I/O error",
 	}
 
-	kernelLog := t.getKernelLog(ctx)
-
 	re := regexp.MustCompile(strings.Join(fileCorruptionPatterns, "|"))
 	match := re.FindString(kernelLog)
 	if match != "" {
@@ -311,7 +313,22 @@ func (t *Tester) checkForFileSystemCorruptions(ctx context.Context) {
 	t.logger.Log("No file corruption log entries found")
 }
 
-func (t *Tester) verifyKernelHibernateRestoreLogs(ctx context.Context) {
+func (t *Tester) checkforHibernateImageErrors(ctx context.Context, kernelLog string) {
+	patterns := []string{
+		"Unrecognized hibernate image header format!",
+		"hibernation: Image mismatch: architecture specific data",
+		"dm-[0-9]+: INTEGRITY AEAD ERROR, sector [0-9]+",
+	}
+
+	re := regexp.MustCompile(strings.Join(patterns, "|"))
+	match := re.FindString(kernelLog)
+	if match != "" {
+		t.logger.Fatalf("the kernel log has entries that indicate an error: '%s'", match)
+	}
+	t.logger.Log("No unexpected kernel error entries were found")
+}
+
+func (t *Tester) verifyKernelHibernateRestoreLogs(ctx context.Context, kernelLog string) {
 	expectedEntries := []string{
 		// suspend
 		"Freezing user space processes ...",
@@ -321,8 +338,6 @@ func (t *Tester) verifyKernelHibernateRestoreLogs(ctx context.Context) {
 		"PM: restore of devices complete",
 		"Restarting tasks ...",
 	}
-
-	kernelLog := t.getKernelLog(ctx)
 
 	for _, entry := range expectedEntries {
 		if !strings.Contains(kernelLog, entry) {
@@ -361,6 +376,7 @@ func (t *Tester) verifyCycleID(ctx context.Context) {
 		t.logger.Fatalf("hibernate cycle id %d read from %s is incorrect. Expected value: %d",
 			cycleID, hibernateCycleIDPath, t.cycleID)
 	}
+	t.logger.Logf("Read correct hibernate cycle id %d from %s", cycleID, hibernateCycleIDPath)
 }
 
 func (t *Tester) getGRPCClient(ctx context.Context) {
