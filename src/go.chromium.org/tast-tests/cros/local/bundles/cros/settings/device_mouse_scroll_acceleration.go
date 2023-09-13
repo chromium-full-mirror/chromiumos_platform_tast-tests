@@ -81,10 +81,10 @@ func DeviceMouseScrollAcceleration(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find Tast virtual mouse: ", err)
 	}
 
-	// Verify if enable scroll acceleration button exists.
-	scrollAccelerationButton := nodewith.NameContaining("Scroll acceleration").Role(role.ToggleButton).First()
-	if err := ui.WaitUntilExists(scrollAccelerationButton)(ctx); err != nil {
-		s.Fatal("Failed to find scroll acceleration button: ", err)
+	// Verify if enable controlled scrolling button exists.
+	controlledScrollingButton := nodewith.NameContaining("Controlled scrolling").Role(role.ToggleButton).First()
+	if err := ui.WaitUntilExists(controlledScrollingButton)(ctx); err != nil {
+		s.Fatal("Failed to find controlled scrolling button: ", err)
 	}
 
 	// Verify if scrolling speed slider exists and is disabled.
@@ -99,9 +99,9 @@ func DeviceMouseScrollAcceleration(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find disabled scrolling speed slider")
 	}
 
-	// Turn off scroll acceleration should enable scrolling speed slider.
-	if err := ui.LeftClick(scrollAccelerationButton)(ctx); err != nil {
-		s.Fatal("Failed to click scroll acceleration button: ", err)
+	// Turn on controlled scrolling button should enable scrolling speed slider.
+	if err := ui.LeftClick(controlledScrollingButton)(ctx); err != nil {
+		s.Fatal("Failed to click controlled scrolling button: ", err)
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
