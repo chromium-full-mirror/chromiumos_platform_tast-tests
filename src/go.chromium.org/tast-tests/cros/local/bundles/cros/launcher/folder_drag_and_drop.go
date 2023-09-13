@@ -93,12 +93,12 @@ func FolderDragAndDrop(ctx context.Context, s *testing.State) {
 
 	folderName := fmt.Sprintf("FolderDnD %t", tabletMode)
 	if err := launcher.RenameFolder(tconn, kb, launcher.UnnamedFolderFinder.First(), folderName)(ctx); err != nil {
-		s.Fatal("Failed to rename test folder")
+		s.Fatal("Failed to rename test folder: ", err)
 	}
 
 	folderItemName := "Folder " + folderName
 	folderFinder := nodewith.ClassName(launcher.ExpandedItemsClass).Name(folderItemName)
-	if err := ui.Exists(folderFinder)(ctx); err != nil {
+	if err := ui.WaitUntilExists(folderFinder)(ctx); err != nil {
 		s.Fatal("Unable to find test folder: ", err)
 	}
 

@@ -34,7 +34,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -705,12 +704,14 @@ func RenameFolder(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, from *n
 	// Chrome add prefix "Folder " to all folder names in AppListItemView.
 	toFolder := nodewith.Name("Folder " + to).HasClass(ExpandedItemsClass)
 	folderView := nodewith.HasClass("AppListFolderView")
+	nameTextField := nodewith.Ancestor(folderView).Role(role.TextField)
 	ui := uiauto.New(tconn)
 	return uiauto.Combine(fmt.Sprintf("RenameFolder to %s", to),
 		OpenExpandedView(tconn),
 		ui.LeftClick(from),
 		ui.WaitUntilExists(folderView),
-		ui.FocusAndWait(nodewith.HasClass("Textfield").Ancestor(folderView)),
+		ui.WaitForLocation(folderView),
+		ui.FocusAndWait(nameTextField),
 		func(ctx context.Context) error {
 			return kb.Type(ctx, to+"\n")
 		},
@@ -750,21 +751,11 @@ func FirstNonRecentAppItem(ctx context.Context, tconn *chrome.TestConn) (int, er
 		return 0, nil
 	}
 
-	recentAppsLocation, err := ui.Location(ctx, recentAppsContainer)
+	recentAppItems, err := ui.NodesInfo(ctx, nodewith.HasClass(ExpandedItemsClass).Ancestor(recentAppsContainer))
 	if err != nil {
-		return -1, errors.Wrap(err, "failed to query recent apps")
+		return -1, errors.Wrap(err, "Unable to query recent apps")
 	}
-
-	// Get the index of the first non-folder item.
-	for itemIndex := 0; ; itemIndex++ {
-		itemLocation, err := ui.Location(ctx, nodewith.HasClass(ExpandedItemsClass).Nth(itemIndex))
-		if err != nil {
-			return -1, errors.Wrap(err, "failed to get item locatoin")
-		}
-		if !recentAppsLocation.Contains(*itemLocation) {
-			return itemIndex, nil
-		}
-	}
+	return len(recentAppItems), nil
 }
 
 // CloseFolderView closes app list folder view - expects that the app list UI is currently showing a folder content.
@@ -773,6 +764,11 @@ func CloseFolderView(ctx context.Context, tconn *chrome.TestConn) error {
 	folderView := nodewith.HasClass("AppListFolderView")
 	if err := ui.WaitUntilExists(folderView)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find an open folder")
+	}
+
+	// Wait for a folder item to show up as a signal that the folder show animation completed.
+	if err := ui.WaitUntilExists(nodewith.HasClass(ExpandedItemsClass).Ancestor(folderView).Nth(0))(ctx); err != nil {
+		return errors.Wrap(err, "failed to find item within folder")
 	}
 
 	folderViewLocation, err := ui.Location(ctx, folderView)
@@ -784,6 +780,10 @@ func CloseFolderView(ctx context.Context, tconn *chrome.TestConn) error {
 	// Click to close the folder.
 	if err := mouse.Click(tconn, pointOutsideFolder, mouse.LeftButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click outside of the folder")
+	}
+
+	if err := ui.WaitUntilGone(folderView)(ctx); err != nil {
+		return errors.Wrap(err, "folder view did not go away")
 	}
 
 	return nil
@@ -871,9 +871,15 @@ func DragIconAfterIcon(ctx context.Context, tconn *chrome.TestConn, srcIndex, de
 			return errors.Wrap(err, "failed to press the button")
 		}
 
-		// Move a little bit first to trigger launcher-app-paging.
-		if err := mouse.Move(tconn, srcBounds.CenterPoint().Add(coords.Point{X: 10, Y: 10}), time.Second)(ctx); err != nil {
+		// Move to initiate drag.
+		if err := mouse.Move(tconn, srcBounds.CenterPoint().Add(coords.Point{X: 5, Y: 5}), time.Second)(ctx); err != nil {
 			return errors.Wrap(err, "failed to move the mouse a little bit to trigger launcher-app-paging")
+		}
+
+		// Starting a drag in tablet mode transitions ui into cardified state - ensure
+		// that destination item bounds stabilze before proceeding with test logic.
+		if err := ui.WaitForLocation(itemListFinder.Nth(destIndex))(ctx); err != nil {
+			return errors.Wrap(err, "destination location not stabilized")
 		}
 
 		// Fetch the bounds of the item view at destIndex after launcher-app-paging completes.
@@ -965,16 +971,21 @@ func DragItemToItem(tconn *chrome.TestConn, src, dest *nodewith.Finder) uiauto.A
 		if err := mouse.Move(tconn, start.CenterPoint(), 0)(ctx); err != nil {
 			return errors.Wrap(err, "failed to move to the start location")
 		}
+
 		if err := mouse.Press(tconn, mouse.LeftButton)(ctx); err != nil {
 			return errors.Wrap(err, "failed to press the button")
 		}
 
-		// Move a little bit first to trigger launcher-app-paging.
+		// Move to initiate drag.
 		if err := mouse.Move(tconn, start.CenterPoint().Add(coords.Point{X: 10, Y: 10}), time.Second)(ctx); err != nil {
 			return errors.Wrap(err, "failed to move the mouse")
 		}
 
 		// Get destination location during drag.
+		if err := ui.WaitForLocation(dest)(ctx); err != nil {
+			return errors.Wrap(err, "destination location not stabilized")
+		}
+
 		end, err := ui.Location(ctx, dest)
 		if err != nil {
 			return errors.Wrap(err, "failed to get location for second icon")
@@ -1040,15 +1051,28 @@ func RemoveIconFromFolder(tconn *chrome.TestConn, folderFinder *nodewith.Finder)
 			return errors.Wrap(err, "failed to click the folder")
 		}
 
+		// Wait for folder location to stabalize in case of a moving folder animation.
+		folderView := nodewith.HasClass("AppListFolderView")
+		if err := ui.WaitUntilExists(folderView)(ctx); err != nil {
+			return errors.Wrap(err, "failed to open the folder")
+		}
+		ui.WaitForLocation(folderView)(ctx)
+
 		// Get the location for the first item in the folder.
-		folderItems := nodewith.HasClass(ExpandedItemsClass).Ancestor(nodewith.HasClass("AppListFolderView"))
-		start, err := ui.Location(ctx, folderItems.Nth(0))
+		folderItem := nodewith.HasClass(ExpandedItemsClass).Ancestor(nodewith.HasClass("AppListFolderView")).Nth(0)
+
+		if err := ui.WaitUntilExists(folderItem)(ctx); err != nil {
+			return errors.Wrap(err, "folder item did not appear")
+		}
+		if err := ui.WaitForLocation(folderItem)(ctx); err != nil {
+			return errors.Wrap(err, "item location not stabilized")
+		}
+		start, err := ui.Location(ctx, folderItem)
 		if err != nil {
 			return errors.Wrap(err, "failed to get the location of the first folder item")
 		}
 
 		// Get a point outside of the folder view.
-		folderView := nodewith.HasClass("AppListFolderView")
 		folderViewLocation, err := ui.Location(ctx, folderView)
 		if err != nil {
 			return errors.Wrap(err, "failed to get folderViewLocation")
@@ -1058,7 +1082,19 @@ func RemoveIconFromFolder(tconn *chrome.TestConn, folderFinder *nodewith.Finder)
 		// Drag the first folder item outside of the folder.
 		mouse.Move(tconn, start.CenterPoint(), 0)(ctx)
 		mouse.Press(tconn, mouse.LeftButton)(ctx)
+		mouse.Move(tconn, start.CenterPoint().Add(coords.Point{X: 5, Y: 5}), time.Second)(ctx)
 		mouse.Move(tconn, pointOutsideFolder, time.Second)(ctx)
+
+		if err := ui.WaitUntilGone(folderView)(ctx); err != nil {
+			return errors.Wrap(err, "folder not closed after dragging the item out")
+		}
+
+		// In tablet mode, the apps grid transitions into cardified state after
+		// dragging a folder item outside folder bounds. Make sure that the original
+		// folder icon bounds stabilize before proceeding.
+		if err := ui.WaitForLocation(folderFinder)(ctx); err != nil {
+			return errors.Wrap(err, "item location not stabilized")
+		}
 
 		// Get the location of the folder during the drag.
 		folderLocation, err := ui.Location(ctx, folderFinder)
@@ -1067,14 +1103,14 @@ func RemoveIconFromFolder(tconn *chrome.TestConn, folderFinder *nodewith.Finder)
 		}
 
 		// Drag app to the right of the folder.
-		mouse.Move(tconn, folderLocation.CenterPoint().Add(coords.Point{X: (folderLocation.Width + 1) / 2, Y: 0}), time.Second)(ctx)
+		mouse.Move(tconn, folderLocation.RightCenter().Add(coords.Point{X: 5, Y: 0}), time.Second)(ctx)
 
 		// Release the mouse, ending the drag.
 		mouse.Release(tconn, mouse.LeftButton)(ctx)
 
 		// Make sure that the folder has closed.
 		if err := ui.WaitUntilGone(folderView)(ctx); err != nil {
-			errors.Wrap(err, "folderView is not gone")
+			return errors.Wrap(err, "folderView is not gone")
 		}
 
 		return nil
@@ -1254,12 +1290,16 @@ func ScrollBubbleLauncherDuringItemDragUntilItemVisible(ctx context.Context, tco
 
 	var scrollPoint coords.Point
 	if up {
-		scrollPoint = coords.NewPoint(bubbleViewLocation.CenterX(), bubbleViewLocation.Top)
+		scrollPoint = coords.NewPoint(bubbleViewLocation.CenterX(), bubbleViewLocation.Top+3)
 	} else {
-		scrollPoint = bubbleViewLocation.BottomCenter()
+		scrollPoint = coords.NewPoint(bubbleViewLocation.CenterX(), bubbleViewLocation.Bottom()-3)
 	}
 	if err := mouse.Move(tconn, scrollPoint, 200)(ctx); err != nil {
 		return errors.Wrap(err, "failed to move to the start location")
+	}
+
+	if err := mouse.Move(tconn, scrollPoint.Add(coords.Point{X: 0, Y: 2}), 200)(ctx); err != nil {
+		return errors.Wrap(err, "failed to move to the initiate scroll")
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
