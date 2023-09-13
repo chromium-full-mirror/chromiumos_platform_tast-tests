@@ -38,6 +38,7 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
+		Timeout:      4 * time.Minute,
 		// SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
 		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
 			[]ime.InputMethod{ime.EnglishUS},
