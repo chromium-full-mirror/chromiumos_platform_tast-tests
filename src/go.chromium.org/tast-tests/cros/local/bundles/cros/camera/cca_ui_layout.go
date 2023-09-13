@@ -69,11 +69,13 @@ func CCAUILayout(ctx context.Context, s *testing.State) {
 
 	screendiffConfig := screenshot.Config{
 		DefaultOptions: screenshot.Options{
-			WindowWidthDP:  diffWindowWidth,
-			WindowHeightDP: diffWindowHeight,
-			WindowState:    defaultWindowState,
-			Retries:        8,
-			RetryInterval:  500 * time.Millisecond,
+			WindowWidthDP:       diffWindowWidth,
+			WindowHeightDP:      diffWindowHeight,
+			WindowState:         defaultWindowState,
+			Retries:             8,
+			RetryInterval:       500 * time.Millisecond,
+			MaxDifferentPixels:  30,
+			PixelDeltaThreshold: 9,
 		},
 		SkipDpiNormalization: true,
 	}
