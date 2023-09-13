@@ -49,6 +49,7 @@ func init() {
 		Data:         []string{"canvas.html"},
 		HardwareDeps: hwdep.D(hwdep.TouchScreen(), hwdep.X86()),
 		Fixture:      "chromeLoggedIn",
+		Timeout:      10 * time.Minute,
 	})
 }
 

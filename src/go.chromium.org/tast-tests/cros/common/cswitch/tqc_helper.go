@@ -287,7 +287,7 @@ func IsDeviceEnumerated(ctx context.Context, device, port string) (bool, error) 
 			return errors.New("Device enumeration failed")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 3 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 3 * time.Second}); err != nil {
 		return false, err
 	}
 
