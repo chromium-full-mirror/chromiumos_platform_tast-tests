@@ -28953,6 +28953,7 @@ type ONCGlobalNetworkConfiguration struct {
 	AllowOnlyPolicyCellularNetworks      bool     `json:"AllowOnlyPolicyCellularNetworks"`
 	AllowCellularSimLock                 bool     `json:"AllowCellularSimLock"`
 	AllowCellularHotspot                 bool     `json:"AllowCellularHotspot"`
+	AllowTextMessages                    string   `json:"AllowTextMessages"`
 	BlockedHexSSIDs                      []string `json:"BlockedHexSSIDs,omitempty"`
 }
 

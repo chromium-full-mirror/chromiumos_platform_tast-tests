@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
+	"go.chromium.org/tast-tests/cros/local/chrome/systemlogs"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filepicker"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -39,13 +40,10 @@ const (
 	simLockPortalURL = "https://partnerdash.google.com/apps/nexussimunlockportal/imeiupload?a=1054655288&t=1772550927529650125"
 )
 
-// NewUIHelper creates a Helper object and ensures that a UI is loaded.
-func NewUIHelper(ctx context.Context, username, password string) (*UIHelper, error) {
+// NewUIHelperWithOpts creates a Helper object with a new Chrome instance, and ensures that a UI is loaded.
+func NewUIHelperWithOpts(ctx context.Context, opts ...chrome.Option) (*UIHelper, error) {
 
-	cr, err := chrome.New(ctx,
-		chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
-		chrome.ProdPolicy(),
-	)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "chrome login failed")
 	}
@@ -67,6 +65,12 @@ func NewUIHelper(ctx context.Context, username, password string) (*UIHelper, err
 
 	helper := UIHelper{UIHandler: uiHandler, UI: ui, Cr: cr, Tconn: tconn}
 	return &helper, nil
+}
+
+// NewUIHelper creates a Helper object logged into a GAIA user, and ensures that a UI is loaded.
+func NewUIHelper(ctx context.Context, username, password string) (*UIHelper, error) {
+	return NewUIHelperWithOpts(ctx, chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
+		chrome.ProdPolicy())
 }
 
 // LaunchChromeWithCarrierLock launches chrome with carrier lock service enabled.
@@ -221,6 +225,33 @@ func (h *UIHelper) ValidateMessage(ctx context.Context, messageSent string) erro
 	}
 
 	return errors.Wrap(err, "notification does not contain sent sms")
+}
+
+// ValidateSuppressedMessage validates that the network log reports a suppressed text message.
+func (h *UIHelper) ValidateSuppressedMessage(ctx context.Context) error {
+	const networkSection = "network_event_log"
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		logs, err := systemlogs.GetSystemLogs(ctx, h.Tconn, networkSection)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to read network_event_log from system logs"))
+		}
+
+		const errorKey = "Suppressing text message"
+		lines := strings.Split(logs, "\n")
+		for _, l := range lines {
+			if strings.Contains(l, errorKey) {
+				return nil
+			}
+		}
+
+		return errors.Wrap(err, "supress message log not found in network logs")
+	}, &testing.PollOptions{
+		Timeout: 3 * time.Minute,
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // UploadCsvSimLockPortal logs in to the prod SimLock portal and uploads the CSV file to lock/unlock
