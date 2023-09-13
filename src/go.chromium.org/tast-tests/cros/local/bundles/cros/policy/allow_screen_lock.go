@@ -38,7 +38,7 @@ func init() {
 		BugComponent: "b:1277523",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
-		Fixture:      fixture.ChromePolicyLoggedIn,
+		Fixture:      fixture.ChromePolicyLoggedInLockscreen,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AllowScreenLock{}, pci.VerifiedFunctionalityUI),
 		},
@@ -123,11 +123,50 @@ func AllowScreenLock(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to open the system tray: ", err)
 			}
 
-			if err := uiauto.Combine("Check lock screen from system tray",
-				ui.WaitUntilExists(nodewith.Name("Shut down").ClassName("IconButton")),
-				ui.WaitUntilGone(nodewith.Name("Lock").ClassName("IconButton")),
+			// Check if the power menu button is shown.
+			if err := ui.WaitUntilExists(nodewith.Name("Power menu").ClassName("Button"))(ctx); err != nil {
+				s.Error("Failed to check the power menu button: ", err)
+			}
+
+			// Open the power menu button menu with a click on the button.
+			if err := ui.LeftClick(quicksettings.PowerMenuButton)(ctx); err != nil {
+				s.Error("Failed to find and click power menu button: ", err)
+			}
+
+			// Check the power menu button items the Lock shouldn't be there
+			if err := uiauto.Combine("Check the power button items",
+				ui.WaitUntilGone(nodewith.Name("Lock").ClassName("MenuItemView")),
+				ui.WaitUntilExists(nodewith.Name("Restart").ClassName("MenuItemView")),
+				ui.WaitUntilExists(nodewith.Name("Shut down").ClassName("MenuItemView")),
+				ui.WaitUntilExists(nodewith.Name("Sign out").ClassName("MenuItemView")),
 			)(ctx); err != nil {
-				s.Error("Failed to check the lock screen button: ", err)
+				s.Error("Failed to check the power menu button items: ", err)
+			}
+
+			// Close the power menu button menu with a click on the button again.
+			if err := ui.LeftClick(quicksettings.PowerMenuButton)(ctx); err != nil {
+				s.Error("Failed to find and click power menu button: ", err)
+			}
+
+			// Check the power menu button menu disappeared and the menu items are
+			// not available anymore.
+			if err := uiauto.Combine("Check power button menu items are no available",
+				ui.WaitUntilGone(nodewith.Name("Lock").ClassName("MenuItemView")),
+				ui.WaitUntilGone(nodewith.Name("Restart").ClassName("MenuItemView")),
+				ui.WaitUntilGone(nodewith.Name("Shut down").ClassName("MenuItemView")),
+				ui.WaitUntilGone(nodewith.Name("Sign out").ClassName("MenuItemView")),
+			)(ctx); err != nil {
+				s.Error("Failed to check the power menu button items are still visible: ", err)
+			}
+
+			// Hide the quicksettings.
+			if err := quicksettings.Hide(ctx, tconn); err != nil {
+				s.Error("Failed to close the system tray: ", err)
+			}
+
+			// Check the hide was successful and the power menu button is not available.
+			if err := ui.WaitUntilGone(nodewith.Name("Power menu").ClassName("Button"))(ctx); err != nil {
+				s.Error("Failed system tray still visible: ", err)
 			}
 
 			// Wait until the lock state is the wanted value or until timeout.
