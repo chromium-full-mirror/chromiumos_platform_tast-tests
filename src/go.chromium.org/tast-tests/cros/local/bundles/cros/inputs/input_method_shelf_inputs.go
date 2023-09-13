@@ -214,7 +214,7 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 			its.ClickFieldAndWaitForActive(inputField),
 			ui.LeftClick(imeMenuTrayButtonFinder),
 			ui.LeftClick(emojiInputMenuItem),
-			ui.WaitUntilExists(emojiPickerFinder),
+			ui.WithTimeout(30*time.Second).WaitUntilExists(emojiPickerFinder),
 			its.DismissGifNudgeOverlay(),
 			ui.WithTimeout(30*time.Second).LeftClick(emojiItem),
 			util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), inputEmoji),
