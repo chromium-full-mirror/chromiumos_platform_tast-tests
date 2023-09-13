@@ -4,7 +4,7 @@
 
 package ti50
 
-// All well known gpio straps for different form factors in ti50
+// All well known gpio straps for different form factors in ti50.
 const (
 	// FfTablet puts ti50 image into Tablet form factor mode via strapping resistors
 	FfTablet GpioStrap = "TI50_FF_TABLET"
@@ -14,7 +14,7 @@ const (
 	FfBox GpioStrap = "TI50_FF_BOX"
 )
 
-// All well known gpio straps for tpm bus mode
+// All well known gpio straps for tpm bus mode.
 const (
 	// TpmSpi boots ti50 image for TPM communication via SPI bus
 	TpmSpi GpioStrap = "TI50_TPM_SPI"
@@ -22,7 +22,7 @@ const (
 	TpmI2c GpioStrap = "TI50_TPM_I2C"
 )
 
-// All well known gpio straps for CCD connection status
+// All well known gpio straps for CCD connection status.
 const (
 	// CcdDisconnected is the default, no CCD cable connected
 	CcdDisconnected GpioStrap = "CCD_DISCONNECTED"
@@ -54,7 +54,7 @@ const (
 	ServoMicroConnected GpioStrap = "SERVO_MICRO_CONNECTED"
 )
 
-// All well known gpio names for ti50 image
+// All well known gpio names for ti50 image.
 const (
 	// GpioTi50ResetL is reset pin to GSC (active low)
 	GpioTi50ResetL GpioName = "RESET"
@@ -93,4 +93,6 @@ const (
 	GpioTi50EcPacketMode GpioName = "EC_GSC_PACKET_MODE"
 	// GpioTi50ChassisOpen is the pin that GSC reads to know if end-user has physical access
 	GpioTi50ChassisOpen GpioName = "CHASSIS_OPEN"
+	// GpioTi50WriteProtectL is the hardware write protect signal that GSC controls
+	GpioTi50WriteProtectL GpioName = "WP_L"
 )

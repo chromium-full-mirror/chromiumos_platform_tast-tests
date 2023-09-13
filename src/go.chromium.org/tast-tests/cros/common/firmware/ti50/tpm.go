@@ -83,6 +83,12 @@ const (
 		tpm2.AttrPPRead |
 		tpm2.AttrWriteSTClear |
 		tpm2.AttrPPWrite
+	// FwmpFileAttr is the attribute set that AP firmware uses when creating FWMP file
+	FwmpFileAttr = tpm2.AttrPlatformCreate |
+		tpm2.AttrOwnerWrite |
+		tpm2.AttrAuthRead |
+		tpm2.AttrPPRead |
+		tpm2.AttrPPWrite
 )
 
 // TpmHandle allows interacting with GSC's TPM bus with higher level tpm commands until tpm2 lib
