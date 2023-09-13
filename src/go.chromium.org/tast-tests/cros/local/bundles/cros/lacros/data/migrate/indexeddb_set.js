@@ -20,15 +20,34 @@
                 reject();
             }
             objectStore.transaction.oncomplete = () => {
-                const userObjectStore = db.transaction("users", 'readwrite')
-                    .objectStore("users");
-                const req =
-                    userObjectStore.add({ id: userId, email: userEmail });
-                req.error = () => {
-                    console.error("Adding an entry to database failed.");
+                try {
+                    const trans = db.transaction("users", "readwrite");
+                    trans.oncomplete = () => {
+                        // Wait until this point to resolve the promise instead
+                        // of inside `req.onsuccess`.
+                        console.log("All req were completed.");
+                        resolve();
+                    }
+                    trans.onerror = e => {
+                        console.error(e);
+                        console.error(
+                            "An error occurred on transaction level.");
+                        reject();
+                    }
+                    const userObjectStore = trans.objectStore("users");
+                    const req =
+                        userObjectStore.add({ id: userId, email: userEmail });
+                    req.error = () => {
+                        console.error("Adding an entry to database failed.");
+                        reject();
+                    };
+                    req.onsuccess = () => {
+                        console.log("Req was completed.");
+                    }
+                } catch (err) {
+                    console.error(err);
                     reject();
-                };
-                req.onsuccess = () => resolve();
+                }
             }
         }
     })
