@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -65,7 +66,7 @@ func Deletion(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
 
 	kb, err := input.Keyboard(ctx)
@@ -78,6 +79,10 @@ func Deletion(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create test API connection: ", err)
 	}
+
+	// Start screen recording, to help with debugging errors.
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	filesApp, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
