@@ -17,7 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
@@ -363,17 +363,15 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to the test API connection: ", err)
+	}
+
 	if param.platformLiveCaptions {
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to connect to the test API connection: ", err)
-		}
-		s.Log("Toggling platform VC effects")
-		vct := vctray.New(ctx, tconn)
-		if err := vct.ChangeSettingsInPanel(
-			vct.SetLiveCaption(param.platformLiveCaptions),
-		)(ctx); err != nil {
-			s.Fatal("Failed to configure platform VC effects: ", err)
+		s.Log("Turning on Live Captions")
+		if err := ossettings.ToggleLiveCaption(cr, tconn, param.platformLiveCaptions)(ctx); err != nil {
+			s.Fatal("Failed to toggle on live caption: ", err)
 		}
 	}
 
