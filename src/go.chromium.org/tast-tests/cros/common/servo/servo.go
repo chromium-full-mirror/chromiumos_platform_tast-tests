@@ -35,6 +35,8 @@ type Servo struct {
 	hasC2D2            bool
 	isDualV4           bool
 	isPDTester         bool
+	// TODO(b/194310192): Unify the servo UART regexp controls in servod.
+	uartRegexp         StringControl
 
 	// If initialPDRole is set, then upon Servo.Close(), the PDRole control will be set to initialPDRole.
 	initialPDRole PDRoleValue
