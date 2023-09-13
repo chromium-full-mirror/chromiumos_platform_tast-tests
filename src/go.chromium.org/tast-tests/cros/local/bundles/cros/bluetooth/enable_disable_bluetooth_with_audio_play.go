@@ -164,9 +164,9 @@ func EnableDisableBluetoothWithAudioPlay(ctx context.Context, s *testing.State) 
 	}(cleanupCtx)
 
 	// Bluetooth button in the quick setting menu, when Bluetooth is on.
-	bluetoothTurnOffButton := nodewith.NameContaining("Toggle Bluetooth. Connected to a device named " + btHeadset).Role(role.ToggleButton)
+	bluetoothTurnOffButton := nodewith.NameContaining("Toggle Bluetooth. Connected to a device named " + btHeadset).Role(role.Button)
 	// Bluetooth button in the quick setting menu, when Bluetooth is off.
-	bluetoothTurnOnButton := nodewith.NameContaining("Toggle Bluetooth. Bluetooth is off").Role(role.ToggleButton)
+	bluetoothTurnOnButton := nodewith.NameContaining("Toggle Bluetooth. Bluetooth is off").Role(role.Button).First()
 
 	for i := 1; i <= iter; i++ {
 		testing.ContextLogf(ctx, "Iteration %d/%d", i, iter)
