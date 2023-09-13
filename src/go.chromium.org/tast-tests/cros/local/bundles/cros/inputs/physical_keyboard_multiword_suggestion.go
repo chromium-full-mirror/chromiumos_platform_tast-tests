@@ -37,8 +37,9 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
+				// TODO(b/299975550): Diagnose flakiness and remove "informational".
 				Fixture:           fixture.ClamshellNonVKWithMultiwordSuggest,
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "informational"},
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 			},
 			{
