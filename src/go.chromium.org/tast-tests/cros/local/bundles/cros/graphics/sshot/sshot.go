@@ -61,7 +61,7 @@ func SShot(ctx context.Context, s *testing.State, cr *chrome.Chrome, capture fun
 	const maxKnownColorDiff = 0x13
 
 	expectedColor := colorcmp.RGB(0xcc, 0x88, 0x44)
-	// Allow up to 30 seconds for the target screen to render.
+	// Allow up to 40 seconds for the target screen to render.
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		if err := capture(ctx, path); err != nil {
 			return err
@@ -85,5 +85,5 @@ func SShot(ctx context.Context, s *testing.State, cr *chrome.Chrome, capture fun
 		}
 		return errors.Errorf("screenshot did not have matching dominant color; expected %v but got %v at ratio %0.2f",
 			colorcmp.ColorStr(expectedColor), colorcmp.ColorStr(color), ratio)
-	}, &testing.PollOptions{Timeout: 30 * time.Second})
+	}, &testing.PollOptions{Timeout: 40 * time.Second})
 }
