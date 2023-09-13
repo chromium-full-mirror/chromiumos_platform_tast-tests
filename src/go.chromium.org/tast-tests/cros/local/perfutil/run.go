@@ -195,20 +195,20 @@ func (r *Runner) RunMultiple(ctx context.Context, name string, scenario Scenario
 			return nil
 		}
 		runErrors = append(runErrors, fmt.Sprintf("\nRun %d of %d failed with: %+v", index, r.maxRuns, e))
-		if r.maxRuns-len(runErrors) < r.minSuccessfulRuns-successCount {
+		if r.maxRuns-(index+1) < r.minSuccessfulRuns-successCount {
 			return errors.Wrapf(e,
 				"failed to get the required number of "+
-					"succesful runs (%d); got (%d/%d) "+
+					"succesful runs (%d) in test run %d of %d; got %d "+
 					"successful runs, with %d errors: %v",
-				r.minSuccessfulRuns, successCount,
-				r.maxRuns, len(runErrors), runErrors)
+				r.minSuccessfulRuns, index, r.maxRuns, successCount,
+				len(runErrors), runErrors)
 		}
 		return nil
 	}
 
 	for i := 0; i < r.maxRuns; i++ {
-		hists, e := scenario(ctx, fmt.Sprintf("%s-%d", runPrefix, i))
-		if err := appendRunError(i, e); err != nil {
+		hists, runError := scenario(ctx, fmt.Sprintf("%s-%d", runPrefix, i))
+		if err := appendRunError(i, runError); err != nil {
 			return runErrors, err
 		}
 		storage := r.pv
@@ -216,11 +216,13 @@ func (r *Runner) RunMultiple(ctx context.Context, name string, scenario Scenario
 			// store() may have side-effects and must always be called.
 			storage = NewValues(false)
 		}
-
-		if err := appendRunError(i, store(ctx, storage, hists)); err != nil {
+		storeError := store(ctx, storage, hists)
+		if err := appendRunError(i, storeError); err != nil {
 			return runErrors, errors.Wrap(err, "failed to store the histogram data")
 		}
-		successCount++
+		if runError == nil && storeError == nil {
+			successCount++
+		}
 		if successCount >= r.minSuccessfulRuns {
 			break
 		}
