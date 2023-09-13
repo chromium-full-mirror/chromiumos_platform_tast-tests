@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
@@ -33,6 +34,7 @@ type meetParams struct {
 	platformBlur         bool
 	platformLiveCaptions bool
 	platformRelight      bool
+	platformFraming      bool
 	muteAudio            bool
 	modelType            effects.ModelType
 	botCount             int
@@ -261,6 +263,12 @@ func init() {
 					muteAudio:            true,
 				},
 			},
+			{
+				Name: "platform_framing_720p",
+				Val: meetParams{
+					platformFraming: true,
+				},
+			},
 		},
 	})
 }
@@ -375,6 +383,15 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	if param.platformFraming {
+		s.Log("Toggling platform level effects from vctray")
+		vct := vctray.New(ctx, tconn)
+		if err := vct.ChangeSettingsInPanel(
+			vct.SetCameraFraming(param.platformFraming),
+		)(ctx); err != nil {
+			s.Fatal("Failed to configure platform VC effects: ", err)
+		}
+	}
 	defer gm.Close(closeCtx)
 
 	// Configure Meeting.

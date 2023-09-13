@@ -35,6 +35,7 @@ var (
 	)
 	adjustLightingButton    = nodewith.NameStartingWith("Toggle Improve lighting").Role(role.ToggleButton).Ancestor(panelSection)
 	liveCaptionButton       = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton).Ancestor(panelSection)
+	adjustCameraFraming     = nodewith.NameStartingWith("Toggle Camera framing").Role(role.ToggleButton).Ancestor(panelSection)
 	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton).Ancestor(panelSection)
 
 	bgBlurOffButton   = nodewith.NameContaining("Off").Role(role.ToggleButton).Ancestor(panelSection)
@@ -199,6 +200,11 @@ func (vcTray VCTray) SetAdjustLighting(expectedOn bool) action.Action {
 // SetNoiseCancellation toggles on/off the "Noise cancellation" option.
 func (vcTray VCTray) SetNoiseCancellation(expectedOn bool) action.Action {
 	return vcTray.SetFeature(noiseCancellationButton, expectedOn)
+}
+
+// SetCameraFraming toggles on/off the "Camera Framing" option.
+func (vcTray VCTray) SetCameraFraming(expectedOn bool) action.Action {
+	return vcTray.SetFeature(adjustCameraFraming, expectedOn)
 }
 
 // SetLiveCaption toggles on/off the "Live Caption" option.
