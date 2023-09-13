@@ -78,6 +78,13 @@ func TestParseStringList(t *testing.T) {
 				"child_devices":   []interface{}{string("ccd_ti50 (18d1:504a) 01818054-54283135")},
 			},
 		}},
+		{`[("pd 0 hard\r\nec:~> '\\x1b'[6D'\\x1b'[J[1078.462100 C0: PE_SNK_Hard_Reset", None, 'PE_SNK_Hard_Reset')]`, false, []interface{}{
+			[]interface{}{
+				string("pd 0 hard\r\nec:~> '\\x1b'[6D'\\x1b'[J[1078.462100 C0: PE_SNK_Hard_Reset"),
+				nil,
+				string("PE_SNK_Hard_Reset"),
+			}},
+		},
 	} {
 		res, err := ParseStringList(tc.pslParam)
 		if tc.expectErr {

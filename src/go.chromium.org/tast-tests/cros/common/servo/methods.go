@@ -566,6 +566,12 @@ func parseValueInternal(value []rune, index *int) (interface{}, error) {
 				return nil, err
 			}
 			return substr, nil
+		case 'N':
+			if string(value[*index:*index+4]) == "None" {
+				*index += 3
+				return nil, nil
+			}
+			fallthrough
 		default:
 			return nil, errors.Errorf("unexpected value char %q at index %d in %s", c, *index, string(value))
 		}
@@ -587,7 +593,7 @@ func parseStringListInternal(value []rune, index *int) ([]interface{}, error) {
 	for ; *index < len(value); (*index)++ {
 		c := value[*index]
 		switch c {
-		case '[', '(', '{', '\'', '"', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		case '[', '(', '{', '\'', '"', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'N':
 			subval, err := parseValueInternal(value, index)
 			if err != nil {
 				return nil, err
