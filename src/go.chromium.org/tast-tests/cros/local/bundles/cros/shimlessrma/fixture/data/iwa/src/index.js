@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-const extensionId = "ihhhlnmoacmgjdemohllacakjndgpcii";
+const extensionId = "jmalcmbicpnakfkncbgbcmlmgpfkhdca";
 
 const print = (str, textarea_name) => {
   displayDiv = document.getElementById("display");
