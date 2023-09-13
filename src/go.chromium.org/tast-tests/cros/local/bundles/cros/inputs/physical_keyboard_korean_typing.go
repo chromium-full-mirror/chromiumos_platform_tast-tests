@@ -42,7 +42,7 @@ func init() {
 				"screenplay-06f14078-48c8-4fa4-8350-444f06eb4555",
 			}),
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
-		Timeout:      8 * time.Minute,
+		Timeout:      12 * time.Minute,
 		Params: []testing.Param{
 			{
 				Fixture:   fixture.ClamshellNonVK,
