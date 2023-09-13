@@ -79,7 +79,9 @@ func init() {
 //   - Record and save metrics.
 func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	const (
-		addBotTimeout       = 100 * time.Second
+		// The addBotTimeout allows 3 2-minute BondAPI request retries by the
+		// Bond lib.
+		addBotTimeout       = 6*time.Minute + 10*time.Second
 		docsScrollTimeout   = 30 * time.Second
 		slidesScrollTimeout = 30 * time.Second
 		gmailURL            = "https://gmail.com"
@@ -173,8 +175,6 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Created a room with the code ", meetingCode)
 
-	// addBotTimeout(100s) would allow 3 bond.longerSendTimeout(30s) attempts
-	// to request the bond server to add bots.
 	sctx, cancel := context.WithTimeout(ctx, addBotTimeout)
 	defer cancel()
 	// Add 30 seconds to the bot duration to make sure that bots do not leave
