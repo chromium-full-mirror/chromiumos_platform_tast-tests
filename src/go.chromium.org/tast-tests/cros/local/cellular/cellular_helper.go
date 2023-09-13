@@ -99,7 +99,9 @@ const (
 	// SimLockWildcardProfileID Profile ID used in the production sim lock portal for vacation/wildcard
 	SimLockWildcardProfileID = "50046"
 	// SimLockNetworkSelectionImsiPrefixProfileID Profile ID used in the production sim lock portal to test IMSI prefix
-	SimLockNetworkSelectionImsiPrefixProfileID = "50047"
+	SimLockNetworkSelectionImsiPrefixProfileID = "50051"
+	// SimLockNetworkSelectionSpnMatchProfileID Profile ID used in the production sim lock portal to test SPN match
+	SimLockNetworkSelectionSpnMatchProfileID = "50053"
 	// SimLockVzwProfileID Verizon profile id in the production sim lock portal
 	SimLockVzwProfileID = "50045"
 	// SimLockExcludeVzwProfileID Test profile to exclude Verizon MCC/MNCs in production sim lock portal
