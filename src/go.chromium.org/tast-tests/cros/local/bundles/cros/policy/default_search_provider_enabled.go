@@ -34,7 +34,12 @@ func init() {
 		},
 		BugComponent: "b:1129862",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:mainline",
+			"informational",
+			"group:criticalstaging",
+		},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
