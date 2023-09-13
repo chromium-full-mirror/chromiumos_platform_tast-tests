@@ -486,9 +486,9 @@ func logoutChrome(ctx context.Context, cr *chrome.Chrome) error {
 	return nil
 }
 
-func clickRestoreButtonNormalStatus(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, s *testing.State) error {
+func clickRestoreButtonNormalStatus(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, s *testing.State) (retErr error) {
 	ui := uiauto.New(tconn).WithTimeout(time.Minute)
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "click_normal_restore")
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return retErr != nil }, cr, "click_normal_restore")
 
 	notificationDialog := nodewith.HasClass("AshNotificationView").NameStartingWith("Restore apps?")
 	restoreButton := nodewith.Name("Restore").Role(role.Button).Ancestor(notificationDialog)
@@ -500,9 +500,9 @@ func clickRestoreButtonNormalStatus(ctx context.Context, cr *chrome.Chrome, tcon
 	return nil
 }
 
-func clickRestoreButtonCrashedStatus(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, s *testing.State) error {
+func clickRestoreButtonCrashedStatus(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, s *testing.State) (retErr error) {
 	ui := uiauto.New(tconn).WithTimeout(time.Minute)
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "click_crash_restore")
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return retErr != nil }, cr, "click_crash_restore")
 
 	// Full text is "Your *Chromebook* restarted unexpectedly".
 	alertDialog := nodewith.HasClass("AshNotificationView").NameStartingWith("Your").Role(role.AlertDialog)
