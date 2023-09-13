@@ -26,6 +26,10 @@ type crasStreamMixVal struct {
 	blockSize int
 }
 
+// b/291180821: Skip "kevin", "wormdingler", "quackingstick", "homestar", "pazquel", "limozeen", "pompom", "kingoftown", "pazquel360" until b/291180821 is fixed.
+// b/293263346: Skip "gladios", "lisbon" before b/293263346 is fixed.
+var crasStreamMixUnstableModels = []string{"kevin", "wormdingler", "quackingstick", "homestar", "pazquel", "limozeen", "pompom", "kingoftown", "pazquel360", "gladios", "lisbon"}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasStreamMix,
@@ -36,9 +40,6 @@ func init() {
 		BugComponent: "b:776546",
 		// b/291180821: Remove no_qemu after making the test pass on betty.
 		SoftwareDeps: []string{"audio_stable", "chrome", "no_qemu"},
-		// b/291180821: Skip "kevin", "wormdingler", "quackingstick", "homestar", "pazquel", "limozeen", "pompom", "kingoftown", "pazquel360" until b/291180821 is fixed.
-		// b/293263346: Skip "gladios", "lisbon" before b/293263346 is fixed.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kevin", "wormdingler", "quackingstick", "homestar", "pazquel", "limozeen", "pompom", "kingoftown", "pazquel360", "gladios", "lisbon")),
 		Pre:          chrome.LoggedIn(),
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{
@@ -49,15 +50,16 @@ func init() {
 					channel:   2,
 					blockSize: 8192,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crasStreamMixUnstableModels...)),
 			},
 			{
-				Name:      "blocksize",
-				ExtraAttr: []string{"informational", "group:criticalstaging"},
+				Name: "blocksize",
 				Val: crasStreamMixVal{
 					rate:      48000,
 					channel:   2,
 					blockSize: 512,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crasStreamMixUnstableModels...)),
 			},
 			{
 				Name: "channel",
@@ -66,10 +68,21 @@ func init() {
 					channel:   1,
 					blockSize: 8192,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crasStreamMixUnstableModels...)),
 			},
 			{
-				Name:      "all",
-				ExtraAttr: []string{"informational", "group:criticalstaging"},
+				Name: "all",
+				Val: crasStreamMixVal{
+					rate:      44100,
+					channel:   1,
+					blockSize: 512,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crasStreamMixUnstableModels...)),
+			},
+			{
+				Name:              "all_unstable",
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crasStreamMixUnstableModels...)),
 				Val: crasStreamMixVal{
 					rate:      44100,
 					channel:   1,
