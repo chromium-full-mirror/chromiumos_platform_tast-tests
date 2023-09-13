@@ -211,10 +211,10 @@ func verifyDirectoryContents(ctx context.Context, dir string, expectedContent Di
 				return errors.Wrapf(err, "cannot read file %q", k)
 			}
 			if len(got) != len(want) {
-				return errors.Errorf("length of file %q does not match expected one: got %d bytes, want %d bytes", k, len(got), len(want))
+				return errors.Errorf("length of file %q does not match: got %d bytes, want %d bytes", k, len(got), len(want))
 			}
 			if bytes.Compare(want, got) != 0 {
-				return errors.Errorf("content of file %q does not match expected one", k)
+				return errors.Errorf("content of file %q does not match: got %q, want %q", k, got, want)
 			}
 		}
 	}
