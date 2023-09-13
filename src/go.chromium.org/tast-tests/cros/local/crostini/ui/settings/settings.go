@@ -157,7 +157,8 @@ func FindSettingsPage(ctx context.Context, tconn *chrome.TestConn, windowName st
 	ui := uiauto.New(tconn)
 
 	// Check Settings app is opened to the specific page.
-	if err := ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile(".*" + windowName + ".*")).First())(ctx); err != nil {
+	// The setting page takes longer time (15-20 sec) on debug&dcheck build on slow DUTs.
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(nodewith.NameRegex(regexp.MustCompile(".*" + windowName + ".*")).First())(ctx); err != nil {
 		return nil, errors.Wrapf(err, "failed to find window %s", windowName)
 	}
 
