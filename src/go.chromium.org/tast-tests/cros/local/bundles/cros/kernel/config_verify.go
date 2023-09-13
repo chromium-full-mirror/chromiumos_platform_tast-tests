@@ -174,6 +174,7 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 	enabled := []string{
 		// Either module or enabled, depending on platform.
 		"CONFIGFS_FS",
+		"EROFS_FS",
 	}
 	value := map[string]string{
 		// Security; NULL-address hole should be as large as possible.
