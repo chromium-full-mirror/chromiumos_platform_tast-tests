@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package tast.cros.power;
+
+option go_package = "go.chromium.org/tast-tests/cros/common/power/powerpb";
+
+message OneTimeMetrics {
+    optional double battery_charge_design_size = 1;
+    optional double battery_charge_size = 2;
+    optional double battery_energy_size = 3;
+    optional double battery_shutdown_percent = 4;
+    double backlight_linear_percent = 5;
+    double backlight_nonlinear_percent = 6;
+}

@@ -20,6 +20,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	pb "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 
 	"go.chromium.org/tast/core/errors"
@@ -170,7 +171,7 @@ const (
 )
 
 // ConvertPowerPerfValue converts raw performance metric values to power dictionary.
-func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string]interface{}, error) {
+func ConvertPowerPerfValue(ctx context.Context, values *perf.Values, metrics *pb.OneTimeMetrics) (map[string]interface{}, error) {
 	measurement := values.GetValues()
 	if measurement == nil || len(measurement) == 0 {
 		return nil, errors.New("invalid power measurement")
@@ -276,7 +277,7 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 		}
 	}
 
-	minutesBatteryLife := getMinutesBatteryLife(ctx, innerDataMap, innerAverageMap, totalDurationSec)
+	minutesBatteryLife := getMinutesBatteryLife(ctx, innerDataMap, innerAverageMap, totalDurationSec, metrics)
 	values.Set(perf.Metric{
 		Name:      generalPerfMetricType + minutesBatteryLifeKey,
 		Unit:      "minute",
@@ -301,7 +302,7 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 		}, innerDataMap["non_SoC"]...)
 	}
 
-	updatePowerLogPerf(ctx, innerDataMap, innerAverageMap, typeMap, unitMap)
+	updatePowerLogPerf(ctx, innerDataMap, innerAverageMap, typeMap, unitMap, metrics)
 
 	powerDict["data"] = innerDataMap
 	powerDict["average"] = innerAverageMap
@@ -311,38 +312,42 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 }
 
 // getMinutesBatteryLife calculates and returns the projected operating minutes.
-func getMinutesBatteryLife(ctx context.Context, innerDataMap map[string][]float64, innerAverageMap map[string]float64, totalDurationSec float64) (minutesBatteryLife float64) {
-	// Power key value calculation.
-	batteryPath, err := SysfsBatteryPath(ctx)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to calculate key value: ", err)
-		return 0
+func getMinutesBatteryLife(ctx context.Context, innerDataMap map[string][]float64, innerAverageMap map[string]float64, totalDurationSec float64, metrics *pb.OneTimeMetrics) (minutesBatteryLife float64) {
+	errStr := func(metric string) string {
+		e := "Cannot compute battery life in minutes and defaulting to 0 minute because "
+		e += metric + " cannot be retrieved"
+		return e
 	}
 
-	chargeFullDesign, err := ReadBatteryChargeDesignSize(ctx, batteryPath)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to get battery charge design size: ", err)
+	if metrics.BatteryChargeDesignSize == nil {
+		testing.ContextLog(ctx, errStr("battery charge design size"))
 		return 0
 	}
+	chargeFullDesign := *metrics.BatteryChargeDesignSize
 
-	chargeFull, err := ReadBatteryChargeSize(ctx, batteryPath)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to get battery charge size: ", err)
+	if metrics.BatteryChargeSize == nil {
+		testing.ContextLog(ctx, errStr("battery charge"))
 		return 0
 	}
+	chargeFull := *metrics.BatteryChargeSize
 
-	energyFullDesign, err := ReadBatteryDesignEnergySize(ctx, batteryPath)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to get battery design energy size: ", err)
+	if metrics.BatteryEnergySize == nil {
+		testing.ContextLog(ctx, errStr("battery energy size"))
 		return 0
 	}
+	energyFullDesign := *metrics.BatteryEnergySize
 
 	if energyUsed, ok := innerAverageMap["discharge_mwh"]; ok && energyUsed > 0 && totalDurationSec > 0 {
-		lowBatteryShutdownPercent, err := LowBatteryShutdownPercent(ctx)
-		if err != nil {
-			testing.ContextLog(ctx, "Failed to read low battery shut down percent: Use 4% for approximation")
-			lowBatteryShutdownPercent = 4.0
+		var lowBatteryShutdownPercent = 4.0
+		if metrics.BatteryShutdownPercent == nil {
+			es := "Low battery shut down percent cannot be retrieved "
+			es += "while computing battery life in minutes and "
+			es += "4% is used for approximation"
+			testing.ContextLog(ctx, es)
+		} else {
+			lowBatteryShutdownPercent = *metrics.BatteryShutdownPercent
 		}
+
 		batSizeScale := 1 - lowBatteryShutdownPercent/100.0
 
 		var chargeUsedInPercent float64
@@ -390,27 +395,26 @@ func getNonSocSubsystemPowerData(ctx context.Context,
 }
 
 // updatePowerLogPerf adds perf scalar to power log map.
-func updatePowerLogPerf(ctx context.Context, dataMap map[string][]float64, averageMap map[string]float64, typeMap, unitMap map[string]string) {
+func updatePowerLogPerf(ctx context.Context, dataMap map[string][]float64, averageMap map[string]float64, typeMap, unitMap map[string]string, metrics *pb.OneTimeMetrics) {
 	// Backlight scalars.
 	const (
 		nonlinearKey = "level_backlight_percent_nonlinear"
 		linearKey    = "level_backlight_percent_linear"
 	)
-	nonlinear, linear := util.GetBacklightLevel(ctx)
 
-	dataMap[nonlinearKey] = []float64{nonlinear}
-	averageMap[nonlinearKey] = nonlinear
+	dataMap[nonlinearKey] = []float64{metrics.BacklightNonlinearPercent}
+	averageMap[nonlinearKey] = metrics.BacklightNonlinearPercent
 	typeMap[nonlinearKey] = "perf"
 	unitMap[nonlinearKey] = generalPerfMetricTypeUnit
 
-	dataMap[linearKey] = []float64{linear}
-	averageMap[linearKey] = linear
+	dataMap[linearKey] = []float64{metrics.BacklightLinearPercent}
+	averageMap[linearKey] = metrics.BacklightLinearPercent
 	typeMap[linearKey] = "perf"
 	unitMap[linearKey] = generalPerfMetricTypeUnit
 }
 
 // CreatePowerLogDict creates the power log dictionary from power dict.
-func CreatePowerLogDict(ctx context.Context, testName string, powerDict map[string]interface{}, args ...OptionalRecorderArg) map[string]interface{} {
+func CreatePowerLogDict(ctx context.Context, testName string, powerDict map[string]interface{}, devInfo *pb.DeviceInfo) map[string]interface{} {
 	powerLogDict := map[string]interface{}{
 		"format_version": 7,
 		// TODO: see b/271917877
@@ -427,7 +431,7 @@ func CreatePowerLogDict(ctx context.Context, testName string, powerDict map[stri
 		// 	},
 		"timestamp": time.Now().Unix(),
 		"test":      testName,
-		"dut":       FormatDeviceInfoForPowerLog(GetDeviceInfo(ctx, args...)),
+		"dut":       FormatDeviceInfoForPowerLog(devInfo),
 		"power":     powerDict,
 	}
 
@@ -706,14 +710,64 @@ func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 	return nil
 }
 
+// CollectOneTimeMetrics collects necessary additional one-time metrics for
+// power dashboard.
+func CollectOneTimeMetrics(ctx context.Context) *pb.OneTimeMetrics {
+	nonlinear, linear := util.GetBacklightLevel(ctx)
+
+	metrics := new(pb.OneTimeMetrics)
+	*metrics = pb.OneTimeMetrics{
+		BacklightLinearPercent:    linear,
+		BacklightNonlinearPercent: nonlinear,
+	}
+
+	if batteryPath, err := SysfsBatteryPath(ctx); err == nil {
+		batteryDesignSize, err := ReadBatteryChargeDesignSize(ctx, batteryPath)
+		if err != nil {
+			testing.ContextLog(ctx, "Failed to get battery charge design size: ", err)
+		} else {
+			metrics.BatteryChargeDesignSize = new(float64)
+			*metrics.BatteryChargeDesignSize = batteryDesignSize
+		}
+
+		batterySize, err := ReadBatteryChargeSize(ctx, batteryPath)
+		if err != nil {
+			testing.ContextLog(ctx, "Failed to get battery charge size: ", err)
+		} else {
+			metrics.BatteryChargeSize = new(float64)
+			*metrics.BatteryChargeSize = batterySize
+		}
+
+		batteryEnergySize, err := ReadBatteryDesignEnergySize(ctx, batteryPath)
+		if err != nil {
+			testing.ContextLog(ctx, "Failed to get battery design energy size: ", err)
+		} else {
+			metrics.BatteryEnergySize = new(float64)
+			*metrics.BatteryEnergySize = batteryEnergySize
+		}
+	}
+
+	lowBatteryShutdownPercent, err := LowBatteryShutdownPercent(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to read low battery shut down percent: ", err)
+	} else {
+		metrics.BatteryShutdownPercent = new(float64)
+		*metrics.BatteryShutdownPercent = lowBatteryShutdownPercent
+	}
+
+	return metrics
+}
+
 // GeneratePowerLog returns the power dict and the power log dict, and
 // stores power_log.json and power_log.html.
 func GeneratePowerLog(ctx context.Context, outDir, testName string, values *perf.Values, args ...OptionalRecorderArg) (map[string]interface{}, map[string]interface{}, error) {
-	powerDict, err := ConvertPowerPerfValue(ctx, values)
+	devInfo := GetDeviceInfo(ctx, args...)
+	metrics := CollectOneTimeMetrics(ctx)
+	powerDict, err := ConvertPowerPerfValue(ctx, values, metrics)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to convert power perf values to power dictionary")
 	}
-	powerLogDict := CreatePowerLogDict(ctx, testName, powerDict, args...)
+	powerLogDict := CreatePowerLogDict(ctx, testName, powerDict, devInfo)
 
 	if err := SavePowerLogJSON(ctx, outDir, powerLogDict); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to generate power_log.json")
