@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -104,6 +105,14 @@ func EndProcess(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
 			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 			defer cancel()
+
+			if browserType == browser.TypeLacros {
+				// Ensuring Lacros is not running before launching it since the launched Lacros
+				// from previous run could be hasn't terminated yet.
+				if err := lacros.WaitForLacrosNotRunning(ctx, tconn, 3*time.Second); err != nil {
+					s.Fatal("Failed to wait for Lacros is not running: ", err)
+				}
+			}
 
 			// browserfixt.SetUp sets up the lacros by bringing up the window (with one empty tab),
 			// but no window will be brought up for ash-Chrome.

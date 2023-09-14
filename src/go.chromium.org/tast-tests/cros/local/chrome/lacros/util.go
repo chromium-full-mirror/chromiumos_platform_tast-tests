@@ -13,6 +13,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	internal "go.chromium.org/tast-tests/cros/local/chrome/internal/lacros"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
+	"go.chromium.org/tast-tests/cros/local/procutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -54,6 +56,30 @@ func IsLacrosRunning(ctx context.Context, cr *chrome.Chrome) (bool, error) {
 		return false, errors.Wrap(err, "failed to get TestConn to check Lacros")
 	}
 	return ash.AppRunning(ctx, tconn, apps.Lacros.ID)
+}
+
+// WaitForLacrosNotRunning waits for the Lacros is not running.
+func WaitForLacrosNotRunning(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		proc, err := lacrosproc.Root(ctx, tconn)
+		if err != nil {
+			if err == procutil.ErrNotFound {
+				// No lacros processes are running.
+				return nil
+			}
+			return testing.PollBreak(err)
+		}
+
+		isRunning, err := proc.IsRunning()
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+		if isRunning {
+			return errors.New("lacros process is still running")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: timeout, Interval: time.Second})
 }
 
 // ResetState terminates Lacros and removes its user data directory, unless KeepAlive is enabled.
