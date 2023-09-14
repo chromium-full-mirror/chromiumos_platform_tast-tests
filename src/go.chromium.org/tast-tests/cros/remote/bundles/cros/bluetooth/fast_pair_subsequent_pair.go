@@ -112,7 +112,7 @@ func FastPairSubsequentPair(ctx context.Context, s *testing.State) {
 	// We need to wait for the Primary DUT to complete pairing, which includes a network
 	// call to Footprints. There aren't any UI indicators that the network call was
 	// finished so we have to use Sleep.
-	// TODO(b/263407987): Remove this sleep once the bug is fixed.
+	//GoBigSleepLint TODO(b/263407987): Remove this sleep once the bug is fixed.
 	testing.Sleep(ctx, 5*time.Second)
 
 	// Enable Bluetooth on the Companion DUT.

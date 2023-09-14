@@ -179,6 +179,10 @@ type fixtureFeatures struct {
 	// Pair OTA pool.
 	UseFastPairTapeAccount bool
 
+	// UseSameGaiaLogin enforces that all companion DUTs will login on the same account
+	// as the primary DUT.
+	UseSameGaiaLogin bool
+
 	// RequireFastPairUserVars enables retrieving chrome user credentials from
 	// fixture vars, and requires that they are provided. Required for all Fast
 	// Pair tests that use a GAIA login.
@@ -511,7 +515,8 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	defer cancel()
 
 	// Perform per-DUT setup actions.
-	for _, dutConfig := range tf.fv.DUTConfigs {
+	var primaryDUTUsername, primaryDUTPassword string
+	for dutIndex, dutConfig := range tf.fv.DUTConfigs {
 		dutName := dutConfig.DUT.HostName()
 		s.Logf("SetUp for DUT %s started", dutName)
 
@@ -561,7 +566,12 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			// Resolve chrome user credentials.
 			var chromeUsername, chromePassword string
 			s.Log("Resolving chrome user credentials")
-			if tf.features.RequireFastPairUserVars {
+			if tf.features.UseSameGaiaLogin && dutIndex != 0 {
+				// All companion DUTs (expected to be in the last half of the config list) should
+				// use the same GAIA credentials as the first account.
+				chromeUsername = primaryDUTUsername
+				chromePassword = primaryDUTPassword
+			} else if tf.features.RequireFastPairUserVars {
 				// Fast Pair tests require GAIA credentials to be provided, which can be
 				// passed via CLI or will use the default credentials.
 				chromeUsername = s.RequiredVar(fixtureVarFastPairChromeUsername)
@@ -591,6 +601,12 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 				chromeUsername = defaultChromeUsername
 				chromePassword = defaultChromePassword
 				s.Log("Using default fake chrome user credentials")
+			}
+
+			if tf.features.UseSameGaiaLogin && dutIndex == 0 {
+				// Save primary DUT credentials if we have to re-use them for companion DUT logins.
+				primaryDUTUsername = chromeUsername
+				primaryDUTPassword = chromePassword
 			}
 
 			// Start Chrome with the features and login mode provided by the test fixture.
@@ -1084,6 +1100,14 @@ func (tf *fixture) dumpAllCollectedLogs(ctx context.Context, logName string) err
 // ready for tests.
 func (tf *fixture) resetDutBluetoothState(ctx context.Context, dutConfig *DUTConfig, enableBluetooth bool) error {
 	dutName := dutConfig.DUT.HostName()
+	// Reset the state of the bluetooth adapter.
+	testing.ContextLogf(ctx, "Resetting and setting bluetooth enabled to %t on DUT %s", enableBluetooth, dutName)
+	if _, err := dutConfig.BluetoothService.Reset(ctx, &bts.ResetRequest{
+		PowerOn: enableBluetooth,
+	}); err != nil {
+		return errors.Wrapf(err, "failed to reset and set bluetooth enabled to %t on DUT %s", enableBluetooth, dutName)
+	}
+
 	// Handle Fast Pair UI reset needs.
 	if tf.fastPairEnabled {
 		testing.ContextLogf(ctx, "Removing all saved bluetooth devices via UI on DUT %s", dutName)
@@ -1094,14 +1118,6 @@ func (tf *fixture) resetDutBluetoothState(ctx context.Context, dutConfig *DUTCon
 		if _, err := dutConfig.BluetoothUIService.CloseNotifications(ctx, &emptypb.Empty{}); err != nil {
 			return errors.Wrapf(err, "failed to close all UI notifications on DUT %s", dutName)
 		}
-	}
-
-	// Reset the state of the bluetooth adapter.
-	testing.ContextLogf(ctx, "Resetting and setting bluetooth enabled to %t on DUT %s", enableBluetooth, dutName)
-	if _, err := dutConfig.BluetoothService.Reset(ctx, &bts.ResetRequest{
-		PowerOn: enableBluetooth,
-	}); err != nil {
-		return errors.Wrapf(err, "failed to reset and set bluetooth enabled to %t on DUT %s", enableBluetooth, dutName)
 	}
 	return nil
 }
