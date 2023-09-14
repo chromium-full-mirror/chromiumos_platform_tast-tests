@@ -1,55 +1,53 @@
 requirements {
-	id: "test-passfail-0001-v01"
-	description: "There are 2 tests for this requirement: pass and fail"
-	level: "MUST"
+  id: "test-passfail-0001-v01"
+  description: "There are 2 tests for this requirement: pass and fail"
+  level: "MUST"
 }
 requirements {
-	id: "test-pass-0001-v01"
-	description: "There is a pass test for this requirement"
-	level: "MUST"
+  id: "test-pass-0001-v01"
+  description: "There is a pass test for this requirement"
+  level: "MUST"
 }
 requirements {
-	id: "test-fail-0001-v01"
-	description: "There is a fail test for this requirement"
-	level: "MUST"
+  id: "test-fail-0001-v01"
+  description: "There is a fail test for this requirement"
+  level: "MUST"
 }
 requirements {
-	id: "test-none-0001-v01"
-	description: "There are no tests for this requirement"
-	level: "MUST"
+  id: "test-none-0001-v01"
+  description: "There are no tests for this requirement"
+  level: "MUST"
 }
 mappings {
-	requirement_id: "test-passfail-0001-v01"
-	tests {
-          source: "tauto"
-          name: "stub_PassServer"
-        }
-	tests {
-          source: "tauto"
-          name: "stub_FailServer"
-        }
-	tests {
-          source: "tast"
-          name: "tast.example.Pass"
-        }
-	tests {
-          source: "tast"
-          name: "tast.example.Fail"
-        }
+  requirement_id: "test-passfail-0001-v01"
+  tests {
+    source: "tauto"
+    name: "stub_PassServer"
+  }
+  tests {
+    source: "tauto"
+    name: "stub_FailServer"
+  }
+  tests {
+    source: "tast"
+    name: "tast.example.Pass"
+  }
+  tests {
+    source: "tast"
+    name: "tast.example.Fail"
+  }
 }
 mappings {
-	requirement_id: "test-pass-0001-v01"
-	tests {
-          source: "tauto"
-          name: "stub_PassServer"
-        }
+  requirement_id: "test-pass-0001-v01"
+  tests {
+    source: "tauto"
+    name: "stub_PassServer"
+  }
 }
 mappings {
-	requirement_id: "test-fail-0001-v01"
-	tests {
-          source: "tauto"
-          name: "stub_FailServer"
-        }
+  requirement_id: "test-fail-0001-v01"
+  tests {
+    source: "tauto"
+    name: "stub_FailServer"
+  }
 }
-
-

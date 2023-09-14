@@ -1,25 +1,24 @@
 requirements {
-	id: "test-invalid-0001-v01"
-	description: "There is a pass test for this requirement"
-	level: "MUST"
+  id: "test-invalid-0001-v01"
+  description: "There is a pass test for this requirement"
+  level: "MUST"
 }
 mappings {
-	requirement_id: "test-invalid-0001-v01"
-	tests {
-          source: "tauto"
-          name: "noResult"
-	}
-	tests {
-          source: "tauto"
-		name: "stub_PassServer"
-	}
-	tests {
-          source: "tast"
-          name: "tast.noResult"
-	}
-	tests {
-          source: "tast"
-          name: "tast.example.Pass"
-	}
+  requirement_id: "test-invalid-0001-v01"
+  tests {
+    source: "tauto"
+    name: "noResult"
+  }
+  tests {
+    source: "tauto"
+    name: "stub_PassServer"
+  }
+  tests {
+    source: "tast"
+    name: "tast.noResult"
+  }
+  tests {
+    source: "tast"
+    name: "tast.example.Pass"
+  }
 }
-

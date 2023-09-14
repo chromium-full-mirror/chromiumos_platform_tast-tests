@@ -1,33 +1,32 @@
 requirements {
-	id: "boot-perf-0008-v01"
-	description: "Filler"
-	level: "MUST"
+  id: "boot-perf-0008-v01"
+  description: "Filler"
+  level: "MUST"
 }
 requirements {
-	id: "boot-perf-0009-v01"
-	description: "Filler"
-	level: "MUST"
+  id: "boot-perf-0009-v01"
+  description: "Filler"
+  level: "MUST"
 }
 mappings {
-	requirement_id: "boot-perf-0008-v01"
-	tests {
-          source: "tauto"
-          name: "power_UiResume.freeze"
-        }
-	tests {
-          source: "tauto"
-          name: "stub_FailServer"
-        }
+  requirement_id: "boot-perf-0008-v01"
+  tests {
+    source: "tauto"
+    name: "power_UiResume.freeze"
+  }
+  tests {
+    source: "tauto"
+    name: "stub_FailServer"
+  }
 }
 mappings {
-	requirement_id: "boot-perf-0009-v01"
-	tests {
-          source: "tauto"
-          name: "power_UiResume.freeze"
-        }
-	tests {
-          source: "tauto"
-          name: "stub_PassServer"
-        }
+  requirement_id: "boot-perf-0009-v01"
+  tests {
+    source: "tauto"
+    name: "power_UiResume.freeze"
+  }
+  tests {
+    source: "tauto"
+    name: "stub_PassServer"
+  }
 }
-

@@ -1,79 +1,79 @@
 requirements {
-	id: "test-passfail-0001-v01"
-	description: "There are 2 tests for this requirement: pass and fail"
-	level: "MUST"
-	depends_on: "test-pass-0002-v01"
+  id: "test-passfail-0001-v01"
+  description: "There are 2 tests for this requirement: pass and fail"
+  level: "MUST"
+  depends_on: "test-pass-0002-v01"
 }
 requirements {
-	id: "test-pass-0001-v01"
-	description: "There is a pass test for this requirement"
-	level: "MUST"
-	depends_on: "test-pass-0002-v01"
+  id: "test-pass-0001-v01"
+  description: "There is a pass test for this requirement"
+  level: "MUST"
+  depends_on: "test-pass-0002-v01"
 }
 requirements {
-	id: "test-pass-0002-v01"
-	description: "There is a pass test for this requirement"
-	level: "MAY"
+  id: "test-pass-0002-v01"
+  description: "There is a pass test for this requirement"
+  level: "MAY"
 }
 requirements {
-	id: "test-fail-0001-v01"
-	description: "There is a fail test for this requirement"
-	level: "MAY"
+  id: "test-fail-0001-v01"
+  description: "There is a fail test for this requirement"
+  level: "MAY"
 }
 requirements {
-	id: "test-fail-0002-v01"
-	description: "There are no tests for this requirement"
-	level: "MUST"
-	depends_on: "test-fail-0001-v01"
+  id: "test-fail-0002-v01"
+  description: "There are no tests for this requirement"
+  level: "MUST"
+  depends_on: "test-fail-0001-v01"
 }
 requirements {
-	id: "test-other-0001-v01"
-	description: "There is a tast test for this requirement"
-	level: "MUST"
+  id: "test-other-0001-v01"
+  description: "There is a tast test for this requirement"
+  level: "MUST"
 }
 mappings {
-	requirement_id: "test-passfail-0001-v01"
-	tests {
-          source: "tauto"
-          name: "stub_PassServer"
-        }
-	tests {
-          source: "tauto"
-          name: "stub_FailServer"
-        }
+  requirement_id: "test-passfail-0001-v01"
+  tests {
+    source: "tauto"
+    name: "stub_PassServer"
+  }
+  tests {
+    source: "tauto"
+    name: "stub_FailServer"
+  }
 }
 mappings {
-	requirement_id: "test-pass-0001-v01"
-	tests {
-          source: "tauto"
-          name: "stub_PassServer"
-        }
+  requirement_id: "test-pass-0001-v01"
+  tests {
+    source: "tauto"
+    name: "stub_PassServer"
+  }
 }
 mappings {
-	requirement_id: "test-pass-0002-v01"
-	tests {
-          source: "tauto"
-          name: "stub_PassServer"
-        }
+  requirement_id: "test-pass-0002-v01"
+  tests {
+    source: "tauto"
+    name: "stub_PassServer"
+  }
 }
 mappings {
-	requirement_id: "test-fail-0001-v01"
-	tests {
-          source: "tauto"
-          name: "stub_FailServer"
-        }
+  requirement_id: "test-fail-0001-v01"
+  tests {
+    source: "tauto"
+    name: "stub_FailServer"
+  }
 }
 mappings {
-	requirement_id: "test-fail-0002-v01"
-	tests {
-          source: "tast"
-          name: "tast.example.Pass"
-        }
+  requirement_id: "test-fail-0002-v01"
+  tests {
+    source: "tast"
+    name: "tast.example.Pass"
+  }
 }
 mappings {
-	requirement_id: "test-other-0001-v01"
-	tests {
-          source: "tast"
-          name: "tast.example.Pass"
-        }
+  requirement_id: "test-other-0001-v01"
+  tests {
+    source: "tast"
+    name: "tast.example.Pass"
+  }
 }
