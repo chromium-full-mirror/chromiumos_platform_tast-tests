@@ -427,7 +427,7 @@ func VerifyCurrentKernelPartitionHasHighestPriority(ctx context.Context, dut *du
 	// about the disk layout and the partition information.
 	currentRootPartitionBytes, err := dut.Conn().CommandContext(ctx, "rootdev", "-s").Output()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to get current root partition")
 	}
 	currentRootPartition := strings.TrimSpace(string(currentRootPartitionBytes))
 
@@ -438,12 +438,12 @@ func VerifyCurrentKernelPartitionHasHighestPriority(ctx context.Context, dut *du
 
 	currentKernelPriority, err := getKernelPartitionPriority(ctx, dut, currentRootPartition)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to get current kernel partition priority")
 	}
 
 	alternativeKernelPriority, err := getKernelPartitionPriority(ctx, dut, alternativeRootPartition)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to get alternative kernel partition priority")
 	}
 
 	if currentKernelPriority <= alternativeKernelPriority {
@@ -458,19 +458,19 @@ func VerifyCurrentKernelPartitionHasHighestPriority(ctx context.Context, dut *du
 func getKernelPartitionPriority(ctx context.Context, dut *dut.DUT, rootPartition string) (int, error) {
 	partitionNumber, err := getKernelPartitionNumber(rootPartition)
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "failed to get partition number")
 	}
 
 	// Get a drive path.
-	driveBytes, err := dut.Conn().CommandContext(ctx, "rootdev", "-d").Output()
+	driveBytes, err := dut.Conn().CommandContext(ctx, "rootdev", "-s", "-d").Output()
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "failed to get drive path")
 	}
 	drive := strings.TrimSpace(string(driveBytes))
 
 	priority, err := getPartitionPriority(ctx, dut, drive, partitionNumber)
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "failed to get priority of partition")
 	}
 
 	return priority, nil
@@ -485,7 +485,7 @@ func getKernelPartitionNumber(rootPartition string) (int, error) {
 	// Root partition number is the last number in the root partition path.
 	rootPartitionNumber, err := strconv.Atoi(rootPartition[len(rootPartition)-1:])
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "failed to calculate root partition number")
 	}
 
 	return rootPartitionNumber - 1, nil
@@ -495,11 +495,11 @@ func getKernelPartitionNumber(rootPartition string) (int, error) {
 func getPartitionPriority(ctx context.Context, dut *dut.DUT, drive string, partitionNumber int) (int, error) {
 	priorityBytes, err := dut.Conn().CommandContext(ctx, "cgpt", "show", drive, "-i", strconv.Itoa(partitionNumber), "-P").Output()
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "failed to get partition priority via cgpt")
 	}
 	priority, err := strconv.Atoi(strings.TrimSpace(string(priorityBytes)))
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "failed to parse cgpt priority")
 	}
 
 	return priority, nil
