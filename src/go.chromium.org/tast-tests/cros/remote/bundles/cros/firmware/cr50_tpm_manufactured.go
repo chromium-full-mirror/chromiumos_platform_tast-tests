@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -68,30 +67,7 @@ func Cr50TPMManufactured(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	var leftoverLines string
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		lines, err := h.Servo.GetQuotedString(ctx, servo.CR50UARTStream)
-		if err != nil {
-			return errors.Wrap(err, "failed to read UART")
-		} else if lines != "" {
-			// It is possible to read partial lines, so save the part after newline for later
-			lines = leftoverLines + lines
-			if crlfIdx := strings.LastIndex(lines, "\r\n"); crlfIdx < 0 {
-				leftoverLines = lines
-				lines = ""
-			} else {
-				leftoverLines = lines[crlfIdx+2:]
-				lines = lines[:crlfIdx+2]
-			}
-
-			for _, l := range strings.Split(lines, "\r\n") {
-				if strings.Contains(l, "tpm_manufactured: manufactured") {
-					return nil
-				}
-			}
-		}
-		return errors.New("failed to find `tpm_manufactured: manufactured` string")
-	}, &testing.PollOptions{Interval: 200 * time.Millisecond, Timeout: 60 * time.Second}); err != nil {
-		s.Fatal("GSC output parsing failed: ", err)
+	if err := h.Servo.PollForString(ctx, servo.CR50UARTStream, "tpm_manufactured: manufactured"); err != nil {
+		s.Fatal(errors.Wrap(err, "GSC output parsing failed"))
 	}
 }

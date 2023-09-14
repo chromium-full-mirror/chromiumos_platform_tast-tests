@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/xmlrpc"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -1358,4 +1357,36 @@ func (s *Servo) OpenLid(ctx context.Context) error {
 func (s *Servo) CloseLid(ctx context.Context) error {
 	testing.ContextLog(ctx, "Closing DUT lid")
 	return s.SetStringAndCheck(ctx, LidOpen, string(LidOpenNo))
+}
+
+// PollForString polls a UART for a string for up to 60s, returning nil if found
+func (s *Servo) PollForString(ctx context.Context, uart StringControl, toFind string) error {
+	var leftoverLines string
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if lines, err := s.GetQuotedString(ctx, uart); err != nil {
+			return errors.Wrap(err, "failed to read UART")
+		} else if lines != "" {
+			// It is possible to read partial lines, so save the part after newline for later
+			lines = leftoverLines + lines
+			if crlfIdx := strings.LastIndex(lines, "\r\n"); crlfIdx < 0 {
+				leftoverLines = lines
+				lines = ""
+			} else {
+				leftoverLines = lines[crlfIdx+2:]
+				lines = lines[:crlfIdx+2]
+			}
+
+			for _, l := range strings.Split(lines, "\r\n") {
+				if strings.Contains(l, toFind) {
+					return nil
+				}
+			}
+		}
+		return errors.Errorf("failed to find %q", toFind)
+	}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: 60 * time.Second}); err != nil {
+		return errors.Wrap(err, "UART output-parsing failed")
+	}
+
+	return nil
 }
