@@ -25,6 +25,9 @@ type bypasser interface {
 	// BypassDevMode bypasses the developer mode firmware logic to boot
 	// internal image.
 	BypassDevMode(ctx context.Context) error
+	// BypassAltfwMode bypasses the altfw-mode firmware logic to boot
+	// the altfw image.
+	BypassAltfwMode(ctx context.Context) error
 }
 
 type baseBypasser struct {
@@ -105,6 +108,12 @@ func (k *keyboardBypasser) BypassDevMode(ctx context.Context) error {
 	return h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab)
 }
 
+func (k *keyboardBypasser) BypassAltfwMode(ctx context.Context) error {
+	h := k.helper
+	testing.ContextLog(ctx, "Pressing Ctrl-L")
+	return h.Servo.ECPressCtrlKey(ctx, "l")
+}
+
 type legacyKeyboardBypasser struct {
 	keyboardBypasser
 }
@@ -136,6 +145,11 @@ func (lk *legacyKeyboardBypasser) BypassDevBootUSB(ctx context.Context) error {
 
 func (lk *legacyKeyboardBypasser) BypassDevMode(ctx context.Context) error {
 	return lk.keyboardBypasser.BypassDevMode(ctx)
+}
+
+func (lk *legacyKeyboardBypasser) BypassAltfwMode(ctx context.Context) error {
+	testing.ContextLog(ctx, "legacy")
+	return lk.keyboardBypasser.BypassAltfwMode(ctx)
 }
 
 type legacyDetachableBypasser struct {
@@ -214,6 +228,13 @@ func (ld *legacyDetachableBypasser) BypassDevBootUSB(ctx context.Context) error 
 
 func (ld *legacyDetachableBypasser) BypassDevMode(ctx context.Context) error {
 	h := ld.helper
+	testing.ContextLog(ctx, "Pressing and holding volume down button for 3 seconds")
+	return h.Servo.SetInt(ctx, servo.VolumeDownHold, 3000)
+}
+
+func (ld *legacyDetachableBypasser) BypassAltfwMode(ctx context.Context) error {
+	h := ld.helper
+	// TODO(b:296600641): Is this the right method?
 	testing.ContextLog(ctx, "Pressing and holding volume down button for 3 seconds")
 	return h.Servo.SetInt(ctx, servo.VolumeDownHold, 3000)
 }

@@ -307,6 +307,26 @@ func (s *Servo) ECPressKey(ctx context.Context, key string) error {
 	return nil
 }
 
+// ECPressCtrlKey simulates a CTRL-keypress on the DUT from the servo using kbpress.
+// baseKey is the key to press while Ctrl is held down, e.g. "d"
+func (s *Servo) ECPressCtrlKey(ctx context.Context, baseKey string) error {
+	const ctrlL = "<ctrl_l>"
+	ctrlRow, ctrlCol, err := s.GetKeyRowCol(ctrlL)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get %s in key matrix", ctrlL)
+	}
+	if err := s.RunECCommand(ctx, fmt.Sprintf("kbpress %d %d 1", ctrlCol, ctrlRow)); err != nil {
+		return errors.Wrapf(err, "failed to press key %s>", ctrlL)
+	}
+	if err := s.ECPressKey(ctx, baseKey); err != nil {
+		return errors.Wrapf(err, "failed to enter key %q", baseKey)
+	}
+	if err := s.RunECCommand(ctx, fmt.Sprintf("kbpress %d %d 0", ctrlCol, ctrlRow)); err != nil {
+		return errors.Wrapf(err, "failed to release key %s", ctrlL)
+	}
+	return nil
+}
+
 // SetKBBacklight sets the DUT keyboards backlight to the given value (0 - 100).
 func (s *Servo) SetKBBacklight(ctx context.Context, percent int) error {
 	testing.ContextLog(ctx, "Setting keyboard backlight to: ", percent)
