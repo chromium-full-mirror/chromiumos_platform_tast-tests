@@ -174,7 +174,6 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 	enabled := []string{
 		// Either module or enabled, depending on platform.
 		"CONFIGFS_FS",
-		"EROFS_FS",
 	}
 	value := map[string]string{
 		// Security; NULL-address hole should be as large as possible.
@@ -205,6 +204,8 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		// reflecting the default name of the partition to be used to store the suspended
 		// disk image.
 		"PM_STD_PARTITION",
+		// EROFS_FS is used on newer kernels 5.x and up.
+		"EROFS_FS",
 	}
 	missing := []string{
 		// Never going to optimize to this CPU.
