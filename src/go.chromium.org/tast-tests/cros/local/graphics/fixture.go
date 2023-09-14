@@ -310,8 +310,12 @@ func (f *gpuWatchHangsFixture) PreTest(ctx context.Context, s *testing.FixtTestS
 	if err != nil {
 		s.Log("Failed to get initial dirty writeback duration: ", err)
 	} else {
+		// Performing a full sync makes it less likely that there are pending writes that might defer logging from being written immediately later.
+		if err := testexec.CommandContext(ctx, "sync").Run(testexec.DumpLogOnError); err != nil {
+			s.Log("Failed to sync the file system, proceed without failing the tests: ", err)
+		}
 		SetDirtyWritebackDuration(ctx, 1*time.Second)
-		// Set dirty writeback duration to initial value even if we fails to set to 1 second. Note this implicitly calls sync.
+		// Set dirty writeback duration to initial value even if we fails to set to 1 second.
 		f.postFunc = append(f.postFunc, func(ctx context.Context) error {
 			return SetDirtyWritebackDuration(ctx, dirtyWritebackDuration)
 		})

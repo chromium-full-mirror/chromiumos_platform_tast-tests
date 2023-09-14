@@ -440,17 +440,9 @@ func DEQPEnvironment(env []string) []string {
 // set_dirty_writeback_centisecs() function in
 // autotest/files/client/bin/utils.py.
 func SetDirtyWritebackDuration(ctx context.Context, d time.Duration) error {
-	// Performing a full sync makes it less likely that there are pending writes
-	// that might defer logging from being written immediately later.
-	cmd := testexec.CommandContext(ctx, "sync")
-	err := cmd.Run()
-	if err != nil {
-		cmd.DumpLog(ctx)
-		return errors.Wrap(err, "sync failed")
-	}
 	if d >= 0 {
 		centisecs := d / (time.Second / 100)
-		if err = ioutil.WriteFile(dirtyWritebackCentisecsPath, []byte(fmt.Sprintf("%d", centisecs)), 0600); err != nil {
+		if err := ioutil.WriteFile(dirtyWritebackCentisecsPath, []byte(fmt.Sprintf("%d", centisecs)), 0600); err != nil {
 			return err
 		}
 
