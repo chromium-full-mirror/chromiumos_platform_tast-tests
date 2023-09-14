@@ -35,6 +35,7 @@ const (
 	iwaFile          = "iwa/dist/diagnostics_app.swbn"
 	extensionFile    = "extension/diagnostics_app.crx"
 	tmpUsbMountPoint = "/tmp/virtual_usb"
+	testFile         = "/var/lib/rmad/.test"
 )
 
 func init() {
@@ -63,14 +64,16 @@ func newInstallIWAFixture() *installIWAFixture {
 
 // installIWAFixture implements testing.FixtureImpl.
 type installIWAFixture struct {
-	cr         *chrome.Chrome
-	v          Value
-	USBCleanUp func(ctx context.Context) error
+	cr                                    *chrome.Chrome
+	v                                     Value
+	signinProfileTestExtensionManifestKey string
 }
 
 // Value is a value exposed by fixture to tests.
 type Value struct {
-	Tconn *chrome.TestConn
+	Tconn           *chrome.TestConn
+	RestartChrome   func(ctx context.Context) error
+	Launch3pDiagApp func(ctx context.Context, withUSB bool) error
 }
 
 func (f *installIWAFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -82,40 +85,29 @@ func (f *installIWAFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 			f.TearDown(ctx, s)
 		}
 	}(cleanupCtx)
+	f.v.RestartChrome = f.restartChrome
+	f.v.Launch3pDiagApp = f.launch3pDiagApp
 
 	// Make sure rmad is not currently running.
 	if err := upstart.StopJob(ctx, "rmad"); err != nil {
 		s.Fatal("Failed to stop rmad, err: ", err)
 	}
-	// Create a valid empty rmad state file.
+	// Create a valid empty rmad state file and enter the test mode.
 	if err := shimlessrmaapp.CreateEmptyStateFile(); err != nil {
 		s.Fatal("Failed to create empty state file for rmad, err: ", err)
 	}
+	if _, err := os.Create(testFile); err != nil {
+		s.Fatal("Failed to create .test file, err: ", err)
+	}
 
 	// Open Chrome with Shimless RMA enabled.
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("ShimlessRMAFlow"),
-		chrome.EnableFeatures("IsolatedWebApps"),
-		chrome.EnableFeatures("IsolatedWebAppDevMode"),
-		chrome.EnableFeatures("ShimlessRMA3pDiagnostics"),
-		chrome.EnableFeatures("ShimlessRMA3pDiagnosticsDevMode"),
-		chrome.EnableFeatures("IWAForTelemetryExtensionAPI"),
-		chrome.NoLogin(),
-		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-		chrome.ExtraArgs("--launch-rma"))
-	if err != nil {
+	f.signinProfileTestExtensionManifestKey = s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
+	if err := f.restartChrome(ctx); err != nil {
 		s.Fatal("Failed to new chrome, err: ", err)
 	}
-	f.cr = cr
-
-	tconn, err := cr.SigninProfileTestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to get test API connection, err: ", err)
-	}
-	f.v.Tconn = tconn
 
 	// Start to create a virtual USB mass storage device.
 	usbMassStorage := usbdevice.NewUSBMassStorage()
-	f.USBCleanUp = usbMassStorage.CleanUp
 	if err := usbMassStorage.Init(ctx, 100); err != nil {
 		s.Fatal("Failed to set up virtual USB backing file, err: ", err)
 	}
@@ -156,24 +148,12 @@ func (f *installIWAFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		s.Fatal("Failed to plug in the virtual USB as RO, err: ", err)
 	}
 
-	// Trigger the installation flow.
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to open Keyboard device: ", err)
+	if err := f.launch3pDiagApp(ctx, true /* withUSB= */); err != nil {
+		s.Fatal("Failed to enter install flow")
 	}
-	defer kb.Close(ctx)
 
-	ui := uiauto.New(tconn)
+	ui := uiauto.New(f.v.Tconn)
 	installButton := nodewith.NameContaining("Install").Role(role.Button)
-	// When rmad is in a busy state, the shortcut is disabled. So we retry
-	// for 30 seconds.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		kb.Accel(ctx, "alt+shift+d")
-		return ui.Exists(installButton)(ctx)
-	}, &testing.PollOptions{Interval: time.Second, Timeout: 30 * time.Second}); err != nil {
-		s.Fatal("Failed to enter the IWA installation flow, err: ", err)
-	}
-
 	// Install the IWA.
 	if err := uiauto.Combine("click the install button",
 		ui.WaitUntilExists(installButton),
@@ -190,6 +170,12 @@ func (f *installIWAFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		s.Fatal("Failed to click the accept button: ", err)
 	}
 
+	// Installation should complete, we don't need the USB anymore.
+	if err := usbMassStorage.PlugOut(ctx); err != nil {
+		s.Fatal("Failed to plug out the virtual USB, err: ", err)
+	}
+	usbMassStorage.CleanUp(ctx)
+
 	return &f.v
 }
 
@@ -202,7 +188,7 @@ func (f *installIWAFixture) TearDown(ctx context.Context, s *testing.FixtState) 
 	}
 	shimlessrmaapp.RemoveStateFile()
 	upstart.StopJob(ctx, "rmad")
-	f.USBCleanUp(ctx)
+	os.Remove(testFile)
 	os.RemoveAll(tmpUsbMountPoint)
 }
 
@@ -225,5 +211,64 @@ func (f *installIWAFixture) mountVirtualUSB(ctx context.Context, usbPath string)
 		return errors.Wrap(err, "failed to mount USB")
 	}
 
+	return nil
+}
+
+func (f *installIWAFixture) restartChrome(ctx context.Context) error {
+	if f.cr != nil {
+		if err := f.cr.Close(ctx); err != nil {
+			return errors.Wrap(err, "failed to close chrome")
+		}
+		f.cr = nil
+	}
+
+	cr, err := chrome.New(ctx, chrome.EnableFeatures("ShimlessRMAFlow"),
+		chrome.EnableFeatures("IsolatedWebApps"),
+		chrome.EnableFeatures("IsolatedWebAppDevMode"),
+		chrome.EnableFeatures("ShimlessRMA3pDiagnostics"),
+		chrome.EnableFeatures("ShimlessRMA3pDiagnosticsDevMode"),
+		chrome.EnableFeatures("IWAForTelemetryExtensionAPI"),
+		chrome.NoLogin(),
+		chrome.LoadSigninProfileExtension(f.signinProfileTestExtensionManifestKey),
+		chrome.ExtraArgs("--launch-rma"))
+	if err != nil {
+		return errors.Wrap(err, "failed to new chrome")
+	}
+	f.cr = cr
+
+	tconn, err := f.cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get test API connection")
+	}
+	f.v.Tconn = tconn
+
+	return nil
+}
+
+func (f *installIWAFixture) launch3pDiagApp(ctx context.Context, withUSB bool) error {
+	// Trigger the installation flow.
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to open Keyboard device")
+	}
+	defer kb.Close(ctx)
+
+	ui := uiauto.New(f.v.Tconn)
+	var button *nodewith.Finder
+	if withUSB {
+		// When there is a USB, UI should enter the install flow.
+		button = nodewith.NameContaining("Install").Role(role.Button)
+	} else {
+		// When there is no USB and the extension and IWA are already installed, it should open the IWA directly.
+		button = nodewith.NameContaining("Check extension").Role(role.Button)
+	}
+	// When rmad is in a busy state, the shortcut is disabled. So we retry
+	// for 30 seconds.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		kb.Accel(ctx, "alt+shift+d")
+		return ui.Exists(button)(ctx)
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 30 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to enter the IWA installation flow")
+	}
 	return nil
 }
