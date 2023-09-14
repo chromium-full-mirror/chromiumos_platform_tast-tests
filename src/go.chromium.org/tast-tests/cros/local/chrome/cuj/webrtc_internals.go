@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -207,6 +208,7 @@ func ReportWebRTCInternals(pv *perf.Values, dump []byte, numBots int, present bo
 func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsID, framesTransmittedAttribute, directionSuffix, variantFormat string) (int, int, error) {
 	totalCount := 0
 	screenshareCount := 0
+	orderedIDs := make([]string, 0)
 	for id, byAttribute := range byID {
 		kindTimeline, ok := byAttribute["kind"]
 		if !ok {
@@ -231,6 +233,18 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 			continue
 		}
 
+		orderedIDs = append(orderedIDs, id)
+	}
+
+	sort.Slice(orderedIDs, func(i, j int) bool {
+		// Sort by number of items in the frames transmitted timeline as a simple
+		// proxy for length of time each stream was active. In descending order so
+		// the bots with longest time spent in the meeting sort earlier.
+		return len(byID[orderedIDs[i]][framesTransmittedAttribute]) > len(byID[orderedIDs[j]][framesTransmittedAttribute])
+	})
+
+	for _, id := range orderedIDs {
+		byAttribute := byID[id]
 		screenShareSuffix := ""
 		if contentTypeTimeline, ok := byAttribute["contentType"]; ok {
 			contentType, err := contentTypeTimeline.Collapse()
