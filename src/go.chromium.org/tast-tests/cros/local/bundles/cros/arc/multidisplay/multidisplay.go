@@ -1339,16 +1339,24 @@ func grabScreenshotOfDisplaysForFailedTests(ctx context.Context, cr *chrome.Chro
 			return errors.New("failed to get directory for saving files")
 		}
 		path := fmt.Sprintf("%s/snapping-%s-screenshot-failed-%s.png", dir, fileName, d.ID)
-		fd, err := os.Create(path)
-		if err != nil {
-			return errors.Wrap(err, "failed to create screenshot")
-		}
-		defer fd.Close()
-		if err := png.Encode(fd, img); err != nil {
-			return errors.Wrap(err, "failed to save screenshot in PNG format")
+		if err := writeScreenshotPng(path, img); err != nil {
+			return errors.Wrap(err, "could not write screenshot png file")
 		}
 
 		testing.ContextLogf(ctx, "Image containing the failed snap: %s", path)
+	}
+
+	return nil
+}
+
+func writeScreenshotPng(path string, img image.Image) error {
+	fd, err := os.Create(path)
+	if err != nil {
+		return errors.Wrap(err, "failed to create screenshot")
+	}
+	defer fd.Close()
+	if err := png.Encode(fd, img); err != nil {
+		return errors.Wrap(err, "failed to save screenshot in PNG format")
 	}
 
 	return nil

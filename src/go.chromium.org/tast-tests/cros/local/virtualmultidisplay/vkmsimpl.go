@@ -85,15 +85,6 @@ func (c *vkmsMultiDisplayController) AdditionalFixtureSetup(ctx context.Context)
 		return errors.Wrap(err, "could not kill DRM processes")
 	}
 
-	testing.ContextLog(ctx, "Checking if VKMS is loaded")
-	if err := ensureModuleLoadedOrNot("vkms", true); err == nil {
-		testing.ContextLog(ctx, "VKMS Detected, removing")
-		// Unload VKMS if it is loaded.
-		if err := testexec.CommandContext(ctx, "rmmod", "vkms").Run(); err != nil {
-			return errors.Wrap(err, "could not unload module vkms")
-		}
-	}
-
 	// Make sure the config directory exists and that configFS is mounted there
 	if err := os.MkdirAll("/sys/kernel/config", os.ModePerm); err != nil {
 		return errors.Wrap(err, "could not create configfs directory")
@@ -230,29 +221,13 @@ func (c *vkmsMultiDisplayController) writeToDisplayConfigFs(displayID int, value
 	}
 
 	connectorPath := fmt.Sprintf(vkmsConnectedAttributePattern, displayID)
-	f, err := os.OpenFile(connectorPath, os.O_TRUNC|os.O_RDWR, 0600)
-	if err != nil {
-		return errors.Wrapf(err, "could not open display debug path: %q", connectorPath)
-	}
-	defer f.Close()
-
-	_, err = f.WriteString(value)
-	f.Close()
-	if err != nil {
-		return errors.Wrapf(err, "could not write %s to display debug path: %q", value, connectorPath)
+	if err := os.WriteFile(connectorPath, []byte(value), 0600); err != nil {
+		return errors.Wrap(err, "could not write connector file")
 	}
 
-	f, err = os.OpenFile(connectorPath, os.O_TRUNC|os.O_RDWR, 0600)
-	if err != nil {
-		return errors.Wrapf(err, "could not open display debug path: %q for reading", connectorPath)
-	}
-
-	var readback [1]byte
-	if _, err = f.Read(readback[:]); err != nil {
-		return errors.Wrapf(err, "could not read back from display path %q", connectorPath)
-	}
-
-	if string(readback[:]) != value {
+	if readback, err := os.ReadFile(connectorPath); err != nil {
+		return errors.Wrap(err, "could not read back connector file")
+	} else if string(readback[0]) != value {
 		return errors.Errorf("set display enabled for display %d to %s but read back %s", displayID, value, string(readback[:]))
 	}
 
@@ -356,12 +331,6 @@ func (c *vkmsMultiDisplayController) AdditionalFixtureTeardown(ctx context.Conte
 		}
 	}
 
-	// Remove VKMS and reenable it as default.
-	if err := ensureModuleLoadedOrNot("vkms", true); err == nil {
-		if err := testexec.CommandContext(ctx, "rmmod", "vkms").Run(); err != nil {
-			return errors.Wrap(err, "could not unload module vkms")
-		}
-	}
 	// Re enable vkms with default parameters.
 	if err := testexec.CommandContext(ctx, "modprobe", "vkms").Run(); err != nil {
 		return errors.Wrap(err, "could not load module vkms")
