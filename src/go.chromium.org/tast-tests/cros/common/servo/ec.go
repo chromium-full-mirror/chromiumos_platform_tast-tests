@@ -608,3 +608,30 @@ func (s *Servo) PressECBtnVerifyOutput(ctx context.Context, button DetachableECB
 	}
 	return nil
 }
+
+// WaitFirmwareKeyboard waits until the DUT is in firmware with keyboard enabled
+// On entry the DUT can be in firmware or kernel.
+// This function works by waiting for the "KB enable" messaged shown by the EC when it boots.
+// NOTE: At present this only works on x86 devices which use Google EC and 8042 keyboard
+func (s *Servo) WaitFirmwareKeyboard(ctx context.Context, timeout time.Duration) error {
+	if err := s.SetOnOff(ctx, ECUARTCapture, On); err != nil {
+		return errors.Wrap(err, "failed to capture EC UART")
+	}
+	defer func() {
+		if err := s.SetOnOff(ctx, ECUARTCapture, Off); err != nil {
+			testing.ContextLog(ctx, "Failed to disable capture EC UART")
+		}
+	}()
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := s.PollForString(ctx, ECUARTStream, "KB enable"); err != nil {
+			return errors.Wrap(err, "failed to find keyboard enable")
+		}
+
+		return nil
+	}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: timeout}); err != nil {
+		return errors.Wrap(err, "failed waiting for firmware")
+	}
+
+	return nil
+}
