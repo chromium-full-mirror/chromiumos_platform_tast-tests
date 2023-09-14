@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/bluetooth"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
+	"go.chromium.org/tast-tests/cros/local/bluetooth/floss"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
@@ -55,8 +56,15 @@ func init() {
 					disableFeatures: []string{"Floss"},
 				},
 				ExtraAttr: []string{"bluetooth_flaky"},
+			}, {
+				Name: "floss_enabled",
+				Val: enableDisableBluetoothWithDifferentUsersParams{
+					btImpl:         &floss.Floss{},
+					enableFeatures: []string{"QsRevamp", "Floss"},
+				},
+				ExtraAttr:         []string{"bluetooth_floss_flaky"},
+				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 			},
-			// TODO(b/246007564): Add floss_enabled variant once b/270447662 is fixed.
 		},
 		Timeout: time.Minute * 5,
 	})
