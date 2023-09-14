@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
@@ -55,12 +56,32 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Has PDTester")
 
+	port, err := h.Servo.GetPdPort(ctx)
+
+	if err != nil {
+		s.Fatal("Error in getting PD port: ", err)
+	}
+	s.Log("Testing EC port ", port)
+
+	// Note - servo has 2 PD ports.  Port 0 is the connection to the charger
+	// port 1 connects to the DUT.
+	var pdState *servo.PDState
+	pdState, err = h.Servo.GetServoPDState(ctx)
+	if err != nil {
+		s.Fatal("Failed to get Servo PD state: ", err)
+	}
+
+	s.Log("Servo PD info:")
+	s.Logf("  Port       %d", pdState.Port)
+	s.Logf("  Polarity   %q", pdState.Polarity)
+	s.Logf("  Status     %q", pdState.Status)
+	s.Logf("  PowerRole  %q", pdState.PowerRole)
+	s.Logf("  DataRole   %q", pdState.DataRole)
+	s.Logf("  PEState    %d", pdState.PEState)
+	s.Logf("  Flags      0x%x", pdState.Flags)
+
 	hasBattery := h.Config.HasECCapability(firmware.ECBattery)
 	s.Log("ECCapBattery: ", hasBattery)
-
-	if err := h.RequireServo(ctx); err != nil {
-		s.Fatal("Failed to require servo: ", err)
-	}
 
 	if hasBattery {
 		if err := firmware.ChargeToLevel(ctx, h, 10, 10*time.Minute); err != nil {

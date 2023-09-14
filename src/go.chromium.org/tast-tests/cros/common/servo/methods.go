@@ -1118,10 +1118,35 @@ func (s *Servo) runUARTCommand(ctx context.Context, cmd string) error {
 		return errors.New("Required servo control 'uartRegexp' not available. Run test using servo_v4/v4p1")
 	}
 
-	if err := s.SetString(ctx, StringControl(s.uartRegexp), "None"); err != nil {
+	if err := s.SetString(ctx, s.uartRegexp, "None"); err != nil {
 		return errors.Wrap(err, "Clearing Servo UART Regexp")
 	}
 	return s.SetString(ctx, UARTCmd, cmd)
+}
+
+// RunServoCommandGetOutput runs the given command on the servo v4 UART and
+// returns the output matching patterns.
+func (s *Servo) RunServoCommandGetOutput(ctx context.Context, cmd string, patterns []string) ([][]string, error) {
+	if s.uartRegexp == "" {
+		return nil, errors.New("Required servo control 'uartRegexp' not available. Run test using servo_v4/v4p1")
+	}
+
+	if err := s.SetStringList(ctx, s.uartRegexp, patterns); err != nil {
+		return nil, errors.Wrapf(err, "setting %s to %s", s.uartRegexp, patterns)
+	}
+
+	defer s.SetString(ctx, s.uartRegexp, "None")
+
+	if err := s.SetString(ctx, UARTCmd, cmd); err != nil {
+		return nil, errors.Wrapf(err, "setting %s to %s", string(UARTCmd), cmd)
+	}
+
+	iList, err := s.GetStringList(ctx, UARTCmd)
+	if err != nil {
+		return nil, errors.Wrap(err, "decoding string list")
+	}
+
+	return ConvertToStringArrayArray(ctx, iList)
 }
 
 // RunUSBCDPConfigCommand executes the "usbc_action dp" command with the specified args on the servo
