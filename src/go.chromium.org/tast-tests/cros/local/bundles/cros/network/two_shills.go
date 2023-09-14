@@ -24,7 +24,7 @@ func init() {
 			"deanliao@google.com",                 // Test author
 			"cros-networking@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		Attr: []string{"group:mainline", "group:network", "network_cq"},
 	})
 }
 

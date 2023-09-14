@@ -26,7 +26,7 @@ func init() {
 			"cros-networking@google.com",
 			"stevenjb@chromium.org",
 		},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:network", "network_cq"},
 		SoftwareDeps: []string{"chrome", "shill-wifi"},
 
 		Params: []testing.Param{

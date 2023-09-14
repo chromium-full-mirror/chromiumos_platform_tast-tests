@@ -27,7 +27,7 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:network", "network_cq"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }

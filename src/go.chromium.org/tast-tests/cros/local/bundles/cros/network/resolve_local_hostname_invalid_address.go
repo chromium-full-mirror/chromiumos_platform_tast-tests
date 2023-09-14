@@ -23,6 +23,8 @@ func init() {
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",
+			"group:network",
+			"network_cq",
 		},
 	})
 }

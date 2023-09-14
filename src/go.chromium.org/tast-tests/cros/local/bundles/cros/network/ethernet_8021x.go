@@ -37,7 +37,7 @@ func init() {
 		},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:network", "network_cq"},
 		Fixture:      "ensureNoUI",
 
 		Params: []testing.Param{

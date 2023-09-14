@@ -23,7 +23,7 @@ func init() {
 			"arowa@google.com",
 			"chromeos-kernel-wifi@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		Attr: []string{"group:mainline", "group:network", "network_cq"},
 		Pre:  pre.SetLoggingWiFi(),
 	})
 }
