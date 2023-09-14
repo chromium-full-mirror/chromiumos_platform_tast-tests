@@ -72,6 +72,9 @@ var IMETestCases = imeTestDataMap{
 	},
 }
 
+// JapaneseCandidatesBoxTestString is a long, all upper case string so that it can be more easily detected by uidetection.
+const JapaneseCandidatesBoxTestString = "TIMLOHISCOOL"
+
 func setHiraganaMode(ui *uiauto.Context) uiauto.Action {
 	// The IME menu tray should exist by default when a new IMEs are added.
 	imeMenuTrayButtonFinder := nodewith.Name("IME menu button").Role(role.Button)
@@ -143,25 +146,15 @@ func TestJapaneseCandidatesBoxInEditor(ctx context.Context, ui *uiauto.Context, 
 		return err
 	}
 
-	if err := uiauto.Combine("remove test string",
-		keyboard.AccelAction("Shift+Up"),
-		keyboard.AccelAction("Backspace"),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to remove test string after verifying the suggestions box appears in the correct location")
-	}
 	return nil
 }
 
 // TestJapaneseCandidatesBox verifies that the Japanese suggestion box appears in the expected range.
 // It assumes that a input field is already in focus, and the Japanese input method is enabled.
 func TestJapaneseCandidatesBox(ctx context.Context, ui *uiauto.Context, uda *uidetection.Context, keyboard *input.KeyboardEventWriter) error {
-
-	// This is a long, all upper case string so that it can be more easily detected by uidetection.
-	const japaneseCandidatesBoxTestString = "TIMLOHISCOOL"
-
 	testing.ContextLog(ctx, "Verifying suggestion box location for Japanese input")
 
-	if err := keyboard.TypeAction(japaneseCandidatesBoxTestString)(ctx); err != nil {
+	if err := keyboard.TypeAction(JapaneseCandidatesBoxTestString)(ctx); err != nil {
 		return err
 	}
 
@@ -179,7 +172,7 @@ func TestJapaneseCandidatesBox(ctx context.Context, ui *uiauto.Context, uda *uid
 	}
 
 	// Find location of committed text.
-	inputFinder := uidetection.Word(japaneseCandidatesBoxTestString)
+	inputFinder := uidetection.Word(JapaneseCandidatesBoxTestString)
 	inputLoc, err := uda.Location(ctx, inputFinder)
 	if err != nil {
 		return err

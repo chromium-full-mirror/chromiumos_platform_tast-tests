@@ -173,6 +173,7 @@ func testUseIMEInGeditFile(ctx context.Context, terminalApp *terminalapp.Termina
 	uda := uidetection.NewDefault(tconn)
 	appWindow := nodewith.NameStartingWith(testFile).Role(role.Window).First()
 	inputMethod := imeData.InputMethod
+	expectedText := imeData.ExpectedText
 
 	if err := uiauto.Combine("open file with Gedit via the terminal",
 		// Launch Gedit.
@@ -192,6 +193,7 @@ func testUseIMEInGeditFile(ctx context.Context, terminalApp *terminalapp.Termina
 		if err := imetestutil.TestJapaneseCandidatesBoxInEditor(ctx, ui, uda, keyboard); err != nil {
 			return err
 		}
+		expectedText += "\n" + imetestutil.JapaneseCandidatesBoxTestString
 	}
 
 	if err := uiauto.Combine("save file",
@@ -208,7 +210,7 @@ func testUseIMEInGeditFile(ctx context.Context, terminalApp *terminalapp.Termina
 		return err
 	}
 	// Check the content of the test file.
-	if err := cont.CheckFileContent(ctx, testFile, imeData.ExpectedText+"\n"); err != nil {
+	if err := cont.CheckFileContent(ctx, testFile, expectedText+"\n"); err != nil {
 		return errors.Wrap(err, "failed to verify the content of the test file")
 	}
 

@@ -174,6 +174,7 @@ func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalAp
 	}
 
 	inputMethod := imeData.InputMethod
+	expectedText := imeData.ExpectedText
 	// Open the VSCode again, this time, it won't open the Get Started tab.
 	if err := uiauto.Combine("create and compose file with VSCode",
 		apps.LaunchVSCodeForFile(apps.VSCode, uda, ui, terminalApp, keyboard, apps.VSCodeTestFile),
@@ -193,6 +194,7 @@ func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalAp
 		if err := imetestutil.TestJapaneseCandidatesBoxInEditor(ctx, ui, uda, keyboard); err != nil {
 			return err
 		}
+		expectedText += "\n" + imetestutil.JapaneseCandidatesBoxTestString
 	}
 
 	if err := uiauto.Combine("save file",
@@ -201,7 +203,7 @@ func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalAp
 	}
 
 	// Check the content of the test file.
-	if err := cont.CheckFileContent(ctx, apps.VSCodeTestFile, imeData.ExpectedText); err != nil {
+	if err := cont.CheckFileContent(ctx, apps.VSCodeTestFile, expectedText); err != nil {
 		return errors.Wrap(err, "failed to verify the content of the file")
 	}
 
