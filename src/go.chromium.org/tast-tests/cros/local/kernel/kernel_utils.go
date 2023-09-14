@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -130,7 +129,7 @@ func readKernelConfigBytes(ctx context.Context) ([]byte, error) {
 		}
 	}
 	defer r.Close()
-	configs, err := ioutil.ReadAll(r)
+	configs, err := io.ReadAll(r)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read config")
 	}
@@ -253,7 +252,7 @@ func BackupPartition(ctx context.Context, rootDevWithoutPart, label string) (*pb
 	// Look for table with expected label (eg. KERN-A, MINIOS-B, ROOT-A).
 	table := partitionTables[label]
 
-	backupPath, err := ioutil.TempFile("/var/tmp", fmt.Sprintf("%s_", label))
+	backupPath, err := os.CreateTemp("/var/tmp", fmt.Sprintf("%s_", label))
 	if err != nil {
 		os.Remove(backupPath.Name())
 		return nil, "", errors.Wrapf(err, "creating tmpfile for backing up partition %s", label)
@@ -276,7 +275,7 @@ func BackupPartition(ctx context.Context, rootDevWithoutPart, label string) (*pb
 	return table, backupPath.Name(), nil
 }
 
-// RestorePartition restores a partition from backup file. Leaves backup file for users to delete.
+// RestorePartition restores a partition on booted disk from backup file. Leaves backup file for users to delete.
 func RestorePartition(ctx context.Context, backupPath, partitionPath string) error {
 	testing.ContextLogf(ctx, "Restoring partition at %q from backup at %q ", partitionPath, backupPath)
 	cmd := fmt.Sprintf("cat %s > %s", backupPath, partitionPath)
@@ -414,8 +413,8 @@ func GetPartitionTable(ctx context.Context, rootDevWithPart string) (*pb.CgptPar
 }
 
 // BackupRootfsVerityHash saves the verity hash for given kernel from the corresponding rootfs partition.
-func BackupRootfsVerityHash(ctx context.Context, rootDevWithoutPart string, table *pb.CgptPartition) (int64, int64, string, error) {
-	out, err := testexec.CommandContext(ctx, "vbutil_kernel", "--verify", table.PartitionPath, "--verbose").Output(testexec.DumpLogOnError)
+func BackupRootfsVerityHash(ctx context.Context, rootDevWithPart string, partitionCopy pb.PartitionCopy) (int64, int64, string, error) {
+	out, err := testexec.CommandContext(ctx, "vbutil_kernel", "--verify", rootDevWithPart, "--verbose").Output(testexec.DumpLogOnError)
 	if err != nil {
 		return 0, 0, "", errors.Wrap(err, "failed to get vbutil kernel")
 	}
@@ -428,7 +427,7 @@ func BackupRootfsVerityHash(ctx context.Context, rootDevWithoutPart string, tabl
 		return 0, 0, "", errors.Errorf("failed to parse dm table for rootfs, got output: %v", string(out))
 	}
 
-	sectorSize, err := getSectorSize(ctx, table.PartitionPath)
+	sectorSize, err := getSectorSize(ctx, rootDevWithPart)
 	if err != nil {
 		return 0, 0, "", errors.Wrap(err, "failed to get size of sectors")
 	}
@@ -441,19 +440,17 @@ func BackupRootfsVerityHash(ctx context.Context, rootDevWithoutPart string, tabl
 	// TODO(tij@): Verify with dlunev@ this calculation makes sense and these numbers are not variable.
 	hashSize := hashStartBytes/4096*64 + 512
 
+	rootDevWithoutPart, _ := SplitRootDevAndPart(ctx, rootDevWithPart)
 	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
 		return 0, 0, "", errors.Wrap(err, "failed to get cgpt table")
 	}
 
-	section, err := GetCopyFromLabel(table.Label)
-	if err != nil {
-		return 0, 0, "", errors.Wrap(err, "failed to get partition label copy")
-	}
-	rootfsLabel := fmt.Sprintf("ROOT-%s", section)
+	copy := CopyEnumToCopy[partitionCopy]
+	rootfsLabel := fmt.Sprintf("ROOT-%s", copy)
 	rootfsTable := partitionTables[rootfsLabel]
 
-	backupPath, err := ioutil.TempFile("/var/tmp", fmt.Sprintf("rootfsVerityHash%s_", table.Label))
+	backupPath, err := os.CreateTemp("/var/tmp", fmt.Sprintf("rootfsVerityHash%s_", copy))
 	if err != nil {
 		os.Remove(backupPath.Name())
 		return 0, 0, "", errors.Wrap(err, "creating tmpfile for backing up verity hash")
@@ -471,26 +468,23 @@ func BackupRootfsVerityHash(ctx context.Context, rootDevWithoutPart string, tabl
 		return 0, 0, "", errors.Wrap(err, "failed to save rootfs verity hash to file")
 	}
 
-	testing.ContextLogf(ctx, "Rootfs verity hash saved at path: %v has size %v", backupPath.Name(), hashSize)
+	testing.ContextLogf(ctx, "Rootfs verity hash for device %q saved at path: %v, has size %v", rootDevWithPart, backupPath.Name(), hashSize)
 
 	return hashStartBytes, hashSize, backupPath.Name(), nil
 }
 
 // RestoreRootfsVerityHash restores saved verity hash for given kernel copy to rootfs partition from backup file.
-func RestoreRootfsVerityHash(ctx context.Context, offset int64, backupPath, rootDevWithoutPart, label string) error {
+func RestoreRootfsVerityHash(ctx context.Context, offset int64, backupPath, rootDevWithoutPart string, partitionCopy pb.PartitionCopy) error {
 	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
 		return errors.Wrap(err, "failed to get cgpt table")
 	}
 
-	section, err := GetCopyFromLabel(label)
-	if err != nil {
-		return errors.Wrap(err, "failed to get partition label copy")
-	}
-	rootfsLabel := fmt.Sprintf("ROOT-%s", section)
+	// Uses to copy to build label for corresponding Rootfs label (e.g. A -> ROOT-A).
+	rootfsLabel := PartitionNameCopyToLabel(pb.PartitionName_ROOTFS, partitionCopy)
 	rootfsTable := partitionTables[rootfsLabel]
 
-	testing.ContextLogf(ctx, "Restoring rootfs verity hash from backup at %q ", backupPath)
+	testing.ContextLogf(ctx, "Restoring rootfs verity hash to %q from backup at %q ", rootfsTable.PartitionPath, backupPath)
 	args := []string{
 		fmt.Sprintf("if=%s", backupPath),
 		fmt.Sprintf("of=%s", rootfsTable.PartitionPath),
@@ -505,19 +499,17 @@ func RestoreRootfsVerityHash(ctx context.Context, offset int64, backupPath, root
 }
 
 // CorruptRootfsVerityHash corrupts verity hash for given kernel copy.
-func CorruptRootfsVerityHash(ctx context.Context, offset, size int64, rootDevWithoutPart, label string) error {
+func CorruptRootfsVerityHash(ctx context.Context, offset, size int64, rootDevWithoutPart string, partitionCopy pb.PartitionCopy) error {
 	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
 		return errors.Wrap(err, "failed to get cgpt table")
 	}
 
-	copy, err := GetCopyFromLabel(label)
-	if err != nil {
-		return errors.Wrap(err, "failed to get partition label copy")
-	}
-	rootfsLabel := PartitionNameCopyToLabel(pb.PartitionName_ROOTFS, CopyToCopyEnum[copy])
+	// Uses to copy to build label for corresponding Rootfs label (e.g. A -> ROOT-A).
+	rootfsLabel := PartitionNameCopyToLabel(pb.PartitionName_ROOTFS, partitionCopy)
 	rootfsTable := partitionTables[rootfsLabel]
 
+	testing.ContextLogf(ctx, "Corrupting rootfs verity hash on %q", rootfsTable.PartitionPath)
 	args := []string{
 		"if=/dev/zero",
 		fmt.Sprintf("of=%s", rootfsTable.PartitionPath),
@@ -577,8 +569,14 @@ func GetKernelVersion(ctx context.Context, rootDevWithoutPart, label string) (st
 }
 
 // SetKernelVersion uses vbutil_kernel to set the kernel version for a given partition.
-func SetKernelVersion(ctx context.Context, table *pb.CgptPartition, version string) error {
-	tmpFile, err := ioutil.TempFile("/var/tmp", fmt.Sprintf("%s-repack_*.bin", table.Label))
+func SetKernelVersion(ctx context.Context, rootDevWithoutPart, label, version string) error {
+	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
+	if err != nil {
+		return errors.Wrap(err, "failed to get cgpt table")
+	}
+	table := partitionTables[label]
+
+	tmpFile, err := os.CreateTemp("/var/tmp", fmt.Sprintf("%s-repack_*.bin", table.Label))
 	if err != nil {
 		os.Remove(tmpFile.Name())
 		return errors.Wrap(err, "creating tmpfile for storing modified kernel with new version")
@@ -611,7 +609,13 @@ func SetKernelVersion(ctx context.Context, table *pb.CgptPartition, version stri
 }
 
 // SetKernelHeaderMagic sets the kernel header magic for provided partition table.
-func SetKernelHeaderMagic(ctx context.Context, table *pb.CgptPartition, magic HeaderMagic, forceBoot bool) error {
+func SetKernelHeaderMagic(ctx context.Context, rootDevWithoutPart, label string, magic HeaderMagic, forceBoot bool) error {
+	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
+	if err != nil {
+		return errors.Wrap(err, "failed to get cgpt table")
+	}
+	table := partitionTables[label]
+
 	testing.ContextLogf(ctx, "Setting header to %s on device %s (label %q)", magic, table.PartitionPath, table.Label)
 	args := []string{
 		fmt.Sprintf("of=%s", table.PartitionPath),

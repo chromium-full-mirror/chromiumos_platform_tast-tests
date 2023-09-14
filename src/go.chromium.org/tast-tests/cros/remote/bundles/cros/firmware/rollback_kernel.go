@@ -179,7 +179,7 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 
 	// Make sure we start with a deterministic state so we don't have a
 	// situation where for example KERN-B is not bootable.
-	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &pb.Partition{}); err != nil {
+	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to ensure both kernel copies are bootable: ", err)
 	}
 	if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, &pb.Partition{

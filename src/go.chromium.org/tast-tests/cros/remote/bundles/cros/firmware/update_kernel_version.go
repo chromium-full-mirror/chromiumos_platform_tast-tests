@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -85,7 +86,7 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 
 	// Make sure we start with a deterministic state so we don't have a
 	// situation where for example KERN-B is many version ahead of KERN-A.
-	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &pb.Partition{}); err != nil {
+	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to ensure both kernel copies are bootable: ", err)
 	}
 	if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, &pb.Partition{

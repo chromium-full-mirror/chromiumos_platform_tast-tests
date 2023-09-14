@@ -76,13 +76,13 @@ func (ks *KernelService) WriteRawHeader(ctx context.Context, req *pb.WriteRawHea
 
 // RestoreCgptAttributes restores CGPT partition attributes directly dumped from GetCgptTable
 func (ks *KernelService) RestoreCgptAttributes(ctx context.Context, req *pb.RestoreCgptAttributesRequest) (*empty.Empty, error) {
-	rootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, req.BlockDevice)
+	rootDevWithoutPart, partitionNumber := kernel.SplitRootDevAndPart(ctx, req.BlockDevice)
 	testing.ContextLog(ctx, "Restoring passed CGPT attributes to: ", req.BlockDevice)
 	for _, part := range req.CgptTable {
 		if len(part.Attrs) == 0 {
 			continue
 		}
-		cgptAddCmdline := []string{"add", "-i", strconv.Itoa(int(part.PartitionNumber))}
+		cgptAddCmdline := []string{"add", "-i", strconv.Itoa(partitionNumber)}
 		for _, attr := range part.Attrs {
 			switch attr.Name {
 			case "legacy_boot":
@@ -135,15 +135,21 @@ func (ks *KernelService) BackupPartition(ctx context.Context, req *pb.Partition)
 	}, nil
 }
 
-// RestorePartition restores partition from backup.
+// RestorePartition restores partition from backup to current boot device.
 func (ks *KernelService) RestorePartition(ctx context.Context, req *pb.PartitionInfo) (*empty.Empty, error) {
-	if err := kernel.RestorePartition(ctx, req.BackupPath, req.Table.PartitionPath); err != nil {
+	rootDevWithoutPart, err := kernel.GetCurrentRootDevice(ctx, false)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't get current rootdev")
+	}
+	rootDevWithPart := kernel.RootDevPartitionPath(rootDevWithoutPart, int(req.Table.PartitionNumber))
+
+	if err := kernel.RestorePartition(ctx, req.BackupPath, rootDevWithPart); err != nil {
 		return nil, errors.Wrap(err, "could not restore partition from backup")
 	}
 
 	label := kernel.PartitionNameCopyToLabel(req.Name, req.Copy)
 	if _, err := ks.RestoreCgptAttributes(ctx, &pb.RestoreCgptAttributesRequest{
-		BlockDevice: req.RootDev, // RootDev includes partition number.
+		BlockDevice: rootDevWithPart, // RootDev includes partition number.
 		CgptTable:   map[string]*pb.CgptPartition{label: req.Table},
 	}); err != nil {
 		return nil, errors.Wrap(err, "failed to retore CGPT attributes")
@@ -245,18 +251,11 @@ func (ks *KernelService) RestoreKernel(ctx context.Context, req *pb.KernelBackup
 }
 
 // EnsureBothKernelCopiesBootable makes sure both kernel copies are identical and bootable.
-func (ks *KernelService) EnsureBothKernelCopiesBootable(ctx context.Context, req *pb.Partition) (*empty.Empty, error) {
-	var rootDevWithPart string
-	if req.RootDev != "" {
-		rootDevWithPart = req.RootDev
-	} else {
-		var err error
-		rootDevWithPart, err = kernel.GetCurrentRootDevice(ctx, true)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get root device")
-		}
+func (ks *KernelService) EnsureBothKernelCopiesBootable(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	rootDevWithPart, err := kernel.GetCurrentRootDevice(ctx, true)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get current root device")
 	}
-
 	if err := kernel.EnsureBothKernelCopiesBootable(ctx, rootDevWithPart); err != nil {
 		return nil, err
 	}
@@ -265,18 +264,10 @@ func (ks *KernelService) EnsureBothKernelCopiesBootable(ctx context.Context, req
 
 // PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B).
 func (ks *KernelService) PrioritizeKernelCopy(ctx context.Context, req *pb.Partition) (*empty.Empty, error) {
-	var rootDevWithPart string
-	if req.RootDev != "" {
-		rootDevWithPart = req.RootDev
-	} else {
-		var err error
-		rootDevWithPart, err = kernel.GetCurrentRootDevice(ctx, true)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get root device")
-		}
+	rootDevWithoutPart, err := kernel.GetCurrentRootDevice(ctx, false)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get current root device")
 	}
-
-	rootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, rootDevWithPart)
 	if err := kernel.PrioritizeKernelCopy(ctx, rootDevWithoutPart, kernel.PartitionNameCopyToLabel(req.Name, req.Copy)); err != nil {
 		return nil, err
 	}
@@ -285,15 +276,9 @@ func (ks *KernelService) PrioritizeKernelCopy(ctx context.Context, req *pb.Parti
 
 // GetCurrentCopy returns the current label DUT is using.
 func (ks *KernelService) GetCurrentCopy(ctx context.Context, req *pb.Partition) (*pb.Partition, error) {
-	var rootDevWithPart string
-	if req.RootDev != "" {
-		rootDevWithPart = req.RootDev
-	} else {
-		var err error
-		rootDevWithPart, err = kernel.GetCurrentRootDevice(ctx, true)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get root device")
-		}
+	rootDevWithPart, err := kernel.GetCurrentRootDevice(ctx, true)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get current root device")
 	}
 
 	currPart, err := kernel.GetPartitionTable(ctx, rootDevWithPart)
@@ -331,13 +316,6 @@ func (ks *KernelService) VerifyKernelCopy(ctx context.Context, req *pb.Partition
 	}
 	testing.ContextLogf(ctx, "DUT is currently booted from %s (label: %q)", currPart.PartitionPath, currPart.Label)
 
-	if req.RootDev != "" {
-		expRootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, req.RootDev)
-		accRootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, currPart.PartitionPath)
-		if expRootDevWithoutPart != accRootDevWithoutPart {
-			return nil, errors.Errorf("expected to be booted from device %q but was booted from device %q", expRootDevWithoutPart, accRootDevWithoutPart)
-		}
-	}
 	currCopy, _ := kernel.GetCopyFromLabel(currPart.Label)
 	expCopy := kernel.CopyEnumToCopy[req.Copy]
 	if currCopy != expCopy {
@@ -348,8 +326,18 @@ func (ks *KernelService) VerifyKernelCopy(ctx context.Context, req *pb.Partition
 
 // BackupRootfsVerityHash saves the verity hash for given kernel from the corresponding rootfs partition.
 func (ks *KernelService) BackupRootfsVerityHash(ctx context.Context, req *pb.PartitionInfo) (*pb.RootfsVerityHashBackup, error) {
-	rootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, req.RootDev)
-	offset, size, backupPath, err := kernel.BackupRootfsVerityHash(ctx, rootDevWithoutPart, req.Table)
+	var rootDevWithPart string
+	if req.RootDev != "" {
+		rootDevWithPart = req.RootDev
+	} else {
+		var err error
+		rootDevWithPart, err = kernel.GetCurrentRootDevice(ctx, true)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get root device")
+		}
+	}
+
+	offset, size, backupPath, err := kernel.BackupRootfsVerityHash(ctx, rootDevWithPart, req.Copy)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not back up rootfs verity hash")
 	}
@@ -364,21 +352,27 @@ func (ks *KernelService) BackupRootfsVerityHash(ctx context.Context, req *pb.Par
 	}, nil
 }
 
-// RestoreRootfsVerityHash saves the verity hash for given kernel from the corresponding rootfs partition.
+// RestoreRootfsVerityHash sets the verity hash for the current root device from backup.
 func (ks *KernelService) RestoreRootfsVerityHash(ctx context.Context, req *pb.RootfsVerityHashBackup) (*empty.Empty, error) {
-	rootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, req.RootDev)
-	if err := kernel.RestoreRootfsVerityHash(ctx, req.Offset, req.BackupPath, rootDevWithoutPart, kernel.PartitionNameCopyToLabel(req.Name, req.Copy)); err != nil {
+	rootDevWithoutPart, err := kernel.GetCurrentRootDevice(ctx, false)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get root device")
+	}
+	if err := kernel.RestoreRootfsVerityHash(ctx, req.Offset, req.BackupPath, rootDevWithoutPart, req.Copy); err != nil {
 		return nil, errors.Wrap(err, "could not restore rootfs verity hash")
 	}
 
 	return &empty.Empty{}, nil
 }
 
-// CorruptRootfsVerityHash corrupts verity hash for given kernel copy.
+// CorruptRootfsVerityHash corrupts verity hash for given kernel copy on current root device.
 func (ks *KernelService) CorruptRootfsVerityHash(ctx context.Context, req *pb.RootfsVerityHashBackup) (*empty.Empty, error) {
-	rootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, req.RootDev)
-	if corruptErr := kernel.CorruptRootfsVerityHash(ctx, req.Offset, req.HashSize, rootDevWithoutPart, kernel.PartitionNameCopyToLabel(req.Name, req.Copy)); corruptErr != nil {
-		if restoreErr := kernel.RestoreRootfsVerityHash(ctx, req.Offset, req.BackupPath, rootDevWithoutPart, kernel.PartitionNameCopyToLabel(req.Name, req.Copy)); restoreErr != nil {
+	rootDevWithoutPart, err := kernel.GetCurrentRootDevice(ctx, false)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get root device")
+	}
+	if corruptErr := kernel.CorruptRootfsVerityHash(ctx, req.Offset, req.HashSize, rootDevWithoutPart, req.Copy); corruptErr != nil {
+		if restoreErr := kernel.RestoreRootfsVerityHash(ctx, req.Offset, req.BackupPath, rootDevWithoutPart, req.Copy); restoreErr != nil {
 			return nil, errors.Wrapf(restoreErr, "could not corrupt rootfs verity hash and failed to restore it back to original hash: %v", corruptErr)
 		}
 		return nil, errors.Wrap(corruptErr, "could not corrupt rootfs verity hash")
@@ -415,7 +409,19 @@ func (ks *KernelService) GetKernelVersion(ctx context.Context, req *pb.Partition
 
 // SetKernelVersion uses vbutil_kernel to set the kernel version for a given partition.
 func (ks *KernelService) SetKernelVersion(ctx context.Context, req *pb.KernelVersion) (*empty.Empty, error) {
-	if err := kernel.SetKernelVersion(ctx, req.Table, req.Version); err != nil {
+	var rootDevWithPart string
+	if req.RootDev != "" {
+		rootDevWithPart = req.RootDev
+	} else {
+		var err error
+		rootDevWithPart, err = kernel.GetCurrentRootDevice(ctx, true)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get root device")
+		}
+	}
+	rootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, rootDevWithPart)
+
+	if err := kernel.SetKernelVersion(ctx, rootDevWithoutPart, req.Table.Label, req.Version); err != nil {
 		return nil, errors.Wrapf(err, "failed to set kernel version to %q", req.Version)
 	}
 	return &empty.Empty{}, nil
@@ -423,7 +429,20 @@ func (ks *KernelService) SetKernelVersion(ctx context.Context, req *pb.KernelVer
 
 // SetKernelHeaderMagic sets the header magic for the kernel.
 func (ks *KernelService) SetKernelHeaderMagic(ctx context.Context, req *pb.KernelHeaderMagicInfo) (*empty.Empty, error) {
-	if err := kernel.SetKernelHeaderMagic(ctx, req.Table, kernel.HeaderMagicEnumToMagic[req.Magic], req.ForceBoot); err != nil {
+	var rootDevWithPart string
+	if req.RootDev != "" {
+		rootDevWithPart = req.RootDev
+	} else {
+		var err error
+		rootDevWithPart, err = kernel.GetCurrentRootDevice(ctx, true)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get root device")
+		}
+	}
+	rootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, rootDevWithPart)
+
+	label := kernel.PartitionNameCopyToLabel(req.Name, req.Copy)
+	if err := kernel.SetKernelHeaderMagic(ctx, rootDevWithoutPart, label, kernel.HeaderMagicEnumToMagic[req.Magic], req.ForceBoot); err != nil {
 		return nil, errors.Wrap(err, "failed to set kernel header magic")
 	}
 	return &empty.Empty{}, nil

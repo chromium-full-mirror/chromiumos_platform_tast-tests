@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -111,7 +112,7 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupContext)
 
-	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &pb.Partition{}); err != nil {
+	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to ensure both kernel copies are bootable: ", err)
 	}
 	if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, &pb.Partition{

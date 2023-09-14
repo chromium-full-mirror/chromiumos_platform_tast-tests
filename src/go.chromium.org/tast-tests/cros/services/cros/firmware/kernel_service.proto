@@ -36,7 +36,7 @@ service KernelService {
     rpc RestoreKernel (KernelBackup) returns (google.protobuf.Empty) {}
 
     // EnsureBothKernelCopiesBootable makes sure both kernel copies are identical and bootable.
-    rpc EnsureBothKernelCopiesBootable (Partition) returns (google.protobuf.Empty) {}
+    rpc EnsureBothKernelCopiesBootable (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
     // PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B).
     rpc PrioritizeKernelCopy (Partition) returns (google.protobuf.Empty) {}
@@ -185,7 +185,10 @@ message KernelVersion {
 
 // KernelHeaderMagicInfo is used for setting the kernel header magic for a kernel section.
 message KernelHeaderMagicInfo {
-    CgptPartition Table = 1;
+    reserved 1;
     KernelHeaderMagic Magic = 2;
     bool ForceBoot = 3; // Force partition to be bootable after setting header magic.
+    PartitionName Name = 4;
+    PartitionCopy Copy = 5;
+    string RootDev = 6;
 }

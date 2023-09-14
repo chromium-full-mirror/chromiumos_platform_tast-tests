@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -112,7 +113,7 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 		otherCopy = pb.PartitionCopy_A
 	}
 
-	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &pb.Partition{}); err != nil {
+	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to ensure both kernel copies are bootable: ", err)
 	}
 	if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, &pb.Partition{
@@ -139,7 +140,8 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 	}
 
 	if _, err := h.KernelServiceClient.SetKernelHeaderMagic(ctx, &pb.KernelHeaderMagicInfo{
-		Table: kernToCorrupt,
+		Name:  pb.PartitionName_KERNEL,
+		Copy:  copyToCorrupt,
 		Magic: pb.KernelHeaderMagic_CORRUPTD,
 	}); err != nil {
 		s.Fatalf("Failed to corrupt %s: %v", kernToCorrupt.Label, err)
@@ -161,9 +163,10 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to verify DUT currently is in copy %s: %v", otherCopy, err)
 	}
 
-	s.Log("ore kernel partition ", kernToCorrupt.Label)
+	s.Log("Restore kernel partition ", kernToCorrupt.Label)
 	if _, err = h.KernelServiceClient.SetKernelHeaderMagic(ctx, &pb.KernelHeaderMagicInfo{
-		Table:     kernToCorrupt,
+		Name:      pb.PartitionName_KERNEL,
+		Copy:      copyToCorrupt,
 		Magic:     pb.KernelHeaderMagic_CHROMEOS,
 		ForceBoot: true,
 	}); err != nil {
