@@ -136,7 +136,7 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 		Password:           acc.Password,
 		DmserverUrl:        reportingutil.DmServerURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
-		EnabledFeatures:    "EncryptedReportingPipeline",
+		EnabledFeatures:    "EncryptedReportingPipeline, ClientAutomatedTest",
 		SkipLogin:          false,
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
