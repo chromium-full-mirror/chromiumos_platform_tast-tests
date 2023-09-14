@@ -61,14 +61,13 @@ type RepeatedWord struct {
 type PVSRunner struct {
 	Dut         *ssh.Conn
 	ContainerID string
-	Env         PVSRuntimeEnv
+	Env         RuntimeEnv
 }
 
-// PVSRuntimeEnv represents the environment variables that will be set during
-// an execution of the PVS CLI.
-type PVSRuntimeEnv struct {
+// RuntimeEnv represents the environment variables that will be set during
+// an execution of the SHoP and PVS CLI's.
+type RuntimeEnv struct {
 	ReuseTLEDir            string
-	ForceDlmSkuID          string
 	SimulatedDut           bool
 	SimulatedTestRunner    bool
 	SimulatedDutInfo       string
@@ -77,6 +76,9 @@ type PVSRuntimeEnv struct {
 	SimulatedTestsNoResult string
 	SimulatedTestsFail     string
 	SimulatedTestKeyval    string
+	ForceDlmSkuID          string
+	PvsImageTag            string
+	ShopRef                string
 }
 
 // EnsurePass runs the given subtest and fatally errors if it fails.
@@ -117,13 +119,10 @@ func (p PVSRunner) RunPVSCommandNonfatal(ctx context.Context, subcommand string,
 	return processControlChars(output), err
 }
 
-func (p PVSRuntimeEnv) generateEnvMap() map[string]string {
+func (p RuntimeEnv) generateEnvMap() map[string]string {
 	env := make(map[string]string)
 	if p.ReuseTLEDir != "" {
 		env["REUSE_TLE_DIR"] = p.ReuseTLEDir
-	}
-	if p.ForceDlmSkuID != "" {
-		env["FORCE_DLM_SKU_ID"] = p.ForceDlmSkuID
 	}
 	if p.SimulatedDut {
 		env["SIMULATED_DUT"] = "1"
@@ -148,6 +147,15 @@ func (p PVSRuntimeEnv) generateEnvMap() map[string]string {
 	}
 	if p.SimulatedTestKeyval != "" {
 		env["SIMULATED_TEST_KEYVAL"] = p.SimulatedTestKeyval
+	}
+	if p.ForceDlmSkuID != "" {
+		env["FORCE_DLM_SKU_ID"] = p.ForceDlmSkuID
+	}
+	if p.PvsImageTag != "" {
+		env["PVS_IMAGE_TAG"] = p.PvsImageTag
+	}
+	if p.ShopRef != "" {
+		env["SHOP_REF"] = p.ShopRef
 	}
 	return env
 }

@@ -37,9 +37,8 @@ func BasicPassFail(ctx context.Context, s *testing.State) {
 	pvsRunner := pvsutils.PVSRunner{
 		Dut:         dut,
 		ContainerID: s.FixtValue().(string),
-		Env: pvsutils.PVSRuntimeEnv{
-			ReuseTLEDir:   pvsutils.TmpReuseTLEDir,
-			ForceDlmSkuID: "0",
+		Env: pvsutils.RuntimeEnv{
+			ReuseTLEDir: pvsutils.TmpReuseTLEDir,
 		},
 	}
 
@@ -155,17 +154,6 @@ func BasicPassFail(ctx context.Context, s *testing.State) {
 			{Pattern: pvsutils.PrintedResultPass, Count: 0},
 			{Pattern: "Error: 2 mandatory requirements failed see logs for more details", Count: 1},
 			{Pattern: "Mandatory Requirements Satisfied: 0/2 \\(0\\%\\)", Count: 1},
-		})
-	})
-
-	pvsutils.EnsurePass(ctx, s, "fail on dlm_sku_id not set", func(ctx context.Context, s *testing.State) {
-		pvsRunner.Env.ForceDlmSkuID = ""
-		pvsRunner.Env.SimulatedDut = true
-		pvsRunner.Env.SimulatedTestRunner = true
-		pvsRunner.Env.SimulatedDutInfo = "dedede:drawcia:262144:"
-		output := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
-		pvsutils.ValidateOutputContains(s, output, []string{
-			"no dlm_sku_id populated on target DUT",
 		})
 	})
 }

@@ -36,9 +36,8 @@ func Depends(ctx context.Context, s *testing.State) {
 	pvsRunner := pvsutils.PVSRunner{
 		Dut:         dut,
 		ContainerID: s.FixtValue().(string),
-		Env: pvsutils.PVSRuntimeEnv{
-			ReuseTLEDir:   pvsutils.TmpReuseTLEDir,
-			ForceDlmSkuID: "0",
+		Env: pvsutils.RuntimeEnv{
+			ReuseTLEDir: pvsutils.TmpReuseTLEDir,
 		},
 	}
 

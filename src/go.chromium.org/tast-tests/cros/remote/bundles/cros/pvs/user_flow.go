@@ -22,7 +22,7 @@ func init() {
 			"chromeos-pvs-eng@google.com",
 			"jackgelinas@google.com",
 		},
-		Attr:    []string{"group:pvs", "pvs_perbuild"},
+		Attr:    []string{"group:pvs"},
 		Timeout: 600 * time.Minute,
 		Fixture: "pvsShopUnpack",
 		Vars: []string{

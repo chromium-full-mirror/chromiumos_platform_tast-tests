@@ -55,6 +55,7 @@ func init() {
 			"pvs.skip_teardown",
 			"pvs.simulated_mode",
 			"pvs.feature_flags",
+			"pvs.force_dlm_sku_id",
 		},
 	})
 }
@@ -84,16 +85,6 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 	gitCookies := s.RequiredVar("pvs.git_cookies")
 	if _, err := writeToFileAsChronos(ctx, pvsHost, gitCookies, gitCookiesPath); err != nil {
 		s.Fatal("Error occured when populating git cookies: ", err)
-	}
-
-	shopRef, ok := s.Var("pvs.shop_ref")
-	if !ok {
-		shopRef = defaultTagAndRef
-	}
-
-	pvsImageTag, ok := s.Var("pvs.image_tag")
-	if !ok {
-		pvsImageTag = defaultTagAndRef
 	}
 
 	// Populate service account and upload config
@@ -134,17 +125,7 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 	}
 
 	// Run shop unpack
-	shopUnpack := fmt.Sprintf(`SHOP_REF=%s PVS_IMAGE_TAG=%s FORCE_DLM_SKU_ID=0 shop unpack`, shopRef, pvsImageTag)
-	if _, ok := s.Var("pvs.simulated_mode"); ok {
-		shopUnpack = fmt.Sprintf(`SIMULATED_DUT=1 SIMULATED_TEST_RUNNER=1 %v`, shopUnpack)
-	} else {
-		dutHostname := s.CompanionDUT("dut").HostName()
-		shopUnpack = fmt.Sprintf(`%v --dut %v`, shopUnpack, dutHostname)
-	}
-	pvsChromeOSVersion, foundPVSChromeOSVersion := s.Var("pvs.chromeos_version")
-	if foundPVSChromeOSVersion {
-		shopUnpack += fmt.Sprintf(" --chromeos-version %s", pvsChromeOSVersion)
-	}
+	shopUnpack := shopUnpackCmd(s)
 	shopOutput, err := RunAsChronos(ctx, pvsHost, shopUnpack)
 	if err != nil {
 		s.Fatal("Error occured when running shop unpack: ", err)
@@ -193,4 +174,51 @@ func (f *pvsFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
 func (f *pvsFixture) Reset(ctx context.Context) error {
 	return nil
+}
+
+func shopUnpackCmd(s *testing.FixtState) string {
+	env := shopEnv(s).generateEnvMap()
+	var envArgs []string
+	for key, val := range env {
+		envArgs = append(envArgs, fmt.Sprintf("%v=%v", key, val))
+	}
+	args := shopArgs(s)
+	cmd := fmt.Sprintf(
+		"%v shop unpack %v",
+		strings.Join(envArgs, " "),
+		strings.Join(args, " "),
+	)
+	return cmd
+}
+
+func shopEnv(s *testing.FixtState) RuntimeEnv {
+	env := RuntimeEnv{}
+	if shopRef, ok := s.Var("pvs.shop_ref"); ok {
+		env.ShopRef = shopRef
+	} else {
+		env.ShopRef = defaultTagAndRef
+	}
+	if pvsImageTag, ok := s.Var("pvs.image_tag"); ok {
+		env.PvsImageTag = pvsImageTag
+	}
+	if forceDlmSkuID, ok := s.Var("pvs.force_dlm_sku_id"); ok {
+		env.ForceDlmSkuID = forceDlmSkuID
+	}
+	if _, ok := s.Var("pvs.simulated_mode"); ok {
+		env.SimulatedDut = true
+		env.SimulatedTestRunner = true
+	}
+	return env
+}
+
+func shopArgs(s *testing.FixtState) []string {
+	args := make([]string, 0)
+	if _, ok := s.Var("pvs.simulated_mode"); !ok {
+		dutHostname := s.CompanionDUT("dut").HostName()
+		args = append(args, "--dut", dutHostname)
+	}
+	if chromeosVersion, ok := s.Var("pvs.chromeos_version"); ok {
+		args = append(args, "--chromeos-version", chromeosVersion)
+	}
+	return args
 }

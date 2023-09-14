@@ -37,7 +37,7 @@ func DependsSkip(ctx context.Context, s *testing.State) {
 	pvsRunner := pvsutils.PVSRunner{
 		Dut:         dut,
 		ContainerID: s.FixtValue().(string),
-		Env: pvsutils.PVSRuntimeEnv{
+		Env: pvsutils.RuntimeEnv{
 			ReuseTLEDir:         pvsutils.TmpReuseTLEDir,
 			SimulatedDut:        true,
 			SimulatedTestRunner: true,
