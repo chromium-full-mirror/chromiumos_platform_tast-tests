@@ -135,6 +135,59 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
+	// TODO(b/301629757): Remove arcBootedWithKeyMintOn/arcBootedWithKeyMintOff when KeyMint is fully launched on ARC-T.
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCSupported(),
+			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+			chrome.EnableFeatures("ArcSwitchToKeyMintOnT", "CrOSLateBootArcSwitchToKeyMintDaemon"),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+		}, nil
+	}
+	// arcBootedRestricted is a fixture similar to arcBootedWithDisableExternalStorage. The only difference
+	// from arcBootedWithDisableExternalStorage is that CGroups is used to limit the CPU time of ARC.
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedWithKeyMintOn",
+		Desc: "ARC is booted, with KeyMint turned on",
+		Contacts: []string{
+			"yaohuali@google.com",
+			"arc-commercial@google.com",
+		},
+		Vars:            []string{"ui.gaiaPoolDefault"},
+		Impl:            NewArcBootedFixture(fixtureConfig),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCSupported(),
+			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+			chrome.DisableFeatures("ArcSwitchToKeyMintOnT", "CrOSLateBootArcSwitchToKeyMintDaemon"),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+		}, nil
+	}
+	// arcBootedRestricted is a fixture similar to arcBootedWithDisableExternalStorage. The only difference
+	// from arcBootedWithDisableExternalStorage is that CGroups is used to limit the CPU time of ARC.
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedWithKeyMintOff",
+		Desc: "ARC is booted, with KeyMint turned off",
+		Contacts: []string{
+			"yaohuali@google.com",
+			"arc-commercial@google.com",
+		},
+		Vars:            []string{"ui.gaiaPoolDefault"},
+		Impl:            NewArcBootedFixture(fixtureConfig),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
 	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.PlayStoreOptin = true
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -594,11 +647,11 @@ func DefaultBootedFixtureConfig() BootedFixtureConfig {
 			return []chrome.Option{chrome.UnRestrictARCCPU()}, nil
 		},
 		// specified config appended to arcvm_dev.conf.
-		ArcvmConfig:       "",
-		BootTimeout:       BootTimeout,
+		ArcvmConfig:         "",
+		BootTimeout:         BootTimeout,
 		ParentStateProvider: nil,
-		EnableUIAutomator: true,
-		PlayStoreOptin:    false,
+		EnableUIAutomator:   true,
+		PlayStoreOptin:      false,
 	}
 }
 
