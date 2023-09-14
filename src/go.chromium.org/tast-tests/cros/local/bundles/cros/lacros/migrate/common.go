@@ -314,10 +314,14 @@ func setupBookmark(ctx context.Context, ui *uiauto.Context, br *browser.Browser,
 	if err := kb.Accel(ctx, "Ctrl+d"); err != nil {
 		return errors.Wrap(err, "failed to open bookmark creation popup")
 	}
+	doneButton := nodewith.Name("Done").Role(role.Button)
+	// Check that "Done" button is shown to ensure that typing starts after the dialog is presented.
+	if err := ui.WaitUntilExists(doneButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to confirm bookmark creation popup")
+	}
 	if err := kb.Type(ctx, bookmarkName); err != nil {
 		return errors.Wrap(err, "failed to type bookmark name")
 	}
-	doneButton := nodewith.Name("Done").Role(role.Button)
 	if err := uiauto.Combine("Save bookmark",
 		ui.LeftClick(doneButton),
 		ui.WaitUntilGone(doneButton),
@@ -369,10 +373,14 @@ func setupShortcut(ctx context.Context, ui *uiauto.Context, br *browser.Browser,
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to open 'Add shortcut' popup")
 	}
+	doneButton := nodewith.Name("Done").Role(role.Button)
+	// Check that "Done" button is shown to ensure that typing starts after the dialog is presented.
+	if err := ui.WaitUntilExists(doneButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify 'Add shortcut' popup is shown")
+	}
 	if err := kb.Type(ctx, shortcutName+"\t"+shortcutURL); err != nil {
 		return errors.Wrap(err, "failed to type shortcut data")
 	}
-	doneButton := nodewith.Name("Done").Role(role.Button)
 	if err := uiauto.Combine("Click 'Done' button",
 		ui.LeftClick(doneButton),
 		ui.WaitUntilGone(doneButton),
