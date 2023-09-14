@@ -45,11 +45,17 @@ func init() {
 		Desc:         "Monitors the touchpad event detected properly or not",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
-		// TODO(b/298304858): Promote to critical.
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		HardwareDeps: hwdep.D(hwdep.Touchpad()),
 		Fixture:      "crosHealthdRunning",
+		Params: []testing.Param{{
+			// TODO(b/298304858): Promote to critical.
+			// TODO(b/299568777): Enforce laptop mode to run th test on non-calmshell devices.
+			Name:              "clamshell",
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Clamshell)),
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+		}},
 	})
 }
 
