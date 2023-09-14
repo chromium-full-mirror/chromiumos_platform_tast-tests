@@ -363,6 +363,16 @@ func Enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpc *rpc.Clien
 		if err := linuxssh.GetFile(ctx, dut.Conn(), fdmsDir, fdmsDirHost, linuxssh.DereferenceSymlinks); err != nil {
 			testing.ContextLog(ctx, "Failed to dump FakeDMS dir: ", err)
 		}
+
+		uiDir := "/var/log/ui"
+		uiDirHost := path.Join(attemptDir, "ui")
+		if err := os.Mkdir(uiDirHost, 0777); err != nil {
+			testing.ContextLog(ctx, "Failed to create ui dir: ", err)
+		}
+
+		if err := linuxssh.GetFile(ctx, dut.Conn(), uiDir, uiDirHost, linuxssh.DereferenceSymlinks); err != nil {
+			testing.ContextLog(ctx, "Failed to dump ui dir: ", err)
+		}
 	}(cleanupCtx)
 
 	pJSON, err := json.Marshal(policy.NewBlob())
