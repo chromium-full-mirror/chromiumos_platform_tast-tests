@@ -61,6 +61,8 @@ func AshCommonMetricConfigs() []MetricConfig {
 func LacrosCommonMetricConfigs() []MetricConfig {
 	return []MetricConfig{
 		// Smoothness.
+		NewCustomMetricConfig("Chrome.Lacros.Smoothness.PercentDroppedFrames_1sWindow2", "percent", perf.SmallerIsBetter),
+		// TODO(b/300502975): Deprecate after M122.
 		NewCustomMetricConfig("Chrome.Lacros.Smoothness.PercentDroppedFrames_1sWindow", "percent", perf.SmallerIsBetter),
 	}
 }
