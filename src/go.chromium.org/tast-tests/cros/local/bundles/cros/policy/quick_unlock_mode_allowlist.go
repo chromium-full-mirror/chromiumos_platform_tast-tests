@@ -12,12 +12,12 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -165,41 +165,8 @@ func QuickUnlockModeAllowlist(ctx context.Context, s *testing.State) {
 			}
 
 			// Open the Lockscreen page where we can set a PIN.
-			conn, err := apps.LaunchOSSettings(ctx, cr, "chrome://os-settings/osPrivacy/lockScreen")
-			if err != nil {
-				s.Fatal("Failed to connect to the settings page: ", err)
-			}
-			defer conn.Close()
-
+			settingsPage := policyutil.OSSettingsPageWithPassword(ctx, cr, "osPrivacy/lockScreen", fixtures.Password)
 			ui := uiauto.New(tconn)
-
-			// Find and enter the password in the pop up window.
-			if err := ui.LeftClick(nodewith.Name("Password").Role(role.TextField))(ctx); err != nil {
-				s.Fatal("Failed to find the password field: ", err)
-			}
-			if err := kb.Type(ctx, fixtures.Password+"\n"); err != nil {
-				s.Fatal("Failed to type password: ", err)
-			}
-
-			// Find node info for the radio button group node.
-			rgNode, err := ui.Info(ctx, nodewith.Role(role.RadioGroup))
-			if err != nil {
-				s.Fatal("Failed to find radio group: ", err)
-			}
-
-			pinCapabilities := getExpectedQuickUnlockCapabilities(&param.quickUnlockModeAllowlist, &param.webAuthnFactors, "PIN")
-
-			var wantRestriction restriction.Restriction
-			if pinCapabilities.set {
-				wantRestriction = restriction.None
-			} else {
-				wantRestriction = restriction.Disabled
-			}
-
-			// Check that the radio button group has the expected restriction.
-			if rgNode.Restriction != wantRestriction {
-				s.Errorf("Unexpected radio button group state: got %v, want %v", rgNode.Restriction, wantRestriction)
-			}
 
 			if fingerprintSupported {
 				fingerprintCapabilities := getExpectedQuickUnlockCapabilities(&param.quickUnlockModeAllowlist, &param.webAuthnFactors, "FINGERPRINT")
@@ -212,61 +179,37 @@ func QuickUnlockModeAllowlist(ctx context.Context, s *testing.State) {
 				}
 			}
 
+			pinCapabilities := getExpectedQuickUnlockCapabilities(&param.quickUnlockModeAllowlist, &param.webAuthnFactors, "PIN")
+			var wantRestriction restriction.Restriction
+			if pinCapabilities.set {
+				wantRestriction = restriction.None
+			} else {
+				wantRestriction = restriction.Disabled
+			}
+
+			// Check that the PIN button has the expected restriction.
+			if err := settingsPage.
+				SelectNode(ctx, nodewith.Name("Set up").Role(role.Button)).
+				Restriction(wantRestriction).
+				Verify(); err != nil {
+				s.Fatal("Unexpected button state: want ", wantRestriction)
+			}
+
 			// If PIN can be set, we set up a PIN and see if the lock screen UI corresponds to PIN's unlock capability.
 			if pinCapabilities.set {
-				if err := uiauto.Combine("switch to PIN or password and wait for PIN dialog",
-					// Find and click on radio button "PIN or password".
-					ui.LeftClick(nodewith.Name("PIN or password").Role(role.RadioButton)),
-					// Find and click on "Set up PIN" button.
-					ui.LeftClick(nodewith.Name("Set up PIN").Role(role.Button)),
-					// Wait for the PIN pop up window to appear.
-					ui.WaitUntilExists(nodewith.Name("Enter your PIN").Role(role.StaticText)),
-				)(ctx); err != nil {
-					s.Fatal("Failed to open PIN dialog: ", err)
-				}
-
-				// Enter the PIN.
-				if err := kb.Type(ctx, PIN); err != nil {
-					s.Fatal("Failed to type PIN: ", err)
-				}
-
-				continueButton := nodewith.Name("Continue").Role(role.Button)
-
-				// Find the Continue button node.
-				if err := ui.WaitUntilExists(continueButton)(ctx); err != nil {
-					s.Fatal("Failed to find the Continue button: ", err)
-				}
-
-				if err := ui.LeftClick(continueButton)(ctx); err != nil {
-					s.Fatal("Failed to click the Continue button: ", err)
-				}
-
-				if err := ui.WaitUntilExists(nodewith.Name("Confirm your PIN").Role(role.StaticText))(ctx); err != nil {
-					s.Fatal("Failed to find the PIN confirmation dialog: ", err)
-				}
-
-				// Enter the PIN.
-				if err := kb.Type(ctx, PIN); err != nil {
-					s.Fatal("Failed to type PIN: ", err)
-				}
-
-				confirmButton := nodewith.Name("Confirm").Role(role.Button)
-
-				if err := ui.LeftClick(confirmButton)(ctx); err != nil {
-					s.Fatal("Failed to click the Confirm button: ", err)
-				}
-
-				// Don't lock the screen before the add PIN operation ended.
-				if err := ui.WaitUntilGone(nodewith.Name("Confirm your PIN").Role(role.StaticText))(ctx); err != nil {
-					s.Fatal("Failed to wait for PIN confirmation dialog to disappear: ", err)
+				if err := settingsPage.
+					SetUpPin(ctx, PIN, true /*completeSetup*/).
+					Verify(); err != nil {
+					s.Fatal("Unexpected button state: want ", wantRestriction)
 				}
 
 				if err := lockAndUnlockScreen(ctx, tconn, kb, fixtures.Password, PIN, pinCapabilities.unlock); err != nil {
 					s.Fatal("Failed to lock and unlock the screen using PIN or password: ", err)
 				}
 
-				// Delete the PIN so upcoming tests don't get affected.
-				if err := ui.LeftClick(nodewith.Name("Password only").Role(role.RadioButton))(ctx); err != nil {
+				if err := uiauto.Combine("delete PIN",
+					ui.LeftClick(nodewith.HasClass("icon-more-vert").Ancestor(ossettings.WindowFinder).Role(role.PopUpButton)),
+					ui.LeftClick(nodewith.Name("Remove").Ancestor(ossettings.WindowFinder).Role(role.MenuItem)))(ctx); err != nil {
 					s.Fatal("Failed to delete PIN: ", err)
 				}
 			}
