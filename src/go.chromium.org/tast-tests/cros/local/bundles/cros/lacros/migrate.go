@@ -31,7 +31,7 @@ func init() {
 			"hidehiko@google.com",
 		},
 		BugComponent: "crbug:OS>LaCrOS",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Data:         []string{"migrate/indexeddb_check.js", "migrate/indexeddb_set.js", "migrate/boring_page.html"},
 		Timeout:      5 * time.Minute,
