@@ -35,10 +35,10 @@ func init() {
 			"cryptohome-core@google.com",
 			"behnoodm@chromium.org", // Test author
 		},
-		BugComponent: "b:272567540",
+		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		Attr:         []string{"informational", "group:cryptohome", "group:mainline"},
 		SoftwareDeps: []string{"pinweaver", "chrome"},
-		Timeout:      100 * time.Second,
+		Timeout:      150 * time.Second,
 	})
 }
 
