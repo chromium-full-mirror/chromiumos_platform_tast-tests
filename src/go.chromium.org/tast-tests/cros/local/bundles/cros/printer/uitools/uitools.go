@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
+	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -96,6 +97,12 @@ func NavigateToPrintersSettingsPage(ctx context.Context, tconn *chrome.TestConn,
 // OpenAddPrinterDialog opens the "Add printer" dialog. This function assumes
 // that the printers settings page is open.
 func OpenAddPrinterDialog(ctx context.Context, ui *uiauto.Context) error {
+	// A network connection is required in order for the Add Printer button to
+	// be present/active.
+	if err := shill.WaitForOnlineAfterResume(ctx); err != nil {
+		return errors.Wrap(err, "network connection is required for Add Printer dialog")
+	}
+
 	// Open the printers settings page and wait for it to load.
 	printersPageButton := PrintersFinder.Ancestor(ossettings.WindowFinder)
 	searchPrintersBar := SearchPrintersFinder.Ancestor(ossettings.WindowFinder)
