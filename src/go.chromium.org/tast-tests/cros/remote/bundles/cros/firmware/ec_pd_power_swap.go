@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -52,20 +53,20 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 		s.Fatal("Servo configuration does not support PD testing: ", err)
 	}
 
-	port, err := h.Servo.GetPdPort(ctx)
+	err := h.Servo.RequireDUTPDInfo(ctx)
 
 	if err != nil {
-		s.Fatal("Error in getting PD port: ", err)
+		s.Fatal("Error in getting PD port info: ", err)
 	}
 
-	if dualRole, err := h.Servo.GetDualRole(ctx, port); dualRole == false {
+	if dualRole, err := h.Servo.GetDualRole(ctx, servo.PDPortUnderTest); dualRole == false {
 		if err != nil {
 			s.Fatal("Get DualRole failed: ", err)
 		}
 		testing.ContextLog(ctx, "Power Swap support not advertised by DUT")
 	}
 
-	if pdState, err := h.Servo.GetPDState(ctx, port); err != nil {
+	if pdState, err := h.Servo.GetPDState(ctx, servo.PDPortUnderTest); err != nil {
 		s.Fatal("Failed to get PD state: ", err)
 	} else {
 		testing.ContextLog(ctx, "PD state before: ", pdState)
@@ -73,12 +74,12 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 		curPowerRole = pdState[0][4]
 	}
 
-	if err := h.Servo.SendPowerSwapRequest(ctx, port); err != nil {
+	if err := h.Servo.SendPowerSwapRequest(ctx, servo.PDPortUnderTest); err != nil {
 		s.Fatal("Send Power Swap failed: ", err)
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if pdState, err := h.Servo.GetPDState(ctx, port); err == nil {
+		if pdState, err := h.Servo.GetPDState(ctx, servo.PDPortUnderTest); err == nil {
 			testing.ContextLog(ctx, "PD state after: ", pdState)
 			testing.ContextLog(ctx, "PD Role after: ", pdState[0][4])
 			nowPowerRole = pdState[0][4]

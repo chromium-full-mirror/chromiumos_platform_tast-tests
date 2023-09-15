@@ -7,6 +7,7 @@ package servo
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"go.chromium.org/tast/core/errors"
@@ -25,14 +26,75 @@ const (
 	//      5 - Data role    -- DFP
 	reEcPdStateCommand string = `Port\s+C(\d+)\s+CC(\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)(.*)[\r\n]`
 	reEcPdRecv         string = `RECV\s([\w]+)`
+	rePDVersion        string = `\s+(\d+|Wrong.*)`
 	// PdControlMsgMask -- bitmask for PD control messages
 	PdControlMsgMask int = 0x1f
 	// MaxPorts -- Max number of ports on EC
 	MaxPorts int = 4
+	// PDPortUnderTest indicates command should be sent to the PD port conntected to servo
+	PDPortUnderTest int = MaxPorts
 )
+
+// DUTPDInfo caches the fixed PD testing information for the DUT
+type DUTPDInfo struct {
+	version    int // 1==TCPMv1, 2==TCPMv1
+	activePort int // PD port connected to servo
+	portCount  int // Total number of PD ports on the DUT
+}
+
+// RequireDUTPDInfo allocates and caches the fixed information about the PD port under test
+func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
+	if s.dutPDInfo != nil {
+		return nil
+	}
+
+	pdInfo := &DUTPDInfo{}
+
+	out, err := s.RunECCommandGetOutput(ctx, "pd version", []string{rePDVersion})
+	if err != nil {
+		return errors.Wrap(err, "EC pd version failed")
+	}
+	pdInfo.version, err = strconv.Atoi(out[0][1])
+
+	numPorts := 0
+	enabledPorts := 0
+	pdPort := MaxPorts
+	for port := 0; port < MaxPorts; port++ {
+		if out, err := s.GetPDState(ctx, port); err == nil {
+			testing.ContextLog(ctx, "PD state out[0][3]: ", out[0][3])
+			if strings.HasPrefix(out[0][3], "Ena") {
+				pdPort = port
+				enabledPorts++
+			}
+			numPorts++
+		}
+	}
+
+	if numPorts == 0 {
+		return errors.New("no PD ports found on the DUT")
+	}
+	pdInfo.portCount = numPorts
+
+	if enabledPorts == 0 {
+		return errors.New("no active PD ports found")
+	} else if enabledPorts > 1 {
+		return errors.New("more than one active PD port found")
+	}
+	pdInfo.activePort = pdPort
+
+	testing.ContextLogf(ctx, "DUT PD Port info: TCPMv%d, testing port %d, port count %d",
+		pdInfo.version, pdInfo.activePort, pdInfo.portCount)
+
+	s.dutPDInfo = pdInfo
+
+	return nil
+}
 
 // GetPDState Returns PD state console output
 func (s *Servo) GetPDState(ctx context.Context, port int) ([][]string, error) {
+	if port == PDPortUnderTest {
+		port = s.dutPDInfo.activePort
+	}
 	cmd := fmt.Sprintf("pd %d state", port)
 
 	out, err := s.RunECCommandGetOutput(ctx, cmd, []string{reEcPdStateCommand})
@@ -45,6 +107,9 @@ func (s *Servo) GetPDState(ctx context.Context, port int) ([][]string, error) {
 
 // SendPowerSwapRequest sends power swap request
 func (s *Servo) SendPowerSwapRequest(ctx context.Context, port int) error {
+	if port == PDPortUnderTest {
+		port = s.dutPDInfo.activePort
+	}
 	cmd := fmt.Sprintf("pd %d swap power", port)
 
 	s.EnablePDConsoleDebug(ctx)
@@ -89,6 +154,9 @@ func (s *Servo) DisablePDConsoleDebug(ctx context.Context) error {
 
 // GetDualRole returns true if dual role is enabled on port
 func (s *Servo) GetDualRole(ctx context.Context, port int) (bool, error) {
+	if port == PDPortUnderTest {
+		port = s.dutPDInfo.activePort
+	}
 	cmd := fmt.Sprintf("pd %d dualrole", port)
 	onResponse := "on"
 
@@ -100,30 +168,4 @@ func (s *Servo) GetDualRole(ctx context.Context, port int) (bool, error) {
 	testing.ContextLog(ctx, "DualRole reply: ", out[0][1])
 
 	return out[0][1] == onResponse, nil
-}
-
-// GetPdPort returns enabled PD port number on EC
-func (s *Servo) GetPdPort(ctx context.Context) (int, error) {
-
-	pdPort := MaxPorts
-	numFound := 0
-
-	for port := 0; port < MaxPorts; port++ {
-		if out, err := s.GetPDState(ctx, port); err == nil {
-			testing.ContextLog(ctx, "PD state out[0][3]: ", out[0][3])
-			if strings.HasPrefix(out[0][3], "Ena") {
-				pdPort = port
-				numFound++
-			}
-		}
-	}
-
-	if numFound == 0 {
-		return pdPort, errors.New("no PD ports found")
-	} else if numFound > 1 {
-		return pdPort, errors.New("more than one PD port found")
-	}
-	testing.ContextLog(ctx, "Found PD port: ", pdPort)
-
-	return pdPort, nil
 }

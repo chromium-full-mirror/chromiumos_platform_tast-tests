@@ -56,12 +56,10 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Has PDTester")
 
-	port, err := h.Servo.GetPdPort(ctx)
-
+	err := h.Servo.RequireDUTPDInfo(ctx)
 	if err != nil {
-		s.Fatal("Error in getting PD port: ", err)
+		s.Fatal("Error in getting PD port info: ", err)
 	}
-	s.Log("Testing EC port ", port)
 
 	// Note - servo has 2 PD ports.  Port 0 is the connection to the charger
 	// port 1 connects to the DUT.
