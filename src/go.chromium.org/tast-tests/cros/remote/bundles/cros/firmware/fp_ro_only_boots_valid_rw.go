@@ -47,7 +47,7 @@ type testParams struct {
 
 func testFlashingFirmwareVersion(ctx context.Context, d *rpcdut.RPCDUT, params *testParams) error {
 	testing.ContextLog(ctx, "Flashing firmware: ", params.firmwarePath)
-	if err := fingerprint.FlashRWFirmware(ctx, d, params.firmwarePath); err != nil {
+	if err := fingerprint.FlashFirmwareUpdate(ctx, d, fingerprint.ImageTypeRW, params.firmwarePath); err != nil {
 		return errors.Wrapf(err, "failed to flash firmware: %q", params.firmwarePath)
 	}
 

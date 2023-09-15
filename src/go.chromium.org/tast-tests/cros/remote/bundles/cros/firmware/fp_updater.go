@@ -90,7 +90,7 @@ func flashOldRWFirmware(ctx context.Context, s *testing.State, d *rpcdut.RPCDUT)
 		return errors.Wrap(err, "failed to send old firmware to DUT")
 	}
 
-	if err := fingerprint.FlashRWFirmware(ctx, d, oldFirmwarePathOnDut); err != nil {
+	if err := fingerprint.FlashFirmwareUpdate(ctx, d, fingerprint.ImageTypeRW, oldFirmwarePathOnDut); err != nil {
 		return errors.Wrap(err, "failed to flash RW firmware")
 	}
 

@@ -388,7 +388,8 @@ func FirmwarePath(ctx context.Context, d *rpcdut.RPCDUT, fpBoard fp.BoardName) (
 	return outStr, nil
 }
 
-// FlashFirmware flashes the original fingerprint firmware in rootfs.
+// FlashFirmware flashes the entire FPMCU using test utility flash_fp_mcu.
+// This requires having hardware write-protect disabled.
 // It will fail if flashing takes more time than flashFpMcuTimeout or there is
 // no enough time.
 func FlashFirmware(ctx context.Context, d *rpcdut.RPCDUT, fpFirmwarePath string, needsRebootAfterFlashing bool) error {
@@ -430,28 +431,32 @@ func FlashFirmware(ctx context.Context, d *rpcdut.RPCDUT, fpFirmwarePath string,
 	return nil
 }
 
-// FlashRWFirmware flashes the specified firmwareFile as the RW image on the FPMCU.
-// It does not modify the RO image.
-func FlashRWFirmware(ctx context.Context, d *rpcdut.RPCDUT, firmwareFile string) (retErr error) {
+// FlashFirmwareUpdate updates one particular firmware region/image of the
+// FPMCU using the firmware update mechanism.
+// This does not require having hardware write-protect disabled and will not
+// clear entropy or software write-protect status.
+func FlashFirmwareUpdate(ctx context.Context, d *rpcdut.RPCDUT, image FWImageType, file string) error {
 	fs := dutfs.NewClient(d.RPC().Conn)
-	exists, err := fs.Exists(ctx, firmwareFile)
+	exists, err := fs.Exists(ctx, file)
 	if err != nil {
-		return errors.Wrapf(err, "error checking that file exists: %q", firmwareFile)
+		return errors.Wrapf(err, "error checking that file exists: %q", file)
 	}
 	if !exists {
-		return errors.Errorf("file does not exist: %q", firmwareFile)
+		return errors.Errorf("file does not exist: %q", file)
 	}
 
-	cmdArgs := []string{
+	flashCmd := []string{
 		"/opt/sbin/crosec-legacy-drv",
-		"-p", "ec:type=fp",
-		"-i", "EC_RW",
-		"-N",
-		"-w", firmwareFile,
+		"--noverify-all",             // only verify included regions
+		"--verbose",                  // verbose
+		"--programmer", "ec:type=fp", // use "programmer" for fingerprint "EC"
+		"--include", "EC_" + string(image), // only write the specific image
+		"--write", file,
 	}
-	cmd := d.DUT().Conn().CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
+	testing.ContextLogf(ctx, "Running command: %s", shutil.EscapeSlice(flashCmd))
+	cmd := d.Conn().CommandContext(ctx, flashCmd[0], flashCmd[1:]...)
 	if err := cmd.Run(ssh.DumpLogOnError); err != nil {
-		return errors.Wrapf(err, "error while writing crosec-legacy-drv with arguments %v", cmdArgs)
+		return errors.Wrap(err, "flashrom failed")
 	}
 
 	return nil
