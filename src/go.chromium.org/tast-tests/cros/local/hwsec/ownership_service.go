@@ -10,7 +10,6 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	hwsecpb "go.chromium.org/tast-tests/cros/services/cros/hwsec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -26,6 +25,7 @@ func init() {
 	})
 }
 
+// OwnershipService implements tast.cros.hwsec.OwnershipService.
 type OwnershipService struct {
 	s *testing.ServiceState
 }
@@ -34,8 +34,8 @@ type OwnershipService struct {
 func (*OwnershipService) EnsureTPMIsReset(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	testing.ContextLog(ctx, "Requesting a local TPM reset")
 
-	cmdRunner := hwseclocal.NewCmdRunner()
-	helper, err := hwseclocal.NewHelper(cmdRunner)
+	cmdRunner := NewCmdRunner()
+	helper, err := NewHelper(cmdRunner)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create local helper")
 	}
@@ -51,8 +51,8 @@ func (*OwnershipService) EnsureTPMIsReset(ctx context.Context, req *empty.Empty)
 func (*OwnershipService) EnsureTPMAndSystemStateAreReset(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	testing.ContextLog(ctx, "Requesting a local TPM and state reset")
 
-	cmdRunner := hwseclocal.NewCmdRunner()
-	helper, err := hwseclocal.NewHelper(cmdRunner)
+	cmdRunner := NewCmdRunner()
+	helper, err := NewHelper(cmdRunner)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create local helper")
 	}
