@@ -6,6 +6,7 @@ package bluetooth
 
 import (
 	"context"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -360,6 +361,34 @@ func (b *BtService) DisconnectDevice(ctx context.Context, request *pb.Disconnect
 	}
 	if err := b.facade.DisconnectDevice(ctx, request.DeviceAddress); err != nil {
 		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
+// WaitForConnectState waits the device to be connected or disconnected.
+func (b *BtService) WaitForConnectState(ctx context.Context, request *pb.WaitForConnectStateRequest) (*emptypb.Empty, error) {
+	if err := b.assertHasFacade(); err != nil {
+		return nil, err
+	}
+
+	timeout := 15 * time.Second
+	if request.GetTimeout() != nil {
+		timeout = request.GetTimeout().AsDuration()
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		isConnected, err := b.facade.DeviceIsConnected(ctx, request.DeviceAddress)
+		if err != nil {
+			return testing.PollBreak(errors.New("failed to check device's connect state"))
+		}
+
+		if isConnected != request.GetExpectedConnectState() {
+			return errors.New("still waiting for the expected connect state")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: timeout, Interval: time.Second}); err != nil {
+		msg := map[bool]string{true: "connected", false: "disconnected"}
+		return nil, errors.Wrapf(err, "failed to wait for device to be %s", msg[request.GetExpectedConnectState()])
 	}
 	return &emptypb.Empty{}, nil
 }

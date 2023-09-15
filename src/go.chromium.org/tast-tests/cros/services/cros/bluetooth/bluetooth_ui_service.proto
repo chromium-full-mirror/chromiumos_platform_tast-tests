@@ -37,6 +37,14 @@ service BluetoothUIService {
   // ForgetBluetoothDevice will attempt to navigate to the Device Detail subpage for the device specified in the request,
   // then click "Forget" to forget the device.
   rpc ForgetBluetoothDevice(ForgetBluetoothDeviceRequest) returns (google.protobuf.Empty) {}
+
+  // CollectDeviceList will attempt to collect and list all available Bluetooth devices
+  // in the Bluetooth page in the OS-Settings.
+  rpc CollectDeviceList(google.protobuf.Empty) returns (CollectDeviceListResponse) {}
+
+  // BluetoothDeviceDetail will attempt to navigate to the Device Detail subpage for the device
+  // specified in the request, then retrieves the information of this particular device.
+  rpc BluetoothDeviceDetail(BluetoothDeviceDetailRequest) returns (BluetoothDeviceDetailResponse) {}
 }
 
 enum FastPairProtocol {
@@ -60,4 +68,26 @@ message PairDeviceWithQuickSettingsRequest {
 
 message ForgetBluetoothDeviceRequest {
   string device_name = 1;
+}
+
+message Battery {
+  optional string percentage = 1;
+}
+
+message Device {
+  string name = 1;
+  bool is_connected = 2;
+  repeated Battery battery_information = 3;
+}
+
+message CollectDeviceListResponse {
+  repeated Device devices = 1;
+}
+
+message BluetoothDeviceDetailRequest {
+  string name = 1;
+}
+
+message BluetoothDeviceDetailResponse {
+  Device device = 1;
 }

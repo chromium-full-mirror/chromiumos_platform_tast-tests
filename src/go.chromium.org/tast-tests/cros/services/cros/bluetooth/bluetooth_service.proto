@@ -104,6 +104,9 @@ service BluetoothService {
   // DisconnectDevice disconnects the device with the given address.
   rpc DisconnectDevice(DisconnectDeviceRequest) returns (google.protobuf.Empty) {}
 
+  // WaitForConnectState waits the device to be connected or disconnected.
+  rpc WaitForConnectState(WaitForConnectStateRequest) returns (google.protobuf.Empty) {}
+
   // DeviceProperties collects and returns a known device's properties.
   rpc DeviceProperties(DevicePropertiesRequest) returns (DevicePropertiesResponse) {}
 
@@ -281,6 +284,12 @@ message ConnectDeviceRequest {
 
 message DisconnectDeviceRequest {
   string deviceAddress = 1;
+}
+
+message WaitForConnectStateRequest {
+  string deviceAddress = 1;
+  bool expectedConnectState = 2;
+  optional google.protobuf.Duration timeout = 3;
 }
 
 message DevicePropertiesRequest {

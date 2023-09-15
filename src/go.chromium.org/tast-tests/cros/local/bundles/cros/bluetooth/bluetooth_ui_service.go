@@ -6,12 +6,15 @@ package bluetooth
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/local/bluetooth"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -49,13 +52,9 @@ type BtUIService struct {
 // the fast pair notification. The |request| contains a Protocol which must be
 // either Initial or Subsequent for this function.
 func (bui *BtUIService) PairWithFastPairNotification(ctx context.Context, request *pb.PairWithFastPairNotificationRequest) (*emptypb.Empty, error) {
-	cr := bui.sharedObject.Chrome
-	if cr == nil {
-		return nil, errors.New("Chrome has not been started")
-	}
-	tConn, err := cr.TestAPIConn(ctx)
+	_, tConn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
+		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
 
 	// The Initial and Subsequent scenarios have slightly different notifications.
@@ -125,13 +124,9 @@ func (bui *BtUIService) PairWithFastPairNotification(ctx context.Context, reques
 // CloseNotifications closes all open notifications.
 func (bui *BtUIService) CloseNotifications(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
 	testing.ContextLog(ctx, "Closing all notifications on DUT")
-	cr := bui.sharedObject.Chrome
-	if cr == nil {
-		return nil, errors.New("Chrome has not been started")
-	}
-	tConn, err := cr.TestAPIConn(ctx)
+	_, tConn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
+		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
 	if err := ash.CloseNotifications(ctx, tConn); err != nil {
 		return nil, errors.Wrap(err, "failed to close all notifications")
@@ -143,13 +138,9 @@ func (bui *BtUIService) CloseNotifications(ctx context.Context, empty *emptypb.E
 // on the Saved Devices subpage. The array of devices should be in the expected
 // order. Fails if the list of Saved Devices doesn't match the one provided.
 func (bui *BtUIService) ConfirmSavedDevicesState(ctx context.Context, request *pb.ConfirmSavedDevicesStateRequest) (_ *emptypb.Empty, retErr error) {
-	cr := bui.sharedObject.Chrome
-	if cr == nil {
-		return nil, errors.New("Chrome has not been started")
-	}
-	tconn, err := cr.TestAPIConn(ctx)
+	cr, tconn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
+		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
 
 	cleanupCtx := ctx
@@ -188,13 +179,9 @@ func (bui *BtUIService) ConfirmSavedDevicesState(ctx context.Context, request *p
 
 // RemoveAllSavedDevices will attempt to remove all the devices from the Saved Devices subpage.
 func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *emptypb.Empty) (_ *emptypb.Empty, retErr error) {
-	cr := bui.sharedObject.Chrome
-	if cr == nil {
-		return nil, errors.New("Chrome has not been started")
-	}
-	tconn, err := cr.TestAPIConn(ctx)
+	cr, tconn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
+		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
 
 	cleanupCtx := ctx
@@ -259,13 +246,9 @@ func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *empt
 //
 // This method will ensure that any windows it had opened are closed before returning.
 func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb.PairDeviceWithQuickSettingsRequest) (_ *emptypb.Empty, retErr error) {
-	cr := bui.sharedObject.Chrome
-	if cr == nil {
-		return nil, errors.New("Chrome has not been started")
-	}
-	tconn, err := cr.TestAPIConn(ctx)
+	_, tconn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
+		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
 
 	cleanupCtx := ctx
@@ -338,13 +321,9 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 // for the device specified in the request, then click "Forget" to forget the
 // device.
 func (bui *BtUIService) ForgetBluetoothDevice(ctx context.Context, request *pb.ForgetBluetoothDeviceRequest) (_ *emptypb.Empty, retErr error) {
-	cr := bui.sharedObject.Chrome
-	if cr == nil {
-		return nil, errors.New("Chrome has not been started")
-	}
-	tconn, err := cr.TestAPIConn(ctx)
+	_, tconn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
+		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
 
 	cleanupCtx := ctx
@@ -373,4 +352,163 @@ func (bui *BtUIService) ForgetBluetoothDevice(ctx context.Context, request *pb.F
 
 	testing.ContextLogf(ctx, "Successfully forgot device %s", request.DeviceName)
 	return &emptypb.Empty{}, nil
+}
+
+// CollectDeviceList will attempt to collect and list all available Bluetooth devices
+// in the Bluetooth page.
+func (bui *BtUIService) CollectDeviceList(ctx context.Context, _ *emptypb.Empty) (_ *pb.CollectDeviceListResponse, retErr error) {
+	cr, tconn, err := bui.crAndTestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
+	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	condition := uiauto.New(tconn).Exists(nodewith.Name("Bluetooth subpage back button").Ancestor(ossettings.WindowFinder))
+	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "bluetoothDevices", condition)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to launch OS accessibility settings")
+	}
+	defer settings.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "bt_devices_page")
+
+	// Regular expression for finding a device entry.
+	//
+	// These are examples of the target label:
+	// 	Device 1 of 2 named KEYBD_REF. Device is connected. Device type is unknown. Device has 99% battery.
+	// 	Device 2 of 2 named MOUSE_REF. Device is not connected. Device type is unknown.
+	r := regexp.MustCompile(`^Device \d+ of \d+ named (.*)\. Device is (connected|not connected)\. Device type is \w+\.( Device has (\d+)% battery)?$`)
+	infos, err := settings.NodesInfo(ctx, nodewith.NameRegex(r).HasClass("list-item"))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get nodes information")
+	}
+
+	devices := make([]*pb.Device, 0, len(infos))
+	for _, info := range infos {
+		ss := r.FindStringSubmatch(info.Name)
+		// Expecting 5 sub-matches which are
+		// 	0: entire match
+		// 	1: device name
+		// 	2: connected state
+		// 	3: battery information
+		// 	4: battery level value
+		if ss == nil || len(ss) != 5 {
+			return nil, errors.Errorf("failed to extract string sub match by %q from %q, sub matches: %d", r.String(), info.Name, len(ss))
+		}
+		device := &pb.Device{
+			Name:        ss[1],
+			IsConnected: ss[2] == "connected",
+		}
+
+		// Battery level may not be presented, it's only available for connected BLE devices.
+		if ss[4] != "" {
+			device.BatteryInformation = []*pb.Battery{{Percentage: &ss[4]}}
+			if !device.IsConnected {
+				return nil, errors.Errorf("unexpected device info %+v, battery information should be available iff the BLE device is connected", device)
+			}
+		}
+
+		devices = append(devices, device)
+	}
+
+	return &pb.CollectDeviceListResponse{Devices: devices}, nil
+}
+
+// BluetoothDeviceDetail will attempt to navigate to the Device Detail subpage for the device
+// specified in the request, then retrieves the information of this particular device.
+func (bui *BtUIService) BluetoothDeviceDetail(ctx context.Context, req *pb.BluetoothDeviceDetailRequest) (_ *pb.BluetoothDeviceDetailResponse, retErr error) {
+	_, tconn, err := bui.crAndTestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
+	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	settings, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, tconn, req.Name)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to navigate to Bluetooth Device Details subpage for device %s", req.Name)
+	}
+	defer settings.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "bt_device_detail_page")
+
+	// Regular expression for finding the device heading.
+	//
+	// This is an example of the target label:
+	// 	Connected to KEYBD_REF
+	deviceHeadingRegexp := regexp.MustCompile(fmt.Sprintf(`^(Connected to|Disconnected from) %s$`, req.Name))
+	deviceHeading := nodewith.NameRegex(deviceHeadingRegexp)
+
+	// Waiting for the heading of the device detail page before proceed on extract device detail.
+	if err := settings.WaitUntilExists(deviceHeading)(ctx); err != nil {
+		return nil, errors.Wrapf(err, "failed to wait until the device %s detail page open", req.Name)
+	}
+
+	// Extract device connected state from the heading.
+	info, err := settings.Info(ctx, deviceHeading)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get node information")
+	}
+	ss := deviceHeadingRegexp.FindStringSubmatch(info.Name)
+	// Expecting 2 sub-matches which are
+	// 	0: entire match
+	// 	1: connected state
+	if ss == nil || len(ss) != 2 {
+		return nil, errors.Errorf("failed to extract string sub match by %q from %q, sub matches: %d", deviceHeadingRegexp.String(), info.Name, len(ss))
+	}
+	device := &pb.Device{
+		Name:        req.Name,
+		IsConnected: ss[1] == "Connected to",
+	}
+
+	// Regular expression for finding the device heading.
+	//
+	// This is an example of the target label:
+	// 	Battery level 99%
+	batteryLevelRegexp := regexp.MustCompile(`^Battery level (\d+)%$`)
+	label := nodewith.NameRegex(batteryLevelRegexp)
+
+	// Extract battery level if it's present.
+	found, err := settings.IsNodeFound(ctx, label)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find the battery level node")
+	}
+	if found {
+		info, err := settings.Info(ctx, label)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get node information")
+		}
+		ss := batteryLevelRegexp.FindStringSubmatch(info.Name)
+		// Expecting 2 sub-matches which are
+		// 	0: entire match
+		// 	1: battery level value
+		if ss == nil || len(ss) != 2 {
+			return nil, errors.Errorf("failed to extract string sub match by %q from %q, sub matches: %d", batteryLevelRegexp.String(), info.Name, len(ss))
+		}
+		if ss[1] != "" {
+			device.BatteryInformation = []*pb.Battery{{Percentage: &ss[1]}}
+		}
+	}
+
+	return &pb.BluetoothDeviceDetailResponse{Device: device}, nil
+}
+
+// crAndTestAPIConn obtains/returns the (*chrome.Chrome) instance and the TestAPI connection.
+// It also asserts the (*chrome.Chrome) instance and throws an error if (*chrome.Chrome) instance isn't available.
+func (bui *BtUIService) crAndTestAPIConn(ctx context.Context) (*chrome.Chrome, *chrome.TestConn, error) {
+	// Leverage the UseTconn to do:
+	// 1. Obtain the TestAPI connection, this allows a more flexible usage as
+	//    the TestAPI when Chrome is no logged in is different than usual.
+	// 2. Assert if Chrome is instantiated, provides a safer resource accessing.
+	tconn, err := common.UseTconn(ctx, bui.sharedObject, func(tconn *chrome.TestConn) (*chrome.TestConn, error) {
+		return tconn, nil
+	})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to obtain Test API connection")
+	}
+
+	return bui.sharedObject.Chrome, tconn, nil
 }
