@@ -110,13 +110,13 @@ func init() {
 			Name: "memory",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
 			// TODO(b/279849842): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: byronlee@google.com
 			Name: "sensitive_sensor",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor),
 			// TODO(b/280388091): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: kerker@google.com
 			Name:              "fingerprint",
@@ -137,7 +137,7 @@ func init() {
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
 			// TODO(b/279707249): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: weiluanwang@google.com
 			Name: "power_button",

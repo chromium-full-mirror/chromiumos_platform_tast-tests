@@ -30,7 +30,7 @@ func init() {
 			// Contact: byronlee@google.com
 			Name:              "battery_capacity",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryCapacity),
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 		}, {
 			// Contact: byronlee@google.com
@@ -113,7 +113,7 @@ func init() {
 			// Contact: byronlee@google.com
 			Name:      "sensitive_sensor",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: kerker@google.com
 			Name:              "fingerprint",

@@ -33,19 +33,19 @@ func init() {
 			Name: "cpu_stress_v2",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
 			// TODO(b/295497926): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: kerker@google.com
 			Name: "audio_driver",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
 			// TODO(b/295499944): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: yycheng@google.com
 			Name: "cpu_cache_v2",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
 			// TODO(b/281766836): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: dennyh@google.com
 			Name:              "ufs_lifetime",
