@@ -119,10 +119,10 @@ func waitAndroidAccessibilityReady(ctx context.Context, a *arc.ARC) error {
 }
 
 // prepareFeature prepares to run ARC tests with the specified accessibility feature enabled.
-func prepareFeature(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, tconn *chrome.TestConn, feature a11y.Feature) (cleanup func(context.Context), e error) {
+func prepareFeature(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, tconn *chrome.TestConn, feature a11y.Feature) (cleanup func(context.Context), retErr error) {
 	tdh := tearDownHelper{}
 	defer func(ctx context.Context) {
-		if e != nil {
+		if retErr != nil {
 			tdh.tearDown(ctx)
 		}
 	}(ctx)
@@ -170,10 +170,10 @@ func prepareFeature(ctx context.Context, s *testing.State, cr *chrome.Chrome, a 
 
 // SetUpChromeVox runs preparations to run ARC tests with ChromeVox enabled.
 // Caller is responsible to run cleanup function after tests finish.
-func SetUpChromeVox(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, tconn *chrome.TestConn) (_ *chromevox.Conn, cleanup func(context.Context), e error) {
+func SetUpChromeVox(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, tconn *chrome.TestConn) (_ *chromevox.Conn, cleanup func(context.Context), retErr error) {
 	tdh := tearDownHelper{}
 	defer func(ctx context.Context) {
-		if e != nil {
+		if retErr != nil {
 			tdh.tearDown(ctx)
 		}
 	}(ctx)
@@ -204,10 +204,10 @@ func SetUpChromeVox(ctx context.Context, s *testing.State, cr *chrome.Chrome, a 
 
 // SetUpSelectToSpeak runs preparations to run ARC tests with SelectToSpeak enabled.
 // Caller is responsible to run cleanup function after tests finish.
-func SetUpSelectToSpeak(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, tconn *chrome.TestConn) (_ *sts.Conn, cleanup func(context.Context), e error) {
+func SetUpSelectToSpeak(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, tconn *chrome.TestConn) (_ *sts.Conn, cleanup func(context.Context), retErr error) {
 	tdh := tearDownHelper{}
 	defer func(ctx context.Context) {
-		if e != nil {
+		if retErr != nil {
 			tdh.tearDown(ctx)
 		}
 	}(ctx)
@@ -247,10 +247,10 @@ func AttachFaillog(ctx context.Context, s *testing.State, tconn *chrome.TestConn
 
 // StartActivityWithChromeVox launches the activity and wait for ready to run tests with ChromeVox.
 // Caller is responsible to run cleanup function after tests finish.
-func StartActivityWithChromeVox(ctx context.Context, s *testing.State, a *arc.ARC, tconn *chrome.TestConn, cvconn *chromevox.Conn, activity TestActivity) (cleanup func(context.Context), e error) {
+func StartActivityWithChromeVox(ctx context.Context, s *testing.State, a *arc.ARC, tconn *chrome.TestConn, cvconn *chromevox.Conn, activity TestActivity) (cleanup func(context.Context), retErr error) {
 	tdh := tearDownHelper{}
 	defer func(ctx context.Context) {
-		if e != nil {
+		if retErr != nil {
 			tdh.tearDown(ctx)
 		}
 	}(ctx)
@@ -294,10 +294,10 @@ func StartActivityWithChromeVox(ctx context.Context, s *testing.State, a *arc.AR
 }
 
 // StartActivityWithSelectToSpeak launches the activity and wait for ready to run tests with SelectToSpeak.
-func StartActivityWithSelectToSpeak(ctx context.Context, s *testing.State, a *arc.ARC, tconn *chrome.TestConn, activity TestActivity) (_ func(context.Context), e error) {
+func StartActivityWithSelectToSpeak(ctx context.Context, s *testing.State, a *arc.ARC, tconn *chrome.TestConn, activity TestActivity) (_ func(context.Context), retErr error) {
 	tdh := tearDownHelper{}
 	defer func(ctx context.Context) {
-		if e != nil {
+		if retErr != nil {
 			tdh.tearDown(ctx)
 		}
 	}(ctx)
