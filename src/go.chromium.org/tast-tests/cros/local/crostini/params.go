@@ -427,6 +427,10 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				testParam.Val = "browser.TypeLacros"
 			}
 
+			if testCase.SelfManagedInstall {
+				testParam.Val = fmt.Sprintf("vm.Debian%s", strings.Title(string(i.debianVersion)))
+			}
+
 			if testCase.UseFixture {
 				testParam.Fixture = fixture
 			} else {

@@ -20,6 +20,7 @@ import (
 	cui "go.chromium.org/tast-tests/cros/local/crostini/ui"
 	"go.chromium.org/tast-tests/cros/local/crostini/ui/settings"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -72,6 +73,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Timeout:           7 * time.Minute,
+				Val:               vm.DebianBullseye,
 			}, {
 				Name:              "unstable",
 				ExtraAttr:         []string{"informational"},
@@ -79,6 +81,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Timeout:           7 * time.Minute,
+				Val:               vm.DebianBullseye,
 			},
 		},
 	})
