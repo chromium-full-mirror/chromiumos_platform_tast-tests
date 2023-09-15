@@ -249,11 +249,7 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 	result.appShownDuration = request + delayShown
 	result.enabledScreenDuration = p["boot_progress_enable_screen"]
 
-	// TODO(b/299182092) GetAppKills hangs for Grunt R-container.
-	// Wait up to 5 seconds and don't treat this as stop error.
-	appKillCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	result.appKills, err = arc.GetAppKills(appKillCtx, tconn)
+	result.appKills, err = arc.GetAppKills(ctx, tconn)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to collect ARC app kill counts: ", err)
 	}
