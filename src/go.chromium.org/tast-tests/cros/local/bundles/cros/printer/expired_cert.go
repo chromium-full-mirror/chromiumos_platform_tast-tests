@@ -38,7 +38,7 @@ func init() {
 		Func:         ExpiredCert,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests that a printer with an expired SSL certificate fails print jobs and propagates the error to chrome",
-		Contacts:     []string{"project-bolton@google.com", "liamhuffman@google.com"},
+		Contacts:     []string{"project-bolton@google.com"},
 		Attr: []string{
 			"group:paper-io",
 			"paper-io_printing",

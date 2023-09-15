@@ -29,7 +29,6 @@ func init() {
 		Contacts: []string{
 			"cros-peripherals@google.com",
 			"project-bolton@google.com",
-			"liamhuffman@google.com",
 		},
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent: "b:860616",
