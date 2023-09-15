@@ -59,7 +59,7 @@ func PreparePKCS12Cert(ctx context.Context, certs certificate.CertStore) (cert s
 			return "", errors.Wrapf(err, "failed to write file %q", p.path)
 		}
 	}
-	out, err := testexec.CommandContext(ctx, "openssl", "pkcs12", "-export", "-inkey", privateKeyPath, "-in", clientCertPath, "-password", "pass:").Output(testexec.DumpLogOnError)
+	out, err := testexec.CommandContext(ctx, "openssl", "pkcs12", "-export", "-inkey", privateKeyPath, "-in", clientCertPath, "-password", "pass:", "-legacy").Output(testexec.DumpLogOnError)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create PKCS#12 certificate")
 	}
