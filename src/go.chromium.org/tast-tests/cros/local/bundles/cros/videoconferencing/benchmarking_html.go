@@ -142,7 +142,7 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 
 	}
 
-	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight, effects.KHd)
+	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight, effects.KAuto)
 	if err != nil {
 		s.Fatal("Failed to apply platform effects: ", err)
 	}

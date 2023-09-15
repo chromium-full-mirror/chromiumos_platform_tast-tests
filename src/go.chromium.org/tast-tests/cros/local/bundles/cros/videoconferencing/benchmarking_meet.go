@@ -81,7 +81,7 @@ func init() {
 				Name: "platform_blur_720p",
 				Val: meetParams{
 					platformBlur: true,
-					modelType:    effects.KHd,
+					modelType:    effects.KAuto,
 				},
 			},
 			{
@@ -115,7 +115,7 @@ func init() {
 				Name: "platform_relight_720p",
 				Val: meetParams{
 					platformRelight: true,
-					modelType:       effects.KHd,
+					modelType:       effects.KAuto,
 				},
 			},
 			{
@@ -137,7 +137,7 @@ func init() {
 				Val: meetParams{
 					platformBlur:    true,
 					platformRelight: true,
-					modelType:       effects.KHd,
+					modelType:       effects.KAuto,
 				},
 			},
 			{
@@ -181,7 +181,7 @@ func init() {
 				Name: "platform_relight_720p_4ppl",
 				Val: meetParams{
 					platformRelight: true,
-					modelType:       effects.KHd,
+					modelType:       effects.KAuto,
 					botCount:        3,
 				},
 			},
@@ -189,7 +189,7 @@ func init() {
 				Name: "platform_blur_720p_4ppl",
 				Val: meetParams{
 					platformBlur: true,
-					modelType:    effects.KHd,
+					modelType:    effects.KAuto,
 					botCount:     3,
 				},
 			},
@@ -198,7 +198,7 @@ func init() {
 				Val: meetParams{
 					platformBlur:    true,
 					platformRelight: true,
-					modelType:       effects.KHd,
+					modelType:       effects.KAuto,
 					botCount:        3,
 				},
 			},
@@ -219,7 +219,7 @@ func init() {
 				Name: "platform_relight_720p_10ppl",
 				Val: meetParams{
 					platformRelight: true,
-					modelType:       effects.KHd,
+					modelType:       effects.KAuto,
 					botCount:        9,
 				},
 			},
@@ -227,7 +227,7 @@ func init() {
 				Name: "platform_blur_720p_10ppl",
 				Val: meetParams{
 					platformBlur: true,
-					modelType:    effects.KHd,
+					modelType:    effects.KAuto,
 					botCount:     9,
 				},
 			},
@@ -236,7 +236,7 @@ func init() {
 				Val: meetParams{
 					platformBlur:    true,
 					platformRelight: true,
-					modelType:       effects.KHd,
+					modelType:       effects.KAuto,
 					botCount:        9,
 				},
 			},

@@ -42,6 +42,8 @@ type ModelType string
 const (
 	// KNone is the empty string used for no effects.
 	KNone ModelType = ""
+	// KAuto is the string used for the system default model.
+	KAuto ModelType = "auto"
 	// KHd is the standard "HD" model.
 	KHd ModelType = "hd"
 	// KFull is the standard "low res" model.
@@ -76,7 +78,9 @@ func ApplyPlatformEffects(ctx context.Context, blur, relight bool, modelType Mod
 	}
 
 	platformEffects.GpuAPI = "vulkan"
-	if modelType == KHd {
+	if modelType == KAuto {
+		platformEffects.SegmentationModelType = string(KAuto)
+	} else if modelType == KHd {
 		platformEffects.SegmentationModelType = string(KHd)
 	} else if modelType == KEffnet256 {
 		platformEffects.SegmentationModelType = string(KEffnet256)
