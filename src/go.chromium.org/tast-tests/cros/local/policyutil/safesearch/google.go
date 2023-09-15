@@ -6,6 +6,7 @@ package safesearch
 
 import (
 	"context"
+	"fmt"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/errors"
@@ -20,8 +21,12 @@ func TestGoogleSafeSearch(ctx context.Context, br *browser.Browser, safeSearchEx
 	}
 	defer conn.Close()
 
+	originalCondition := `new URL(document.URL).searchParams.get("safe") == "active"`
+	// If page was redirected for security check the original url will be encoded in the new url query params:
+	// https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dkittens%26safe%3Dactive
+	redirectCondition := `document.URL.toLowerCase().indexOf("safe%3dactive") > -1`
 	var isSafe bool
-	if err := conn.Eval(ctx, `new URL(document.URL).searchParams.get("safe") == "active"`, &isSafe); err != nil {
+	if err := conn.Eval(ctx, fmt.Sprintf("%s || %s", originalCondition, redirectCondition), &isSafe); err != nil {
 		return errors.Wrap(err, "could not read safe search param from URL")
 	}
 
