@@ -74,7 +74,7 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 	s.Log("Servo PD info:")
 	s.Logf("  Port       %d", pdState.Port)
 	s.Logf("  Polarity   %q", pdState.Polarity)
-	s.Logf("  Status     %q", pdState.Status)
+	s.Logf("  Connection %q", pdState.Connection)
 	s.Logf("  PowerRole  %q", pdState.PowerRole)
 	s.Logf("  DataRole   %q", pdState.DataRole)
 	s.Logf("  PEState    %d", pdState.PEState)

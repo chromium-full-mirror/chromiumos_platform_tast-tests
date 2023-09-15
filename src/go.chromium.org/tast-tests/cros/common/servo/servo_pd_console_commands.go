@@ -7,14 +7,13 @@ package servo
 import (
 	"context"
 	"strconv"
-	"strings"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 // A PDPolarityValue defines the CC polarity state
-type PDPolarityValue StringControl
+type PDPolarityValue string
 
 // List of polarity values
 const (
@@ -22,13 +21,13 @@ const (
 	PolarityCC2 PDPolarityValue = "CC2"
 )
 
-// A PDStatusValue defines the current PD status, enabled or disabled
-type PDStatusValue string
+// A ConnectionValue defines the current PD connection status, enabled or disabled
+type ConnectionValue string
 
 // List of PD status values
 const (
-	PDEnabled  PDStatusValue = "enabled"
-	PDDisabled PDStatusValue = "disabled"
+	PDEnabled  ConnectionValue = "enabled"
+	PDDisabled ConnectionValue = "disabled"
 )
 
 // A PowerRoleValue defines the current PD port power role
@@ -49,31 +48,52 @@ const (
 	DataRoleUFP DataRoleValue = "UFP"
 )
 
+type servoStateTokens []string
+
+func (t *servoStateTokens) lookup(field string) (string, error) {
+	token := (*t)[pdFieldIndex[field]]
+	if value, ok := pdFieldLookup[field][token]; ok {
+		return value, nil
+	}
+	return "", errors.Errorf("PD field %q contains unknown value %q", field, token)
+}
+
 // A PDState encapsulates the full PD port state on a servo
 type PDState struct {
-	Port      int
-	Polarity  PDPolarityValue
-	Status    PDStatusValue
-	PowerRole PowerRoleValue
-	DataRole  DataRoleValue
-	PEState   int
-	Flags     uint32
+	Port       int
+	Polarity   PDPolarityValue
+	Connection ConnectionValue
+	PowerRole  PowerRoleValue
+	DataRole   DataRoleValue
+	PEState    int
+	Flags      uint32
 }
 
 const (
 	// ReServoPdStateCommand - Valid for TCPM v1 only
 	// Example: Port C1 CC1, Ena - Role: SRC-UFP State: 23(), Flags: 0x1415e
-	// Match index:
-	//	0 - Full match
-	//	1 - Port number		0 or 1
-	//	2 - CC Polarity		CC1/CC2
-	//	3 - Connection status	Ena/Dis
-	//	4 - Power role		SRC/SNK
-	//	5 - Data role		DFP/UFP
-	//	6 - PE State		number
-	//	7 - Flags		32-bit flags
 	ReServoPdStateCommand string = `Port\s+C(\d+)\s+(CC\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)\s+State:\s(\d+)\(.*\),\s+Flags:\s+0x(\w*)[\r\n]`
 )
+
+var pdFieldIndex = map[string]int{
+	"Full":       0,
+	"PortNumber": 1,
+	"CCPolarity": 2,
+	"Connection": 3,
+	"PowerRole":  4,
+	"DataRole":   5,
+	"PEState":    6,
+	"Flags":      7,
+}
+
+// PD fields lookup.  Primary key must match a key from pdFieldIndex
+// Sub-keys match the servo output from the "pd state" command
+var pdFieldLookup = map[string]map[string]string{
+	"CCPolarity": {"CC1": string(PolarityCC1), "CC2": string(PolarityCC2)},
+	"Connection": {"Ena": string(PDEnabled), "Dis": string(PDDisabled)},
+	"PowerRole":  {"SRC": string(PowerRoleSRC), "SNK": string(PowerRoleSNK)},
+	"DataRole":   {"DFP": string(DataRoleDFP), "UFP": string(DataRoleUFP)},
+}
 
 // GetServoPDState returns the state of the PD port on the servo that connects to the DUT
 // For servoV4 and servoV4p1, the PD port 0 is the charging port and PD port 1 is the DUT port.
@@ -84,55 +104,48 @@ func (s *Servo) GetServoPDState(ctx context.Context) (*PDState, error) {
 		return nil, errors.Wrap(err, "failed to get servo PD state")
 	}
 
-	testing.ContextLogf(ctx, "Full string: %s", out[0][0])
-	testing.ContextLogf(ctx, "Token count : %d", len(out[0]))
+	t := servoStateTokens(out[0])
 
-	// Port number, for servo it should always be 1
-	portState.Port, err = strconv.Atoi(out[0][1])
+	testing.ContextLogf(ctx, "Full string: %s", t[pdFieldIndex["Full"]])
+	testing.ContextLogf(ctx, "Token count : %d", len(t))
+
+	portState.Port, err = strconv.Atoi(t[pdFieldIndex["PortNumber"]])
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to convert port number from PD state")
+		return nil, errors.Wrap(err, "failed to convert port number")
 	}
 
-	// CC polarity, convert directly to PDPolarityValue
-	portState.Polarity = PDPolarityValue(out[0][2])
-
-	// Connection status: Enabled/Disabled
-	if strings.HasPrefix(out[0][3], "Ena") {
-		portState.Status = PDEnabled
-	} else if strings.HasPrefix(out[0][3], "Dis") {
-		portState.Status = PDDisabled
+	if polarity, err := t.lookup("CCPolarity"); err != nil {
+		return nil, err
 	} else {
-		return nil, errors.Errorf("invalid PD status: %s", out[0][3])
+		portState.Polarity = PDPolarityValue(polarity)
 	}
 
-	// Power role: SRC/SNK
-	if strings.HasPrefix(out[0][4], "SRC") {
-		portState.PowerRole = PowerRoleSRC
-	} else if strings.HasPrefix(out[0][3], "SNK") {
-		portState.PowerRole = PowerRoleSNK
+	if connection, err := t.lookup("Connection"); err != nil {
+		return nil, err
 	} else {
-		return nil, errors.Errorf("invalid power role: %s", out[0][4])
+		portState.Connection = ConnectionValue(connection)
 	}
 
-	// Data role: DFP/UFP
-	if strings.HasPrefix(out[0][5], "DFP") {
-		portState.DataRole = DataRoleDFP
-	} else if strings.HasPrefix(out[0][5], "UFP") {
-		portState.DataRole = DataRoleUFP
+	if powerRole, err := t.lookup("PowerRole"); err != nil {
+		return nil, err
 	} else {
-		return nil, errors.Errorf("invalid data role: %s", out[0][5])
+		portState.PowerRole = PowerRoleValue(powerRole)
 	}
 
-	// PE state
-	portState.PEState, err = strconv.Atoi(out[0][6])
+	if dataRole, err := t.lookup("DataRole"); err != nil {
+		return nil, err
+	} else {
+		portState.DataRole = DataRoleValue(dataRole)
+	}
+
+	portState.PEState, err = strconv.Atoi(t[pdFieldIndex["PEState"]])
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to convert PE state number from PD state")
+		return nil, errors.Wrap(err, "failed to convert PE state number")
 	}
 
-	// Flags
-	flags64, err := strconv.ParseUint(out[0][7], 16, 32)
+	flags64, err := strconv.ParseUint(t[pdFieldIndex["Flags"]], 16, 32)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to convert flags from PD state")
+		return nil, errors.Wrap(err, "failed to convert PE state number")
 	}
 	portState.Flags = uint32(flags64)
 
