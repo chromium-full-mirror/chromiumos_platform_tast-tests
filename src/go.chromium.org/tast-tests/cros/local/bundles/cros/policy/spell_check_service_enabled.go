@@ -34,6 +34,7 @@ func init() {
 		Desc:         "Behavior of SpellCheckServiceEnabled policy",
 		Contacts: []string{
 			"chrome-language@google.com",
+			"dp-chromeos-eng@google.com",
 			"megjablon@google.com",
 		},
 		BugComponent: "crbug:UI>Browser>Language>Spellcheck",
