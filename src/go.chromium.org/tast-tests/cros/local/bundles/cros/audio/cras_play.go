@@ -66,6 +66,9 @@ func CrasPlay(ctx context.Context, s *testing.State) {
 
 	defer func() {
 		if err := command.Wait(); err != nil {
+			if err := crastestclient.DumpAudioDiagnostics(ctx, s.OutDir()); err != nil {
+				s.Error("Failed to dump audio diagnostics: ", err)
+			}
 			s.Fatal("Playback did not finish in time: ", err)
 		}
 	}()
