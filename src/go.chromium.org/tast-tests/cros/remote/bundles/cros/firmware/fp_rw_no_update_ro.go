@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint/fixture"
@@ -79,24 +78,8 @@ func FpRWNoUpdateRO(ctx context.Context, s *testing.State) {
 
 	s.Log("Flashing RO firmware (expected to fail)")
 
-	var flashromConfig flashrom.Config
-	flashromInstance, ctx, shutdown, _, err := flashromConfig.
-		FlashromInit(flashrom.VerbosityDebug).
-		ProgrammerInit(flashrom.ProgrammerEc, "type=fp").
-		SetDut(d.DUT()).
-		Probe(ctx)
-	defer func() {
-		if err := shutdown(); err != nil {
-			s.Error("Failed to shutdown flashromInstance: ", err)
-		}
-	}()
-
-	if err != nil {
-		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
-	}
-
-	if output, err := flashromInstance.Write(ctx, testImages[fingerprint.TestImageTypeDev].Path, true, false, "", []string{"EC_RO"}); err == nil {
-		s.Fatal("Flashing RO firmware should not succeed, cmd output: ", output)
+	if err := fingerprint.FlashFirmwareUpdate(ctx, d, fingerprint.ImageTypeRO, testImages[fingerprint.TestImageTypeDev].Path); err == nil {
+		s.Fatal("Flashing RO firmware should not succeed")
 	}
 
 	s.Log("Flashing failed as expected")
