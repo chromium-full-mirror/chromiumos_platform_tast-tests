@@ -30,7 +30,10 @@ func init() {
 		Func:         ProbeFanInfo,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that cros_healthd can fetch fan info",
-		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
+		Contacts: []string{
+			"cros-tdm-tpe-eng@google.com",
+			"yycheng@google.com",
+		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},

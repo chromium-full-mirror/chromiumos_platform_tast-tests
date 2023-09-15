@@ -39,6 +39,7 @@ func init() {
 		Desc:         "Check that we can probe cros_healthd for bus info",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
+			"chungsheng@google.com",
 			"intel.chrome.automation.team@intel.com",
 			"pathan.jilani@intel.com",
 		},

@@ -46,6 +46,7 @@ func init() {
 			"cros-network-health-team@google.com",
 			"cros-tdm-tpe-eng@google.com",
 			"khegde@google.com",
+			"weiluanwang@google.com",
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},

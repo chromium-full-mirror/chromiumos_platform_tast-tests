@@ -44,7 +44,10 @@ func init() {
 		Func:         MonitorTouchscreenEvent,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Monitors the touchscreen event detected properly or not",
-		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
+		Contacts: []string{
+			"cros-tdm-tpe-eng@google.com",
+			"weiluanwang@google.com",
+		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		// TODO(b/299588042): Promote to critical.
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},

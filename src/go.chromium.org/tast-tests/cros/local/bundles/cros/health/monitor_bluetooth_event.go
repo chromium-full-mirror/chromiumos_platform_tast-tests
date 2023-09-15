@@ -21,7 +21,10 @@ func init() {
 		Func:         MonitorBluetoothEvent,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Monitors the Bluetooth event detected properly or not",
-		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
+		Contacts: []string{
+			"cros-tdm-tpe-eng@google.com",
+			"byronlee@google.com",
+		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},

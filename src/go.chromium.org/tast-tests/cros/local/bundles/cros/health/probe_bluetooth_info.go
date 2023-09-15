@@ -58,7 +58,10 @@ func init() {
 		Func:         ProbeBluetoothInfo,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that cros_healthd can fetch Bluetooth info",
-		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
+		Contacts: []string{
+			"cros-tdm-tpe-eng@google.com",
+			"byronlee@google.com",
+		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},

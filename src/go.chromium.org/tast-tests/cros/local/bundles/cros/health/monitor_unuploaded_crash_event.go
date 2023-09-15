@@ -46,7 +46,10 @@ func init() {
 		Func:         MonitorUnuploadedCrashEvent,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Monitors unuploaded crash events detected properly or not",
-		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
+		Contacts: []string{
+			"cros-tdm-tpe-eng@google.com",
+			"weiluanwang@google.com",
+		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},

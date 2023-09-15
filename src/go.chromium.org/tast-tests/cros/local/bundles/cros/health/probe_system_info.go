@@ -34,8 +34,11 @@ func init() {
 		Func:         ProbeSystemInfo,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that we can probe cros_healthd for system info",
-		Contacts: []string{"cros-tdm-tpe-eng@google.com",
-			"moises.veleta@intel.com"},
+		Contacts: []string{
+			"cros-tdm-tpe-eng@google.com",
+			"chungsheng@google.com",
+			"moises.veleta@intel.com",
+		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},

@@ -18,7 +18,10 @@ func init() {
 		Func:         DiagnosticsList,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests getting supported dignostic routines from cros_healthd",
-		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
+		Contacts: []string{
+			"cros-tdm-tpe-eng@google.com",
+			"weiluanwang@google.com",
+		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Attr:         []string{"group:mainline"},
