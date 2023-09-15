@@ -74,6 +74,7 @@ func IdleCoolDownConfig() CoolDownConfig {
 	cdConfig := DefaultCoolDownConfig(CoolDownPreserveUI)
 	cdConfig.PollTimeout = 7 * time.Minute
 	cdConfig.TemperatureThreshold = 60000
+	cdConfig.TemperatureThresholdMode = TemperatureThresholdFixed
 	return cdConfig
 }
 
