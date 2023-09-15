@@ -21,7 +21,7 @@ import (
 
 const (
 	boardRegexp = "board=(tatl|tael)"
-	osRegexp    = "upload_var_vm_os_release=.*(buster|bullseye)"
+	osRegexp    = "upload_var_vm_os_release=.*Debian GNU/Linux.*"
 )
 
 func init() {
