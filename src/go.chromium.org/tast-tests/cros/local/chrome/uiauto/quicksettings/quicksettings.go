@@ -7,6 +7,7 @@ package quicksettings
 
 import (
 	"context"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -359,7 +360,7 @@ func DoNotDisturbEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, err
 	ui := uiauto.New(tconn)
 	// FeatureTiles do not expose an explicit toggled state to the UI node tree
 	// so the best we can do is search for the tooltip string.
-	return ui.IsNodeFound(ctx, FeatureTileDoNotDisturb.NameContaining("Do not disturb is on"))
+	return ui.IsNodeFound(ctx, FeatureTileDoNotDisturb.NameRegex(regexp.MustCompile(`(?i)do not disturb is on`)))
 }
 
 // SetDoNotDisturb enables or disables the Do Not Disturb feature using its
