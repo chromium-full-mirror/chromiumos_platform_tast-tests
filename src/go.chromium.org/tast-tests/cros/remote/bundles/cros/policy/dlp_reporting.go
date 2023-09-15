@@ -240,7 +240,7 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 		DmserverUrl:        reportingutil.DmServerURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
 		EnableLacros:       params.BrowserType == dlp.BrowserType_LACROS,
-		EnabledFeatures:    "EncryptedReportingPipeline",
+		EnabledFeatures:    "EncryptedReportingPipeline, ClientAutomatedTest",
 	}); err != nil {
 		s.Fatal("Remote call EnrollAndLogin() failed: ", err)
 	}
