@@ -1544,6 +1544,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			}, /*prefix=*/ "Tracing")
 		}
 
+		meetEndTime := time.Now().Add(meetTimeout)
 		if meet.docs {
 			// Start an annotation section to interact with Google Docs.
 			endDocsInteractions := recorder.AnnotateSection(ctx, "Docs_interactions")
@@ -1695,7 +1696,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			if err := kw.Accel(ctx, "Alt+Tab"); err != nil {
 				return errors.Wrap(err, "failed to hit alt-tab and focus back to Meet tab")
 			}
-			meetTimeout = end.Sub(time.Now())
 			endDocsInteractions(ctx)
 
 			if numPhases == 1 {
@@ -1736,18 +1736,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				}
 			}
 			endJamboardInteractions(ctx)
-			meetTimeout = end.Sub(time.Now())
 		} else {
 			startTracingRoutine(ctx)
-		}
-
-		// Ensures that meet session is long enough. graphics.MeasureGPUCounters
-		// exits early without errors on ARM where there is no i915 counters.
-		if err := inputsimulations.MoveMouseFor(ctx, tconn, meetTimeout); err != nil {
-			return errors.Wrap(err, "failed to simulate mouse movement")
-		}
-		if err := <-errc; err != nil {
-			return errors.Wrap(err, "failed to collect GPU counters")
 		}
 
 		// "Stop presenting" if the test wants to interact with
@@ -1884,6 +1874,16 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 					return errors.Wrap(err, "failed to stop snapshot for Google Sheets")
 				}
 			}
+		}
+
+		moveMouseTimeout := meetEndTime.Sub(time.Now())
+		// Ensures that meet session is long enough. graphics.MeasureGPUCounters
+		// exits early without errors on ARM where there is no i915 counters.
+		if err := inputsimulations.MoveMouseFor(ctx, tconn, moveMouseTimeout); err != nil {
+			return errors.Wrap(err, "failed to simulate mouse movement")
+		}
+		if err := <-errc; err != nil {
+			return errors.Wrap(err, "failed to collect GPU counters")
 		}
 
 		if err := checkParticipantCount(ctx, expectedParticipantCount); err != nil {
