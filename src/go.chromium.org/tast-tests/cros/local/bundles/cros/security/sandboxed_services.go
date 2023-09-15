@@ -344,8 +344,8 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		}
 
 		if reqs == nil {
-			// Processes running as root must always be listed in the baseline.
 			if info.Euid == 0 {
+				// Processes running as root must always be listed in the baseline.
 				s.Errorf("Unexpected %q process %v (%v) running as root", info.Name, pid, info.Exe)
 				// These failures often correspond to short-lived root processes that are only present
 				// on specific boards. The failures can be hard to fix because we don't always have
@@ -355,20 +355,15 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 				// By printing the expected baseline/exclusion entry we make it easier for ourselves
 				// to fix some failures, especially considering that process names are truncated
 				// by the kernel.
-				s.Error("A baseline entry for this process would look like:")
 				// {"tpm_managerd", "root", "root", 0},
-				s.Errorf("{%q, \"root\", \"root\", 0}", info.Name)
-				s.Error("An exclusion list entry for this process would look like:")
-				s.Errorf("%q", info.Name)
-			}
-			// Processes running with CAP_SYS_ADMIN must always be listed in the baseline.
-			if info.Ecaps&(1<<sandboxing.CapSysAdmin) > 0 {
+				s.Errorf("A baseline entry for this process would look like: {%q, \"root\", \"root\", 0}", info.Name)
+				s.Errorf("An exclusion list entry for this process would look like: %q", info.Name)
+			} else if info.Ecaps&(1<<sandboxing.CapSysAdmin) > 0 {
+				// Processes running with CAP_SYS_ADMIN must always be listed in the baseline.
 				s.Errorf("Unexpected %q process %v (%v) with CAP_SYS_ADMIN capability", info.Name, pid, info.Exe)
-				s.Error("A baseline entry for this process would look like:")
 				// {"spaced", "spaced", "spaced", restrictCaps},
-				s.Errorf("{%q, %q, %q, restrictCaps}", info.Name, info.Username, info.Username)
-				s.Error("An exclusion list entry for this process would look like:")
-				s.Errorf("%q", info.Name)
+				s.Errorf("A baseline entry for this process would look like: {%q, %q, %q, restrictCaps}", info.Name, info.Username, info.Username)
+				s.Errorf("An exclusion list entry for this process would look like: %q", info.Name)
 			}
 			// Ignore unlisted non-root, non-CAP_SYS_ADMIN processes on the
 			// assumption that they've already done some sandboxing.
