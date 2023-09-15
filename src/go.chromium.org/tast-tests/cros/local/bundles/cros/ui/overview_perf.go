@@ -54,18 +54,18 @@ func init() {
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedIn",
-			Timeout: 20 * time.Minute,
+			Timeout: cujrecorder.CooldownTimeout + 20*time.Minute,
 		}, {
 			Name:              "lacros",
 			Val:               browser.TypeLacros,
 			Fixture:           "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           20 * time.Minute,
+			Timeout:           cujrecorder.CooldownTimeout + 20*time.Minute,
 		}, {
 			Name:    "passthrough",
 			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedInWith100FakeAppsPassthroughCmdDecoder",
-			Timeout: 20 * time.Minute,
+			Timeout: cujrecorder.CooldownTimeout + 20*time.Minute,
 		}},
 		Data: []string{"animation.html", "animation.js"},
 	})

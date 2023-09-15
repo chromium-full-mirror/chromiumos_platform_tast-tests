@@ -40,7 +40,7 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      3 * time.Minute,
+		Timeout:      cujrecorder.CooldownTimeout + 3*time.Minute,
 		Params: []testing.Param{{
 			Val:               browser.TypeAsh,
 			Fixture:           "chromeLoggedIn",
