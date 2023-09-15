@@ -149,6 +149,9 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 			}
 			defer closeBrowser(cleanupCtx)
 
+			recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+			defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording_"+param.name+".webm"), s.HasError)
+
 			// Setup server to send notifications from.
 			server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 			serverURL, err := url.Parse(server.URL)
