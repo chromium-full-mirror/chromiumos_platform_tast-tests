@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/mgs"
+	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/safesearch"
 	"go.chromium.org/tast/core/testing"
 )
@@ -40,18 +41,40 @@ func init() {
 		Timeout: 3 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ForceGoogleSafeSearch{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.DeviceLocalAccounts{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.DeviceLocalAccountAutoLoginId{}, pci.VerifiedFunctionalityOS),
 		},
 	})
 }
 
 func ForceGoogleSafeSearch(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+	// Launch a new MGS with default account.
+	m, cr, err := mgs.New(
+		ctx,
+		fdms,
+		mgs.DefaultAccount(),
+		mgs.AutoLaunch(mgs.MgsAccountID),
+	)
+	if err != nil {
+		s.Fatal("Failed to start Chrome on Signin screen with default MGS account: ", err)
+	}
+	defer func() {
+		if err := m.Close(ctx); err != nil {
+			s.Fatal("Failed close MGS: ", err)
+		}
+	}()
 
 	for _, param := range []struct {
 		name     string
 		wantSafe bool
 		value    *policy.ForceGoogleSafeSearch
 	}{
+		{
+			name:     "unset",
+			wantSafe: false,
+			value:    &policy.ForceGoogleSafeSearch{Stat: policy.StatusUnset},
+		},
 		{
 			name:     "enabled",
 			wantSafe: true,
@@ -62,29 +85,32 @@ func ForceGoogleSafeSearch(ctx context.Context, s *testing.State) {
 			wantSafe: false,
 			value:    &policy.ForceGoogleSafeSearch{Val: false},
 		},
-		{
-			name:     "unset",
-			wantSafe: false,
-			value:    &policy.ForceGoogleSafeSearch{Stat: policy.StatusUnset},
-		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
-			// Launch a new MGS with default account.
-			mgs, cr, err := mgs.New(
-				ctx,
-				fdms,
-				mgs.DefaultAccount(),
-				mgs.AutoLaunch(mgs.MgsAccountID),
-				mgs.AddPublicAccountPolicies(mgs.MgsAccountID, []policy.Policy{param.value}),
-			)
-			if err != nil {
-				s.Fatal("Failed to start Chrome on Signin screen with default MGS account: ", err)
+			mgsAccountPolicy := policy.DeviceLocalAccountInfo{
+				AccountID:   &mgs.MgsAccountID,
+				AccountType: &mgs.AccountType,
 			}
-			defer func() {
-				if err := mgs.Close(ctx); err != nil {
-					s.Fatal("Failed close MGS: ", err)
-				}
-			}()
+			policies := []policy.Policy{
+				&policy.DeviceLocalAccounts{
+					Val: []policy.DeviceLocalAccountInfo{
+						mgsAccountPolicy,
+					},
+				},
+				&policy.DeviceLocalAccountAutoLoginId{
+					Val: mgs.MgsAccountID,
+				},
+			}
+			pb := policy.NewBlob()
+			if err := pb.AddPublicAccountPolicies(mgs.MgsAccountID, []policy.Policy{param.value}); err != nil {
+				s.Fatal("Failed to add public account ForceGoogleSafeSearch policy: ", err)
+			}
+			if err := pb.AddPolicies(policies); err != nil {
+				s.Fatal("Failed to add policies for public account setup: ", err)
+			}
+			if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, pb); err != nil {
+				s.Fatal("Failed to update policies: ", err)
+			}
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_")
 			br := cr.Browser()
 
