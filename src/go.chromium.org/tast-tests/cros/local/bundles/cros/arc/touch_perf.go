@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/inputlatency"
-	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/testing"
 )
@@ -39,16 +38,9 @@ func init() {
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
-		Fixture: "arcBooted",
-		Timeout: cdConfig().PollTimeout + 4*time.Minute,
+		Fixture: "arcBootedWithDisableExternalStorage",
+		Timeout: 10 * time.Minute,
 	})
-}
-
-// cdConfig returns the config to wait for the CPU to cooldown for TouchPerf tests.
-func cdConfig() cpu.CoolDownConfig {
-	cdConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
-	cdConfig.TemperatureThreshold = 61000
-	return cdConfig
 }
 
 func TouchPerf(ctx context.Context, s *testing.State) {
@@ -103,9 +95,8 @@ func TouchPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not maximize test app: ", err)
 	}
 
-	s.Log("Waiting until CPU is stabilized")
-	if _, err := cpu.WaitUntilStabilized(ctx, cdConfig()); err != nil {
-		s.Fatal("Could not wait until CPU is stabilized: ", err)
+	if err := inputlatency.WaitForCPUStabilized(ctx); err != nil {
+		s.Fatal("Failed to wait until CPU is stabilized: ", err)
 	}
 
 	s.Log("Injecting touch move events")
