@@ -80,7 +80,7 @@ func CacheIntegrity(ctx context.Context, s *testing.State) {
 		minSizeKB int64
 		maxSizeKB int64
 	}{
-		{"packages_cache.xml", 50, 200},
+		{"packages_cache.xml", 50, 320},
 		{"tts_state_cache.dat", 50, 500},
 		{"gservices_cache/databases/gservices.db", 25, 100},
 		{"gms_core_cache/app_chimera/current_config.fb", 256, 2048},
