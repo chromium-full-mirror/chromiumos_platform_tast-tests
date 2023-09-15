@@ -31,6 +31,10 @@ const (
 		`.shadowRoot.getElementById("phoneHubCameraRollItem")` +
 		`.shadowRoot.querySelector("settings-multidevice-feature-toggle")` +
 		`.shadowRoot.getElementById("toggle")`
+	notificationToggleJS = crossdevicesettings.MultideviceSubpageJS +
+		`.shadowRoot.getElementById("phoneHubNotificationsItem")` +
+		`.shadowRoot.querySelector("settings-multidevice-feature-toggle")` +
+		`.shadowRoot.getElementById("toggle")`
 	setupDialogNextButtonJS = crossdevicesettings.MultidevicePageJS +
 		`.shadowRoot.querySelector("settings-multidevice-permissions-setup-dialog")` +
 		`.shadowRoot.getElementById("getStartedButton")`
@@ -203,28 +207,39 @@ func ToggleLocatePhonePod(ctx context.Context, tconn *chrome.TestConn, enable bo
 	return togglePod(ctx, tconn, LocatePhonePod, enable)
 }
 
-// FindRecentPhotosSetupButton returns a finder which locates the Set up button for the Recent Photos feature.
-func FindRecentPhotosSetupButton() *nodewith.Finder {
-	return nodewith.Ancestor(nodewith.ClassName("MultideviceFeatureOptInView")).Name("Set up").Role(role.Button)
+// FindSubFeaturesSetupButton returns a finder which locates the Set up button for the Recent Photos feature.
+func FindSubFeaturesSetupButton() *nodewith.Finder {
+	return nodewith.Ancestor(nodewith.ClassName("MultideviceFeatureOptInView")).NameContaining("Set up").Role(role.Button)
 }
 
-// OptInRecentPhotos enables the Recent Photos feature by clicking on the Set up button displayed in the Phone Hub bubble and run the set up flow right before user consent on the phone.
-func OptInRecentPhotos(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
+// OptInSubFeatures enables the Phone Hub sub-features by clicking on the Set up button displayed in the Phone Hub bubble and run the set up flow right before user consent on the phone.
+func OptInSubFeatures(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
 	ui := uiauto.New(tconn)
-	if err := ui.LeftClick(FindRecentPhotosSetupButton())(ctx); err != nil {
-		return errors.Wrap(err, "failed to click on the Recent Photos opt-in button")
-	}
+	subFeaturesButton := FindSubFeaturesSetupButton()
+	// If the setup button is not visible in Phone Hub UI, try to enable them in settings page.
+	if subFeaturesButton == nil {
+		if err := ToggleRecentPhotosSetting(ctx, tconn, cr, true); err != nil {
+			return errors.Wrap(err, "no setup button found in Phone Hub bubble and failed to toggle the Camera Roll feature in settings page")
+		}
+		if err := ToggleNotificationSetting(ctx, tconn, cr, true); err != nil {
+			return errors.Wrap(err, "no setup button found in Phone Hub bubble and failed to toggle the Notification feature in settings page")
+		}
+	} else {
+		if err := ui.LeftClick(FindSubFeaturesSetupButton())(ctx); err != nil {
+			return errors.Wrap(err, "failed to click on the sub-features opt-in button")
+		}
 
-	setupDialogConn, err := crossdevicesettings.OSSettingsWithShadowPiercer(ctx, tconn, cr, setupDialogURL, false)
-	if err != nil {
-		return errors.Wrap(err, "permissions set up dialog did not launch")
-	}
-	defer setupDialogConn.Close()
-	if err := setupDialogConn.WaitForExpr(ctx, setupDialogNextButtonJS); err != nil {
-		return errors.Wrap(err, "failed to wait for Permissions Setup Dialog to be visible")
-	}
-	if err := setupDialogConn.Eval(ctx, setupDialogNextButtonJS+`.click()`, nil); err != nil {
-		return errors.Wrap(err, "failed to click Next on Permissions Setup Dialog intro screen")
+		setupDialogConn, err := crossdevicesettings.OSSettingsWithShadowPiercer(ctx, tconn, cr, setupDialogURL, false)
+		if err != nil {
+			return errors.Wrap(err, "permissions set up dialog did not launch")
+		}
+		defer setupDialogConn.Close()
+		if err := setupDialogConn.WaitForExpr(ctx, setupDialogNextButtonJS); err != nil {
+			return errors.Wrap(err, "failed to wait for Permissions Setup Dialog to be visible")
+		}
+		if err := setupDialogConn.Eval(ctx, setupDialogNextButtonJS+`.click()`, nil); err != nil {
+			return errors.Wrap(err, "failed to click Next on Permissions Setup Dialog intro screen")
+		}
 	}
 
 	return nil
@@ -241,8 +256,18 @@ func DownloadMostRecentPhoto(ctx context.Context, tconn *chrome.TestConn) error 
 	return nil
 }
 
-// ToggleRecentPhotosSetting toggles the Recent Photos setting using JS. This assumes that a connected device has already been paired.
+// ToggleRecentPhotosSetting toggles the Camera Roll feature in the settings page.
 func ToggleRecentPhotosSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, enable bool) error {
+	return ToggleSubFeatureSetting(ctx, tconn, cr, true, recentPhotosToggleJS)
+}
+
+// ToggleNotificationSetting toggles the Notification feature in the settings page.
+func ToggleNotificationSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, enable bool) error {
+	return ToggleSubFeatureSetting(ctx, tconn, cr, true, notificationToggleJS)
+}
+
+// ToggleSubFeatureSetting toggles the sub features (Camera roll and notification) setting using JS. This assumes that a connected device has already been paired.
+func ToggleSubFeatureSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, enable bool, featureToggleJS string) error {
 	settingsConn, err := crossdevicesettings.OSSettingsWithShadowPiercer(ctx, tconn, cr /*url=*/, "" /*existingConn=*/, false)
 	if err != nil {
 		return err
@@ -254,20 +279,20 @@ func ToggleRecentPhotosSetting(ctx context.Context, tconn *chrome.TestConn, cr *
 		return errors.Wrap(err, "failed to re-launch OS Settings to the multidevice feature page")
 	}
 
-	if err := settingsConn.WaitForExpr(ctx, recentPhotosToggleJS); err != nil {
-		return errors.Wrap(err, "failed to find the Recent Photos toggle")
+	if err := settingsConn.WaitForExpr(ctx, featureToggleJS); err != nil {
+		return errors.Wrap(err, "failed to find the feature's toggle")
 	}
 	var isEnabled bool
-	if err := settingsConn.Eval(ctx, recentPhotosToggleJS+featureCheckedJS, &isEnabled); err != nil {
-		return errors.Wrap(err, "failed to get Recent Photos toggle status")
+	if err := settingsConn.Eval(ctx, featureToggleJS+featureCheckedJS, &isEnabled); err != nil {
+		return errors.Wrap(err, "failed to get feature's toggle status")
 	}
 	if isEnabled != enable {
-		if err := settingsConn.Eval(ctx, recentPhotosToggleJS+`.click()`, nil); err != nil {
-			return errors.Wrap(err, "failed to click on Recent Photos toggle")
+		if err := settingsConn.Eval(ctx, featureToggleJS+`.click()`, nil); err != nil {
+			return errors.Wrap(err, "failed to click on feature;s toggle")
 		}
 	}
-	if err := settingsConn.WaitForExpr(ctx, recentPhotosToggleJS+featureCheckedJS+`===`+strconv.FormatBool(enable)); err != nil {
-		return errors.Wrapf(err, "failed to toggle Recent Photos to %v using JS", strconv.FormatBool(enable))
+	if err := settingsConn.WaitForExpr(ctx, featureToggleJS+featureCheckedJS+`===`+strconv.FormatBool(enable)); err != nil {
+		return errors.Wrapf(err, "failed to toggle feature to %v using JS", strconv.FormatBool(enable))
 	}
 
 	return nil

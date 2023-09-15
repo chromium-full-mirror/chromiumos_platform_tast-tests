@@ -34,10 +34,11 @@ import (
 
 // FixtureOptions contains the options that we set for various crossDeviceFixture.
 type FixtureOptions struct {
-	allFeatures         bool // Whether or not to enable all cross device features.
-	saveScreenRecording bool
-	lockFixture         bool // Whether or not to lock the fixture preventing chrome from being torn down outside of fixture teardown.
-	noSignIn            bool // Whether or not to sign in with the specified GAIA account. True will not skip OOBE.
+	allFeatures            bool // Whether or not to enable all cross device features.
+	saveScreenRecording    bool
+	lockFixture            bool // Whether or not to lock the fixture preventing chrome from being torn down outside of fixture teardown.
+	noSignIn               bool // Whether or not to sign in with the specified GAIA account. True will not skip OOBE.
+	allPhoneHubSubfeatures bool // Whether or not to enable all Phone Hub sub features (Camera Roll, Notifications and Exo).
 }
 
 // NewCrossDeviceOnboarded creates a fixture that logs in to CrOS, pairs it with an Android device,
@@ -45,11 +46,12 @@ type FixtureOptions struct {
 // Note that crossdevice fixtures inherit from crossdeviceAndroidSetup.
 func NewCrossDeviceOnboarded(opt FixtureOptions, fOpt chrome.OptionsCallback) testing.FixtureImpl {
 	return &crossdeviceFixture{
-		fOpt:                fOpt,
-		allFeatures:         opt.allFeatures,
-		saveScreenRecording: opt.saveScreenRecording,
-		lockFixture:         opt.lockFixture,
-		noSignIn:            opt.noSignIn,
+		fOpt:                   fOpt,
+		allFeatures:            opt.allFeatures,
+		saveScreenRecording:    opt.saveScreenRecording,
+		lockFixture:            opt.lockFixture,
+		noSignIn:               opt.noSignIn,
+		allPhoneHubSubfeatures: opt.allPhoneHubSubfeatures,
 	}
 }
 
@@ -74,7 +76,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHub",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return nil, nil
 		}),
 		Vars: []string{
@@ -98,7 +100,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHubRerun",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return nil, nil
 		}),
 		Vars: []string{
@@ -120,7 +122,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupSmartLock",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return nil, nil
 		}),
 		Vars: []string{
@@ -142,7 +144,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHub",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return nil, nil
 		}),
 		Vars: []string{
@@ -165,7 +167,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupSmartLock",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, false, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return nil, nil
 		}),
 		Vars: []string{
@@ -189,7 +191,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHub",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig().Opts()
 		}),
 		Vars: []string{
@@ -214,7 +216,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHub",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("Floss")}, nil
 		}),
 		Vars: []string{
@@ -238,7 +240,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHubRerun",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("Floss")}, nil
 		}),
 		Vars: []string{
@@ -260,7 +262,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupSmartLock",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("Floss")}, nil
 		}),
 		Vars: []string{
@@ -282,7 +284,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHub",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("Floss")}, nil
 		}),
 		Vars: []string{
@@ -305,7 +307,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupSmartLock",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, false, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("Floss")}, nil
 		}),
 		Vars: []string{
@@ -328,7 +330,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHub",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			lacrosOpts, err := lacrosfixt.NewConfig().Opts()
 			if err != nil {
 				return nil, err
@@ -359,6 +361,7 @@ type crossdeviceFixture struct {
 	btsnoopCmd                        *testexec.Cmd
 	logMarker                         *logsaver.Marker // Marker for per-test log.
 	allFeatures                       bool
+	allPhoneHubSubfeatures            bool
 	saveAndroidScreenRecordingOnError func(context.Context, func() bool) error
 	saveScreenRecording               bool
 	crosScreenRecordingStarted        bool
@@ -564,6 +567,17 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 			}
 			if err := androidDevice.EnablePhoneHubNotifications(ctx); err != nil {
 				s.Fatal("Failed to enable Phone Hub notifications: ", err)
+			}
+		}
+		if f.allPhoneHubSubfeatures {
+			if err := phonehub.Show(ctx, tconn); err != nil {
+				s.Fatal("Failed to show Phone Hub bubble")
+			}
+			if err := phonehub.OptInSubFeatures(ctx, tconn, cr); err != nil {
+				s.Fatal("Failed to enable Recent Photos via the opt-in view: ", err)
+			}
+			if err := androidDevice.GrantPermissionOnCdmDialog(ctx); err != nil {
+				s.Fatal("Failed to enable Recent Photos and Notificaion on the phone: ", err)
 			}
 		}
 		if _, err := ash.WaitForNotification(ctx, tconn, 90*time.Second, ash.WaitTitleContains("Connected to")); err != nil {

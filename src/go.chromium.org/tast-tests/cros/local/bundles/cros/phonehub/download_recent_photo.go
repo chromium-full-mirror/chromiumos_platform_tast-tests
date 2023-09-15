@@ -75,17 +75,6 @@ func DownloadRecentPhoto(ctx context.Context, s *testing.State) {
 	androidFilePath := filepath.Join(crossdevice.AndroidPhotosPath, photoName)
 	defer androidDevice.RemoveMediaFile(ctx, androidFilePath)
 
-	// Open Phone Hub and enable Recent Photos via the opt-in view.
-	if err := phonehub.Show(ctx, tconn); err != nil {
-		s.Fatal("Failed to open Phone Hub: ", err)
-	}
-	if err := phonehub.OptInRecentPhotos(ctx, tconn, chrome); err != nil {
-		s.Fatal("Failed to enable Recent Photos via the opt-in view: ", err)
-	}
-	if err := androidDevice.TurnOnRecentPhotosFeature(ctx); err != nil {
-		s.Fatal("Failed to enable Recent Photos on the phone: ", err)
-	}
-
 	// Re-open Phone Hub to expose controls to download recent photos.
 	if err := phonehub.Show(ctx, tconn); err != nil {
 		s.Fatal("Failed to re-open Phone Hub to download Recent Photos: ", err)

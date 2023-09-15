@@ -276,8 +276,8 @@ func (c *AndroidDevice) ToggleScreen(ctx context.Context) error {
 	return nil
 }
 
-// TurnOnRecentPhotosFeature enables the recent photos feature through the phone side set up dialog.
-func (c *AndroidDevice) TurnOnRecentPhotosFeature(ctx context.Context) error {
+// GrantPermissionOnCdmDialog enables the recent photos feature through the phone side set up dialog.
+func (c *AndroidDevice) GrantPermissionOnCdmDialog(ctx context.Context) error {
 	uiDevice, err := ui.NewDeviceWithRetry(ctx, c.Device)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to the UI Automator server")
@@ -290,7 +290,7 @@ func (c *AndroidDevice) TurnOnRecentPhotosFeature(ctx context.Context) error {
 	}
 
 	if err := turnOnButton.Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to turn on the recent photos feature")
+		return errors.Wrap(err, "failed to turn on features")
 	}
 	return nil
 }
