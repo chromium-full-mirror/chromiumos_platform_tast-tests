@@ -80,16 +80,25 @@ func startProcess(ctx context.Context, name string, args ...string) (*testexec.C
 }
 
 func stopProcess(ctx context.Context, cmd *testexec.Cmd) error {
-	testing.ContextLogf(ctx, "Terminating command with PID %d", cmd.Cmd.Process.Pid)
+	testing.ContextLogf(ctx, "Terminating process with PID %d", cmd.Cmd.Process.Pid)
 	if err := cmd.Signal(unix.SIGTERM); err != nil {
-		return errors.Wrap(err, "failed to send SIGTERM to command")
+		return errors.Wrap(err, "failed to send SIGTERM to process")
 	}
 	if err := cmd.Wait(); err != nil {
-		// We're expecting the exit status to be non-zero if the process was killed by SIGTERM.
-		// Anything else indicates a problem.
-		if ws, ok := testexec.GetWaitStatus(err); !ok || ws.Signal() != unix.SIGTERM {
+		// We are expecting the process to exit due to the SIGTERM signal we sent to it.
+		// If the program has a signal handler, it can return any error code it wants,
+		// but 143 is the canonical error code for SIGTERM so it's okay to rely on it in
+		// most cases.
+		const expectedExitCode = 143
+		exitCode, ok := testexec.ExitCode(err)
+		if !ok {
 			cmd.DumpLog(ctx)
-			return errors.Wrap(err, "failed to wait for command termination")
+			return errors.Wrap(err, "failed to get process exit status")
+
+		}
+		if exitCode != expectedExitCode {
+			cmd.DumpLog(ctx)
+			return errors.Wrapf(err, "expected exit code %d, got %d", expectedExitCode, exitCode)
 		}
 	}
 	return nil
