@@ -8,10 +8,12 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/inputlatency"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -90,8 +92,16 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	}
 	defer act.Close(ctx)
 
-	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
-		s.Fatalf("Unable to launch %s/%s: %v", appName, activityName, err)
+	if err := action.Retry(3, func(ctx context.Context) error {
+		ctxStartApp, cancel := context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+		if err := act.StartWithDefaultOptions(ctxStartApp, tconn); err == nil {
+			return nil
+		}
+		act.Stop(ctx, tconn)
+		return errors.Wrap(err, "failed to start app")
+	}, 0)(ctx); err != nil {
+		s.Fatalf("Unable to launch %s/%s: %v after retries", appName, activityName, err)
 	}
 	defer act.Stop(ctx, tconn)
 
