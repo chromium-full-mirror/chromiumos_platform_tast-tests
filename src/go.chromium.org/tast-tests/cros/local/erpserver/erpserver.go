@@ -61,7 +61,7 @@ type RequestEncryptedRecord struct {
 // UploadRequest is a struct that maps to ERP upload requests JSON.
 type UploadRequest struct {
 	AttachEncryptionSettings bool
-	AttachConfigurationFile  bool
+	ConfigurationFileVersion *int `json:"configurationFileVersion,omitempty"`
 	EncryptedRecord          []RequestEncryptedRecord
 }
 
@@ -76,16 +76,17 @@ type ResponseEncryptionSettings struct {
 // ResponseConfigFile is a struct that maps to the ERP config file in the
 // JSON response.
 type ResponseConfigFile struct {
-	EventConfigs               []EventConfig `json:"eventConfigs"`
-	ConfigurationFileSignature string        `json:"configurationFileSignature"`
+	Version             int           `json:"version"`
+	EventConfigs        []EventConfig `json:"eventConfigs"`
+	ConfigFileSignature string        `json:"configFileSignature"`
 }
 
 // EventConfig is a struct that maps to the ERP event config in the
 // JSON response.
 type EventConfig struct {
 	Destination           string `json:"destination"`
-	MinimumReleaseVersion int32  `json:"minimumReleaseVersion"`
-	MaximumReleaseVersion int32  `json:"maximumReleaseVersion"`
+	MinimumReleaseVersion int32  `json:"minimumReleaseVersion,omitempty"`
+	MaximumReleaseVersion int32  `json:"maximumReleaseVersion,omitempty"`
 }
 
 // UploadResponse is a struct that maps to ERP upload responses JSON.
@@ -208,9 +209,9 @@ func (erpserver *ErpServer) handleUpload(ctx context.Context, w http.ResponseWri
 		}
 	}
 
-	if request.AttachConfigurationFile {
-		testing.ContextLog(ctx, "ERP attach configuration file requested")
-		if erpserver.fakeConfigFile != nil {
+	if request.ConfigurationFileVersion != nil {
+		if erpserver.fakeConfigFile != nil && *request.ConfigurationFileVersion != erpserver.fakeConfigFile.Version {
+			testing.ContextLog(ctx, "ERP attach configuration file requested, with version= ", *request.ConfigurationFileVersion)
 			response.ConfigurationFile = erpserver.fakeConfigFile
 		}
 	}
