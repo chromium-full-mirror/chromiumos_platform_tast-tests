@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -95,13 +96,14 @@ func CreateAndRenameFolder(ctx context.Context, s *testing.State) {
 	folderWithJpName := nodewith.Name("Folder " + jpFolderName).ClassName(launcher.ExpandedItemsClass)
 
 	folderView := nodewith.ClassName("AppListFolderView")
-	textfield := nodewith.ClassName("Textfield").Ancestor(folderView)
+	textfield := nodewith.Role(role.TextField).Ancestor(folderView)
 
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("Rename Folder to NewName",
 		launcher.OpenExpandedView(tconn),
 		ui.LeftClick(launcher.UnnamedFolderFinder.First()),
 		ui.WaitUntilExists(folderView),
+		ui.WaitUntilExists(nodewith.HasClass(launcher.ExpandedItemsClass).Ancestor(folderView).Nth(0)),
 		ui.FocusAndWait(textfield),
 		func(ctx context.Context) error {
 			return kb.Type(ctx, enFolderName)
@@ -133,6 +135,7 @@ func CreateAndRenameFolder(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Rename the folder to a long name that will be truncated",
 		ui.LeftClick(folderWithEnName),
 		ui.WaitUntilExists(folderView),
+		ui.WaitUntilExists(nodewith.HasClass(launcher.ExpandedItemsClass).Ancestor(folderView).Nth(0)),
 		ui.FocusAndWait(textfield),
 		func(ctx context.Context) error {
 			return kb.Type(ctx, longFolderName)
@@ -175,7 +178,11 @@ func CreateAndRenameFolder(ctx context.Context, s *testing.State) {
 	defer ime.SetCurrentInputMethod(cleanupCtx, tconn, currentImeID)
 
 	if err = uiauto.Combine("Rename the folder in Japanese",
-		ui.FocusAndWait(textfield),
+		// The previous test actions left the name textfiled in focused, but inactive
+		// state - press Enter to activate the folder name textfield.
+		kb.AccelAction("Enter"),
+		// Clear the current folder name.
+		kb.AccelAction("Backspace"),
 		kb.TypeAction(japaneseTypeAction),
 		// Press tab to change from hiragana to katakana
 		kb.AccelAction("tab"),
