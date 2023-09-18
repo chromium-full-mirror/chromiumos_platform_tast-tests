@@ -32,13 +32,13 @@ func init() {
 
 func CSAReconnect(ctx context.Context, s *testing.State) {
 	const (
-		primaryChannel = 64
+		primaryChannel = 153
 		alterChannel   = 36
 	)
 
 	tf := s.FixtValue().(*wificell.TestFixture)
 
-	apOps := []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.Channel(primaryChannel), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.SpectrumManagement()}
+	apOps := []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.Channel(primaryChannel), hostapd.HTCaps(hostapd.HTCapHT20)}
 	ap, err := tf.ConfigureAP(ctx, apOps, nil)
 	if err != nil {
 		s.Fatal("Failed to configure AP: ", err)

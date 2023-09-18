@@ -187,25 +187,25 @@ func init() {
 				}},
 				ExtraRequirements: []string{"wifi-gen-0004-v01"},
 			}, {
-				// Verifies that DUT can connect to an open 802.11ax network on channel 60 with a channel width of 20MHz.
+				// Verifies that DUT can connect to an open 802.11ax network on channel 40 with a channel width of 20MHz.
 				Name:      "80211axhe20",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT20), ap.SpectrumManagement(),
+						ap.Mode(ap.Mode80211axPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
 						ap.HEChWidth(ap.HEChWidth20Or40),
 					},
 				}},
 				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
 			}, {
-				// Verifies that DUT can connect to an open 802.11ax network on channel 60 with a channel width of 40MHz.
+				// Verifies that DUT can connect to an open 802.11ax network on channel 157 with a channel width of 40MHz.
 				Name:      "80211axhe40",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC), ap.SpectrumManagement(),
+						ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
 						ap.HEChWidth(ap.HEChWidth20Or40),
 					},
 				}},
@@ -1578,12 +1578,12 @@ func init() {
 					pingOps: []ping.Option{ping.Count(100), ping.Interval(1)},
 				}},
 			}, {
-				// Verifies that DUT can connect to an open 802.11ac network on channel 60 with a channel width of 20MHz and records power measurements.
+				// Verifies that DUT can connect to an open 802.11ac network on channel 40 with a channel width of 20MHz and records power measurements.
 				Name:      "powerac",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesPower),
 				ExtraAttr: []string{"wificell_unstable"},
 				Val: []simpleConnectTestcase{{
-					apOpts:  []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40)},
+					apOpts:  []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40)},
 					pingOps: []ping.Option{ping.Count(100), ping.Interval(1)},
 				}},
 			},
