@@ -32,7 +32,7 @@ func init() {
 		Func:         PhysicalKeyboardAppCompatCitrix,
 		Desc:         "Checks that physical keyboard can perform typing in citrix",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
-		BugComponent: "b:244259740",
+		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "informational", "group:vdi_limited"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
