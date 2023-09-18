@@ -150,9 +150,10 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
-				Name:    "webxprt4",
-				Timeout: 30*time.Minute + cujrecorder.CooldownTimeout,
-				Fixture: "loggedInToCUJUserWithoutCooldown",
+				Name:      "webxprt4",
+				ExtraAttr: []string{"group:cuj", "cuj_weekly"},
+				Timeout:   30*time.Minute + cujrecorder.CooldownTimeout,
+				Fixture:   "loggedInToCUJUserWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
@@ -160,9 +161,10 @@ func init() {
 				},
 			},
 			{
-				Name:    "lacros_webxprt4",
-				Timeout: 30*time.Minute + cujrecorder.CooldownTimeout,
-				Fixture: "loggedInToCUJUserLacrosWithoutCooldown",
+				Name:      "lacros_webxprt4",
+				ExtraAttr: []string{"group:cuj", "cuj_weekly"},
+				Timeout:   30*time.Minute + cujrecorder.CooldownTimeout,
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
