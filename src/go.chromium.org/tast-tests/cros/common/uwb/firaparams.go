@@ -41,7 +41,7 @@ func FiraDefaultControllerSet() *FiraAppConfigParams {
 		RangingIntervalMs:             200,
 		MacFcsType:                    MacFcsType_CRC_16,
 		RangingRoundControl:           &defaultRangingRoundControl,
-		AoaResultRequest:              AoaResultRequest_REQ_AOA_RESULTS,
+		AoaResultRequest:              AoaResultRequest_NO_AOA_REPORT,
 		RangeDataNtfConfig:            RangeDataNtfConfig_RANGE_DATA_NTF_CONFIG_ENABLE,
 		RangeDataNtfProximityNearCm:   0,
 		RangeDataNtfProximityFarCm:    20000,
@@ -89,10 +89,10 @@ func FiraDefaultControleeSet() *FiraAppConfigParams {
 	return params
 }
 
-// ByteArrayToInt returns the uint64 that is represented by the given byte array. Used to convert MAC address to uint64
-func ByteArrayToInt(byteArray []byte) uint64 {
+// ByteSliceToInt returns the uint64 that is represented by the given byte slice. Used to convert MAC address to uint64
+func ByteSliceToInt(byteSlice []byte) uint64 {
 	paddedData := make([]byte, 8)
-	copy(paddedData, byteArray)
+	copy(paddedData, byteSlice)
 
 	// Convert the byte array to an uint64 using little-endian byte order
 	intValue := binary.LittleEndian.Uint64(paddedData)

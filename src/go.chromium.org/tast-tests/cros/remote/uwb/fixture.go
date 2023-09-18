@@ -7,17 +7,23 @@ package uwb
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android"
+	"go.chromium.org/tast-tests/cros/common/uwb"
+	us "go.chromium.org/tast-tests/cros/services/cros/uwb"
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
-	resetTimeout = 30 * time.Second
+	resetTimeout = 60 * time.Second
 )
 
 func init() {
@@ -26,17 +32,22 @@ func init() {
 		Desc:            "Fixture for setting up mixed android/CrOS device testbeds",
 		Contacts:        []string{"chromeos-uwb-team@google.com"},
 		Impl:            &mixedPeerRemoteFixture{},
+		ServiceDeps:     []string{"tast.cros.uwb.UwbService"},
 		SetUpTimeout:    3 * time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
+		Vars:            []string{"uwb.mainHost", "uwb.crosHosts"},
 	})
 }
 
 // FixtData holds information made available to tests that specify this Fixture.
 type FixtData struct {
-	PhoneIPs []string
+	PhoneIPs    []string
+	CrosClients []*us.UwbServiceClient
+	CrosHosts   []string
+	MainHost    string
 }
 
 // phonePeer represents a phone peer connection.
@@ -45,12 +56,66 @@ type phonePeer struct {
 	droneToDUT *ssh.Forwarder
 }
 
+// crosDUT holds a dut instance and its corresponding UwbServiceClient
+type crosDUT struct {
+	dut    *dut.DUT
+	client *us.UwbServiceClient
+}
+
 type mixedPeerRemoteFixture struct {
 	labstation *ssh.Conn
 	phonePeers []*phonePeer
+
+	crosDUTs []*crosDUT
 }
 
 func (f *mixedPeerRemoteFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	fixtData := &FixtData{}
+
+	//Set mainHost in FixtData
+	mainHostName, ok := s.Var("uwb.mainHost")
+	if ok != true {
+		s.Fatal("mainHost variable not provided, this variable should be the unique DUT name of the main DUT being tested")
+	}
+	fixtData.MainHost = mainHostName
+
+	//Set crosHosts in FixtData
+	crosHostsNames, ok := s.Var("uwb.crosHosts")
+	if ok != true {
+		s.Fatal("crosHosts variable not provided, this variable should be a comma separated list of the unique DUT names of the companion DUTs being tested")
+	}
+	crosHostsList := strings.Split(crosHostsNames, ",")
+	fixtData.CrosHosts = crosHostsList
+
+	//main Cros DUT setup
+	svc, err := remoteDUTSetUp(ctx, s, s.DUT())
+	if err != nil {
+		s.Fatal("Main DUT set up error: ", err)
+	}
+
+	fixtData.CrosClients = []*us.UwbServiceClient{svc}
+	f.crosDUTs = []*crosDUT{&crosDUT{
+		dut:    s.DUT(),
+		client: svc,
+	}}
+
+	//other Cros DUT setups
+	for i := 1; i <= len(crosHostsList); i++ {
+		dutRole := "cd" + strconv.Itoa(i)
+		dut := s.CompanionDUT(dutRole)
+		svc, err := remoteDUTSetUp(ctx, s, dut)
+		if err != nil {
+			s.Fatal(dutRole+" set up error: ", err)
+		}
+		fixtData.CrosClients = append(fixtData.CrosClients, svc)
+
+		f.crosDUTs = append(f.crosDUTs, &crosDUT{
+			dut:    dut,
+			client: svc,
+		})
+	}
+	s.Logf("CrOS device count: %d", len(f.crosDUTs))
+
 	// Get Android companion DUT info
 	if companions, err := android.Companions(); err == nil {
 		if err := f.setupLabstation(ctx, s, companions[0].AssociatedHostname); err != nil {
@@ -64,16 +129,14 @@ func (f *mixedPeerRemoteFixture) SetUp(ctx context.Context, s *testing.FixtState
 		}
 	}
 
-	data := &FixtData{
-		PhoneIPs: make([]string, len(f.phonePeers)),
-	}
+	fixtData.PhoneIPs = make([]string, len(f.phonePeers))
 
 	s.Logf("Android device count: %d", len(f.phonePeers))
 	for i := 0; i < len(f.phonePeers); i++ {
-		data.PhoneIPs[i] = f.phonePeers[i].droneToDUT.ListenAddr().String()
+		fixtData.PhoneIPs[i] = f.phonePeers[i].droneToDUT.ListenAddr().String()
 	}
 
-	return data
+	return fixtData
 }
 
 func (f *mixedPeerRemoteFixture) TearDown(ctx context.Context, s *testing.FixtState) {
@@ -91,9 +154,49 @@ func (f *mixedPeerRemoteFixture) TearDown(ctx context.Context, s *testing.FixtSt
 			s.Error("Failed to close labstation connection: ", err)
 		}
 	}
+
+	for i := 0; i < len(f.crosDUTs); i++ {
+		client := *f.crosDUTs[i].client
+		dut := f.crosDUTs[i].dut
+
+		// Disable UWB
+		err := uwb.CallAndCheckOK(client.Disable(ctx, &emptypb.Empty{}))
+		if err != nil {
+			s.Errorf("DUT %d error with Disable call in Teardown: %v", i, err)
+		}
+
+		//restart uwbd d-bus daemon
+		err = restartUwbd(ctx, dut)
+		if err != nil {
+			s.Errorf("DUT %d error in restarting uwbd: %v", i, err)
+		}
+	}
 }
 
-func (*mixedPeerRemoteFixture) Reset(ctx context.Context) error                        { return nil }
+func (f *mixedPeerRemoteFixture) Reset(ctx context.Context) error {
+	for i := 0; i < len(f.crosDUTs); i++ {
+		dut := f.crosDUTs[i].dut
+		client := *f.crosDUTs[i].client
+
+		//restart uwbd
+		err := restartUwbd(ctx, dut)
+		if err != nil {
+			return err
+		}
+
+		//disable and enable UWB
+		err = uwb.CallAndCheckOK(client.Disable(ctx, &emptypb.Empty{}))
+		if err != nil {
+			return errors.Wrap(err, "Disable call error in fixture Reset")
+		}
+
+		err = uwb.CallAndCheckOK(client.Enable(ctx, &emptypb.Empty{}))
+		if err != nil {
+			return errors.Wrap(err, "Enable call error in fixture Reset")
+		}
+	}
+	return nil
+}
 func (*mixedPeerRemoteFixture) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
 func (*mixedPeerRemoteFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
@@ -216,5 +319,47 @@ func (f *mixedPeerRemoteFixture) setupLabstation(ctx context.Context, s *testing
 	s.Log(string(out))
 
 	f.labstation = labstation
+	return nil
+}
+
+func remoteDUTSetUp(ctx context.Context, s *testing.FixtState, d *dut.DUT) (*us.UwbServiceClient, error) {
+	// Restart UWBD D-bus service
+	err := restartUwbd(ctx, d)
+	if err != nil {
+		return nil, err
+	}
+
+	cl, err := rpc.Dial(s.FixtContext(), d, s.RPCHint())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+	}
+
+	// Set UwbServiceClient
+	svc := us.NewUwbServiceClient(cl.Conn)
+	if _, err = svc.NewClient(ctx, &emptypb.Empty{}); err != nil {
+		return nil, errors.Wrap(err, "could not start UWB D-Bus client")
+	}
+
+	// Call UWB enable
+	err = uwb.CallAndCheckOK(svc.Enable(ctx, &emptypb.Empty{}))
+	if err != nil {
+		return nil, errors.Wrap(err, "enable call to dbus failed")
+	}
+
+	return &svc, nil
+}
+
+func restartUwbd(ctx context.Context, d *dut.DUT) error {
+	cmd := d.Conn().CommandContext(ctx, "stop", "uwbd")
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	cmd = d.Conn().CommandContext(ctx, "start", "uwbd")
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
 	return nil
 }

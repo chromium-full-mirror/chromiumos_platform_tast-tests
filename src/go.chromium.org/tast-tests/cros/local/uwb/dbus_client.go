@@ -210,10 +210,17 @@ func (d DbusClient) GetFiraRangingReports(ctx context.Context, sessionID uint32,
 		return nil, errors.Wrap(err, "failed to register for uwbd rangedata signals")
 	}
 
-	rangingDuration := time.NewTimer(duration)
+	// bufferTimer & bufferCheck is used to wait for a short duration before collecting the results from the ranging signals as UWB on the peer devices may take a couple
+	// seconds to begin and we do not want to collect the notifications prior to beginning
+	bufferDuration := 5 * time.Second
+	bufferTimer := time.NewTimer(bufferDuration)
+	defer bufferTimer.Stop()
+	bufferCheck := true
 
-	defer rangingDuration.Stop()
+	// rangingTimer is the timer to collect ranging reports as results; We add bufferDuration to account for bufferTimer being allowed to Stop prior to receiving the first OK
+	rangingTimer := time.NewTimer(duration + bufferDuration)
 	results := make(map[uint64]*uwb.RangingResult)
+	defer rangingTimer.Stop()
 
 readSignalChannel:
 	for {
@@ -232,6 +239,18 @@ readSignalChannel:
 			if signal.RangeData.SessionId == sessionID {
 
 				for _, report := range signal.RangeData.TwowayRangingMeasurements {
+					// if buffer hasn't expired and bufferCheck is false, check if status_ok
+					if !bufferTimer.Stop() && bufferCheck == false {
+						// if status_ok, set boolean to true indicating that the buffer is no longer necessary and proceed
+						if report.Status == uwb.StatusCode_UCI_STATUS_OK {
+							bufferCheck = true
+							// we also reset rangingTimer to start for given duration from this moment onwards
+							rangingTimer = time.NewTimer(duration)
+						} else {
+							// otherwise, buffer is still necessary, continue to check subsequent iterations
+							continue
+						}
+					}
 
 					// check if there exists a RangingResult in the results map for this mac address, creating one if not
 					_, ok := results[report.MacAddress]
@@ -288,7 +307,7 @@ readSignalChannel:
 				}
 			}
 
-		case <-rangingDuration.C:
+		case <-rangingTimer.C:
 			break readSignalChannel
 
 		case <-ctx.Done():
