@@ -27,7 +27,7 @@ func init() {
 		BugComponent: "b:1002147",
 		// These attributes make the test suite to run on the shimless supported models.
 		Attr:         []string{"group:shimless_rma", "shimless_rma_normal"},
-		Fixture:      fixture.InstallIWA,
+		Fixture:      fixture.Install3pDiag,
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 	})

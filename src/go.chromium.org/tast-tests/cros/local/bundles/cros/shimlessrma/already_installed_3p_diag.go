@@ -14,7 +14,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IWAAlreadyInstalled,
+		Func:         AlreadyInstalled3pDiag,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check if we can open IWA(Isolated Web App) directly if it's already installed",
 		Contacts: []string{
@@ -24,14 +24,14 @@ func init() {
 		BugComponent: "b:1002147",
 		// These attributes make the test suite to run on the shimless supported models.
 		Attr:         []string{"group:shimless_rma", "shimless_rma_normal"},
-		Fixture:      fixture.InstallIWA,
+		Fixture:      fixture.Install3pDiag,
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 	})
 }
 
-func IWAAlreadyInstalled(ctx context.Context, s *testing.State) {
-	// fixture.InstallIWA already installs the IWA.
+func AlreadyInstalled3pDiag(ctx context.Context, s *testing.State) {
+	// fixture.Install3pDiag already installs the IWA.
 	// Now we want to relaunch a new chrome and enter the flow again, to see if we can skip the install flow and load the IWA.
 	v := s.FixtValue().(*fixture.Value)
 	if err := v.RestartChrome(ctx); err != nil {

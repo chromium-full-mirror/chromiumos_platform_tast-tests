@@ -27,7 +27,7 @@ import (
 
 // Fixture names.
 const (
-	InstallIWA = "installIWA"
+	Install3pDiag = "install3pDiag"
 )
 
 const (
@@ -40,10 +40,10 @@ const (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            InstallIWA,
+		Name:            Install3pDiag,
 		Desc:            "Trigger shimless flow and install the diagnostic IWA",
 		Contacts:        []string{"chromeos-shimless-eng@google.com"},
-		Impl:            newInstallIWAFixture(),
+		Impl:            newInstall3pDiagFixture(),
 		SetUpTimeout:    chrome.LoginTimeout + 30*time.Second + cleanupTimeout,
 		TearDownTimeout: cleanupTimeout,
 		PreTestTimeout:  10 * time.Second,
@@ -57,13 +57,13 @@ func extFiles() []string {
 	return []string{iwaFile, extensionFile}
 }
 
-func newInstallIWAFixture() *installIWAFixture {
-	f := &installIWAFixture{}
+func newInstall3pDiagFixture() *install3pDiagFixture {
+	f := &install3pDiagFixture{}
 	return f
 }
 
-// installIWAFixture implements testing.FixtureImpl.
-type installIWAFixture struct {
+// install3pDiagFixture implements testing.FixtureImpl.
+type install3pDiagFixture struct {
 	cr                                    *chrome.Chrome
 	v                                     Value
 	signinProfileTestExtensionManifestKey string
@@ -76,7 +76,7 @@ type Value struct {
 	Launch3pDiagApp func(ctx context.Context, withUSB bool) error
 }
 
-func (f *installIWAFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+func (f *install3pDiagFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTimeout)
 	defer cancel()
@@ -179,7 +179,7 @@ func (f *installIWAFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	return &f.v
 }
 
-func (f *installIWAFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+func (f *install3pDiagFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if f.cr != nil {
 		if err := f.cr.Close(ctx); err != nil {
 			s.Error("Failed to close Chrome: ", err)
@@ -192,17 +192,17 @@ func (f *installIWAFixture) TearDown(ctx context.Context, s *testing.FixtState) 
 	os.RemoveAll(tmpUsbMountPoint)
 }
 
-func (f *installIWAFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+func (f *install3pDiagFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
-func (f *installIWAFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+func (f *install3pDiagFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
-func (f *installIWAFixture) Reset(ctx context.Context) error {
+func (f *install3pDiagFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (f *installIWAFixture) mountVirtualUSB(ctx context.Context, usbPath string) error {
+func (f *install3pDiagFixture) mountVirtualUSB(ctx context.Context, usbPath string) error {
 	os.RemoveAll(tmpUsbMountPoint)
 	if err := os.MkdirAll(tmpUsbMountPoint, 0777); err != nil {
 		return errors.Wrap(err, "failed to create the temporary USB mount point")
@@ -214,7 +214,7 @@ func (f *installIWAFixture) mountVirtualUSB(ctx context.Context, usbPath string)
 	return nil
 }
 
-func (f *installIWAFixture) restartChrome(ctx context.Context) error {
+func (f *install3pDiagFixture) restartChrome(ctx context.Context) error {
 	if f.cr != nil {
 		if err := f.cr.Close(ctx); err != nil {
 			return errors.Wrap(err, "failed to close chrome")
@@ -245,7 +245,7 @@ func (f *installIWAFixture) restartChrome(ctx context.Context) error {
 	return nil
 }
 
-func (f *installIWAFixture) launch3pDiagApp(ctx context.Context, withUSB bool) error {
+func (f *install3pDiagFixture) launch3pDiagApp(ctx context.Context, withUSB bool) error {
 	// Trigger the installation flow.
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
