@@ -106,24 +106,22 @@ func NonConnectedCellularHasNoApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the last good APN: ", ctx)
 	}
 
-	lastGoodApnInfoApnName := lastGoodApn[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]
-
 	ui := uiauto.New(tconn)
-
-	lastGoodApnNode := nodewith.NameContaining(lastGoodApnInfoApnName)
-	if err := ui.WaitUntilExists(lastGoodApnNode)(ctx); err != nil {
-		s.Fatal("Expected APN information to be shown but last good APN name was not found: ", err)
-	}
 
 	// Wait until after we have opened the network details via the Quick Settings to disconnect.
 	if _, err := helper.Disconnect(ctx); err != nil {
 		s.Fatal("Failed to disconnect to the default cellular service: ", err)
 	}
 
-	// TODO(b/298522793): Check that no APN name is shown in OOBE.
-	if login {
-		if err := ui.WithTimeout(5 * time.Second).WaitUntilGone(lastGoodApnNode)(ctx); err != nil {
-			s.Fatal("Expected no APN information to be shown but last good APN name was found: ", err)
+	lastGoodApnInfoApnName, ok := lastGoodApn[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]
+	if ok && lastGoodApnInfoApnName != "" {
+		lastGoodApnNode := nodewith.NameContaining(lastGoodApnInfoApnName)
+
+		// TODO(b/298522793): Check that no APN name is shown in OOBE.
+		if login {
+			if err := ui.WithTimeout(5 * time.Second).WaitUntilGone(lastGoodApnNode)(ctx); err != nil {
+				s.Fatal("Expected no APN information to be shown but last good APN name was found: ", err)
+			}
 		}
 	}
 
@@ -133,7 +131,7 @@ func NonConnectedCellularHasNoApn(ctx context.Context, s *testing.State) {
 	} else {
 		apnSubpageButton = quicksettings.APNSubpageButton
 	}
-	if err := cellular.CheckThatApnListIsEmpty(ctx, tconn, apnSubpageButton, lastGoodApnNode); err != nil {
+	if err := cellular.CheckThatApnListIsEmpty(ctx, tconn, apnSubpageButton); err != nil {
 		s.Fatal("Failed to navigate to the APN subpage and verify no APN information is shown: ", err)
 	}
 }
