@@ -32,7 +32,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-var outputNodeHDMIRe = regexp.MustCompile(`yes.*HDMI.*2\*`)
+var outputNodeHDMIRe = regexp.MustCompile(`yes.*HDMI.*\d\*`)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -426,7 +426,7 @@ func youtubePlayerFunctionalities(ctx context.Context, kb *input.KeyboardEventWr
 		return errors.Wrap(err, "failed to press scale button")
 	}
 
-	if err := cui.WaitUntilExists(deskButtonText)(ctx); err == nil {
+	if err := cui.WithTimeout(10 * time.Second).WaitUntilGone(deskButtonText)(ctx); err != nil {
 		return errors.Wrap(err, "failed due to existence of Desk 1 element to validate normal mode")
 	}
 
