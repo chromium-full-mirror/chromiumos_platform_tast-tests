@@ -6,6 +6,7 @@ package printer
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/pre"
@@ -119,7 +120,11 @@ func OpenPrinterSettingsFromPrintPreviewDestinationDialogCros(ctx context.Contex
 	settingsApp := ossettings.New(tconn)
 	defer settingsApp.Close(cleanupCtx)
 	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
-	launchButton := nodewith.NameStartingWith("Manage printers").Role(role.Button)
+
+	// Button to launch Printer settings will state "Manage" when there are printers
+	// in the list and "Manager Printers" in the empty state UI.
+	buttonNameRegex := regexp.MustCompile("Manage( Printers)?")
+	launchButton := nodewith.NameRegex(buttonNameRegex).Role(role.Button)
 	printerSettingsWindow := nodewith.Name("Settings - Printers").Role(role.Window).First()
 	if err := uiauto.Combine("find and click manage printers button",
 		ui.WaitUntilExists(launchButton),
