@@ -193,6 +193,7 @@ func identifyFwScreens(h *firmware.Helper) []fwCommon.FwScreenID {
 			fwCommon.LegacyRecoveryInsert,
 			fwCommon.LegacyRecoveryNoGood,
 			fwCommon.LegacyRecoveryInsert,
+			fwCommon.LegacyBlank,
 		}
 	}
 	return expFWScreensInOrder
