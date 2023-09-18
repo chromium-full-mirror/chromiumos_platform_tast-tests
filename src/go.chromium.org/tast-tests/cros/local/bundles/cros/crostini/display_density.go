@@ -6,6 +6,7 @@ package crostini
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -149,11 +150,9 @@ func DisplayDensity(ctx context.Context, s *testing.State) {
 		highDensity
 	)
 
-	if err := uiauto.StartRecordFromKB(ctx, tconn, keyboard, pre.DownloadsPath); err != nil {
-		s.Log("Failed to start recording from keyboard: ", err)
-	}
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, pre.Tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
-	defer uiauto.StopRecordFromKBAndSaveOnError(cleanupCtx, tconn, s.HasError, s.OutDir(), pre.DownloadsPath)
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 

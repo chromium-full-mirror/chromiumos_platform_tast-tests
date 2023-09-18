@@ -425,8 +425,8 @@ func StopAndSaveOnError(ctx context.Context, sr *ScreenRecorder, filepath string
 //
 //	defer uiauto.StopRecordFromKBAndSaveOnError(ctx, tconn, s.HasError, s.OutDir())
 func StartRecordFromKB(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, downloadsPath string) error {
-	screenRecordBtn := nodewith.NameRegex(regexp.MustCompile("Screen record.*")).Role(role.Button)
-	fullScreenBtn := nodewith.NameRegex(regexp.MustCompile("Record full screen.*")).Role(role.Button)
+	screenRecordBtn := nodewith.NameRegex(regexp.MustCompile("Screen record.*")).Role(role.ToggleButton)
+	fullScreenBtn := nodewith.NameRegex(regexp.MustCompile("Record full screen.*")).Role(role.ToggleButton)
 	desktop := nodewith.Role(role.Window).First()
 	ui := New(tconn)
 
