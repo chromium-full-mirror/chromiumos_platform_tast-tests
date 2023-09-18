@@ -34,7 +34,6 @@ func init() {
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",
-			"informational", "group:criticalstaging",
 		},
 		Fixture: fixture.Chrome(
 			chrome.GuestLogin(),
