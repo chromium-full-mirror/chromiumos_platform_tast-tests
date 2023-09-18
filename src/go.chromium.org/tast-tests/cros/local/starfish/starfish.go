@@ -17,17 +17,23 @@ import (
 	"go.chromium.org/tast/core/timing"
 )
 
-var starfishCarrierVar = testing.RegisterVarString(
+// StarfishCarrierVar indicates carrier from current active
+// starfish slot.
+var StarfishCarrierVar = testing.RegisterVarString(
 	"starfish.carrier",
 	"",
 	"starfish.carrier",
 )
 
-const starfishNotFound = "---"
+// StarfishNotFound indicates missing startfish index and carrier
+// variables.
+const StarfishNotFound = "---"
 
-var starfishIndexVar = testing.RegisterVarString(
+// StarfishIndexVar indicates the index of currently
+// active starfish slot.
+var StarfishIndexVar = testing.RegisterVarString(
 	"starfish.index",
-	starfishNotFound,
+	StarfishNotFound,
 	"starfish.index",
 )
 
@@ -64,9 +70,9 @@ func NewStarfish(ctx context.Context) (*Starfish, error) {
 	ctx, st := timing.Start(ctx, "Starfish.NewStarfish")
 	defer st.End()
 
-	carrier := starfishCarrierVar.Value()
-	indexVar := starfishIndexVar.Value()
-	if indexVar == starfishNotFound {
+	carrier := StarfishCarrierVar.Value()
+	indexVar := StarfishIndexVar.Value()
+	if indexVar == StarfishNotFound {
 		testing.ContextLog(ctx, "starfish setup not supported for carrier: ", carrier)
 		return nil, nil
 	}
@@ -251,4 +257,22 @@ func (s *Starfish) printLogs(ctx context.Context, logs []string) {
 	for _, line := range logs {
 		testing.ContextLog(ctx, "--Starfish:~$ ", line)
 	}
+}
+
+// ParseStarfishSlotMapping builds a map of slot to carrier mapping from
+// starfish slot mapping auto label.
+func (s *Starfish) ParseStarfishSlotMapping(slotCarrierMapping string) map[int]string {
+	slots := strings.Split(slotCarrierMapping, ",")
+	slotCarrierMap := make(map[int]string)
+	for _, slot := range slots {
+		parts := strings.Split(slot, "_")
+		if len(parts) == 2 {
+			index, err := strconv.Atoi(parts[0])
+			if err != nil {
+				continue
+			}
+			slotCarrierMap[index] = parts[1]
+		}
+	}
+	return slotCarrierMap
 }

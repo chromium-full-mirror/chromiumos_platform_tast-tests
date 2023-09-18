@@ -105,6 +105,14 @@ func GetCellularCarrierFromHostInfoLabels(ctx context.Context, labels []string) 
 	return ""
 }
 
+// GetStarfishMappingFromHostInfoLabels return the starfish slot mapping from host_info_labels, else return empty string
+func GetStarfishMappingFromHostInfoLabels(ctx context.Context, labels []string) string {
+	if c, ok := getLastStringValue(getLabelMap(labels), "starfish_slot_mapping"); ok {
+		return c
+	}
+	return ""
+}
+
 // GetDevicePoolFromHostInfoLabels return the current device pool name from host_info_labels, else return empty string
 func GetDevicePoolFromHostInfoLabels(ctx context.Context, labels []string) []string {
 	var pools []string

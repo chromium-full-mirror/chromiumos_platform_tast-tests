@@ -73,15 +73,16 @@ type LabelMap map[string][]string
 
 // Helper fetches Cellular Device and Service properties.
 type Helper struct {
-	Manager            *shill.Manager
-	Device             *shill.Device
-	enableEthernetFunc func(ctx context.Context)
-	enableWifiFunc     func(ctx context.Context)
-	Labels             []string
-	modemInfo          *ModemInfo
-	simInfo            []*SIMInfo
-	carrierName        string
-	devicePools        []string
+	Manager             *shill.Manager
+	Device              *shill.Device
+	enableEthernetFunc  func(ctx context.Context)
+	enableWifiFunc      func(ctx context.Context)
+	Labels              []string
+	modemInfo           *ModemInfo
+	simInfo             []*SIMInfo
+	carrierName         string
+	starfishSlotMapping string
+	devicePools         []string
 }
 
 const (
@@ -1462,6 +1463,8 @@ func (h *Helper) GetHostInfoLabels(ctx context.Context, labels []string) error {
 	h.simInfo = GetSIMInfoFromHostInfoLabels(ctx, labels)
 	h.carrierName = GetCellularCarrierFromHostInfoLabels(ctx, labels)
 	testing.ContextLog(ctx, "Carrier Name : ", h.carrierName)
+	h.starfishSlotMapping = GetStarfishMappingFromHostInfoLabels(ctx, labels)
+	testing.ContextLog(ctx, "Starfish slot mapping : ", h.starfishSlotMapping)
 	h.devicePools = GetDevicePoolFromHostInfoLabels(ctx, labels)
 	testing.ContextLog(ctx, "Pools : ", h.devicePools)
 	return nil
@@ -1494,6 +1497,11 @@ func (h *Helper) GetCarrierNameForICCID(ctx context.Context, iccid string) (stri
 // GetLabelCarrierName return the current carrier name
 func (h *Helper) GetLabelCarrierName(ctx context.Context) string {
 	return h.carrierName
+}
+
+// GetLabelStarfishSlotMapping return the starfish slot mapping label
+func (h *Helper) GetLabelStarfishSlotMapping(ctx context.Context) string {
+	return h.starfishSlotMapping
 }
 
 // GetLabelOwnNumber return the current own number.
