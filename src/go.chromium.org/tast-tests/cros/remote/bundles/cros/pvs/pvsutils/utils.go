@@ -67,18 +67,19 @@ type PVSRunner struct {
 // RuntimeEnv represents the environment variables that will be set during
 // an execution of the SHoP and PVS CLI's.
 type RuntimeEnv struct {
-	ReuseTLEDir            string
-	SimulatedDut           bool
-	SimulatedTestRunner    bool
-	SimulatedDutInfo       string
-	SimulatedTestsSkip     string
-	SimulatedTestsError    string
-	SimulatedTestsNoResult string
-	SimulatedTestsFail     string
-	SimulatedTestKeyval    string
-	ForceDlmSkuID          string
-	PvsImageTag            string
-	ShopRef                string
+	ReuseTLEDir             string
+	SimulatedDut            bool
+	SimulatedTestRunner     bool
+	SimulatedDutInfo        string
+	SimulatedTestsSkip      string
+	SimulatedTestsError     string
+	SimulatedTestsNoResult  string
+	SimulatedTestsFail      string
+	SimulatedTestKeyval     string
+	ForceDlmSkuID           string
+	PvsImageTag             string
+	ShopRef                 string
+	IgnoreGitAccessFailures bool
 }
 
 // EnsurePass runs the given subtest and fatally errors if it fails.
@@ -156,6 +157,9 @@ func (p RuntimeEnv) generateEnvMap() map[string]string {
 	}
 	if p.ShopRef != "" {
 		env["SHOP_REF"] = p.ShopRef
+	}
+	if p.IgnoreGitAccessFailures {
+		env["IGNORE_GIT_ACCESS_FAILURES"] = "1"
 	}
 	return env
 }

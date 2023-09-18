@@ -56,6 +56,7 @@ func init() {
 			"pvs.simulated_mode",
 			"pvs.feature_flags",
 			"pvs.force_dlm_sku_id",
+			"pvs.ignore_git_access_failures",
 		},
 	})
 }
@@ -203,6 +204,9 @@ func shopEnv(s *testing.FixtState) RuntimeEnv {
 	}
 	if forceDlmSkuID, ok := s.Var("pvs.force_dlm_sku_id"); ok {
 		env.ForceDlmSkuID = forceDlmSkuID
+	}
+	if _, ok := s.Var("pvs.ignore_git_access_failures"); ok {
+		env.IgnoreGitAccessFailures = true
 	}
 	if _, ok := s.Var("pvs.simulated_mode"); ok {
 		env.SimulatedDut = true
