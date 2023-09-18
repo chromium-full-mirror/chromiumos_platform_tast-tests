@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/usbdevice"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -18,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/shimlessrmaapp"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-	"go.chromium.org/tast-tests/cros/local/usbdevice"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
