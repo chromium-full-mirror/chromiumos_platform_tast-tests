@@ -37,9 +37,9 @@ var (
 	liveCaptionButton       = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton).Ancestor(panelSection)
 	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton).Ancestor(panelSection)
 
-	bgBlurOffButton   = nodewith.NameContaining("Off").Role(role.Button).Ancestor(panelSection)
-	bgBlurLightButton = nodewith.NameContaining("Light").Role(role.Button).Ancestor(panelSection)
-	bgBlurFullButton  = nodewith.NameContaining("Full").Role(role.Button).Ancestor(panelSection)
+	bgBlurOffButton   = nodewith.NameContaining("Off").Role(role.ToggleButton).Ancestor(panelSection)
+	bgBlurLightButton = nodewith.NameContaining("Light").Role(role.ToggleButton).Ancestor(panelSection)
+	bgBlurFullButton  = nodewith.NameContaining("Full").Role(role.ToggleButton).Ancestor(panelSection)
 
 	showAppsButton = nodewith.NameContaining("Used by").Role(role.Button).Ancestor(panelSection)
 )
