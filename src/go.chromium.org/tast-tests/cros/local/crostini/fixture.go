@@ -461,16 +461,14 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	// Setup the screen recorder.
-	screenRecorder, err := uiauto.NewScreenRecorder(ctx, f.tconn)
-	if err != nil {
-		s.Log("Failed to create screen recorder: ", err)
-	}
-	if screenRecorder != nil {
-		if err := screenRecorder.Start(ctx, f.tconn); err != nil {
-			s.Log("Failed to start screen recorder: ", err)
+	screenRecorder := uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
+	hasChromeBeenReset := false
+	defer func(ctx context.Context) {
+		// The recorder will not exist if Chrome has been reset.
+		if !hasChromeBeenReset {
+			screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
 		}
-		defer screenRecorder.StopAndSaveOnError(cleanupCtx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
-	}
+	}(cleanupCtx)
 
 	// Setup the perf recorder.
 	perfRecorder, err := StartRecording(ctx, f.tconn, "crostini_restart", RestartStages)
@@ -547,6 +545,7 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err := f.cr.ResetState(ctx); err != nil {
 		s.Fatal("Failed to reset chrome's state: ", err)
 	}
+	hasChromeBeenReset = true
 
 	f.preData.startedOK = true
 	vm.Lock()
