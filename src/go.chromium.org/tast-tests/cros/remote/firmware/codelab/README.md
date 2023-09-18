@@ -319,6 +319,8 @@ At this point (after running `gofmt`), your test file should resemble [`codelab_
 
 ### Using Servo in local tests
 
+> While it is theoretically possible to use servo from a local test using servo.NewDirect, in practice the DUT's firewall will block access. You don't want to do this, but it is documented just in case.
+
 Servo functionality and usage remains exactly the same as both in the remote and local tests however they just differ in the way the connection is being established to communicate with servo devices. This subsection discusses the details and possible problems that you might encounter while using servo in local tests.
 
 In local tests, we don't have to establish a proxy (it's doable but not recommended) to communicate with servod instance, a simple direct connection will be enough. The [`NewDirect`] constructor takes the servo host:port and returns a `servo.Servo` object. Additionally, we should close the Servo connection at the end of the test (via `defer`). Make sure, the host:port address is reachable from DUT.
