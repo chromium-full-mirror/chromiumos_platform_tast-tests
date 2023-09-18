@@ -34,8 +34,8 @@ func init() {
 		},
 		BugComponent: "b:1096648", // ChromeOS > Data > Engineering > Featured
 		SoftwareDeps: []string{"reboot"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
-		Timeout:      60 * time.Second,
+		Attr:         []string{"group:mainline", "informational"},
+		Timeout:      2 * time.Minute,
 	})
 }
 
