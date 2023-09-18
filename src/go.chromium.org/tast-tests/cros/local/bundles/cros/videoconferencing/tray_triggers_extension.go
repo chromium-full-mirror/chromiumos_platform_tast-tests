@@ -33,18 +33,19 @@ func init() {
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
 		Attr: []string{
-			"group:video_conference", "group:external-dependency", "video_conference_per_build",
+			"group:video_conference",
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Params: []testing.Param{
 			{
 				Fixture:   fixture.LoggedInWithFakeVCExtension,
-				ExtraAttr: []string{"video_conference_cq_critical"},
+				ExtraAttr: []string{"group:mainline"},
 			},
 			{
 				Name:              "lacros",
 				ExtraSoftwareDeps: []string{"lacros"},
+				ExtraAttr:         []string{"video_conference_per_build"},
 				Fixture:           fixture.LoggedInLacrosWithFakeVCExtension,
 			},
 		},
