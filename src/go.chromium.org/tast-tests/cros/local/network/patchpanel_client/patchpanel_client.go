@@ -13,6 +13,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	pp "chromiumos/system_api/patchpanel_proto"
+
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
@@ -28,6 +29,7 @@ const (
 	terminaVMStartupMethod              = "org.chromium.PatchPanel.TerminaVmStartup"
 	terminaVMShutdownMethod             = "org.chromium.PatchPanel.TerminaVmShutdown"
 	notifyAndroidInteractiveStateMethod = "org.chromium.PatchPanel.NotifyAndroidInteractiveState"
+	setFeatureFlagMethod                = "org.chromium.PatchPanel.SetFeatureFlag"
 )
 
 // Client is a wrapper around patchpanel DBus API.
@@ -200,4 +202,27 @@ func (c *Client) NotifyAndroidInteractiveState(ctx context.Context, interactive 
 		return nil, errors.Wrapf(err, "failed unmarshaling %s response", notifyAndroidInteractiveStateMethod)
 	}
 	return response, nil
+}
+
+// SetQosEnable enables or disables the QoS feature in Patchpanel.
+func (c *Client) SetQosEnable(ctx context.Context, enable bool) error {
+	request := &pp.SetFeatureFlagRequest{
+		Flag:    pp.SetFeatureFlagRequest_WIFI_QOS,
+		Enabled: enable,
+	}
+	buf, err := proto.Marshal(request)
+	if err != nil {
+		return errors.Wrapf(err, "failed marshaling %s request", setFeatureFlagMethod)
+	}
+
+	var result []uint8
+	if err := c.obj.CallWithContext(ctx, setFeatureFlagMethod, 0, buf).Store(&result); err != nil {
+		return errors.Wrapf(err, "failed reading %s response", setFeatureFlagMethod)
+	}
+
+	response := &pp.SetFeatureFlagResponse{}
+	if err := proto.Unmarshal(result, response); err != nil {
+		return errors.Wrapf(err, "failed unmarshaling %s response", setFeatureFlagMethod)
+	}
+	return nil
 }
