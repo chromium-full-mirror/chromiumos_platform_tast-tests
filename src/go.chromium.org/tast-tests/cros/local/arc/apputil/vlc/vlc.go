@@ -43,8 +43,9 @@ const (
 	doneBtnID = idPrefix + "doneButton"
 	nextBtnID = idPrefix + "nextButton"
 
-	shortTimeout = 15 * time.Second
-	longTimeout  = 2 * time.Minute
+	shortTimeout   = 5 * time.Second
+	defaultTimeout = 15 * time.Second
+	longTimeout    = 2 * time.Minute
 )
 
 // Vlc holds resources of ARC app VLC player.
@@ -186,7 +187,7 @@ func (vlc *Vlc) PlayAudio(ctx context.Context, filetype string) error {
 
 	testing.ContextLog(ctx, "Click on file")
 	filename := vlc.app.Device.Object(ui.TextContains(filetype))
-	if err := apputil.FindAndClick(filename, shortTimeout)(ctx); err != nil {
+	if err := apputil.FindAndClick(filename, defaultTimeout)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to find the target file: %s", filetype)
 	}
 
@@ -196,14 +197,14 @@ func (vlc *Vlc) PlayAudio(ctx context.Context, filetype string) error {
 
 	testing.ContextLog(ctx, "Verify playing filename")
 	playingFilename := vlc.app.Device.Object(ui.ID(titleID), ui.TextContains(filetype))
-	if err := playingFilename.WaitForExists(ctx, shortTimeout); err != nil {
+	if err := playingFilename.WaitForExists(ctx, defaultTimeout); err != nil {
 		return errors.Wrap(err, "the VLC player is not playing")
 	}
 
 	testing.ContextLog(ctx, "Wait for pause button")
 	playPauseID := idPrefix + "header_play_pause"
 	pauseButton := vlc.app.Device.Object(ui.ID(playPauseID), ui.Description("Pause"))
-	if err := pauseButton.WaitForExists(ctx, shortTimeout); err != nil {
+	if err := pauseButton.WaitForExists(ctx, defaultTimeout); err != nil {
 		return errors.Wrap(err, "the VLC player is not playing")
 	}
 
@@ -217,13 +218,14 @@ func (vlc *Vlc) clearStartupPrompt(ctx context.Context) error {
 	permissionBtn := vlc.app.Device.Object(ui.ID(idPrefix + "grantPermissionButton"))
 
 	return uiauto.IfSuccessThen(
-		apputil.WaitForExists(startBtn, shortTimeout),
+		apputil.WaitForExists(startBtn, defaultTimeout),
 		uiauto.Combine("clear start up prompt",
 			apputil.ClickIfExist(startBtn, shortTimeout),
 			apputil.ClickIfExist(permissionBtn, shortTimeout),
 			apputil.ClickIfExist(vlc.app.Device.Object(ui.Text("ALLOW")), shortTimeout),
 			apputil.ClickIfExist(vlc.app.Device.Object(ui.ID(nextBtnID)), shortTimeout),
 			apputil.ClickIfExist(vlc.app.Device.Object(ui.ID(doneBtnID)), shortTimeout),
+			apputil.ClickIfExist(vlc.app.Device.Object(ui.Text("YES")), shortTimeout),
 			apputil.ClickIfExist(vlc.app.Device.Object(ui.Text("YES")), shortTimeout),
 		),
 	)(ctx)
@@ -235,7 +237,7 @@ func (vlc *Vlc) clearPromptAfterPlay(ctx context.Context) error {
 
 	// The multi-step prompt has the same button object. Use for loop to reduce code.
 	for i := 0; i < 3; i++ {
-		if err := apputil.ClickIfExist(nextButton, shortTimeout)(ctx); err != nil {
+		if err := apputil.ClickIfExist(nextButton, defaultTimeout)(ctx); err != nil {
 			return err
 		}
 	}
