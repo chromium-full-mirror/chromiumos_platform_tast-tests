@@ -12,6 +12,8 @@ const (
 	ChromeLoggedInMultiDisplay = "chromeLoggedInMultiDisplay"
 	// Logged into a user session with --disable-sync flag.
 	ChromeLoggedInDisableSync = "chromeLoggedInDisableSync"
+	// Logged into a user session with --disable-sync flag and turn on battery saver.
+	ChromeLoggedInDisableSyncWithBatterySaver = "chromeLoggedInDisableSyncWithBatterySaver"
 	// Logged into a user session with --disable-sync flag and firmware updates disabled.
 	ChromeLoggedInDisableSyncNoFwUpdate = "chromeLoggedInDisableSyncNoFwUpdate"
 	// Logged into a guest user session

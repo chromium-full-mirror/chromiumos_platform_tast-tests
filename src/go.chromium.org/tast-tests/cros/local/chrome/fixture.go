@@ -50,6 +50,18 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromeLoggedInDisableSyncWithBatterySaver,
+		Desc:     "Logged into a user session with --disable-sync flag and turn on battery saver",
+		Contacts: []string{"darrenwu@chromium.org", "cros-vm-technology@google.com"},
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{ExtraArgs("--disable-sync"), EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn")}, nil
+		}),
+		SetUpTimeout:    FixtureSetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInDisableSyncNoFwUpdate,
 		Desc:     "Logged into a user session with --disable-sync flag and firmware updates disabled",
 		Contacts: []string{"cwd@chromium.org"},
