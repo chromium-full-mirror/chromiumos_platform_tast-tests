@@ -23,7 +23,8 @@ import (
 )
 
 // PKCandidatesFinder is the finder for candidates in the IME candidates window.
-var PKCandidatesFinder = nodewith.Role(role.ImeCandidate).Onscreen()
+// Since multiple candidates can appear, only use the first one.
+var PKCandidatesFinder = nodewith.Role(role.ImeCandidate).Onscreen().First()
 
 type enterInputActionPK func(keyboard *input.KeyboardEventWriter, ui *uiauto.Context) uiauto.Action
 
