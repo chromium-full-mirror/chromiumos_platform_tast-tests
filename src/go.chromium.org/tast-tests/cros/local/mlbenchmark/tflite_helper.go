@@ -75,6 +75,7 @@ func parseOutput(output string) (*benchmarkResults, error) {
 	// Init and Overall memory usage from there.
 
 	var results benchmarkResults
+	var warmupRe = regexp.MustCompile(`^count=([\d\.]+) `)
 	var detailRe = regexp.MustCompile(`^count=([\d\.]+) first=[\d\.]+ curr=[\d\.]+ min=[\d\.]+ max=[\d\.]+ avg=([\d\.]+) std=([\d\.]+)`)
 	var summaryRe = regexp.MustCompile(`^Inference timings in us: Init: ([\d\.]+), First inference: ([\d\.]+), Warmup \(avg\): [\d\.]+, Inference \(avg\): [\d\.]+`)
 	var memoryRe = regexp.MustCompile(`^Overall peak memory footprint \(MB\) via periodic monitoring: ([\d\.]+)`)
@@ -83,27 +84,29 @@ func parseOutput(output string) (*benchmarkResults, error) {
 	scanner.Split(bufio.ScanLines)
 	warmupPassed, detailResultsFound, summaryResultFound, memoryResultFound := false, false, false, false
 	for scanner.Scan() {
-		// Check if the string matches detailRe. If so, there will be 4 group matches.
-		matches := detailRe.FindStringSubmatch(scanner.Text())
-		if len(matches) > 3 {
-			// If we have skipped the warmup match, use the next one.
+		// Check to see if the warmup string is output, if so there will be 2 group matches.
+		matches := warmupRe.FindStringSubmatch(scanner.Text())
+		if len(matches) == 2 {
+			// If we've passed the warmup stage, check if this is the detail line. If so, 4 group matches.
 			if warmupPassed {
-				var err error
-				results.RunCount, err = strconv.ParseInt(matches[1], 10, 64)
-				if err != nil {
-					return nil, errors.Wrap(err, "couldn't parse RunCount")
+				matches := detailRe.FindStringSubmatch(scanner.Text())
+				if len(matches) == 4 {
+					var err error
+					results.RunCount, err = strconv.ParseInt(matches[1], 10, 64)
+					if err != nil {
+						return nil, errors.Wrap(err, "couldn't parse RunCount")
+					}
+					results.AvgLatency, err = strconv.ParseFloat(matches[2], 64)
+					if err != nil {
+						return nil, errors.Wrap(err, "couldn't parse AvgLatency")
+					}
+					results.StdDev, err = strconv.ParseFloat(matches[3], 64)
+					if err != nil {
+						return nil, errors.Wrap(err, "couldn't parse StdDev")
+					}
+					detailResultsFound = true
 				}
-				results.AvgLatency, err = strconv.ParseFloat(matches[2], 64)
-				if err != nil {
-					return nil, errors.Wrap(err, "couldn't parse AvgLatency")
-				}
-				results.StdDev, err = strconv.ParseFloat(matches[3], 64)
-				if err != nil {
-					return nil, errors.Wrap(err, "couldn't parse StdDev")
-				}
-				detailResultsFound = true
 			} else {
-				// This is the first match, so mark that we've seen the warmup line.
 				warmupPassed = true
 			}
 		}
