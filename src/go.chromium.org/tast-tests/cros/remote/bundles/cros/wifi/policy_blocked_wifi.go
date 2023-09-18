@@ -50,6 +50,7 @@ const connectionVerificationFailure string = "failed to verify that WiFi was con
 const ssidDataRemovalFailure string = "failed to remove entries for SSID"
 const tabPressFailure string = "failed to move to next UI element with Tab"
 const failedToStartChrome string = "DUT: failed to start Chrome: "
+const canNotJoinWiFiPreTest string = "Failed to join WiFi even policies are not applied: "
 
 var (
 	useDeviceGUID           = "device_network_config"
@@ -200,7 +201,9 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 	rpcClient := testFixture.DUTRPC(wificell.DefaultDUT)
 	policyClient := ps.NewPolicyServiceClient(rpcClient.Conn)
 	wifiSvc := testFixture.DUTWifiClient(wificell.DefaultDUT)
-	localCtx := localContext{ctx, rpcClient.Conn, wifiSvc, params.wifiCred}
+	longerCtx, cancel := ctxutil.Shorten(ctx, 25*time.Second)
+	defer cancel()
+	localCtx := localContext{longerCtx, rpcClient.Conn, wifiSvc, params.wifiCred}
 
 	// Configure 3 access points for blocked, non blocked, blocked+preferred SSIDs.
 	nonBlockedApOptions := []ap.Option{ap.Mode(ap.Mode80211nMixed), ap.Channel(108), ap.HTCaps(ap.HTCapHT20), ap.SpectrumManagement(), ap.SSID(notBlockedSSID)}
@@ -239,6 +242,10 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 	defer deconfigAP(cleanupCtxBlockedAndPreferredAP, blockedAndPreferredAP)
 	ctx, cancelBlockedAndPreferredAP := testFixture.ReserveForDeconfigAP(ctx, blockedAndPreferredAP)
 	defer cancelBlockedAndPreferredAP()
+	accessPoints := make(map[string]*wificell.APIface)
+	accessPoints[notBlockedSSID] = notBlockedAP
+	accessPoints[blockedSSID] = blockedAP
+	accessPoints[blockedPreferredSSID] = blockedAndPreferredAP
 	// End configure 3 access points for blocked, non blocked, blocked+preferred SSIDs.
 
 	startChromeRequest := func(keepState bool) *ui.NewRequest {
@@ -251,15 +258,48 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 	}
 	chromeService := ui.NewChromeServiceClient(rpcClient.Conn)
 
+	// Clean policy and shill at the end of test even it is failing early.
+	cleanPolicyAfterTest := func(localCtx localContext) {
+		s.Log("Cleaning policies")
+		ctx = localCtx.ctx
+		if _, err := chromeService.New(ctx, startChromeRequest(false /*keepState*/)); err != nil {
+			s.Fatal("Failed to start Chrome: ", err)
+		}
+	}
+	defer cleanPolicyAfterTest(localCtx)
+	cleanShillAfterTest := func(localCtx localContext) {
+		s.Log("Cleaning shill")
+		if err := cleanAllSSIDDataFromShill(localCtx); err != nil {
+			s.Fatal("Failed to clean SSIDs: ", err)
+		}
+	}
+	defer cleanShillAfterTest(localCtx)
+
+	s.Log("Start testing WiFi connection even before policy is applied")
+	func() {
+		ctx, cancel := ctxutil.Shorten(ctx, 25*time.Second)
+		cleanupCtx := ctx
+		defer cancel()
+		// This will reset chrome and all policies.
+		if _, err := chromeService.New(ctx, startChromeRequest(false /*keepsState*/)); err != nil {
+			s.Fatal(failedToStartChrome, err)
+		}
+		defer chromeService.Close(cleanupCtx, &emptypb.Empty{})
+
+		if err := testJoinWithOneClickBeforeLogin(localCtx, accessPoints); err != nil {
+			s.Fatal(canNotJoinWiFiPreTest, err)
+		}
+	}()
+
 	// Enroll device and apply policies from pJSON.
-	if err := enrollDut(ctx, params.devicePolicy, policyClient); err != nil {
-		s.Fatal("Failed to enroll using chrome: ", err)
+	if err := cleanShillAndReEnroll(localCtx, params.devicePolicy, policyClient); err != nil {
+		s.Fatal("Failed to clean shill and enroll DUT with policies: ", err)
 	}
 
 	// Run WiFi connections tests with applied policy on the login screen.
 	func() {
 		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+		ctx, cancel := ctxutil.Shorten(ctx, 25*time.Second)
 		defer cancel()
 
 		if _, err := chromeService.New(ctx, startChromeRequest(true /*keepsState*/)); err != nil {
@@ -322,7 +362,7 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 		// Get chrome service and login to users session with default test user.
 		// Policies were applied on device level, so they will be efficient for any logged in user.
 		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+		ctx, cancel := ctxutil.Shorten(ctx, 25*time.Second)
 		defer cancel()
 		chromeService := ui.NewChromeServiceClient(rpcClient.Conn)
 		if _, err := chromeService.New(ctx, &ui.NewRequest{KeepState: true}); err != nil {
@@ -419,14 +459,6 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 		}
 		// --------- End of test join WiFi from quick settings "Add a new WiFi connection" in quick settings after login.
 	}()
-
-	// Cleaning SSIDs and policy data after the test.
-	if err := cleanAllSSIDDataFromShill(localCtx); err != nil {
-		s.Fatal("Failed to clean SSIDs: ", err)
-	}
-	if _, err := chromeService.New(ctx, startChromeRequest(false /*keepState*/)); err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
 }
 
 // expectBlockedJoinWiFiOSSettings verifies that provided network is disabled by administrator.
@@ -633,9 +665,14 @@ func joinWiFiWithOneClick(localCtx localContext, ssid, password string, settingT
 		return cleanup, errors.Wrap(err, `failed to open "Join Wi-Fi network" dialog"`)
 	}
 
-	if _, ok := localCtx.wifiCred.(*wifiutil.None); ok || !isCredentialsRequired {
+	if _, ok := localCtx.wifiCred.(*wifiutil.None); ok {
 		return cleanup, nil
 	}
+
+	if !isCredentialsRequired {
+		return cleanup, nil
+	}
+
 	uiauto := ui.NewAutomationServiceClient(rpcClient)
 	if _, err := uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: wifiutil.JoinWiFiNetworkDialogFinder}); err != nil {
 		return cleanup, errors.Wrap(err, "failed to click the join button")
@@ -823,6 +860,35 @@ func cleanShillAndReEnroll(localCtx localContext, devicePolicy *policy.DeviceOpe
 
 	ctx := localCtx.ctx
 	if err := enrollDut(ctx, devicePolicy, policyClient); err != nil {
+		return err
+	}
+	return nil
+}
+
+// testJoinWithOneClickBeforeLogin testing join WiFi with one click from quick settings on OOB screen before
+// policies are applied.
+func testJoinWithOneClickBeforeLogin(localCtx localContext, accessPoints map[string]*wificell.APIface) (retErr error) {
+	// Connect to the wifi which will be blocked by ONC policy.
+	if err := expectSuccJoinWiFi(accessPoints[blockedSSID], localCtx, quickSettings, expectDialog); err != nil {
+		return err
+	}
+	// lockedAndPreferredAP is included into policy, but there should be no policy yet.
+	if err := expectSuccJoinWiFi(accessPoints[blockedPreferredSSID], localCtx, quickSettings, expectDialog); err != nil {
+		return err
+	}
+
+	// Connect to the notBlockedAP.
+	if err := expectSuccJoinWiFi(accessPoints[notBlockedSSID], localCtx, quickSettings, expectDialog); err != nil {
+		return err
+	}
+
+	// Connect to the wifi which will be blocked by ONC policy.
+	if err := expectSuccJoinWiFi(accessPoints[blockedSSID], localCtx, quickSettings, !expectDialog); err != nil {
+		return err
+	}
+
+	// Connect to the notBlockedAP.
+	if err := expectSuccJoinWiFi(accessPoints[notBlockedSSID], localCtx, quickSettings, !expectDialog); err != nil {
 		return err
 	}
 	return nil
