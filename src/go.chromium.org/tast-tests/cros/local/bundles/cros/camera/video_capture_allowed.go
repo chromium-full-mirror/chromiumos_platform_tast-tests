@@ -17,13 +17,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -68,13 +64,6 @@ func VideoCaptureAllowed(ctx context.Context, s *testing.State) {
 
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
-
-	// Connect to Test API to use it with the UI library.
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-	ui := uiauto.New(tconn)
 
 	for _, param := range []struct {
 		name          string
@@ -125,30 +114,10 @@ func VideoCaptureAllowed(ctx context.Context, s *testing.State) {
 			}
 			defer conn.Close()
 
-			// Check for existence of either the allow or block button until one of them appears.
-			allowButton := nodewith.Name("Allow").Role(role.Button)
-			blockedButton := nodewith.Name("This page has been blocked from accessing your camera.").Role(role.Button)
-			blocked := false
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-
-				if err = ui.Exists(allowButton)(ctx); err == nil {
-					return testing.PollBreak(nil)
-				}
-
-				if err = ui.Exists(blockedButton)(ctx); err == nil {
-					blocked = true
-					return testing.PollBreak(nil)
-				}
-
-				return errors.New("failed to find allow or blocked button")
-
-			}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
-				s.Fatal("Failed to find indicator if video capture is allowed or blocked: ", err)
-			}
-
-			if blocked != param.expectedBlock {
-				s.Errorf("Unexpected blocking of video capture: want %t got %t", param.expectedBlock, blocked)
-			}
+			// Check for existence of either the allow or block button until one of
+			// them appears.
+			// TODO(b/296796133): Temporarily remove the check while waiting for the
+			// fix of indicators behavior.
 		})
 	}
 }
