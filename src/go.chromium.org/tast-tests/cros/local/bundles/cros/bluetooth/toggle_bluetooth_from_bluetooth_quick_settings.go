@@ -66,6 +66,10 @@ func ToggleBluetoothFromBluetoothQuickSettings(ctx context.Context, s *testing.S
 
 	bt := s.FixtValue().(bluetooth.HasBluetoothImpl).BluetoothImpl()
 
+	if err := bt.Enable(ctx); err != nil {
+		s.Fatal("Failed to enable Bluetooth: ", err)
+	}
+
 	if err := bt.PollForEnabled(ctx); err != nil {
 		s.Fatal("Expected Bluetooth to be enabled: ", err)
 	}
