@@ -80,7 +80,7 @@ func ShortcutOnKeyboardPluggedIn(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify “Turn volume up” shortcut and observe “[volume icon]” as the shortcut key.
-	if err := sc.VerifyShortcuts(ctx, ui, "Turn volume up", sc.ShortcutKeys{Keys: "volume up", Role: role.Image}); err != nil {
+	if err := sc.VerifyShortcuts(ctx, ui, "Turn volume up", sc.ShortcutKeys{Keys: "volume-up", Role: role.GenericContainer}); err != nil {
 		s.Fatal("Failed to observe [volume up] icon as shortcut keys for Turn volume up: ", err)
 	}
 
@@ -96,7 +96,7 @@ func ShortcutOnKeyboardPluggedIn(ctx context.Context, s *testing.State) {
 		description string
 		keys        sc.ShortcutKeys
 	}{
-		{"Turn volume up", sc.ShortcutKeys{Keys: "volume up", Role: role.Image}},
+		{"Turn volume up", sc.ShortcutKeys{Keys: "volume-up", Role: role.GenericContainer}},
 		{"Turn volume up", sc.ShortcutKeys{Keys: "F10", Role: role.StaticText}},
 	}
 	for _, shortcut := range turnVolumeUpShortcuts {
