@@ -38,7 +38,7 @@ func init() {
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name:      "bluez_le_keyboard",
+				Name:      "floss_disabled_le_keyboard",
 				Fixture:   "chromeUIDisabledWith1BTPeerPowerFlossDisabled",
 				ExtraAttr: []string{"bluetooth_flaky"},
 				Val: &btActiveDiscoveryPowerTestCase{
@@ -46,7 +46,7 @@ func init() {
 				},
 			},
 			{
-				Name:      "floss_le_keyboard",
+				Name:      "floss_enabled_le_keyboard",
 				Fixture:   "chromeUIDisabledWith1BTPeerPowerFlossEnabled",
 				ExtraAttr: []string{"bluetooth_floss_flaky"},
 				Val: &btActiveDiscoveryPowerTestCase{
