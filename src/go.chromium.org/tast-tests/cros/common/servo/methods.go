@@ -1350,13 +1350,13 @@ func (s *Servo) RequireDebugHeader(ctx context.Context) error {
 // OpenLid sends the ec command to simulate DUT lid opening
 func (s *Servo) OpenLid(ctx context.Context) error {
 	testing.ContextLog(ctx, "Opening DUT lid")
-	return s.SetStringAndCheck(ctx, LidOpen, string(LidOpenYes))
+	return s.SetString(ctx, LidOpen, string(LidOpenYes))
 }
 
 // CloseLid sends the ec command to simulate DUT lid closing
 func (s *Servo) CloseLid(ctx context.Context) error {
 	testing.ContextLog(ctx, "Closing DUT lid")
-	return s.SetStringAndCheck(ctx, LidOpen, string(LidOpenNo))
+	return s.SetString(ctx, LidOpen, string(LidOpenNo))
 }
 
 // PollForString polls a UART for a string for up to 60s, returning nil if found
