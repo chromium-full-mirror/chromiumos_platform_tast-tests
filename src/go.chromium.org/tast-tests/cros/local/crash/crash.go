@@ -232,7 +232,7 @@ func GetDaemonStoreCrashDirs(ctx context.Context) ([]string, error) {
 	var ret []string
 	for k := range sessions {
 		userhash := sessions[k]
-		ret = append(ret, fmt.Sprintf("/home/root/%s/crash", userhash))
+		ret = append(ret, fmt.Sprintf("/run/daemon-store/crash/%s", userhash))
 	}
 	return ret, nil
 }
@@ -258,7 +258,7 @@ func GetDaemonStoreConsentDirs(ctx context.Context) ([]string, error) {
 	var ret []string
 	for k := range sessions {
 		userhash := sessions[k]
-		ret = append(ret, fmt.Sprintf("/home/root/%s/uma-consent", userhash))
+		ret = append(ret, fmt.Sprintf("/run/daemon-store/uma-consent/%s", userhash))
 	}
 	// If no one is logged in, that's okay -- just return an empty list and don't fail.
 	// (Many tests are run when no user is logged in.)
@@ -313,7 +313,7 @@ func GetDaemonStoreAppSyncOptinDirs(ctx context.Context) ([]string, error) {
 	var ret []string
 	for k := range sessions {
 		userhash := sessions[k]
-		ret = append(ret, fmt.Sprintf("/home/root/%s/appsync-optin", userhash))
+		ret = append(ret, fmt.Sprintf("/run/daemon-store/appsync-optin/%s", userhash))
 	}
 	// If no one is logged in, that's okay -- just return an empty list and don't fail.
 	// (Many tests are run when no user is logged in.)
