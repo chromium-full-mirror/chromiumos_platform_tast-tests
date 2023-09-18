@@ -212,7 +212,7 @@ func Init(ctx context.Context, cr *chrome.Chrome, outDir string, appLauncher tes
 	// TODO(b:296013012): For debugging test flakiness, remove this after the
 	// flakiness is gone.
 	if tb.CameraType == testutil.UseFakeHALCamera {
-		if err := cr.StartTracing(ctx, []string{"disabled-by-default-android camera"}); err != nil {
+		if err := cr.StartTracing(ctx, []string{"camera"}); err != nil {
 			testing.ContextLog(ctx, "Failed to enable tracing: ", err)
 		}
 
