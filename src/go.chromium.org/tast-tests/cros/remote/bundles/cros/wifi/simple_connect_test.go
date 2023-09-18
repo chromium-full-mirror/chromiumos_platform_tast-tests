@@ -82,8 +82,8 @@ func simpleConnect80211abg() []simpleConnectParams {
 	return []simpleConnectParams{{
 		Name:              "80211a",
 		Fixture:           defaultFixture,
-		Doc:               simpleConnectDocPref("an open 802.11a network on channels 48, 64."),
-		Val:               mkOps("a", 48, 64),
+		Doc:               simpleConnectDocPref("an open 802.11a network on channels 48, 157."),
+		Val:               mkOps("a", 48, 157),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy, tdreq.WiFiSecSupportOpen},
 	}, {
 		Name:              "80211b",
@@ -154,9 +154,9 @@ func simpleConnect80211ac() []simpleConnectParams {
 	return []simpleConnectParams{{
 		Name:    "80211acvht20",
 		Fixture: defaultFixture,
-		Doc:     simpleConnectDocPref("an open 802.11ac network on channel 60 with a channel width of 20MHz."),
+		Doc:     simpleConnectDocPref("an open 802.11ac network on channel 40 with a channel width of 20MHz."),
 		Val: []simpleConnectParamsVal{{APOpts: `
-			ap.Mode(ap.Mode80211acPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT20), ap.SpectrumManagement(),
+			ap.Mode(ap.Mode80211acPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
 			ap.VHTChWidth(ap.VHTChWidth20Or40),
 		`}},
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
