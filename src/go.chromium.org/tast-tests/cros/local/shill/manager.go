@@ -730,6 +730,24 @@ func (m *Manager) DisablePortalDetection(ctx context.Context) error {
 	return m.SetPortalDetection(ctx, "")
 }
 
+// DisablePortalDetectionWithRestore disables portal detection for all
+// technologies and returns a function to restore the portal detection to its
+// previous state.
+func (m *Manager) DisablePortalDetectionWithRestore(ctx context.Context) (func(context.Context), error) {
+	portals, err := m.GetPortalDetection(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := m.DisablePortalDetection(ctx); err != nil {
+		return nil, err
+	}
+	return func(ctx context.Context) {
+		if err := m.SetPortalDetection(ctx, portals); err != nil {
+			testing.ContextLog(ctx, "Failed to restore portal detection: ", err)
+		}
+	}, nil
+}
+
 // SetPortalDetection enables portal detection for the technologies in the cpList.
 func (m *Manager) SetPortalDetection(ctx context.Context, cpList string) error {
 	if err := m.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, cpList); err != nil {
@@ -950,9 +968,35 @@ func (m *Manager) WaitForDefaultService(ctx context.Context, svc *Service) error
 	return nil
 }
 
+// GetServiceOrder gets the technology priority.
+func (m *Manager) GetServiceOrder(ctx context.Context) ([]string, error) {
+	var technologies string
+	if err := m.Call(ctx, "GetServiceOrder").Store(&technologies); err != nil {
+		return nil, err
+	}
+	return strings.Split(technologies, ","), nil
+}
+
 // SetServiceOrder sets the technology priority.
 func (m *Manager) SetServiceOrder(ctx context.Context, technologies []string) error {
 	return m.Call(ctx, "SetServiceOrder", strings.Join(technologies, ",")).Err
+}
+
+// SetServiceOrderWithRestore sets the technology priority and returns a
+// function to restore the previous technology order.
+func (m *Manager) SetServiceOrderWithRestore(ctx context.Context, technologies []string) (func(context.Context), error) {
+	oldOrder, err := m.GetServiceOrder(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := m.SetServiceOrder(ctx, technologies); err != nil {
+		return nil, err
+	}
+	return func(ctx context.Context) {
+		if err := m.SetServiceOrder(ctx, oldOrder); err != nil {
+			testing.ContextLog(ctx, "Failed to restore service order: ", err)
+		}
+	}, nil
 }
 
 // CheckTetheringReadiness returns the tethering readiness status.

@@ -18,6 +18,17 @@ type Packet struct {
 	DNS  *layers.DNS
 }
 
+// DSCP returns the DSCP value present in the packet, 0 if no applicable.
+func (p *Packet) DSCP() uint8 {
+	if p.IPv4 != nil {
+		return p.IPv4.TOS >> 2
+	}
+	if p.IPv6 != nil {
+		return p.IPv6.TrafficClass >> 2
+	}
+	return 0
+}
+
 func parsePacket(p gopacket.Packet) *Packet {
 	packet := &Packet{}
 

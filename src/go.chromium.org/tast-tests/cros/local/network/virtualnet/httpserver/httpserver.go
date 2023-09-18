@@ -98,3 +98,8 @@ func (h *httpServer) Stop(ctx context.Context) error {
 func (h *httpServer) WriteLogs(ctx context.Context, f *os.File) error {
 	return h.env.ReadAndWriteLogIfExists(h.env.ChrootPath(logPath), f)
 }
+
+// NoContentHandler handles any HTTP request by replying "No Content" status code.
+func NoContentHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNoContent)
+}
