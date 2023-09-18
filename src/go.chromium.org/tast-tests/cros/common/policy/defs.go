@@ -4144,37 +4144,6 @@ func (p *DeviceVariationsRestrictParameter) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 200. AttestationEnabledForUser
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type AttestationEnabledForUser struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *AttestationEnabledForUser) Name() string          { return "AttestationEnabledForUser" }
-func (p *AttestationEnabledForUser) Scope() Scope          { return ScopeUser }
-func (p *AttestationEnabledForUser) Status() Status        { return p.Stat }
-func (p *AttestationEnabledForUser) UntypedV() interface{} { return p.Val }
-func (p *AttestationEnabledForUser) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *AttestationEnabledForUser) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *AttestationEnabledForUser) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 202. DeviceLocalAccountAutoLoginBailoutEnabled
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -18259,6 +18228,7 @@ type WebAppSettings struct {
 }
 
 type WebAppSettingsValue struct {
+	ForceUnregisterOsIntegration  bool   `json:"force_unregister_os_integration"`
 	ManifestId                    string `json:"manifest_id"`
 	PreventCloseAfterRunOnOsLogin bool   `json:"prevent_close_after_run_on_os_login"`
 	RunOnOsLogin                  string `json:"run_on_os_login"`
@@ -21432,39 +21402,6 @@ func (p *FirstPartySetsEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 949. ForceMajorVersionToMinorPositionInUserAgent
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type ForceMajorVersionToMinorPositionInUserAgent struct {
-	Stat Status
-	Val  int
-}
-
-func (p *ForceMajorVersionToMinorPositionInUserAgent) Name() string {
-	return "ForceMajorVersionToMinorPositionInUserAgent"
-}
-func (p *ForceMajorVersionToMinorPositionInUserAgent) Scope() Scope          { return ScopeUser }
-func (p *ForceMajorVersionToMinorPositionInUserAgent) Status() Status        { return p.Stat }
-func (p *ForceMajorVersionToMinorPositionInUserAgent) UntypedV() interface{} { return p.Val }
-func (p *ForceMajorVersionToMinorPositionInUserAgent) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v int
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as int", m)
-	}
-	return v, nil
-}
-func (p *ForceMajorVersionToMinorPositionInUserAgent) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *ForceMajorVersionToMinorPositionInUserAgent) Equal(iface interface{}) bool {
-	v, ok := iface.(int)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 950. AllHttpAuthSchemesAllowedForOrigins
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -22030,37 +21967,6 @@ func (p *FirstPartySetsOverrides) SetProto(m *protoreflect.Message) {
 }
 func (p *FirstPartySetsOverrides) Equal(iface interface{}) bool {
 	v, ok := iface.(*FirstPartySetsOverridesValue)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 970. DownloadBubbleEnabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type DownloadBubbleEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *DownloadBubbleEnabled) Name() string          { return "DownloadBubbleEnabled" }
-func (p *DownloadBubbleEnabled) Scope() Scope          { return ScopeUser }
-func (p *DownloadBubbleEnabled) Status() Status        { return p.Stat }
-func (p *DownloadBubbleEnabled) UntypedV() interface{} { return p.Val }
-func (p *DownloadBubbleEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *DownloadBubbleEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *DownloadBubbleEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
 	if !ok {
 		return ok
 	}
@@ -25294,30 +25200,30 @@ func (p *ShowDisplaySizeScreenEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1100. AnonymousSearchEnabled
+// 1100. EssentialSearchEnabled
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
-type AnonymousSearchEnabled struct {
+type EssentialSearchEnabled struct {
 	Stat Status
 	Val  bool
 }
 
-func (p *AnonymousSearchEnabled) Name() string          { return "AnonymousSearchEnabled" }
-func (p *AnonymousSearchEnabled) Scope() Scope          { return ScopeUser }
-func (p *AnonymousSearchEnabled) Status() Status        { return p.Stat }
-func (p *AnonymousSearchEnabled) UntypedV() interface{} { return p.Val }
-func (p *AnonymousSearchEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+func (p *EssentialSearchEnabled) Name() string          { return "EssentialSearchEnabled" }
+func (p *EssentialSearchEnabled) Scope() Scope          { return ScopeUser }
+func (p *EssentialSearchEnabled) Status() Status        { return p.Stat }
+func (p *EssentialSearchEnabled) UntypedV() interface{} { return p.Val }
+func (p *EssentialSearchEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
 	var v bool
 	if err := json.Unmarshal(m, &v); err != nil {
 		return nil, errors.Wrapf(err, "could not read %s as bool", m)
 	}
 	return v, nil
 }
-func (p *AnonymousSearchEnabled) SetProto(m *protoreflect.Message) {
+func (p *EssentialSearchEnabled) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
-func (p *AnonymousSearchEnabled) Equal(iface interface{}) bool {
+func (p *EssentialSearchEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
 	if !ok {
 		return ok
@@ -25328,7 +25234,6 @@ func (p *AnonymousSearchEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1101. LegacyTechReportAllowlist
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type LegacyTechReportAllowlist struct {
 	Stat Status
@@ -25751,7 +25656,6 @@ func (p *DeviceLoginScreenWebHidAllowDevicesForUrls) Equal(iface interface{}) bo
 // ****************************************************************************
 // 1116. SafeBrowsingProxiedRealTimeChecksAllowed
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type SafeBrowsingProxiedRealTimeChecksAllowed struct {
 	Stat Status
@@ -26194,7 +26098,6 @@ func (p *MidiBlockedForUrls) Equal(iface interface{}) bool {
 // 1131. GlanceablesEnabled
 // This policy has a default value of False.
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GlanceablesEnabled struct {
 	Stat Status
@@ -26422,30 +26325,30 @@ func (p *ForcePermissionPolicyUnloadDefaultEnabled) Equal(iface interface{}) boo
 }
 
 // ****************************************************************************
-// 1138. ReportWebsiteActivity
+// 1138. ReportWebsiteActivityAllowlist
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
-type ReportWebsiteActivity struct {
+type ReportWebsiteActivityAllowlist struct {
 	Stat Status
 	Val  []string
 }
 
-func (p *ReportWebsiteActivity) Name() string          { return "ReportWebsiteActivity" }
-func (p *ReportWebsiteActivity) Scope() Scope          { return ScopeUser }
-func (p *ReportWebsiteActivity) Status() Status        { return p.Stat }
-func (p *ReportWebsiteActivity) UntypedV() interface{} { return p.Val }
-func (p *ReportWebsiteActivity) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+func (p *ReportWebsiteActivityAllowlist) Name() string          { return "ReportWebsiteActivityAllowlist" }
+func (p *ReportWebsiteActivityAllowlist) Scope() Scope          { return ScopeUser }
+func (p *ReportWebsiteActivityAllowlist) Status() Status        { return p.Stat }
+func (p *ReportWebsiteActivityAllowlist) UntypedV() interface{} { return p.Val }
+func (p *ReportWebsiteActivityAllowlist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
 	var v []string
 	if err := json.Unmarshal(m, &v); err != nil {
 		return nil, errors.Wrapf(err, "could not read %s as []string", m)
 	}
 	return v, nil
 }
-func (p *ReportWebsiteActivity) SetProto(m *protoreflect.Message) {
+func (p *ReportWebsiteActivityAllowlist) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
-func (p *ReportWebsiteActivity) Equal(iface interface{}) bool {
+func (p *ReportWebsiteActivityAllowlist) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
 	if !ok {
 		return ok
@@ -26454,30 +26357,30 @@ func (p *ReportWebsiteActivity) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1139. ReportWebsiteUsage
+// 1139. ReportWebsiteTelemetryAllowlist
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
-type ReportWebsiteUsage struct {
+type ReportWebsiteTelemetryAllowlist struct {
 	Stat Status
 	Val  []string
 }
 
-func (p *ReportWebsiteUsage) Name() string          { return "ReportWebsiteUsage" }
-func (p *ReportWebsiteUsage) Scope() Scope          { return ScopeUser }
-func (p *ReportWebsiteUsage) Status() Status        { return p.Stat }
-func (p *ReportWebsiteUsage) UntypedV() interface{} { return p.Val }
-func (p *ReportWebsiteUsage) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+func (p *ReportWebsiteTelemetryAllowlist) Name() string          { return "ReportWebsiteTelemetryAllowlist" }
+func (p *ReportWebsiteTelemetryAllowlist) Scope() Scope          { return ScopeUser }
+func (p *ReportWebsiteTelemetryAllowlist) Status() Status        { return p.Stat }
+func (p *ReportWebsiteTelemetryAllowlist) UntypedV() interface{} { return p.Val }
+func (p *ReportWebsiteTelemetryAllowlist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
 	var v []string
 	if err := json.Unmarshal(m, &v); err != nil {
 		return nil, errors.Wrapf(err, "could not read %s as []string", m)
 	}
 	return v, nil
 }
-func (p *ReportWebsiteUsage) SetProto(m *protoreflect.Message) {
+func (p *ReportWebsiteTelemetryAllowlist) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
-func (p *ReportWebsiteUsage) Equal(iface interface{}) bool {
+func (p *ReportWebsiteTelemetryAllowlist) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
 	if !ok {
 		return ok
@@ -26486,32 +26389,32 @@ func (p *ReportWebsiteUsage) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1140. ReportWebsiteUsageCollectionRateMs
+// 1140. ReportWebsiteTelemetryCollectionRateMs
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
-type ReportWebsiteUsageCollectionRateMs struct {
+type ReportWebsiteTelemetryCollectionRateMs struct {
 	Stat Status
 	Val  int
 }
 
-func (p *ReportWebsiteUsageCollectionRateMs) Name() string {
-	return "ReportWebsiteUsageCollectionRateMs"
+func (p *ReportWebsiteTelemetryCollectionRateMs) Name() string {
+	return "ReportWebsiteTelemetryCollectionRateMs"
 }
-func (p *ReportWebsiteUsageCollectionRateMs) Scope() Scope          { return ScopeUser }
-func (p *ReportWebsiteUsageCollectionRateMs) Status() Status        { return p.Stat }
-func (p *ReportWebsiteUsageCollectionRateMs) UntypedV() interface{} { return p.Val }
-func (p *ReportWebsiteUsageCollectionRateMs) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+func (p *ReportWebsiteTelemetryCollectionRateMs) Scope() Scope          { return ScopeUser }
+func (p *ReportWebsiteTelemetryCollectionRateMs) Status() Status        { return p.Stat }
+func (p *ReportWebsiteTelemetryCollectionRateMs) UntypedV() interface{} { return p.Val }
+func (p *ReportWebsiteTelemetryCollectionRateMs) UnmarshalAs(m json.RawMessage) (interface{}, error) {
 	var v int
 	if err := json.Unmarshal(m, &v); err != nil {
 		return nil, errors.Wrapf(err, "could not read %s as int", m)
 	}
 	return v, nil
 }
-func (p *ReportWebsiteUsageCollectionRateMs) SetProto(m *protoreflect.Message) {
+func (p *ReportWebsiteTelemetryCollectionRateMs) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
-func (p *ReportWebsiteUsageCollectionRateMs) Equal(iface interface{}) bool {
+func (p *ReportWebsiteTelemetryCollectionRateMs) Equal(iface interface{}) bool {
 	v, ok := iface.(int)
 	if !ok {
 		return ok
@@ -26543,6 +26446,458 @@ func (p *SafeBrowsingSurveysEnabled) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
 func (p *SafeBrowsingSurveysEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1142. BlockTruncatedCookies
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type BlockTruncatedCookies struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *BlockTruncatedCookies) Name() string          { return "BlockTruncatedCookies" }
+func (p *BlockTruncatedCookies) Scope() Scope          { return ScopeUser }
+func (p *BlockTruncatedCookies) Status() Status        { return p.Stat }
+func (p *BlockTruncatedCookies) UntypedV() interface{} { return p.Val }
+func (p *BlockTruncatedCookies) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *BlockTruncatedCookies) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *BlockTruncatedCookies) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1143. ReportWebsiteTelemetry
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ReportWebsiteTelemetry struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *ReportWebsiteTelemetry) Name() string          { return "ReportWebsiteTelemetry" }
+func (p *ReportWebsiteTelemetry) Scope() Scope          { return ScopeUser }
+func (p *ReportWebsiteTelemetry) Status() Status        { return p.Stat }
+func (p *ReportWebsiteTelemetry) UntypedV() interface{} { return p.Val }
+func (p *ReportWebsiteTelemetry) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *ReportWebsiteTelemetry) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ReportWebsiteTelemetry) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1144. CompressionDictionaryTransportEnabled
+// ****************************************************************************
+type CompressionDictionaryTransportEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *CompressionDictionaryTransportEnabled) Name() string {
+	return "CompressionDictionaryTransportEnabled"
+}
+func (p *CompressionDictionaryTransportEnabled) Scope() Scope          { return ScopeUser }
+func (p *CompressionDictionaryTransportEnabled) Status() Status        { return p.Stat }
+func (p *CompressionDictionaryTransportEnabled) UntypedV() interface{} { return p.Val }
+func (p *CompressionDictionaryTransportEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *CompressionDictionaryTransportEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *CompressionDictionaryTransportEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1145. MicrosoftOfficeCloudUpload
+// This policy has a default value of disallowed.
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type MicrosoftOfficeCloudUpload struct {
+	Stat Status
+	Val  string
+}
+
+func (p *MicrosoftOfficeCloudUpload) Name() string          { return "MicrosoftOfficeCloudUpload" }
+func (p *MicrosoftOfficeCloudUpload) Scope() Scope          { return ScopeUser }
+func (p *MicrosoftOfficeCloudUpload) Status() Status        { return p.Stat }
+func (p *MicrosoftOfficeCloudUpload) UntypedV() interface{} { return p.Val }
+func (p *MicrosoftOfficeCloudUpload) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as string", m)
+	}
+	return v, nil
+}
+func (p *MicrosoftOfficeCloudUpload) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *MicrosoftOfficeCloudUpload) Equal(iface interface{}) bool {
+	v, ok := iface.(string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1146. GoogleWorkspaceCloudUpload
+// This policy has a default value of disallowed.
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type GoogleWorkspaceCloudUpload struct {
+	Stat Status
+	Val  string
+}
+
+func (p *GoogleWorkspaceCloudUpload) Name() string          { return "GoogleWorkspaceCloudUpload" }
+func (p *GoogleWorkspaceCloudUpload) Scope() Scope          { return ScopeUser }
+func (p *GoogleWorkspaceCloudUpload) Status() Status        { return p.Stat }
+func (p *GoogleWorkspaceCloudUpload) UntypedV() interface{} { return p.Val }
+func (p *GoogleWorkspaceCloudUpload) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as string", m)
+	}
+	return v, nil
+}
+func (p *GoogleWorkspaceCloudUpload) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GoogleWorkspaceCloudUpload) Equal(iface interface{}) bool {
+	v, ok := iface.(string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1147. ShortcutCustomizationAllowed
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ShortcutCustomizationAllowed struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ShortcutCustomizationAllowed) Name() string          { return "ShortcutCustomizationAllowed" }
+func (p *ShortcutCustomizationAllowed) Scope() Scope          { return ScopeUser }
+func (p *ShortcutCustomizationAllowed) Status() Status        { return p.Stat }
+func (p *ShortcutCustomizationAllowed) UntypedV() interface{} { return p.Val }
+func (p *ShortcutCustomizationAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ShortcutCustomizationAllowed) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ShortcutCustomizationAllowed) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1148. MicrosoftOneDriveMount
+// This policy has a default value of disallowed.
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type MicrosoftOneDriveMount struct {
+	Stat Status
+	Val  string
+}
+
+func (p *MicrosoftOneDriveMount) Name() string          { return "MicrosoftOneDriveMount" }
+func (p *MicrosoftOneDriveMount) Scope() Scope          { return ScopeUser }
+func (p *MicrosoftOneDriveMount) Status() Status        { return p.Stat }
+func (p *MicrosoftOneDriveMount) UntypedV() interface{} { return p.Val }
+func (p *MicrosoftOneDriveMount) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as string", m)
+	}
+	return v, nil
+}
+func (p *MicrosoftOneDriveMount) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *MicrosoftOneDriveMount) Equal(iface interface{}) bool {
+	v, ok := iface.(string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1149. ExtensionOAuthRedirectUrls
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type ExtensionOAuthRedirectUrls struct {
+	Stat Status
+	Val  map[string][]string
+}
+
+func (p *ExtensionOAuthRedirectUrls) Name() string          { return "ExtensionOAuthRedirectUrls" }
+func (p *ExtensionOAuthRedirectUrls) Scope() Scope          { return ScopeUser }
+func (p *ExtensionOAuthRedirectUrls) Status() Status        { return p.Stat }
+func (p *ExtensionOAuthRedirectUrls) UntypedV() interface{} { return p.Val }
+func (p *ExtensionOAuthRedirectUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v map[string][]string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as map[string][]string", m)
+	}
+	return v, nil
+}
+func (p *ExtensionOAuthRedirectUrls) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ExtensionOAuthRedirectUrls) Equal(iface interface{}) bool {
+	v, ok := iface.(map[string][]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1151. QuickOfficeForceFileDownloadEnabled
+// This policy has a default value of False.
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type QuickOfficeForceFileDownloadEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *QuickOfficeForceFileDownloadEnabled) Name() string {
+	return "QuickOfficeForceFileDownloadEnabled"
+}
+func (p *QuickOfficeForceFileDownloadEnabled) Scope() Scope          { return ScopeUser }
+func (p *QuickOfficeForceFileDownloadEnabled) Status() Status        { return p.Stat }
+func (p *QuickOfficeForceFileDownloadEnabled) UntypedV() interface{} { return p.Val }
+func (p *QuickOfficeForceFileDownloadEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *QuickOfficeForceFileDownloadEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *QuickOfficeForceFileDownloadEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1155. FullRestoreMode
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type FullRestoreMode struct {
+	Stat Status
+	Val  int
+}
+
+func (p *FullRestoreMode) Name() string          { return "FullRestoreMode" }
+func (p *FullRestoreMode) Scope() Scope          { return ScopeUser }
+func (p *FullRestoreMode) Status() Status        { return p.Stat }
+func (p *FullRestoreMode) UntypedV() interface{} { return p.Val }
+func (p *FullRestoreMode) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *FullRestoreMode) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *FullRestoreMode) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1156. MicrosoftOneDriveAccountRestriction
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type MicrosoftOneDriveAccountRestriction struct {
+	Stat Status
+	Val  string
+}
+
+func (p *MicrosoftOneDriveAccountRestriction) Name() string {
+	return "MicrosoftOneDriveAccountRestriction"
+}
+func (p *MicrosoftOneDriveAccountRestriction) Scope() Scope          { return ScopeUser }
+func (p *MicrosoftOneDriveAccountRestriction) Status() Status        { return p.Stat }
+func (p *MicrosoftOneDriveAccountRestriction) UntypedV() interface{} { return p.Val }
+func (p *MicrosoftOneDriveAccountRestriction) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as string", m)
+	}
+	return v, nil
+}
+func (p *MicrosoftOneDriveAccountRestriction) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *MicrosoftOneDriveAccountRestriction) Equal(iface interface{}) bool {
+	v, ok := iface.(string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1157. SafeBrowsingDeepScanningEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type SafeBrowsingDeepScanningEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *SafeBrowsingDeepScanningEnabled) Name() string          { return "SafeBrowsingDeepScanningEnabled" }
+func (p *SafeBrowsingDeepScanningEnabled) Scope() Scope          { return ScopeUser }
+func (p *SafeBrowsingDeepScanningEnabled) Status() Status        { return p.Stat }
+func (p *SafeBrowsingDeepScanningEnabled) UntypedV() interface{} { return p.Val }
+func (p *SafeBrowsingDeepScanningEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *SafeBrowsingDeepScanningEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *SafeBrowsingDeepScanningEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1158. DriveFileSyncAvailable
+// ****************************************************************************
+type DriveFileSyncAvailable struct {
+	Stat Status
+	Val  string
+}
+
+func (p *DriveFileSyncAvailable) Name() string          { return "DriveFileSyncAvailable" }
+func (p *DriveFileSyncAvailable) Scope() Scope          { return ScopeUser }
+func (p *DriveFileSyncAvailable) Status() Status        { return p.Stat }
+func (p *DriveFileSyncAvailable) UntypedV() interface{} { return p.Val }
+func (p *DriveFileSyncAvailable) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as string", m)
+	}
+	return v, nil
+}
+func (p *DriveFileSyncAvailable) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DriveFileSyncAvailable) Equal(iface interface{}) bool {
+	v, ok := iface.(string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1159. DeviceSwitchFunctionKeysBehaviorEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DeviceSwitchFunctionKeysBehaviorEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DeviceSwitchFunctionKeysBehaviorEnabled) Name() string {
+	return "DeviceSwitchFunctionKeysBehaviorEnabled"
+}
+func (p *DeviceSwitchFunctionKeysBehaviorEnabled) Scope() Scope          { return ScopeDevice }
+func (p *DeviceSwitchFunctionKeysBehaviorEnabled) Status() Status        { return p.Stat }
+func (p *DeviceSwitchFunctionKeysBehaviorEnabled) UntypedV() interface{} { return p.Val }
+func (p *DeviceSwitchFunctionKeysBehaviorEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DeviceSwitchFunctionKeysBehaviorEnabled) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "device_switch_function_keys_behavior_enabled", "enabled", p.Val)
+}
+func (p *DeviceSwitchFunctionKeysBehaviorEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
 	if !ok {
 		return ok
@@ -26819,8 +27174,6 @@ func newByName(name string) (Policy, error) {
 		return &IdleWarningDelayBattery{}, nil
 	case "DeviceVariationsRestrictParameter":
 		return &DeviceVariationsRestrictParameter{}, nil
-	case "AttestationEnabledForUser":
-		return &AttestationEnabledForUser{}, nil
 	case "DeviceLocalAccountAutoLoginBailoutEnabled":
 		return &DeviceLocalAccountAutoLoginBailoutEnabled{}, nil
 	case "AllowScreenWakeLocks":
@@ -27875,8 +28228,6 @@ func newByName(name string) (Policy, error) {
 		return &ExemptDomainFileTypePairsFromFileTypeDownloadWarnings{}, nil
 	case "FirstPartySetsEnabled":
 		return &FirstPartySetsEnabled{}, nil
-	case "ForceMajorVersionToMinorPositionInUserAgent":
-		return &ForceMajorVersionToMinorPositionInUserAgent{}, nil
 	case "AllHttpAuthSchemesAllowedForOrigins":
 		return &AllHttpAuthSchemesAllowedForOrigins{}, nil
 	case "DefaultWindowPlacementSetting":
@@ -27911,8 +28262,6 @@ func newByName(name string) (Policy, error) {
 		return &WebSQLAccess{}, nil
 	case "FirstPartySetsOverrides":
 		return &FirstPartySetsOverrides{}, nil
-	case "DownloadBubbleEnabled":
-		return &DownloadBubbleEnabled{}, nil
 	case "DevicePowerAdaptiveChargingEnabled":
 		return &DevicePowerAdaptiveChargingEnabled{}, nil
 	case "GetDisplayMediaSetSelectAllScreensAllowedForUrls":
@@ -28111,8 +28460,8 @@ func newByName(name string) (Policy, error) {
 		return &SafeBrowsingExtensionProtectionAllowed{}, nil
 	case "ShowDisplaySizeScreenEnabled":
 		return &ShowDisplaySizeScreenEnabled{}, nil
-	case "AnonymousSearchEnabled":
-		return &AnonymousSearchEnabled{}, nil
+	case "EssentialSearchEnabled":
+		return &EssentialSearchEnabled{}, nil
 	case "LegacyTechReportAllowlist":
 		return &LegacyTechReportAllowlist{}, nil
 	case "ReportAppInventory":
@@ -28181,14 +28530,42 @@ func newByName(name string) (Policy, error) {
 		return &BruschettaInstallerConfiguration{}, nil
 	case "ForcePermissionPolicyUnloadDefaultEnabled":
 		return &ForcePermissionPolicyUnloadDefaultEnabled{}, nil
-	case "ReportWebsiteActivity":
-		return &ReportWebsiteActivity{}, nil
-	case "ReportWebsiteUsage":
-		return &ReportWebsiteUsage{}, nil
-	case "ReportWebsiteUsageCollectionRateMs":
-		return &ReportWebsiteUsageCollectionRateMs{}, nil
+	case "ReportWebsiteActivityAllowlist":
+		return &ReportWebsiteActivityAllowlist{}, nil
+	case "ReportWebsiteTelemetryAllowlist":
+		return &ReportWebsiteTelemetryAllowlist{}, nil
+	case "ReportWebsiteTelemetryCollectionRateMs":
+		return &ReportWebsiteTelemetryCollectionRateMs{}, nil
 	case "SafeBrowsingSurveysEnabled":
 		return &SafeBrowsingSurveysEnabled{}, nil
+	case "BlockTruncatedCookies":
+		return &BlockTruncatedCookies{}, nil
+	case "ReportWebsiteTelemetry":
+		return &ReportWebsiteTelemetry{}, nil
+	case "CompressionDictionaryTransportEnabled":
+		return &CompressionDictionaryTransportEnabled{}, nil
+	case "MicrosoftOfficeCloudUpload":
+		return &MicrosoftOfficeCloudUpload{}, nil
+	case "GoogleWorkspaceCloudUpload":
+		return &GoogleWorkspaceCloudUpload{}, nil
+	case "ShortcutCustomizationAllowed":
+		return &ShortcutCustomizationAllowed{}, nil
+	case "MicrosoftOneDriveMount":
+		return &MicrosoftOneDriveMount{}, nil
+	case "ExtensionOAuthRedirectUrls":
+		return &ExtensionOAuthRedirectUrls{}, nil
+	case "QuickOfficeForceFileDownloadEnabled":
+		return &QuickOfficeForceFileDownloadEnabled{}, nil
+	case "FullRestoreMode":
+		return &FullRestoreMode{}, nil
+	case "MicrosoftOneDriveAccountRestriction":
+		return &MicrosoftOneDriveAccountRestriction{}, nil
+	case "SafeBrowsingDeepScanningEnabled":
+		return &SafeBrowsingDeepScanningEnabled{}, nil
+	case "DriveFileSyncAvailable":
+		return &DriveFileSyncAvailable{}, nil
+	case "DeviceSwitchFunctionKeysBehaviorEnabled":
+		return &DeviceSwitchFunctionKeysBehaviorEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
@@ -28197,44 +28574,6 @@ func newByName(name string) (Policy, error) {
 // ****************************************************************************
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
-
-type RefTimeUsageLimitEntry struct {
-	LastUpdatedMillis string `json:"last_updated_millis"`
-	UsageQuotaMins    int    `json:"usage_quota_mins"`
-}
-
-type RefTime struct {
-	Hour   int `json:"hour"`
-	Minute int `json:"minute"`
-}
-
-type RefConfig struct {
-	AccessCodeTtl       int    `json:"access_code_ttl"`
-	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
-	SharedSecret        string `json:"shared_secret"`
-}
-
-type RefDayPercentagePair struct {
-	Days       int `json:"days"`
-	Percentage int `json:"percentage"`
-}
-
-type RefDisallowedTimeInterval struct {
-	DayOfWeek string `json:"day_of_week"`
-	Hours     int    `json:"hours"`
-	Minutes   int    `json:"minutes"`
-}
-
-type RefDeviceLoginScreenPowerSettings struct {
-	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
-	IdleAction string                                   `json:"IdleAction"`
-}
-
-type RefDeviceLoginScreenPowerSettingsDelays struct {
-	Idle      int `json:"Idle"`
-	ScreenDim int `json:"ScreenDim"`
-	ScreenOff int `json:"ScreenOff"`
-}
 
 type RefPowerManagementDelays struct {
 	Delays     *RefPowerManagementDelaysDelays `json:"Delays"`
@@ -28263,26 +28602,9 @@ type RefWeeklyTime struct {
 	Time      int    `json:"time"`
 }
 
-type RefUsbDeviceId struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
-}
-
-type RefUsbDeviceIdInclusive struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
-}
-
 type RefDomainFiletypePair struct {
 	Domains       []string `json:"domains,omitempty"`
 	FileExtension string   `json:"file_extension"`
-}
-
-type RefBookmarkType struct {
-	Children     []*RefBookmarkType `json:"children,omitempty"`
-	Name         string             `json:"name"`
-	ToplevelName string             `json:"toplevel_name"`
-	Url          string             `json:"url"`
 }
 
 type Reffile_transfer_enable_disable_schema struct {
@@ -28301,6 +28623,61 @@ type Reffile_transfer_enable_disable_schemaSourceDestinationListSources struct {
 
 type Reffile_transfer_source_destination_schema struct {
 	FileSystemType string `json:"file_system_type"`
+}
+
+type RefBookmarkType struct {
+	Children     []*RefBookmarkType `json:"children,omitempty"`
+	Name         string             `json:"name"`
+	ToplevelName string             `json:"toplevel_name"`
+	Url          string             `json:"url"`
+}
+
+type RefUsbDeviceId struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
+}
+
+type RefUsbDeviceIdInclusive struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
+}
+
+type RefTimeUsageLimitEntry struct {
+	LastUpdatedMillis string `json:"last_updated_millis"`
+	UsageQuotaMins    int    `json:"usage_quota_mins"`
+}
+
+type RefTime struct {
+	Hour   int `json:"hour"`
+	Minute int `json:"minute"`
+}
+
+type RefConfig struct {
+	AccessCodeTtl       int    `json:"access_code_ttl"`
+	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
+	SharedSecret        string `json:"shared_secret"`
+}
+
+type RefDisallowedTimeInterval struct {
+	DayOfWeek string `json:"day_of_week"`
+	Hours     int    `json:"hours"`
+	Minutes   int    `json:"minutes"`
+}
+
+type RefDayPercentagePair struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
+}
+
+type RefDeviceLoginScreenPowerSettings struct {
+	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
+	IdleAction string                                   `json:"IdleAction"`
+}
+
+type RefDeviceLoginScreenPowerSettingsDelays struct {
+	Idle      int `json:"Idle"`
+	ScreenDim int `json:"ScreenDim"`
+	ScreenOff int `json:"ScreenOff"`
 }
 
 // ****************************************************************************
