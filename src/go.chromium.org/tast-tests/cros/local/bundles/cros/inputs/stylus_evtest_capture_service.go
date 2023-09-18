@@ -74,6 +74,14 @@ func (svc *StylusEvtestCaptureService) StartStylusDataCapture(ctx context.Contex
 		return nil, err
 	}
 
+	fileInfo, err := os.Stat(touchLogFilePath)
+	if err != nil {
+		return nil, err
+	}
+	if fileInfo.Size() == 0 {
+		return nil, errors.New("no touch events were logged")
+	}
+
 	return &pb.StylusEvtestCaptureResponse{StylusLogPath: touchLogFilePath}, nil
 }
 
