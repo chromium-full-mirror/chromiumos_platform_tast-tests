@@ -189,9 +189,11 @@ func checkFCMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh 
 	// Remove file if it was downloaded.
 	defer os.Remove(filepath.Join(downloadsPath, "unknown_malware.zip"))
 
-	// Check that scanning was at least initiated within 10s after download.
+	// Check that scanning was at least initiated within 30s after download.
 	// A row with a non-empty left column is added when scanning is initiated.
 	// Once scanning is done, the right column is filled.
+	// Note: This row is added only after fcm has connected, which can take up to 21s
+	// (see CloudBinaryUploadService::RetryFCMConnection). So wait 30s for additional safety.
 	var unusedVariable string
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := dconnSafebrowsing.Eval(ctx, `(async () => {
@@ -205,14 +207,14 @@ func checkFCMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh 
 			return err
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 2 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 2 * time.Second}); err != nil {
 		testing.ContextLog(ctx, "scanning didn't initiate: ", err)
-		// If scanning wasn't initiated within 10s, some initialization probably didn't happen yet.
+		// If scanning wasn't initiated within 30s, some initialization probably didn't happen yet.
 		// Allow to retry it only twice, as the initialization shouldn't take very long.
 		if retryNumber > 1 {
 			return false, errors.Wrap(err, "scanning didn't initiate after the second retry")
 		}
-		return true, errors.Wrap(err, "scanning didn't initiate within 10s")
+		return true, errors.Wrap(err, "scanning didn't initiate within 30s")
 	}
 
 	// Verify verdict.
