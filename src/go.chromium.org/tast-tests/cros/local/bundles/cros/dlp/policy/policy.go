@@ -130,3 +130,32 @@ func ClipboardBlockPolicy(source, destination string) []policy.Policy {
 	},
 	}
 }
+
+// PopulateDLPPolicyBlockClipboardArc returns a clipboard dlp policy blocking clipboard from source to ARC component.
+func PopulateDLPPolicyBlockClipboardArc(source string) []policy.Policy {
+	return []policy.Policy{&policy.DataLeakPreventionRulesList{
+		Val: []*policy.DataLeakPreventionRulesListValue{
+			{
+				Name:        "Disable copy and paste of confidential content from site to ARC",
+				Description: "User should not be able to copy and paste confidential content from site to ARC",
+				Sources: &policy.DataLeakPreventionRulesListValueSources{
+					Urls: []string{
+						source,
+					},
+				},
+				Destinations: &policy.DataLeakPreventionRulesListValueDestinations{
+					Components: []string{
+						"ARC",
+					},
+				},
+				Restrictions: []*policy.DataLeakPreventionRulesListValueRestrictions{
+					{
+						Class: "CLIPBOARD",
+						Level: "BLOCK",
+					},
+				},
+			},
+		},
+	},
+	}
+}
