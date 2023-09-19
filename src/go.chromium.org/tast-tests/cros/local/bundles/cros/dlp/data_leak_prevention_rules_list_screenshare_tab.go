@@ -64,7 +64,7 @@ func init() {
 		}},
 		Params: []testing.Param{{
 			Name:      "ash_blocked",
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "blocked",
