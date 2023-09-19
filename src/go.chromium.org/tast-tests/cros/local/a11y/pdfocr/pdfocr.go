@@ -8,11 +8,14 @@ package pdfocr
 
 import (
 	"context"
+	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
@@ -33,6 +36,8 @@ import (
 
 // Strings used in go.chromium.org/tast-tests/cros/local/bundles/cros/a11y/pdfocr*.go
 const (
+	// ScreenAI DLC ID.
+	ScreenAiDlcID = "screen-ai"
 	// Status node message when PDF OCR finished converting image to text. This
 	// must be synced with `IDS_PDF_OCR_COMPLETED` defined in the Chromium repo.
 	StatusReadyMessage = "This PDF is inaccessible. Text extracted, powered by Google AI"
@@ -74,8 +79,8 @@ const (
 // that clean up the testing environment. EnsureDlc contains a defer function
 // that checks whether the dlcservice state is restored during cleanup.
 type DlcFailureSetUpData struct {
-	TempDlcPath string
-	TDown       *a11y.TearDownHelper
+	BackupDir string
+	TDown     *a11y.TearDownHelper
 }
 
 // SetUpData contains necessary objects for PDF OCR tests and is returned by
@@ -126,48 +131,65 @@ func SetUpDlcFailure(ctx context.Context) (DlcFailureSetUpData, error) {
 		return upstart.EnsureJobRunning(ctx, dlc.JobName)
 	})
 
-	// Force a DLC Install failure by moving the PRELOAD directory to another place.
-	extDirBase, err := ioutil.TempDir("", "")
-	if err != nil {
-		return DlcFailureSetUpData{}, errors.Wrap(err, "failed to create a temp dir")
+	// Force a DLC Install failure by moving the preload path to a backup directory.
+	preloadPath := filepath.Join(dlc.PreloadDir, ScreenAiDlcID)
+	if _, err := os.Stat(preloadPath); errors.Is(err, fs.ErrNotExist) {
+		return setupData, errors.Wrapf(err, "%s doesn't exist", preloadPath)
 	}
-	screenAiDlcID := "screen-ai"
-	preloadPath := filepath.Join(dlc.PreloadDir, screenAiDlcID)
-	tempDlcPath := filepath.Join(extDirBase, screenAiDlcID)
+	// backupDlcPath needs to be a permanent location that is not wiped by test's
+	// setup/teardown; otherwise, it can introduce flakiness to the test. Also,
+	// it needs to be unique and used only by this test setup.
+	backupDir := fmt.Sprintf("/var/cache/%s-backup", ScreenAiDlcID)
+	backupDlcPath := filepath.Join(backupDir, ScreenAiDlcID)
+	if _, err := os.Stat(backupDir); err == nil {
+		// backupDir exists, so it needs to be removed. backupDir will be created
+		// by moveDir() below.
+		os.RemoveAll(backupDir)
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		// Return with errors if os.Stat() failed and raised some errors other than
+		// whether or not backupDir exists.
+		return setupData, errors.Wrapf(err, "os.Stat() on %s raised unexpected errors", backupDir)
+	}
 
-	err = fsutil.CopyDir(preloadPath, tempDlcPath)
-	if err != nil {
-		return DlcFailureSetUpData{}, errors.Wrap(err, "failed to move the screen-ai dlc to a temp directory")
+	// fsutil.CopyDir() expects backupDlcPath to not exist; otherwise, it returns an error.
+	// fsutil.CopyDir() will create backupDlcPath. Use fsutil.CopyDir() instead of moveDir()
+	// as errors from moveDir() may lead to incomplete status of the screen-ai dlc, which can
+	// engender flakiness and errors in subsequent tests. fsutil.CopyDir() is more robust in
+	// that the screen-ai dlc still exists in the preload path even if fsutil.CopyDir() fails.
+	if err := fsutil.CopyDir(preloadPath, backupDlcPath); err != nil {
+		return setupData, errors.Wrapf(err, "failed to move from %s to %s", preloadPath, backupDlcPath)
 	}
-	os.RemoveAll(preloadPath)
-	setupData.TempDlcPath = tempDlcPath
+	if err := os.RemoveAll(preloadPath); err != nil {
+		return setupData, errors.Wrapf(err, "failed to remove %s", preloadPath)
+	}
+	setupData.BackupDir = backupDir
 	setupData.TDown.Append(func() error {
-		return fsutil.CopyDir(tempDlcPath, preloadPath)
+		return moveDir(backupDlcPath, preloadPath)
 	})
 
 	if err := upstart.StartJob(ctx, dlc.JobName); err != nil {
-		return DlcFailureSetUpData{}, errors.Wrap(err, "failed to start dlcservice")
+		return setupData, errors.Wrap(err, "failed to start dlcservice")
 	}
 
 	return setupData, nil
 }
 
-// RefreshDlc refreshes DLC by moving the screen-ai DLC to the correct directory.
-func RefreshDlc(ctx context.Context, tempDlcPath string) error {
+// RefreshDlc refreshes DLC by moving the screen-ai DLC to the preload directory.
+func RefreshDlc(ctx context.Context, backupDir string) error {
 	if err := upstart.StopJob(ctx, dlc.JobName); err != nil {
 		return errors.Wrapf(err, "failed to stop %q", dlc.JobName)
 	}
 
-	// Move the screen-ai dlc from the temp directory to the PRELOAD directory.
-	screenAiDlcID := "screen-ai"
-	preloadPath := filepath.Join(dlc.PreloadDir, screenAiDlcID)
+	// Move the screen-ai dlc from the backup directory to the preload directory.
+	preloadPath := filepath.Join(dlc.PreloadDir, ScreenAiDlcID)
+	backupDlcPath := filepath.Join(backupDir, ScreenAiDlcID)
 
-	if _, err := os.Stat(tempDlcPath); os.IsNotExist(err) {
-		return errors.Wrapf(err, "failed to find %s", tempDlcPath)
+	if _, err := os.Stat(backupDlcPath); errors.Is(err, fs.ErrNotExist) {
+		return errors.Wrapf(err, "failed to find %s", backupDlcPath)
 	}
 
-	if err := fsutil.CopyDir(tempDlcPath, preloadPath); err != nil {
-		return errors.Wrap(err, "failed to move the screen-ai dlc to a temp directory")
+	if err := moveDir(backupDlcPath, preloadPath); err != nil {
+		return errors.Wrapf(err, "failed to move from %s to %s", backupDlcPath, preloadPath)
 	}
 
 	if err := upstart.StartJob(ctx, dlc.JobName); err != nil {
@@ -247,4 +269,87 @@ func ExpectDownloadFailureUtterance(ctx context.Context, sm *tts.SpeechMonitor) 
 	}
 
 	return nil
+}
+
+// moveDir moves a directory from srcDir to dstDir, using fsutil.MoveFile(), and
+// returns retErr if any errors occurred. dstDir must not exist. The mode is
+// preserved. The owner is also preserved if the EUID is 0.
+func moveDir(srcDir, dstDir string) (retErr error) {
+	// Create target dir or return error if already present.
+	srcStat, err := os.Stat(srcDir)
+	if err != nil {
+		retErr = errors.Errorf("failed to stat %s", srcDir)
+		return
+	}
+	if _, err := os.Stat(dstDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(dstDir, srcStat.Mode()); err != nil {
+			retErr = errors.Wrapf(err, "failed to create %s", dstDir)
+			return
+		}
+	} else {
+		retErr = errors.Errorf("target dir %s exists", dstDir)
+		return
+	}
+
+	// Attempt to remove target dir if moving failed.
+	defer func() {
+		if retErr != nil {
+			if err := os.RemoveAll(dstDir); err != nil {
+				retErr = errors.Join(retErr, errors.Wrapf(err, "failed to remove %s", dstDir))
+			}
+		}
+	}()
+
+	// Preserve owner attributes.
+	if os.Geteuid() == 0 {
+		st := srcStat.Sys().(*syscall.Stat_t)
+		if err := os.Chown(dstDir, int(st.Uid), int(st.Gid)); err != nil {
+			retErr = errors.Wrapf(err, "failed to change owner of dir %s", dstDir)
+			return
+		}
+	}
+
+	// Move dir content.
+	entries, err := ioutil.ReadDir(srcDir)
+	if err != nil {
+		retErr = errors.Wrapf(err, "failed to read dir %s", srcDir)
+		return
+	}
+	for _, entry := range entries {
+		srcPath := filepath.Join(srcDir, entry.Name())
+		dstPath := filepath.Join(dstDir, entry.Name())
+		stat, err := os.Stat(srcPath)
+		if err != nil {
+			retErr = errors.Errorf("failed to stat %s", srcPath)
+			return
+		}
+		switch stat.Mode() & os.ModeType {
+		case os.ModeDir:
+			if err := moveDir(srcPath, dstPath); err != nil {
+				retErr = errors.Wrapf(err, "failed to move dir %s", srcPath)
+				return
+			}
+		case os.ModeSymlink:
+			if link, err := os.Readlink(srcPath); err != nil {
+				retErr = errors.Wrapf(err, "failed to read symlink %s", srcPath)
+				return
+			} else if err := os.Symlink(link, dstPath); err != nil {
+				retErr = errors.Wrapf(err, "failed to create symlink %s", dstPath)
+				return
+			}
+		default:
+			if err := fsutil.MoveFile(srcPath, dstPath); err != nil {
+				retErr = errors.Wrapf(err, "failed to move file %s", srcPath)
+				return
+			}
+		}
+	}
+
+	// Remove srcDir after moving dir content.
+	if err := os.RemoveAll(srcDir); err != nil {
+		retErr = errors.Wrapf(err, "failed to remove %s", srcDir)
+		return
+	}
+
+	return
 }

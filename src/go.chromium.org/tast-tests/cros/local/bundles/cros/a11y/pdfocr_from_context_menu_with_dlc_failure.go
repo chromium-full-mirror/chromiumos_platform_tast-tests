@@ -67,6 +67,10 @@ func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) 
 	// Setup the dlc failure testing environment for PDF OCR.
 	data, err := pdfocr.SetUpDlcFailure(ctx)
 	if err != nil {
+		// Revert changes made in `pdfocr.SetUpDlcFailure()`.
+		if err := data.TDown.TearDown(); err != nil {
+			s.Fatal("Failed to tear down PDF OCR dlc failure test: ", err)
+		}
 		s.Fatal("Failed to set up dlc failure environment for PDF OCR: ", err)
 	}
 	var skipDeferForDlcFailure bool
@@ -146,7 +150,7 @@ func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) 
 
 			if subtest.secondDownloadSuccess {
 				// Restore the screen-ai dlc failure.
-				if err := pdfocr.RefreshDlc(ctx, data.TempDlcPath); err != nil {
+				if err := pdfocr.RefreshDlc(ctx, data.BackupDir); err != nil {
 					s.Fatal("Failed to restore the screen-ai dlc: ", err)
 				}
 				skipDeferForDlcFailure = true
