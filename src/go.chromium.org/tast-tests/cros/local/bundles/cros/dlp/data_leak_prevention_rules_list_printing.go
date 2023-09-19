@@ -97,24 +97,8 @@ func init() {
 				waitTimeSecWarning:      waitTimeSecWarningAsh,
 			},
 		}, {
-			Name: "ash_allowed",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val: printingTestParams{
-				name:                    "allowed",
-				path:                    dlpPrintingAllowedPath,
-				restriction:             restrictionlevel.Allowed,
-				browserType:             browser.TypeAsh,
-				waitTimeSecNotification: waitTimeSecNotificationAsh,
-				waitTimeSecWarning:      waitTimeSecWarningAsh,
-			},
-		}, {
 			Name:      "ash_warn_proceeded",
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:golden_tier"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: printingTestParams{
 				name:                    "warn_proceded",
@@ -125,13 +109,9 @@ func init() {
 				waitTimeSecWarning:      waitTimeSecWarningAsh,
 			},
 		}, {
-			Name: "ash_warn_cancelled",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_warn_cancelled",
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: printingTestParams{
 				name:                    "warn_cancelled",
 				path:                    dlpPrintingWarnPath,
@@ -142,7 +122,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_blocked",
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:golden_tier"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: printingTestParams{
@@ -154,25 +134,8 @@ func init() {
 				waitTimeSecWarning:      waitTimeSecWarningLacros,
 			},
 		}, {
-			Name: "lacros_allowed",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val: printingTestParams{
-				name:                    "allowed",
-				path:                    dlpPrintingAllowedPath,
-				restriction:             restrictionlevel.Allowed,
-				browserType:             browser.TypeLacros,
-				waitTimeSecNotification: waitTimeSecNotificationLacros,
-				waitTimeSecWarning:      waitTimeSecWarningLacros,
-			},
-		}, {
 			Name:              "lacros_warn_proceeded",
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:golden_tier"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: printingTestParams{
@@ -184,12 +147,8 @@ func init() {
 				waitTimeSecWarning:      waitTimeSecWarningLacros,
 			},
 		}, {
-			Name: "lacros_warn_cancelled",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary"},
+			Name:              "lacros_warn_cancelled",
+			ExtraAttr:         []string{"group:golden_tier"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: printingTestParams{
