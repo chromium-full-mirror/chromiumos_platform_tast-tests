@@ -28,7 +28,7 @@ var rootSymlinks = [][]string{{"var/run", "/run"}, {"var/lock", "/run/lock"}}
 
 // bindRootDirs contains the paths which will be bind mounted when running a
 // process.
-var bindRootDirs = []string{"bin", "dev", "dev/pts", "etc/group", "etc/passwd", "lib", "lib32", "lib64", "proc", "sbin", "sys", "usr", "usr/local", "usr/local/sbin"}
+var bindRootDirs = []string{"bin", "dev", "dev/pts", "etc/group", "etc/passwd", "etc/ssl", "lib", "lib32", "lib64", "proc", "sbin", "sys", "usr", "usr/local", "usr/local/sbin"}
 
 // bindRootWritableDirs is the subset of bindRootDirs that should be mounted
 // writable.
