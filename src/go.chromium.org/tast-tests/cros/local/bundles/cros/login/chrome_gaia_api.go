@@ -22,13 +22,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks Gaia calls credentials passing API properly",
 		Contacts: []string{
-			"cros-oac@google.com",
-			"bohdanty@google.com",
-			"dkuzmin@google.com",
-			"rrsilva@google.com",
+			"cros-3pidp@google.com",
+			"lmasopust@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
-		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
+		BugComponent: "b:1253671", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",
