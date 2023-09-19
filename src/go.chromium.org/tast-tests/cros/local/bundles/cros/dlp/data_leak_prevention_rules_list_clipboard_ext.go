@@ -22,12 +22,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
-	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
@@ -146,15 +147,6 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 		s.Fatal("Failed to wait for chrome.clipboard API to become available: ", err)
 	}
 
-	info, err := display.GetInternalInfo(ctx, tconn)
-	if err != nil {
-		s.Fatal("No display: ", err)
-	}
-
-	// Display bounds.
-	displayWidth := int(info.Bounds.Width)
-	displayHeight := int(info.Bounds.Height)
-
 	// Check extension access with a restricted site.
 	// See RestrictiveDLPPolicyForClipboard function in policy package for more details.
 	sourceURL := blockedServer.URL + "/text_1.html"
@@ -188,9 +180,10 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 		s.Fatalf("Failed to wait for %q to achieve quiescence: %v", destURL, err)
 	}
 
+	textBoxNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).First()
 	if err := uiauto.Combine("Select tab and press Ctrl+Z",
-		// Select tab for the extension.
-		ui.MouseClickAtLocation(0, coords.Point{X: displayWidth / 2, Y: displayHeight / 2}),
+		ui.WaitUntilExists(textBoxNode.Visible()),
+		ui.LeftClick(textBoxNode),
 		// A custom command to which DLP extension listens and then reads clipboard data.
 		keyboard.AccelAction("Ctrl+Z"))(ctx); err != nil {
 		s.Fatal("Failed to select tab and press Ctrl+Z: ", err)
