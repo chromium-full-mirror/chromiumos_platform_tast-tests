@@ -7,6 +7,7 @@ package lacros
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/trace/github.com/google/perfetto/perfetto_proto"
@@ -103,7 +104,10 @@ func (l *Lacros) Close(ctx context.Context) (retErr error) {
 	// TODO(crbug.com/1311504): There is similar functionality in chrome.ResetState. Integrate these?
 	// TODO(crbug.com/1312306): For some reason, including t.Type == "other" breaks this.
 	ts, err := l.sess.FindTargets(ctx, func(t *target.Info) bool {
-		return t.Type == "page" || t.Type == "app"
+		return t.Type == "app" || (t.Type == "page" &&
+			// Trying to close the tab strip would just produce an
+			// error. It will disappear automatically with the last tab.
+			!strings.HasPrefix(t.URL, "chrome://tab-strip.top-chrome/"))
 	})
 	if err != nil {
 		testing.ContextLogf(ctx, "Last known Lacros state is %s", info.State)
