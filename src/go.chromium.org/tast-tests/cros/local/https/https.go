@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -220,7 +221,7 @@ func CertificateExists(ctx context.Context, cr *chrome.Chrome, br *browser.Brows
 	if err := uiauto.Combine("open correct tab",
 		ui.WaitUntilExists(authorities),
 		ui.DoDefault(authorities),
-		ui.WaitUntilExists(authTabText),
+		ui.WithTimeout(30*time.Second).WaitUntilExists(authTabText),
 	)(ctx); err != nil {
 		return false, errors.Wrap(err, "failed to open authorities tab")
 	}
