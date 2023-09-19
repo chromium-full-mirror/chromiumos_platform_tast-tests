@@ -30,7 +30,7 @@ func init() {
 			"pwa-commercial@google.com",
 			"peletskyi@google.com", // Test author
 		},
-		BugComponent: "b:1311568", // ChromeOS > Software > Commercial (Enterprise) > App Platforms > Coralfish
+		BugComponent: "b:1168200", // Chrome > Isolated Web Apps
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Attr: []string{
 			"group:golden_tier",
