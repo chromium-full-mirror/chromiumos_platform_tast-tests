@@ -84,7 +84,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		options = append(options, chrome.KeepState())
 	}
 
-	options = append(options, chrome.ExtraArgs("--enable-features=OobeGaiaInfoScreen"))
+	options = append(options, chrome.ExtraArgs("--skip-multidevice-screen"))
 	// TODO(b/287862720): Update the test to go through CHOOBE flow and stop disabling the features.
 	options = append(options, chrome.ExtraArgs("--disable-features=OobeChoobe,OobeDisplaySize,OobeTouchpadScrollDirection"))
 
