@@ -36,7 +36,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const content = "Sample text about random things."
+const content = "example.com"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -50,7 +50,7 @@ func init() {
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:hw_agnostic"},
-		Data:         []string{"text_1.html", "text_2.html", "editable_text_box.html"},
+		Data:         []string{"draggable_link.html", "text_2.html", "editable_text_box.html"},
 		Params: []testing.Param{{
 			Name:      "ash_blocked",
 			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
@@ -79,7 +79,7 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 
 	blockedServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer blockedServer.Close()
-	srcURL := blockedServer.URL + "/text_1.html"
+	srcURL := blockedServer.URL + "/draggable_link.html"
 
 	dstServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer dstServer.Close()
@@ -181,10 +181,6 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 	// Activate the drag source window.
 	if err := w1.ActivateWindow(ctx, tconn); err != nil {
 		s.Fatalf("Failed to activate the %s window: %v", srcURL, err)
-	}
-
-	if err = keyboard.Accel(ctx, "Ctrl+A"); err != nil {
-		s.Fatal("Failed to press Ctrl+A to select all content: ", err)
 	}
 
 	s.Log("Draging and dropping content")
