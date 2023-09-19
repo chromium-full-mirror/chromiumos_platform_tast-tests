@@ -73,7 +73,7 @@ func init() {
 			},
 		}, {
 			Name:      "ash_warn_proceeded",
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "warn_proceeded",
