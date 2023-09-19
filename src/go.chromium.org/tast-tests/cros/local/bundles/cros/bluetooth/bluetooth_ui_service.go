@@ -142,7 +142,7 @@ func (bui *BtUIService) CloseNotifications(ctx context.Context, empty *emptypb.E
 // ConfirmSavedDevicesState will attempt to confirm the state of Saved Devices
 // on the Saved Devices subpage. The array of devices should be in the expected
 // order. Fails if the list of Saved Devices doesn't match the one provided.
-func (bui *BtUIService) ConfirmSavedDevicesState(ctx context.Context, request *pb.ConfirmSavedDevicesStateRequest) (*emptypb.Empty, error) {
+func (bui *BtUIService) ConfirmSavedDevicesState(ctx context.Context, request *pb.ConfirmSavedDevicesStateRequest) (_ *emptypb.Empty, retErr error) {
 	cr := bui.sharedObject.Chrome
 	if cr == nil {
 		return nil, errors.New("Chrome has not been started")
@@ -152,10 +152,16 @@ func (bui *BtUIService) ConfirmSavedDevicesState(ctx context.Context, request *p
 		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	app, err := ossettings.NavigateToBluetoothSavedDevicesSubpage(ctx, tconn, cr)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to Bluetooth Saved Devices subpage")
 	}
+	defer app.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "confirm_saved_devices_state")
 
 	testing.ContextLog(ctx, "Opened Bluetooth Saved Devices subpage")
 
@@ -176,15 +182,12 @@ func (bui *BtUIService) ConfirmSavedDevicesState(ctx context.Context, request *p
 		}
 	}
 
-	// Only close Settings if there are no errors. This allows us to see Settings in the screenshot on failure.
-	app.Close(ctx)
-
 	testing.ContextLogf(ctx, "Confirmed the state of the Saved Devices subpage with %d devices", len(request.DeviceNames))
 	return &emptypb.Empty{}, nil
 }
 
 // RemoveAllSavedDevices will attempt to remove all the devices from the Saved Devices subpage.
-func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *emptypb.Empty) (*emptypb.Empty, error) {
+func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *emptypb.Empty) (_ *emptypb.Empty, retErr error) {
 	cr := bui.sharedObject.Chrome
 	if cr == nil {
 		return nil, errors.New("Chrome has not been started")
@@ -194,10 +197,16 @@ func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *empt
 		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	app, err := ossettings.NavigateToBluetoothSavedDevicesSubpage(ctx, tconn, cr)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to Bluetooth Saved Devices subpage")
 	}
+	defer app.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "remove_all_saved_devices")
 
 	testing.ContextLog(ctx, "Opened Bluetooth Saved Devices subpage")
 
@@ -207,9 +216,6 @@ func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *empt
 	// UI, so we poll for devices. If there are no saved devices, return early.
 	opts := testing.PollOptions{Timeout: 5 * time.Second, Interval: 300 * time.Millisecond}
 	if err := ui.WithPollOpts(opts).WaitUntilExists(ossettings.SavedDeviceRows.First())(ctx); err != nil {
-		// Only close Settings if there are no errors. This allows us to see Settings in the screenshot on failure.
-		app.Close(ctx)
-
 		testing.ContextLog(ctx, "Saved Devices subpage contains no devices")
 		return &emptypb.Empty{}, nil
 	}
@@ -243,9 +249,6 @@ func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *empt
 
 		count++
 	}
-
-	// Only close Settings if there are no errors. This allows us to see Settings in the screenshot on failure.
-	app.Close(ctx)
 
 	testing.ContextLogf(ctx, "Removed %d of %d saved devices from Saved Devices subpage", count, len(devices))
 	return &emptypb.Empty{}, nil
@@ -334,7 +337,7 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 // ForgetBluetoothDevice will attempt to navigate to the Device Details subpage
 // for the device specified in the request, then click "Forget" to forget the
 // device.
-func (bui *BtUIService) ForgetBluetoothDevice(ctx context.Context, request *pb.ForgetBluetoothDeviceRequest) (*emptypb.Empty, error) {
+func (bui *BtUIService) ForgetBluetoothDevice(ctx context.Context, request *pb.ForgetBluetoothDeviceRequest) (_ *emptypb.Empty, retErr error) {
 	cr := bui.sharedObject.Chrome
 	if cr == nil {
 		return nil, errors.New("Chrome has not been started")
@@ -344,10 +347,16 @@ func (bui *BtUIService) ForgetBluetoothDevice(ctx context.Context, request *pb.F
 		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	app, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, tconn, request.DeviceName)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to navigate to Bluetooth Device Details subpage for device %s", request.DeviceName)
 	}
+	defer app.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "forget_bt_device")
 
 	testing.ContextLogf(ctx, "Opened Bluetooth Device Details subpage for device %s", request.DeviceName)
 
@@ -361,9 +370,6 @@ func (bui *BtUIService) ForgetBluetoothDevice(ctx context.Context, request *pb.F
 	)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to forget device from Bluetooth Device Details subpage")
 	}
-
-	// Only close Settings if there are no errors. This allows us to see Settings in the screenshot on failure.
-	app.Close(ctx)
 
 	testing.ContextLogf(ctx, "Successfully forgot device %s", request.DeviceName)
 	return &emptypb.Empty{}, nil
