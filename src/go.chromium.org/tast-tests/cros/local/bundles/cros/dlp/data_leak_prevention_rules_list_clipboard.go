@@ -86,7 +86,7 @@ func init() {
 			},
 		}, {
 			Name:      "ash_warn_proceeded",
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: clipboardTestParams{
 				name:        "warn_proceded",
