@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -31,6 +32,12 @@ func init() {
 		PostTestTimeout: 5 * time.Second,
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCrosHealthdFixture(),
+		// Reboot the DUT before starting the healthd fixture to ensure that
+		// sufficient resources are available by resetting to clean state. For
+		// example, the cpu_stress and cpu_cache routine requires 628 MiB memory
+		// before running, which may not be available depending on what tests were
+		// ran before the healthd fixture.
+		Parent: fixture.CrosHealthdRebootDUT,
 	})
 }
 
