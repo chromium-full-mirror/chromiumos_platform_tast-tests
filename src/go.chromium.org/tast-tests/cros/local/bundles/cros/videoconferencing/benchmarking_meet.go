@@ -87,20 +87,6 @@ func init() {
 				},
 			},
 			{
-				Name: "platform_blur_720p_low_segm",
-				Val: meetParams{
-					platformBlur: true,
-					modelType:    effects.KFull,
-				},
-			},
-			{
-				Name: "platform_blur_720p_effnet256",
-				Val: meetParams{
-					platformBlur: true,
-					modelType:    effects.KEffnet256,
-				},
-			},
-			{
 				Name: "platform_blur_720p_effnet384",
 				Val: meetParams{
 					platformBlur: true,
@@ -121,13 +107,6 @@ func init() {
 				},
 			},
 			{
-				Name: "platform_relight_720p_low_segm",
-				Val: meetParams{
-					platformRelight: true,
-					modelType:       effects.KFull,
-				},
-			},
-			{
 				Name: "app_blur_relight_720p",
 				Val: meetParams{
 					appBlur:    true,
@@ -140,22 +119,6 @@ func init() {
 					platformBlur:    true,
 					platformRelight: true,
 					modelType:       effects.KAuto,
-				},
-			},
-			{
-				Name: "platform_blur_relight_720p_low_segm",
-				Val: meetParams{
-					platformBlur:    true,
-					platformRelight: true,
-					modelType:       effects.KFull,
-				},
-			},
-			{
-				Name: "platform_blur_relight_720p_effnet256",
-				Val: meetParams{
-					platformBlur:    true,
-					platformRelight: true,
-					modelType:       effects.KEffnet256,
 				},
 			},
 			{
@@ -202,44 +165,6 @@ func init() {
 					platformRelight: true,
 					modelType:       effects.KAuto,
 					botCount:        3,
-				},
-			},
-			{
-				Name: "no_effects_720p_10ppl",
-				Val: meetParams{
-					botCount: 9,
-				},
-			},
-			{
-				Name: "app_blur_720p_10ppl",
-				Val: meetParams{
-					appBlur:  true,
-					botCount: 9,
-				},
-			},
-			{
-				Name: "platform_relight_720p_10ppl",
-				Val: meetParams{
-					platformRelight: true,
-					modelType:       effects.KAuto,
-					botCount:        9,
-				},
-			},
-			{
-				Name: "platform_blur_720p_10ppl",
-				Val: meetParams{
-					platformBlur: true,
-					modelType:    effects.KAuto,
-					botCount:     9,
-				},
-			},
-			{
-				Name: "platform_blur_relight_720p_10ppl",
-				Val: meetParams{
-					platformBlur:    true,
-					platformRelight: true,
-					modelType:       effects.KAuto,
-					botCount:        9,
 				},
 			},
 			// Audio is explicitly muted for all live caption tests, as
