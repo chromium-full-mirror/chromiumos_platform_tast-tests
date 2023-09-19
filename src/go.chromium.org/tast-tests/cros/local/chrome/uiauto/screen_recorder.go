@@ -195,15 +195,15 @@ func NewTabRecorder(ctx context.Context, tconn *chrome.TestConn, tabIndex int) (
 	}
 
 	ui := New(tconn)
-	shareScreenDialog := nodewith.Name("Choose what to share").HasClass("DesktopMediaPickerDialogView")
+	shareScreenDialog := nodewith.Name("Choose what to share").HasClass("DesktopMediaPickerDialogView").First()
 	shareChromeTabOption := nodewith.NameRegex(regexp.MustCompile("(Chromium|Chrome) Tab")).Role(role.Tab).Ancestor(shareScreenDialog)
 	tabButton := nodewith.Role(role.Row).Ancestor(shareScreenDialog).Nth(tabIndex)
 	shareButton := nodewith.Name("Share").Role(role.Button).Ancestor(shareScreenDialog).Focusable()
 
 	if err := Combine("start screen recorder through ui",
-		ui.LeftClick(shareChromeTabOption),
-		ui.WithInterval(500*time.Millisecond).LeftClickUntil(tabButton, ui.Exists(shareButton)),
-		ui.LeftClick(shareButton),
+		ui.WithInterval(500*time.Millisecond).DoDefaultUntil(shareChromeTabOption, ui.Exists(tabButton)),
+		ui.WithInterval(500*time.Millisecond).DoDefaultUntil(tabButton, ui.Exists(shareButton)),
+		ui.DoDefaultUntil(shareButton, ui.WithTimeout(time.Second).WaitUntilGone(shareButton)),
 	)(ctx); err != nil {
 		return nil, err
 	}
