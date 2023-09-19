@@ -20,37 +20,12 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	pb "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-)
-
-// Define a type for each metric. Metric "type" will be added as a prefix before the metric name.
-// This is to help categorize each metric in power_log.json/.html, which can also be used as a
-// filter on power_dashboard.
-const (
-	cpuIdleMetricType          = "cpuidle."
-	cpuUsageMetricType         = "cpu_usage."
-	fanMetricType              = "fan."
-	fpsMetricType              = "fps."
-	generalPerfMetricType      = "perf."
-	gpuFreqMetricType          = "gpufreq_wavg."
-	gpuUsageMetricType         = "gpu_usage."
-	packageCstatesMetricType   = "cpupkg."
-	batterySOCMetricType       = "battery."
-	histogramMetricType        = "histogram."
-	powerRelatedMetricType     = "power."
-	thermalMetricType          = "temperature."
-	webrtcBitrateMetricType    = "webrtc_bitrate."
-	webrtcFpsMetricType        = "webrtc_fps."
-	webrtcLimitationMetricType = "webrtc_limitation."
-	webrtcPixelMetricType      = "webrtc_pixel."
-	webrtcTimeMetricType       = "webrtc_time."
-	webrtcQPMetricType         = "webrtc_qp."
-	zramMetricType             = "zram."
-	memoryMetricType           = "memory."
 )
 
 // Only keys inside validMetricTypeMap are accepted metric types.
@@ -77,30 +52,6 @@ var validMetricTypeMap = map[string]bool{
 	"memory":            true,
 	"other":             true,
 }
-
-// Units for each metric type.
-const (
-	cpuIdleMetricTypeUnit          = "percent"
-	cpuUsageMetricTypeUnit         = "percent"
-	fanMetricTypeUnit              = "rpm"
-	fpsMetricTypeUnit              = "fps"
-	generalPerfMetricTypeUnit      = "point"
-	gpuFreqMetricTypeUnit          = "megahertz"
-	gpuUsageUtilizationTypeUnit    = "percent"
-	gpuUsageMemoryTypeUnit         = "kiB"
-	histogramLatencyMetricTypeUnit = "us"
-	packageCstatesMetricTypeUnit   = "percent"
-	powerRelatedMetricTypeUnit     = "W"
-	thermalMetricTypeUnit          = "celsius"
-	webrtcBitrateMetricTypeUnit    = "kbps"
-	webrtcFpsMetricTypeUnit        = "fps"
-	webrtcLimitationMetricTypeUnit = "percent"
-	webrtcPixelMetricTypeUnit      = "pixel"
-	webrtcTimeMetricTypeUnit       = "ms"
-	webrtcQPMetricTypeUnit         = "point"
-	zramMetricTypeUnit             = "requests"
-	memoryMetricTypeUnit           = "kiB"
-)
 
 // Power log file name.
 const powerLogFileName = "power_log"
@@ -164,11 +115,6 @@ const htmlChartStr = `
 </body>
 </html>
 `
-
-const (
-	minutesBatteryLifeKey       = "minutes_battery_life"
-	minutesBatteryLifeTestedKey = "minutes_battery_life_tested"
-)
 
 // ConvertPowerPerfValue converts raw performance metric values to power dictionary.
 func ConvertPowerPerfValue(ctx context.Context, values *perf.Values, metrics *pb.OneTimeMetrics) (map[string]interface{}, error) {
@@ -265,7 +211,7 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values, metrics *pb
 	}
 
 	var totalDurationSec float64
-	if value, ok := innerAverageMap[minutesBatteryLifeTestedKey]; ok {
+	if value, ok := innerAverageMap[cp.MinutesBatteryLifeTestedKey]; ok {
 		totalDurationSec = value * 60
 	}
 	if value, ok := innerDataMap["t"]; ok {
@@ -279,25 +225,25 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values, metrics *pb
 
 	minutesBatteryLife := getMinutesBatteryLife(ctx, innerDataMap, innerAverageMap, totalDurationSec, metrics)
 	values.Set(perf.Metric{
-		Name:      generalPerfMetricType + minutesBatteryLifeKey,
+		Name:      cp.GeneralPerfMetricType + cp.MinutesBatteryLifeKey,
 		Unit:      "minute",
 		Direction: perf.BiggerIsBetter,
 	}, minutesBatteryLife)
-	innerDataMap[minutesBatteryLifeKey] = []float64{minutesBatteryLife}
-	innerAverageMap[minutesBatteryLifeKey] = minutesBatteryLife
-	typeMap[minutesBatteryLifeKey] = "perf"
-	unitMap[minutesBatteryLifeKey] = "minute"
+	innerDataMap[cp.MinutesBatteryLifeKey] = []float64{minutesBatteryLife}
+	innerAverageMap[cp.MinutesBatteryLifeKey] = minutesBatteryLife
+	typeMap[cp.MinutesBatteryLifeKey] = "perf"
+	unitMap[cp.MinutesBatteryLifeKey] = "minute"
 
-	typeMap[minutesBatteryLifeTestedKey] = "perf"
+	typeMap[cp.MinutesBatteryLifeTestedKey] = "perf"
 
 	// Check if package-0 is collected first because `rapl` is not supported on all platforms.
-	if _, ok := innerDataMap[package0]; ok && len(innerDataMap["system"]) == len(innerDataMap[package0]) {
+	if _, ok := innerDataMap[cp.Package0]; ok && len(innerDataMap["system"]) == len(innerDataMap[cp.Package0]) {
 		innerDataMap["non_SoC"], innerAverageMap["non_SoC"] = getNonSocSubsystemPowerData(ctx, innerDataMap, innerAverageMap)
 		typeMap["non_SoC"] = "power"
-		unitMap["non_SoC"] = powerRelatedMetricTypeUnit
+		unitMap["non_SoC"] = cp.PowerRelatedMetricTypeUnit
 		values.Append(perf.Metric{
-			Name:     powerRelatedMetricType + "non_SoC",
-			Unit:     powerRelatedMetricTypeUnit,
+			Name:     cp.PowerRelatedMetricType + "non_SoC",
+			Unit:     cp.PowerRelatedMetricTypeUnit,
 			Multiple: true,
 		}, innerDataMap["non_SoC"]...)
 	}
@@ -382,7 +328,7 @@ func getNonSocSubsystemPowerData(ctx context.Context,
 	// System power data.
 	systemPowerNumbers := innerDataMap["system"]
 	// SoC power data.
-	SocPowerNumbers := innerDataMap[package0]
+	SocPowerNumbers := innerDataMap[cp.Package0]
 	// All subsystem(nonSoc) power data.
 	nonSoCPowerNumbers := make([]float64, 0)
 
@@ -390,7 +336,7 @@ func getNonSocSubsystemPowerData(ctx context.Context,
 		nonSoCPowerNumbers = append(nonSoCPowerNumbers, systemPowerNumbers[index]-SocPowerNumbers[index])
 	}
 
-	nonSoCPowerAverage := innerAverageMap["system"] - innerAverageMap[package0]
+	nonSoCPowerAverage := innerAverageMap["system"] - innerAverageMap[cp.Package0]
 	return nonSoCPowerNumbers, nonSoCPowerAverage
 }
 
@@ -405,12 +351,12 @@ func updatePowerLogPerf(ctx context.Context, dataMap map[string][]float64, avera
 	dataMap[nonlinearKey] = []float64{metrics.BacklightNonlinearPercent}
 	averageMap[nonlinearKey] = metrics.BacklightNonlinearPercent
 	typeMap[nonlinearKey] = "perf"
-	unitMap[nonlinearKey] = generalPerfMetricTypeUnit
+	unitMap[nonlinearKey] = cp.GeneralPerfMetricTypeUnit
 
 	dataMap[linearKey] = []float64{metrics.BacklightLinearPercent}
 	averageMap[linearKey] = metrics.BacklightLinearPercent
 	typeMap[linearKey] = "perf"
-	unitMap[linearKey] = generalPerfMetricTypeUnit
+	unitMap[linearKey] = cp.GeneralPerfMetricTypeUnit
 }
 
 // CreatePowerLogDict creates the power log dictionary from power dict.

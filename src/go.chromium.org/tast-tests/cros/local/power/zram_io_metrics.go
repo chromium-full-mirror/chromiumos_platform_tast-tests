@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -103,24 +104,24 @@ func (z *ZramIOMetrics) Setup(ctx context.Context, prefix, intervalName string) 
 	if z.hasZram {
 		// Number of read I/Os processed.
 		z.metrics["read"] = perf.Metric{
-			Name:      prefix + zramMetricType + "zram_read_IOs",
-			Unit:      zramMetricTypeUnit,
+			Name:      prefix + cp.ZramMetricType + "zram_read_IOs",
+			Unit:      cp.ZramMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
 			Interval:  intervalName,
 		}
 		// Number of write I/Os processed.
 		z.metrics["write"] = perf.Metric{
-			Name:      prefix + zramMetricType + "zram_write_IOs",
-			Unit:      zramMetricTypeUnit,
+			Name:      prefix + cp.ZramMetricType + "zram_write_IOs",
+			Unit:      cp.ZramMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
 			Interval:  intervalName,
 		}
 		// Number of I/Os in flight.
 		z.metrics["flight"] = perf.Metric{
-			Name:      prefix + zramMetricType + "zram_IOs_in_flight",
-			Unit:      zramMetricTypeUnit,
+			Name:      prefix + cp.ZramMetricType + "zram_IOs_in_flight",
+			Unit:      cp.ZramMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
 			Interval:  intervalName,

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 
 	"go.chromium.org/tast/core/testing"
@@ -64,8 +65,8 @@ func (v *VideoFpsMetrics) Start(ctx context.Context) error {
 	v.names = videoNames
 	for _, videoName := range videoNames {
 		v.metrics[videoName] = perf.Metric{
-			Name:      v.prefix + fpsMetricType + videoName,
-			Unit:      fpsMetricTypeUnit,
+			Name:      v.prefix + cp.FPSMetricType + videoName,
+			Unit:      cp.FPSMetricTypeUnit,
 			Direction: perf.BiggerIsBetter,
 			Multiple:  true,
 			Interval:  v.intervalName,

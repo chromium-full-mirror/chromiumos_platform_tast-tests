@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -77,8 +78,8 @@ func (cs *PackageCStatesMetrics) Start(ctx context.Context) error {
 	}
 	for name := range stats {
 		cs.metrics[name] = perf.Metric{
-			Name:      cs.prefix + packageCstatesMetricType + "package-" + name,
-			Unit:      packageCstatesMetricTypeUnit,
+			Name:      cs.prefix + cp.PackageCstatesMetricType + "package-" + name,
+			Unit:      cp.PackageCstatesMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
 			Interval:  cs.intervalName}

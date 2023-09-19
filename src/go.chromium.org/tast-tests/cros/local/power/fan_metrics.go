@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -75,8 +76,8 @@ func (f *FanMetrics) Setup(ctx context.Context, prefix, intervalName string) err
 	f.fanNum = fanNum
 	for i := 0; i < fanNum; i++ {
 		newFanMetric := perf.Metric{
-			Name:      prefix + fanMetricType + "fan_" + strconv.Itoa(i),
-			Unit:      fanMetricTypeUnit,
+			Name:      prefix + cp.FanMetricType + "fan_" + strconv.Itoa(i),
+			Unit:      cp.FanMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
 			Interval:  intervalName,

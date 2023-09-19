@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 
 	"go.chromium.org/tast/core/errors"
@@ -35,99 +36,99 @@ func NewWebRTCMetrics(conn *chrome.Conn) *WebRTCMetrics {
 // Setup creates metrics.
 func (v *WebRTCMetrics) Setup(ctx context.Context, prefix, intervalName string) error {
 	v.metrics["bitrate"] = perf.Metric{
-		Name:      prefix + webrtcBitrateMetricType + "bitrate",
-		Unit:      webrtcBitrateMetricTypeUnit,
+		Name:      prefix + cp.WebrtcBitrateMetricType + "bitrate",
+		Unit:      cp.WebrtcBitrateMetricTypeUnit,
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,
 	}
 	v.metrics["frame_encode_time"] = perf.Metric{
-		Name:      prefix + webrtcTimeMetricType + "frame_encode_time",
-		Unit:      webrtcTimeMetricTypeUnit,
+		Name:      prefix + cp.WebrtcTimeMetricType + "frame_encode_time",
+		Unit:      cp.WebrtcTimeMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,
 	}
 	v.metrics["packet_send_delay"] = perf.Metric{
-		Name:      prefix + webrtcTimeMetricType + "packet_send_delay",
-		Unit:      webrtcTimeMetricTypeUnit,
+		Name:      prefix + cp.WebrtcTimeMetricType + "packet_send_delay",
+		Unit:      cp.WebrtcTimeMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,
 	}
 	v.metrics["out_fps"] = perf.Metric{
-		Name:      prefix + webrtcFpsMetricType + "out_fps",
-		Unit:      webrtcFpsMetricTypeUnit,
+		Name:      prefix + cp.WebrtcFpsMetricType + "out_fps",
+		Unit:      cp.WebrtcFpsMetricTypeUnit,
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,
 	}
 	v.metrics["src_fps"] = perf.Metric{
-		Name:      prefix + webrtcFpsMetricType + "src_fps",
-		Unit:      webrtcFpsMetricTypeUnit,
+		Name:      prefix + cp.WebrtcFpsMetricType + "src_fps",
+		Unit:      cp.WebrtcFpsMetricTypeUnit,
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,
 	}
 	v.metrics["out_width"] = perf.Metric{
-		Name:      prefix + webrtcPixelMetricType + "out_width",
-		Unit:      webrtcPixelMetricTypeUnit,
+		Name:      prefix + cp.WebrtcPixelMetricType + "out_width",
+		Unit:      cp.WebrtcPixelMetricTypeUnit,
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,
 	}
 	v.metrics["out_height"] = perf.Metric{
-		Name:      prefix + webrtcPixelMetricType + "out_height",
-		Unit:      webrtcPixelMetricTypeUnit,
+		Name:      prefix + cp.WebrtcPixelMetricType + "out_height",
+		Unit:      cp.WebrtcPixelMetricTypeUnit,
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,
 	}
 	v.metrics["src_width"] = perf.Metric{
-		Name:      prefix + webrtcPixelMetricType + "src_width",
-		Unit:      webrtcPixelMetricTypeUnit,
+		Name:      prefix + cp.WebrtcPixelMetricType + "src_width",
+		Unit:      cp.WebrtcPixelMetricTypeUnit,
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,
 	}
 	v.metrics["src_height"] = perf.Metric{
-		Name:      prefix + webrtcPixelMetricType + "src_height",
-		Unit:      webrtcPixelMetricTypeUnit,
+		Name:      prefix + cp.WebrtcPixelMetricType + "src_height",
+		Unit:      cp.WebrtcPixelMetricTypeUnit,
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,
 	}
 	v.metrics["qp"] = perf.Metric{
-		Name:      prefix + webrtcQPMetricType + "qp",
-		Unit:      webrtcQPMetricTypeUnit,
+		Name:      prefix + cp.WebrtcQPMetricType + "qp",
+		Unit:      cp.WebrtcQPMetricTypeUnit,
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,
 	}
 	v.metrics["limitation_none"] = perf.Metric{
-		Name:      prefix + webrtcLimitationMetricType + "limitation_none",
-		Unit:      webrtcLimitationMetricTypeUnit,
+		Name:      prefix + cp.WebrtcLimitationMetricType + "limitation_none",
+		Unit:      cp.WebrtcLimitationMetricTypeUnit,
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,
 	}
 	v.metrics["limitation_other"] = perf.Metric{
-		Name:      prefix + webrtcLimitationMetricType + "limitation_other",
-		Unit:      webrtcLimitationMetricTypeUnit,
+		Name:      prefix + cp.WebrtcLimitationMetricType + "limitation_other",
+		Unit:      cp.WebrtcLimitationMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,
 	}
 	v.metrics["limitation_cpu"] = perf.Metric{
-		Name:      prefix + webrtcLimitationMetricType + "limitation_cpu",
-		Unit:      webrtcLimitationMetricTypeUnit,
+		Name:      prefix + cp.WebrtcLimitationMetricType + "limitation_cpu",
+		Unit:      cp.WebrtcLimitationMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,
 	}
 	v.metrics["limitation_bandwidth"] = perf.Metric{
-		Name:      prefix + webrtcLimitationMetricType + "limitation_bandwidth",
-		Unit:      webrtcLimitationMetricTypeUnit,
+		Name:      prefix + cp.WebrtcLimitationMetricType + "limitation_bandwidth",
+		Unit:      cp.WebrtcLimitationMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName,

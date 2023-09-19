@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -101,8 +102,8 @@ func (b *SysfsThermalMetrics) Setup(ctx context.Context, prefix, intervalName st
 		tempFile := path.Join(sensorPath, "temp")
 		if _, err := readInt64(ctx, tempFile); err == nil {
 			perfMetric := perf.Metric{
-				Name:      prefix + thermalMetricType + metricName,
-				Unit:      thermalMetricTypeUnit,
+				Name:      prefix + cp.ThermalMetricType + metricName,
+				Unit:      cp.ThermalMetricTypeUnit,
 				Direction: perf.SmallerIsBetter,
 				Multiple:  true,
 				Interval:  intervalName}

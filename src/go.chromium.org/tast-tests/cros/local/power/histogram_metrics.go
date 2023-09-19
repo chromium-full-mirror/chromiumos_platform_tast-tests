@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 
@@ -34,8 +35,8 @@ type histogramMetadata struct {
 
 // A map of supported histogram name to {unit, direction}
 var validHistogramsMap = map[string]histogramMetadata{
-	"Event.Latency.EndToEnd.KeyPress":      {histogramLatencyMetricTypeUnit, perf.SmallerIsBetter},
-	"EventLatency.KeyPressed.TotalLatency": {histogramLatencyMetricTypeUnit, perf.SmallerIsBetter},
+	"Event.Latency.EndToEnd.KeyPress":      {cp.HistogramLatencyMetricTypeUnit, perf.SmallerIsBetter},
+	"EventLatency.KeyPressed.TotalLatency": {cp.HistogramLatencyMetricTypeUnit, perf.SmallerIsBetter},
 }
 
 // NewHistogramMetrics creates the struct to store Chrome histogram metrics.
@@ -58,7 +59,7 @@ func (v *HistogramMetrics) Setup(ctx context.Context, prefix, intervalName strin
 		// Remove "." from the name because power_dashboard would confuse that with metric type.
 		nameInChart := strings.ReplaceAll(name, ".", "")
 		v.metrics[name] = perf.Metric{
-			Name:      prefix + histogramMetricType + nameInChart,
+			Name:      prefix + cp.HistogramMetricType + nameInChart,
 			Unit:      validHistogramsMap[name].unit,
 			Direction: validHistogramsMap[name].direction,
 			Multiple:  true,

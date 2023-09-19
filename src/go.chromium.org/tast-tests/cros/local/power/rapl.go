@@ -15,30 +15,20 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast/core/errors"
-)
-
-const (
-	package0 = "package-0"
-	core     = "core"
-	uncore   = "uncore"
-	dram     = "dram"
-
-	// Note: psys is not supported on ChromeOS. It is ignored if it appears
-	// in any RAPL files.
-	psys = "psys"
 )
 
 // Note that all of these values are estimates.
 var isZoneExpected = map[string]bool{
 	// core reports the joules from the CPU. It is a subset of package-0.
-	core: true,
+	cp.Core: true,
 	// dram reports the joules from memory.
-	dram: true,
+	cp.Dram: true,
 	// package-0 reports the joules from the energy consumption of the entire SoC.
-	package0: true,
+	cp.Package0: true,
 	// uncore reports the joules from the GPU. It is a subset of package-0.
-	uncore: true,
+	cp.Uncore: true,
 }
 
 // RAPLValues represents the Intel "Running Average Power Limit" (RAPL) values.
@@ -63,10 +53,10 @@ func (rapl *RAPLValues) ReportPerfMetrics(perfValues *perf.Values, prefix string
 		name  string
 		value float64
 	}{
-		{"Package0", rapl.joules[package0]},
-		{"Core", rapl.joules[core]},
-		{"Uncore", rapl.joules[uncore]},
-		{"DRAM", rapl.joules[dram]},
+		{"Package0", rapl.joules[cp.Package0]},
+		{"Core", rapl.joules[cp.Core]},
+		{"Uncore", rapl.joules[cp.Uncore]},
+		{"DRAM", rapl.joules[cp.Dram]},
 	} {
 		perfValues.Append(perf.Metric{
 			Name:      prefix + e.name,
@@ -86,10 +76,10 @@ func (rapl *RAPLValues) ReportWattPerfMetrics(perfValues *perf.Values, prefix st
 		name  string
 		value float64
 	}{
-		{"Package0", rapl.joules[package0] / interval},
-		{"Core", rapl.joules[core] / interval},
-		{"Uncore", rapl.joules[uncore] / interval},
-		{"DRAM", rapl.joules[dram] / interval},
+		{"Package0", rapl.joules[cp.Package0] / interval},
+		{"Core", rapl.joules[cp.Core] / interval},
+		{"Uncore", rapl.joules[cp.Uncore] / interval},
+		{"DRAM", rapl.joules[cp.Dram] / interval},
 	} {
 		perfValues.Append(perf.Metric{
 			Name:      prefix + e.name,
@@ -103,22 +93,22 @@ func (rapl *RAPLValues) ReportWattPerfMetrics(perfValues *perf.Values, prefix st
 // Package0 returns the sum of joules for the entire SoC. Note that this is
 // different to total power.
 func (rapl *RAPLValues) Package0() float64 {
-	return rapl.joules[package0]
+	return rapl.joules[cp.Package0]
 }
 
 // Core returns the joules from the CPU.
 func (rapl *RAPLValues) Core() float64 {
-	return rapl.joules[core]
+	return rapl.joules[cp.Core]
 }
 
 // DRAM returns the joules from the DRAM.
 func (rapl *RAPLValues) DRAM() float64 {
-	return rapl.joules[dram]
+	return rapl.joules[cp.Dram]
 }
 
 // Uncore returns the joules from the GPU.
 func (rapl *RAPLValues) Uncore() float64 {
-	return rapl.joules[uncore]
+	return rapl.joules[cp.Uncore]
 }
 
 // Duration returns RAPL measuring time.
@@ -260,7 +250,7 @@ func readRAPLValues(dirsToParse []string) (*RAPLValues, time.Time, error) {
 		}
 
 		// Ignore psys, since it is not supported on ChromeOS.
-		if name == psys {
+		if name == cp.Psys {
 			continue
 		}
 
@@ -269,7 +259,7 @@ func readRAPLValues(dirsToParse []string) (*RAPLValues, time.Time, error) {
 		}
 		rapl.joules[name] = e
 
-		if name == package0 {
+		if name == cp.Package0 {
 			// Some devices (i.e. AMD) have a partial RAPL implementation, so
 			// this isn't a fatal error.
 			if c, err := readRAPLPowerConstraint(dir); err == nil {

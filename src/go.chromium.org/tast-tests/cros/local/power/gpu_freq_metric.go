@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -96,8 +97,8 @@ func (g *GPUFreqMetrics) Setup(ctx context.Context, prefix, intervalName string)
 			g.collector = c
 			g.freqEnabled = true
 			g.freqMetric = perf.Metric{
-				Name:      prefix + gpuFreqMetricType + "gpu_freq",
-				Unit:      gpuFreqMetricTypeUnit,
+				Name:      prefix + cp.GPUFreqMetricType + "gpu_freq",
+				Unit:      cp.GPUFreqMetricTypeUnit,
 				Direction: perf.SmallerIsBetter,
 				Multiple:  true,
 				Interval:  intervalName,

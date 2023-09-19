@@ -23,6 +23,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -134,7 +135,7 @@ var rankingProcess = map[string]string{
 	`^virgl-\d+-(.*)`: "virgl-id-$1",
 }
 
-// Perf timeline does snapshot repeatly with a short interval. To reduce the
+// Perf timeline does snapshot repeatedly with a short interval. To reduce the
 // log volume, we design the log / logs data structures so each pattern of log
 // will be printed only once.
 type log struct {
@@ -509,8 +510,8 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 					continue
 				}
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%s%sDRM_%s.Utilization.%s.%s", ds.prefix, gpuUsageMetricType, drmRank, engine, procName),
-					Unit:      gpuUsageUtilizationTypeUnit,
+					Name:      fmt.Sprintf("%s%sDRM_%s.Utilization.%s.%s", ds.prefix, cp.GPUUsageMetricType, drmRank, engine, procName),
+					Unit:      cp.GPUUsageUtilizationTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  ds.intervalName,
@@ -522,8 +523,8 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 					continue
 				}
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%s%sDRM_%s.Memory.%s.%s", ds.prefix, gpuUsageMetricType, drmRank, kind, procName),
-					Unit:      gpuUsageMemoryTypeUnit,
+					Name:      fmt.Sprintf("%s%sDRM_%s.Memory.%s.%s", ds.prefix, cp.GPUUsageMetricType, drmRank, kind, procName),
+					Unit:      cp.GPUUsageMemoryTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  ds.intervalName,
@@ -534,8 +535,8 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 		if drmHasUtilization {
 			for engine := range drm.allEngines {
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%s%sDRM_%s.Utilization.%s", ds.prefix, gpuUsageMetricType, drmRank, engine),
-					Unit:      gpuUsageUtilizationTypeUnit,
+					Name:      fmt.Sprintf("%s%sDRM_%s.Utilization.%s", ds.prefix, cp.GPUUsageMetricType, drmRank, engine),
+					Unit:      cp.GPUUsageUtilizationTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  ds.intervalName,
@@ -545,8 +546,8 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 		if drmHasMemory {
 			for kind := range drm.allMemoryKinds {
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%s%sDRM_%s.Memory.%s", ds.prefix, gpuUsageMetricType, drmRank, kind),
-					Unit:      gpuUsageMemoryTypeUnit,
+					Name:      fmt.Sprintf("%s%sDRM_%s.Memory.%s", ds.prefix, cp.GPUUsageMetricType, drmRank, kind),
+					Unit:      cp.GPUUsageMemoryTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  ds.intervalName,

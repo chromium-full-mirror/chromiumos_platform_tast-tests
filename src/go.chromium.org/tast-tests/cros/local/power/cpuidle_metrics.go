@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -133,7 +134,7 @@ func (cs *CpuidleStateMetrics) Setup(ctx context.Context, prefix, intervalName s
 func readCpuidleStateTimes(ctx context.Context, cpuidleTimeFiles map[string][]cpuidleTimeFile) (map[string](map[string]int64), time.Time, error) {
 	ret := make(map[string](map[string]int64))
 
-	// Open all CPU files in advance so reading from the files can be as fast as possbile.
+	// Open all CPU files in advance so reading from the files can be as fast as possible.
 	openFiles := make(map[string]*os.File)
 	fileNum := 0
 	for cpuName, files := range cpuidleTimeFiles {
@@ -222,8 +223,8 @@ func (cs *CpuidleStateMetrics) Start(ctx context.Context) error {
 	}
 
 	cs.metrics[c0State] = perf.Metric{
-		Name:      cs.prefix + cpuIdleMetricType + "cpu-" + c0State,
-		Unit:      cpuIdleMetricTypeUnit,
+		Name:      cs.prefix + cp.CPUIdleMetricType + "cpu-" + c0State,
+		Unit:      cp.CPUIdleMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  cs.intervalName}
@@ -232,8 +233,8 @@ func (cs *CpuidleStateMetrics) Start(ctx context.Context) error {
 
 		// Per-cpu stats
 		cs.metrics[cpuName+"-"+c0State] = perf.Metric{
-			Name:      cs.prefix + cpuIdleMetricType + cpuName + "-" + c0State,
-			Unit:      cpuIdleMetricTypeUnit,
+			Name:      cs.prefix + cp.CPUIdleMetricType + cpuName + "-" + c0State,
+			Unit:      cp.CPUIdleMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
 			Interval:  cs.intervalName}
@@ -241,8 +242,8 @@ func (cs *CpuidleStateMetrics) Start(ctx context.Context) error {
 		for stateName := range perCPUStats {
 			// Per-cpu stats
 			cs.metrics[cpuName+"-"+stateName] = perf.Metric{
-				Name:      cs.prefix + cpuIdleMetricType + cpuName + "-" + stateName,
-				Unit:      cpuIdleMetricTypeUnit,
+				Name:      cs.prefix + cp.CPUIdleMetricType + cpuName + "-" + stateName,
+				Unit:      cp.CPUIdleMetricTypeUnit,
 				Direction: perf.SmallerIsBetter,
 				Multiple:  true,
 				Interval:  cs.intervalName}
@@ -250,8 +251,8 @@ func (cs *CpuidleStateMetrics) Start(ctx context.Context) error {
 			if _, isPresent := cs.metrics[stateName]; !isPresent {
 				// Aggregated metrics of all the cpus
 				cs.metrics[stateName] = perf.Metric{
-					Name:      cs.prefix + cpuIdleMetricType + "cpu-" + stateName,
-					Unit:      cpuIdleMetricTypeUnit,
+					Name:      cs.prefix + cp.CPUIdleMetricType + "cpu-" + stateName,
+					Unit:      cp.CPUIdleMetricTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  cs.intervalName}

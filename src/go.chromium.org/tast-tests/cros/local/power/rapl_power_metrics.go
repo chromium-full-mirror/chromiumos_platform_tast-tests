@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -57,15 +58,15 @@ func (r *RAPLPowerMetrics) Start(_ context.Context) error {
 	}
 	for name := range r.snapshot.start.joules {
 		r.metrics[name] = perf.Metric{
-			Name:      r.prefix + powerRelatedMetricType + name,
-			Unit:      powerRelatedMetricTypeUnit,
+			Name:      r.prefix + cp.PowerRelatedMetricType + name,
+			Unit:      cp.PowerRelatedMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
 			Interval:  r.intervalName}
 	}
 	r.metrics[package0PowerConstraintName] = perf.Metric{
-		Name:      r.prefix + powerRelatedMetricType + package0PowerConstraintName,
-		Unit:      powerRelatedMetricTypeUnit,
+		Name:      r.prefix + cp.PowerRelatedMetricType + package0PowerConstraintName,
+		Unit:      cp.PowerRelatedMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  r.intervalName}

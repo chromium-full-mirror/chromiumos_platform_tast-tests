@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -40,8 +41,8 @@ func NewProcfsCPUMetrics() *ProcfsCPUMetrics {
 // Setup creates the metric.
 func (c *ProcfsCPUMetrics) Setup(ctx context.Context, prefix, intervalName string) error {
 	c.metric = perf.Metric{
-		Name:      prefix + cpuUsageMetricType + "cpu_usage",
-		Unit:      cpuUsageMetricTypeUnit,
+		Name:      prefix + cp.CPUUsageMetricType + "cpu_usage",
+		Unit:      cp.CPUUsageMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName}

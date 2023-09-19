@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
 )
@@ -44,50 +45,50 @@ func (m *MemoryMetrics) Setup(ctx context.Context, prefix, intervalName string) 
 	m.swapSize = metrics[util.MemInfoSwapTotal]
 	// Temporary storage buffers for block devices.
 	m.memBuffers = perf.Metric{
-		Name:      prefix + memoryMetricType + "buffers",
-		Unit:      memoryMetricTypeUnit,
+		Name:      prefix + cp.MemoryMetricType + "buffers",
+		Unit:      cp.MemoryMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName}
 	// In-memory caches for disk reads including Slab-reclaimable memory.
 	m.memCached = perf.Metric{
-		Name:      prefix + memoryMetricType + "cached",
-		Unit:      memoryMetricTypeUnit,
+		Name:      prefix + cp.MemoryMetricType + "cached",
+		Unit:      cp.MemoryMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName}
 	// Total - (Free + Buffers + Cached + SReclaimable)
 	m.memUsed = perf.Metric{
-		Name:      prefix + memoryMetricType + "used",
-		Unit:      memoryMetricTypeUnit,
+		Name:      prefix + cp.MemoryMetricType + "used",
+		Unit:      cp.MemoryMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName}
 	// Memory used for the lowest-level page tables.
 	m.memPageTables = perf.Metric{
-		Name:      prefix + memoryMetricType + "page_tables",
-		Unit:      memoryMetricTypeUnit,
+		Name:      prefix + cp.MemoryMetricType + "page_tables",
+		Unit:      cp.MemoryMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName}
 	// Amount of used swap memory.
 	m.swapUsed = perf.Metric{
-		Name:      prefix + memoryMetricType + "swap",
-		Unit:      memoryMetricTypeUnit,
+		Name:      prefix + cp.MemoryMetricType + "swap",
+		Unit:      cp.MemoryMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName}
 	// Amount of free memory
 	m.memFree = perf.Metric{
-		Name:      prefix + memoryMetricType + "free",
-		Unit:      memoryMetricTypeUnit,
+		Name:      prefix + cp.MemoryMetricType + "free",
+		Unit:      cp.MemoryMetricTypeUnit,
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName}
 	// Amount of available memory without swapping
 	m.memAvailable = perf.Metric{
-		Name:      prefix + memoryMetricType + "available",
-		Unit:      memoryMetricTypeUnit,
+		Name:      prefix + cp.MemoryMetricType + "available",
+		Unit:      cp.MemoryMetricTypeUnit,
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,
 		Interval:  intervalName}
