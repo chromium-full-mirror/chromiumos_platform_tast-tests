@@ -300,15 +300,19 @@ func (r *ScreenRecorder) Release(ctx context.Context) {
 
 // StopAndSaveOnError ends the screen recording and save it on error.
 func (r *ScreenRecorder) StopAndSaveOnError(ctx context.Context, filepath string, hasError func() bool) {
+	if hasError() {
+		// GoBigSleepLint: If there's an error, we want to wait long enough to see
+		// what happens after the error. This allows you to sync logs to the video
+		// when the error has occurred, and also happens to help in case something
+		// happens after timing out.
+		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+			testing.ContextLog(ctx, "Failed to let screen recorder run after error: ", err)
+		}
+	}
+
 	if err := r.Stop(ctx); err != nil {
 		testing.ContextLogf(ctx, "Failed to stop recording: %s", err)
 	} else if hasError() {
-		// GoBigSleepLint: If there's an error, we want to wait long enough to see
-		// what happens after the error. This allows you to see subtitles when the
-		// error has occurred, and also happens to help in case something happens
-		// after timing out.
-		testing.Sleep(ctx, 2*time.Second)
-
 		testing.ContextLogf(ctx, "Saving screen record to %s", filepath)
 		if err := r.SaveInBytes(ctx, filepath); err != nil {
 			testing.ContextLogf(ctx, "Failed to save screen record in bytes: %s", err)
@@ -357,7 +361,9 @@ func RecordScreen(ctx context.Context, s testingState, tconn *chrome.TestConn, f
 			// timing out.
 			if s.HasError() {
 				//  GoBigSleepLint: Allow time to observe artifacts of error
-				testing.Sleep(ctx, time.Second*2)
+				if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+					testing.ContextLog(ctx, "Failed to let screen recorder run after error: ", err)
+				}
 			}
 			ScreenRecorderStopSaveRelease(ctx, recorder, filepath.Join(s.OutDir(), "recording.webm"))
 		}()
