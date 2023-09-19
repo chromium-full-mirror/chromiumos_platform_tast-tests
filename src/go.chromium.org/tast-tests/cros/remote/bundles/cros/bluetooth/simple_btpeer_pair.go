@@ -31,7 +31,6 @@ func init() {
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr: []string{
 			"group:bluetooth",
-			"bluetooth_core",
 			"bluetooth_btpeers_1",
 		},
 		SoftwareDeps: []string{"chrome"},

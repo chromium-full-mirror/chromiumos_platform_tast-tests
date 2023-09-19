@@ -22,7 +22,7 @@ func init() {
 			"shijinabraham@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
-		Attr:         []string{"group:bluetooth", "bluetooth_flaky"},
+		Attr:         []string{"group:bluetooth"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name:      "floss_disabled",
