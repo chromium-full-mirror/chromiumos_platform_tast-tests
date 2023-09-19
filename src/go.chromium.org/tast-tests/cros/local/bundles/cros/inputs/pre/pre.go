@@ -68,6 +68,12 @@ var MultiwordEnabledModels = []string{
 	"hatch",
 }
 
+// ArcCompatModels is a subset of boards where acr++ applications are most commonly used.
+// Confirmed with ashpakov@ from developer engrpod, octopus is the most commonly used model.
+var ArcCompatModels = []string{
+	"octopus",
+}
+
 // InputsStableModels is a shortlist of models aiming to run critical inputs tests.
 // More information refers to http://b/161415599.
 var InputsStableModels = hwdep.Model(StableModels...)
@@ -84,3 +90,6 @@ var PhysicalKeyboardPerfModels = hwdep.Model(
 	"redrix", // High-end laptop
 	"krane",  // Low-end tablet
 )
+
+// InputsAppCompatArcModels is a list of models intended to run arc++ related tests.
+var InputsAppCompatArcModels = hwdep.Model(ArcCompatModels...)

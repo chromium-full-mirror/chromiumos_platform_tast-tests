@@ -32,7 +32,7 @@ func init() {
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		Timeout:      5 * time.Minute,
 		Fixture:      fixture.PlayStore,
-		HardwareDeps: hwdep.D(pre.InputsStableModels),
+		HardwareDeps: hwdep.D(pre.InputsAppCompatArcModels),
 		Params: []testing.Param{
 			{
 				Name:             "french",

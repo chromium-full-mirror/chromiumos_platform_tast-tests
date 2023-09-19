@@ -35,7 +35,7 @@ func init() {
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		Timeout:      5 * time.Minute,
 		Fixture:      fixture.PlayStoreWithVK,
-		HardwareDeps: hwdep.D(pre.InputsStableModels),
+		HardwareDeps: hwdep.D(pre.InputsAppCompatArcModels),
 	})
 }
 
