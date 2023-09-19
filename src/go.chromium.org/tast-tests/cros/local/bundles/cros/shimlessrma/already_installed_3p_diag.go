@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/shimlessrma/fixture"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -26,6 +27,8 @@ func init() {
 		Attr:         []string{"group:shimless_rma", "shimless_rma_normal"},
 		Fixture:      fixture.Install3pDiag,
 		SoftwareDeps: []string{"chrome"},
+		// The OEMs align with the setting in Chrome: chrome/common/chromeos/extensions/chromeos_system_extension_info.cc.
+		HardwareDeps: hwdep.D(hwdep.OEM("ASUS", "Google", "HP")),
 		Timeout:      5 * time.Minute,
 	})
 }
