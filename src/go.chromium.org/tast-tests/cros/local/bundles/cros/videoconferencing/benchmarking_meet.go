@@ -52,7 +52,7 @@ func init() {
 			"chromeos-platform-ml@google.com",
 			"zhaon@google.com",
 		},
-		BugComponent: "b:260653207",
+		BugComponent: "b:1212695",
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Timeout:      15 * time.Minute,
@@ -450,7 +450,7 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}
 
-	// TODO: Remove manual power metric collection
+	// TODO: b/301135946 - Remove manual power collection
 	powerEnd := time.Now()
 	powerDuration := int(powerEnd.Sub(powerStart).Seconds())
 	if raplEnergyBefore != nil {
