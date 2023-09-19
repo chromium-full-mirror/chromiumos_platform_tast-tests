@@ -208,11 +208,11 @@ func TestDownload(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error")
 
-	// Need to wait for a valid dm token, i.e., the proper initialization of the enterprise connectors.
+	// Need to wait for a valid fcm token, i.e., the proper initialization of the enterprise connectors.
 	if testParams.ScansEnabled {
-		s.Log("Checking for dm token")
-		if err := helpers.WaitForDMTokenRegistered(ctx, br, tconnAsh, server, downloadsPath); err != nil {
-			s.Fatal("Failed to wait for DM token: ", err)
+		s.Log("Checking for fcm token")
+		if err := helpers.WaitForFCMTokenRegistered(ctx, br, tconnAsh, server, downloadsPath); err != nil {
+			s.Fatal("Failed to wait for FCM token: ", err)
 		}
 	}
 

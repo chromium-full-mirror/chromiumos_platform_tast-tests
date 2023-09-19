@@ -123,7 +123,7 @@ func init() {
 			},
 		},
 		Data: []string{
-			"download.html", // download.html required for CheckDMTokenRegistered.
+			"download.html", // download.html required for CheckFCMTokenRegistered.
 			"file_input.html",
 			"10ssns.txt",
 			"allowed.txt",
@@ -234,15 +234,15 @@ func testFileAttachedForBrowser(ctx context.Context, s *testing.State, browserTy
 	defer dconn.Close()
 	defer dconn.CloseTarget(cleanupCtx)
 
-	// Need to wait for a valid dm token, i.e., the proper initialization of the enterprise connectors.
+	// Need to wait for a valid fcm token, i.e., the proper initialization of the enterprise connectors.
 	if testParams.ScansEnabled {
-		s.Log("Checking for dm token")
+		s.Log("Checking for fcm token")
 		downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 		if err != nil {
 			s.Fatal("Failed to get user's Download path: ", err)
 		}
-		if err := helpers.WaitForDMTokenRegistered(ctx, br, tconnAsh, server, downloadsPath); err != nil {
-			s.Fatal("Failed to wait for DM token: ", err)
+		if err := helpers.WaitForFCMTokenRegistered(ctx, br, tconnAsh, server, downloadsPath); err != nil {
+			s.Fatal("Failed to wait for FCM token: ", err)
 		}
 	}
 

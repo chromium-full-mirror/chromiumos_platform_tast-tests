@@ -61,8 +61,8 @@ const (
 // The scanning timeout of chrome is 5 minutes, so we wait a bit more to get a proper TIMEOUT notification.
 const ScanningTimeOut = 6 * time.Minute
 
-// DmTokenTimeOut describes how long we wait for a valid dm token.
-const DmTokenTimeOut = 10 * time.Minute
+// FcmTokenTimeOut describes how long we wait for a valid fcm token.
+const FcmTokenTimeOut = 10 * time.Minute
 
 // GetTestFileParams returns the list of parameters for the files that should be tested.
 func GetTestFileParams() []TestFileParams {
@@ -123,27 +123,27 @@ func GetTestFileParamsWithWarn() []TestFileParams {
 	})
 }
 
-// WaitForDMTokenRegistered waits until a valid DM token exists.
+// WaitForFCMTokenRegistered waits until a valid fcm token exists.
 // This is done by downloading unknown_malware.zip from `download.html`.
 // This function fails if scanning is disabled.
-func WaitForDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *chrome.TestConn, server *httptest.Server, downloadsPath string) error {
+func WaitForFCMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *chrome.TestConn, server *httptest.Server, downloadsPath string) error {
 	retryNumber := 0
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		canRetry, err := checkDMTokenRegistered(ctx, br, tconnAsh, server, downloadsPath, retryNumber)
+		canRetry, err := checkFCMTokenRegistered(ctx, br, tconnAsh, server, downloadsPath, retryNumber)
 		retryNumber++
 		if canRetry {
 			return err
 		}
 		return testing.PollBreak(err)
-	}, &testing.PollOptions{Timeout: DmTokenTimeOut, Interval: 5 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to wait for dm token to be registered")
+	}, &testing.PollOptions{Timeout: FcmTokenTimeOut, Interval: 5 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to wait for fcm token to be registered")
 	}
 	return nil
 }
 
-// checkDMTokenRegistered checks that a dm token is registered.
+// checkFCMTokenRegistered checks that a fcm token is registered.
 // Returns a bool and an error. The bool indicates whether the check can be retried.
-func checkDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *chrome.TestConn, server *httptest.Server, downloadsPath string, retryNumber int) (bool, error) {
+func checkFCMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *chrome.TestConn, server *httptest.Server, downloadsPath string, retryNumber int) (bool, error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -248,7 +248,7 @@ func checkDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: ScanningTimeOut, Interval: 5 * time.Second}); err != nil {
-		return false, errors.Wrap(err, "failed to wait for dm token registration")
+		return false, errors.Wrap(err, "failed to wait for fcm token registration")
 	}
 
 	if failedToGetToken {
