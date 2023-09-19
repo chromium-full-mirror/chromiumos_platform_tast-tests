@@ -178,7 +178,7 @@ func checkDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *
 		if _, err := ash.WaitForNotification(
 			ctx,
 			tconnAsh,
-			1*time.Minute,
+			ScanningTimeOut,
 			ash.WaitIDContains("notification-ui-manager"),
 			ash.WaitTitleOrMessageContains("unknown_malware.zip"),
 		); err != nil {
