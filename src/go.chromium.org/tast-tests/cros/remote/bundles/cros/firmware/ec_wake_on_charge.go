@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -55,7 +56,7 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
-		Timeout:      30 * time.Minute,
+		Timeout:      40 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "chromeslate",
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromeslate)),
@@ -89,20 +90,12 @@ func init() {
 	})
 }
 
-var tabletModeAngleHasChanged = false
+var (
+	tabletModeAngleHasChanged bool
+	checkedInfo               debugInformation
+)
 
 func ECWakeOnCharge(ctx context.Context, s *testing.State) {
-	// getChargerPollOptions sets the time to retry the GetChargerAttached command.
-	getChargerPollOptions := testing.PollOptions{
-		Timeout:  1 * time.Minute,
-		Interval: 1 * time.Second,
-	}
-
-	// runECPollOptions sets the time to retry the RunECCommandGetOutput command.
-	runECPollOptions := testing.PollOptions{
-		Timeout:  30 * time.Second,
-		Interval: 1 * time.Second,
-	}
 
 	h := s.FixtValue().(*fixture.Value).Helper
 
@@ -131,165 +124,8 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 
 	// At start of test, save some information that may
 	// be useful for debugging.
-	var checkedInfo debugInformation
 	if err := checkInformation(ctx, h, &checkedInfo); err != nil {
 		s.Fatal("Unable to log information at start of test: ", err)
-	}
-
-	checkCCDTestlab := func(ctx context.Context) error {
-		// Regular expressions.
-		var (
-			accessDenied          = `Access Denied`
-			shortPPStart          = `\[\S+ PP start short\]`
-			checkCCDTestlabEnable = `(` + accessDenied + `|` + shortPPStart + `)`
-		)
-		testlabStatus, err := h.Servo.GetString(ctx, servo.CR50Testlab)
-		if err != nil {
-			return errors.Wrap(err, "failed to get cr50_testlab")
-		}
-		if testlabStatus != string(servo.On) {
-			s.Log("Checking if enabling testlab is possible")
-			strings, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccd testlab enable", []string{checkCCDTestlabEnable})
-			if err != nil {
-				s.Log("Unexpected error from 'ccd testlab enable': ", err)
-			} else {
-				s.Logf("Output from running 'ccd testlab enable': %s", strings[0][0])
-			}
-			// In case that 'ccd testlab enable' worked, sleep here regardless for the timeout to
-			// happen on the power press.
-			if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-				return errors.Wrap(err, "failed to sleep")
-			}
-		}
-		return nil
-	}
-
-	openCCD := func(ctx context.Context) error {
-		if checkedInfo.hasCCD {
-			// Running 'ccd testlab open' would likely not work if it was not enabled.
-			// But, if CCD was locked, testlab mode couldn't be enabled, and the
-			// console output would print 'access denied'. For debugging purposes,
-			// check here if enabling testlab mode is possible.
-			// To-do: if 'ccd testlab open' fails, we might need to consider doing a
-			// regular ap open.
-			if val, err := h.Servo.GetString(ctx, servo.GSCCCDLevel); err != nil {
-				return errors.Wrap(err, "failed to get gsc_ccd_level")
-			} else if val != servo.Open {
-				s.Logf("CCD is not open, got %q. Attempting to unlock", val)
-				if err := checkCCDTestlab(ctx); err != nil {
-					return err
-				}
-				if err := h.Servo.SetString(ctx, servo.CR50Testlab, servo.Open); err != nil {
-					return errors.Wrap(err, "failed to unlock CCD")
-				}
-			}
-		}
-		return nil
-	}
-	setPowerSupply := func(ctx context.Context, connectPower, waitConnectAfterACPower bool) error {
-		if connectPower {
-			// Connect power supply.
-			if err := h.SetDUTPower(ctx, true); err != nil {
-				return errors.Wrap(err, "failed to connect charger")
-			}
-
-			// On babytiger and babymega, leased from the lab,
-			// it appeared that even though the servo command was
-			// successful, the pd role didn't change. Check whether
-			// this would also happen on the other DUTs. If it did,
-			// exit from the test, and restore connection to the DUT
-			// by the deferred cleanup.
-			if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-				return errors.Wrap(err, "failed to sleep")
-			}
-			if checkedInfo.servoConnectionType == "type-c" {
-				role, err := h.Servo.GetPDRole(ctx)
-				if err != nil {
-					return errors.Wrap(err, "failed to retrieve USB PD role for servo")
-				}
-				if role != servo.PDRoleSrc {
-					return errors.Wrapf(err, "setting pd role to src, but got: %q", role)
-				}
-			}
-
-			// If DUT has hibernated before, reconnecting power supply will wake up the device.
-			// Wait for DUT to reconnect.
-			if waitConnectAfterACPower {
-				s.Log("Waiting for DUT to power ON")
-				waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 8*time.Minute)
-				defer cancelWaitConnect()
-
-				var opts []firmware.WaitConnectOption
-				opts = append(opts, firmware.FromHibernation)
-				if err := h.WaitConnect(waitConnectCtx, opts...); err != nil {
-					return &retriableErr{E: errors.Wrap(err, "failed to reconnect to DUT")}
-				}
-				// Cr50 goes to sleep during hibernation, and when DUT wakes, CCD state might be locked.
-				// Open CCD after waking DUT and before talking to the EC.
-				if err := openCCD(ctx); err != nil {
-					return err
-				}
-				// Sleep briefly to ensure that CCD has fully opened.
-				if err := testing.Sleep(ctx, 1*time.Second); err != nil {
-					return errors.Wrap(err, "failed to sleep")
-				}
-				// For debugging purposes, log the ccd state again for reference.
-				if checkedInfo.hasCCD {
-					valAfterOpenCCD, err := h.Servo.GetString(ctx, servo.GSCCCDLevel)
-					if err != nil {
-						return errors.Wrap(err, "failed to get gsc_ccd_level")
-					}
-					s.Logf("CCD state: %s", valAfterOpenCCD)
-				}
-			}
-
-			// Verify EC console is responsive.
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				if _, err := h.Servo.RunECCommandGetOutput(ctx, "version", []string{`.`}); err != nil {
-					return errors.Wrap(err, "EC is not responsive after reconnecting power supply to DUT")
-				}
-				return nil
-			}, &runECPollOptions); err != nil {
-				return errors.Wrap(err, "failed to wait for EC to become responsive")
-			}
-			s.Log("EC is responsive")
-
-			// Verify that DUT is charging with power supply connected.
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				ok, err := h.Servo.GetChargerAttached(ctx)
-				if err != nil {
-					return errors.Wrap(err, "error checking whether charger is attached")
-				}
-				if !ok {
-					return errors.New("DUT is not charging after connecting the power supply")
-				}
-				return nil
-			}, &getChargerPollOptions); err != nil {
-				return errors.Wrap(err, "failed to check for charger after connecting power")
-			}
-			s.Log("DUT is charging")
-		} else {
-			// Disconnect power supply.
-			if err := h.SetDUTPower(ctx, false); err != nil {
-				return errors.Wrap(err, "failed to remove charger")
-			}
-
-			// Verify that power supply was disconnected.
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				ok, err := h.Servo.GetChargerAttached(ctx)
-				if err != nil {
-					return errors.Wrap(err, "error checking whether charger is attached")
-				}
-				if ok {
-					return errors.New("charger is still attached - use Servo V4 Type-C or supply RPM vars")
-				}
-				return nil
-			}, &getChargerPollOptions); err != nil {
-				return errors.Wrap(err, "failed to check for charger after disconnecting power")
-			}
-			s.Log("Power supply was disconnected")
-		}
-		return nil
 	}
 
 	// To prevent leaving DUT in an offline state, open lid or perform a cold reset at the end of test.
@@ -335,6 +171,7 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 			case <-done:
 				break monitorServo
 			default:
+				// GoBigSleepLint: Ping servo periodically to monitor whether it's alive.
 				if err := testing.Sleep(ctx, time.Second); err != nil {
 					s.Error("Failed to sleep while monitoring servo: ", err)
 				}
@@ -349,35 +186,33 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 		}
 	}()
 	for _, tc := range []struct {
-		lidOpen string
+		lidOpen servo.LidOpenValue
 	}{
-		{string(servo.LidOpenYes)},
-		{string(servo.LidOpenNo)},
+		{servo.LidOpenYes},
+		{servo.LidOpenNo},
 	} {
 		// Only repeat the test in lid closed when device has a lid.
-		if tc.lidOpen == "no" && args.hasLid == false {
+		if tc.lidOpen == servo.LidOpenNo && args.hasLid == false {
 			break
 		}
 
-		var waitConnectAfterACPower bool
 		s.Log("Stopping AC Power")
-		if err := setPowerSupply(ctx, false, waitConnectAfterACPower); err != nil {
+		if err := powercontrol.PlugUnplugCharger(ctx, h, false); err != nil {
 			s.Fatal("Failed to stop power supply: ", err)
-		}
-
-		// When power is cut, there may be a temporary disconnection between servo and DUT,
-		// and the duration may vary from model to model. Delaying for some time here seems
-		// to be helpful in preventing EC errors.
-		s.Log("Sleeping for 15 seconds")
-		if err := testing.Sleep(ctx, 15*time.Second); err != nil {
-			s.Fatal("Failed to sleep: ", err)
 		}
 
 		// Skip setting the lid state for DUTs that don't have a lid, i.e. Chromeslates.
 		if args.hasLid {
+			if tc.lidOpen == servo.LidOpenNo {
+				// Closing lid might cause servod exit if the CCD watchdog is not removed.
+				s.Log("Removing ccd watchdogs")
+				if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
+					s.Fatal("Failed to remove CCD watchdog: ", err)
+				}
+			}
 			s.Logf("-------------Test with lid open: %s-------------", tc.lidOpen)
 			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				if err := h.Servo.SetStringAndCheck(ctx, servo.LidOpen, tc.lidOpen); err != nil {
+				if err := h.Servo.SetStringAndCheck(ctx, servo.LidOpen, string(tc.lidOpen)); err != nil {
 					// This error may be temporary.
 					if strings.Contains(err.Error(), "No data was sent from the pty") ||
 						strings.Contains(err.Error(), "Timed out waiting for interfaces to become available") {
@@ -391,32 +226,22 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 			}
 			// There's a chance that CCD would close when lid closed.
 			// Open CCD to prevent errors from running EC commands.
-			if tc.lidOpen == "no" {
-				if err := openCCD(ctx); err != nil {
+			if tc.lidOpen == servo.LidOpenNo {
+				if err := h.OpenCCD(ctx, true, true); err != nil {
 					s.Fatal("Failed to open CCD after closing lid: ", err)
 				}
 			}
-		}
-
-		// Between cutting power and sending DUT into hibernation, waiting
-		// for some delay seems to help with preventing servo exit.
-		s.Log("Sleeping for 30 seconds")
-		if err := testing.Sleep(ctx, 30*time.Second); err != nil {
-			s.Fatal("Failed to sleep: ", err)
 		}
 
 		if h.Config.Hibernate {
 			if err := hibernateDUT(ctx, h, s.DUT(), checkedInfo.hasMicroOrC2D2, tc.lidOpen, args.formFactor, args.tabletModeOff); err != nil {
 				s.Fatal("Failed to hibernate DUT: ", err)
 			}
-			if checkedInfo.hasMicroOrC2D2 || tc.lidOpen == "yes" {
-				waitConnectAfterACPower = true
-			}
 		} else {
 			// For DUTs that do not support the ec hibernation command, when lid is open, we could use
 			// a long power button press instead to put DUT in deep sleep. But, when lid is closed without
 			// log-in, power state will eventually reach G3.
-			if tc.lidOpen == "yes" {
+			if tc.lidOpen == servo.LidOpenYes {
 				s.Logf("Long pressing on power key for %s to put DUT into deep sleep mode", h.Config.HoldPwrButtonPowerOff)
 				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOff)); err != nil {
 					s.Fatal("Failed to set a KeypressControl by servo: ", err)
@@ -429,38 +254,34 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Reconnecting AC")
-		if err := setPowerSupply(ctx, true, waitConnectAfterACPower); err != nil {
-			if _, ok := err.(*retriableErr); ok {
-				s.Log("Retriable error: ", err.(*retriableErr))
-				switch tc.lidOpen {
-				case "yes":
-					// Power button is another wake up pin to wake DUT from hibernation.
-					// If re-connecting charger fails in waking up DUT, try with a press
-					// on power.
-					retryCtx, cancelRetry := context.WithTimeout(ctx, 1*time.Minute)
-					defer cancelRetry()
-					if err := bootDUTIntoS0(retryCtx, h); err != nil {
-						s.Fatal("Failed to reconnect to DUT: ", err)
-					}
-				case "no":
-					// According to Stainless, when lid is closed, DUTs remain in G3
-					// after waking up from hibernation with charger reconnected.
-					s.Log("Checking if power state in G3 or S5")
-					if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 1*time.Minute, "G3", "S5"); err != nil {
-						s.Fatal("Unable to get power state at G3 or S5: ", err)
-					}
+		if err := checkECWakesFromACReconnected(ctx, h, string(tc.lidOpen)); err != nil {
+			_, ok := err.(*retriableErr)
+			if ok && !h.Config.ACOnCanWakeApFromUlp {
+				s.Log("AC on event cannot wake AP, putting AP back to SO with power button")
+				if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
+					s.Fatal("Failed to get G3 power state: ", err)
 				}
-				// Delay for some time to ensure that DUT has fully settled down.
-				s.Log("Sleeping for 30 seconds")
-				if err := testing.Sleep(ctx, 30*time.Second); err != nil {
-					s.Fatal("Failed to sleep for 30 seconds: ", err)
+				durToWakeToS0 := servo.DurTab
+				if h.Config.Platform == "kukui" {
+					// Long press the power button to boot the device to S0.
+					durToWakeToS0 = servo.DurLongPress
+				}
+				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, durToWakeToS0); err != nil {
+					s.Fatal("Failed to press power button: ", err)
+				}
+				s.Log("Waiting for DUT to reconnect")
+				waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+				defer cancelWaitConnect()
+
+				if err := h.WaitConnect(waitConnectCtx); err != nil {
+					s.Fatal("Failed to reconnect to DUT: ", err)
 				}
 			} else {
-				s.Fatal("Failed to reconnect power supply: ", err)
+				s.Fatal("Failed to wake EC from AC reconnected: ", err)
 			}
 		}
 
-		// Stainless results showed that on Nami DUTs, when tested with lid closed,
+		// Testhaus results showed that on Nami DUTs, when tested with lid closed,
 		// lid's state changed after waking up from hibernation. More research
 		// might be needed, but for now skip on checking lid state for Nami devices.
 		if args.hasLid && h.Config.Platform != "nami" {
@@ -470,7 +291,7 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Failed to check the final lid state: ", err)
 			}
-			if lidStateFinal != tc.lidOpen {
+			if lidStateFinal != string(tc.lidOpen) {
 				s.Fatalf("DUT's lid_open state has changed from %s to %s", tc.lidOpen, lidStateFinal)
 			}
 		}
@@ -482,10 +303,6 @@ func checkTabletModeStatus(ctx context.Context, h *firmware.Helper) (bool, error
 	if err := h.RequireRPCUtils(ctx); err != nil {
 		return false, errors.Wrap(err, "requiring RPC utils")
 	}
-	testing.ContextLog(ctx, "Sleeping for a few seconds before starting a new Chrome")
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		return false, errors.Wrap(err, "failed to wait for a few seconds")
-	}
 	if _, err := h.RPCUtils.NewChrome(ctx, &empty.Empty{}); err != nil {
 		return false, errors.Wrap(err, "failed to create instance of chrome")
 	}
@@ -495,23 +312,6 @@ func checkTabletModeStatus(ctx context.Context, h *firmware.Helper) (bool, error
 		return false, err
 	}
 	return res.TabletModeEnabled, nil
-}
-
-func bootDUTIntoS0(ctx context.Context, h *firmware.Helper) error {
-	// Check if DUT is at G3. If DUT is in G3, use power button to boot it into S0.
-	testing.ContextLog(ctx, "Checking if power states at G3 or S5")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 1*time.Minute, "G3", "S5"); err != nil {
-		return errors.Wrap(err, "unable to get power state at G3 or S5. DUT disconnected due to other reasons")
-	}
-	testing.ContextLogf(ctx, "Pressing power button for %s to wake DUT into S0 from G3 or S5", h.Config.HoldPwrButtonPowerOn)
-	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
-		return errors.Wrap(err, "failed to press power button")
-	}
-	testing.ContextLog(ctx, "Waiting for power state S0")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 1*time.Minute, "S0"); err != nil {
-		return errors.Wrap(err, "unable to get power state at S0")
-	}
-	return nil
 }
 
 func checkInformation(ctx context.Context, h *firmware.Helper, info *debugInformation) error {
@@ -558,18 +358,14 @@ func ensureClamshellMode(ctx context.Context, h *firmware.Helper, dut *dut.DUT, 
 			}
 			return errors.Wrapf(err, "failed to run %s", tabletModeOff)
 		}
-		// Allow some delay to ensure that DUT has completely transitioned out of tablet mode.
-		if err := testing.Sleep(ctx, 3*time.Second); err != nil {
-			return errors.Wrap(err, "failed to sleep")
-		}
 		testing.ContextLogf(ctx, "Tablet mode status: %s", out)
 	}
 	return nil
 }
 
-func hibernateDUT(ctx context.Context, h *firmware.Helper, dut *dut.DUT, hasMicroOrC2D2 bool, lidOpen, formFactor, tabletModeOff string) error {
+func hibernateDUT(ctx context.Context, h *firmware.Helper, dut *dut.DUT, hasMicroOrC2D2 bool, lidOpen servo.LidOpenValue, formFactor, tabletModeOff string) error {
 	switch lidOpen {
-	case "no":
+	case servo.LidOpenNo:
 		if hasMicroOrC2D2 {
 			// In cases where lid is closed, and there's a servo_micro or C2D2 connection,
 			// use console command to hibernate. Using keyboard presses might trigger DUT
@@ -582,7 +378,7 @@ func hibernateDUT(ctx context.Context, h *firmware.Helper, dut *dut.DUT, hasMicr
 		}
 		// Note: In most cases, when lid is closed without log-in, power state transitions from S0 to S5,
 		// and then eventually to G3, which would be equivalent to long pressing on power to put DUT asleep.
-		// However, recent Stainless results showed that dedede(kracko) remained connected with power state
+		// However, recent Testhaus results showed that dedede(kracko) remained connected with power state
 		// at S0 after lid closed. Attempt power-off if closing lid didn't put DUTs in G3.
 		testing.ContextLog(ctx, "Waiting for power state to become G3 or S5")
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 5*time.Minute, "G3", "S5"); err != nil {
@@ -598,9 +394,6 @@ func hibernateDUT(ctx context.Context, h *firmware.Helper, dut *dut.DUT, hasMicr
 				if err := h.DUT.Conn().CommandContext(ctx, "poweroff").Start(); err != nil {
 					return errors.Wrap(err, "failed to run poweroff cmd")
 				}
-				if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-					return errors.Wrap(err, "failed to sleep")
-				}
 				if err := h.DUT.WaitUnreachable(ctx); err != nil {
 					return errors.Wrap(err, "failed to wait for DUT unreachable")
 				}
@@ -608,7 +401,7 @@ func hibernateDUT(ctx context.Context, h *firmware.Helper, dut *dut.DUT, hasMicr
 			}
 			return errors.Wrap(err, "failed to get powerstates at G3 or S5")
 		}
-	case "yes":
+	case servo.LidOpenYes:
 		if formFactor == "convertible" || formFactor == "detachable" {
 			// For convertibles and detachables, if DUT was left in tablet mode by previous tests,
 			// key presses may be inactive. Always turn tablet mode off before using keyboard to hibernate.
@@ -617,6 +410,7 @@ func hibernateDUT(ctx context.Context, h *firmware.Helper, dut *dut.DUT, hasMicr
 				return err
 			}
 		}
+		h.DisconnectDUT(ctx)
 		testing.ContextLog(ctx, "Putting DUT in hibernation with key presses")
 		if err := h.Servo.ECHibernate(ctx, h.Model, servo.UseKeyboard); err != nil {
 			testing.ContextLogf(ctx, "Failed to hibernate: %v. Retry with using EC console command to hibernate", err)
@@ -624,7 +418,99 @@ func hibernateDUT(ctx context.Context, h *firmware.Helper, dut *dut.DUT, hasMicr
 				return errors.Wrap(err, "failed to hibernate")
 			}
 		}
-		h.DisconnectDUT(ctx)
+	}
+	return nil
+}
+
+// checkECWakesFromACReconnected plugs the charger, probes the ec for
+// response, and expect the DUT to reconnect if the lid was open, or
+// remain at G3 if the lid was closed. It is called to wake the DUT
+// from hibernation.
+func checkECWakesFromACReconnected(ctx context.Context, h *firmware.Helper, lidOpen string) error {
+	// getChargerPollOptions sets the time to retry the GetChargerAttached command.
+	var getChargerPollOptions = testing.PollOptions{
+		Timeout:  1 * time.Minute,
+		Interval: 1 * time.Second,
+	}
+	// getPDRolePollOptions sets the time to retry the GetPDRole command.
+	var getPDRolePollOptions = testing.PollOptions{
+		Timeout:  10 * time.Second,
+		Interval: 1 * time.Second,
+	}
+	// runECPollOptions sets the time to retry the RunECCommandGetOutput command.
+	var runECPollOptions = testing.PollOptions{
+		Timeout:  1 * time.Minute,
+		Interval: 1 * time.Second,
+	}
+	if err := h.SetDUTPower(ctx, true); err != nil {
+		return errors.Wrap(err, "failed to connect charger")
+	}
+	if checkedInfo.servoConnectionType == "type-c" {
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			role, err := h.Servo.GetPDRole(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to retrieve USB PD role for servo")
+			}
+			if role != servo.PDRoleSrc {
+				return errors.Wrapf(err, "setting pd role to src, but got: %q", role)
+			}
+			return nil
+		}, &getPDRolePollOptions); err != nil {
+			return err
+		}
+	}
+	// Cr50 goes to sleep during hibernation, and when DUT wakes, CCD state might be locked.
+	// Open CCD before talking to the EC.
+	if err := h.OpenCCD(ctx, true, true); err != nil {
+		return errors.Wrap(err, "failed to open CCD")
+	}
+	// Verify EC console is responsive.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if _, err := h.Servo.RunECCommandGetOutput(ctx, "version", []string{`.`}); err != nil {
+			return errors.Wrap(err, "EC is not responsive after reconnecting power supply to DUT")
+		}
+		return nil
+	}, &runECPollOptions); err != nil {
+		return errors.Wrap(err, "failed to wait for EC to become responsive")
+	}
+	testing.ContextLog(ctx, "EC is responsive")
+
+	// Verify that DUT is charging with power supply connected.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		ok, err := h.Servo.GetChargerAttached(ctx)
+		if err != nil {
+			return errors.Wrap(err, "error checking whether charger is attached")
+		}
+		if !ok {
+			return errors.New("DUT is not charging after connecting the power supply")
+		}
+		return nil
+	}, &getChargerPollOptions); err != nil {
+		return errors.Wrap(err, "failed to check for charger after connecting power")
+	}
+	testing.ContextLog(ctx, "DUT is charging")
+
+	if lidOpen == string(servo.LidOpenYes) {
+		testing.ContextLog(ctx, "Waiting for DUT to power ON")
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+		defer cancelWaitConnect()
+
+		var opts []firmware.WaitConnectOption
+		opts = append(opts, firmware.FromHibernation)
+		err := h.WaitConnect(waitConnectCtx, opts...)
+		if errors.As(err, &context.DeadlineExceeded) {
+			// For some devices, the ac on event cannot wake the AP.
+			// Return a retriableErr and allow the test to continue by
+			// booting up the device with a short power button press.
+			return &retriableErr{E: errors.Wrap(err, "timeout in reconnecting to DUT")}
+		}
+		return err
+	}
+	// When lid is closed, DUTs remain in G3 after waking up from
+	// hibernation with charger reconnected.
+	testing.ContextLog(ctx, "Checking for power state at G3")
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
+		return errors.Wrap(err, "failed to get power state at G3")
 	}
 	return nil
 }

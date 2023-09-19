@@ -84,6 +84,7 @@ type Config struct {
 	NoBrokenScreenInDev   bool              `json:"no_broken_screen_in_dev"`
 	MiniDiagEnabled       bool              `json:"minidiag_enabled"`
 	MiniOSEnabled         bool              `json:"minios_enabled"`
+	ACOnCanWakeApFromUlp  bool              `json:"ac_on_can_wake_ap_from_ulp"`
 
 	// Raw duration fields represent a quantity of seconds.
 	// They are used during NewConfig to populate actual duration fields, which are defined below.
