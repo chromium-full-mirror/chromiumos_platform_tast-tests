@@ -7,7 +7,10 @@ package firmware
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,6 +21,35 @@ import (
 
 	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast/core/testing"
+)
+
+var (
+	// board is a runtime variable to store board information
+	// of dut.
+	board = testing.RegisterVarString(
+		"firmware.board",
+		"",
+		"A variable to store the board information for the dut")
+
+	// branch is a runtime variable to store which branch to download firmware from
+	// for the dut.
+	branch = testing.RegisterVarString(
+		"firmware.branch",
+		"",
+		"A variable to store the branch information for the fw download")
+
+	// branch is a runtime variable to store which version of firmware to download
+	// for the dut.
+	firmwareVersion = testing.RegisterVarString(
+		"firmware.firmwareVersion",
+		"",
+		"A variable to store the version information for the fw download")
+
+	// GCS location for the firmware to be downloaded
+	firmwarePath = testing.RegisterVarString(
+		"firmware.firmwarePath",
+		"",
+		"A variable to store the path information for the fw download")
 )
 
 func init() {
@@ -39,6 +71,7 @@ func init() {
 // UpdateDutFirmwareServo reads the current AP firmware and flashes it back from the servo using futility
 func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
+	firmwarePathVal := string(firmwarePath.Value())
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -85,8 +118,9 @@ func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 
 	uuid, _ := uuid.NewRandom()
 	const (
-		tmpFirmwareDir     = "/mnt/stateful_partition/tmp"
-		backupFirmwareFile = "backupfw.bin"
+		tmpFirmwareDir      = "/mnt/stateful_partition/tmp"
+		backupFirmwareFile  = "backupfw.bin"
+		firmwareFileToFlash = "firmwareForTest.bin"
 	)
 	servoTmpDir := fmt.Sprintf("%s-%s", tmpFirmwareDir, uuid)
 	if err := h.ServoProxy.RunCommand(ctx, false, "mkdir", "-p", servoTmpDir); err != nil {
@@ -110,6 +144,7 @@ func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 	if len(match) != 3 {
 		s.Fatalf("Unexpected fw id format from crossystem %v, got: %s", reporters.CrossystemParamFwid, initialRwFwid)
 	}
+	fwidModel := strings.ToLower(match[1])
 	initialRwFwid = match[2]
 
 	// Get the RO firmware version ID available on the DUT.
@@ -128,18 +163,69 @@ func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
 	}
 
-	s.Log("Flashing DUT with backup firmware file")
-	if err := h.ServoProxy.RunCommand(ctx, false, "futility", "update", "-i", fmt.Sprintf("%s/%s", servoTmpDir, backupFirmwareFile), fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), "--gbb_flags=0x18"); err != nil {
-		s.Fatal("Failed to flash DUT bin file: ", err)
+	// Flash DUT with the initial fw at the end
+	defer func() {
+		s.Log("Flashing DUT with backup firmware file")
+		if err := h.ServoProxy.RunCommand(ctx, false, "futility", "update", "-i", fmt.Sprintf("%s/%s", servoTmpDir, backupFirmwareFile), fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), "--gbb_flags=0x18"); err != nil {
+			s.Fatal("Failed to flash DUT bin file: ", err)
+		}
+		s.Log("Completed flashing of backup fw")
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
+		}
+
+		// Verify RO/RW firmware versions are the prior ones after flashing.
+		// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
+		if err = fwUtils.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
+			s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
+		}
+	}()
+
+	if firmwarePathVal == "" {
+		return
 	}
-	s.Log("Completed flashing of backup fw")
+	tmpDir, err := ioutil.TempDir("", "firmware-UpdateDUTFirmwareServo")
+	if err != nil {
+		s.Fatal("Failed to create a new directory for the test: ", err)
+	}
+	defer os.RemoveAll(tmpDir)
+	s.Log("Downloading Firmware to Flash")
+
+	binToFlash := downloadFirmwareFromGCS(ctx, s, tmpDir, firmwarePathVal, fwidModel)
+	s.Log("Firmware to Flash: ", binToFlash)
+
+	if err := h.ServoProxy.PutFiles(ctx, false, map[string]string{fmt.Sprintf("%s/%s", tmpDir, binToFlash): fmt.Sprintf("%s/%s", servoTmpDir, firmwareFileToFlash)}); err != nil {
+		s.Fatal("Failed to copy files to servo host: ", err)
+	}
+
+	s.Log("Flashing DUT with downloaded firmware file")
+	if err := h.ServoProxy.RunCommand(ctx, false, "futility", "update", "-i", fmt.Sprintf("%s/%s", servoTmpDir, firmwareFileToFlash), fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), "--gbb_flags=0x18"); err != nil {
+		s.Fatal("Failed to flash firmware bin file: ", err)
+	}
+	s.Log("Completed flashing of downloaded fw")
 	if err := h.EnsureDUTBooted(ctx); err != nil {
 		s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
 	}
 
-	// Verify RO/RW firmware versions are the prior ones after flashing.
+	// Verify RO/RW firmware versions are the downloaded firmware versions after flashing.
 	// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-	if err = fwUtils.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
-		s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
+	if err = fwUtils.VerifyFwIDs(ctx, h, firmwarePathVal, firmwarePathVal); err != nil {
+		s.Fatalf("After flashing RO_old + RW_old ( %s + %s ): %v", firmwarePathVal, firmwarePathVal, err)
 	}
+}
+
+// downloadFirmwareFromGCS reads a file from GCS based on the board, branch and firmware version specified
+func downloadFirmwareFromGCS(ctx context.Context, s *testing.State, tmpDir, firmwareFilepath, model string) string {
+	// Download the latest shipped firmware.
+	if err := fwUtils.DownloadFirmwareFile(ctx, s, tmpDir, firmwareFilepath); err != nil {
+		s.Fatal("Failed while downloading file: ", err)
+	}
+
+	// Untar the binary file with respect to the model name found in 'crossystem fwid'.
+	binToFlash, err := fwUtils.UntarUnknownFileName(ctx, tmpDir, model)
+	s.Log("Bin to Flash: ", binToFlash)
+	if err != nil {
+		s.Fatal("Failed to untar file: ", err)
+	}
+	return binToFlash
 }

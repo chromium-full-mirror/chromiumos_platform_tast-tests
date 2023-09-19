@@ -241,7 +241,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 
 	// Untar the binary file with respect to the model name found in 'crossystem fwid'.
-	binToFlash, err := untarUnknownFileName(ctx, tmpDir, fwidModel)
+	binToFlash, err := fwUtils.UntarUnknownFileName(ctx, tmpDir, fwidModel)
 	if err != nil {
 		s.Fatal("Failed to untar file: ", err)
 	}
@@ -698,21 +698,6 @@ func collectShippedFws(h *firmware.Helper, filepath string) ([]jsonFwInfo, error
 	}
 
 	return shippedFws, nil
-}
-
-// untarUnknownFileName will try to untar the respective fw bin file from the downloaded tar file.
-func untarUnknownFileName(ctx context.Context, tmpDir, fwidModel string) (string, error) {
-	// List of possible formats for the binary file found in a downloaded tar file.
-	filenamePool := []string{fmt.Sprintf("image-%s.bin", fwidModel), fmt.Sprintf("./image-%s.bin", fwidModel), "image.bin"}
-	var err error
-	for _, filename := range filenamePool {
-		if err = testexec.CommandContext(ctx, "tar", "-xvf", tmpDir+"/"+firmwareFileName, "-C", tmpDir, filename).Run(ssh.DumpLogOnError); err != nil {
-			testing.ContextLogf(ctx, "WARNING! failed to untar the image with the name %q: %v", filename, err)
-			continue
-		}
-		return filename, nil
-	}
-	return "", errors.Wrap(err, "failed to untar fw bin file from the downloaded tar file")
 }
 
 // getNewestRWIDAvailable identifies which is the newest firmware ID available
