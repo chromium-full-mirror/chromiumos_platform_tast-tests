@@ -20,8 +20,6 @@ func init() {
 		BugComponent: "b:156085",
 		Contacts: []string{
 			"cros-networking@google.com",
-			"arowa@google.com",
-			"chromeos-kernel-wifi@google.com",
 		},
 		Attr: []string{"group:mainline", "group:network", "network_cq"},
 		Pre:  pre.SetLoggingWiFi(),
