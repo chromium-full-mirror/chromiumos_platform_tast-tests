@@ -47,10 +47,10 @@ func init() {
 			Pre:               multivm.ArcLacrosStarted(),
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 		}, {
-			Name:              "arc_p",
+			Name:              "arc_container",
 			Pre:               multivm.ArcStarted(),
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "crostini",
 			Pre:               multivm.CrostiniStarted(),
