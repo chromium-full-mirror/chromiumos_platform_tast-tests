@@ -33,12 +33,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Chrome supports login",
 		Contacts: []string{
-			"cros-oobe@google.com",
-			"bohdanty@google.com",
-			"rrsilva@google.com",
+			"cros-lurs@google.com",
+			"anastasiian@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
-		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Val: chromeTestParams{
