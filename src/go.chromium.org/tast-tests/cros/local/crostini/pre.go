@@ -199,7 +199,7 @@ type testingState interface {
 // GetContainerMetadataArtifact gets the container metadata artifact
 // for the container parameters. Note that this function will return
 // different values on different architectures.
-func GetContainerMetadataArtifact(debianVersion vm.ContainerDebianVersion, largeContainer bool) string {
+func GetContainerMetadataArtifact(debianVersion string, largeContainer bool) string {
 	if largeContainer {
 		return fmt.Sprintf("crostini_app_test_container_metadata_%s_%s.tar.xz", debianVersion, vm.TargetArch())
 	}
@@ -209,7 +209,7 @@ func GetContainerMetadataArtifact(debianVersion vm.ContainerDebianVersion, large
 // GetContainerRootfsArtifact gets the container rootfs artifact
 // for the container parameters. Note that this function will return
 // different values on different architectures.
-func GetContainerRootfsArtifact(debianVersion vm.ContainerDebianVersion, largeContainer bool) string {
+func GetContainerRootfsArtifact(debianVersion string, largeContainer bool) string {
 	if largeContainer {
 		return fmt.Sprintf("crostini_app_test_container_rootfs_%s_%s.squashfs", debianVersion, vm.TargetArch())
 	}
@@ -220,8 +220,8 @@ func GetContainerRootfsArtifact(debianVersion vm.ContainerDebianVersion, largeCo
 // paths, and debian version set appropriately for the test.
 func GetInstallerOptions(s testingState, debianVersion vm.ContainerDebianVersion, largeContainer bool, userName string) *cui.InstallationOptions {
 	iOptions := &cui.InstallationOptions{
-		ContainerMetadataPath: s.DataPath(GetContainerMetadataArtifact(debianVersion, largeContainer)),
-		ContainerRootfsPath:   s.DataPath(GetContainerRootfsArtifact(debianVersion, largeContainer)),
+		ContainerMetadataPath: s.DataPath(GetContainerMetadataArtifact(debianVersion.Codename, largeContainer)),
+		ContainerRootfsPath:   s.DataPath(GetContainerRootfsArtifact(debianVersion.Codename, largeContainer)),
 		DebianVersion:         debianVersion,
 		UserName:              userName,
 	}

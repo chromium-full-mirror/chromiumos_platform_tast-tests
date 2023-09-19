@@ -50,15 +50,29 @@ const (
 )
 
 // ContainerDebianVersion represents the OS version of the container's image.
-type ContainerDebianVersion string
+type ContainerDebianVersion struct {
+	// Codename of the distribution
+	Codename string
+	// Version number of the distribution
+	Version int
+}
 
-const (
+var (
 	// DebianBuster refers to the "buster" distribution of debian (a.k.a. debian 10).
-	DebianBuster ContainerDebianVersion = "buster"
+	DebianBuster = ContainerDebianVersion{
+		Codename: "buster",
+		Version:  10,
+	}
 	// DebianBullseye refers to the "bullseye" distribution of debian (a.k.a. debian 11).
-	DebianBullseye ContainerDebianVersion = "bullseye"
+	DebianBullseye = ContainerDebianVersion{
+		Codename: "bullseye",
+		Version:  11,
+	}
 	// DebianBookworm refers to the "bookworm" distribution of debian (a.k.a. debian 12).
-	DebianBookworm ContainerDebianVersion = "bookworm"
+	DebianBookworm = ContainerDebianVersion{
+		Codename: "bookworm",
+		Version:  12,
+	}
 )
 
 // ContainerArch represents the architecture of the container
@@ -154,7 +168,7 @@ func GetRunningContainer(ctx context.Context, user string) (*Container, error) {
 // architecture, i.e. part of the path used to compute the container's
 // gsutil URL.
 func ArchitectureAlias(t ContainerDebianVersion) string {
-	return fmt.Sprintf("debian/%s/test", t)
+	return fmt.Sprintf("debian/%s/test", t.Codename)
 }
 
 // Create will create a Linux container in an existing VM. It returns without waiting for the creation to complete.

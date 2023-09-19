@@ -292,7 +292,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				// then the debian version is always
 				// the same and we don't need to
 				// include it in the test name.
-				name = combineName(name, string(i.debianVersion))
+				name = combineName(name, i.debianVersion.Codename)
 			}
 
 			if testCase.DeviceMode == devicemode.TabletMode || testCase.DeviceMode == devicemode.ClamshellMode {
@@ -375,29 +375,29 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 					} else if testCase.DeviceMode == devicemode.ClamshellMode {
 						suffix = "Clamshell"
 					}
-					fixture = fmt.Sprintf("\"crostini%sLargeContainer%s\"", strings.Title(string(i.debianVersion)), suffix)
+					fixture = fmt.Sprintf("\"crostini%sLargeContainer%s\"", strings.Title(i.debianVersion.Codename), suffix)
 				} else if testCase.UseGaiaLogin {
-					fixture = fmt.Sprintf("\"crostini%sGaia\"", strings.Title(string(i.debianVersion)))
+					fixture = fmt.Sprintf("\"crostini%sGaia\"", strings.Title(i.debianVersion.Codename))
 				} else if bt == browser.TypeLacros {
-					fixture = fmt.Sprintf("\"crostini%sWithLacros\"", strings.Title(string(i.debianVersion)))
+					fixture = fmt.Sprintf("\"crostini%sWithLacros\"", strings.Title(i.debianVersion.Codename))
 				} else {
-					fixture = fmt.Sprintf("\"crostini%s\"", strings.Title(string(i.debianVersion)))
+					fixture = fmt.Sprintf("\"crostini%s\"", strings.Title(i.debianVersion.Codename))
 				}
 
 			} else {
 				extraData = append(extraData,
-					fmt.Sprintf("crostini.GetContainerMetadataArtifact(%q, %t)", i.debianVersion, testCase.UseLargeContainer),
-					fmt.Sprintf("crostini.GetContainerRootfsArtifact(%q, %t)", i.debianVersion, testCase.UseLargeContainer),
+					fmt.Sprintf("crostini.GetContainerMetadataArtifact(%q, %t)", i.debianVersion.Codename, testCase.UseLargeContainer),
+					fmt.Sprintf("crostini.GetContainerRootfsArtifact(%q, %t)", i.debianVersion.Codename, testCase.UseLargeContainer),
 				)
 
 				if testCase.SelfManagedInstall {
 					precondition = ""
 				} else if testCase.UseLargeContainer {
-					precondition = fmt.Sprintf("crostini.StartedBy%s%sLargeContainer()", "Dlc", strings.Title(string(i.debianVersion)))
+					precondition = fmt.Sprintf("crostini.StartedBy%s%sLargeContainer()", "Dlc", strings.Title(i.debianVersion.Codename))
 				} else if testCase.UseGaiaLogin {
-					precondition = fmt.Sprintf("crostini.StartedBy%s%sGaia()", "Dlc", strings.Title(string(i.debianVersion)))
+					precondition = fmt.Sprintf("crostini.StartedBy%s%sGaia()", "Dlc", strings.Title(i.debianVersion.Codename))
 				} else {
-					precondition = fmt.Sprintf("crostini.StartedBy%s%s()", "Dlc", strings.Title(string(i.debianVersion)))
+					precondition = fmt.Sprintf("crostini.StartedBy%s%s()", "Dlc", strings.Title(i.debianVersion.Codename))
 				}
 			}
 
@@ -428,7 +428,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			}
 
 			if testCase.SelfManagedInstall {
-				testParam.Val = fmt.Sprintf("vm.Debian%s", strings.Title(string(i.debianVersion)))
+				testParam.Val = fmt.Sprintf("vm.Debian%s", strings.Title(i.debianVersion.Codename))
 			}
 
 			if testCase.UseFixture {
