@@ -84,7 +84,7 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 	dstServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer dstServer.Close()
 
-	if err := policyutil.ServeAndVerify(ctx, fakeDMS, cr, policy.PopulateDLPPolicyForClipboard(blockedServer.URL, dstServer.URL)); err != nil {
+	if err := policyutil.ServeAndVerify(ctx, fakeDMS, cr, policy.PopulateClipboardBlockPolicy(blockedServer.URL, dstServer.URL)); err != nil {
 		s.Fatal("Failed to serve and verify the DLP policy: ", err)
 	}
 

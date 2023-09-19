@@ -173,9 +173,9 @@ func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State)
 	pb := policyBlob.NewBlob()
 	switch params.restriction {
 	case restrictionlevel.Blocked:
-		pb.AddPolicies(policy.ClipboardBlockPolicy(sourceServer.URL+path, destServer.URL))
+		pb.AddPolicies(policy.PopulateClipboardBlockPolicy(sourceServer.URL+path, destServer.URL))
 	case restrictionlevel.WarnCancelled, restrictionlevel.WarnProceeded:
-		pb.AddPolicies(policy.ClipboardWarnPolicy(sourceServer.URL+path, destServer.URL))
+		pb.AddPolicies(policy.PopulateClipboardWarnPolicy(sourceServer.URL+path, destServer.URL))
 	}
 
 	// Update policy.

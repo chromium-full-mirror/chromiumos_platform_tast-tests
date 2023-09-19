@@ -73,7 +73,7 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 	bt := s.Param().(browser.Type)
 
 	// DLP policy with all clipboard blocked restriction.
-	policyDLP := policy.RestrictiveDLPPolicyForClipboard("example.com")
+	policyDLP := policy.PopulateClipboardBlockAllURLsPolicy("example.com")
 	if bt == browser.TypeLacros {
 		policyDLP = append(policyDLP, &policyBlob.LacrosAvailability{Val: "lacros_only"})
 	}
@@ -131,7 +131,7 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 	destServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer destServer.Close()
 
-	if err := policyutil.ServeAndVerify(ctx, fakeDMS, cr, policy.PopulateDLPPolicyForClipboard(blockedServer.URL, destServer.URL)); err != nil {
+	if err := policyutil.ServeAndVerify(ctx, fakeDMS, cr, policy.PopulateClipboardBlockPolicy(blockedServer.URL, destServer.URL)); err != nil {
 		s.Fatal("Failed to serve and verify the DLP policy: ", err)
 	}
 

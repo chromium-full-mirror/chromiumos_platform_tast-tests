@@ -138,7 +138,7 @@ func DataLeakPreventionRulesListDragdropMixedTypeBrowsers(ctx context.Context, s
 		s.Fatal("Failed to clean up: ", err)
 	}
 
-	if err := policyutil.ServeAndVerify(ctx, fdms, cr, policy.PopulateDLPPolicyForClipboard(srcMatch, dstMatch)); err != nil {
+	if err := policyutil.ServeAndVerify(ctx, fdms, cr, policy.PopulateClipboardBlockPolicy(srcMatch, dstMatch)); err != nil {
 		s.Fatal("Failed to serve and verify the DLP policy: ", err)
 	}
 

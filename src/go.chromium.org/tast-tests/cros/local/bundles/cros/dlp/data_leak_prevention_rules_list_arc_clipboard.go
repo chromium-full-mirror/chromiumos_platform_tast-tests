@@ -50,7 +50,7 @@ func DataLeakPreventionRulesListArcClipboard(ctx context.Context, s *testing.Sta
 	path := "/text_1.html"
 	// Update the policy blob.
 	pb := policyBlob.NewBlob()
-	pb.AddPolicies(policy.PopulateDLPPolicyBlockClipboardArc(sourceServer.URL + path))
+	pb.AddPolicies(policy.PopulateClipboardBlockArcPolicy(sourceServer.URL + path))
 	if err := fakeDMS.WritePolicyBlob(pb); err != nil {
 		s.Fatal("Failed to write policies to FakeDMS: ", err)
 	}
