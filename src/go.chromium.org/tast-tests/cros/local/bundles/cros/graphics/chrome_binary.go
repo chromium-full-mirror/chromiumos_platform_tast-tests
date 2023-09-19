@@ -18,7 +18,7 @@ func init() {
 		Func: ChromeBinary,
 		Desc: "This test runs chrome binary tests and reports errors ",
 		Contacts: []string{
-			"chromeos-gfx@chromium.org",
+			"chromeos-gfx@google.com",
 			"jshargo@google.com",
 			"mcasas@google.com",
 			"syedfaaiz@google.com",
