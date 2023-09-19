@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/imetestutil"
 	"go.chromium.org/tast-tests/cros/local/chrome/devicemode"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/vm"
 )
 
 // Struct used to specify extra test options for standard tests.  If the timeout
@@ -257,24 +258,24 @@ func TestAppNoBusterTestParams(t *testing.T) {
 	for _, filename := range appNoBusterTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
 			{
-				Timeout:             15 * time.Minute,
-				StableHardwareDep:   "crostini.CrostiniAppStable",
-				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
-				ExtraSoftwareDeps:   []string{"crostini_app"},
-				UseLargeContainer:   true,
-				UseFixture:          true,
-				DeviceMode:          devicemode.TabletMode,
-				NoBusterTest:        true,
+				Timeout:                 15 * time.Minute,
+				StableHardwareDep:       "crostini.CrostiniAppStable",
+				UnstableHardwareDep:     "crostini.CrostiniAppUnstable",
+				ExtraSoftwareDeps:       []string{"crostini_app"},
+				UseLargeContainer:       true,
+				UseFixture:              true,
+				DeviceMode:              devicemode.TabletMode,
+				MinimumContainerVersion: vm.DebianBullseye,
 			},
 			{
-				Timeout:             15 * time.Minute,
-				StableHardwareDep:   "crostini.CrostiniAppStable",
-				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
-				ExtraSoftwareDeps:   []string{"crostini_app"},
-				UseLargeContainer:   true,
-				UseFixture:          true,
-				DeviceMode:          devicemode.ClamshellMode,
-				NoBusterTest:        true,
+				Timeout:                 15 * time.Minute,
+				StableHardwareDep:       "crostini.CrostiniAppStable",
+				UnstableHardwareDep:     "crostini.CrostiniAppUnstable",
+				ExtraSoftwareDeps:       []string{"crostini_app"},
+				UseLargeContainer:       true,
+				UseFixture:              true,
+				DeviceMode:              devicemode.ClamshellMode,
+				MinimumContainerVersion: vm.DebianBullseye,
 			}})
 		genparams.Ensure(t, filename, params)
 	}
@@ -298,14 +299,14 @@ func TestAppClamshellOnlyTestParams(t *testing.T) {
 	for _, filename := range appClamshellOnlyTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
 			{
-				Timeout:             15 * time.Minute,
-				StableHardwareDep:   "crostini.CrostiniAppStable",
-				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
-				ExtraSoftwareDeps:   []string{"crostini_app"},
-				UseLargeContainer:   true,
-				UseFixture:          true,
-				DeviceMode:          devicemode.ClamshellMode,
-				NoBusterTest:        true,
+				Timeout:                 15 * time.Minute,
+				StableHardwareDep:       "crostini.CrostiniAppStable",
+				UnstableHardwareDep:     "crostini.CrostiniAppUnstable",
+				ExtraSoftwareDeps:       []string{"crostini_app"},
+				UseLargeContainer:       true,
+				UseFixture:              true,
+				DeviceMode:              devicemode.ClamshellMode,
+				MinimumContainerVersion: vm.DebianBullseye,
 			}})
 		genparams.Ensure(t, filename, params)
 	}
@@ -403,12 +404,12 @@ var containerTests = []string{
 func TestContainerTestParams(t *testing.T) {
 	for _, filename := range containerTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:           15 * time.Minute,
-			ExtraData:         []string{"hello-world-amd64.tar", "hello-world-arm64.tar"},
-			ExtraSoftwareDeps: []string{"vm_host"},
-			UseLargeContainer: true,
-			UseFixture:        true,
-			NoBusterTest:      true,
+			Timeout:                 15 * time.Minute,
+			ExtraData:               []string{"hello-world-amd64.tar", "hello-world-arm64.tar"},
+			ExtraSoftwareDeps:       []string{"vm_host"},
+			UseLargeContainer:       true,
+			UseFixture:              true,
+			MinimumContainerVersion: vm.DebianBullseye,
 		}})
 		genparams.Ensure(t, filename, params)
 	}

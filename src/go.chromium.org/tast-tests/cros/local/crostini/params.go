@@ -177,13 +177,14 @@ type Param struct {
 
 	// IMEName is used to specify the name of the input method being tested.
 	// This name will be used in naming the test and as a test Val.
-	// A non-empty value implies NoBusterTest=true and devicemode.ClamshellMode.
-	// If no additional input_method is used, set as empty string.
+	// A non-empty value implies MinimumContainerVersion=vm.DebianBullseye
+	// and devicemode.ClamshellMode. If no additional input_method is used,
+	// set as empty string.
 	IMEName string
 
-	// NoBusterTest is used to control whether the test runs on the Debian
-	// buster container.
-	NoBusterTest bool
+	// MinimumContainerVersion is the minimum version of the container to
+	// run tests for.
+	MinimumContainerVersion vm.ContainerDebianVersion
 }
 
 type generatedParam struct {
@@ -262,7 +263,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 		}
 
 		if testCase.IMEName != "" {
-			testCase.NoBusterTest = true
+			testCase.MinimumContainerVersion = vm.DebianBullseye
 			testCase.DeviceMode = devicemode.ClamshellMode
 		}
 
@@ -282,7 +283,8 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				return
 			}
 
-			if testCase.NoBusterTest && i.debianVersion == vm.DebianBuster {
+			if i.debianVersion.Version < testCase.MinimumContainerVersion.Version {
+				// Minimum version requirement not satisfied.
 				return
 			}
 
