@@ -26,30 +26,37 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
+			// Contact: byronlee@google.com
 			Name:              "battery_capacity",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryCapacity),
 			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 		}, {
+			// Contact: byronlee@google.com
 			Name:              "battery_health",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryHealth),
 			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 		}, {
+			// Contact: dennyh@google.com
 			Name:              "smartctl_check",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineSmartctlCheck),
 			ExtraSoftwareDeps: []string{"smartctl"},
 		}, {
+			// Contact: yycheng@google.com
 			Name: "cpu_cache",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineCPUCache),
 		}, {
+			// Contact: yycheng@google.com
 			Name: "cpu_stress",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineCPUStress),
 		}, {
+			// Contact: dennyh@google.com
 			Name:              "nvme_self_test",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineNVMESelfTest),
 			Timeout:           3 * time.Minute,
 			ExtraSoftwareDeps: []string{"nvme"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme(), hwdep.NvmeSelfTest()),
 		}, {
+			// Contact: dennyh@google.com
 			Name: "nvme_wear_level",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineNVMEWearLevel),
 			// nvme_wear_level requires specific offsets in the nvme log that
@@ -57,69 +64,82 @@ func init() {
 			ExtraSoftwareDeps: []string{"nvme", "wilco"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 		}, {
+			// Contact: weiluanwang@google.com
 			// Cannot be added to DiagnosticsPass.* since the result would be
 			// "Not run" in lab's network. See b/286497166.
 			Name: "signal_strength",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineSignalStrength),
 		}, {
+			// Contact: weiluanwang@google.com
 			Name: "gateway_can_be_pinged",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineGatewayCanBePinged),
 		}, {
+			// Contact: weiluanwang@google.com
 			// Cannot be added to DiagnosticsPass.* since the result would be
 			// "Not run" in lab's network. See b/286497147.
 			Name: "has_secure_wifi_connection",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHasSecureWifiConnection),
 		}, {
+			// Contact: weiluanwang@google.com
 			// Cannot be added to DiagnosticsPass.* since that requires the
 			// routine to be run in a good network environment. The
 			// DiagnosticsPass.* counterpart will be flaky in a normal lab.
 			Name: "dns_latency",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDNSLatency),
 		}, {
+			// Contact: weiluanwang@google.com
 			Name: "http_firewall",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHTTPFirewall),
 			// TODO(b/281464322): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
+			// Contact: weiluanwang@google.com
 			Name: "https_firewall",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSFirewall),
 			// TODO(b/281464322): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
+			// Contact: weiluanwang@google.com
 			// Cannot be added to DiagnosticsPass.* since that requires the
 			// routine to be run in a good network environment. The
 			// DiagnosticsPass.* counterpart will be flaky in a normal lab.
 			Name: "https_latency",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSLatency),
 		}, {
+			// Contact: yycheng@google.com
 			Name: "memory",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
 			// TODO(b/279849842): Promote to critical.
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
+			// Contact: byronlee@google.com
 			Name: "sensitive_sensor",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor),
 			// TODO(b/280388091): Promote to critical.
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
+			// Contact: kerker@google.com
 			Name:              "fingerprint",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 			// TODO(b/279374234): Promote to critical.
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
+			// Contact: kerker@google.com
 			Name:              "fingerprint_alive",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 			// TODO(b/279374234): Promote to critical.
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
+			// Contact: dennyh@google.com
 			Name:              "emmc_lifetime",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
 			// TODO(b/279707249): Promote to critical.
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
+			// Contact: weiluanwang@google.com
 			Name: "power_button",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutinePowerButton),
 		}},

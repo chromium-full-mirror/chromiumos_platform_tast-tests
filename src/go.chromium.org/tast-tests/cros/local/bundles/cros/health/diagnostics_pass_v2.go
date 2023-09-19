@@ -25,38 +25,47 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
+			// Contact: yycheng@google.com
 			Name: "memory_v2",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineMemoryV2},
 		}, {
+			// Contact: yycheng@google.com
 			Name: "cpu_stress_v2",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
 			// TODO(b/295497926): Promote tast to critical
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
+			// Contact: kerker@google.com
 			Name: "audio_driver",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
 			// TODO(b/295499944): Promote tast to critical
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
+			// Contact: yycheng@google.com
 			Name: "cpu_cache_v2",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
 			// TODO(b/281766836): Promote tast to critical
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
+			// Contact: dennyh@google.com
 			Name:              "ufs_lifetime",
 			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineUFSLifetime},
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 		}, {
+			// Contact: yycheng@google.com
 			Name: "prime_search_v2",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutinePrimeSearchV2},
 		}, {
+			// Contact: weiluanwang@google.com
 			Name: "volume_button",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
 		}, {
+			// Contact: weiluanwang@google.com
 			Name:              "led_lit_up",
 			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineLedLitUp},
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		}, {
+			// Contact: yycheng@google.com
 			Name: "floating_point_v2",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineFloatingPointV2},
 		}}})
