@@ -136,6 +136,7 @@ func skipGmailSplash(ctx context.Context, tconn *chrome.TestConn, d *ui.Device) 
 	const (
 		dialogID            = "com.google.android.gm:id/customPanel"
 		dismissID           = "com.google.android.gm:id/gm_dismiss_button"
+		denyPermissionID    = "com.android.permissioncontroller:id/permission_deny_button"
 		customPanelMaxCount = 10
 		actionTimeout       = 10 * time.Second
 	)
@@ -143,6 +144,15 @@ func skipGmailSplash(ctx context.Context, tconn *chrome.TestConn, d *ui.Device) 
 	// Dismiss the ARC compatibility mode splash from Ash, if any.
 	if err := cuj.DismissMobilePrompt(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to dismiss compatibility splash")
+	}
+
+	dontAllow := d.Object(ui.ID(denyPermissionID), ui.Text("Don’t allow"))
+	if err := dontAllow.WaitForExists(ctx, actionTimeout); err != nil {
+		testing.ContextLog(ctx, `"Don’t allow" notification button did not show up`)
+	} else {
+		if err := dontAllow.Click(ctx); err != nil {
+			return errors.Wrap(err, `failed to click "Don’t allow" button`)
+		}
 	}
 
 	gotIt := d.Object(ui.Text("GOT IT"))
