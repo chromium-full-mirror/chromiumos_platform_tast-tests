@@ -52,6 +52,7 @@ type cyclicTestParameters struct {
 	Affinity            affinity      // Run cyclictest threads on which sets of processors.
 	MaxLatencyThreshold time.Duration // Max latency threshold.
 	StressConfig        *schedConfig  // The schedule config of the stress process. if `StressConfig` is nil, no stress process will be run.
+	ShouldFail          bool          // Whether the test should fail based on the threshold. This should only be true for tests that simulate actual CRAS specs to prevent noise.
 }
 
 const (
@@ -96,6 +97,7 @@ func init() {
 					Affinity:            defaultAff,
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
+					ShouldFail:          true,
 				},
 			},
 			{
@@ -177,6 +179,7 @@ func init() {
 						Policy:   otherSched,
 						Priority: 0,
 					},
+					ShouldFail: true,
 				},
 			},
 			{
@@ -366,8 +369,13 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 		p.Set(maxLatency, stat.Max)
 
 		if stat.Max > float64(param.MaxLatencyThreshold/time.Microsecond) {
-			s.Error("Max latency exceeds threshold: ", stat.Max,
-				"us > ", param.MaxLatencyThreshold)
+			if param.ShouldFail {
+				s.Error("Max latency exceeds threshold: ", stat.Max,
+					"us > ", param.MaxLatencyThreshold)
+			} else {
+				s.Log("Max latency exceeds threshold: ", stat.Max,
+					"us > ", param.MaxLatencyThreshold)
+			}
 		}
 	}
 	if err := p.Save(s.OutDir()); err != nil {
