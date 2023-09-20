@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -24,7 +25,7 @@ import (
 
 // Timeout for methods of Tast fixture.
 const (
-	setUpTimeout    = 3 * time.Minute
+	setUpTimeout    = 6 * time.Minute
 	tearDownTimeout = 3 * time.Minute
 	resetTimeout    = 1 * time.Second
 	postTestTimeout = 1 * time.Minute
@@ -48,7 +49,7 @@ func init() {
 		PreTestTimeout:  preTestTimeout,
 		TearDownTimeout: tearDownTimeout,
 		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
-		Vars:            []string{"callboxManager", "callbox"},
+		Vars:            []string{"callboxManager", "callbox", "companionCount"},
 	})
 }
 
@@ -109,6 +110,10 @@ func (tf *TestFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 			baseURL:        "http://" + tf.Vars.CallboxManager,
 			defaultCallbox: tf.Vars.Callbox,
 		}
+	}
+
+	if err := disableCompanionDUTs(ctx, s); err != nil {
+		s.Fatal("Failed to disable companion DUTs: ", err)
 	}
 
 	if err := tf.initRemoteClient(ctx, s.DUT(), s.RPCHint()); err != nil {
@@ -325,4 +330,44 @@ func (tf *TestFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if err := tf.rpcClient.Close(ctx); err != nil {
 		s.Error("Failed to close DUT RPC client: ", err)
 	}
+}
+
+// disableCompanionDUTs disables all "companion" DUTs that are connected to the same callbox.
+func disableCompanionDUTs(ctx context.Context, s *testing.FixtState) error {
+	str, ok := s.Var("companionCount")
+	if !ok {
+		return nil
+	}
+
+	companionCount, err := strconv.Atoi(str)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse integer variable: %q", str)
+	}
+
+	for i := 0; i < companionCount; i++ {
+		companionDUT := s.CompanionDUT(fmt.Sprintf("cd%d", i+1))
+		if companionDUT == nil {
+			return errors.Errorf("failed to get companion DUT cd%d", i+1)
+		}
+
+		s.Log("Connecting to companion DUT: ", companionDUT.HostName())
+		companionCl, err := rpc.Dial(ctx, companionDUT, s.RPCHint())
+		if err != nil {
+			s.Fatal("Failed to connect to the RPC service on the companion DUT: ", err)
+		}
+		defer companionCl.Close(ctx)
+
+		// Create a new remote cellular client on companion DUT and disable it.
+		service := cellular.NewRemoteCellularServiceClient(companionCl.Conn)
+		if _, err := service.SetUp(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrapf(err, "failed to initialize remote cellular client on companion DUT: %d", i+1)
+		}
+
+		s.Log("Disabling cellular on companion DUT: ", companionDUT.HostName())
+		if _, err := service.Disable(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrapf(err, "failed to disable companion DUT: %d", i+1)
+		}
+	}
+
+	return nil
 }
