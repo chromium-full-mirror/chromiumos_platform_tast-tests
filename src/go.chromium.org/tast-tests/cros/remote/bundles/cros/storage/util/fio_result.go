@@ -52,8 +52,51 @@ type fioDiskUsageReport struct {
 
 // FioResultWriter is a serial processor of fio results.
 type FioResultWriter struct {
-	resultLock sync.Mutex
-	results    []fioResultReport
+	resultLock  sync.Mutex
+	results     []fioResultReport
+	ignoreRead  bool
+	ignoreWrite bool
+	ignoreSync  bool
+	ignoreTrim  bool
+}
+
+func (f *FioResultWriter) ignoreResult(read, write, sync, trim bool) {
+	f.ignoreRead = read
+	f.ignoreWrite = write
+	f.ignoreSync = sync
+	f.ignoreTrim = trim
+}
+
+// ReportOnlyRead makes writer output only read data.
+func (f *FioResultWriter) ReportOnlyRead() {
+	f.ignoreResult(false, true, true, true)
+}
+
+// ReportOnlyWrite makes writer output only write data.
+func (f *FioResultWriter) ReportOnlyWrite() {
+	f.ignoreResult(true, false, true, true)
+}
+
+// ReportOnlyReadWrite makes writer output only read and write data.
+func (f *FioResultWriter) ReportOnlyReadWrite() {
+	f.ignoreResult(false, false, true, true)
+}
+
+func (f *FioResultWriter) reportResults(ctx context.Context, res *fioResult, perfValues *perf.Values) {
+	for _, job := range res.Jobs {
+		if !f.ignoreRead {
+			reportJobRWResult(ctx, job.Read, job.Jobname+"_read", perfValues)
+		}
+		if !f.ignoreWrite {
+			reportJobRWResult(ctx, job.Write, job.Jobname+"_write", perfValues)
+		}
+		if !f.ignoreTrim {
+			reportJobRWResult(ctx, job.Trim, job.Jobname+"_trim", perfValues)
+		}
+		if !f.ignoreSync {
+			reportJobRWResult(ctx, job.Sync, job.Jobname+"_sync", perfValues)
+		}
+	}
 }
 
 // Save processes and saves reported results.
@@ -64,7 +107,7 @@ func (f *FioResultWriter) Save(ctx context.Context, path string, writeKeyVal boo
 	perfValues := perf.NewValues()
 
 	for _, report := range f.results {
-		reportResults(ctx, report.result, perfValues)
+		f.reportResults(ctx, report.result, perfValues)
 	}
 
 	if writeKeyVal {
@@ -178,13 +221,4 @@ func flattenNestedResults(prefix string, nested interface{}) (flat map[string]fl
 		flat[prefix] = nested.(float64)
 	}
 	return
-}
-
-func reportResults(ctx context.Context, res *fioResult, perfValues *perf.Values) {
-	for _, job := range res.Jobs {
-		reportJobRWResult(ctx, job.Read, job.Jobname+"_read", perfValues)
-		reportJobRWResult(ctx, job.Write, job.Jobname+"_write", perfValues)
-		reportJobRWResult(ctx, job.Trim, job.Jobname+"_trim", perfValues)
-		reportJobRWResult(ctx, job.Sync, job.Jobname+"_sync", perfValues)
-	}
 }
