@@ -43,6 +43,16 @@ func init() {
 			},
 			Timeout: 3 * time.Hour,
 		}, {
+			Name: "power_qual_prep",
+			Val: power.ChargeParams{
+				MinChargePercentage:   79.0,
+				MaxChargePercentage:   81.0,
+				DischargeOnCompletion: true,
+				IsCustomized:          false,
+				IsPowerQual:           false,
+			},
+			Timeout: 3 * time.Hour,
+		}, {
 			Name: "charge_qual_prep",
 			Val: power.ChargeParams{
 				MinChargePercentage:   7.5,
