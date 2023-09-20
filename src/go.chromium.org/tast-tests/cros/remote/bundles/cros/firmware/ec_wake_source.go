@@ -73,7 +73,7 @@ func init() {
 
 // time constants
 const (
-	dutWakeDelay   time.Duration = 5 * time.Second
+	dutWakeDelay   time.Duration = 15 * time.Second
 	lidSwitchDelay time.Duration = 2 * time.Second
 )
 
@@ -113,9 +113,9 @@ func ECWakeSource(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to suspend and wake with lid: ", err)
 		}
 
-		s.Log("Suspend DUT then close lid, wake by opening lid")
-		if err := testWakeWithLid(ctx, h); err != nil {
-			s.Fatal("Failed to suspend and wake with lid: ", err)
+		s.Log("Dbus-Suspend DUT then close lid, wake by opening lid")
+		if err := testDbusSuspendAndWakeWithLid(ctx, h); err != nil {
+			s.Fatal("Failed to dbus-suspend and wake with lid: ", err)
 		}
 	case wakeByUSBKeyboard:
 		s.Log("Suspend DUT and wake using keypress from USB keyboard")
@@ -146,13 +146,13 @@ func testSuspendAndWakeWithLid(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-func testWakeWithLid(ctx context.Context, h *firmware.Helper) error {
+func testDbusSuspendAndWakeWithLid(ctx context.Context, h *firmware.Helper) error {
 	bootID, err := h.Reporter.BootID(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get boot id")
 	}
 
-	testing.ContextLog(ctx, "Suspending DUT")
+	testing.ContextLog(ctx, "Suspending DUT with dbus-suspend")
 	cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--delay=5")
 	if err := cmd.Start(); err != nil {
 		return errors.Wrap(err, "failed to suspend DUT")
@@ -163,13 +163,13 @@ func testWakeWithLid(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to get S0ix or S3 powerstate")
 	}
 
-	testing.ContextLogf(ctx, "Sleeping for %s", dutWakeDelay)
+	testing.ContextLogf(ctx, "Sleeping for %s while suspended", dutWakeDelay)
 	// GoBigSleepLint: Sleep long enough for DUT to unsuspend and verify DUT remains suspended after that.
 	if err := testing.Sleep(ctx, dutWakeDelay); err != nil {
 		return err
 	}
 
-	testing.ContextLog(ctx, "Checking it remains suspended for S0ix or S3 powerstate")
+	testing.ContextLog(ctx, "Checking it remains suspended in S0ix or S3 powerstate")
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0ix", "S3"); err != nil {
 		return errors.Wrap(err, "failed to get S0ix or S3 powerstate")
 	}
@@ -191,6 +191,13 @@ func testWakeWithLid(ctx context.Context, h *firmware.Helper) error {
 }
 
 func closeAndOpenLid(ctx context.Context, h *firmware.Helper, delay time.Duration) error {
+
+	testing.ContextLog(ctx, "Checking for S3..S0 powerstate before lid-close")
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0", "S0ix", "S3"); err != nil {
+		return errors.Wrap(err, "DUT not in S3..S0 before lid-close")
+	}
+
+	testing.ContextLog(ctx, "Suspending DUT with lid-close")
 	if err := h.Servo.CloseLid(ctx); err != nil {
 		return err
 	}
@@ -200,13 +207,14 @@ func closeAndOpenLid(ctx context.Context, h *firmware.Helper, delay time.Duratio
 		return errors.Wrap(err, "failed to get S0ix or S3 powerstate")
 	}
 
-	testing.ContextLogf(ctx, "Sleeping for %s", delay)
+	testing.ContextLogf(ctx, "Sleeping for %s while suspended", delay)
 	// GoBigSleepLint: Remain in suspend state for variable length of time before
 	// opening lid to verify it still wakes even after a while.
 	if err := testing.Sleep(ctx, delay); err != nil {
 		return err
 	}
 
+	testing.ContextLog(ctx, "Waking DUT with lid-open")
 	if err := h.Servo.OpenLid(ctx); err != nil {
 		return err
 	}
@@ -215,6 +223,8 @@ func closeAndOpenLid(ctx context.Context, h *firmware.Helper, delay time.Duratio
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
 		return errors.Wrap(err, "failed to get S0 powerstate")
 	}
+
+	testing.ContextLog(ctx, "Reached S0 powerstate")
 
 	return nil
 }
