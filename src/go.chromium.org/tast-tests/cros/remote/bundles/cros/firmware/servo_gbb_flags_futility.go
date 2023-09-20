@@ -59,14 +59,17 @@ func ServoGBBFlagsFutility(ctx context.Context, s *testing.State) {
 			s.Fatal("ClearAndSetGBBFlagsByServo to restore original values failed: ", err)
 		}
 
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to reconnect to DUT after reboot: ", err)
+		}
+
 		if err := checker.GBBFlagsByServo(ctx, old); err != nil {
 			s.Fatal("all flags should have been restored: ", err)
 		}
 	}(ctxForCleanup)
 
-	s.Log("Waiting for reboot")
-	if err := h.WaitConnect(ctx); err != nil {
-		s.Fatalf("Failed to connect to DUT: %s", err)
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		s.Fatal("Failed to reconnect to DUT after reboot: ", err)
 	}
 
 	if err := checker.GBBFlagsByServo(ctx, req); err != nil {
