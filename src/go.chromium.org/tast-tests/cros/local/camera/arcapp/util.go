@@ -160,13 +160,16 @@ func StartRecording(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
 	return nil
 }
 
-// StopRecording stops the current recording and verify the video size is reasonable.
-func StopRecording(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
+// StopRecordingAndCheckFile stops the current recording and verify the video size is reasonable
+// if checkSavedFile is set to true.
+func StopRecordingAndCheckFile(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, checkSavedFile bool) error {
 	outputFile, err := broadcastIntentGetData(ctx, a, intentStopRecording)
 	if err != nil {
 		return errors.Wrap(err, "could not send intent")
 	}
-
+	if !checkSavedFile {
+		return nil
+	}
 	// Check if video file was generated.
 	if fileSize, err := fileSizeInDCIM(ctx, cr.NormalizedUser(), outputFile); err != nil {
 		return errors.Wrap(err, "could not determine size of video file")
@@ -174,6 +177,11 @@ func StopRecording(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
 		return errors.Wrapf(err, "video file is smaller than expected: got %d, want >= %d", fileSize, minExpectedFileSize)
 	}
 	return nil
+}
+
+// StopRecording stops the current recording and verify the video size is reasonable.
+func StopRecording(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
+	return StopRecordingAndCheckFile(ctx, cr, a, true)
 }
 
 // GetNumOfCameras returns the number of the detected cameras.

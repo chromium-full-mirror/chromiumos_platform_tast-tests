@@ -119,7 +119,7 @@ func TrayTriggersARC(ctx context.Context, s *testing.State) {
 		// `could not send intent: broadcast of "chromeos.camera.app.arccameratest.ACTION_STOP_RECORDING" failed, status = 0, data = "8"`
 		uiauto.Sleep(3*time.Second),
 		func(ctx context.Context) error {
-			return arcapp.StopRecording(ctx, cr, a)
+			return arcapp.StopRecordingAndCheckFile(ctx, cr, a, false)
 		},
 		vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse),
 		vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
