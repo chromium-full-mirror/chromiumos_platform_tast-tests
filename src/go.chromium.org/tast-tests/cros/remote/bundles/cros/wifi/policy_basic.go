@@ -48,13 +48,14 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:wificell", "wificell_func"},
-		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.policy.PolicyService"},
-		Timeout:      10 * time.Minute,
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesEnroll),
-		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:            []string{"group:wificell", "wificell_func"},
+		SoftwareDeps:    []string{"chrome"},
+		ServiceDeps:     []string{wificell.ShillServiceName, "tast.cros.policy.PolicyService"},
+		Timeout:         10 * time.Minute,
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesEnroll),
+		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.Served),
 			pci.SearchFlag(&policy.OpenNetworkConfiguration{}, pci.Served),

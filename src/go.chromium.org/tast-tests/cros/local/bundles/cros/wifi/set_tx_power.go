@@ -28,7 +28,8 @@ func init() {
 			// Updating the SAR tables in CBFS can break this test.
 			"group:firmware", "firmware_bios",
 		},
-		Requirements: []string{tdreq.WiFiRegSupportDynamicPowerTable, tdreq.WiFiRegSupportStaticSAR, tdreq.WiFiRegSupportDynamicSAR, tdreq.WiFiRegSupportGeoSAR, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates, "sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+		Requirements:    []string{tdreq.WiFiRegSupportDynamicPowerTable, tdreq.WiFiRegSupportStaticSAR, tdreq.WiFiRegSupportDynamicSAR, tdreq.WiFiRegSupportGeoSAR, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates, "sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				// This test only runs on devices which do not use VPD SAR tables.

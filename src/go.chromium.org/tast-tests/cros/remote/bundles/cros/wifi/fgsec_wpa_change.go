@@ -34,12 +34,13 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:wificell", "wificell_func"},
-		ServiceDeps:  []string{wificell.ShillServiceName},
-		SoftwareDeps: []string{"wpa3_sae"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesCapture),
-		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportPMF, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:            []string{"group:wificell", "wificell_func"},
+		ServiceDeps:     []string{wificell.ShillServiceName},
+		SoftwareDeps:    []string{"wpa3_sae"},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
+		Requirements:    []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportPMF, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "wpa_1_2_3",

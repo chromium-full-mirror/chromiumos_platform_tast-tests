@@ -26,7 +26,8 @@ func init() {
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},
 		// List of requirements this test satisfies.
-		Requirements: []string{tdreq.WiFiDrvSupportCfg80211, tdreq.WiFiSpecUlMIMO, tdreq.WiFiGenSupport2x2MIMO, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		Requirements:    []string{tdreq.WiFiDrvSupportCfg80211, tdreq.WiFiSpecUlMIMO, tdreq.WiFiGenSupport2x2MIMO, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

@@ -39,8 +39,9 @@ func init() {
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesCapture),
 		// Skip on Marvell on 8997 platforms because of test failure post security fixes b/187853331
 		// Test failure is due to increased RTT time
-		HardwareDeps: hwdep.D(hwdep.WifiNotMarvell8997()),
-		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		HardwareDeps:    hwdep.D(hwdep.WifiNotMarvell8997()),
+		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

@@ -48,8 +48,9 @@ func init() {
 		// to see if your board is incorrectly included/excluded.
 		// On reven board, the test fails due to missing iwlwifi folder and lockdown
 		// issue(b:263033256), so skipped this test on reven.
-		HardwareDeps: hwdep.D(hwdep.WifiIntel(), hwdep.SkipOnModel("reven")),
-		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		HardwareDeps:    hwdep.D(hwdep.WifiIntel(), hwdep.SkipOnModel("reven")),
+		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

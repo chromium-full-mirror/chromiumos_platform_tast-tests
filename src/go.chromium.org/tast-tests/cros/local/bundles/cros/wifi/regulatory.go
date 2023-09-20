@@ -34,8 +34,9 @@ func init() {
 		Attr:         []string{"group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},
 		// TODO(b/192693354, b/155410645): StP2 + 3.18 doesn't have self-managed regdomain, skip the remaining board before uprev is finished.
-		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("asuka", "sentry")),
-		Requirements: []string{tdreq.WiFiRegSupportNL80211CMD, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		HardwareDeps:    hwdep.D(hwdep.SkipOnPlatform("asuka", "sentry")),
+		Requirements:    []string{tdreq.WiFiRegSupportNL80211CMD, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

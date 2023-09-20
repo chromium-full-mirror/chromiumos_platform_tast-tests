@@ -41,8 +41,9 @@ func init() {
 		// On reven board, the test fails due to missing iwlwifi folder(b:264258845).
 		// Flex does not update the driver and does not need to recheck the functionality
 		// of the firmware dump, so skip this test on reven.
-		HardwareDeps: hwdep.D(hwdep.WifiIntel(), hwdep.SkipOnModel("reven")),
-		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		HardwareDeps:    hwdep.D(hwdep.WifiIntel(), hwdep.SkipOnModel("reven")),
+		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

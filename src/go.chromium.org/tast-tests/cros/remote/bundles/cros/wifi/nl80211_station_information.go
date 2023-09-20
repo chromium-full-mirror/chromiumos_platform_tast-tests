@@ -38,10 +38,11 @@ func init() {
 		Attr:         []string{"group:wificell", "wificell_func"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		// Marvell chips don't support all the attributes
-		HardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
-		Timeout:      2 * time.Minute,
-		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		HardwareDeps:    hwdep.D(hwdep.WifiNotMarvell()),
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		Timeout:         2 * time.Minute,
+		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

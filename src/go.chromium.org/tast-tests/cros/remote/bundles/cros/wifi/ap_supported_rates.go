@@ -39,8 +39,9 @@ func init() {
 		// See b/138406224. ath10k only supports this on CrOS kernels >=4.14
 		SoftwareDeps: []string{"no_ath10k_4_4"},
 		// Low flake rate for Marvell devices that are trending towards AUE. Skip on those platforms.
-		HardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
-		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		HardwareDeps:    hwdep.D(hwdep.WifiNotMarvell()),
+		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "11g",

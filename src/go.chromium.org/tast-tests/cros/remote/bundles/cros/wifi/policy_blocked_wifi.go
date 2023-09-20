@@ -113,9 +113,10 @@ func init() {
 			"tast.cros.browser.ChromeService",
 			"tast.cros.wifi.WifiService",
 		),
-		Timeout:      10 * time.Minute,
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesEnroll),
-		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		Timeout:         10 * time.Minute,
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesEnroll),
+		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				// TODO(b/278192058): Extend test with  EAP-TLS and WPA-EAP WiFi if they have different behavior when blocked.
