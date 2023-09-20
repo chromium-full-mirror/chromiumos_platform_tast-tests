@@ -114,7 +114,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            newCellularFixture().setRestartMM(true),
+		Impl:            newCellularFixture().setRestartMM(true).setRestartOnFailure([]string{modemmanager.JobName}).setDaemonUptimeBeforeTest(0 * time.Second),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularArcBooted",
@@ -385,8 +385,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	if f.restartMM {
-		// Disable cellular in shill to prevents re-enabling cellular after Modem
-		// disable called.
+		// Disable cellular in shill to prevent re-enabling cellular after Modem disable called.
 		if _, err := helper.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyCellular); err != nil {
 			s.Fatal("Unable to disable Cellular: ", err)
 		}
