@@ -128,7 +128,7 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 	}
 
 	if cfg.SkipAutoEnrollmentCheck() {
-		args = append(args, "--enterprise-enable-forced-re-enrollment=never", "--enterprise-enable-initial-enrollment=never")
+		args = append(args, "--enterprise-enable-forced-re-enrollment=never", "--enterprise-enable-initial-enrollment=never", "--enterprise-enable-unified-state-determination=never")
 	}
 
 	if cfg.ForceManualEnrollment() {
