@@ -159,6 +159,15 @@ func BackupRestore(ctx context.Context, s *testing.State) {
 		s.Fatal("Running autotestPrivate.importCrostini failed: ", err)
 	}
 
+	// Open Terminal to ensure Crostini is ready.
+	terminalApp, err := terminalapp.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Error launching Crostini: ", err)
+	}
+	if err := terminalApp.Exit(pre.KB)(ctx); err != nil {
+		s.Fatal("Failed to exit Terminal window: ", err)
+	}
+
 	if err := cont.CheckFileContent(ctx, testFileName, testFileContent); err != nil {
 		s.Fatal("Failed to verify file contents: ", err)
 	}
