@@ -12,8 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
-
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/cellularconst"
@@ -89,7 +87,7 @@ func init() {
 			Val:       apnTestParam{"callbox_default_attach_different_connect_apn_ipv4v6.pbf", "callbox-default-attach", "callbox-ipv4v6"},
 			ExtraData: []string{"callbox_default_attach_different_connect_apn_ipv4v6.pbf"},
 		}},
-		Fixture: "cellular",
+		Fixture: "cellularResetShillProfileOnPostTest",
 		Timeout: 2 * time.Minute,
 	})
 }
@@ -114,15 +112,6 @@ func ShillApn(ctx context.Context, s *testing.State) {
 	if _, err := helper.Disable(ctx); err != nil {
 		s.Fatal("Failed to disable cellular: ", err)
 	}
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
-	defer cancel()
-	defer func(ctx context.Context) {
-		// Restart shill after deleting |modbOverrideProto|.
-		if errs := helper.ResetShill(ctx); errs != nil {
-			s.Fatal("Failed to reset shill: ", errs)
-		}
-	}(cleanupCtx)
 
 	deferCleanUp, err := cellular.SetServiceProvidersExclusiveOverride(ctx, s.DataPath(modbOverrideProto))
 	if err != nil {

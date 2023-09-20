@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -67,7 +66,7 @@ func init() {
 			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_unreachable_entitlement_server.pbf", shillconst.TetheringReadinessNotAllowed, false},
 			ExtraData: []string{"callbox_default_unreachable_entitlement_server.pbf"},
 		}},
-		Fixture: "cellular",
+		Fixture: "cellularResetShillProfileOnPostTest",
 		Timeout: 2 * time.Minute,
 	})
 }
@@ -79,16 +78,6 @@ func ShillEntitlementCheck(ctx context.Context, s *testing.State) {
 	sendImsi := params.SendImsi
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
-	defer cancel()
-	defer func(ctx context.Context) {
-		// Restart shill after deleting |modbOverrideProto|.
-		if errs := helper.ResetShill(ctx); errs != nil {
-			s.Fatal("Failed to reset shill: ", errs)
-		}
-	}(cleanupCtx)
 
 	deferCleanUp, err := cellular.SetServiceProvidersExclusiveOverride(ctx, s.DataPath(modbOverrideProto))
 	if err != nil {

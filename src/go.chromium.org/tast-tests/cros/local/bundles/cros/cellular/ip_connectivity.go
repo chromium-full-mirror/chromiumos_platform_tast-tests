@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -49,7 +48,7 @@ func init() {
 			Val:       ipTestParams{"callbox_null_attach_ipv4v6_fallback_ipv6.pbf", false, true},
 			ExtraData: []string{"callbox_null_attach_ipv4v6_fallback_ipv6.pbf"},
 		}},
-		Fixture: "cellular",
+		Fixture: "cellularResetShillProfileOnPostTest",
 		Timeout: 2 * time.Minute,
 	})
 }
@@ -65,15 +64,6 @@ func IPConnectivity(ctx context.Context, s *testing.State) {
 	if _, err := helper.Disable(ctx); err != nil {
 		s.Fatal("Failed to disable cellular: ", err)
 	}
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
-	defer cancel()
-	defer func(ctx context.Context) {
-		// Restart shill after deleting |modbOverrideProto|.
-		if errs := helper.ResetShill(ctx); errs != nil {
-			s.Fatal("Failed to reset shill: ", errs)
-		}
-	}(cleanupCtx)
 
 	cleanup, err := cellular.SetServiceProvidersExclusiveOverride(ctx, s.DataPath(modbOverrideProto))
 	if err != nil {

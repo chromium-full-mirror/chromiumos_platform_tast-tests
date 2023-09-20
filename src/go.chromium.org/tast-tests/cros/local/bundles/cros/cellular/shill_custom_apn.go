@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/cellularconst"
@@ -40,7 +39,7 @@ func init() {
 			Name: "set_user_apn_list",
 			Val:  shillCellularCustomAPNTestParam{true},
 		}},
-		Fixture: "cellular",
+		Fixture: "cellularResetShillProfileOnPostTest",
 		Timeout: 6 * time.Minute,
 	})
 }
@@ -99,14 +98,10 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 	}
 
 	cleanupCtx := ctx
-	ctx, cancel = ctxutil.Shorten(ctx, 6*time.Second)
+	ctx, cancel = ctxutil.Shorten(ctx, 4*time.Second)
 	defer cancel()
 	defer func(ctx context.Context) {
 		cellular.CheckIfL850VerizonAndFixDefaultAPN(ctx)
-		// Restart shill after deleting |modbOverrideProto|.
-		if errs := helper.ResetShill(ctx); errs != nil {
-			s.Fatal("Failed to reset shill: ", errs)
-		}
 	}(cleanupCtx)
 
 	deferCleanUp, err := cellular.SetServiceProvidersExclusiveOverride(ctx, s.DataPath(modbOverrideProto))

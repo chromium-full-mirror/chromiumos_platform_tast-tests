@@ -12,8 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
-
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -100,7 +98,7 @@ func init() {
 				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_and_default_ipv6_and_ipv4.pbf", "callbox-ipv6", "callbox-dun-ipv4", "callbox-ipv6"},
 				ExtraData: []string{"callbox_tethering_dun_and_default_ipv6_and_ipv4.pbf"},
 			}},
-		Fixture: "cellular",
+		Fixture: "cellularResetShillProfileOnPostTest",
 		Timeout: 2 * time.Minute,
 	})
 }
@@ -161,16 +159,6 @@ func ShillCallboxHotspot(ctx context.Context, s *testing.State) {
 	}
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
-	defer cancel()
-	defer func(ctx context.Context) {
-		// Restart shill after deleting |modbOverrideProto|.
-		if errs := helper.ResetShill(ctx); errs != nil {
-			s.Fatal("Failed to reset shill: ", errs)
-		}
-	}(cleanupCtx)
 
 	deferCleanUp, err := cellular.SetServiceProvidersExclusiveOverride(ctx, s.DataPath(modbOverrideProto))
 	if err != nil {

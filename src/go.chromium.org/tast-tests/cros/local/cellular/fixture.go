@@ -23,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/starfish"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -117,6 +116,20 @@ func init() {
 		Impl:            newCellularFixture().setRestartMM(true).setRestartOnFailure([]string{modemmanager.JobName}).setDaemonUptimeBeforeTest(0 * time.Second),
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "cellularResetShillProfileOnPostTest",
+		Desc: "Tests that require shill to be reset after each test. This includes resetting the default.profile",
+		Contacts: []string{
+			"andrewlassalle@google.com",
+			"chromeos-cellular-team@google.com",
+		},
+		SetUpTimeout:    5 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second),
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularArcBooted",
 		Desc:            "Arc tests on cellular interface",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
@@ -179,16 +192,17 @@ func init() {
 // cellularFixture implements testing.FixtureImpl.
 type cellularFixture struct {
 	// Fixture control flags
-	restartMM              bool
-	useFakeDMS             bool
-	useRoaming             bool
-	useTestESIM            bool
-	checkSIM               bool
-	clearSIMLock           bool
-	hasArc                 bool
-	restartOnFailure       []string
-	daemonUptimeBeforeTest time.Duration
-	systemUptimeBeforeTest time.Duration
+	restartMM                   bool
+	useFakeDMS                  bool
+	useRoaming                  bool
+	useTestESIM                 bool
+	checkSIM                    bool
+	clearSIMLock                bool
+	hasArc                      bool
+	resetShillProfileOnPostTest bool
+	restartOnFailure            []string
+	daemonUptimeBeforeTest      time.Duration
+	systemUptimeBeforeTest      time.Duration
 	// Fixture variables
 	helper          *Helper
 	modemfwdStopped bool
@@ -230,6 +244,10 @@ func (f *cellularFixture) setUseRoaming(value bool) *cellularFixture {
 }
 func (f *cellularFixture) setUseTestESIM(value bool) *cellularFixture {
 	f.useTestESIM = value
+	return f
+}
+func (f *cellularFixture) setResetShillProfileOnPostTest(value bool) *cellularFixture {
+	f.resetShillProfileOnPostTest = value
 	return f
 }
 func (f *cellularFixture) setRestartOnFailure(value []string) *cellularFixture {
@@ -494,24 +512,33 @@ func getUpstartArgsForVerboseLogging(job string) []upstart.Arg {
 }
 
 func (f *cellularFixture) restartJobsAndWaitOnFailure(ctx context.Context) {
-	// stop and start jobs instead of upstart.Restart to emulate a reboot.
+	var restartOnFailure []string
 	for _, p := range f.restartOnFailure {
+		// If shill was reset on PostTest, don't do it again.
+		if f.resetShillProfileOnPostTest && p == shill.JobName {
+			continue
+		}
+		restartOnFailure = append(restartOnFailure, p)
+	}
+
+	// stop and start jobs instead of upstart.Restart to emulate a reboot.
+	for _, p := range restartOnFailure {
 		testing.ContextLogf(ctx, "Fixture detected a test failure, restarting %s", p)
 		if _, err := stopJob(ctx, p); err != nil {
 			testing.ContextLogf(ctx, "Failed to stop job: %q, %s", p, err)
 		}
 	}
-	for _, p := range f.restartOnFailure {
+	for _, p := range restartOnFailure {
 		if err := upstart.StartJob(ctx, p, getUpstartArgsForVerboseLogging(p)...); err != nil {
 			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", p, err)
 		}
 	}
-	if slices.Contains(f.restartOnFailure, modemmanager.JobName) {
+	if slices.Contains(restartOnFailure, modemmanager.JobName) {
 		if _, err := modemmanager.NewModem(ctx); err != nil {
 			testing.ContextLog(ctx, "Could not find MM dbus object after restarting ModemManager: ", err)
 		}
 	}
-	if len(f.restartOnFailure) > 0 {
+	if len(restartOnFailure) > 0 {
 		// GoBigSleepLint - Delay starting the next test to avoid any transients caused by restarting MM and shill.
 		testing.Sleep(ctx, f.daemonUptimeBeforeTest)
 	}
@@ -520,6 +547,12 @@ func (f *cellularFixture) restartJobsAndWaitOnFailure(ctx context.Context) {
 func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	if s.HasError() {
 		f.restartJobsAndWaitOnFailure(ctx)
+	}
+	if f.resetShillProfileOnPostTest {
+		testing.ContextLog(ctx, "Resetting shill on PostTest")
+		if errs := f.helper.ResetShill(ctx); errs != nil {
+			testing.ContextLogf(ctx, "Failed to restart job: shill, %s", errs)
+		}
 	}
 	if f.netUnlock != nil {
 		f.netUnlock()

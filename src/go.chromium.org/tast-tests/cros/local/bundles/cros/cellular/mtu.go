@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/shill"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/cellularconst"
@@ -50,7 +49,7 @@ func init() {
 			Val:       mtuTestParams{"callbox_low_mtu_override.pbf", 1400},
 			ExtraData: []string{"callbox_low_mtu_override.pbf"},
 		}},
-		Fixture: "cellular",
+		Fixture: "cellularResetShillProfileOnPostTest",
 		Timeout: 2 * time.Minute,
 	})
 }
@@ -65,15 +64,6 @@ func MTU(ctx context.Context, s *testing.State) {
 	if _, err := helper.Disable(ctx); err != nil {
 		s.Fatal("Failed to disable cellular: ", err)
 	}
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
-	defer cancel()
-	defer func(ctx context.Context) {
-		// Restart shill after deleting |modbOverrideProto|.
-		if errs := helper.ResetShill(ctx); errs != nil {
-			s.Fatal("Failed to reset shill: ", errs)
-		}
-	}(cleanupCtx)
 
 	cleanup, err := cellular.SetServiceProvidersExclusiveOverride(ctx, s.DataPath(modbOverrideProto))
 	if err != nil {
