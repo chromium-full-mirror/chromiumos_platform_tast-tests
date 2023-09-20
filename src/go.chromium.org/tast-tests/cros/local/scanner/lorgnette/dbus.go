@@ -320,3 +320,23 @@ func (l *Lorgnette) CancelScan(ctx context.Context, request *lpb.CancelScanReque
 
 	return response, nil
 }
+
+// ReadScanData calls lorgnette's ReadScanData method and returns the remote response.
+func (l *Lorgnette) ReadScanData(ctx context.Context, request *lpb.ReadScanDataRequest) (*lpb.ReadScanDataResponse, error) {
+	marshalled, err := proto.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal ReadScanDataRequest")
+	}
+
+	var buf []byte
+	if err := l.obj.CallWithContext(ctx, dbusInterface+".ReadScanData", 0, marshalled).Store(&buf); err != nil {
+		return nil, errors.Wrap(err, "failed to call ReadScanData")
+	}
+
+	response := &lpb.ReadScanDataResponse{}
+	if err := proto.Unmarshal(buf, response); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal ReadScanDataResponse")
+	}
+
+	return response, nil
+}

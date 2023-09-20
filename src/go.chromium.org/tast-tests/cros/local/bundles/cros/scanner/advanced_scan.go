@@ -5,9 +5,13 @@
 package scanner
 
 import (
+	"bytes"
 	"context"
+	"image/color"
+	"image/png"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"time"
 
 	lpb "chromiumos/system_api/lorgnette_proto"
@@ -60,6 +64,24 @@ func checkOption(option *lpb.ScannerOption, expectedType lpb.OptionType, expecte
 	}
 	if option.Unit != expectedUnit {
 		return errors.Errorf("Wrong unit.  Got %v, expected %v", lpb.OptionUnit.String(option.Unit), lpb.OptionUnit.String(expectedUnit))
+	}
+	return nil
+}
+
+func checkImage(scanData []byte, width, height int) error {
+	imgInfo, err := png.DecodeConfig(bytes.NewReader(scanData))
+	if err != nil {
+		return err
+	}
+
+	if imgInfo.ColorModel != color.RGBAModel {
+		return errors.Errorf("Incorrect color model.  Got %v, expected %v", imgInfo.ColorModel, color.RGBAModel)
+	}
+	if imgInfo.Width != width {
+		return errors.Errorf("Incorrect width.  Got %v, expected %v", imgInfo.Width, width)
+	}
+	if imgInfo.Height != height {
+		return errors.Errorf("Incorrect height.  Got %v, expected %v", imgInfo.Height, height)
 	}
 	return nil
 }
@@ -187,16 +209,55 @@ func AdvancedScan(ctx context.Context, s *testing.State) {
 		s.Fatal("Successful StartPreparedScan response is missing job handle")
 	}
 	jobHandle := startScanResponse.JobHandle
+	defer func(ctx context.Context) {
+		s.Log("Canceling scan job")
+		cancelScanRequest := &lpb.CancelScanRequest{
+			JobHandle: jobHandle,
+		}
+		cancelScanResponse, err := l.CancelScan(ctx, cancelScanRequest)
+		if err != nil {
+			s.Fatal("Failed to call CancelScan: ", err)
+		}
+		if cancelScanResponse.Result != lpb.OperationResult_OPERATION_RESULT_SUCCESS {
+			s.Fatal("Failed to cancel scan: ", lpb.OperationResult.String(cancelScanResponse.Result))
+		}
+	}(cleanupCtx)
 
-	s.Log("Canceling scan job")
-	cancelScanRequest := &lpb.CancelScanRequest{
+	s.Log("Reading scan data")
+	readScanDataRequest := &lpb.ReadScanDataRequest{
 		JobHandle: jobHandle,
 	}
-	cancelScanResponse, err := l.CancelScan(ctx, cancelScanRequest)
-	if err != nil {
-		s.Fatal("Failed to call CancelScan: ", err)
+	scanData := make([]byte, 0)
+	keepReading := true
+	for keepReading {
+		readResponse, err := l.ReadScanData(ctx, readScanDataRequest)
+		if err != nil {
+			s.Fatal("Failed to call ReadScanData: ", err)
+		}
+
+		switch readResponse.Result {
+		case lpb.OperationResult_OPERATION_RESULT_SUCCESS:
+			scanData = append(scanData, readResponse.Data...)
+			if len(readResponse.Data) == 0 {
+				// GoBigSleepLint: Give the scanner time to produce more data.
+				testing.Sleep(ctx, 100*time.Millisecond)
+			}
+		case lpb.OperationResult_OPERATION_RESULT_EOF:
+			scanData = append(scanData, readResponse.Data...)
+			keepReading = false
+		default:
+			s.Fatal("Got unexpected result from ReadScanData: ", lpb.OperationResult.String(readResponse.Result))
+		}
 	}
-	if cancelScanResponse.Result != lpb.OperationResult_OPERATION_RESULT_SUCCESS {
-		s.Fatal("Failed to cancel scan: ", lpb.OperationResult.String(cancelScanResponse.Result))
+	s.Logf("Got %d total scanned bytes", len(scanData))
+
+	// Expect a color 8.5x11.69" image at 300 dpi.
+	// TODO(b/274860786): Check correct options once non-default option setting is available.
+	if err := checkImage(scanData, 2550, 3507); err != nil {
+		s.Error("Incorrect scanned image: ", err)
+		saveScanPath := filepath.Join(s.OutDir(), "scan.png")
+		if err := ioutil.WriteFile(saveScanPath, scanData, 0644); err != nil {
+			s.Fatal("Failed to save scanned image: ", err)
+		}
 	}
 }
