@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/mlbenchmark/mlbenchmark_smartdim_20230920.tar.xz",
+  "size":  25136,
+  "sha256sum": "63b95b6700148f329b850e7a61bc5bfb91e1b1431f502b8745ec7f8af907ba99"
+}

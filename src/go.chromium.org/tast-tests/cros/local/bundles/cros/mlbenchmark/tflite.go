@@ -113,6 +113,22 @@ func init() {
 					GraphFilename: "seanet_wave.tflite",
 				},
 			},
+			{
+				Name:      "smartdim_rootfs",
+				ExtraData: []string{"mlbenchmark_smartdim.tar.xz"},
+				Val: mlbenchmark.TFLiteBenchmarkParams{
+					DataFilename:  "mlbenchmark_smartdim.tar.xz",
+					GraphFilename: "mlservice-model-smart_dim-20190521-v3.tflite",
+				},
+			},
+			{
+				Name:      "smartdim_oob",
+				ExtraData: []string{"mlbenchmark_smartdim.tar.xz"},
+				Val: mlbenchmark.TFLiteBenchmarkParams{
+					DataFilename:  "mlbenchmark_smartdim.tar.xz",
+					GraphFilename: "mlservice-model-smart_dim-20210201-downloadable.tflite",
+				},
+			},
 		},
 	})
 }
