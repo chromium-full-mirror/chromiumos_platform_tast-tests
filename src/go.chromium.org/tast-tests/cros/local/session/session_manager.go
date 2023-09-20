@@ -128,20 +128,6 @@ func (m *SessionManager) EnableChromeTestingAndWait(ctx context.Context, forceRe
 	return filepath, nil
 }
 
-// HandleSupervisedUserCreationStarting calls
-// SessionManager.HandleSupervisedUserCreationStarting D-Bus method.
-func (m *SessionManager) HandleSupervisedUserCreationStarting(
-	ctx context.Context) error {
-	return m.call(ctx, "HandleSupervisedUserCreationStarting").Err
-}
-
-// HandleSupervisedUserCreationFinished calls
-// SessionManager.HandleSupervisedUserCreationFinished D-Bus method.
-func (m *SessionManager) HandleSupervisedUserCreationFinished(
-	ctx context.Context) error {
-	return m.call(ctx, "HandleSupervisedUserCreationFinished").Err
-}
-
 // IsScreenLocked calls SessionManager.IsScreenLocked D-Bus method.
 func (m *SessionManager) IsScreenLocked(ctx context.Context) (screenLocked bool, err error) {
 	c := m.call(ctx, "IsScreenLocked")
