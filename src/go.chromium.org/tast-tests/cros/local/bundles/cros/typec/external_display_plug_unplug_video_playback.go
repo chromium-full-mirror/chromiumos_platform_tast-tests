@@ -162,7 +162,7 @@ func ExternalDisplayPlugUnplugVideoPlayback(ctx context.Context, s *testing.Stat
 	if err != nil {
 		s.Fatal("Failed to exceute cras_test_client command: ", err)
 	}
-	re := regexp.MustCompile(`yes.*HDMI.*2\*`)
+	re := regexp.MustCompile(`yes.*HDMI.*\d\*`)
 	if !re.MatchString(string(out)) {
 		s.Fatal("Failed to select HDMI as output audio node")
 	}
