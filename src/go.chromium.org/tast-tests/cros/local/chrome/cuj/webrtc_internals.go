@@ -229,7 +229,7 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 		if len(framesTransmittedTimeline) == 0 {
 			return 0, 0, errors.Errorf("no values for %s attribute for %q", framesTransmittedAttribute, id)
 		}
-		if framesTransmittedTimeline[len(framesTransmittedTimeline)-1] == 0 {
+		if framesTransmittedTimeline[len(framesTransmittedTimeline)-1] == float64(0) {
 			continue
 		}
 
