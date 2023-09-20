@@ -5,6 +5,7 @@
 package filemanager
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // FuseboxDirPath is the path to the directory containing all the fusebox mounts.
@@ -60,4 +62,25 @@ func CreateFolderInFusebox(fuseboxToken, folderName string) (string, error) {
 		return "", errors.Wrapf(err, "failed to create folder %q", fullPath)
 	}
 	return fullPath, nil
+}
+
+// RemovePathInFusebox removes the specified path and use poll to check if the
+// removal is successful or not.
+// This function is mainly used in the cleanup phase, we want to give some time
+// to the `RemoveAll` in case the fusebox unmounts before the removal finishes.
+func RemovePathInFusebox(ctx context.Context, fullPath string, timeout time.Duration) {
+	if err := os.RemoveAll(fullPath); err != nil {
+		testing.ContextLog(ctx, "Failed removing path: ", err)
+		return
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			return nil
+		} else if err != nil {
+			return errors.Wrap(err, "failed to stat path")
+		}
+		return errors.New("still waiting for path to be removed")
+	}, &testing.PollOptions{Timeout: timeout}); err != nil {
+		testing.ContextLog(ctx, "Failed removing path from fusebox: ", err)
+	}
 }

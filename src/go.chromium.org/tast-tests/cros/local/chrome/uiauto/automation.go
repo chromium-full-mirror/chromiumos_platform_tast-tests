@@ -1508,6 +1508,41 @@ func (ac *Context) ResetScrollOffset(finder *nodewith.Finder) Action {
 	}
 }
 
+// ScrollToVisible returns a function that calls makeVisible() JS method to
+// scroll the node to make it visible.
+func (ac *Context) ScrollToVisible(finder *nodewith.Finder) Action {
+	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		deadline, ok := ctx.Deadline()
+		var cancel context.CancelFunc
+		// Reserve time for cleanup if there is sufficient timeout
+		// or no timeout is set.
+		if !ok || time.Until(deadline) > releaseCleanupTime+100*time.Millisecond {
+			ctx, cancel = ctxutil.Shorten(ctx, releaseCleanupTime)
+			defer cancel()
+		}
+
+		q, err := ac.createQuery(ctx, finder)
+		if err != nil {
+			return err
+		}
+		defer q.release(cleanupCtx)
+		expr := `
+		async function() {
+			await this.execute();
+			this.node.makeVisible();
+		}`
+
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			return q.Call(ctx, nil, expr)
+		}, &ac.pollOpts); err != nil {
+			return errors.Wrap(err, "failed to call makeVisible() on the node")
+		}
+
+		return nil
+	}
+}
+
 // LeftClickUntilFocused returns a function that repeatedly left clicks the
 // node until it is focused.
 // NOTE: the node needs to focusable.

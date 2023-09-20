@@ -101,7 +101,7 @@ func DrivefsOfficeOpenFromOdfs(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to create test folder in ODFS %q: %s", testFolderName, err)
 	}
-	defer os.RemoveAll(testFolderPath)
+	defer filemanager.RemovePathInFusebox(cleanupCtx, testFolderPath, 5*time.Second)
 	for _, testFile := range data.GeneratedFiles {
 		content, err := os.ReadFile(testFile.SrcFile)
 		if err != nil {

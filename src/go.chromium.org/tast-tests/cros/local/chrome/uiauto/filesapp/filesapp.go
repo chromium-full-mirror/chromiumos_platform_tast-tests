@@ -245,12 +245,19 @@ func (f *FilesApp) WaitForTitle(expectedTitle string) uiauto.Action {
 // An error is returned if dir is not found or does not open.
 func (f *FilesApp) OpenDir(dirName, expectedTitle string) uiauto.Action {
 	dir := nodewith.Name(dirName).Role(role.TreeItem).First()
+	label := nodewith.Name(dirName).Role(role.StaticText).Ancestor(dir)
+
 	if f.appID == FolderSelectPseudoAppID {
-		return f.LeftClickUntil(nodewith.Name(dirName).Role(role.StaticText).Ancestor(dir),
+		return f.LeftClickUntil(label,
 			f.Exists(nodewith.Name(expectedTitle).Role(role.Button).First()))
 	}
-	return f.LeftClickUntil(nodewith.Name(dirName).Role(role.StaticText).Ancestor(dir),
-		f.Exists(f.windowFinderWithTitle(expectedTitle)))
+
+	return uiauto.Combine(fmt.Sprintf("OpenDir(%s)", dirName),
+		// Directory tree can contain a lot of items, we need to scroll the item
+		// into view first before clicking it.
+		f.ScrollToVisible(dir),
+		f.LeftClickUntil(label, f.Exists(f.windowFinderWithTitle(expectedTitle))),
+	)
 }
 
 // FormatDevice returns a function that formats USB drive with the default options.
@@ -493,7 +500,7 @@ func (f *FilesApp) SelectMultipleFiles(kb *input.KeyboardEventWriter, fileList .
 // CreateFolder returns a function that creates a new folder named dirName in the current directory.
 func (f *FilesApp) CreateFolder(kb *input.KeyboardEventWriter, dirName string) uiauto.Action {
 	return uiauto.Combine(fmt.Sprintf("CreateFolder(%s)", dirName),
-		f.FocusAndWait(nodewith.Role(role.ListBox)),
+		f.EnsureFocused(nodewith.Role(role.ListBox)),
 		kb.AccelAction("Ctrl+E"), // Press Ctrl+E to create a new folder.
 		// Wait for rename text field.
 		f.WaitUntilExists(nodewith.Role(role.TextField).Editable().Focusable().Focused()),
@@ -518,6 +525,26 @@ func (f *FilesApp) OpenPath(expectedTitle, dirName string, path ...string) uiaut
 		steps = append(steps, f.WaitForTitle(FilesTitlePrefix+path[len(path)-1]))
 	}
 	return uiauto.Combine(fmt.Sprintf("OpenPath(%s, %s, %s)", expectedTitle, dirName, path), steps...)
+}
+
+// OpenPathBySearch returns a function that opens a path by searching.
+// It's quite similar to `OpenPath`, the difference is it only cares the first
+// and the last path: it open the first path by clicking the directory tree
+// item, and then it searches the last path and click into it.
+// Note: this is useful in cases where the folder we are trying to open has
+// too many sibling folders so it's not visible in the file list.
+func (f *FilesApp) OpenPathBySearch(kb *input.KeyboardEventWriter, dirName string, path ...string) uiauto.Action {
+	if len(path) == 0 {
+		return f.OpenDir(dirName, FilesTitlePrefix+dirName)
+	}
+	folderNameToSearch := path[len(path)-1]
+	return uiauto.Combine("Open dir path",
+		f.OpenDir(dirName, FilesTitlePrefix+dirName),
+		f.Search(kb, folderNameToSearch),
+		f.WaitForFile(folderNameToSearch),
+		f.OpenFile(folderNameToSearch),
+		f.WaitForTitle(FilesTitlePrefix+folderNameToSearch),
+	)
 }
 
 // DeleteFileOrFolder returns a function that deletes a file or folder.

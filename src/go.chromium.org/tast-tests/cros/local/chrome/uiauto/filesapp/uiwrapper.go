@@ -116,6 +116,11 @@ func (f *FilesApp) EnsureFocused(finder *nodewith.Finder) uiauto.Action {
 	return f.ui.EnsureFocused(finder.FinalAncestor(WindowFinder(f.appID)))
 }
 
+// ScrollToVisible calls ui.ScrollToVisible scoping the finder to the Files App.
+func (f *FilesApp) ScrollToVisible(finder *nodewith.Finder) uiauto.Action {
+	return f.ui.ScrollToVisible(finder.FinalAncestor(WindowFinder(f.appID)))
+}
+
 // RetryUntil calls ui.RetryUntil which performs `action` until `condition“ is met.
 func (f *FilesApp) RetryUntil(action, condition uiauto.Action) uiauto.Action {
 	return f.ui.RetryUntil(action, condition)
