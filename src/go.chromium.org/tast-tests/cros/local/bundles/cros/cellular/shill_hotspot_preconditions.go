@@ -33,14 +33,10 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Second)
 	defer cancel()
 	defer func(ctx context.Context) {
 		cellular.CheckIfL850VerizonAndFixDefaultAPN(ctx)
-		// Restart shill after test to unload the tethering modb.
-		if errs := helper.ResetShill(ctx); errs != nil {
-			s.Fatal("Failed to reset shill: ", errs)
-		}
 	}(cleanupCtx)
 
 	// TODO(b/267804414): Set tethering Allowed is only needed during fishfooding and can be removed later.
