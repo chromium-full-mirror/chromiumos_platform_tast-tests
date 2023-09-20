@@ -113,6 +113,8 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 		args = append(args,
 			"--vmodule="+strings.Join([]string{
 				"*auto_enrollment_check_screen*=1",
+				"*gaia_screen_handler*=1",
+				"*oobe_test_api_handler*=1",
 				"*enrollment_screen*=1",
 				"*login_display_host_common*=1",
 				"*wizard_controller*=1",
