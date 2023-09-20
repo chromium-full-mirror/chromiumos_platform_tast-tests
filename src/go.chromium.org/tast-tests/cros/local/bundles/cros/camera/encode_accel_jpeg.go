@@ -24,10 +24,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Run Chrome jpeg_encode_accelerator_unittest",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome", caps.HWEncodeJPEG},
 		Data:         []string{"bali_640x368_P420.yuv"},
-		BugComponent: "b:167281",
 	})
 }
 

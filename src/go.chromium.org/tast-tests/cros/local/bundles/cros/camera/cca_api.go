@@ -18,10 +18,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the private JavaScript APIs CCA relies on work as expected",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Pre:          chrome.LoggedIn(),
-		BugComponent: "b:978428",
 	})
 }
 

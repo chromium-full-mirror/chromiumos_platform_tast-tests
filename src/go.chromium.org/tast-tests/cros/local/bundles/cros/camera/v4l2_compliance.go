@@ -28,7 +28,7 @@ func init() {
 			"chromeos-camera-eng@google.com",
 			"ribalda@chromium.org",
 		},
-		BugComponent: "b:1093480",
+		BugComponent: "b:1093480", // ChromeOS > Platform > Technologies > Camera > Kernel
 		Attr:         []string{"group:mainline", "group:camera-usb-qual", "group:cq-medium"},
 		// TODO(b/173778998) Jinlon privacy switch is not compliance: EBUSY during streamoff.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("jinlon")),

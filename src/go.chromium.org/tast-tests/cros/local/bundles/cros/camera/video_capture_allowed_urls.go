@@ -36,7 +36,7 @@ func init() {
 			"wtlee@google.com",
 			"eariassoto@google.com", // Test author
 		},
-		BugComponent: "b:978428",
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{

@@ -26,11 +26,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify CCA volume button shutter related use cases",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", "proprietary_codecs"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "ccaLaunchedWithFakeHALCamera",
-		BugComponent: "b:978428",
 	})
 }
 

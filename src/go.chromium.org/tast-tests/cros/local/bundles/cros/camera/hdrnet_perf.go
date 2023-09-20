@@ -35,6 +35,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs the HDRnet performance tests",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "jcliang@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		HardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
 		SoftwareDeps: []string{"chrome", caps.BuiltinMIPICamera},
@@ -49,8 +50,7 @@ func init() {
 			// Comma separated list of profilers to run (cpu, gpu, perf_record, top).
 			"profilers",
 		},
-		Timeout:      60 * time.Minute,
-		BugComponent: "b:167281",
+		Timeout: 60 * time.Minute,
 	})
 }
 

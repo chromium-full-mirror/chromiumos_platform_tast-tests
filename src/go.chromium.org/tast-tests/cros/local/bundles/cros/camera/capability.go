@@ -19,8 +19,8 @@ func init() {
 		Func:         Capability,
 		Desc:         "Compare capabilities defined in autocaps package with ones detected by platform camera tools",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "informational", "group:camera-stability"},
-		BugComponent: "b:167281",
 	})
 }
 

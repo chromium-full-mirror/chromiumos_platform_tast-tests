@@ -26,7 +26,7 @@ func init() {
 			"chromeos-camera-eng@google.com",
 			"ribalda@chromium.org",
 		},
-		BugComponent: "b:167281",
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:cq-medium", "group:camera-stability"},
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
 	})

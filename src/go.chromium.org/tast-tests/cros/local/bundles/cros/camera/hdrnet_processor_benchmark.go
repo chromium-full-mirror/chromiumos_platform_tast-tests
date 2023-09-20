@@ -20,10 +20,10 @@ func init() {
 		Func:         HDRnetProcessorBenchmark,
 		Desc:         "Runs the HDRnet processor benchmark and reports the measurements",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "jcliang@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"camera_feature_hdrnet"},
 		Timeout:      5 * time.Minute,
-		BugComponent: "b:167281",
 	})
 }
 

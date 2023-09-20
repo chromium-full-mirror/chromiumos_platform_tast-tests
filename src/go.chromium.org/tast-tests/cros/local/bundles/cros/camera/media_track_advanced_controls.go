@@ -616,6 +616,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies the MediaTrack advanced controls",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"media_track_advanced_controls.html", "media_track_advanced_controls.js"},
@@ -632,7 +633,6 @@ func init() {
 				Val:               browser.TypeLacros,
 			},
 		},
-		BugComponent: "b:978428",
 	})
 }
 

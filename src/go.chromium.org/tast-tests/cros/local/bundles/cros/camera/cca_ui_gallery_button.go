@@ -23,10 +23,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that gallery button related logic works expectedly in CCA",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "ccaLaunchedWithFakeHALCamera",
-		BugComponent: "b:978428",
 	})
 }
 

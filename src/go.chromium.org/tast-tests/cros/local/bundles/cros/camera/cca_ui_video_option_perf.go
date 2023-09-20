@@ -26,11 +26,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Record video with different video option on CCA, measure UI performance including CPU usage",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Timeout:      20 * time.Minute,
 		Fixture:      "ccaTestBridgeReady",
-		BugComponent: "b:978428",
 	})
 }
 

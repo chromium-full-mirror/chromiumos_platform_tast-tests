@@ -33,6 +33,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures jpeg_encode_accelerator_unittest performance",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", caps.HWEncodeJPEG},
 		Data:         []string{"coast_3840x2160_P420.yuv"},
@@ -41,7 +42,6 @@ func init() {
 			Name: "dmabuf",
 			Val:  "JpegEncodeAcceleratorTest.SimpleDmaEncode",
 		}},
-		BugComponent: "b:167281",
 	})
 }
 

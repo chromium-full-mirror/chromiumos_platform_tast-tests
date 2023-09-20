@@ -25,6 +25,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Functionality of multi-camera after suspend-resume scenario",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Vars:         []string{"servo"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.camera.CCAService"},
@@ -48,7 +49,6 @@ func init() {
 				Val:  &camera.CameraTestRequest{Mode: camera.CameraMode_VIDEO, Facing: camera.Facing_FACING_BACK},
 			},
 		},
-		BugComponent: "b:978428",
 	})
 }
 

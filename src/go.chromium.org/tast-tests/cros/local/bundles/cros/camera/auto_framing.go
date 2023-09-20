@@ -20,11 +20,11 @@ func init() {
 		Func:         AutoFraming,
 		Desc:         "Auto-framing core pipeline smoke test",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"camera_feature_auto_framing"},
 		Data:         []string{autoFramingTestImageFile, autoFramingTestImageFile + ".json"},
 		Timeout:      4 * time.Minute,
-		BugComponent: "b:167281",
 	})
 }
 

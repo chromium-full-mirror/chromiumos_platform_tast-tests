@@ -21,9 +21,9 @@ func init() {
 		Func:         FirmwareUpdate,
 		Desc:         "Exercises firmware update on USB camera",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:camera-usb-qual"},
 		Vars:         []string{"config"},
-		BugComponent: "b:167281",
 	})
 }
 

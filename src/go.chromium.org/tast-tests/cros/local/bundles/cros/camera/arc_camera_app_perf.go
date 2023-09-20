@@ -44,12 +44,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the performance when interacting with the ARC camera app",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "seannli@google.com", "arcvm-eng@google.com"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "arcWithWorkingCameraForPerf",
 		Data:         []string{arcapp.CameraAppApk},
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Timeout:      20 * time.Minute,
-		BugComponent: "b:978428",
 	})
 }
 

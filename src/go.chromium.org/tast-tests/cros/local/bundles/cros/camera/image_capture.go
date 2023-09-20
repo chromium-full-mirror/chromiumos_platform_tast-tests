@@ -24,6 +24,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies availability of ImageCapture API outside CCA",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         append(getusermedia.DataFiles(), "web_api.html"),
@@ -44,7 +45,6 @@ func init() {
 				Val:               browser.TypeLacros,
 			},
 		},
-		BugComponent: "b:978428",
 	})
 }
 

@@ -25,6 +25,7 @@ func init() {
 		Desc:         "Verifying alignment of chart tablet screen and target facing camera FOV in camerabox setup",
 		Data:         []string{"camerabox_align.svg", "camerabox_align.html", "camerabox_align.css", "camerabox_align.js", "camerabox_align.png", "pattern_checker.js", "opencv.js"},
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:camerabox"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},
 		ServiceDeps:  []string{"tast.cros.camerabox.AlignmentService"},
@@ -50,7 +51,6 @@ func init() {
 				Val:       pb.Facing_FACING_BACK,
 			},
 		},
-		BugComponent: "b:167281",
 	})
 }
 

@@ -33,6 +33,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and stress testing common functions randomly",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org", "pihsun@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Vars: []string{
 			// Number of iterations to test.
@@ -80,7 +81,6 @@ func init() {
 			Fixture:           "ccaTestBridgeReady",
 			Timeout:           30 * 24 * time.Hour,
 		}},
-		BugComponent: "b:978428",
 	})
 }
 

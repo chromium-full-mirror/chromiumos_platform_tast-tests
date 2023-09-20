@@ -23,6 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and verifies video recording related use cases",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:intel-gating", "group:intel-nda", "group:criticalstaging"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Timeout:      5 * time.Minute,
@@ -33,7 +34,6 @@ func init() {
 			Name: "multi_stream",
 			Val:  true,
 		}},
-		BugComponent: "b:978428",
 	})
 }
 

@@ -23,8 +23,8 @@ func init() {
 		Func:         PNPChromeLogin,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power metrics when device is in idle with Chrome login",
-		BugComponent: "b:167281",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:camera_dependent"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      1*time.Minute + pnp.PNPTimeParams.Total + power.RecorderTimeout,

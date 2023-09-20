@@ -25,6 +25,7 @@ func init() {
 		Desc:         "Verifying the WFC orientation is correct or not",
 		Data:         []string{"camerabox_align.js", "opencv.js", "pattern_checker.js", "wfc_orientation.html", "wfc_orientation.css", "wfc_orientation.png", "wfc_pattern.png"},
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:camerabox"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},
 		ServiceDeps:  []string{"tast.cros.camerabox.OrientationService"},
@@ -41,7 +42,6 @@ func init() {
 				Val:       pb.Facing_FACING_FRONT,
 			},
 		},
-		BugComponent: "b:167281",
 	})
 }
 

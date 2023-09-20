@@ -57,6 +57,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies camera HAL3 interface function on remote DUT",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:camerabox"},
 		Data:         []string{"adb", pre.SetupITSRepoScript, pre.ITSPy3Patch, pre.ChartPath, pre.NumpySrcTarGz, pre.ConfigYml},
 		Vars:         []string{"chart"},
@@ -83,7 +84,6 @@ func init() {
 				Val:               itsParam{0, pb.Facing_FACING_FRONT, pre.ChartPath},
 			},
 		},
-		BugComponent: "b:167281",
 	})
 }
 

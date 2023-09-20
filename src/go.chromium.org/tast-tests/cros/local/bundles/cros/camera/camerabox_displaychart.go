@@ -22,9 +22,9 @@ func init() {
 		Func:         CameraboxDisplaychart,
 		Desc:         "Verifies whether display chart script working normally",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		BugComponent: "b:167281",
 	})
 }
 

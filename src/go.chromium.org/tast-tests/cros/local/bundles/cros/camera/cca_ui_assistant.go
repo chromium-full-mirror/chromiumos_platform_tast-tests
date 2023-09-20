@@ -33,10 +33,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests opening Camera app using an Assistant query",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal", "camera_app", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaTestBridgeReady",
-		BugComponent: "b:978428",
 	})
 }
 

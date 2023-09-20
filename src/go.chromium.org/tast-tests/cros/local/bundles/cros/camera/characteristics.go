@@ -20,8 +20,8 @@ func init() {
 		Func:         Characteristics,
 		Desc:         "Verifies the format of camera characteristics file",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
-		BugComponent: "b:167281",
 	})
 }
 

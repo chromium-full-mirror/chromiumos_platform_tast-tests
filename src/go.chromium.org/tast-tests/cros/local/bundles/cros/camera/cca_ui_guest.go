@@ -19,10 +19,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks camera app can be launched in guest mode",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:criticalstaging"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "ccaLaunchedGuestWithFakeHALCamera",
-		BugComponent: "b:978428",
 	})
 }
 

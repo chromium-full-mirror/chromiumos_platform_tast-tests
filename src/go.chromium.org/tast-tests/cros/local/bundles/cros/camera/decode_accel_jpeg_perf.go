@@ -32,13 +32,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures jpeg_decode_accelerator_unittest performance",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", caps.HWDecodeJPEG},
 		Data: []string{"peach_pi-1280x720.jpg", "pink-nature-1920x1080.jpg",
 			"red-squirrel-2560x1920.jpg", "bonsai-tree-3840x2160.jpg"},
 		// TODO(b/287584650): Modify the gtest to finish in a given time so we can control the timeout.
-		Timeout:      60 * time.Minute,
-		BugComponent: "b:167281",
+		Timeout: 60 * time.Minute,
 	})
 }
 

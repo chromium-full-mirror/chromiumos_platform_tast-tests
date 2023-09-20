@@ -32,10 +32,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies if CCA is unusable when the camera app is disabled by the Adenterprise policy",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "chromePolicyLoggedIn",
-		BugComponent: "b:978428",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.SystemFeaturesDisableList{Val: []string{"camera"}}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.VideoCaptureAllowed{Val: false}, pci.VerifiedFunctionalityJS),

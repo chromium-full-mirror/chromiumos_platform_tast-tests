@@ -36,6 +36,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Captures performance data about getUserMedia video capture",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{caps.BuiltinOrVividCamera, "chrome"},
 		Data: append(
@@ -57,7 +58,6 @@ func init() {
 				Val:               browser.TypeLacros,
 			},
 		},
-		BugComponent: "b:978428",
 	})
 }
 

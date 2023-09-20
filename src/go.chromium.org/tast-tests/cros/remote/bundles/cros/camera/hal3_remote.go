@@ -20,6 +20,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies camera HAL3 interface function on remote DUT",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:camerabox"},
 		SoftwareDeps: []string{"arc", "arc_camera3", caps.BuiltinCamera},
 		ServiceDeps:  []string{"tast.cros.camerabox.HAL3Service"},
@@ -28,7 +29,6 @@ func init() {
 		Vars:         []string{"chart"},
 		// For extra params, reference corresponding tests in:
 		// src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/camera/hal3_*.go
-		BugComponent: "b:167281",
 		Params: []testing.Param{
 			{
 				Name:      "frame_back",

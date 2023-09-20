@@ -25,12 +25,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the BarcodeDetector API used in CCA",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Data:         []string{"cca_qrcode.html", "cca_qrcode.js", "qrcode_3024x3024.jpg"},
 		Pre:          chrome.LoggedIn(),
 		Timeout:      4 * time.Minute,
-		BugComponent: "b:978428",
 	})
 }
 

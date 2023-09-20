@@ -28,8 +28,8 @@ func init() {
 		Func:         PNPGoogleMeet,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power metrics when in a google meet session",
-		BugComponent: "b:167281",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		VarDeps:      []string{"ui.bond_credentials"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:camera_dependent"},
 		SoftwareDeps: []string{"chrome"},

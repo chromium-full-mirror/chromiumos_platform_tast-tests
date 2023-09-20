@@ -40,8 +40,8 @@ func init() {
 		Func:         PNPDirectOffUSBCameraPower,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power metrics for capturing frame from a usb camera using yavta",
-		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:camera_dependent"},
 		SoftwareDeps: []string{caps.BuiltinUSBCamera},
 		Fixture:      pnp.StablePowerLacrosGAIA,

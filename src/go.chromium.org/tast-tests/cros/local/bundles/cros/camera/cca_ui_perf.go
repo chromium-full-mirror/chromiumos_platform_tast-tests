@@ -24,13 +24,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and measures the UI performance including CPU and power usage",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		// Three subtests each have 200s timeout and one subtest have 300s timeout.
 		// 200s * 4 + 300s = 19 minutes (rounded up)
-		Timeout:      19 * time.Minute,
-		Fixture:      "ccaTestBridgeReadyWithTimeLapse",
-		BugComponent: "b:978428",
+		Timeout: 19 * time.Minute,
+		Fixture: "ccaTestBridgeReadyWithTimeLapse",
 	})
 }
 

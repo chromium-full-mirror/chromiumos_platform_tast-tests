@@ -20,11 +20,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and verifies the PTZ functionality",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Data:         []string{"ptz_scene_1280x720.mjpeg"},
 		Fixture:      "ccaTestBridgeReadyWithFakeCamera",
-		BugComponent: "b:978428",
 	})
 }
 

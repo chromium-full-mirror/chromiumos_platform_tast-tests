@@ -32,6 +32,7 @@ func init() {
 			"shik@chromium.org",
 			"cros-exp-wg+testresults@google.com", // for fieldtrial_testing_config
 		},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Params: []testing.Param{{
@@ -89,7 +90,6 @@ func init() {
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			Val:               videoRecoridng,
 		}},
-		BugComponent: "b:978428",
 	})
 }
 

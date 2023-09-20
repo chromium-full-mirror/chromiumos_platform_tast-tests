@@ -28,11 +28,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and verifies edge cases for video recording",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Timeout:      7 * time.Minute,
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
-		BugComponent: "b:978428",
 	})
 }
 

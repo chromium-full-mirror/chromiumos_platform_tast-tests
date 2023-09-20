@@ -18,10 +18,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and verifies the preview functions",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org", "shik@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:intel-nda", "group:criticalstaging"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "ccaLaunchedWithFakeHALCamera",
-		BugComponent: "b:978428",
 	})
 }
 

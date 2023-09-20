@@ -26,11 +26,11 @@ func init() {
 		Func:         CCADocumentPerf,
 		Desc:         "Measures the performance of document scanning library used in CCA",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Data:         []string{"document_256x256_P420.yuv", "document_2448x3264.jpg"},
 		SoftwareDeps: []string{"ondevice_document_scanner"},
 		Timeout:      4 * time.Minute,
-		BugComponent: "b:978428",
 	})
 }
 

@@ -25,12 +25,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs the HDRnet end-to-end integration test",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "jcliang@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet)),
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinMIPICamera},
 		Fixture:      "ccaTestBridgeReady",
 		Timeout:      6 * time.Minute,
-		BugComponent: "b:167281",
 	})
 }
 

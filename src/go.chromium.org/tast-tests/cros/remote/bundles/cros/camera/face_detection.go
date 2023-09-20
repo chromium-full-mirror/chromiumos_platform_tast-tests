@@ -22,6 +22,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies face detection",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:camerabox"},
 		SoftwareDeps: []string{"arc", "arc_camera3", caps.BuiltinUSBCamera},
 		ServiceDeps:  []string{"tast.cros.camerabox.HAL3Service"},
@@ -39,7 +40,6 @@ func init() {
 				Val:       pb.Facing_FACING_FRONT,
 			},
 		},
-		BugComponent: "b:167281",
 	})
 }
 

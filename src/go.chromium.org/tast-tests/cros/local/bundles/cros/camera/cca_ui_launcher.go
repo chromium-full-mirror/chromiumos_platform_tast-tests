@@ -22,10 +22,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks the behaviors of launching camera app via launcher",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@google.com"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "chromeLoggedIn",
-		BugComponent: "b:978428",
 	})
 }
 

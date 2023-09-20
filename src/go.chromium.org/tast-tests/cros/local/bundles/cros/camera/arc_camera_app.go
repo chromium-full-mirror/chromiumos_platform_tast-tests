@@ -26,10 +26,10 @@ func init() {
 		Data:         []string{arcapp.CameraAppApk},
 		Desc:         "Checks basic Android camera functionalities work under ARC",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "seannli@google.com"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "arcWithWorkingCamera",
-		BugComponent: "b:978428",
 	})
 }
 

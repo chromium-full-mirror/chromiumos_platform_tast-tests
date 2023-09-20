@@ -26,6 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Record video and measure the performance including CPU, power and preview FPS",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Timeout:      20 * time.Minute,
@@ -33,7 +34,6 @@ func init() {
 			Name:    "fake_hal",
 			Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
 		}},
-		BugComponent: "b:978428",
 	})
 }
 

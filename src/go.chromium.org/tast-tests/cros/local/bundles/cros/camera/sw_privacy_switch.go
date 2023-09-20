@@ -17,8 +17,8 @@ func init() {
 		Func:         SWPrivacySwitch,
 		Desc:         "Runs sw_privacy_switch_test to verify SWPrivacySwitchStreamManipulator works",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "okuji@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "informational"},
-		BugComponent: "b:167281",
 	})
 }
 
