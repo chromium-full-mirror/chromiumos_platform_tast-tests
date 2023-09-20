@@ -248,6 +248,16 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 	accessPoints[blockedPreferredSSID] = blockedAndPreferredAP
 	// End configure 3 access points for blocked, non blocked, blocked+preferred SSIDs.
 
+	// Re-scan WiFi networks to make sure that SSIDs for the created APs (access
+	// points) are visible in the DUT's network setting.
+	req := &wifi.RequestScansRequest{Count: 1}
+	if _, err := wifiSvc.RequestScans(ctx, req); err != nil {
+		s.Fatal("Failed to request scan: ", err)
+	}
+	if _, err := wifiSvc.WaitScanIdle(ctx, &empty.Empty{}); err != nil {
+		s.Fatal(scanWaitingFailure, err)
+	}
+
 	startChromeRequest := func(keepState bool) *ui.NewRequest {
 		req := &ui.NewRequest{
 			LoginMode:                    ui.LoginMode_LOGIN_MODE_NO_LOGIN,
@@ -637,17 +647,31 @@ func expectSuccJoinWiFi(expectedAP *wificell.APIface, localCtx localContext, set
 		return errors.Wrap(err, scanWaitingFailure)
 	}
 
+	var err error
 	cleanupCtx := ctx
 	ssid := expectedAP.Config().SSID
-	cleanup, err := joinWiFiWithOneClick(localCtx, ssid, testPass, settingType, isCredentialsRequired)
-	defer cleanup(cleanupCtx)
+
+	for retryAttempt := 0; retryAttempt < 2; retryAttempt++ {
+		cleanup, err := joinWiFiWithOneClick(localCtx, ssid, testPass, settingType, isCredentialsRequired)
+		defer cleanup(cleanupCtx)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return errors.Wrap(err, "failed open and fill WiFi data from one click")
 	}
 
-	if err := expectWiFiConnected(ctx, wifiSvc, ssid); err != nil {
+	for retryAttempt := 0; retryAttempt < 2; retryAttempt++ {
+		err := expectWiFiConnected(ctx, wifiSvc, ssid)
+		if err == nil {
+			break
+		}
+	}
+	if err != nil {
 		return errors.Wrap(err, connectionVerificationFailure)
 	}
+
 	return nil
 }
 
