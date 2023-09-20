@@ -229,13 +229,8 @@ func (p *itsPreImpl) Prepare(ctx context.Context, s *testing.PreState) interface
 		s.Fatal("Failed to get bundle path: ", err)
 	}
 
-	// Set up ITS repo
-	repoSetupArgs := []string{s.DataPath(SetupITSRepoScript), s.DataPath(p.bundlePath()), "--output", p.dir}
-	if p.androidCodeName == androidP {
-		repoSetupArgs = append(repoSetupArgs, "--patch_path", s.DataPath(ITSPy3Patch))
-	}
-	if err := testexec.CommandContext(ctx, "python3", repoSetupArgs...).Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to set up its repo from bundle path: ", err)
+	if err := testexec.CommandContext(ctx, "unzip", "-d", p.dir, s.DataPath(p.bundlePath())).Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to unzip its package: ", err)
 	}
 
 	if p.androidCodeName == androidT {
