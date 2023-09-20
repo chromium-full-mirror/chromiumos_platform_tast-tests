@@ -162,7 +162,7 @@ func DetachableDevScreen(ctx context.Context, s *testing.State) {
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOff); err != nil {
 			s.Fatal("Failed to poweroff the DUT: ", err)
 		}
-		s.Log(ctx, "Checking for G3 powerstate")
+		s.Log("Checking for G3 powerstate")
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3", "S5"); err != nil {
 			s.Fatal("Failed to get power state at G3: ", err)
 		}
