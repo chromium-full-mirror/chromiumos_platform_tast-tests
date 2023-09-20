@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -64,11 +63,6 @@ func init() {
 }
 
 func ChargeDischargeBattery(ctx context.Context, s *testing.State) {
-	// Reserve some time to cleanup, even if it fails due to ctx timeout.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
 	var chargeParam = s.Param().(power.ChargeParams)
 
 	if chargeParam.IsCustomized {
@@ -95,18 +89,7 @@ func ChargeDischargeBattery(ctx context.Context, s *testing.State) {
 		chargeParam.MaxChargePercentage = float64(maxPercent)
 	}
 
-	r := power.NewRecorder(ctx, 20*time.Second, s.OutDir(), s.TestName())
-	defer r.Close(cleanupCtx)
-
-	if err := r.Start(ctx); err != nil {
-		s.Fatal("Cannot start collecting power metrics: ", err)
-	}
-
 	if err := setup.PrepareBattery(ctx, chargeParam); err != nil {
 		s.Fatal("Failed to charge/discharge DUT: ", err)
-	}
-
-	if err := r.Finish(ctx); err != nil {
-		s.Error("Cannot finish collecting power metrics: ", err)
 	}
 }
