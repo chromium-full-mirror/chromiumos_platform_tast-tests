@@ -57,7 +57,7 @@ func (zm *Zoom) expandAudioOption(ctx context.Context) error {
 	moreAudioControlsButton := nodewith.Name("More audio controls").Role(role.Button)
 
 	return uiauto.NamedAction("expand audio option",
-		ui.LeftClickUntil(
+		ui.DoDefaultUntil(
 			moreAudioControlsButton,
 			ud.WaitUntilExists(audioOptionsFinder),
 		))(ctx)
