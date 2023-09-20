@@ -306,72 +306,18 @@ func (h *CmdTPMClearHelper) ensureTPMIsReset(ctx context.Context, removeFiles bo
 	}
 	ownershipID := strings.TrimSpace(string(ownershipData))
 
-	// Wrap this section to a function, so we can ensure all daemons are up.
-	err = func(ctx context.Context) error {
-		if err := h.tpmClearer.PreClearTPM(ctx); err != nil {
-			return errors.Wrap(err, "failed to pre clear TPM")
-		}
+	if err := h.tpmClearer.PreClearTPM(ctx); err != nil {
+		return errors.Wrap(err, "failed to pre clear TPM")
+	}
 
-		if err := h.daemonController.TryStop(ctx, UIDaemon); err != nil {
-			// ui might not be running because there's no guarantee that it's running when we start the test.
-			// If we actually failed to stop ui and something ends up being wrong, then we can use the logging
-			// below to let whoever that's debugging this problem find out.
-			testing.ContextLog(ctx, "Failed to stop ui, this is normal if ui was not running: ", err)
-		}
-		defer func(ctx context.Context) {
-			if err := h.daemonController.Ensure(ctx, UIDaemon); err != nil {
-				testing.ContextLog(ctx, "Failed to ensure ui daemon: ", err)
-			}
-		}(ctx)
-
-		if err := h.daemonController.TryStopDaemons(ctx, HighLevelTPMDaemons); err != nil {
-			// High-level TPM daemons might not be running because there's no guarantee that it's running when we start the test.
-			// If we actually failed to stop them and something ends up being wrong, then we can use the logging
-			// below to let whoever that's debugging this problem find out.
-			testing.ContextLog(ctx, "Failed to stop High-level TPM daemons, this is normal if they were not running: ", err)
-		}
-		defer func(ctx context.Context) {
-			if err := h.daemonController.EnsureDaemons(ctx, HighLevelTPMDaemons); err != nil {
-				testing.ContextLog(ctx, "Failed to ensure High-level TPM daemons: ", err)
-			}
-		}(ctx)
-
-		if err := h.daemonController.TryStopDaemons(ctx, StatefulDaemons); err != nil {
-			// Stateful daemons might not be running because there is no guarantee
-			// that it is running when we start the test. If we actually failed to
-			// stop them and something ends up being wrong, then we can use the
-			// logging below to let whoever that's debugging this problem find out.
-			testing.ContextLog(ctx, "Failed to stop Stateful daemons, this is normal if they were not running: ", err)
-		}
-		defer func(ctx context.Context) {
-			if err := h.daemonController.EnsureDaemons(ctx, StatefulDaemons); err != nil {
-				testing.ContextLog(ctx, "Failed to ensure Stateful daemons: ", err)
-			}
-		}(ctx)
-
+	h.restartDaemonsAndInvoke(ctx, func(ctx context.Context) error {
 		if err := h.tpmClearer.ClearTPM(ctx); err != nil {
 			return errors.Wrap(err, "failed to clear TPM")
 		}
 
 		if removeFiles {
-			args := append([]string{"-rf", "--"}, SystemStateFiles...)
-			if out, err := h.cmdRunner.Run(ctx, "rm", args...); err != nil {
-				return errors.Wrapf(err, "failed to remove files to clear ownership: %s", string(out))
-			}
-
-			command := "rm -rf " + strings.Join(SystemStateGlobs, " ")
-			if out, err := h.cmdRunner.Run(ctx, "bash", "-c", command); err != nil {
-				return errors.Wrapf(err, "failed to remove files to clear ownership: %s", string(out))
-			}
-
-			if out, err := h.cmdRunner.Run(ctx, "bash", "-c", "vgchange -ay; lvremove -ff /dev/*/cryptohome*"); err != nil {
-				// Ignore errors on failure, it is possible that the device doesn't support LVM or doesn't have any dm-crypt user crpytohomes.
-				testing.ContextLog(ctx, "Failed to remove user logical volumes (this might be expected if the device doesn't support LVM): ", err, string(out))
-			}
-
-			// Run tmpfiles to restore the removed folders and permissions.
-			if out, err := h.cmdRunner.Run(ctx, "/usr/bin/systemd-tmpfiles", "--create", "--remove", "--boot", "--prefix", "/home", "--prefix", "/var/lib"); err != nil {
-				testing.ContextLog(ctx, "Failed to run tmpfiles: ", err, string(out))
+			if err := h.ensureSystemStateIsReset(ctx); err != nil {
+				return errors.Wrap(err, "failed to reset system state files")
 			}
 		}
 
@@ -379,7 +325,7 @@ func (h *CmdTPMClearHelper) ensureTPMIsReset(ctx context.Context, removeFiles bo
 			return errors.Wrap(err, "failed to post clear TPM")
 		}
 		return nil
-	}(ctx)
+	})
 
 	if err != nil {
 		if err := h.saveTPMClearLogs(ctx); err != nil {
@@ -401,6 +347,29 @@ func (h *CmdTPMClearHelper) ensureTPMIsReset(ctx context.Context, removeFiles bo
 		return ErrIneffectiveReset
 	}
 
+	return nil
+}
+
+func (h *CmdTPMClearHelper) ensureSystemStateIsReset(ctx context.Context) error {
+	args := append([]string{"-rf", "--"}, SystemStateFiles...)
+	if out, err := h.cmdRunner.Run(ctx, "rm", args...); err != nil {
+		return errors.Wrapf(err, "failed to remove files to clear ownership: %s", string(out))
+	}
+
+	command := "rm -rf " + strings.Join(SystemStateGlobs, " ")
+	if out, err := h.cmdRunner.Run(ctx, "bash", "-c", command); err != nil {
+		return errors.Wrapf(err, "failed to remove files to clear ownership: %s", string(out))
+	}
+
+	if out, err := h.cmdRunner.Run(ctx, "bash", "-c", "vgchange -ay; lvremove -ff /dev/*/cryptohome*"); err != nil {
+		// Ignore errors on failure, it is possible that the device doesn't support LVM or doesn't have any dm-crypt user crpytohomes.
+		testing.ContextLog(ctx, "Failed to remove user logical volumes (this might be expected if the device doesn't support LVM): ", err, string(out))
+	}
+
+	// Run tmpfiles to restore the removed folders and permissions.
+	if out, err := h.cmdRunner.Run(ctx, "/usr/bin/systemd-tmpfiles", "--create", "--remove", "--boot", "--prefix", "/home", "--prefix", "/var/lib"); err != nil {
+		testing.ContextLog(ctx, "Failed to run tmpfiles: ", err, string(out))
+	}
 	return nil
 }
 
@@ -451,9 +420,59 @@ func (h *CmdTPMClearHelper) EnsureTPMIsReset(ctx context.Context) error {
 	return h.ensureTPMIsReset(ctx, false)
 }
 
-// EnsureTPMAndSystemStateAreReset ensures the TPM is reset and simulates a Powerwash.
+// EnsureTPMAndSystemStateAreReset ensures the TPM is reset (if the device has an enabled TPM)
+// and simulates a powerwash by wiping system state files and restarting daemons.
 func (h *CmdTPMClearHelper) EnsureTPMAndSystemStateAreReset(ctx context.Context) error {
+	status, err := h.TPMManagerClient().GetNonsensitiveStatus(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get TPM status")
+	}
+	// If TPM isn't enabled (e.g. device doesn't have allowed TPM), only clear system state files
+	if !status.IsEnabled {
+		return h.restartDaemonsAndInvoke(ctx, h.ensureSystemStateIsReset)
+	}
 	return h.ensureTPMIsReset(ctx, true)
+}
+
+func (h *CmdTPMClearHelper) restartDaemonsAndInvoke(ctx context.Context, f func(ctx context.Context) error) error {
+	if err := h.daemonController.TryStop(ctx, UIDaemon); err != nil {
+		// ui might not be running because there's no guarantee that it's running when we start the test.
+		// If we actually failed to stop ui and something ends up being wrong, then we can use the logging
+		// below to let whoever that's debugging this problem find out.
+		testing.ContextLog(ctx, "Failed to stop ui, this is normal if ui was not running: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := h.daemonController.Ensure(ctx, UIDaemon); err != nil {
+			testing.ContextLog(ctx, "Failed to ensure ui daemon: ", err)
+		}
+	}(ctx)
+
+	if err := h.daemonController.TryStopDaemons(ctx, HighLevelTPMDaemons); err != nil {
+		// High-level TPM daemons might not be running because there's no guarantee that it's running when we start the test.
+		// If we actually failed to stop them and something ends up being wrong, then we can use the logging
+		// below to let whoever that's debugging this problem find out.
+		testing.ContextLog(ctx, "Failed to stop High-level TPM daemons, this is normal if they were not running: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := h.daemonController.EnsureDaemons(ctx, HighLevelTPMDaemons); err != nil {
+			testing.ContextLog(ctx, "Failed to ensure High-level TPM daemons: ", err)
+		}
+	}(ctx)
+
+	if err := h.daemonController.TryStopDaemons(ctx, StatefulDaemons); err != nil {
+		// Stateful daemons might not be running because there is no guarantee
+		// that it is running when we start the test. If we actually failed to
+		// stop them and something ends up being wrong, then we can use the
+		// logging below to let whoever that's debugging this problem find out.
+		testing.ContextLog(ctx, "Failed to stop Stateful daemons, this is normal if they were not running: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := h.daemonController.EnsureDaemons(ctx, StatefulDaemons); err != nil {
+			testing.ContextLog(ctx, "Failed to ensure Stateful daemons: ", err)
+		}
+	}(ctx)
+
+	return f(ctx)
 }
 
 // EnableUserSecretStash enables the UserSecretStash experiment by removing the
