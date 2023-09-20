@@ -510,7 +510,7 @@ func SetUpCrashTest(ctx context.Context, opts ...Option) error {
 		return errors.Wrap(err, "failed to get daemon store crash directories")
 	}
 	for _, path := range daemonStorePaths {
-		p.crashDirs = append(p.crashDirs, crashAndStash{path, path + ".real"})
+		p.crashDirs = append(p.crashDirs, crashAndStash{path, path + "/real"})
 	}
 
 	// This file usually doesn't exist; don't error out if it doesn't. "Not existing"
@@ -813,7 +813,7 @@ func TearDownCrashTest(ctx context.Context, opts ...tearDownOption) error {
 		}
 	}
 	for _, path := range daemonStorePaths {
-		p.crashDirs = append(p.crashDirs, crashAndStash{path, path + ".real"})
+		p.crashDirs = append(p.crashDirs, crashAndStash{path, path + "/real"})
 	}
 
 	if err := tearDownCrashTest(ctx, &p); err != nil {
