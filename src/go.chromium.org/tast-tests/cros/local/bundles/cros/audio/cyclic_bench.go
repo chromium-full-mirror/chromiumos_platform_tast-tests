@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/mgs"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type schedPolicy int
@@ -82,7 +83,6 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"cras", "chrome"},
 		Timeout:      3 * time.Minute,
-		Fixture:      fixture.FakeDMSEnrolled,
 		Params: []testing.Param{
 			{
 				Name: "rr12_1thread_10ms",
@@ -99,6 +99,7 @@ func init() {
 					StressConfig:        nil,
 					ShouldFail:          true,
 				},
+				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "rr10_1thread_10ms",
@@ -114,6 +115,24 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 				},
+				Fixture: fixture.FakeDMSEnrolled,
+			},
+			{
+				Name: "rr10_1thread_10ms_hrtimer_off",
+				Val: cyclicTestParameters{
+					Config: schedConfig{
+						Policy:   rrSched,
+						Priority: crasClientPriority,
+					},
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
+					StressConfig:        nil,
+				},
+				Fixture:           fixture.FakeDMSEnrolledWithHighResTimerOff,
+				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
 			},
 			{
 				Name: "rr12_4thread_10ms",
@@ -129,6 +148,7 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 				},
+				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "rr10_4thread_10ms",
@@ -144,6 +164,7 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 				},
+				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "rr12_1thread_10ms_stress_rr20_2workers_per_cpu",
@@ -162,6 +183,7 @@ func init() {
 						Priority: defaultStressPriority,
 					},
 				},
+				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "rr12_1thread_10ms_stress_nice_p0_2workers_per_cpu",
@@ -181,6 +203,7 @@ func init() {
 					},
 					ShouldFail: true,
 				},
+				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "nice_p0_1thread_10ms",
@@ -196,6 +219,24 @@ func init() {
 					MaxLatencyThreshold: 10000 * time.Microsecond,
 					StressConfig:        nil,
 				},
+				Fixture: fixture.FakeDMSEnrolled,
+			},
+			{
+				Name: "nice_p0_1thread_10ms_hrtimer_off",
+				Val: cyclicTestParameters{
+					Config: schedConfig{
+						Policy:   otherSched,
+						Priority: 0,
+					},
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: 10000 * time.Microsecond,
+					StressConfig:        nil,
+				},
+				Fixture:           fixture.FakeDMSEnrolledWithHighResTimerOff,
+				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
 			},
 			{
 				Name: "nice_n20_1thread_10ms",
@@ -211,6 +252,24 @@ func init() {
 					MaxLatencyThreshold: 5000 * time.Microsecond,
 					StressConfig:        nil,
 				},
+				Fixture: fixture.FakeDMSEnrolled,
+			},
+			{
+				Name: "nice_n20_1thread_10ms_hrtimer_off",
+				Val: cyclicTestParameters{
+					Config: schedConfig{
+						Policy:   otherSched,
+						Priority: -20,
+					},
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: 5000 * time.Microsecond,
+					StressConfig:        nil,
+				},
+				Fixture:           fixture.FakeDMSEnrolledWithHighResTimerOff,
+				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
 			},
 			{
 				Name: "nice_p19_1thread_10ms",
@@ -226,6 +285,7 @@ func init() {
 					MaxLatencyThreshold: 20000 * time.Microsecond,
 					StressConfig:        nil,
 				},
+				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "nice_p0_1thread_10ms_stress_nice_p0_2workers_per_cpu",
@@ -244,6 +304,7 @@ func init() {
 						Priority: 0,
 					},
 				},
+				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "rr12_1thread_10ms_small_core",
@@ -259,6 +320,7 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 				},
+				Fixture:           fixture.FakeDMSEnrolled,
 				ExtraSoftwareDeps: []string{"cpu_heterogeneous"},
 			},
 			{
@@ -275,6 +337,7 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 				},
+				Fixture:           fixture.FakeDMSEnrolled,
 				ExtraSoftwareDeps: []string{"cpu_heterogeneous"},
 			},
 		},
