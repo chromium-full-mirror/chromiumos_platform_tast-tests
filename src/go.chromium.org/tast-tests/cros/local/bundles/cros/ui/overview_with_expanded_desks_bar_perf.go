@@ -90,10 +90,6 @@ func OverviewWithExpandedDesksBarPerf(ctx context.Context, s *testing.State) {
 
 	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
-	if err := runOverviewWithExpandedDesksBarSubtest(ctx, s, tconn, runner, 2 /* desks */); err != nil {
-		s.Fatal("Test case with 2 desks failed: ", err)
-	}
-
 	// Maximize the active window so that the desks bar is created before the
 	// overview window animation is started. If the screen isn't covered by
 	// window(s), the desks bar will be created after the overview animation
@@ -104,6 +100,10 @@ func OverviewWithExpandedDesksBarPerf(ctx context.Context, s *testing.State) {
 	}
 	if err := ash.SetWindowStateAndWait(ctx, tconn, activeWindow.ID, ash.WindowStateMaximized); err != nil {
 		s.Fatal("Failed to maximize active window: ", err)
+	}
+
+	if err := runOverviewWithExpandedDesksBarSubtest(ctx, s, tconn, runner, 2 /* desks */); err != nil {
+		s.Fatal("Test case with 2 desks failed: ", err)
 	}
 
 	if err := runOverviewWithExpandedDesksBarSubtest(ctx, s, tconn, runner, 8 /* desks */); err != nil {
@@ -155,8 +155,8 @@ func runOverviewWithExpandedDesksBarSubtest(ctx context.Context, s *testing.Stat
 				}
 				return nil
 			},
-			"Ash.Overview.AnimationSmoothness.Enter.ClamshellMode",
-			"Ash.Overview.AnimationSmoothness.Exit.ClamshellMode",
+			"Ash.Overview.AnimationSmoothness.Enter.SingleClamshellMode",
+			"Ash.Overview.AnimationSmoothness.Exit.SingleClamshellMode",
 			"Ash.Overview.Enter.PresentationTime",
 			"Ash.Overview.Exit.PresentationTime",
 		)),
