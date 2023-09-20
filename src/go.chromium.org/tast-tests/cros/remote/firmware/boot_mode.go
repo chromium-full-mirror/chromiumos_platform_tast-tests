@@ -660,7 +660,7 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 	h := ms.Helper
 	testing.ContextLog(ctx, "Set DFP mode")
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
-		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %s", err)
+		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 	}
 	totalTimeout := h.Config.DelayRebootToPing + h.Config.FirmwareScreen
 	if msOptsContain(opts, WaitSoftwareSync) {
@@ -683,7 +683,7 @@ func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context, opts ...ModeSw
 	h := ms.Helper
 	testing.ContextLog(ctx, "Set DFP mode")
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
-		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %s", err)
+		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 	}
 	totalTimeout := h.Config.DelayRebootToPing + h.Config.FirmwareScreen
 	if msOptsContain(opts, WaitSoftwareSync) {
