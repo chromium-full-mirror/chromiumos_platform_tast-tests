@@ -324,7 +324,7 @@ func (f *gpuWatchHangsFixture) PreTest(ctx context.Context, s *testing.FixtTestS
 	}
 
 	// syslog.NewReader reports syslog message written after it is started for GPU hang detection.
-	sysLogReader, err := syslog.NewReader(ctx)
+	sysLogReader, err := syslog.NewReader(ctx, syslog.Severities(syslog.Info, syslog.Warning, syslog.Err))
 	if err != nil {
 		s.Log("Failed to get syslog reader: ", err)
 	} else {

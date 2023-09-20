@@ -21,6 +21,7 @@ import (
 )
 
 var (
+	// Signatures in /var/log/messages to look for.
 	hangSignatures = []string{
 		// i915
 		`drm:i915_hangcheck_elapsed`,
@@ -64,7 +65,8 @@ func checkHangs(ctx context.Context, reader *syslog.Reader) error {
 	}
 
 	// Join regexp to save time.
-	re := regexp.MustCompile(strings.Join(hangSignatures, "|"))
+	joinedHangSignatures := strings.Join(hangSignatures, "|")
+	re := regexp.MustCompile(joinedHangSignatures)
 	for {
 		e, err := reader.Read()
 		if err == io.EOF {
@@ -72,9 +74,14 @@ func checkHangs(ctx context.Context, reader *syslog.Reader) error {
 		} else if err != nil {
 			return errors.Wrap(err, "failed to read syslog")
 		}
-		matches := re.FindAllStringSubmatch(e.Line, -1)
-		if len(matches) > 0 {
+		if re.MatchString(e.Content) {
+			// Only output the full regex once we already found a hang to prevent the reader reads the output itself.
+			testing.ContextLog(ctx, "Found hangs with following regex: ", joinedHangSignatures)
 			return errors.Errorf("GPU hang: %s", e.Content)
+		}
+
+		if ctx.Err() != nil {
+			return errors.Wrap(ctx.Err(), "context expired while parsing syslog")
 		}
 	}
 	return nil
