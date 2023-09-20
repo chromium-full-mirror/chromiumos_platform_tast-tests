@@ -5,9 +5,11 @@
 package firmware
 
 import (
+	"bytes"
 	"context"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -15,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/remote/log"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -87,11 +90,41 @@ func ECWakeSource(ctx context.Context, s *testing.State) {
 		s.Fatal("Requiring RPC utils: ", err)
 	}
 
+	sessionDBusMonitor, err := log.StartDBusMonitorCollector(
+		ctx,
+		h.DUT.Conn(),
+		"--system",
+		"type='signal'",
+		"interface='org.chromium.SessionManagerInterface'",
+		"member='StartSessionEx'",
+	)
+	if err != nil {
+		s.Fatal("Failed to start dbus-monitor")
+	}
+	defer sessionDBusMonitor.Close()
+
 	// Create instance of chrome for login so that DUT suspends mode instead of shutting down.
 	s.Log("Use Chrome service")
 	if _, err := h.RPCUtils.ReuseChrome(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to create instance of chrome: ", err)
 	}
+
+	// GoBigSleepLint: Wait a short amount to make sure dbus monitor had enough time to log session start.
+	if err := testing.Sleep(ctx, 1*time.Second); err != nil {
+		s.Fatal("Failed to sleep for 1s")
+	}
+
+	var buff bytes.Buffer
+	dumpErr := sessionDBusMonitor.Dump(&buff)
+	if dumpErr != nil {
+		s.Fatal("Failed to dump dbus-monitor logs to buffer")
+	}
+	logs := buff.String()
+
+	if !strings.Contains(logs, "path=/org/chromium/SessionManager; interface=org.chromium.SessionManagerInterface; member=StartSessionEx") {
+		s.Fatal("Failed to detect session start from power manager: ", logs)
+	}
+	s.Log("Detected session start from power manager")
 
 	switch testType {
 	case wakeByPowerBtn:
