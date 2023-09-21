@@ -55,7 +55,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic"},
-		Data:    []string{"text_1.html", "text_2.html", "editable_text_box.html"},
+		Data:    []string{"draggable_link.html", "text_2.html", "editable_text_box.html"},
 		Fixture: fixture.LacrosPolicyLoggedIn,
 		Timeout: 3 * time.Minute,
 		Params: []testing.Param{{
@@ -74,7 +74,7 @@ func init() {
 	})
 }
 
-const sourceContent = "Sample text about random things."
+const sourceContent = "example.com"
 
 func DataLeakPreventionRulesListDragdropMixedTypeBrowsers(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
@@ -84,7 +84,7 @@ func DataLeakPreventionRulesListDragdropMixedTypeBrowsers(ctx context.Context, s
 	srcServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer srcServer.Close()
 
-	srcURL := srcServer.URL + "/text_1.html"
+	srcURL := srcServer.URL + "/draggable_link.html"
 
 	dstServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer dstServer.Close()
@@ -223,10 +223,6 @@ func DataLeakPreventionRulesListDragdropMixedTypeBrowsers(ctx context.Context, s
 		// Activate the drag source window.
 		if err := browserWin.ActivateWindow(ctx, tconn); err != nil {
 			s.Fatalf("Failed to activate the %s window: %s", srcURL, err)
-		}
-
-		if err = keyboard.Accel(ctx, "Ctrl+A"); err != nil {
-			s.Fatal("Failed to press Ctrl+A to select all content: ", err)
 		}
 
 		dstNode = ossettings.SearchLanguages
