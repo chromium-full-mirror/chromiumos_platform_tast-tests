@@ -182,12 +182,24 @@ func (t *Tester) SetURLsForTabs(urlsForTabs []string) {
 	t.urlsForTabs = urlsForTabs
 }
 
+func (t *Tester) disableConsoleSuspend(ctx context.Context) {
+	cmdCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+
+	t.logger.Log("Disabling console_suspend")
+	out, err := t.dut.Conn().CommandContext(cmdCtx, "/bin/sh", "-c", "echo N | sudo tee /sys/module/printk/parameters/console_suspend").CombinedOutput()
+	if err != nil {
+		t.logger.Logf("Disabling console_suspend failed: %v %s", err, out)
+	}
+}
+
 func (t *Tester) hibernateAndReboot(ctx context.Context) {
+	t.disableConsoleSuspend(ctx);
+
 	cmdCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 
 	t.logger.Log("Starting hibernation ...")
-
 	out, err := t.dut.Conn().CommandContext(cmdCtx, "/sbin/minijail0", "-v", "/usr/sbin/hiberman", "hibernate", "-r").CombinedOutput()
 	t.logger.Logf("hiberman output: %s", out)
 
@@ -209,6 +221,9 @@ func (t *Tester) resumeFromHibernate(ctx context.Context) {
 
 	// a new GRPC client is needed after the reboot
 	t.getGRPCClient(ctx)
+
+	// Console suspend is re-enabled on reboot, disable it again.
+	t.disableConsoleSuspend(ctx);
 
 	t.loginToResume(ctx)
 
