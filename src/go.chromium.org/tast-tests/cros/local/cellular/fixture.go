@@ -38,7 +38,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{},
+		Impl:            newCellularFixture(),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularTestESIM",
@@ -49,7 +49,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{useTestESIM: true},
+		Impl:            newCellularFixture().setUseTestESIM(true),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFakeDMSEnrolled",
@@ -60,7 +60,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{useFakeDMS: true},
+		Impl:            newCellularFixture().setUseFakeDMS(true),
 		Parent:          fixture.FakeDMSEnrolled,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -72,7 +72,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{useFakeDMS: true, useTestESIM: true},
+		Impl:            newCellularFixture().setUseFakeDMS(true).setUseTestESIM(true),
 		Parent:          fixture.FakeDMSEnrolled,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -84,7 +84,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{useFakeDMS: true, checkSIM: true},
+		Impl:            newCellularFixture().setUseFakeDMS(true).setCheckSIM(true),
 		Parent:          fixture.FakeDMSEnrolled,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -96,7 +96,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{useFakeDMS: true, clearSIMLock: true},
+		Impl:            newCellularFixture().setUseFakeDMS(true).setClearSIMLock(true),
 		Parent:          fixture.FakeDMSEnrolled,
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -112,7 +112,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{restartMM: true},
+		Impl:            newCellularFixture().setRestartMM(true),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularArcBooted",
@@ -123,7 +123,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{hasArc: true},
+		Impl:            newCellularFixture().setHasArc(true),
 		Parent:          "arcBooted",
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -135,7 +135,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{useRoaming: true, checkSIM: true},
+		Impl:            newCellularFixture().setUseRoaming(true).setCheckSIM(true),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFunctioningSim",
@@ -146,7 +146,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{checkSIM: true},
+		Impl:            newCellularFixture().setCheckSIM(true),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularPower",
@@ -157,7 +157,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{checkSIM: true},
+		Impl:            newCellularFixture().setCheckSIM(true),
 		Parent:          "powerMetricsNoUI",
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -169,7 +169,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{clearSIMLock: true},
+		Impl:            newCellularFixture().setClearSIMLock(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
 }
@@ -189,6 +189,40 @@ type cellularFixture struct {
 	modemfwdStopped bool
 	sf              *starfish.Starfish
 	netUnlock       func()
+}
+
+func newCellularFixture() *cellularFixture {
+	val := cellularFixture{}
+	// set defaults
+	return &val
+}
+func (f *cellularFixture) setCheckSIM(value bool) *cellularFixture {
+	f.checkSIM = value
+	return f
+}
+func (f *cellularFixture) setClearSIMLock(value bool) *cellularFixture {
+	f.clearSIMLock = value
+	return f
+}
+func (f *cellularFixture) setHasArc(value bool) *cellularFixture {
+	f.hasArc = value
+	return f
+}
+func (f *cellularFixture) setRestartMM(value bool) *cellularFixture {
+	f.restartMM = value
+	return f
+}
+func (f *cellularFixture) setUseFakeDMS(value bool) *cellularFixture {
+	f.useFakeDMS = value
+	return f
+}
+func (f *cellularFixture) setUseRoaming(value bool) *cellularFixture {
+	f.useRoaming = value
+	return f
+}
+func (f *cellularFixture) setUseTestESIM(value bool) *cellularFixture {
+	f.useTestESIM = value
+	return f
 }
 
 // FixtData holds information made available to tests that specify this fixture.
