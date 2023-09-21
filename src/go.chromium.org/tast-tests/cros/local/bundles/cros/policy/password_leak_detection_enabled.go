@@ -36,7 +36,12 @@ func init() {
 			"chiav@google.com",
 		},
 		BugComponent: "b:1129862",
-		Attr:         []string{"group:golden_tier"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:mainline",
+			"informational",
+			"group:criticalstaging",
+		},
 		Data:         passwordleakdetection.GetDataFiles(),
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
