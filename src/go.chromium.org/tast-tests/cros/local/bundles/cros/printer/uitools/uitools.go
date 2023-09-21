@@ -38,7 +38,7 @@ const (
 	AppSocketName              = "AppSocket"
 	EditName                   = "Edit"
 	EditPrinterName            = "Edit printer"
-	EulaName                   = "End User License Agreement: "
+	EulaRegex                  = "End User Licen[cs]e Agreement: "
 	ManufacturerName           = "Manufacturer"
 	ModelName                  = "Model"
 	NameName                   = "Name"
@@ -81,7 +81,7 @@ func GetPpdWindowFinder(printerName string) *nodewith.Finder {
 
 // GetEulaFinder will create the finder for the given eulaLink string.
 func GetEulaFinder(eulaLink string) *nodewith.Finder {
-	return nodewith.Role(role.StaticText).NameContaining(EulaName + eulaLink)
+	return nodewith.Role(role.StaticText).NameRegex(regexp.MustCompile(EulaRegex + regexp.QuoteMeta(eulaLink)))
 }
 
 // NavigateToPrintersSettingsPage opens OS settings and navigates to the
