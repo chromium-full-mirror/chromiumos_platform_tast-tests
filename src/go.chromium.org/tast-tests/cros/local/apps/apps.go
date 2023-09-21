@@ -568,7 +568,7 @@ func InstallPWAForURL(ctx context.Context, tconn *chrome.TestConn, br *browser.B
 	installAppDialog := nodewith.NameStartingWith("Install app").Role(role.AlertDialog).HasClass("Widget")
 	installButton := nodewith.Name("Install").Role(role.Button).Ancestor(installAppDialog)
 
-	return uiauto.NamedCombine("install PWA through omnibox",
+	installPWA := uiauto.NamedCombine("install PWA through omnibox",
 		// The status bubble indicates the page is still loading.
 		// Wait for the status bubble to disappear before installing.
 		ui.WithTimeout(time.Minute).WaitUntilGone(statusBubble),
@@ -578,7 +578,26 @@ func InstallPWAForURL(ctx context.Context, tconn *chrome.TestConn, br *browser.B
 		// Low-end DUTs may take longer to wait for the dialog to pop up.
 		ui.WithTimeout(2*time.Minute).LeftClickUntil(installIcon, ui.WaitUntilExists(installAppDialog)),
 		ui.LeftClick(installButton),
-	)(ctx)
+	)
+
+	// The page might be stuck at loading, and the install icon will not pop up.
+	// Retry installing PWA be reloading the page to enhance the stability.
+	const retryTimes = 3
+	var lastErr error
+	return uiauto.Retry(retryTimes, func(ctx context.Context) error {
+		if lastErr != nil {
+			if err := br.ReloadActiveTab(ctx); err != nil {
+				return errors.Wrap(err, "failed to reload the tab")
+			}
+			// The page might be usable even if it failed to quiesce.
+			// Log the error and try to continue the installation.
+			if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+				testing.ContextLogf(ctx, "Failed to wait for %q to be loaded and quiesce: %v", pwaURL, err)
+			}
+		}
+		lastErr = installPWA(ctx)
+		return lastErr
+	})(ctx)
 }
 
 // LaunchChromeByShortcut launches a new Chrome window in either normal user mode by shortcut `Ctl+N`
