@@ -113,7 +113,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            newCellularFixture().setRestartMM(true).setRestartOnFailure([]string{modemmanager.JobName}).setDaemonUptimeBeforeTest(0 * time.Second),
+		Impl:            newCellularFixture().setRestartMM(true).setRestartOnFailure([]string{modemmanager.JobName}).setDaemonUptimeBeforeTest(0 * time.Second).setDisableCellularInShill(true),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "cellularResetShillProfileOnPostTest",
@@ -203,6 +203,7 @@ type cellularFixture struct {
 	restartOnFailure            []string
 	daemonUptimeBeforeTest      time.Duration
 	systemUptimeBeforeTest      time.Duration
+	disableCellularInShill      bool
 	// Fixture variables
 	helper          *Helper
 	modemfwdStopped bool
@@ -260,6 +261,10 @@ func (f *cellularFixture) setDaemonUptimeBeforeTest(value time.Duration) *cellul
 }
 func (f *cellularFixture) setSystemUptimeBeforeTest(value time.Duration) *cellularFixture {
 	f.systemUptimeBeforeTest = value
+	return f
+}
+func (f *cellularFixture) setDisableCellularInShill(value bool) *cellularFixture {
+	f.disableCellularInShill = value
 	return f
 }
 
@@ -402,11 +407,13 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}
 
-	if f.restartMM {
+	if f.disableCellularInShill {
 		// Disable cellular in shill to prevent re-enabling cellular after Modem disable called.
 		if _, err := helper.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyCellular); err != nil {
 			s.Fatal("Unable to disable Cellular: ", err)
 		}
+	}
+	if f.restartMM {
 		if err := upstart.RestartJob(ctx, modemmanager.JobName, GetMMUpstartArgsForVerboseLogging()...); err != nil {
 			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", modemmanager.JobName, err)
 		}
@@ -496,7 +503,7 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	}
 
 	// Ensure that Cellular is Enabled and has a default Service before each test.
-	if !f.useTestESIM && !f.restartMM {
+	if !f.useTestESIM && !f.disableCellularInShill {
 		f.helper.EnsureDefaultService(ctx)
 	}
 }
@@ -566,7 +573,7 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 }
 
 func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if f.restartMM {
+	if f.disableCellularInShill {
 		if err := f.helper.Manager.EnableTechnology(ctx, shill.TechnologyCellular); err != nil {
 			s.Fatal("Unable to enable Cellular: ", err)
 		}
