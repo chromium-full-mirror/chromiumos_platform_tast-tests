@@ -94,4 +94,8 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: pdStatePollTimeout, Interval: pdStatePollInterval}); err != nil {
 		s.Fatal("Expected PD power swap: ", err)
 	}
+
+	if err := h.Servo.RestorePDPort(ctx, servo.PDPortUnderTest); err != nil {
+		s.Fatal("Failed to restore PD")
+	}
 }

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -105,6 +106,11 @@ func (s *Servo) GetPDState(ctx context.Context, port int) ([][]string, error) {
 	return out, nil
 }
 
+const (
+	pdStatePollTimeout  time.Duration = 10 * time.Second
+	pdStatePollInterval time.Duration = 500 * time.Millisecond
+)
+
 // SendPowerSwapRequest sends power swap request
 func (s *Servo) SendPowerSwapRequest(ctx context.Context, port int) error {
 	if port == PDPortUnderTest {
@@ -168,4 +174,55 @@ func (s *Servo) GetDualRole(ctx context.Context, port int) (bool, error) {
 	testing.ContextLog(ctx, "DualRole reply: ", out[0][1])
 
 	return out[0][1] == onResponse, nil
+}
+
+// SetPDPowerRole - Sets PD power role
+func (s *Servo) SetPDPowerRole(ctx context.Context, port int, role string) error {
+	out, err := s.GetPDState(ctx, port)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to get PD State")
+	}
+
+	if out[0][4] != role {
+		if err := s.SendPowerSwapRequest(ctx, port); err != nil {
+			return errors.Wrap(err, "send power swap failed")
+		}
+
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if pdState, err := s.GetPDState(ctx, port); err == nil {
+				testing.ContextLog(ctx, "PD state after: ", pdState)
+				testing.ContextLog(ctx, "PD Role after: ", pdState[0][4])
+				nowPowerRole := pdState[0][4]
+				if role != nowPowerRole {
+					return errors.Wrap(err, "failed to switch power role")
+				}
+			} else {
+				return errors.Wrap(err, "failed to get PD state")
+			}
+
+			return nil
+		}, &testing.PollOptions{Timeout: pdStatePollTimeout, Interval: pdStatePollInterval}); err != nil {
+			return errors.Wrap(err, "expected PD power swap")
+		}
+
+	} else {
+		testing.ContextLog(ctx, "PD already at power role: ", role)
+	}
+
+	return nil
+}
+
+// RestorePDPort - Restores DUT PD port
+func (s *Servo) RestorePDPort(ctx context.Context, port int) error {
+	if port == PDPortUnderTest {
+		port = s.dutPDInfo.activePort
+	}
+
+	// Set DUT PD to SNK so battery charges
+	if err := s.SetPDPowerRole(ctx, port, "SNK"); err != nil {
+		return errors.Wrap(err, "failed to set PD role to SNK")
+	}
+
+	return nil
 }
