@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromeos-test-assets-private/tast/cros/int/arc/VtsAidlKeyMintTargetTest_arm64_20230920",
+  "size": 3109856,
+  "sha256sum": "9f2af7fbbea1245b5bd8d3dc0feaef0d38d974fefdf89e82b86676ce87b1aa25"
+}
