@@ -14,13 +14,14 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 )
 
-const suggestionSubPageURL = "osLanguages/smartInputs"
+const inputSubpageURL = "osLanguages/input"
 
-// LaunchAtSuggestionSettingsPage launches Settings app on suggestions page.
+// LaunchAtSuggestionSettingsPage launches the Input subpage of the Settings app
+// which contains suggestions settings.
 func LaunchAtSuggestionSettingsPage(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*IMESettings, error) {
 	ui := uiauto.New(tconn)
 	suggestionPageHeading := nodewith.NameStartingWith("Suggestions").Role(role.Heading).Ancestor(ossettings.WindowFinder)
-	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, suggestionSubPageURL, ui.Exists(suggestionPageHeading))
+	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, inputSubpageURL, ui.Exists(suggestionPageHeading))
 	if err != nil {
 		return nil, err
 	}
