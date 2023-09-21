@@ -125,7 +125,10 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	if err := m.Press(); err != nil {
 		s.Fatal("Unable to inject Press mouse event: ", err)
 	}
-	if err := inputlatency.WaitForClearUIWithWaitTime(ctx, d, nil, waitMS); err != nil {
+	if err := inputlatency.WaitForSomeEvents(ctx, d, nil); err != nil {
+		s.Fatal("Failed to wait for events to show up: ", err)
+	}
+	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
 		s.Fatal("Failed to clear UI: ", err)
 	}
 	var x int32 = 10
@@ -152,7 +155,7 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	if err := m.Release(); err != nil {
 		s.Fatal("Unable to inject Release mouse event: ", err)
 	}
-	if err := inputlatency.WaitForClearUIWithWaitTime(ctx, d, nil, waitMS); err != nil {
+	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
 		s.Fatal("Failed to clear UI: ", err)
 	}
 
@@ -190,7 +193,7 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	}
 
 	// Clear data to start next test.
-	if err := inputlatency.WaitForClearUIWithWaitTime(ctx, d, nil, waitMS); err != nil {
+	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
 		s.Fatal("Failed to clear UI: ", err)
 	}
 
@@ -199,7 +202,10 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	if err := m.Move(x, y); err != nil {
 		s.Fatal("Unable to inject mouse hover-move event: ", err)
 	}
-	if err := inputlatency.WaitForClearUIWithWaitTime(ctx, d, nil, waitMS); err != nil {
+	if err := inputlatency.WaitForSomeEvents(ctx, d, nil); err != nil {
+		s.Fatal("Failed to wait for events to show up: ", err)
+	}
+	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
 		s.Fatal("Failed to clear UI: ", err)
 	}
 

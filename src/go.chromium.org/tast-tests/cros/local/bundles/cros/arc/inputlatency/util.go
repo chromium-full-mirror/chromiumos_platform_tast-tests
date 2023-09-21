@@ -164,21 +164,36 @@ func WaitForEvents(ctx context.Context, d *ui.Device, count int, pkgName string)
 	return txt, nil
 }
 
-// WaitForClearUI clears the event data in ArcInputLatencyTest.apk to get ready for next event tracing.
-func WaitForClearUI(ctx context.Context, d *ui.Device, pkgNamePtr *string) error {
-	return WaitForClearUIWithWaitTime(ctx, d, pkgNamePtr, 0*time.Second)
-}
-
-// WaitForClearUIWithWaitTime waits for events from previous action to be received, and then
-// clears the event data in ArcInputLatencyTest.apk to get ready for next event tracing.
-func WaitForClearUIWithWaitTime(ctx context.Context, d *ui.Device, pkgNamePtr *string, ms time.Duration) error {
-	// GoBigSleepLint: Wait for previous events to be received. Currently there's no good way to
-	// detect if all events generated from the previous action are received. Waiting briefly seems
-	// to be the best solution at the moment, which is also being used in WaitForNextEventTime.
-	if err := testing.Sleep(ctx, ms*time.Millisecond); err != nil {
-		return errors.Wrap(err, "timeout while waiting to generate next event time")
+// WaitForSomeEvents waits for at least some events to show up.
+func WaitForSomeEvents(ctx context.Context, d *ui.Device, pkgNamePtr *string) error {
+	pkgName := inputLatencyPkgName
+	// Use default package name if nil.
+	if pkgNamePtr != nil {
+		pkgName = *pkgNamePtr
 	}
 
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		v := d.Object(ui.ID(fmt.Sprintf("%s:id/event_count", pkgName)))
+		txt, err := v.GetText(ctx)
+		if err != nil {
+			return err
+		}
+		num, err := strconv.ParseInt(txt, 10, 64)
+		if err != nil {
+			return err
+		}
+		if num == 0 {
+			return errors.Errorf("failed to wait for some event to show up: got %s, want a non-zero count", txt)
+		}
+		return nil
+	}, appUIUpdatePollOptions); err != nil {
+		return err
+	}
+	return nil
+}
+
+// WaitForClearUI clears the event data in ArcInputLatencyTest.apk to get ready for next event tracing.
+func WaitForClearUI(ctx context.Context, d *ui.Device, pkgNamePtr *string) error {
 	var pkgName string
 	// Use default package name if nil.
 	if pkgNamePtr != nil {
