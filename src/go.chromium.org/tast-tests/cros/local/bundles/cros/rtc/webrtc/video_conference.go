@@ -8,6 +8,7 @@ package webrtc
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -24,16 +25,20 @@ import (
 
 // VCTestParams is a structure about test parameters.
 type VCTestParams struct {
-	// Place holder. The parameters e.g. execute JS blurring or platform blurring will be added later.
-	placeHolder bool
+	// Step is true, then performance values in each step (e.g. idle, only open camera) are collected.
+	// If it is false, then performance values only in a video conference with |numPeople| persons.
+	Step bool
+	// Numpeope is the number of persons in a video conference.
+	// This can be set only if Step is false and it must be more than two.
+	NumPeople int
 }
 
 const (
 	// VCHTML is the HTML holding a video conference using WebRTC API.
 	VCHTML = "webrtc/video_conference.html"
 
-	powerInterval   = 5 * time.Second // Power library metrics collection interval.
-	profileInterval = 30 * time.Second
+	powerInterval   = 5 * time.Second  // Power library metrics collection interval.
+	profileInterval = 30 * time.Second // Sleep interval to measure the performance metrics
 )
 
 // TestFiles returns the files required running the test.
@@ -43,6 +48,79 @@ func TestFiles() []string {
 		"webrtc/video_conference.js",
 		"webrtc/third_party/munge_sdp.js",
 	}
+}
+
+// runStep performs the following steps in order.
+// 1. Open camera.
+// 2. Turn on mic.
+// 3. Show camera preview.
+// 4. Hold 1:1 (2p) call.
+// 5. Hold 9p call.
+func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
+	if err := pr.Start(ctx); err != nil {
+		return errors.Wrap(err, "cannot start collecting power metrics")
+	}
+	// GoBigSleepLint: Sleep for profiling idle state.
+	if err := testing.Sleep(ctx, profileInterval); err != nil {
+		return errors.Wrapf(err, "failed to sleep for %v", profileInterval)
+	}
+
+	type stepConfig struct {
+		name    string
+		evalStr string
+		errMsg  string
+	}
+	for _, step := range []stepConfig{
+		{"camera", "VC.startCamera()", "failed opening camera"},
+		{"audio", "VC.micOn()", "failed turning on mic"},
+		{"camera_preview", "VC.showCameraPreview()", "failed showing camera preview"},
+		{"video_2p", "VC.holdCall(2)", "failed holding 1:1 (2p) call (VP9 L1T3)"},
+		{"video_9p", "VC.holdCall(9)", "failed holding 9p call (VP9 L3T3_KEY)"},
+	} {
+		testing.ContextLog(ctx, "starting ", step.name)
+		if err := conn.Eval(ctx, step.evalStr, nil); err != nil {
+			return errors.Wrap(err, step.errMsg)
+		}
+		testing.ContextLog(ctx, "measuring performance metrics ", step.name)
+		// GoBigSleepLint: Sleep to measure the performance metrics
+		if err := testing.Sleep(ctx, profileInterval); err != nil {
+			return errors.Wrapf(err, "failed to sleep for %v", profileInterval)
+		}
+	}
+	if err := pr.Finish(ctx); err != nil {
+		return errors.Wrap(err, "cannot finish collecting power metrics")
+	}
+	return nil
+}
+
+// runNonStep holds a conference video call in which |numPeople| persons attends
+// and thus |numPeople-1| decoders and 1 encoder run.
+func runNonStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder, params VCTestParams) error {
+	if params.NumPeople <= 1 {
+		return errors.Errorf("the number of people must be more than 1: NumPeople=%d", params.NumPeople)
+	}
+	if err := conn.Eval(ctx, "VC.micOn()", nil); err != nil {
+		return errors.Wrap(err, "failed start camera and mic")
+	}
+	if err := conn.Eval(ctx, "VC.showCameraPreview()", nil); err != nil {
+		return errors.Wrap(err, "failed showing camera preview")
+	}
+
+	if err := conn.Eval(ctx, fmt.Sprintf("VC.holdCall(%d)", params.NumPeople), nil); err != nil {
+		return errors.Wrapf(err, "failed holding %dp call", params.NumPeople)
+	}
+
+	if err := pr.Start(ctx); err != nil {
+		return errors.Wrap(err, "cannot start collecting power metrics")
+	}
+	// GoBigSleepLint: Sleep to measure the performance metrics
+	if err := testing.Sleep(ctx, profileInterval); err != nil {
+		return errors.Wrapf(err, "failed to sleep for %v", profileInterval)
+	}
+	if err := pr.Finish(ctx); err != nil {
+		return errors.Wrap(err, "cannot finish collecting power metrics")
+	}
+	return nil
 }
 
 func runVCPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
@@ -85,42 +163,10 @@ func runVCPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
 		return errors.Wrap(err, "timed out waiting for page loading")
 	}
 
-	if err := r.Start(ctx); err != nil {
-		return errors.Wrap(err, "cannot start collecting power metrics")
+	if params.Step {
+		return runStep(ctx, conn, r)
 	}
-
-	// GoBigSleepLint: Sleep for profiling idle state.
-	if err := testing.Sleep(ctx, profileInterval); err != nil {
-		return errors.Wrapf(err, "failed to sleep for %v", profileInterval)
-	}
-	type stepConfig struct {
-		name    string
-		evalStr string
-		errMsg  string
-	}
-	for _, step := range []stepConfig{
-		{"camera", "VC.startCamera()", "failed opening camera"},
-		{"audio", "VC.micOn()", "failed turning on mic"},
-		{"camera_preview", "VC.showCameraPreview()", "failed showing camera preview"},
-		{"video_2p", "VC.holdCall(2)", "failed holding 1:1 (2p) call (VP9 L1T3)"},
-		{"video_9p", "VC.holdCall(9)", "failed holding 9p call (VP9 L3T3_KEY)"},
-	} {
-		testing.ContextLog(ctx, "starting ", step.name)
-		if err := conn.Eval(ctx, step.evalStr, nil); err != nil {
-			return errors.Wrap(err, step.errMsg)
-		}
-		testing.ContextLog(ctx, "measuring performance metrics ", step.name)
-		// GoBigSleepLint: Sleep to measure the performance metrics
-		if err := testing.Sleep(ctx, profileInterval); err != nil {
-			return errors.Wrapf(err, "failed to sleep for %v", profileInterval)
-		}
-	}
-
-	if err := r.Finish(ctx); err != nil {
-		return errors.Wrap(err, "cannot finish collecting power metrics")
-	}
-
-	return nil
+	return runNonStep(ctx, conn, r, params)
 }
 
 // RunVideoConference runs a video conference using WebRTC API and measures the

@@ -6,6 +6,7 @@ package rtc
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
@@ -22,18 +23,47 @@ func init() {
 		Func:         WebRTCVideoConference,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure audio, camera, graphics and video stack performance in a video conference using WebRTC",
+		Vars:         []string{"rtc.WebRTCVideoConference.NumPeople"},
 		Contacts: []string{
+			"hiroh@google.com", // Test Author.
 			"chromeos-rtc@google.com",
 		},
 		BugComponent: "b:1401297", // ChromeOS > Platform > Technologies > RTC
 		// TODO(hiroh): Look for a suite
 		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},
 		Data:         webrtc.TestFiles(),
-		Timeout:      20 * time.Minute,
 		Params: []testing.Param{
 			{
+				Name:    "custom",
 				Val:     webrtc.VCTestParams{},
 				Fixture: "chromeRTCPerf",
+				Timeout: 5 * time.Minute,
+			},
+			{
+				Name: "step",
+				Val: webrtc.VCTestParams{
+					Step: true,
+				},
+				Fixture: "chromeRTCPerf",
+				Timeout: 10 * time.Minute,
+			},
+			{
+				Name: "2p",
+				Val: webrtc.VCTestParams{
+					NumPeople: 2,
+				},
+				Fixture:   "chromeRTCPerf",
+				Timeout:   5 * time.Minute,
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "9p",
+				Val: webrtc.VCTestParams{
+					NumPeople: 9,
+				},
+				Fixture:   "chromeRTCPerf",
+				Timeout:   5 * time.Minute,
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 		},
 	})
@@ -41,6 +71,24 @@ func init() {
 
 func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 	params := s.Param().(webrtc.VCTestParams)
+
+	if val, ok := s.Var("rtc.WebRTCVideoConference.NumPeople"); ok {
+		numPeople, err := strconv.ParseInt(val, 10, 32)
+		if err != nil {
+			s.Fatal("Failed to parse rtc.WebRTCVideoConference.NumPeople")
+		}
+		params.NumPeople = int(numPeople)
+	}
+
+	if params.Step {
+		if params.NumPeople > 0 {
+			s.Fatal("Invalid parameters. The number of people cannot be set if Step is true")
+		}
+	} else {
+		if params.NumPeople <= 1 {
+			s.Fatal("Invalid parameters. The number of people cannot be less than 2 if Step is false")
+		}
+	}
 
 	tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
 	if err != nil {
