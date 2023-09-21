@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/mlbenchmark/ml-test-assets-0.0.6_20230921.tar.gz",
+  "size":  30657361,
+  "sha256sum": "3345c213731c9ef6235d0747e05fab0b414877f88eec6dce41034c1a6b52bf61"
+}
