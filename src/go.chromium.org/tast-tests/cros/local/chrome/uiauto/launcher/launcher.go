@@ -64,7 +64,7 @@ const SearchBoxView = "SearchBoxView"
 var UnnamedFolderFinder = nodewith.Name("Folder Unnamed").HasClass(ExpandedItemsClass)
 
 // SearchResultListItemFinder is the finder of the list items in launcher search result.
-var SearchResultListItemFinder = nodewith.HasClass("ui/app_list/SearchResultView")
+var SearchResultListItemFinder = nodewith.HasClass("SearchResultView")
 
 // SearchResultListViewFinder is the finder of the list views in launcher search result.
 var SearchResultListViewFinder = nodewith.HasClass("SearchResultListView")

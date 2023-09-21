@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/input"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -119,7 +118,7 @@ func searchAndOpen(ctx context.Context, tconn *chrome.TestConn, kb *input.Keyboa
 		return errors.Wrap(err, "failed to search")
 	}
 
-	searchResult := nodewith.Name(t.url).ClassName("ui/app_list/SearchResultView")
+	searchResult := launcher.SearchResultListItemFinder.Name(t.url)
 	if err := uiauto.New(tconn).DoDefault(searchResult)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find or activate search result")
 	}
