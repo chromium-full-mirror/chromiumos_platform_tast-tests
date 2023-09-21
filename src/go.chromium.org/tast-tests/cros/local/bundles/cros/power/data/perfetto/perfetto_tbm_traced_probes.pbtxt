@@ -1,0 +1,236 @@
+# This is inspired from the internal config: go/perfetto-aot-merged-config
+
+# Enable periodic flushing of the trace buffer into the output file.
+write_into_file: true
+
+# Writes the userspace buffer into the file every 2.5 seconds.
+file_write_period_ms: 2500
+
+# We need to guarantee that events stay within some defined sorting window (for the importer).
+flush_period_ms: 30000
+
+# Buffer 0: for process stats.
+buffers {
+    size_kb: 260096
+    fill_policy: RING_BUFFER
+}
+
+# Buffer 1: Small buffer for meminfo and procfs scans
+buffers {
+    size_kb: 128
+    fill_policy: RING_BUFFER
+}
+
+# Buffer 2: for ftrace, frame timeline, rss_stat, GPU memory.
+buffers {
+    size_kb: 28608
+    fill_policy: RING_BUFFER
+}
+
+data_sources {
+    config {
+        name: "linux.process_stats"
+        target_buffer: 0
+        process_stats_config {
+            scan_all_processes_on_start: true
+            proc_stats_poll_ms: 1000
+        }
+    }
+}
+
+data_sources {
+    config {
+        name: "linux.sysfs_power"
+        target_buffer: 0
+    }
+}
+
+data_sources: {
+    config {
+        name: "linux.sys_stats"
+        target_buffer: 1
+        sys_stats_config {
+            meminfo_period_ms: 5000
+            meminfo_counters: MEMINFO_MEM_FREE
+            meminfo_counters: MEMINFO_SWAP_FREE
+            meminfo_counters: MEMINFO_SLAB
+            meminfo_counters: MEMINFO_SLAB_UNRECLAIMABLE
+            meminfo_counters: MEMINFO_KERNEL_STACK
+
+            cpufreq_period_ms: 1000
+
+            stat_period_ms: 1000
+            stat_counters: STAT_CPU_TIMES
+            stat_counters: STAT_FORK_COUNT
+        }
+    }
+}
+
+data_sources {
+    config {
+        name: "linux.process_stats"
+        target_buffer: 1
+        process_stats_config {
+            proc_stats_poll_ms: 30000 # 30 seconds
+            quirks: DISABLE_ON_DEMAND
+        }
+    }
+}
+
+data_sources {
+    config {
+        name: "linux.ftrace"
+        target_buffer: 2
+        ftrace_config {
+            symbolize_ksyms: true
+
+            # os.Trace markers:
+            ftrace_events: "ftrace/print"
+
+            # RSS and ION buffer events:
+            ftrace_events: "gpu_mem/gpu_mem_total"
+            ftrace_events: "dmabuf_heap/dma_heap_stat"
+            ftrace_events: "ion/ion_stat"
+            ftrace_events: "kmem/ion_heap_grow"
+            ftrace_events: "kmem/ion_heap_shrink"
+            ftrace_events: "rss_stat"
+
+            # Scheduling information & process tracking. Useful for:
+            # - what is happening on each CPU at each moment
+            # - why a thread was descheduled
+            # - parent/child relationships between processes and threads.
+            ftrace_events: "power/suspend_resume"
+            ftrace_events: "sched/sched_blocked_reason"
+            ftrace_events: "sched/sched_process_free"
+            ftrace_events: "sched/sched_switch"
+            ftrace_events: "task/task_newtask"
+            ftrace_events: "task/task_rename"
+
+            # Wakeup info. Allows you to compute how long a task was
+            # blocked due to CPU contention.
+            ftrace_events: "sched/sched_waking"
+            ftrace_events: "sched/sched_wakeup_new"
+
+            # Workqueue events.
+            ftrace_events: "workqueue/workqueue_activate_work"
+            ftrace_events: "workqueue/workqueue_execute_end"
+            ftrace_events: "workqueue/workqueue_execute_start"
+            ftrace_events: "workqueue/workqueue_queue_work"
+
+            # vmscan and mm_compaction events.
+            ftrace_events: "vmscan/mm_vmscan_kswapd_wake"
+            ftrace_events: "vmscan/mm_vmscan_kswapd_sleep"
+            ftrace_events: "vmscan/mm_vmscan_direct_reclaim_begin"
+            ftrace_events: "vmscan/mm_vmscan_direct_reclaim_end"
+            ftrace_events: "compaction/mm_compaction_begin"
+            ftrace_events: "compaction/mm_compaction_end"
+
+            # cpu events.
+            ftrace_events: "power/cpu_frequency"
+            ftrace_events: "power/cpu_idle"
+
+            compact_sched {
+                enabled: true
+            }
+        }
+    }
+}
+
+data_sources: {
+    config {
+        name: "android.gpu.memory"
+    }
+}
+
+data_sources: {
+    config {
+        name: "android.power"
+        android_power_config {
+            battery_poll_ms: 1000
+            battery_counters: BATTERY_COUNTER_CAPACITY_PERCENT
+            battery_counters: BATTERY_COUNTER_CHARGE
+            battery_counters: BATTERY_COUNTER_CURRENT
+            collect_power_rails: true
+        }
+    }
+}
+
+data_sources: {
+    config {
+        name: "android.log"
+        android_log_config {
+        }
+    }
+}
+
+data_sources: {
+    config {
+        name: "org.chromium.trace_event"
+        chrome_config {
+            trace_config: "{\"record_mode\":\"record-until-full\",\"included_categories\":[\"accessibility\",\"AccountFetcherService\",\"android_webview\",\"aogh\",\"audio\",\"base\",\"benchmark\",\"blink\",\"blink.animations\",\"blink.bindings\",\"blink.console\",\"blink.net\",\"blink.resource\",\"blink.user_timing\",\"blink.worker\",\"blink_gc\",\"blink_style\",\"Blob\",\"browser\",\"browsing_data\",\"CacheStorage\",\"Calculators\",\"CameraStream\",\"camera\",\"cast_app\",\"cast_perf_test\",\"cast.mdns\",\"cast.mdns.socket\",\"cast.stream\",\"cc\",\"cc.debug\",\"cdp.perf\",\"chromeos\",\"cma\",\"compositor\",\"content\",\"content_capture\",\"device\",\"devtools\",\"devtools.contrast\",\"devtools.timeline\",\"disk_cache\",\"download\",\"download_service\",\"drm\",\"drmcursor\",\"dwrite\",\"DXVA_Decoding\",\"evdev\",\"event\",\"exo\",\"extensions\",\"explore_sites\",\"FileSystem\",\"file_system_provider\",\"fonts\",\"GAMEPAD\",\"gpu\",\"gpu.angle\",\"gpu.capture\",\"headless\",\"hwoverlays\",\"identity\",\"ime\",\"IndexedDB\",\"input\",\"io\",\"ipc\",\"Java\",\"jni\",\"jpeg\",\"latency\",\"latencyInfo\",\"leveldb\",\"loading\",\"log\",\"login\",\"media\",\"media_router\",\"memory\",\"midi\",\"mojom\",\"mus\",\"native\",\"navigation\",\"net\",\"netlog\",\"offline_pages\",\"omnibox\",\"oobe\",\"ozone\",\"partition_alloc\",\"passwords\",\"p2p\",\"page-serialization\",\"paint_preview\",\"pepper\",\"PlatformMalloc\",\"power\",\"ppapi\",\"ppapi_proxy\",\"print\",\"rail\",\"renderer\",\"renderer_host\",\"renderer.scheduler\",\"RLZ\",\"safe_browsing\",\"screenlock_monitor\",\"segmentation_platform\",\"sequence_manager\",\"service_manager\",\"ServiceWorker\",\"sharing\",\"shell\",\"shortcut_viewer\",\"shutdown\",\"SiteEngagement\",\"skia\",\"sql\",\"stadia_media\",\"stadia_rtc\",\"startup\",\"sync\",\"system_apps\",\"test_gpu\",\"thread_pool\",\"toplevel\",\"toplevel.flow\",\"ui\",\"v8\",\"v8.execute\",\"v8.wasm\",\"ValueStoreFrontend::Backend\",\"views\",\"views.frame\",\"viz\",\"vk\",\"wayland\",\"webaudio\",\"weblayer\",\"WebCore\",\"webrtc\",\"xr\"],\"memory_dump_config\":{}}"
+        }
+    }
+}
+
+data_sources: {
+    config {
+        name: "org.chromium.trace_metadata"
+        chrome_config {
+            trace_config: "{\"record_mode\":\"record-until-full\",\"included_categories\":[\"accessibility\",\"AccountFetcherService\",\"android_webview\",\"aogh\",\"audio\",\"base\",\"benchmark\",\"blink\",\"blink.animations\",\"blink.bindings\",\"blink.console\",\"blink.net\",\"blink.resource\",\"blink.user_timing\",\"blink.worker\",\"blink_gc\",\"blink_style\",\"Blob\",\"browser\",\"browsing_data\",\"CacheStorage\",\"Calculators\",\"CameraStream\",\"camera\",\"cast_app\",\"cast_perf_test\",\"cast.mdns\",\"cast.mdns.socket\",\"cast.stream\",\"cc\",\"cc.debug\",\"cdp.perf\",\"chromeos\",\"cma\",\"compositor\",\"content\",\"content_capture\",\"device\",\"devtools\",\"devtools.contrast\",\"devtools.timeline\",\"disk_cache\",\"download\",\"download_service\",\"drm\",\"drmcursor\",\"dwrite\",\"DXVA_Decoding\",\"evdev\",\"event\",\"exo\",\"extensions\",\"explore_sites\",\"FileSystem\",\"file_system_provider\",\"fonts\",\"GAMEPAD\",\"gpu\",\"gpu.angle\",\"gpu.capture\",\"headless\",\"hwoverlays\",\"identity\",\"ime\",\"IndexedDB\",\"input\",\"io\",\"ipc\",\"Java\",\"jni\",\"jpeg\",\"latency\",\"latencyInfo\",\"leveldb\",\"loading\",\"log\",\"login\",\"media\",\"media_router\",\"memory\",\"midi\",\"mojom\",\"mus\",\"native\",\"navigation\",\"net\",\"netlog\",\"offline_pages\",\"omnibox\",\"oobe\",\"ozone\",\"partition_alloc\",\"passwords\",\"p2p\",\"page-serialization\",\"paint_preview\",\"pepper\",\"PlatformMalloc\",\"power\",\"ppapi\",\"ppapi_proxy\",\"print\",\"rail\",\"renderer\",\"renderer_host\",\"renderer.scheduler\",\"RLZ\",\"safe_browsing\",\"screenlock_monitor\",\"segmentation_platform\",\"sequence_manager\",\"service_manager\",\"ServiceWorker\",\"sharing\",\"shell\",\"shortcut_viewer\",\"shutdown\",\"SiteEngagement\",\"skia\",\"sql\",\"stadia_media\",\"stadia_rtc\",\"startup\",\"sync\",\"system_apps\",\"test_gpu\",\"thread_pool\",\"toplevel\",\"toplevel.flow\",\"ui\",\"v8\",\"v8.execute\",\"v8.wasm\",\"ValueStoreFrontend::Backend\",\"views\",\"views.frame\",\"viz\",\"vk\",\"wayland\",\"webaudio\",\"weblayer\",\"WebCore\",\"webrtc\",\"xr\"],\"memory_dump_config\":{}}"
+        }
+    }
+}
+
+data_sources: {
+    config {
+        name: "linux.ftrace"
+        ftrace_config {
+            ftrace_events: "sched/sched_switch"
+            ftrace_events: "power/suspend_resume"
+            ftrace_events: "sched/sched_wakeup"
+            ftrace_events: "sched/sched_wakeup_new"
+            ftrace_events: "sched/sched_waking"
+            ftrace_events: "power/cpu_frequency"
+            ftrace_events: "power/cpu_idle"
+            ftrace_events: "power/gpu_frequency"
+            ftrace_events: "gpu_mem/gpu_mem_total"
+            ftrace_events: "regulator/regulator_set_voltage"
+            ftrace_events: "regulator/regulator_set_voltage_complete"
+            ftrace_events: "power/clock_enable"
+            ftrace_events: "power/clock_disable"
+            ftrace_events: "power/clock_set_rate"
+            ftrace_events: "sched/sched_process_exit"
+            ftrace_events: "sched/sched_process_free"
+            ftrace_events: "task/task_newtask"
+            ftrace_events: "task/task_rename"
+            ftrace_events: "ftrace/print"
+            atrace_apps: "*"
+            buffer_size_kb: 2048
+            drain_period_ms: 250
+        }
+    }
+}
+
+data_sources {
+    config {
+        name: "track_event"
+        target_buffer: 0
+    }
+}
+
+data_sources {
+    config {
+        name: "gpu.counters.i915"
+        target_buffer: 0
+    }
+}
+
+data_sources {
+    config {
+        name: "gpu.renderstages.intel"
+        target_buffer: 0
+    }
+}
+
+duration_ms: 3600000
+

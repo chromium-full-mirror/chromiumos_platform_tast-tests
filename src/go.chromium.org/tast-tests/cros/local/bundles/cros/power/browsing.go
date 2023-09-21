@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -21,11 +22,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast-tests/cros/local/tracing"
 )
 
 type browsingTestParam struct {
-	ConfigName string
-	TimeParams power.TimeParams
+	ConfigName   string
+	TimeParams   power.TimeParams
+	CollectTrace bool
 }
 
 const setupTimeoutBuffer = 5 * time.Minute
@@ -98,6 +101,19 @@ func init() {
 			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:               browsingTestParam{ConfigName: "light", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"lacros"},
+		}, {
+			Name:      "tracing_ash",
+			Fixture:   "powerAsh",
+			Timeout:   time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:       browsingTestParam{ConfigName: "custom", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}, CollectTrace: true},
+			ExtraData: []string{tracing.TBMTracedProbesConfigFile},
+		}, {
+			Name:              "tracing_lacros",
+			Fixture:           "powerLacros",
+			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:               browsingTestParam{ConfigName: "custom", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}, CollectTrace: true},
+			ExtraSoftwareDeps: []string{"lacros"},
+			ExtraData:         []string{tracing.TBMTracedProbesConfigFile},
 		}},
 	})
 }
@@ -171,6 +187,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 	configName := s.Param().(browsingTestParam).ConfigName
 	interval := s.Param().(browsingTestParam).TimeParams.Interval
 	totalTime := s.Param().(browsingTestParam).TimeParams.Total
+	collectTrace := s.Param().(browsingTestParam).CollectTrace
 
 	if configName == "custom" {
 		if v, ok := s.Var("config_name"); ok {
@@ -222,6 +239,20 @@ func Browsing(ctx context.Context, s *testing.State) {
 	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_ConfigName_" + configName, Unit: "unit"}, 0)
 	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_ConfigVersion_" + config.Version, Unit: "unit"}, 0)
 	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_ConfigURLVersion_" + config.URLData.Version, Unit: "unit"}, 0)
+
+	if collectTrace {
+		var session *tracing.Session
+		traceConfigPath := s.DataPath(tracing.TBMTracedProbesConfigFile)
+		traceDataPath := filepath.Join(s.OutDir(), "trace.perfetto-trace")
+		session, err = tracing.StartSession(ctx, traceConfigPath, tracing.WithTraceDataPath(traceDataPath))
+		if err != nil {
+			s.Fatal("Failed to start tracing: ", err)
+		}
+		s.Log("Collecting Perfetto trace File at: ", session.TraceDataPath())
+
+		defer session.Finalize(cleanupCtx)
+		defer session.Stop()
+	}
 
 	if err := r.Start(ctx); err != nil {
 		s.Fatal("Cannot start collecting power metrics: ", err)
