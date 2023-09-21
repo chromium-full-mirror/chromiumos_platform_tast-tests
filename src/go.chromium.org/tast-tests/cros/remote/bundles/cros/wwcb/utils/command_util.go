@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/exec"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -114,7 +115,7 @@ func VerifyUSBDevicesCount(ctx context.Context, dut *dut.DUT, expectUSBDevices [
 			return errors.Wrap(err, "get USB devices")
 		}
 		if len(devices) != len(expectUSBDevices) {
-			return errors.Errorf("unexpected number of USB devices, \ngot: %v, \nwant: %v", strings.Join(devices, "\n"), strings.Join(expectUSBDevices, "\n"))
+			return errors.Errorf("unexpected number of USB devices, got: %v, want: %v", strings.Join(devices, "\n"), strings.Join(expectUSBDevices, "\n"))
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
@@ -439,7 +440,7 @@ func GetDeviceWritableStatus(ctx context.Context, dut *dut.DUT, mountPoint strin
 }
 
 // CopyFileToExternalStorage copies the file to external storage and ensures write protection is functioning properly.
-func CopyFileToExternalStorage(ctx context.Context, dut *dut.DUT, mountPoint string, remoteTextPath string) error {
+func CopyFileToExternalStorage(ctx context.Context, dut *dut.DUT, mountPoint, remoteTextPath string) error {
 	mountPointStatus, err := GetDeviceWritableStatus(ctx, dut, mountPoint)
 	if err != nil {
 		return errors.Wrap(err, "can't get the read-write status of the device")
@@ -458,7 +459,7 @@ func CopyFileToExternalStorage(ctx context.Context, dut *dut.DUT, mountPoint str
 }
 
 // VerifyUSBDeviceConnectionChangeCount Verifies the count of USB devices after a connection change.
-func VerifyUSBDeviceConnectionChangeCount(ctx context.Context, dut *dut.DUT, before int, expectedCount int) error {
+func VerifyUSBDeviceConnectionChangeCount(ctx context.Context, dut *dut.DUT, before, expectedCount int) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		after, err := GetUSBDevice(ctx, dut)
 		if err != nil {
@@ -469,4 +470,18 @@ func VerifyUSBDeviceConnectionChangeCount(ctx context.Context, dut *dut.DUT, bef
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
+}
+
+// VerifyExternalStorageMounted verifies the external storage is mounted by listing the removable media information.
+func VerifyExternalStorageMounted(ctx context.Context, dut *dut.DUT) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := dut.Conn().CommandContext(ctx, "ls", "/media/removable").Output(exec.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to execute ls /media/removable")
+		} else if strings.TrimSpace(string(out)) == "" {
+			return errors.New("failed to check there is the information about the removable media, but got nothing")
+		}
+		testing.ContextLogf(ctx, "Found the mounted USB device: %s", strings.Fields(string(out)))
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second})
 }
