@@ -136,6 +136,17 @@ const (
 	Wificell = "wificell"
 )
 
+// Shortcuts for common values.
+var (
+	// PeripheralWifiStateWorking is a shortcut for calling PeripheralWifiState
+	// with the WORKING state.
+	//
+	// In order for this to be WORKING, all wifi routers in the testbed must be
+	// WORKING. If your test uses a router, it should depend on this as well.
+	// There is a PeripheralWifiStateWorking constant for ease of use.
+	PeripheralWifiStateWorking = PeripheralWifiState("WORKING")
+)
+
 // keyValueDep returns a formatted a dependency with key depKey and an optional
 // depValue. If depValue is set, the dependency added is in the format
 // "<depKey>:<depValue>", matching the syntax as required by swarming.
@@ -371,6 +382,10 @@ func OS(osType string) string {
 
 // PeripheralWifiState returns a "peripheral_wifi_state" dependency with the
 // specified state value.
+//
+// In order for this to be WORKING, all wifi routers in the testbed must be
+// WORKING. If your test uses a router, it should depend on this as well.
+// There is a PeripheralWifiStateWorking constant for ease of use.
 func PeripheralWifiState(peripheralState string) string {
 	return keyValueDep("peripheral_wifi_state", peripheralState)
 }
