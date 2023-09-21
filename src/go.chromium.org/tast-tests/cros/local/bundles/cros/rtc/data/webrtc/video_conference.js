@@ -18,14 +18,19 @@ class VideoConference {
   }
 
   async getUserMedia(audio) {
-    const constraints = {
-      audio: audio,
+    let constraints = {
       video: {
-            width: {ideal: 1920, max: 1920, min: 1280},
-           height: {ideal: 1080, max: 1080, min: 720},
+        width: {ideal: 1920, max: 1920, min: 1280},
+        height: {ideal: 1080, max: 1080, min: 720},
         frameRate: 30,
       },
     };
+    if (audio) {
+      constraints.audio = {
+        echoCancellation: true,
+        autoGainControl: true,
+      }
+    }
 
     let stream = await navigator.mediaDevices.getUserMedia(constraints);
     this.cameraStream = stream;
