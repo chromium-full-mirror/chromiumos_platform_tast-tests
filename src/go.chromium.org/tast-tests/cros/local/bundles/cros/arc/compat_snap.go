@@ -206,7 +206,7 @@ func CompatSnap(ctx context.Context, s *testing.State) {
 	}
 
 	// Close the compat mode splash dialog.
-	if err := wm.CheckVisibility(ctx, tconn, wm.BubbleDialogClassName, true); err != nil {
+	if err := wm.CheckVisibility(ctx, tconn, wm.ArcSplashScreenDialogViewClassName, true); err != nil {
 		s.Fatal("Failed to wait for splash: ", err)
 	}
 	if err := wm.CloseSplash(ctx, tconn, wm.InputMethodClick, nil); err != nil {

@@ -71,7 +71,7 @@ func RightClickLongPress(ctx context.Context, s *testing.State) {
 	}
 
 	// Close the splash screen if it's shown.
-	if err := wm.CheckVisibility(ctx, tconn, wm.BubbleDialogClassName, true); err == nil {
+	if err := wm.CheckVisibility(ctx, tconn, wm.ArcSplashScreenDialogViewClassName, true); err == nil {
 		if err := wm.CloseSplash(ctx, tconn, wm.InputMethodClick, nil); err != nil {
 			s.Fatal("Failed to close splash: ", err)
 		}

@@ -498,7 +498,7 @@ func testFullyLockedApp(ctx context.Context, tconn *chrome.TestConn, keyboard *i
 		return errors.Wrap(err, "failed to sleep after clicking on the compat-mode button")
 	}
 
-	if err := wm.CheckVisibility(ctx, tconn, wm.BubbleDialogClassName, false); err != nil {
+	if err := wm.CheckVisibility(ctx, tconn, wm.ArcSplashScreenDialogViewClassName, false); err != nil {
 		return errors.Wrapf(err, "failed to verify the visibility of the compat-mode menu of %s", activity.ActivityName())
 	}
 

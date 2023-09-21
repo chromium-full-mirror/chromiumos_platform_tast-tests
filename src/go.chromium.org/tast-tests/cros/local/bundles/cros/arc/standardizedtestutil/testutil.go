@@ -223,8 +223,8 @@ func runTest(ctx context.Context, s *testing.State, apkName, appPkgName, appActi
 			// Close the ResizeLock splash screen.
 			if isResizeLockTest {
 				// Skip closing the Splash windown if it doesn't exist.
-				if err := wm.CheckVisibility(ctx, tconn, wm.BubbleDialogClassName, false /*visible*/); err != nil {
-					if err := wm.CheckVisibility(ctx, tconn, wm.BubbleDialogClassName, true /*visible*/); err != nil {
+				if err := wm.CheckVisibility(ctx, tconn, wm.ArcSplashScreenDialogViewClassName, false /*visible*/); err != nil {
+					if err := wm.CheckVisibility(ctx, tconn, wm.ArcSplashScreenDialogViewClassName, true /*visible*/); err != nil {
 						s.Fatal("Failed to wait for splash: ", err)
 					}
 

@@ -71,9 +71,11 @@ const (
 
 	// CenterButtonClassName is the class name of the caption center button.
 	CenterButtonClassName = "FrameCenterButton"
-	// BubbleDialogClassName is the class name of the bubble dialog.
-	BubbleDialogClassName = "BubbleDialogDelegateView"
-	checkBoxClassName     = "Checkbox"
+	// roundedCornerBubbleDialogDelegateViewClassName is the class name of the resize toggle menu.
+	roundedCornerBubbleDialogDelegateViewClassName = "roundedCornerBubbleDialogDelegateView"
+	// ArcSplashScreenDialogViewClassName is the class name of the splash screen dialog.
+	ArcSplashScreenDialogViewClassName = "ArcSplashScreenDialogView"
+	checkBoxClassName                  = "Checkbox"
 	// ResizeConfirmationDialogClassName is the class name of resize confirmation dialog.
 	resizeConfirmationDialogClassName = "ResizeConfirmationDialogView"
 	shelfIconClassName                = "ash/ShelfAppButton"
@@ -198,7 +200,7 @@ func CheckResizeLockState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 		return errors.Wrapf(err, "failed to verify the resizability of %s", activity.ActivityName())
 	}
 
-	if err := CheckVisibility(ctx, tconn, BubbleDialogClassName, isSplashVisible); err != nil {
+	if err := CheckVisibility(ctx, tconn, ArcSplashScreenDialogViewClassName, isSplashVisible); err != nil {
 		return errors.Wrapf(err, "failed to verify the visibility of the splash screen on %s", activity.ActivityName())
 	}
 
@@ -433,7 +435,7 @@ func toggleCompatModeMenuViaButtonClick(ctx context.Context, tconn *chrome.TestC
 		return errors.Wrap(err, "failed to click on the compat-mode button")
 	}
 
-	return CheckVisibility(ctx, tconn, BubbleDialogClassName, isMenuVisible)
+	return CheckVisibility(ctx, tconn, roundedCornerBubbleDialogDelegateViewClassName, isMenuVisible)
 }
 
 // toggleCompatModeMenuViaKeyboard injects the keyboard shortcut and verifies the expected visibility of the compat-mode menu.
@@ -445,7 +447,7 @@ func toggleCompatModeMenuViaKeyboard(ctx context.Context, tconn *chrome.TestConn
 		}
 		return nil
 	}
-	dialog := nodewith.Role(role.Window).HasClass(BubbleDialogClassName)
+	dialog := nodewith.Role(role.Window).HasClass(roundedCornerBubbleDialogDelegateViewClassName)
 	if isMenuVisible {
 		return ui.WithTimeout(10*time.Second).WithInterval(2*time.Second).RetryUntil(accel, ui.Exists(dialog))(ctx)
 	}
@@ -457,7 +459,7 @@ func toggleCompatModeMenuViaKeyboard(ctx context.Context, tconn *chrome.TestConn
 // Can't use chromeui.WaitUntilGone() for this purpose because this function also checks whether the dialog has the "Phone" button or not to ensure that we are checking the correct dialog.
 func waitForCompatModeMenuToDisappear(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
-	dialog := nodewith.ClassName(BubbleDialogClassName).Role(role.Window)
+	dialog := nodewith.ClassName(roundedCornerBubbleDialogDelegateViewClassName).Role(role.Window)
 	phoneButton := nodewith.HasClass(phoneButtonName).Ancestor(dialog)
 	return ui.WithTimeout(10 * time.Second).WaitUntilGone(phoneButton)(ctx)
 }
@@ -465,7 +467,7 @@ func waitForCompatModeMenuToDisappear(ctx context.Context, tconn *chrome.TestCon
 // CloseSplash closes the splash screen via the given method.
 func CloseSplash(ctx context.Context, tconn *chrome.TestConn, method InputMethodType, keyboard *input.KeyboardEventWriter) error {
 	ui := uiauto.New(tconn)
-	splash := nodewith.ClassName(BubbleDialogClassName).Role(role.Window)
+	splash := nodewith.ClassName(ArcSplashScreenDialogViewClassName).Role(role.Window)
 	if err := ui.Exists(splash)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find the splash dialog")
 	}
@@ -515,7 +517,7 @@ func ToggleResizeLockMode(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 	}
 
 	ui := uiauto.New(tconn)
-	compatModeMenuDialog := nodewith.Role(role.Window).HasClass(BubbleDialogClassName)
+	compatModeMenuDialog := nodewith.Role(role.Window).HasClass(roundedCornerBubbleDialogDelegateViewClassName)
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(compatModeMenuDialog)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to find the compat-mode menu dialog of %s", activity.ActivityName())
 	}
@@ -564,7 +566,7 @@ func ToggleResizeLockMode(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 			return errors.Wrap(err, "failed to press the Esc key")
 		}
 		return nil
-	}, ui.Gone(nodewith.Role(role.Window).Name(BubbleDialogClassName)))(ctx); err != nil {
+	}, ui.Gone(nodewith.Role(role.Window).Name(roundedCornerBubbleDialogDelegateViewClassName)))(ctx); err != nil {
 		return errors.Wrap(err, "failed to verify that the resizability confirmation dialog is invisible")
 	}
 
