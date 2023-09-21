@@ -56,7 +56,7 @@ func Run(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to parse valid geekbenchInfo struct")
 	}
 
-	if gbInfo.name == "crostini" {
+	if strings.Contains(gbInfo.name, "crostini") {
 		tconn = s.PreValue().(crostini.PreData).TestAPIConn
 		cr = s.PreValue().(crostini.PreData).Chrome
 		cont = s.PreValue().(crostini.PreData).Container
@@ -84,10 +84,15 @@ func Run(ctx context.Context, s *testing.State) {
 	}
 	defer gbDir.rmDir(ctx)
 
-	// Crostini VM is always 64-bit.
-	execName, err := getExecutableFileName(ctx, gbInfo.name == "crostini" /* ignoreARMBitWidth */, gbInfo.version)
-	if err != nil {
-		s.Fatal("Failed to get executable name: ", err)
+	var execName string
+	if strings.Contains(gbInfo.name, "custom") {
+		execName = "geekbench_custom"
+	} else {
+		// Crostini VM is always 64-bit.
+		execName, err = getExecutableFileName(ctx, strings.Contains(gbInfo.name, "crostini") /* ignoreARMBitWidth */, gbInfo.version)
+		if err != nil {
+			s.Fatal("Failed to get executable name: ", err)
+		}
 	}
 
 	execFilePath := filepath.Join(gbDir.path, execName)

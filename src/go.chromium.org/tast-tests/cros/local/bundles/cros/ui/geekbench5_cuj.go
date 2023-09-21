@@ -30,10 +30,7 @@ func init() {
 			"geekbench5.plar",
 			"geekbench5_x86_64",
 		},
-		SoftwareDeps: []string{
-			"chrome",
-			"amd64",
-		},
+		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
 			"keepState",
 			"ui.gaiaPoolDefault",
@@ -42,20 +39,22 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Timeout: 15*time.Minute + cujrecorder.CooldownTimeout,
-				Fixture: "chromeLoggedInDisableSync",
-				Val:     geekbenchcuj.GetGBInfo("native", 5, true /*needLicense*/),
+				Timeout:           15*time.Minute + cujrecorder.CooldownTimeout,
+				Fixture:           "chromeLoggedInDisableSync",
+				ExtraSoftwareDeps: []string{"amd64"},
+				Val:               geekbenchcuj.GetGBInfo("native", 5, true /*needLicense*/),
 			},
 			{
-				Name:    "battery_saver",
-				Timeout: 15*time.Minute + cujrecorder.CooldownTimeout,
-				Fixture: fixture.ChromeLoggedInDisableSyncWithBatterySaver,
-				Val:     geekbenchcuj.GetGBInfo("native", 5, true /*needLicense*/),
+				Name:              "battery_saver",
+				Timeout:           15*time.Minute + cujrecorder.CooldownTimeout,
+				Fixture:           fixture.ChromeLoggedInDisableSyncWithBatterySaver,
+				ExtraSoftwareDeps: []string{"amd64"},
+				Val:               geekbenchcuj.GetGBInfo("native", 5, true /*needLicense*/),
 			},
 			{
 				Name:              "crostini",
 				Timeout:           20*time.Minute + cujrecorder.CooldownTimeout,
-				ExtraSoftwareDeps: []string{"vm_host", "dlc"},
+				ExtraSoftwareDeps: []string{"vm_host", "dlc", "amd64"},
 				ExtraData: []string{
 					crostini.GetContainerMetadataArtifact("bullseye", false),
 					crostini.GetContainerRootfsArtifact("bullseye", false),
@@ -63,6 +62,27 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Pre:               crostini.StartedByDlcBullseye(),
 				Val:               geekbenchcuj.GetGBInfo("crostini", 5, true /*needLicense*/),
+			},
+			// custom and crostini_custom are run only by tools/geekbench.py
+			{
+				Name:      "custom",
+				Timeout:   15*time.Minute + cujrecorder.CooldownTimeout,
+				Fixture:   "chromeLoggedInDisableSync",
+				ExtraData: []string{"geekbench_custom"},
+				Val:       geekbenchcuj.GetGBInfo("native_custom", 5, true /*needLicense*/),
+			},
+			{
+				Name:              "crostini_custom",
+				Timeout:           20*time.Minute + cujrecorder.CooldownTimeout,
+				ExtraSoftwareDeps: []string{"vm_host", "dlc"},
+				ExtraData: []string{
+					crostini.GetContainerMetadataArtifact("bullseye", false),
+					crostini.GetContainerRootfsArtifact("bullseye", false),
+					"geekbench_custom",
+				},
+				ExtraHardwareDeps: crostini.CrostiniStable,
+				Pre:               crostini.StartedByDlcBullseye(),
+				Val:               geekbenchcuj.GetGBInfo("crostini_custom", 5, true /*needLicense*/),
 			},
 		},
 	})

@@ -145,10 +145,16 @@ func getExecutableFileName(ctx context.Context, ignoreARMBitWidth bool, version 
 // the specific type of GeekbenchCUJ given environment, version, and needLicense.
 func GetGBInfo(env string, version int, needLicense bool) geekbenchInfo {
 	var gbInfo geekbenchInfo
-	if env == "native" {
+	if strings.Contains(env, "native") {
 		gbInfo = nativeGeekbenchInfo
-	} else if env == "crostini" {
+		if strings.Contains(env, "custom") {
+			gbInfo.name = "native_custom"
+		}
+	} else if strings.Contains(env, "crostini") {
 		gbInfo = crostiniGeekbenchInfo
+		if strings.Contains(env, "custom") {
+			gbInfo.name = "crostini_custom"
+		}
 	} else {
 		return geekbenchInfo{}
 	}
