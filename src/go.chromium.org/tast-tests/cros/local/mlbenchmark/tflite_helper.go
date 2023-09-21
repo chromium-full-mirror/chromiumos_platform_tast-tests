@@ -7,6 +7,7 @@ package mlbenchmark
 import (
 	"bufio"
 	"context"
+	"math/big"
 	"regexp"
 	"strconv"
 	"strings"
@@ -59,6 +60,15 @@ type benchmarkResults struct {
 	RunCount              int64
 }
 
+func parseNumeric(input string) (float64, error) {
+	flt, _, err := big.ParseFloat(input, 10, 0, big.ToNearestEven)
+	if err != nil {
+		return 0, errors.Wrapf(err, "couldn't parse input: %s", input)
+	}
+	f, _ := flt.Float64()
+	return f, nil
+}
+
 func parseOutput(output string) (*benchmarkResults, error) {
 	// The benchmark_model output will contain several key lines.
 	// There will be two that look like detailRe, and one that looks
@@ -96,11 +106,11 @@ func parseOutput(output string) (*benchmarkResults, error) {
 					if err != nil {
 						return nil, errors.Wrap(err, "couldn't parse RunCount")
 					}
-					results.AvgLatency, err = strconv.ParseFloat(matches[2], 64)
+					results.AvgLatency, err = parseNumeric(matches[2])
 					if err != nil {
 						return nil, errors.Wrap(err, "couldn't parse AvgLatency")
 					}
-					results.StdDev, err = strconv.ParseFloat(matches[3], 64)
+					results.StdDev, err = parseNumeric(matches[3])
 					if err != nil {
 						return nil, errors.Wrap(err, "couldn't parse StdDev")
 					}
@@ -115,11 +125,11 @@ func parseOutput(output string) (*benchmarkResults, error) {
 		matches = summaryRe.FindStringSubmatch(scanner.Text())
 		if len(matches) > 2 {
 			var err error
-			results.InitLatency, err = strconv.ParseFloat(matches[1], 64)
+			results.InitLatency, err = parseNumeric(matches[1])
 			if err != nil {
 				return nil, errors.Wrap(err, "couldn't parse InitLatency")
 			}
-			results.FirstInferenceLatency, err = strconv.ParseFloat(matches[2], 64)
+			results.FirstInferenceLatency, err = parseNumeric(matches[2])
 			if err != nil {
 				return nil, errors.Wrap(err, "couldn't parse FirstInferenceLatency")
 			}
@@ -130,7 +140,7 @@ func parseOutput(output string) (*benchmarkResults, error) {
 		matches = memoryRe.FindStringSubmatch(scanner.Text())
 		if len(matches) > 1 {
 			var err error
-			results.PeakMemoryUsage, err = strconv.ParseFloat(matches[1], 64)
+			results.PeakMemoryUsage, err = parseNumeric(matches[1])
 			if err != nil {
 				return nil, errors.Wrap(err, "couldn't parse InitialMemoryUsage")
 			}
