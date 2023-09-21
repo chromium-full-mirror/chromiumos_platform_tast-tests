@@ -37,6 +37,7 @@ func init() {
 			"group:golden_tier",
 			"group:mainline",
 			"informational",
+			"group:criticalstaging",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
