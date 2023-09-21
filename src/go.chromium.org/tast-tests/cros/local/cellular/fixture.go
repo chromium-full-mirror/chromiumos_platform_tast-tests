@@ -179,14 +179,16 @@ func init() {
 // cellularFixture implements testing.FixtureImpl.
 type cellularFixture struct {
 	// Fixture control flags
-	restartMM        bool
-	useFakeDMS       bool
-	useRoaming       bool
-	useTestESIM      bool
-	checkSIM         bool
-	clearSIMLock     bool
-	hasArc           bool
-	restartOnFailure []string
+	restartMM              bool
+	useFakeDMS             bool
+	useRoaming             bool
+	useTestESIM            bool
+	checkSIM               bool
+	clearSIMLock           bool
+	hasArc                 bool
+	restartOnFailure       []string
+	daemonUptimeBeforeTest time.Duration
+	systemUptimeBeforeTest time.Duration
 	// Fixture variables
 	helper          *Helper
 	modemfwdStopped bool
@@ -198,6 +200,8 @@ func newCellularFixture() *cellularFixture {
 	val := cellularFixture{}
 	// set defaults
 	val.restartOnFailure = []string{hermes.JobName, modemmanager.JobName, shill.JobName}
+	val.daemonUptimeBeforeTest = 2 * time.Minute
+	val.systemUptimeBeforeTest = 2 * time.Minute
 	return &val
 }
 func (f *cellularFixture) setCheckSIM(value bool) *cellularFixture {
@@ -232,6 +236,14 @@ func (f *cellularFixture) setRestartOnFailure(value []string) *cellularFixture {
 	f.restartOnFailure = value
 	return f
 }
+func (f *cellularFixture) setDaemonUptimeBeforeTest(value time.Duration) *cellularFixture {
+	f.daemonUptimeBeforeTest = value
+	return f
+}
+func (f *cellularFixture) setSystemUptimeBeforeTest(value time.Duration) *cellularFixture {
+	f.systemUptimeBeforeTest = value
+	return f
+}
 
 // FixtData holds information made available to tests that specify this fixture.
 type FixtData struct {
@@ -247,8 +259,6 @@ func (fd FixtData) FakeDMS() *fakedms.FakeDMS {
 	}
 	return fd.fdms
 }
-
-const uptimeBeforeTest = 2 * time.Minute
 
 func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	// Initialize Starfish before any Modem initialization.
@@ -340,7 +350,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	// Give some time for cellular daemons to perform any modem operations. Stopping them via upstart might leave the modem in a bad state.
-	if err := EnsureUptime(ctx, uptimeBeforeTest); err != nil {
+	if err := EnsureUptime(ctx, f.systemUptimeBeforeTest); err != nil {
 		s.Fatal("Failed to wait for system uptime: ", err)
 	}
 	if err := SetShillVerboseLogging(ctx); err != nil {
@@ -350,7 +360,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to set Modemmanager log level to DEBUG: ", err)
 	}
 	// Before stopping modemfwd, check and wait for modemfwd to idle.
-	if err := waitForModemFwdToIdle(ctx); err != nil {
+	if err := f.waitForModemFwdToIdle(ctx); err != nil {
 		s.Fatal("Could not confirm if ModemFwd is idle: ", err)
 	}
 	if err := waitForModemToBeExported(ctx); err != nil {
@@ -504,7 +514,7 @@ func (f *cellularFixture) restartJobsAndWaitOnFailure(ctx context.Context) {
 	}
 	if len(f.restartOnFailure) > 0 {
 		// GoBigSleepLint - Delay starting the next test to avoid any transients caused by restarting MM and shill.
-		testing.Sleep(ctx, uptimeBeforeTest)
+		testing.Sleep(ctx, f.daemonUptimeBeforeTest)
 	}
 }
 
@@ -567,8 +577,8 @@ func stopJob(ctx context.Context, job string) (bool, error) {
 
 }
 
-func waitForModemFwdToIdle(ctx context.Context) error {
-	if err := EnsureDaemonUptime(ctx, modemfwd.JobName, uptimeBeforeTest); err != nil {
+func (f *cellularFixture) waitForModemFwdToIdle(ctx context.Context) error {
+	if err := EnsureDaemonUptime(ctx, modemfwd.JobName, f.daemonUptimeBeforeTest); err != nil {
 		return errors.Wrapf(err, "failed to wait for %v uptime", modemfwd.JobName)
 	}
 	// Before stopping modemfwd, check and wait for flash to complete.
