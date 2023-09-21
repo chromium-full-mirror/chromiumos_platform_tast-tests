@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -177,13 +179,14 @@ func init() {
 // cellularFixture implements testing.FixtureImpl.
 type cellularFixture struct {
 	// Fixture control flags
-	restartMM    bool
-	useFakeDMS   bool
-	useRoaming   bool
-	useTestESIM  bool
-	checkSIM     bool
-	clearSIMLock bool
-	hasArc       bool
+	restartMM        bool
+	useFakeDMS       bool
+	useRoaming       bool
+	useTestESIM      bool
+	checkSIM         bool
+	clearSIMLock     bool
+	hasArc           bool
+	restartOnFailure []string
 	// Fixture variables
 	helper          *Helper
 	modemfwdStopped bool
@@ -194,6 +197,7 @@ type cellularFixture struct {
 func newCellularFixture() *cellularFixture {
 	val := cellularFixture{}
 	// set defaults
+	val.restartOnFailure = []string{hermes.JobName, modemmanager.JobName, shill.JobName}
 	return &val
 }
 func (f *cellularFixture) setCheckSIM(value bool) *cellularFixture {
@@ -222,6 +226,10 @@ func (f *cellularFixture) setUseRoaming(value bool) *cellularFixture {
 }
 func (f *cellularFixture) setUseTestESIM(value bool) *cellularFixture {
 	f.useTestESIM = value
+	return f
+}
+func (f *cellularFixture) setRestartOnFailure(value []string) *cellularFixture {
+	f.restartOnFailure = value
 	return f
 }
 
@@ -476,28 +484,34 @@ func getUpstartArgsForVerboseLogging(job string) []upstart.Arg {
 	return []upstart.Arg{}
 }
 
-func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	if s.HasError() {
-		testing.ContextLog(ctx, "Fixture detected a test failure, restarting MM, Shill and Hermes")
-		processes := []string{shill.JobName, modemmanager.JobName, hermes.JobName}
-		// stop and start jobs instead of upstart.Restart to emulate a reboot.
-		for _, p := range processes {
-			if _, err := stopJob(ctx, p); err != nil {
-				testing.ContextLogf(ctx, "Failed to stop job: %q, %s", p, err)
-			}
+func (f *cellularFixture) restartJobsAndWaitOnFailure(ctx context.Context) {
+	// stop and start jobs instead of upstart.Restart to emulate a reboot.
+	for _, p := range f.restartOnFailure {
+		testing.ContextLogf(ctx, "Fixture detected a test failure, restarting %s", p)
+		if _, err := stopJob(ctx, p); err != nil {
+			testing.ContextLogf(ctx, "Failed to stop job: %q, %s", p, err)
 		}
-		for _, p := range processes {
-			if err := upstart.StartJob(ctx, p, getUpstartArgsForVerboseLogging(p)...); err != nil {
-				testing.ContextLogf(ctx, "Failed to restart job: %q, %s", p, err)
-			}
+	}
+	for _, p := range f.restartOnFailure {
+		if err := upstart.StartJob(ctx, p, getUpstartArgsForVerboseLogging(p)...); err != nil {
+			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", p, err)
 		}
+	}
+	if slices.Contains(f.restartOnFailure, modemmanager.JobName) {
 		if _, err := modemmanager.NewModem(ctx); err != nil {
 			testing.ContextLog(ctx, "Could not find MM dbus object after restarting ModemManager: ", err)
 		}
+	}
+	if len(f.restartOnFailure) > 0 {
 		// GoBigSleepLint - Delay starting the next test to avoid any transients caused by restarting MM and shill.
 		testing.Sleep(ctx, uptimeBeforeTest)
 	}
+}
 
+func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	if s.HasError() {
+		f.restartJobsAndWaitOnFailure(ctx)
+	}
 	if f.netUnlock != nil {
 		f.netUnlock()
 	}
