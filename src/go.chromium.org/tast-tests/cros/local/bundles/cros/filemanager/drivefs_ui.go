@@ -39,6 +39,7 @@ func init() {
 			"group:mainline",
 		},
 		Fixture: "driveFsStarted",
+		Timeout: 5 * time.Minute,
 	})
 }
 
