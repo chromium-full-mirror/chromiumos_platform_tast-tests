@@ -142,7 +142,7 @@ func FetchPackageStates() (map[string]int64, error) {
 		"Silvermont":   silvermontStates,
 		"Skylake":      broadwellStates,
 		"Tiger Lake":   broadwellStates,
-		"Tremont":      goldmontStates,
+		"Tremont":      broadwellStates,
 		"Westmere":     nehalemStates,
 	}
 
