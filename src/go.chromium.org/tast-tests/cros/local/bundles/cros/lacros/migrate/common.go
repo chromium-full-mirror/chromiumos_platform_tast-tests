@@ -301,6 +301,8 @@ const (
 	downloadsURL = "chrome://downloads"
 	// Arbitrary bookmark name.
 	bookmarkName = "MyBookmark12345"
+	// Name of the folder to save bookmark into.
+	bookmarkFolderName = "Bookmarks bar"
 )
 
 // setupBookmark creates an arbitrary bookmark.
@@ -322,6 +324,17 @@ func setupBookmark(ctx context.Context, ui *uiauto.Context, br *browser.Browser,
 	if err := kb.Type(ctx, bookmarkName); err != nil {
 		return errors.Wrap(err, "failed to type bookmark name")
 	}
+
+	// Make sure that the bookmark is saved to 'Bookmarks bar' where its visible.
+	folderButton := nodewith.Name("Folder").Role(role.PopUpButton)
+	bookmarksBarOption := nodewith.Name(bookmarkFolderName).Role(role.MenuItem)
+	if err := uiauto.Combine("Select 'Bookmarks bar' folder",
+		ui.LeftClick(folderButton),
+		ui.LeftClickUntil(bookmarksBarOption, ui.Gone(bookmarksBarOption)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to select 'Bookmarks bar' folder")
+	}
+
 	if err := uiauto.Combine("Save bookmark",
 		ui.LeftClick(doneButton),
 		ui.WaitUntilGone(doneButton),
