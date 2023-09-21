@@ -20034,6 +20034,8 @@ func OpenclCts(ctx context.Context, s *testing.State) {
 	os.Setenv("CLVK_LOG", "2")
 	// Make sure the test has write permission in clvk's temporary folder.
 	os.Setenv("CLVK_COMPILER_TEMP_DIR", os.TempDir())
+	// Set OpenCL version to CL1.2
+	os.Setenv("CLVK_OPENCL_VERSION", "0x00402000")
 
 	expectation, err := expectations.GetTestExpectation(ctx, s.TestName())
 	if err != nil {
