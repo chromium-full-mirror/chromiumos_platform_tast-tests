@@ -55,6 +55,8 @@ func init() {
 
 type adaptiveChargingTestFunc = func(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error
 
+const powerdChargeHistoryDir = "/var/lib/power_manager/charge_history/"
+
 func AdaptiveCharging(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -74,20 +76,30 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 	}
 	defer upstart.RestartJob(cleanupCtx, "powerd")
 
+	fakeHistoryDir, err := os.MkdirTemp("/tmp", "charge_history")
+	if err != nil {
+		s.Fatal("Failed to create fake charge history directory: ", err)
+	}
+
+	if err := testexec.CommandContext(ctx, "mount", "--bind", fakeHistoryDir, powerdChargeHistoryDir).Run(); err != nil {
+		s.Fatalf("Failed to mount fake charge history directory %s on powerd charge history directory %s: %v", fakeHistoryDir, powerdChargeHistoryDir, err)
+	}
+	defer func(c context.Context) {
+		if err := testexec.CommandContext(c, "umount", powerdChargeHistoryDir).Run(); err != nil {
+			testing.ContextLogf(c, "Failed to unmount fake charge history directory from %s: %v", powerdChargeHistoryDir, err)
+		}
+	}(cleanupCtx)
+
 	// Create fake charge history to make sure the Adaptive Charging heuristic
 	// doesn't disable the feature.
-	timeFullDir := "/var/lib/power_manager/charge_history/time_full_on_ac/"
-	timeAcDir := "/var/lib/power_manager/charge_history/time_on_ac/"
-	chargeEventsDir := "/var/lib/power_manager/charge_history/charge_events/"
-	storedTimeFullDir := createFakeChargeHistory(s, timeFullDir)
-	defer os.Rename(storedTimeFullDir, timeFullDir)
-	defer os.RemoveAll(timeFullDir)
-	storedTimeAcDir := createFakeChargeHistory(s, timeAcDir)
-	defer os.Rename(storedTimeAcDir, timeAcDir)
-	defer os.RemoveAll(timeAcDir)
-	storedChargeEventsDir := createFakeChargeHistory(s, chargeEventsDir)
-	defer os.Rename(storedChargeEventsDir, chargeEventsDir)
-	defer os.RemoveAll(chargeEventsDir)
+	holdTimeDir := filepath.Join(powerdChargeHistoryDir, "hold_time_on_ac/")
+	timeFullDir := filepath.Join(powerdChargeHistoryDir, "time_full_on_ac/")
+	timeAcDir := filepath.Join(powerdChargeHistoryDir, "time_on_ac/")
+	chargeEventsDir := filepath.Join(powerdChargeHistoryDir, "charge_events/")
+	createFakeChargeHistory(s, holdTimeDir)
+	createFakeChargeHistory(s, timeFullDir)
+	createFakeChargeHistory(s, timeAcDir)
+	createFakeChargeHistory(s, chargeEventsDir)
 
 	if err := upstart.EnsureJobRunning(ctx, "powerd"); err != nil {
 		s.Fatal("Failed to restart powerd: ", err)
@@ -201,19 +213,10 @@ func testSettings(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn
 	return nil
 }
 
-// createFakeChargeHistory populates `dir` with fake charge history and stores
-// the existing contents in the directory specified by the return value.
-func createFakeChargeHistory(s *testing.State, dir string) string {
-	storedDir, err := ioutil.TempFile("/tmp", "stored_charge_history.*")
-	if err != nil {
-		s.Fatal("Failed to copy existing charge history to temporary location: ", err)
-	}
-
-	os.Rename(dir, storedDir.Name())
-
-	os.Mkdir(dir, 0666)
-	if err != nil {
-		s.Fatal("Failed to create directory for temporary charge history: ", err)
+// createFakeChargeHistory creates and populates `dir` with fake charge history values.
+func createFakeChargeHistory(s *testing.State, dir string) {
+	if err := os.Mkdir(dir, 0700); err != nil {
+		s.Fatalf("Failed to create fake charge history subdir, %s: %v", dir, err)
 	}
 
 	now := time.Now()
@@ -221,10 +224,16 @@ func createFakeChargeHistory(s *testing.State, dir string) string {
 	duration := 24 * time.Hour
 	contents := []byte("\"" + strconv.FormatInt(duration.Microseconds(), 10) + "\"")
 	for i := 0; i < 15; i++ {
-		ioutil.WriteFile(filepath.Join(dir, strconv.FormatInt(10*today.Add(time.Duration(-i)*duration).UnixMicro(), 10)), contents, 0666)
+		dateMicroseconds := today.Add(time.Duration(-i) * duration).UnixMicro()
+		// powerd uses Windows Epoch for Adaptive Charging timestamps, since that's what libchrome uses for timestamp
+		// serialization... for this reason, we need to add this number to our microseconds to get a correct number of
+		// microseconds, as commented for libchrome/base/time/time.h:Time::kTimeTToMicrosecondsOffset.
+		// Windows Epoch is 1601-01-01 and Unix Epoch is 1970-01-01.
+		dateMicroseconds += 11644473600000000
+		if err := ioutil.WriteFile(filepath.Join(dir, strconv.FormatInt(dateMicroseconds, 10)), contents, 0600); err != nil {
+			s.Fatal("Failed to write charge history file: ", err)
+		}
 	}
-
-	return storedDir.Name()
 }
 
 func pollUntilBatterySustainingState(ctx context.Context, sustaining bool) error {
