@@ -16,13 +16,11 @@ import (
 
 	"github.com/shirou/gopsutil/v3/process"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	ups "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/security/sandboxing"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/moblab"
-	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
@@ -31,13 +29,28 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SharedFilesystemState,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Reports on the state of the ChromeOS shared filesystem and fails if an unexpected mount is found when not logged in",
+		Desc:         "Reports on the state of the ChromeOS shared filesystem and fails if an unexpected mount is found",
 		Contacts: []string{
 			"chromeos-hardening@google.com",
 		},
 		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
+		Params: []testing.Param{{
+			Name:    "guest",
+			Fixture: fixture.ChromeLoggedInGuest,
+			Val:     "guest",
+		}, {
+			Name:              "arcpp_user",
+			Fixture:           "arcBooted",
+			ExtraSoftwareDeps: []string{"android_container"},
+			Val:               "arcpp-user",
+		}, {
+			Name:              "arcvm_user",
+			Fixture:           "arcBooted",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			Val:               "arcvm-user",
+		}},
 	})
 }
 
@@ -50,7 +63,7 @@ func init() {
 //  3. Add short reasoning as a comment above the mount, then add a more detailed
 //     explanation in
 //     https://chrome-internal.googlesource.com/chromeos/docs/+/HEAD/security/shared_filesystem_state.md
-//  4. Add nvaa@ or another chromeos-security@ engineer as a reviewer on the CL.
+//  4. Add allenwebb@ or another chromeos-hardening@ engineer as a reviewer on the CL.
 func SharedFilesystemState(ctx context.Context, s *testing.State) {
 	// Names of processes whose children should be ignored. These processes themselves are also ignored.
 	ignoredAncestorNames := make(map[string]struct{})
@@ -69,26 +82,6 @@ func SharedFilesystemState(ctx context.Context, s *testing.State) {
 		exclusionsMap[sandboxing.TruncateProcName(name)] = struct{}{}
 	}
 
-	if upstart.JobExists(ctx, "ui") {
-		s.Log("Restarting ui job to clean up stray processes")
-		if err := upstart.RestartJob(ctx, "ui"); err != nil {
-			s.Fatal("Failed to restart ui job: ", err)
-		}
-	}
-
-	sm, err := session.NewSessionManager(ctx)
-	if err != nil {
-		s.Fatal("Failed to create session_manager binding: ", err)
-	}
-
-	if err := cryptohome.MountGuest(ctx); err != nil {
-		s.Fatal("Failed to mount guest: ", err)
-	}
-
-	if err := sm.StartSession(ctx, cryptohome.GuestUser, ""); err != nil {
-		s.Fatal("Failed to start guest session: ", err)
-	}
-
 	// vm_concierge starts in the guest session and creates its own mounts, so if
 	// vm_concierge is present, we should wait for the job to start (at best
 	// effort) to increase the likelihood that its mounts will be present by the
@@ -101,24 +94,8 @@ func SharedFilesystemState(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	defer upstart.RestartJob(ctx, "ui")
-
-	testType := "guest"
+	testType := s.Param().(string)
 	testBody(s, testType, ignoredAncestorNames, exclusionsMap)
-
-	cr, err := chrome.New(
-		ctx,
-		chrome.ARCEnabled(),
-		chrome.UnRestrictARCCPU(),
-	)
-	if err != nil {
-		s.Fatal("Chrome login failed: ", err)
-	}
-	defer cr.Close(ctx)
-
-	testType = "arc-user"
-	testBody(s, testType, ignoredAncestorNames, exclusionsMap)
-
 }
 
 func testBody(s *testing.State, testType string, ignoredAncestorNames, exclusionsMap map[string]struct{}) {
@@ -265,7 +242,7 @@ func testBody(s *testing.State, testType string, ignoredAncestorNames, exclusion
 			for k, v := range mountsCommon {
 				expectedSharedMounts[k] = v
 			}
-			if testType == "user" {
+			if strings.HasSuffix(testType, "-user") {
 				for k, v := range mountsUser {
 					expectedSharedMounts[k] = v
 				}
