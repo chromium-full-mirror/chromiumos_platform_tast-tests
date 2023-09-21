@@ -23,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -55,7 +54,7 @@ func init() {
 			Name:      "blocked_ash_to_lacros",
 			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
 			Val: dragdrop.MixedBrowsersParams{
-				Source:      dragdrop.FileManager,
+				Source:      dragdrop.Settings,
 				Destination: dragdrop.Chrome,
 			},
 		}, {
@@ -137,42 +136,21 @@ func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, 
 
 	var dstWin *ash.Window
 	var srcWin *ash.Window
-	var filesApp *filesapp.FilesApp
-	var settingsApp *ossettings.OSSettings
 
-	// Start ash app.
-	launchAppSetWin := func(appName dragdrop.AppName, isSrc bool) {
-		switch appName {
-		case dragdrop.FileManager:
-			filesApp, err = filesapp.Launch(ctx, tconn)
-			if err != nil {
-				s.Fatal("Failed to open Files app: ", err)
-			}
-		case dragdrop.Settings:
-			settingsApp, err = ossettings.Launch(ctx, tconn)
-			if err != nil {
-				s.Fatal("Failed to open settings app: ", err)
-			}
-		}
-		activeWin, err := ash.GetActiveWindow(ctx, tconn)
-		if err != nil {
-			s.Fatalf("Failed to get active Window for %s: %v", appName, err)
-		}
-		if isSrc {
-			srcWin = activeWin
-		} else {
-			dstWin = activeWin
-		}
+	// Start Ash app.
+	_, err = ossettings.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to open settings app: ", err)
 	}
 
-	if params.Source == dragdrop.FileManager || params.Destination == dragdrop.FileManager {
-		launchAppSetWin(dragdrop.FileManager, params.Source == dragdrop.FileManager)
-		defer filesApp.Close(cleanupCtx)
+	activeWin, err := ash.GetActiveWindow(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get active Window for OS Settings: ", err)
 	}
-
-	if params.Source == dragdrop.Settings || params.Destination == dragdrop.Settings {
-		launchAppSetWin(dragdrop.Settings, params.Source == dragdrop.Settings)
-		defer settingsApp.Close(cleanupCtx)
+	if params.Source == dragdrop.Settings {
+		srcWin = activeWin
+	} else {
+		dstWin = activeWin
 	}
 
 	// Start browser.
@@ -204,7 +182,6 @@ func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, 
 	ui := uiauto.New(tconn)
 
 	// Setup source app.
-
 	if err := srcWin.ActivateWindow(ctx, tconn); err != nil {
 		s.Fatal("Cannot activate source window: ", err)
 	}
@@ -241,7 +218,6 @@ func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, 
 	}
 
 	// Setup destination app.
-
 	if err := dstWin.ActivateWindow(ctx, tconn); err != nil {
 		s.Fatal("Cannot activate destination window: ", err)
 	}
@@ -274,7 +250,6 @@ func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, 
 	}
 
 	notifError := clipboard.CheckClipboardBubble(ctx, ui, srcMatch)
-
 	if notifError != nil {
 		s.Error("Expected notification but found an error: ", notifError)
 	}
@@ -284,8 +259,4 @@ func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, 
 	if pastedError == nil {
 		s.Error("Content was pasted but should have been blocked")
 	}
-}
-
-func startAppSetWindow(appName dragdrop.AppName) {
-
 }
