@@ -7,6 +7,7 @@ package servo
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -110,7 +111,7 @@ func (s *Servo) GetPdPort(ctx context.Context) (int, error) {
 	for port := 0; port < MaxPorts; port++ {
 		if out, err := s.GetPDState(ctx, port); err == nil {
 			testing.ContextLog(ctx, "PD state out[0][3]: ", out[0][3])
-			if out[0][3] == "Enable" {
+			if strings.HasPrefix(out[0][3], "Ena") {
 				pdPort = port
 				numFound++
 			}
