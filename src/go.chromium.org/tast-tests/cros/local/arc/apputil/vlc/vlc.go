@@ -211,6 +211,18 @@ func (vlc *Vlc) PlayAudio(ctx context.Context, filetype string) error {
 	return nil
 }
 
+func (vlc *Vlc) clearAllYesButton(ctx context.Context) error {
+	yesButton := vlc.app.Device.Object(ui.Text("YES"))
+	if err := apputil.WaitForExists(yesButton, shortTimeout)(ctx); err != nil {
+		return nil
+	}
+	if err := apputil.FindAndClick(yesButton, shortTimeout)(ctx); err != nil {
+		return err
+	}
+
+	return vlc.clearAllYesButton(ctx)
+}
+
 func (vlc *Vlc) clearStartupPrompt(ctx context.Context) error {
 	// If app messages appear, click it.
 	testing.ContextLog(ctx, "Clear start up prompt")
@@ -225,8 +237,7 @@ func (vlc *Vlc) clearStartupPrompt(ctx context.Context) error {
 			apputil.ClickIfExist(vlc.app.Device.Object(ui.Text("ALLOW")), shortTimeout),
 			apputil.ClickIfExist(vlc.app.Device.Object(ui.ID(nextBtnID)), shortTimeout),
 			apputil.ClickIfExist(vlc.app.Device.Object(ui.ID(doneBtnID)), shortTimeout),
-			apputil.ClickIfExist(vlc.app.Device.Object(ui.Text("YES")), shortTimeout),
-			apputil.ClickIfExist(vlc.app.Device.Object(ui.Text("YES")), shortTimeout),
+			vlc.clearAllYesButton,
 		),
 	)(ctx)
 }
