@@ -427,7 +427,7 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	}
 
 	// Ensure that Cellular is Enabled and has a default Service before each test.
-	if !f.useTestESIM {
+	if !f.useTestESIM && !f.restartMM {
 		f.helper.EnsureDefaultService(ctx)
 	}
 }
