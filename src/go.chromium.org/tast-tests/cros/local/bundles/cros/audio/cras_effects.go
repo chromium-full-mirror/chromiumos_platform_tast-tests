@@ -39,7 +39,7 @@ func init() {
 			chrome.GuestLogin(),
 			chrome.EnableFeatures("AudioSettingsPage", "QsRevamp"),
 		),
-		HardwareDeps: hwdep.D(hwdep.Model("redrix", "gimble", "anahera", "yaviks", "yavikso")),
+		HardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 		Timeout:      30 * time.Second,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{

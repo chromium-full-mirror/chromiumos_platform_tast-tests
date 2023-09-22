@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
 	"go.chromium.org/tast-tests/cros/local/procutil"
 	"go.chromium.org/tast-tests/cros/local/profiler"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
@@ -40,10 +41,6 @@ var unstableModelsPlaybackCapture = []string{
 	// TODO(b/198322358): Undo skip after fix.
 	"ekko", "nautilus", "nautiluslte", "soraka",
 }
-
-// The list of models supporting AEC on DSP, which is manually specified now since there are just a few.
-// Consider detecting the support in hardware layer in the future.
-var modelsSupportDspAec = []string{"redrix", "gimble", "anahera", "yaviks", "yavikso"}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -97,7 +94,7 @@ func init() {
 					Capture:        true,
 					CaptureEffects: effectsDspAec,
 				},
-				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...), hwdep.Model(modelsSupportDspAec...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...), hwdep.Model(internal.DSPAECModels...)),
 			},
 		},
 	})
