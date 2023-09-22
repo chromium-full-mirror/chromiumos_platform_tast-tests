@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -127,6 +128,7 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
+	fs := dutfs.NewClient(cl.Conn)
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
 	keyboardSvc := inputspb.NewKeyboardServiceClient(cl.Conn)
@@ -149,11 +151,6 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initialize webcam: ", err)
 	}
 
-	extDispIDArray := []string{extDispID}
-	if err := utils.MappingWithDockFixture(ctx, s, extDispIDArray, dockingID); err != nil {
-		s.Fatal("Failed to mapping display fixture to camera: ", err)
-	}
-
 	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
@@ -166,8 +163,10 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify display count: ", err)
 	}
 
-	// GoBigSleepLint: Wait for external display to show the screen.
-	testing.Sleep(ctx, 30*time.Second)
+	extDispIDArray := []string{extDispID}
+	if err := utils.MappingWebcam(ctx, s, fs, keyboardSvc, displaySvc, appsSvc, uiautoSvc, extDispIDArray); err != nil {
+		s.Fatal("Failed to do the map about the displays & the webcams: ", err)
+	}
 
 	defer func(ctx context.Context) {
 		if s.HasError() {
