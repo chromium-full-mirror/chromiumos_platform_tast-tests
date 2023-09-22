@@ -28,6 +28,26 @@ const PictureFile = "red.jpg"
 // MyFilesPath is an absolute path on DUT.
 const MyFilesPath = "/home/chronos/user/MyFiles/"
 
+var (
+	// FilesWindowFinder is the finder of Files app window.
+	FilesWindowFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
+			{Value: &ui.NodeWith_Name{Name: "Files - My files"}},
+			{Value: &ui.NodeWith_First{First: true}},
+		},
+	}
+
+	// openFileFinder is the finder used to open the file on the Files app.
+	openFileFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
+			{Value: &ui.NodeWith_Name{Name: "Open"}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: FilesWindowFinder}},
+		},
+	}
+)
+
 // PushFileToDUT copies the specified fileName from the test's data folder to the DUT's remoteDir.
 // Returns the path of the file on the DUT on success.
 func PushFileToDUT(ctx context.Context, s *testing.State, dut *dut.DUT, fileName, remoteDir string) (string, error) {
@@ -171,27 +191,11 @@ func ClickFullScreenButton(ctx context.Context, uiautoSvc ui.AutomationServiceCl
 
 // OpenMediaFileWithGallery clicks the file on the Filesapp and open it with the Gallery app.
 func OpenMediaFileWithGallery(ctx context.Context, uiautoSvc ui.AutomationServiceClient, fileName string) (string, error) {
-	filesappWindowFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
-			{Value: &ui.NodeWith_Name{Name: "Files - My files"}},
-			{Value: &ui.NodeWith_First{First: true}},
-		},
-	}
-
 	fileNameFinder := &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
 			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_STATIC_TEXT}},
 			{Value: &ui.NodeWith_Name{Name: fileName}},
-			{Value: &ui.NodeWith_Ancestor{Ancestor: filesappWindowFinder}},
-		},
-	}
-
-	openButtonFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
-			{Value: &ui.NodeWith_Name{Name: "Open"}},
-			{Value: &ui.NodeWith_Ancestor{Ancestor: filesappWindowFinder}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: FilesWindowFinder}},
 		},
 	}
 
@@ -203,15 +207,23 @@ func OpenMediaFileWithGallery(ctx context.Context, uiautoSvc ui.AutomationServic
 		},
 	}
 
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: filesappWindowFinder}); err != nil {
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: FilesWindowFinder}); err != nil {
 		return "", errors.Wrap(err, "failed to wait for FilesApp showing on screen")
+	}
+
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: fileNameFinder}); err != nil {
+		return "", errors.Wrap(err, "failed to wait for filename showing on screen")
 	}
 
 	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: fileNameFinder}); err != nil {
 		return "", errors.Wrap(err, "failed to click on the filename")
 	}
 
-	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: openButtonFinder}); err != nil {
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: openFileFinder}); err != nil {
+		return "", errors.Wrap(err, "failed to wait for open file button showing on screen")
+	}
+
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: openFileFinder}); err != nil {
 		return "", errors.Wrap(err, "failed to click on the open button")
 	}
 
