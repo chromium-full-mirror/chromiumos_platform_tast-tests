@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/devicemode"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
@@ -277,6 +278,10 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 
 	if f.kb, err = input.Keyboard(ctx); err != nil {
 		s.Fatal("Failed to create keyboard device: ", err)
+	}
+
+	if err := guestos.DisableCursorBlinking(ctx, f.bruschettaVM); err != nil {
+		s.Fatal("Failed to disable cursor blinking: ", err)
 	}
 
 	return FixtureData{

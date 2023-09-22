@@ -25,6 +25,7 @@ import (
 	cui "go.chromium.org/tast-tests/cros/local/crostini/ui"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	dlcutil "go.chromium.org/tast-tests/cros/local/dlc"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
@@ -523,7 +524,7 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	// Disable cursor blinking for GTK apps.
-	if err := f.cont.Command(ctx, "gsettings", "set", "org.gnome.desktop.interface", "cursor-blink", "false").Run(testexec.DumpLogOnError); err != nil {
+	if err := guestos.DisableCursorBlinking(ctx, f.cont); err != nil {
 		s.Fatal("Failed to stop cursor blink: ", err)
 	}
 
