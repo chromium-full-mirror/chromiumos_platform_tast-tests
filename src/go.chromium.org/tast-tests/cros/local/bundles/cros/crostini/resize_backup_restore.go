@@ -195,8 +195,21 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 		s.Fatal("Backup complete notification not found: ", err)
 	}
 
-	backupFilePath := filepath.Join(myFilesPath, backupFileName)
-	defer os.Remove(backupFilePath)
+	// Remove any files with the .tini extension. This is used because the backup file created may be named differently if there was a delay in using the keyboard.
+	defer func() {
+		listFiles, err := os.ReadDir(myFilesPath)
+		if err != nil {
+			testing.ContextLog(ctx, "Could not read MyFiles directory to remove test files: ", err)
+			return
+		}
+		for _, file := range listFiles {
+			if !file.IsDir() && filepath.Ext(file.Name()) == ".tini" {
+				if err := os.Remove(filepath.Join(myFilesPath, file.Name())); err != nil {
+					testing.ContextLogf(ctx, "Failed to remove file %s: %q ", file.Name(), err)
+				}
+			}
+		}
+	}()
 
 	// Log a listing of dir.
 	logFiles := func(dir string) {
