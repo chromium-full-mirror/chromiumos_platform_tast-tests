@@ -168,16 +168,23 @@ func AppVscodeIME(ctx context.Context, s *testing.State) {
 func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, cont *vm.Container, imeData imetestutil.IMETestData) error {
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
+	vscodeCfg := apps.VSCode
 
-	if err := apps.InitialiseVSCode(ctx, apps.VSCode, cont, keyboard, tconn); err != nil {
+	if err := apps.InitialiseVSCode(ctx, vscodeCfg, cont, keyboard, tconn); err != nil {
 		return err
 	}
 
 	inputMethod := imeData.InputMethod
 	expectedText := imeData.ExpectedText
-	// Open the VSCode again, this time, it won't open the Get Started tab.
+
+	// Use the debug config for Japanese tests so that we can get more logs for b/298881339.
+	if imeData.InputMethod == ime.Japanese {
+		vscodeCfg = apps.VSCodeDebug
+	}
+
+	// Open VSCode again, this time, it won't open the Get Started tab.
 	if err := uiauto.Combine("create and compose file with VSCode",
-		apps.LaunchVSCodeForFile(apps.VSCode, uda, ui, terminalApp, keyboard, apps.VSCodeTestFile),
+		apps.LaunchVSCodeForFile(vscodeCfg, uda, ui, terminalApp, keyboard, apps.VSCodeTestFile),
 		inputMethod.InstallAndActivate(tconn),
 		inputMethod.WaitUntilActivated(tconn),
 		// VSCode will read the first keypress as English input, even when the input method is set otherwise.
@@ -196,7 +203,6 @@ func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalAp
 		}
 		expectedText += "\n" + imetestutil.JapaneseCandidatesBoxTestString
 	}
-
 	if err := uiauto.Combine("save file",
 		apps.SaveFileAndCloseVSCode(apps.VSCode, ui, keyboard, apps.VSCodeTestFile))(ctx); err != nil {
 		return err
@@ -204,6 +210,10 @@ func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalAp
 
 	// Check the content of the test file.
 	if err := cont.CheckFileContent(ctx, apps.VSCodeTestFile, expectedText); err != nil {
+		// Only save the wayland logs if there was an error.
+		if vscodeCfg == apps.VSCodeDebug {
+			apps.SaveWaylandDebugLogs(ctx, cont)
+		}
 		return errors.Wrap(err, "failed to verify the content of the file")
 	}
 
