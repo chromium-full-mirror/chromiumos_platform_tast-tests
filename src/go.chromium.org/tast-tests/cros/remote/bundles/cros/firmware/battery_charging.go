@@ -202,11 +202,6 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to suspend DUT: ", err)
 		}
 
-		s.Log("Waiting for DUT to disconnect")
-		if err := h.DisconnectDUT(ctx); err != nil {
-			s.Fatal("Failed to disconnect DUT: ", err)
-		}
-
 		if h.Config.ModeSwitcherType == firmware.MenuSwitcher && h.Config.Platform != "zork" {
 			s.Logf("Waking DUT from suspend by %s", tc.wakeSource)
 			switch tc.wakeSource {
@@ -453,7 +448,7 @@ func waitConnectFromSuspend(ctx context.Context, h *firmware.Helper) error {
 		return state
 	}
 
-	waitConnectOpt := []firmware.WaitConnectOption{firmware.ResetEthernetDongle}
+	waitConnectOpt := []firmware.WaitConnectOption{firmware.ResetEthernetDongle, firmware.SkipPDRoleSnk}
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancelWaitConnect()
 	err := h.WaitConnect(waitConnectCtx, waitConnectOpt...)

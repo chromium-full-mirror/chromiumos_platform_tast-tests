@@ -133,17 +133,21 @@ type Helper struct {
 }
 
 // WaitConnectOption includes situations to wait to connect from.
-type WaitConnectOption string
+type WaitConnectOption int
 
 const (
 	// FromHibernation alerts WaitConnect to skip
 	// on setting servo control while DUT is still
 	// in the process of waking up from hibernation.
-	FromHibernation WaitConnectOption = "hibernation"
+	FromHibernation WaitConnectOption = iota
 
 	// ResetEthernetDongle resets the ethernet dongle
 	// for speed-up in ssh connection.
-	ResetEthernetDongle WaitConnectOption = "reset_ethernet"
+	ResetEthernetDongle
+
+	// SkipPDRoleSnk skips setting pd role as snk if setting
+	// servo.DFP fails during WaitConnect.
+	SkipPDRoleSnk
 )
 
 // SetupUSBOption includes options for setting up a USB device.
@@ -870,7 +874,7 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 			if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
 				testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 				dfpFailures++
-				if dfpFailures == 3 {
+				if dfpFailures == 3 && !wcOptsContain(opts, SkipPDRoleSnk) {
 					ok, err := h.Servo.HasControl(ctx, string(servo.PDRole))
 					if err != nil {
 						testing.ContextLogf(ctx, "Failed to check for %q control: %s", servo.PDRole, err)
