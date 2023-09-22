@@ -40,11 +40,23 @@ func init() {
 		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Open new resources related to project in this desk.
-			Value: "screenplay-c74ed558-34e5-4373-9b18-cb40269caa65",
-		}},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-c74ed558-34e5-4373-9b18-cb40269caa65",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-aa50f67f-f24e-4f8d-af88-1fac22e84312",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-f2f7491e-e6ee-429e-9d56-aa386a2db2ca",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-2e1d03c8-d145-4fe5-b68f-04301d32199b",
+			}},
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
 		}, {

@@ -47,6 +47,10 @@ func init() {
 			Fixture:           "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-433ab5fd-64cf-4f9d-8318-5acf68163ad4",
+		}},
 	})
 }
 

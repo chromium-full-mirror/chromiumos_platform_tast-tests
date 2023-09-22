@@ -35,6 +35,10 @@ func init() {
 		BugComponent: "b:1253115",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-773f2ac5-bc20-4c79-ad65-70fc5c8ba0c2",
+		}},
 	})
 }
 

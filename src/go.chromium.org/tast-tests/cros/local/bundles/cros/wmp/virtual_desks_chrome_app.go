@@ -40,6 +40,23 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
 		Data:         []string{"web_app_install_force_list_index.html", "web_app_install_force_list_manifest.json", "web_app_install_force_list_service-worker.js", "web_app_install_force_list_icon-192x192.png", "web_app_install_force_list_icon-512x512.png"},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-c74ed558-34e5-4373-9b18-cb40269caa65",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-aa50f67f-f24e-4f8d-af88-1fac22e84312",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-f2f7491e-e6ee-429e-9d56-aa386a2db2ca",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-2e1d03c8-d145-4fe5-b68f-04301d32199b",
+			}},
 	})
 }
 

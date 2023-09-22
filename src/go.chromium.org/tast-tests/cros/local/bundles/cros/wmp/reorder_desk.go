@@ -52,11 +52,15 @@ func init() {
 		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational", "group:cq-medium"},
 		SoftwareDeps: []string{"chrome"},
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Drag desk to reorder.
-			Value: "screenplay-f64b4ed7-ca0e-4ea4-85b9-99254079ebde",
-		}},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-f64b4ed7-ca0e-4ea4-85b9-99254079ebde",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-0996004d-b395-4948-899f-1eba89966e34",
+			}},
 		Fixture: "chromeLoggedIn",
 		Params: []testing.Param{
 			{

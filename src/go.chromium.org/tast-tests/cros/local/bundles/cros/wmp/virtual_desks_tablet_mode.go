@@ -36,6 +36,19 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Fixture:      "chromeLoggedIn",
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-aa50f67f-f24e-4f8d-af88-1fac22e84312",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-f2f7491e-e6ee-429e-9d56-aa386a2db2ca",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-2e1d03c8-d145-4fe5-b68f-04301d32199b",
+			}},
 	})
 }
 

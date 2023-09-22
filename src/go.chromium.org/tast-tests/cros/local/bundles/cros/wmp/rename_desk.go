@@ -34,11 +34,15 @@ func init() {
 		// ChromeOS > Software > Window Management > Virtual Desks
 		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational"},
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Rename desks.
-			Value: "screenplay-88d0d385-f273-448a-912f-54ae1093959a",
-		}},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-88d0d385-f273-448a-912f-54ae1093959a",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-e877e627-9609-417d-bb72-a1691f06e0c2",
+			}},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 	})

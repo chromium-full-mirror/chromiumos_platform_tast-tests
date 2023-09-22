@@ -41,11 +41,19 @@ func init() {
 		// ChromeOS > Software > Window Management > OverviewMode
 		BugComponent: "b:1252584",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Send window to another desk.
-			Value: "screenplay-655469b9-efb0-4595-aba4-7d91d265b3dd",
-		}},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-655469b9-efb0-4595-aba4-7d91d265b3dd",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-048ac5ea-ecf6-4f52-818e-ca13507a591a",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-97e91de9-7126-4997-b0f3-707c3ff48fce",
+			}},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Fixture: "chromeLoggedInWithJelly",

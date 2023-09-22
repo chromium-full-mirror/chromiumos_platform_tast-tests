@@ -32,6 +32,10 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-7f6bc58a-ac38-4ca0-8bc8-ef88ec49aa11",
+		}},
 	})
 }
 

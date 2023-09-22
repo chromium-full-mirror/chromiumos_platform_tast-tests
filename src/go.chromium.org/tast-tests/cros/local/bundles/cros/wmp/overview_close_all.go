@@ -54,11 +54,15 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Close the desk and its windows after task completion.
-			Value: "screenplay-a8ad8d9d-ed34-48e1-a984-25570a099f75",
-		}},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-a8ad8d9d-ed34-48e1-a984-25570a099f75",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-04939a9c-e24a-427a-9548-2994f88ad7c1",
+			}},
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 	})
 }

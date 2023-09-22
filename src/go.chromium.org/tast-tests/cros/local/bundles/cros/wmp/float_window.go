@@ -45,6 +45,10 @@ func init() {
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute,
 		VarDeps: []string{"ui.gaiaPoolDefault"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-f4dbfe9b-7a0d-4759-885a-79b1925d6cd0",
+		}},
 	})
 }
 

@@ -32,6 +32,10 @@ func init() {
 		// ChromeOS > Software > ScreenCapture
 		BugComponent: "b:1253115",
 		SoftwareDeps: []string{"chrome"},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-936ea36a-b93f-4127-9260-9975e69365fa",
+		}},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      1 * time.Minute,

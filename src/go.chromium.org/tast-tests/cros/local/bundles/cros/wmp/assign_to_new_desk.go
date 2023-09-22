@@ -50,6 +50,19 @@ func init() {
 			Fixture:           "loggedInToCUJUserARCSupportedLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-ff7bb1e3-d3d8-45b4-b48d-16163633c78d",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-c7f54dee-97c4-4834-b4c5-dbee34b1cb0a",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-0996004d-b395-4948-899f-1eba89966e34",
+			}},
 	})
 }
 

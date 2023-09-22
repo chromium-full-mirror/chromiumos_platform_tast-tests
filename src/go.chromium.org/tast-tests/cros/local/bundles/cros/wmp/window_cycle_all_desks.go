@@ -34,11 +34,23 @@ func init() {
 		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Navigate to a window on another desk.
-			Value: "screenplay-f2f7491e-e6ee-429e-9d56-aa386a2db2ca",
-		}},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-56a6ba3c-d691-4eb7-a487-ca25effa4288",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-8984d485-f75b-4723-83ba-9c0aa7dd829b",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-0996004d-b395-4948-899f-1eba89966e34",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-f2f7491e-e6ee-429e-9d56-aa386a2db2ca",
+			}},
 		Params: []testing.Param{{
 			Fixture: "chromeLoggedIn",
 		}, {

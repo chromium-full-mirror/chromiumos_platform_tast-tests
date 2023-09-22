@@ -46,6 +46,10 @@ func init() {
 				Val:  wmp.Window,
 			},
 		},
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-936ea36a-b93f-4127-9260-9975e69365fa",
+		}},
 	})
 }
 

@@ -38,25 +38,31 @@ func init() {
 		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Switch desks.
-			Value: "screenplay-353dbfd4-4666-4e1f-be6c-7a210f95069d",
-		}},
-		Params: []testing.Param{{
-			ExtraSearchFlags: []*testing.StringPair{{
-				Key: "feature_id",
-				// Switch desks.
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-e4c751d7-be37-45e5-8017-47197bb76197",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-aa50f67f-f24e-4f8d-af88-1fac22e84312",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-f2f7491e-e6ee-429e-9d56-aa386a2db2ca",
+			},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-2e1d03c8-d145-4fe5-b68f-04301d32199b",
+			},
+			{
+				Key:   "feature_id",
 				Value: "screenplay-353dbfd4-4666-4e1f-be6c-7a210f95069d",
 			}},
+		Params: []testing.Param{{
 			Fixture: "chromeLoggedIn",
 			Val:     browser.TypeAsh,
 		}, {
-			ExtraSearchFlags: []*testing.StringPair{{
-				Key: "feature_id",
-				// Switch accounts.
-				Value: "screenplay-cda6d805-a7c7-4332-84fe-97d11de4b7c5",
-			}},
 			Name:              "lacros",
 			Fixture:           "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},

@@ -40,7 +40,10 @@ func init() {
 				Key:   "feature_id",
 				Value: "screenplay-936ea36a-b93f-4127-9260-9975e69365fa",
 			},
-		},
+			{
+				Key:   "feature_id",
+				Value: "screenplay-7f6bc58a-ac38-4ca0-8bc8-ef88ec49aa11",
+			}},
 		Params: []testing.Param{
 			{
 				Name: "clamshell_mode",
