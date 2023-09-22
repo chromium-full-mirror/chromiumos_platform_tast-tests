@@ -40,7 +40,11 @@ func init() {
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraData:         []string{"VtsHalKeymasterV3_0TargetTest_rvc_bertha_x86_64"},
+			ExtraData: []string{
+				"VtsHalKeymasterV3_0TargetTest_rvc_bertha_x86_64",
+				"VtsHalKeymasterV3_0TargetTest_arm",
+				"VtsHalKeymasterV3_0TargetTest_arm64",
+			},
 		}},
 	})
 }
