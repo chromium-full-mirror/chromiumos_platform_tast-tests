@@ -30,7 +30,7 @@ func init() {
 			"katie@chromium.org",           // Test author
 		},
 		BugComponent: "b:1272762", // ChromeOS Public Tracker > Experiences > Accessibility > Features > Magnifiers
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 	})

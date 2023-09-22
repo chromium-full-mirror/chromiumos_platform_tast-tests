@@ -34,7 +34,7 @@ func init() {
 			"akihiroota@chromium.org",      // Test author
 		},
 		BugComponent: "b:1272895",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Keyboard()),
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

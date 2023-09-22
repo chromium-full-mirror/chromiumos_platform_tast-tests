@@ -29,7 +29,7 @@ func init() {
 			"akihiroota@chromium.org",      // Test author
 		},
 		BugComponent: "b:1272897",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Fixture: "chromeLoggedIn",
