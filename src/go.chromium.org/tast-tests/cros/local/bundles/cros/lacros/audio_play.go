@@ -79,6 +79,10 @@ func AudioPlay(ctx context.Context, s *testing.State) {
 	}
 	defer conn.Close()
 
+	if err := conn.Eval(ctx, "audio.load()", nil); err != nil {
+		s.Fatal("Failed to load audio: ", err)
+	}
+
 	if err := conn.Eval(ctx, "audio.play()", nil); err != nil {
 		s.Fatal("Failed to start playing: ", err)
 	}
