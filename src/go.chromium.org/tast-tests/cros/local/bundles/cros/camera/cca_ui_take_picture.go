@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Opens CCA and verifies photo taking related use cases",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:intel-gating", "group:intel-nda", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:intel-gating", "group:intel-nda"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
 	})

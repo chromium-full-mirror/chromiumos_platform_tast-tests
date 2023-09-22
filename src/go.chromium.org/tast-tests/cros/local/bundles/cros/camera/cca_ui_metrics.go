@@ -23,7 +23,7 @@ func init() {
 		Desc:         "Tests if Chrome Camera App sends metrics correctly",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", "metrics_consent"},
 		Fixture:      "ccaLaunchedWithFakeHALCamera",
 	})

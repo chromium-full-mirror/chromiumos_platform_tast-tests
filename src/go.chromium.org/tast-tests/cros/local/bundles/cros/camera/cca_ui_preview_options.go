@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Opens CCA and verifies the use cases of preview options like mirror",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
 	})

@@ -46,7 +46,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.VividCamera},
 			Fixture:           "ccaLaunched",
 			// TODO(b/209833758): Removed from CQ due to flake in VM.
-			ExtraAttr: []string{"group:camera-postsubmit", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:camera-postsubmit", "informational"},
 			Val:       none,
 		}, {
 			Name:      "fake_vcd_fieldtrial_testing_config_on",
@@ -72,21 +72,21 @@ func init() {
 			Fixture: "ccaLaunchedWithFakeHALCamera",
 			// Marked as information because of flakiness.
 			// TODO(b/275270567): Reenable on CQ once flakiness is gone.
-			ExtraAttr: []string{"informational", "group:cq-medium", "group:criticalstaging"},
+			ExtraAttr: []string{"informational", "group:cq-medium"},
 			Val:       none,
 		}, {
 			Name:    "photo_fake_hal",
 			Fixture: "ccaLaunchedWithFakeHALCamera",
 			// Marked as information because of flakiness.
 			// TODO(b/275270567): Reenable on CQ once flakiness is gone.
-			ExtraAttr: []string{"informational", "group:cq-medium", "group:criticalstaging"},
+			ExtraAttr: []string{"informational", "group:cq-medium"},
 			Val:       photoTaking,
 		}, {
 			Name:    "video_fake_hal",
 			Fixture: "ccaLaunchedWithFakeHALCamera",
 			// Marked as information because of flakiness.
 			// TODO(b/275270567): Reenable on CQ once flakiness is gone.
-			ExtraAttr:         []string{"informational", "group:cq-medium", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational", "group:cq-medium"},
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			Val:               videoRecoridng,
 		}},

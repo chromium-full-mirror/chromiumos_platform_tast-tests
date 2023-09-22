@@ -43,7 +43,7 @@ func init() {
 		}, {
 			Name:      "fake_hal",
 			Fixture:   "ccaTestBridgeReadyWithFakeHALCamera",
-			ExtraAttr: []string{"group:criticalstaging"},
+			ExtraAttr: []string{},
 		}},
 	})
 }

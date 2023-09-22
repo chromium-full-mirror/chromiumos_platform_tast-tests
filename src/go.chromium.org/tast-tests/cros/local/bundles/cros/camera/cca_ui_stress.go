@@ -71,7 +71,7 @@ func init() {
 			Timeout:   5 * time.Minute,
 		}, {
 			Name:      "fake_hal",
-			ExtraAttr: []string{"group:mainline", "informational", "group:camera-libcamera", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline", "informational", "group:camera-libcamera"},
 			Fixture:   "ccaTestBridgeReadyWithFakeHALCamera",
 			Timeout:   5 * time.Minute,
 		}, {
