@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -34,7 +35,21 @@ func init() {
 	})
 }
 
-// PDDataSwap USB PD data role swap test
+const (
+	pdDataRolePollTimeout  time.Duration = 500 * time.Millisecond
+	pdDataRolePollInterval time.Duration = 100 * time.Millisecond
+	pdDataRoleSwapCount    int           = 10
+)
+
+// dataSwapSrc determines which PD partner initiates the data swap.
+type dataSwapSrc int
+
+const (
+	dutDataSwap dataSwapSrc = iota
+	servoDataSwap
+)
+
+// PDDataSwap performs a USB PD data role swap test.
 func PDDataSwap(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
@@ -61,22 +76,10 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 		s.Fatal("Error in getting PD port info: ", err)
 	}
 
-	// Note - servo has 2 PD ports.  Port 0 is the connection to the charger
-	// port 1 connects to the DUT.
-	var pdState *servo.PDState
-	pdState, err = h.Servo.GetServoPDState(ctx)
+	pdState, err := h.Servo.GetServoPDState(ctx)
 	if err != nil {
 		s.Fatal("Failed to get Servo PD state: ", err)
 	}
-
-	s.Log("Servo PD info:")
-	s.Logf("  Port       %d", pdState.Port)
-	s.Logf("  Polarity   %q", pdState.Polarity)
-	s.Logf("  Connection %q", pdState.Connection)
-	s.Logf("  PowerRole  %q", pdState.PowerRole)
-	s.Logf("  DataRole   %q", pdState.DataRole)
-	s.Logf("  PEState    %d", pdState.PEState)
-	s.Logf("  Flags      0x%x", pdState.Flags)
 
 	hasBattery := h.Config.HasECCapability(firmware.ECBattery)
 	s.Log("ECCapBattery: ", hasBattery)
@@ -95,5 +98,81 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 		s.Log("Battery capacity at test start: ", cs["batt.state_of_charge"])
 	}
 
-	// TODO: Implement actual PD data role swap test
+	// Verify that the DUT supports data swap, as reported in the servo's partner flags.
+	if pdState.Flags&servo.PartnerDualRoleData != 0 {
+		s.Logf("DUT supports data role swap, attempting %d swaps", pdDataRoleSwapCount)
+		var swapSrc dataSwapSrc
+		for i := 0; i < pdDataRoleSwapCount; i++ {
+			// Every 2 swaps, switch which partner initiates the data role swap.
+			if i&2 == 0 {
+				swapSrc = dutDataSwap
+			} else {
+				swapSrc = servoDataSwap
+			}
+			err := dataRoleSwap(ctx, h, swapSrc)
+			if err != nil {
+				s.Fatal("Data role swap failed: ", err)
+			}
+		}
+	}
+	// TODO: b/194910842 - [faft-pd] Convert firmware_PDDataSwap to TAST
+	// Need to verify data role swap is rejected.
+}
+
+func dataRoleSwap(ctx context.Context, h *firmware.Helper, swapSrc dataSwapSrc) error {
+	// Get the servo's current role.
+	pdState, err := h.Servo.GetServoPDState(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get Servo PD state before data swap")
+	}
+
+	servoRoleBefore := pdState.DataRole
+	testing.ContextLog(ctx, "Servo data role before: ", servoRoleBefore)
+
+	if swapSrc == servoDataSwap {
+		// Initiate swap from the servo.
+		testing.ContextLog(ctx, "Servo initiates data swap")
+		reply, err := h.Servo.ServoSendDataSwapRequest(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to initiate data swap on servo")
+		}
+
+		testing.ContextLogf(ctx, "DUT swap response %q", reply)
+
+		if reply == servo.PDCtrlReject {
+			// A PD device is allowed to reject a data swap request.
+			// The DUT may reject a data swap if it is already in its
+			// preferred role.
+			// Fall through and perform a swap from the DUT side.
+			testing.ContextLog(ctx, "DUT rejected data swap (expected)")
+
+			swapSrc = dutDataSwap
+		}
+	}
+
+	if swapSrc == dutDataSwap {
+		// Initiate swap from the DUT.
+		testing.ContextLog(ctx, "DUT initiates data swap")
+		err = h.Servo.SendDataSwapRequest(ctx, servo.PDPortUnderTest)
+		if err != nil {
+			return errors.Wrap(err, "failed to initiate data swap on DUT")
+		}
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if pdState, err = h.Servo.GetServoPDState(ctx); err == nil {
+			if pdState.DataRole == servoRoleBefore {
+				return errors.Wrap(err, "failed to switch data role")
+			}
+		} else {
+			return errors.Wrap(err, "failed to get servo PD state after data swap")
+		}
+
+		testing.ContextLog(ctx, "Servo data role after: ", pdState.DataRole)
+		return nil
+	}, &testing.PollOptions{Timeout: pdDataRolePollTimeout, Interval: pdDataRolePollInterval}); err != nil {
+		return errors.Wrap(err, "expected data role swap")
+	}
+
+	return nil
 }

@@ -28,8 +28,6 @@ const (
 	reEcPdStateCommand string = `Port\s+C(\d+)\s+CC(\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)(.*)[\r\n]`
 	reEcPdRecv         string = `RECV\s([\w]+)`
 	rePDVersion        string = `\s+(\d+|Wrong.*)`
-	// PdControlMsgMask is a bitmask to extract the message type from PD control messages.
-	PdControlMsgMask int = 0x1f
 	// MaxPorts specifies the maximum number of ports on the EC.
 	MaxPorts int = 4
 	// PDPortUnderTest indicates command should be sent to the PD port connected to servo.
@@ -95,6 +93,8 @@ func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 func (s *Servo) GetPDState(ctx context.Context, port int) ([][]string, error) {
 	if port == PDPortUnderTest {
 		port = s.dutPDInfo.activePort
+	} else if port > MaxPorts {
+		return nil, errors.Errorf("invalid PD port number %d", port)
 	}
 	cmd := fmt.Sprintf("pd %d state", port)
 
@@ -115,10 +115,13 @@ const (
 func (s *Servo) SendPowerSwapRequest(ctx context.Context, port int) error {
 	if port == PDPortUnderTest {
 		port = s.dutPDInfo.activePort
+	} else if port > MaxPorts {
+		return errors.Errorf("invalid PD port number %d", port)
 	}
 	cmd := fmt.Sprintf("pd %d swap power", port)
 
 	s.EnablePDConsoleDebug(ctx)
+	defer s.DisablePDConsoleDebug(ctx)
 
 	testing.ContextLog(ctx, "Sending power swap request: ", cmd)
 
@@ -129,7 +132,29 @@ func (s *Servo) SendPowerSwapRequest(ctx context.Context, port int) error {
 	}
 	testing.ContextLog(ctx, "PowerSwap reply: ", out)
 
-	s.DisablePDConsoleDebug(ctx)
+	return nil
+}
+
+// SendDataSwapRequest sends data swap request to be initiated by the DUT.
+func (s *Servo) SendDataSwapRequest(ctx context.Context, port int) error {
+	if port == PDPortUnderTest {
+		port = s.dutPDInfo.activePort
+	} else if port > MaxPorts {
+		return errors.Errorf("invalid PD port number %d", port)
+	}
+	cmd := fmt.Sprintf("pd %d swap data", port)
+
+	s.EnablePDConsoleDebug(ctx)
+	defer s.DisablePDConsoleDebug(ctx)
+
+	testing.ContextLog(ctx, "Sending data swap request: ", cmd)
+
+	out, err := s.RunECCommandGetOutput(ctx, cmd, []string{reEcPdRecv})
+
+	if err != nil {
+		return errors.Wrap(err, "EC pd command failed")
+	}
+	testing.ContextLog(ctx, "DataSwap reply: ", out)
 
 	return nil
 }

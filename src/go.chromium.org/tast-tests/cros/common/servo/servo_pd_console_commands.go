@@ -209,6 +209,34 @@ func (s *Servo) getServoPDStateHelper(ctx context.Context, port int) (*PDState, 
 	return &portState, nil
 }
 
+// ServoSendDataSwapRequest initiates a data swap request from the servo's PD port.
+func (s *Servo) ServoSendDataSwapRequest(ctx context.Context) (pdControlMsgType, error) {
+	// Enable PD message so we can check the response from the DUT.
+	err := s.RunServoCommand(ctx, "pd dump 2")
+	if err != nil {
+		return PDCtrlReserved, errors.Wrap(err, "failed to send enable PD debug")
+	}
+	// Always disable PD commands on exit.
+	defer s.RunServoCommand(ctx, "pd dump 0")
+
+	out, err := s.RunServoCommandGetOutput(ctx, "pd 1 swap data", []string{reEcPdRecv})
+	if err != nil {
+		return PDCtrlReserved, errors.Wrap(err, "failed to send servo data swap")
+	}
+
+	recvMsg, err := strconv.ParseUint(out[0][1], 16, 32)
+	if err != nil {
+		return PDCtrlReserved, errors.Wrapf(err, "failed to convert swap RECV message %q", out[0][1])
+	}
+
+	replyValue := int(recvMsg & PdControlMsgMask)
+	if reply, ok := pdControlMsg[replyValue]; ok {
+		return reply, nil
+	}
+
+	return PDCtrlReserved, errors.Errorf("unknown PD control message value %q", replyValue)
+}
+
 // GetServoPDState returns the state of the PD port on the servo that connects to the DUT
 func (s *Servo) GetServoPDState(ctx context.Context) (*PDState, error) {
 	return s.getServoPDStateHelper(ctx, 1)
