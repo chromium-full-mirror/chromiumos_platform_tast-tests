@@ -114,29 +114,29 @@ func (s *Servo) GetServoPDState(ctx context.Context) (*PDState, error) {
 		return nil, errors.Wrap(err, "failed to convert port number")
 	}
 
-	if polarity, err := t.lookup("CCPolarity"); err != nil {
+	polarity, err := t.lookup("CCPolarity")
+	if err != nil {
 		return nil, err
-	} else {
-		portState.Polarity = PDPolarityValue(polarity)
 	}
+	portState.Polarity = PDPolarityValue(polarity)
 
-	if connection, err := t.lookup("Connection"); err != nil {
+	connection, err := t.lookup("Connection")
+	if err != nil {
 		return nil, err
-	} else {
-		portState.Connection = ConnectionValue(connection)
 	}
+	portState.Connection = ConnectionValue(connection)
 
-	if powerRole, err := t.lookup("PowerRole"); err != nil {
+	powerRole, err := t.lookup("PowerRole")
+	if err != nil {
 		return nil, err
-	} else {
-		portState.PowerRole = PowerRoleValue(powerRole)
 	}
+	portState.PowerRole = PowerRoleValue(powerRole)
 
-	if dataRole, err := t.lookup("DataRole"); err != nil {
+	dataRole, err := t.lookup("DataRole")
+	if err != nil {
 		return nil, err
-	} else {
-		portState.DataRole = DataRoleValue(dataRole)
 	}
+	portState.DataRole = DataRoleValue(dataRole)
 
 	portState.PEState, err = strconv.Atoi(t[pdFieldIndex["PEState"]])
 	if err != nil {
