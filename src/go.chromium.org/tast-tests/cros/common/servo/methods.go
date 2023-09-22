@@ -1111,8 +1111,8 @@ func (s *Servo) WatchdogRemove(ctx context.Context, val WatchdogValue) error {
 	return nil
 }
 
-// runUARTCommand runs the given command on the servo console.
-func (s *Servo) runUARTCommand(ctx context.Context, cmd string) error {
+// RunServoCommand runs the given command on the servo console.
+func (s *Servo) RunServoCommand(ctx context.Context, cmd string) error {
 	if s.uartRegexp == "" {
 		return errors.New("Required servo control 'uartRegexp' not available. Run test using servo_v4/v4p1")
 	}
@@ -1153,13 +1153,13 @@ func (s *Servo) RunServoCommandGetOutput(ctx context.Context, cmd string, patter
 func (s *Servo) RunUSBCDPConfigCommand(ctx context.Context, args ...string) error {
 	args = append([]string{"usbc_action dp"}, args...)
 	cmd := strings.Join(args, " ")
-	return s.runUARTCommand(ctx, cmd)
+	return s.RunServoCommand(ctx, cmd)
 }
 
 // SetCC sets the CC line to the specified value.
 func (s *Servo) SetCC(ctx context.Context, val OnOffValue) error {
 	cmd := "cc " + string(val)
-	return s.runUARTCommand(ctx, cmd)
+	return s.RunServoCommand(ctx, cmd)
 }
 
 // SetActiveDUTController sets the active controller on a dual mode v4 servo
