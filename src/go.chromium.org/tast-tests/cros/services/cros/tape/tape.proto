@@ -6,18 +6,17 @@ syntax = "proto3";
 
 package tast.cros.tape;
 
+import "google/protobuf/empty.proto";
+
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/tape";
 
 // TapeService provides functions for use with the TAPE GCP.
 service Service {
   // GetDeviceID retrieves the deviceID used for deprovisioning from the DuT.
-  rpc GetDeviceID(GetDeviceIDRequest) returns (GetDeviceIDResponse) {}
-}
-
-message GetDeviceIDRequest {
-  string customerID = 1;
+  rpc GetDeviceID(google.protobuf.Empty) returns (GetDeviceIDResponse) {}
 }
 
 message GetDeviceIDResponse {
   string deviceID = 1;
+  string customerID = 2;
 }

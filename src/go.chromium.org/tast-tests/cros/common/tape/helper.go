@@ -6,7 +6,12 @@ package tape
 
 import (
 	"context"
+	"io/ioutil"
+	"regexp"
+	"strings"
 	"time"
+
+	"github.com/golang/protobuf/ptypes/empty"
 
 	ts "go.chromium.org/tast-tests/cros/services/cros/tape"
 	"go.chromium.org/tast/core/errors"
@@ -186,18 +191,24 @@ func (ah *OwnedTestAccountManager) CleanUp(ctx context.Context) error {
 func (c *client) DeprovisionHelper(ctx context.Context, rpcClient *rpc.Client, customerID, orgUnitPath string) error {
 	tapeService := ts.NewServiceClient(rpcClient.Conn)
 	// Get the device ID of the DUT to deprovision it at the end of the test.
-	res, err := tapeService.GetDeviceID(ctx, &ts.GetDeviceIDRequest{CustomerID: customerID})
+	ids, err := tapeService.GetDeviceID(ctx, &empty.Empty{})
 	if err != nil {
-		return errors.Wrap(err, "failed to get the deviceID")
+		return errors.Wrap(err, "failed to get the customer and deviceID")
 	}
-	if err = c.Deprovision(ctx, res.DeviceID, customerID); err != nil {
-		return errors.Wrapf(err, "failed to deprovision device %s", res.DeviceID)
+
+	return c.DeprovisionAndVerify(ctx, WithDeviceAndCustomerID(ids.DeviceID, ids.CustomerID))
+}
+
+// DeprovisionAndVerify is a helper function to deprovision a device in a managed domain.
+func (c *client) DeprovisionAndVerify(ctx context.Context, opt DeprovisionOption) error {
+
+	err := c.Deprovision(ctx, opt)
+	if err != nil {
+		return errors.Wrap(err, "failed to deprovision device")
 	}
-	if orgUnitPath == "" {
-		return nil
-	}
+
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		isDeprovisioned, err := c.Deprovisioned(ctx, res.DeviceID, orgUnitPath, customerID)
+		isDeprovisioned, err := c.Deprovisioned(ctx, opt)
 		if err != nil {
 			return err
 		}
@@ -214,20 +225,20 @@ func (c *client) DeprovisionHelper(ctx context.Context, rpcClient *rpc.Client, c
 }
 
 // MoveDeviceToOU is a helper function to move a device to an OU.
-func (c *client) MoveDeviceToOU(ctx context.Context, rpcClient *rpc.Client, customerID, orgUnitPath string) error {
+func (c *client) MoveDeviceToOU(ctx context.Context, rpcClient *rpc.Client, orgUnitPath string) error {
 	tapeService := ts.NewServiceClient(rpcClient.Conn)
 	// Get the device ID of the DUT.
-	res, err := tapeService.GetDeviceID(ctx, &ts.GetDeviceIDRequest{CustomerID: customerID})
+	ids, err := tapeService.GetDeviceID(ctx, &empty.Empty{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get the deviceID")
 	}
-	_, err = c.MoveDevicesToOU(ctx, []string{res.DeviceID}, orgUnitPath, customerID)
+	_, err = c.MoveDevicesToOU(ctx, []string{ids.DeviceID}, orgUnitPath, ids.CustomerID)
 	if err != nil {
-		return errors.Wrapf(err, "failed to move device %s to %s", res.DeviceID, orgUnitPath)
+		return errors.Wrapf(err, "failed to move device %s to %s", ids.DeviceID, orgUnitPath)
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		isDeprovisioned, err := c.Deprovisioned(ctx, res.DeviceID, orgUnitPath, customerID)
+		isDeprovisioned, err := c.Deprovisioned(ctx, WithDeviceAndCustomerID(ids.DeviceID, ids.CustomerID))
 		if err != nil {
 			return err
 		}
@@ -242,6 +253,31 @@ func (c *client) MoveDeviceToOU(ctx context.Context, rpcClient *rpc.Client, cust
 	}
 
 	return nil
+}
+
+// GetDeviceIDHelper retrieves the device id from the /var/lib/devicesettings/policy.1 file.
+func GetDeviceIDHelper(ctx context.Context) (deviceID, customerID string, retErr error) {
+	const deviceSettingsFileName = "/var/lib/devicesettings/policy.1"
+
+	data, err := ioutil.ReadFile(deviceSettingsFileName)
+	if err != nil {
+		return "", "", errors.Wrapf(err, "failed to read %s", deviceSettingsFileName)
+	}
+	deviceSettings := strings.ToValidUTF8(string(data), "")
+
+	// The deviceID is prefixed with $ and has the format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx and is separated by a
+	// SOH(x01) character and a tab from the customerID which has the format Cxxxxxxxx.
+	r, err := regexp.Compile("\\$([a-z0-9]){8}-([a-z0-9]){4}-([a-z0-9]){4}-([a-z0-9]){4}-([a-z0-9]){12}\x01\tC([a-z]|[0-9]){8}")
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to compile regular expression")
+	}
+
+	deviceAndCustomerID := strings.Split(r.FindString(deviceSettings)[1:], "\x01\t")
+	if len(deviceAndCustomerID) != 2 {
+		return "", "", errors.New("failed to find device and customerID in devicesettings")
+	}
+
+	return deviceAndCustomerID[0], deviceAndCustomerID[1], nil
 }
 
 // Additional target keys for policies.

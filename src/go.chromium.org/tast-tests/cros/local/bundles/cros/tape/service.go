@@ -6,11 +6,11 @@ package tape
 
 import (
 	"context"
-	"io/ioutil"
-	"strings"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"go.chromium.org/tast-tests/cros/common/tape"
 	ts "go.chromium.org/tast-tests/cros/services/cros/tape"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -29,18 +29,12 @@ type Service struct {
 }
 
 // GetDeviceID retrieves the device id from the /var/lib/devicesettings/policy.1 file.
-func (service *Service) GetDeviceID(ctx context.Context, req *ts.GetDeviceIDRequest) (resp *ts.GetDeviceIDResponse, retErr error) {
-	const deviceSettingsFileName = "/var/lib/devicesettings/policy.1"
-	const deviceIDLength = 36
+func (service *Service) GetDeviceID(ctx context.Context, req *empty.Empty) (resp *ts.GetDeviceIDResponse, retErr error) {
 
-	data, err := ioutil.ReadFile(deviceSettingsFileName)
+	deviceID, customerID, err := tape.GetDeviceIDHelper(ctx)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to read %s", deviceSettingsFileName)
+		return nil, errors.Wrap(err, "failed to retrieve deviceID")
 	}
 
-	deviceSettings := strings.ToValidUTF8(string(data), "")
-	pos := strings.Index(deviceSettings, "\t"+req.CustomerID)
-	deviceID := deviceSettings[pos-deviceIDLength-1 : pos-1]
-
-	return &ts.GetDeviceIDResponse{DeviceID: deviceID}, nil
+	return &ts.GetDeviceIDResponse{DeviceID: deviceID, CustomerID: customerID}, nil
 }

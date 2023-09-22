@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -378,18 +379,75 @@ func (c *client) SetPolicy(ctx context.Context, policySchema PolicySchema, updat
 	return nil
 }
 
+// storeDeprovisioningIDsRequest is a struct containing the necessary data to store the deprovisioning IDs in TAPE.
+type storeDeprovisioningIDsRequest struct {
+	DeviceID           string `json:"deviceid"`
+	CustomerID         string `json:"customerid"`
+	StableDeviceSecret string `json:"stabledevicesecret"`
+}
+
+// StoreDeprovisioningIDs stores the deviceID and customerID with the stableDeviceSecret as key in
+// the database of TAPE.
+func (c *client) StoreDeprovisioningIDs(ctx context.Context, deviceID, customerID, stableDeviceSecret string) error {
+
+	request := &storeDeprovisioningIDsRequest{
+		DeviceID:           deviceID,
+		CustomerID:         customerID,
+		StableDeviceSecret: stableDeviceSecret,
+	}
+
+	payloadBytes, err := json.Marshal(request)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal data")
+	}
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/storeDeprovisioningIDs", callTimeout, 2, payloadBytes)
+	if err != nil {
+		return errors.Wrap(err, "failed to make REST call")
+	}
+	defer response.Body.Close()
+	return nil
+}
+
+type deprovisionOption struct {
+	DeviceID           string
+	CustomerID         string
+	StableDeviceSecret string
+}
+
+// DeprovisionOption provides options for deprovisioning a device.
+type DeprovisionOption func(*deprovisionOption)
+
+// WithDeviceAndCustomerID provides the option to deprovision by customerID.
+func WithDeviceAndCustomerID(deviceID, customerID string) DeprovisionOption {
+	return func(opt *deprovisionOption) {
+		opt.DeviceID = deviceID
+		opt.CustomerID = customerID
+	}
+}
+
+// WithStableDeviceSecret provides the option to deprovision by StableDeviceSecret.
+func WithStableDeviceSecret(stableDeviceSecret string) DeprovisionOption {
+	return func(opt *deprovisionOption) {
+		opt.StableDeviceSecret = stableDeviceSecret
+	}
+}
+
 // deprovisionRequest is a struct containing the necessary data to deprovision a device.
+// If StableDeviceSecret is provided TAPE will get the CustomerID and DeviceID from its
+// database. Otherwise the CustomerID and the DeviceID have to be provided or the call
+// will fail.
 type deprovisionRequest struct {
-	DeviceID   string `json:"deviceid"`
-	CustomerID string `json:"customerid"`
+	DeviceID           string `json:"deviceid"`
+	CustomerID         string `json:"customerid"`
+	StableDeviceSecret string `json:"stabledevicesecret"`
 }
 
 // Deprovision calls TAPE to deprovision a device in DPanel.
-func (c *client) Deprovision(ctx context.Context, deviceID, customerID string) error {
-	request := &deprovisionRequest{
-		DeviceID:   deviceID,
-		CustomerID: customerID,
-	}
+func (c *client) Deprovision(ctx context.Context, opt DeprovisionOption) error {
+	options := deprovisionOption{}
+	opt(&options)
+
+	request := deprovisionRequest(options)
 
 	payloadBytes, err := json.Marshal(request)
 	if err != nil {
@@ -401,6 +459,87 @@ func (c *client) Deprovision(ctx context.Context, deviceID, customerID string) e
 	}
 	defer response.Body.Close()
 	return nil
+}
+
+// Deprovisioned calls TAPE to check if a device with a specific deviceID is
+// provisioned.
+func (c *client) Deprovisioned(ctx context.Context, opt DeprovisionOption) (bool, error) {
+	status, err := c.Provisioned(ctx, opt)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get provision status")
+	}
+	return !status, nil
+}
+
+// Provisioned calls TAPE to check if a device with a specific deviceID is
+// provisioned.
+func (c *client) Provisioned(ctx context.Context, opt DeprovisionOption) (bool, error) {
+	status, err := c.GetProvisionStatus(ctx, opt)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get provision status")
+	}
+	return strings.Contains(status, "Not deprovisioned"), nil
+}
+
+// GetProvisionStatus calls TAPE to check if a device with a specific deviceID is
+// provisioned.
+func (c *client) GetProvisionStatus(ctx context.Context, opt DeprovisionOption) (string, error) {
+	options := deprovisionOption{}
+	opt(&options)
+
+	request := deprovisionRequest(options)
+
+	payloadBytes, err := json.Marshal(request)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to marshal data")
+	}
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/isDeprovisioned", callTimeout, 2, payloadBytes)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to make REST call")
+	}
+
+	// Read the response.
+	respBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read response")
+	}
+	return string(respBody), nil
+}
+
+// getDeviceInfoRequest is a struct containing the necessary data to list devices
+// in an organizational unit.
+type getDeviceInfoRequest struct {
+	DeviceID   string `json:"deviceid"`
+	CustomerID string `json:"customerid"`
+}
+
+// GetDeviceInfo calls TAPE to retrieve device information from DPanel. This information comes in
+// the form of JSON fromatted string and contains information like "cpuInfo","deviceId","deviceLicenseType",
+// "ethernetMacAddress","firmwareVersion","firstEnrollmentTime","lastDeprovisionTimestamp","lastEnrollmentTime",
+// "lastKnownNetwork","lastSync","orgUnitId","orgUnitPath","osVersion","platformVersion","recentUsers",
+// "serialNumber","status","tpmVersionInfo". For more information see:
+// https://developers.google.com/admin-sdk/directory/v1/guides/manage-chrome-devices#get_chrome_device
+func (c *client) GetDeviceInfo(ctx context.Context, deviceID, customerID string) (string, error) {
+	request := &getDeviceInfoRequest{
+		DeviceID:   deviceID,
+		CustomerID: customerID,
+	}
+
+	payloadBytes, err := json.Marshal(request)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to marshal data")
+	}
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/getDevice", callTimeout, 2, payloadBytes)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to make REST call")
+	}
+
+	// Read the response.
+	respBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read response")
+	}
+	return string(respBody), nil
 }
 
 // listDevicesRequest is a struct containing the necessary data to list devices
@@ -433,40 +572,6 @@ func (c *client) ListDevices(ctx context.Context, orgUnitPath, customerID string
 		return "", errors.Wrap(err, "failed to read response")
 	}
 	return string(respBody), nil
-}
-
-// DeprovisionedRequest is a struct containing the necessary data to check if a
-// device is provisioned in an organizational unit.
-type DeprovisionedRequest struct {
-	DeviceID    string `json:"deviceid"`
-	OrgUnitPath string `json:"orgunitpath"`
-	CustomerID  string `json:"customerid"`
-}
-
-// Deprovisioned calls TAPE to check if a device with a specific deviceID is
-// provisioned in organizational unit corresponding to orgUnitPath.
-func (c *client) Deprovisioned(ctx context.Context, deviceID, orgUnitPath, customerID string) (bool, error) {
-	request := &DeprovisionedRequest{
-		DeviceID:    deviceID,
-		OrgUnitPath: orgUnitPath,
-		CustomerID:  customerID,
-	}
-
-	payloadBytes, err := json.Marshal(request)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to marshal data")
-	}
-	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/isDeprovisioned", callTimeout, 2, payloadBytes)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to make REST call")
-	}
-
-	// Read the response.
-	respBody, err := io.ReadAll(response.Body)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to read response")
-	}
-	return string(respBody) == "Deprovisioned", nil
 }
 
 // MoveDevicesToOURequest is a struct containing the necessary data to move a

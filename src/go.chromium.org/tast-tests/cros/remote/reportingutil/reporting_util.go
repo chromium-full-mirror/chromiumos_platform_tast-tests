@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/common/tape"
@@ -150,12 +151,12 @@ func Deprovision(ctx context.Context, cc grpc.ClientConnInterface, serviceAccoun
 
 	tapeService := ts.NewServiceClient(cc)
 	// Get the device id of the DUT to deprovision it at the end of the test.
-	res, err := tapeService.GetDeviceID(ctx, &ts.GetDeviceIDRequest{CustomerID: "C" + customerID})
+	ids, err := tapeService.GetDeviceID(ctx, &empty.Empty{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get the deviceID")
 	}
 
-	if err = tapeClient.Deprovision(ctx, res.DeviceID, customerID); err != nil {
+	if err = tapeClient.Deprovision(ctx, tape.WithDeviceAndCustomerID(ids.DeviceID, ids.CustomerID)); err != nil {
 		return errors.Wrap(err, "failed to deprovision device")
 	}
 	return nil
@@ -178,6 +179,8 @@ func DisableUpdatingDeviceAttribute(ctx context.Context, client tapeClient, requ
 func SleepWithContextLog(ctx context.Context, minutes int) error {
 	testing.ContextLogf(ctx,
 		"Waiting for %d minutes to check for reported telemetry", minutes)
+
+	// GoBigSleepLint: Waiting for reported telemetry.
 	if err := testing.Sleep(ctx, time.Duration(minutes)*time.Minute); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}

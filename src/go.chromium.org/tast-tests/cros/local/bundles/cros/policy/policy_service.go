@@ -23,6 +23,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -40,7 +41,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	ppb "go.chromium.org/tast-tests/cros/services/cros/policy"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -56,6 +56,9 @@ func init() {
 		},
 		// GuaranteeCompatibility allows tests outside ChromeOS to call this service.
 		GuaranteeCompatibility: true,
+		Vars: []string{
+			tape.ServiceAccountVar,
+		},
 	})
 }
 
@@ -135,9 +138,54 @@ func (c *PolicyService) WaitForEnrollmentError(ctx context.Context, req *empty.E
 	return &empty.Empty{}, errors.New("failed to find enrollment error message")
 }
 
+// StoreIDsForDeprovisioningAndLogErrors calls StoreIDsForDeprovisioning and logs returned errors.
+func (c *PolicyService) StoreIDsForDeprovisioningAndLogErrors(ctx context.Context) {
+	if err := c.StoreIDsForDeprovisioning(ctx); err != nil {
+		testing.ContextLog(ctx, "StoreIDsForDeprovisioning failed: ", err)
+	}
+}
+
+// StoreIDsForDeprovisioning stores the customerID and deviceID in TAPE to enable the deprovisioning of the device.
+// This function should be deferred before any enrollment with real GAIA is performed. As enrollment can still fail after
+// the provisioning it is important to also do this when enrollment fails.
+func (c *PolicyService) StoreIDsForDeprovisioning(ctx context.Context) error {
+	deviceID, customerID, err := tape.GetDeviceIDHelper(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get customerID and deviceID")
+	}
+
+	// Get the stable_device_secret as the key under which we store the deviceID and customerID
+	// as that won't change.
+	const stableDeviceSecretFileName = "/sys/firmware/vpd/ro/stable_device_secret_DO_NOT_SHARE"
+	data, err := ioutil.ReadFile(stableDeviceSecretFileName)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read %s", stableDeviceSecretFileName)
+	}
+	stableDeviceSecret := string(data)
+
+	tapeServiceAccount, ok := c.s.Var(tape.ServiceAccountVar)
+	if !ok {
+		return errors.New("missing tape.ServiceAccount variable")
+	}
+
+	tapeClient, err := tape.NewClient(ctx, []byte(tapeServiceAccount))
+	if err != nil {
+		return errors.Wrap(err, "failed to create TAPE client")
+	}
+
+	if err := tapeClient.StoreDeprovisioningIDs(ctx, deviceID, customerID, stableDeviceSecret); err != nil {
+		return errors.Wrap(err, "failed to store the ids needed to deprovision in TAPE")
+	}
+
+	return nil
+}
+
 // GAIAEnrollAndLoginUsingChrome enrolls the device using dmserver. Specified user is logged in after this function completes.
 func (c *PolicyService) GAIAEnrollAndLoginUsingChrome(ctx context.Context, req *ppb.GAIAEnrollAndLoginUsingChromeRequest) (*empty.Empty, error) {
 	testing.ContextLogf(ctx, "Enrolling using Chrome with username: %s, dmserver: %s", string(req.Username), string(req.DmserverURL))
+
+	// Store the IDs we need for deprovisioning, as enrollment can fail after provisioning we need to defer this function before enrolling.
+	defer c.StoreIDsForDeprovisioningAndLogErrors(ctx)
 
 	if err := c.newChrome(
 		ctx,
@@ -156,6 +204,9 @@ func (c *PolicyService) GAIAEnrollAndLoginUsingChrome(ctx context.Context, req *
 func (c *PolicyService) GAIAEnrollUsingChrome(ctx context.Context, req *ppb.GAIAEnrollUsingChromeRequest) (*empty.Empty, error) {
 	testing.ContextLogf(ctx, "Enrolling using Chrome with username: %s, dmserver: %s", string(req.Username), string(req.DmserverURL))
 
+	// Store the IDs we need for deprovisioning, as enrollment can fail after provisioning we need to defer this function before enrolling.
+	defer c.StoreIDsForDeprovisioningAndLogErrors(ctx)
+
 	if err := c.newChrome(
 		ctx,
 		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
@@ -172,6 +223,9 @@ func (c *PolicyService) GAIAEnrollUsingChrome(ctx context.Context, req *ppb.GAIA
 // GAIAZTEEnrollUsingChrome ZTE enrolls the device using dmserver.
 func (c *PolicyService) GAIAZTEEnrollUsingChrome(ctx context.Context, req *ppb.GAIAZTEEnrollUsingChromeRequest) (*empty.Empty, error) {
 	testing.ContextLogf(ctx, "ZTE Enrolling using Chrome with dmserver: %s", string(req.DmserverURL))
+
+	// Store the IDs we need for deprovisioning, as enrollment can fail after provisioning we need to defer this function before enrolling.
+	defer c.StoreIDsForDeprovisioningAndLogErrors(ctx)
 
 	if err := c.newChrome(
 		ctx,
@@ -217,6 +271,9 @@ func (c *PolicyService) GAIAEnrollForReporting(ctx context.Context, req *ppb.GAI
 	} else {
 		loginOption = chrome.GAIALogin(chrome.Creds{User: req.Username, Pass: req.Password})
 	}
+
+	// Store the IDs we need for deprovisioning, as enrollment can fail after provisioning we need to defer this function before enrolling.
+	defer c.StoreIDsForDeprovisioningAndLogErrors(ctx)
 
 	if err := c.newChrome(
 		ctx,
