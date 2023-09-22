@@ -182,7 +182,7 @@ func TestCreateFileWithVSCode(ctx context.Context, cfg VSCodeConfig, terminalApp
 		uda.WaitUntilExists(uidetection.Word("Desktop").WithinA11yNode(saveAsWindow)),
 		keyboard.AccelAction("ctrl+A"),
 		keyboard.TypeAction(VSCodeTestFile),
-		uda.LeftClick(uidetection.Word("Save").WithinA11yNode(saveAsWindow)),
+		uda.LeftClick(uidetection.TextBlock([]string{"Save"}, uidetection.SpecifiedWordsOnly(true)).WithinA11yNode(saveAsWindow)),
 	)
 
 	// Open the VSCode again, this time, it won't open the Get Started tab.
