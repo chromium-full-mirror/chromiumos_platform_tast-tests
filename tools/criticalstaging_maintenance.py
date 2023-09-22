@@ -21,7 +21,8 @@
     $ gcloud auth application-default set-quota-project chromeos-bot
 
     Usage example:
-    $ python criticalstaging_maintenance.py
+    In the tast-tests root dir
+    ~/chromiumos/src/platform/tast-tests$ python tools/criticalstaging_maintenance.py
 
     Contributor:
     dbeckett@google.com
@@ -79,7 +80,7 @@ def commit(testgroup, contact):
         if returncode != 0:
             raise Exception("The command 'repo upload' failed:", error)
 
-        returncode, error = run_cmd('repo abandon no_stale_cs_{testgroup}_tests')
+        returncode, error = run_cmd(f'repo abandon no_stale_cs_{testgroup}_tests')
         if returncode != 0:
             raise Exception("The command 'repo abandon no_stale_cs_{testgroup}_tests' failed:", error)
 
