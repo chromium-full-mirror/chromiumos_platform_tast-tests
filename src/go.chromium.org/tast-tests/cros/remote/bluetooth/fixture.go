@@ -125,6 +125,10 @@ const (
 	// chromeFeatureFloss is enabled when FlossEnabled fixture feature is true,
 	// and disabled when it is false.
 	chromeFeatureFloss = "Floss"
+
+	// chromeFeatureFlossIsAvailabilityCheckNeeded needs to be disabled when
+	// chromeFeatureFloss is enabled.
+	chromeFeatureFlossIsAvailabilityCheckNeeded = "FlossIsAvailabilityCheckNeeded"
 )
 
 // Power measurement parameters.
@@ -546,6 +550,7 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		// Enable/Disable floss feature based on desired bluetooth stack.
 		if btStack == bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_FLOSS {
 			tf.features.EnableFeatures = append(tf.features.EnableFeatures, chromeFeatureFloss)
+			tf.features.DisableFeatures = append(tf.features.DisableFeatures, chromeFeatureFlossIsAvailabilityCheckNeeded)
 		} else {
 			tf.features.DisableFeatures = append(tf.features.DisableFeatures, chromeFeatureFloss)
 		}
