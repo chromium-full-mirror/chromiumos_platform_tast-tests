@@ -107,6 +107,10 @@ func testBody(s *testing.State, testType string, ignoredAncestorNames, exclusion
 	BaseExpectedSharedMounts := map[string]bool{
 		// This is where USB drives get mounted.
 		"^/media$": true,
+		// Fusebox shares files between a variety of contexts such as ARC, volumes
+		// implemented using the FileSystemProvider JavaScript API, and volumes
+		// served by the MediaTransferProtocol.
+		"^/media/fuse/fusebox$": true,
 		// This is used to mount downloaded disk images.
 		// Multiple components/DLCs are allowed to be mounted under this path.
 		"^/run/imageloader(/|$)": true,
