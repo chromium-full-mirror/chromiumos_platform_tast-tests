@@ -39,13 +39,15 @@ func init() {
 			chrome.GuestLogin(),
 			chrome.EnableFeatures("AudioSettingsPage", "QsRevamp"),
 		),
-		HardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 		Timeout:      30 * time.Second,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name: "dsp_aec",
 				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "Microphone (internal)",
+					outputDevice:             "Speaker (internal)",
 					captureClients: []captureConfig{
 						{flags: []string{"--effects=0x11"}},
 					},
@@ -55,10 +57,14 @@ func init() {
 						APNC:    internal.EffectDisabled, // NC fallback not implemented.
 					},
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 			},
 			{
 				Name: "dsp_0x0_conflict",
 				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "Microphone (internal)",
+					outputDevice:             "Speaker (internal)",
 					captureClients: []captureConfig{
 						{flags: []string{"--effects=0x0"}},
 					},
@@ -68,10 +74,14 @@ func init() {
 						APNC:    internal.EffectDisabled, // NC fallback not implemented.
 					},
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 			},
 			{
 				Name: "dsp_0x0_dont_care",
 				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "Microphone (internal)",
+					outputDevice:             "Speaker (internal)",
 					captureClients: []captureConfig{
 						{flags: []string{
 							"--effects=0x0",
@@ -84,10 +94,14 @@ func init() {
 						APNC:    internal.EffectDisabled,
 					},
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 			},
 			{
 				Name: "dsp_aec_0x0_conflict",
 				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "Microphone (internal)",
+					outputDevice:             "Speaker (internal)",
 					captureClients: []captureConfig{
 						{flags: []string{"--effects=0x11"}},
 						{flags: []string{"--effects=0x0"}},
@@ -98,10 +112,14 @@ func init() {
 						APNC:    internal.EffectDisabled, // Fallback not implemented.
 					},
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 			},
 			{
 				Name: "dsp_aec_0x0_dont_care",
 				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "Microphone (internal)",
+					outputDevice:             "Speaker (internal)",
 					captureClients: []captureConfig{
 						{flags: []string{"--effects=0x11"}},
 						{flags: []string{
@@ -115,14 +133,18 @@ func init() {
 						APNC:    internal.EffectDisabled,
 					},
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 			},
 		},
 	})
 }
 
 type crasEffectsParam struct {
-	captureClients []captureConfig
-	expectEffects  effects
+	noiseCancellationEnabled bool
+	inputDevice              string
+	outputDevice             string
+	captureClients           []captureConfig
+	expectEffects            effects
 }
 
 // effects observed and expected.
@@ -165,12 +187,12 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to cr.TestAPIConn: ", err)
 	}
 
-	for _, device := range []string{"Microphone (internal)", "Speaker (internal)"} {
+	for _, device := range []string{param.inputDevice, param.outputDevice} {
 		if err := quicksettings.SelectAudioOption(ctx, tconn, device); err != nil {
 			s.Fatalf("Failed to select %q in UI: %v", device, err)
 		}
 	}
-	if err := quicksettings.ToggleNoiseCancellation(ctx, tconn, true); err != nil {
+	if err := quicksettings.ToggleNoiseCancellation(ctx, tconn, param.noiseCancellationEnabled); err != nil {
 		s.Fatal("Failed to enable noise cancellation: ", err)
 	}
 
