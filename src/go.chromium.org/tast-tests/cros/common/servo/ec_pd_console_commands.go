@@ -330,3 +330,63 @@ func (s *Servo) RestorePDPort(ctx context.Context, port int) error {
 
 	return nil
 }
+
+// TriggerPDSoftReset triggers a USB-PD Soft Reset from the EC/DUT-side
+func (s *Servo) TriggerPDSoftReset(ctx context.Context) error {
+	// Get port status
+	outBefore, err := s.GetPDState(ctx, PDPortUnderTest)
+	if err != nil {
+		return errors.Wrap(err, "failed to get pre-test EC/DUT-side PD port status")
+	}
+
+	if err := s.EnablePDConsoleDebug(ctx); err != nil {
+		return errors.Wrap(err, "could not enable EC/DUT's PD debug logs")
+	}
+
+	// Go back to `pd dump 0` after.
+	defer s.DisablePDConsoleDebug(ctx)
+
+	// Run the command
+	err = s.RunECCommand(
+		ctx,
+		fmt.Sprintf("pd %d soft", s.dutPDInfo.activePort),
+	)
+	if err != nil {
+		return errors.Wrap(err, "could not trigger soft reset on EC/DUT")
+	}
+
+	// Compare PD state before and after (should be the same)
+	outAfter, err := s.GetPDState(ctx, PDPortUnderTest)
+	if err != nil {
+		return errors.Wrap(err, "failed to get post-test EC/DUT-side PD port status")
+	}
+
+	// Connection status
+	if outBefore[0][3] != outAfter[0][3] {
+		return errors.Errorf(
+			"PD connection state changed after soft reset. Now %s, expected %s",
+			outAfter[0][3],
+			outBefore[0][3],
+		)
+	}
+
+	// Power role
+	if outBefore[0][4] != outAfter[0][4] {
+		return errors.Errorf(
+			"Power role changed after soft reset. Now %s, expected %s",
+			outAfter[0][4],
+			outBefore[0][4],
+		)
+	}
+
+	// Data role
+	if outBefore[0][5] != outAfter[0][5] {
+		return errors.Errorf(
+			"Data role changed after soft reset. Now %s, expected %s",
+			outAfter[0][5],
+			outBefore[0][5],
+		)
+	}
+
+	return nil
+}
