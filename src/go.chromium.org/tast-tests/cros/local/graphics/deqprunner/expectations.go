@@ -142,20 +142,32 @@ func GetCaseListFilters(ctx context.Context, category runnerCategory, environmen
 	   but it's harmless to have unused tests in the lists and makes
 	   copy-and-paste mistakes less likely.
 	*/
-	gpus, err := hardwareprobe.GPUFamilies(ctx)
+	probeResult, err := hardwareprobe.GetHardwareProbeResult(ctx)
 	if err != nil {
-		return CaseListFilters{}, errors.Wrap(err, "failed to get gpu information")
+		return CaseListFilters{}, errors.Wrap(err, "failed to get hardware probe result")
 	}
-	gpu := gpus[0]
-	skips, err := readExpectations(ctx, category, gpu, environment, "-skips.txt")
+	targetGPU := probeResult.GPUInfo[0].Family
+	// TODO(pwang): host may have two or more GPU (e.g. dGPU). Figure out the best action to handle multi-GPU cases.
+	// Prefer NVIDIA GPU if we are testing borealis.
+	if environment == Borealis {
+		for _, gpuInfo := range probeResult.GPUInfo {
+			if gpuInfo.Vendor == "nvidia" {
+				targetGPU = gpuInfo.Family
+				testing.ContextLogf(ctx, "Found NVIDIA GPU for testing borealis, loading %v expectations", targetGPU)
+				break
+			}
+		}
+	}
+
+	skips, err := readExpectations(ctx, category, targetGPU, environment, "-skips.txt")
 	if err != nil {
 		return CaseListFilters{}, errors.Wrap(err, "failed to set up skips expectations")
 	}
-	fails, err := readExpectations(ctx, category, gpu, environment, "-fails.txt")
+	fails, err := readExpectations(ctx, category, targetGPU, environment, "-fails.txt")
 	if err != nil {
 		return CaseListFilters{}, errors.Wrap(err, "failed to set up fails expectations")
 	}
-	flakes, err := readExpectations(ctx, category, gpu, environment, "-flakes.txt")
+	flakes, err := readExpectations(ctx, category, targetGPU, environment, "-flakes.txt")
 	if err != nil {
 		return CaseListFilters{}, errors.Wrap(err, "failed to set up flakes expectations")
 	}
