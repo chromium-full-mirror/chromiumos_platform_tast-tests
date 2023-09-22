@@ -32,12 +32,23 @@ func init() {
 	})
 }
 
-func getWaivedItems() []string {
+func getSkippedItems() []string {
 	return []string{
 		// Statful partition is unable to mount in test image.
 		"release_image_stateful_partition",
+		// These info stored in release rootfs partition which varies in
+		// the lab devices.
+		"release_image_info",
+		"signing_keys",
+	}
+}
+
+func getWaivedItems() []string {
+	return []string{
 		// AP RO hash is not stored in Ti50.
 		"gsc_ap_ro_hash",
+		// CBI is intentional empty on some projects.
+		"cbi_data",
 	}
 }
 
@@ -56,7 +67,7 @@ func prepareFaiConfig(ctx context.Context) (string, error) {
 	var jsonConfig map[string]interface{}
 	json.Unmarshal(rawConfig, &jsonConfig)
 
-	for _, key := range getWaivedItems() {
+	for _, key := range getSkippedItems() {
 		delete(jsonConfig, key)
 	}
 
@@ -78,12 +89,17 @@ func FAI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to prepare fai config: ", err)
 	}
 	defer os.Remove(configPath)
-	output, err := testexec.CommandContext(ctx, factoryFaiPath, "-c", configPath).Output()
+	output, err := testexec.CommandContext(ctx, factoryFaiPath, "-c", configPath).CombinedOutput()
 	if err != nil {
-		s.Fatal("Failed to execute factory_fai: ", err)
+		s.Error("Failed to execute factory_fai: ", err)
+		s.Fatal("Output: ", string(output[:]))
 	}
 	var jsonResult map[string]interface{}
 	json.Unmarshal(output, &jsonResult)
+
+	for _, key := range getWaivedItems() {
+		delete(jsonResult, key)
+	}
 
 	for key, value := range jsonResult {
 		switch t := value.(type) {
