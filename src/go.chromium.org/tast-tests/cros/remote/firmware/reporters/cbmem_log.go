@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // GetCBMEMLogs gets CBMEM log from the last boot.
@@ -62,5 +63,6 @@ func (r *Reporter) CheckDisplayedScreens(ctx context.Context, expected []firmwar
 		}
 	}
 	removeAdjacentDuplicates(&fwScreens)
+	testing.ContextLogf(ctx, "Found firmware screens: %x", fwScreens)
 	return cmp.Equal(fwScreens, expected), nil
 }
