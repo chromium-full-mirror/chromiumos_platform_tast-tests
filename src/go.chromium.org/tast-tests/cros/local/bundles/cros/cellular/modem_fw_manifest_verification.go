@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"encoding/xml"
 	"os"
 	"path/filepath"
 
@@ -13,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/modemfwd"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -20,7 +22,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ModemFWManifestVerification,
 		Desc:         "Verifies the validity of the firmware manifest",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com", "madhavadas@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl"},
 		Fixture:      "cellular",
@@ -30,11 +32,6 @@ func init() {
 
 // ModemFWManifestVerification Test
 func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
-	fileExists := func(file string) bool {
-		_, err := os.Stat(file)
-		return !os.IsNotExist(err)
-	}
-
 	// Stop modemfwd so that the DLCs don't get uninstalled in the middle of the test.
 	if err := upstart.StopJob(ctx, modemfwd.JobName); err != nil {
 		s.Fatalf("Failed to stop %q: %s", modemfwd.JobName, err)
@@ -139,6 +136,18 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 					s.Fatalf("There is no carrier id defined for carrier FW %q", carrierFW.Version)
 				}
 			}
+			// Verify recovery on FM101
+			if device.DeviceId == "usb:2cb7:01a2" {
+				recoveryFileList, err := getFM101RecoveryFileList(modemFirmwarePath, device.Variant)
+				if err != nil {
+					s.Fatal("Failed to get recovery file list: ", err)
+				}
+				for _, fullPath := range recoveryFileList {
+					if !fileExists(fullPath) {
+						missingFiles[fullPath] = true
+					}
+				}
+			}
 		}
 	}
 
@@ -153,4 +162,67 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 	if dlcCounter > 0 && dlcCounter != len(manifest.Device) {
 		s.Fatal("There is an unequal number of variants and DLCs")
 	}
+}
+
+func fileExists(file string) bool {
+	_, err := os.Stat(file)
+	return !os.IsNotExist(err)
+}
+
+func getFM101RecoveryFileList(firmwarePath, variant string) ([]string, error) {
+	type recoveryData struct {
+		XMLName xml.Name `xml:"data"`
+		Text    string   `xml:"chardata"`
+		Erase   []struct {
+			Text                    string `xml:"chardata"`
+			PAGESPERBLOCK           string `xml:"PAGES_PER_BLOCK,attr"`
+			SECTORSIZEINBYTES       string `xml:"SECTOR_SIZE_IN_BYTES,attr"`
+			NumPartitionSectors     string `xml:"num_partition_sectors,attr"`
+			PhysicalPartitionNumber string `xml:"physical_partition_number,attr"`
+			StartSector             string `xml:"start_sector,attr"`
+			Tag                     string `xml:"tag,attr"`
+		} `xml:"erase"`
+		Program []struct {
+			Text                    string `xml:"chardata"`
+			PAGESPERBLOCK           string `xml:"PAGES_PER_BLOCK,attr"`
+			SECTORSIZEINBYTES       string `xml:"SECTOR_SIZE_IN_BYTES,attr"`
+			Filename                string `xml:"filename,attr"`
+			Label                   string `xml:"label,attr"`
+			NumPartitionSectors     string `xml:"num_partition_sectors,attr"`
+			PhysicalPartitionNumber string `xml:"physical_partition_number,attr"`
+			StartSector             string `xml:"start_sector,attr"`
+			Tag                     string `xml:"tag,attr"`
+		} `xml:"program"`
+	}
+
+	recoveryDirPath := filepath.Join(firmwarePath, "fm101", "download_agent"+"_"+variant)
+	if !fileExists(recoveryDirPath) {
+		recoveryDirPath = filepath.Join(firmwarePath, "fm101", "download_agent")
+		if !fileExists(recoveryDirPath) {
+			return nil, errors.New("missing download_agent")
+		}
+	}
+
+	recoveryPath := filepath.Join(recoveryDirPath, "rawprogram_nand_p2K_b128K.xml")
+	b, err := os.ReadFile(recoveryPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read recovery xml")
+	}
+	var data recoveryData
+	if err := xml.Unmarshal(b, &data); err != nil {
+		return nil, errors.Wrap(err, "failed to parse gtest XML report")
+	}
+	var ret []string
+	for i := 0; i < len(data.Program); i++ {
+		if data.Program[i].Filename != "" {
+			fullPath := filepath.Join(firmwarePath, "fm101", data.Program[i].Filename)
+			ret = append(ret, fullPath)
+		}
+	}
+	fileList := []string{"prog_nand_firehose_9x55.mbn", "patch_p2K_b128K.xml"}
+	for _, file := range fileList {
+		fullPath := filepath.Join(recoveryDirPath, file)
+		ret = append(ret, fullPath)
+	}
+	return ret, nil
 }
