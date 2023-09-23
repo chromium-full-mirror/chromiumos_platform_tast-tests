@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/synthmark-1.12.0-20230906.apk",
+  "size": 5502619,
+  "sha256sum": "95cd6ebcdf85a19db67fbf73e90418cc4d04b09354bd2fd6aa22dff6bb39e3f2"
+}
