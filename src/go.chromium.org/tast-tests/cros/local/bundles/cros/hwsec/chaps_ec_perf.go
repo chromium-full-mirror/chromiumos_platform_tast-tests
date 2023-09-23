@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:1188704",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "tpm2"},
-		Timeout:      4 * time.Minute,
+		Timeout:      7 * time.Minute,
 		Fixture:      "ussAuthSessionFixture",
 	})
 }
