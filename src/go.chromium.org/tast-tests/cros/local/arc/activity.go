@@ -165,6 +165,11 @@ type extraInt struct {
 	val int
 }
 
+type extraFloat struct {
+	key string
+	val float64
+}
+
 type extraString struct {
 	key string
 	val string
@@ -192,6 +197,7 @@ type activityStartCmdBuilder struct {
 	windowingMode         WindowingMode
 	activityType          ActivityType
 	extraInts             []extraInt
+	extraFloats           []extraFloat
 	extraBools            []extraBool
 	extraStrings          []extraString
 	extraStringArrays     []extraStringArray
@@ -234,6 +240,11 @@ func (opts activityStartCmdBuilder) build() []string {
 			out = append(out, "--ei", e.key, strconv.Itoa(e.val))
 		}
 	}
+	if len(opts.extraFloats) > 0 {
+		for _, e := range opts.extraFloats {
+			out = append(out, "--ef", e.key, strconv.FormatFloat(e.val, 'f', -1, 64))
+		}
+	}
 	if len(opts.extraStrings) > 0 {
 		for _, e := range opts.extraStrings {
 			out = append(out, "--es", e.key, e.val)
@@ -270,6 +281,7 @@ func makeActivityStartCmdBuilder() activityStartCmdBuilder {
 		windowingMode:     -1,
 		activityType:      -1,
 		extraInts:         []extraInt{},
+		extraFloats:       []extraFloat{},
 		extraStrings:      []extraString{},
 		extraStringArrays: []extraStringArray{},
 		extraBools:        []extraBool{},
@@ -362,6 +374,14 @@ func WithExtraInt(key string, val int) ActivityStartOption {
 func WithExtraIntUint64(key string, val uint64) ActivityStartOption {
 	return func(builder *activityStartCmdBuilder) {
 		builder.extraInts = append(builder.extraInts, extraInt{key, int(val)})
+	}
+}
+
+// WithExtraFloat adds an extra float to the activity which can provide extra
+// information.
+func WithExtraFloat(key string, val float64) ActivityStartOption {
+	return func(builder *activityStartCmdBuilder) {
+		builder.extraFloats = append(builder.extraFloats, extraFloat{key, val})
 	}
 }
 
