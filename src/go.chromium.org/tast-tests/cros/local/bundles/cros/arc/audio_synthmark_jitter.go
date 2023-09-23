@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
@@ -26,10 +27,15 @@ import (
 type audioSynthmarkJitterStressMode int
 
 const audioSynthmarkJitterSynthmarkAPK = "synthmark-1.12.0.apk"
+const audioSynthmarkJitterOboetesterAPK = "oboetester_debug.apk"
 
 const (
 	// audioSynthmarkJitterStressNone run the test without any stress
 	audioSynthmarkJitterStressNone audioSynthmarkJitterStressMode = iota
+
+	// audioSynthmarkJitterStressRepeatedlyStartApp repeatedly starts and stops Oboetester app.
+	// This can catch virtio-gpu memory allocation regression with TDP MMU in b/296807862.
+	audioSynthmarkJitterStressRepeatedlyStartApp
 )
 
 type audioSynthmarkJitterParam struct {
@@ -64,6 +70,12 @@ func init() {
 			Val: audioSynthmarkJitterParam{
 				stressMode: audioSynthmarkJitterStressNone,
 			},
+		}, {
+			Name:      "stress_repeatedly_start_app",
+			ExtraData: []string{audioSynthmarkJitterOboetesterAPK},
+			Val: audioSynthmarkJitterParam{
+				stressMode: audioSynthmarkJitterStressRepeatedlyStartApp,
+			},
 		}},
 	})
 }
@@ -74,6 +86,7 @@ func AudioSynthmarkJitter(ctx context.Context, s *testing.State) {
 		cleanupTime      = 30 * time.Second
 		testDuration     = 30 * time.Second
 		cyclicBenchLoops = 6000 // each loop takes around 5ms
+		stressDuration   = 40 * time.Second
 
 		pkg          = "com.sonodroid.synthmark"
 		activityName = ".MainActivity"
@@ -105,6 +118,56 @@ func AudioSynthmarkJitter(ctx context.Context, s *testing.State) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
+	}
+
+	// Start stress test
+	stressStopChan := make(chan struct{}) // Once the test finished, this channel will be closed to signal the stress to stop.
+	stressWG := sync.WaitGroup{}
+	switch param.stressMode {
+	case audioSynthmarkJitterStressRepeatedlyStartApp:
+		const (
+			oboetesterPkg          = "com.mobileer.oboetester"
+			oboetesterActivityName = ".MainActivity"
+		)
+
+		testing.ContextLog(ctx, "Install Oboetester for stress")
+		if err := a.Install(ctx, s.DataPath(audioSynthmarkJitterOboetesterAPK)); err != nil {
+			s.Fatal("Failed to install Oboetester: ", err)
+		}
+		defer a.Uninstall(cleanupCtx, oboetesterPkg)
+
+		oboetesterActivity, err := arc.NewActivity(a, oboetesterPkg, oboetesterActivityName)
+		if err != nil {
+			s.Fatalf("Failed to create activity %q in package %q: %v", oboetesterActivityName, oboetesterPkg, err)
+		}
+		defer oboetesterActivity.Close(cleanupCtx)
+
+		stressWG.Add(1)
+		go func() {
+			defer stressWG.Done()
+			timer := time.NewTimer(stressDuration)
+			defer timer.Stop()
+			for {
+				select {
+				case <-timer.C:
+					return
+				case <-stressStopChan:
+					return
+				case <-ctx.Done():
+					return
+				default:
+					if err := oboetesterActivity.Start(ctx, tconn); err != nil {
+						s.Fatal("Failed to start Oboetester: ", err)
+					}
+					if err := d.Object(ui.TextContains("TEST OUTPUT")).WaitForExists(ctx, 10*time.Second); err != nil {
+						s.Fatal("Failed to wait for Oboetester TEST OUTPUT: ", err)
+					}
+					if err := oboetesterActivity.Stop(ctx, tconn); err != nil {
+						s.Fatal("Failed to stop Oboetester: ", err)
+					}
+				}
+			}
+		}()
 	}
 
 	// Launch cyclic_bench on the host
@@ -179,6 +242,11 @@ func AudioSynthmarkJitter(ctx context.Context, s *testing.State) {
 		s.Fatalf("Cyclic bench result length is %d != 1", len(stats.CyclicTestStat))
 	}
 	cyclicBenchResult := stats.CyclicTestStat[0] // Get result from the first thread (we ran it with 1 thread)
+
+	// Wait for stress
+	close(stressStopChan)
+	testing.ContextLog(ctx, "Waiting for stress to finish")
+	stressWG.Wait()
 
 	// Record perf values
 	perfValues := perf.NewValues()
