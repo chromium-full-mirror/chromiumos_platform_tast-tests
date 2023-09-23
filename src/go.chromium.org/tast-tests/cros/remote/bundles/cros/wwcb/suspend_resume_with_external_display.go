@@ -30,7 +30,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SuspendResumeWithExternalDisplay,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Suspend/resume DUT then check screen light on DUT & external display by camera connecting to the host",
+		Desc:         "Suspend/resume DUT then check screen brightness on DUT & external display by camera connecting to the host",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb"},
@@ -86,51 +86,52 @@ func SuspendResumeWithExternalDisplay(ctx context.Context, s *testing.State) {
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 	keyboardSvc := inputspb.NewKeyboardServiceClient(cl.Conn)
-
-	// What if the script is testing for dock test case, it will need to power on docking station.
-	// Then do the mapping the camera to display fixture with docking station connected to DUT.
-	extDispIDArray := []string{extDispID}
+	fs := dutfs.NewClient(cl.Conn)
 
 	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
 
+	// If the test is on a docking station, power it on and connect it to the DUT.
 	if dockingID, ok := s.Var("DockingID"); ok {
 		ippowerPorts := []int{1}
 		if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
 			s.Fatal("Failed to power on the docking station: ", err)
 		}
 		defer utils.CloseIppower(cleanupCtx, ippowerPorts)
+
 		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
 			s.Fatal("Failed to connect to the docking station: ", err)
 		}
 	}
-	fs := dutfs.NewClient(cl.Conn)
-	if err := utils.MappingWebcam(ctx, s, fs, keyboardSvc, displaySvc, appsSvc, uiautoSvc, extDispIDArray); err != nil {
-		s.Fatal("Failed to initialize mapping webcams: ", err)
-	}
+
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
 		s.Fatal("Failed to verify display count: ", err)
 	}
-
-	// GoBigSleepLint: Wait for external display screen to show up.
-	testing.Sleep(ctx, 30*time.Second)
 
 	displayIDs, err := displaySvc.GetDisplayIDs(ctx, &emptypb.Empty{})
 	if err != nil {
 		s.Fatal("Failed to get display ID: ", err)
 	} else if len(displayIDs.DisplayIds) < 2 {
-		s.Fatal("Failed to get display ID;it must be greater than or equal to 2")
+		s.Fatal("Failed to get display ID; it must be greater than or equal to 2")
 	}
 
-	extDispDefaultLight, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
-	if err != nil {
-		s.Fatal("Failed to get the external display light from camera: ", err)
+	// GoBigSleepLint: Wait for external display screen to show up.
+	testing.Sleep(ctx, 30*time.Second)
+
+	extDispIDArray := []string{extDispID}
+	if err := utils.MappingWebcam(ctx, s, fs, keyboardSvc, displaySvc, appsSvc, uiautoSvc, extDispIDArray); err != nil {
+		s.Fatal("Failed to do the map about the displays & the webcams: ", err)
 	}
 
-	dutDefaultLight, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+	extDispBrightnessAwake, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
 	if err != nil {
-		s.Fatal("Failed to get the DUT light from camera: ", err)
+		s.Fatal("Failed to get the external display's brightness when the DUT is awake: ", err)
+	}
+
+	dutBrightnessAwake, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+	if err != nil {
+		s.Fatal("Failed to get the DUT's screen's brightness when the DUT is awake: ", err)
 	}
 
 	if err := utils.SuspendDUT(ctx, s.DUT(), pxy); err != nil {
@@ -138,27 +139,27 @@ func SuspendResumeWithExternalDisplay(ctx context.Context, s *testing.State) {
 	}
 	defer func(ctx context.Context) {
 		if err := utils.PowerOnDUT(ctx, pxy, dut); err != nil {
-			s.Error("Failed to power-on DUT at cleanup: ", err)
+			s.Error("Failed to power on DUT at cleanup: ", err)
 		}
 	}(cleanupCtx)
 
-	extDispSuspendLight, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
+	extDispBrightnessSuspend, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
 	if err != nil {
-		s.Fatal("Failed to get the external display light in suspend mode: ", err)
+		s.Fatal("Failed to get the external display's brightness when the DUT is suspended: ", err)
 	}
 
-	dutSuspendLight, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+	dutBrightnessSuspend, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
 	if err != nil {
-		s.Fatal("Failed to get the DUT light in suspend mode: : ", err)
+		s.Fatal("Failed to get the DUT's screen's brightness when the DUT is suspended: ", err)
 	}
 
-	// Check external display & DUT screen to become dark by camera connecting to the host.
-	if extDispSuspendLight >= extDispDefaultLight {
-		s.Fatalf("Expect the external display light in suspend mode is equal to lower than default; suspended light: %d, default light: %d", extDispSuspendLight, extDispDefaultLight)
+	// Check the external display & DUT screen to become dark when the DUT is suspended by camera connecting to the host.
+	if extDispBrightnessSuspend >= extDispBrightnessAwake {
+		s.Fatalf("Expect the brightness of the external display to be higher when the DUT is awake than when the DUT is suspended; suspended brightness: %d, awake brightness: %d", extDispBrightnessSuspend, extDispBrightnessAwake)
 	}
 
-	if dutSuspendLight >= dutDefaultLight {
-		s.Fatalf("Expect the DUT light in suspend mode is equal to lower than default; suspended light: %d, default light: %d", dutSuspendLight, dutDefaultLight)
+	if dutBrightnessSuspend >= dutBrightnessAwake {
+		s.Fatalf("Expect the brightness of the DUT to be higher when the DUT is awake than when the DUT is suspended; suspended brightness: %d, awake brightness: %d", dutBrightnessSuspend, dutBrightnessAwake)
 	}
 
 	if err := utils.PowerOnDUT(ctx, pxy, dut); err != nil {
@@ -168,22 +169,22 @@ func SuspendResumeWithExternalDisplay(ctx context.Context, s *testing.State) {
 	// GoBigSleepLint: Wait for external display screen to show up.
 	testing.Sleep(ctx, 30*time.Second)
 
-	extDispWakenLight, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
+	extDispBrigthnessResume, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
 	if err != nil {
-		s.Fatal("Failed to get the external display light while DUT wake up: ", err)
+		s.Fatal("Failed to get the external display's brightness when DUT is resumed: ", err)
 	}
 
-	dutWakenLight, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+	dutBrightnessResume, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
 	if err != nil {
-		s.Fatal("Failed to get the DUT light while DUT wake up: ", err)
+		s.Fatal("Failed to get the DUT's screen's brightness when DUT is resumed: ", err)
 	}
 
-	// Check external display & DUT screen to turn on by camera connecting to host.
-	if extDispSuspendLight >= extDispWakenLight {
-		s.Fatalf("Expect the external display light in suspend mode is equal or lower than waken; suspended light: %d, waken light: %d", extDispSuspendLight, extDispWakenLight)
+	// Check the external display & DUT screen being turned on when DUT is resumed by the camera connecting to host.
+	if extDispBrightnessSuspend >= extDispBrigthnessResume {
+		s.Fatalf("Expect the brightness of the external display to be higher when the DUT is resumed than when the DUT is suspended; suspended brightness: %d, resumed brightness: %d", extDispBrightnessSuspend, extDispBrigthnessResume)
 	}
 
-	if dutSuspendLight >= dutWakenLight {
-		s.Fatalf("Expect the DUT light in suspend mode is equal or lower than waken; suspended light: %d, waken light: %d", dutSuspendLight, dutWakenLight)
+	if dutBrightnessSuspend >= dutBrightnessResume {
+		s.Fatalf("Expect the brightness of the DUT to be higher when the DUT is resumed than when the DUT is suspended; suspended brightness: %d, resumed brightness: %d", dutBrightnessSuspend, dutBrightnessResume)
 	}
 }
