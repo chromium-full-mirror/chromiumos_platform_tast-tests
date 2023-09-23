@@ -480,9 +480,8 @@ func VerifyExternalStorageMounted(ctx context.Context, dut *dut.DUT) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to execute ls /media/removable")
 		} else if strings.TrimSpace(string(out)) == "" {
-			return errors.New("failed to check there is the information about the removable media, but got nothing")
+			return errors.New("failed to check the contents of /media/removable, but got nothing")
 		}
-		testing.ContextLogf(ctx, "Found the mounted USB device: %s", strings.Fields(string(out)))
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second})
 }
