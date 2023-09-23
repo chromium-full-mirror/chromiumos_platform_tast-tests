@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	rmpb "chromiumos/system_api/resource_manager_proto"
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/resourced"
 	"go.chromium.org/tast/core/errors"
@@ -427,6 +428,15 @@ func checkSetMemoryMargins(ctx context.Context, rm *resourced.Client) (resErr er
 	return nil
 }
 
+func checkReportBackgroundPids(ctx context.Context, rm *resourced.Client) (resErr error) {
+	// Check ReportBackgroundPids method can be called successfully.
+	if err := rm.ReportBackgroundPids(ctx, rmpb.ReportBackgroundPids_ASH, []int32{101, 102, 103}); err != nil {
+		return errors.Wrap(err, "failed to call report background pids")
+	}
+
+	return nil
+}
+
 func Resourced(ctx context.Context, s *testing.State) {
 	rm, err := resourced.NewClient(ctx)
 	if err != nil {
@@ -477,5 +487,9 @@ func Resourced(ctx context.Context, s *testing.State) {
 
 	if err := checkSetGameModeWithTimeout(ctx, rm, true, true); err != nil {
 		s.Fatal("Checking swappiness/THP tuning with SetGameModeWithTimeout failed: ", err)
+	}
+
+	if err := checkReportBackgroundPids(ctx, rm); err != nil {
+		s.Fatal("Checking ReportBackgroundPids failed: ", err)
 	}
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
+	rmpb "chromiumos/system_api/resource_manager_proto"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -259,6 +260,14 @@ func (c *Client) PowerSupplyChange(ctx context.Context) error {
 func (c *Client) SetMemoryMarginsBps(ctx context.Context, critical, moderate uint32) error {
 	if err := c.obj.Call(ctx, "SetMemoryMarginsBps", critical, moderate).Err; err != nil {
 		return errors.Wrap(err, "failed to call method SetMemoryMarginsBps")
+	}
+	return nil
+}
+
+// ReportBackgroundPids reports the list of the background pids of a component (Ash or Lacros).
+func (c *Client) ReportBackgroundPids(ctx context.Context, component rmpb.ReportBackgroundPids_Component, pids []int32) error {
+	if err := dbusutil.CallProtoMethod(ctx, c.obj.Obj(), dbusInterface+".ReportBackgroundPids", &rmpb.ReportBackgroundPids{Component: component, Pids: pids}, nil); err != nil {
+		return errors.Wrap(err, "failed to call method ReportBackgroundPids")
 	}
 	return nil
 }
