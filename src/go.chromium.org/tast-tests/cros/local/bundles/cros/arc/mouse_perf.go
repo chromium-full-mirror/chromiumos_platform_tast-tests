@@ -6,11 +6,12 @@ package arc
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/arc/perfetto"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/inputlatency"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
@@ -31,7 +32,7 @@ func init() {
 		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
-		Data:         inputlatency.AndroidData(),
+		Data:         append(inputlatency.AndroidData(), "perfetto_config.pbtxt"),
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_container"},
@@ -92,16 +93,26 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	}
 	defer act.Close(ctx)
 
-	if err := action.Retry(3, func(ctx context.Context) error {
-		ctxStartApp, cancel := context.WithTimeout(ctx, 30*time.Second)
-		defer cancel()
-		if err := act.StartWithDefaultOptions(ctxStartApp, tconn); err == nil {
+	sdkVersion, err := arc.SDKVersion()
+	if err != nil {
+		s.Fatal("ailed to get SDK version: ", err)
+	}
+	ctxStartApp, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	if sdkVersion >= arc.SDKR {
+		traceResultPath := filepath.Join(s.OutDir(), "activity_start.trace")
+		if err := perfetto.Trace(ctx, a, s.DataPath("perfetto_config.pbtxt"), traceResultPath, false, func(ctx context.Context) error {
+			if err := act.StartWithDefaultOptions(ctxStartApp, tconn); err != nil {
+				return errors.Wrapf(err, "Unable to launch %s/%s", appName, activityName)
+			}
 			return nil
+		}); err != nil {
+			s.Fatal("Error on run perfetto trace on activity start: ", err)
 		}
-		act.Stop(ctx, tconn)
-		return errors.Wrap(err, "failed to start app")
-	}, 0)(ctx); err != nil {
-		s.Fatalf("Unable to launch %s/%s: %v after retries", appName, activityName, err)
+	} else {
+		if err := act.StartWithDefaultOptions(ctxStartApp, tconn); err != nil {
+			s.Fatalf("Unable to launch %s/%s: %v", appName, activityName, err)
+		}
 	}
 	defer act.Stop(ctx, tconn)
 
