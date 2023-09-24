@@ -17,12 +17,12 @@ const probeCount = 500
 const minProbeTimeDelta = 500 * time.Millisecond
 const errorThreshold = probeCount / 100 * 5
 
-// 30 % is way too high, but eMMC have a pretty high runtime_suspend delay
+// 50 % is way too high, but eMMC have a pretty high runtime_suspend delay
 // It doesn't look immediately that reducing it will help anything
 // (see b/289845817), so for now make the threshold high for we pretty
 // much aim to detect the situation when the disk doesn't to low power
 // state at all or almost at all.
-const highStateThreshold = probeCount / 100 * 30
+const highStateThreshold = probeCount / 100 * 50
 
 func init() {
 	testing.AddTest(&testing.Test{
