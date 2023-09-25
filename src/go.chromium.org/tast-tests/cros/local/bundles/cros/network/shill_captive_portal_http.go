@@ -24,7 +24,7 @@ type params struct {
 	serviceState         string
 	httpResponseHandler  func(rw http.ResponseWriter, req *http.Request)
 	httpsResponseHandler func(rw http.ResponseWriter, req *http.Request)
-	proxyConfig          string
+	oncSource            string
 	checkPortal          bool
 }
 
@@ -45,16 +45,34 @@ func init() {
 				serviceState:         shillconst.ServiceStateRedirectFound,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
-				proxyConfig:          "",
+				oncSource:            "",
 				checkPortal:          true,
 			},
 		}, {
-			Name: "proxyconfig",
+			Name: "managednetworkdevicepolicy",
 			Val: &params{
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
-				proxyConfig:          captiveportalconsts.TestProxyConfig,
+				oncSource:            shillconst.ServiceONCSourceDevicePolicy,
+				checkPortal:          true,
+			},
+		}, {
+			Name: "managednetworkuserpolicy",
+			Val: &params{
+				serviceState:         shillconst.ServiceStateOnline,
+				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
+				httpsResponseHandler: nil,
+				oncSource:            shillconst.ServiceONCSourceUserPolicy,
+				checkPortal:          true,
+			},
+		}, {
+			Name: "managednetworknone",
+			Val: &params{
+				serviceState:         shillconst.ServiceStateRedirectFound,
+				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
+				httpsResponseHandler: nil,
+				oncSource:            shillconst.ServiceONCSourceNone,
 				checkPortal:          true,
 			},
 		}, {
@@ -63,7 +81,7 @@ func init() {
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
-				proxyConfig:          "",
+				oncSource:            "",
 				checkPortal:          false,
 			},
 		}, {
@@ -73,7 +91,7 @@ func init() {
 				serviceState:         shillconst.ServiceStatePortalSuspected,
 				httpResponseHandler:  captiveportalconsts.RedirectWithNoLocationHandler,
 				httpsResponseHandler: nil,
-				proxyConfig:          "",
+				oncSource:            "",
 				checkPortal:          true,
 			},
 		}, {
@@ -82,7 +100,7 @@ func init() {
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.NoContentHandler,
 				httpsResponseHandler: captiveportalconsts.NoContentHandler,
-				proxyConfig:          "",
+				oncSource:            "",
 				checkPortal:          true,
 			},
 		}, {
@@ -91,7 +109,7 @@ func init() {
 				serviceState:         shillconst.ServiceStateNoConnectivity,
 				httpResponseHandler:  nil,
 				httpsResponseHandler: nil,
-				proxyConfig:          "",
+				oncSource:            "",
 				checkPortal:          true,
 			},
 		}, {
@@ -100,7 +118,7 @@ func init() {
 				serviceState:         shillconst.ServiceStateRedirectFound,
 				httpResponseHandler:  captiveportalconsts.TempRedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
-				proxyConfig:          "",
+				oncSource:            "",
 				checkPortal:          true,
 			},
 		}},
@@ -162,14 +180,15 @@ func ShillCaptivePortalHTTP(ctx context.Context, s *testing.State) {
 	}
 	defer pw.Close(cleanupCtx)
 
-	//testing for ProxyConfig - no portal state to send in this case
-	if params.proxyConfig != "" {
-		if err := service.SetProperty(ctx, shillconst.ServicePropertyProxyConfig, params.proxyConfig); err != nil {
-			s.Fatal("Failed to set ProxyConfig: ", err)
+	// Set oncSource property on service. For UserPolicy and DevicePolicy, shill will skip portal detection.
+	// For no policy, shill will do portal detection.
+	if params.oncSource != "" {
+		if err := service.SetProperty(ctx, shillconst.ServicePropertyONCSource, params.oncSource); err != nil {
+			s.Fatal("Failed to set ServicePropertyONCSource: ", err)
 		}
 	}
 
-	//testing for CheckPortal - no portal state to send in this case
+	// Set checkPortal on service. If |false|, shill will skip portal detection.
 	if !params.checkPortal {
 		if err := service.SetProperty(ctx, shillconst.ServicePropertyCheckPortal, "false"); err != nil {
 			s.Fatal("Failed to invoke CheckPortal service: ", err)

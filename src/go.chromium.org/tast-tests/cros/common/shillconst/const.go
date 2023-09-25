@@ -151,6 +151,7 @@ const (
 	ServicePropertyProxyConfig       = "ProxyConfig"
 	ServicePropertyEphemeralPriority = "EphemeralPriority"
 	ServicePropertyCheckPortal       = "CheckPortal"
+	ServicePropertyONCSource         = "ONCSource"
 
 	// Cellular service property names.
 	ServicePropertyCellularEID               = "Cellular.EID"
@@ -239,6 +240,15 @@ const (
 	ServiceStateDisconnect        = "disconnecting"
 	ServiceStateFailure           = "failure"
 	ServiceStateActivationFailure = "activation-failure"
+)
+
+// Service ONC Source values defined in dbus-constants.h
+const (
+	ServiceONCSourceUnknown      = "Unknown"
+	ServiceONCSourceNone         = "None"
+	ServiceONCSourceUserImport   = "UserImport"
+	ServiceONCSourceDevicePolicy = "DevicePolicy"
+	ServiceONCSourceUserPolicy   = "UserPolicy"
 )
 
 // Cellular network technology values defined in dbus-constants.h
