@@ -17,10 +17,35 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
+	"go.chromium.org/tast-tests/cros/local/vm"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+// From Audacity 3.2.0 onwards, ShowSplashScreen will be reset if the saved
+// config version is from an earlier version. Setting a higher version has no
+// effect on older versions, so always include it.
+const (
+	audacityConfig = `[Version]
+Major=3
+Minor=2
+Micro=4
+[GUI]
+ShowSplashScreen=0
+`
+)
+
+// DisableAudacitySplashScreen configures Audacity to not display the startup splash.
+func DisableAudacitySplashScreen(ctx context.Context, cont *vm.Container) error {
+	// Audacity 3.2.0+ switches to XDG_CONFIG_HOME for new installations,
+	// but will continue to use ~/.audacity-data if it exists.
+	if err := cont.WriteFile(ctx, ".audacity-data/audacity.cfg", audacityConfig); err != nil {
+		return errors.Wrap(err, "failed to write Audacity config")
+	}
+
+	return nil
+}
 
 // VerifyAudacityLaunchAndClose verifies audacity window and item on shelf.
 // It also closes audacity.

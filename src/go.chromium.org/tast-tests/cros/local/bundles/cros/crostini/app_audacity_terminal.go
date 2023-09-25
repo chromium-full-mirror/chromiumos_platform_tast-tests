@@ -6,7 +6,6 @@ package crostini
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/crostiniapps"
@@ -132,8 +131,8 @@ func AppAudacityTerminal(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(handler, handler)
 
 	// Disable the welcome screen.
-	if err := cont.WriteFile(ctx, fmt.Sprintf(".audacity-data/audacity.cfg"), "[GUI]\nShowSplashScreen=0\n"); err != nil {
-		s.Fatal("Failed to write Audacity config: ", err)
+	if err := crostiniapps.DisableAudacitySplashScreen(ctx, cont); err != nil {
+		s.Fatal("Failed to disable Audacity splash screen: ", err)
 	}
 
 	// Open Terminal app.
