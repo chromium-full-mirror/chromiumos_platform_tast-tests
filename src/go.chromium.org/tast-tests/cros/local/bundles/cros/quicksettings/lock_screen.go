@@ -96,7 +96,7 @@ func LockScreen(ctx context.Context, s *testing.State) {
 			s.Fatalf("Waiting for screen to be ready for password failed: %v (last status %+v)", err, st)
 		}
 
-		if err := lockscreen.EnterPassword(ctx, tconn, username, password+"\n", keyboard); err != nil {
+		if err := lockscreen.EnterPassword(ctx, tconn, username, password, keyboard); err != nil {
 			s.Fatal("Entering password failed: ", err)
 		}
 
