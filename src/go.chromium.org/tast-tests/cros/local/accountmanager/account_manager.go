@@ -377,7 +377,7 @@ func OpenOneGoogleBar(ctx context.Context, tconn *chrome.TestConn, br *browser.B
 // somethingWentWrongInOGB returns `true` if there is a "Something went wrong"
 // message displayed. This means that there was an error on the OGB side.
 func somethingWentWrongInOGB(ctx context.Context, tconn *chrome.TestConn) bool {
-	somethingWentWrongMessage := nodewith.NameStartingWith("Something went wrong.").Ancestor(OGBDialog())
+	somethingWentWrongMessage := nodewith.NameStartingWith("Something went wrong.")
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
 	err := ui.WaitUntilExists(somethingWentWrongMessage)(ctx)
 	return err == nil
