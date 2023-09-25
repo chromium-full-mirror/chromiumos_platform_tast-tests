@@ -140,3 +140,39 @@ func parseProxyAddress(proxyAddress string) (host string, port int, err error) {
 	}
 	return parts[0], port, nil
 }
+
+// NewChromeWithProxy new Chrome with proxy.
+// Please note that for in-session mode, it's better to use LaunchAndApplyProxy.
+// Method returns cleanup method which will close cr returned.
+// Therefore, there is no need to cr.Close.
+// TODO(b/301880537): avoid using --ignore-certificate-errors when applying proxy testing.
+func NewChromeWithProxy(ctx context.Context, proxy proxy.Proxy, opts ...Option) (*Chrome, func(context.Context) error, error) {
+	if !proxy.IsRunning() {
+		if err := proxy.Start(ctx); err != nil {
+			return nil, nil, errors.Wrap(err, "failed to start proxy")
+		}
+	}
+
+	// Set up proxy sever.
+	opts = append(opts, ExtraArgs(fmt.Sprintf("--proxy-server=%s", proxy.ProxyAddress())))
+	// Ignore certificate errors then Chrome doesn't need to trust cert.
+	opts = append(opts, ExtraArgs("--ignore-certificate-errors"))
+
+	cr, err := New(ctx, opts...)
+	if err != nil {
+		proxy.Close(ctx)
+		return nil, nil, errors.Wrap(err, "failed to create a chrome")
+	}
+
+	cleanup := func(ctx context.Context) error {
+		err1 := proxy.Close(ctx)
+		err2 := cr.Close(ctx)
+		returnErr := errors.Join(err1, err2)
+		if returnErr != nil {
+			return errors.Wrap(returnErr, "failed to cleanup proxy")
+		}
+		return nil
+	}
+
+	return cr, cleanup, nil
+}
