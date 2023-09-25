@@ -49,11 +49,19 @@ func init() {
 			"weiluanwang@google.com",
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
-		// TODO(b/299588042): Promote to critical.
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		HardwareDeps: hwdep.D(hwdep.TouchScreen()),
 		Fixture:      "crosHealthdRunning",
+		Params: []testing.Param{{
+			// Stable models.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("bard")),
+		}, {
+			// TODO(b/300852245): Promote to critical when the issue on nami(bard) is fixed.
+			Name:              "unstable",
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("bard")),
+			ExtraAttr:         []string{"informational"},
+		}},
 	})
 }
 
