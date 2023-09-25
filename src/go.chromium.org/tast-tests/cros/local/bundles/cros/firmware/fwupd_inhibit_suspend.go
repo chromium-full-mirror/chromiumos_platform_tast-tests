@@ -26,7 +26,7 @@ func init() {
 		BugComponent: "b:857851",
 		Contacts: []string{
 			"chromeos-fwupd@google.com", // CrOS FWUPD
-			"campello@google.org",
+			"rishabhagr@chromium.org",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"fwupd"},
