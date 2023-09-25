@@ -69,9 +69,9 @@ var MultiwordEnabledModels = []string{
 }
 
 // ArcCompatModels is a subset of boards where acr++ applications are most commonly used.
-// Confirmed with ashpakov@ from developer engrpod, octopus is the most commonly used model.
+// Confirmed with ashpakov@ from developer engrpod, bobba one of the the most commonly used model under board octopus.
 var ArcCompatModels = []string{
-	"octopus",
+	"bobba",
 }
 
 // InputsStableModels is a shortlist of models aiming to run critical inputs tests.
