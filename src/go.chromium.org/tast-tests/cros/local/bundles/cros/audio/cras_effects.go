@@ -7,6 +7,7 @@ package audio
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,6 +30,24 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+var (
+	crasEffectsHasAPNC = fixture.AloopLoaded{
+		Channels: 2,
+		Parent: fixture.Chrome(
+			chrome.GuestLogin(),
+			chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"),
+			chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
+		),
+	}.Instance()
+	crasEffectsHasNoAPNC = fixture.AloopLoaded{
+		Channels: 2,
+		Parent: fixture.Chrome(
+			chrome.GuestLogin(),
+			chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
+		),
+	}.Instance()
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasEffects,
@@ -38,56 +57,52 @@ func init() {
 		Attr: []string{
 			"group:mainline",
 		},
-		Fixture: fixture.AloopLoaded{
-			Channels: 2,
-			Parent: fixture.Chrome(
-				chrome.GuestLogin(),
-				chrome.EnableFeatures("AudioSettingsPage", "QsRevamp"),
-			),
-		}.Instance(),
 		Timeout:      30 * time.Second,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
+			// AEC provider tests.
 			{
 				Name: "dsp_aec",
 				Val: crasEffectsParam{
 					noiseCancellationEnabled: true,
-					inputDevice:              "Microphone (internal)",
-					outputDevice:             "Speaker (internal)",
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{flags: []string{"--effects=0x11"}},
 					},
 					expectEffects: effects{
 						DSPNC:   internal.EffectEnabled,
-						CrasAPM: internal.EffectEnabled,  // For DSP AEC.
-						APNC:    internal.EffectDisabled, // NC fallback not implemented.
+						CrasAPM: internal.EffectEnabled, // For DSP AEC.
+						APNC:    internal.EffectDisabled,
 					},
 				},
+				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 			},
 			{
 				Name: "dsp_0x0_conflict",
 				Val: crasEffectsParam{
 					noiseCancellationEnabled: true,
-					inputDevice:              "Microphone (internal)",
-					outputDevice:             "Speaker (internal)",
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{flags: []string{"--effects=0x0"}},
 					},
 					expectEffects: effects{
 						DSPNC:   internal.EffectDisabled, // DSP AEC blocked.
-						CrasAPM: internal.EffectDisabled,
-						APNC:    internal.EffectDisabled, // NC fallback not implemented.
+						CrasAPM: internal.EffectEnabled,  // For AP NC.
+						APNC:    internal.EffectEnabled,  // NC fallback.
 					},
 				},
+				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 			},
 			{
 				Name: "dsp_0x0_dont_care",
 				Val: crasEffectsParam{
 					noiseCancellationEnabled: true,
-					inputDevice:              "Microphone (internal)",
-					outputDevice:             "Speaker (internal)",
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{flags: []string{
 							"--effects=0x0",
@@ -100,32 +115,34 @@ func init() {
 						APNC:    internal.EffectDisabled,
 					},
 				},
+				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 			},
 			{
 				Name: "dsp_aec_0x0_conflict",
 				Val: crasEffectsParam{
 					noiseCancellationEnabled: true,
-					inputDevice:              "Microphone (internal)",
-					outputDevice:             "Speaker (internal)",
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{flags: []string{"--effects=0x11"}},
 						{flags: []string{"--effects=0x0"}},
 					},
 					expectEffects: effects{
 						DSPNC:   internal.EffectDisabled, // DSP AEC blocked.
-						CrasAPM: internal.EffectEnabled,  // Constructed with empty effects to block DSP AEC.
-						APNC:    internal.EffectDisabled, // Fallback not implemented.
+						CrasAPM: internal.EffectEnabled,  // For AP NC.
+						APNC:    internal.EffectEnabled,  // AP NC fallback.
 					},
 				},
+				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 			},
 			{
 				Name: "dsp_aec_0x0_dont_care",
 				Val: crasEffectsParam{
 					noiseCancellationEnabled: true,
-					inputDevice:              "Microphone (internal)",
-					outputDevice:             "Speaker (internal)",
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{flags: []string{"--effects=0x11"}},
 						{flags: []string{
@@ -139,31 +156,33 @@ func init() {
 						APNC:    internal.EffectDisabled,
 					},
 				},
+				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 			},
 			{
 				Name: "dsp_echo_ref_blocked_by_selection",
 				Val: crasEffectsParam{
 					noiseCancellationEnabled: true,
-					inputDevice:              "Microphone (internal)",
-					outputDevice:             "Loopback Playback",
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
 						{flags: []string{"--effects=0x11"}},
 					},
 					expectEffects: effects{
 						DSPNC:   internal.EffectDisabled, // Blocked by echo reference: user selection.
 						CrasAPM: internal.EffectEnabled,  // CRAS AEC fallback.
-						APNC:    internal.EffectDisabled, // CRAS NC fallback not implemented.
+						APNC:    internal.EffectEnabled,  // CRAS NC fallback.
 					},
 				},
+				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 			},
 			{
 				Name: "dsp_echo_ref_blocked_by_playback",
 				Val: crasEffectsParam{
 					noiseCancellationEnabled: true,
-					inputDevice:              "Microphone (internal)",
-					outputDevice:             "Speaker (internal)",
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
 					addPlaybackPinDevice:     "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
 						{flags: []string{"--effects=0x11"}},
@@ -171,17 +190,18 @@ func init() {
 					expectEffects: effects{
 						DSPNC:   internal.EffectDisabled, // Blocked by echo reference: playback.
 						CrasAPM: internal.EffectEnabled,  // CRAS AEC fallback.
-						APNC:    internal.EffectDisabled, // CRAS NC fallback not implemented.
+						APNC:    internal.EffectEnabled,  // CRAS NC fallback.
 					},
 				},
+				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 			},
 			{
 				Name: "dsp_echo_ref_not_blocked_by_playback",
 				Val: crasEffectsParam{
 					noiseCancellationEnabled: true,
-					inputDevice:              "Microphone (internal)",
-					outputDevice:             "Speaker (internal)",
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
 					addPlaybackPinDevice:     "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{flags: []string{"--effects=0x11"}},
@@ -192,7 +212,192 @@ func init() {
 						APNC:    internal.EffectDisabled,
 					},
 				},
+				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
+			},
+			// NC provider tests with both DSP and AP NC.
+			{
+				Name: "nc_both_prefer_dsp",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{flags: []string{"--effects=0x11"}}, // Set AEC on to avoid blocking DSP NC.
+					},
+					expectEffects: effects{
+						DSPNC:   internal.EffectEnabled,
+						CrasAPM: internal.EffectEnabled,
+						APNC:    internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+			},
+			{
+				Name: "nc_both_disabled",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: false,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{flags: []string{"--effects=0x11"}}, // Set AEC on to avoid blocking DSP NC.
+					},
+					expectEffects: effects{
+						DSPNC:   internal.EffectDisabled,
+						CrasAPM: internal.EffectEnabled,
+						APNC:    internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+			},
+			{
+				Name: "nc_both_fallback_ap",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
+					captureClients: []captureConfig{
+						{flags: []string{"--effects=0x11"}}, // Set AEC on to avoid blocking DSP NC.
+					},
+					expectEffects: effects{
+						DSPNC:   internal.EffectDisabled,
+						CrasAPM: internal.EffectEnabled,
+						APNC:    internal.EffectEnabled,
+					},
+				},
+				Fixture:           crasEffectsHasAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+			},
+			{
+				Name: "nc_both_fallback_ap_disabled",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: false,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
+					captureClients: []captureConfig{
+						{flags: []string{"--effects=0x11"}}, // Set AEC on to avoid blocking DSP NC.
+					},
+					expectEffects: effects{
+						DSPNC:   internal.EffectDisabled,
+						CrasAPM: internal.EffectEnabled,
+						APNC:    internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+			},
+			// NC provider tests with only DSP NC.
+			{
+				Name: "nc_only_dsp_enabled",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
+					captureClients: []captureConfig{
+						{flags: []string{"--effects=0"}}, // Effects=0 should not block.
+					},
+					expectEffects: effects{
+						DSPNC:   internal.EffectEnabled,
+						CrasAPM: internal.EffectDisabled,
+						APNC:    internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasNoAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
+			},
+			{
+				Name: "nc_only_dsp_block_select_internal_speaker",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
+					captureClients: []captureConfig{
+						{flags: []string{"--effects=0"}}, // Effects=0 should not block.
+					},
+					expectEffects: effects{
+						DSPNC:   internal.EffectDisabled,
+						CrasAPM: internal.EffectDisabled,
+						APNC:    internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasNoAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
+			},
+			{
+				Name: "nc_only_dsp_block_pin_internal_speaker",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "ALSA_LOOPBACK",
+					captureClients: []captureConfig{
+						{flags: []string{"--effects=0"}}, // Effects=0 should not block.
+					},
+					addPlaybackPinDevice: "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
+					expectEffects: effects{
+						DSPNC:   internal.EffectDisabled,
+						CrasAPM: internal.EffectDisabled,
+						APNC:    internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasNoAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
+			},
+			{
+				Name: "nc_only_dsp_enabled_with_aec",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
+					captureClients: []captureConfig{
+						{flags: []string{"--effects=0x1"}}, // Effects=1 should not block.
+					},
+					expectEffects: effects{
+						DSPNC:   internal.EffectEnabled,
+						CrasAPM: internal.EffectEnabled,
+						APNC:    internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasNoAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
+			},
+			{
+				Name: "nc_only_dsp_block_select_internal_speaker_with_aec",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
+					captureClients: []captureConfig{
+						{flags: []string{"--effects=0x1"}}, // Effects=1 should not block.
+					},
+					expectEffects: effects{
+						DSPNC:   internal.EffectDisabled,
+						CrasAPM: internal.EffectEnabled,
+						APNC:    internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasNoAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
+			},
+			{
+				Name: "nc_only_dsp_block_pin_internal_speaker_with_aec",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "ALSA_LOOPBACK",
+					captureClients: []captureConfig{
+						{flags: []string{"--effects=0x1"}}, // Effects=1 should not block.
+					},
+					addPlaybackPinDevice: "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
+					expectEffects: effects{
+						DSPNC:   internal.EffectDisabled,
+						CrasAPM: internal.EffectEnabled,
+						APNC:    internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasNoAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
 			},
 		},
 	})
@@ -238,14 +443,32 @@ func toggleInputNoiseCancellation(ctx context.Context, s *testing.State, tconn *
 	}
 }
 
+func internalCardName() (string, error) {
+	cards, err := audio.GetSoundCards()
+	if err != nil {
+		return "", errors.Wrap(err, "audio.GetSoundCards")
+	}
+	for _, card := range cards {
+		if ext, err := card.IsExternal(); err == nil && !ext && strings.HasPrefix(card.ShortName, "sof-") {
+			return card.ShortName, nil
+		}
+	}
+	return "", errors.Errorf("cannot get internal card name from %v", cards)
+}
+
 func resetNCState(ctx context.Context) error {
+	cardName, err := internalCardName()
+	if err != nil {
+		return errors.Wrap(err, "cannot get internal card name")
+	}
 	ucmSuffix, err := crosconfig.Get(ctx, "/audio/main", "ucm-suffix")
 	if err != nil && !crosconfig.IsNotFound(err) {
 		return errors.Wrap(err, "cannot get ucm suffix")
 	}
 
 	if err := testexec.CommandContext(ctx,
-		"alsaucm", "-csof-rt5682."+ucmSuffix,
+		"alsaucm",
+		fmt.Sprintf("-c%s.%s", cardName, ucmSuffix),
 		"set", "_verb", "HiFi",
 		"set", "_enamod", "Internal Mic Noise Cancellation",
 		"set", "_dismod", "Internal Mic Noise Cancellation",
@@ -269,26 +492,11 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 		s.Fatal("resetNCState failed: ", err)
 	}
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to cr.TestAPIConn: ", err)
+	if err := internal.SelectIODevices(ctx, cras, param.inputDevice, param.outputDevice); err != nil {
+		s.Fatal("Failed to select IO devices: ", err)
 	}
-
-	// Select internal mic/speaker initially so that NC UI is visible.
-	for _, device := range []string{"Microphone (internal)", "Speaker (internal)"} {
-		if err := quicksettings.SelectAudioOption(ctx, tconn, device); err != nil {
-			s.Fatalf("Failed to select %q in UI: %v", device, err)
-		}
-	}
-	if err := quicksettings.ToggleNoiseCancellation(ctx, tconn, param.noiseCancellationEnabled); err != nil {
-		s.Fatal("Failed to enable noise cancellation: ", err)
-	}
-	for _, device := range []string{param.inputDevice, param.outputDevice} {
-		if err := quicksettings.SelectAudioOption(ctx, tconn, device); err != nil {
-			s.Fatalf("Failed to select %q in UI: %v", device, err)
-		}
+	if err := cras.SetNoiseCancellationEnabled(ctx, param.noiseCancellationEnabled); err != nil {
+		s.Fatal("Failed to set noise cancellation: ", err)
 	}
 
 	m, err := internal.NewCrasProcessingMonitor(ctx)

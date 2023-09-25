@@ -8,4 +8,8 @@ package internal
 var (
 	// Models that support DSP AEC.
 	DSPAECModels = []string{"redrix", "gimble", "anahera", "yaviks", "yavikso"}
+	// Models that support both DSP NC and AP NC.
+	DSPAPNCModels = []string{"redrix", "gimble", "anahera", "yaviks", "yavikso"}
+	// Models that support DSP NC but not AP NC.
+	DSPNCOnlyModels = []string{"dojo"}
 )
