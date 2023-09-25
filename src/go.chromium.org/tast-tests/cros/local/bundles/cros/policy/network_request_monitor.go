@@ -10,6 +10,8 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
@@ -62,13 +64,44 @@ func init() {
 		VarDeps: []string{"policy.managedUserAccountPool",
 			"ui.bond_credentials"},
 		Params: []testing.Param{{
+			Name:    "umbrella",
 			Fixture: fixture.FakeDMSEnrolled,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
+			Val: networkrequestmonitor.TestVariant{
+				Variant:      networkrequestmonitor.Umbrella,
+				BrowserType:  browser.TypeAsh,
+				PolicyStatus: networkrequestmonitor.PolicyDisabled,
+			}}, {
+			Name:              "umbrella_lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.PersistentLacrosEnrolled, // FakeDMSEnrolled with lacros policy.
-			Val:               browser.TypeLacros,
+			Val: networkrequestmonitor.TestVariant{
+				Variant:      networkrequestmonitor.Umbrella,
+				BrowserType:  browser.TypeLacros,
+				PolicyStatus: networkrequestmonitor.PolicyDisabled,
+			}}, {
+			Name:    "annotations_diff",
+			Fixture: fixture.FakeDMSEnrolled,
+			Val: networkrequestmonitor.TestVariant{
+				Variant:      networkrequestmonitor.AnnotationsDiff,
+				BrowserType:  browser.TypeAsh,
+				PolicyStatus: networkrequestmonitor.PolicyDisabled,
+			}}, {
+			Name:    "annotations_diff_enabled",
+			Fixture: fixture.FakeDMSEnrolled,
+			Val: networkrequestmonitor.TestVariant{
+				Variant:      networkrequestmonitor.AnnotationsDiffEnabled,
+				BrowserType:  browser.TypeAsh,
+				PolicyStatus: networkrequestmonitor.PolicyEnabled,
+				ExcludeServices: []string{
+					// TODO(b/303726475): add quick_answers to annotations_diff_enabled test variant
+					"quick_answers_definition",
+					"quick_answers_unit_conversion",
+					// TODO(b/302747744): UKM enabled option for annotations_diff_enabled variant of NetworkRequestMonitor
+					"url_keyed_data_collection",
+					// TODO(b/303721967): add autofill_payments to annotations_diff_enabled test variant
+					"autofill_payments",
+				},
+			},
 		}},
 		Data: dataFiles(),
 		SearchFlags: []*testing.StringPair{
@@ -208,6 +241,7 @@ func optionalServices(policySetting networkrequestmonitor.PolicySetting) []optio
 		{
 			name:                  "url_keyed_data_collection",
 			associatedAnnotations: []string{ukm.UkmNetworkAnnotationID},
+			// TODO(b/302747744): UKM enabled option for annotations_diff_enabled variant of NetworkRequestMonitor
 			policies: []policy.Policy{
 				&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: false},
 				// TODO(b/293876410): Reenable App Sync once AppKM traffic annotations are split off or can be ignored.
@@ -268,8 +302,24 @@ func dataFiles() []string {
 	return dataFiles
 }
 
+// NetworkRequestMonitor is a test that runs a number of Optional Service subtests
+// in a desired configuration while recording network traffic, and makes assertions
+// about the requests sent at the end. This test has 3 variants:
+//  1. umbrella: all services are disabled, and assertions are limited to
+//     network requests specified by the individual subtests themselves. None are
+//     expected when services are in the disabled state.
+//  2. annotations_diff: all services are disabled, and network requests should be
+//     limited to those found in the AnnotationsDiffAllowlist map.
+//  3. annotations_diff_enabled: all services are enabled, and network requests should
+//     be limited to those found in the AnnotationsDiffAllowlist map, plus the requests
+//     specified by the subtests themselves.
 func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+
+	tcs, ok := s.Param().(networkrequestmonitor.TestVariant)
+	if !ok {
+		s.Fatal("Failed to convert test variant into correct type")
+	}
 
 	// Reserve ten seconds for cleanup.
 	cleanupCtx := ctx
@@ -303,7 +353,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		chrome.LacrosExtraArgs("--force-devtools-available"), // Enable developer tools for extensions.
 	}
 
-	browserType := s.Param().(browser.Type)
+	browserType := tcs.BrowserType
 	// Add args to start net export on startup.
 	opts = append(opts, netexport.CommandLineArgs(browserType)...)
 
@@ -342,7 +392,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 
 	// Update policies.
-	services := optionalServices(networkrequestmonitor.PolicyDisabled)
+	services := removeExcludedServices(optionalServices(tcs.PolicyStatus), tcs.ExcludeServices)
 	var policies []policy.Policy
 	for _, service := range services {
 		policies = append(policies, service.policies...)
@@ -408,7 +458,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 				Chrome:        cr,
 				Browser:       br,
 				Server:        server,
-				PolicySetting: networkrequestmonitor.PolicyDisabled}
+				PolicySetting: tcs.PolicyStatus}
 			if err := service.trigger(ctx, params); err != nil {
 				s.Fatalf("Failed to trigger %v: %v", service.name, err)
 			}
@@ -422,17 +472,71 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get net export session: ", err)
 	}
 
-	// Verify network traffic annotations associated with the optional services
-	// are not found in the logs.
-	foundAnnotations, err := netExport.FindMultipleAnnotationsUntil(ctx, hashCodes,
-		&testing.PollOptions{Timeout: 80 * time.Second, Interval: 10 * time.Second})
-	if err != nil {
-		s.Fatal("Failed to poll hashcode in log: ", err)
-	}
-
-	for _, annotationID := range hashCodes {
-		if _, exists := foundAnnotations[annotationID]; exists {
-			s.Error("Found unexpected annotation = ", foundAnnotations)
+	switch tcs.Variant {
+	case networkrequestmonitor.Umbrella:
+		// Verify network traffic annotations associated with the optional services
+		// are not found in the logs.
+		foundAnnotations, err := netExport.FindMultipleAnnotationsUntil(ctx, hashCodes,
+			&testing.PollOptions{Timeout: 80 * time.Second, Interval: 10 * time.Second})
+		if err != nil {
+			s.Fatal("Failed to poll hashcode in log: ", err)
 		}
+
+		for _, annotationID := range hashCodes {
+			if _, exists := foundAnnotations[annotationID]; exists {
+				s.Error("Found unexpected annotation = ", foundAnnotations)
+			}
+		}
+	case networkrequestmonitor.AnnotationsDiff:
+		annotations, err := netExport.FindAll()
+		if err != nil {
+			s.Fatal("Could not extract annotations: ", err)
+		}
+
+		var unexpectedAnnotations []string
+		for k := range annotations {
+			_, foundInAllowlist := networkrequestmonitor.AnnotationsDiffAllowlist[k]
+			if !foundInAllowlist {
+				unexpectedAnnotations = append(unexpectedAnnotations, k)
+			}
+		}
+		if len(unexpectedAnnotations) > 0 {
+			s.Error("Found non-allowlisted annotations: ", unexpectedAnnotations)
+		}
+	case networkrequestmonitor.AnnotationsDiffEnabled:
+		annotations, err := netExport.FindAll()
+		if err != nil {
+			s.Fatal("Could not extract annotations: ", err)
+		}
+
+		var unexpectedAnnotations []string
+		optionalServiceAnnotations := make(map[string]struct{})
+		for _, hash := range hashCodes {
+			optionalServiceAnnotations[hash] = struct{}{}
+		}
+		for k := range annotations {
+			_, foundInAllowlist := networkrequestmonitor.AnnotationsDiffAllowlist[k]
+			_, foundInOptionalServiceAnnotations := optionalServiceAnnotations[k]
+			if !(foundInAllowlist || foundInOptionalServiceAnnotations) {
+				unexpectedAnnotations = append(unexpectedAnnotations, k)
+			}
+		}
+		if len(unexpectedAnnotations) > 0 {
+			s.Error("Found annotations not in allowlist or optional service annotations: ", unexpectedAnnotations)
+		}
+
 	}
+}
+
+// removeExcludedServices returns an array of optionalService with elements
+// matching names in excludedServices removed.
+func removeExcludedServices(services []optionalService, excludedServices []string) []optionalService {
+	var newServices []optionalService
+	for _, s := range services {
+		if slices.Contains(excludedServices, s.name) {
+			continue
+		}
+		newServices = append(newServices, s)
+	}
+	return newServices
 }
