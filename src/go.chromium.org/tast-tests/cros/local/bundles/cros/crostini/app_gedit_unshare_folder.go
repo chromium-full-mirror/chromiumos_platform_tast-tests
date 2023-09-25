@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crostini/ui/settings"
 	"go.chromium.org/tast-tests/cros/local/crostini/ui/sharedfolders"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/guestos/apps"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 
@@ -132,10 +133,9 @@ func init() {
 
 func AppGeditUnshareFolder(ctx context.Context, s *testing.State) {
 	var (
-		tmpFilename          = "test_file.txt"
-		tmpFileContents      = "Test file string in file in the Linux shared folder."
-		geditWindowAshTitle  = "test_file.txt [Read-Only] (/mnt/chromeos/MyFiles/Downloads) - gedit"
-		geditContextMenuItem = "Text Editor"
+		tmpFilename         = "test_file.txt"
+		tmpFileContents     = "Test file string in file in the Linux shared folder."
+		geditWindowAshTitle = "test_file.txt [Read-Only] (/mnt/chromeos/MyFiles/Downloads) - gedit"
 	)
 
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
@@ -167,6 +167,11 @@ func AppGeditUnshareFolder(ctx context.Context, s *testing.State) {
 
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
+
+	geditContextMenuItem, err := apps.GeditAppName(ctx, cont)
+	if err != nil {
+		s.Fatal("Failed to get gedit app name: ", err)
+	}
 
 	// Open Files app.
 	filesApp, err := filesapp.Launch(ctx, tconn)

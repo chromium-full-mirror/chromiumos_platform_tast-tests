@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos/apps"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
@@ -102,9 +103,14 @@ func AppGeditInstallUninstall(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to install Gedit: ", err)
 	}
 
+	geditAppName, err := apps.GeditAppName(ctx, cont)
+	if err != nil {
+		s.Fatal("Failed to get gedit app name: ", err)
+	}
+
 	// Launch and test Gedit.
 	s.Log("Launching Gedit from launcher")
-	if err := launcher.SearchAndLaunchWithQuery(tconn, keyboard, "t", "Text Editor")(ctx); err != nil {
+	if err := launcher.SearchAndLaunchWithQuery(tconn, keyboard, string(geditAppName[0]), geditAppName)(ctx); err != nil {
 		s.Fatal("Failed to launch gedit: ", err)
 	}
 

@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos/apps"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
@@ -135,6 +136,11 @@ func RestartApp(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
+	geditAppName, err := apps.GeditAppName(ctx, cont)
+	if err != nil {
+		s.Fatal("Failed to get gedit app name: ", err)
+	}
+
 	terminalApp, err := terminalapp.Launch(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch terminal: ", err)
@@ -145,13 +151,13 @@ func RestartApp(ctx context.Context, s *testing.State) {
 	}
 
 	// Launch gedit.
-	if err := launchGedit(ctx, keyboard, tconn); err != nil {
+	if err := launchGedit(ctx, keyboard, tconn, geditAppName); err != nil {
 		s.Fatal("Failed to launch gedit after shutdown Crostini: ", err)
 	}
 }
 
-func launchGedit(ctx context.Context, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn) error {
-	if err := launcher.SearchAndLaunchWithQuery(tconn, keyboard, "t", "Text Editor")(ctx); err != nil {
+func launchGedit(ctx context.Context, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, geditAppName string) error {
+	if err := launcher.SearchAndLaunchWithQuery(tconn, keyboard, string(geditAppName[0]), geditAppName)(ctx); err != nil {
 		return errors.Wrap(err, "failed to launch gedit")
 	}
 

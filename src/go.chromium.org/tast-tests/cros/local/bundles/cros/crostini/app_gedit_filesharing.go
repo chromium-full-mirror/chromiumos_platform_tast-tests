@@ -24,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/crostini/ui/sharedfolders"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	guestosapps "go.chromium.org/tast-tests/cros/local/guestos/apps"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
@@ -38,7 +39,6 @@ var (
 	tmpFilename              = "testfile.txt"
 	tmpFileCrostiniMountPath = filepath.Join(sharedfolders.MountPathDownloads, tmpFilename)
 	tmpFileContents          = "This is a text string in a text file in the Downloads folder."
-	geditContextMenuItem     = "Text Editor"
 	viewContextMenuItem      = "View"
 )
 
@@ -164,6 +164,11 @@ func AppGeditFilesharing(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
+	geditContextMenuItem, err := guestosapps.GeditAppName(ctx, cont)
+	if err != nil {
+		s.Fatal("Failed to get gedit app name: ", err)
+	}
+
 	// Create a temp text file in the /Downloads folder to use in this test.
 	if err := ioutil.WriteFile(tmpFileCrosDownloadsPath, []byte(tmpFileContents), 0644); err != nil {
 		s.Fatal("Failed to create text file in Downloads folder: ", err)
@@ -219,7 +224,7 @@ func AppGeditFilesharing(ctx context.Context, s *testing.State) {
 	}
 
 	err = checkFilesharingWorksAfterRestart(
-		ctx, cont, tconn, filesApp, keyboard, ui, ud, geditWindow)
+		ctx, cont, tconn, filesApp, keyboard, ui, ud, geditWindow, geditContextMenuItem)
 	if err != nil {
 		s.Fatal("Failed tests to check whether file sharing  works correctly after restart of Crostini: ", err)
 	}
@@ -274,7 +279,8 @@ func checkFilesharingWorksAfterRestart(
 	keyboard *input.KeyboardEventWriter,
 	ui *uiauto.Context,
 	ud *uidetection.Context,
-	geditWindow *nodewith.Finder) error {
+	geditWindow *nodewith.Finder,
+	geditContextMenuItem string) error {
 
 	// Check that file is no longer mounted in the container after Linux is restarted.
 	if err := crostini.VerifyFileNotInContainer(ctx, cont, tmpFileCrostiniMountPath); err != nil {
