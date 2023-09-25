@@ -64,6 +64,16 @@ func ECSharedMemory(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to send 'crash divzero' to EC: ", err)
 	}
 
+	/**
+	 * GoBigSleepLint: Wait for the EC to successfully crash before making the first attempt
+	 * to connect.
+	 *
+	 * Attempting to connect to the EC without waiting can result in the first connection
+	 * attempt occurring while the EC is still crashing/not ready - putting WaitConnect
+	 * in a state where it it never reestablishes a connection to the EC
+	 */
+	testing.Sleep(ctx, 5*time.Second)
+
 	if err := h.DUT.WaitConnect(ctx); err != nil {
 		s.Fatal("Failed connect to DUT: ", err)
 	}
