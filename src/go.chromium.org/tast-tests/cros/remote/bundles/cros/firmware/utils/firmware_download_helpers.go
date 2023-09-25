@@ -23,9 +23,16 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// FirmwareType represents the type of firmware we are working on - AP or EC
+type FirmwareType string
+
 const (
 	// firmwareFileName contains the name of the file to be downloaded from chromeos-image-archive.
 	firmwareFileName = "firmware_from_source.tar.bz2"
+	// ECFirmware indicates firmware for EC
+	ECFirmware FirmwareType = "EC"
+	// APFirmware indicates firmware for AP
+	APFirmware FirmwareType = "AP"
 )
 
 // VerifyFwIDs will show in logs the current firmware version and compare it to expected ones if they are provided.
@@ -98,9 +105,14 @@ func DownloadFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmwar
 }
 
 // UntarUnknownFileName will try to untar the respective fw bin file from the downloaded tar file.
-func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string) (string, error) {
+func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType FirmwareType) (string, error) {
 	// List of possible formats for the binary file found in a downloaded tar file.
-	filenamePool := []string{fmt.Sprintf("image-%s.bin", fwidModel), fmt.Sprintf("./image-%s.bin", fwidModel), "image.bin"}
+	var filenamePool []string
+	if fwType == APFirmware {
+		filenamePool = []string{fmt.Sprintf("image-%s.bin", fwidModel), fmt.Sprintf("./image-%s.bin", fwidModel), "image.bin"}
+	} else if fwType == ECFirmware {
+		filenamePool = []string{fmt.Sprintf("%s/ec.bin", fwidModel), fmt.Sprintf("./%s/ec.bin", fwidModel)}
+	}
 	var err error
 	for _, filename := range filenamePool {
 		if err = testexec.CommandContext(ctx, "tar", "-xvf", tmpDir+"/"+firmwareFileName, "-C", tmpDir, filename).Run(ssh.DumpLogOnError); err != nil {

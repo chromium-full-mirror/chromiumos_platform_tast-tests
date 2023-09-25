@@ -7,7 +7,6 @@ package firmware
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -16,11 +15,13 @@ import (
 	"github.com/google/uuid"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
+	"go.chromium.org/tast/core/testing"
 
 	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
-	"go.chromium.org/tast/core/testing"
+	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 )
 
 var (
@@ -62,6 +63,7 @@ func init() {
 		BugComponent: "b:1032353", // Chrome Operations > Fleet > Software > OS Fleet Automation
 		Attr:         []string{"group:labqual_informational"},
 		SoftwareDeps: []string{"chrome"},
+		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
 		Fixture:      fixture.NormalMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      90 * time.Minute, // 1hr30min.
@@ -118,9 +120,10 @@ func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 
 	uuid, _ := uuid.NewRandom()
 	const (
-		tmpFirmwareDir      = "/mnt/stateful_partition/tmp"
-		backupFirmwareFile  = "backupfw.bin"
-		firmwareFileToFlash = "firmwareForTest.bin"
+		tmpFirmwareDir        = "/mnt/stateful_partition/tmp"
+		backupFirmwareFile    = "backupfw.bin"
+		ecFirmwareFileToFlash = "ecFirmwareForTest.bin"
+		apFirmwareFileToFlash = "FirmwareForTest.bin"
 	)
 	servoTmpDir := fmt.Sprintf("%s-%s", tmpFirmwareDir, uuid)
 	if err := h.ServoProxy.RunCommand(ctx, false, "mkdir", "-p", servoTmpDir); err != nil {
@@ -162,14 +165,43 @@ func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 	if err := h.EnsureDUTBooted(ctx); err != nil {
 		s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
 	}
+	tmpDir, err := os.MkdirTemp("", "firmware-UpdateDUTFirmwareServo")
+	if err != nil {
+		s.Fatal("Failed to create a new directory for the test: ", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	if err := h.RequireBiosServiceClient(ctx); err != nil {
+		s.Fatal("Requiring BiosServiceClient: ", err)
+	}
+
+	// Backup EC Firmware
+	testing.ContextLog(ctx, "Backing up current EC_RW")
+	backupRW, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
+		Section:    pb.ImageSection_ECRWImageSection,
+		Programmer: pb.Programmer_ECProgrammer,
+		Path:       "/usr/local/share/tast/",
+	})
+	if err != nil {
+		s.Fatal("Failed to backup EC RW firmware: ", err)
+	}
+	testing.ContextLog(ctx, "Backing up current EC_RO")
+	backupRO, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
+		Section:    pb.ImageSection_ECROImageSection,
+		Programmer: pb.Programmer_ECProgrammer,
+		Path:       "/usr/local/share/tast/",
+	})
+	if err != nil {
+		s.Fatal("Failed to backup EC RO firmware: ", err)
+	}
 
 	// Flash DUT with the initial fw at the end
 	defer func() {
-		s.Log("Flashing DUT with backup firmware file")
+		s.Log("Flashing DUT with backup AP firmware file")
 		if err := h.ServoProxy.RunCommand(ctx, false, "futility", "update", "-i", fmt.Sprintf("%s/%s", servoTmpDir, backupFirmwareFile), fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), "--gbb_flags=0x18"); err != nil {
 			s.Fatal("Failed to flash DUT bin file: ", err)
 		}
-		s.Log("Completed flashing of backup fw")
+		s.Log("Completed flashing of backup AP fw")
 		if err := h.EnsureDUTBooted(ctx); err != nil {
 			s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
 		}
@@ -179,27 +211,88 @@ func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 		if err = fwUtils.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
 			s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
 		}
+
+		s.Log("Flashing DUT with backup EC RW firmware file: ", backupRW)
+		h.DisconnectDUT(ctx)
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Can't restore firmware, DUT is off: ", err)
+		}
+		if err := h.RequireBiosServiceClient(ctx); err != nil {
+			s.Fatal("Requiring BiosServiceClient: ", err)
+		}
+		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, backupRW); err != nil {
+			s.Fatal("Failed to restore EC firmware: ", err)
+		}
+
+		s.Log("Flashing DUT with backup EC RO firmware file: ", backupRO)
+		if err := h.RequireBiosServiceClient(ctx); err != nil {
+			s.Fatal("Requiring BiosServiceClient: ", err)
+		}
+		s.Log("Restoring EC firmware backup using: ", backupRO)
+		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, backupRO); err != nil {
+			s.Fatal("Failed to restore EC firmware: ", err)
+		}
+
+		// Reboot and check active copy after restore.
+		ms, err := firmware.NewModeSwitcher(ctx, h)
+		if err != nil {
+			s.Fatal("Creating mode switcher: ", err)
+		}
+		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+			s.Fatal("Failed to reboot: ", err)
+		}
+		s.Log("Checking ec_active_copy is RW or RW_B")
+		activeCopy, err := h.Servo.GetString(ctx, "ec_active_copy")
+		if err != nil {
+			s.Fatal("EC active copy failed: ", err)
+		}
+		if !strings.HasPrefix(activeCopy, "RW") {
+			s.Fatalf("EC active copy incorrect, got %q want RW", activeCopy)
+		}
 	}()
 
+	s.Log("Downloading EC Firmware to Flash")
 	if firmwarePathVal == "" {
 		return
 	}
-	tmpDir, err := ioutil.TempDir("", "firmware-UpdateDUTFirmwareServo")
-	if err != nil {
-		s.Fatal("Failed to create a new directory for the test: ", err)
-	}
-	defer os.RemoveAll(tmpDir)
-	s.Log("Downloading Firmware to Flash")
 
-	binToFlash := downloadFirmwareFromGCS(ctx, s, tmpDir, firmwarePathVal, fwidModel)
-	s.Log("Firmware to Flash: ", binToFlash)
+	ecBinToFlash := downloadFirmwareFromGCS(ctx, s, tmpDir, firmwarePathVal, fwidModel, fwUtils.ECFirmware)
+	s.Log("EC Firmware to Flash: ", ecBinToFlash)
 
-	if err := h.ServoProxy.PutFiles(ctx, false, map[string]string{fmt.Sprintf("%s/%s", tmpDir, binToFlash): fmt.Sprintf("%s/%s", servoTmpDir, firmwareFileToFlash)}); err != nil {
+	if err := h.ServoProxy.PutFiles(ctx, false, map[string]string{fmt.Sprintf("%s/%s", tmpDir, ecBinToFlash): fmt.Sprintf("%s/%s", servoTmpDir, ecFirmwareFileToFlash)}); err != nil {
 		s.Fatal("Failed to copy files to servo host: ", err)
 	}
 
-	s.Log("Flashing DUT with downloaded firmware file")
-	if err := h.ServoProxy.RunCommand(ctx, false, "futility", "update", "-i", fmt.Sprintf("%s/%s", servoTmpDir, firmwareFileToFlash), fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), "--gbb_flags=0x18"); err != nil {
+	// Flash EC
+	s.Log("Flashing DUT EC with downloaded firmware file")
+	ecChip, err := h.Servo.GetString(ctx, servo.ECChip)
+	if err != nil {
+		s.Fatal("Failed to read DUT EC Chip: ", err)
+	}
+	if ecChip == "stm32" {
+		if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", servoTmpDir, ecFirmwareFileToFlash), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--bitbang_rate=57600", "--verify", "--verbose"); err != nil {
+			s.Fatal("Failed to flash EC firmware bin file: ", err)
+		}
+	} else if !strings.HasPrefix(ecChip, "it8") {
+		// Flashing blocked for ite chips due to b/268108518
+		if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", servoTmpDir, ecFirmwareFileToFlash), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--verify", "--verbose"); err != nil {
+			s.Fatal("Failed to flash EC firmware bin file: ", err)
+		}
+	}
+	s.Log("Completed flashing of downloaded ec fw")
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
+	}
+
+	apBinToFlash := downloadFirmwareFromGCS(ctx, s, tmpDir, firmwarePathVal, fwidModel, fwUtils.APFirmware)
+	s.Log("AP Firmware to Flash: ", apBinToFlash)
+
+	if err := h.ServoProxy.PutFiles(ctx, false, map[string]string{fmt.Sprintf("%s/%s", tmpDir, apBinToFlash): fmt.Sprintf("%s/%s", servoTmpDir, apFirmwareFileToFlash)}); err != nil {
+		s.Fatal("Failed to copy files to servo host: ", err)
+	}
+
+	s.Log("Flashing DUT AP with downloaded firmware file")
+	if err := h.ServoProxy.RunCommand(ctx, false, "futility", "update", "-i", fmt.Sprintf("%s/%s", servoTmpDir, apFirmwareFileToFlash), fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), "--gbb_flags=0x18"); err != nil {
 		s.Fatal("Failed to flash firmware bin file: ", err)
 	}
 	s.Log("Completed flashing of downloaded fw")
@@ -212,17 +305,17 @@ func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 	if err = fwUtils.VerifyFwIDs(ctx, h, firmwarePathVal, firmwarePathVal); err != nil {
 		s.Fatalf("After flashing RO_old + RW_old ( %s + %s ): %v", firmwarePathVal, firmwarePathVal, err)
 	}
+
 }
 
 // downloadFirmwareFromGCS reads a file from GCS based on the board, branch and firmware version specified
-func downloadFirmwareFromGCS(ctx context.Context, s *testing.State, tmpDir, firmwareFilepath, model string) string {
+func downloadFirmwareFromGCS(ctx context.Context, s *testing.State, tmpDir, firmwareFilepath, model string, fwType fwUtils.FirmwareType) string {
 	// Download the latest shipped firmware.
 	if err := fwUtils.DownloadFirmwareFile(ctx, s, tmpDir, firmwareFilepath); err != nil {
 		s.Fatal("Failed while downloading file: ", err)
 	}
-
 	// Untar the binary file with respect to the model name found in 'crossystem fwid'.
-	binToFlash, err := fwUtils.UntarUnknownFileName(ctx, tmpDir, model)
+	binToFlash, err := fwUtils.UntarUnknownFileName(ctx, tmpDir, model, fwType)
 	s.Log("Bin to Flash: ", binToFlash)
 	if err != nil {
 		s.Fatal("Failed to untar file: ", err)

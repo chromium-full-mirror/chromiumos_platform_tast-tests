@@ -241,7 +241,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 
 	// Untar the binary file with respect to the model name found in 'crossystem fwid'.
-	binToFlash, err := fwUtils.UntarUnknownFileName(ctx, tmpDir, fwidModel)
+	binToFlash, err := fwUtils.UntarUnknownFileName(ctx, tmpDir, fwidModel, fwUtils.APFirmware)
 	if err != nil {
 		s.Fatal("Failed to untar file: ", err)
 	}
