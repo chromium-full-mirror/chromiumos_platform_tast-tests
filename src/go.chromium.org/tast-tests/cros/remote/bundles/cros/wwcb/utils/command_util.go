@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast/core/dut"
@@ -484,4 +485,48 @@ func VerifyExternalStorageMounted(ctx context.Context, dut *dut.DUT) error {
 		testing.ContextLogf(ctx, "Found the mounted USB device: %s", strings.Fields(string(out)))
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second})
+}
+
+// IsDUTInTabletMode returns true if the DUT is in tablet mode, false otherwise.
+func IsDUTInTabletMode(ctx context.Context, dut *dut.DUT) (bool, error) {
+	// Verify powerd received the tablet mode change notification.
+	testing.ContextLog(ctx, "Get the tabletmode value from powerd")
+	// Expected output from the `dbus-send` command is:
+	//    boolean true
+	// OR
+	//    boolean false
+	out, err := dut.Conn().CommandContext(ctx, "dbus-send", "--system", "--print-reply=literal", "--type=method_call", "--dest=org.chromium.PowerManager", "/org/chromium/PowerManager", "org.chromium.PowerManager.GetTabletMode").Output()
+	if err != nil {
+		return false, errors.Wrap(err, "retrieve dbus-send output")
+	}
+	words := strings.Fields(string(out))
+	if len(words) != 2 {
+		return false, errors.Errorf("Received unexpected output from dbus-send:%s", string(out))
+	}
+	testing.ContextLog(ctx, "powerd tabletmode: ", words[1])
+	return words[1] == "true", nil
+}
+
+// EnableDUTInTabletMode returns reset command.
+func EnableDUTInTabletMode(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy, isEnableTablet bool) (string, error) {
+	tablet, err := IsDUTInTabletMode(ctx, dut)
+	if err != nil {
+		return "", errors.Wrap(err, "check DUT in tablet mode")
+	}
+	resetCommand := ""
+	// Enable table mode.
+	if isEnableTablet && !tablet {
+		testing.ContextLog(ctx, "Enable tablet mode")
+		if err := pxy.Servo().RunECCommand(ctx, "tabletmode on"); err != nil {
+			return "", errors.Wrap(err, "enable tablet mode")
+		}
+		resetCommand = "tabletmode off"
+	} else if !isEnableTablet && tablet {
+		testing.ContextLog(ctx, "Disable tablet mode")
+		if err := pxy.Servo().RunECCommand(ctx, "tabletmode off"); err != nil {
+			return "", errors.Wrap(err, "disable tablet mode")
+		}
+		resetCommand = "tabletmode on"
+	}
+	return resetCommand, nil
 }
