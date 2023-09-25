@@ -31,9 +31,9 @@ const (
 	// execution attempts.
 	memfdExecuteHistogramBucket = 4
 	// The amount of time reserved for cleanup.
-	cleanupTimeout = 5 * time.Second
+	cleanupTimeout = 10 * time.Second
 	// The amount of time reserved for UMA metrics to emit.
-	umaTimeout = 60 * time.Second
+	umaTimeout = 90 * time.Second
 )
 
 func init() {
@@ -48,7 +48,8 @@ func init() {
 		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"chrome", "metrics_consent", "memfd_exec_detection"},
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
-		Timeout:      chrome.LoginTimeout + umaTimeout + cleanupTimeout,
+		Fixture:      "chromeLoggedIn",
+		Timeout:      umaTimeout + cleanupTimeout,
 	})
 }
 
@@ -70,6 +71,8 @@ func MemoryFileExecTelemetry(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTimeout)
 	defer cancel()
 
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
 	// Make sure secanomalyd isn't running, and then clear pending metrics.
 	// This ensures there's no events from before the test starts.
 	if err := upstart.StopJob(ctx, "secanomalyd"); err != nil {
@@ -79,13 +82,6 @@ func MemoryFileExecTelemetry(ctx context.Context, s *testing.State) {
 	if err := metrics.ClearHistogramTransferFile(); err != nil {
 		s.Error("Could not truncate existing metrics files: ", err)
 	}
-
-	// Create a new Chrome user session.
-	cr, err := chrome.New(ctx)
-	if err != nil {
-		s.Fatal("Chrome login failed: ", err)
-	}
-	defer cr.Close(cleanupCtx)
 
 	// Start secanomalyd with the --dev flag, so that metrics are emitted
 	// despite being in dev mode.
