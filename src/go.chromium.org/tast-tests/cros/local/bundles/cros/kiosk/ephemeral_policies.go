@@ -103,14 +103,15 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 		},
 	}
 
-	httpServer := kioskmode.NewWebKioskAppServer(ctx)
-	defer httpServer.Close()
+	webApp := kioskmode.DefaultWebApp()
+	serverURL, cleanupServer := webApp.NewServer(ctx)
+	defer cleanupServer()
 
 	localAccounts := policy.DeviceLocalAccounts{Val: []policy.DeviceLocalAccountInfo{}}
 	for i := range testCases {
 		// Use WebKiosk to simulate logins with different accountIDs. This wouldn't work with
 		// ChromeApps because the login would be based on the appID rather than the accountID.
-		accountInfo := kioskmode.WebKioskAppAccountInfo(httpServer.URL, testCases[i].AccountID)
+		accountInfo := webApp.NewDeviceLocalAccountInfo(serverURL, testCases[i].AccountID)
 		accountInfo.EphemeralMode = &testCases[i].EphemeralMode
 		localAccounts.Val = append(localAccounts.Val, accountInfo)
 	}

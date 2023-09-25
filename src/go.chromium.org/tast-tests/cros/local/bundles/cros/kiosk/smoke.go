@@ -23,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/kioskmode"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -146,7 +145,7 @@ func (param smokeTestParam) appAccountID() string {
 // appButtonName returns the name shown in the "Apps" button in the login screen.
 func (param smokeTestParam) appButtonName() string {
 	if param.isWebApp {
-		return kioskmode.WebKioskTitle
+		return kioskmode.DefaultKioskWebAppTitle
 	}
 	return kioskmode.KioskAppBtnName
 }
@@ -157,7 +156,7 @@ const chromeAppHeading = "Simple Print Sample"
 // appPageHeading returns the title in the app page as found in the accessibility tree.
 func (param smokeTestParam) appPageHeading() string {
 	if param.isWebApp {
-		return kioskmode.WebKioskHeading
+		return kioskmode.DefaultKioskWebAppHeading
 	}
 	return chromeAppHeading
 }

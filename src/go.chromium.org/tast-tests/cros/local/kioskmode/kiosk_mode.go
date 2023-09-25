@@ -11,7 +11,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
-	"net/http/httptest"
 	"os"
 	"strings"
 	"time"
@@ -54,6 +53,8 @@ var (
 )
 
 const (
+	// WebKioskAccountID identifier of the default WebKioskApp.
+	WebKioskAccountID = "arbitrary_id_web_kiosk_1@managedchrome.com"
 	// kioskStartingLog is reported by Chrome once Kiosk is starting.
 	kioskStartingLog = "Starting kiosk mode"
 	// kioskStartingDuration is the time estimate to emit a kioskStartingLog after Kiosk launch has
@@ -92,7 +93,8 @@ type Kiosk struct {
 	cr            *chrome.Chrome
 	fdms          *fakedms.FakeDMS
 	localAccounts *policy.DeviceLocalAccounts
-	httpServer    *httptest.Server
+	// extraCleanup is a nullable function used to clean resources, like HTTP servers for web Kiosk.
+	extraCleanup cleanupFunc
 	// reader for Chrome syslog messages from this Kiosk session. Used to wait for Kiosk logs.
 	reader                         *syslog.Reader
 	signinTestExtensionManifestKey string
@@ -115,13 +117,13 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifest
 	}
 
 	// Parse necessary structs from test provided options.
-	cfg, deviceLocalAccounts, httpServer, policyBlob, err := parseOptions(ctx, opts)
+	cfg, deviceLocalAccounts, policyBlob, cleanup, err := parseOptions(ctx, opts)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to parse Kiosk configuration from options")
 	}
 	defer func() {
-		if retErr != nil && httpServer != nil {
-			httpServer.Close()
+		if retErr != nil && cleanup != nil {
+			cleanup()
 		}
 	}()
 
@@ -168,7 +170,7 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifest
 		cr:                             cr,
 		fdms:                           fdms,
 		localAccounts:                  deviceLocalAccounts,
-		httpServer:                     httpServer,
+		extraCleanup:                   cleanup,
 		reader:                         reader,
 		signinTestExtensionManifestKey: signinTestExtensionManifestKey,
 	}, cr, nil
@@ -205,8 +207,8 @@ func (k *Kiosk) Close(ctx context.Context) (retErr error) {
 		retErr = errors.New("potentially insufficient time remaining for kiosk.Close")
 	}
 
-	if k.httpServer != nil {
-		k.httpServer.Close()
+	if k.extraCleanup != nil {
+		k.extraCleanup()
 	}
 
 	if k.reader != nil {
@@ -521,16 +523,16 @@ func waitPoliciesPersisted(ctx context.Context, deviceLocalAccounts []policy.Dev
 }
 
 // parseOptions processes opts and returns relevant structs as needed for kioskmode.New.
-func parseOptions(ctx context.Context, opts []Option) (_ *Config, _ *policy.DeviceLocalAccounts, _ *httptest.Server, _ *policy.Blob, retErr error) {
+func parseOptions(ctx context.Context, opts []Option) (_ *Config, _ *policy.DeviceLocalAccounts, _ *policy.Blob, _ cleanupFunc, retErr error) {
 	cfg, err := NewConfig(opts)
 	if err != nil {
 		return nil, nil, nil, nil, errors.Wrap(err, "failed to process options")
 	}
 
-	deviceLocalAccounts, httpServer := deviceLocalAccountsForConfig(ctx, cfg)
+	deviceLocalAccounts, cleanup := deviceLocalAccountsForConfig(ctx, cfg)
 	defer func() {
-		if retErr != nil && httpServer != nil {
-			httpServer.Close()
+		if retErr != nil && cleanup != nil {
+			cleanup()
 		}
 	}()
 
@@ -538,18 +540,20 @@ func parseOptions(ctx context.Context, opts []Option) (_ *Config, _ *policy.Devi
 	if err != nil {
 		return nil, nil, nil, nil, errors.Wrap(err, "failed to create Kiosk policy blob for config")
 	}
-	return cfg, deviceLocalAccounts, httpServer, pb, nil
+	return cfg, deviceLocalAccounts, pb, cleanup, nil
 }
 
-// deviceLocalAccountsForConfig sets up a policy.DeviceLocalAccounts slice and the default http
+// deviceLocalAccountsForConfig sets up a policy.DeviceLocalAccounts slice and the default HTTP
 // server if necessary, as configured in the given cfg.
-func deviceLocalAccountsForConfig(ctx context.Context, cfg *Config) (*policy.DeviceLocalAccounts, *httptest.Server) {
+func deviceLocalAccountsForConfig(ctx context.Context, cfg *Config) (*policy.DeviceLocalAccounts, cleanupFunc) {
 	if cfg.m.DeviceLocalAccounts == nil {
-		httpServer := NewWebKioskAppServer(ctx)
-		webKioskAppAccountInfo := WebKioskAppAccountInfo(httpServer.URL, WebKioskAccountID)
+		webApp := DefaultWebApp()
+		serverURL, cleanup := webApp.NewServer(ctx)
+		webKioskAppAccountInfo := webApp.NewDeviceLocalAccountInfo(serverURL, WebKioskAccountID)
 		deviceLocalAccounts := &policy.DeviceLocalAccounts{
-			Val: []policy.DeviceLocalAccountInfo{KioskAppAccountInfo, webKioskAppAccountInfo}}
-		return deviceLocalAccounts, httpServer
+			Val: []policy.DeviceLocalAccountInfo{KioskAppAccountInfo, webKioskAppAccountInfo},
+		}
+		return deviceLocalAccounts, cleanup
 	}
 	return cfg.m.DeviceLocalAccounts, nil
 }
