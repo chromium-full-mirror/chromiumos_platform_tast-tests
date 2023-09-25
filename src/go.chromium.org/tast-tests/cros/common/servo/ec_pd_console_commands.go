@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	// reEcPdStateCommand -- TCPM v1 and v2 compatible regex for pd <port> state output
+	// reEcPdStateCommand is a TCPM v1 and v2 compatible regex for pd <port> state output.
 	//   Example: Port C0 CC3, Enable - Role: SRC-DFP TC State: Attached.SRC, Flags: 0x9002 PE State: PE_SRC_Ready, Flags: 0x0201
 	//   Match Index:
 	//      0 - Full match
@@ -28,22 +28,22 @@ const (
 	reEcPdStateCommand string = `Port\s+C(\d+)\s+CC(\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)(.*)[\r\n]`
 	reEcPdRecv         string = `RECV\s([\w]+)`
 	rePDVersion        string = `\s+(\d+|Wrong.*)`
-	// PdControlMsgMask -- bitmask for PD control messages
+	// PdControlMsgMask is a bitmask to extract the message type from PD control messages.
 	PdControlMsgMask int = 0x1f
-	// MaxPorts -- Max number of ports on EC
+	// MaxPorts specifies the maximum number of ports on the EC.
 	MaxPorts int = 4
-	// PDPortUnderTest indicates command should be sent to the PD port conntected to servo
+	// PDPortUnderTest indicates command should be sent to the PD port connected to servo.
 	PDPortUnderTest int = MaxPorts
 )
 
-// DUTPDInfo caches the fixed PD testing information for the DUT
+// DUTPDInfo caches the fixed PD testing information for the DUT.
 type DUTPDInfo struct {
 	version    int // 1==TCPMv1, 2==TCPMv1
 	activePort int // PD port connected to servo
 	portCount  int // Total number of PD ports on the DUT
 }
 
-// RequireDUTPDInfo allocates and caches the fixed information about the PD port under test
+// RequireDUTPDInfo allocates and caches the fixed information about the PD port under test.
 func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 	if s.dutPDInfo != nil {
 		return nil
@@ -91,7 +91,7 @@ func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 	return nil
 }
 
-// GetPDState Returns PD state console output
+// GetPDState returns PD state console output for a PD port on the DUT.
 func (s *Servo) GetPDState(ctx context.Context, port int) ([][]string, error) {
 	if port == PDPortUnderTest {
 		port = s.dutPDInfo.activePort
@@ -111,7 +111,7 @@ const (
 	pdStatePollInterval time.Duration = 500 * time.Millisecond
 )
 
-// SendPowerSwapRequest sends power swap request
+// SendPowerSwapRequest sends power swap request to be initiated by the DUT.
 func (s *Servo) SendPowerSwapRequest(ctx context.Context, port int) error {
 	if port == PDPortUnderTest {
 		port = s.dutPDInfo.activePort
@@ -134,7 +134,7 @@ func (s *Servo) SendPowerSwapRequest(ctx context.Context, port int) error {
 	return nil
 }
 
-// EnablePDConsoleDebug enables PD console debugging level 2
+// EnablePDConsoleDebug enables PD console debugging level 2 on the DUT.
 func (s *Servo) EnablePDConsoleDebug(ctx context.Context) error {
 	cmd := "pd dump 2"
 
@@ -146,7 +146,7 @@ func (s *Servo) EnablePDConsoleDebug(ctx context.Context) error {
 	return nil
 }
 
-// DisablePDConsoleDebug disables PD console debugging
+// DisablePDConsoleDebug disables PD console debugging on the DUT.
 func (s *Servo) DisablePDConsoleDebug(ctx context.Context) error {
 	cmd := "pd dump 0"
 
@@ -158,7 +158,7 @@ func (s *Servo) DisablePDConsoleDebug(ctx context.Context) error {
 	return nil
 }
 
-// GetDualRole returns true if dual role is enabled on port
+// GetDualRole returns true if dual role power is enabled on port.
 func (s *Servo) GetDualRole(ctx context.Context, port int) (bool, error) {
 	if port == PDPortUnderTest {
 		port = s.dutPDInfo.activePort
@@ -176,7 +176,7 @@ func (s *Servo) GetDualRole(ctx context.Context, port int) (bool, error) {
 	return out[0][1] == onResponse, nil
 }
 
-// SetPDPowerRole - Sets PD power role
+// SetPDPowerRole sets the PD power role for a PD port on the DUT.
 func (s *Servo) SetPDPowerRole(ctx context.Context, port int, role string) error {
 	out, err := s.GetPDState(ctx, port)
 
@@ -213,13 +213,13 @@ func (s *Servo) SetPDPowerRole(ctx context.Context, port int, role string) error
 	return nil
 }
 
-// RestorePDPort - Restores DUT PD port
+// RestorePDPort restores DUT PD port state to the SNK role.
 func (s *Servo) RestorePDPort(ctx context.Context, port int) error {
 	if port == PDPortUnderTest {
 		port = s.dutPDInfo.activePort
 	}
 
-	// Set DUT PD to SNK so battery charges
+	// Set DUT PD to SNK so battery charges.
 	if err := s.SetPDPowerRole(ctx, port, "SNK"); err != nil {
 		return errors.Wrap(err, "failed to set PD role to SNK")
 	}

@@ -12,40 +12,40 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// A PDPolarityValue defines the CC polarity state
-type PDPolarityValue string
+// A pdPolarityValue defines the CC polarity state.
+type pdPolarityValue string
 
-// List of polarity values
+// List of polarity values.
 const (
-	PolarityCC1 PDPolarityValue = "CC1"
-	PolarityCC2 PDPolarityValue = "CC2"
+	PolarityCC1 pdPolarityValue = "CC1"
+	PolarityCC2 pdPolarityValue = "CC2"
 )
 
-// A ConnectionValue defines the current PD connection status, enabled or disabled
-type ConnectionValue string
+// A connectionValue defines the current PD connection status, enabled or disabled.
+type connectionValue string
 
-// List of PD status values
+// List of PD status values.
 const (
-	PDEnabled  ConnectionValue = "enabled"
-	PDDisabled ConnectionValue = "disabled"
+	PDEnabled  connectionValue = "enabled"
+	PDDisabled connectionValue = "disabled"
 )
 
-// A PowerRoleValue defines the current PD port power role
-type PowerRoleValue string
+// A powerRoleValue defines the current PD port power role.
+type powerRoleValue string
 
-// List of PD power roles
+// List of PD power roles.
 const (
-	PowerRoleSRC PowerRoleValue = "SRC"
-	PowerRoleSNK PowerRoleValue = "SNK"
+	PowerRoleSRC powerRoleValue = "SRC"
+	PowerRoleSNK powerRoleValue = "SNK"
 )
 
-// A DataRoleValue defines the current PD port data role
-type DataRoleValue string
+// A dataRoleValue defines the current PD port data role.
+type dataRoleValue string
 
 // List of PD data roles
 const (
-	DataRoleDFP DataRoleValue = "DFP"
-	DataRoleUFP DataRoleValue = "UFP"
+	DataRoleDFP dataRoleValue = "DFP"
+	DataRoleUFP dataRoleValue = "UFP"
 )
 
 type servoStateTokens []string
@@ -58,21 +58,21 @@ func (t *servoStateTokens) lookup(field string) (string, error) {
 	return "", errors.Errorf("PD field %q contains unknown value %q", field, token)
 }
 
-// A PDState encapsulates the full PD port state on a servo
+// A PDState encapsulates the full PD port state on a servo.
 type PDState struct {
 	Port       int
-	Polarity   PDPolarityValue
-	Connection ConnectionValue
-	PowerRole  PowerRoleValue
-	DataRole   DataRoleValue
+	Polarity   pdPolarityValue
+	Connection connectionValue
+	PowerRole  powerRoleValue
+	DataRole   dataRoleValue
 	PEState    int
 	Flags      uint32
 }
 
 const (
-	// ReServoPdStateCommand - Valid for TCPM v1 only
+	// reServoPdStateCommand is a regex to retrieve the PD state, valid for TCPM v1 only.
 	// Example: Port C1 CC1, Ena - Role: SRC-UFP State: 23(), Flags: 0x1415e
-	ReServoPdStateCommand string = `Port\s+C(\d+)\s+(CC\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)\s+State:\s(\d+)\(.*\),\s+Flags:\s+0x(\w*)[\r\n]`
+	reServoPdStateCommand string = `Port\s+C(\d+)\s+(CC\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)\s+State:\s(\d+)\(.*\),\s+Flags:\s+0x(\w*)[\r\n]`
 )
 
 var pdFieldIndex = map[string]int{
@@ -86,8 +86,8 @@ var pdFieldIndex = map[string]int{
 	"Flags":      7,
 }
 
-// PD fields lookup.  Primary key must match a key from pdFieldIndex
-// Sub-keys match the servo output from the "pd state" command
+// pdFieldLookup maps pdFieldIndex key values to the valid servo output that is returned
+// from the "pd state" command.
 var pdFieldLookup = map[string]map[string]string{
 	"CCPolarity": {"CC1": string(PolarityCC1), "CC2": string(PolarityCC2)},
 	"Connection": {"Ena": string(PDEnabled), "Dis": string(PDDisabled)},
@@ -95,11 +95,11 @@ var pdFieldLookup = map[string]map[string]string{
 	"DataRole":   {"DFP": string(DataRoleDFP), "UFP": string(DataRoleUFP)},
 }
 
-// GetServoPDState returns the state of the PD port on the servo that connects to the DUT
+// GetServoPDState returns the state of the PD port on the servo that connects to the DUT.
 // For servoV4 and servoV4p1, the PD port 0 is the charging port and PD port 1 is the DUT port.
 func (s *Servo) GetServoPDState(ctx context.Context) (*PDState, error) {
 	var portState PDState
-	out, err := s.RunServoCommandGetOutput(ctx, "pd 1 state", []string{ReServoPdStateCommand})
+	out, err := s.RunServoCommandGetOutput(ctx, "pd 1 state", []string{reServoPdStateCommand})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get servo PD state")
 	}
@@ -118,25 +118,25 @@ func (s *Servo) GetServoPDState(ctx context.Context) (*PDState, error) {
 	if err != nil {
 		return nil, err
 	}
-	portState.Polarity = PDPolarityValue(polarity)
+	portState.Polarity = pdPolarityValue(polarity)
 
 	connection, err := t.lookup("Connection")
 	if err != nil {
 		return nil, err
 	}
-	portState.Connection = ConnectionValue(connection)
+	portState.Connection = connectionValue(connection)
 
 	powerRole, err := t.lookup("PowerRole")
 	if err != nil {
 		return nil, err
 	}
-	portState.PowerRole = PowerRoleValue(powerRole)
+	portState.PowerRole = powerRoleValue(powerRole)
 
 	dataRole, err := t.lookup("DataRole")
 	if err != nil {
 		return nil, err
 	}
-	portState.DataRole = DataRoleValue(dataRole)
+	portState.DataRole = dataRoleValue(dataRole)
 
 	portState.PEState, err = strconv.Atoi(t[pdFieldIndex["PEState"]])
 	if err != nil {
