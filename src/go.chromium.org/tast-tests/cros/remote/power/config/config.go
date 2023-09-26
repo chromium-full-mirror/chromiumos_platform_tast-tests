@@ -117,3 +117,19 @@ func ValidateConfig(c *Config) (tests, orderedTests, unorderedTests []string, er
 
 	return tests, orderedTests, unorderedTests, nil
 }
+
+// FindWeightedTests finds the weighted in config file.
+func FindWeightedTests(c *Config) map[string]bool {
+	weightedTests := make(map[string]bool)
+
+	// Find all the tests with weight > 0.
+	for _, persona := range c.Personas {
+		for _, test := range persona.Tests {
+			if test.Weight > 0 {
+				weightedTests[test.Name] = true
+			}
+		}
+	}
+
+	return weightedTests
+}

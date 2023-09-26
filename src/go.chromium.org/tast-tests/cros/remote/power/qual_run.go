@@ -33,6 +33,9 @@ type QualRun struct {
 	OrderedTests []string
 	// UnorderedTests contains all tests that can be run in any order.
 	UnorderedTests []string
+	// WeightedTests maps test name to boolean that indicates if the test
+	// weight > 0 or not.
+	WeightedTests map[string]bool
 
 	// testPowers holds the power results for each test.
 	testPowers map[string]*result.Power
@@ -57,11 +60,14 @@ func NewQualRun(ctx context.Context, url string) (*QualRun, error) {
 		return nil, errors.Wrap(err, "failed to validate configuration")
 	}
 
+	weightedTests := config.FindWeightedTests(cfg)
+
 	return &QualRun{
 		Config:         cfg,
 		Tests:          tests,
 		OrderedTests:   orderedTests,
 		UnorderedTests: unorderedTests,
+		WeightedTests:  weightedTests,
 		testPowers:     make(map[string]*result.Power),
 	}, nil
 }
@@ -93,6 +99,9 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 	// Read the power test result for each test.
 	for _, t := range tests {
 		if r.isTestSkipped(t) {
+			continue
+		}
+		if !r.WeightedTests[t] {
 			continue
 		}
 		dir, err := findTestDir(t, dirs)
@@ -128,6 +137,9 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir string) error {
 		for _, t := range p.Tests {
 			if r.isTestSkipped(t.Name) {
 				persona.Skipped = append(persona.Skipped, t.Name)
+				continue
+			}
+			if t.Weight == 0 {
 				continue
 			}
 			power := r.testPowers[t.Name]
