@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/input"
 
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -28,12 +27,6 @@ func init() {
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Timeout:      5 * time.Minute,
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
-		Params: []testing.Param{{
-			Val: false,
-		}, {
-			Name: "multi_stream",
-			Val:  true,
-		}},
 	})
 }
 
@@ -172,7 +165,6 @@ func CCAUIRecordVideo(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(cca.FixtureData).Chrome
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveCameraFolderWhenFail: true})
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
-	enableMultiStream := s.Param().(bool)
 	subTestTimeout := 40 * time.Second
 	for _, tc := range []struct {
 		name  string
@@ -190,16 +182,6 @@ func CCAUIRecordVideo(ctx context.Context, s *testing.State) {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tc.name, func(ctx context.Context, s *testing.State) {
 			if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
-				cleanupCtx := ctx
-				ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
-				defer cancel()
-
-				if enableMultiStream {
-					if err := app.SetEnableMultiStreamRecording(ctx, true); err != nil {
-						return errors.Wrap(err, "failed to enable multi-stream recording")
-					}
-					defer app.SetEnableMultiStreamRecording(cleanupCtx, false)
-				}
 				testing.ContextLog(ctx, "Switch to video mode")
 				if err := app.SwitchMode(ctx, cca.Video); err != nil {
 					return errors.Wrap(err, "failed to switch to video mode")
