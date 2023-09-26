@@ -1,0 +1,43 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.power;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/power";
+
+service DeviceSetupService {
+    // Setup device for power test.
+    rpc Setup(DeviceSetupRequest) returns (google.protobuf.Empty) {}
+
+    // Cleanup resets device to its original state.
+    rpc Cleanup(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+message DeviceSetupRequest {
+    // Describes this device setup and it is used for logging purposes.
+    optional string setup_name = 1;
+    UIAndBacklightMode ui_and_backlight = 2;
+    WifiInterfacesMode wifi = 3;
+    BluetoothMode bluetooth = 4;
+}
+
+enum UIAndBacklightMode {
+    DO_NOT_CHANGE_UI_WITH_DEFAULT_BACKLIGHT = 0;
+    DISABLE_UI_WITH_ZERO_BACKLIGHT = 1;
+}
+
+enum WifiInterfacesMode {
+    DO_NOT_CHANGE_WIFI_INTERFACES = 0;
+    DISABLE_WIFI_INTERFACES = 1;
+}
+
+enum BluetoothMode {
+    DISABLE_BLUETOOTH_INTERFACES = 0;
+    DO_NOT_CHANGE_BLUETOOTH = 1;
+}
+

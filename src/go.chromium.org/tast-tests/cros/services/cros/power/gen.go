@@ -4,6 +4,7 @@
 
 //go:generate protoc -I . -I ../../../common/perf/perfpb --go_out=plugins=grpc:../../../../../.. metrics_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. battery_service.proto
+//go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. device_setup_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. usb_service.proto
 
 // Package power provides the BatteryService.
