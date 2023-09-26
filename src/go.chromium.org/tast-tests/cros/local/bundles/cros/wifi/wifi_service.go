@@ -204,6 +204,7 @@ func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetw
 				settings.LeftClick(networkItem),
 				settings.LeftClick(nodewith.Name("Disconnect").Role(role.Button)),
 				settings.WaitUntilExists(nodewith.Name("Not Connected").Role(role.StaticText)),
+				settings.WaitUntilExists(nodewith.Name("Connect").Role(role.Button)),
 			)(ctx); err != nil {
 				return &emptypb.Empty{}, err
 			}
