@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -67,7 +68,8 @@ func Cr50TPMManufactured(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if err := h.Servo.PollForString(ctx, servo.CR50UARTStream, "tpm_manufactured: manufactured"); err != nil {
+	tpmRe := regexp.MustCompile(`tpm_manufactured: manufactured`)
+	if err := h.Servo.PollForRegexp(ctx, servo.CR50UARTStream, tpmRe, 60*time.Second); err != nil {
 		s.Fatal(errors.Wrap(err, "GSC output parsing failed"))
 	}
 }

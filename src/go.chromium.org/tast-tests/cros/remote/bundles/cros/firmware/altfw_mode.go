@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -143,7 +144,8 @@ func AltfwMode(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Look for AP uart")
-	if err := h.Servo.PollForString(ctx, servo.APUARTStream, "U-Boot 20"); err != nil {
+	ubootRe := regexp.MustCompile(`U-Boot 20`)
+	if err := h.Servo.PollForRegexp(ctx, servo.APUARTStream, ubootRe, 60*time.Second); err != nil {
 		s.Fatal(errors.Wrap(err, "failed to find U-Boot prompt"))
 	}
 

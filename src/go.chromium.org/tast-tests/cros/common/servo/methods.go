@@ -1359,8 +1359,8 @@ func (s *Servo) CloseLid(ctx context.Context) error {
 	return s.SetString(ctx, LidOpen, string(LidOpenNo))
 }
 
-// PollForString polls a UART for a string for up to 60s, returning nil if found
-func (s *Servo) PollForString(ctx context.Context, uart StringControl, toFind string) error {
+// PollForRegexp polls a UART for one or more strings for up to timeout, returning nil if found
+func (s *Servo) PollForRegexp(ctx context.Context, uart StringControl, toFind *regexp.Regexp, timeout time.Duration) error {
 	var leftoverLines string
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -1378,13 +1378,13 @@ func (s *Servo) PollForString(ctx context.Context, uart StringControl, toFind st
 			}
 
 			for _, l := range strings.Split(lines, "\r\n") {
-				if strings.Contains(l, toFind) {
+				if toFind.MatchString(l) {
 					return nil
 				}
 			}
 		}
 		return errors.Errorf("failed to find %q", toFind)
-	}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: 60 * time.Second}); err != nil {
+	}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: timeout}); err != nil {
 		return errors.Wrap(err, "UART output-parsing failed")
 	}
 
