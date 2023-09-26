@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/printing/ippeveprinter"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -71,14 +72,6 @@ func init() {
 	})
 }
 
-func startProcess(ctx context.Context, name string, args ...string) (*testexec.Cmd, error) {
-	cmd := testexec.CommandContext(ctx, name, args...)
-	if err := cmd.Start(); err != nil {
-		return nil, errors.Wrap(err, "failed to start command")
-	}
-	return cmd, nil
-}
-
 func stopProcess(ctx context.Context, cmd *testexec.Cmd) error {
 	testing.ContextLogf(ctx, "Terminating process with PID %d", cmd.Cmd.Process.Pid)
 	if err := cmd.Signal(unix.SIGTERM); err != nil {
@@ -105,36 +98,11 @@ func stopProcess(ctx context.Context, cmd *testexec.Cmd) error {
 }
 
 func startSocat(ctx context.Context) (*testexec.Cmd, error) {
-	return startProcess(ctx, "socat", "TCP4-LISTEN:631,fork,reuseaddr", "/run/cups/cups.sock")
-}
-
-func waitForPort(ctx context.Context, port string, timeout time.Duration) error {
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		netcat := testexec.CommandContext(ctx, "nc", "-z", "localhost", port)
-		err := netcat.Run()
-		if code, ok := testexec.ExitCode(err); !ok || code != 0 {
-			return err
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: timeout})
-}
-
-func startPrinter(ctx context.Context) (*testexec.Cmd, string, error) {
-	// `-r off` turns off DNS-SD service advertisements. We do this to make the
-	// printer undiscoverable outside the device that this test is running on, to
-	// avoid interfering with other tests.
-	cmd, err := startProcess(ctx, "ippeveprinter", "-p", "4444", "anyname", "-r", "off")
-	if err != nil {
-		return cmd, "", errors.Wrap(err, "failed to start ippeveprinter")
+	cmd := testexec.CommandContext(ctx, "socat", "TCP4-LISTEN:631,fork,reuseaddr", "/run/cups/cups.sock")
+	if err := cmd.Start(); err != nil {
+		return nil, errors.Wrap(err, "failed to start command")
 	}
-
-	// Wait until printer is listening on port.
-	// It starts very quickly so 5 seconds is plenty of time to wait.
-	if err := waitForPort(ctx, "4444", time.Second*5); err != nil {
-		return cmd, "", errors.Wrap(err, "timed out waiting for ippeveprinter to start")
-	}
-
-	return cmd, "ipp://localhost:4444/ipp/print", nil
+	return cmd, nil
 }
 
 func setupPrinterWithCups(ctx context.Context, printerName, printerURI string) error {
@@ -189,13 +157,13 @@ func ExternalPrintServers(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// Run a fake printer.
-	printerProcess, printerURI, err := startPrinter(ctx)
+	// Run a fake printer using `ippeveprinter`.
+	printer, err := ippeveprinter.Start(ctx)
 	if err != nil {
 		s.Fatal("Could not start fake printer: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := stopProcess(ctx, printerProcess); err != nil {
+		if err := printer.Stop(ctx); err != nil {
 			s.Fatal("Failed to stop fake printer: ", err)
 		}
 	}(cleanupCtx)
@@ -203,8 +171,9 @@ func ExternalPrintServers(ctx context.Context, s *testing.State) {
 	// Set up the fake printer with CUPS.
 	// Note: This does not make the printer available to chrome because it's not set up in chrome.
 	// It should become available when we set up a print server with ipp://localhost:631 URI.
-	const fakePrinterName = "server-printer"
-	if err := setupPrinterWithCups(ctx, fakePrinterName, printerURI); err != nil {
+	const printerName = "server-printer"
+	if err := setupPrinterWithCups(ctx, printerName, printer.IppURI()); err != nil {
+		printer.DumpLog(ctx)
 		s.Fatal("Could not set up the fake printer with CUPS: ", err)
 	}
 
@@ -254,7 +223,7 @@ func ExternalPrintServers(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Print Preview: ", err)
 	}
 
-	if err := printpreview.SelectPrinter(ctx, tconn, fakePrinterName); err != nil {
-		s.Fatal(fmt.Sprintf("Failed to select printer %s: ", fakePrinterName), err)
+	if err := printpreview.SelectPrinter(ctx, tconn, printerName); err != nil {
+		s.Fatal(fmt.Sprintf("Failed to select printer %s: ", printerName), err)
 	}
 }

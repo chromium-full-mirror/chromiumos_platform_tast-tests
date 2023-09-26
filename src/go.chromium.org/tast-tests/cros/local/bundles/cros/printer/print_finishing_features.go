@@ -5,15 +5,10 @@
 package printer
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
-
-	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/pre"
@@ -27,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/printing/ippeveprinter"
 	"go.chromium.org/tast-tests/cros/local/printing/lp"
 	"go.chromium.org/tast-tests/cros/local/printing/printer"
 
@@ -83,55 +79,6 @@ func init() {
 	})
 }
 
-func startIPPEverywherePrinter(ctx context.Context, attributesFile string) (*testexec.Cmd, int, error) {
-	// `-r off` turns off DNS-SD service advertisements. We do this to make the
-	// printer undiscoverable outside the device that this test is running on, to
-	// avoid interfering with other tests.
-	ippeveprinter := testexec.CommandContext(ctx, "stdbuf", "-o0", "ippeveprinter", "ippeveprinter_test", "-a", attributesFile, "-r", "off")
-	stderr, err := ippeveprinter.StderrPipe()
-	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to fetch stderr")
-	}
-
-	if err := ippeveprinter.Start(); err != nil {
-		return nil, 0, errors.Wrap(err, "failed to start ippeveprinter")
-	}
-
-	var printerPort int
-	r := regexp.MustCompile(`Listening on port (\d+)\.`)
-	rd := bufio.NewReader(stderr)
-	for {
-		line, err := rd.ReadString('\n')
-		if err != nil {
-			return nil, 0, errors.Wrap(err, "failed to read output from pipe")
-		}
-		matches := r.FindStringSubmatch(line)
-		if matches != nil {
-			if printerPort, err = strconv.Atoi(matches[1]); err != nil {
-				return nil, 0, errors.Wrap(err, "failed to parse printer port")
-			}
-			break
-		}
-	}
-
-	return ippeveprinter, printerPort, nil
-}
-
-func stopIPPEverywherePrinter(ctx context.Context, ippeveprinter *testexec.Cmd) error {
-	testing.ContextLogf(ctx, "Terminating ippeveprinter with PID %d", ippeveprinter.Cmd.Process.Pid)
-	if err := ippeveprinter.Signal(unix.SIGTERM); err != nil {
-		return errors.Wrap(err, "failed to send SIGTERM to ippeveprinter")
-	}
-	if err := ippeveprinter.Wait(); err != nil {
-		// We're expecting the exit status to be non-zero if the process was killed by SIGTERM.
-		// Anything else indicates a problem.
-		if ws, ok := testexec.GetWaitStatus(err); !ok || !ws.Signaled() || ws.Signal() != unix.SIGTERM {
-			return errors.Wrap(err, "failed to wait for ippeveprinter termination")
-		}
-	}
-	return nil
-}
-
 func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -151,14 +98,15 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 	}
 
 	// `ipp_conf_finishings.txt` is a modified ipp attributes file fetched from
-	// ippeveprinter with default parameters so that finishing printing features are supported
-	ippeveprinter, printerPort, err := startIPPEverywherePrinter(ctx, s.DataPath("ipp_conf_finishings.txt"))
+	// ippeveprinter with default parameters so that finishing printing features are supported.
+	printer, err := ippeveprinter.Start(ctx,
+		ippeveprinter.WithAttributesFile(s.DataPath("ipp_conf_finishings.txt")))
 	if err != nil {
-		s.Fatal("Failed to start IPPEverywherePrinter: ", err)
+		s.Fatal("Failed to start ippeveprinter: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := stopIPPEverywherePrinter(ctx, ippeveprinter); err != nil {
-			s.Fatal("Failed to stop IPPEverywherePrinter: ", err)
+		if err := printer.Stop(ctx); err != nil {
+			s.Fatal("Failed to stop ippeveprinter: ", err)
 		}
 	}(ctx)
 
@@ -192,7 +140,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 		kb.TypeAction(printerDisplayName),
 		ui.LeftClick(addressFinder),
 		ui.EnsureFocused(addressFinder),
-		kb.TypeAction(fmt.Sprintf("localhost:%d", printerPort)),
+		kb.TypeAction(fmt.Sprintf("localhost:%d", printer.Port())),
 		ui.LeftClick(nodewith.Role("button").Name("Add")),
 	)(ctx); err != nil {
 		s.Fatal("Failed to set printer details: ", err)
@@ -251,8 +199,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to print: ", err)
 	}
 
-	printerURI := fmt.Sprintf("ipp://localhost:%d/ipp/print", printerPort)
-	printerName, err := lp.PrinterNameByURI(ctx, printerURI)
+	printerName, err := lp.PrinterNameByURI(ctx, printer.IppURI())
 	if err != nil {
 		s.Fatal("Failed to find printer: ", err)
 	}
@@ -272,7 +219,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 		s.Fatal("Print job failed to complete: ", err)
 	}
 
-	cmd := testexec.CommandContext(ctx, "ipptool", "-tv", printerURI, s.DataPath("get-jobs-finishings-info.test"))
+	cmd := testexec.CommandContext(ctx, "ipptool", "-tv", printer.IppURI(), s.DataPath("get-jobs-finishings-info.test"))
 	stdout, _, err := cmd.SeparatedOutput()
 	// ippeveprinter cleans up print jobs after 60 seconds, so we should be able to see information about the job sent in this test
 	if !strings.Contains(string(stdout), "finishings (1setOf enum) = fold-double-gate,punch-dual-left,staple-top-right") {

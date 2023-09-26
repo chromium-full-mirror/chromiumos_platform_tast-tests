@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/pre"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/uitools"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -25,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printmanagementapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/printing/ippeveprinter"
 	"go.chromium.org/tast-tests/cros/local/printing/printer"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -97,19 +97,21 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 
-	const printerPort = "1201"
 	const printerDisplayName = "expiredCert"
 
 	// Start virtual printer with expired certificate.
-	// `-r off` turns off DNS-SD service advertisements. We do this to make the
-	// printer undiscoverable outside the device that this test is running on, to
-	// avoid interfering with other tests.
-	ippeveprinter := testexec.CommandContext(ctx, "ippeveprinter", "-A",
-		"-K", tmpDir, "-p", printerPort, "-n", "localhost", printerDisplayName, "-r", "off")
-
-	if err := ippeveprinter.Start(); err != nil {
-		s.Fatal("Failed to start ippeveprinter")
+	printer, err := ippeveprinter.Start(ctx,
+		ippeveprinter.WithAuthenticationEnabled(),
+		ippeveprinter.WithKeyPath(tmpDir),
+		ippeveprinter.WithHostname("localhost"))
+	if err != nil {
+		s.Fatal("Failed to start ippeveprinter: ", err)
 	}
+	defer func(ctx context.Context) {
+		if err := printer.Stop(ctx); err != nil {
+			s.Fatal("Failed to stop fake printer: ", err)
+		}
+	}(cleanupCtx)
 
 	// Open OS Settings and navigate to the Printing page.
 	ui := uiauto.New(tconn)
@@ -146,7 +148,7 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 		kb.TypeAction(printerDisplayName),
 		ui.DoDefault(addressFinder),
 		ui.EnsureFocused(addressFinder),
-		kb.TypeAction(fmt.Sprintf("localhost:%s", printerPort)),
+		kb.TypeAction(fmt.Sprintf("localhost:%d", printer.Port())),
 		ui.DoDefault(nodewith.Role("button").Name("Add")),
 	)(ctx); err != nil {
 		s.Fatal("Failed to set printer details: ", err)
