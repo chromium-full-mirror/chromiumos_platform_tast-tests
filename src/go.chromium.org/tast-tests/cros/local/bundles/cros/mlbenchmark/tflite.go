@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/mlbenchmark"
 	"go.chromium.org/tast-tests/cros/local/mlbenchmark/fixture"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -27,6 +28,8 @@ func init() {
 		Data:         []string{"ml-test-assets.tar.gz"},
 		Timeout:      30 * time.Minute,
 		Fixture:      fixture.MLBenchmark,
+		// Exclude dedede due to cooldown issues: http://b/289367416#comment39.
+		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("dedede")),
 		Params: []testing.Param{
 			{
 				Name: "mobilenet_v2_1_0_224",
