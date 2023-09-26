@@ -124,6 +124,14 @@ func (f *mixedPeerRemoteFixture) setupADBPeers(ctx context.Context, s *testing.F
 			if err := f.labstation.CommandContext(ctx, "adb", "-s", c.SerialNumber, "forward", localPort, "tcp:5555").Run(ssh.DumpLogOnError); err != nil {
 				return err
 			}
+
+			// Check that forwarded port still exists.
+			// The forward command may succeed but the port may immediately crash if adb-over-tcp isn't fully initialized.
+			if out, err := f.labstation.CommandContext(ctx, "adb", "forward", "--list").Output(ssh.DumpLogOnError); err != nil {
+				return err
+			} else if !strings.Contains(string(out), c.SerialNumber) {
+				return errors.New("cannot find newly forwarded port")
+			}
 			return nil
 		}, &testing.PollOptions{
 			Timeout:  30 * time.Second,
