@@ -326,6 +326,9 @@ const (
 	// Storage16kWriteIOPs with The ChromeOS device non-volatile storage MUST support >= 150 16kB random write IOPS.
 	Storage16kWriteIOPs = "store-performance-0003-v01"
 
+	// StorageEndurancePerf with The ChromeOS device non-volatile storage performance test result SHOULD NOT decrease by more than 5% after 3 years of heavy use (or the simulated equivalent) of 5.5 GB/day written per 32 GB capacity (up to 34.2 GB/day).
+	StorageEndurancePerf = "store-endurance-0003-v01"
+
 	// Storage eMMC
 
 	// EmmcStorageControllerRevision with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC controller MUST support eMMC5.1

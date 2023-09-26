@@ -52,12 +52,13 @@ type fioDiskUsageReport struct {
 
 // FioResultWriter is a serial processor of fio results.
 type FioResultWriter struct {
-	resultLock  sync.Mutex
-	results     []fioResultReport
-	ignoreRead  bool
-	ignoreWrite bool
-	ignoreSync  bool
-	ignoreTrim  bool
+	internalResults map[string]float64
+	resultLock      sync.Mutex
+	results         []fioResultReport
+	ignoreRead      bool
+	ignoreWrite     bool
+	ignoreSync      bool
+	ignoreTrim      bool
 }
 
 func (f *FioResultWriter) ignoreResult(read, write, sync, trim bool) {
@@ -82,19 +83,19 @@ func (f *FioResultWriter) ReportOnlyReadWrite() {
 	f.ignoreResult(false, false, true, true)
 }
 
-func (f *FioResultWriter) reportResults(ctx context.Context, res *fioResult, perfValues *perf.Values) {
+func (f *FioResultWriter) reportResults(ctx context.Context, res *fioResult) {
 	for _, job := range res.Jobs {
 		if !f.ignoreRead {
-			reportJobRWResult(ctx, job.Read, job.Jobname+"_read", perfValues)
+			f.reportJobRWResult(ctx, job.Read, job.Jobname+"_read")
 		}
 		if !f.ignoreWrite {
-			reportJobRWResult(ctx, job.Write, job.Jobname+"_write", perfValues)
+			f.reportJobRWResult(ctx, job.Write, job.Jobname+"_write")
 		}
 		if !f.ignoreTrim {
-			reportJobRWResult(ctx, job.Trim, job.Jobname+"_trim", perfValues)
+			f.reportJobRWResult(ctx, job.Trim, job.Jobname+"_trim")
 		}
 		if !f.ignoreSync {
-			reportJobRWResult(ctx, job.Sync, job.Jobname+"_sync", perfValues)
+			f.reportJobRWResult(ctx, job.Sync, job.Jobname+"_sync")
 		}
 	}
 }
@@ -104,11 +105,12 @@ func (f *FioResultWriter) Save(ctx context.Context, path string, writeKeyVal boo
 	f.resultLock.Lock()
 	defer f.resultLock.Unlock()
 
-	perfValues := perf.NewValues()
-
 	for _, report := range f.results {
-		f.reportResults(ctx, report.result, perfValues)
+		f.reportResults(ctx, report.result)
 	}
+
+	perfValues := perf.NewValues()
+	f.reportPerfValues(ctx, perfValues)
 
 	if writeKeyVal {
 		if err := perfValues.Save(path); err != nil {
@@ -117,6 +119,7 @@ func (f *FioResultWriter) Save(ctx context.Context, path string, writeKeyVal boo
 	}
 
 	f.results = nil
+	f.internalResults = nil
 }
 
 // Report posts a single fio result to the writer.
@@ -126,34 +129,65 @@ func (f *FioResultWriter) Report(group string, result *fioResult) {
 	f.results = append(f.results, fioResultReport{group, result})
 }
 
-// reportJobRWResult appends metrics for latency and bandwidth from the current test results
+// reportPerfValues appends metrics for latency and bandwidth from the internal test results
 // to the given perf values.
-func reportJobRWResult(ctx context.Context, testRes map[string]interface{}, prefix string, perfValues *perf.Values) {
+func (f *FioResultWriter) reportPerfValues(ctx context.Context, perfValues *perf.Values) {
+	for k, v := range f.internalResults {
+		if strings.Contains(k, "delta") {
+			perfValues.Set(perf.Metric{
+				Name:      k,
+				Unit:      "percentage",
+				Direction: perf.SmallerIsBetter,
+			}, v)
+		} else if strings.Contains(k, "percentile") {
+			perfValues.Set(perf.Metric{
+				Name:      k,
+				Unit:      "ns",
+				Direction: perf.SmallerIsBetter,
+			}, v)
+		} else if strings.Contains(k, "_bw") {
+			perfValues.Set(perf.Metric{
+				Name:      k,
+				Unit:      "KB_per_sec",
+				Direction: perf.BiggerIsBetter,
+			}, v)
+		} else if strings.Contains(k, "_iops") {
+			perfValues.Set(perf.Metric{
+				Name:      k,
+				Unit:      "iops",
+				Direction: perf.BiggerIsBetter,
+			}, v)
+		}
+	}
+}
+
+// reportJobRWResult appends results for latency and bandwidth from the current test results
+// to the internal results map.
+func (f *FioResultWriter) reportJobRWResult(ctx context.Context, testRes map[string]interface{}, prefix string) {
 	flatResult, err := flattenNestedResults("", testRes)
 	if err != nil {
 		testing.ContextLog(ctx, "Error flattening results json: ", err)
 		return
 	}
 
+	if f.internalResults == nil {
+		f.internalResults = make(map[string]float64)
+	}
+
 	for k, v := range flatResult {
-		if strings.Contains(k, "percentile") {
-			perfValues.Set(perf.Metric{
-				Name:      "_" + prefix + k,
-				Unit:      "ns",
-				Direction: perf.SmallerIsBetter,
-			}, v)
-		} else if k == "_bw" {
-			perfValues.Set(perf.Metric{
-				Name:      "_" + prefix + k,
-				Unit:      "KB_per_sec",
-				Direction: perf.BiggerIsBetter,
-			}, v)
-		} else if k == "_iops" {
-			perfValues.Set(perf.Metric{
-				Name:      "_" + prefix + k,
-				Unit:      "iops",
-				Direction: perf.BiggerIsBetter,
-			}, v)
+		if !strings.Contains(k, "percentile") && k != "_bw" && k != "_iops" {
+			continue
+		}
+		key := "_" + prefix + k
+		val, ok := f.internalResults[key]
+		if !ok {
+			f.internalResults[key] = v
+			continue
+		}
+		if val != 0 {
+			delta := ((v - val) / val) * 100
+			key := key + "_delta"
+			f.internalResults[key] = delta
 		}
 	}
 }

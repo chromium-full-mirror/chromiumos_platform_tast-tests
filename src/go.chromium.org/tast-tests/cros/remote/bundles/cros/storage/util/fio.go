@@ -31,6 +31,7 @@ var (
 		"4k_write_qd4",
 		"surfing",
 		"suspend_stress",
+		"64k_stress",
 	}
 )
 
