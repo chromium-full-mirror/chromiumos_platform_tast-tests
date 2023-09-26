@@ -60,7 +60,7 @@ const (
 	postTestTimeout = webRTCLogsGatherTimeout + arcLogsGatherTimeout
 
 	// setUpTimeout is the time to set up chrome and arc.
-	setUpTimeout          = chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute
+	setUpTimeout          = chrome.MinLoginTimeout + arc.BootTimeout + 2*time.Minute
 	setUpWithOptinTimeout = setUpTimeout + optin.OptinTimeout
 	resetTimeout          = 30 * time.Second
 
@@ -1344,9 +1344,6 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 	var setupCompleted bool // Whether the SetUp function is successfully completed.
 
 	func() {
-		ctx, cancel := context.WithTimeout(ctx, chrome.LoginTimeout)
-		defer cancel()
-
 		var docsBlockerExtDir string
 		var err error
 		var funcCompleted bool

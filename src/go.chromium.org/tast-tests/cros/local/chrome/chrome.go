@@ -78,6 +78,12 @@ const (
 	// TODO(crbug.com/1199705): Find a better value.
 	EnrollmentAndLoginTimeout = LoginTimeout + 1*time.Minute
 
+	// MinLoginTimeout is the minimum timeout for the login operation.
+	// Login timeout shorter than this amount would be extended
+	// to ensure the Chrome has enough time to perform login.
+	// See b/269211070 for more information.
+	MinLoginTimeout = 4 * time.Minute
+
 	// tryReuseSessionTimeout is the maximum amount of time that Chrome is expected to take to perform
 	// session reuse checking. Chrome will connect to the existing Chrome instance, obtained the
 	// existing configuration, and compare with the new session config. This procedure doesn't
@@ -292,8 +298,8 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	// b/211032595: Sometimes, vm test requires longer timeout.
 	// b/269211070: Sometimes, gaia login requires a longer timeout.
 	// Make sure the timeout to be at least 4 minutes.
-	if timeout < time.Minute*4 {
-		timeout = time.Minute * 4
+	if timeout < MinLoginTimeout {
+		timeout = MinLoginTimeout
 	}
 	origCtx := ctx
 	ctx, cancel := context.WithTimeout(origCtx, timeout)
