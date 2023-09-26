@@ -45,8 +45,10 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Data:         []string{runManyFiles},
 		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
-		Timeout:      20 * time.Minute,
-		Fixture:      "vmDLC",
+		// Specify guest kernel(if not provided use termina dlc)
+		Vars:    []string{"vm.ManyFiles.kernelPath"},
+		Timeout: 20 * time.Minute,
+		Fixture: "vmDLC",
 		Params: []testing.Param{
 			{
 				// TODO(b/275507715): Add variant with casefold enabled.
@@ -91,6 +93,10 @@ func init() {
 
 func ManyFiles(ctx context.Context, s *testing.State) {
 	data := s.FixtValue().(dlc.FixtData)
+	kernelPath := data.Kernel
+	if kernelPathOverride, ok := s.Var("vm.ManyFiles.kernelPath"); ok {
+		kernelPath = kernelPathOverride
+	}
 
 	// Create a temporary directory that shared with the guest so the guest can put test logs.
 	td, err := ioutil.TempDir("/usr/local/tmp", "tast.vm.ManyFiles.")
@@ -128,7 +134,7 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	}
 
 	// Constructs a crosvm command
-	ps, err := storage.GenCrosvmCmd(td, ud, s.OutDir(), data.Kernel,
+	ps, err := storage.GenCrosvmCmd(td, ud, s.OutDir(), kernelPath,
 		s.DataPath(runManyFiles),
 		opt, scriptArgs)
 	if err != nil {
@@ -206,7 +212,7 @@ TestCaseLoop:
 			s.Fatal("Failed to drop caches: ", err)
 		}
 
-		// Sleep until virtiofs's cache is invalidated
+		// GoBigSleepLint: Sleep until virtiofs's cache is invalidated
 		if err != testing.Sleep(ctx, storage.VirtioFSCacheTimeoutSecond*time.Second) {
 			s.Fatal("Failed to sleep until cache is invalidated: ", err)
 		}
