@@ -72,7 +72,7 @@ const (
 	// CenterButtonClassName is the class name of the caption center button.
 	CenterButtonClassName = "FrameCenterButton"
 	// roundedCornerBubbleDialogDelegateViewClassName is the class name of the resize toggle menu.
-	roundedCornerBubbleDialogDelegateViewClassName = "roundedCornerBubbleDialogDelegateView"
+	roundedCornerBubbleDialogDelegateViewClassName = "RoundedCornerBubbleDialogDelegateView"
 	// ArcSplashScreenDialogViewClassName is the class name of the splash screen dialog.
 	ArcSplashScreenDialogViewClassName = "ArcSplashScreenDialogView"
 	checkBoxClassName                  = "Checkbox"
