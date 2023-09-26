@@ -789,7 +789,8 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 		return errors.Wrap(err, "requiring servo")
 	}
 
-	if h.DUT.Connected(ctx) {
+	// TODO(b/265193946): Remove this when dedede RO is fixed.
+	if h.DUT.Connected(ctx) && h.Board == "dedede" {
 		// Stainless reported thermal shutdown on some dedede duts while they
 		// were booting into recovery mode. Check for the temperature information
 		// before power-off for debugging purposes.
@@ -835,13 +836,73 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 			}
 		}
 	}
-	// According to Stainless, some DUTs were stuck at G3 while
-	// booting to recovery mode. Their ec logs reported that they
-	// were experiencing thermal shutdown. Match for the relevant
-	// texts and report in the returned error. If thermal shutdown
-	// is caught, attempt a few more retries to boot dut to recovery.
-	var ecStream string
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
+	// TODO(b/265193946): Remove this when dedede RO is fixed.
+	if h.Board == "dedede" {
+		// According to Stainless, some DUTs were stuck at G3 while
+		// booting to recovery mode. Their ec logs reported that they
+		// were experiencing thermal shutdown. Match for the relevant
+		// texts and report in the returned error. If thermal shutdown
+		// is caught, attempt a few more retries to boot dut to recovery.
+		var ecStream string
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			testing.ContextLog(ctx, "Capturing EC log")
+			if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
+				return errors.Wrap(err, "failed to set ec_uart_capture on")
+			}
+			defer func() {
+				if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.Off); err != nil {
+					testing.ContextLog(ctx, "Failed to disable ec_uart_capture: ", err)
+				}
+				// Sometimes capturing thermal shutdown fails because of
+				// noise data, for example, "thermal SHUTDOWN". Setting
+				// the 'chan' command before to hear from a particular channel
+				// would not work because sending servo rec command later
+				// reverses this setting, and enables all channels back.
+				// Save and upload the uart log to Stainless for debugging purposes.
+				outDir, ok := testing.ContextOutDir(ctx)
+				if ok {
+					destPath := filepath.Join(outDir, "ecUart.log")
+					if err := ioutil.WriteFile(destPath, []byte(ecStream), 0666); err != nil {
+						testing.ContextLog(ctx, "Failed to write ecUart.log: ", err)
+					}
+				} else {
+					testing.ContextLog(ctx, "Failed to find test output directory")
+				}
+
+			}()
+
+			if err := h.Servo.SetPowerState(ctx, recType); err != nil {
+				return errors.Wrapf(err, "setting power state to %s", recType)
+			}
+			out, err := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
+			if err != nil {
+				return errors.Wrap(err, "failed to read ec stream")
+			}
+			ecStream = out
+
+			// Based on chipset_shutdown_reason defined in ec_command.h found under the
+			// ec repo, 32776 would refer to thermal shutdown.
+			var (
+				regexpThermalShutdown      = `(?i)thermal shutdown`
+				regexpShutdownReason       = `chipset_force_shutdown\(\)\s+32776`
+				regexpMatchThermalShutdown = `(` + regexpThermalShutdown + `|` + regexpShutdownReason + `)`
+			)
+			thermalShutdown := regexp.MustCompile(regexpMatchThermalShutdown).FindStringSubmatch(ecStream)
+			if len(thermalShutdown) != 0 {
+				testing.ContextLog(ctx, "Warning!!! Captured thermal shutdown")
+				currPowerState, err := h.Servo.GetECSystemPowerState(ctx)
+				if err != nil {
+					return errors.Wrap(err, "failed to check for powerstate after thermal shutdown detected")
+				}
+				if currPowerState == "G3" {
+					return errors.Errorf("captured %s at G3 after rebooting dut to recovery", thermalShutdown)
+				}
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 3 * time.Minute, Interval: 3 * time.Second}); err != nil {
+			return err
+		}
+	} else {
 		testing.ContextLog(ctx, "Capturing EC log")
 		if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
 			return errors.Wrap(err, "failed to set ec_uart_capture on")
@@ -850,54 +911,10 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 			if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.Off); err != nil {
 				testing.ContextLog(ctx, "Failed to disable ec_uart_capture: ", err)
 			}
-			// Sometimes capturing thermal shutdown fails because of
-			// noise data, for example, "thermal SHUTDOWN". Setting
-			// the 'chan' command before to hear from a particular channel
-			// would not work because sending servo rec command later
-			// reverses this setting, and enables all channels back.
-			// Save and upload the uart log to Stainless for debugging purposes.
-			outDir, ok := testing.ContextOutDir(ctx)
-			if ok {
-				destPath := filepath.Join(outDir, "ecUart.log")
-				if err := ioutil.WriteFile(destPath, []byte(ecStream), 0666); err != nil {
-					testing.ContextLog(ctx, "Failed to write ecUart.log: ", err)
-				}
-			} else {
-				testing.ContextLog(ctx, "Failed to find test output directory")
-			}
-
 		}()
-
 		if err := h.Servo.SetPowerState(ctx, recType); err != nil {
 			return errors.Wrapf(err, "setting power state to %s", recType)
 		}
-		out, err := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
-		if err != nil {
-			return errors.Wrap(err, "failed to read ec stream")
-		}
-		ecStream = out
-
-		// Based on chipset_shutdown_reason defined in ec_command.h found under the
-		// ec repo, 32776 would refer to thermal shutdown.
-		var (
-			regexpThermalShutdown      = `(?i)thermal shutdown`
-			regexpShutdownReason       = `chipset_force_shutdown\(\)\s+32776`
-			regexpMatchThermalShutdown = `(` + regexpThermalShutdown + `|` + regexpShutdownReason + `)`
-		)
-		thermalShutdown := regexp.MustCompile(regexpMatchThermalShutdown).FindStringSubmatch(ecStream)
-		if len(thermalShutdown) != 0 {
-			testing.ContextLog(ctx, "Warning!!! Captured thermal shutdown")
-			currPowerState, err := h.Servo.GetECSystemPowerState(ctx)
-			if err != nil {
-				return errors.Wrap(err, "failed to check for powerstate after thermal shutdown detected")
-			}
-			if currPowerState == "G3" {
-				return errors.Errorf("captured %s at G3 after rebooting dut to recovery", thermalShutdown)
-			}
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 3 * time.Minute, Interval: 3 * time.Second}); err != nil {
-		return err
 	}
 
 	if usbMux == servo.USBMuxDUT {
