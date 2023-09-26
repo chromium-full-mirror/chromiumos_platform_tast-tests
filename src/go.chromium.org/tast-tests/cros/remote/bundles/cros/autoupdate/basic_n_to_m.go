@@ -38,7 +38,7 @@ func init() {
 
 func BasicNToM(ctx context.Context, s *testing.State) {
 	paygen := s.FixtValue().(updateutil.WithPaygen).Paygen()
-	filtered := paygen.FilterChannel("stable").FilterDeltaTypes([]string{"OMAHA"})
+	filtered := paygen.FilterChannel("stable")
 	if err := util.NToMTest(ctx, s.DUT(), s.OutDir(), s.RPCHint(), &util.Operations{}, filtered, 3 /*deltaM*/); err != nil {
 		s.Error("Failed to complete the N to M update test: ", err)
 	}

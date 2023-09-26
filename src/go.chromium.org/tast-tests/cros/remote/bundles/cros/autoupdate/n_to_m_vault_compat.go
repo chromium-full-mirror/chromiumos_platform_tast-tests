@@ -73,7 +73,7 @@ func init() {
 
 func NToMVaultCompat(ctx context.Context, s *testing.State) {
 	paygen := s.FixtValue().(updateutil.WithPaygen).Paygen()
-	filtered := paygen.FilterChannel("stable").FilterDeltaTypes([]string{"OMAHA"})
+	filtered := paygen.FilterChannel("stable")
 
 	dut := s.DUT()
 

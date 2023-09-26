@@ -165,7 +165,7 @@ func EnterpriseRollbackPreviousVersion(ctx context.Context, s *testing.State) {
 
 	// Find the latest release for milestone M.
 	paygen := s.FixtValue().(updateutil.WithPaygen).Paygen()
-	filtered := paygen.FilterBoard(deviceInfo.Board).FilterDeltaType("OMAHA").FilterMilestone(targetMilestone)
+	filtered := paygen.FilterBoard(deviceInfo.Board).FilterMilestone(targetMilestone)
 	latest, err := filtered.FindLatest()
 	if err != nil {
 		// Unreleased boards are filtered with auto_update_stable, so there should
