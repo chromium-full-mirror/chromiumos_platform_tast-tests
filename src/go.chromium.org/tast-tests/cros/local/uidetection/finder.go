@@ -161,11 +161,13 @@ func (f *Finder) Within(other *Finder) *Finder {
 }
 
 // WithinA11yNode ensures that the element returned must be within the element returned by the a11y node finder on the screen.
+//
+// Does not wait for the a11y element to appear. If it may not exist yet, use uiauto's WaitForLocation to verify the element exists and is stable.
 func (f *Finder) WithinA11yNode(other *nodewith.Finder) *Finder {
 	return f.newConstraint(func(ctx context.Context, uda *Context, scaleFactor float64) (*coords.Rect, error) {
-		loc, err := uiauto.New(uda.tconn).WithPollOpts(uda.pollOpts).Location(ctx, other)
+		loc, err := uiauto.New(uda.tconn).ImmediateLocation(ctx, other)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to find enclosing a11y node")
 		}
 		px := coords.ConvertBoundsFromDPToPX(*loc, scaleFactor)
 		return &px, nil
@@ -392,14 +394,14 @@ func handleResizedScreenshots(ctx context.Context, uda *Context, resizingScaleFa
 
 	if uda.screenshotResizingStrategy == ResizeAsFallback {
 		testing.ContextLogf(ctx,
-			"INFO: resized screenshot by %.1fx looking for element %q, as it was not detected on the original screenshot.",
+			"INFO: resized screenshot by %.1fx looking for element %q, as it was not detected on the original screenshot",
 			resizingScaleFactor,
 			desc,
 		)
 	}
 
 	if uda.saveResizedScreenshots && len(transformedImagePng) == 0 {
-		testing.ContextLog(ctx, "INFO: a resized debug image was requested, but was not returned. Image size may have been too large.")
+		testing.ContextLog(ctx, "INFO: a resized debug image was requested, but was not returned. Image size may have been too large")
 		return
 	} else if !uda.saveResizedScreenshots || len(transformedImagePng) == 0 {
 		// No resized screenshot to save.
