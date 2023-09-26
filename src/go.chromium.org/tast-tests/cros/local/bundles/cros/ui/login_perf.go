@@ -758,6 +758,10 @@ func testFunction(
 
 	// The actual test function
 	testFunc := func(ctx context.Context, stopTracing func(ctx context.Context) error) error {
+		// Limit each test run to 2 minutes (so that we could retry early).
+		ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancel()
+
 		out, err := exec.Command("ps", "aux").Output()
 		testing.ContextLog(ctx, "ps aux result:")
 		testing.ContextLog(ctx, string(out))
@@ -869,10 +873,6 @@ func testFunction(
 			}
 			stopTracingCallback = cujRecorder.StopTracing
 		}
-
-		// Limit each test run to 2 minutes (so that we could retry early).
-		ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
-		defer cancel()
 
 		var err error
 		histograms, err = metrics.RunAndWaitAll(
