@@ -169,19 +169,14 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 
 	// Set up new network.
 	if params.vpn {
-		// L2TP VPN defaults to use the env IPv4 address as the DNS server.
 		searchDomain := []string{"test2-1.com", "test2-2.com"}
-		conn, err = vpn.StartConnection(ctx, baseR, vpn.TypeL2TPIPsec, vpn.WithSearchDomains(searchDomain))
+		conn, err = vpn.StartConnection(ctx, baseR, vpn.TypeIKEv2, vpn.WithSearchDomains(searchDomain))
 		if err != nil {
 			s.Fatal("Failed to connect vpn: ", err)
 		}
 		defer cleanupVPN(cleanupCtx)
-		nameserver, err := baseR.GetVethInAddrs(ctx)
-		if err != nil {
-			s.Fatal("Failed to get new network's addresses: ", err)
-		}
 		newConfig = dns.Config{
-			IPv4Nameservers:      []string{nameserver.IPv4Addr.String()},
+			IPv4Nameservers:      []string{conn.Server.OverlayIPv4}, // tast test IKEv2 server pushes server overlay address as DNS by default.
 			IPv4DomainSearchList: searchDomain,
 		}
 	} else {
