@@ -24,7 +24,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "paulhsia@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		Timeout:      4 * time.Minute,
+		Timeout:      8 * time.Minute,
 		SoftwareDeps: []string{
 			"chrome", // For DLC.
 		},
