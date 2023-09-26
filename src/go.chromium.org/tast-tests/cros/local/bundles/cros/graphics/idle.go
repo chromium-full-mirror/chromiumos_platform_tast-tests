@@ -71,16 +71,6 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 			Fixture:           "chromeGraphicsIdleArc",
 		}, {
-			Name:              "gem_idle",
-			Val:               gemIdle,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
-			Fixture:           "chromeGraphicsIdle",
-		}, {
-			Name:              "gem_idle_arc",
-			Val:               gemIdle,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
-			Fixture:           "chromeGraphicsIdleArc",
-		}, {
 			Name:              "i915_min_clock",
 			Val:               i915MinClock,
 			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
@@ -310,71 +300,6 @@ func psr(ctx context.Context) error {
 		testing.ContextLogf(ctx, "Found active with kernel: %s", kernelVersion)
 		return nil
 	}, &testing.PollOptions{
-		Timeout: 1 * time.Minute,
-	}); err != nil {
-		return err
-	}
-	return nil
-}
-
-// gemIdle checks that we can get all gem objects to become idle (i.e. the i915_gem_active list or i915_gem_objects client/process gem object counts need to go to 0).
-func gemIdle(ctx context.Context) error {
-	kernelVersion, _, err := sysutil.KernelVersionAndArch()
-	if err != nil {
-		return errors.Wrap(err, "failed to get kernel version")
-	}
-
-	if kernelVersion.IsOrLater(5, 10) {
-		// The data needed for this test was removed in the 5.10 kernel.
-		// See b/179453336 for details.
-		testing.ContextLog(ctx, "Skipping gem idle check on kernel 5.10 and above")
-		return nil
-	}
-
-	perProcessCheck := false
-	gemPath, err := graphics.GetValidKernelDriverDebugFile(ctx, []string{
-		"i915_gem_active",
-	})
-	if err != nil {
-		gemPath, err = graphics.GetValidKernelDriverDebugFile(ctx, []string{
-			"i915_gem_objects",
-		})
-		if err != nil {
-			return errors.Wrap(err, "no gem paths found")
-		}
-		perProcessCheck = true
-	}
-
-	var pollFunc func(context.Context) error
-	if perProcessCheck {
-		// Check 4.4 and later kernels
-		pollFunc = func(ctx context.Context) error {
-			f, err := os.ReadFile(gemPath)
-			if err != nil {
-				return errors.Wrapf(err, "failed to open %v", gemPath)
-			}
-
-			re := regexp.MustCompile("\n.*\\(0 active,")
-			if re.FindStringSubmatch(string(f)) == nil {
-				return errors.Errorf("can't find 0 gem activities in %v", gemPath)
-			}
-			return nil
-		}
-	} else {
-		// Check pre 4.4 kernels
-		pollFunc = func(ctx context.Context) error {
-			f, err := os.ReadFile(gemPath)
-			if err != nil {
-				return errors.Wrapf(err, "failed to open %v", gemPath)
-			}
-			re := regexp.MustCompile("Total 0 objects")
-			if re.FindStringSubmatch(string(f)) == nil {
-				return errors.Errorf("can't find 0 gem activities in %v", gemPath)
-			}
-			return nil
-		}
-	}
-	if err := testing.Poll(ctx, pollFunc, &testing.PollOptions{
 		Timeout: 1 * time.Minute,
 	}); err != nil {
 		return err
