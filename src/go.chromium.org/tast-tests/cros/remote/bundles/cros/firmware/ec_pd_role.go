@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
+	"golang.org/x/exp/slices"
 )
 
 func init() {
@@ -144,14 +145,7 @@ func ECPDRole(ctx context.Context, s *testing.State) {
 			// When powered off, we found two duts on Stainless with their pd dual-role status
 			// reported as "off", rather than "force sink".
 			modelsWithPDOffDurG3 := []string{"elm", "hana"}
-			if func(modelName string, modelPool []string) bool {
-				for _, m := range modelPool {
-					if modelName == m {
-						return true
-					}
-				}
-				return false
-			}(h.Model, modelsWithPDOffDurG3) {
+			if slices.Contains(modelsWithPDOffDurG3, h.Model) {
 				step.expectStatus = servo.USBPdDualRoleOff
 			}
 		}
