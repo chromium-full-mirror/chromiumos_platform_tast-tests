@@ -773,7 +773,7 @@ func CloseFolderView(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 
 	// Wait for a folder item to show up as a signal that the folder show animation completed.
-	if err := ui.WaitUntilExists(nodewith.HasClass(ExpandedItemsClass).Ancestor(folderView).Nth(0))(ctx); err != nil {
+	if err := ui.WaitUntilExists(nodewith.HasClass(ExpandedItemsClass).Ancestor(folderView).First())(ctx); err != nil {
 		return errors.Wrap(err, "failed to find item within folder")
 	}
 
@@ -988,7 +988,7 @@ func DragItemToItem(tconn *chrome.TestConn, src, dest *nodewith.Finder) uiauto.A
 		}
 
 		// Get destination location during drag.
-		if err := ui.WaitForLocation(dest)(ctx); err != nil {
+		if err := ui.WithInterval(time.Second).WaitForLocation(dest)(ctx); err != nil {
 			return errors.Wrap(err, "destination location not stabilized")
 		}
 
@@ -1065,7 +1065,7 @@ func RemoveIconFromFolder(tconn *chrome.TestConn, folderFinder *nodewith.Finder)
 		ui.WaitForLocation(folderView)(ctx)
 
 		// Get the location for the first item in the folder.
-		folderItem := nodewith.HasClass(ExpandedItemsClass).Ancestor(nodewith.HasClass("AppListFolderView")).Nth(0)
+		folderItem := nodewith.HasClass(ExpandedItemsClass).Ancestor(nodewith.HasClass("AppListFolderView")).First()
 
 		if err := ui.WaitUntilExists(folderItem)(ctx); err != nil {
 			return errors.Wrap(err, "folder item did not appear")
@@ -1256,6 +1256,10 @@ func GetFolderSize(ctx context.Context, tconn *chrome.TestConn, folder *nodewith
 	// Get |folderItemsInfo| which is used to get the size of the folder.
 	folderView := nodewith.HasClass("AppListFolderView")
 	folderItems := nodewith.HasClass("AppListItemView").Ancestor(folderView)
+	if err := ui.WaitUntilExists(folderItems.First())(ctx); err != nil {
+		return 0, errors.Wrap(err, "failed to find item within folder")
+	}
+
 	folderItemsInfo, err := ui.NodesInfo(ctx, folderItems)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to find folderItemsInfo")
