@@ -223,10 +223,10 @@ func CheckIfL850VerizonAndFixDefaultAPN(ctx context.Context) {
 	}
 	// Disable/Enable the modem to ensure shill gets the new modem profiles, otherwise shill will
 	// use the previous value on the next connection attempt and it will override it again.
-	if err := modem.Disable(ctx); err != nil {
+	if err := modem.DisableUnchecked(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to disable: ", err)
 	}
-	if err := modem.Enable(ctx); err != nil {
+	if err := modem.EnableUnchecked(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to enable: ", err)
 	}
 	return

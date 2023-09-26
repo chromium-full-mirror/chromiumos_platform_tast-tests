@@ -472,6 +472,14 @@ func (m *Modem) IsConnected(ctx context.Context) (bool, error) {
 	return false, nil
 }
 
+// EnableUnchecked sets the ModemEnable state to true.
+func (m *Modem) EnableUnchecked(ctx context.Context) error {
+	if err := m.Call(ctx, mmconst.ModemEnable, true).Err; err != nil {
+		return errors.Wrap(err, "modem enable failed")
+	}
+	return nil
+}
+
 // Enable sets the ModemEnable state to true and calls EnsureEnabled.
 func (m *Modem) Enable(ctx context.Context) error {
 	if err := m.Call(ctx, mmconst.ModemEnable, true).Err; err != nil {
@@ -479,6 +487,14 @@ func (m *Modem) Enable(ctx context.Context) error {
 	}
 	if err := m.EnsureEnabled(ctx); err != nil {
 		return errors.Wrap(err, "modem not enabled")
+	}
+	return nil
+}
+
+// DisableUnchecked sets the ModemEnable state to false.
+func (m *Modem) DisableUnchecked(ctx context.Context) error {
+	if err := m.Call(ctx, mmconst.ModemEnable, false).Err; err != nil {
+		return errors.Wrap(err, "modem disable failed")
 	}
 	return nil
 }
