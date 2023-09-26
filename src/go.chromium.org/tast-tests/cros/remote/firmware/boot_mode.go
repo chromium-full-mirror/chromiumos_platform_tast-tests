@@ -337,6 +337,11 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 			}
 		}
 		if transitionToDev {
+			closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+			if err != nil {
+				return errors.Wrap(err, "failed to enable capture EC UART")
+			}
+			defer func() { errReturn = errors.Join(errReturn, closeUART(ctx)) }()
 			// 1. Set power_state to 'rec', but don't show the DUT a USB image to boot from.
 			// 2. From the firmware screen that appears, press keys to transition to dev mode.
 			//    The specific keypresses will depend on the DUT's ModeSwitcherType.
@@ -382,6 +387,11 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 			// 2. From the firmware screen that appears, press keys to transition to dev mode.
 			//    The specific keypresses will depend on the DUT's ModeSwitcherType.
 			testing.ContextLog(ctx, "Rebooting to enter dev mode first")
+			closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+			if err != nil {
+				return errors.Wrap(err, "failed to enable capture EC UART")
+			}
+			defer func() { errReturn = errors.Join(errReturn, closeUART(ctx)) }()
 			if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 				return err
 			}
@@ -494,7 +504,7 @@ var resetTypePowerState = map[ResetType]servo.PowerStateValue{
 // Dev mode will be retained, but rec mode will default back to normal mode.
 // This has the side-effect of disconnecting the RPC connection.
 // Pass the option AllowGBBForce if you know that the DUT is using GBB flags and won't wait for Ctrl-D or Ctrl-U to be pressed.
-func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType, opts ...ModeSwitchOption) error {
+func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType, opts ...ModeSwitchOption) (retErr error) {
 	h := ms.Helper
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "requiring servo")
@@ -556,6 +566,14 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 			}
 		}
 	} else {
+		// Capture EC UART if booting into dev mode.
+		if fromMode == fwCommon.BootModeDev && !msOptsContain(opts, AllowGBBForce) {
+			closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+			if err != nil {
+				return errors.Wrap(err, "failed to enable capture EC UART")
+			}
+			defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }()
+		}
 		powerState, ok := resetTypePowerState[resetType]
 		if !ok {
 			return errors.Errorf("no power state associated with resetType %v", resetType)
@@ -607,8 +625,17 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 
 	// If in dev mode, bypass the TO_DEV screen.
 	if fromMode == fwCommon.BootModeDev && !msOptsContain(opts, AllowGBBForce) {
-		if err := ms.FwScreenToDevMode(ctx, opts...); err != nil {
-			return errors.Wrap(err, "fw screen to developer mode")
+		testing.ContextLog(ctx, "Waiting until keyboard is ready")
+		if err := h.Servo.WaitFirmwareKeyboard(ctx, h.Config.FirmwareScreen); err != nil {
+			// If this fails, this is the same as sleeping for the waitTimeout
+			testing.ContextLog(ctx, "Failed to wait for keyboard: ", err)
+		}
+		params := RunBypasser{BypasserMethod: ms.bypasser.BypassDevMode, RepeatBypasser: true, WaitUntilDUTConnected: h.Config.DelayRebootToPing}
+		if msOptsContain(opts, WaitSoftwareSync) {
+			params.WaitUntilDUTConnected += h.Config.SoftwareSyncUpdate
+		}
+		if err := ms.RunBypasserUntilDUTConnected(ctx, params); err != nil {
+			return errors.Wrap(err, "bypass dev mode")
 		}
 	} else if fromMode == fwCommon.BootModeUSBDev && !msOptsContain(opts, AllowGBBForce) {
 		if err := ms.fwScreenToUSBDevMode(ctx, opts...); err != nil {
@@ -658,21 +685,23 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 // The actual behavior depends on the ModeSwitcherType.
 func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitchOption) error {
 	h := ms.Helper
-	testing.ContextLog(ctx, "Set DFP mode")
-	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
-		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
+	testing.ContextLog(ctx, "Waiting until keyboard is ready")
+	if err := h.Servo.WaitFirmwareKeyboard(ctx, h.Config.FirmwareScreen); err != nil {
+		// If this fails, this is the same as sleeping for the waitTimeout
+		testing.ContextLog(ctx, "Failed to wait for keyboard: ", err)
 	}
-	totalTimeout := h.Config.DelayRebootToPing + h.Config.FirmwareScreen
+
+	if err := ms.bypasser.TriggerRecToDev(ctx); err != nil {
+		return errors.Wrap(err, "failed to bypass to dev")
+	}
+
+	// It takes some time to powerwash, etc. when going from normal -> dev, and at the end, we're at the dev mode screen and need to press Ctrl-D (or equivalent).
+	// Reconnect to the DUT.
+	params := RunBypasser{BypasserMethod: ms.bypasser.BypassDevMode, RepeatBypasser: true, WaitUntilDUTConnected: h.Config.DelayRebootToPing + h.Config.FirmwareScreen}
 	if msOptsContain(opts, WaitSoftwareSync) {
-		totalTimeout += h.Config.SoftwareSyncUpdate
+		params.WaitUntilDUTConnected += h.Config.SoftwareSyncUpdate
 	}
-	params := RunBypasser{BypasserMethod: ms.bypasser.TriggerRecToDev, RepeatBypasser: true, WaitUntilDUTConnected: totalTimeout}
-	// Repeating bypasser's sequence of presses might unintentionally
-	// power off Wilco devices, and devices running TabletDetachableSwitcher
-	// because the first effective press might land at the wrong location.
-	if h.Config.PowerButtonDevSwitch || h.Config.ModeSwitcherType == TabletDetachableSwitcher {
-		params.RepeatBypasser = false
-	}
+
 	return ms.RunBypasserUntilDUTConnected(ctx, params)
 }
 
@@ -822,6 +851,7 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 			return errors.Wrapf(err, "setting usb mux state to %s while DUT is off", usbMux)
 		}
 	}
+	testing.ContextLogf(ctx, "Sleeping for %s (UsbDisableTime)", UsbDisableTime)
 	// GoBigSleepLint: Powering off the USB mux has some side effects that take some time. Specifically, you can't turn
 	// it back on again too quickly or the USB stick fails.
 	if err := testing.Sleep(ctx, UsbDisableTime); err != nil {
@@ -912,6 +942,28 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 	}
 
 	if usbMux == servo.USBMuxDUT {
+		testing.ContextLog(ctx, "Waiting until keyboard is ready")
+		waitTimeout := h.Config.FirmwareScreen
+		if err := h.Servo.WaitFirmwareKeyboard(ctx, waitTimeout); err != nil {
+			// If this fails, this is the same as sleeping for the waitTimeout
+			testing.ContextLog(ctx, "Failed to get to firmware screen: ", err)
+		}
+		testing.ContextLog(ctx, "Set DFP mode")
+		if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+			testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
+			// If we have a battery, and the servo supports pd role, turn the power off to force DUT to DFP
+			if h.Config.HasECCapability(ECBattery) {
+				ok, err := h.Servo.HasControl(ctx, string(servo.PDRole))
+				if err != nil {
+					testing.ContextLogf(ctx, "Failed to check for %q control: %s", servo.PDRole, err)
+				} else if ok {
+					err = h.Servo.SetPDRole(ctx, servo.PDRoleSnk)
+					if err != nil {
+						testing.ContextLogf(ctx, "Failed to set pd role to %q: %s", servo.PDRoleSnk, err)
+					}
+				}
+			}
+		}
 		testing.ContextLog(ctx, "Enabling USB")
 		if err := h.Servo.SetUSBMuxState(ctx, usbMux); err != nil {
 			return errors.Wrapf(err, "setting usb mux state to %s at rec screen", usbMux)

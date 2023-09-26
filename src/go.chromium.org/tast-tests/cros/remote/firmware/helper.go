@@ -1624,12 +1624,11 @@ func (h *Helper) CheckBrokenScreen(ctx context.Context) error {
 			return errors.Wrap(err, "failed to run the reboot cmd")
 		}
 	}
-	testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
-	// GoBigSleepLint: Sleeping for model specific time.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		return errors.Wrapf(err, "sleeping for %s (FirmwareScreen) to wait for firmware screen", h.Config.FirmwareScreen)
+	testing.ContextLog(ctx, "Waiting until keyboard is ready")
+	if err := h.Servo.WaitFirmwareKeyboard(ctx, h.Config.FirmwareScreen); err != nil {
+		// If this fails, this is the same as sleeping for the FirmwareScreen time.
+		testing.ContextLog(ctx, "Failed to wait for keyboard: ", err)
 	}
-
 	testing.ContextLog(ctx, "Checking if it reaches Broken Screen")
 	if err := h.WaitDUTConnectDuringBootFromUSB(ctx, false); err != nil {
 		return errors.Wrap(err, "failed to reach Broken Screen")
