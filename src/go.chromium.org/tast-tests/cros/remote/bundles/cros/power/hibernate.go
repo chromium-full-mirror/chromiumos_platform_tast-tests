@@ -15,11 +15,13 @@ import (
 )
 
 const (
-	hibernateCyclesVars    = "cycles"
-	hibernateCyclesDefault = 1
-	hibernateEmailVar      = "email"
-	hibernatePasswordVar   = "password"
-	hibernateCycleIDVar    = "cycleID"
+	hibernateCyclesVars                   = "cycles"
+	hibernateCyclesDefault                = 1
+	hibernateEmailVar                     = "email"
+	hibernatePasswordVar                  = "password"
+	hibernateCycleIDVar                   = "cycleID"
+	hibernateSimulateMemPressureMB        = "simulateMemPressureMB"
+	hibernateSimulateMemPressureMBDefault = 0
 )
 
 type hibernateMode int
@@ -44,7 +46,7 @@ func init() {
 		// Allow for a larger number of cycles for stress testing. In case of a hang the
 		// test will time out on one of the shorter context specific timeouts.
 		Timeout: 24 * time.Hour,
-		Vars:    []string{hibernateCyclesVars, hibernateEmailVar, hibernatePasswordVar, hibernateCycleIDVar},
+		Vars:    []string{hibernateCyclesVars, hibernateEmailVar, hibernatePasswordVar, hibernateCycleIDVar, hibernateSimulateMemPressureMB},
 		VarDeps: []string{tape.ServiceAccountVar},
 		Attr:    []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
@@ -117,6 +119,22 @@ func Hibernate(ctx context.Context, s *testing.State) {
 
 	if cycleID > 0 {
 		ht.OverrideCycleID(uint32(cycleID))
+	}
+
+	simulateMemPressureMB := hibernateSimulateMemPressureMBDefault
+	if v, ok := s.Var(hibernateSimulateMemPressureMB); ok {
+		var err error
+
+		simulateMemPressureMB, err = strconv.Atoi(v)
+		if err != nil {
+			s.Fatalf("Failed to parse %s from string %s", hibernateSimulateMemPressureMB, v)
+		} else if simulateMemPressureMB < 0 || simulateMemPressureMB > 32000 {
+			s.Fatalf("Invalid numeric value provided for %s : %d", hibernateSimulateMemPressureMB, simulateMemPressureMB)
+		}
+	}
+
+	if simulateMemPressureMB > 0 {
+		ht.SetSimulateMemoryPressure(uint32(simulateMemPressureMB))
 	}
 
 	ht.SetURLsForTabs([]string{"about:blank", "about:blank", "about:blank"})

@@ -55,6 +55,7 @@ type Tester struct {
 	isFirstCycle    bool
 	logger          logger
 	rpcHint         *testing.RPCHint
+	memPressureMB   uint32
 }
 
 // NewTester creates and returns an instance of Tester.
@@ -87,6 +88,10 @@ func (t *Tester) CleanUp(ctx context.Context) error {
 func (t *Tester) OverrideCycleID(cycleID uint32) {
 	t.cycleID = cycleID
 	t.overrideCycleID = true
+}
+
+func (t *Tester) SetSimulateMemoryPressure(memMB uint32) {
+	t.memPressureMB = memMB
 }
 
 // HibernateAndResume performs a full hibernate cycle of hibernating the system
@@ -283,6 +288,67 @@ func (t *Tester) disableConsoleSuspend(ctx context.Context) error {
 	return nil
 }
 
+func (t *Tester) forceMemPressure(ctx context.Context, sizeMB uint32) error {
+	cmdCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
+
+	t.logger.Logf("Allocating %dMB of memory...", sizeMB)
+	// We use ramfs rather than tmpfs for a few reasons. The primary reason is that
+	// ramfs is not evictable so we don't have to worry about it being compressible or
+	// not because it will never be swapped out anyway. Additionally, it's not size
+	// restricted to the size of the mount as it would be with tmpfs.
+	//
+	// We also use this as an opportunity to check for any corruption by storing
+	// the sha256 of this large allocation along with it which can be verified on
+	// resume.
+	allocCmd := `
+	mountpoint /run/mem_pressure || \
+	mkdir /run/mem_pressure 2>/dev/null ; \
+	mount -t ramfs ramfs /run/mem_pressure ; \
+	dd if=/dev/urandom of=/run/mem_pressure/alloc bs=1M count=%d && \
+	sha256sum /run/mem_pressure/alloc | cut -f1 -d' ' | tee /run/mem_pressure/alloc_sha256
+	`
+	allocCmdToRun := fmt.Sprintf(allocCmd, sizeMB)
+	out, err := t.dut.Conn().CommandContext(cmdCtx, "/bin/sh", "-c", allocCmdToRun).CombinedOutput()
+	if err != nil {
+		return errors.Wrapf(err, "allocating memory failed: %s", out)
+	}
+
+	return nil
+}
+
+func (t *Tester) verifyMemPressureHashOnResume(ctx context.Context) error {
+	cmdCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
+
+	t.logger.Log("Verifiying mem pressure hash after resume...")
+	verifyCmd := `
+	set -e ; \
+	[ -f /run/mem_pressure/alloc ] && \
+	COMPUTED_HASH=$(sha256sum /run/mem_pressure/alloc | cut -f1 -d' '); \
+	INMEM_HASH=$(cat /run/mem_pressure/alloc_sha256); \
+	if [ "$COMPUTED_HASH" = "$INMEM_HASH" ]; then \
+		echo -n "OK"
+		umount /run/mem_pressure
+		exit 0; \
+	fi; \
+	echo -n "FAILED HASH VERIFICATION, GOT:$COMPUTED_HASH WANTED:$INMEM_HASH"; \
+	exit 1;
+	`
+	out, err := t.dut.Conn().CommandContext(cmdCtx, "/bin/sh", "-c", verifyCmd).CombinedOutput()
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("failed to verify mem pressure: %s", string(out)))
+	}
+
+	if strings.Contains(string(out), "FAILED HASH VERIFICATION") {
+		msg := fmt.Sprintf("memory pressure contents didn't match: %s", string(out))
+		return errors.New(msg)
+	}
+
+	t.logger.Logf("Mem pressure hash Verification result: %s", out)
+	return nil
+}
+
 func (t *Tester) waitForDutUnreachable(ctx context.Context) error {
 	defer t.dut.Close(ctx)
 	if err := t.dut.WaitUnreachable(ctx); err != nil {
@@ -296,6 +362,12 @@ func (t *Tester) waitForDutUnreachable(ctx context.Context) error {
 func (t *Tester) hibernate(ctx context.Context, reboot bool) error {
 	if err := t.disableConsoleSuspend(ctx); err != nil {
 		return err
+	}
+
+	if t.memPressureMB > 0 {
+		if err := t.forceMemPressure(ctx, t.memPressureMB); err != nil {
+			return err
+		}
 	}
 
 	cmdCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
@@ -384,6 +456,12 @@ func (t *Tester) postResumeSteps(ctx context.Context) error {
 	// a hibernate/resume cycle
 	if err := t.verifyKernelHibernateRestoreLogs(ctx, kernelLog); err != nil {
 		return err
+	}
+
+	if t.memPressureMB > 0 {
+		if err := t.verifyMemPressureHashOnResume(ctx); err != nil {
+			return err
+		}
 	}
 
 	return nil
