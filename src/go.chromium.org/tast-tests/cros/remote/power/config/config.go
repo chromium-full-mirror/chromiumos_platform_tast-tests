@@ -99,12 +99,7 @@ func ValidateConfig(c *Config) (tests, orderedTests, unorderedTests []string, er
 	}
 
 	testsInOrder := make(map[string]bool)
-	// Verify ordered tests are included in the tests defined by personas.
 	for _, t := range c.Control.FixedOrderTests {
-		if !allTests[t] {
-			err = errors.Errorf("fixed order test %s is not included in any personas", t)
-			return nil, nil, nil, err
-		}
 		testsInOrder[t] = true
 	}
 

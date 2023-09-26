@@ -271,9 +271,7 @@ func TestValidateConfig(t *gotesting.T) {
 			},
 		}},
 	}
-	if _, _, _, err = ValidateConfig(&unknownOrderedTests); err == nil {
-		t.Error("ValidateConfig didn't return error for unknown ordered tests")
-	} else if !strings.Contains(err.Error(), "fixed order test") {
-		t.Error("ValidateConfig returned an incorrect error for unknown ordered tests; got:", err)
+	if _, _, _, err = ValidateConfig(&unknownOrderedTests); err != nil {
+		t.Error("ValidateConfig returned error for ordered tests not in any personas:", err)
 	}
 }
