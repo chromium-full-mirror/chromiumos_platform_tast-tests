@@ -309,8 +309,8 @@ func (s *OSSettings) SetToggleOption(cr *chrome.Chrome, optionName string, expec
 			// Ensure the toggle is visible
 			s.ui.FocusAndWait(optionFinder),
 			s.ui.WaitUntilEnabled(optionFinder),
-			s.ui.LeftClick(optionFinder),
-			s.ui.WaitUntilCheckedState(optionFinder, expected),
+			s.ui.LeftClickUntil(optionFinder,
+				s.ui.WithTimeout(3*time.Second).WaitUntilCheckedState(optionFinder, expected)),
 		)(ctx)
 	}
 }
