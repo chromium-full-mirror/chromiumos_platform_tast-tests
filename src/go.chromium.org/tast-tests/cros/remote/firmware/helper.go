@@ -641,9 +641,23 @@ func (h *Helper) validateUSBImage(ctx context.Context, usbdev string, cloudStora
 //
 // CAUTION: You must set ephemeraldevserver='false' in your control file in order to flash usb drives.
 func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudStorage, opts ...SetupUSBOption) (retErr error) {
-	usbdev, err := h.CheckUSBOnServoHost(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to check the usb device on servo host")
+	usbdev := ""
+	// Do a simple ImageUSBKeyDev if the user said not to flash, don't check the device very carefully.
+	if cloudStorage == nil {
+		var err error
+		usbdev, err = h.Servo.GetStringTimeout(ctx, servo.ImageUSBKeyDev, time.Second*90)
+		if err != nil {
+			return errors.Wrap(err, "servo call image_usbkey_dev failed")
+		}
+		if usbdev == "" {
+			return errors.New("no USB key detected")
+		}
+	} else {
+		var err error
+		usbdev, err = h.CheckUSBOnServoHost(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to check the usb device on servo host")
+		}
 	}
 
 	if valid, err := h.validateUSBImage(ctx, usbdev, cloudStorage, opts...); valid && err == nil {
