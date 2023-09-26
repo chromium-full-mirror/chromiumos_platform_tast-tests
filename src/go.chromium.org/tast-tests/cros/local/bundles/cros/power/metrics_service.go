@@ -2,6 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// TODO(zactu): This file will be removed in the future. The
+// functionalities will be provided by remote power test services
+// such as the device_setup_service instead.
+
 package power
 
 import (
