@@ -856,10 +856,9 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 	}
 	// Resetting ethernet dongle might speed up connection to the dut.
 	// At the moment, it seems that only servo v4.1 supports this feature.
-	// Don't fail if the control didn't work, and log the error instead.
 	if wcOptsContain(opts, ResetEthernetDongle) {
 		if err := h.ResetServoEthernetDongle(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to reset ethernet dongle: ", err)
+			return errors.Wrap(err, "failed to reset ethernet")
 		}
 	}
 	testing.ContextLogf(ctx, "Waiting for %s to connect", h.DUT.HostName())
@@ -1703,7 +1702,7 @@ func (h *Helper) ResetServoEthernetDongle(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to check control %v", servo.DutEthPwrEn)
 	}
 	if !ok {
-		return errors.Errorf("control %v doesn't exist", servo.DutEthPwrEn)
+		return nil
 	}
 	testing.ContextLog(ctx, "Resetting the ethernet adapter")
 	return h.Servo.ToggleOffOn(ctx, servo.DutEthPwrEn)
