@@ -88,7 +88,7 @@ func init() {
 				chrome.EnableFeatures("QsRevamp"),
 			}, nil
 		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -116,16 +116,16 @@ func init() {
 	fixtureConfig := arc.DefaultBootedFixtureConfig()
 	fixtureConfig.PlayStoreOptin = true
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.GAIALogin(chrome.Creds{
-					User: s.RequiredVar("assistant.username"),
-					Pass: s.RequiredVar("assistant.password"),
-				}),
-				VerboseLogging(),
-				ashNoNudgesExtraArg(),
-				chrome.ExtraArgs(arc.DisableSyncFlags()...),
-			}, nil
-		}
+		return []chrome.Option{
+			chrome.GAIALogin(chrome.Creds{
+				User: s.RequiredVar("assistant.username"),
+				Pass: s.RequiredVar("assistant.password"),
+			}),
+			VerboseLogging(),
+			ashNoNudgesExtraArg(),
+			chrome.ExtraArgs(arc.DisableSyncFlags()...),
+		}, nil
+	}
 	// Assistant fixtures use assistant test GAIA for tests with Arc++ feature
 	// as we have to make sure that necessary bits are enabled to run our tests,
 	// e.g. device apps.
@@ -139,8 +139,8 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
-		Vars: []string{"assistant.username", "assistant.password"},
-		Impl: arc.NewArcBootedFixture(fixtureConfig),
+		Vars:            []string{"assistant.username", "assistant.password"},
+		Impl:            arc.NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		PostTestTimeout: arc.PostTestTimeout,
 		ResetTimeout:    arc.ResetTimeout,
@@ -342,7 +342,7 @@ func init() {
 				ashNoNudgesExtraArg(),
 			}, nil
 		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
