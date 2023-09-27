@@ -113,7 +113,7 @@ func VAAPIUnittest(ctx context.Context, s *testing.State) {
 	if report, err := gtest.New(
 		filepath.Join(chrome.BinTestDir, exec),
 		gtest.Logfile(filepath.Join(s.OutDir(), exec+".log")),
-		gtest.ExtraArgs("--test_data_path="+tempDir+"/"),
+		gtest.ExtraArgs("--single-process-tests", "--test_data_path="+tempDir+"/"),
 		gtest.Filter(decoderVal.gtestFilter),
 	).Run(ctx); err != nil {
 		s.Errorf("Failed to run %v: %v", exec, err)
