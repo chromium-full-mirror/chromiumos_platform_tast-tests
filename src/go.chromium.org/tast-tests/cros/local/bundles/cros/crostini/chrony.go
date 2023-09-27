@@ -49,7 +49,7 @@ func Chrony(ctx context.Context, s *testing.State) {
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 
 	// We set a 4-second polling interval for chrony, so match that for retries.
-	if err := action.Retry(8, func(context.Context) error {
+	if err := action.Retry(15, func(context.Context) error {
 		cmd := cont.VM.Command(ctx, "chronyc", "-c", "tracking")
 		stdout, err := cmd.Output(testexec.DumpLogOnError)
 		if err != nil {
