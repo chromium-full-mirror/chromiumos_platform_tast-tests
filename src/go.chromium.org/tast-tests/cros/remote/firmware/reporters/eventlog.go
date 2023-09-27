@@ -6,11 +6,31 @@ package reporters
 
 import (
 	"context"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+// EventlogBootMode is a string representing the DUT's boot mode found from 'elogtool list'.
+type EventlogBootMode string
+
+const (
+	// Listed below are some supported boot modes, as documented in the
+	// 'vboot_reference/firmware/2lib/include/2info.h' file.
+	NormalMode     EventlogBootMode = "Secure"
+	DeveloperMode  EventlogBootMode = "Developer"
+	Diagnostic     EventlogBootMode = "Diagnostic"
+	BrokenScreen   EventlogBootMode = "Broken screen"
+	ManualRecovery EventlogBootMode = "Manual recovery"
+
+	// Listed below are some deprecated boot modes, as documented in the
+	// 'coreboot/util/cbfstool/eventlog.c' file.
+	ChromeOSRecoveryMode  EventlogBootMode = "ChromeOS Recovery Mode"
+	ChromeOSDeveloperMode EventlogBootMode = "ChromeOS Developer Mode"
 )
 
 // Event contains the contents of one line from `elogtool list`.
@@ -84,4 +104,80 @@ func (r *Reporter) EventlogListAfter(ctx context.Context, previousEvent Event) (
 		}
 	}
 	return events, nil
+}
+
+// groupEventsByBoots groups the events from 'elogtool list' by system boots.
+// arranging them from the oldest to the newest boot.
+func groupEventsByBoots(events []Event) [][]Event {
+	var results [][]Event
+	reSystemBoot := regexp.MustCompile(`System boot`)
+	for i := len(events) - 1; i > 0; i-- {
+		match := reSystemBoot.FindStringSubmatch(events[i].Message)
+		if match != nil {
+			singleBoot := events[i+1:]
+			results = append(results, singleBoot)
+			events = events[0:i]
+		}
+	}
+	for i, j := 0, len(results)-1; i < j; i, j = i+1, j-1 {
+		results[i], results[j] = results[j], results[i]
+	}
+	return results
+}
+
+// findBootModesFromEvents takes a slice of event and returns the boot modes found.
+// Call groupEventsByBoots first to group events from 'elogtool list' for each boot.
+func findBootModesFromEvents(events []Event) []string {
+	var (
+		reFirmwareVbootInfo *regexp.Regexp = regexp.MustCompile(`(?i)Firmware vboot info`)
+		reFirmwareBootMode  *regexp.Regexp = regexp.MustCompile(`boot_mode=([\w ]+)`)
+		reChromeOSBootMode  *regexp.Regexp = regexp.MustCompile(`(Chrome\s?OS[\w ]+)`)
+	)
+	var bootModes []string
+	for _, event := range events {
+		var findBootModeRegexp *regexp.Regexp
+		firmwareVbootInfo := reFirmwareVbootInfo.FindStringSubmatch(event.Message)
+		if firmwareVbootInfo != nil {
+			findBootModeRegexp = reFirmwareBootMode
+		} else {
+			findBootModeRegexp = reChromeOSBootMode
+		}
+		firmwareBootMode := findBootModeRegexp.FindStringSubmatch(event.Message)
+		if len(firmwareBootMode) == 2 {
+			bootModes = append(bootModes, strings.TrimSpace(firmwareBootMode[1]))
+		}
+	}
+	return bootModes
+}
+
+// CheckBootModes checks for boot modes found from 'elogtool list'
+// against the expected ones.
+func (r *Reporter) CheckBootModes(ctx context.Context, newEvents []Event, expectedBootModes []EventlogBootMode) error {
+	groups := groupEventsByBoots(newEvents)
+	var foundBootModes []string
+	for _, events := range groups {
+		results := findBootModesFromEvents(events)
+		if len(results) >= 2 {
+			if len(results) == 2 && results[0] == string(ChromeOSRecoveryMode) && results[1] == string(ChromeOSDeveloperMode) {
+				// For old devices, the dev mode event is logged immediately after the rec mode event.
+				// Drop 'ChromeOS Developer Mode', and only keep 'ChromeOS Recovery Mode'.
+				foundBootModes = append(foundBootModes, results[0])
+			} else {
+				// For most of the devices, expected to get one boot mode in a system boot.
+				return errors.Errorf("got unexpected numbers of boot mode in a boot, got %d", len(results))
+			}
+		} else {
+			foundBootModes = append(foundBootModes, results...)
+		}
+	}
+	testing.ContextLog(ctx, "Found boot modes: ", foundBootModes)
+	if len(foundBootModes) != len(expectedBootModes) {
+		return errors.Errorf("found %d boot modes from the event log, but expected %d", len(foundBootModes), len(expectedBootModes))
+	}
+	for idx, val := range foundBootModes {
+		if val != string(expectedBootModes[idx]) {
+			return errors.Errorf("found %s, but expected %s", val, expectedBootModes[idx])
+		}
+	}
+	return nil
 }
