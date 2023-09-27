@@ -413,8 +413,17 @@ func GetPartitionTable(ctx context.Context, rootDevWithPart string) (*pb.CgptPar
 }
 
 // BackupRootfsVerityHash saves the verity hash for given kernel from the corresponding rootfs partition.
-func BackupRootfsVerityHash(ctx context.Context, rootDevWithPart string, partitionCopy pb.PartitionCopy) (int64, int64, string, error) {
-	out, err := testexec.CommandContext(ctx, "vbutil_kernel", "--verify", rootDevWithPart, "--verbose").Output(testexec.DumpLogOnError)
+func BackupRootfsVerityHash(ctx context.Context, rootDevWithoutPart string, partitionCopy pb.PartitionCopy) (int64, int64, string, error) {
+	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
+	if err != nil {
+		return 0, 0, "", errors.Wrap(err, "failed to read cgpt table")
+	}
+	kernelLabel := PartitionNameCopyToLabel(pb.PartitionName_KERNEL, partitionCopy)
+	rootfsLabel := PartitionNameCopyToLabel(pb.PartitionName_ROOTFS, partitionCopy)
+	kernelTable := partitionTables[kernelLabel]
+	rootfsTable := partitionTables[rootfsLabel]
+
+	out, err := testexec.CommandContext(ctx, "vbutil_kernel", "--verify", kernelTable.PartitionPath, "--verbose").Output(testexec.DumpLogOnError)
 	if err != nil {
 		return 0, 0, "", errors.Wrap(err, "failed to get vbutil kernel")
 	}
@@ -427,7 +436,7 @@ func BackupRootfsVerityHash(ctx context.Context, rootDevWithPart string, partiti
 		return 0, 0, "", errors.Errorf("failed to parse dm table for rootfs, got output: %v", string(out))
 	}
 
-	sectorSize, err := getSectorSize(ctx, rootDevWithPart)
+	sectorSize, err := getSectorSize(ctx, kernelTable.PartitionPath)
 	if err != nil {
 		return 0, 0, "", errors.Wrap(err, "failed to get size of sectors")
 	}
@@ -440,16 +449,7 @@ func BackupRootfsVerityHash(ctx context.Context, rootDevWithPart string, partiti
 	// TODO(tij@): Verify with dlunev@ this calculation makes sense and these numbers are not variable.
 	hashSize := hashStartBytes/4096*64 + 512
 
-	rootDevWithoutPart, _ := SplitRootDevAndPart(ctx, rootDevWithPart)
-	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
-	if err != nil {
-		return 0, 0, "", errors.Wrap(err, "failed to get cgpt table")
-	}
-
 	copy := CopyEnumToCopy[partitionCopy]
-	rootfsLabel := fmt.Sprintf("ROOT-%s", copy)
-	rootfsTable := partitionTables[rootfsLabel]
-
 	backupPath, err := os.CreateTemp("/var/tmp", fmt.Sprintf("rootfsVerityHash%s_", copy))
 	if err != nil {
 		os.Remove(backupPath.Name())
@@ -468,7 +468,7 @@ func BackupRootfsVerityHash(ctx context.Context, rootDevWithPart string, partiti
 		return 0, 0, "", errors.Wrap(err, "failed to save rootfs verity hash to file")
 	}
 
-	testing.ContextLogf(ctx, "Rootfs verity hash for device %q saved at path: %v, has size %v", rootDevWithPart, backupPath.Name(), hashSize)
+	testing.ContextLogf(ctx, "Rootfs verity hash for device %q saved at path: %v, has size %v", kernelTable.PartitionPath, backupPath.Name(), hashSize)
 
 	return hashStartBytes, hashSize, backupPath.Name(), nil
 }

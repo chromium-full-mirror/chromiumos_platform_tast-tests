@@ -160,10 +160,21 @@ func (ks *KernelService) RestorePartition(ctx context.Context, req *pb.Partition
 
 // BackupKernel backs up both kernel A and B copies, and corresponding ROOTFS verity hashes and saves them to a file.
 func (ks *KernelService) BackupKernel(ctx context.Context, req *pb.KernelBackup) (*pb.KernelBackup, error) {
+	var rootDevWithPart string
+	if req.RootDev != "" {
+		rootDevWithPart = req.RootDev
+	} else {
+		var err error
+		rootDevWithPart, err = kernel.GetCurrentRootDevice(ctx, true)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get root device")
+		}
+		req.RootDev = rootDevWithPart
+	}
 	kernA, err := ks.BackupPartition(ctx, &pb.Partition{
 		Name:    pb.PartitionName_KERNEL,
 		Copy:    pb.PartitionCopy_A,
-		RootDev: req.RootDev,
+		RootDev: rootDevWithPart,
 	})
 	if err != nil {
 		// If backing up partition fails, unfinished backup file is already deleted.
@@ -173,7 +184,7 @@ func (ks *KernelService) BackupKernel(ctx context.Context, req *pb.KernelBackup)
 	kernB, err := ks.BackupPartition(ctx, &pb.Partition{
 		Name:    pb.PartitionName_KERNEL,
 		Copy:    pb.PartitionCopy_B,
-		RootDev: req.RootDev,
+		RootDev: rootDevWithPart,
 	})
 	if err != nil {
 		// If backing up KERN-B fails, make sure KERN-A back up is cleaned up, KERN-B tmpfile will already be cleaned up.
@@ -183,13 +194,12 @@ func (ks *KernelService) BackupKernel(ctx context.Context, req *pb.KernelBackup)
 
 	req.KernA = kernA
 	req.KernB = kernB
-	req.RootDev = kernA.RootDev
 
 	if req.BackupRootfs {
 		rootA, err := ks.BackupPartition(ctx, &pb.Partition{
 			Name:    pb.PartitionName_ROOTFS,
 			Copy:    pb.PartitionCopy_A,
-			RootDev: req.RootDev,
+			RootDev: rootDevWithPart,
 		})
 		if err != nil {
 			os.Remove(kernA.BackupPath)
@@ -200,7 +210,7 @@ func (ks *KernelService) BackupKernel(ctx context.Context, req *pb.KernelBackup)
 		rootB, err := ks.BackupPartition(ctx, &pb.Partition{
 			Name:    pb.PartitionName_ROOTFS,
 			Copy:    pb.PartitionCopy_B,
-			RootDev: req.RootDev,
+			RootDev: rootDevWithPart,
 		})
 		if err != nil {
 			os.Remove(kernA.BackupPath)
@@ -336,8 +346,9 @@ func (ks *KernelService) BackupRootfsVerityHash(ctx context.Context, req *pb.Par
 			return nil, errors.Wrap(err, "failed to get root device")
 		}
 	}
+	rootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, rootDevWithPart)
 
-	offset, size, backupPath, err := kernel.BackupRootfsVerityHash(ctx, rootDevWithPart, req.Copy)
+	offset, size, backupPath, err := kernel.BackupRootfsVerityHash(ctx, rootDevWithoutPart, req.Copy)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not back up rootfs verity hash")
 	}
@@ -345,7 +356,7 @@ func (ks *KernelService) BackupRootfsVerityHash(ctx context.Context, req *pb.Par
 	return &pb.RootfsVerityHashBackup{
 		Name:       req.Name,
 		Copy:       req.Copy,
-		RootDev:    req.RootDev,
+		RootDev:    rootDevWithPart,
 		Offset:     offset,
 		HashSize:   size,
 		BackupPath: backupPath,
