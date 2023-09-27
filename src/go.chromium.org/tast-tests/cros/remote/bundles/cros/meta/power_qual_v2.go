@@ -45,8 +45,9 @@ func init() {
 				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/videoplayback_lacros_test.json",
 			},
 			{
-				Name: "browsing_light",
-				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/browsing_light.json",
+				Name:              "browsing_light",
+				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/browsing_light.json",
+				ExtraRequirements: []string{"pwr-batLife-0012-v01"},
 			},
 			// TODO(b/274972858): add other parameterized tests.
 			// For example, add "essential" and "advanced" tests that use different configurations.
