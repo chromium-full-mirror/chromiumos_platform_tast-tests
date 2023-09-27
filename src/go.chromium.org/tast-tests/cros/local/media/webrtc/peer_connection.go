@@ -47,7 +47,8 @@ type rxMeas struct {
 	FramesDecoded   float64 `json:"framesDecoded"`
 }
 
-type readRTCReportFunc func(ctx context.Context, conn *chrome.Conn, decode bool, out interface{}) error
+// ReadRTCReportFunc is the type of a function that reads WebRTC stats and fills out in rxMeas if decode is true, or txMeas.
+type ReadRTCReportFunc func(ctx context.Context, conn *chrome.Conn, decode bool, out interface{}) error
 
 type validateFrameFunc func(ctx context.Context, conn *chrome.Conn, width, height int) error
 
@@ -63,7 +64,7 @@ type validateFrameFunc func(ctx context.Context, conn *chrome.Conn, width, heigh
 //
 // Returns error on failure or timeout.
 func WaitForPeerConnectionStabilized(ctx context.Context, conn *chrome.Conn,
-	streamWidth, streamHeight int, displayCapture bool, readRTCReport readRTCReportFunc) error {
+	streamWidth, streamHeight int, displayCapture bool, readRTCReport ReadRTCReportFunc) error {
 	const (
 		// Before taking any measurements, we need to wait for the RTCPeerConnection
 		// to ramp up the CPU adaptation; until then, the transmitted resolution may
@@ -105,7 +106,7 @@ func WaitForPeerConnectionStabilized(ctx context.Context, conn *chrome.Conn,
 // a hardware implementation. If decode is true, this returns decoder implementation and otherwise encoder implementation.
 // This method uses the RTCPeerConnection getStats() API [1].
 // [1] https://w3c.github.io/webrtc-pc/#statistics-model
-func GetCodecImplementation(ctx context.Context, conn *chrome.Conn, decode bool, readRTCReport readRTCReportFunc) (string, bool, error) {
+func GetCodecImplementation(ctx context.Context, conn *chrome.Conn, decode bool, readRTCReport ReadRTCReportFunc) (string, bool, error) {
 	// See [1] and [2] for the statNames to use here. The values are browser
 	// specific, for Chrome, "ExternalDecoder" and "{V4L2,Vaapi, etc.}VideoEncodeAccelerator"
 	// means that WebRTC is using hardware acceleration and anything else
@@ -174,7 +175,7 @@ func GetCodecImplementation(ctx context.Context, conn *chrome.Conn, decode bool,
 
 // MeasureRTCEncodeStats parses the WebRTC Tx stats, and stores them into p.
 // See https://www.w3.org/TR/webrtc-stats/#stats-dictionaries for more info.
-func MeasureRTCEncodeStats(ctx context.Context, conn *chrome.Conn, readRTCReport readRTCReportFunc, p *perf.Values) (int, error) {
+func MeasureRTCEncodeStats(ctx context.Context, conn *chrome.Conn, readRTCReport ReadRTCReportFunc, p *perf.Values) (int, error) {
 	const (
 		// timeSamples specifies number of frame decode time samples to get.
 		timeSamples = 10
@@ -222,7 +223,7 @@ func MeasureRTCEncodeStats(ctx context.Context, conn *chrome.Conn, readRTCReport
 // MeasureRTCDecodeStats parses the WebRTC Rx stats, and stores them into p.
 // See https://www.w3.org/TR/webrtc-stats/#stats-dictionaries for more info.
 func MeasureRTCDecodeStats(ctx context.Context, conn *chrome.Conn, framesEncoded, streamWidth, streamHeight int,
-	readRTCReport readRTCReportFunc, validateFrame validateFrameFunc, p *perf.Values) error {
+	readRTCReport ReadRTCReportFunc, validateFrame validateFrameFunc, p *perf.Values) error {
 	const (
 		// timeSamples specifies number of frame decode time samples to get.
 		timeSamples = 10
@@ -277,7 +278,7 @@ func MeasureRTCDecodeStats(ctx context.Context, conn *chrome.Conn, framesEncoded
 // MeasureRTCStats parses the WebRTC Tx and Rx Stats, and stores them into p.
 // See https://www.w3.org/TR/webrtc-stats/#stats-dictionaries for more info.
 func MeasureRTCStats(ctx context.Context, conn *chrome.Conn, streamWidth, streamHeight int, displayCapture bool,
-	readRTCReport readRTCReportFunc, validateFrame validateFrameFunc, p *perf.Values) error {
+	readRTCReport ReadRTCReportFunc, validateFrame validateFrameFunc, p *perf.Values) error {
 	if err := WaitForPeerConnectionStabilized(ctx, conn, streamWidth, streamHeight, displayCapture, readRTCReport); err != nil {
 		return err
 	}

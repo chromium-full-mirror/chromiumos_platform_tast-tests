@@ -12,13 +12,17 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strconv"
+	"sync"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/media/webrtc"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
@@ -95,11 +99,11 @@ func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
 		{"video_2p", "VC.holdCall(2)", "failed holding 1:1 (2p) call (VP9 L1T3)"},
 		{"video_9p", "VC.holdCall(9)", "failed holding 9p call (VP9 L3T3_KEY)"},
 	} {
-		testing.ContextLog(ctx, "starting ", step.name)
+		testing.ContextLog(ctx, "Starting ", step.name)
 		if err := conn.Eval(ctx, step.evalStr, nil); err != nil {
 			return errors.Wrap(err, step.errMsg)
 		}
-		testing.ContextLog(ctx, "measuring performance metrics ", step.name)
+		testing.ContextLog(ctx, "Measuring performance metrics ", step.name)
 		// GoBigSleepLint: Sleep to measure the performance metrics
 		if err := testing.Sleep(ctx, profileInterval); err != nil {
 			return errors.Wrapf(err, "failed to sleep for %v", profileInterval)
@@ -115,7 +119,6 @@ func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
 // and thus |numPeople-1| decoders and 1 encoder run.
 func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conn *chrome.Conn, pr *power.Recorder, presentURL string, params VCTestParams) error {
 	const profileInterval = 60 * time.Second // Sleep interval to measure the performance metrics.
-
 	if params.NumPeople <= 1 {
 		return errors.Errorf("the number of people must be more than 1: NumPeople=%d", params.NumPeople)
 	}
@@ -128,20 +131,29 @@ func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, c
 	if err := conn.Eval(ctx, fmt.Sprintf("VC.holdCall(%d, %t)", params.NumPeople, params.Present), nil); err != nil {
 		return errors.Wrapf(err, "failed holding %dp call", params.NumPeople)
 	}
+
 	if params.Present {
 		// Capturing a tab activates the captured tab. Back to the video conference tab.
 		if err := browser.ActivateTabByTitle(ctx, tconn, "WebRTC VideoConference"); err != nil {
 			return errors.Wrap(err, "failed activating video conference tab")
 		}
 	}
+
+	rtcPerf := perf.NewValues()
+	if err := measureWebRTCStats(ctx, conn, rtcPerf, params); err != nil {
+		return errors.Wrap(err, "failed collecting webrtc stats")
+	}
+
 	if err := pr.Start(ctx); err != nil {
 		return errors.Wrap(err, "cannot start collecting power metrics")
 	}
+
 	// GoBigSleepLint: Sleep to measure the performance metrics
-	if err := testing.Sleep(ctx, profileInterval); err != nil {
+	if err := testing.Sleep(ctx, profileInterval*2); err != nil {
 		return errors.Wrapf(err, "failed to sleep for %v", profileInterval)
 	}
-	if err := pr.Finish(ctx); err != nil {
+
+	if err := pr.Finish(ctx, rtcPerf); err != nil {
 		return errors.Wrap(err, "cannot finish collecting power metrics")
 	}
 	if params.Trace {
@@ -263,5 +275,125 @@ func recordTracing(ctx context.Context, outDir, configFile string) error {
 		return errors.Wrap(err, "failed to stop tracing")
 	}
 	testing.ContextLog(ctx, "Complete tracing")
+	return nil
+}
+
+// placeHolderValidateFrame is a place holder function passed to webrtc.MeasureRTCDecodeStats().
+func placeHolderValidateFrame(ctx context.Context, conn *chrome.Conn, width, height int) error {
+	return nil
+}
+
+// readRTCReport returns a function to read WebRTC stats for an |id| decoder and encoder.
+func readRTCReport(id int, displayCapture bool) webrtc.ReadRTCReportFunc {
+	return func(ctx context.Context, conn *chrome.Conn, decode bool, out interface{}) error {
+		// Decode: localPeerConnection, "outbound-rtp"
+		// Encode: remotePeerConnection, "inbound-rtp"
+		var peerConnection string
+		var staticType string
+		if displayCapture {
+			peerConnection = "VC.displayLocalPC"
+			staticType = "outbound-rtp"
+		} else {
+			if decode {
+				peerConnection = fmt.Sprintf("VC.remotePCs[%d]", id)
+				staticType = "inbound-rtp"
+			} else {
+				peerConnection = fmt.Sprintf("VC.localPCs[%d]", id)
+				staticType = "outbound-rtp"
+			}
+		}
+		return conn.Call(ctx, out, fmt.Sprintf(`async() => {
+		  const peerConnection = %s;
+		  const stats = await peerConnection.getStats(null);
+		  if (stats == null) {
+		    throw new Error("getStats() failed");
+		  }
+		  var R = null;
+		  for (const [_, report] of stats) {
+		    if (report['type'] === '%s' &&
+		       (!R || R['frameHeight'] < report['frameHeight'])) {
+		      R = report;
+		    }
+		  }
+		  if (R !== null) {
+		    return R;
+		  }
+		  throw new Error("Stat not found");
+		}`, peerConnection, staticType))
+	}
+}
+
+// measureWebRTCStats records the webrtc decoder and encoder performance metrics from webrtc stats.
+func measureWebRTCStats(ctx context.Context, conn *chrome.Conn, rtcPerf *perf.Values, params VCTestParams) error {
+	type cameraResolution struct {
+		Width  int `json:"width"`
+		Height int `json:"height"`
+	}
+	var resolution cameraResolution
+	if err := conn.Call(ctx, &resolution, "() => { return VC.getCameraResolution(); }", nil); err != nil {
+		return errors.Wrap(err, "failed getting a camera resolution")
+	}
+	testing.ContextLog(ctx, "Camera resolution: ", resolution)
+	// If a camera resolution is more than 720p, then we set scaleResolutionDownBy to 2.
+	// So the video encoder and decoder resolution is a half of camera resolution.
+	if params.NumPeople > 2 && resolution.Width > 1280 && resolution.Height > 720 {
+		resolution.Width /= 2
+		resolution.Height /= 2
+	}
+
+	testing.ContextLog(ctx, "Expected video resolution: ", resolution)
+	if err := webrtc.WaitForPeerConnectionStabilized(ctx, conn, resolution.Width, resolution.Height, false, readRTCReport(params.NumPeople-2, false)); err != nil {
+		return err
+	}
+	var wg sync.WaitGroup
+	var ps = make([]*perf.Values, params.NumPeople-1)
+	var statErrs = make([]error, params.NumPeople-1)
+	for i := 0; i < params.NumPeople-1; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			framesEncoded := 0
+			readRTCReportFunc := readRTCReport(i, false)
+			if i == params.NumPeople-2 {
+				p := perf.NewValues()
+				var err error
+				framesEncoded, err = webrtc.MeasureRTCEncodeStats(ctx, conn, readRTCReportFunc, p)
+				if err != nil {
+					statErrs[i] = err
+					return
+				}
+				rtcPerf.MergeWithSuffix("_camera", p)
+			}
+			p := perf.NewValues()
+			if err := webrtc.MeasureRTCDecodeStats(ctx, conn, framesEncoded, resolution.Width, resolution.Height, readRTCReportFunc, placeHolderValidateFrame, p); err != nil {
+				statErrs[i] = err
+				return
+			}
+		}(i)
+	}
+	var presentStatErr error
+	if params.Present {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			var err error
+			p := perf.NewValues()
+			if _, err = webrtc.MeasureRTCEncodeStats(ctx, conn, readRTCReport(0, true), p); err != nil {
+				presentStatErr = err
+				return
+			}
+			rtcPerf.MergeWithSuffix("_present", p)
+		}()
+	}
+	wg.Wait()
+	for i, p := range ps {
+		if statErrs[i] != nil {
+			return statErrs[i]
+		}
+		rtcPerf.MergeWithSuffix("_"+strconv.Itoa(i), p)
+	}
+	if presentStatErr != nil {
+		return presentStatErr
+	}
 	return nil
 }

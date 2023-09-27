@@ -55,6 +55,12 @@ class VideoConference {
     await this.getUserMedia(true);
   }
 
+  // Get the camera resolution.
+  getCameraResolution() {
+    const streamSettings = this.sentStream.getVideoTracks()[0].getSettings();
+    return { width: streamSettings.width, height: streamSettings.height};
+  }
+
   // Shows the camera preview.
   async showCameraPreview() {
     this.cameraPreview.srcObject = this.sentStream;
@@ -282,9 +288,9 @@ class VideoConference {
     displayStream.getVideoTracks()[0].applyConstraints(constraints);
     this.displayPreview.srcObject = displayStream;
 
-    const displayLocalPC =
+    this.displayLocalPC =
           new RTCPeerConnection({encodedInsertableStreams: true});
-    const displayLocalPCStream = displayLocalPC.addTransceiver(
+    const displayLocalPCStream = this.displayLocalPC.addTransceiver(
       displayStream.getVideoTracks()[0], {
         degradationPreference: 'maintain-resolution',
         streams : [ displayStream ],
@@ -293,7 +299,7 @@ class VideoConference {
 
     const displayRemotePC = new RTCPeerConnection();
     displayRemotePC.addTransceiver('video');
-    await this.connect(displayLocalPC, displayRemotePC, 'VP8');
+    await this.connect(this.displayLocalPC, displayRemotePC, 'VP8');
 
     // Drop all encoded frames so that one encoder runs but no decoder runs for
     // screen sharing.
