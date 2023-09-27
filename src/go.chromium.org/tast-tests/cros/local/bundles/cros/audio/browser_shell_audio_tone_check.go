@@ -79,13 +79,6 @@ func BrowserShellAudioToneCheck(ctx context.Context, s *testing.State) {
 		if err := ui.LeftClick(croshCloseButton)(ctx); err != nil {
 			s.Error("Failed to close browser shell: ", err)
 		}
-		croshLeaveButton := nodewith.Name("Leave").Role(role.Button)
-		if err := ui.WaitForLocation(croshLeaveButton)(ctx); err != nil {
-			s.Error("Failed to wait for 'Leave' prompt button: ", err)
-		}
-		if err := ui.LeftClick(croshLeaveButton)(ctx); err != nil {
-			s.Error("Failed to left click 'Leave' prompt button: ", err)
-		}
 	}(cleanupCtx)
 
 	croshWindow := nodewith.Name("crosh").Role(role.Window).First()
