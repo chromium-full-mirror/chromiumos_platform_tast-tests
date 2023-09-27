@@ -579,10 +579,36 @@ func (gm *GoogleMeet) ScreenshotCanvas(ctx context.Context, cr *chrome.Chrome) (
 func (gm *GoogleMeet) joinConference(ctx context.Context) error {
 	joinNowButton := nodewith.Name("Join now").Role(role.Button)
 	askToJoinButton := nodewith.Name("Ask to join").Role(role.Button)
+	errorHeading := nodewith.Name("Couldn't start the video call because of an error").Role(role.Heading)
 
-	nodeFinder, err := gm.ui.FindAnyExists(ctx, joinNowButton, askToJoinButton, inMeetingIdentifier)
+	findMeetNode := func(ctx context.Context, timeout time.Duration) (*nodewith.Finder, error) {
+		foundFinder, err := gm.ui.WithTimeout(timeout).FindAnyExists(ctx, joinNowButton, askToJoinButton, inMeetingIdentifier, errorHeading)
+		if err != nil {
+			return nil, err
+		}
+		return foundFinder, nil
+	}
+
+	nodeFinder, err := findMeetNode(ctx, 15*time.Second)
 	if err != nil {
 		return err
+	}
+
+	// If it navigates to an error page, reload the page.
+	if nodeFinder == errorHeading {
+		testing.ContextLog(ctx, "Couldn't start the video call because of an error")
+		reloadButton := nodewith.Name("Reload").Role(role.Button)
+		if err := uiauto.NamedAction("reload page", gm.ui.DoDefault(reloadButton))(ctx); err != nil {
+			return err
+		}
+		nodeFinder, err = findMeetNode(ctx, time.Minute)
+		if err != nil {
+			return err
+		}
+
+		if nodeFinder == errorHeading {
+			return errors.Errorf("couldn't start the video call because of an error, find node: %v", errorHeading)
+		}
 	}
 
 	// Do nothing if the user joins the meeting automatically.
@@ -591,6 +617,7 @@ func (gm *GoogleMeet) joinConference(ctx context.Context) error {
 	}
 
 	return uiauto.Combine("join meeting",
+		gm.ui.WaitForLocation(nodeFinder),
 		gm.ui.WithTimeout(longUITimeout).DoDefaultUntil(
 			nodeFinder,
 			// The joining process takes a while. Using default timeout here.
