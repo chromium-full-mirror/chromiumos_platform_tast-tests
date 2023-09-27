@@ -22,6 +22,7 @@ import (
 var extensionFiles = []string{
 	"manifest.json",
 	"index.html",
+	"migrate_extension_state.js",
 }
 
 const (
@@ -75,7 +76,9 @@ func MigrateExtensionState(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(ctx)
 
-	verifyExtensionStateOnLacros(ctx, s, cr)
+	if err := verifyExtensionStateOnLacros(ctx, s, cr); err != nil {
+		s.Fatal("Calling verifyExtensionStateOnLacros failed: ", err)
+	}
 }
 
 func prepareExtensionState(ctx context.Context, extDir string) error {
@@ -100,52 +103,46 @@ func prepareExtensionState(ctx context.Context, extDir string) error {
 		return errors.Wrap(err, "failed to open extension page")
 	}
 
-	if err := conn.Call(ctx, nil, `() => {
-		return new Promise((resolve, reject) => {
-			chrome.storage.sync.set({key: 'value'}, () => {
-				if (chrome.runtime.lastError) {
-					reject(new Error(chrome.runtime.lastError.message));
-				}
-				resolve();
-			});
-		});
-	}`); err != nil {
-		return errors.Wrap(err, "failed to call chrome.storage.sync.set()")
+	if err := conn.Call(ctx, nil, `setStorageSync`); err != nil {
+		return errors.Wrap(err, "setStorageSync() failed")
+	}
+
+	if err := conn.Call(ctx, nil, "setStorageLocal"); err != nil {
+		return errors.Wrap(err, "setStorageLocal() failed")
 	}
 
 	return nil
 }
 
-func verifyExtensionStateOnLacros(ctx context.Context, s *testing.State, cr *chrome.Chrome) {
+func verifyExtensionStateOnLacros(ctx context.Context, s *testing.State, cr *chrome.Chrome) error {
 	if _, err := os.Stat(migrate.LacrosFirstRunPath); err != nil {
-		s.Fatal("Error reading 'First Run' file: ", err)
+		return errors.Wrap(err, "failed to read 'First Run' file")
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
+		return errors.Wrap(err, "failed to create a Test API connection")
 	}
 
 	l, err := lacros.Launch(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to launch lacros: ", err)
+		return errors.Wrap(err, "failed to launch Lacros")
 	}
 	defer l.Close(ctx)
 
 	conn, err := l.NewConn(ctx, simpleExtensionURL)
 	if err != nil {
-		s.Fatal("Failed to open extension page: ", err)
+		return errors.Wrap(err, "failed to open the extension page")
 	}
 	defer conn.Close()
 
-	if err := conn.Call(ctx, nil, `() => {
-		return new Promise((resolve, reject) => {
-			chrome.storage.sync.get(['key'], (result) => {
-				if (result.key == 'value') resolve();
-				else reject();
-			});
-		});
-	}`); err != nil {
-		s.Fatal("Failed to get the expected value with chrome.storage.sync.get: ", err)
+	if err := conn.Call(ctx, nil, "verifyStorageSync"); err != nil {
+		return errors.Wrap(err, "verifyStorageSync() failed")
 	}
+
+	if err := conn.Call(ctx, nil, "verifyStorageLocal"); err != nil {
+		return errors.Wrap(err, "verifyStorageLocal() failed")
+	}
+
+	return nil
 }
