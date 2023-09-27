@@ -74,12 +74,13 @@ func ScanApp(ctx context.Context, s *testing.State) {
 	}(ctx)
 
 	var settings = scanapp.ScanSettings{
-		Scanner:    printer.VisibleName,
-		Source:     scanapp.SourceFlatbed,
-		FileType:   scanapp.FileTypePNG,
 		ColorMode:  scanapp.ColorModeColor,
+		FileType:   scanapp.FileTypePNG,
 		PageSize:   scanapp.PageSizeLetter,
 		Resolution: scanapp.Resolution300DPI,
+		ScanTo:     scanapp.MyFiles,
+		Scanner:    printer.VisibleName,
+		Source:     scanapp.SourceFlatbed,
 	}
 
 	app, err := scanapp.LaunchAndStartScanWithSettings(ctx, tconn, settings)
