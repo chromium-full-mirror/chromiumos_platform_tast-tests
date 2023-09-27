@@ -8,8 +8,10 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/google/gopacket/layers"
 	"go.chromium.org/tast-tests/cros/local/network/capture"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
@@ -25,10 +27,32 @@ import (
 type packetType uint
 
 const (
-	packetTCPSyn packetType = 1 << iota
-	packetDNS               = 1 << iota
-	packetAll               = (1 << iota) - 1
+	packetTCPSyn         packetType = 1 << iota
+	packetDNS                       = 1 << iota
+	packetDHCPv4Discover            = 1 << iota
+	packetDHCPv4Request             = 1 << iota
+	packetAll                       = (1 << iota) - 1
 )
+
+var packetTypes []packetType = []packetType{
+	packetTCPSyn, packetDNS, packetDHCPv4Discover, packetDHCPv4Request,
+}
+
+func (pt packetType) String() string {
+	switch pt {
+	case packetTCPSyn:
+		return "TCP SYN"
+	case packetDNS:
+		return "DNS"
+	case packetDHCPv4Discover:
+		return "DHCPv4 Discover"
+	case packetDHCPv4Request:
+		return "DHCPv4 Request"
+	case packetAll:
+		return "All"
+	}
+	return "unknown"
+}
 
 const (
 	dscpNetworkControl uint8 = 48
@@ -55,7 +79,7 @@ func init() {
 // packets are emitted directly from the test and DSCP mark is verified by doing
 // a live capture on the access point virtual interface. It typically verifies
 // that at least one packet of a given protocol has the correct mark.
-// TODO(b/296958870): check DHCP and ICMP{,v6} packet marks.
+// TODO(b/296958870): check ICMP{,v6} packet marks.
 func QosNetworkControl(ctx context.Context, s *testing.State) {
 	// Reserve a little time for cleanup.
 	cleanupCtx := ctx
@@ -83,6 +107,13 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create shill manager proxy: ", err)
 	}
+
+	// Enable DHCP QoS.
+	restoreDHCPQos, err := m.SetEnableDHCPQosWithRestore(ctx, true)
+	if err != nil {
+		s.Fatal("Failed to enable QoS for DHCP in Shill: ", err)
+	}
+	defer restoreDHCPQos(cleanupCtx)
 
 	// Disable captive portal check.
 	restoreCaptivePortal, err := m.DisablePortalDetectionWithRestore(ctx)
@@ -169,6 +200,18 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 	for seen != packetAll {
 		select {
 		case p := <-packets:
+			// Check DHCP v4 packet marks. The packets are emitted by the DUT
+			// after layer 2 is connected.
+			if p.DHCPv4 != nil && hasDSCP(p, dscpNetworkControl) {
+				switch getDHCPMsgType(p) {
+				case layers.DHCPMsgTypeDiscover:
+					seen |= packetDHCPv4Discover
+				case layers.DHCPMsgTypeRequest:
+					seen |= packetDHCPv4Request
+				}
+				continue
+			}
+
 			if p.IPv4 != nil && !p.IPv4.SrcIP.Equal(clientAddr) || p.IPv6 != nil {
 				// For now ignore IPv6 packets or packets not explicitly emitted by the client.
 				continue
@@ -186,7 +229,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 			}
 
 		case <-ctx.Done():
-			return errors.New("timeout waiting for packets")
+			return errors.Errorf("timeout waiting for packets: %s", listPackets(seen^packetAll))
 		}
 
 		if seen == packetAll {
@@ -198,4 +241,26 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 
 func hasDSCP(p *capture.Packet, dscp uint8) bool {
 	return p.DSCP() == dscp
+}
+
+func getDHCPMsgType(p *capture.Packet) layers.DHCPMsgType {
+	if p.DHCPv4 != nil {
+		for _, op := range p.DHCPv4.Options {
+			if op.Type != layers.DHCPOptMessageType {
+				continue
+			}
+			return layers.DHCPMsgType(op.Data[0])
+		}
+	}
+	return layers.DHCPMsgTypeUnspecified
+}
+
+func listPackets(pktBits packetType) string {
+	var packets []string
+	for _, t := range packetTypes {
+		if pktBits&t == t {
+			packets = append(packets, t.String())
+		}
+	}
+	return strings.Join(packets, ",")
 }

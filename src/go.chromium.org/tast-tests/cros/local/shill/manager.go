@@ -1033,3 +1033,17 @@ func (m *Manager) GetNetworksForGeolocation(ctx context.Context) (*dbusutil.Prop
 func (m *Manager) ScanAndConnectToBestServices(ctx context.Context) error {
 	return m.Call(ctx, "ScanAndConnectToBestServices").Err
 }
+
+// SetEnableDHCPQosWithRestore sets the EnableDHCPQos property and returns a
+// helper to restore the property at its previous value.
+func (m *Manager) SetEnableDHCPQosWithRestore(ctx context.Context, enable bool) (func(context.Context), error) {
+	oldValue, err := m.GetAndSetProperty(ctx, shillconst.ManagerPropertyEnableDHCPQos, enable)
+	if err != nil {
+		return nil, err
+	}
+	return func(ctx context.Context) {
+		if err := m.SetProperty(ctx, shillconst.ManagerPropertyEnableDHCPQos, oldValue); err != nil {
+			testing.ContextLog(ctx, "Failed to restore EnableDHCPQos property: ", err)
+		}
+	}, nil
+}

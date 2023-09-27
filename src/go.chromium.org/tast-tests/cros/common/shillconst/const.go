@@ -126,6 +126,7 @@ const (
 	ManagerPropertyPortalHTTPSURL         = "PortalHttpsUrl"
 	ManagerPropertyDefaultService         = "DefaultService"
 	ManagerPropertyTetheringConfig        = "TetheringConfig"
+	ManagerPropertyEnableDHCPQos          = "EnableDHCPQoS"
 )
 
 // Service property names defined in dbus-constants.h .

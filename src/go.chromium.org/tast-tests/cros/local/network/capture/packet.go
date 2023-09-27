@@ -12,10 +12,11 @@ import (
 // Packet contains the different layers of a packet captured. Only the detected
 // layers are set and multiple fields can be set at the same time.
 type Packet struct {
-	IPv4 *layers.IPv4
-	IPv6 *layers.IPv6
-	TCP  *layers.TCP
-	DNS  *layers.DNS
+	IPv4   *layers.IPv4
+	IPv6   *layers.IPv6
+	DHCPv4 *layers.DHCPv4
+	TCP    *layers.TCP
+	DNS    *layers.DNS
 }
 
 // DSCP returns the DSCP value present in the packet, 0 if no applicable.
@@ -37,6 +38,9 @@ func parsePacket(p gopacket.Packet) *Packet {
 	}
 	if ip := p.Layer(layers.LayerTypeIPv6); ip != nil {
 		packet.IPv6 = ip.(*layers.IPv6)
+	}
+	if dhcp := p.Layer(layers.LayerTypeDHCPv4); dhcp != nil {
+		packet.DHCPv4 = dhcp.(*layers.DHCPv4)
 	}
 	if tcp := p.Layer(layers.LayerTypeTCP); tcp != nil {
 		packet.TCP = tcp.(*layers.TCP)
