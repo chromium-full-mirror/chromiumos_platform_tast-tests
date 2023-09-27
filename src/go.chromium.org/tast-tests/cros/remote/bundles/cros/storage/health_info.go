@@ -140,6 +140,7 @@ func HealthInfo(ctx context.Context, s *testing.State) {
 
 	switch disk.Type {
 	case util.NvmeDisk:
+		fallthrough
 	case util.EmmcOverNvmeDisk:
 		healthSupported, err = nvmeHealthSupported(ctx, s.DUT(), s.DataPath("tbw_probe"))
 	case util.EmmcDisk:
