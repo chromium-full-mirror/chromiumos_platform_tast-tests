@@ -6,9 +6,12 @@ package croshealthd
 
 import (
 	"context"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -41,10 +44,41 @@ func init() {
 	})
 }
 
+// checkNewCrashes checks if there are new healthd related crash files.
+// It filters crashes by executable names to avoid false alarms caused by
+// unrelated crashes.
+func checkNewCrashes(oldCrashFiles, newCrashFiles []string) (executableName string, found bool) {
+	relatedExecutableNames := map[string]struct{}{
+		"cros_healthd":      struct{}{},
+		"executor_delegate": struct{}{},
+	}
+
+	mOldCrashFiles := make(map[string]struct{}, len(oldCrashFiles))
+	for _, oldCrashFile := range oldCrashFiles {
+		mOldCrashFiles[oldCrashFile] = struct{}{}
+	}
+	// Sample value for newCrashFile: /var/spool/crash/executor_delegate.20230927.074735.23293.2687.proclog.
+	for _, newCrashFile := range newCrashFiles {
+		if _, found := mOldCrashFiles[newCrashFile]; found {
+			continue
+		}
+		// Sample value for fileBase: executor_delegate.20230927.074735.23293.2687.proclog.
+		fileBase := filepath.Base(newCrashFile)
+		// Sample value for executableName: executor_delegate.
+		executableName, _, _ := strings.Cut(fileBase, ".")
+		if _, found := relatedExecutableNames[executableName]; found {
+			return executableName, true
+		}
+	}
+	return "", false
+}
+
 // crosHealthdFixture implements testing.FixtureImpl.
 type crosHealthdFixture struct {
 	// pid of cros_healthd, for check if it crashed or restarted within a single test.
 	pid int
+	// Existing crash files for check if any unexpected crash occurs within a single test.
+	crashFiles []string
 }
 
 func newCrosHealthdFixture() testing.FixtureImpl {
@@ -65,6 +99,13 @@ func (f *crosHealthdFixture) PreTest(ctx context.Context, s *testing.FixtTestSta
 	}
 
 	f.pid = pid
+
+	crashDirs := crash.GetAllCrashDirs(ctx)
+	crashFiles, err := crash.GetCrashes(crashDirs...)
+	if err != nil {
+		s.Fatalf("Unable to get crash files: %s", err)
+	}
+	f.crashFiles = crashFiles
 }
 
 func (f *crosHealthdFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
@@ -76,6 +117,16 @@ func (f *crosHealthdFixture) PostTest(ctx context.Context, s *testing.FixtTestSt
 	// Make sure it has not crashed or restarted.
 	if pid != f.pid {
 		s.Fatalf("%s PID changed: want %v, got %v", crosHealthdJobName, f.pid, pid)
+	}
+
+	crashDirs := crash.GetAllCrashDirs(ctx)
+	crashFiles, err := crash.GetCrashes(crashDirs...)
+	if err != nil {
+		s.Fatalf("Unable to get crash files: %s", err)
+	}
+	if executableName, found := checkNewCrashes(f.crashFiles, crashFiles); found {
+		s.Log("crashFiles: ", crashFiles)
+		s.Fatalf("There is a new crash for %s", executableName)
 	}
 }
 
