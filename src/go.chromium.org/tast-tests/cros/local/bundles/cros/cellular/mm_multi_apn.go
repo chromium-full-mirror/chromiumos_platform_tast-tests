@@ -99,7 +99,6 @@ func MMMultiApn(ctx context.Context, s *testing.State) {
 			if len(bearerPaths) == 1 {
 				err = cellular.TagKnownBugOnModemType(ctx, err, "b/249388479", []cellularconst.ModemType{cellularconst.ModemTypeNL668})
 				err = cellular.TagKnownBugOnModemType(ctx, err, "b/236295106", []cellularconst.ModemType{cellularconst.ModemTypeFM350})
-				err = cellular.TagKnownBugOnModemType(ctx, err, "b/249387022", []cellularconst.ModemType{cellularconst.ModemTypeSC7180, cellularconst.ModemTypeSC7280})
 			}
 			s.Fatal("Modem connect failed with error: ", err)
 		}
