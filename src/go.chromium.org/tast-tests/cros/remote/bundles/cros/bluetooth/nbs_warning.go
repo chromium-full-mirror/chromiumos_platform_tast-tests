@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
@@ -38,7 +39,8 @@ func init() {
 			"tast.cros.ui.AudioService",
 			"tast.cros.chrome.uiauto.quicksettings.QuickSettingsService",
 		},
-		Timeout: 3 * time.Minute,
+		TestBedDeps: []string{tbdep.WorkingBluetoothPeers(1)},
+		Timeout:     3 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled",

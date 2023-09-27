@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
@@ -36,6 +37,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep),
+		TestBedDeps:  []string{tbdep.WorkingBluetoothPeers(1)},
 		ServiceDeps: []string{
 			"tast.cros.bluetooth.BluetoothService",
 			"tast.cros.bluetooth.BluetoothUIService",

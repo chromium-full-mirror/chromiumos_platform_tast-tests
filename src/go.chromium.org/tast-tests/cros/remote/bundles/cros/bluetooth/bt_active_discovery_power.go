@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
@@ -35,6 +36,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService", "tast.cros.power.MetricsService"},
+		TestBedDeps:  []string{tbdep.WorkingBluetoothPeers(1)},
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{
 			{

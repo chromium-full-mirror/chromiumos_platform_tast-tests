@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast/core/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -46,6 +47,7 @@ func init() {
 			"tast.cros.bluetooth.BluetoothService",
 		},
 		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),
+		TestBedDeps:  []string{tbdep.WorkingBluetoothPeers(1)},
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled",

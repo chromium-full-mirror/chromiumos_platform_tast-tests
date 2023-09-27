@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/dut"
@@ -36,6 +37,7 @@ func init() {
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService", "tast.cros.bluetooth.BluetoothUIService"},
 		SoftwareDeps: []string{"chrome"},
+		TestBedDeps:  []string{tbdep.WorkingBluetoothPeers(1)},
 		Attr:         []string{"group:bluetooth", "bluetooth_btpeers_1"},
 		Params: []testing.Param{
 			{
