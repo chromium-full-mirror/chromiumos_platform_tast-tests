@@ -27,6 +27,7 @@ func init() {
 		},
 		BugComponent: "b:1032353", // Chrome Operations > Fleet > Software > OS Fleet Automation
 		Fixture:      fixture.NormalMode,
+		Timeout:      15 * time.Minute, // Increased timeout to allow sufficient time for DUT to reboot
 		Attr:         []string{"group:labqual_informational"},
 	})
 }
@@ -49,8 +50,8 @@ func ServoGBBFlagsFutility(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed initial ClearAndSetGBBFlagsByServo: ", err)
 	}
 	ctxForCleanup := ctx
-	// 150 seconds is a ballpark estimate, adjust as needed.
-	ctx, cancel := ctxutil.Shorten(ctx, 150*time.Second)
+	// 3 minutes is a ballpark estimate based on testing this on several boards.
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
 	defer cancel()
 
 	checker := checkers.New(h)
