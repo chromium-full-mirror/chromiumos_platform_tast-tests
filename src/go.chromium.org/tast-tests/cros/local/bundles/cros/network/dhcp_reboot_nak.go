@@ -124,7 +124,10 @@ func DHCPRebootNAK(ctx context.Context, s *testing.State) {
 	// - Shill service state becomes connected and it takes the new lease (address).
 	testing.ContextLog(ctx, "Verifying DHCP rebinding")
 
-	testing.ContextLog(ctx, gatewayIP.String(), intendedIP.String())
+	// In this test, dhcpcd will defer the process for NAK for 4 seconds. Thus we
+	// need a longer poll timeout here.
+	const rebindingTimeout = 10 * time.Second
+
 	nakRule := dhcp.NewRejectRequestRule(intendedIP.String())
 	dhcpOptsAfterNAK := dhcp.NewOptionMap(gatewayIP, intendedIPAfterNAK)
 	discoverRuleAfterNAK := dhcp.NewRespondToDiscovery(intendedIPAfterNAK.String(), gatewayIP.String(),
@@ -156,7 +159,7 @@ func DHCPRebootNAK(ctx context.Context, s *testing.State) {
 				return errors.Errorf("unexpected address: got %s, want %s", props.Address, intendedIPAfterNAK.String())
 			}
 			return nil
-		}, &testing.PollOptions{Timeout: 5 * time.Second})
+		}, &testing.PollOptions{Timeout: rebindingTimeout})
 	}); len(errs) > 0 {
 		for _, err := range errs {
 			s.Error("Failed to verify DHCP negotiation for reconnect: ", err)
