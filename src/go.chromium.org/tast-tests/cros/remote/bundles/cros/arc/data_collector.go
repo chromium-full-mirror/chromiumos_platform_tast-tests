@@ -286,10 +286,9 @@ func init() {
 			Name:              "branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_p"},
-			// x86-64 ARC: pyro(reef-Intel), sand(reef-Intel), snappy(reef-Intel), careena(grunt-AMD), treeya(grunt-AMD)
+			// x86-64 ARC: pyro(reef-Intel), sand(reef-Intel), snappy(reef-Intel)
 			// arm ARC: elm(elm) - 1 model exception with all other devices either reached AUE or migrated to R.
-			// TODO(b/293160140): Remove grunt models once they fully migrate to R-Container.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("pyro", "sand", "snappy", "elm", "careena", "treeya")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("pyro", "sand", "snappy", "elm")),
 			Val: testParam{
 				vmEnabled:                     false,
 				androidPackage:                "android-container-pi",
@@ -297,7 +296,7 @@ func init() {
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				dexOptCacheGen:                false,
-				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "x86_64-ndk", "arm-native"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "arm-native"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
