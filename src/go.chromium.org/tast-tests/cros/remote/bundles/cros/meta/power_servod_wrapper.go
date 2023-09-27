@@ -35,6 +35,16 @@ func init() {
 				Name: "bare",
 				Val:  "",
 			},
+			{
+				Name:      "cpd_vp_h264_1080_30fps",
+				Val:       "power.VideoPlayback.h264_1080_30fps_ash",
+				ExtraAttr: []string{"group:power", "power_cpd"},
+			},
+			{
+				Name:      "cpd_vp_vp9_1080_30fps",
+				Val:       "power.VideoPlayback.vp9_1080_30fps_ash",
+				ExtraAttr: []string{"group:power", "power_cpd"},
+			},
 		},
 		Vars: []string{"servo", "test_to_run"},
 	})
