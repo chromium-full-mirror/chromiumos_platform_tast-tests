@@ -11,8 +11,10 @@ import (
 	"path/filepath"
 	"time"
 
+	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
+
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -261,5 +263,56 @@ func ClickOnMaximizeButton(ctx context.Context, uiautoSvc ui.AutomationServiceCl
 		return errors.Wrap(err, "failed to click on maximize button from context menu")
 	}
 
+	return nil
+}
+
+// ClickPowerSourceOption clicks the option after open power source combobox.
+func ClickPowerSourceOption(ctx context.Context, uiautoSvc ui.AutomationServiceClient, comboBoxFinder, optionFinder *ui.Finder) error {
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: comboBoxFinder}); err != nil {
+		return errors.Wrap(err, "wait power source exists")
+	}
+	if _, err := uiautoSvc.DoDefault(ctx, &ui.DoDefaultRequest{Finder: comboBoxFinder}); err != nil {
+		return errors.Wrap(err, "click power source combobox")
+	}
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: optionFinder}); err != nil {
+		return errors.Wrap(err, "click power source option")
+	}
+	return nil
+}
+
+// OpenPowerSettings opens the power settings page.
+func OpenPowerSettings(ctx context.Context, cs ui.ChromeServiceClient, appsSvc pb.AppsServiceClient, uiautoSvc ui.AutomationServiceClient) error {
+	launchAppTimeout := 60
+
+	deviceFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Name{Name: "Device"}},
+			{Value: &ui.NodeWith_First{First: true}},
+		},
+	}
+	powerFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Name{Name: "Power"}},
+			{Value: &ui.NodeWith_First{First: true}},
+		},
+	}
+
+	if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Settings", TimeoutSecs: int32(launchAppTimeout)}); err != nil {
+		return errors.Wrap(err, "launch settings app")
+	}
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: deviceFinder}); err != nil {
+		return errors.Wrap(err, "wait device button")
+	}
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: deviceFinder}); err != nil {
+		return errors.Wrap(err, "click device button")
+	}
+	// GoBigSleepLint. Sleep is 2 second time, ensure power button position is correct.
+	testing.Sleep(ctx, 2*time.Second)
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: powerFinder}); err != nil {
+		return errors.Wrap(err, "wait power button")
+	}
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: powerFinder}); err != nil {
+		return errors.Wrap(err, "click power button")
+	}
 	return nil
 }
