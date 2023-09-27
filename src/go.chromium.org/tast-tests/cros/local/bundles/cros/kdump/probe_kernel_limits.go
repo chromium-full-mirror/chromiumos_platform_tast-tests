@@ -30,7 +30,7 @@ func ProbeKernelLimits(ctx context.Context, s *testing.State) {
 		return
 	}
 	val := strings.TrimSuffix(string(valBytes), "\n")
-	if val != "1" {
+	if val == "1" {
 		s.Log("kexec disabled via kexec_load_disabled")
 		return
 	}
