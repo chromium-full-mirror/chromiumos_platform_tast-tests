@@ -8,8 +8,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"strconv"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -38,7 +36,7 @@ func init() {
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel("hana", "elm", "sycamore", "sycamore360", "telesu", "birch", "maple", "maple14")),
 		Timeout:      20 * time.Minute,
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 	})
@@ -54,25 +52,6 @@ func FWSysfsVPD(ctx context.Context, s *testing.State) {
 
 	if err := h.RequireBiosServiceClient(ctx); err != nil {
 		s.Fatal("Requiring BiosServiceClient: ", err)
-	}
-
-	// Check for FW version and fail if it's below 8846
-	// See b:156407743 for details.
-	s.Log("Checking for FW version")
-	fwidOut, err := h.DUT.Conn().CommandContext(ctx, "crossystem", "fwid").Output()
-	if err != nil {
-		s.Fatal("Failed to check firmware version: ", err)
-	}
-
-	fwidMajorStr := strings.Split(string(fwidOut), ".")
-
-	fwidMajor, err := strconv.Atoi(fwidMajorStr[1])
-	if err != nil {
-		s.Fatal("Failed to parse firmware version string: ", string(fwidOut))
-	}
-
-	if fwidMajor <= 8846 {
-		s.Fatal("Firmware version is below 8846, cannot continue: ", fwidMajor)
 	}
 
 	s.Log("Generating random strings for VPD values")
