@@ -109,7 +109,8 @@ func getCurrentNvmePowerState(ctx context.Context, disk *Disk) (int64, error) {
 	if err != nil {
 		return -1, errors.Wrap(err, "can't get NVMe power state")
 	}
-	return value, nil
+	// Lower 5 bit define the power state, upper 3 bit - workload hint.
+	return value & 0x1f, nil
 }
 
 func checkApstEnabled(ctx context.Context, disk *Disk) (bool, error) {
