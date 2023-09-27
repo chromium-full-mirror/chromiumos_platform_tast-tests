@@ -73,9 +73,9 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 
 	chargeBattery(cleanupCtx, s)
 
-	// Disconnect battery.
-	if err := pxy.Servo().SetCC(ctx, "off"); err != nil {
-		s.Fatal("Unable to disable Servo CC: ", err)
+	// Disable charging
+	if _, err := s.DUT().Conn().CommandContext(cleanupCtx, "ectool", "chargeoverride", "dontcharge").Output(); err != nil {
+		s.Fatal("Unable to disable charging: ", err)
 	}
 
 	cpdVBATMetric := perf.Metric{
@@ -130,9 +130,9 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	servoCancel()
 	servoResult := <-ch
 
-	// Reconnect battery.
-	if err := pxy.Servo().SetCC(ctx, "srcdts"); err != nil {
-		s.Fatal("Failed to enable Servo CC: ", err)
+	// Enable charging
+	if _, err := s.DUT().Conn().CommandContext(cleanupCtx, "ectool", "chargeoverride", "off").Output(); err != nil {
+		s.Fatal("Unable to enable charging: ", err)
 	}
 
 	subtestDir := filepath.Join(resultsDir, "tests", subtest)
