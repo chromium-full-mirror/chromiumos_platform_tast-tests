@@ -15,11 +15,18 @@ import (
 // TestGoogleSafeSearch checks whether safe search is automatically enabled for
 // Google search.
 func TestGoogleSafeSearch(ctx context.Context, br *browser.Browser, safeSearchExpected bool) error {
-	conn, err := br.NewConn(ctx, "https://www.google.com/search?q=kittens")
+	conn, err := br.NewConn(ctx, "")
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to Chrome")
 	}
 	defer conn.Close()
+
+	if err := conn.Navigate(ctx, "https://www.google.com/search?q=kittens"); err != nil {
+		return errors.Wrap(err, "failed to navigate to google search url")
+	}
+	if err := conn.WaitForExpr(ctx, `document.URL.includes("google.com")`); err != nil {
+		return errors.Wrap(err, "failed to wait for navigation")
+	}
 
 	originalCondition := `new URL(document.URL).searchParams.get("safe") == "active"`
 	// If page was redirected for security check the original url will be encoded in the new url query params:
