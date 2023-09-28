@@ -614,16 +614,12 @@ var keyboardReadyRe *regexp.Regexp = regexp.MustCompile(`KB enable|HC 0x0*67`)
 // WaitFirmwareKeyboard waits until the DUT is in firmware with keyboard enabled
 // On entry the DUT can be in firmware or kernel.
 // This function works by waiting for the "KB enable" or "HC 0x67" message shown by the EC when it boots.
-func (s *Servo) WaitFirmwareKeyboard(ctx context.Context, timeout time.Duration) error {
-	if err := s.SetOnOff(ctx, ECUARTCapture, On); err != nil {
-		return errors.Wrap(err, "failed to capture EC UART")
+func (s *Servo) WaitFirmwareKeyboard(ctx context.Context, timeout time.Duration) (retErr error) {
+	closeUART, err := s.EnableUARTCapture(ctx, ECUARTCapture)
+	if err != nil {
+		return errors.Wrap(err, "failed to enable capture EC UART")
 	}
-	defer func() {
-		if err := s.SetOnOff(ctx, ECUARTCapture, Off); err != nil {
-			testing.ContextLog(ctx, "Failed to disable capture EC UART")
-		}
-	}()
-
+	defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }()
 	if err := s.PollForRegexp(ctx, ECUARTStream, keyboardReadyRe, timeout); err != nil {
 		return errors.Wrap(err, "failed to find keyboard enable")
 	}

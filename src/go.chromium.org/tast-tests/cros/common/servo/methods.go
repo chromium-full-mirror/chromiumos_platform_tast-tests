@@ -1360,7 +1360,35 @@ func (s *Servo) CloseLid(ctx context.Context) error {
 	return s.SetString(ctx, LidOpen, string(LidOpenNo))
 }
 
-// PollForRegexp polls a UART for one or more strings for up to timeout, returning nil if found
+// EnableUARTCapture enables capture on the specified UART control, unless it is already enabled.
+// Make sure you call the close function in a deferred call. I.e.
+// closeUART, err := s.EnableUARTCapture(ctx, ECUARTCapture)
+// if err != nil { ... }
+// defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }
+// ... Do a reboot or something ...
+// err = s.PollForRegexp(ctx, ECUARTStream, regex, time.Minute)
+// if err != nil { ... }
+func (s *Servo) EnableUARTCapture(ctx context.Context, uart OnOffControl) (closeUART func(ctx context.Context) error, err error) {
+	closeUART = func(ctx context.Context) error { return nil }
+	if on, err := s.GetOnOff(ctx, uart); err != nil {
+		return closeUART, errors.Wrapf(err, "failed to query capture %s", uart)
+	} else if !on {
+		testing.ContextLogf(ctx, "Capturing %s", uart)
+		if err := s.SetOnOff(ctx, uart, On); err != nil {
+			return closeUART, errors.Wrapf(err, "failed to capture %s", uart)
+		}
+		closeUART = func(ctx context.Context) error {
+			testing.ContextLogf(ctx, "Disable capture %s", uart)
+			if err := s.SetOnOff(ctx, uart, Off); err != nil {
+				return errors.Wrapf(err, "failed to disable capture %s", uart)
+			}
+			return nil
+		}
+	}
+	return
+}
+
+// PollForRegexp polls a UART for one or more strings for up to timeout, returning nil if found. You may need to call EnableUARTCapture() before rebooting to capture boot time logs.
 func (s *Servo) PollForRegexp(ctx context.Context, uart StringControl, toFind *regexp.Regexp, timeout time.Duration) error {
 	var leftoverLines string
 

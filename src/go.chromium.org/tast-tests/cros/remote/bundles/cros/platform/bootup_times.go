@@ -395,7 +395,7 @@ func powerNormalPress(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy) error
 }
 
 // waitForS0State waits for S0 power state
-func waitForS0State(ctx context.Context, pxy *servo.Proxy) error {
+func waitForS0State(ctx context.Context, pxy *servo.Proxy) (retErr error) {
 	var leftoverLines string
 	readyForPowerOn := regexp.MustCompile(`power state 1 = S5`)
 	tooLateToPowerOn := regexp.MustCompile(`power state 0 = G3`)
@@ -404,16 +404,11 @@ func waitForS0State(ctx context.Context, pxy *servo.Proxy) error {
 	didPowerOn := false
 	hitS5 := false
 	donePowerOff := false
-	testing.ContextLog(ctx, "Capturing EC log")
-	if err := pxy.Servo().SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
-		return errors.Wrap(err, "failed to capture EC UART")
+	closeUART, err := pxy.Servo().EnableUARTCapture(ctx, servo.ECUARTCapture)
+	if err != nil {
+		return errors.Wrap(err, "failed to enable capture EC UART")
 	}
-	defer func() error {
-		if err := pxy.Servo().SetOnOff(ctx, servo.ECUARTCapture, servo.Off); err != nil {
-			return errors.Wrap(err, "failed to disable capture EC UART")
-		}
-		return nil
-	}()
+	defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }()
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		lines, err := pxy.Servo().GetQuotedString(ctx, servo.ECUARTStream)
 		if err != nil {

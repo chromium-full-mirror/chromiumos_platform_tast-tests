@@ -47,13 +47,13 @@ func BIOSCodeAB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to require servo: ", err)
 	}
 
-	s.Log("Capturing EC log")
-	if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
+	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+	if err != nil {
 		s.Fatal("Failed to capture EC UART: ", err)
 	}
 	defer func() {
-		if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.Off); err != nil {
-			s.Fatal("Failed to disable capture EC UART: ", err)
+		if err := closeUART(ctx); err != nil {
+			s.Fatal("Failed to cancel capture EC UART: ", err)
 		}
 	}()
 	// Read the uart stream just to make sure there isn't buffered data.

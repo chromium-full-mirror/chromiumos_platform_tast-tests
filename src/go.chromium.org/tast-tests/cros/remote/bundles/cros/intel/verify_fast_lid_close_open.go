@@ -72,11 +72,15 @@ func VerifyFastLidCloseOpen(ctx context.Context, s *testing.State) {
 	}
 	iterations := s.Param().(int)
 
-	s.Log("Capturing EC log")
-	if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
+	ucancel, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+	defer func() {
+		if err := ucancel(cleanupCtx); err != nil {
+			s.Fatal("Failed to cancel capture EC UART: ", err)
+		}
+	}()
+	if err != nil {
 		s.Fatal("Failed to capture EC UART: ", err)
 	}
-	defer h.Servo.SetOnOff(cleanupCtx, servo.ECUARTCapture, servo.Off)
 
 	// Read the uart stream just to make sure there isn't buffered data.
 	if _, err := h.Servo.GetQuotedString(ctx, servo.ECUARTStream); err != nil {

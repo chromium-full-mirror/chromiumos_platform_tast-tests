@@ -116,8 +116,13 @@ func BootTime(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to init servo: ", err)
 	}
 
-	s.Log("Capturing EC log")
-	if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
+	cancel, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+	defer func() {
+		if err := cancel(ctx); err != nil {
+			s.Fatal("Failed to cancel capture EC UART: ", err)
+		}
+	}()
+	if err != nil {
 		s.Fatal("Failed to capture EC UART: ", err)
 	}
 	timestampState, err := h.Servo.GetOnOff(ctx, servo.ECUARTTimestamp)
@@ -130,9 +135,6 @@ func BootTime(ctx context.Context, s *testing.State) {
 	defer func() {
 		var onoff servo.OnOffValue
 
-		if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.Off); err != nil {
-			s.Fatal("Failed to disable capture EC UART: ", err)
-		}
 		if timestampState {
 			onoff = servo.On
 		} else {

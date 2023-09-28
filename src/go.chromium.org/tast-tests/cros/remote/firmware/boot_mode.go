@@ -783,7 +783,7 @@ func (ms *ModeSwitcher) WarmResetToRecovery(ctx context.Context, fromMode fwComm
 // EnableRecMode powers the DUT into the "rec" state, but does not wait to reconnect to the DUT.
 // If booting into rec mode, usbMux should point to the DUT, so that the DUT can finish booting into recovery mode.
 // Otherwise, usbMux should be off. This will prevent the DUT from transitioning to rec mode, so other operations can be performed (such as bypassing to dev mode).
-func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerStateValue, usbMux servo.USBMuxState) error {
+func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerStateValue, usbMux servo.USBMuxState) (retErr error) {
 	h := ms.Helper
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "requiring servo")
@@ -845,14 +845,12 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 		// is caught, attempt a few more retries to boot dut to recovery.
 		var ecStream string
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			testing.ContextLog(ctx, "Capturing EC log")
-			if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
-				return errors.Wrap(err, "failed to set ec_uart_capture on")
+			closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+			if err != nil {
+				return errors.Wrap(err, "failed to enable capture EC UART")
 			}
 			defer func() {
-				if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.Off); err != nil {
-					testing.ContextLog(ctx, "Failed to disable ec_uart_capture: ", err)
-				}
+				retErr = errors.Join(retErr, closeUART(ctx))
 				// Sometimes capturing thermal shutdown fails because of
 				// noise data, for example, "thermal SHUTDOWN". Setting
 				// the 'chan' command before to hear from a particular channel
@@ -903,15 +901,11 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 			return err
 		}
 	} else {
-		testing.ContextLog(ctx, "Capturing EC log")
-		if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
-			return errors.Wrap(err, "failed to set ec_uart_capture on")
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			return errors.Wrap(err, "failed to enable capture EC UART")
 		}
-		defer func() {
-			if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.Off); err != nil {
-				testing.ContextLog(ctx, "Failed to disable ec_uart_capture: ", err)
-			}
-		}()
+		defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }()
 		if err := h.Servo.SetPowerState(ctx, recType); err != nil {
 			return errors.Wrapf(err, "setting power state to %s", recType)
 		}
