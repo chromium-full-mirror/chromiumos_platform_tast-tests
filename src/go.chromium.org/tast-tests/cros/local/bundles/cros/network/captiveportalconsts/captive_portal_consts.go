@@ -15,8 +15,6 @@ const (
 	RedirectURL = "http://www.example.com"
 	// HTTPSPortalURL contains the URL to be set in the manager.
 	HTTPSPortalURL = "https://www.example.com"
-	// TestProxyConfig contains a fake proxy config.
-	TestProxyConfig = "test proxy config"
 )
 
 // RedirectHandler is the handler used to redirect when a redirect is found.

@@ -27,7 +27,7 @@ type healthCaptivePortalHTTPParams struct {
 	serviceState         string
 	httpResponseHandler  func(rw http.ResponseWriter, req *http.Request)
 	httpsResponseHandler func(rw http.ResponseWriter, req *http.Request)
-	proxyConfig          string
+	oncSource            string
 	checkPortal          bool
 	networkState         string
 	portalState          string
@@ -53,21 +53,43 @@ func init() {
 				serviceState:         shillconst.ServiceStateRedirectFound,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
-				proxyConfig:          "",
+				oncSource:            "",
 				checkPortal:          true,
 				networkState:         health.NetworkStatePortal,
 				portalState:          health.PortalStatePortal,
 			},
 		}, {
-			Name: "proxyconfig",
+			Name: "managednetworkdevicepolicy",
 			Val: &healthCaptivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
-				proxyConfig:          captiveportalconsts.TestProxyConfig,
+				oncSource:            shillconst.ServiceONCSourceDevicePolicy,
 				checkPortal:          true,
 				networkState:         health.NetworkStateOnline,
 				portalState:          health.PortalStateOnline,
+			},
+		}, {
+			Name: "managednetworkuserpolicy",
+			Val: &healthCaptivePortalHTTPParams{
+				serviceState:         shillconst.ServiceStateOnline,
+				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
+				httpsResponseHandler: nil,
+				oncSource:            shillconst.ServiceONCSourceUserPolicy,
+				checkPortal:          true,
+				networkState:         health.NetworkStateOnline,
+				portalState:          health.PortalStateOnline,
+			},
+		}, {
+			Name: "managednetworknone",
+			Val: &healthCaptivePortalHTTPParams{
+				serviceState:         shillconst.ServiceStateRedirectFound,
+				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
+				httpsResponseHandler: nil,
+				oncSource:            shillconst.ServiceONCSourceNone,
+				checkPortal:          true,
+				networkState:         health.NetworkStatePortal,
+				portalState:          health.PortalStatePortal,
 			},
 		}, {
 			Name: "checkportalfalse",
@@ -75,7 +97,7 @@ func init() {
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
-				proxyConfig:          "",
+				oncSource:            "",
 				checkPortal:          false,
 				networkState:         health.NetworkStateOnline,
 				portalState:          health.PortalStateOnline,
@@ -86,7 +108,7 @@ func init() {
 				serviceState:         shillconst.ServiceStatePortalSuspected,
 				httpResponseHandler:  captiveportalconsts.RedirectWithNoLocationHandler,
 				httpsResponseHandler: nil,
-				proxyConfig:          "",
+				oncSource:            "",
 				checkPortal:          true,
 				networkState:         health.NetworkStatePortal,
 				// Chrome portal detection will override PortalSuspected with Portal
@@ -99,7 +121,7 @@ func init() {
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.NoContentHandler,
 				httpsResponseHandler: captiveportalconsts.NoContentHandler,
-				proxyConfig:          "",
+				oncSource:            "",
 				checkPortal:          true,
 				networkState:         health.NetworkStateOnline,
 				portalState:          health.PortalStateOnline,
@@ -110,7 +132,7 @@ func init() {
 				serviceState:         shillconst.ServiceStateNoConnectivity,
 				httpResponseHandler:  nil,
 				httpsResponseHandler: nil,
-				proxyConfig:          "",
+				oncSource:            "",
 				checkPortal:          true,
 				networkState:         health.NetworkStatePortal,
 				portalState:          health.PortalStateNoInternet,
@@ -121,7 +143,7 @@ func init() {
 				serviceState:         shillconst.ServiceStateRedirectFound,
 				httpResponseHandler:  captiveportalconsts.TempRedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
-				proxyConfig:          "",
+				oncSource:            "",
 				checkPortal:          true,
 				networkState:         health.NetworkStatePortal,
 				portalState:          health.PortalStatePortal,
@@ -190,28 +212,29 @@ func HealthCaptivePortalHTTP(ctx context.Context, s *testing.State) {
 		HTTPSCerts:                 httpsCerts,
 	}
 	pool := subnet.NewPool()
-	veth, portalEnv, err := virtualnet.CreateRouterEnv(ctx, m, pool, opts)
+	service, portalEnv, err := virtualnet.CreateRouterEnv(ctx, m, pool, opts)
 	if err != nil {
 		s.Fatal("Failed to create a portal env: ", err)
 	}
 	defer portalEnv.Cleanup(cleanupCtx)
 
-	pw, err := veth.CreateWatcher(ctx)
+	pw, err := service.CreateWatcher(ctx)
 	if err != nil {
 		s.Fatal("Failed to create watcher: ", err)
 	}
 	defer pw.Close(cleanupCtx)
 
-	//testing for ProxyConfig - no portal state to send in this case
-	if params.proxyConfig != "" {
-		if err := veth.SetProperty(ctx, shillconst.ServicePropertyProxyConfig, params.proxyConfig); err != nil {
-			s.Fatal("Failed to set ProxyConfig: ", err)
+	// Set oncSource property on service. For UserPolicy and DevicePolicy, shill will skip portal detection.
+	// For no policy, shill will do portal detection.
+	if params.oncSource != "" {
+		if err := service.SetProperty(ctx, shillconst.ServicePropertyONCSource, params.oncSource); err != nil {
+			s.Fatal("Failed to set ServicePropertyONCSource: ", err)
 		}
 	}
 
-	//testing for CheckPortal - no portal state to send in this case
+	// Set checkPortal on service. If |false|, shill will skip portal detection.
 	if !params.checkPortal {
-		if err := veth.SetProperty(ctx, shillconst.ServicePropertyCheckPortal, "false"); err != nil {
+		if err := service.SetProperty(ctx, shillconst.ServicePropertyCheckPortal, "false"); err != nil {
 			s.Fatal("Failed to invoke CheckPortal service: ", err)
 		}
 	}
@@ -240,8 +263,8 @@ func HealthCaptivePortalHTTP(ctx context.Context, s *testing.State) {
 
 	// The default service is guaranteed to to be first in Shill.
 	defaultService := services[0]
-	if !reflect.DeepEqual(defaultService, veth) {
-		s.Fatalf("Unexpected default service, got: %v, want: %v", defaultService, veth)
+	if !reflect.DeepEqual(defaultService, service) {
+		s.Fatalf("Unexpected default service, got: %v, want: %v", defaultService, service)
 	}
 	name, err := defaultService.GetName(ctx)
 	if err != nil {
