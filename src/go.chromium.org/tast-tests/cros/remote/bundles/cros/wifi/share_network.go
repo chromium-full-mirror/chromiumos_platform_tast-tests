@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
@@ -46,6 +47,7 @@ const (
 	deviceOwner shareNetworkTestUser = iota
 	normalUser
 	guest
+	noLogin
 )
 
 type shareNetworkTestNetwork struct {
@@ -128,6 +130,7 @@ func init() {
 			"tast.cros.ui.AutomationService",
 			wifiutil.FaillogServiceName,
 		},
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Timeout:      5 * time.Minute,
@@ -153,7 +156,7 @@ func init() {
 							openNetwork.checkConnected,
 							openNetwork.checkKnownNetwork,
 							openNetwork.forgetButtonAvailable, // Any user should be able to forget a shared network.
-							secureNetwork.isNotKnownNetwork,
+							secureNetwork.isNotKnownNetwork(normalUser),
 						},
 					},
 					// Further add a non-shared network for later use.
@@ -169,15 +172,23 @@ func init() {
 						verifications: []func(*rpc.Client) action.Action{
 							openNetwork.checkKnownNetwork,
 							openNetwork.forgetButtonAvailable, // Any user should be able to forget a shared network.
-							secureNetwork.isNotKnownNetwork,
-							secureNetwork2.isNotKnownNetwork,
+							secureNetwork.isNotKnownNetwork(guest),
+							secureNetwork2.isNotKnownNetwork(guest),
 						},
 					},
 					// Verify the non-shared added by other user is indeed not shared with device owner.
 					{
 						loginAs: deviceOwner,
 						verifications: []func(*rpc.Client) action.Action{
-							secureNetwork2.isNotKnownNetwork,
+							secureNetwork2.isNotKnownNetwork(deviceOwner),
+						},
+					},
+					// Verify that the non-shared network added by other user is not shared when no one is logged in.
+					{
+						loginAs: noLogin,
+						verifications: []func(*rpc.Client) action.Action{
+							secureNetwork.isNotKnownNetwork(noLogin),
+							secureNetwork2.isNotKnownNetwork(noLogin),
 						},
 					},
 				},
@@ -202,6 +213,11 @@ func ShareNetwork(ctx context.Context, s *testing.State) {
 		guest: {
 			LoginMode: ui.LoginMode_LOGIN_MODE_GUEST_LOGIN,
 			KeepState: true,
+		},
+		noLogin: {
+			LoginMode:                    ui.LoginMode_LOGIN_MODE_NO_LOGIN,
+			SigninProfileTestExtensionId: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
+			KeepState:                    true,
 		},
 	}
 
@@ -237,8 +253,9 @@ func ShareNetwork(ctx context.Context, s *testing.State) {
 		var actions []action.Action
 
 		// Verify that shill profile is loaded correctly for each user session.
-		actions = append(actions, correctShillProfileIsLoaded(rpcClient, s.DUT()))
-
+		if user != noLogin {
+			actions = append(actions, correctShillProfileIsLoaded(rpcClient, s.DUT()))
+		}
 		if len(test.networksToJoin) > 0 {
 			actions = append(actions, joinNetworks(rpcClient, test.networksToJoin))
 		}
@@ -330,18 +347,59 @@ func (network *shareNetworkTestNetwork) checkKnownNetwork(rpcClient *rpc.Client)
 	}
 }
 
-// isNotKnownNetwork returns an action that verifies a network is not a known network by check if the network is not listed in the known network list.
-// The returned action will return an error if the network is known, and otherwise will return |nil|.
-func (network *shareNetworkTestNetwork) isNotKnownNetwork(rpcClient *rpc.Client) action.Action {
-	wifiSvc := wifi.NewWifiServiceClient(rpcClient.Conn)
-	return func(ctx context.Context) error {
-		if _, err := wifiSvc.KnownNetworksControls(ctx, &wifi.KnownNetworksControlsRequest{
-			Ssids:   []string{network.Config().SSID},
-			Control: wifi.KnownNetworksControlsRequest_WaitUntilGone,
-		}); err != nil {
-			return errors.Wrap(err, "failed to verify the network is listed in known networks")
+// isNotKnownNetwork returns an action that verifies a network is not a known
+// network by checking if the network is not listed in the known network list.
+// The returned action will return an error if the network is known, and
+// otherwise will return |nil|.
+func (network *shareNetworkTestNetwork) isNotKnownNetwork(user shareNetworkTestUser) func(*rpc.Client) action.Action {
+	switch user {
+	case noLogin:
+		// RPC KnownNetworksControls requires OS-Settings app and it's not available when
+		// DUT is not logged in, so it has to be done by checking Quick Settings instead.
+		return func(rpcClient *rpc.Client) action.Action {
+			quickSettingsSvc := quicksettings.NewQuickSettingsServiceClient(rpcClient.Conn)
+			uiauto := ui.NewAutomationServiceClient(rpcClient.Conn)
+			return func(ctx context.Context) error {
+				if _, err := quickSettingsSvc.SelectNetwork(ctx, &quicksettings.SelectNetworkRequest{
+					Ssid: network.Config().SSID,
+				}); err != nil {
+					return errors.Wrap(err, "failed to select the network")
+				}
+
+				// Wait for the join network settings dialog to appear.
+				if _, err := uiauto.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: wifiutil.JoinWiFiNetworkDialogFinder}); err != nil {
+					return errors.Wrap(err, "failed to verify if the join network settings dialog is displayed")
+				}
+				// Wait for the password input field to appear.
+				// We check for the password input field to confirm that the network
+				// is not remembered (no credentials saved).
+				if _, err := uiauto.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: wifiutil.PasswordFieldFinder}); err != nil {
+					return errors.Wrap(err, "failed to verify if the password input field is displayed")
+				}
+
+				// Close the join network settings dialog.
+				closeDialogButton := ui.Node().Name("Cancel").Role(ui.Role_ROLE_BUTTON).Ancestor(wifiutil.JoinWiFiNetworkDialogFinder).Finder()
+				if _, err := uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: closeDialogButton}); err != nil {
+					return errors.Wrap(err, "failed to close the join network settings dialog")
+				}
+
+				return nil
+			}
 		}
-		return nil
+	default:
+		// RPC KnownNetworksControls is available when DUT is logged in.
+		return func(rpcClient *rpc.Client) action.Action {
+			wifiSvc := wifi.NewWifiServiceClient(rpcClient.Conn)
+			return func(ctx context.Context) error {
+				if _, err := wifiSvc.KnownNetworksControls(ctx, &wifi.KnownNetworksControlsRequest{
+					Ssids:   []string{network.Config().SSID},
+					Control: wifi.KnownNetworksControlsRequest_WaitUntilGone,
+				}); err != nil {
+					return errors.Wrap(err, "failed to verify the network is listed in known networks")
+				}
+				return nil
+			}
+		}
 	}
 }
 
