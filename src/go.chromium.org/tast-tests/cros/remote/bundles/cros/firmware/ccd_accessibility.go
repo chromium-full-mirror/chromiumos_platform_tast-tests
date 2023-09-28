@@ -155,15 +155,8 @@ func CCDAccessibility(ctx context.Context, s *testing.State) {
 // lockOpenCCDprocedure will lock ccd and attempt to open it without using testlab.
 func lockOpenCCDprocedure(ctx context.Context, h *firmware.Helper) error {
 	// Lock CCD.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		re := `CCD locked.`
-		_, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccd lock", []string{re})
-		if err != nil {
-			return errors.Wrap(err, "failed to lock CCD")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 2 * time.Second}); err != nil {
-		return err
+	if err := h.Servo.LockCCD(ctx); err != nil {
+		return errors.Wrap(err, "failed to lock CCD")
 	}
 	testing.ContextLog(ctx, "CCD is lock")
 
