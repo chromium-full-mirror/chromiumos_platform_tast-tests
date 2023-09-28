@@ -193,6 +193,86 @@ func AdvancedScan(ctx context.Context, s *testing.State) {
 		s.Error("Mismatch for source: ", err)
 	}
 
+	// Set the requested dimensions to color A4 at 150 dpi.
+	s.Log("Setting scan options")
+	setOptionsRequest := &lpb.SetOptionsRequest{
+		Scanner: handle,
+		Options: []*lpb.ScannerOption{
+			&lpb.ScannerOption{
+				// Deliberately include a bad option to verify that it doesn't prevent the rest from being set.
+				Name:       "bad-option",
+				OptionType: lpb.OptionType_TYPE_BOOL,
+				Value:      &lpb.ScannerOption_BoolValue{BoolValue: true},
+			},
+			&lpb.ScannerOption{
+				Name:       "mode",
+				OptionType: lpb.OptionType_TYPE_STRING,
+				Value:      &lpb.ScannerOption_StringValue{StringValue: "color"},
+			},
+			&lpb.ScannerOption{
+				Name:       "resolution",
+				OptionType: lpb.OptionType_TYPE_INT,
+				Value: &lpb.ScannerOption_IntValue{
+					IntValue: &lpb.ScannerOption_IntValues{
+						Value: []int32{150},
+					},
+				},
+			},
+			&lpb.ScannerOption{
+				Name:       "tl-x",
+				OptionType: lpb.OptionType_TYPE_FIXED,
+				Value: &lpb.ScannerOption_FixedValue{
+					FixedValue: &lpb.ScannerOption_FixedValues{
+						Value: []float64{0.0},
+					},
+				},
+			},
+			&lpb.ScannerOption{
+				Name:       "tl-y",
+				OptionType: lpb.OptionType_TYPE_FIXED,
+				Value: &lpb.ScannerOption_FixedValue{
+					FixedValue: &lpb.ScannerOption_FixedValues{
+						Value: []float64{0.0},
+					},
+				},
+			},
+			&lpb.ScannerOption{
+				Name:       "br-x",
+				OptionType: lpb.OptionType_TYPE_FIXED,
+				Value: &lpb.ScannerOption_FixedValue{
+					FixedValue: &lpb.ScannerOption_FixedValues{
+						Value: []float64{210.0},
+					},
+				},
+			},
+			&lpb.ScannerOption{
+				Name:       "br-y",
+				OptionType: lpb.OptionType_TYPE_FIXED,
+				Value: &lpb.ScannerOption_FixedValue{
+					FixedValue: &lpb.ScannerOption_FixedValues{
+						Value: []float64{297.0},
+					},
+				},
+			},
+		},
+	}
+	setOptionsResponse, err := l.SetOptions(ctx, setOptionsRequest)
+	if err != nil {
+		s.Fatal("Failed to call SetOptions: ", err)
+	}
+	for optname, result := range setOptionsResponse.Results {
+		// bad-option should fail and the rest should succeed.
+		if optname == "bad-option" && result != lpb.OperationResult_OPERATION_RESULT_UNSUPPORTED {
+			s.Fatal("Wrong SetOptions result for bad-option: ", lpb.OperationResult.String(result))
+		}
+		if optname != "bad-option" && result != lpb.OperationResult_OPERATION_RESULT_SUCCESS {
+			s.Fatalf("Wrong SetOptions result for %v: %v", optname, lpb.OperationResult.String(result))
+		}
+	}
+	if setOptionsResponse.Config == nil {
+		s.Fatal("Successful SetOptions response is missing Config")
+	}
+
 	s.Log("Starting scan")
 	startScanRequest := &lpb.StartPreparedScanRequest{
 		Scanner:     handle,
@@ -251,9 +331,8 @@ func AdvancedScan(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("Got %d total scanned bytes", len(scanData))
 
-	// Expect a color 8.5x11.69" image at 300 dpi.
-	// TODO(b/274860786): Check correct options once non-default option setting is available.
-	if err := checkImage(scanData, 2550, 3507); err != nil {
+	// Expect a color 210x297mm image at 150 dpi.
+	if err := checkImage(scanData, 1240, 1753); err != nil {
 		s.Error("Incorrect scanned image: ", err)
 		saveScanPath := filepath.Join(s.OutDir(), "scan.png")
 		if err := ioutil.WriteFile(saveScanPath, scanData, 0644); err != nil {

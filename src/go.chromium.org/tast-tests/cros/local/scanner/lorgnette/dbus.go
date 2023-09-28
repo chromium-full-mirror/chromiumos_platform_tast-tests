@@ -281,6 +281,26 @@ func (l *Lorgnette) CloseScanner(ctx context.Context, request *lpb.CloseScannerR
 	return response, nil
 }
 
+// SetOptions calls lorgnette's SetOptions method and returns the remote response.
+func (l *Lorgnette) SetOptions(ctx context.Context, request *lpb.SetOptionsRequest) (*lpb.SetOptionsResponse, error) {
+	marshalled, err := proto.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal SetOptionsRequest")
+	}
+
+	var buf []byte
+	if err := l.obj.CallWithContext(ctx, dbusInterface+".SetOptions", 0, marshalled).Store(&buf); err != nil {
+		return nil, errors.Wrap(err, "failed to call SetOptions")
+	}
+
+	response := &lpb.SetOptionsResponse{}
+	if err := proto.Unmarshal(buf, response); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal SetOptionsResponse")
+	}
+
+	return response, nil
+}
+
 // StartPreparedScan calls lorgnette's StartPreparedScan method and returns the remote response.
 func (l *Lorgnette) StartPreparedScan(ctx context.Context, request *lpb.StartPreparedScanRequest) (*lpb.StartPreparedScanResponse, error) {
 	marshalled, err := proto.Marshal(request)
