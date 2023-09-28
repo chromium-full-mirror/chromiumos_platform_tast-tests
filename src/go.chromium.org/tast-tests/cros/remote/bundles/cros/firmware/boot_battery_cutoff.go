@@ -101,22 +101,8 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 	sendingBatterryCutoff := func(ctx context.Context) error {
 		// Disconnect Charger.
 		s.Log("Stopping power supply")
-		if err := h.SetDUTPower(ctx, false); err != nil {
+		if err := firmware.PollToSetChargerStatus(ctx, h, false); err != nil {
 			return errors.Wrap(err, "failed to remove charger")
-		}
-
-		// Verify that charging stopped before sending battery cutoff.
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			chargerAttached, err := h.Servo.GetChargerAttached(ctx)
-			if err != nil {
-				return errors.Wrap(err, "error checking whether charger is attached")
-			}
-			if chargerAttached {
-				return errors.New("charger was not removed")
-			}
-			return nil
-		}, &testing.PollOptions{Timeout: 20 * time.Second, Interval: 1 * time.Second}); err != nil {
-			return errors.Wrap(err, "failed to check for charger after stopping power suply")
 		}
 		s.Log("Charger is removed")
 
@@ -147,8 +133,9 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 		}
 		s.Log("EC is unresponsive")
 
-		// Wait for a 60-second-delay after sending the batterycutoff command, per the test requirement on SMP battery.
+		// Wait for a 60-second-delay after sending the batterycutoff command.
 		s.Logf("Sleep for %s", sleepDuration)
+		// GoBigSleepLint: Test requirement on SMP battery.
 		if err := testing.Sleep(ctx, sleepDuration); err != nil {
 			return errors.Wrap(err, "failed to sleep")
 		}
@@ -188,13 +175,9 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 		if hasCCD, err := h.Servo.HasCCD(ctx); err != nil {
 			s.Fatal("While checking if servo has a CCD connection: ", err)
 		} else if hasCCD {
-			if val, err := h.Servo.GetString(ctx, servo.GSCCCDLevel); err != nil {
-				s.Fatal("Failed to get gsc_ccd_level: ", err)
-			} else if val != servo.Open {
-				s.Logf("CCD is not open, got %q. Attempting to unlock", val)
-				if err := h.Servo.SetString(ctx, servo.CR50Testlab, servo.Open); err != nil {
-					s.Fatal("Failed to unlock CCD: ", err)
-				}
+			s.Log("Ensuring CCD is open")
+			if err := h.OpenCCD(ctx, false, false); err != nil {
+				s.Fatal("Failed to set CCD open: ", err)
 			}
 		}
 		if *hardwareWPEnabled {
@@ -298,9 +281,10 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 
 	// Connect charger.
 	s.Log("Starting power supply")
-	if err := h.SetDUTPower(ctx, true); err != nil {
+	if err := firmware.PollToSetChargerStatus(ctx, h, true); err != nil {
 		s.Fatal("Failed to attach the charger: ", err)
 	}
+	s.Log("Charger attached")
 
 	// Confirm a successful boot.
 	if err := confirmBoot(ctx, true); err != nil {
