@@ -45,6 +45,9 @@ func init() {
 }
 
 func UfsConfiguration(ctx context.Context, s *testing.State) {
+	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
+	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
+
 	const storageInfoPath = "/mnt/stateful_partition/encrypted/var/log/storage_info.txt"
 	storageInfo, err := util.RunCmdWithStringOutput(ctx, s.DUT(), "cat", storageInfoPath)
 	if err != nil {

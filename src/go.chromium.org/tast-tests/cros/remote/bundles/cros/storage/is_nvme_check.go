@@ -27,6 +27,9 @@ func init() {
 }
 
 func IsNvmeCheck(ctx context.Context, s *testing.State) {
+	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
+	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
+
 	disk, err := util.GetInternalStorage(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get internal disk: ", err)

@@ -37,6 +37,9 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	resultWriter := &util.FioResultWriter{}
 	defer resultWriter.Save(ctx, s.OutDir(), true)
 
+	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
+	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
+
 	disk, err := util.GetStandbyRootfs(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get internal disk: ", err)
@@ -58,6 +61,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
 		cmd := "lsof -p " + pidFio + " -p " + pidSuspend + " +r 1 &>/dev/null"
 		out, err := util.RunCmdWithStringOutputSilent(ctx, s.DUT(), "bash", "-c", cmd)
 		if err != nil {

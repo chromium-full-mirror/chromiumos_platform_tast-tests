@@ -45,6 +45,9 @@ func init() {
 }
 
 func SocPerformance(ctx context.Context, s *testing.State) {
+	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
+	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
+
 	resultWriter := &util.FioResultWriter{}
 	defer resultWriter.Save(ctx, s.OutDir(), true)
 
