@@ -428,10 +428,10 @@ func checkSetMemoryMargins(ctx context.Context, rm *resourced.Client) (resErr er
 	return nil
 }
 
-func checkReportBackgroundPids(ctx context.Context, rm *resourced.Client) (resErr error) {
-	// Check ReportBackgroundPids method can be called successfully.
-	if err := rm.ReportBackgroundPids(ctx, rmpb.ReportBackgroundPids_ASH, []int32{101, 102, 103}); err != nil {
-		return errors.Wrap(err, "failed to call report background pids")
+func checkReportBackgroundProcesses(ctx context.Context, rm *resourced.Client) (resErr error) {
+	// Check ReportBackgroundProcesses method can be called successfully.
+	if err := rm.ReportBackgroundProcesses(ctx, rmpb.ReportBackgroundProcesses_ASH, []int32{101, 102, 103}); err != nil {
+		return errors.Wrap(err, "failed to call report background processes")
 	}
 
 	return nil
@@ -489,7 +489,7 @@ func Resourced(ctx context.Context, s *testing.State) {
 		s.Fatal("Checking swappiness/THP tuning with SetGameModeWithTimeout failed: ", err)
 	}
 
-	if err := checkReportBackgroundPids(ctx, rm); err != nil {
-		s.Fatal("Checking ReportBackgroundPids failed: ", err)
+	if err := checkReportBackgroundProcesses(ctx, rm); err != nil {
+		s.Fatal("Checking ReportBackgroundProcesses failed: ", err)
 	}
 }

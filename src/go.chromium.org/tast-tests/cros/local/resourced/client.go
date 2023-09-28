@@ -264,10 +264,10 @@ func (c *Client) SetMemoryMarginsBps(ctx context.Context, critical, moderate uin
 	return nil
 }
 
-// ReportBackgroundPids reports the list of the background pids of a component (Ash or Lacros).
-func (c *Client) ReportBackgroundPids(ctx context.Context, component rmpb.ReportBackgroundPids_Component, pids []int32) error {
-	if err := dbusutil.CallProtoMethod(ctx, c.obj.Obj(), dbusInterface+".ReportBackgroundPids", &rmpb.ReportBackgroundPids{Component: component, Pids: pids}, nil); err != nil {
-		return errors.Wrap(err, "failed to call method ReportBackgroundPids")
+// ReportBackgroundProcesses reports the list of the background processes of a component (Ash or Lacros).
+func (c *Client) ReportBackgroundProcesses(ctx context.Context, component rmpb.ReportBackgroundProcesses_Component, pids []int32) error {
+	if err := dbusutil.CallProtoMethod(ctx, c.obj.Obj(), dbusInterface+".ReportBackgroundProcesses", &rmpb.ReportBackgroundProcesses{Component: component, Pids: pids}, nil); err != nil {
+		return errors.Wrap(err, "failed to call method ReportBackgroundProcesses")
 	}
 	return nil
 }
