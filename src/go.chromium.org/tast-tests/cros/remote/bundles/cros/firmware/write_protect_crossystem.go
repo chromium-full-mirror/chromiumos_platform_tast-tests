@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -23,7 +24,7 @@ func init() {
 			"cros-flashrom-team@google.com",
 		},
 		BugComponent: "b:750299",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      5 * time.Minute,
@@ -34,17 +35,22 @@ func init() {
 func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
-	// Might potentially fix issues with servod stopping during execution.
-	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
-		s.Fatal("Failed to remove main watchdog: ", err)
-	}
-
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
+	ms, err := firmware.NewModeSwitcher(ctx, h)
+	if err != nil {
+		s.Fatal("Creating mode switcher: ", err)
+	}
+
 	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
 		s.Fatal("Failed to disable WP: ", err)
+	}
+
+	s.Log("Performing mode aware reboot to setting hw wp")
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
+		s.Fatal("Failed to reboot: ", err)
 	}
 
 	if err := fwUtils.CheckCrossystemWPSW(ctx, h, 0); err != nil {
@@ -55,6 +61,11 @@ func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable WP: ", err)
 	}
 
+	s.Log("Performing mode aware reboot to setting hw wp")
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
+		s.Fatal("Failed to reboot: ", err)
+	}
+
 	if err := fwUtils.CheckCrossystemWPSW(ctx, h, 1); err != nil {
 		s.Fatal("Failed to confirm WP is on: ", err)
 	}
@@ -62,5 +73,10 @@ func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 	// Reset FWWP state to off before test end.
 	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
 		s.Fatal("Failed to disable WP: ", err)
+	}
+
+	s.Log("Performing mode aware reboot to setting hw wp")
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
+		s.Fatal("Failed to reboot: ", err)
 	}
 }
