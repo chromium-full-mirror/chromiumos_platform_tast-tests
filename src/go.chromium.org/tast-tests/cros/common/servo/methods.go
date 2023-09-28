@@ -27,9 +27,10 @@ const (
 	ArbKey                StringControl = "arb_key"
 	ArbKeyConfig          StringControl = "arb_key_config"
 	BottomUSBKeyMux       StringControl = "bottom_usbkey_mux"
-	Devices               StringControl = "devices"
+	ColdResetSelect       StringControl = "cold_reset_select"
 	DUTUSB3EnV4p1         StringControl = "servo_v4p1_dut_usb3_en"
 	DUTVoltageMV          StringControl = "dut_voltage_mv"
+	Devices               StringControl = "devices"
 	DownloadImageToUSBDev StringControl = "download_image_to_usb_dev"
 	ECActiveCopy          StringControl = "ec_active_copy"
 	FWWPState             StringControl = "fw_wp_state"
@@ -37,24 +38,24 @@ const (
 	ImageUSBKeyDirection  StringControl = "image_usbkey_direction"
 	ImageUSBKeyPwr        StringControl = "image_usbkey_pwr"
 	LidOpen               StringControl = "lid_open"
+	PDCommunication       StringControl = "servo_pd_comm"
 	PowerState            StringControl = "power_state"
+	PwrButtonCtrl         StringControl = "pwr_button"
+	ServoDUTSBU1MV        StringControl = "servo_dut_sbu1_mv"
+	ServoDUTSBU2MV        StringControl = "servo_dut_sbu2_mv"
+	SupportCrosECComm     StringControl = "supports_cros_ec_communication"
 	TopUSBKeyMux          StringControl = "top_usbkey_mux"
 	Type                  StringControl = "servo_type"
 	UARTCmd               StringControl = "servo_uart_cmd"
 	UARTRegexp            StringControl = "servo_v4_uart_regexp"
 	UARTRegexpV4p1        StringControl = "servo_v4p1_uart_regexp"
-	WarmReset             StringControl = "warm_reset"
 	USBArbKey             StringControl = "usb_arb_key"
 	USBArbKeyConfig       StringControl = "usb_arb_key_config"
+	USBCPolarity          StringControl = "usbc_polarity"
+	WarmReset             StringControl = "warm_reset"
 	Watchdog              StringControl = "watchdog"
 	WatchdogAdd           StringControl = "watchdog_add"
 	WatchdogRemove        StringControl = "watchdog_remove"
-	PDCommunication       StringControl = "servo_pd_comm"
-	SupportCrosECComm     StringControl = "supports_cros_ec_communication"
-	PwrButtonCtrl         StringControl = "pwr_button"
-	ServoDUTSBU1MV        StringControl = "servo_dut_sbu1_mv"
-	ServoDUTSBU2MV        StringControl = "servo_dut_sbu2_mv"
-	USBCPolarity          StringControl = "usbc_polarity"
 
 	// DUTConnectionType was previously known as V4Type ("servo_v4_type")
 	DUTConnectionType StringControl = "root.dut_connection_type"
@@ -975,11 +976,32 @@ func (s *Servo) SetUSBMuxState(ctx context.Context, value USBMuxState) error {
 // SetPowerState sets the PowerState control.
 // Because this is particularly disruptive, it is always logged.
 // It can be slow, because some boards are configured to hold down the power button for 12 seconds.
-func (s *Servo) SetPowerState(ctx context.Context, value PowerStateValue) error {
+func (s *Servo) SetPowerState(ctx context.Context, value PowerStateValue) (retErr error) {
 	testing.ContextLogf(ctx, "Setting %q to %q", PowerState, value)
 	// Power states that reboot the EC can make servod exit or fail if the CCD watchdog is enabled.
 	switch value {
-	case PowerStateReset, PowerStateRec, PowerStateRecForceMRC, PowerStateCR50Reset, PowerStateWarmReset:
+	case PowerStateRec, PowerStateRecForceMRC, PowerStateReset:
+		// TODO(b/302370064) C2D2 has a terrible habit of rebooting the GSC during recovery and cold resets
+		if _, err := s.GetServoType(ctx); err != nil {
+			return errors.Wrap(err, "get servo types")
+		}
+		if s.hasC2D2 {
+			oldVal, err := s.GetString(ctx, ColdResetSelect)
+			if err != nil {
+				return errors.Wrapf(err, "check %s", ColdResetSelect)
+			}
+			if err := s.SetString(ctx, ColdResetSelect, string(GSCECResetPulse)); err != nil {
+				return errors.Wrapf(err, "set %s", ColdResetSelect)
+			}
+			defer func() {
+				err := s.SetString(ctx, ColdResetSelect, oldVal)
+				if err != nil {
+					retErr = errors.Join(retErr, errors.Wrapf(err, "restore %s", ColdResetSelect))
+				}
+			}()
+		}
+		fallthrough
+	case PowerStateCR50Reset, PowerStateWarmReset:
 		if err := s.RemoveCCDWatchdogs(ctx); err != nil {
 			return errors.Wrap(err, "remove ccd watchdog")
 		}

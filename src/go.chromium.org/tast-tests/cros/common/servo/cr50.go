@@ -17,12 +17,14 @@ import (
 
 // These are the Cr50 Servo controls which can be get/set with a string value.
 const (
-	GSCCCDLevel    StringControl = "gsc_ccd_level"
-	CR50Testlab    StringControl = "cr50_testlab"
-	CR50UARTCmd    StringControl = "cr50_uart_cmd"
-	CR50UARTRegexp StringControl = "cr50_uart_regexp"
-	CR50UARTStream StringControl = "cr50_uart_stream"
-	GSCVersion     StringControl = "gsc_version"
+	CR50Testlab     StringControl = "cr50_testlab"
+	CR50UARTCmd     StringControl = "cr50_uart_cmd"
+	CR50UARTRegexp  StringControl = "cr50_uart_regexp"
+	CR50UARTStream  StringControl = "cr50_uart_stream"
+	GSCCCDLevel     StringControl = "gsc_ccd_level"
+	GSCECReset      StringControl = "gsc_ec_reset"
+	GSCECResetPulse StringControl = "gsc_ecrst_pulse"
+	GSCVersion      StringControl = "gsc_version"
 )
 
 // These controls accept only "on" and "off" as values.
