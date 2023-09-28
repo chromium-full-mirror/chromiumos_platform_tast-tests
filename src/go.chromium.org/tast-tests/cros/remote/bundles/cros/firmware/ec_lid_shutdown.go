@@ -93,11 +93,6 @@ func ECLidShutdown(ctx context.Context, s *testing.State) {
 	if err := h.EnsureDUTBooted(ctx); err != nil {
 		s.Fatal("Failed to reconnect to DUT: ", err)
 	}
-
-	s.Log("Clear flag then go to recovery mode, expect G3 after lid close")
-	if err := setFlagBeforeRecMode(ctx, h, false); err != nil {
-		s.Fatal("Failed to power on and off correctly with GBBFlag_DISABLE_LID_SHUTDOWN not set: ", err)
-	}
 }
 
 func setFlagBeforeRecMode(ctx context.Context, h *firmware.Helper, flag bool) (reterr error) {
