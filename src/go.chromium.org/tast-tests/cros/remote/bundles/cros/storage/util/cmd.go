@@ -31,7 +31,7 @@ func RunCmdWithOutputSilent(ctx context.Context, dut *dut.DUT, bin string, args 
 // output to a string.
 func RunCmdWithStringOutput(ctx context.Context, dut *dut.DUT, bin string, args ...string) (string, error) {
 	out, err := RunCmdWithOutput(ctx, dut, bin, args...)
-	return strings.TrimSuffix(string(out), "\n"), err
+	return strings.TrimSpace(string(out)), err
 }
 
 // RunCmdWithStringOutputSilent is a wrapper to RunCmdWithOutput which converts the
