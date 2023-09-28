@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -43,11 +44,15 @@ func CellularDoNotAutoconnectToSameNetwork(ctx context.Context, s *testing.State
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	// Reserve some time for closing the OS Settings and enabling auto-connect for the cellular service.
+	cleanupCtx := ctx
+	ctx, _ = ctxutil.Shorten(ctx, 5*time.Second)
+
 	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
-	defer mdp.Close(ctx)
+	defer mdp.Close(cleanupCtx)
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 	if _, err := helper.Connect(ctx); err != nil {
@@ -56,12 +61,13 @@ func CellularDoNotAutoconnectToSameNetwork(ctx context.Context, s *testing.State
 
 	wasAutoconnectChanged, err := helper.SetServiceAutoConnect(ctx, false)
 	if err != nil {
-		s.Fatal("Failed to set autoconnect to false")
+		s.Fatal("Failed to set autoconnect to false: ", err)
 	}
+
 	resetAutoconnect := func() {
 		if wasAutoconnectChanged {
-			if _, err := helper.SetServiceAutoConnect(ctx, true); err != nil {
-				s.Fatal("Failed to set autoconnect back to true")
+			if _, err := helper.SetServiceAutoConnect(cleanupCtx, true); err != nil {
+				s.Fatal("Failed to set autoconnect back to true: ", err)
 			}
 		}
 	}
@@ -97,6 +103,6 @@ func CellularDoNotAutoconnectToSameNetwork(ctx context.Context, s *testing.State
 
 	secondIccid, err := helper.GetCurrentICCID(ctx)
 	if iccid == secondIccid && helper.IsConnected(ctx) == nil {
-		s.Fatal("Network auto-connected when it was not supposed to")
+		s.Fatal("Network auto-connected when it was not supposed to: ", err)
 	}
 }
