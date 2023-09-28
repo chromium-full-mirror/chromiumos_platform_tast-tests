@@ -221,8 +221,11 @@ func waitForPageWithPrefixToBeDismissed(ctx context.Context, sess *driver.Sessio
 			// If the call fails, we fall back to the original error message.
 			if name, step, screenErr := currentOOBEScreenDetails(ctx, sess); screenErr != nil {
 				testing.ContextLog(ctx, "Failed to get OOBE screen details: ", screenErr)
+			} else if title, subtitle, dialogueErr := currentOOBEDialogueDetails(ctx, sess); dialogueErr != nil {
+				return errors.Wrapf(sess.Watcher().ReplaceErr(err), "OOBE not dismissed, it is on screen %q, step %q, DialogueErr: %q", name, step, dialogueErr)
 			} else {
-				return errors.Wrapf(sess.Watcher().ReplaceErr(err), "OOBE not dismissed, it is on screen %q, step %q", name, step)
+				testing.ContextLogf(ctx, "OOBE Dialogue subtitle: %q", subtitle)
+				return errors.Wrapf(sess.Watcher().ReplaceErr(err), "OOBE not dismissed, it is on screen %q, step %q, title: %q", name, step, title)
 			}
 		}
 
@@ -251,4 +254,25 @@ func currentOOBEScreenDetails(ctx context.Context, sess *driver.Session) (string
 	}
 
 	return screenName, screenStep, nil
+}
+
+// currentOOBEDialogueDetails returns with the title and subtitle of the current OOBE dialogue.
+func currentOOBEDialogueDetails(ctx context.Context, sess *driver.Session) (string, string, error) {
+	conn, err := WaitForOOBEConnection(ctx, sess)
+	if err != nil {
+		return "", "", err
+	}
+
+	var titleText string
+	var subtitleText string
+
+	if err := conn.Eval(ctx, "OobeAPI.getOobeActiveDialogTitleText()", &titleText); err != nil {
+		return "", "", errors.Wrap(err, "failed to get OOBE Dialog title")
+	}
+
+	if err := conn.Eval(ctx, "OobeAPI.getOobeActiveDialogSubtitleText()", &subtitleText); err != nil {
+		return "", "", errors.Wrap(err, "failed to get OOBE Dialog subtitle")
+	}
+
+	return titleText, subtitleText, nil
 }
