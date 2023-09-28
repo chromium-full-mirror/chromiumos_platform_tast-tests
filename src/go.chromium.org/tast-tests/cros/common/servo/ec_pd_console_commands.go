@@ -7,8 +7,8 @@ package servo
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/errors"
@@ -25,6 +25,7 @@ const (
 	//      3 - Comm Status  -- Enable
 	//      4 - Power role   -- SRC
 	//      5 - Data role    -- DFP
+	//      6 - TCPM version-specific extra fields
 	reEcPdStateCommand string = `Port\s+C(\d+)\s+CC(\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)(.*)[\r\n]`
 	reEcPdRecv         string = `RECV\s([\w]+)`
 	rePDVersion        string = `\s+(\d+|Wrong.*)`
@@ -41,6 +42,42 @@ type DUTPDInfo struct {
 	portCount  int // Total number of PD ports on the DUT
 }
 
+// extractPEStateNameTCPMv1 interprets console output on TCPMv1 DUTs and extracts
+// the current PE State and converts it to a string name
+func extractPEStateNameTCPMv1(extraFields string) (string, error) {
+	re := regexp.MustCompile(`State: (\d+)`)
+
+	matches := re.FindStringSubmatch(extraFields)
+	if len(matches) < 1 {
+		return "", errors.Errorf("cannot extract state from %q", extraFields)
+	}
+
+	stateNum, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return "", errors.Wrap(err, "cannot convert PE state")
+	}
+
+	stateName, ok := peStateNameLookup[stateNum]
+	if !ok {
+		return "", errors.Errorf("unknown PE state %d", stateNum)
+	}
+	return stateName, nil
+}
+
+// extractPEStateNameTCPMv2 interprets console output on TCPMv2 DUTs and extracts
+// the current PE State name
+func extractPEStateNameTCPMv2(extraFields string) (string, error) {
+	// The match group is optional because it is not present if PD comms are disabled
+	re := regexp.MustCompile(`PE State: ([A-Za-z_]+)?,`)
+
+	matches := re.FindStringSubmatch(extraFields)
+	if len(matches) < 1 {
+		return "", errors.Errorf("cannot extract state from %q", extraFields)
+	}
+
+	return matches[1], nil
+}
+
 // RequireDUTPDInfo allocates and caches the fixed information about the PD port under test.
 func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 	if s.dutPDInfo != nil {
@@ -53,19 +90,61 @@ func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "EC pd version failed")
 	}
+
 	pdInfo.version, err = strconv.Atoi(out[0][1])
+	if err != nil {
+		testing.ContextLog(
+			ctx,
+			"PD Version command is not supported. This test is likely running "+
+				"against an old version of the EC. The test will assume the "+
+				" DUT is running the TCPMv1 stack. This may cause errors.",
+		)
+		pdInfo.version = 1
+	}
+
+	if !(pdInfo.version == 1 || pdInfo.version == 2) {
+		panic("Unsupported TCPM version")
+	}
 
 	numPorts := 0
 	enabledPorts := 0
 	pdPort := MaxPorts
 	for port := 0; port < MaxPorts; port++ {
 		if out, err := s.GetPDState(ctx, port); err == nil {
-			testing.ContextLog(ctx, "PD state out[0][3]: ", out[0][3])
-			if strings.HasPrefix(out[0][3], "Ena") {
+			testing.ContextLogf(ctx, "DUT Port %d state: %q", port, out)
+
+			// Element #6 has the TCPM version-specific output:
+			//  - For TCPMv1: "State: 8(), Flags: 0x16946"
+			//  - For TCPMv2: "TC State: Attached.SRC, Flags: 0x9002 PE State: PE_SRC_Ready, Flags: 0x0201"
+			extraFields := out[0][6]
+
+			var stateName string
+			var err error
+
+			if pdInfo.version == 1 {
+				stateName, err = extractPEStateNameTCPMv1(extraFields)
+			} else if pdInfo.version == 2 {
+				stateName, err = extractPEStateNameTCPMv2(extraFields)
+			}
+
+			if err != nil {
+				return errors.Wrapf(err, "cannot read TCPMv%d state", pdInfo.version)
+			}
+
+			var activePEStates = map[string]bool{
+				"PD_STATE_SNK_READY": true,
+				"PD_STATE_SRC_READY": true,
+				"PE_SNK_Ready":       true,
+				"PE_SRC_Ready":       true,
+			}
+
+			if _, ok := activePEStates[stateName]; ok {
 				pdPort = port
 				enabledPorts++
 			}
 			numPorts++
+		} else {
+			testing.ContextLogf(ctx, "DUT Port %d not present", port)
 		}
 	}
 

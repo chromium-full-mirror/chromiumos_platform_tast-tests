@@ -44,4 +44,9 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 	if err := firmware.SetupPDTester(ctx, h, firmware.CCPolarityStandard, firmware.DTSModeOn); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
+
+	// Gather info on the DUT's USB-PD config
+	if err := h.Servo.RequireDUTPDInfo(ctx); err != nil {
+		s.Fatal("Could not gather DUT PD info: ", err)
+	}
 }
