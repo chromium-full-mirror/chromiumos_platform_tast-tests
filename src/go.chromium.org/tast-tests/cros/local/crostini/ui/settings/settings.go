@@ -75,7 +75,7 @@ var (
 	RemoveLinuxAlert      = nodewith.Name("Remove Linux development environment").Role(role.AlertDialog).ClassName("Widget").Onscreen()
 	BackupButton          = nodewith.NameStartingWith("Backup Linux").Role(role.Button).Ancestor(ossettings.WindowFinder).Onscreen()
 	RestoreButton         = nodewith.NameStartingWith("Replace").Role(role.Button).Ancestor(ossettings.WindowFinder).Onscreen()
-	BackupFileWindow      = nodewith.Name("Backup").Role(role.Window).ClassName("WebDialogView").Onscreen()
+	BackupFileWindow      = nodewith.NameRegex(regexp.MustCompile("Backup|Back Up")).Role(role.Window).ClassName("WebDialogView").Onscreen()
 	BackupSave            = nodewith.Name("Save").Role(role.Button).Ancestor(BackupFileWindow).Onscreen()
 	BackupNotification    = nodewith.NameStartingWith("Backup complete").Role(role.AlertDialog).ClassName("MessagePopupView").Onscreen()
 	RestoreNotification   = nodewith.NameStartingWith("Restore complete").Role(role.AlertDialog).ClassName("MessagePopupView").Onscreen()
@@ -107,7 +107,7 @@ func OpenLinuxSubpage(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Ch
 		return nil, errors.Wrap(err, "failed to go to linux subpage")
 	}
 
-	// The remove button is initially unstable in the a11y tree on low-end
+	// GoBigSleepLint: The remove button is initially unstable in the a11y tree on low-end
 	// devices. Add a sleep for the node to be stable.
 	testing.Sleep(ctx, time.Second)
 
@@ -570,7 +570,7 @@ func (s *Settings) Resize(ctx context.Context, targetSize uint64) (string, uint6
 		s.ui.WaitUntilGone(ResizeDiskDialog.Self))(ctx); err != nil {
 		return "", 0, errors.Wrap(err, "failed to resize")
 	}
-	// TODO (crbug/1232877): remove this line when crbug/1232877 is resolved.
+	// GoBigSleepLint: TODO (crbug/1232877): remove this line when crbug/1232877 is resolved.
 	testing.Sleep(ctx, time.Second)
 	return sizeOnSlider, size, nil
 }
