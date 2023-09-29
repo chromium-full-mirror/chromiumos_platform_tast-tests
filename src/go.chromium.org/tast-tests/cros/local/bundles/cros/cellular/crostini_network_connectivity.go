@@ -76,7 +76,7 @@ func CrostiniNetworkConnectivity(ctx context.Context, s *testing.State) {
 		}
 		testing.ContextLog(ctx, "ContainerIP: ", containerIP)
 		if err := cellular.VerifyCrostiniIPConnectivity(ctx, cont.Command, ipv4, ipv6); err != nil {
-			return errors.Wrap(err, "failed connectivity test")
+			return err
 		}
 		return nil
 	}

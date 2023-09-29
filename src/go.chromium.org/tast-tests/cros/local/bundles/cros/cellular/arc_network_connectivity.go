@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/cellular"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -43,7 +42,7 @@ func ArcNetworkConnectivity(ctx context.Context, s *testing.State) {
 
 	verifyIPConnectivity := func(ctx context.Context) error {
 		if err := cellular.VerifyArcIPConnectivity(ctx, ipv4, ipv6, arc); err != nil {
-			return errors.Wrap(err, "failed connectivity test")
+			return err
 		}
 		return nil
 	}

@@ -53,16 +53,16 @@ func logOutputToFile(ctx context.Context, log, fn string) {
 func verifyCrostiniConnectivityUsingPing(ctx context.Context, binCmd, addr string, cmd func(context.Context, ...string) *testexec.Cmd) error {
 	testing.ContextLog(ctx, "Verify connectivity to: ", addr)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := cmd(ctx, binCmd, "-c1", "-w5", addr).Run(); err != nil {
-			testing.ContextLog(ctx, "Failed to ping: ", addr)
-			return errors.Wrap(err, "failed ping test in Crostini")
+		if out, err := cmd(ctx, binCmd, "-c1", "-w5", addr).CombinedOutput(); err != nil {
+			logOutputToFile(ctx, string(out), "ping-"+addr+".txt")
+			return errors.Wrapf(err, "failed to run %s -c1 -w5 %s in Crostini", binCmd, addr)
 		}
 		return nil
 	}, &testing.PollOptions{
 		Timeout:  pingTimeout,
 		Interval: defaultInterval,
 	}); err != nil {
-		return errors.Wrap(err, "failed ping test in Crostini")
+		return err
 	}
 	return nil
 }
@@ -90,14 +90,14 @@ func verifyIPConnectivityUsingCurl(ctx context.Context, cmd func(context.Context
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if out, err := cmd(ctx, "curl", "-v", ipType, addr).CombinedOutput(); err != nil {
 			logOutputToFile(ctx, string(out), "curl"+ipType+".txt")
-			return errors.Wrap(err, "failed curl test-1")
+			return errors.Wrapf(err, "failed to run curl -v %s %s", ipType, addr)
 		}
 		return nil
 	}, &testing.PollOptions{
 		Timeout:  curlTimeout,
 		Interval: defaultInterval,
 	}); err != nil {
-		return errors.Wrap(err, "failed  curl test-2")
+		return err
 	}
 	return nil
 }
@@ -125,7 +125,7 @@ func verifyIPConnectivityUsingPing(ctx context.Context, binCmd, addr string, cmd
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if out, err := cmd(ctx, binCmd, "-v", "-c1", "-w5", addr).CombinedOutput(); err != nil {
 			logOutputToFile(ctx, string(out), "ping"+ipType+".txt")
-			return errors.Wrap(err, "failed ping test")
+			return errors.Wrapf(err, "failed to run %s -v -c1 -w5 %s", binCmd, addr)
 		}
 		return nil
 	}, &testing.PollOptions{
