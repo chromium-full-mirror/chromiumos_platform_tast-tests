@@ -766,7 +766,7 @@ func ciceroneDBusMatchSpec(memberName string) dbusutil.MatchSpec {
 // container to make the image size smaller.  This makes a big speed
 // difference on slow devices for backup and restore.
 func ShrinkDefaultContainer(ctx context.Context, ownerID string) error {
-	// This list was constructed by running: `sudo du -b / | sort -n`,
+	// This list was constructed by running: `sudo du -bx / | sort -n`,
 	// and then deleting paths and checking that the container can still
 	// be restarted.
 	for _, path := range []string{
@@ -774,6 +774,9 @@ func ShrinkDefaultContainer(ctx context.Context, ownerID string) error {
 		"/usr/lib/git-core",
 		"/usr/lib/python3",
 		"/usr/lib/udev",
+		"/usr/lib/*-linux-gnu/dri",
+		"/usr/lib/*-linux-gnu/samba",
+		"/usr/lib/*-linux-gnu/libLLVM-*",
 		"/usr/share/doc",
 		"/usr/share/fonts/X11",
 		"/usr/share/fonts/truetype",
@@ -783,24 +786,21 @@ func ShrinkDefaultContainer(ctx context.Context, ownerID string) error {
 		"/usr/share/man",
 		"/usr/share/perl",
 		"/usr/share/qt5",
+		"/usr/share/qt6",
 		"/usr/share/samba",
 		"/usr/share/vim",
 		"/var/cache",
 		"/var/lib/apt",
 		"/var/lib/dpkg",
 	} {
-		cmd := DefaultContainerCommand(ctx, ownerID, "sudo", "sh", "-c", "[ -e "+shutil.Escape(path)+" ]")
-		if err := cmd.Run(); err != nil {
-			return errors.Errorf("path %s does not exist", path)
-		}
-		cmd = DefaultContainerCommand(ctx, ownerID, "sudo", "rm", "-rf", path)
+		cmd := DefaultContainerCommand(ctx, ownerID, "sudo", "rm", "-rf", path)
 		if err := cmd.Run(); err != nil {
 			return err
 		}
-		cmd = DefaultContainerCommand(ctx, ownerID, "sudo", "journalctl", "--rotate", "--vacuum-size=1")
-		if err := cmd.Run(); err != nil {
-			return errors.Wrap(err, "failed to clear journal")
-		}
+	}
+	cmd := DefaultContainerCommand(ctx, ownerID, "sudo", "journalctl", "--rotate", "--vacuum-size=1")
+	if err := cmd.Run(); err != nil {
+		return errors.Wrap(err, "failed to clear journal")
 	}
 	return nil
 }
