@@ -14,6 +14,7 @@ import (
 type Packet struct {
 	IPv4   *layers.IPv4
 	IPv6   *layers.IPv6
+	ICMPv4 *layers.ICMPv4
 	DHCPv4 *layers.DHCPv4
 	TCP    *layers.TCP
 	DNS    *layers.DNS
@@ -38,6 +39,9 @@ func parsePacket(p gopacket.Packet) *Packet {
 	}
 	if ip := p.Layer(layers.LayerTypeIPv6); ip != nil {
 		packet.IPv6 = ip.(*layers.IPv6)
+	}
+	if icmp := p.Layer(layers.LayerTypeICMPv4); icmp != nil {
+		packet.ICMPv4 = icmp.(*layers.ICMPv4)
 	}
 	if dhcp := p.Layer(layers.LayerTypeDHCPv4); dhcp != nil {
 		packet.DHCPv4 = dhcp.(*layers.DHCPv4)

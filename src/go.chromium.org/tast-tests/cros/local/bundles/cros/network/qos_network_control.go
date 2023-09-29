@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/capture"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/httpserver"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
@@ -27,15 +28,16 @@ import (
 type packetType uint
 
 const (
-	packetTCPSyn         packetType = 1 << iota
-	packetDNS                       = 1 << iota
-	packetDHCPv4Discover            = 1 << iota
-	packetDHCPv4Request             = 1 << iota
-	packetAll                       = (1 << iota) - 1
+	packetTCPSyn            packetType = 1 << iota
+	packetDNS                          = 1 << iota
+	packetDHCPv4Discover               = 1 << iota
+	packetDHCPv4Request                = 1 << iota
+	packetICMPv4EchoRequest            = 1 << iota
+	packetAll                          = (1 << iota) - 1
 )
 
 var packetTypes []packetType = []packetType{
-	packetTCPSyn, packetDNS, packetDHCPv4Discover, packetDHCPv4Request,
+	packetTCPSyn, packetDNS, packetDHCPv4Discover, packetDHCPv4Request, packetICMPv4EchoRequest,
 }
 
 func (pt packetType) String() string {
@@ -48,6 +50,8 @@ func (pt packetType) String() string {
 		return "DHCPv4 Discover"
 	case packetDHCPv4Request:
 		return "DHCPv4 Request"
+	case packetICMPv4EchoRequest:
+		return "ICMPv4 Echo Request"
 	case packetAll:
 		return "All"
 	}
@@ -79,7 +83,7 @@ func init() {
 // packets are emitted directly from the test and DSCP mark is verified by doing
 // a live capture on the access point virtual interface. It typically verifies
 // that at least one packet of a given protocol has the correct mark.
-// TODO(b/296958870): check ICMP{,v6} packet marks.
+// TODO(b/296958870): check ICMPv6 packet marks.
 func QosNetworkControl(ctx context.Context, s *testing.State) {
 	// Reserve a little time for cleanup.
 	cleanupCtx := ctx
@@ -181,6 +185,10 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 		s.Fatalf("Unexpected GET status code %d", r.StatusCode)
 	}
 
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, props.Gateway, "root", 10*time.Second); err != nil {
+		s.Fatalf("Failed to ping %s: %v", props.Gateway, err)
+	}
+
 	// Create a shortened context to bound the packet checks. As the connection
 	// is already done, it shouldn't be necessary to wait a long time.
 	d := time.Now().Add(10 * time.Second)
@@ -226,6 +234,11 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 			// Check TCP SYN packet mark.
 			if p.TCP != nil && p.TCP.SYN && hasDSCP(p, dscpNetworkControl) {
 				seen |= packetTCPSyn
+				continue
+			}
+
+			if p.ICMPv4 != nil && p.ICMPv4.TypeCode.Type() == layers.ICMPv4TypeEchoRequest && hasDSCP(p, dscpNetworkControl) {
+				seen |= packetICMPv4EchoRequest
 			}
 
 		case <-ctx.Done():
