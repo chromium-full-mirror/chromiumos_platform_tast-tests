@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/hermes"
+	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/modemfwd"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast-tests/cros/local/network"
@@ -209,6 +210,8 @@ type cellularFixture struct {
 	modemfwdStopped bool
 	sf              *starfish.Starfish
 	netUnlock       func()
+	// Per-test logging marker
+	logMarker *logsaver.Marker
 }
 
 func newCellularFixture() *cellularFixture {
@@ -443,6 +446,18 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 func (f *cellularFixture) Reset(ctx context.Context) error { return nil }
 
 func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	// Start tracking per-test logs.
+	if f.logMarker != nil {
+		testing.ContextLog(ctx, "Logging marker was leaked")
+	}
+
+	logMarker, err := logsaver.NewMarker("/var/log/net.log")
+	if err != nil {
+		testing.ContextLog(ctx, "Unable to create logging marker, per-log tests will be unavailable")
+	} else {
+		f.logMarker = logMarker
+	}
+
 	// If ModemManager isn't exporting a modem, it's possible that the modem has stopped responding due to
 	// b/247984538, attempt to force a restart of the modem on devices that support modemfwd-helpers.
 	modem, err := modemmanager.NewModem(ctx)
@@ -555,20 +570,34 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 	if s.HasError() {
 		f.restartJobsAndWaitOnFailure(ctx)
 	}
+
 	if f.resetShillProfileOnPostTest {
 		testing.ContextLog(ctx, "Resetting shill on PostTest")
 		if errs := f.helper.ResetShill(ctx); errs != nil {
 			testing.ContextLogf(ctx, "Failed to restart job: shill, %s", errs)
 		}
 	}
+
 	if f.netUnlock != nil {
 		f.netUnlock()
 	}
+
 	if f.clearSIMLock {
 		// Helper labels will already be stored.
 		if err := f.helper.ClearSIMLockFromHostInfo(ctx); err != nil {
 			s.Fatal("Failed to clear SIM lock: ", err)
 		}
+	}
+
+	if f.logMarker != nil {
+		// Save per-test logs.
+		outDir, ok := testing.ContextOutDir(ctx)
+		if !ok {
+			testing.ContextLog(ctx, "Failed to get ContextOutDir")
+		} else if err := f.logMarker.Save(filepath.Join(outDir, "net.log")); err != nil {
+			testing.ContextLog(ctx, "Failed to store per-test net.log")
+		}
+		f.logMarker = nil
 	}
 }
 
