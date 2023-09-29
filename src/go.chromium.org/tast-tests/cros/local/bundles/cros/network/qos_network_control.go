@@ -28,16 +28,20 @@ import (
 type packetType uint
 
 const (
-	packetTCPSyn            packetType = 1 << iota
-	packetDNS                          = 1 << iota
-	packetDHCPv4Discover               = 1 << iota
-	packetDHCPv4Request                = 1 << iota
-	packetICMPv4EchoRequest            = 1 << iota
-	packetAll                          = (1 << iota) - 1
+	packetTCPSyn                     packetType = 1 << iota
+	packetDNS                                   = 1 << iota
+	packetDHCPv4Discover                        = 1 << iota
+	packetDHCPv4Request                         = 1 << iota
+	packetICMPv4EchoRequest                     = 1 << iota
+	packetICMPv6EchoRequest                     = 1 << iota
+	packetICMPv6RouterSolicitation              = 1 << iota
+	packetICMPv6NeighborSolicitation            = 1 << iota
+	packetAll                                   = (1 << iota) - 1
 )
 
 var packetTypes []packetType = []packetType{
-	packetTCPSyn, packetDNS, packetDHCPv4Discover, packetDHCPv4Request, packetICMPv4EchoRequest,
+	packetTCPSyn, packetDNS, packetDHCPv4Discover, packetDHCPv4Request,
+	packetICMPv4EchoRequest, packetICMPv6EchoRequest,
 }
 
 func (pt packetType) String() string {
@@ -52,6 +56,12 @@ func (pt packetType) String() string {
 		return "DHCPv4 Request"
 	case packetICMPv4EchoRequest:
 		return "ICMPv4 Echo Request"
+	case packetICMPv6EchoRequest:
+		return "ICMPv6 Echo Request"
+	case packetICMPv6RouterSolicitation:
+		return "ICMPv6 Router Solicitation"
+	case packetICMPv6NeighborSolicitation:
+		return "ICMPv6 Neighbor Solicitation"
 	case packetAll:
 		return "All"
 	}
@@ -147,6 +157,7 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 	wifi, err := virtualnet.CreateWifiRouterEnv(ctx, ifaces.AP[0], m, pool, virtualnet.EnvOptions{
 		EnableDHCP:                true,
 		EnableDNS:                 true,
+		RAServer:                  true,
 		HTTPServerResponseHandler: httpserver.NoContentHandler,
 	})
 	if err != nil {
@@ -196,8 +207,15 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to GET %s: %v", testURL, err)
 	}
 
-	if err := ping.ExpectPingSuccessWithTimeout(ctx, props.Gateway, "root", 10*time.Second); err != nil {
-		s.Fatalf("Failed to ping %s: %v", props.Gateway, err)
+	// Ping all the addresses of the gateway address to generate ICMP echo requests.
+	ifAddrs, err := wifi.Router.GetVethInAddrs(ctx)
+	if err != nil {
+		s.Fatal("Failed to obtain gateway addresses: ", err)
+	}
+	for _, addr := range ifAddrs.All() {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, addr.String(), "root", 10*time.Second); err != nil {
+			s.Fatalf("Failed to ping %s: %v", addr, err)
+		}
 	}
 
 	// Create a shortened context to bound the packet checks. As the connection
@@ -231,7 +249,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 				continue
 			}
 
-			if p.IPv4 != nil && !p.IPv4.SrcIP.Equal(clientAddr) || p.IPv6 != nil {
+			if p.IPv4 != nil && !p.IPv4.SrcIP.Equal(clientAddr) {
 				// For now ignore IPv6 packets or packets not explicitly emitted by the client.
 				continue
 			}
@@ -250,6 +268,21 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 
 			if p.ICMPv4 != nil && p.ICMPv4.TypeCode.Type() == layers.ICMPv4TypeEchoRequest && hasDSCP(p, dscpNetworkControl) {
 				seen |= packetICMPv4EchoRequest
+				continue
+			}
+
+			if p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeEchoRequest && hasDSCP(p, dscpNetworkControl) {
+				seen |= packetICMPv6EchoRequest
+				continue
+			}
+
+			if p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeRouterSolicitation && hasDSCP(p, dscpNetworkControl) {
+				seen |= packetICMPv6RouterSolicitation
+				continue
+			}
+
+			if p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeNeighborSolicitation && hasDSCP(p, dscpNetworkControl) {
+				seen |= packetICMPv6NeighborSolicitation
 			}
 
 		case <-ctx.Done():
