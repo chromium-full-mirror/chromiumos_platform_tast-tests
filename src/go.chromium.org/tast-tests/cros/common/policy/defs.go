@@ -24562,7 +24562,6 @@ func (p *EnforceLocalAnchorConstraintsEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1080. ShowTouchpadScrollScreenEnabled
 // This policy has a default value of False.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ShowTouchpadScrollScreenEnabled struct {
 	Stat Status
@@ -25170,7 +25169,6 @@ func (p *SafeBrowsingExtensionProtectionAllowed) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1099. ShowDisplaySizeScreenEnabled
 // This policy has a default value of False.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ShowDisplaySizeScreenEnabled struct {
 	Stat Status
@@ -26906,6 +26904,202 @@ func (p *DeviceSwitchFunctionKeysBehaviorEnabled) Equal(iface interface{}) bool 
 }
 
 // ****************************************************************************
+// 1160. DeviceDlcPredownloadList
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DeviceDlcPredownloadList struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *DeviceDlcPredownloadList) Name() string          { return "DeviceDlcPredownloadList" }
+func (p *DeviceDlcPredownloadList) Scope() Scope          { return ScopeDevice }
+func (p *DeviceDlcPredownloadList) Status() Status        { return p.Stat }
+func (p *DeviceDlcPredownloadList) UntypedV() interface{} { return p.Val }
+func (p *DeviceDlcPredownloadList) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *DeviceDlcPredownloadList) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "device_dlc_predownload_list", "value", p.Val)
+}
+func (p *DeviceDlcPredownloadList) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1161. DataControlsRules
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DataControlsRules struct {
+	Stat Status
+	Val  []*DataControlsRulesValue
+}
+
+type DataControlsRulesValue struct {
+	Description  string                                `json:"description"`
+	Destinations *DataControlsRulesValueDestinations   `json:"destinations"`
+	Name         string                                `json:"name"`
+	Restrictions []*DataControlsRulesValueRestrictions `json:"restrictions,omitempty"`
+	RuleId       string                                `json:"rule_id"`
+	Sources      *DataControlsRulesValueSources        `json:"sources"`
+}
+
+type DataControlsRulesValueDestinations struct {
+	Incognito    bool     `json:"incognito"`
+	OsClipboard  bool     `json:"os_clipboard"`
+	OtherProfile bool     `json:"other_profile"`
+	Urls         []string `json:"urls,omitempty"`
+}
+
+type DataControlsRulesValueRestrictions struct {
+	Class string `json:"class"`
+	Level string `json:"level"`
+}
+
+type DataControlsRulesValueSources struct {
+	ByteSizeHigherThan   int      `json:"byte_size_higher_than"`
+	ByteSizeLowerThan    int      `json:"byte_size_lower_than"`
+	FileNumberHigherThan int      `json:"file_number_higher_than"`
+	FileNumberLowerThan  int      `json:"file_number_lower_than"`
+	FileType             []string `json:"file_type,omitempty"`
+	Incognito            bool     `json:"incognito"`
+	MimeType             []string `json:"mime_type,omitempty"`
+	OsClipboard          bool     `json:"os_clipboard"`
+	OtherProfile         bool     `json:"other_profile"`
+	Urls                 []string `json:"urls,omitempty"`
+}
+
+func (p *DataControlsRules) Name() string          { return "DataControlsRules" }
+func (p *DataControlsRules) Scope() Scope          { return ScopeUser }
+func (p *DataControlsRules) Status() Status        { return p.Stat }
+func (p *DataControlsRules) UntypedV() interface{} { return p.Val }
+func (p *DataControlsRules) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []*DataControlsRulesValue
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []*DataControlsRulesValue", m)
+	}
+	return v, nil
+}
+func (p *DataControlsRules) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DataControlsRules) Equal(iface interface{}) bool {
+	v, ok := iface.([]*DataControlsRulesValue)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1162. DeviceEphemeralNetworkPoliciesEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type DeviceEphemeralNetworkPoliciesEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DeviceEphemeralNetworkPoliciesEnabled) Name() string {
+	return "DeviceEphemeralNetworkPoliciesEnabled"
+}
+func (p *DeviceEphemeralNetworkPoliciesEnabled) Scope() Scope          { return ScopeDevice }
+func (p *DeviceEphemeralNetworkPoliciesEnabled) Status() Status        { return p.Stat }
+func (p *DeviceEphemeralNetworkPoliciesEnabled) UntypedV() interface{} { return p.Val }
+func (p *DeviceEphemeralNetworkPoliciesEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DeviceEphemeralNetworkPoliciesEnabled) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "device_ephemeral_network_policies_enabled", "value", p.Val)
+}
+func (p *DeviceEphemeralNetworkPoliciesEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1163. PPAPISharedImagesForVideoDecoderAllowed
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type PPAPISharedImagesForVideoDecoderAllowed struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *PPAPISharedImagesForVideoDecoderAllowed) Name() string {
+	return "PPAPISharedImagesForVideoDecoderAllowed"
+}
+func (p *PPAPISharedImagesForVideoDecoderAllowed) Scope() Scope          { return ScopeUser }
+func (p *PPAPISharedImagesForVideoDecoderAllowed) Status() Status        { return p.Stat }
+func (p *PPAPISharedImagesForVideoDecoderAllowed) UntypedV() interface{} { return p.Val }
+func (p *PPAPISharedImagesForVideoDecoderAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *PPAPISharedImagesForVideoDecoderAllowed) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *PPAPISharedImagesForVideoDecoderAllowed) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1165. RelatedWebsiteSetsEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type RelatedWebsiteSetsEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *RelatedWebsiteSetsEnabled) Name() string          { return "RelatedWebsiteSetsEnabled" }
+func (p *RelatedWebsiteSetsEnabled) Scope() Scope          { return ScopeUser }
+func (p *RelatedWebsiteSetsEnabled) Status() Status        { return p.Stat }
+func (p *RelatedWebsiteSetsEnabled) UntypedV() interface{} { return p.Val }
+func (p *RelatedWebsiteSetsEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *RelatedWebsiteSetsEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *RelatedWebsiteSetsEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // JSON deserialization logic (used by policy.Unmarshal).
 // ****************************************************************************
 
@@ -28566,6 +28760,16 @@ func newByName(name string) (Policy, error) {
 		return &DriveFileSyncAvailable{}, nil
 	case "DeviceSwitchFunctionKeysBehaviorEnabled":
 		return &DeviceSwitchFunctionKeysBehaviorEnabled{}, nil
+	case "DeviceDlcPredownloadList":
+		return &DeviceDlcPredownloadList{}, nil
+	case "DataControlsRules":
+		return &DataControlsRules{}, nil
+	case "DeviceEphemeralNetworkPoliciesEnabled":
+		return &DeviceEphemeralNetworkPoliciesEnabled{}, nil
+	case "PPAPISharedImagesForVideoDecoderAllowed":
+		return &PPAPISharedImagesForVideoDecoderAllowed{}, nil
+	case "RelatedWebsiteSetsEnabled":
+		return &RelatedWebsiteSetsEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
@@ -28575,16 +28779,41 @@ func newByName(name string) (Policy, error) {
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
 
-type RefPowerManagementDelays struct {
-	Delays     *RefPowerManagementDelaysDelays `json:"Delays"`
-	IdleAction string                          `json:"IdleAction"`
+type RefConfig struct {
+	AccessCodeTtl       int    `json:"access_code_ttl"`
+	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
+	SharedSecret        string `json:"shared_secret"`
 }
 
-type RefPowerManagementDelaysDelays struct {
-	Idle        int `json:"Idle"`
-	IdleWarning int `json:"IdleWarning"`
-	ScreenDim   int `json:"ScreenDim"`
-	ScreenOff   int `json:"ScreenOff"`
+type RefTimeUsageLimitEntry struct {
+	LastUpdatedMillis string `json:"last_updated_millis"`
+	UsageQuotaMins    int    `json:"usage_quota_mins"`
+}
+
+type RefTime struct {
+	Hour   int `json:"hour"`
+	Minute int `json:"minute"`
+}
+
+type RefDeviceLoginScreenPowerSettings struct {
+	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
+	IdleAction string                                   `json:"IdleAction"`
+}
+
+type RefDeviceLoginScreenPowerSettingsDelays struct {
+	Idle      int `json:"Idle"`
+	ScreenDim int `json:"ScreenDim"`
+	ScreenOff int `json:"ScreenOff"`
+}
+
+type RefDomainFiletypePair struct {
+	Domains       []string `json:"domains,omitempty"`
+	FileExtension string   `json:"file_extension"`
+}
+
+type RefUsbDeviceIdInclusive struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
 }
 
 type RefWeeklyTimeIntervals struct {
@@ -28602,9 +28831,11 @@ type RefWeeklyTime struct {
 	Time      int    `json:"time"`
 }
 
-type RefDomainFiletypePair struct {
-	Domains       []string `json:"domains,omitempty"`
-	FileExtension string   `json:"file_extension"`
+type RefBookmarkType struct {
+	Children     []*RefBookmarkType `json:"children,omitempty"`
+	Name         string             `json:"name"`
+	ToplevelName string             `json:"toplevel_name"`
+	Url          string             `json:"url"`
 }
 
 type Reffile_transfer_enable_disable_schema struct {
@@ -28625,37 +28856,9 @@ type Reffile_transfer_source_destination_schema struct {
 	FileSystemType string `json:"file_system_type"`
 }
 
-type RefBookmarkType struct {
-	Children     []*RefBookmarkType `json:"children,omitempty"`
-	Name         string             `json:"name"`
-	ToplevelName string             `json:"toplevel_name"`
-	Url          string             `json:"url"`
-}
-
 type RefUsbDeviceId struct {
 	ProductId int `json:"product_id"`
 	VendorId  int `json:"vendor_id"`
-}
-
-type RefUsbDeviceIdInclusive struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
-}
-
-type RefTimeUsageLimitEntry struct {
-	LastUpdatedMillis string `json:"last_updated_millis"`
-	UsageQuotaMins    int    `json:"usage_quota_mins"`
-}
-
-type RefTime struct {
-	Hour   int `json:"hour"`
-	Minute int `json:"minute"`
-}
-
-type RefConfig struct {
-	AccessCodeTtl       int    `json:"access_code_ttl"`
-	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
-	SharedSecret        string `json:"shared_secret"`
 }
 
 type RefDisallowedTimeInterval struct {
@@ -28669,15 +28872,16 @@ type RefDayPercentagePair struct {
 	Percentage int `json:"percentage"`
 }
 
-type RefDeviceLoginScreenPowerSettings struct {
-	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
-	IdleAction string                                   `json:"IdleAction"`
+type RefPowerManagementDelays struct {
+	Delays     *RefPowerManagementDelaysDelays `json:"Delays"`
+	IdleAction string                          `json:"IdleAction"`
 }
 
-type RefDeviceLoginScreenPowerSettingsDelays struct {
-	Idle      int `json:"Idle"`
-	ScreenDim int `json:"ScreenDim"`
-	ScreenOff int `json:"ScreenOff"`
+type RefPowerManagementDelaysDelays struct {
+	Idle        int `json:"Idle"`
+	IdleWarning int `json:"IdleWarning"`
+	ScreenDim   int `json:"ScreenDim"`
+	ScreenOff   int `json:"ScreenOff"`
 }
 
 // ****************************************************************************
