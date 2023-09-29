@@ -12,55 +12,55 @@ import (
 
 // FormatDeviceInfoForPowerLog create a map with specific keys used by power dashboard.
 func FormatDeviceInfoForPowerLog(devInfo *pb.DeviceInfo) map[string]interface{} {
-	board := devInfo.Board
-	platform := devInfo.Platform
+	board := devInfo.GetBoard()
+	platform := devInfo.GetPlatform()
 
 	if !strings.HasPrefix(platform, board) {
 		board += "_" + platform
 	}
-	if devInfo.HasHammer {
+	if devInfo.GetHasHammer() {
 		board += "_hammer"
 	}
 
 	versionMap := map[string]interface{}{
-		"hw":        devInfo.HardwareRevision,
-		"milestone": devInfo.ChromeosReleaseMilestone,
-		"os":        devInfo.ChromeosReleaseVersion,
+		"hw":        devInfo.GetHardwareRevision(),
+		"milestone": devInfo.GetChromeosReleaseMilestone(),
+		"os":        devInfo.GetChromeosReleaseVersion(),
 		"channel":   nil,
-		"firmware":  devInfo.FirmwareVersion,
-		"ec":        devInfo.EcVersion,
-		"kernel":    devInfo.KernelVersion,
+		"firmware":  devInfo.GetFirmwareVersion(),
+		"ec":        devInfo.GetEcVersion(),
+		"kernel":    devInfo.GetKernelVersion(),
 	}
 
 	if devInfo.ChromeosChannel != nil {
-		versionMap["channel"] = *devInfo.ChromeosChannel
+		versionMap["channel"] = devInfo.GetChromeosChannel()
 	}
 
 	skuMap := map[string]interface{}{
-		"cpu":                 devInfo.CpuName,
-		"memory_size":         devInfo.MemorySize,
-		"storage_size":        devInfo.DiskSize,
-		"display_resolution":  devInfo.ScreenResolution,
-		"hwid":                devInfo.HardwareId,
-		"cpu_count":           devInfo.CpuCount,
-		"cpu_cores":           devInfo.CoreCount,
-		"cpu_threads":         devInfo.ThreadCountPerCpu,
-		"cpu_vendor":          devInfo.CpuVendor,
-		"cpu_cache":           devInfo.CpuCacheSize,
-		"gpu":                 devInfo.GpuModel,
-		"memory_type":         devInfo.MemoryType,
-		"memory_frequency":    devInfo.MemoryFrequency,
-		"storage_type":        devInfo.StorageType,
-		"screen_size":         devInfo.ScreenSize,
-		"screen_refresh_rate": devInfo.ScreenRefreshRate,
+		"cpu":                 devInfo.GetCpuName(),
+		"memory_size":         devInfo.GetMemorySize(),
+		"storage_size":        devInfo.GetDiskSize(),
+		"display_resolution":  devInfo.GetScreenResolution(),
+		"hwid":                devInfo.GetHardwareId(),
+		"cpu_count":           devInfo.GetCpuCount(),
+		"cpu_cores":           devInfo.GetCoreCount(),
+		"cpu_threads":         devInfo.GetThreadCountPerCpu(),
+		"cpu_vendor":          devInfo.GetCpuVendor(),
+		"cpu_cache":           devInfo.GetCpuCacheSize(),
+		"gpu":                 devInfo.GetGpuModel(),
+		"memory_type":         devInfo.GetMemoryType(),
+		"memory_frequency":    devInfo.GetMemoryFrequency(),
+		"storage_type":        devInfo.GetStorageType(),
+		"screen_size":         devInfo.GetScreenSize(),
+		"screen_refresh_rate": devInfo.GetScreenRefreshRate(),
 	}
 
 	if devInfo.BatteryShutdownPercent != nil {
-		skuMap["battery_shutdown_percent"] = *devInfo.BatteryShutdownPercent
+		skuMap["battery_shutdown_percent"] = devInfo.GetBatteryShutdownPercent()
 	}
 
 	if devInfo.BatterySize != nil {
-		skuMap["battery_size"] = *devInfo.BatterySize
+		skuMap["battery_size"] = devInfo.GetBatterySize()
 	}
 
 	inaMap := map[string]interface{}{
@@ -76,6 +76,6 @@ func FormatDeviceInfoForPowerLog(devInfo *pb.DeviceInfo) map[string]interface{} 
 		"sku":     skuMap,
 		"ina":     inaMap,
 		// note: note to annotate results on the dashboard.
-		"note": devInfo.DashboardNote,
+		"note": devInfo.GetDashboardNote(),
 	}
 }

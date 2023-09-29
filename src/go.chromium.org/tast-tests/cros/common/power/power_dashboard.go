@@ -322,19 +322,19 @@ func getMinutesBatteryLife(ctx context.Context, innerDataMap map[string][]float6
 		testing.ContextLog(ctx, errStr("battery charge design size"))
 		return 0
 	}
-	chargeFullDesign := *metrics.BatteryChargeDesignSize
+	chargeFullDesign := metrics.GetBatteryChargeDesignSize()
 
 	if metrics.BatteryChargeSize == nil {
 		testing.ContextLog(ctx, errStr("battery charge"))
 		return 0
 	}
-	chargeFull := *metrics.BatteryChargeSize
+	chargeFull := metrics.GetBatteryChargeSize()
 
 	if metrics.BatteryEnergySize == nil {
 		testing.ContextLog(ctx, errStr("battery energy size"))
 		return 0
 	}
-	energyFullDesign := *metrics.BatteryEnergySize
+	energyFullDesign := metrics.GetBatteryEnergySize()
 
 	if energyUsed, ok := innerAverageMap["discharge_mwh"]; ok && energyUsed > 0 && totalDurationSec > 0 {
 		var lowBatteryShutdownPercent = 4.0
@@ -344,7 +344,7 @@ func getMinutesBatteryLife(ctx context.Context, innerDataMap map[string][]float6
 			es += "4% is used for approximation"
 			testing.ContextLog(ctx, es)
 		} else {
-			lowBatteryShutdownPercent = *metrics.BatteryShutdownPercent
+			lowBatteryShutdownPercent = metrics.GetBatteryShutdownPercent()
 		}
 
 		batSizeScale := 1 - lowBatteryShutdownPercent/100.0
@@ -401,13 +401,13 @@ func updatePowerLogPerf(ctx context.Context, dataMap map[string][]float64, avera
 		linearKey    = "level_backlight_percent_linear"
 	)
 
-	dataMap[nonlinearKey] = []float64{metrics.BacklightNonlinearPercent}
-	averageMap[nonlinearKey] = metrics.BacklightNonlinearPercent
+	dataMap[nonlinearKey] = []float64{metrics.GetBacklightNonlinearPercent()}
+	averageMap[nonlinearKey] = metrics.GetBacklightNonlinearPercent()
 	typeMap[nonlinearKey] = "perf"
 	unitMap[nonlinearKey] = GeneralPerfMetricTypeUnit
 
-	dataMap[linearKey] = []float64{metrics.BacklightLinearPercent}
-	averageMap[linearKey] = metrics.BacklightLinearPercent
+	dataMap[linearKey] = []float64{metrics.GetBacklightLinearPercent()}
+	averageMap[linearKey] = metrics.GetBacklightLinearPercent()
 	typeMap[linearKey] = "perf"
 	unitMap[linearKey] = GeneralPerfMetricTypeUnit
 }
