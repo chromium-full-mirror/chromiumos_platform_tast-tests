@@ -27,6 +27,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast-tests/cros/local/vm"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -227,6 +228,12 @@ func InstallCrostini(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chr
 		vm.ImageServerURLComponentName, url), nil); err != nil {
 		return 0, errors.Wrap(err, "failed to run autotestPrivate.registerComponent")
 	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	defer cancel()
+	// Clear image server URL so Crostini can be installed normally afterwards.
+	defer tconn.Eval(cleanupCtx, fmt.Sprintf(`chrome.autotestPrivate.registerComponent(%q, "")`, vm.ImageServerURLComponentName), nil)
 
 	installer := New(tconn)
 
