@@ -205,7 +205,7 @@ func TestHasECCapability(t *testing.T) {
 	if !cfg.HasECCapability(ECBattery) {
 		t.Fatalf("Platform %q: HasECCapability(ECBattery) returned False; want True", withECBatteryName)
 	}
-	if cfg.HasECCapability(ECPECI) {
-		t.Fatalf("Platform %q: HasECCapability(ECPECI) returned True; want False", withECBatteryName)
+	if cfg.HasECCapability(ECLid) {
+		t.Fatalf("Platform %q: HasECCapability(ECLid) returned True; want False", withECBatteryName)
 	}
 }

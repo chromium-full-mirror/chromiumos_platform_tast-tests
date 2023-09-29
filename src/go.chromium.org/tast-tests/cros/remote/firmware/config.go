@@ -21,9 +21,8 @@ import (
 // ModeSwitcherType represents which methods the platform uses for switching between DUT boot modes.
 type ModeSwitcherType string
 
-// Currently, there are exactly four possible values for ModeSwitcherType.
+// Currently, there are exactly three possible values for ModeSwitcherType.
 const (
-	JetStreamSwitcher        ModeSwitcherType = "jetstream_switcher"
 	KeyboardDevSwitcher      ModeSwitcherType = "keyboard_dev_switcher"
 	MenuSwitcher             ModeSwitcherType = "menu_switcher"
 	TabletDetachableSwitcher ModeSwitcherType = "tablet_detachable_switcher"
@@ -34,19 +33,13 @@ type ECCapability string
 
 // These are the ECCapabilities currently described in fw-testing-configs.
 const (
-	ECARM            ECCapability = "arm"
-	ECBattery        ECCapability = "battery"
-	ECCBI            ECCapability = "cbi"
-	ECCharging       ECCapability = "charging"
-	ECDoubleBoot     ECCapability = "doubleboot"
-	ECKeyboard       ECCapability = "keyboard"
-	ECLid            ECCapability = "lid"
-	ECPECI           ECCapability = "peci"
-	ECSmartUSBCharge ECCapability = "smart_usb_charge"
-	ECThermal        ECCapability = "thermal"
-	ECUSB            ECCapability = "usb"
-	ECUSBPDUART      ECCapability = "usbpd_uart"
-	ECX86            ECCapability = "x86"
+	ECARM      ECCapability = "arm"
+	ECBattery  ECCapability = "battery"
+	ECCBI      ECCapability = "cbi"
+	ECCharging ECCapability = "charging"
+	ECKeyboard ECCapability = "keyboard"
+	ECLid      ECCapability = "lid"
+	ECX86      ECCapability = "x86"
 )
 
 // USBEnablePin represents each object in the list in the config files for the key "custom_usb_enable_pins".
@@ -103,7 +96,6 @@ type Config struct {
 	RawHoldPwrButtonPowerOff         float64 `json:"hold_pwr_button_poweroff"`
 	RawHoldPwrButtonPowerOn          float64 `json:"hold_pwr_button_poweron"`
 	RawKeypressDelay                 float64 `json:"keypress_delay"`
-	RawSerialFirmwareBootDelay       float64 `json:"serial_firmware_boot_delay"`
 	RawShutdown                      float64 `json:"shutdown"`
 	RawShutdownTimeout               float64 `json:"shutdown_timeout"`
 	RawSoftwareSyncUpdate            float64 `json:"software_sync_update"`
@@ -120,7 +112,6 @@ type Config struct {
 	HoldPwrButtonPowerOff         time.Duration
 	HoldPwrButtonPowerOn          time.Duration
 	KeypressDelay                 time.Duration
-	SerialFirmwareBootDelay       time.Duration
 	RecInvalidScreen              time.Duration
 	MiniOSScreen                  time.Duration
 	// Shutdown is supposed to be the time the DUT takes to power off.
@@ -132,11 +123,6 @@ type Config struct {
 	ShutdownTimeout    time.Duration
 	SoftwareSyncUpdate time.Duration
 	USBPlug            time.Duration
-
-	// Instructions for updating AP firmware over servo
-	APFlashCCDProgrammer   string   `json:"ap_flash_ccd_programmer"`
-	APFlashCCDPreCommands  []string `json:"ap_flash_ccd_pre_commands"`
-	APFlashCCDPostCommands []string `json:"ap_flash_ccd_post_commands"`
 
 	// Models maps DUT model names to overriding config JSON objects.
 	Models map[string]json.RawMessage `json:"models"`
@@ -231,7 +217,6 @@ func NewConfig(cfgFilepath, board, model string) (*Config, error) {
 	cfg.HoldPwrButtonPowerOff = toSeconds(cfg.RawHoldPwrButtonPowerOff)
 	cfg.HoldPwrButtonPowerOn = toSeconds(cfg.RawHoldPwrButtonPowerOn)
 	cfg.KeypressDelay = toSeconds(cfg.RawKeypressDelay)
-	cfg.SerialFirmwareBootDelay = toSeconds(cfg.RawSerialFirmwareBootDelay)
 	cfg.Shutdown = toSeconds(cfg.RawShutdown)
 	cfg.ShutdownTimeout = toSeconds(cfg.RawShutdownTimeout)
 	cfg.SoftwareSyncUpdate = toSeconds(cfg.RawSoftwareSyncUpdate)
