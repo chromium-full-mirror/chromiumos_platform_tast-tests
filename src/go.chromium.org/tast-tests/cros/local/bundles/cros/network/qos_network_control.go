@@ -60,6 +60,7 @@ func (pt packetType) String() string {
 
 const (
 	dscpNetworkControl uint8 = 48
+	testURL                  = "http://test.example.com/"
 )
 
 func init() {
@@ -177,12 +178,22 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 
 	s.Logf("IP configuration: client=%s gateway=%s", props.Address, props.Gateway)
 
-	r, err := http.Get("http://test.example.com/")
-	if err != nil {
-		s.Fatal("Failed to perform GET request: ", err)
-	}
-	if r.StatusCode != http.StatusNoContent {
-		s.Fatalf("Unexpected GET status code %d", r.StatusCode)
+	// Do a GET request to the webserver running on the gateway to generate DNS
+	// and TCP packets.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		r, err := http.Get(testURL)
+		if err != nil {
+			return err
+		}
+		if r.StatusCode != http.StatusNoContent {
+			return errors.Errorf("unexpected status code %d", r.StatusCode)
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  10 * time.Second,
+		Interval: time.Second,
+	}); err != nil {
+		s.Fatalf("Failed to GET %s: %v", testURL, err)
 	}
 
 	if err := ping.ExpectPingSuccessWithTimeout(ctx, props.Gateway, "root", 10*time.Second); err != nil {
