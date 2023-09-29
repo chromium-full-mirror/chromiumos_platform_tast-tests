@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package tast.cros.power;
+package tast.common.power.powerpb;
 
 option go_package = "go.chromium.org/tast-tests/cros/common/power/powerpb";
 
