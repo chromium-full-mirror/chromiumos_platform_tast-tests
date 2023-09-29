@@ -27,6 +27,7 @@ func init() {
 		Desc:         "Checks the scroll to next/previous months on the calendar view",
 		Contacts: []string{
 			"cros-calendar@google.com",
+			"cros-status-area-eng@google.com",
 			"jiamingc@chromium.org",
 		},
 		BugComponent: "b:1246126", // ChromeOS > Software > System UI Surfaces > Status Area > Calendar
