@@ -188,10 +188,10 @@ func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalAp
 		inputMethod.InstallAndActivate(tconn),
 		inputMethod.WaitUntilActivated(tconn),
 		// VSCode will read the first keypress as English input, even when the input method is set otherwise.
-		// Enter two backspaces first so that the testing string is entered correctly.
+		// Enter two esc first so that the testing string is entered correctly. We use esc because it will have no effect on string entry.
 		// TODO(b/274709150): Remove the following 2 lines after this bug is fixed.
-		keyboard.AccelAction("Backspace"),
-		keyboard.AccelAction("Backspace"),
+		keyboard.AccelAction("Esc"),
+		keyboard.AccelAction("Esc"),
 		imeData.EnterTestStringActionPK(keyboard, ui),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to enter test string")
