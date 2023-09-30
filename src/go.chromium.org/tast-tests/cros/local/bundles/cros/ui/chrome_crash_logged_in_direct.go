@@ -58,7 +58,7 @@ func init() {
 				browserType: browser.TypeLacros,
 			},
 			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
-			ExtraAttr:         []string{"group:hw_agnostic", "informational"},
+			ExtraAttr:         []string{"group:hw_agnostic", "informational", "group:criticalstaging"},
 		}},
 	})
 }
