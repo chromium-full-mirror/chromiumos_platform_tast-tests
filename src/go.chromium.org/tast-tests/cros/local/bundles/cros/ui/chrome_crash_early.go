@@ -79,7 +79,7 @@ func init() {
 				browserType: browser.TypeLacros,
 			},
 			ExtraSoftwareDeps: []string{"lacros"}, // There's no such thing as lacros_internal.
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "loose",
 			Val: chromeCrashEarlyParams{
