@@ -59,20 +59,20 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Test forwarding on each of three ports.
-	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, true)
-	testForwarding(ctx, s, f, th, r, ti50.UartAP, false, false)
+	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, true, "AP off, no uServo")
+	testForwarding(ctx, s, f, th, r, ti50.UartAP, false, false, "AP off, no uServo")
 	if gscProps.HasFpmcuUart() {
-		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, true)
+		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, true, "AP off, no uServo")
 	}
 
 	// Simulate the AP processor being turned on, in order to enable AP forwarding.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
 	// Test forwarding on each of three ports.
-	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, true)
-	testForwarding(ctx, s, f, th, r, ti50.UartAP, true, true)
+	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, true, "AP on, no uServo")
+	testForwarding(ctx, s, f, th, r, ti50.UartAP, true, true, "AP on, no uServo")
 	if gscProps.HasFpmcuUart() {
-		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, true)
+		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, true, "AP on, no uServo")
 	}
 
 	//
@@ -87,24 +87,24 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Test forwarding on each of three ports.
-	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, false)
-	testForwarding(ctx, s, f, th, r, ti50.UartAP, false, false)
+	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, false, "AP off, with uServo")
+	testForwarding(ctx, s, f, th, r, ti50.UartAP, false, false, "AP off, with uServo")
 	if gscProps.HasFpmcuUart() {
-		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, false)
+		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, false, "AP off, with uServo")
 	}
 
 	// Simulate the AP processor being turned on, in order to enable AP forwarding.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
 	// Test forwarding on each of three ports.
-	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, false)
-	testForwarding(ctx, s, f, th, r, ti50.UartAP, true, false)
+	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, false, "AP on, with uServo")
+	testForwarding(ctx, s, f, th, r, ti50.UartAP, true, false, "AP on, with uServo")
 	if gscProps.HasFpmcuUart() {
-		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, false)
+		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, false, "AP on, with uServo")
 	}
 }
 
-func testForwarding(ctx context.Context, s *testing.State, f *fixture.Value, th utils.FirmwareTestingHelper, r *rand.Rand, port ti50.UartName, expectUartToUsb, expectUsbToUart bool) {
+func testForwarding(ctx context.Context, s *testing.State, f *fixture.Value, th utils.FirmwareTestingHelper, r *rand.Rand, port ti50.UartName, expectUartToUsb, expectUsbToUart bool, caseStr string) {
 	uart := f.DevBoard().PhysicalUart(port, time.Second)
 	ccd := f.DevBoard().CcdSerialInterface(port, time.Second)
 	th.MustSucceed(ccd.Open(ctx), "Failed to open %s ccd", port)
@@ -121,18 +121,18 @@ func testForwarding(ctx context.Context, s *testing.State, f *fixture.Value, th 
 	byt, err := ccd.ReadSerialBytes(ctx, len(databuf))
 	if expectUartToUsb {
 		if err != nil {
-			s.Errorf("Data sent to %s UART did not come out of USB: %s", port, err)
+			s.Errorf("%s: Data sent to %s UART did not come out of USB: %s", caseStr, port, err)
 		} else if !bytes.Equal(byt, databuf) {
-			s.Errorf("Data sent to %s UART came out of USB corrupted", port)
+			s.Errorf("%s: Data sent to %s UART came out of USB corrupted", caseStr, port)
 			s.Errorf("Wanted '%+v' got '%+v'", databuf, byt)
 		}
 	} else {
 		if err == nil {
 			if !bytes.Equal(byt, databuf) {
-				s.Errorf("Data sent to %s UART unexpectedly did come out of USB: corrupted", port)
+				s.Errorf("%s: Data sent to %s UART unexpectedly did come out of USB: corrupted", caseStr, port)
 				s.Errorf("Sent '%+v' got '%+v'", databuf, byt)
 			} else {
-				s.Errorf("Data sent to %s UART unexpectedly did come out of USB", port)
+				s.Errorf("%s: Data sent to %s UART unexpectedly did come out of USB", caseStr, port)
 			}
 		}
 	}
@@ -146,18 +146,18 @@ func testForwarding(ctx context.Context, s *testing.State, f *fixture.Value, th 
 	byt, err = uart.ReadSerialBytes(ctx, len(databuf))
 	if expectUsbToUart {
 		if err != nil {
-			s.Errorf("Data sent to %s USB did not come out of UART: %s", port, err)
+			s.Errorf("%s: Data sent to %s USB did not come out of UART: %s", caseStr, port, err)
 		} else if !bytes.Equal(byt, databuf) {
-			s.Errorf("Data sent to %s USB came out of UART corrupted", port)
+			s.Errorf("%s: Data sent to %s USB came out of UART corrupted", caseStr, port)
 			s.Errorf("Wanted '%+v' got '%+v'", databuf, byt)
 		}
 	} else {
 		if err == nil {
 			if !bytes.Equal(byt, databuf) {
-				s.Errorf("Data sent to %s USB unexpectedly did come out of UART: corrupted", port)
+				s.Errorf("%s: Data sent to %s USB unexpectedly did come out of UART: corrupted", caseStr, port)
 				s.Errorf("Sent '%+v' got '%+v'", databuf, byt)
 			} else {
-				s.Errorf("Data sent to %s USB unexpectedly did come out of UART", port)
+				s.Errorf("%s: Data sent to %s USB unexpectedly did come out of UART", caseStr, port)
 			}
 		}
 	}
