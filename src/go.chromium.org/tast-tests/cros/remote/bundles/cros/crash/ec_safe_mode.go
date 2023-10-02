@@ -5,7 +5,10 @@
 package crash
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
+	"io/ioutil"
 	"regexp"
 	"strings"
 	"time"
@@ -23,7 +26,8 @@ import (
 )
 
 type testParameters struct {
-	crashCommand string
+	crashCommand   string
+	expectCoredump bool
 }
 
 func init() {
@@ -74,6 +78,14 @@ func init() {
 					crashCommand: "crash watchdog",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.ECBuildConfigOptions("PANIC_ON_WATCHDOG_WARNING", "PLATFORM_EC_PANIC_ON_WATCHDOG_WARNING")),
+			},
+			{
+				Name: "coredump",
+				Val: testParameters{
+					crashCommand:   "crash divzero",
+					expectCoredump: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.ECFeatureMemoryDumpCommands()),
 			},
 		},
 	})
@@ -221,8 +233,13 @@ func ECSafeMode(ctx context.Context, s *testing.State) {
 		Regexes: []string{base + `\.eccrash`, base + `\.meta`},
 	}
 
+	const coredumpPattern = base + `\.coredump\.gz`
+	if param.expectCoredump {
+		waitReq.Regexes = append(waitReq.Regexes, coredumpPattern)
+	}
+
 	s.Log("Waiting for files to become present")
-	_, err = fs.WaitForCrashFiles(ctx, waitReq)
+	crashFiles, err := fs.WaitForCrashFiles(ctx, waitReq)
 	if err != nil {
 		s.Fatal("Failed to find crash files: " + err.Error())
 	}
@@ -253,5 +270,55 @@ func ECSafeMode(ctx context.Context, s *testing.State) {
 	/* Verify timer info line is present */
 	if !strings.Contains(string(ecPreviousLog), timerInfoLine) {
 		s.Fatalf("Time info line %q is missing from cros_ec.previous", timerInfoLine)
+	}
+
+	if param.expectCoredump {
+		coredump, err := linuxssh.ReadFile(cleanupCtx, d.Conn(), "/var/spool/cros_ec/coredump")
+		if err != nil {
+			s.Fatal("Failed to read coredump: ", err)
+		}
+		/* Verify coredump header ID */
+		headerID := string(coredump[0:2])
+		if headerID != "ZE" {
+			s.Fatal("Failed to verify coredump header ID: ", headerID)
+		}
+		/* Verify coredump panicinfo */
+		coredumpPanicinfo, err := linuxssh.ReadFile(cleanupCtx, d.Conn(), "/var/spool/cros_ec/panicinfo")
+		if err != nil {
+			s.Fatal("Failed to read coredump panicinfo: ", err)
+		}
+		if bytes.Equal(panicinfo, coredumpPanicinfo) {
+			s.Fatal("Coredump panicinfo does not match expected panicinfo")
+		}
+
+		/* Decompress coredump gz file and verify it matches */
+		var coredumpGzPath string
+		for _, match := range crashFiles.Matches {
+			if match.Regex == coredumpPattern {
+				coredumpGzPath = match.Files[0]
+				break
+			}
+		}
+		if coredumpGzPath == "" {
+			s.Fatal("Failed to find coredump gz")
+		}
+		coredumpGzCompressed, err := linuxssh.ReadFile(cleanupCtx, d.Conn(), coredumpGzPath)
+		if err != nil {
+			s.Fatal("Failed to read compressed coredump gz")
+		}
+
+		gz, err := gzip.NewReader(bytes.NewReader(coredumpGzCompressed))
+		if err != nil {
+			s.Fatal("Failed to initialize gzip reader")
+		}
+		defer gz.Close()
+
+		coredumpGzDecompressed, err := ioutil.ReadAll(gz)
+		if err != nil {
+			s.Fatal("Failed to decompress coredump gz")
+		}
+		if !bytes.Equal(coredumpGzDecompressed, coredump) {
+			s.Fatal("Decompressed coredump gz does not match coredump")
+		}
 	}
 }
