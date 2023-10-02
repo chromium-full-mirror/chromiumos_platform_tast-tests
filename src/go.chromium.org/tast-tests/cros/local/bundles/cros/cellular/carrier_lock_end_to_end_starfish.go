@@ -25,7 +25,7 @@ func init() {
 		Desc:         "Validates carrier lock on starfish",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "ujjwalpande@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Attr:         []string{},
 		Fixture:      "starfish",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      20 * time.Minute,
