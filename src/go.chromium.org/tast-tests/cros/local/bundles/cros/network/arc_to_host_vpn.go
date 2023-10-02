@@ -101,7 +101,7 @@ func ARCToHostVPN(ctx context.Context, s *testing.State) {
 
 	// Make sure our test app is disconnected.
 	if err := arcvpn.WaitForARCServiceState(ctx, a, arcvpn.VPNTestAppPkg, arcvpn.VPNTestAppSvc, false); err != nil {
-		s.Fatalf("Failed to start %s: %v", arcvpn.VPNTestAppSvc, err)
+		s.Fatalf("Failed to stop %s: %v", arcvpn.VPNTestAppSvc, err)
 	}
 
 	// Facade ARC VPN is connected.

@@ -17,6 +17,8 @@ import android.os.HandlerThread;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import java.io.IOException;
+
 /**
  * Test app that starts a simple VPN. It's not expected to actually forward data in/out, just to
  * register some VPN with the system.
@@ -35,19 +37,30 @@ public class ArcTestVpnService extends VpnService {
     private static final int NOTIFICATION_ID = 1;
     private static final String NOTIFICATION_CHANNEL_ID = TAG;
 
+    // Saved as a member variable so the fd is seen as still being used. Otherwise it might get
+    // closed from under us and also cause the tun interface to be closed as well.
+    private ParcelFileDescriptor mTunFd;
+
     @Override
     public void onCreate() {
         super.onCreate();
 
         showNotification();
-        ParcelFileDescriptor tunFd = setUpVpnService();
+        setUpVpnService();
+    }
 
-        // Execute on a separate thread so that the service doesn't look like it's ANR and killed
-        // by the system.
-        HandlerThread thread = new HandlerThread(TAG + " Handler");
-        thread.start();
-        Handler handler = new Handler(thread.getLooper());
-        handler.post(() -> infiniteLoop(tunFd));
+    /** Called when the system has deactivated the underlying interface. */
+    @Override
+    public void onRevoke() {
+        // Close and cleanup the fd so the service can be stopped.
+        try {
+            mTunFd.close();
+        } catch (IOException e) {
+            Log.w(TAG, "Unable to close tun fd.", e);
+        }
+        mTunFd = null;
+
+        super.onRevoke();
     }
 
     /**
@@ -70,25 +83,12 @@ public class ArcTestVpnService extends VpnService {
     }
 
     /** Registers ourselves as an actual VpnService and sets up the underlying interface. */
-    private ParcelFileDescriptor setUpVpnService() {
-        Intent intent = VpnService.prepare(getApplicationContext());
+    private void setUpVpnService() {
+        VpnService.prepare(getApplicationContext());
 
-        return new VpnService.Builder()
+        mTunFd = new VpnService.Builder()
                 .addAddress("192.168.2.2", 24)
                 .addRoute("0.0.0.0", 0)
                 .establish();
-    }
-
-    /**
-     * Infinitely loops and references {@code fd} to prevent the file descriptor from closing,
-     * which would cause the tun interface to close as well.
-     *
-     * Must be called on handler thread.
-     */
-    private void infiniteLoop(ParcelFileDescriptor fd) {
-        while (fd.getFileDescriptor().valid()) {
-            // Do nothing
-        }
-        Log.e(TAG, "tun fd unexpectedly closed");
     }
 }
