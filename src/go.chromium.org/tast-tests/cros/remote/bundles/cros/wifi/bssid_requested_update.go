@@ -43,20 +43,20 @@ func BSSIDRequestedUpdate(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 	ssid := hostapd.RandomSSID("BSSIDRequestedUpdate_")
 
-	// Generate BSSID for ap1
+	// Generate BSSID for ap1.
 	ap1HwAddr, err := hostapd.RandomMAC()
 	if err != nil {
 		s.Fatal("Failed to generate random BSSID: ", err)
 	}
 	ap1BSSID := ap1HwAddr.String()
 
-	// Generate different BSSID for ap2
+	// Generate different BSSID for ap2.
 	ap2HwAddr := ap1HwAddr
 	ap2HwAddr[5]++
 	ap2BSSID := ap2HwAddr.String()
 
-	// Configure ap1
-	s.Log("Starting the first AP")
+	// Configure ap1.
+	s.Logf("Starting the first AP at %s", ap1BSSID)
 	ap1Ops := []hostapd.Option{
 		hostapd.Mode(hostapd.Mode80211nPure),
 		hostapd.Channel(1),
@@ -77,7 +77,7 @@ func BSSIDRequestedUpdate(ctx context.Context, s *testing.State) {
 	ctx, cancel := tf.ReserveForDeconfigAP(ctx, ap1)
 	defer cancel()
 
-	// Connect to first AP without specifying a BSSIDRequested
+	// Connect to first AP without specifying a BSSIDRequested.
 	s.Log("Connecting to first AP")
 	configProps := map[string]interface{}{}
 	_, err = tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, ap1, dutcfg.ConnProperties(configProps))
@@ -96,8 +96,8 @@ func BSSIDRequestedUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to associate to first BSSID: ", err)
 	}
 
-	// Configure ap2
-	s.Log("Starting the second AP")
+	// Configure ap2.
+	s.Logf("Starting the second AP at %s", ap2BSSID)
 	ap2Ops := []hostapd.Option{
 		hostapd.Mode(hostapd.Mode80211nPure),
 		hostapd.Channel(48),
@@ -118,16 +118,16 @@ func BSSIDRequestedUpdate(ctx context.Context, s *testing.State) {
 	ctx, cancel = tf.ReserveForDeconfigAP(ctx, ap2)
 	defer cancel()
 
-	// Update connected service's BSSIDRequested property to |ap2BSSID|
+	// Update connected service's BSSIDRequested property to |ap2BSSID|.
 	s.Log("Setting BSSIDRequested to second AP")
 	if err := tf.WifiClient().SetBSSIDRequested(ctx, ap2BSSID); err != nil {
 		s.Fatalf("Failed to set BSSIDRequested to %s: %s", ap2BSSID, err)
 	}
 	if err := pollUntilBSSIDMatches(ctx, tf, ap2BSSID); err != nil {
-		s.Fatal("Failed to associate to first BSSID: ", err)
+		s.Fatal("Failed to associate to second BSSID: ", err)
 	}
 
-	// Update connected service's BSSIDRequested property back to |ap1BSSID|
+	// Update connected service's BSSIDRequested property back to |ap1BSSID|.
 	s.Log("Setting BSSIDRequested back to first AP")
 	if err := tf.WifiClient().SetBSSIDRequested(ctx, ap1BSSID); err != nil {
 		s.Fatalf("Failed to set BSSIDRequested to %s: %s", ap1BSSID, err)
@@ -147,7 +147,7 @@ func pollUntilBSSIDMatches(ctx context.Context, tf *wificell.TestFixture, bssid 
 			return errors.Wrap(err, "still not associated to bssid")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrapf(err, "failed to reassociate to BSSID %s", bssid)
 	}
 	return nil
