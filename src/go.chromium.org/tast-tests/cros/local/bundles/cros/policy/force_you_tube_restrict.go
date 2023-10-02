@@ -66,6 +66,12 @@ func ForceYouTubeRestrict(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	if err != nil {
+		s.Fatal("Failed to setup chrome: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
+
 	for _, param := range []struct {
 		// name is the subtest name.
 		name string
@@ -102,21 +108,10 @@ func ForceYouTubeRestrict(ctx context.Context, s *testing.State) {
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
-			// Perform cleanup.
-			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
-				s.Fatal("Failed to clean up: ", err)
-			}
-
 			// Update policies.
 			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.value}); err != nil {
 				s.Fatal("Failed to update policies: ", err)
 			}
-
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-			if err != nil {
-				s.Fatal("Failed to setup chrome: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
 
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
