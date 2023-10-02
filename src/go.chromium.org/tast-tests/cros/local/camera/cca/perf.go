@@ -91,8 +91,8 @@ func (p *PerfData) Save(outDir string) error {
 	return pv.Save(outDir)
 }
 
-// measureStablizedUsage measures the CPU and power usage after it's cooled down for stabilizationDuration.
-func measureStablizedUsage(ctx context.Context) (map[string]float64, error) {
+// measureStabilizedUsage measures the CPU and power usage after it's cooled down for stabilizationDuration.
+func measureStabilizedUsage(ctx context.Context) (map[string]float64, error) {
 	testing.ContextLog(ctx, "Sleeping to wait for CPU usage to stabilize for ", stabilizationDuration)
 	// GoBigSleepLint: Sleep to stabilize CPU before measuring the CPU usage.
 	if err := testing.Sleep(ctx, stabilizationDuration); err != nil {
@@ -128,7 +128,7 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 	}
 	defer fpsObserver.Stop(cleanupCtx)
 
-	usage, err := measureStablizedUsage(ctx)
+	usage, err := measureStabilizedUsage(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to measure CPU and power usage")
 	}
@@ -181,7 +181,7 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 	}
 	defer fpsObserverQR.Stop(cleanupCtx)
 
-	usageQR, err := measureStablizedUsage(ctx)
+	usageQR, err := measureStabilizedUsage(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to measure CPU and power usage with QR code detection")
 	}
@@ -276,7 +276,7 @@ func MeasureVideoRecordingPerformance(ctx context.Context, app *App, perfData *P
 	}
 	defer fpsObserver.Stop(cleanupCtx)
 
-	usage, err := measureStablizedUsage(ctx)
+	usage, err := measureStabilizedUsage(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to measure CPU and power usage")
 	}
