@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast-tests/cros/local/erpserver"
@@ -116,6 +117,15 @@ func verifyNoRuntimeCounters(server *erpserver.ErpServer) error {
 
 func ReportingRuntimeCountersTelemetry(ctx context.Context, s *testing.State) {
 	missiveFeature := "CrOSLateBootMissiveStorage:signature_verification_dev_enabled/true/compression_enabled/false"
+
+	// Need to enable PSR if the device is proto. Ignore any error because
+	// intel-psrtool would not exist in other environment and the command
+	// would fail if PSR is already enabled on a proto device.
+	psrtoolCmd := testexec.CommandContext(ctx, "intel-psrtool", "-a")
+	if err := psrtoolCmd.Run(); err != nil {
+		s.Log("Failed to run the intel-psrtool command: ", err)
+	}
+
 	// Prepare fake ERP server.
 	publicKey := s.RequiredVar("erpserver.public_key")
 	privateKey := s.RequiredVar("erpserver.private_key")
