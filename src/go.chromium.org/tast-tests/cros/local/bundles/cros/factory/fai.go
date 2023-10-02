@@ -26,7 +26,7 @@ func init() {
 		Contacts: []string{"chromeos-factory-fai@google.com", "wyuang@google.com"},
 		// ChromeOS > Platform > Enablement > Factory
 		BugComponent: "b:167224",
-		SoftwareDeps: []string{"factory_flow"},
+		SoftwareDeps: []string{"factory_flow", "gsc"},
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      3 * time.Minute,
 	})
