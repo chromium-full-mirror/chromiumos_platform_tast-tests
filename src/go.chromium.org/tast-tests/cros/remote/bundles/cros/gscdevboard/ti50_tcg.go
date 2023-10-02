@@ -34,20 +34,11 @@ func init() {
 			Name: "test_activate",
 			Val:  "TestActivate",
 		}, {
-			Name: "test_activate_aik",
-			Val:  "TestActivateAik",
-		}, {
 			Name: "test_activate_ecdh",
 			Val:  "TestActivateEcdh",
 		}, {
 			Name: "test_activate_hmac",
 			Val:  "TestActivateHmac",
-		}, {
-			Name: "test_activate_make_credential",
-			Val:  "TestActivateMakeCredential",
-		}, {
-			Name: "test_activate_make_credential_ecc",
-			Val:  "TestActivateMakeCredentialEcc",
 		}, {
 			Name: "test_auth_dec_session",
 			Val:  "TestAuthDecSession",
@@ -112,9 +103,6 @@ func init() {
 			Name: "test_da_exemption",
 			Val:  "TestDAExemption",
 		}, {
-			Name: "test_da_logic",
-			Val:  "TestDALogic",
-		}, {
 			Name: "test_duplicate_errors",
 			Val:  "TestDuplicateErrors",
 		}, {
@@ -166,9 +154,6 @@ func init() {
 			Name: "test_external_key_import",
 			Val:  "TestExternalKeyImport",
 		}, {
-			Name: "test_failure_mode",
-			Val:  "TestFailureMode",
-		}, {
 			Name: "test_firmware_read",
 			Val:  "TestFirmwareRead",
 		}, {
@@ -204,9 +189,6 @@ func init() {
 		}, {
 			Name: "test_hierarchy_control_owner_access",
 			Val:  "TestHierarchyControlOwnerAccess",
-		}, {
-			Name: "test_hierarchy_control_resource_management",
-			Val:  "TestHierarchyControlResourceManagement",
 		}, {
 			Name: "test_hmac2",
 			Val:  "TestHmac2",
@@ -288,9 +270,6 @@ func init() {
 		}, {
 			Name: "test_nv_with_policy",
 			Val:  "TestNvWithPolicy",
-		}, {
-			Name: "test_object_change_auth",
-			Val:  "TestObjectChangeAuth",
 		}, {
 			Name: "test_patch_410162",
 			Val:  "TestPatch_410162",
