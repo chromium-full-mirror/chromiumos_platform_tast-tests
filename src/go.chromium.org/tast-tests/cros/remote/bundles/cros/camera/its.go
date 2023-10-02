@@ -252,7 +252,8 @@ func ITS(ctx context.Context, s *testing.State) {
 			return
 		}
 		p := path.Join(s.OutDir(), "its")
-		if err := os.Rename(itsLogPath, p); err != nil {
+		if err := testexec.CommandContext(
+			ctx, "mv", itsLogPath, p).Run(testexec.DumpLogOnError); err != nil {
 			s.Errorf("Failed to move ITS log path %v to test output directory: %v", itsLogPath, err)
 		}
 	}(cleanupCtx)
