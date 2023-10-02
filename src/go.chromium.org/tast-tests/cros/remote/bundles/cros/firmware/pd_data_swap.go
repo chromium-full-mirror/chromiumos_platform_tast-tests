@@ -57,19 +57,9 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
-	// TODO: move common PD test requirements into separate go file.
-
-	// From firmware_test.py->setup_pdtester:
-	// 1. Verify servo includes PD tester (v4, v4p1), and debug connection (micro, c2d2)
-	// 2. Ensure battery is at 10% or greater
-	//	a. Start charging if needed and wait
-	// 3. Disable dts_mode on the PD tester
-
-	// PD tests require both a servo V4 connection and servo debug connection.
-	if err := h.Servo.RequirePDTester(ctx); err != nil {
-		s.Fatal("Servo configuration does not support PD testing: ", err)
+	if err := firmware.SetupPDTester(ctx, h, firmware.CCPolarityStandard, firmware.DTSModeOff); err != nil {
+		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
-	s.Log("Has PDTester")
 
 	err := h.Servo.RequireDUTPDInfo(ctx)
 	if err != nil {
@@ -79,23 +69,6 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 	pdState, err := h.Servo.GetServoPDState(ctx)
 	if err != nil {
 		s.Fatal("Failed to get Servo PD state: ", err)
-	}
-
-	hasBattery := h.Config.HasECCapability(firmware.ECBattery)
-	s.Log("ECCapBattery: ", hasBattery)
-
-	if hasBattery {
-		if err := firmware.ChargeToLevel(ctx, h, 10, 10*time.Minute); err != nil {
-			s.Fatal("Cannot start PD test: ", err)
-		}
-
-		// FIXME - have ChargeToLevel return current state
-		cs, err := firmware.GetChargingState(ctx, h)
-		if err != nil {
-			s.Fatal("Failed to read charging state: ", err)
-		}
-
-		s.Log("Battery capacity at test start: ", cs["batt.state_of_charge"])
 	}
 
 	// Verify that the DUT supports data swap, as reported in the servo's partner flags.
