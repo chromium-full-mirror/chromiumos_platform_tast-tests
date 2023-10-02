@@ -131,7 +131,7 @@ func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) 
 				s.Fatal("Failed to wait for the PDF ROOT node to be created in accessibility tree: ", err)
 			}
 
-			if err := pdfocr.TurnOnFromContextMenu(ctx, ui, pdfRoot, pdfocr.ContextMenuAlways); err != nil {
+			if err := pdfocr.TurnOnFromContextMenu(ctx, ui, pdfRoot); err != nil {
 				s.Fatal("Failed to turn on PDF OCR from the Context Menu")
 			}
 
@@ -157,7 +157,7 @@ func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) 
 			}
 
 			// Turn on PDF OCR always again.
-			if err := pdfocr.TurnOnFromContextMenu(ctx, ui, pdfRoot, pdfocr.ContextMenuAlways); err != nil {
+			if err := pdfocr.TurnOnFromContextMenu(ctx, ui, pdfRoot); err != nil {
 				s.Fatal("Failed to turn on PDF OCR from the Context Menu")
 			}
 

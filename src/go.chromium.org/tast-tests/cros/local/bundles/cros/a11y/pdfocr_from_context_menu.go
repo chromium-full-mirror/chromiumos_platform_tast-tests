@@ -66,49 +66,36 @@ func PDFOCRFromContextMenu(ctx context.Context, s *testing.State) {
 	server := data.Server
 	tconn := data.TConn
 
-	for _, subtest := range []struct {
-		name       string
-		menuOption pdfocr.ContextMenuOption
-	}{{
-		name:       "Just once",
-		menuOption: pdfocr.ContextMenuOnce,
-	}, {
-		name:       "Always",
-		menuOption: pdfocr.ContextMenuAlways,
-	}} {
-		s.Run(ctx, subtest.name, func(ctx context.Context, s *testing.State) {
-			// Open the test PDF.
-			conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/"+pdfocr.TestPDFName)
-			if err != nil {
-				s.Fatal("Failed to open test PDF: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-			defer conn.Close()
+	// Open the test PDF.
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/"+pdfocr.TestPDFName)
+	if err != nil {
+		s.Fatal("Failed to open test PDF: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
+	defer conn.Close()
 
-			ui := uiauto.New(tconn)
-			pdfRoot := nodewith.Role(role.PdfRoot)
-			if err := ui.WaitUntilExists(pdfRoot)(ctx); err != nil {
-				s.Fatal("Failed to wait for the PDF ROOT node to be created in the accessibility tree: ", err)
-			}
+	ui := uiauto.New(tconn)
+	pdfRoot := nodewith.Role(role.PdfRoot)
+	if err := ui.WaitUntilExists(pdfRoot)(ctx); err != nil {
+		s.Fatal("Failed to wait for the PDF ROOT node to be created in the accessibility tree: ", err)
+	}
 
-			if err := pdfocr.TurnOnFromContextMenu(ctx, ui, pdfRoot, subtest.menuOption); err != nil {
-				s.Fatal("Failed to turn on PDF OCR from the Context Menu")
-			}
+	if err := pdfocr.TurnOnFromContextMenu(ctx, ui, pdfRoot); err != nil {
+		s.Fatal("Failed to turn on PDF OCR from the Context Menu")
+	}
 
-			// Wait until screen-ai dlc is installed.
-			if err := testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
-				s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
-			}
+	// Wait until screen-ai dlc is installed.
+	if err := testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
+		s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
+	}
 
-			status := nodewith.Name(pdfocr.StatusReadyMessage).Role(role.Status)
-			ocredText := nodewith.Name(pdfocr.TextInPDFImage).Role(role.StaticText)
-			// Check if PDF OCR successfully extracts text from the inaccessible PDF.
-			if err := uiauto.Combine("Check OCR result",
-				ui.WithTimeout(30*time.Second).WaitUntilExists(status),
-				ui.WithTimeout(30*time.Second).WaitUntilExists(ocredText),
-			)(ctx); err != nil {
-				s.Fatal("Failed to verify text extracted by PDF OCR")
-			}
-		})
+	status := nodewith.Name(pdfocr.StatusReadyMessage).Role(role.Status)
+	ocredText := nodewith.Name(pdfocr.TextInPDFImage).Role(role.StaticText)
+	// Check if PDF OCR successfully extracts text from the inaccessible PDF.
+	if err := uiauto.Combine("Check OCR result",
+		ui.WithTimeout(30*time.Second).WaitUntilExists(status),
+		ui.WithTimeout(30*time.Second).WaitUntilExists(ocredText),
+	)(ctx); err != nil {
+		s.Fatal("Failed to verify text extracted by PDF OCR")
 	}
 }

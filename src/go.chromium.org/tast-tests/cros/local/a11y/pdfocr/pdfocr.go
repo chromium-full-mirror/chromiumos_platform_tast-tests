@@ -65,15 +65,6 @@ const (
 	MultiPagePDFExpectedTextJSONName = "building_chromium_expected.json"
 )
 
-// ContextMenuOption is a string value that indicates a context menu option for PDF OCR.
-type ContextMenuOption string
-
-// List of context menu options for PDF OCR.
-const (
-	ContextMenuAlways ContextMenuOption = "Always"
-	ContextMenuOnce                     = "Just once"
-)
-
 // DlcFailureSetUpData contains necessary objects for PDF OCR tests with dlc
 // failure and is returned by SetUpDlcFailure. TDown contains defer functions
 // that clean up the testing environment. EnsureDlc contains a defer function
@@ -144,7 +135,9 @@ func SetUpDlcFailure(ctx context.Context) (DlcFailureSetUpData, error) {
 	if _, err := os.Stat(backupDir); err == nil {
 		// backupDir exists, so it needs to be removed. backupDir will be created
 		// by moveDir() below.
-		os.RemoveAll(backupDir)
+		if err := os.RemoveAll(backupDir); err != nil {
+			return setupData, errors.Wrapf(err, "failed to remove %s", backupDir)
+		}
 	} else if !errors.Is(err, fs.ErrNotExist) {
 		// Return with errors if os.Stat() failed and raised some errors other than
 		// whether or not backupDir exists.
@@ -244,16 +237,14 @@ func SetUp(ctx, cleanupCtx context.Context, dataFS http.FileSystem, bt browser.T
 }
 
 // TurnOnFromContextMenu turns on PDF OCR from the Context menu in PDF Viewer.
-// `menuOption` must to be either `ContextMenuAlways` or `ContextMenuOnce`.
-func TurnOnFromContextMenu(ctx context.Context, ui *uiauto.Context, pdfRoot *nodewith.Finder, menuOption ContextMenuOption) error {
-	pdfOCRMenuEntry := nodewith.Name(ContextMenuName).Role(role.MenuItem)
-	pdfOCROption := nodewith.Name(string(menuOption)).Role(role.MenuItem)
+func TurnOnFromContextMenu(ctx context.Context, ui *uiauto.Context, pdfRoot *nodewith.Finder) error {
+	pdfOCRMenuEntry := nodewith.Name(ContextMenuName).Role(role.MenuItemCheckBox)
 	if err := uiauto.Combine("Turn on PDF OCR from the Context Menu",
 		ui.WithTimeout(5*time.Second).RightClick(pdfRoot),
+		ui.WithTimeout(5*time.Second).WaitUntilExists(pdfOCRMenuEntry),
 		ui.WithTimeout(5*time.Second).LeftClick(pdfOCRMenuEntry),
-		ui.WithTimeout(5*time.Second).LeftClick(pdfOCROption),
 	)(ctx); err != nil {
-		return errors.Wrapf(err, "failed to turn on PDF OCR %s from the Context Menu: ", menuOption)
+		return errors.Wrap(err, "failed to turn on PDF OCR from the Context Menu")
 	}
 
 	return nil
@@ -350,6 +341,5 @@ func moveDir(srcDir, dstDir string) (retErr error) {
 		retErr = errors.Wrapf(err, "failed to remove %s", srcDir)
 		return
 	}
-
 	return
 }
