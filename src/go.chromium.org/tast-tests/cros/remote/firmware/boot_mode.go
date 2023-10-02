@@ -714,7 +714,7 @@ func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context, opts ...ModeSw
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
 		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 	}
-	totalTimeout := h.Config.DelayRebootToPing + h.Config.FirmwareScreen
+	totalTimeout := h.Config.USBImageBootTimeout + h.Config.FirmwareScreen
 	if msOptsContain(opts, WaitSoftwareSync) {
 		totalTimeout += h.Config.SoftwareSyncUpdate
 	}
