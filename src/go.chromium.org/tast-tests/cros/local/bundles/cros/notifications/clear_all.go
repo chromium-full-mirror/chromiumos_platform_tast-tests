@@ -28,6 +28,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that the 'Clear all' button dismisses all notifications",
 		Contacts: []string{
+			"cros-status-area-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"amehfooz@chromium.org",
 			"cros-system-ui-eng@google.com",

@@ -31,6 +31,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that notifications appear in notification centre and can be interacted with",
 		Contacts: []string{
+			"cros-status-area-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"amehfooz@chromium.org",
 			"cros-system-ui-eng@google.com",
