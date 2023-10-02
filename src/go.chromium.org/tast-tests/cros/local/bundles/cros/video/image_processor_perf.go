@@ -6,6 +6,7 @@ package video
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/gtest"
 	mediacpu "go.chromium.org/tast-tests/cros/local/media/cpu"
+	"go.chromium.org/tast-tests/cros/local/media/logging"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -32,15 +34,23 @@ func init() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Fixture:      "graphicsNoChrome",
+		Data: []string{
+			"images/puppets-1280x720.nv12.yuv",
+			"images/puppets-1280x720.nv12.yuv.json",
+		},
 	})
 }
 
 func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 	const exec = "image_processor_perf_test"
+	dataDirectory := filepath.Dir(s.DataPath("images/puppets-1280x720.nv12.yuv"))
+	testArgs := []string{fmt.Sprintf("--source_directory=%s", dataDirectory),
+		logging.ChromeVmoduleFlag()}
 
 	if report, err := gtest.New(
 		filepath.Join(chrome.BinTestDir, exec),
 		gtest.Logfile(filepath.Join(s.OutDir(), exec+".log")),
+		gtest.ExtraArgs(testArgs...),
 		gtest.UID(int(sysutil.ChronosUID)),
 	).Run(ctx); err != nil {
 		s.Errorf("Failed to run %v: %v", exec, err)
@@ -61,9 +71,10 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 	// and is blocking.
 	go graphics.MeasureGPUCounters(ctx, measureDuration, p)
 
-	measurements, err := mediacpu.MeasureProcessUsage(ctx, measureDuration, mediacpu.KillProcess, gtest.New(
+	measurements, err := mediacpu.MeasureProcessUsage(ctx, measureDuration, mediacpu.WaitProcess, gtest.New(
 		filepath.Join(chrome.BinTestDir, exec),
 		gtest.Logfile(filepath.Join(s.OutDir(), exec+".log")),
+		gtest.ExtraArgs(testArgs...),
 	))
 	if err != nil {
 		s.Error("No additional information is available for this failure")
