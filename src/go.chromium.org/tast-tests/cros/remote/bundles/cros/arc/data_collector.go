@@ -1015,7 +1015,7 @@ func decompressImage(ctx context.Context, d *dut.DUT, vmEnabled bool, imageName,
 	if isErofsImage {
 		testing.ContextLogf(ctx, "%s is an EROFS image. Repacking it as a Squashfs image", imageName)
 
-		repackedImagePath := "/tmp/data_collector_repacked." + imageName
+		repackedImagePath := "/var/tmp/data_collector_repacked." + imageName
 		if err := repackErofsImageAsSquashfs(ctx, d, dutImagePath, repackedImagePath); err != nil {
 			return errors.Wrapf(err, "failed to repack EROFS image %s", dutImagePath)
 		}
@@ -1042,7 +1042,7 @@ func decompressImage(ctx context.Context, d *dut.DUT, vmEnabled bool, imageName,
 
 // repackErofsImageAsSquashfs remotely repacks an EROFS image at |srcImagePath| as a Squashfs image at |dstImagePath| on DUT.
 func repackErofsImageAsSquashfs(ctx context.Context, d *dut.DUT, srcImagePath, dstImagePath string) error {
-	const extractDir = "/tmp/data_collector_extracted"
+	const extractDir = "/var/tmp/data_collector_extracted"
 
 	if err := dututils.MkdirRemote(ctx, d, extractDir); err != nil {
 		return errors.Wrapf(err, "failed to create %s", extractDir)
