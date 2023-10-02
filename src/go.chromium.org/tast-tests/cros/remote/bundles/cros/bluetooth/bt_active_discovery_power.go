@@ -6,13 +6,15 @@ package bluetooth
 
 import (
 	"context"
+	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
-	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
+	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -68,7 +70,7 @@ func BTActiveDiscoveryPower(ctx context.Context, s *testing.State) {
 
 	// Baseline idle power
 	fv.StartPowerRecording(ctx)
-	testing.ContextLog(ctx, "Keep idle for ", interval)
+	s.Log("Keep idle for ", interval)
 	// GoBigSleepLint: sleep to keep discovery for measuring power consumption
 	testing.Sleep(ctx, interval)
 
@@ -81,16 +83,23 @@ func BTActiveDiscoveryPower(ctx context.Context, s *testing.State) {
 		s.Log("Measured power idle [W]: ", pIdle)
 	}
 
-	// Discovery
-	testing.ContextLog(ctx, "Start discovery")
-	if _, err = fv.BluetoothService.StartDiscovery(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to start discover: ", err)
+	// Use an invalid address to keep discovery running
+	request := bts.DiscoverDeviceRequest{
+		DeviceAddress:    "00:00:00:00:00:00",
+		DiscoveryTimeout: durationpb.New(interval),
 	}
 
 	fv.StartPowerRecording(ctx)
-	testing.ContextLog(ctx, "Keep discovery for ", interval)
-	// GoBigSleepLint: sleep to keep discovery for measuring power consumption
-	testing.Sleep(ctx, interval)
+
+	// Keep discovering for a non-existence target for interval seconds.
+	s.Log("Keep discovering for ", interval)
+	if _, err = fv.BluetoothService.DiscoverDevice(ctx, &request); err != nil {
+		if strings.Contains(err.Error(), "failed to wait until bluetooth adapter discovered device") {
+			s.Logf("Done discovering for %v for power measurement", interval)
+		} else {
+			s.Fatal("Unexpected discovery error: ", err)
+		}
+	}
 
 	pResults, err = fv.StopPowerRecording(ctx, s.TestName()+".discov0")
 	if err != nil {
@@ -101,31 +110,30 @@ func BTActiveDiscoveryPower(ctx context.Context, s *testing.State) {
 		s.Log("Measured power discovery with 0 peer [W]: ", pScan)
 	}
 
-	testing.ContextLog(ctx, "Stop discovery")
-	if _, err = fv.BluetoothService.StopDiscovery(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to stop discover: ", err)
-	}
-
 	btpeer := fv.BTPeers[0]
 	tc := s.Param().(*btActiveDiscoveryPowerTestCase)
 
 	// Emulate the desired device type with btpeer.
-	testing.ContextLogf(ctx, "Configuring a btpeer as %q device", tc.DeviceType.String())
+	s.Logf("Configuring a btpeer as %q device", tc.DeviceType.String())
 	device, err := bluetooth.NewEmulatedBTPeerDevice(ctx, btpeer, &bluetooth.EmulatedBTPeerDeviceConfig{
 		DeviceType: tc.DeviceType,
 	})
 	if err != nil {
 		s.Fatal("Failed to call NewEmulatedBTPeerDevice: ", err)
 	}
-	testing.ContextLogf(ctx, "Device %s is ready to pair", device.String())
+	s.Logf("Device %s is ready to pair", device.String())
 
-	testing.ContextLog(ctx, "Start discovery")
-	if _, err = fv.BluetoothService.StartDiscovery(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to start discover: ", err)
+	s.Log("Keep discovering for ", interval)
+	if _, err = fv.BluetoothService.DiscoverDevice(ctx, &request); err != nil {
+		if strings.Contains(err.Error(), "failed to wait until bluetooth adapter discovered device") {
+			s.Log("Ignore discovery error")
+		} else {
+			s.Fatal("Unexpected discovery error: ", err)
+		}
 	}
 
 	fv.StartPowerRecording(ctx)
-	testing.ContextLog(ctx, "Keep discovery for ", interval)
+	s.Log("Keep discovering for ", interval)
 	// GoBigSleepLint: sleep to keep discovery for measuring power consumption
 	testing.Sleep(ctx, interval)
 
@@ -138,11 +146,6 @@ func BTActiveDiscoveryPower(ctx context.Context, s *testing.State) {
 		s.Log("Measured power discovery with 1 peer [W]: ", pScan1Peer)
 	}
 
-	testing.ContextLog(ctx, "Stop discovery")
-	if _, err = fv.BluetoothService.StopDiscovery(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to stop discover: ", err)
-	}
-
-	testing.ContextLog(ctx, "Discovery power consumption with 0 peer advertising: ", pScan-pIdle)
-	testing.ContextLog(ctx, "Discovery power consumption with 1 peer advertising: ", pScan1Peer-pIdle)
+	s.Log("Discovery power consumption with 0 peer advertising: ", pScan-pIdle)
+	s.Log("Discovery power consumption with 1 peer advertising: ", pScan1Peer-pIdle)
 }
