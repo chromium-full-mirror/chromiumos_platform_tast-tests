@@ -65,6 +65,11 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 		}, {
 			// Contact: weiluanwang@google.com
+			Name:      "captive_portal",
+			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			// Contact: weiluanwang@google.com
 			// Cannot be added to DiagnosticsPass.* since the result would be
 			// "Not run" in lab's network. See b/286497166.
 			Name: "signal_strength",

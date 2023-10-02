@@ -101,10 +101,6 @@ func init() {
 			Name: "dns_resolution",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
 		}, {
-			// Contact: weiluanwang@google.com
-			Name: "captive_portal",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),
-		}, {
 			// Contact: yycheng@google.com
 			Name:      "memory",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
