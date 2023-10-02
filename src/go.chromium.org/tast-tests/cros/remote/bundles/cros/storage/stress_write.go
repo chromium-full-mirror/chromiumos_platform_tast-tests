@@ -34,6 +34,9 @@ func init() {
 }
 
 func StressWrite(ctx context.Context, s *testing.State) {
+	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
+	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
+
 	resultWriter := &util.FioResultWriter{}
 	defer resultWriter.Save(ctx, s.OutDir(), true)
 
@@ -62,6 +65,8 @@ func StressWrite(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
+
 	// Stress the device, verifying data along the way
 	s.Log("Starting 64k_stress workload, will run for 5 hours")
 	err = configBase.
@@ -71,6 +76,8 @@ func StressWrite(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to run fio: ", err)
 	}
+
+	util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
 
 	// Get after performance results
 	// GoBigSleepLint: Provide some idle time before measuring storage performance.
