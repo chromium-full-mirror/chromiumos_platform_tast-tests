@@ -62,11 +62,21 @@ func getYouTubeErrorMessage(ctx context.Context, br ash.ConnSource, url string) 
 	// Maximum number of times to continue polling YouTube after seeing an empty error message.
 	const pollingThreshold = 5
 
-	conn, err := br.NewConn(ctx, url)
+	conn, err := br.NewConn(ctx, "")
 	if err != nil {
 		return "", err
 	}
 	defer conn.Close()
+
+	if err := conn.Navigate(ctx, url); err != nil {
+		return "", errors.Wrap(err, "failed to navigate to google search url")
+	}
+	if err := conn.WaitForExpr(ctx, `document.URL.includes('youtube.com')`); err != nil {
+		return "", errors.Wrap(err, "failed to wait for navigation")
+	}
+	if err := conn.WaitForExpr(ctx, `document.readyState === 'interactive' || document.readyState === 'complete'`); err != nil {
+		return "", errors.Wrap(err, "failed to wait for initial loading")
+	}
 
 	var message string
 	cnt := 0
