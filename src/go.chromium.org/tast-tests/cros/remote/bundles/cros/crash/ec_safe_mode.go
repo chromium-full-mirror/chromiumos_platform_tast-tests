@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	crash_service "go.chromium.org/tast-tests/cros/services/cros/crash"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -39,6 +40,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
 		Timeout:      10 * time.Minute,
 		Fixture:      fixture.NormalMode,
+		ServiceDeps:  []string{"tast.cros.crash.FixtureService"},
 		SoftwareDeps: []string{"device_crash", "ec_crash", "pstore", "reboot", "no_qemu"},
 		HardwareDeps: hwdep.D(hwdep.ECFeatureSystemSafeMode()),
 		Params: []testing.Param{
@@ -94,6 +96,7 @@ const (
 
 // ECSafeMode verifies that EC safe mode runs and Kernel syncs logs
 func ECSafeMode(ctx context.Context, s *testing.State) {
+	const systemCrashDir = "/var/spool/crash"
 	var timerInfoLine string
 
 	param := s.Param().(testParameters)
@@ -111,10 +114,22 @@ func ECSafeMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 
+	fs := crash_service.NewFixtureServiceClient(cl.Conn)
+
+	req := crash_service.SetUpCrashTestRequest{
+		Consent: crash_service.SetUpCrashTestRequest_MOCK_CONSENT,
+	}
+
 	// Shorten deadline to leave time for cleanup
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
+
+	if _, err := fs.SetUp(ctx, &req); err != nil {
+		s.Error("Failed to set up: ", err)
+		cl.Close(cleanupCtx)
+		return
+	}
 
 	// This is a bit delicate. If the test fails _before_ we panic the machine,
 	// we need to do TearDown then, and on the same connection (so we can close Chrome).
@@ -202,6 +217,19 @@ func ECSafeMode(ctx context.Context, s *testing.State) {
 	cl, err = rpc.Dial(ctx, d, s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+	fs = crash_service.NewFixtureServiceClient(cl.Conn)
+
+	const base = `embedded_controller\.\d{8}\.\d{6}\.\d+\.0`
+	waitReq := &crash_service.WaitForCrashFilesRequest{
+		Dirs:    []string{systemCrashDir},
+		Regexes: []string{base + `\.eccrash`, base + `\.meta`},
+	}
+
+	s.Log("Waiting for files to become present")
+	_, err = fs.WaitForCrashFiles(ctx, waitReq)
+	if err != nil {
+		s.Fatal("Failed to find crash files: " + err.Error())
 	}
 
 	/* Verify panicinfo flags */
