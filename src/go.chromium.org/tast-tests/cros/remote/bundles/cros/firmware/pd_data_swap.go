@@ -16,6 +16,12 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+type pdDataSwapTestParams struct {
+	cc       firmware.CCPolarity
+	dts      firmware.DTSMode
+	shutdown bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: PDDataSwap,
@@ -32,6 +38,37 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      15 * time.Minute,
+		Params: []testing.Param{{
+			Name: "normal",
+			Val: pdDataSwapTestParams{
+				cc:       firmware.CCPolarityStandard,
+				dts:      firmware.DTSModeOn,
+				shutdown: false,
+			},
+		}, {
+			Name: "flipcc",
+			Val: pdDataSwapTestParams{
+				cc:       firmware.CCPolarityFlipped,
+				dts:      firmware.DTSModeOn,
+				shutdown: false,
+			},
+		}, {
+			Name: "dtsoff",
+			Val: pdDataSwapTestParams{
+				cc:       firmware.CCPolarityStandard,
+				dts:      firmware.DTSModeOff,
+				shutdown: false,
+			},
+		}, {
+			Name: "flipcc_dtsoff",
+			Val: pdDataSwapTestParams{
+				cc:       firmware.CCPolarityFlipped,
+				dts:      firmware.DTSModeOff,
+				shutdown: false,
+			},
+		}},
+		// TODO: b/194910842 - [faft-pd] Convert firmware_PDDataSwap to TAST
+		// Add "shutdown" parameter
 	})
 }
 
@@ -57,7 +94,9 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
-	if err := firmware.SetupPDTester(ctx, h, firmware.CCPolarityStandard, firmware.DTSModeOff); err != nil {
+	testParams := s.Param().(pdDataSwapTestParams)
+
+	if err := firmware.SetupPDTester(ctx, h, testParams.cc, testParams.dts); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
 
