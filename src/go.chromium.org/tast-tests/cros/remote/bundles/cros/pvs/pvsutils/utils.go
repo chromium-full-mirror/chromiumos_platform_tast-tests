@@ -5,6 +5,7 @@
 package pvsutils
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -90,20 +91,19 @@ func EnsurePass(ctx context.Context, s *testing.State, subtestName string, subte
 }
 
 // RunPVSCommand runs the given pvs command with the given options and fatally
-// errors if a no exit error is thrown, otherwise the combined Stdout and Stderr
-// are returned.
-func (p PVSRunner) RunPVSCommand(ctx context.Context, s *testing.State, subcommand string, options ...string) string {
-	output, err := p.RunPVSCommandNonfatal(ctx, subcommand, options...)
+// errors if a no exit error is thrown, otherwise  stdout, stderr is returned.
+func (p PVSRunner) RunPVSCommand(ctx context.Context, s *testing.State, subcommand string, options ...string) (string, string) {
+	stdout, stderr, err := p.RunPVSCommandNonfatal(ctx, subcommand, options...)
 	exitErr := &ssherrs.ExitError{}
 	if err != nil && !errors.As(err, &exitErr) {
 		s.Fatal("Non exit-code error received when running pvs: ", err)
 	}
-	return output
+	return stdout, stderr
 }
 
 // RunPVSCommandNonfatal runs the given pvs command with the given options and
-// returns the corresponding error and combined Stdout and Stderr.
-func (p PVSRunner) RunPVSCommandNonfatal(ctx context.Context, subcommand string, options ...string) (string, error) {
+// returns the corresponding error and stdout, stderr.
+func (p PVSRunner) RunPVSCommandNonfatal(ctx context.Context, subcommand string, options ...string) (string, string, error) {
 	env := p.Env.generateEnvMap()
 	var envArgs []string
 	for key, val := range env {
@@ -116,8 +116,8 @@ func (p PVSRunner) RunPVSCommandNonfatal(ctx context.Context, subcommand string,
 		subcommand,
 		strings.Join(options, " "),
 	)
-	output, err := RunAsChronos(ctx, p.Dut, pvsCommand)
-	return processControlChars(output), err
+	stdout, stderr, err := RunAsChronos(ctx, p.Dut, pvsCommand)
+	return processControlChars(stdout), stderr, err
 }
 
 func (p RuntimeEnv) generateEnvMap() map[string]string {
@@ -240,30 +240,36 @@ func CopyToPVSOutputDir(ctx context.Context, s *testing.State, filepath string) 
 }
 
 // RunAsChronos runs the given command as the chronos user on the given dut.
-func RunAsChronos(ctx context.Context, dut *ssh.Conn, cmd string) (string, error) {
+func RunAsChronos(ctx context.Context, dut *ssh.Conn, cmd string) (string, string, error) {
 	wrappedCmd := dut.CommandContext(ctx, "sudo", "--login", "-u", "chronos", "bash", "-c", cmd)
 	return runAsRoot(ctx, wrappedCmd)
 }
 
-func runAsRoot(ctx context.Context, cmd *ssh.Cmd) (string, error) {
+func runAsRoot(ctx context.Context, cmd *ssh.Cmd) (string, string, error) {
 	testing.ContextLogf(ctx, "Running command: `%v`", strings.Join(cmd.Args, " "))
-	out, err := cmd.CombinedOutput()
-	testing.ContextLog(ctx, "Output from command: ", string(out))
-	return string(out), err
+	var bstdout, bstderr bytes.Buffer
+	cmd.Stdout = &bstdout
+	cmd.Stderr = &bstderr
+	err := cmd.Run()
+	stdout := string(bstdout.Bytes())
+	stderr := string(bstderr.Bytes())
+	testing.ContextLog(ctx, "Output from command: ", stdout)
+	testing.ContextLog(ctx, "Stderr from command: ", stderr)
+	return stdout, stderr, err
 }
 
-func removeAsRoot(ctx context.Context, dut *ssh.Conn, path string) (string, error) {
+func removeAsRoot(ctx context.Context, dut *ssh.Conn, path string) (string, string, error) {
 	cmd := dut.CommandContext(ctx, "sudo", "rm", "-rf", path)
 	return runAsRoot(ctx, cmd)
 }
 
-func runAsChronosWithStdin(ctx context.Context, dut *ssh.Conn, cmd, stdin string) (string, error) {
+func runAsChronosWithStdin(ctx context.Context, dut *ssh.Conn, cmd, stdin string) (string, string, error) {
 	wrappedCmd := dut.CommandContext(ctx, "sudo", "--login", "-u", "chronos", "bash", "-c", cmd)
 	wrappedCmd.Stdin = strings.NewReader(stdin)
 	return runAsRoot(ctx, wrappedCmd)
 }
 
-func writeToFileAsChronos(ctx context.Context, dut *ssh.Conn, content, path string) (string, error) {
+func writeToFileAsChronos(ctx context.Context, dut *ssh.Conn, content, path string) (string, string, error) {
 	writeToFile := fmt.Sprintf(`cat > %v`, path)
 	return runAsChronosWithStdin(ctx, dut, writeToFile, content)
 }

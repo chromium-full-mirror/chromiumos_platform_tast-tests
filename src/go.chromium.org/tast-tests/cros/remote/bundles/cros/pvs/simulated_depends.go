@@ -52,7 +52,7 @@ func SimulatedDepends(ctx context.Context, s *testing.State) {
 	pvsutils.EnsurePass(ctx, s, "run tests dlm_sku_id=3494", func(ctx context.Context, s *testing.State) {
 		pvsRunner.Env.SimulatedDutInfo = "dedede:drawcia:262144:3494"
 
-		output := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passfail-0001-v01",
@@ -80,7 +80,7 @@ func SimulatedDepends(ctx context.Context, s *testing.State) {
 		pvsRunner.Env.SimulatedDutInfo = "dedede:drawcia:262144:3495"
 		pvsRunner.Env.SimulatedTestsFail = "stub_PassServer"
 
-		output := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passfail-0001-v01",
@@ -107,7 +107,7 @@ func SimulatedDepends(ctx context.Context, s *testing.State) {
 	pvsutils.EnsurePass(ctx, s, "verify results", func(ctx context.Context, s *testing.State) {
 		pvsRunner.Env.SimulatedTestsFail = ""
 
-		output := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passfail-0001-v01",
@@ -137,7 +137,7 @@ func SimulatedDepends(ctx context.Context, s *testing.State) {
 	pvsutils.EnsurePass(ctx, s, "re-run tests dlm_sku_id=3494", func(ctx context.Context, s *testing.State) {
 		pvsRunner.Env.SimulatedDutInfo = "dedede:drawcia:262144:3494"
 
-		output := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passfail-0001-v01",
@@ -158,7 +158,7 @@ func SimulatedDepends(ctx context.Context, s *testing.State) {
 	})
 
 	pvsutils.EnsurePass(ctx, s, "verify results after re-run", func(ctx context.Context, s *testing.State) {
-		output := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passfail-0001-v01",

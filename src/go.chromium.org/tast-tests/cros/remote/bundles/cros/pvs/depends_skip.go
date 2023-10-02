@@ -51,7 +51,7 @@ func DependsSkip(ctx context.Context, s *testing.State) {
 	)
 
 	pvsutils.EnsurePass(ctx, s, "list requirements", func(ctx context.Context, s *testing.State) {
-		output := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passskip-0001-v01",
@@ -80,7 +80,7 @@ func DependsSkip(ctx context.Context, s *testing.State) {
 	})
 
 	pvsutils.EnsurePass(ctx, s, "run tests", func(ctx context.Context, s *testing.State) {
-		output := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passskip-0001-v01",
@@ -114,7 +114,7 @@ func DependsSkip(ctx context.Context, s *testing.State) {
 	})
 
 	pvsutils.EnsurePass(ctx, s, "verify results", func(ctx context.Context, s *testing.State) {
-		output := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passskip-0001-v01",
@@ -146,7 +146,7 @@ func DependsSkip(ctx context.Context, s *testing.State) {
 	})
 
 	pvsutils.EnsurePass(ctx, s, "re-run tests", func(ctx context.Context, s *testing.State) {
-		output := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-fail-0001-v01",
@@ -171,7 +171,7 @@ func DependsSkip(ctx context.Context, s *testing.State) {
 	})
 
 	pvsutils.EnsurePass(ctx, s, "verify results after re-run", func(ctx context.Context, s *testing.State) {
-		output := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passskip-0001-v01",

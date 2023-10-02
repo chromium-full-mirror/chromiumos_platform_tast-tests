@@ -47,7 +47,7 @@ func BasicPassFail(ctx context.Context, s *testing.State) {
 	)
 
 	pvsutils.EnsurePass(ctx, s, "list all requirements", func(ctx context.Context, s *testing.State) {
-		output := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan, "--all")
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan, "--all")
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passfail-0001-v01",
@@ -69,7 +69,7 @@ func BasicPassFail(ctx context.Context, s *testing.State) {
 	})
 
 	pvsutils.EnsurePass(ctx, s, "list requirements with tests", func(ctx context.Context, s *testing.State) {
-		output := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passfail-0001-v01",
@@ -91,7 +91,7 @@ func BasicPassFail(ctx context.Context, s *testing.State) {
 	})
 
 	pvsutils.EnsurePass(ctx, s, "run tests", func(ctx context.Context, s *testing.State) {
-		output := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
+		output, errLog := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passfail-0001-v01",
@@ -108,13 +108,15 @@ func BasicPassFail(ctx context.Context, s *testing.State) {
 			{Pattern: pvsutils.PrintedResultNotRun, Count: 0},
 			{Pattern: pvsutils.PrintedResultFail, Count: 3},
 			{Pattern: pvsutils.PrintedResultPass, Count: 3},
-			{Pattern: "Error: 2 mandatory requirements failed see logs for more details", Count: 1},
 			{Pattern: "Mandatory Requirements Satisfied: 1/3 \\(33\\%\\)", Count: 1},
+		})
+		pvsutils.CountTestCases(s, errLog, []pvsutils.RepeatedWord{
+			{Pattern: "Error: 2 mandatory requirements failed see logs for more details", Count: 1},
 		})
 	})
 
 	pvsutils.EnsurePass(ctx, s, "verify results", func(ctx context.Context, s *testing.State) {
-		output := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passfail-0001-v01",
@@ -136,7 +138,7 @@ func BasicPassFail(ctx context.Context, s *testing.State) {
 	})
 
 	pvsutils.EnsurePass(ctx, s, "re-run failed tests", func(ctx context.Context, s *testing.State) {
-		output := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
+		output, errLog := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-passfail-0001-v01",
@@ -152,8 +154,10 @@ func BasicPassFail(ctx context.Context, s *testing.State) {
 			{Pattern: pvsutils.PrintedResultNotRun, Count: 0},
 			{Pattern: pvsutils.PrintedResultFail, Count: 3},
 			{Pattern: pvsutils.PrintedResultPass, Count: 0},
-			{Pattern: "Error: 2 mandatory requirements failed see logs for more details", Count: 1},
 			{Pattern: "Mandatory Requirements Satisfied: 0/2 \\(0\\%\\)", Count: 1},
+		})
+		pvsutils.CountTestCases(s, errLog, []pvsutils.RepeatedWord{
+			{Pattern: "Error: 2 mandatory requirements failed see logs for more details", Count: 1},
 		})
 	})
 }

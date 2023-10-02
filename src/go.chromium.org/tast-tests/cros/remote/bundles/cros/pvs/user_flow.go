@@ -45,11 +45,11 @@ func UserFlow(ctx context.Context, s *testing.State) {
 		requirementFilter = requirementFilterOverride
 	}
 	s.Log("PVS is being run with the following filter: ", requirementFilter)
-	if _, err := pvsRunner.RunPVSCommandNonfatal(ctx, "fetch"); err != nil {
+	if _, _, err := pvsRunner.RunPVSCommandNonfatal(ctx, "fetch"); err != nil {
 		s.Error("Error occured when calling `pvs fetch`: ", err)
 	}
 	runSubcommand := fmt.Sprintf("run --filter %v", requirementFilter)
-	if _, err := pvsRunner.RunPVSCommandNonfatal(ctx, runSubcommand); err != nil {
+	if _, _, err := pvsRunner.RunPVSCommandNonfatal(ctx, runSubcommand); err != nil {
 		if _, ok := s.Var("pvs.UserFlow.ignorePVSRunFailure"); !ok {
 			s.Error("Error occured when calling `pvs run`: ", err)
 		} else {
@@ -57,10 +57,10 @@ func UserFlow(ctx context.Context, s *testing.State) {
 		}
 	}
 	listSubcommand := fmt.Sprintf("list --filter %v", requirementFilter)
-	if _, err := pvsRunner.RunPVSCommandNonfatal(ctx, listSubcommand); err != nil {
+	if _, _, err := pvsRunner.RunPVSCommandNonfatal(ctx, listSubcommand); err != nil {
 		s.Error("Error occured when calling `pvs list`: ", err)
 	}
-	if _, err := pvsRunner.RunPVSCommandNonfatal(ctx, "upload"); err != nil {
+	if _, _, err := pvsRunner.RunPVSCommandNonfatal(ctx, "upload"); err != nil {
 		s.Error("Error occured when calling `pvs upload`: ", err)
 	}
 }

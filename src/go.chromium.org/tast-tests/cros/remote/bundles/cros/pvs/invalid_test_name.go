@@ -47,7 +47,7 @@ func InvalidTestName(ctx context.Context, s *testing.State) {
 	)
 
 	pvsutils.EnsurePass(ctx, s, "run tests", func(ctx context.Context, s *testing.State) {
-		output := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
+		output, errLog := pvsRunner.RunPVSCommand(ctx, s, "run", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-invalid-0001-v01",
@@ -60,6 +60,8 @@ func InvalidTestName(ctx context.Context, s *testing.State) {
 			{Pattern: pvsutils.TestResultPattern("tast.noResult", pvsutils.PrintedResultError), Count: 1},
 			{Pattern: pvsutils.PrintedResultNotRun, Count: 0},
 			{Pattern: pvsutils.PrintedResultFail, Count: 0},
+		})
+		pvsutils.CountTestCases(s, errLog, []pvsutils.RepeatedWord{
 			{Pattern: "Error: 1 mandatory requirements failed see logs for more details", Count: 1},
 		})
 		pvsutils.CountTestCases(s, output, []pvsutils.RepeatedWord{
@@ -70,7 +72,7 @@ func InvalidTestName(ctx context.Context, s *testing.State) {
 	})
 
 	pvsutils.EnsurePass(ctx, s, "verify results", func(ctx context.Context, s *testing.State) {
-		output := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
+		output, _ := pvsRunner.RunPVSCommand(ctx, s, "list", "--test-plan", testplan)
 
 		pvsutils.ValidateOutputContains(s, output, []string{
 			"test-invalid-0001-v01",
