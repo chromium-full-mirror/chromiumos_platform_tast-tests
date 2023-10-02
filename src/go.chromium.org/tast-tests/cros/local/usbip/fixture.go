@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/drivefs"
 	"go.chromium.org/tast-tests/cros/local/network/tcpdump"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -73,8 +74,8 @@ func init() {
 		Contacts:        []string{"project-bolton@google.com"},
 		Impl:            &LoadModuleFixture{},
 		Parent:          "driveFsStarted",
-		SetUpTimeout:    UsbipModulesLoadedTimeout,
-		TearDownTimeout: UsbipModulesLoadedTimeout,
+		SetUpTimeout:    UsbipModulesLoadedTimeout + drivefs.DriveFsSetupAndTearDownTimeout,
+		TearDownTimeout: UsbipModulesLoadedTimeout + drivefs.DriveFsSetupAndTearDownTimeout,
 		PreTestTimeout:  UsbipModulesLoadedTimeout,
 		PostTestTimeout: UsbipModulesLoadedTimeout,
 	})

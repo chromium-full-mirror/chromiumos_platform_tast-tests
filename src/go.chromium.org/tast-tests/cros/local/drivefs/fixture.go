@@ -22,7 +22,8 @@ import (
 )
 
 const (
-	driveFsSetupAndTearDownTimeout = time.Minute
+	// DriveFsSetupAndTearDownTimeout allocates 1 minute for Drivefs operations.
+	DriveFsSetupAndTearDownTimeout = time.Minute
 )
 
 var (
@@ -35,8 +36,8 @@ func init() {
 		Desc:            "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
 		Contacts:        []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
 		Impl:            &fixture{bt: browser.TypeAsh},
-		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
-		ResetTimeout:    driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: time.Hour,
 		Vars: []string{
 			"drivefs.accountPool",
@@ -49,8 +50,8 @@ func init() {
 		Desc:            "Lacros variant of driveFsStarted",
 		Contacts:        []string{"chromeos-files-syd@chromium.org"},
 		Impl:            &fixture{bt: browser.TypeLacros},
-		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
-		ResetTimeout:    driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: time.Hour,
 		Vars: []string{
 			"drivefs.accountPool",
@@ -66,9 +67,9 @@ func init() {
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("FilesTrash")},
 			bt:            browser.TypeAsh,
 		},
-		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
-		ResetTimeout:    driveFsSetupAndTearDownTimeout,
-		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
+		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
 			"drivefs.accountPool",
 			"drivefs.extensionClientID",
@@ -83,9 +84,9 @@ func init() {
 			enableBulkPinning: true,
 			bt:                browser.TypeAsh,
 		},
-		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
-		ResetTimeout:    driveFsSetupAndTearDownTimeout,
-		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
+		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
 			"drivefs.accountPool",
 			"drivefs.extensionClientID",
@@ -99,9 +100,9 @@ func init() {
 		Impl: &fixture{drivefsOptions: map[string]string{
 			"switchblade_dss": "true",
 		}, bt: browser.TypeAsh},
-		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
-		ResetTimeout:    driveFsSetupAndTearDownTimeout,
-		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
+		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
 			"drivefs.accountPool",
 			"drivefs.extensionClientID",
@@ -115,9 +116,9 @@ func init() {
 		Impl: &fixture{drivefsOptions: map[string]string{
 			"switchblade_dss": "true",
 		}, bt: browser.TypeLacros},
-		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
-		ResetTimeout:    driveFsSetupAndTearDownTimeout,
-		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
+		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
 			"drivefs.accountPool",
 			"drivefs.extensionClientID",
@@ -133,9 +134,9 @@ func init() {
 			drivefsOptions: map[string]string{
 				"switchblade_dss": "true",
 			}, bt: browser.TypeLacros},
-		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
-		ResetTimeout:    driveFsSetupAndTearDownTimeout,
-		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
+		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
 			"drivefs.accountPool",
 			"drivefs.extensionClientID",
@@ -150,9 +151,9 @@ func init() {
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync")},
 			bt:            browser.TypeAsh,
 		},
-		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
-		ResetTimeout:    driveFsSetupAndTearDownTimeout,
-		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
+		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
 			"drivefs.accountPool",
 			"drivefs.extensionClientID",
@@ -167,9 +168,9 @@ func init() {
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud")},
 			bt:            browser.TypeLacros,
 		},
-		SetUpTimeout:    chrome.GAIALoginTimeout + driveFsSetupAndTearDownTimeout,
-		ResetTimeout:    driveFsSetupAndTearDownTimeout,
-		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
+		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
 			"drivefs.accountPool",
 			"drivefs.extensionClientID",
