@@ -28,6 +28,7 @@ const (
 	ArbKeyConfig          StringControl = "arb_key_config"
 	BottomUSBKeyMux       StringControl = "bottom_usbkey_mux"
 	Devices               StringControl = "devices"
+	DUTUSB3EnV4p1         StringControl = "servo_v4p1_dut_usb3_en"
 	DUTVoltageMV          StringControl = "dut_voltage_mv"
 	DownloadImageToUSBDev StringControl = "download_image_to_usb_dev"
 	ECActiveCopy          StringControl = "ec_active_copy"
@@ -248,6 +249,15 @@ const (
 	DUTControllerCCD        DUTController = "ccd_gsc"
 	DUTControllerCCDTi50    DUTController = "ccd_ti50"
 	DUTControllerServoMicro DUTController = "servo_micro"
+)
+
+// A DUTUSB3Value is a string accepted by the dut_usb3 control.
+type DUTUSB3Value string
+
+// These are the string values that can be passed to the dut_usb3 control.
+const (
+	DUTUSB3Enable  DUTUSB3Value = "enable"
+	DUTUSB3Disable DUTUSB3Value = "disable"
 )
 
 // ServoKeypressDelay comes from hdctools/servo/drv/keyboard_handlers.py.
