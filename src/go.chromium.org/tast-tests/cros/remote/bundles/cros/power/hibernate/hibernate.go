@@ -200,7 +200,7 @@ func (t *Tester) hibernateAndReboot(ctx context.Context) {
 	defer cancel()
 
 	t.logger.Log("Starting hibernation ...")
-	out, err := t.dut.Conn().CommandContext(cmdCtx, "/sbin/minijail0", "-v", "/usr/sbin/hiberman", "hibernate", "-r").CombinedOutput()
+	out, err := t.dut.Conn().CommandContext(cmdCtx, "/sbin/minijail0", "--config", "/usr/share/minijail/hiberman.conf", "/usr/sbin/hiberman", "hibernate", "-r").CombinedOutput()
 	t.logger.Logf("hiberman output: %s", out)
 
 	if err != nil {
