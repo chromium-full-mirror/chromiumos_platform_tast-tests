@@ -1310,6 +1310,15 @@ func (s *Servo) GetPDCommunication(ctx context.Context) (string, error) {
 	return pdComm, nil
 }
 
+// SetPDCommunication sets servo_pd_comm to the specified value, if it is not
+// set to that value already.
+func (s *Servo) SetPDCommunication(ctx context.Context, value OnOffValue) error {
+	if err := s.SetString(ctx, PDCommunication, string(value)); err != nil {
+		return errors.Wrap(err, "failed to set PD communication status")
+	}
+	return nil
+}
+
 // RequireCCD verifies that the servo has a CCD connection, and switches to it for dual v4 servos.
 func (s *Servo) RequireCCD(ctx context.Context) error {
 	servoType, err := s.GetServoType(ctx)
