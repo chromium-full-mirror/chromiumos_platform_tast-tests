@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -53,6 +54,11 @@ func EmojiInput(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating test API connection failed: ", err)
 	}
+
+	handler := func(msg string) {
+		faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	}
+	s.AttachErrorHandlers(handler, handler)
 
 	// Ensure Clamshell mode because we want to verify the physical keyboard usecase
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
