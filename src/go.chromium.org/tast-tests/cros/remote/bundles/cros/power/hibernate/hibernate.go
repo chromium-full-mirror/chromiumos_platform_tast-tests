@@ -194,7 +194,7 @@ func (t *Tester) disableConsoleSuspend(ctx context.Context) {
 }
 
 func (t *Tester) hibernateAndReboot(ctx context.Context) {
-	t.disableConsoleSuspend(ctx);
+	t.disableConsoleSuspend(ctx)
 
 	cmdCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
@@ -223,7 +223,7 @@ func (t *Tester) resumeFromHibernate(ctx context.Context) {
 	t.getGRPCClient(ctx)
 
 	// Console suspend is re-enabled on reboot, disable it again.
-	t.disableConsoleSuspend(ctx);
+	t.disableConsoleSuspend(ctx)
 
 	t.loginToResume(ctx)
 
