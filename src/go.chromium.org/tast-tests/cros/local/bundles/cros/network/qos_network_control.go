@@ -109,14 +109,11 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create patchpanel client: ", err)
 	}
 
-	if err := pc.SetQosEnable(ctx, true); err != nil {
+	restoreQosFeature, err := pc.SetQosEnableWithRestore(ctx, true)
+	if err != nil {
 		s.Fatal("Failed to enable QoS in patchpanel: ", err)
 	}
-	defer func() {
-		if err := pc.SetQosEnable(cleanupCtx, false); err != nil {
-			s.Error("Failed to disable QoS in patchpanel: ", err)
-		}
-	}()
+	defer restoreQosFeature(cleanupCtx)
 
 	m, err := shill.NewManager(ctx)
 	if err != nil {

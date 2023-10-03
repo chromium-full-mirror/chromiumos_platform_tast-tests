@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -205,24 +206,42 @@ func (c *Client) NotifyAndroidInteractiveState(ctx context.Context, interactive 
 }
 
 // SetQosEnable enables or disables the QoS feature in Patchpanel.
-func (c *Client) SetQosEnable(ctx context.Context, enable bool) error {
+func (c *Client) SetQosEnable(ctx context.Context, enable bool) (bool, error) {
 	request := &pp.SetFeatureFlagRequest{
 		Flag:    pp.SetFeatureFlagRequest_WIFI_QOS,
 		Enabled: enable,
 	}
 	buf, err := proto.Marshal(request)
 	if err != nil {
-		return errors.Wrapf(err, "failed marshaling %s request", setFeatureFlagMethod)
+		return false, errors.Wrapf(err, "failed marshaling %s request", setFeatureFlagMethod)
 	}
 
 	var result []uint8
 	if err := c.obj.CallWithContext(ctx, setFeatureFlagMethod, 0, buf).Store(&result); err != nil {
-		return errors.Wrapf(err, "failed reading %s response", setFeatureFlagMethod)
+		return false, errors.Wrapf(err, "failed reading %s response", setFeatureFlagMethod)
 	}
 
 	response := &pp.SetFeatureFlagResponse{}
 	if err := proto.Unmarshal(result, response); err != nil {
-		return errors.Wrapf(err, "failed unmarshaling %s response", setFeatureFlagMethod)
+		return false, errors.Wrapf(err, "failed unmarshaling %s response", setFeatureFlagMethod)
 	}
-	return nil
+	return response.GetEnabled(), nil
+}
+
+// SetQosEnableWithRestore enables or disables the QoS feature in Patchpanel and
+// provide a helper function to restore the flag to its previous value.
+func (c *Client) SetQosEnableWithRestore(ctx context.Context, enable bool) (func(context.Context), error) {
+	old, err := c.SetQosEnable(ctx, enable)
+	if err != nil {
+		return nil, err
+	}
+	return func(ctx context.Context) {
+		if old == enable {
+			// No need to restore anything.
+			return
+		}
+		if _, err := c.SetQosEnable(ctx, old); err != nil {
+			testing.ContextLog(ctx, "Failed to restore QoS enable feature flag: ", err)
+		}
+	}, nil
 }
