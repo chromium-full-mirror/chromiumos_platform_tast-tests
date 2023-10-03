@@ -27,6 +27,7 @@ const (
 	NormalMode              = "bootModeNormal"
 	DevMode                 = "bootModeDev"
 	DevModeGBB              = "bootModeDevGBB"
+	DevModeWPEnabledZeroGBB = "boolModeDevWPEnabledZeroGBB"
 	USBDevModeNoServices    = "bootModeUSBDevNoServices"
 	USBDevModeGBBNoServices = "bootModeUSBDevGBBNoServices"
 	USBDevModeGBB           = "bootModeUSBDevGBB"
@@ -68,6 +69,19 @@ func init() {
 		Desc:            "Reboot into dev mode using GBB flags before test",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
 		Impl:            newFixture(common.BootModeDev, true, true),
+		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
+		SetUpTimeout:    10 * time.Second,
+		ResetTimeout:    10 * time.Second,
+		PreTestTimeout:  15 * time.Minute,
+		PostTestTimeout: 10 * time.Minute,
+		TearDownTimeout: 10 * time.Minute,
+		Data:            []string{firmware.ConfigFile},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            DevModeWPEnabledZeroGBB,
+		Desc:            "Reboot while ensuring HW and SW write protect are enabled and that GBB is set to zero. Device must already be in developer mode",
+		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
+		Impl:            newWPEnabledZeroGBBFixture(),
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		SetUpTimeout:    10 * time.Second,
 		ResetTimeout:    10 * time.Second,
@@ -170,6 +184,8 @@ type Value struct {
 	GBBFlags      *pb.GBBFlagsState
 	Helper        *firmware.Helper
 	ForcesDevMode bool
+	ForceZeroGBB  bool
+	ForceWPEnable bool
 }
 
 // impl contains fields that are useful for Fixture methods.
@@ -187,8 +203,23 @@ func newFixture(mode common.BootMode, forceDev, copyTastFiles bool) testing.Fixt
 		value: &Value{
 			BootMode:      mode,
 			ForcesDevMode: forceDev,
+			ForceZeroGBB:  false,
+			ForceWPEnable: false,
 		},
 		copyTastFiles: copyTastFiles,
+	}
+}
+
+// newWPEnabledZeroGBBFixture creates an instance of firmware Fixture with WP enabled and zero GBB.
+func newWPEnabledZeroGBBFixture() testing.FixtureImpl {
+	return &impl{
+		value: &Value{
+			BootMode:      common.BootModeDev,
+			ForcesDevMode: false,
+			ForceZeroGBB:  true,
+			ForceWPEnable: true,
+		},
+		copyTastFiles: true,
 	}
 }
 
@@ -219,6 +250,11 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 
 	if i.disallowSSH {
 		s.Log("Skipping GBB and reboot because noSSH var was set")
+		return i.value
+	}
+
+	if i.value.ForceZeroGBB {
+		i.value.GBBFlags = &pb.GBBFlagsState{Clear: common.AllGBBFlags()}
 		return i.value
 	}
 
@@ -460,6 +496,16 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 			s.Fatalf("Failed to reboot to mode %q: %s", i.value.BootMode, err)
 		}
 	}
+
+	if i.value.ForceWPEnable {
+		s.Log("Enabling software and hardware write protect")
+		if err := i.value.Helper.DUT.Conn().CommandContext(ctx, "futility", "flash", "--wp-enable").Run(); err != nil {
+			s.Fatal("Failed to enable software write protect: ", err)
+		}
+		if err := i.value.Helper.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+			s.Fatal("Failed to enable write protect: ", err)
+		}
+	}
 }
 
 // PostTest is called by the framework after each test to tear down changes PreTest made.
@@ -483,6 +529,17 @@ func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
 		i.origBootMode = nil
 		i.origGBBFlags = nil
 	}(ctx)
+
+	// If we enabled WP during setup, then disable here so we can update GBB flags if needed
+	if i.value.ForceWPEnable {
+		s.Log("Disabling software and hardware write protect")
+		if err := i.value.Helper.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+			s.Fatal("Failed to disable write protect: ", err)
+		}
+		if err := i.value.Helper.DUT.Conn().CommandContext(ctx, "futility", "flash", "--wp-disable").Run(); err != nil {
+			s.Fatal("Failed to disable software write protect: ", err)
+		}
+	}
 
 	// Close the servo to reset pd role, watchdogs, etc. unless we are booted from USB as resetting the pd role will make the dut reboot.
 	if i.value.BootMode != common.BootModeRecovery && i.value.BootMode != common.BootModeUSBDev {
