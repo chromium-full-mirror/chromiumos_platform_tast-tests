@@ -29,7 +29,8 @@ const (
 
 var (
 	pushButton     = regexp.MustCompile("Press the physical button now")
-	testLabEnabled = regexp.MustCompile("Updating testlab to true")
+	testLabEnabled = regexp.MustCompile("Updating testlab to true|CCD test lab mode enabled")
+	ccdOpened      = regexp.MustCompile("CCD [Oo]pened")
 )
 
 func init() {
@@ -104,7 +105,7 @@ func (c *ccdOpenImpl) ensureTestLabOpen(ctx context.Context, s *testing.FixtTest
 
 	s.Log("Testlab mode not enabled")
 	s.Log("Restarting ti50 with CCD, SPI, and Clamshell straps and AP on to remove FWMP")
-	gpioApplyStrap(ctx, s, b, ti50.CcdSuzyQ, ti50.TpmSpi, ti50.FfClamshell)
+	gpioApplyStrap(ctx, s, b, ti50.CcdSuzyQ, ti50.StrapForCcdOpenFixture)
 	gpioSet(ctx, s, b, ti50.GpioTi50PltRstL, true)
 	mustSucceed(s, b.Reset(ctx), "Reset board")
 	mustSucceed(s, i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
@@ -118,7 +119,7 @@ func (c *ccdOpenImpl) ensureTestLabOpen(ctx context.Context, s *testing.FixtTest
 
 	s.Log("Opening CCD with chassis open and no FWMP space. Should be instant")
 	out = runCommand(ctx, s, i, "ccd open")
-	if !strings.Contains(out, "CCD Opened") {
+	if !ccdOpened.MatchString(out) {
 		s.Fatal("CCD did not open, but got instead: ", out)
 	}
 

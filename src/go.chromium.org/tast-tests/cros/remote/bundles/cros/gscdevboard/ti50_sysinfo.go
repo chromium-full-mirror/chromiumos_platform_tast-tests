@@ -26,7 +26,7 @@ func init() {
 			"jbk@chromium.org",         // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_ot_fpga_cw310", "gsc_he", "gsc_image_ti50", "gsc_nightly"},
+		Attr:         []string{"group:gsc", "gsc_h1_shield", "gsc_dt_ab", "gsc_dt_shield", "gsc_ot_fpga_cw310", "gsc_he", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.Ti50CcdOpen,
 	})
 }
@@ -41,7 +41,6 @@ func Ti50Sysinfo(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	s.Log("(Re)starting ti50")
-	b.GpioApplyStrap(ctx, ti50.TpmSpi)
 	th.MustSucceed(b.Reset(ctx), "Reset board")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 

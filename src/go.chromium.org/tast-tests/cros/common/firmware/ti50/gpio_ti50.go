@@ -22,6 +22,13 @@ const (
 	TpmI2c GpioStrap = "TI50_TPM_I2C"
 )
 
+// Combined gpio straps
+const (
+	// StrapForCcdOpenFixture boots ti50 image with SPI TPM and in Clamshell form factor, it
+	// boots cr50 in some SPI mode suitable for running the TPM commands for opening ccd.
+	StrapForCcdOpenFixture GpioStrap = "FOR_CCD_OPEN_FIXTURE"
+)
+
 // All well known gpio straps for CCD connection status.
 const (
 	// CcdDisconnected is the default, no CCD cable connected
