@@ -38,7 +38,7 @@ func init() {
 		Params: []testing.Param{
 			testing.Param{
 				Name:              "probe_by_default",
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(storageNotProbable...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(storageNotProbable...), hwdep.ChromeEC()),
 				Val: extraCmdParams{
 					extraBuildParams: []string{
 						"--add-firmware-components",
