@@ -106,7 +106,8 @@ func testBody(s *testing.State, testType string, ignoredAncestorNames, exclusion
 	// that will be found on every system, whether ARC is enabled or not.
 	BaseExpectedSharedMounts := map[string]bool{
 		// This is where USB drives get mounted.
-		"^/media$": true,
+		"^/media$":               true,
+		"^/media/removable(/|$)": true,
 		// Fusebox shares files between a variety of contexts such as ARC, volumes
 		// implemented using the FileSystemProvider JavaScript API, and volumes
 		// served by the MediaTransferProtocol.
