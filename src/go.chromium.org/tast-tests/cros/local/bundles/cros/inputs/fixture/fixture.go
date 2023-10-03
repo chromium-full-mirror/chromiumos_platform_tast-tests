@@ -44,48 +44,51 @@ const (
 	handwritingLegacyRecognition
 	emojiPickerGifSupport
 	firstPartyVietnameseInput
+	altClickAndSixPackCustomization
 )
 
 // List of fixture names for inputs.
 const (
-	AnyVK                                         = "anyVK"
-	AnyVKInGuest                                  = "anyVKInGuest"
-	AnyVKInGAIA                                   = "anyVKInGaia"
-	ClamshellVK                                   = "clamshellVK"
-	ClamshellVKRestart                            = "clamshellVKRestart"
-	ClamshellNonVKWithDiacriticsOnPKLongpress     = "clamshellWithDiacriticsOnPKLongpress"
-	ClamshellNonVKWithFirstPartyVietnamese        = "clamshellNonVKWithFirstPartyVietnamese"
-	ClamshellNonVK                                = "clamshellNonVK"
-	ClamshellNonVKStereoAloopLoaded               = "clamshellNonVKStereoAloopLoaded"
-	ClamshellNonVKInGuest                         = "clamshellNonVKInGuest"
-	ClamshellNonVKRestart                         = "clamshellNonVKRestart"
-	ClamshellNonVKWithMultiwordSuggest            = "clamshellNonVKWithMultiwordSuggest"
-	ClamshellNonVKInGAIA                          = "clamshellNonVKInGAIA"
-	ClamshellVKWithHandWritingLegacyRecognitionOn = "clamshellVKWithHandWritingLegacyRecognitionOn"
-	TabletVK                                      = "tabletVK"
-	TabletVKWithHandWritingLegacyRecognitionOn    = "tabletVKWithHandWritingLegacyRecognitionOn"
-	TabletVKStereoAloopLoaded                     = "tabletVKStereoAloopLoaded"
-	TabletVKRestart                               = "tabletVKRestart"
-	TabletVKInGuest                               = "tabletVKInGuest"
+	AnyVK                                             = "anyVK"
+	AnyVKInGuest                                      = "anyVKInGuest"
+	AnyVKInGAIA                                       = "anyVKInGaia"
+	ClamshellVK                                       = "clamshellVK"
+	ClamshellVKRestart                                = "clamshellVKRestart"
+	ClamshellNonVKWithAltClickAndSixPackCustomization = "clamshellNonVKWithAltClickAndSixPackCustomization"
+	ClamshellNonVKWithDiacriticsOnPKLongpress         = "clamshellWithDiacriticsOnPKLongpress"
+	ClamshellNonVKWithFirstPartyVietnamese            = "clamshellNonVKWithFirstPartyVietnamese"
+	ClamshellNonVK                                    = "clamshellNonVK"
+	ClamshellNonVKStereoAloopLoaded                   = "clamshellNonVKStereoAloopLoaded"
+	ClamshellNonVKInGuest                             = "clamshellNonVKInGuest"
+	ClamshellNonVKRestart                             = "clamshellNonVKRestart"
+	ClamshellNonVKWithMultiwordSuggest                = "clamshellNonVKWithMultiwordSuggest"
+	ClamshellNonVKInGAIA                              = "clamshellNonVKInGAIA"
+	ClamshellVKWithHandWritingLegacyRecognitionOn     = "clamshellVKWithHandWritingLegacyRecognitionOn"
+	TabletVK                                          = "tabletVK"
+	TabletVKWithHandWritingLegacyRecognitionOn        = "tabletVKWithHandWritingLegacyRecognitionOn"
+	TabletVKStereoAloopLoaded                         = "tabletVKStereoAloopLoaded"
+	TabletVKRestart                                   = "tabletVKRestart"
+	TabletVKInGuest                                   = "tabletVKInGuest"
 	// Lacros fixtures.
-	LacrosAnyVK                                         = "lacrosAnyVK"
-	LacrosAnyVKInGuest                                  = "lacrosAnyVKInGuest"
-	LacrosAnyVKInGAIA                                   = "lacrosAnyVKInGaia"
-	LacrosClamshellVK                                   = "lacrosClamshellVK"
-	LacrosClamshellVKWithHandWritingLegacyRecognitionOn = "lacrosclamshellVKWithHandWritingLegacyRecognitionOn"
-	LacrosClamshellNonVK                                = "lacrosClamshellNonVK"
-	LacrosClamshellNonVKStereoAloopLoaded               = "lacrosClamshellNonVKStereoAloopLoaded"
-	LacrosClamshellNonVKInGuest                         = "lacrosClamshellNonVKInGuest"
-	LacrosClamshellNonVKInGAIA                          = "lacrosClamshellNonVKInGaia"
-	LacrosClamshellNonVKRestart                         = "lacrosClamshellNonVKRestart"
-	LacrosClamshellNonVKWithMultiwordSuggest            = "lacrosClamshellNonVKWithMultiwordSuggest"
-	LacrosClamshellNonVKWithDiacriticsOnPKLongpress     = "lacrosClamshellWithDiacriticsOnPKLongpress"
-	LacrosClamshellNonVKWithFirstPartyVietnamese        = "lacrosClamshellNonVKWithFirstPartyVietnamese"
-	LacrosTabletVK                                      = "lacrosTabletVK"
-	LacrosTabletVKWithHandWritingLegacyRecognitionOn    = "lacrostabletVKWithHandWritingLegacyRecognitionOn"
-	LacrosTabletVKStereoAloopLoaded                     = "lacrosTabletVKStereoAloopLoaded"
-	LacrosTabletVKInGuest                               = "lacrosTabletVKInGuest"
-	LacrosTabletVKRestart                               = "lacrosTabletVKRestart"
+	LacrosAnyVK                                             = "lacrosAnyVK"
+	LacrosAnyVKInGuest                                      = "lacrosAnyVKInGuest"
+	LacrosAnyVKInGAIA                                       = "lacrosAnyVKInGaia"
+	LacrosClamshellVK                                       = "lacrosClamshellVK"
+	LacrosClamshellVKWithHandWritingLegacyRecognitionOn     = "lacrosclamshellVKWithHandWritingLegacyRecognitionOn"
+	LacrosClamshellNonVK                                    = "lacrosClamshellNonVK"
+	LacrosClamshellNonVKStereoAloopLoaded                   = "lacrosClamshellNonVKStereoAloopLoaded"
+	LacrosClamshellNonVKInGuest                             = "lacrosClamshellNonVKInGuest"
+	LacrosClamshellNonVKInGAIA                              = "lacrosClamshellNonVKInGaia"
+	LacrosClamshellNonVKRestart                             = "lacrosClamshellNonVKRestart"
+	LacrosClamshellNonVKWithAltClickAndSixPackCustomization = "lacrosClamshellNonVKWithAltClickAndSixPackCustomization"
+	LacrosClamshellNonVKWithMultiwordSuggest                = "lacrosClamshellNonVKWithMultiwordSuggest"
+	LacrosClamshellNonVKWithDiacriticsOnPKLongpress         = "lacrosClamshellWithDiacriticsOnPKLongpress"
+	LacrosClamshellNonVKWithFirstPartyVietnamese            = "lacrosClamshellNonVKWithFirstPartyVietnamese"
+	LacrosTabletVK                                          = "lacrosTabletVK"
+	LacrosTabletVKWithHandWritingLegacyRecognitionOn        = "lacrostabletVKWithHandWritingLegacyRecognitionOn"
+	LacrosTabletVKStereoAloopLoaded                         = "lacrosTabletVKStereoAloopLoaded"
+	LacrosTabletVKInGuest                                   = "lacrosTabletVKInGuest"
+	LacrosTabletVKRestart                                   = "lacrosTabletVKRestart"
 )
 
 func init() {
@@ -219,6 +222,20 @@ func init() {
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, true, browser.TypeAsh),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: ClamshellNonVKWithAltClickAndSixPackCustomization,
+		Desc: "Clamshell mode with alt-click and six pack customization",
+		Contacts: []string{
+			"jhtin@chromium.org",
+			"essential-inputs-team@google.com",
+		},
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, altClickAndSixPackCustomization),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -467,6 +484,20 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: LacrosClamshellNonVKWithAltClickAndSixPackCustomization,
+		Desc: "Lacros variant: Clamshell mode with alt-click and six pack customization",
+		Contacts: []string{
+			"jhtin@chromium.org",
+			"essential-inputs-team@google.com",
+		},
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, altClickAndSixPackCustomization),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: LacrosClamshellNonVKWithMultiwordSuggest,
 		Desc: "Lacros variant: clamshell mode with VK disabled and multiword suggest",
 		Contacts: []string{
@@ -702,6 +733,8 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs("--enable-features=HandwritingLegacyRecognition"))
 		case emojiPickerGifSupport:
 			opts = append(opts, chrome.ExtraArgs(("--enable-features=SystemEmojiPickerGIFSupport")))
+		case altClickAndSixPackCustomization:
+			opts = append(opts, chrome.ExtraArgs("--enable-features=AltClickAndSixPackCustomization"))
 		}
 	}
 

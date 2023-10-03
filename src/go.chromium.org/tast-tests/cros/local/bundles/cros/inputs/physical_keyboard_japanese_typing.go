@@ -43,26 +43,26 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:             "us",
-				Fixture:          fixture.ClamshellNonVK,
+				Fixture:          fixture.ClamshellNonVKWithAltClickAndSixPackCustomization,
 				Val:              ime.JapaneseWithUSKeyboard,
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.JapaneseWithUSKeyboard}),
 			},
 			{
 				Name:             "jp",
-				Fixture:          fixture.ClamshellNonVK,
+				Fixture:          fixture.ClamshellNonVKWithAltClickAndSixPackCustomization,
 				Val:              ime.Japanese,
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.Japanese}),
 			},
 			{
 				Name:              "us_lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
+				Fixture:           fixture.LacrosClamshellNonVKWithAltClickAndSixPackCustomization,
 				Val:               ime.JapaneseWithUSKeyboard,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.JapaneseWithUSKeyboard}),
 			},
 			{
 				Name:              "jp_lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
+				Fixture:           fixture.LacrosClamshellNonVKWithAltClickAndSixPackCustomization,
 				Val:               ime.Japanese,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Japanese}),
@@ -172,7 +172,7 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "あにほんごあ"),
 				// Move to the beginning of the text and delete the first character.
 				kb.AccelAction("Ctrl+e"),
-				kb.AccelAction("Alt+Backspace"),
+				kb.AccelAction("Search+Backspace"),
 				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "にほんごあ"),
 				// Move to the end of the text and delete the last character.
 				kb.AccelAction("Ctrl+f"),
@@ -180,7 +180,7 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "にほんご"),
 				// Move to the beginning of the text and delete the first character.
 				kb.AccelAction("Ctrl+Left"),
-				kb.AccelAction("Alt+Backspace"),
+				kb.AccelAction("Search+Backspace"),
 				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ほんご"),
 				// Move to the end of the text and delete the last character.
 				kb.AccelAction("Ctrl+Right"),
@@ -195,7 +195,7 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 				// Move to the end of the text, move left, and replace .
 				kb.AccelAction("Ctrl+Down"),
 				kb.AccelAction("Left"),
-				kb.AccelAction("Alt+Backspace"),
+				kb.AccelAction("Search+Backspace"),
 				kb.TypeAction("a"),
 				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ああ"),
 			),

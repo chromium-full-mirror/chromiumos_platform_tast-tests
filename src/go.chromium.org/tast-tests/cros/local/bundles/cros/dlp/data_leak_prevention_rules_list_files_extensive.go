@@ -347,7 +347,7 @@ func testTrashingAndRestoring(ctx context.Context, ui *uiauto.Context, tconn *ch
 
 	// Restore the file and check it's still managed.
 	if err := uiauto.Combine("restore the downloaded file",
-		kb.AccelAction("Alt+Backspace"),
+		kb.AccelAction("Search+Backspace"),
 		f.OpenDownloads(),
 		f.OpenFile(folder),
 		f.WaitForFile(restrictedFile),
