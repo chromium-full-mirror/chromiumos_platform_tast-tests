@@ -163,3 +163,15 @@ func TbtMountPath(dirsAfterPlug, dirsbeforePlug []string) string {
 	}
 	return ""
 }
+
+// GenerateFileWithSize generates file of specified size in respective path.
+func GenerateFileWithSize(ctx context.Context, sourceFilePath string, fileSize int64) error {
+	file, err := os.Create(sourceFilePath)
+	if err != nil {
+		return errors.Wrap(err, "failed to create file")
+	}
+	if err := file.Truncate(int64(fileSize)); err != nil {
+		return errors.Wrapf(err, "failed to truncate file with size %d", fileSize)
+	}
+	return nil
+}

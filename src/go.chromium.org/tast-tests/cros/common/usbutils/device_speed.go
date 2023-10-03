@@ -6,13 +6,21 @@ package usbutils
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // USBDevice represents information of a connected USB device.
@@ -95,4 +103,124 @@ func NumberOfUSBDevicesConnected(deviceInfoList []USBDevice, devClassName, usbSp
 	}
 	numberOfDevicesConnected := len(speedSlice)
 	return numberOfDevicesConnected
+}
+
+// calculateHashOfFile checks the checksum for the input file.
+func calculateHashOfFile(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "failed to open files")
+	}
+	defer file.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, file); err != nil {
+		return []byte{}, errors.Wrap(err, "failed to calculate the hash of the files")
+	}
+
+	return h.Sum(nil), nil
+}
+
+// StoragePath returns storage path of the given device name.
+func StoragePath(ctx context.Context, deviceName string) (string, error) {
+	const mediaRemovable = "/media/removable/"
+	var storageFullPath string
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		fileInfos, err := ioutil.ReadDir(mediaRemovable)
+		if err != nil {
+			return errors.Wrap(err, "failed to read contents of media removable directory")
+		}
+
+		found := false
+		for _, fileInfo := range fileInfos {
+			if strings.Contains(fileInfo.Name(), deviceName) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return errors.Errorf("failed to find device %s", deviceName)
+		}
+		storageFullPath = filepath.Join(mediaRemovable, deviceName)
+		return nil
+	}, &testing.PollOptions{Timeout: 45 * time.Second, Interval: 15 * time.Second}); err != nil {
+		return "", errors.Wrap(err, "failed to find storage device")
+	}
+	return storageFullPath, nil
+}
+
+// TransferFile performs copying the file from source to destination
+// and validates it by comparing the hash of both the files. If the
+// bidirectional param is set to true, it copies the data from destination to source and validates the hash again.
+func TransferFile(ctx context.Context, src, dst string, bidirection bool) error {
+	localHash, err := calculateHashOfFile(src)
+	if err != nil {
+		return errors.Wrap(err, "failed to calculate hash of the source file")
+	}
+
+	testing.ContextLogf(ctx, "Transferring file from %s to %s", src, dst)
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return errors.Wrap(err, "failed to get file info")
+	}
+	if !sourceFileStat.Mode().IsRegular() {
+		return errors.Errorf("%s is not a regular file", src)
+	}
+	source, err := os.Open(src)
+	if err != nil {
+		return errors.Wrap(err, "failed to open file")
+	}
+	defer source.Close()
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return errors.Wrap(err, "failed to create file")
+	}
+	defer destination.Close()
+
+	if _, err := io.Copy(destination, source); err != nil {
+		return errors.Wrap(err, "failed to copy")
+	}
+	destHash, err := calculateHashOfFile(dst)
+	if err != nil {
+		return errors.Wrap(err, "failed to calculate hash of the destination file")
+	}
+	if !bytes.Equal(localHash, destHash) {
+		return errors.Wrapf(err, "the hash doesn't match (destHash path: %q)", destHash)
+	}
+
+	if bidirection {
+		testing.ContextLogf(ctx, "Transferring file from %s to %s", dst, src)
+		destFileStat, err := os.Stat(dst)
+		if err != nil {
+			return errors.Wrap(err, "failed to get file info")
+		}
+		if !destFileStat.Mode().IsRegular() {
+			return errors.Errorf("%s is not a regular file", dst)
+		}
+		destination, err := os.Open(dst)
+		if err != nil {
+			return errors.Wrap(err, "failed to open file")
+		}
+		defer destination.Close()
+
+		source, err := os.Create(src)
+		if err != nil {
+			return errors.Wrap(err, "failed to create file")
+		}
+		defer source.Close()
+
+		if _, err := io.Copy(source, destination); err != nil {
+			return errors.Wrap(err, "failed to copy")
+		}
+		locHash, err := calculateHashOfFile(src)
+		if err != nil {
+			return errors.Wrap(err, "failed to calculate hash of the destination file")
+		}
+		if !bytes.Equal(locHash, destHash) {
+			return errors.Wrapf(err, "the hash doesn't match (destHash path: %q)", destHash)
+		}
+	}
+	return nil
 }

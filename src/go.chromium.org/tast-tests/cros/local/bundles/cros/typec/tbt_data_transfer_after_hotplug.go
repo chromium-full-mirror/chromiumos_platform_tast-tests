@@ -5,12 +5,8 @@
 package typec
 
 import (
-	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/json"
-	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -18,12 +14,12 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
-	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/typec/setup"
+	typec "go.chromium.org/tast-tests/cros/local/bundles/cros/typec/typecutils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/typecutils"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -38,9 +34,9 @@ func init() {
 		Attr:         []string{"group:typec", "group:intel-tbt3-dock-usb"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"test_config.json", "testcert.p12"},
-		Vars:         []string{"typec.dutTbtPort", "typec.cSwitchPort", "typec.domainIP", "ui.signinProfileTestExtensionManifestKey"},
+		Vars:         []string{"typec.dutTbtPort", "typec.cSwitchPort", "typec.sdCardName", "typec.dutSsdTbtPort", "typec.ssdName", "typec.domainIP", "ui.signinProfileTestExtensionManifestKey"},
 		HardwareDeps: hwdep.D(setup.ThunderboltSupportedDevices()),
-		Timeout:      5 * time.Minute,
+		Timeout:      160 * time.Minute,
 	})
 }
 
@@ -52,23 +48,35 @@ func init() {
 //
 // This test requires the following H/W topology to run.
 //
-//	DUT ------> C-Switch(device that performs hot plug-unplug)---->TBT SSD.
+//	DUT ------> C-Switch(device that performs hot plug-unplug)---->TBT SSD, SD card.
 func TbtDataTransferAfterHotplug(ctx context.Context, s *testing.State) {
 
 	const (
 		// Config file which contains expected values of TBT parameters.
 		jsonTestConfig = "test_config.json"
-		// Source file name.
-		transFilename = "file_ogg.ogg"
-		// Tbt mount path.
-		tbtMount = "/media/removable/"
+		// SSD TransFile name.
+		ssdTransFilename = "file_ogg_tbt_ssd.txt"
+		// SD Card TransFile name.
+		sdCardTransFilename = "file_ogg_sdcard.txt"
+		// TBT SSD data file size.
+		ssdDataFileSize = 1024 * 1024 * 1024 * 20
+		// SD card data file size.
+		sdCardDataFileSize = 1024 * 1024 * 1024 * 5
 	)
+
 	// TBT port ID in the DUT.
 	tbtPort := s.RequiredVar("typec.dutTbtPort")
+	// SSD TBT port ID in the DUT.
+	ssdTbtPort := s.RequiredVar("typec.dutSsdTbtPort")
 	// cswitch port ID.
 	cSwitchON := s.RequiredVar("typec.cSwitchPort")
 	// IP address of Tqc server hosting device.
 	domainIP := s.RequiredVar("typec.domainIP")
+	// SD CardDevice Name
+	sdCardDeviceName := s.RequiredVar("typec.sdCardName")
+	// TBT SSD Device Name
+	ssdDeviceName := s.RequiredVar("typec.ssdName")
+	const cSwitchOFF = "0"
 
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx
@@ -90,11 +98,6 @@ func TbtDataTransferAfterHotplug(ctx context.Context, s *testing.State) {
 
 	if err := cr.ContinueLogin(ctx); err != nil {
 		s.Fatal("Failed to login: ", err)
-	}
-
-	dirsBeforePlug, err := getRemovableDirs(ctx, tbtMount)
-	if err != nil {
-		s.Fatal("Failed to get removable devices: ", err)
 	}
 
 	// Read json config file.
@@ -126,126 +129,76 @@ func TbtDataTransferAfterHotplug(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
-		s.Fatal("Failed to enable c-switch port: ", err)
-	}
-
-	if _, err := cswitch.IsDeviceEnumerated(ctx, tbtVal["device_name"].(string), tbtPort); err != nil {
-		s.Fatal("Failed to enumerate TBT device: ", err)
-	}
-
-	tbtGeneration, err := cswitch.Generation(ctx, tbtPort)
-	if err != nil {
-		s.Fatal("Failed to get TBT genaration: ", err)
-	}
-	if strings.TrimSpace(tbtGeneration) != tbtVal["generation"].(string) {
-		s.Fatalf("Failed to verify the generation, got %s, want %s", tbtGeneration, tbtVal["generation"].(string))
-	}
-
-	sourcePath, err := ioutil.TempDir("", "temp")
-	if err != nil {
-		s.Fatal("Failed to create temp directory: ", err)
-	}
-	defer os.RemoveAll(sourcePath)
-	// Source file path.
-	sourceFilePath := path.Join(sourcePath, transFilename)
-	dirsAfterPlug, err := getRemovableDirs(ctx, tbtMount)
-	if err != nil {
-		s.Fatal("Failed to get removable devices: ", err)
-	}
-	if !(len(dirsBeforePlug) < len(dirsAfterPlug)) {
-		s.Fatal("Failed to mount removable devices")
-	}
-	devicePath := getTBTMountPath(dirsAfterPlug, dirsBeforePlug)
-	if devicePath == "" {
-		s.Fatal("Failed to get vaild devicePath")
-	}
-	// Destination file path.
-	destinationFilePath := path.Join(tbtMount, devicePath, transFilename)
-
-	// Waits for TBT detection till timeout.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if _, err := os.Stat(path.Join(tbtMount, devicePath)); os.IsNotExist(err) {
-			return errors.New("Tbt mount path does not exist")
+	for i := 1; i <= 10; i++ {
+		s.Logf("Hotplug - unplug iteration: %d/10", i)
+		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+			s.Fatal("Failed to enable c-switch port: ", err)
 		}
-		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 250 * time.Millisecond}); err != nil {
-		s.Fatal("Timeout waiting for TBT device: ", err)
-	}
-	if err := ioutil.WriteFile(sourceFilePath, []byte("test"), 0644); err != nil {
-		s.Fatal("Failed to create file in tempdir: ", err)
-	}
-	defer os.Remove(sourceFilePath)
-	localHash, err := calculateHashOfFile(sourceFilePath)
-	if err != nil {
-		s.Error("Failed to calculate hash of the source file : ", err)
-	}
 
-	s.Logf("Transferring file from %s to %s", sourceFilePath, destinationFilePath)
-	copyErr := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("cp -rf %s %s", sourceFilePath, destinationFilePath)).Run()
-	if copyErr != nil {
-		s.Fatalf("Failed to copy file to %s path", destinationFilePath)
-	}
-
-	destHash, err := calculateHashOfFile(destinationFilePath)
-	if err != nil {
-		s.Error("Failed to calculate hash of the destination file : ", err)
-	}
-
-	if !bytes.Equal(localHash, destHash) {
-		s.Errorf(" The hash doesn't match (destHash path: %q)", destHash)
-	}
-	if err := os.Remove(destinationFilePath); err != nil {
-		s.Fatal("Failed to remove file : ", destinationFilePath)
-	}
-	cSwitchOFF := "0"
-	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchOFF, domainIP); err != nil {
-		s.Fatal("Failed to disable c-switch port: ", err)
-	}
-
-	if _, err := cswitch.IsDeviceEnumerated(ctx, tbtVal["device_name"].(string), tbtPort); err == nil {
-		s.Fatal("Failed to hot unplug the TBT device: ", err)
-	}
-}
-
-// calculateHashOfFile checks the checksum for the input file.
-func calculateHashOfFile(path string) ([]byte, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return []byte{}, errors.Wrap(err, "failed to open files")
-	}
-	defer file.Close()
-
-	h := sha256.New()
-	if _, err := io.Copy(h, file); err != nil {
-		return []byte{}, errors.Wrap(err, "failed to calculate the hash of the files")
-	}
-
-	return h.Sum(nil), nil
-}
-
-// getRemovableDirs returns the connected removable devices.
-func getRemovableDirs(ctx context.Context, mountPath string) ([]string, error) {
-	out, err := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("ls %s", mountPath)).Output()
-	if err != nil {
-		return nil, err
-	}
-	return strings.Fields(string(out)), nil
-}
-
-// getTBTMountPath returns the latest removable device.
-func getTBTMountPath(dirsAfterPlug, dirsbeforePlug []string) string {
-	for _, afterPlug := range dirsAfterPlug {
-		found := false
-		for _, beforePlug := range dirsbeforePlug {
-			if afterPlug == beforePlug {
-				found = true
-				break
-			}
+		// Verifying Enumeration of TBT Dock station.
+		if _, err := cswitch.IsDeviceEnumerated(ctx, tbtVal["device_name"].(string), tbtPort); err != nil {
+			s.Fatal("Failed to enumerate TBT device: ", err)
 		}
-		if !found {
-			return afterPlug
+
+		// Verifying Enumeration of TBT SSD.
+		if _, err := cswitch.IsDeviceEnumerated(ctx, tbtVal["device_detection"].(string), ssdTbtPort); err != nil {
+			s.Fatal("Failed to enumerate TBT device: ", err)
+		}
+
+		tbtGeneration, err := cswitch.Generation(ctx, tbtPort)
+		if err != nil {
+			s.Fatal("Failed to get TBT genaration: ", err)
+		}
+		if strings.TrimSpace(tbtGeneration) != tbtVal["generation"].(string) {
+			s.Fatalf("Failed to verify the generation, got %s, want %s", tbtGeneration, tbtVal["generation"].(string))
+		}
+
+		sourcePath, err := ioutil.TempDir("", "temp")
+		if err != nil {
+			s.Fatal("Failed to create temp directory: ", err)
+		}
+		defer os.RemoveAll(sourcePath)
+
+		s.Log("Checking the device path of SSD")
+		ssdDevicePath, err := usbutils.StoragePath(ctx, ssdDeviceName)
+		if err != nil {
+			s.Fatal("Failed to get ssd device path: ", err)
+		}
+
+		s.Log("Checking the device path of SD_CARd")
+		sdDevicePath, err := usbutils.StoragePath(ctx, sdCardDeviceName)
+		if err != nil {
+			s.Fatal("Failed to get sd card device path: ", err)
+		}
+
+		ssdSourceFilePath := path.Join(sourcePath, ssdTransFilename)
+		if err := typec.GenerateFileWithSize(ctx, ssdSourceFilePath, ssdDataFileSize); err != nil {
+			s.Fatal("Failed to generate 20gb file : ", err)
+		}
+
+		sdCardSourceFilePath := path.Join(sourcePath, sdCardTransFilename)
+		if err := typec.GenerateFileWithSize(ctx, sdCardSourceFilePath, sdCardDataFileSize); err != nil {
+			s.Fatal("Failed to generate 5gb file : ", err)
+		}
+
+		ssdDestinationFilePath := path.Join(ssdDevicePath, ssdTransFilename)
+		if err := usbutils.TransferFile(ctx, ssdSourceFilePath, ssdDestinationFilePath, true); err != nil {
+			s.Fatalf("Failed to copy data from %s to %s: %v", ssdSourceFilePath, ssdDestinationFilePath, err)
+		}
+		defer os.Remove(ssdDestinationFilePath)
+
+		sdCardDestinationFilePath := path.Join(sdDevicePath, sdCardTransFilename)
+		if err := usbutils.TransferFile(ctx, sdCardSourceFilePath, sdCardDestinationFilePath, true); err != nil {
+			s.Fatalf("Failed to copy data from %s to %s: %v", sdCardSourceFilePath, sdCardDestinationFilePath, err)
+		}
+		defer os.Remove(sdCardDestinationFilePath)
+
+		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchOFF, domainIP); err != nil {
+			s.Fatal("Failed to disable c-switch port: ", err)
+		}
+
+		if _, err := cswitch.IsDeviceEnumerated(ctx, tbtVal["device_name"].(string), tbtPort); err == nil {
+			s.Fatal("Failed to hot unplug the TBT device: ", err)
 		}
 	}
-	return ""
 }
