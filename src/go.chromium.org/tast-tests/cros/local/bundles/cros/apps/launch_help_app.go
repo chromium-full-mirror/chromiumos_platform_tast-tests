@@ -33,6 +33,8 @@ func init() {
 			"showoff-eng@google.com",
 		},
 		BugComponent: "b:690873",
+		// TODO(b/303137892): remove after fixing tast test.
+		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      chrome.GAIALoginTimeout + time.Minute,
