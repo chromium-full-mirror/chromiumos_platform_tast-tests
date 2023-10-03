@@ -245,6 +245,16 @@ func RunAsChronos(ctx context.Context, dut *ssh.Conn, cmd string) (string, strin
 	return runAsRoot(ctx, wrappedCmd)
 }
 
+// RunAsRoot runs the given command as the root user on the given dut.
+func RunAsRoot(ctx context.Context, dut *ssh.Conn, cmd string) (string, string, error) {
+	cmdList := strings.Split(cmd, " ")
+	if len(cmdList) == 0 {
+		return "", "", errors.New("cannot execute an empty command")
+	}
+	rootCmd := dut.CommandContext(ctx, cmdList[0], cmdList[1:]...)
+	return runAsRoot(ctx, rootCmd)
+}
+
 func runAsRoot(ctx context.Context, cmd *ssh.Cmd) (string, string, error) {
 	testing.ContextLogf(ctx, "Running command: `%v`", strings.Join(cmd.Args, " "))
 	var bstdout, bstderr bytes.Buffer
