@@ -188,7 +188,8 @@ func (s *Servo) RunECCommand(ctx context.Context, cmd string) error {
 }
 
 // RunECCommandGetOutput runs the given command on the EC on the device and returns the output matching patterns.
-// It is recommended to send "chan save", "chan 0" just before and "chan restore" afterwards to prevent other logging from interrupting your command.
+// It is recommended to send "chan save", "chan 0" just before and "chan restore" afterwards to prevent other
+// logging from interrupting your command. (RunECCommandGetOutputNoConsoleLogs() can handle this for you)
 func (s *Servo) RunECCommandGetOutput(ctx context.Context, cmd string, patterns []string) ([][]string, error) {
 	err := s.SetStringList(ctx, ECUARTRegexp, patterns)
 	if err != nil {
@@ -204,6 +205,35 @@ func (s *Servo) RunECCommandGetOutput(ctx context.Context, cmd string, patterns 
 		return nil, errors.Wrap(err, "decoding string list")
 	}
 	return ConvertToStringArrayArray(ctx, iList)
+}
+
+// RunECCommandGetOutputNoConsoleLogs works like RunECCommandGetOutput but automatically disables
+// all console logging, which could interfere with capturing command output.
+func (s *Servo) RunECCommandGetOutputNoConsoleLogs(ctx context.Context, cmd string, patterns []string) ([][]string, error) {
+	// EC console can be extremely chatty. Log messages are liable to interrupt
+	// the console output, breaking the regex pattern. Turn off all other channels
+	// and restore after.
+	if err := s.SaveDUTConsoleChannelMask(ctx); err != nil {
+		return nil, errors.Wrap(err, "cannot save current chan mask")
+	}
+
+	// 0 turns off all channels except console output, which is always on.
+	if err := s.SetDUTConsoleChannelMask(ctx, 0); err != nil {
+		return nil, errors.Wrap(err, "cannot disable console logs pre-cmd")
+	}
+
+	// Restore original mask
+	defer func() {
+		if err := s.RestoreDUTConsoleChannelMask(ctx); err != nil {
+			panic("Cannot restore console chanel mask to original state")
+		}
+		testing.ContextLog(ctx, "EC console logs restored")
+	}()
+
+	testing.ContextLog(ctx, "EC console logs off")
+
+	// Run command on the EC/DUT console
+	return s.RunECCommandGetOutput(ctx, cmd, patterns)
 }
 
 // GetECSystemPowerState returns the power state, like "S0" or "G3"

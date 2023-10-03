@@ -99,7 +99,7 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that the DUT supports data swap, as reported in the servo's partner flags.
-	if pdState.Flags&servo.PartnerDualRoleData != 0 {
+	if pdState.PEFlags&servo.PartnerDualRoleData != 0 {
 		s.Logf("DUT supports data role swap, attempting %d swaps", pdDataRoleSwapCount)
 		var swapSrc dataSwapSrc
 		for i := 0; i < pdDataRoleSwapCount; i++ {

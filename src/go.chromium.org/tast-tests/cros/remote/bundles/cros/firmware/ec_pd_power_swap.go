@@ -66,12 +66,12 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "Power Swap support not advertised by DUT")
 	}
 
-	if pdState, err := h.Servo.GetPDState(ctx, servo.PDPortUnderTest); err != nil {
+	if pdState, err := h.Servo.GetDUTPDState(ctx, servo.PDPortUnderTest); err != nil {
 		s.Fatal("Failed to get PD state: ", err)
 	} else {
-		testing.ContextLog(ctx, "PD state before: ", pdState)
-		testing.ContextLog(ctx, "PD Role before: ", pdState[0][4])
-		curPowerRole = pdState[0][4]
+		testing.ContextLogf(ctx, "PD state before: %#v", pdState)
+		testing.ContextLog(ctx, "PD Role before: ", pdState.PowerRole)
+		curPowerRole = string(pdState.PowerRole)
 	}
 
 	if err := h.Servo.SendPowerSwapRequest(ctx, servo.PDPortUnderTest); err != nil {
@@ -79,10 +79,10 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if pdState, err := h.Servo.GetPDState(ctx, servo.PDPortUnderTest); err == nil {
-			testing.ContextLog(ctx, "PD state after: ", pdState)
-			testing.ContextLog(ctx, "PD Role after: ", pdState[0][4])
-			nowPowerRole = pdState[0][4]
+		if pdState, err := h.Servo.GetDUTPDState(ctx, servo.PDPortUnderTest); err == nil {
+			testing.ContextLogf(ctx, "PD state after: %#v", pdState)
+			testing.ContextLog(ctx, "PD Role after: ", pdState.PowerRole)
+			nowPowerRole = string(pdState.PowerRole)
 			if curPowerRole == nowPowerRole {
 				return errors.Wrap(err, "failed to switch power role")
 			}

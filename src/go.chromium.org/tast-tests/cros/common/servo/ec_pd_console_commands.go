@@ -7,7 +7,6 @@ package servo
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -16,66 +15,28 @@ import (
 )
 
 const (
-	// reEcPdStateCommand is a TCPM v1 and v2 compatible regex for pd <port> state output.
-	//   Example: Port C0 CC3, Enable - Role: SRC-DFP TC State: Attached.SRC, Flags: 0x9002 PE State: PE_SRC_Ready, Flags: 0x0201
-	//   Match Index:
-	//      0 - Full match
-	//      1 - Port number  -- 0
-	//      2 - Polarity     -- 3
-	//      3 - Comm Status  -- Enable
-	//      4 - Power role   -- SRC
-	//      5 - Data role    -- DFP
-	//      6 - TCPM version-specific extra fields
-	reEcPdStateCommand string = `Port\s+C(\d+)\s+CC(\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)(.*)[\r\n]`
-	reEcPdRecv         string = `RECV\s([\w]+)`
-	rePDVersion        string = `\s+(\d+|Wrong.*)`
+	reEcPdRecv  string = `RECV\s([\w]+)`
+	rePDVersion string = `\s+(\d+|Wrong.*)`
 	// MaxPorts specifies the maximum number of ports on the EC.
 	MaxPorts int = 4
 	// PDPortUnderTest indicates command should be sent to the PD port connected to servo.
 	PDPortUnderTest int = MaxPorts
 )
 
+// TCPMVersion is a type for denoting a TCPM stack version
+type TCPMVersion int
+
+// Supported TCPM Versions
+const (
+	TCPMv1 TCPMVersion = 1
+	TCPMv2 TCPMVersion = 2
+)
+
 // DUTPDInfo caches the fixed PD testing information for the DUT.
 type DUTPDInfo struct {
-	version    int // 1==TCPMv1, 2==TCPMv1
-	activePort int // PD port connected to servo
-	portCount  int // Total number of PD ports on the DUT
-}
-
-// extractPEStateNameTCPMv1 interprets console output on TCPMv1 DUTs and extracts
-// the current PE State and converts it to a string name
-func extractPEStateNameTCPMv1(extraFields string) (string, error) {
-	re := regexp.MustCompile(`State: (\d+)`)
-
-	matches := re.FindStringSubmatch(extraFields)
-	if len(matches) < 1 {
-		return "", errors.Errorf("cannot extract state from %q", extraFields)
-	}
-
-	stateNum, err := strconv.Atoi(matches[1])
-	if err != nil {
-		return "", errors.Wrap(err, "cannot convert PE state")
-	}
-
-	stateName, ok := peStateNameLookup[stateNum]
-	if !ok {
-		return "", errors.Errorf("unknown PE state %d", stateNum)
-	}
-	return stateName, nil
-}
-
-// extractPEStateNameTCPMv2 interprets console output on TCPMv2 DUTs and extracts
-// the current PE State name
-func extractPEStateNameTCPMv2(extraFields string) (string, error) {
-	// The match group is optional because it is not present if PD comms are disabled
-	re := regexp.MustCompile(`PE State: ([A-Za-z_]+)?,`)
-
-	matches := re.FindStringSubmatch(extraFields)
-	if len(matches) < 1 {
-		return "", errors.Errorf("cannot extract state from %q", extraFields)
-	}
-
-	return matches[1], nil
+	version    TCPMVersion // TCPM stack version in use by DUT
+	activePort int         // PD port connected to servo
+	portCount  int         // Total number of PD ports on the DUT
 }
 
 // RequireDUTPDInfo allocates and caches the fixed information about the PD port under test.
@@ -86,50 +47,36 @@ func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 
 	pdInfo := &DUTPDInfo{}
 
-	out, err := s.RunECCommandGetOutput(ctx, "pd version", []string{rePDVersion})
+	out, err := s.RunECCommandGetOutputNoConsoleLogs(ctx, "pd version", []string{rePDVersion})
 	if err != nil {
 		return errors.Wrap(err, "EC pd version failed")
 	}
 
-	pdInfo.version, err = strconv.Atoi(out[0][1])
-	if err != nil {
+	if ver, err := strconv.Atoi(out[0][1]); err != nil {
 		testing.ContextLog(
 			ctx,
 			"PD Version command is not supported. This test is likely running "+
 				"against an old version of the EC. The test will assume the "+
 				" DUT is running the TCPMv1 stack. This may cause errors.",
 		)
-		pdInfo.version = 1
-	}
-
-	if !(pdInfo.version == 1 || pdInfo.version == 2) {
-		panic("Unsupported TCPM version")
+		pdInfo.version = TCPMv1
+	} else {
+		switch ver {
+		case 1:
+			pdInfo.version = TCPMv1
+		case 2:
+			pdInfo.version = TCPMv2
+		default:
+			return errors.Errorf("invalid TCPM version (%d) Output: %q", ver, out)
+		}
 	}
 
 	numPorts := 0
 	enabledPorts := 0
 	pdPort := MaxPorts
 	for port := 0; port < MaxPorts; port++ {
-		if out, err := s.GetPDState(ctx, port); err == nil {
-			testing.ContextLogf(ctx, "DUT Port %d state: %q", port, out)
-
-			// Element #6 has the TCPM version-specific output:
-			//  - For TCPMv1: "State: 8(), Flags: 0x16946"
-			//  - For TCPMv2: "TC State: Attached.SRC, Flags: 0x9002 PE State: PE_SRC_Ready, Flags: 0x0201"
-			extraFields := out[0][6]
-
-			var stateName string
-			var err error
-
-			if pdInfo.version == 1 {
-				stateName, err = extractPEStateNameTCPMv1(extraFields)
-			} else if pdInfo.version == 2 {
-				stateName, err = extractPEStateNameTCPMv2(extraFields)
-			}
-
-			if err != nil {
-				return errors.Wrapf(err, "cannot read TCPMv%d state", pdInfo.version)
-			}
+		if portInfo, err := s.getPDStateByTargetAndVersion(ctx, pdStateDUT, pdInfo.version, port); err == nil {
+			testing.ContextLogf(ctx, "DUT Port %d state: %#v", port, portInfo)
 
 			var activePEStates = map[string]bool{
 				"PD_STATE_SNK_READY": true,
@@ -138,13 +85,13 @@ func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 				"PE_SRC_Ready":       true,
 			}
 
-			if _, ok := activePEStates[stateName]; ok {
+			if _, ok := activePEStates[portInfo.PEStateName]; ok {
 				pdPort = port
 				enabledPorts++
 			}
 			numPorts++
 		} else {
-			testing.ContextLogf(ctx, "DUT Port %d not present", port)
+			testing.ContextLogf(ctx, "DUT Port %d not present (%q)", port, err)
 		}
 	}
 
@@ -166,23 +113,6 @@ func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 	s.dutPDInfo = pdInfo
 
 	return nil
-}
-
-// GetPDState returns PD state console output for a PD port on the DUT.
-func (s *Servo) GetPDState(ctx context.Context, port int) ([][]string, error) {
-	if port == PDPortUnderTest {
-		port = s.dutPDInfo.activePort
-	} else if port > MaxPorts {
-		return nil, errors.Errorf("invalid PD port number %d", port)
-	}
-	cmd := fmt.Sprintf("pd %d state", port)
-
-	out, err := s.RunECCommandGetOutput(ctx, cmd, []string{reEcPdStateCommand})
-	if err != nil {
-		return nil, errors.Wrap(err, "EC pd command failed")
-	}
-
-	return out, nil
 }
 
 const (
@@ -282,23 +212,22 @@ func (s *Servo) GetDualRole(ctx context.Context, port int) (bool, error) {
 
 // SetPDPowerRole sets the PD power role for a PD port on the DUT.
 func (s *Servo) SetPDPowerRole(ctx context.Context, port int, role string) error {
-	out, err := s.GetPDState(ctx, port)
+	pdState, err := s.GetDUTPDState(ctx, port)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to get PD State")
 	}
 
-	if out[0][4] != role {
+	if string(pdState.PowerRole) != role {
 		if err := s.SendPowerSwapRequest(ctx, port); err != nil {
 			return errors.Wrap(err, "send power swap failed")
 		}
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if pdState, err := s.GetPDState(ctx, port); err == nil {
-				testing.ContextLog(ctx, "PD state after: ", pdState)
-				testing.ContextLog(ctx, "PD Role after: ", pdState[0][4])
-				nowPowerRole := pdState[0][4]
-				if role != nowPowerRole {
+			if pdState, err := s.GetDUTPDState(ctx, port); err == nil {
+				testing.ContextLogf(ctx, "PD state after: %#v", pdState)
+				testing.ContextLog(ctx, "PD Role after: ", pdState.PowerRole)
+				if role != string(pdState.PowerRole) {
 					return errors.Wrap(err, "failed to switch power role")
 				}
 			} else {
@@ -334,7 +263,7 @@ func (s *Servo) RestorePDPort(ctx context.Context, port int) error {
 // TriggerPDSoftReset triggers a USB-PD Soft Reset from the EC/DUT-side
 func (s *Servo) TriggerPDSoftReset(ctx context.Context) error {
 	// Get port status
-	outBefore, err := s.GetPDState(ctx, PDPortUnderTest)
+	pdStateBefore, err := s.GetDUTPDState(ctx, PDPortUnderTest)
 	if err != nil {
 		return errors.Wrap(err, "failed to get pre-test EC/DUT-side PD port status")
 	}
@@ -342,9 +271,6 @@ func (s *Servo) TriggerPDSoftReset(ctx context.Context) error {
 	if err := s.EnablePDConsoleDebug(ctx); err != nil {
 		return errors.Wrap(err, "could not enable EC/DUT's PD debug logs")
 	}
-
-	// Go back to `pd dump 0` after.
-	defer s.DisablePDConsoleDebug(ctx)
 
 	// Run the command
 	err = s.RunECCommand(
@@ -355,37 +281,63 @@ func (s *Servo) TriggerPDSoftReset(ctx context.Context) error {
 		return errors.Wrap(err, "could not trigger soft reset on EC/DUT")
 	}
 
+	// Go back to `pd dump 0` after.
+	if err := s.DisablePDConsoleDebug(ctx); err != nil {
+		return errors.Wrap(err, "could not disable EC/DUT's PD debug logs")
+	}
+
 	// Compare PD state before and after (should be the same)
-	outAfter, err := s.GetPDState(ctx, PDPortUnderTest)
+	pdStateAfter, err := s.GetDUTPDState(ctx, PDPortUnderTest)
 	if err != nil {
 		return errors.Wrap(err, "failed to get post-test EC/DUT-side PD port status")
 	}
 
 	// Connection status
-	if outBefore[0][3] != outAfter[0][3] {
+	if pdStateBefore.Connection != pdStateAfter.Connection {
 		return errors.Errorf(
 			"PD connection state changed after soft reset. Now %s, expected %s",
-			outAfter[0][3],
-			outBefore[0][3],
+			pdStateAfter.Connection,
+			pdStateBefore.Connection,
 		)
 	}
 
 	// Power role
-	if outBefore[0][4] != outAfter[0][4] {
+	if pdStateBefore.PowerRole != pdStateAfter.PowerRole {
 		return errors.Errorf(
 			"Power role changed after soft reset. Now %s, expected %s",
-			outAfter[0][4],
-			outBefore[0][4],
+			pdStateAfter.PowerRole,
+			pdStateBefore.PowerRole,
 		)
 	}
 
 	// Data role
-	if outBefore[0][5] != outAfter[0][5] {
+	if pdStateBefore.DataRole != pdStateAfter.DataRole {
 		return errors.Errorf(
 			"Data role changed after soft reset. Now %s, expected %s",
-			outAfter[0][5],
-			outBefore[0][5],
+			pdStateAfter.DataRole,
+			pdStateBefore.DataRole,
 		)
+	}
+
+	return nil
+}
+
+// SaveDUTConsoleChannelMask stores the current console channel mask on the DUT
+func (s *Servo) SaveDUTConsoleChannelMask(ctx context.Context) error {
+	return s.RunECCommand(ctx, "chan save")
+}
+
+// RestoreDUTConsoleChannelMask stores the current console channel mask on the DUT
+func (s *Servo) RestoreDUTConsoleChannelMask(ctx context.Context) error {
+	return s.RunECCommand(ctx, "chan restore")
+}
+
+// SetDUTConsoleChannelMask sets a give console channel mask on the EC
+func (s *Servo) SetDUTConsoleChannelMask(ctx context.Context, mask uint32) error {
+	cmd := fmt.Sprintf("chan %08x", mask)
+
+	if err := s.RunECCommand(ctx, cmd); err != nil {
+		return errors.Wrapf(err, "could not set EC chan mask to 0x%08x", mask)
 	}
 
 	return nil
