@@ -28,6 +28,8 @@ type testParam struct {
 	TabletMode     bool
 	Query          string
 	ExpectedResult string
+	UseIca         bool
+	UseOcr         bool
 }
 
 func init() {
@@ -52,6 +54,8 @@ func init() {
 					TabletMode:     false,
 					Query:          "paper",
 					ExpectedResult: "Thoughts",
+					UseIca:         true,
+					UseOcr:         false,
 				},
 				Fixture: fixture.LauncherImageSearchIca,
 			},
@@ -61,6 +65,8 @@ func init() {
 					TabletMode:     false,
 					Query:          "Paper",
 					ExpectedResult: "Thoughts",
+					UseIca:         true,
+					UseOcr:         false,
 				},
 				Fixture: fixture.LauncherImageSearchIca,
 			},
@@ -70,6 +76,8 @@ func init() {
 					TabletMode:     false,
 					Query:          "Thoughts",
 					ExpectedResult: "About",
+					UseIca:         false,
+					UseOcr:         true,
 				},
 				Fixture: fixture.LauncherImageSearchOcr,
 			},
@@ -79,6 +87,8 @@ func init() {
 					TabletMode:     false,
 					Query:          "Paper",
 					ExpectedResult: "Thoughts",
+					UseIca:         true,
+					UseOcr:         true,
 				},
 				Fixture: fixture.LauncherImageSearchIcaAndOcr,
 			},
@@ -88,6 +98,8 @@ func init() {
 					TabletMode:     false,
 					Query:          "Thoughts",
 					ExpectedResult: "About",
+					UseIca:         true,
+					UseOcr:         true,
 				},
 				Fixture: fixture.LauncherImageSearchIcaAndOcr,
 			},
@@ -96,6 +108,8 @@ func init() {
 }
 
 func SearchLocalImage(ctx context.Context, s *testing.State) {
+	param := s.Param().(testParam)
+
 	cr := s.FixtValue().(fixture.LauncherSearchFixtData).Chrome
 	tconn := s.FixtValue().(fixture.LauncherSearchFixtData).TestAPIConn
 	kb := s.FixtValue().(fixture.LauncherSearchFixtData).Keyboard
@@ -103,6 +117,20 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	// Gather required DLCs
+	var dlcList []string
+	if param.UseIca {
+		dlcList = append(dlcList, "ml-core-internal")
+	}
+	if param.UseOcr {
+		dlcList = append(dlcList, "screen-ai")
+	}
+
+	// TODO(b/303151432): Change the dlc force install to VerifyDlcInstalled when the bug is fixed.
+	if err := launcher.InstallDlc(ctx, dlcList); err != nil {
+		s.Fatal("Cannot install dlc: ", err)
+	}
 
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
@@ -115,7 +143,7 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 	}
 	defer os.Remove(localFileLocation)
 
-	tabletMode := s.Param().(testParam).TabletMode
+	tabletMode := param.TabletMode
 	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, tabletMode, false /*stabilizeAppCount*/)
 	if err != nil {
 		s.Fatal("Failed to set up launcher test case: ", err)
@@ -124,8 +152,8 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 	ud := uidetection.NewDefault(tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
-	query := s.Param().(testParam).Query
-	expectedResult := s.Param().(testParam).ExpectedResult
+	query := param.Query
+	expectedResult := param.ExpectedResult
 	picture := nodewith.Role(role.ListBoxOption).HasClass("SearchResultImageView").NameContaining("search_local_image")
 
 	if err := uiauto.Retry(2, uiauto.NamedCombine("Search for image",

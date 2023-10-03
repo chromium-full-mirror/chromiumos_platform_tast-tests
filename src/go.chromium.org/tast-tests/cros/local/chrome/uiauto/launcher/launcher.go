@@ -32,6 +32,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/errors"
@@ -1565,4 +1566,28 @@ func UninstallsAppUsingContextMenu(ctx context.Context, tconn *chrome.TestConn, 
 // VerifyTextWithUIDetection returns an action checking the given text is shown on screen using ACUITI.
 func VerifyTextWithUIDetection(ud *uidetection.Context, expectedText string) action.Action {
 	return ud.WaitUntilExists(uidetection.Word(expectedText).First())
+}
+
+// InstallDlc installs the required DLCs.
+func InstallDlc(ctx context.Context, dlcList []string) error {
+	for _, id := range dlcList {
+		if err := dlc.Install(ctx, id, ""); err != nil {
+			errStr := fmt.Sprintf("Cannot install dlc %s ", id)
+			return errors.Wrap(err, errStr)
+		}
+	}
+	return nil
+}
+
+// VerifyDlcInstalled checks if the required dlcs are installed.
+func VerifyDlcInstalled(ctx context.Context, dlcList []string) error {
+	const templateMnt = "/run/imageloader/%s/package/root"
+	for _, id := range dlcList {
+		mnt := fmt.Sprintf(templateMnt, id)
+		if _, err := os.Stat(mnt); err != nil {
+			errStr := fmt.Sprintf("dlc %s is not installed", id)
+			return errors.Wrap(err, errStr)
+		}
+	}
+	return nil
 }
