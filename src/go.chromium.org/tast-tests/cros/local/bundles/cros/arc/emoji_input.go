@@ -114,7 +114,8 @@ func EmojiInput(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Emoji",
 		kb.AccelAction(emojiPickerShortcut),
 		auto.WaitUntilEnabled(emojiItem),
-		auto.LeftClick(emojiItem),
+		auto.WaitForLocation(emojiItem),
+		auto.DoDefault(emojiItem),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open launcher and search for query: ", err)
 	}
