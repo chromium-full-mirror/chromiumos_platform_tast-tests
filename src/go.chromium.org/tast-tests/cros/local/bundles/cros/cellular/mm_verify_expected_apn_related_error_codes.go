@@ -147,6 +147,11 @@ func MMVerifyExpectedApnRelatedErrorCodes(ctx context.Context, s *testing.State)
 		}
 
 	case ipErrors:
+		// Fail quickly on FM101 variants with old FW, since running this test puts the modem into a bad state(b/302697538#comment5)
+		errVariant := cellular.TagKnownBugOnVariant(ctx, nil, "b/263815534", []string{"crota_fm101", "krabby_fm101", "kracko_fm101_cat6", "kracko_fm101_cat12", "nivviks_fm101", "pujjo_fm101", "rusty_fm101", "skyrim_fm101", "steelix_fm101"})
+		if errVariant != nil {
+			s.Fatalf("Fail early to avoid putting the DUT in a bad state: %s", errVariant)
+		}
 		errorCode := connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "callbox-ipv4", ipType: mmconst.BearerIPFamilyIPv6, apnType: mmconst.BearerAPNTypeDefault})
 		if errorCode != "org.freedesktop.ModemManager1.Error.MobileEquipment.Ipv4OnlyAllowed" {
 			err := cellular.TagKnownBugOnModemType(ctx, nil, "b/263815534", []cellularconst.ModemType{cellularconst.ModemTypeFM350, cellularconst.ModemTypeL850, cellularconst.ModemTypeFM101})
