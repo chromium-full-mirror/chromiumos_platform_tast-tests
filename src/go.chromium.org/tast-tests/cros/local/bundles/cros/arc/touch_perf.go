@@ -111,6 +111,9 @@ func TouchPerf(ctx context.Context, s *testing.State) {
 	if err := stw.Move(x, y); err != nil {
 		s.Fatal("Unable to inject touch event: ", err)
 	}
+	if err := inputlatency.WaitForSomeEvents(ctx, d, nil); err != nil {
+		s.Fatal("Failed to wait for events to show up: ", err)
+	}
 	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
 		s.Fatal("Failed to clear UI: ", err)
 	}
