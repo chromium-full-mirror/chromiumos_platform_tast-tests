@@ -205,13 +205,9 @@ func assertHelpAppLaunched(ctx context.Context, s *testing.State, tconn *chrome.
 	helpCtx := helpapp.NewContext(cr, tconn)
 	if isLaunched {
 		// Verify perk is shown to default consumer user.
-		isPerkShown, err := helpCtx.IsHTMLElementPresent(ctx, "showoff-offers-page")
+		err := helpCtx.WaitForHTMLElementPresent(ctx, "showoff-offers-page")
 		if err != nil {
-			s.Fatal("Failed to evaluate offers page: ", err)
-		}
-
-		if !isPerkShown {
-			s.Error("Perk is not shown to a consumer user")
+			s.Fatal("Failed to wait for offers page to render: ", err)
 		}
 	} else {
 		isAppLaunched, err := helpCtx.Exists(ctx)

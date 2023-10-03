@@ -168,16 +168,21 @@ func (hc *HelpContext) GetLoadTimeData(ctx context.Context) (*LoadTimeData, erro
 	return data, nil
 }
 
-// IsHTMLElementPresent checks whether a HTMLElement in help app is present regardless of visibility.
-// It takes cssSelector as input param and returns a bool value.
-// cssSelector works piercing shadowRoot.
-func (hc *HelpContext) IsHTMLElementPresent(ctx context.Context, cssSelector string) (bool, error) {
+// WaitForHTMLElementPresent polls Help app for an HTMLElement selected by a given shadow piercing selector query.
+// It returns an error when it fails to run the query or when polling times out.
+func (hc *HelpContext) WaitForHTMLElementPresent(ctx context.Context, cssSelector string) error {
 	var isPresent bool
 	expr := fmt.Sprintf(`shadowPiercingQueryAll(%q).length>0;`, cssSelector)
-	if err := hc.EvalJSWithShadowPiercer(ctx, expr, &isPresent); err != nil {
-		return false, errors.Wrapf(err, "failed to check presence of HTML element: %s", cssSelector)
-	}
-	return isPresent, nil
+
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		if err := hc.EvalJSWithShadowPiercer(ctx, expr, &isPresent); err != nil {
+			return testing.PollBreak(errors.Wrapf(err, `failed to execute query "%q"`, expr))
+		}
+		if !isPresent {
+			return errors.Errorf(`element given by query "%q" not found`, expr)
+		}
+		return nil
+	}, nil)
 }
 
 // NavigateToPageWithURL navigates to a sub page by changing url location directly.
