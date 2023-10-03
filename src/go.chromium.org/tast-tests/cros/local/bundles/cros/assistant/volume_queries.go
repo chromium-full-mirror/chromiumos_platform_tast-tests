@@ -28,7 +28,7 @@ func init() {
 			"group:mainline",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"audio_stable", "chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Fixture:      "assistant",
 	})
