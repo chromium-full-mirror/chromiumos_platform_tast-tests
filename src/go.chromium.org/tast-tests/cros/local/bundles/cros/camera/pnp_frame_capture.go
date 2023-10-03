@@ -34,15 +34,15 @@ const (
 )
 
 type functionMetric struct {
-	FunctionName string `json:"function_name"`
-	MetricName   string `json:"metric_name"`
-	Unit         string `json:"unit"`
-	Value        int64  `json:"value"`
-	Direction    bool   `json:"direction"`
+	FunctionName   string `json:"function_name"`
+	MetricName     string `json:"metric_name"`
+	Unit           string `json:"unit"`
+	Value          int64  `json:"value"`
+	BiggerIsBetter bool   `json:"direction"`
 }
 
 type traceMetrics struct {
-	CameraCoreMetrics struct {
+	PerfettoProtosCameraCoreMetrics struct {
 		Sessions []struct {
 			Sid             int              `json:"sid"`
 			FunctionMetrics []functionMetric `json:"function_metrics"`
@@ -59,7 +59,7 @@ type traceMetrics struct {
 				} `json:"result_buffer_metrics"`
 			} `json:"stream_metrics"`
 		} `json:"sessions"`
-	} `json:"camera_core_metrics"`
+	} `json:"perfetto.protos.camera_core_metrics"`
 }
 
 func init() {
@@ -95,7 +95,7 @@ func setMetric(pv *perf.Values, name, unit string, value float64, direction bool
 func setMetricFromFunction(pv *perf.Values, fm functionMetric, prefix string) {
 	setMetric(
 		pv, fmt.Sprintf("%s%s_%s", prefix, fm.FunctionName, fm.MetricName),
-		fm.Unit, float64(fm.Value), fm.Direction)
+		fm.Unit, float64(fm.Value), fm.BiggerIsBetter)
 }
 
 func parseMetrics(ctx context.Context, pv *perf.Values, traceDataAbsPath, outDir string) error {
@@ -123,13 +123,19 @@ func parseMetrics(ctx context.Context, pv *perf.Values, traceDataAbsPath, outDir
 
 	// If there are multiple camera sessions, only use the last session to
 	// exclude preparation time for redoing OpenDevice().
-	session := metrics.CameraCoreMetrics.Sessions[len(metrics.CameraCoreMetrics.Sessions)-1]
+	if len(metrics.PerfettoProtosCameraCoreMetrics.Sessions) == 0 {
+		return errors.Wrap(err, "failed to find any session")
+	}
+	session := metrics.PerfettoProtosCameraCoreMetrics.Sessions[len(metrics.PerfettoProtosCameraCoreMetrics.Sessions)-1]
 	for _, functionMetric := range session.FunctionMetrics {
 		setMetricFromFunction(pv, functionMetric, "")
 	}
 
 	// If there are multiple configurations, only use the last subsession to
 	// exclude preparation time for redoing ConfigureStream().
+	if len(session.StreamMetrics) == 0 {
+		return errors.Wrap(err, "failed to find any stream in the last session")
+	}
 	stream := session.StreamMetrics[len(session.StreamMetrics)-1]
 	for _, functionMetric := range stream.FunctionMetrics {
 		setMetricFromFunction(pv, functionMetric, "")
@@ -175,6 +181,10 @@ func PNPFrameCapture(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to parse metrics: ", err)
 		}
 	}()
+	// GoBigSleepLint: Wait for trace.pb to start the process.
+	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		s.Fatal("Failed to sleep: ", err)
+	}
 
 	// Start CCA.
 	outDir, ok := testing.ContextOutDir(ctx)
