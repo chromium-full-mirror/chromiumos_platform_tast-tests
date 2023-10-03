@@ -89,6 +89,10 @@ func (f *crosHealthdFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	if err := upstart.EnsureJobRunning(ctx, crosHealthdJobName); err != nil {
 		return errors.Wrap(err, "failed to start cros_healthd")
 	}
+	// Make sure CRAS is running so we can start to send D-Bus request to it for audio related routines.
+	if err := upstart.EnsureJobRunning(ctx, "cras"); err != nil {
+		return errors.Wrap(err, "failed to start CRAS")
+	}
 	return nil
 }
 
