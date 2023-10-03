@@ -486,14 +486,19 @@ func (f *FilesApp) SelectMultipleFiles(kb *input.KeyboardEventWriter, fileList .
 		}
 		defer kb.AccelRelease(ctx, "Ctrl")
 
-		for _, fileName := range fileList {
-			if err := f.SelectFile(fileName)(ctx); err != nil {
+		for index, fileName := range fileList {
+			// Ensure the correct number of items are selected after each selection.
+			selectionLabelRE := regexp.MustCompile(fmt.Sprintf("%d (file|item|folder)s? selected", index+1))
+			selectionLabel := nodewith.Role(role.StaticText).NameRegex(selectionLabelRE)
+
+			if err := uiauto.Combine("Ctrl select a file",
+				f.WaitForFile(fileName),
+				f.LeftClickUntil(file(fileName), f.Exists(selectionLabel)),
+			)(ctx); err != nil {
 				return errors.Wrapf(err, "failed to select %s", fileName)
 			}
 		}
-		// Ensure the correct number of items are selected.
-		var selectionLabelRE = regexp.MustCompile(fmt.Sprintf("%d (file|item|folder)s? selected", len(fileList)))
-		return f.WaitUntilExists(nodewith.Role(role.StaticText).NameRegex(selectionLabelRE))(ctx)
+		return nil
 	}
 }
 
