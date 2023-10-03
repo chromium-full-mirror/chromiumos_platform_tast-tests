@@ -89,7 +89,7 @@ func CR50ECReset(ctx context.Context, s *testing.State) {
 
 // wakeEC will check if given `method` can wake EC form hibernate
 func wakeEC(ctx context.Context, h *firmware.Helper, method wakeECMethod) error {
-	if err := h.Servo.ECHibernate(ctx, servo.UseConsole); err != nil {
+	if err := h.Servo.ECHibernate(ctx, h.Model, servo.UseConsole); err != nil {
 		errors.Wrap(err, "failed to hibernate DUT via EC command")
 	}
 	if method == coldResetWakeECMethod {

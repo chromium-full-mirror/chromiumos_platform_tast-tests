@@ -133,7 +133,7 @@ func powerOffFromUIMenu(ctx context.Context, h *firmware.Helper, screen string) 
 
 func nTimeKeyPress(ctx context.Context, h *firmware.Helper, key string, n int) error {
 	for i := 0; i < n; i++ {
-		if err := h.Servo.ECPressKey(ctx, key); err != nil {
+		if err := h.Servo.ECPressKey(ctx, key, h.Model); err != nil {
 			return err
 		}
 		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {

@@ -575,7 +575,7 @@ func hibernateDUT(ctx context.Context, h *firmware.Helper, dut *dut.DUT, hasMicr
 			// use console command to hibernate. Using keyboard presses might trigger DUT
 			// to wake, and interrupt lid emulation.
 			testing.ContextLog(ctx, "Putting DUT in hibernation with EC console command")
-			if err := h.Servo.ECHibernate(ctx, servo.UseConsole); err != nil {
+			if err := h.Servo.ECHibernate(ctx, h.Model, servo.UseConsole); err != nil {
 				return errors.Wrap(err, "failed to hibernate")
 			}
 			return nil
@@ -618,9 +618,9 @@ func hibernateDUT(ctx context.Context, h *firmware.Helper, dut *dut.DUT, hasMicr
 			}
 		}
 		testing.ContextLog(ctx, "Putting DUT in hibernation with key presses")
-		if err := h.Servo.ECHibernate(ctx, servo.UseKeyboard); err != nil {
+		if err := h.Servo.ECHibernate(ctx, h.Model, servo.UseKeyboard); err != nil {
 			testing.ContextLogf(ctx, "Failed to hibernate: %v. Retry with using EC console command to hibernate", err)
-			if err := h.Servo.ECHibernate(ctx, servo.UseConsole); err != nil {
+			if err := h.Servo.ECHibernate(ctx, h.Model, servo.UseConsole); err != nil {
 				return errors.Wrap(err, "failed to hibernate")
 			}
 		}

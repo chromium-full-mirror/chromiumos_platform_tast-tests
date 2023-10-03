@@ -788,7 +788,7 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to send 'chan restore' to EC: ", err)
 		}
 		// Emulate pressing a keyboard key.
-		if err := h.Servo.ECPressKey(ctx, "<enter>"); err != nil {
+		if err := h.Servo.ECPressKey(ctx, "<enter>", h.Model); err != nil {
 			s.Fatal("Failed to type key: ", err)
 		}
 
