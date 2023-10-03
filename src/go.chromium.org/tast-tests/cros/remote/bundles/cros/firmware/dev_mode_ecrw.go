@@ -109,7 +109,7 @@ func DevModeECRW(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Pressing Ctrl-D or equivalent to get to Dev mode (expected to fail)")
-	if err := ms.FwScreenToDevMode(ctx, firmware.SkipWaitConnect); err != nil {
+	if err := ms.RecScreenToDevMode(ctx, firmware.SkipWaitConnect); err != nil {
 		testing.ContextLog(ctx, "Failed to transition to dev mode from rec mode, this is expected behavior")
 	} else {
 		s.Fatal("Expected transitioning to dev mode from recovery screen while in EC_RW to fail, but succeeded instead")
