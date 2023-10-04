@@ -297,7 +297,7 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 		logcatName := ""
 		if err == nil {
 			// Append Play Store shown time in ms for quick reference.
-			logcatName = fmt.Sprintf("logcat_ok_%d.log", int(v.playStoreShownTime))
+			logcatName = fmt.Sprintf("logcat_ok_%d_%d.log", len(playStoreShownTimes)+1, int(v.playStoreShownTime))
 		} else {
 			logcatName = fmt.Sprintf("logcat_error_%d.log", errorCount)
 		}
