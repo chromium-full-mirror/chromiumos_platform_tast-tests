@@ -35,12 +35,8 @@ func init() {
 }
 
 func Preopt(ctx context.Context, s *testing.State) {
-	if err := performBoot(ctx, s.OutDir()); err != nil {
-		s.Fatal("Failed to boot ARC: ", err)
-	}
-
-	if err := arc.WaitForDexOptOnBoot(ctx, 2*time.Minute); err != nil {
-		s.Fatal("Failed to wait for dexopt on boot to finish: ", err)
+	if err := performBootAndWaitForDexOpt(ctx, s.OutDir()); err != nil {
+		s.Fatal("Failed to boot ARC and wait for dexopt: ", err)
 	}
 
 	if err := arc.CheckNoDex2Oat(s.OutDir()); err != nil {
@@ -48,7 +44,7 @@ func Preopt(ctx context.Context, s *testing.State) {
 	}
 }
 
-func performBoot(ctx context.Context, outDir string) error {
+func performBootAndWaitForDexOpt(ctx context.Context, outDir string) error {
 	args := append(arc.DisableSyncFlags(), "--arc-force-post-boot-dex-opt")
 	cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs(args...))
@@ -62,6 +58,10 @@ func performBoot(ctx context.Context, outDir string) error {
 		return errors.Wrap(err, "failed to connect to ARC")
 	}
 	defer a.Close(ctx)
+
+	if err := arc.WaitForDexOptOnBoot(ctx, 2*time.Minute); err != nil {
+		return errors.Wrap(err, "failed to wait for dexopt on boot to finish")
+	}
 
 	return nil
 }
