@@ -35,6 +35,9 @@ const (
 	// PowerStateTimeout is the timeout to wait for the DUT reach a powerstate.
 	PowerStateTimeout = 120 * time.Second
 
+	// powerOffTimeout is the timeout to wait for the DUT reach G3 or ssh to disconnect before trying harder to power off.
+	powerOffTimeout = 20 * time.Second
+
 	// PowerStateInterval is the interval to wait before polling DUT powerstate.
 	PowerStateInterval = 1 * time.Second
 
@@ -988,9 +991,11 @@ func (ms *ModeSwitcher) PowerOff(ctx context.Context) error {
 		// If Chrome EC exists, check power state reaches G3,
 		// otherwise wait for DUT unreachable.
 		if h.Config.ChromeEC {
-			return h.WaitForPowerStates(ctx, PowerStateInterval, PowerStateTimeout, "G3")
+			return h.WaitForPowerStates(ctx, PowerStateInterval, powerOffTimeout, "G3")
 		}
-		return ms.waitUnreachable(ctx)
+		offCtx, cancel := context.WithTimeout(ctx, powerOffTimeout)
+		defer cancel()
+		return ms.waitUnreachable(offCtx)
 	}
 	if h.DUT.Connected(ctx) {
 		// Since the DUT will power off, deadline exceeded is expected here.
