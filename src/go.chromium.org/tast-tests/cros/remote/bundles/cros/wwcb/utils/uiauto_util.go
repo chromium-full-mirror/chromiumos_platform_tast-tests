@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
@@ -315,4 +316,29 @@ func OpenPowerSettings(ctx context.Context, cs ui.ChromeServiceClient, appsSvc p
 		return errors.Wrap(err, "click power button")
 	}
 	return nil
+}
+
+// WaitUntilBatteryStatus wait untils the battery status based on ui name.
+func WaitUntilBatteryStatus(ctx context.Context, uiautoSvc ui.AutomationServiceClient, isCharging bool) error {
+	const CheckTimeout, CheckInterval = 10 * time.Second, 200 * time.Millisecond
+	batteryInfo := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_HasClass{HasClass: "PowerTrayView"}},
+		},
+	}
+	batteryCharging := "charging"
+	batteryIsFull := "Battery is full"
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		batteryInformation, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: batteryInfo})
+		if err != nil {
+			return errors.Wrap(err, "could not found battery info")
+		}
+		infoName := batteryInformation.NodeInfo.Name
+		if isCharging && !strings.Contains(infoName, batteryCharging) && !strings.Contains(infoName, batteryIsFull) {
+			return errors.New("battery not charging")
+		} else if !isCharging && strings.Contains(infoName, batteryCharging) || strings.Contains(infoName, batteryIsFull) {
+			return errors.New("battery is charging")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: CheckTimeout, Interval: CheckInterval})
 }
