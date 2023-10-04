@@ -718,7 +718,7 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 		} else {
 			defer func() {
 				s.Log("Restoring EC tablet mode setting at the end of test")
-				if err := checkAndRunTabletMode(ctx, testArgs.tabletmodeReset); err != nil {
+				if err := h.Servo.RunECCommand(ctx, testArgs.tabletmodeReset); err != nil {
 					s.Fatal("Unable to reset EC tablet mode setting: ", err)
 				}
 			}()
