@@ -120,7 +120,7 @@ func init() {
 }
 
 func ChromeStackDecoderLegacyPerf(ctx context.Context, s *testing.State) {
-	if err := decoding.RunAccelVideoPerfTest(ctx, s.OutDir(), s.DataPath(s.Param().(string)), decoding.TestParams{DecoderType: decoding.VDA, DisableGlobalVaapiLock: false, TestCases: decoding.CappedFlag | decoding.UncappedFlag}); err != nil {
+	if err := decoding.RunAccelVideoPerfTest(ctx, s.OutDir(), s.DataPath(s.Param().(string)), decoding.TestParams{DecoderType: decoding.VDA, TestCases: decoding.CappedFlag | decoding.UncappedFlag}); err != nil {
 		s.Fatal("test failed: ", err)
 	}
 }

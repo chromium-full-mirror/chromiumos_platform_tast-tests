@@ -152,17 +152,16 @@ func webMAndJSONFile(videoTitle string, height int) (string, string) {
 
 func TestEncodeAccelPerfParams(t *testing.T) {
 	type encodeAccelPerfParam struct {
-		Name                   string
-		TestType               string
-		WebMName               string
-		Profile                string
-		BitrateMode            string
-		Bitrate                int
-		SVCMode                string
-		DisableGlobalVaapiLock bool
-		Attr                   []string
-		Data                   []string
-		SoftwareDeps           []string
+		Name         string
+		TestType     string
+		WebMName     string
+		Profile      string
+		BitrateMode  string
+		Bitrate      int
+		SVCMode      string
+		Attr         []string
+		Data         []string
+		SoftwareDeps []string
 	}
 	type testPatterns struct {
 		title    string
@@ -285,26 +284,6 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 		}
 		params = append(params, param)
 	}
-	// Disable global vaapi lock.
-	for _, profile := range []videotype.CodecProfile{videotype.H264BaselineProf,
-		videotype.VP8Prof, videotype.VP9Prof, videotype.AV1MainProf} {
-		height := 1080
-		videoTitle := "desktop2"
-		webMFile, webMJSONFile := webMAndJSONFile(videoTitle, height)
-		param := encodeAccelPerfParam{
-			Name:                   fmt.Sprintf("%s_%dp_global_vaapi_lock_disabled_%s", toCodecStr(profile), height, videoTitle),
-			WebMName:               webMFile,
-			Profile:                toProfileStr(profile),
-			BitrateMode:            "cbr",
-			DisableGlobalVaapiLock: true,
-
-			TestType:     "encode.SpeedAndQuality",
-			Attr:         []string{"graphics_perbuild"},
-			Data:         []string{webMFile, webMJSONFile},
-			SoftwareDeps: append(encodePerfSoftwareDeps(profile, height, false), "thread_safe_libva_backend"),
-		}
-		params = append(params, param)
-	}
 
 	code := genparams.Template(t, `{{ range . }}{
 			Name: {{ .Name | fmt }},
@@ -318,9 +297,6 @@ func TestEncodeAccelPerfParams(t *testing.T) {
             BitrateMode : {{ .BitrateMode | fmt}},
             {{ if .Bitrate }}
             Bitrate : {{ .Bitrate | fmt}},
-            {{ end }}
-            {{ if .DisableGlobalVaapiLock }}
-            DisableGlobalVaapiLock : {{ .DisableGlobalVaapiLock | fmt}},
             {{ end }}
             },
             ExtraAttr: {{ .Attr | fmt}},

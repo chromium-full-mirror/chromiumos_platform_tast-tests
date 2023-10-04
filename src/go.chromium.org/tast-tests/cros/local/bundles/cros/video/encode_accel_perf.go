@@ -1780,58 +1780,6 @@ func init() {
 				ExtraData:         []string{"encode/fallout4-1920x1080_290frames.vp9.webm", "encode/fallout4-1920x1080_290frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_enc_h264_vbr"},
 			},
-			{
-				Name: "h264_1080p_global_vaapi_lock_disabled_desktop2",
-				Val: encode.TestOptions{
-					WebMName:               "encode/desktop2-1920x1080_490frames.vp9.webm",
-					Profile:                videotype.H264BaselineProf,
-					TestType:               encode.SpeedAndQuality,
-					BitrateMode:            "cbr",
-					DisableGlobalVaapiLock: true,
-				},
-				ExtraAttr:         []string{"graphics_perbuild"},
-				ExtraData:         []string{"encode/desktop2-1920x1080_490frames.vp9.webm", "encode/desktop2-1920x1080_490frames.vp9.webm.json"},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "thread_safe_libva_backend"},
-			},
-			{
-				Name: "vp8_1080p_global_vaapi_lock_disabled_desktop2",
-				Val: encode.TestOptions{
-					WebMName:               "encode/desktop2-1920x1080_490frames.vp9.webm",
-					Profile:                videotype.VP8Prof,
-					TestType:               encode.SpeedAndQuality,
-					BitrateMode:            "cbr",
-					DisableGlobalVaapiLock: true,
-				},
-				ExtraAttr:         []string{"graphics_perbuild"},
-				ExtraData:         []string{"encode/desktop2-1920x1080_490frames.vp9.webm", "encode/desktop2-1920x1080_490frames.vp9.webm.json"},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "thread_safe_libva_backend"},
-			},
-			{
-				Name: "vp9_1080p_global_vaapi_lock_disabled_desktop2",
-				Val: encode.TestOptions{
-					WebMName:               "encode/desktop2-1920x1080_490frames.vp9.webm",
-					Profile:                videotype.VP9Prof,
-					TestType:               encode.SpeedAndQuality,
-					BitrateMode:            "cbr",
-					DisableGlobalVaapiLock: true,
-				},
-				ExtraAttr:         []string{"graphics_perbuild"},
-				ExtraData:         []string{"encode/desktop2-1920x1080_490frames.vp9.webm", "encode/desktop2-1920x1080_490frames.vp9.webm.json"},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "thread_safe_libva_backend"},
-			},
-			{
-				Name: "av1_1080p_global_vaapi_lock_disabled_desktop2",
-				Val: encode.TestOptions{
-					WebMName:               "encode/desktop2-1920x1080_490frames.vp9.webm",
-					Profile:                videotype.AV1MainProf,
-					TestType:               encode.SpeedAndQuality,
-					BitrateMode:            "cbr",
-					DisableGlobalVaapiLock: true,
-				},
-				ExtraAttr:         []string{"graphics_perbuild"},
-				ExtraData:         []string{"encode/desktop2-1920x1080_490frames.vp9.webm", "encode/desktop2-1920x1080_490frames.vp9.webm.json"},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_1080_30", "thread_safe_libva_backend"},
-			},
 		},
 	})
 }

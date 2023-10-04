@@ -15,8 +15,7 @@ import (
 )
 
 type chromeStackDecoderTestParam struct {
-	dataPath               string
-	disableGlobalVaapiLock bool
+	dataPath string
 	// List of Chrome Features to enable, if any.
 	enabledFeatures []string
 }
@@ -173,76 +172,6 @@ func init() {
 			ExtraData:         []string{"test-25fps-321x241.vp9", "test-25fps-321x241.vp9.json"},
 			Timeout:           4 * time.Minute,
 		}, {
-			Name:              "av1_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderTestParam{dataPath: "test-25fps.av1.ivf", disableGlobalVaapiLock: true},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-			ExtraSoftwareDeps: []string{caps.HWDecodeAV1, "thread_safe_libva_backend"},
-			ExtraData:         []string{"test-25fps.av1.ivf", "test-25fps.av1.ivf.json"},
-			Timeout:           4 * time.Minute,
-		}, {
-			Name:              "h264_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderTestParam{dataPath: "test-25fps.h264", disableGlobalVaapiLock: true},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "thread_safe_libva_backend"},
-			ExtraData:         []string{"test-25fps.h264", "test-25fps.h264.json"},
-			Timeout:           4 * time.Minute,
-		}, {
-			Name:              "hevc_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderTestParam{dataPath: "test-25fps.hevc", disableGlobalVaapiLock: true},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-			ExtraSoftwareDeps: []string{caps.HWDecodeHEVC, "proprietary_codecs", "thread_safe_libva_backend"},
-			ExtraData:         []string{"test-25fps.hevc", "test-25fps.hevc.json"},
-			Timeout:           4 * time.Minute,
-		}, {
-			Name:              "vp8_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderTestParam{dataPath: "test-25fps.vp8", disableGlobalVaapiLock: true},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "thread_safe_libva_backend"},
-			ExtraData:         []string{"test-25fps.vp8", "test-25fps.vp8.json"},
-			Timeout:           4 * time.Minute,
-		}, {
-			Name:              "vp9_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderTestParam{dataPath: "test-25fps.vp9", disableGlobalVaapiLock: true},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "thread_safe_libva_backend"},
-			ExtraData:         []string{"test-25fps.vp9", "test-25fps.vp9.json"},
-			Timeout:           4 * time.Minute,
-		}, {
-			Name:              "av1_resolution_switch_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderTestParam{dataPath: "resolution_change.av1.ivf", disableGlobalVaapiLock: true},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-			ExtraSoftwareDeps: []string{caps.HWDecodeAV1, "thread_safe_libva_backend"},
-			ExtraData:         []string{"resolution_change.av1.ivf", "resolution_change.av1.ivf.json"},
-			Timeout:           10 * time.Minute,
-		}, {
-			Name:              "h264_resolution_switch_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderTestParam{dataPath: "switch_1080p_720p_240frames.h264", disableGlobalVaapiLock: true},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "thread_safe_libva_backend"},
-			ExtraData:         []string{"switch_1080p_720p_240frames.h264", "switch_1080p_720p_240frames.h264.json"},
-			Timeout:           10 * time.Minute,
-		}, {
-			Name:              "hevc_resolution_switch_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderTestParam{dataPath: "switch_1080p_720p_240frames.hevc", disableGlobalVaapiLock: true},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-			ExtraSoftwareDeps: []string{caps.HWDecodeHEVC, "proprietary_codecs", "thread_safe_libva_backend"},
-			ExtraData:         []string{"switch_1080p_720p_240frames.hevc", "switch_1080p_720p_240frames.hevc.json"},
-			Timeout:           10 * time.Minute,
-		}, {
-			Name:              "vp8_resolution_switch_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderTestParam{dataPath: "resolution_change_500frames.vp8.ivf", disableGlobalVaapiLock: true},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "thread_safe_libva_backend"},
-			ExtraData:         []string{"resolution_change_500frames.vp8.ivf", "resolution_change_500frames.vp8.ivf.json"},
-			Timeout:           10 * time.Minute,
-		}, {
-			Name:              "vp9_resolution_switch_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderTestParam{dataPath: "resolution_change_500frames.vp9.ivf", disableGlobalVaapiLock: true},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "thread_safe_libva_backend"},
-			ExtraData:         []string{"resolution_change_500frames.vp9.ivf", "resolution_change_500frames.vp9.ivf.json"},
-			Timeout:           10 * time.Minute,
-		}, {
 			Name:              "v4l2_flat_h264",
 			Val:               chromeStackDecoderTestParam{dataPath: "test-25fps.h264", enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"}},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
@@ -323,7 +252,7 @@ func init() {
 func ChromeStackDecoder(ctx context.Context, s *testing.State) {
 	params := s.Param().(chromeStackDecoderTestParam)
 
-	if err := decoding.RunAccelVideoTest(ctx, s.OutDir(), s.DataPath(params.dataPath), decoding.TestParams{DecoderType: decoding.VD, DisableGlobalVaapiLock: params.disableGlobalVaapiLock}, params.enabledFeatures); err != nil {
+	if err := decoding.RunAccelVideoTest(ctx, s.OutDir(), s.DataPath(params.dataPath), decoding.TestParams{DecoderType: decoding.VD}, params.enabledFeatures); err != nil {
 		s.Fatal("test failed: ", err)
 	}
 }

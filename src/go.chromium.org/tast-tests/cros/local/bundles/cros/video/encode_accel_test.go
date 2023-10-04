@@ -183,15 +183,14 @@ func psnrThresholdSVC(codec string, height int, svcMode string) float32 {
 
 func TestEncodeAccelParams(t *testing.T) {
 	type encodeAccelParam struct {
-		Name                   string
-		WebMName               string
-		Profile                string
-		PSNRThreshold          float32
-		SVCMode                string
-		DisableGlobalVaapiLock bool
-		BitrateMode            string
-		ExtraSoftwareDeps      []string
-		ExtraData              []string
+		Name              string
+		WebMName          string
+		Profile           string
+		PSNRThreshold     float32
+		SVCMode           string
+		BitrateMode       string
+		ExtraSoftwareDeps []string
+		ExtraData         []string
 	}
 	type testPatterns struct {
 		title    string
@@ -290,23 +289,6 @@ func TestEncodeAccelParams(t *testing.T) {
 		}
 		params = append(params, param)
 	}
-	// Vaapi lock is disabled
-	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
-		height := 1080
-		webMFile := testVideos[height]
-		webMJSONFile := webMFile + ".json"
-		param := encodeAccelParam{
-			Name:                   fmt.Sprintf("%s_1080p_global_vaapi_lock_disabled", codec),
-			WebMName:               webMFile,
-			Profile:                toProfile(codec),
-			PSNRThreshold:          psnrThreshold(codec, height),
-			BitrateMode:            "cbr",
-			DisableGlobalVaapiLock: true,
-			ExtraSoftwareDeps:      append(encodeSoftwareDeps(codec, height, false), "thread_safe_libva_backend"),
-			ExtraData:              []string{webMFile, webMJSONFile},
-		}
-		params = append(params, param)
-	}
 	code := genparams.Template(t, `{{ range . }}{
 			Name: {{ .Name | fmt }},
 	        Val: encode.TestOptions{
@@ -317,9 +299,6 @@ func TestEncodeAccelParams(t *testing.T) {
 	        SVCMode : {{ .SVCMode | fmt}},
 	        {{ end }}
 	        BitrateMode : {{ .BitrateMode | fmt}},
-	        {{ if .DisableGlobalVaapiLock }}
-	        DisableGlobalVaapiLock : {{ .DisableGlobalVaapiLock | fmt}},
-	        {{ end }}
 	        },
 	        ExtraSoftwareDeps: {{ .ExtraSoftwareDeps | fmt}},
 	        ExtraData: {{ .ExtraData | fmt}},

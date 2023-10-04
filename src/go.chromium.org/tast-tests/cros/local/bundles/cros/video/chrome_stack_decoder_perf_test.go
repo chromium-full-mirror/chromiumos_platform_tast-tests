@@ -43,14 +43,13 @@ func fillSwDeps(codec, resolution, frameRate string) []string {
 
 func TestChromeStackDecoderPerfParams(t *testing.T) {
 	type paramData struct {
-		Name                    string
-		File                    string
-		ConcurrentDecoders      bool
-		GlobalVAAPILockDisabled bool
-		SoftwareDeps            []string
-		Metadata                []string
-		Attr                    []string
-		Timeout                 time.Duration
+		Name               string
+		File               string
+		ConcurrentDecoders bool
+		SoftwareDeps       []string
+		Metadata           []string
+		Attr               []string
+		Timeout            time.Duration
 	}
 	const defaultTimeout = 2 * time.Minute
 
@@ -97,32 +96,12 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 
 		params = append(params, param)
 	}
-	// Another round for the concurrent decoder tests with VA-API global lock
-	// disabled.
-	for _, codec := range codecs {
-		resolution := "1080"
-		frameRate := "60"
-		dataPath := genDataPath(codec, resolution, frameRate)
-		param := paramData{
-			Name:                    fmt.Sprintf("%s_%sp_%sfps_concurrent_global_vaapi_lock_disabled", codec, resolution, frameRate),
-			File:                    dataPath,
-			ConcurrentDecoders:      true,
-			GlobalVAAPILockDisabled: true,
-			SoftwareDeps:            append(fillSwDeps(codec, resolution, frameRate), "thread_safe_libva_backend"),
-			Metadata:                []string{dataPath, dataPath + ".json"},
-			Attr:                    []string{"graphics_video_decodeaccel"},
-			Timeout:                 defaultTimeout,
-		}
-
-		params = append(params, param)
-	}
 
 	code := genparams.Template(t, `{{ range . }}{
 		Name: {{ .Name | fmt }},
 		Val:  chromeStackDecoderPerfParams{
 			dataPath: {{ .File | fmt }},
 			runConcurrentDecodersOnly: {{ .ConcurrentDecoders | fmt }},
-			disableGlobalVaapiLock: {{ .GlobalVAAPILockDisabled | fmt }},
 		},
 		Timeout: {{ .Timeout | fmt }},
 		{{ if .SoftwareDeps }}

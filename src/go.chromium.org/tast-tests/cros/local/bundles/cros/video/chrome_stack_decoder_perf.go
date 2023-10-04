@@ -44,7 +44,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/1080p_30fps_300frames.av1.ivf",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
@@ -56,7 +55,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/1080p_60fps_600frames.av1.ivf",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60"},
@@ -68,7 +66,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/2160p_30fps_300frames.av1.ivf",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_30"},
@@ -80,7 +77,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/2160p_60fps_600frames.av1.ivf",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_60"},
@@ -92,7 +88,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/1080p_30fps_300frames.h264",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_1080_30", "proprietary_codecs"},
@@ -104,7 +99,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/1080p_60fps_600frames.h264",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_1080_60", "proprietary_codecs"},
@@ -116,7 +110,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/2160p_30fps_300frames.h264",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_2160_30", "proprietary_codecs"},
@@ -128,7 +121,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/2160p_60fps_600frames.h264",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_2160_60", "proprietary_codecs"},
@@ -140,7 +132,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/1080p_30fps_300frames.hevc",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_1080_30", "proprietary_codecs"},
@@ -152,7 +143,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/1080p_60fps_600frames.hevc",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_1080_60", "proprietary_codecs"},
@@ -164,7 +154,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/2160p_30fps_300frames.hevc",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_2160_30", "proprietary_codecs"},
@@ -176,7 +165,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/2160p_60fps_600frames.hevc",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_2160_60", "proprietary_codecs"},
@@ -188,7 +176,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/1080p_30fps_300frames.vp8.ivf",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30"},
@@ -200,7 +187,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/1080p_60fps_600frames.vp8.ivf",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_60"},
@@ -212,7 +198,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/2160p_30fps_300frames.vp8.ivf",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_2160_30"},
@@ -224,7 +209,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/2160p_60fps_600frames.vp8.ivf",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_2160_60"},
@@ -236,7 +220,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/1080p_30fps_300frames.vp9.ivf",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30"},
@@ -248,7 +231,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/1080p_60fps_600frames.vp9.ivf",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60"},
@@ -260,7 +242,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/2160p_30fps_300frames.vp9.ivf",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_30"},
@@ -272,7 +253,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/2160p_60fps_600frames.vp9.ivf",
 					runConcurrentDecodersOnly: false,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_60"},
@@ -284,7 +264,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/1080p_60fps_600frames.av1.ivf",
 					runConcurrentDecodersOnly: true,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60", "thread_safe_libva_backend"},
@@ -296,7 +275,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/1080p_60fps_600frames.h264",
 					runConcurrentDecodersOnly: true,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_1080_60", "proprietary_codecs", "thread_safe_libva_backend"},
@@ -308,7 +286,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/1080p_60fps_600frames.hevc",
 					runConcurrentDecodersOnly: true,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_1080_60", "proprietary_codecs", "thread_safe_libva_backend"},
@@ -320,7 +297,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/1080p_60fps_600frames.vp8.ivf",
 					runConcurrentDecodersOnly: true,
-					disableGlobalVaapiLock:    false,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_60", "thread_safe_libva_backend"},
@@ -332,67 +308,6 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/1080p_60fps_600frames.vp9.ivf",
 					runConcurrentDecodersOnly: true,
-					disableGlobalVaapiLock:    false,
-				},
-				Timeout:           2 * time.Minute,
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60", "thread_safe_libva_backend"},
-				ExtraData:         []string{"perf/vp9/1080p_60fps_600frames.vp9.ivf", "perf/vp9/1080p_60fps_600frames.vp9.ivf.json"},
-				ExtraAttr:         []string{"graphics_video_decodeaccel"},
-			},
-			{
-				Name: "av1_1080p_60fps_concurrent_global_vaapi_lock_disabled",
-				Val: chromeStackDecoderPerfParams{
-					dataPath:                  "perf/av1/1080p_60fps_600frames.av1.ivf",
-					runConcurrentDecodersOnly: true,
-					disableGlobalVaapiLock:    true,
-				},
-				Timeout:           2 * time.Minute,
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60", "thread_safe_libva_backend"},
-				ExtraData:         []string{"perf/av1/1080p_60fps_600frames.av1.ivf", "perf/av1/1080p_60fps_600frames.av1.ivf.json"},
-				ExtraAttr:         []string{"graphics_video_decodeaccel"},
-			},
-			{
-				Name: "h264_1080p_60fps_concurrent_global_vaapi_lock_disabled",
-				Val: chromeStackDecoderPerfParams{
-					dataPath:                  "perf/h264/1080p_60fps_600frames.h264",
-					runConcurrentDecodersOnly: true,
-					disableGlobalVaapiLock:    true,
-				},
-				Timeout:           2 * time.Minute,
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_1080_60", "proprietary_codecs", "thread_safe_libva_backend"},
-				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264", "perf/h264/1080p_60fps_600frames.h264.json"},
-				ExtraAttr:         []string{"graphics_video_decodeaccel"},
-			},
-			{
-				Name: "hevc_1080p_60fps_concurrent_global_vaapi_lock_disabled",
-				Val: chromeStackDecoderPerfParams{
-					dataPath:                  "perf/hevc/1080p_60fps_600frames.hevc",
-					runConcurrentDecodersOnly: true,
-					disableGlobalVaapiLock:    true,
-				},
-				Timeout:           2 * time.Minute,
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_1080_60", "proprietary_codecs", "thread_safe_libva_backend"},
-				ExtraData:         []string{"perf/hevc/1080p_60fps_600frames.hevc", "perf/hevc/1080p_60fps_600frames.hevc.json"},
-				ExtraAttr:         []string{"graphics_video_decodeaccel"},
-			},
-			{
-				Name: "vp8_1080p_60fps_concurrent_global_vaapi_lock_disabled",
-				Val: chromeStackDecoderPerfParams{
-					dataPath:                  "perf/vp8/1080p_60fps_600frames.vp8.ivf",
-					runConcurrentDecodersOnly: true,
-					disableGlobalVaapiLock:    true,
-				},
-				Timeout:           2 * time.Minute,
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_60", "thread_safe_libva_backend"},
-				ExtraData:         []string{"perf/vp8/1080p_60fps_600frames.vp8.ivf", "perf/vp8/1080p_60fps_600frames.vp8.ivf.json"},
-				ExtraAttr:         []string{"graphics_video_decodeaccel"},
-			},
-			{
-				Name: "vp9_1080p_60fps_concurrent_global_vaapi_lock_disabled",
-				Val: chromeStackDecoderPerfParams{
-					dataPath:                  "perf/vp9/1080p_60fps_600frames.vp9.ivf",
-					runConcurrentDecodersOnly: true,
-					disableGlobalVaapiLock:    true,
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60", "thread_safe_libva_backend"},

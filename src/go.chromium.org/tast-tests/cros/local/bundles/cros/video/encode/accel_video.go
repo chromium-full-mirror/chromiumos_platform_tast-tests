@@ -116,9 +116,6 @@ type TestOptions struct {
 
 	// Encode bitrate.
 	Bitrate int
-
-	// Controls the global VAAPI Lock.
-	DisableGlobalVaapiLock bool
 }
 
 func webMJSONFileNameFor(webMFileName string) string {
@@ -276,9 +273,6 @@ func RunAccelVideoTest(ctx context.Context, s *testing.State, opts TestOptions) 
 	if opts.BitrateMode != "" {
 		testArgs = append(testArgs, fmt.Sprintf("--bitrate_mode=%s", opts.BitrateMode))
 	}
-	if opts.DisableGlobalVaapiLock {
-		testArgs = append(testArgs, "--disable_vaapi_lock")
-	}
 	if opts.PSNRThreshold != 0 {
 		testArgs = append(testArgs, fmt.Sprintf("--psnr_threshold=%.2f", opts.PSNRThreshold))
 	}
@@ -343,9 +337,6 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 	}
 	if opts.Bitrate > 0 {
 		testArgs = append(testArgs, fmt.Sprintf("--bitrate=%d", opts.Bitrate))
-	}
-	if opts.DisableGlobalVaapiLock {
-		testArgs = append(testArgs, "--disable_vaapi_lock")
 	}
 
 	p := perf.NewValues()
