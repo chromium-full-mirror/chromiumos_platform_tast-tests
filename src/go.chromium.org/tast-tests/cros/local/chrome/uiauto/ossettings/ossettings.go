@@ -306,8 +306,6 @@ func (s *OSSettings) SetToggleOption(cr *chrome.Chrome, optionName string, expec
 		}
 
 		return uiauto.Combine("set toggle option",
-			// Ensure the toggle is visible
-			s.ui.FocusAndWait(optionFinder),
 			s.ui.WaitUntilEnabled(optionFinder),
 			s.ui.LeftClickUntil(optionFinder,
 				s.ui.WithTimeout(3*time.Second).WaitUntilCheckedState(optionFinder, expected)),
