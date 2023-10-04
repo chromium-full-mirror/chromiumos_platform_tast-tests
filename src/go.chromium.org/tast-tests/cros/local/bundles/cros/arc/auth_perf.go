@@ -165,6 +165,15 @@ func init() {
 				browserType:       browser.TypeLacros,
 				maxErrorBootCount: 3,
 			},
+		}, {
+			// TODO(b/301311408): Remove this, when KeyMint is fully launched and is the default.
+			Name:              "keymint_vm",
+			ExtraSoftwareDeps: []string{"android_vm_t"},
+			Val: testParam{
+				browserType:       browser.TypeAsh,
+				maxErrorBootCount: 3,
+				chromeArgs:        []string{"--enable-features=ArcSwitchToKeyMintOnT,ArcSwitchToKeyMintOnTOverride"},
+			},
 		}},
 		VarDeps: []string{
 			"arc.AuthPerf.managed_username",

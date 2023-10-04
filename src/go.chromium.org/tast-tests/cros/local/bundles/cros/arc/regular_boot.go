@@ -61,6 +61,13 @@ func init() {
 			Val: testParams{
 				chromeArgs: []string{"--arcvm-ureadahead-mode=disabled"},
 			},
+		}, {
+			// TODO(b/301311408): Remove this, when KeyMint is fully launched and is the default.
+			Name:              "keymint_vm",
+			ExtraSoftwareDeps: []string{"android_vm_t"},
+			Val: testParams{
+				chromeArgs: []string{"--enable-features=ArcSwitchToKeyMintOnT,ArcSwitchToKeyMintOnTOverride"},
+			},
 		}},
 		VarDeps: []string{
 			"arc.perfAccountPool",
@@ -79,7 +86,7 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 	const iterationCount = 5
 	perfValues := perf.NewValues()
 	for i := 0; i < iterationCount; i++ {
-		bootMetrics, err := performArcRegularBoot(ctx, s.OutDir(), creds)
+		bootMetrics, err := performArcRegularBoot(ctx, s.OutDir(), creds, params.chromeArgs)
 		if err != nil {
 			s.Fatal("Failed to do regular boot: ", err)
 		}
@@ -164,7 +171,7 @@ func performArcInitialBoot(ctx context.Context, credPool string, chromeArgs []st
 // represents here the overhead from tast Chrome login implementation.
 // This also resets system caches before login to simulate scenario when user uses Chromebook after
 // reboot.
-func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Creds) (*bootMetrics, error) {
+func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Creds, chromeArgs []string) (*bootMetrics, error) {
 	// Use custom cooling config that is bit relaxed from default implementation
 	// in order to reduce failure rate especially on AMD low-end devices.
 	coolDownConfig := cpu.CoolDownConfig{
@@ -189,6 +196,7 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 		chrome.ARCSupported(),
 		chrome.GAIALogin(creds),
 		chrome.KeepState(),
+		chrome.ExtraArgs(chromeArgs...),
 		chrome.ExtraArgs(append(arc.DisableSyncFlags(),
 			// Disable ArcWindowPredictor to let chrome record the necessary histograms.
 			// TODO(b/259517082): Stop disabling ArcWindowPredictor.
