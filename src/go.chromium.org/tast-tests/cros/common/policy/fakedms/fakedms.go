@@ -345,3 +345,11 @@ func (fdms *FakeDMS) WaitRemoteCommandResult(ctx context.Context, commandID *int
 		CommandId: commandID,
 	})
 }
+
+// WaitRemoteCommandAcked waits for the remote command to be acknowledged.
+func (fdms *FakeDMS) WaitRemoteCommandAcked(ctx context.Context, commandID *int64) error {
+	_, err := fdms.remoteCommandsServiceClient.WaitRemoteCommandAcked(ctx, &empb.WaitRemoteCommandAckedRequest{
+		CommandId: commandID,
+	})
+	return err
+}

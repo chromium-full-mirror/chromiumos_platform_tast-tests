@@ -937,6 +937,22 @@ func (c *PolicyService) WaitRemoteCommandResult(ctx context.Context, req *ppb.Wa
 	return &ppb.WaitRemoteCommandResultResponse{Result: result}, nil
 }
 
+// WaitRemoteCommandAcked waits for the result of the command with the specified id.
+func (c *PolicyService) WaitRemoteCommandAcked(ctx context.Context, req *ppb.WaitRemoteCommandAckedRequest) (*empty.Empty, error) {
+	testing.ContextLog(ctx, "Waiting for remote command to be acknowledged")
+
+	if c.fakeDMS == nil {
+		return nil, errors.New("fakedms is not started")
+	}
+
+	err := c.fakeDMS.WaitRemoteCommandAcked(ctx, &req.CommandId)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to wait for the remote command acknowledgement")
+	}
+
+	return &empty.Empty{}, nil
+}
+
 // RefreshRemoteCommands triggers remote_command request on the fake_dmserver to fetch and execute all the pending command sent.
 func (c *PolicyService) RefreshRemoteCommands(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	tconn, err := c.sharedObject.Chrome.TestAPIConn(ctx)

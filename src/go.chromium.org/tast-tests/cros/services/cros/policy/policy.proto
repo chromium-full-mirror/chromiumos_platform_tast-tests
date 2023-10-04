@@ -73,6 +73,8 @@ service PolicyService {
       returns (SendRemoteCommandResponse) {}
   rpc WaitRemoteCommandResult(WaitRemoteCommandResultRequest)
       returns (WaitRemoteCommandResultResponse) {}
+  rpc WaitRemoteCommandAcked(WaitRemoteCommandAckedRequest)
+      returns (google.protobuf.Empty) {}
   rpc RefreshRemoteCommands(google.protobuf.Empty)
       returns (google.protobuf.Empty) {}
   rpc FindAndClickRestartNowButton(google.protobuf.Empty)
@@ -222,4 +224,7 @@ message WaitRemoteCommandResultRequest {
 }
 message WaitRemoteCommandResultResponse {
   bytes result = 1;
+}
+message WaitRemoteCommandAckedRequest {
+  int64 command_id = 1;
 }

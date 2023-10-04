@@ -1656,6 +1656,53 @@ func (x *WaitRemoteCommandResultResponse) GetResult() []byte {
 	return nil
 }
 
+type WaitRemoteCommandAckedRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	CommandId int64 `protobuf:"varint,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
+}
+
+func (x *WaitRemoteCommandAckedRequest) Reset() {
+	*x = WaitRemoteCommandAckedRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_policy_policy_proto_msgTypes[29]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *WaitRemoteCommandAckedRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WaitRemoteCommandAckedRequest) ProtoMessage() {}
+
+func (x *WaitRemoteCommandAckedRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_policy_policy_proto_msgTypes[29]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WaitRemoteCommandAckedRequest.ProtoReflect.Descriptor instead.
+func (*WaitRemoteCommandAckedRequest) Descriptor() ([]byte, []int) {
+	return file_policy_policy_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *WaitRemoteCommandAckedRequest) GetCommandId() int64 {
+	if x != nil {
+		return x.CommandId
+	}
+	return 0
+}
+
 var File_policy_policy_proto protoreflect.FileDescriptor
 
 var file_policy_policy_proto_rawDesc = []byte{
@@ -1837,7 +1884,11 @@ var file_policy_policy_proto_rawDesc = []byte{
 	0x22, 0x39, 0x0a, 0x1f, 0x57, 0x61, 0x69, 0x74, 0x52, 0x65, 0x6d, 0x6f, 0x74, 0x65, 0x43, 0x6f,
 	0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
 	0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x32, 0xf4, 0x18, 0x0a, 0x0d,
+	0x01, 0x28, 0x0c, 0x52, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x22, 0x3e, 0x0a, 0x1d, 0x57,
+	0x61, 0x69, 0x74, 0x52, 0x65, 0x6d, 0x6f, 0x74, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64,
+	0x41, 0x63, 0x6b, 0x65, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a,
+	0x63, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03,
+	0x52, 0x09, 0x63, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x49, 0x64, 0x32, 0xd9, 0x19, 0x0a, 0x0d,
 	0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x5b, 0x0a,
 	0x12, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x53, 0x74, 0x61,
 	0x74, 0x75, 0x73, 0x12, 0x2b, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e,
@@ -2027,21 +2078,27 @@ var file_policy_policy_proto_rawDesc = []byte{
 	0x1a, 0x31, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x6c,
 	0x69, 0x63, 0x79, 0x2e, 0x57, 0x61, 0x69, 0x74, 0x52, 0x65, 0x6d, 0x6f, 0x74, 0x65, 0x43, 0x6f,
 	0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x49, 0x0a, 0x15, 0x52, 0x65, 0x66, 0x72, 0x65, 0x73, 0x68,
-	0x52, 0x65, 0x6d, 0x6f, 0x74, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x73, 0x12, 0x16,
-	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
-	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00,
-	0x12, 0x50, 0x0a, 0x1c, 0x46, 0x69, 0x6e, 0x64, 0x41, 0x6e, 0x64, 0x43, 0x6c, 0x69, 0x63, 0x6b,
-	0x52, 0x65, 0x73, 0x74, 0x61, 0x72, 0x74, 0x4e, 0x6f, 0x77, 0x42, 0x75, 0x74, 0x74, 0x6f, 0x6e,
-	0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
-	0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
-	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
-	0x22, 0x00, 0x42, 0x36, 0x5a, 0x34, 0x67, 0x6f, 0x2e, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75,
-	0x6d, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2d, 0x74, 0x65, 0x73, 0x74, 0x73,
-	0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63,
-	0x72, 0x6f, 0x73, 0x2f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x63, 0x0a, 0x16, 0x57, 0x61, 0x69, 0x74, 0x52, 0x65, 0x6d,
+	0x6f, 0x74, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x41, 0x63, 0x6b, 0x65, 0x64, 0x12,
+	0x2f, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x6c, 0x69,
+	0x63, 0x79, 0x2e, 0x57, 0x61, 0x69, 0x74, 0x52, 0x65, 0x6d, 0x6f, 0x74, 0x65, 0x43, 0x6f, 0x6d,
+	0x6d, 0x61, 0x6e, 0x64, 0x41, 0x63, 0x6b, 0x65, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x49, 0x0a, 0x15, 0x52, 0x65,
+	0x66, 0x72, 0x65, 0x73, 0x68, 0x52, 0x65, 0x6d, 0x6f, 0x74, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x61,
+	0x6e, 0x64, 0x73, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d,
+	0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x50, 0x0a, 0x1c, 0x46, 0x69, 0x6e, 0x64, 0x41, 0x6e, 0x64,
+	0x43, 0x6c, 0x69, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x74, 0x61, 0x72, 0x74, 0x4e, 0x6f, 0x77, 0x42,
+	0x75, 0x74, 0x74, 0x6f, 0x6e, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x36, 0x5a, 0x34, 0x67, 0x6f, 0x2e, 0x63, 0x68,
+	0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2d,
+	0x74, 0x65, 0x73, 0x74, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69,
+	0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2056,7 +2113,7 @@ func file_policy_policy_proto_rawDescGZIP() []byte {
 	return file_policy_policy_proto_rawDescData
 }
 
-var file_policy_policy_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
+var file_policy_policy_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_policy_policy_proto_goTypes = []interface{}{
 	(*VerifyPolicyStatusRequest)(nil),            // 0: tast.cros.policy.VerifyPolicyStatusRequest
 	(*EnrollUsingChromeRequest)(nil),             // 1: tast.cros.policy.EnrollUsingChromeRequest
@@ -2087,14 +2144,15 @@ var file_policy_policy_proto_goTypes = []interface{}{
 	(*SendRemoteCommandResponse)(nil),            // 26: tast.cros.policy.SendRemoteCommandResponse
 	(*WaitRemoteCommandResultRequest)(nil),       // 27: tast.cros.policy.WaitRemoteCommandResultRequest
 	(*WaitRemoteCommandResultResponse)(nil),      // 28: tast.cros.policy.WaitRemoteCommandResultResponse
-	(*emptypb.Empty)(nil),                        // 29: google.protobuf.Empty
+	(*WaitRemoteCommandAckedRequest)(nil),        // 29: tast.cros.policy.WaitRemoteCommandAckedRequest
+	(*emptypb.Empty)(nil),                        // 30: google.protobuf.Empty
 }
 var file_policy_policy_proto_depIdxs = []int32{
 	18, // 0: tast.cros.policy.EnrollUsingChromeRequest.extensions:type_name -> tast.cros.policy.Extension
 	17, // 1: tast.cros.policy.Extension.files:type_name -> tast.cros.policy.ExtensionFile
 	0,  // 2: tast.cros.policy.PolicyService.VerifyPolicyStatus:input_type -> tast.cros.policy.VerifyPolicyStatusRequest
-	29, // 3: tast.cros.policy.PolicyService.StartNewChromeReader:input_type -> google.protobuf.Empty
-	29, // 4: tast.cros.policy.PolicyService.WaitForEnrollmentError:input_type -> google.protobuf.Empty
+	30, // 3: tast.cros.policy.PolicyService.StartNewChromeReader:input_type -> google.protobuf.Empty
+	30, // 4: tast.cros.policy.PolicyService.WaitForEnrollmentError:input_type -> google.protobuf.Empty
 	2,  // 5: tast.cros.policy.PolicyService.GAIAZTEEnrollUsingChrome:input_type -> tast.cros.policy.GAIAZTEEnrollUsingChromeRequest
 	1,  // 6: tast.cros.policy.PolicyService.EnrollUsingChrome:input_type -> tast.cros.policy.EnrollUsingChromeRequest
 	3,  // 7: tast.cros.policy.PolicyService.GAIAEnrollUsingChrome:input_type -> tast.cros.policy.GAIAEnrollUsingChromeRequest
@@ -2103,67 +2161,69 @@ var file_policy_policy_proto_depIdxs = []int32{
 	6,  // 10: tast.cros.policy.PolicyService.GAIALoginForReporting:input_type -> tast.cros.policy.GAIALoginForReportingRequest
 	7,  // 11: tast.cros.policy.PolicyService.SAMLTestIdPEnrollUsingChrome:input_type -> tast.cros.policy.SAMLTestIdPEnrollUsingChromeRequest
 	12, // 12: tast.cros.policy.PolicyService.UpdatePolicies:input_type -> tast.cros.policy.UpdatePoliciesRequest
-	29, // 13: tast.cros.policy.PolicyService.CheckChromeAndFakeDMS:input_type -> google.protobuf.Empty
-	29, // 14: tast.cros.policy.PolicyService.StopChromeAndFakeDMS:input_type -> google.protobuf.Empty
+	30, // 13: tast.cros.policy.PolicyService.CheckChromeAndFakeDMS:input_type -> google.protobuf.Empty
+	30, // 14: tast.cros.policy.PolicyService.StopChromeAndFakeDMS:input_type -> google.protobuf.Empty
 	21, // 15: tast.cros.policy.PolicyService.StartChrome:input_type -> tast.cros.policy.StartChromeRequest
-	29, // 16: tast.cros.policy.PolicyService.StopChrome:input_type -> google.protobuf.Empty
-	29, // 17: tast.cros.policy.PolicyService.ContinueLogin:input_type -> google.protobuf.Empty
+	30, // 16: tast.cros.policy.PolicyService.StopChrome:input_type -> google.protobuf.Empty
+	30, // 17: tast.cros.policy.PolicyService.ContinueLogin:input_type -> google.protobuf.Empty
 	8,  // 18: tast.cros.policy.PolicyService.CreateFakeDMSDir:input_type -> tast.cros.policy.CreateFakeDMSDirRequest
 	9,  // 19: tast.cros.policy.PolicyService.CreateTempFakeDMSDir:input_type -> tast.cros.policy.CreateTempFakeDMSDirRequest
 	11, // 20: tast.cros.policy.PolicyService.RemoveFakeDMSDir:input_type -> tast.cros.policy.RemoveFakeDMSDirRequest
-	29, // 21: tast.cros.policy.PolicyService.StartExternalDataServer:input_type -> google.protobuf.Empty
+	30, // 21: tast.cros.policy.PolicyService.StartExternalDataServer:input_type -> google.protobuf.Empty
 	13, // 22: tast.cros.policy.PolicyService.ServePolicyData:input_type -> tast.cros.policy.ServePolicyDataRequest
-	29, // 23: tast.cros.policy.PolicyService.StopExternalDataServer:input_type -> google.protobuf.Empty
+	30, // 23: tast.cros.policy.PolicyService.StopExternalDataServer:input_type -> google.protobuf.Empty
 	15, // 24: tast.cros.policy.PolicyService.EvalStatementInExtension:input_type -> tast.cros.policy.EvalInExtensionRequest
 	15, // 25: tast.cros.policy.PolicyService.EvalInExtension:input_type -> tast.cros.policy.EvalInExtensionRequest
 	19, // 26: tast.cros.policy.PolicyService.VerifyVisibleNotification:input_type -> tast.cros.policy.VerifyVisibleNotificationRequest
 	20, // 27: tast.cros.policy.PolicyService.EvalExpressionInChromeURL:input_type -> tast.cros.policy.EvalExpressionInChromeUrlRequest
-	29, // 28: tast.cros.policy.PolicyService.ClientID:input_type -> google.protobuf.Empty
-	29, // 29: tast.cros.policy.PolicyService.DirectoryAPIID:input_type -> google.protobuf.Empty
-	29, // 30: tast.cros.policy.PolicyService.LockDevice:input_type -> google.protobuf.Empty
+	30, // 28: tast.cros.policy.PolicyService.ClientID:input_type -> google.protobuf.Empty
+	30, // 29: tast.cros.policy.PolicyService.DirectoryAPIID:input_type -> google.protobuf.Empty
+	30, // 30: tast.cros.policy.PolicyService.LockDevice:input_type -> google.protobuf.Empty
 	24, // 31: tast.cros.policy.PolicyService.UnlockDeviceWithPassword:input_type -> tast.cros.policy.UnlockDeviceWithPasswordRequest
-	29, // 32: tast.cros.policy.PolicyService.Logout:input_type -> google.protobuf.Empty
+	30, // 32: tast.cros.policy.PolicyService.Logout:input_type -> google.protobuf.Empty
 	25, // 33: tast.cros.policy.PolicyService.SendRemoteCommand:input_type -> tast.cros.policy.SendRemoteCommandRequest
 	27, // 34: tast.cros.policy.PolicyService.WaitRemoteCommandResult:input_type -> tast.cros.policy.WaitRemoteCommandResultRequest
-	29, // 35: tast.cros.policy.PolicyService.RefreshRemoteCommands:input_type -> google.protobuf.Empty
-	29, // 36: tast.cros.policy.PolicyService.FindAndClickRestartNowButton:input_type -> google.protobuf.Empty
-	29, // 37: tast.cros.policy.PolicyService.VerifyPolicyStatus:output_type -> google.protobuf.Empty
-	29, // 38: tast.cros.policy.PolicyService.StartNewChromeReader:output_type -> google.protobuf.Empty
-	29, // 39: tast.cros.policy.PolicyService.WaitForEnrollmentError:output_type -> google.protobuf.Empty
-	29, // 40: tast.cros.policy.PolicyService.GAIAZTEEnrollUsingChrome:output_type -> google.protobuf.Empty
-	29, // 41: tast.cros.policy.PolicyService.EnrollUsingChrome:output_type -> google.protobuf.Empty
-	29, // 42: tast.cros.policy.PolicyService.GAIAEnrollUsingChrome:output_type -> google.protobuf.Empty
-	29, // 43: tast.cros.policy.PolicyService.GAIAEnrollAndLoginUsingChrome:output_type -> google.protobuf.Empty
-	29, // 44: tast.cros.policy.PolicyService.GAIAEnrollForReporting:output_type -> google.protobuf.Empty
-	29, // 45: tast.cros.policy.PolicyService.GAIALoginForReporting:output_type -> google.protobuf.Empty
-	29, // 46: tast.cros.policy.PolicyService.SAMLTestIdPEnrollUsingChrome:output_type -> google.protobuf.Empty
-	29, // 47: tast.cros.policy.PolicyService.UpdatePolicies:output_type -> google.protobuf.Empty
-	29, // 48: tast.cros.policy.PolicyService.CheckChromeAndFakeDMS:output_type -> google.protobuf.Empty
-	29, // 49: tast.cros.policy.PolicyService.StopChromeAndFakeDMS:output_type -> google.protobuf.Empty
-	29, // 50: tast.cros.policy.PolicyService.StartChrome:output_type -> google.protobuf.Empty
-	29, // 51: tast.cros.policy.PolicyService.StopChrome:output_type -> google.protobuf.Empty
-	29, // 52: tast.cros.policy.PolicyService.ContinueLogin:output_type -> google.protobuf.Empty
-	29, // 53: tast.cros.policy.PolicyService.CreateFakeDMSDir:output_type -> google.protobuf.Empty
-	10, // 54: tast.cros.policy.PolicyService.CreateTempFakeDMSDir:output_type -> tast.cros.policy.CreateTempFakeDMSDirResponse
-	29, // 55: tast.cros.policy.PolicyService.RemoveFakeDMSDir:output_type -> google.protobuf.Empty
-	29, // 56: tast.cros.policy.PolicyService.StartExternalDataServer:output_type -> google.protobuf.Empty
-	14, // 57: tast.cros.policy.PolicyService.ServePolicyData:output_type -> tast.cros.policy.ServePolicyDataResponse
-	29, // 58: tast.cros.policy.PolicyService.StopExternalDataServer:output_type -> google.protobuf.Empty
-	29, // 59: tast.cros.policy.PolicyService.EvalStatementInExtension:output_type -> google.protobuf.Empty
-	16, // 60: tast.cros.policy.PolicyService.EvalInExtension:output_type -> tast.cros.policy.EvalInExtensionResponse
-	29, // 61: tast.cros.policy.PolicyService.VerifyVisibleNotification:output_type -> google.protobuf.Empty
-	29, // 62: tast.cros.policy.PolicyService.EvalExpressionInChromeURL:output_type -> google.protobuf.Empty
-	22, // 63: tast.cros.policy.PolicyService.ClientID:output_type -> tast.cros.policy.ClientIdResponse
-	23, // 64: tast.cros.policy.PolicyService.DirectoryAPIID:output_type -> tast.cros.policy.DirectoryAPIIDResponse
-	29, // 65: tast.cros.policy.PolicyService.LockDevice:output_type -> google.protobuf.Empty
-	29, // 66: tast.cros.policy.PolicyService.UnlockDeviceWithPassword:output_type -> google.protobuf.Empty
-	29, // 67: tast.cros.policy.PolicyService.Logout:output_type -> google.protobuf.Empty
-	26, // 68: tast.cros.policy.PolicyService.SendRemoteCommand:output_type -> tast.cros.policy.SendRemoteCommandResponse
-	28, // 69: tast.cros.policy.PolicyService.WaitRemoteCommandResult:output_type -> tast.cros.policy.WaitRemoteCommandResultResponse
-	29, // 70: tast.cros.policy.PolicyService.RefreshRemoteCommands:output_type -> google.protobuf.Empty
-	29, // 71: tast.cros.policy.PolicyService.FindAndClickRestartNowButton:output_type -> google.protobuf.Empty
-	37, // [37:72] is the sub-list for method output_type
-	2,  // [2:37] is the sub-list for method input_type
+	29, // 35: tast.cros.policy.PolicyService.WaitRemoteCommandAcked:input_type -> tast.cros.policy.WaitRemoteCommandAckedRequest
+	30, // 36: tast.cros.policy.PolicyService.RefreshRemoteCommands:input_type -> google.protobuf.Empty
+	30, // 37: tast.cros.policy.PolicyService.FindAndClickRestartNowButton:input_type -> google.protobuf.Empty
+	30, // 38: tast.cros.policy.PolicyService.VerifyPolicyStatus:output_type -> google.protobuf.Empty
+	30, // 39: tast.cros.policy.PolicyService.StartNewChromeReader:output_type -> google.protobuf.Empty
+	30, // 40: tast.cros.policy.PolicyService.WaitForEnrollmentError:output_type -> google.protobuf.Empty
+	30, // 41: tast.cros.policy.PolicyService.GAIAZTEEnrollUsingChrome:output_type -> google.protobuf.Empty
+	30, // 42: tast.cros.policy.PolicyService.EnrollUsingChrome:output_type -> google.protobuf.Empty
+	30, // 43: tast.cros.policy.PolicyService.GAIAEnrollUsingChrome:output_type -> google.protobuf.Empty
+	30, // 44: tast.cros.policy.PolicyService.GAIAEnrollAndLoginUsingChrome:output_type -> google.protobuf.Empty
+	30, // 45: tast.cros.policy.PolicyService.GAIAEnrollForReporting:output_type -> google.protobuf.Empty
+	30, // 46: tast.cros.policy.PolicyService.GAIALoginForReporting:output_type -> google.protobuf.Empty
+	30, // 47: tast.cros.policy.PolicyService.SAMLTestIdPEnrollUsingChrome:output_type -> google.protobuf.Empty
+	30, // 48: tast.cros.policy.PolicyService.UpdatePolicies:output_type -> google.protobuf.Empty
+	30, // 49: tast.cros.policy.PolicyService.CheckChromeAndFakeDMS:output_type -> google.protobuf.Empty
+	30, // 50: tast.cros.policy.PolicyService.StopChromeAndFakeDMS:output_type -> google.protobuf.Empty
+	30, // 51: tast.cros.policy.PolicyService.StartChrome:output_type -> google.protobuf.Empty
+	30, // 52: tast.cros.policy.PolicyService.StopChrome:output_type -> google.protobuf.Empty
+	30, // 53: tast.cros.policy.PolicyService.ContinueLogin:output_type -> google.protobuf.Empty
+	30, // 54: tast.cros.policy.PolicyService.CreateFakeDMSDir:output_type -> google.protobuf.Empty
+	10, // 55: tast.cros.policy.PolicyService.CreateTempFakeDMSDir:output_type -> tast.cros.policy.CreateTempFakeDMSDirResponse
+	30, // 56: tast.cros.policy.PolicyService.RemoveFakeDMSDir:output_type -> google.protobuf.Empty
+	30, // 57: tast.cros.policy.PolicyService.StartExternalDataServer:output_type -> google.protobuf.Empty
+	14, // 58: tast.cros.policy.PolicyService.ServePolicyData:output_type -> tast.cros.policy.ServePolicyDataResponse
+	30, // 59: tast.cros.policy.PolicyService.StopExternalDataServer:output_type -> google.protobuf.Empty
+	30, // 60: tast.cros.policy.PolicyService.EvalStatementInExtension:output_type -> google.protobuf.Empty
+	16, // 61: tast.cros.policy.PolicyService.EvalInExtension:output_type -> tast.cros.policy.EvalInExtensionResponse
+	30, // 62: tast.cros.policy.PolicyService.VerifyVisibleNotification:output_type -> google.protobuf.Empty
+	30, // 63: tast.cros.policy.PolicyService.EvalExpressionInChromeURL:output_type -> google.protobuf.Empty
+	22, // 64: tast.cros.policy.PolicyService.ClientID:output_type -> tast.cros.policy.ClientIdResponse
+	23, // 65: tast.cros.policy.PolicyService.DirectoryAPIID:output_type -> tast.cros.policy.DirectoryAPIIDResponse
+	30, // 66: tast.cros.policy.PolicyService.LockDevice:output_type -> google.protobuf.Empty
+	30, // 67: tast.cros.policy.PolicyService.UnlockDeviceWithPassword:output_type -> google.protobuf.Empty
+	30, // 68: tast.cros.policy.PolicyService.Logout:output_type -> google.protobuf.Empty
+	26, // 69: tast.cros.policy.PolicyService.SendRemoteCommand:output_type -> tast.cros.policy.SendRemoteCommandResponse
+	28, // 70: tast.cros.policy.PolicyService.WaitRemoteCommandResult:output_type -> tast.cros.policy.WaitRemoteCommandResultResponse
+	30, // 71: tast.cros.policy.PolicyService.WaitRemoteCommandAcked:output_type -> google.protobuf.Empty
+	30, // 72: tast.cros.policy.PolicyService.RefreshRemoteCommands:output_type -> google.protobuf.Empty
+	30, // 73: tast.cros.policy.PolicyService.FindAndClickRestartNowButton:output_type -> google.protobuf.Empty
+	38, // [38:74] is the sub-list for method output_type
+	2,  // [2:38] is the sub-list for method input_type
 	2,  // [2:2] is the sub-list for extension type_name
 	2,  // [2:2] is the sub-list for extension extendee
 	0,  // [0:2] is the sub-list for field type_name
@@ -2523,6 +2583,18 @@ func file_policy_policy_proto_init() {
 				return nil
 			}
 		}
+		file_policy_policy_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*WaitRemoteCommandAckedRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2530,7 +2602,7 @@ func file_policy_policy_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_policy_policy_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   29,
+			NumMessages:   30,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -2596,6 +2668,7 @@ type PolicyServiceClient interface {
 	Logout(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendRemoteCommand(ctx context.Context, in *SendRemoteCommandRequest, opts ...grpc.CallOption) (*SendRemoteCommandResponse, error)
 	WaitRemoteCommandResult(ctx context.Context, in *WaitRemoteCommandResultRequest, opts ...grpc.CallOption) (*WaitRemoteCommandResultResponse, error)
+	WaitRemoteCommandAcked(ctx context.Context, in *WaitRemoteCommandAckedRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	RefreshRemoteCommands(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	FindAndClickRestartNowButton(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -2905,6 +2978,15 @@ func (c *policyServiceClient) WaitRemoteCommandResult(ctx context.Context, in *W
 	return out, nil
 }
 
+func (c *policyServiceClient) WaitRemoteCommandAcked(ctx context.Context, in *WaitRemoteCommandAckedRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.policy.PolicyService/WaitRemoteCommandAcked", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *policyServiceClient) RefreshRemoteCommands(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/tast.cros.policy.PolicyService/RefreshRemoteCommands", in, out, opts...)
@@ -2965,6 +3047,7 @@ type PolicyServiceServer interface {
 	Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	SendRemoteCommand(context.Context, *SendRemoteCommandRequest) (*SendRemoteCommandResponse, error)
 	WaitRemoteCommandResult(context.Context, *WaitRemoteCommandResultRequest) (*WaitRemoteCommandResultResponse, error)
+	WaitRemoteCommandAcked(context.Context, *WaitRemoteCommandAckedRequest) (*emptypb.Empty, error)
 	RefreshRemoteCommands(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	FindAndClickRestartNowButton(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
@@ -3071,6 +3154,9 @@ func (*UnimplementedPolicyServiceServer) SendRemoteCommand(context.Context, *Sen
 }
 func (*UnimplementedPolicyServiceServer) WaitRemoteCommandResult(context.Context, *WaitRemoteCommandResultRequest) (*WaitRemoteCommandResultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WaitRemoteCommandResult not implemented")
+}
+func (*UnimplementedPolicyServiceServer) WaitRemoteCommandAcked(context.Context, *WaitRemoteCommandAckedRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WaitRemoteCommandAcked not implemented")
 }
 func (*UnimplementedPolicyServiceServer) RefreshRemoteCommands(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshRemoteCommands not implemented")
@@ -3677,6 +3763,24 @@ func _PolicyService_WaitRemoteCommandResult_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PolicyService_WaitRemoteCommandAcked_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WaitRemoteCommandAckedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PolicyServiceServer).WaitRemoteCommandAcked(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.policy.PolicyService/WaitRemoteCommandAcked",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PolicyServiceServer).WaitRemoteCommandAcked(ctx, req.(*WaitRemoteCommandAckedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PolicyService_RefreshRemoteCommands_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -3848,6 +3952,10 @@ var _PolicyService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WaitRemoteCommandResult",
 			Handler:    _PolicyService_WaitRemoteCommandResult_Handler,
+		},
+		{
+			MethodName: "WaitRemoteCommandAcked",
+			Handler:    _PolicyService_WaitRemoteCommandAcked_Handler,
 		},
 		{
 			MethodName: "RefreshRemoteCommands",
