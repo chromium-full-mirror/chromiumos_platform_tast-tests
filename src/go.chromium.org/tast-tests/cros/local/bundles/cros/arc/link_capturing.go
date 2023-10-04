@@ -149,8 +149,20 @@ func LinkCapturing(ctx context.Context, s *testing.State) {
 	// (as per https://developer.android.com/training/app-links/verify-site-associations)
 	// is difficult in a test environment, so this is a shortcut which has the
 	// same visible impact.
-	if err := arcDevice.Command(ctx, "pm", "set-app-link", testPackageName, "always").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to set Android link capturing setting: ", err)
+	// PackageManager commands for preferring links change across Android versions.
+	version, err := arc.SDKVersion()
+	if err != nil {
+		s.Fatal("Failed to get ARC version: ", err)
+	}
+
+	if version >= arc.SDKT {
+		if err := arcDevice.Command(ctx, "pm", "set-app-links", "--package", testPackageName, "2", "all").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to set Android link capturing setting: ", err)
+		}
+	} else {
+		if err := arcDevice.Command(ctx, "pm", "set-app-link", testPackageName, "always").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to set Android link capturing setting: ", err)
+		}
 	}
 
 	// Start local server.
