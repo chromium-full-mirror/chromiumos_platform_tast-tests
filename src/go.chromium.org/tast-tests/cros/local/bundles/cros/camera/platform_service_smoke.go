@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/gtest"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -21,8 +22,9 @@ func init() {
 		Desc:         "Smoke test for the Platform Camera Service",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:cq-medium", "group:camera-stability"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:camera-libcamera", "group:cq-medium", "group:camera-stability"},
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
+		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
 		Fixture:      "chromeLoggedIn",
 	})
 }
