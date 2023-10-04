@@ -12,6 +12,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
@@ -163,6 +164,16 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify display count: ", err)
 	}
 
+	displayIDs, err := displaySvc.GetDisplayIDs(ctx, &emptypb.Empty{})
+	if err != nil {
+		s.Fatal("Failed to get display ID: ", err)
+	} else if len(displayIDs.DisplayIds) < 2 {
+		s.Fatal("Failed to get display ID; it must be greater than or equal to 2")
+	}
+
+	// GoBigSleepLint: Wait for external display screen to show up.
+	testing.Sleep(ctx, 30*time.Second)
+
 	extDispIDArray := []string{extDispID}
 	if err := utils.MappingWebcam(ctx, s, fs, keyboardSvc, displaySvc, appsSvc, uiautoSvc, extDispIDArray); err != nil {
 		s.Fatal("Failed to do the map about the displays & the webcams: ", err)
@@ -195,13 +206,13 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 
 	nightLightOff := "off"
 
-	extDispHCVs[nightLightOff], err = utils.GetGamHotColdValue(ctx, s, extDispID)
+	extDispHCVs[nightLightOff], err = utils.GetGamHotColdValue(ctx, s, displayIDs.DisplayIds[1])
 	if err != nil {
 		s.Fatal("Failed to get the external display HCV during night light is off: ", err)
 	}
 	s.Logf("External display HCV during night light is off: %d", extDispHCVs[nightLightOff])
 
-	dutHCVs[nightLightOff], err = utils.GetGamHotColdValue(ctx, s, utils.DUTMonitor)
+	dutHCVs[nightLightOff], err = utils.GetGamHotColdValue(ctx, s, displayIDs.DisplayIds[0])
 	if err != nil {
 		s.Fatal("Failed to get the DUT HCV during night light is off: ", err)
 	}
@@ -252,13 +263,13 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to set color temperature; got %s, want %s", clrTmpSilderInfo.NodeInfo.Value, test.colorTemperatureValue)
 		}
 
-		extDispHCVs[test.name], err = utils.GetGamHotColdValue(ctx, s, extDispID)
+		extDispHCVs[test.name], err = utils.GetGamHotColdValue(ctx, s, displayIDs.DisplayIds[1])
 		if err != nil {
 			s.Fatalf("Failed to get the external display HCV during night light is %s: %v", test.name, err)
 		}
 		s.Logf("External display HCV during night light is %s: %d", test.name, extDispHCVs[test.name])
 
-		dutHCVs[test.name], err = utils.GetGamHotColdValue(ctx, s, utils.DUTMonitor)
+		dutHCVs[test.name], err = utils.GetGamHotColdValue(ctx, s, displayIDs.DisplayIds[0])
 		if err != nil {
 			s.Fatalf("Failed to get the DUT HCV during night light is %s: %v", test.name, err)
 		}
