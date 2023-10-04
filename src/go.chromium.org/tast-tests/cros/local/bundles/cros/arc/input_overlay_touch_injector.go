@@ -53,13 +53,13 @@ func InputOverlayTouchInjector(ctx context.Context, s *testing.State) {
 			// Close educational dialog.
 			ui.LeftClick(nodewith.Name("Got it").HasClass("LabelButtonLabel")),
 			// Execute keystrokes corresponding to tap buttons.
-			gio.TapOverlayButton(kb, "m", &params, gio.TopTap),
-			gio.TapOverlayButton(kb, "n", &params, gio.BotTap),
+			gio.TapOverlayButton(kb, gio.TopTapKey, &params, gio.TopTap),
+			gio.TapOverlayButton(kb, gio.BotTapKey, &params, gio.BotTap),
 			// Execute keystrokes corresponding to hold-release controls.
-			gio.MoveOverlayButton(kb, "w", &params),
-			gio.MoveOverlayButton(kb, "a", &params),
-			gio.MoveOverlayButton(kb, "s", &params),
-			gio.MoveOverlayButton(kb, "d", &params),
+			gio.MoveOverlayButton(kb, gio.UpMoveKey, &params),
+			gio.MoveOverlayButton(kb, gio.LeftMoveKey, &params),
+			gio.MoveOverlayButton(kb, gio.DownMoveKey, &params),
+			gio.MoveOverlayButton(kb, gio.RightMoveKey, &params),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "one or more keystrokes failed")
 		}

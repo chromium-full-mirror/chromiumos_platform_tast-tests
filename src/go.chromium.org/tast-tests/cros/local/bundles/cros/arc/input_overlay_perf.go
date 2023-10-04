@@ -84,14 +84,14 @@ func InputOverlayPerf(ctx context.Context, s *testing.State) {
 			if err := inputlatency.WaitForNextEventTime(ctx, params.Arc, &tapEventTimes, tapWaitMs); err != nil {
 				return errors.Wrap(err, "failed to generate event time")
 			}
-			if err := kb.AccelPress(ctx, "m"); err != nil {
+			if err := kb.AccelPress(ctx, "Space"); err != nil {
 				return errors.Wrap(err, "unable to inject key events")
 			}
 
 			if err := inputlatency.WaitForNextEventTime(ctx, params.Arc, &tapEventTimes, tapWaitMs); err != nil {
 				return errors.Wrap(err, "failed to generate event time")
 			}
-			if err := kb.AccelRelease(ctx, "m"); err != nil {
+			if err := kb.AccelRelease(ctx, "Space"); err != nil {
 				return errors.Wrap(err, "unable to inject key events")
 			}
 		}
@@ -120,7 +120,7 @@ func InputOverlayPerf(ctx context.Context, s *testing.State) {
 			}
 		}
 		// Press first key and throw away the first actions.
-		if err := kb.AccelPressAction("w")(ctx); err != nil {
+		if err := kb.AccelPressAction(gio.UpMoveKey)(ctx); err != nil {
 			return errors.Wrap(err, "failed to press first key")
 		}
 		if err := action.Sleep(5 * time.Second)(ctx); err != nil {
@@ -134,16 +134,16 @@ func InputOverlayPerf(ctx context.Context, s *testing.State) {
 			if err := uiauto.Combine("Continually inject move actions",
 				// Press "a" key.
 				recordEventTime(),
-				kb.AccelPressAction("a"),
+				kb.AccelPressAction(gio.LeftMoveKey),
 				// Lift "w" key.
 				recordEventTime(),
-				kb.AccelReleaseAction("w"),
+				kb.AccelReleaseAction(gio.UpMoveKey),
 				// Press "w" key.
 				recordEventTime(),
-				kb.AccelPressAction("w"),
+				kb.AccelPressAction(gio.UpMoveKey),
 				// Lift "a" key.
 				recordEventTime(),
-				kb.AccelReleaseAction("a"),
+				kb.AccelReleaseAction(gio.LeftMoveKey),
 			)(ctx); err != nil {
 				return errors.Wrap(err, "failed to inject move events")
 			}
@@ -157,7 +157,7 @@ func InputOverlayPerf(ctx context.Context, s *testing.State) {
 		}
 
 		// Release final "w" key.
-		if err := kb.AccelReleaseAction("w")(ctx); err != nil {
+		if err := kb.AccelReleaseAction(gio.UpMoveKey)(ctx); err != nil {
 			return errors.Wrap(err, "failed to release last key")
 		}
 

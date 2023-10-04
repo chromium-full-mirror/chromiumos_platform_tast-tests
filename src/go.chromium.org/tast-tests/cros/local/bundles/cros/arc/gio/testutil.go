@@ -47,6 +47,21 @@ const (
 	tapMode mode = 2
 	// moveMode is the number of expected logcat lines from a press-release event.
 	moveMode mode = 3
+
+	// TopTapKey is the binding of the tap key on top.
+	TopTapKey = " "
+	// TopTapKeyName is the name of the tap key on top.
+	TopTapKeyName = "␣"
+	// BotTapKey is the binding of the tap key on bottom.
+	BotTapKey = "n"
+	// UpMoveKey is the binding of the move key that drags up.
+	UpMoveKey = "w"
+	// LeftMoveKey is the binding of the move key that drags left.
+	LeftMoveKey = "a"
+	// DownMoveKey is the binding of the move key that drags down.
+	DownMoveKey = "s"
+	// RightMoveKey is the binding of the move key that drags right.
+	RightMoveKey = "d"
 )
 
 var (
@@ -106,6 +121,7 @@ func SetupTestApp(ctx context.Context, s *testing.State, testFunc PerformTestFun
 		s.Fatal("Failed to set tablet mode disabled: ", err)
 	}
 	defer cleanup(cleanupCtx)
+	// GoBigSleepLint:
 	// TODO(b/187788935): Wait for "tablet mode animation is finished" in a reliable way.
 	// If an activity is launched while the tablet mode animation is active, the activity
 	// will be launched in un undefined state, making the test flaky.

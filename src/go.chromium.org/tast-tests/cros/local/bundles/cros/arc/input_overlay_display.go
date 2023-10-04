@@ -54,6 +54,8 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 
 		// CUJ: Hide game overlay.
 		s.Log("Display CUJ #1: hide game overlay")
+		topTapKey := nodewith.Name(gio.TopTapKeyName).HasClass("LabelButtonLabel")
+		upMoveKey := nodewith.Name(gio.UpMoveKey).HasClass("LabelButtonLabel")
 		if err := uiauto.Combine("hide game overlay",
 			// Close educational dialog.
 			ui.LeftClick(nodewith.Name("Got it").HasClass("LabelButtonLabel")),
@@ -65,15 +67,15 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 			ui.LeftClick(nodewith.Name("Close game controls").HasClass("ImageButton")),
 			ui.WaitUntilGone(nodewith.Name("Close game controls").HasClass("ImageButton")),
 			// Poll UI elements no longer exist, but overlay is still responsive.
-			ui.Gone(nodewith.Name("m").HasClass("LabelButtonLabel")),
-			gio.TapOverlayButton(kb, "m", &params, gio.TopTap),
-			ui.Gone(nodewith.Name("w").HasClass("LabelButtonLabel")),
-			gio.MoveOverlayButton(kb, "w", &params),
+			ui.Gone(topTapKey),
+			gio.TapOverlayButton(kb, gio.TopTapKey, &params, gio.TopTap),
+			ui.Gone(upMoveKey),
+			gio.MoveOverlayButton(kb, gio.UpMoveKey, &params),
 			// Poll edits can still be done.
 			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
 			ui.LeftClick(nodewith.Name("Edit").HasClass("LabelButtonLabel")),
-			ui.WaitUntilExists(nodewith.Name("m").HasClass("LabelButtonLabel")),
-			ui.WaitUntilExists(nodewith.Name("w").HasClass("LabelButtonLabel")),
+			ui.WaitUntilExists(topTapKey),
+			ui.WaitUntilExists(upMoveKey),
 			// Exit out.
 			ui.LeftClick(nodewith.Name("Cancel").HasClass("LabelButtonLabel")),
 		)(ctx); err != nil {
@@ -95,10 +97,10 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 			ui.LeftClick(nodewith.Name("Close game controls").HasClass("ImageButton")),
 			ui.WaitUntilGone(nodewith.Name("Close game controls").HasClass("ImageButton")),
 			// Poll UI elements no longer exist, and overlay is unresponsive.
-			ui.Gone(nodewith.Name("m").HasClass("LabelButtonLabel")),
-			not(gio.TapOverlayButton(kb, "m", &params, gio.TopTap)),
-			ui.Gone(nodewith.Name("w").HasClass("LabelButtonLabel")),
-			not(gio.MoveOverlayButton(kb, "w", &params)),
+			ui.Gone(topTapKey),
+			not(gio.TapOverlayButton(kb, gio.TopTapKey, &params, gio.TopTap)),
+			ui.Gone(upMoveKey),
+			not(gio.MoveOverlayButton(kb, gio.UpMoveKey, &params)),
 			// Check "Customize" button disabled.
 			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
 			ui.LeftClick(nodewith.Name("Edit").HasClass("LabelButtonLabel")),

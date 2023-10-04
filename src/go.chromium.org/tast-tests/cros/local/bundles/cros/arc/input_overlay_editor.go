@@ -70,12 +70,12 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 			// Change mapping of "w" to "ESC" (NOTE: "w" key is used because, unlike the
 			// "n" key, the associated on-screen error messages have no overlapping text,
 			// and thus it has the highest chance of success with text detection).
-			ui.LeftClick(nodewith.Name("w").HasClass("LabelButtonLabel")),
+			ui.LeftClick(nodewith.Name(gio.UpMoveKey).HasClass("LabelButtonLabel")),
 			kb.TypeKeyAction(input.KEY_ESC),
 			// Verify illegal mapping.
 			waitForMultiple(uda, "following", "supported", "Volume"),
 			// Change mapping of "w" to "w".
-			kb.TypeAction("w"),
+			kb.TypeAction(gio.UpMoveKey),
 			// Verify illegal mapping.
 			waitForMultiple(uda, "Same", "ame"),
 			// Change mapping of "w" to "CTRL"
@@ -99,11 +99,11 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
 			ui.LeftClick(editButton),
 			// Change mapping of "n" to "l".
-			ui.LeftClick(nodewith.Name("n").HasClass("LabelButtonLabel")),
+			ui.LeftClick(nodewith.Name(gio.BotTapKey).HasClass("LabelButtonLabel")),
 			kb.TypeAction("l"),
 			uda.Tap(uidetection.Word("Cancel").WithinA11yNode(appWindow)),
 			// Verify old mapping still exists.
-			ui.WaitUntilExists(nodewith.Name("n").HasClass("LabelButtonLabel")),
+			ui.WaitUntilExists(nodewith.Name(gio.BotTapKey).HasClass("LabelButtonLabel")),
 		)(ctx); err != nil {
 			s.Error("Failed to verify canceled mapping: ", err)
 			// Reset activity.
@@ -118,13 +118,13 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 			// Open game controls.
 			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
 			ui.LeftClick(editButton),
-			// Change mapping of "n" to "m"
-			ui.LeftClick(nodewith.Name("w").HasClass("LabelButtonLabel")),
+			// Change mapping of "w" to "g"
+			ui.LeftClick(nodewith.Name(gio.UpMoveKey).HasClass("LabelButtonLabel")),
 			kb.TypeAction("g"),
 			// Save binding.
 			uda.Tap(uidetection.Word("Save")),
 			uda.WaitUntilGone(uidetection.Word("Save")),
-			// Verify original "m" binding doesn't exist anymore (i.e. the current "m"
+			// Verify original "w" binding doesn't exist anymore (i.e. the current "w"
 			// binding taps at the bottom tap button, not the top tap button).
 			gio.MoveOverlayButton(kb, "g", &params),
 		)(ctx); err != nil {
@@ -137,15 +137,15 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 			// Open game controls.
 			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
 			ui.LeftClick(editButton),
-			// Change mapping of "n" to "m"
-			ui.LeftClick(nodewith.Name("n").HasClass("LabelButtonLabel")),
-			kb.TypeAction("m"),
+			// Change mapping of "n" to " "
+			ui.LeftClick(nodewith.Name(gio.BotTapKey).HasClass("LabelButtonLabel")),
+			kb.TypeAction(gio.TopTapKey),
 			// Save binding.
 			uda.Tap(uidetection.Word("Save")),
 			uda.WaitUntilGone(uidetection.Word("Save")),
-			// Verify original "m" binding doesn't exist anymore (i.e. the current "m"
+			// Verify original " " binding doesn't exist anymore (i.e. the current " "
 			// binding taps at the bottom tap button, not the top tap button).
-			gio.TapOverlayButton(kb, "m", &params, gio.BotTap),
+			gio.TapOverlayButton(kb, gio.TopTapKey, &params, gio.BotTap),
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify unbound mapping: ", err)
 		}
@@ -155,8 +155,8 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 		if err := uiauto.Combine("mapping unbound",
 			// Close and reopen test application.
 			closeAndReopen(&params),
-			// Verify "m" binding still taps at bottom tap button.
-			gio.TapOverlayButton(kb, "m", &params, gio.BotTap),
+			// Verify " " binding still taps at bottom tap button.
+			gio.TapOverlayButton(kb, gio.TopTapKey, &params, gio.BotTap),
 		)(ctx); err != nil {
 			s.Error("Failed to verify mappings saved after app closure and reopening: ", err)
 		}

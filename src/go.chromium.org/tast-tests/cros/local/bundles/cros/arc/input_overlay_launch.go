@@ -48,13 +48,13 @@ func InputOverlayLaunch(ctx context.Context, s *testing.State) {
 			// Find input overlay game control.
 			ui.WaitUntilExists(nodewith.Name("Game controls").HasClass("ImageButton")),
 			// Find input overlay tap buttons.
-			ui.WaitUntilExists(nodewith.Name("m").HasClass("LabelButtonLabel")),
-			ui.WaitUntilExists(nodewith.Name("n").HasClass("LabelButtonLabel")),
+			ui.WaitUntilExists(nodewith.Name(gio.TopTapKeyName).HasClass("LabelButtonLabel")),
+			ui.WaitUntilExists(nodewith.Name(gio.BotTapKey).HasClass("LabelButtonLabel")),
 			// Find input overlay joystick buttons.
-			ui.WaitUntilExists(nodewith.Name("w").HasClass("LabelButtonLabel")),
-			ui.WaitUntilExists(nodewith.Name("d").HasClass("LabelButtonLabel")),
-			ui.WaitUntilExists(nodewith.Name("s").HasClass("LabelButtonLabel")),
-			ui.WaitUntilExists(nodewith.Name("a").HasClass("LabelButtonLabel")),
+			ui.WaitUntilExists(nodewith.Name(gio.UpMoveKey).HasClass("LabelButtonLabel")),
+			ui.WaitUntilExists(nodewith.Name(gio.RightMoveKey).HasClass("LabelButtonLabel")),
+			ui.WaitUntilExists(nodewith.Name(gio.DownMoveKey).HasClass("LabelButtonLabel")),
+			ui.WaitUntilExists(nodewith.Name(gio.LeftMoveKey).HasClass("LabelButtonLabel")),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "one or more items not loaded")
 		}
