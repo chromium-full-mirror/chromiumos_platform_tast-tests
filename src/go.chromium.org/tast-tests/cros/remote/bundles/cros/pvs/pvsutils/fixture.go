@@ -125,6 +125,12 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 		}
 	}
 
+	// Log shop version
+	_, _, err := RunAsChronos(ctx, pvsHost, "shop --version")
+	if err != nil {
+		s.Fatal("Error occured when running 'shop --version': ", err)
+	}
+
 	// Run shop unpack
 	shopUnpack := shopUnpackCmd(s)
 	shopOutput, _, err := RunAsChronos(ctx, pvsHost, shopUnpack)

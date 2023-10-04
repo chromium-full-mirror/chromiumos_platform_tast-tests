@@ -104,19 +104,25 @@ func (p PVSRunner) RunPVSCommand(ctx context.Context, s *testing.State, subcomma
 // RunPVSCommandNonfatal runs the given pvs command with the given options and
 // returns the corresponding error and stdout, stderr.
 func (p PVSRunner) RunPVSCommandNonfatal(ctx context.Context, subcommand string, options ...string) (string, string, error) {
+	pvsCommand := fmt.Sprintf(`pvs %v %v`, subcommand, strings.Join(options, " "))
+	return p.RunCommandInContainer(ctx, pvsCommand)
+}
+
+// RunCommandInContainer runs the given command in the pvs container and returns
+// the corresponding error and stdout, stderr.
+func (p PVSRunner) RunCommandInContainer(ctx context.Context, command string) (string, string, error) {
 	env := p.Env.generateEnvMap()
 	var envArgs []string
 	for key, val := range env {
 		envArgs = append(envArgs, fmt.Sprintf("-e %v=%v", key, val))
 	}
-	pvsCommand := fmt.Sprintf(
-		`docker exec %v %q /usr/bin/gosu pvs pvs %v %v`,
+	dockerExec := fmt.Sprintf(
+		`docker exec %v %q /usr/bin/gosu pvs %v`,
 		strings.Join(envArgs, " "),
 		p.ContainerID,
-		subcommand,
-		strings.Join(options, " "),
+		command,
 	)
-	stdout, stderr, err := RunAsChronos(ctx, p.Dut, pvsCommand)
+	stdout, stderr, err := RunAsChronos(ctx, p.Dut, dockerExec)
 	return processControlChars(stdout), stderr, err
 }
 
@@ -181,6 +187,18 @@ func processControlChars(output string) string {
 	}
 	b.WriteString(previous)
 	return b.String()
+}
+
+// sanitize removes the control characters that are added to stout and sterr for
+// some commands
+func sanitize(output string) string {
+	// Remove the control characters that are generated from the sudo command
+	// called via RunAsChronos
+	santizedOutput := strings.TrimPrefix(output, string([]rune("\x1b[?25h\x1b[?0c")))
+	// Remove the newline character that is appended to the end of stout
+	// but is not actually part of the stdout of the command
+	santizedOutput = strings.TrimSuffix(santizedOutput, string([]rune("\n")))
+	return santizedOutput
 }
 
 // ValidateOutputContains throws a testing error if the given output string
@@ -261,8 +279,8 @@ func runAsRoot(ctx context.Context, cmd *ssh.Cmd) (string, string, error) {
 	cmd.Stdout = &bstdout
 	cmd.Stderr = &bstderr
 	err := cmd.Run()
-	stdout := string(bstdout.Bytes())
-	stderr := string(bstderr.Bytes())
+	stdout := sanitize(string(bstdout.Bytes()))
+	stderr := sanitize(string(bstderr.Bytes()))
 	testing.ContextLog(ctx, "Output from command: ", stdout)
 	testing.ContextLog(ctx, "Stderr from command: ", stderr)
 	return stdout, stderr, err
