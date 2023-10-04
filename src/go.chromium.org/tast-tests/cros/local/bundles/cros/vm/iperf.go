@@ -23,6 +23,7 @@ import (
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -351,20 +352,27 @@ func Iperf(ctx context.Context, s *testing.State) {
 	}
 	defer iperfOut.Close()
 
-	clientPingCmd := testexec.CommandContext(ctx, "ping", "-c", "5", serverAddress)
 	clientIperfCmd := getClientIperfCmd(ctx, serverAddress, iperfLog, params.protocol)
 
-	clientPingCmd.Stdout = clientOut
-	clientPingCmd.Stderr = clientOut
 	clientIperfCmd.Stdout = clientOut
 	clientIperfCmd.Stderr = clientOut
 
-	// // Run client ping to ensure the connection is alive
-	if err := clientPingCmd.Start(); err != nil {
-		s.Fatal("Failed to run ping command: ", err)
-	}
-	if err := clientPingCmd.Wait(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to complete ping: ", err)
+	// Run & retry ping with 20 seconds timeouts to ensure the connection is alive
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		clientPingCmd := testexec.CommandContext(ctx, "ping", "-c", "5", "-W", "1", serverAddress)
+		clientPingCmd.Stdout = clientOut
+		clientPingCmd.Stderr = clientOut
+
+		if err := clientPingCmd.Start(); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to run ping command"))
+		}
+
+		if err := clientPingCmd.Wait(testexec.DumpLogOnError); err != nil {
+			return errors.New("failed to complete the ping")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
+		s.Fatal("Ping failed: ", err)
 	}
 
 	// Run client iperf command
