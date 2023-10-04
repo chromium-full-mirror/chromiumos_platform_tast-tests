@@ -8,7 +8,7 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
-
+	types "go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -43,4 +43,14 @@ func GetStringValue(m map[string]dbus.Variant, key string) (string, error) {
 		return "", errors.Errorf("failed to get string value from dbus.Variant %v", variant)
 	}
 	return val, nil
+}
+
+// DeviceForNetworkType returns the device for the given network type.
+func DeviceForNetworkType(deviceStateList []types.DeviceStateProperties, networkType netconfigtypes.NetworkType) *types.DeviceStateProperties {
+	for _, d := range deviceStateList {
+		if d.Type == networkType {
+			return &d
+		}
+	}
+	return nil
 }

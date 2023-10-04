@@ -10,9 +10,12 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	types "go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/local/cellular/esim/mojo"
+	"go.chromium.org/tast-tests/cros/local/network/netconfig"
 	"go.chromium.org/tast-tests/cros/local/stork"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -35,14 +38,22 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInWithMojoTestEuiccAndSmdsSupport",
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
 			// Ensures non-empty activation codes.
 			Name: "refresh",
 			Val: &testConfig{
 				shouldInstallProfiles: false,
 			},
-		}},
+		},
+			{
+				// Ensures profiles can be installed.
+				Name: "install",
+				Val: &testConfig{
+					shouldInstallProfiles: true,
+				},
+			},
+		},
 	})
 }
 
@@ -52,6 +63,13 @@ func PerformSmdsOperationsWithMojo(ctx context.Context, s *testing.State) {
 
 	eSimMojo := s.FixtValue().(*mojo.FixtData)
 	euicc := eSimMojo.Euicc
+
+	cr := eSimMojo.Cr
+	netConn, err := netconfig.CreateLoggedInCrosNetworkConfig(ctx, cr)
+	if err != nil {
+		s.Fatal("Failed to get network Mojo Object: ", err)
+	}
+	defer netConn.Close(ctx)
 
 	ctxForCleanup := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, stork.CleanupProfileTime)
@@ -66,11 +84,6 @@ func PerformSmdsOperationsWithMojo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to fetch Stork profile: ", err)
 	}
 
-	euicc.RequestAvailableProfiles(ctx)
-
-	// GoBigSleepLint: This is a temporary measure which can be removed once http://www.crrev.com/c/4865376 lands in a build.
-	testing.Sleep(ctx, time.Second)
-
 	result, profiles, err := euicc.RequestAvailableProfiles(ctx)
 	if err != nil {
 		s.Fatal("Failed to request available profiles: ", err)
@@ -84,6 +97,10 @@ func PerformSmdsOperationsWithMojo(ctx context.Context, s *testing.State) {
 	}
 
 	for _, p := range profiles {
+		if err := ensureNotInhibited(ctx, netConn); err != nil {
+			s.Fatal("Failed to get uninhibited cellular device: ", err)
+		}
+
 		if p.ActivationCode == "" {
 			s.Fatal("Failed to get an activation code for profile: ", p.Iccid)
 		}
@@ -112,4 +129,28 @@ func PerformSmdsOperationsWithMojo(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to uninstall profile ", ep.Iccid)
 		}
 	}
+}
+
+// ensureNotInhibited waits until the cellular device is no longer inhibited, returning an error if the timeout has been reached.
+func ensureNotInhibited(ctx context.Context, netConn *netconfig.CrosNetworkConfig) error {
+	// Ensure network is not inhibited.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		deviceStateList, err := netConn.GetDeviceStateList(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get device state list"))
+		}
+
+		cellularDevice := netconfig.DeviceForNetworkType(deviceStateList, types.Cellular)
+		if cellularDevice == nil {
+			return testing.PollBreak(errors.New("failed to find cellular device"))
+		}
+
+		if cellularDevice.InhibitReason != types.NotInhibited {
+			return errors.Errorf("unexpected cellular network inhibit reason = got %v, want %v", cellularDevice.InhibitReason, types.NotInhibited)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute * 3, Interval: time.Second * 5}); err != nil {
+		return errors.Wrap(err, "failed to get uninhibited network ")
+	}
+	return nil
 }
