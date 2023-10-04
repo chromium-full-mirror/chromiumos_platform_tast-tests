@@ -281,6 +281,9 @@ func checkUSBAPortEnabled(ctx context.Context, h *firmware.Helper, enablePins []
 		if pin.Ioex {
 			gpioOrIoex = "ioex"
 		}
+		if pin.ActiveLow {
+			expectedStatus = strconv.Itoa(1 - expectedStatusInt)
+		}
 		testing.ContextLogf(ctx, "Checking status of %q pin name: %q", gpioOrIoex, pin.Name)
 		cmd := fmt.Sprintf("%sget %s", gpioOrIoex, pin.Name)
 		matchList := []string{fmt.Sprintf(reECUSBPortGet, pin.Name)}

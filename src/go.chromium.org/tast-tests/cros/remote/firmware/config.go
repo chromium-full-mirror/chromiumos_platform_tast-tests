@@ -46,6 +46,7 @@ const (
 type USBEnablePin struct {
 	Name string
 	Ioex bool
+	ActiveLow bool
 }
 
 // cfgDirName is the name of the folder within data/ containing the platform config datafiles.
