@@ -20,6 +20,11 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+// forgetDeviceTestParams includes test specific args.
+type forgetDeviceTestParams struct {
+	flossEnabled bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FastPairForgetDevice,
@@ -47,12 +52,18 @@ func init() {
 		Vars:    []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
 		Params: []testing.Param{
 			{
-				Name:      "floss_disabled",
+				Name: "floss_disabled",
+				Val: forgetDeviceTestParams{
+					flossEnabled: false,
+				},
 				Fixture:   "chromeLoggedInAsUserWithFastPairAnd1BTPeerFlossDisabled",
 				ExtraAttr: []string{"bluetooth_flaky"},
 			},
 			{
-				Name:              "floss_enabled",
+				Name: "floss_enabled",
+				Val: forgetDeviceTestParams{
+					flossEnabled: true,
+				},
 				Fixture:           "chromeLoggedInAsUserWithFastPairAnd1BTPeerFlossEnabled",
 				ExtraAttr:         []string{"bluetooth_floss_flaky"},
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
@@ -64,6 +75,7 @@ func init() {
 // FastPairForgetDevice tests the Fast Pair forget device scenario.
 func FastPairForgetDevice(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
+	p := s.Param().(forgetDeviceTestParams)
 
 	// Parse antispoofing key pem from test var.
 	antispoofingKeyPemBase64 := s.RequiredVar(bluetooth.TestVarFastPairAntispoofingKeyPem)
@@ -119,6 +131,10 @@ func FastPairForgetDevice(ctx context.Context, s *testing.State) {
 
 	// Re-open the Saved Devices subpage to refresh the results and confirm the device was added.
 	deviceName := fastPairDevice.AdvertisedName()
+	if p.flossEnabled {
+		// TODO(b/263980939): Floss tests use the advertised name instead of the display name.
+		deviceName = "Autotest Test Device"
+	}
 	if _, err := fv.BluetoothUIService.ConfirmSavedDevicesState(ctx, &bts.ConfirmSavedDevicesStateRequest{
 		DeviceNames: []string{
 			deviceName,

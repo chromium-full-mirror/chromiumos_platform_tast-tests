@@ -20,6 +20,11 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+// savedDeviceTestParams includes test specific args.
+type savedDeviceTestParams struct {
+	flossEnabled bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FastPairSavedDevicesAddAndRemoveInitialPair,
@@ -46,11 +51,17 @@ func init() {
 		VarDeps: []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
 		Params: []testing.Param{
 			{
-				Name:    "floss_disabled",
+				Name: "floss_disabled",
+				Val: savedDeviceTestParams{
+					flossEnabled: false,
+				},
 				Fixture: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossDisabled",
 			},
 			{
-				Name:              "floss_enabled",
+				Name: "floss_enabled",
+				Val: savedDeviceTestParams{
+					flossEnabled: true,
+				},
 				Fixture:           "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossEnabled",
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 			},
@@ -64,6 +75,7 @@ func init() {
 // page is propagated to companion devices.
 func FastPairSavedDevicesAddAndRemoveInitialPair(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
+	p := s.Param().(savedDeviceTestParams)
 
 	// Parse antispoofing key pem from test var.
 	antispoofingKeyPemBase64 := s.RequiredVar(bluetooth.TestVarFastPairAntispoofingKeyPem)
@@ -117,7 +129,12 @@ func FastPairSavedDevicesAddAndRemoveInitialPair(ctx context.Context, s *testing
 	}
 
 	// Re-open the Saved Devices subpage on both DUTs to refresh the results and confirm the device was added.
-	if err := confirmSavedDevicesStateBothDUTs(ctx, fv, []string{fastPairDevice.AdvertisedName()} /*deviceNames*/); err != nil {
+	deviceName := fastPairDevice.AdvertisedName()
+	if p.flossEnabled {
+		// TODO(b/263980939): Floss tests use the advertised name instead of the display name.
+		deviceName = "Autotest Test Device"
+	}
+	if err := confirmSavedDevicesStateBothDUTs(ctx, fv, []string{deviceName} /*deviceNames*/); err != nil {
 		s.Fatal("Failed to confirm the state of the Saved Devices subpage: ", err)
 	}
 
