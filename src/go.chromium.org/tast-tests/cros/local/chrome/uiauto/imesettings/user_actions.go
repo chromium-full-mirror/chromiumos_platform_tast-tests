@@ -106,7 +106,12 @@ func SetEmojiSuggestions(uc *useractions.UserContext, isEnabled bool) uiauto.Act
 		if err != nil {
 			return errors.Wrap(err, "failed to launch OS settings and land at inputs setting page")
 		}
+
+		toggleFinder := nodewith.Name(EmojiSuggestionsOption).Role(role.ToggleButton)
 		return uiauto.Combine("toggle setting and close page",
+			// The toggle is at the bottom of the Inputs page. Ensure the toggle is
+			// visible first so it can be clicked properly.
+			settings.MakeVisible(toggleFinder),
 			settings.SetToggleOption(uc.Chrome(), EmojiSuggestionsOption, isEnabled),
 			settings.Close,
 		)(ctx)
