@@ -734,11 +734,11 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			}
 		}
 		err := genPackagesReferenceAndGmsCoreCache()
+		dumpLogcat("gms_core", attempts)
 		if err == nil {
 			break
 		}
 		attempts = attempts + 1
-		dumpLogcat("gms_core", attempts)
 		if attempts > retryCount {
 			s.Fatal("Failed to generate GMS Core caches. No more retries left: ", err)
 		}
@@ -757,11 +757,11 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			}
 		}
 		err := genTTSCache(ctx, s, cl, filepath.Join(dataDir, ttsCache), v, &du)
+		dumpLogcat("tts", attempts)
 		if err == nil {
 			break
 		}
 		attempts = attempts + 1
-		dumpLogcat("tts", attempts)
 		if attempts > retryCount {
 			s.Fatal("Failed to generate TTS cache. No more retries left: ", err)
 		}
@@ -781,12 +781,12 @@ func DataCollector(ctx context.Context, s *testing.State) {
 				}
 			}
 			err = genDexOptCache(ctx, s, cl, filepath.Join(dataDir, dexOptCache), v, &du)
+			dumpLogcat("dex_opt", attempts)
 			if err == nil {
 				break
 			}
 
 			attempts = attempts + 1
-			dumpLogcat("dex_opt", attempts)
 			if attempts > retryCount {
 				s.Fatal("Failed to generate DexOpt cache. No more retries left: ", err)
 			}
@@ -808,11 +808,11 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			}
 		}
 		err := genUreadaheadPack()
+		dumpLogcat("ureadahead", attempts)
 		if err == nil {
 			break
 		}
 		attempts = attempts + 1
-		dumpLogcat("ureadahead", attempts)
 		if attempts > retryCount {
 			s.Fatal("Failed to generate ureadahead packs. No more retries left: ", err)
 		}
