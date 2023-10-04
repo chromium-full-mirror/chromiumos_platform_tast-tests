@@ -96,7 +96,7 @@ func UnicornPaidAppParentPermission(ctx context.Context, s *testing.State) {
 	}
 
 	// The buy button shows price only when the app isn't purchased already.
-	installButton, err := playstore.FindActionButton(ctx, d, "\\$[0-9.]+", 30*time.Second)
+	installButton, err := playstore.FindActionButton(ctx, d, "(Buy for )?\\$[0-9.]+", 30*time.Second)
 	if err != nil {
 		s.Fatal("Install Button doesn't exist: ", err)
 	}
