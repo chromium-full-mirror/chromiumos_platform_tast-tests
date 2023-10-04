@@ -9,6 +9,7 @@ package mlbenchmark
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -44,5 +45,15 @@ func BuildCommand(ctx context.Context, execName string, args map[string]string) 
 	for key, value := range args {
 		argsAsStr = append(argsAsStr, fmt.Sprintf("%s=%s", key, value))
 	}
-	return testexec.CommandContext(ctx, benchmarkModelCLI, argsAsStr...)
+	return testexec.CommandContext(ctx, execName, argsAsStr...)
+}
+
+// ParseNumeric will parse a float64 from an input string. Supports scientific notation.
+func ParseNumeric(input string) (float64, error) {
+	flt, _, err := big.ParseFloat(input, 10, 0, big.ToNearestEven)
+	if err != nil {
+		return 0, errors.Wrapf(err, "couldn't parse input: %s", input)
+	}
+	f, _ := flt.Float64()
+	return f, nil
 }
