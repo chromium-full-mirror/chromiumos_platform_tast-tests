@@ -58,9 +58,9 @@ func DynamicColor(ctx context.Context, s *testing.State) {
 	if err := json.Unmarshal([]byte(string(output)), &themeOverlay); err != nil {
 		s.Fatal("Failed to unmarshal output: ", err)
 	}
-	const testPalette = 50
-	if palette := themeOverlay["android.theme.customization.system_palette"].(float64); palette != testPalette {
-		s.Errorf("Invalid system_palette got: %f, want: %d", palette, testPalette)
+	const testPaletteInHex = "000032"
+	if palette := themeOverlay["android.theme.customization.system_palette"].(string); palette != testPaletteInHex {
+		s.Errorf("Invalid system_palette got: %s, want: %s", palette, testPaletteInHex)
 	}
 	const testStyle = "EXPRESSIVE"
 	if style := themeOverlay["android.theme.customization.theme_style"].(string); style != testStyle {
