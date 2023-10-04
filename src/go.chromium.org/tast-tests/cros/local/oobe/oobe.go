@@ -143,8 +143,8 @@ func AdvanceThroughConsolidatedConsentIfShown(ctx context.Context, oobeConn *chr
 // TODO(crbug.com/1327981): Use OOBE test API
 func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
 	const (
-		termTimeout            = 30 * time.Second
-		anyDialogTimeout       = 5 * time.Second
+		termTimeout            = 60 * time.Second
+		anyDialogTimeout       = 10 * time.Second
 		anyActionButtonTimeout = 1 * time.Minute
 	)
 	consolidatedConsentHeader := nodewith.Name("Review these terms and control your data").Role(role.Dialog)

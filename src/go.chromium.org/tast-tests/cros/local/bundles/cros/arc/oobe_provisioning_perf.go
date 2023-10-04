@@ -23,6 +23,7 @@ type testParamOobeProvisioningPerf struct {
 	browserType browser.Type
 	username    string
 	password    string
+	metric      string
 }
 
 type oobeMetrics struct {
@@ -52,6 +53,7 @@ func init() {
 				browserType: browser.TypeAsh,
 				username:    "arc.OobeProvisioningPerf.managed_username",
 				password:    "arc.OobeProvisioningPerf.managed_password",
+				metric:      "Managed",
 			},
 		}, {
 			Name:              "managed_vm",
@@ -60,6 +62,7 @@ func init() {
 				browserType: browser.TypeAsh,
 				username:    "arc.OobeProvisioningPerf.managed_username",
 				password:    "arc.OobeProvisioningPerf.managed_password",
+				metric:      "Managed",
 			},
 		}, {
 			Name:              "unmanaged",
@@ -67,12 +70,14 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val: testParamOobeProvisioningPerf{
 				browserType: browser.TypeAsh,
+				metric:      "Unmanaged",
 			},
 		}, {
 			Name:              "unmanaged_lacros",
 			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Val: testParamOobeProvisioningPerf{
 				browserType: browser.TypeLacros,
+				metric:      "Unmanaged",
 			},
 		}, {
 			Name:              "unmanaged_vm",
@@ -80,12 +85,14 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParamOobeProvisioningPerf{
 				browserType: browser.TypeAsh,
+				metric:      "Unmanaged",
 			},
 		}, {
 			Name:              "unmanaged_vm_lacros",
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Val: testParamOobeProvisioningPerf{
 				browserType: browser.TypeLacros,
+				metric:      "Unmanaged",
 			},
 		}},
 		VarDeps: []string{
@@ -120,7 +127,7 @@ func OobeProvisioningPerf(ctx context.Context, s *testing.State) {
 		s.Logf("Running ARC provisioning iteration #%d out of %d",
 			len(provisioningTimes)+1, successBootCount)
 
-		oobeMetrics, err := oobeProvisioningPerfIteration(ctx, s, gaia)
+		oobeMetrics, err := oobeProvisioningPerfIteration(ctx, s, gaia, param.metric)
 		if err != nil {
 			failBootCount++
 			s.Log("Error found during the ARC provisioning: ", err)
@@ -158,8 +165,8 @@ func OobeProvisioningPerf(ctx context.Context, s *testing.State) {
 	}
 }
 
-func oobeProvisioningPerfIteration(ctx context.Context, s *testing.State, gaia chrome.Option) (*oobeMetrics, error) {
-	const histogramName = "Arc.UiAvailable.OobeProvisioning.TimeDelta.Unmanaged"
+func oobeProvisioningPerfIteration(ctx context.Context, s *testing.State, gaia chrome.Option, metric string) (*oobeMetrics, error) {
+	histogramName := "Arc.UiAvailable.OobeProvisioning.TimeDelta." + metric
 
 	var result oobeMetrics
 
@@ -184,12 +191,12 @@ func oobeProvisioningPerfIteration(ctx context.Context, s *testing.State, gaia c
 	}
 
 	testing.ContextLog(ctx, "OOBE is done. Waiting for provisioning metric")
-	metric, err := metrics.WaitForHistogram(ctx, tconn, histogramName, 3*time.Minute)
+	metricValue, err := metrics.WaitForHistogram(ctx, tconn, histogramName, 3*time.Minute)
 	if err != nil {
 		return &result, errors.Wrapf(err, "failed to get %s histogram", histogramName)
 	}
 
-	timeMs, err := metric.Mean()
+	timeMs, err := metricValue.Mean()
 	if err != nil {
 		return &result, errors.Wrapf(err, "failed to read %s histogram", histogramName)
 	}
