@@ -50,16 +50,26 @@ func CheckSuspendStressResults(ctx context.Context, dut *dut.DUT) error {
 	)
 	zeroSuspendErrors := []string{zeroPrematureWakes, zeroSuspendFailures, zeroFirmwareLogErrors, zeroS0ixErrors}
 
-	out, err := RunCmdWithStringOutput(ctx, dut, "cat", suspendStressResults)
+	out, err := RunCmdWithStringOutputSilent(ctx, dut, "cat", suspendStressResults)
 	if err != nil {
 		return errors.Wrap(err, "failed to read suspend stress test results, device likely rebooted")
 	}
 
 	for _, errMsg := range zeroSuspendErrors {
 		if !strings.Contains(out, errMsg) {
-			return errors.Errorf("failed: expect zero failures for %q, got %q", errMsg, out)
+			out = strings.Replace(out, "\n", " ", -1)
+			resultStart := strings.Index(out, "Finished")
+			results := out[resultStart:]
+			return errors.Errorf("failed: expect zero failures for %q, got %q", errMsg, results)
 		}
 	}
 	return nil
 
+}
+
+// CleanupSuspend removes the suspend stress test results file.
+func CleanupSuspend(ctx context.Context, dut *dut.DUT) {
+	if _, err := RunCmdWithOutput(ctx, dut, "rm", suspendStressResults); err != nil {
+		testing.ContextLog(ctx, "Failed to cleanup suspend results: ", err)
+	}
 }

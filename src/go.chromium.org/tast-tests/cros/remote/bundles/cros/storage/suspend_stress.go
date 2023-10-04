@@ -36,6 +36,8 @@ func init() {
 func SuspendStress(ctx context.Context, s *testing.State) {
 	resultWriter := &util.FioResultWriter{}
 	defer resultWriter.Save(ctx, s.OutDir(), true)
+	defer util.CleanupFio(ctx, s.DUT())
+	defer util.CleanupSuspend(ctx, s.DUT())
 
 	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
 	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)

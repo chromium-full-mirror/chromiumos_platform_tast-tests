@@ -215,6 +215,13 @@ func (t TestConfig) ParseFioResults(ctx context.Context, dut *dut.DUT) error {
 
 }
 
+// CleanupFio removes the fio results file.
+func CleanupFio(ctx context.Context, dut *dut.DUT) {
+	if _, err := RunCmdWithOutput(ctx, dut, "rm", fioResultPath); err != nil {
+		testing.ContextLog(ctx, "Failed to cleanup fio results: ", err)
+	}
+}
+
 func validateJob(ctx context.Context, job string) error {
 	for _, config := range Configs {
 		if job == config {
