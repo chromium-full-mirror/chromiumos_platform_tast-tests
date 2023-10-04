@@ -43,7 +43,7 @@ func init() {
 			"ypitsishin@google.org",
 		},
 		BugComponent: "b:280365665",
-		Attr:         []string{"group:launcher_image_search_perbuild"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{localPictureName},
 		Timeout:      10 * time.Minute,
@@ -57,7 +57,8 @@ func init() {
 					UseIca:         true,
 					UseOcr:         false,
 				},
-				Fixture: fixture.LauncherImageSearchIca,
+				Fixture:           fixture.LauncherImageSearchIca,
+				ExtraSoftwareDeps: []string{"camera_feature_effects"},
 			},
 			{
 				Name: "search_by_paper_uppercase_lca",
@@ -68,7 +69,8 @@ func init() {
 					UseIca:         true,
 					UseOcr:         false,
 				},
-				Fixture: fixture.LauncherImageSearchIca,
+				Fixture:           fixture.LauncherImageSearchIca,
+				ExtraSoftwareDeps: []string{"camera_feature_effects"},
 			},
 			{
 				Name: "search_by_content_ocr",
@@ -90,7 +92,8 @@ func init() {
 					UseIca:         true,
 					UseOcr:         true,
 				},
-				Fixture: fixture.LauncherImageSearchIcaAndOcr,
+				Fixture:           fixture.LauncherImageSearchIcaAndOcr,
+				ExtraSoftwareDeps: []string{"camera_feature_effects"},
 			},
 			{
 				Name: "search_by_content_ica_ocr",
@@ -101,7 +104,8 @@ func init() {
 					UseIca:         true,
 					UseOcr:         true,
 				},
-				Fixture: fixture.LauncherImageSearchIcaAndOcr,
+				Fixture:           fixture.LauncherImageSearchIcaAndOcr,
+				ExtraSoftwareDeps: []string{"camera_feature_effects"},
 			},
 		},
 	})

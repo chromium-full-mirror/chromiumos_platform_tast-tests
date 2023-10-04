@@ -33,7 +33,7 @@ func init() {
 		Data:         []string{launcher.ImageSearchPowerTestPictureName},
 		BugComponent: "b:1281467",
 		Timeout:      5*time.Minute + power.RecorderTimeout,
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		Params: []testing.Param{
 			{
 				Name:    "enable",
