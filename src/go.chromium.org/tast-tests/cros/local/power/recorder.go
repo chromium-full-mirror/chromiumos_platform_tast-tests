@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
+	"go.chromium.org/tast-tests/cros/local/power/util"
 
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast/core/ctxutil"
@@ -39,7 +40,7 @@ const (
 	// RecorderTimeout is the max amount of time that Recorder is expected to
 	// take. It includes recorder & metrics construction, recorder cooldown,
 	// recorder destruction and data post-processing.
-	RecorderTimeout = RecorderCooldownTimeout + 3*time.Minute
+	RecorderTimeout = RecorderCooldownTimeout + 13*time.Minute
 )
 
 // Recorder is a utility to measure power metrics during tests.
@@ -74,7 +75,14 @@ func (r *Recorder) AddOptionalRecorderArg(key string, val interface{}) {
 // Out:
 // error: propagate back to the test.
 func (r *Recorder) Cooldown(ctx context.Context) error {
-	return cpu.Cooldown(ctx)
+	if err := cpu.Cooldown(ctx); err != nil {
+		return err
+	}
+
+	if err := util.WaitForIOCooldown(ctx); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Start collecting power metrics.
