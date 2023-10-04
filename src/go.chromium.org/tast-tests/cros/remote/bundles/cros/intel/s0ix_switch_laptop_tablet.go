@@ -30,7 +30,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:intel-nda", "group:mainline", "informational", "group:firmware", "firmware_ec"},
 		Fixture:      fixture.NormalMode,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible)),
 		Requirements: []string{"sys-fw-0022-v02"},
 		Timeout:      10 * time.Minute,
 	})
