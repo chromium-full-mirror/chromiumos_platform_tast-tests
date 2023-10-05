@@ -40,6 +40,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/policyutil/externaldata"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/syslog"
+	lt "go.chromium.org/tast-tests/cros/local/tape"
 	ppb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -149,7 +150,7 @@ func (c *PolicyService) StoreIDsForDeprovisioningAndLogErrors(ctx context.Contex
 // This function should be deferred before any enrollment with real GAIA is performed. As enrollment can still fail after
 // the provisioning it is important to also do this when enrollment fails.
 func (c *PolicyService) StoreIDsForDeprovisioning(ctx context.Context) error {
-	deviceID, customerID, err := tape.GetDeviceIDHelper(ctx)
+	deviceID, customerID, err := lt.GetDeviceIDHelper(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get customerID and deviceID")
 	}

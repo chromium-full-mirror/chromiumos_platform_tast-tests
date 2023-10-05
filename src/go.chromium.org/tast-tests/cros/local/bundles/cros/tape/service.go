@@ -10,7 +10,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"go.chromium.org/tast-tests/cros/common/tape"
+	"go.chromium.org/tast-tests/cros/local/tape"
 	ts "go.chromium.org/tast-tests/cros/services/cros/tape"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
