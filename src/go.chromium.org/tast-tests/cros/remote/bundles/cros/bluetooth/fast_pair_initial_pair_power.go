@@ -31,7 +31,7 @@ func init() {
 			"bluetooth_cross_device_fastpair",
 		},
 		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep),
+		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep, hwdep.Battery()),
 		ServiceDeps: []string{
 			"tast.cros.bluetooth.BluetoothService",
 			"tast.cros.bluetooth.BluetoothUIService",

@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type btActiveDiscoveryPowerTestCase struct {
@@ -39,6 +40,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService", "tast.cros.power.MetricsService"},
 		TestBedDeps:  []string{tbdep.WorkingBluetoothPeers(1)},
+		HardwareDeps: hwdep.D(hwdep.Battery()),
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{
 			{

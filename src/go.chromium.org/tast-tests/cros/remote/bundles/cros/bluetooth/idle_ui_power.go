@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -30,6 +31,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService", "tast.cros.power.MetricsService"},
+		HardwareDeps: hwdep.D(hwdep.Battery()),
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
