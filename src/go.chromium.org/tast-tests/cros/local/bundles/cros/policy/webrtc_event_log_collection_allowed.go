@@ -65,28 +65,7 @@ func WebrtcEventLogCollectionAllowed(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	for _, param := range []webrtclogupload.TestCase{
-		{
-			Name:                  "unset",
-			AnnotationLogExpected: true,
-			Policies: []policy.Policy{
-				&policy.WebRtcEventLogCollectionAllowed{Stat: policy.StatusUnset},
-			},
-		}, {
-			Name:                  "enabled",
-			AnnotationLogExpected: true,
-			Policies: []policy.Policy{
-				&policy.WebRtcEventLogCollectionAllowed{Val: true},
-			},
-		},
-		{
-			Name:                  "disabled",
-			AnnotationLogExpected: false,
-			Policies: []policy.Policy{
-				&policy.WebRtcEventLogCollectionAllowed{Val: false},
-			},
-		},
-	} {
+	for _, param := range webrtclogupload.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			runParam := webrtclogupload.AnnotationTestParam{
 				AnnotationHashCode: webrtclogupload.EventLogCollectionHashID,

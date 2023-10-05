@@ -43,7 +43,7 @@ func init() {
 			"informational",
 			"group:criticalstaging",
 		},
-		Data:         passwordleakdetection.GetDataFiles(),
+		Data:         passwordleakdetection.DataFiles(),
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		SearchFlags: []*testing.StringPair{

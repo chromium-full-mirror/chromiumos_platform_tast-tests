@@ -53,9 +53,9 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 	}
 }
 
-// GetDataFiles returns the list of data files needed to be copied to the dut
+// DataFiles returns the list of data files needed to be copied to the dut
 // for running tests related to password leak detection.
-func GetDataFiles() []string {
+func DataFiles() []string {
 	return []string{"password_leak_detection.html"}
 }
 

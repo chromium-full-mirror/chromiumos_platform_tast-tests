@@ -28,8 +28,8 @@ const AnnotationHashCode = "132553989"
 type TestCase struct {
 	// Name is the testcase name.
 	Name string
-	// Value is the policy value for this case.
-	Value *policy.SpellCheckServiceEnabled
+	// Policy is the policy value for this case.
+	Policy *policy.SpellCheckServiceEnabled
 	// WantRestriction is whether the relevant buttons should be disabled.
 	WantRestriction restriction.Restriction
 	// WantSettingsCheck is the desired state of the settings toggle.
@@ -46,7 +46,7 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 	return map[networkrequestmonitor.PolicySetting]TestCase{
 		networkrequestmonitor.PolicyDisabled: {
 			Name:              "disallow",
-			Value:             &policy.SpellCheckServiceEnabled{Val: false},
+			Policy:            &policy.SpellCheckServiceEnabled{Val: false},
 			WantRestriction:   restriction.Disabled,
 			WantSettingsCheck: checked.False,
 			// "" means that there is no checkmark.
@@ -55,7 +55,7 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "allow",
-			Value:                &policy.SpellCheckServiceEnabled{Val: true},
+			Policy:               &policy.SpellCheckServiceEnabled{Val: true},
 			WantRestriction:      restriction.Disabled,
 			WantSettingsCheck:    checked.True,
 			WantContextCheck:     checked.True,
@@ -63,7 +63,7 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:              "unset",
-			Value:             &policy.SpellCheckServiceEnabled{Stat: policy.StatusUnset},
+			Policy:            &policy.SpellCheckServiceEnabled{Stat: policy.StatusUnset},
 			WantRestriction:   restriction.None,
 			WantSettingsCheck: checked.False,
 			// "" means that there is no checkmark.
@@ -73,9 +73,9 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 	}
 }
 
-// GetDataFiles returns the list of data files needed to be copied to the dut
+// DataFiles returns the list of data files needed to be copied to the dut
 // for running tests related to spell check.
-func GetDataFiles() []string {
+func DataFiles() []string {
 	return []string{"spell_checking.html", mitmproxy.MitmdumpBinFile}
 }
 

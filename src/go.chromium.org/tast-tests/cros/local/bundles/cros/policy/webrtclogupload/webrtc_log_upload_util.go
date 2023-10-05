@@ -69,6 +69,38 @@ func SetConnSource(cs ash.ConnSource) {
 	connSource = cs
 }
 
+// TestCases returns the list of TestCase objects on which the
+// WebRtcEventLogCollectionAllowed and WebRtcTextLogCollectionAllowed
+// policies are tested.
+func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
+	return map[networkrequestmonitor.PolicySetting]TestCase{
+		networkrequestmonitor.PolicyDisabled: {
+			Name:                  "disabled",
+			AnnotationLogExpected: false,
+			Policies: []policy.Policy{
+				&policy.WebRtcEventLogCollectionAllowed{Val: false},
+				&policy.WebRtcTextLogCollectionAllowed{Val: false},
+			},
+		},
+		networkrequestmonitor.PolicyUnset: {
+			Name:                  "unset",
+			AnnotationLogExpected: true,
+			Policies: []policy.Policy{
+				&policy.WebRtcEventLogCollectionAllowed{Stat: policy.StatusUnset},
+				&policy.WebRtcTextLogCollectionAllowed{Stat: policy.StatusUnset},
+			},
+		},
+		networkrequestmonitor.PolicyEnabled: {
+			Name:                  "enabled",
+			AnnotationLogExpected: true,
+			Policies: []policy.Policy{
+				&policy.WebRtcEventLogCollectionAllowed{Val: true},
+				&policy.WebRtcTextLogCollectionAllowed{Val: true},
+			},
+		},
+	}
+}
+
 // NetLogAnnotationTest starts and stops net export, trigger WebRTC logs and
 // polls for appearance of annotation hashcode in net export log.
 func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome,

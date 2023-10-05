@@ -39,7 +39,7 @@ func init() {
 		BugComponent: "b:1129862",
 		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
-		Data:         policyquickanswers.GetDataFiles(),
+		Data:         policyquickanswers.DataFiles(),
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityOS),

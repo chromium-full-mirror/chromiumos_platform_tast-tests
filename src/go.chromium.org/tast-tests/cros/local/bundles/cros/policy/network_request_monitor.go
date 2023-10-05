@@ -70,7 +70,7 @@ func init() {
 			Fixture:           fixture.PersistentLacrosEnrolled, // FakeDMSEnrolled with lacros policy.
 			Val:               browser.TypeLacros,
 		}},
-		Data: concatDataFileLists(),
+		Data: dataFiles(),
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AdvancedProtectionAllowed{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.AutofillAddressEnabled{}, pci.VerifiedFunctionalityUI),
@@ -116,81 +116,72 @@ type optionalService struct {
 	policies []policy.Policy
 	// The function which triggers the optional service.
 	trigger triggerOptionalService
-	// Data files required to be copied to the dut before triggering the service.
-	dataFiles []string
 }
 
-func optionalServices() []optionalService {
+// optionalServices returns the optionalService objects with policies set according
+// to the policySetting parameter.
+func optionalServices(policySetting networkrequestmonitor.PolicySetting) []optionalService {
 	return []optionalService{
 		{
 			name:                  "advanced_protection",
 			associatedAnnotations: []string{advancedprotection.UploadAnnotationHashCode},
-			policies:              []policy.Policy{&policy.AdvancedProtectionAllowed{Val: false}},
+			policies:              []policy.Policy{advancedprotection.TestCases()[policySetting].Policy},
 			trigger:               advancedprotection.TriggerUploadForScanning,
-			dataFiles:             advancedprotection.DataFiles(),
 		},
 		{
 			name:                  "autofill_payments",
 			associatedAnnotations: []string{autofillpayments.AutofillCreditCardAnnotationHash},
 			policies: []policy.Policy{
+				autofillpayments.GetTestCases()[policySetting].Policy,
 				&policy.AutofillAddressEnabled{Val: false},
-				&policy.AutofillCreditCardEnabled{Val: false},
 				&policy.PasswordManagerEnabled{Val: false},
 			},
-			trigger:   autofillpayments.TriggerAutofillCreditCardEnabled,
-			dataFiles: autofillpayments.DataFiles(),
+			trigger: autofillpayments.TriggerAutofillCreditCardEnabled,
 		},
 		{
 			name:                  "calendar_integration",
 			associatedAnnotations: []string{calendarintegration.AnnotationHashCode},
-			policies:              []policy.Policy{&policy.CalendarIntegrationEnabled{Val: false}},
+			policies:              []policy.Policy{calendarintegration.TestCases()[policySetting].Policy},
 			trigger:               calendarintegration.TriggerCalendarIntegration,
-			dataFiles:             []string{},
 		},
 		{
 			name: "default_search_provider",
 			// Annotation will be found even when the policy is disabled.
 			associatedAnnotations: []string{},
-			policies:              []policy.Policy{&policy.DefaultSearchProviderEnabled{Val: false}},
+			policies:              []policy.Policy{defaultsearchprovider.TestCases()[policySetting].Policy},
 			trigger:               defaultsearchprovider.TriggerDefaultSearchProvider,
-			dataFiles:             []string{},
 		},
 		{
 			name:                  "domain_reliability",
 			associatedAnnotations: []string{},
-			policies:              []policy.Policy{&policy.DomainReliabilityAllowed{Val: false}},
+			policies:              []policy.Policy{domainreliability.TestCases()[policySetting].Policy},
 			trigger:               domainreliability.TriggerDomainReliabilityAllowed,
-			dataFiles:             []string{},
 		},
 		{
 			name: "nearby_share",
 			// No network annotations are checked for this service, since the network
 			// calls only occur after Nearby Share setup is complete.
 			associatedAnnotations: []string{},
-			policies:              []policy.Policy{&policy.NearbyShareAllowed{Val: false}},
+			policies:              []policy.Policy{nearbyshare.TestCases()[policySetting].Policy},
 			trigger:               nearbyshare.VerifyNearbySharePermissions,
-			dataFiles:             []string{},
 		},
 		{
 			name:                  "password_leak_detection",
 			associatedAnnotations: []string{passwordleakdetection.AnnotationHashCode},
-			policies:              []policy.Policy{&policy.PasswordLeakDetectionEnabled{Val: false}},
+			policies:              []policy.Policy{passwordleakdetection.TestCases()[policySetting].Policy},
 			trigger:               passwordleakdetection.TriggerPasswordLeakDetection,
-			dataFiles:             passwordleakdetection.GetDataFiles(),
 		},
 		{
 			name:                  "quick_answers_definition",
 			associatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
-			policies:              []policy.Policy{&policy.QuickAnswersDefinitionEnabled{Val: false}},
+			policies:              []policy.Policy{policyquickanswers.DefinitionTestCases()[policySetting].Policy},
 			trigger:               policyquickanswers.TriggerQuickAnswersDefinition,
-			dataFiles:             policyquickanswers.GetDataFiles(),
 		},
 		{
 			name:                  "quick_answers_unit_conversion",
 			associatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
-			policies:              []policy.Policy{&policy.QuickAnswersUnitConversionEnabled{Val: false}},
+			policies:              []policy.Policy{policyquickanswers.UnitConversionTestCases()[policySetting].Policy},
 			trigger:               policyquickanswers.TriggerQuickAnswersUnitConversion,
-			dataFiles:             policyquickanswers.GetDataFiles(),
 		},
 		{
 			name: "remote_desktop",
@@ -199,23 +190,20 @@ func optionalServices() []optionalService {
 				remotedesktop.FTLRegistrationManagerHashCode,
 				remotedesktop.RemotingRegisterSupportHostRequestHashCode,
 			},
-			policies:  []policy.Policy{&policy.RemoteAccessHostAllowRemoteSupportConnections{Val: false}},
-			trigger:   remotedesktop.TriggerRemoteSupportRegistration,
-			dataFiles: []string{},
+			policies: []policy.Policy{remotedesktop.TestCases()[policySetting].Policy},
+			trigger:  remotedesktop.TriggerRemoteSupportRegistration,
 		},
 		{
 			name:                  "search_suggestion",
 			associatedAnnotations: []string{searchsuggestion.AnnotationHashCode},
-			policies:              []policy.Policy{&policy.SearchSuggestEnabled{Val: false}},
+			policies:              []policy.Policy{searchsuggestion.TestCases()[policySetting].Policy},
 			trigger:               searchsuggestion.TriggerSearchSuggestion,
-			dataFiles:             []string{},
 		},
 		{
 			name:                  "spell_check",
 			associatedAnnotations: []string{spellcheck.AnnotationHashCode},
-			policies:              []policy.Policy{&policy.SpellCheckServiceEnabled{Val: false}},
+			policies:              []policy.Policy{spellcheck.TestCases()[policySetting].Policy},
 			trigger:               spellcheck.TriggerSpellCheck,
-			dataFiles:             spellcheck.GetDataFiles(),
 		},
 		{
 			name:                  "url_keyed_data_collection",
@@ -225,15 +213,13 @@ func optionalServices() []optionalService {
 				// TODO(b/293876410): Reenable App Sync once AppKM traffic annotations are split off or can be ignored.
 				&policy.SyncTypesListDisabled{Val: []string{"apps"}},
 			},
-			trigger:   ukm.TriggerAndVerifyUkmAppFromPolicySetting,
-			dataFiles: []string{},
+			trigger: ukm.TriggerAndVerifyUkmAppFromPolicySetting,
 		},
 		{
 			name:                  "user_feedback",
 			associatedAnnotations: []string{userfeedback.HelpContentProviderHashCode, userfeedback.ChromeFeedbackReportAppHashCode},
-			policies:              []policy.Policy{&policy.UserFeedbackAllowed{Val: false}},
+			policies:              []policy.Policy{userfeedback.TestCases()[policySetting].Policy},
 			trigger:               userfeedback.TriggerUserFeedback,
-			dataFiles:             []string{},
 		},
 		{
 			name: "wallpaper_google_photos",
@@ -242,47 +228,42 @@ func optionalServices() []optionalService {
 				wallpapergooglephotos.AlbumsHashCode,
 				wallpapergooglephotos.PhotosHashCode,
 			},
-			policies:  []policy.Policy{&policy.WallpaperGooglePhotosIntegrationEnabled{Val: false}},
-			trigger:   wallpapergooglephotos.TriggerWallpaperGooglePhotosIntegration,
-			dataFiles: []string{},
+			policies: []policy.Policy{wallpapergooglephotos.TestCases()[policySetting].Policy},
+			trigger:  wallpapergooglephotos.TriggerWallpaperGooglePhotosIntegration,
 		},
 		{
 			name: "webrtc_event_and_text_log_collection",
 			associatedAnnotations: []string{
 				webrtc.EventLogCollectionHashID,
 				webrtc.TextLogCollectionHashID},
-			policies: []policy.Policy{
-				&policy.WebRtcEventLogCollectionAllowed{Val: false},
-				&policy.WebRtcTextLogCollectionAllowed{Val: false}},
-			trigger:   webrtc.TriggerWebRTCLogUploads,
-			dataFiles: []string{},
+			policies: webrtc.TestCases()[policySetting].Policies,
+			trigger:  webrtc.TriggerWebRTCLogUploads,
 		},
 		// Note: user_avatar_customization should be kept last in this list to avoid
 		// issues with other test cases.
 		{
 			name:                  "user_avatar_customization",
 			associatedAnnotations: []string{useravatar.AnnotationHashCode},
-			policies:              []policy.Policy{&policy.UserAvatarCustomizationSelectorsEnabled{Val: false}},
+			policies:              []policy.Policy{useravatar.TestCases()[policySetting].Policy},
 			trigger:               useravatar.TriggerUserAvatarCustomization,
 		},
 	}
 }
 
-// concatPolicyLists concats the lists of policies associated with the optional
-// services and returns a single list.
-func concatPolicyLists() (policies []policy.Policy) {
-	for _, service := range optionalServices() {
-		policies = append(policies, service.policies...)
+// dataFiles returns the list of data files to be copied to the DUT and made
+// available while the test is running.
+func dataFiles() []string {
+	dataFileLists := [][]string{
+		advancedprotection.DataFiles(),
+		autofillpayments.DataFiles(),
+		passwordleakdetection.DataFiles(),
+		policyquickanswers.DataFiles(),
+		spellcheck.DataFiles(),
 	}
-	return policies
-}
 
-// concatDataFileLists concats the lists of dataFiles needed to be copied to the
-// dut to trigger the optional services and returns a single list.
-func concatDataFileLists() []string {
 	var dataFiles []string
-	for _, service := range optionalServices() {
-		dataFiles = append(dataFiles, service.dataFiles...)
+	for _, serviceFiles := range dataFileLists {
+		dataFiles = append(dataFiles, serviceFiles...)
 	}
 	return dataFiles
 }
@@ -361,7 +342,11 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 
 	// Update policies.
-	policies := concatPolicyLists()
+	services := optionalServices(networkrequestmonitor.PolicyDisabled)
+	var policies []policy.Policy
+	for _, service := range services {
+		policies = append(policies, service.policies...)
+	}
 	policyBlob.AddPolicies(policies)
 	// Updates policies in Chrome by updating the the policy blob of FakeDMS. This
 	// allows using a custom PolicyUser for the policy blob instead of the default
@@ -417,7 +402,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	var hashCodes []string
 
 	// Trigger the optional services one by one.
-	for _, service := range optionalServices() {
+	for _, service := range services {
 		s.Run(ctx, service.name, func(ctx context.Context, s *testing.State) {
 			params := networkrequestmonitor.OptionalServiceParams{
 				Chrome:        cr,

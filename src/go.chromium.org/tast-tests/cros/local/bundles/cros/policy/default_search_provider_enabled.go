@@ -73,7 +73,7 @@ func DefaultSearchProviderEnabled(ctx context.Context, s *testing.State) {
 			}
 
 			// Update policies.
-			if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{param.Value}); err != nil {
+			if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{param.Policy}); err != nil {
 				s.Fatal("Failed to update policies: ", err)
 			}
 

@@ -80,7 +80,7 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 			}
 
 			// Update policies.
-			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.Value}); err != nil {
+			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.Policy}); err != nil {
 				s.Fatal("Failed to update policies: ", err)
 			}
 			// Setup browser based on the chrome type.

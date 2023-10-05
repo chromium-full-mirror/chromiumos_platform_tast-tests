@@ -99,9 +99,9 @@ func UnitConversionTestCases() map[networkrequestmonitor.PolicySetting]UnitConve
 	}
 }
 
-// GetDataFiles returns the list of data files needed to be copied to the dut
+// DataFiles returns the list of data files needed to be copied to the dut
 // for running tests related to quick answers.
-func GetDataFiles() []string {
+func DataFiles() []string {
 	return []string{"quick_answers.html"}
 }
 

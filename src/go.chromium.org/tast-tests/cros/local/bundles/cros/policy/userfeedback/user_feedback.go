@@ -23,7 +23,7 @@ import (
 type TestCase struct {
 	Name                 string
 	ShouldFindAnnotation bool
-	Value                *policy.UserFeedbackAllowed
+	Policy               *policy.UserFeedbackAllowed
 	WantReportOption     bool
 }
 
@@ -39,19 +39,19 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 	return map[networkrequestmonitor.PolicySetting]TestCase{
 		networkrequestmonitor.PolicyDisabled: {
 			Name:                 "deny",
-			Value:                &policy.UserFeedbackAllowed{Val: false},
+			Policy:               &policy.UserFeedbackAllowed{Val: false},
 			WantReportOption:     false,
 			ShouldFindAnnotation: false,
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "allow",
-			Value:                &policy.UserFeedbackAllowed{Val: true},
+			Policy:               &policy.UserFeedbackAllowed{Val: true},
 			WantReportOption:     true,
 			ShouldFindAnnotation: true,
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
-			Value:                &policy.UserFeedbackAllowed{Stat: policy.StatusUnset},
+			Policy:               &policy.UserFeedbackAllowed{Stat: policy.StatusUnset},
 			WantReportOption:     true,
 			ShouldFindAnnotation: true,
 		},

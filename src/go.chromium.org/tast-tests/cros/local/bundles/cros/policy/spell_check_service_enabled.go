@@ -50,7 +50,7 @@ func init() {
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
 		}},
-		Data: spellcheck.GetDataFiles(),
+		Data: spellcheck.DataFiles(),
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
 		},
@@ -78,7 +78,7 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			}
 
 			// Update policies.
-			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.Value}); err != nil {
+			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.Policy}); err != nil {
 				s.Fatal("Failed to update policies: ", err)
 			}
 

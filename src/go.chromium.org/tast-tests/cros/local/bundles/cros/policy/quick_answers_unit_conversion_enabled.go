@@ -43,7 +43,7 @@ func init() {
 			"informational",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Data:         policyquickanswers.GetDataFiles(),
+		Data:         policyquickanswers.DataFiles(),
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityOS),
