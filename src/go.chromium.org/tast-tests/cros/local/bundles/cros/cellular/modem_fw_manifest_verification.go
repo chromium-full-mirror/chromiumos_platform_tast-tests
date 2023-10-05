@@ -46,9 +46,10 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to parse the firmware manifest: ", err)
 	}
 
-	// Process the error only if the board uses variants. Older boards didn't
-	// always use variants since some of them only had one of a kind.
-	dutVariant, dutVariantErr := cellular.GetDeviceVariant(ctx)
+	dutVariant, err := cellular.GetDeviceVariant(ctx)
+	if err != nil {
+		s.Fatalf("Failed to get device variant: %s", err)
+	}
 
 	missingFiles := make(map[string]bool)
 	var mainFirmwares map[string]bool
@@ -58,9 +59,6 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 		modemFirmwarePaths := []string{cellular.GetModemFirmwarePath()}
 
 		if device.GetDlc() != nil && device.GetDlc().GetDlcId() != "" {
-			if dutVariantErr != nil {
-				s.Fatalf("Failed to get device variant: %s", dutVariantErr)
-			}
 			dlcCounter++
 			// Only the variant that matches the device's variant will contain a DLC that is
 			// already installed by modemfwd.

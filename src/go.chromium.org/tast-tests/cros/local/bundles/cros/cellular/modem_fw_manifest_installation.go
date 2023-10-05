@@ -47,14 +47,14 @@ func ModemFWManifestInstallation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to parse the firmware manifest: ", err)
 	}
 
-	// Ignore the error since older boards didn't always use variants and this
-	// test does not require a variant to succeed.
-	dutVariant, _ := cellular.GetDeviceVariant(ctx)
-
+	dutVariant, err := cellular.GetDeviceVariant(ctx)
+	if err != nil {
+		s.Fatalf("Failed to get device variant: %s", err)
+	}
 	// Find the USB device ID of the modem in this variant.
 	deviceID := ""
 	for _, device := range manifest.Device {
-		if dutVariant == device.Variant || dutVariant == "" {
+		if dutVariant == device.Variant {
 			deviceID = device.DeviceId
 			break
 		}
@@ -94,7 +94,7 @@ func ModemFWManifestInstallation(ctx context.Context, s *testing.State) {
 
 	var carrierIDs = []string{}
 	for _, device := range manifest.Device {
-		if dutVariant == device.Variant || (dutVariant == "" && deviceID == device.DeviceId) {
+		if dutVariant == device.Variant {
 			for _, carrierFW := range device.CarrierFirmware {
 				for _, carrierID := range carrierFW.CarrierId {
 					if uuid == carrierID {
