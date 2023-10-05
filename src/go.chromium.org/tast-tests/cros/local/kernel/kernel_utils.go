@@ -223,6 +223,44 @@ func GetCgptTable(ctx context.Context, rootDevWithoutPart string) (map[string]*p
 	return partitionTable, nil
 }
 
+// RestoreCgptAttributes restores CGPT partition attributes directly dumped from GetCgptTable.
+func RestoreCgptAttributes(ctx context.Context, rootDevWithoutPart string, cgptTable map[string]*pb.CgptPartition) error {
+	cgptTable, err := GetCgptTable(ctx, rootDevWithoutPart)
+	if err != nil {
+		return errors.Wrap(err, "failed to get current cgpt table")
+	}
+	testing.ContextLog(ctx, "Restoring passed CGPT attributes to: ", rootDevWithoutPart)
+	for label, part := range cgptTable {
+		partitionNumber := cgptTable[label].PartitionNumber
+		rootDevWithPart := RootDevPartitionPath(rootDevWithoutPart, int(partitionNumber))
+		if len(part.Attrs) == 0 {
+			continue
+		}
+		cgptAddCmdline := []string{"add", "-i", strconv.Itoa(int(partitionNumber))}
+		for _, attr := range part.Attrs {
+			switch attr.Name {
+			case "legacy_boot":
+				cgptAddCmdline = append(cgptAddCmdline, "-B", strconv.Itoa(int(attr.Value)))
+			case "priority":
+				cgptAddCmdline = append(cgptAddCmdline, "-P", strconv.Itoa(int(attr.Value)))
+			case "tries":
+				cgptAddCmdline = append(cgptAddCmdline, "-T", strconv.Itoa(int(attr.Value)))
+			case "successful":
+				cgptAddCmdline = append(cgptAddCmdline, "-S", strconv.Itoa(int(attr.Value)))
+			case "required":
+				cgptAddCmdline = append(cgptAddCmdline, "-R", strconv.Itoa(int(attr.Value)))
+			}
+		}
+		cgptAddCmdline = append(cgptAddCmdline, rootDevWithoutPart)
+		testing.ContextLogf(ctx, "Restoring CGPT metadata for %s: %s", rootDevWithPart, strings.Join(cgptAddCmdline, " "))
+		if err := testexec.CommandContext(ctx, "cgpt", cgptAddCmdline...).Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "failed to restore cgpt attributes")
+		}
+	}
+
+	return nil
+}
+
 // GetCurrentRootDevice gets the path to the current root device.
 func GetCurrentRootDevice(ctx context.Context, includePart bool) (string, error) {
 	args := []string{"-s"}
@@ -320,14 +358,14 @@ func EnsureBothKernelCopiesBootable(ctx context.Context, rootDevWithPart string)
 	}
 	testing.ContextLogf(ctx, "Currently in partition %q (label %q)", currKernel.PartitionPath, currKernel.Label)
 
-	if !match {
-		srcKern, dstKern := kernA, kernB
-		srcRoot, dstRoot := rootA, rootB
-		if copy, _ := GetCopyFromLabel(currKernel.Label); copy == "B" {
-			srcKern, dstKern = kernB, kernA
-			srcRoot, dstRoot = rootB, rootA
-		}
+	srcKern, dstKern := kernA, kernB
+	srcRoot, dstRoot := rootA, rootB
+	if copy := GetCopyFromLabel(currKernel.Label); copy == "B" {
+		srcKern, dstKern = kernB, kernA
+		srcRoot, dstRoot = rootB, rootA
+	}
 
+	if !match {
 		testing.ContextLogf(ctx, "copying kernel from %q to %q", srcKern.Label, dstKern.Label)
 		if err := copyFile(srcKern.PartitionPath, dstKern.PartitionPath); err != nil {
 			return errors.Wrap(err, "failed to make kernel a and b identical")
@@ -337,31 +375,97 @@ func EnsureBothKernelCopiesBootable(ctx context.Context, rootDevWithPart string)
 		if err := copyFile(srcRoot.PartitionPath, dstRoot.PartitionPath); err != nil {
 			return errors.Wrap(err, "failed to make rootfs a and b identical")
 		}
+
+		if err := sha1sumsMatch(ctx, srcKern.PartitionPath, dstKern.PartitionPath); err != nil {
+			return errors.Wrap(err, "Copying KERN failed unexpectedly")
+		}
+
+		if err := sha1sumsMatch(ctx, srcRoot.PartitionPath, dstRoot.PartitionPath); err != nil {
+			return errors.Wrap(err, "Copying ROOT failed unexpectedly")
+		}
+
 	}
 
-	if err := forcePartitionBootable(ctx, kernA.PartitionPath, 2); err != nil {
-		return errors.Wrap(err, "failed to make KERN-A bootable")
-	}
-
-	if err := forcePartitionBootable(ctx, kernB.PartitionPath, 2); err != nil {
-		return errors.Wrap(err, "failed to make KERN-B bootable")
+	// Set attributes of both copies to attributes of currently booted copy.
+	if err := RestoreCgptAttributes(ctx, rootDevWithoutPart, map[string]*pb.CgptPartition{
+		srcKern.Label: srcKern,
+		dstKern.Label: srcKern,
+		srcRoot.Label: srcRoot,
+		dstRoot.Label: srcRoot,
+	}); err != nil {
+		return errors.Wrap(err, "failed to make cgpt attributes identical and force both partitions bootable")
 	}
 
 	return nil
 }
 
+func sha1sumsMatch(ctx context.Context, partitionPath1, partitionPath2 string) error {
+	sha1sumCmd := testexec.CommandContext(ctx, "sha1sum", partitionPath1, partitionPath2)
+	out, err := sha1sumCmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to get sha1sums")
+	}
+	/*
+		Sample output from sha1sum looks like:
+		$ sha1sum /dev/mmcblk1p4 /dev/mmcblk1p2
+		699616b2a1e7d436e432f23d9db5c98647de22f8  /dev/mmcblk1p4
+		e2d44a0de5edf38adb4e8e9611c48601b46484a8  /dev/mmcblk1p2
+	*/
+	lines := strings.Split(string(out), "\n")
+	sum1 := strings.TrimSpace(strings.Split(lines[0], " ")[0])
+	sum2 := strings.TrimSpace(strings.Split(lines[1], " ")[0])
+
+	if sum1 != sum2 {
+		return errors.Errorf("sha1sum for %s %s did not match, got %s and %s respectively", partitionPath1, partitionPath2, sum1, sum2)
+	}
+	testing.ContextLogf(ctx, "sha1sum for %s %s matched, got %s and %s respectively", partitionPath1, partitionPath2, sum1, sum2)
+	return nil
+}
+
 // PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B).
-func PrioritizeKernelCopy(ctx context.Context, rootDevWithoutPart, label string) error {
+func PrioritizeKernelCopy(ctx context.Context, rootDevWithoutPart string, copy pb.PartitionCopy) error {
 	partitionTable, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
 		return errors.Wrap(err, "failed to read cgpt table")
 	}
 
-	testing.ContextLog(ctx, "Prioritizing partition ", label)
+	testing.ContextLog(ctx, "Prioritizing partition copy ", CopyEnumToCopy[copy])
+	label := PartitionNameCopyToLabel(pb.PartitionName_KERNEL, copy)
 	targetTable := partitionTable[label]
 	cmd := testexec.CommandContext(ctx, "cgpt", "prioritize", fmt.Sprintf("-i%d", targetTable.PartitionNumber), rootDevWithoutPart)
-	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+	if out, err := cmd.CombinedOutput(testexec.DumpLogOnError); err != nil {
 		return errors.Wrapf(err, "failed to make prioritize kernel copy %q", label)
+	} else if string(out) != "" {
+		testing.ContextLog(ctx, "cgpt prioritize output: ", string(out))
+	}
+
+	newPartitionTable, err := GetCgptTable(ctx, rootDevWithoutPart)
+	if err != nil {
+		return errors.Wrap(err, "failed to get updated cgpt table")
+	}
+
+	otherLabel := PartitionNameCopyToLabel(pb.PartitionName_KERNEL, pb.PartitionCopy_B)
+	if copy == pb.PartitionCopy_B {
+		otherLabel = PartitionNameCopyToLabel(pb.PartitionName_KERNEL, pb.PartitionCopy_A)
+	}
+
+	targetTable = newPartitionTable[label]
+	otherTable := newPartitionTable[otherLabel]
+
+	getPriority := func(attrs []*pb.CgptPartitionAttribute) int32 {
+		for _, attr := range attrs {
+			if attr.Name == "priority" {
+				return attr.Value
+			}
+		}
+		return -1
+	}
+
+	targetPriority := getPriority(targetTable.Attrs)
+	otherCopyPriority := getPriority(otherTable.Attrs)
+
+	if otherCopyPriority >= targetPriority {
+		return errors.Errorf("%s unexpectedly had lower priority %d than %s with priority %d", label, targetPriority, otherLabel, otherCopyPriority)
 	}
 
 	return nil
@@ -525,13 +629,13 @@ func CorruptRootfsVerityHash(ctx context.Context, offset, size int64, rootDevWit
 }
 
 // GetCopyFromLabel returns the copy of the partition from the label, e.g. A from KERN-A or B from ROOT-B.
-func GetCopyFromLabel(label string) (string, error) {
+func GetCopyFromLabel(label string) string {
 	// Example label: KERN-A -> A or ROOT-B -> B.
 	match := regexp.MustCompile(`(?:\S+)-(\S+)`).FindStringSubmatch(label)
 	if match == nil || len(match) < 2 {
-		return "", errors.Errorf("label %q doesn't inlcude a specific section", label)
+		return ""
 	}
-	return match[1], nil
+	return match[1]
 }
 
 // GetNameFromLabel returns the name of the partition from the label, e.g. KERN from KERN-A or ROOT from ROOT-B.
@@ -635,7 +739,7 @@ func SetKernelHeaderMagic(ctx context.Context, rootDevWithoutPart, label string,
 		if err := forcePartitionBootable(ctx, table.PartitionPath, 1); err != nil {
 			testing.ContextLogf(ctx, "Failed to reset cgpt attributes for %q: %v", table.Label, err)
 		}
-		if err := PrioritizeKernelCopy(ctx, rootDevWithoutPart, table.Label); err != nil {
+		if err := PrioritizeKernelCopy(ctx, rootDevWithoutPart, CopyToCopyEnum[GetCopyFromLabel(table.Label)]); err != nil {
 			testing.ContextLogf(ctx, "Failed to make %q bootable after restoring header magic, got error: %v", table.Label, err)
 		}
 	}

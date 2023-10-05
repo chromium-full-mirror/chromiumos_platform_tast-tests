@@ -7,12 +7,9 @@ package firmware
 import (
 	"context"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/kernel"
@@ -76,34 +73,21 @@ func (ks *KernelService) WriteRawHeader(ctx context.Context, req *pb.WriteRawHea
 
 // RestoreCgptAttributes restores CGPT partition attributes directly dumped from GetCgptTable
 func (ks *KernelService) RestoreCgptAttributes(ctx context.Context, req *pb.RestoreCgptAttributesRequest) (*empty.Empty, error) {
-	rootDevWithoutPart, partitionNumber := kernel.SplitRootDevAndPart(ctx, req.BlockDevice)
-	testing.ContextLog(ctx, "Restoring passed CGPT attributes to: ", req.BlockDevice)
-	for _, part := range req.CgptTable {
-		if len(part.Attrs) == 0 {
-			continue
-		}
-		cgptAddCmdline := []string{"add", "-i", strconv.Itoa(partitionNumber)}
-		for _, attr := range part.Attrs {
-			switch attr.Name {
-			case "legacy_boot":
-				cgptAddCmdline = append(cgptAddCmdline, "-B", strconv.Itoa(int(attr.Value)))
-			case "priority":
-				cgptAddCmdline = append(cgptAddCmdline, "-P", strconv.Itoa(int(attr.Value)))
-			case "tries":
-				cgptAddCmdline = append(cgptAddCmdline, "-T", strconv.Itoa(int(attr.Value)))
-			case "successful":
-				cgptAddCmdline = append(cgptAddCmdline, "-S", strconv.Itoa(int(attr.Value)))
-			case "required":
-				cgptAddCmdline = append(cgptAddCmdline, "-R", strconv.Itoa(int(attr.Value)))
-			}
-		}
-		cgptAddCmdline = append(cgptAddCmdline, rootDevWithoutPart)
-		testing.ContextLog(ctx, "Restoring CGPT metadata: ", strings.Join(cgptAddCmdline, " "))
-		if err := testexec.CommandContext(ctx, "cgpt", cgptAddCmdline...).Run(testexec.DumpLogOnError); err != nil {
-			return &emptypb.Empty{}, errors.Wrap(err, "failed to restore cgpt attributes")
+	var rootDevWithPart string
+	if req.BlockDevice != "" {
+		rootDevWithPart = req.BlockDevice
+	} else {
+		var err error
+		rootDevWithPart, err = kernel.GetCurrentRootDevice(ctx, true)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get root device")
 		}
 	}
+	rootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, rootDevWithPart)
 
+	if err := kernel.RestoreCgptAttributes(ctx, rootDevWithoutPart, req.CgptTable); err != nil {
+		return nil, errors.Wrap(err, "failed to restore cgpt attributes")
+	}
 	return &empty.Empty{}, nil
 }
 
@@ -148,10 +132,7 @@ func (ks *KernelService) RestorePartition(ctx context.Context, req *pb.Partition
 	}
 
 	label := kernel.PartitionNameCopyToLabel(req.Name, req.Copy)
-	if _, err := ks.RestoreCgptAttributes(ctx, &pb.RestoreCgptAttributesRequest{
-		BlockDevice: rootDevWithPart, // RootDev includes partition number.
-		CgptTable:   map[string]*pb.CgptPartition{label: req.Table},
-	}); err != nil {
+	if err := kernel.RestoreCgptAttributes(ctx, rootDevWithoutPart, map[string]*pb.CgptPartition{label: req.Table}); err != nil {
 		return nil, errors.Wrap(err, "failed to retore CGPT attributes")
 	}
 
@@ -278,7 +259,7 @@ func (ks *KernelService) PrioritizeKernelCopy(ctx context.Context, req *pb.Parti
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get current root device")
 	}
-	if err := kernel.PrioritizeKernelCopy(ctx, rootDevWithoutPart, kernel.PartitionNameCopyToLabel(req.Name, req.Copy)); err != nil {
+	if err := kernel.PrioritizeKernelCopy(ctx, rootDevWithoutPart, req.Copy); err != nil {
 		return nil, err
 	}
 	return &empty.Empty{}, nil
@@ -301,10 +282,7 @@ func (ks *KernelService) GetCurrentCopy(ctx context.Context, req *pb.Partition) 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get name from label")
 	}
-	copy, err := kernel.GetCopyFromLabel(currPart.Label)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get copy from label")
-	}
+	copy := kernel.GetCopyFromLabel(currPart.Label)
 
 	return &pb.Partition{
 		Name:    kernel.PartNameToNameEnum[name],
@@ -326,7 +304,7 @@ func (ks *KernelService) VerifyKernelCopy(ctx context.Context, req *pb.Partition
 	}
 	testing.ContextLogf(ctx, "DUT is currently booted from %s (label: %q)", currPart.PartitionPath, currPart.Label)
 
-	currCopy, _ := kernel.GetCopyFromLabel(currPart.Label)
+	currCopy := kernel.GetCopyFromLabel(currPart.Label)
 	expCopy := kernel.CopyEnumToCopy[req.Copy]
 	if currCopy != expCopy {
 		return nil, errors.Errorf("expected kernel copy to be %q but was booted to %q", expCopy, currPart.Label)

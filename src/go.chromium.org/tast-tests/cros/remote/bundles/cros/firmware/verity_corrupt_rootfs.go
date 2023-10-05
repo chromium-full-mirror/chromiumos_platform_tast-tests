@@ -70,11 +70,6 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to back up KERN-A and KERN-B: ", err)
 	}
 
-	verityBackup, err := h.KernelServiceClient.BackupRootfsVerityHash(ctx, kernelBackup.KernA)
-	if err != nil {
-		s.Fatal("Failed to back up ROOT-A verity hash: ", err)
-	}
-
 	needsRestore := true
 
 	cleanupContext := ctx
@@ -84,11 +79,6 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 		if needsRestore {
 			if err := h.RequireKernelServiceClient(ctx); err != nil {
 				s.Fatal("Failed to connect to kernel service: ", err)
-			}
-
-			s.Log("Restoring ROOT-A verity hash from backup")
-			if _, err := h.KernelServiceClient.RestoreRootfsVerityHash(ctx, verityBackup); err != nil {
-				s.Fatal("Failed to restore rootfs verity hash from backup: ", err)
 			}
 
 			s.Log("Restoring kernel from backup")
@@ -105,7 +95,6 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 		rmargs := []string{
 			kernelBackup.KernA.BackupPath,
 			kernelBackup.KernB.BackupPath,
-			verityBackup.BackupPath,
 		}
 		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", rmargs...).Output(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to delete backup files: ", err)
@@ -138,6 +127,28 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to verify DUT currently is in copy A: ", err)
 	}
+
+	// Backup verity hash after ensuring copy A is bootable as it may have changed after making it bootable.
+	verityBackup, err := h.KernelServiceClient.BackupRootfsVerityHash(ctx, kernelBackup.KernA)
+	if err != nil {
+		s.Fatal("Failed to back up ROOT-A verity hash: ", err)
+	}
+	defer func(ctx context.Context) {
+		if needsRestore {
+			if err := h.RequireKernelServiceClient(ctx); err != nil {
+				s.Fatal("Failed to connect to kernel service: ", err)
+			}
+
+			s.Log("Restoring ROOT-A verity hash from backup")
+			if _, err := h.KernelServiceClient.RestoreRootfsVerityHash(ctx, verityBackup); err != nil {
+				s.Fatal("Failed to restore rootfs verity hash from backup: ", err)
+			}
+		}
+		s.Log("Delete verity backup file from DUT")
+		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", verityBackup.BackupPath).Output(ssh.DumpLogOnError); err != nil {
+			s.Fatal("Failed to delete backup files: ", err)
+		}
+	}(cleanupContext)
 
 	s.Log("Corrupt ROOT-A verity hash")
 	if _, err := h.KernelServiceClient.CorruptRootfsVerityHash(ctx, verityBackup); err != nil {
