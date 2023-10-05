@@ -110,7 +110,7 @@ func init() {
 			},
 		}, {
 			Name:      "ash_warn_cancelled",
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: printingTestParams{
 				name:                    "warn_cancelled",
