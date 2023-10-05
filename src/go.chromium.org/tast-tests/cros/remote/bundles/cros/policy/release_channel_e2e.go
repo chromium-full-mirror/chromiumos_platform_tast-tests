@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
@@ -63,19 +64,16 @@ func init() {
 			pci.SearchFlag(&policy.DeviceReleaseLtsTag{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.DeviceTargetVersionPrefix{}, pci.VerifiedValue),
 		},
+		Fixture: fixture.UpdateEngine, // Ensures update engine is ready and resets its status.
 		Params: []testing.Param{{
 			Name:    "lts",
 			Timeout: releaseChannelE2ETimeout,
 			Val: testParam{
 				ReleaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL,
 				ExpectedPolicies: []policy.Policy{
-					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
-					&policy.DeviceReleaseLtsTag{Stat: policy.StatusSet, Val: "lts"},
-					// TODO(b/272761788):  Current LTS milestone is 108. Ensure
-					// DeviceTargetVersionPrefix needs to be updated.
-					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15183."},
+					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "lts-channel"},
 				},
-				expectedParameters: []string{"targetversionprefix=\"15183.\"", "ltstag=\"lts\"", "track=\"stable-channel\""},
+				expectedParameters: []string{"track=\"lts-channel\""},
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
@@ -121,26 +119,23 @@ func init() {
 				// COM_FOUND_CUJ11_TASK3_WF1.
 				Value: "screenplay-cbd3450e-2c0e-4da8-9d55-8977a34e5e4b",
 			}},
-		}, {
-			Name:    "lts_omaha",
-			Timeout: omahaUpdateE2ETimeout + releaseChannelE2ETimeout,
-			Val: testParam{
-				ReleaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL,
-				ExpectedPolicies: []policy.Policy{
-					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
-					&policy.DeviceReleaseLtsTag{Stat: policy.StatusSet, Val: "lts"},
-					// TODO(b/272761788):  Current LTS milestone is 108. Ensure
-					// DeviceTargetVersionPrefix needs to be updated.
-					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15183."},
-				},
-				expectedParameters: []string{"targetversionprefix=\"15183.\"", "ltstag=\"lts\"", "track=\"stable-channel\""},
+			// TODO(b/303784408): Enable when M120 LTS rolls out and add
+			// CHROMEOS_RELEASE_VERSION verification.
+			// }, {
+			// 	Name:    "lts_omaha",
+			// 	Timeout: omahaUpdateE2ETimeout + releaseChannelE2ETimeout,
+			// 	Val: testParam{
+			// 		ReleaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL,
+			// 		ExpectedPolicies: []policy.Policy{
+			// 			&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "lts-channel"},
+			// 		},
+			// 		expectedParameters: []string{"track=\"lts-channel\""},
 
-				testOmaha: true,
-				expectedLSBReleaseRegex: map[string]string{
-					"CHROMEOS_RELEASE_TRACK":   "^stable-channel$",
-					"CHROMEOS_RELEASE_VERSION": "^15183[.].+[.].+$",
-				},
-			},
+			// 		testOmaha: true,
+			// 		expectedLSBReleaseRegex: map[string]string{
+			// 			"CHROMEOS_RELEASE_TRACK": "^lts-channel$",
+			// 		},
+			// 	},
 		}, {
 			Name:    "stable_omaha",
 			Timeout: omahaUpdateE2ETimeout + releaseChannelE2ETimeout,
@@ -275,7 +270,7 @@ func ReleaseChannelE2E(ctx context.Context, s *testing.State) {
 	}
 
 	if err := update.TriggerUpdateAndCheckNebraskaLogs(ctx, cl, param.expectedParameters); err != nil {
-		s.Error("Failed to verify update reqeust: ", err)
+		s.Error("Failed to verify update request: ", err)
 	}
 
 	if param.testOmaha {
