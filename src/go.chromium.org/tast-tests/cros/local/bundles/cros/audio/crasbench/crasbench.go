@@ -9,12 +9,10 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/dlc"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -75,18 +73,9 @@ func Run(ctx context.Context, s *testing.State) {
 	param := s.Param().(Parameters)
 
 	if param.DLC != "" {
-		ctxForUninstallDlc := ctx
-		var cancel context.CancelFunc
-		ctx, cancel = ctxutil.Shorten(ctx, time.Second*3)
-		defer cancel()
 		if err := dlc.Install(ctx, param.DLC, ""); err != nil {
 			s.Fatal("Failed to install dlc: ", err)
 		}
-		defer func() {
-			if err := dlc.Uninstall(ctxForUninstallDlc, param.DLC); err != nil {
-				s.Fatal("Failed to uninstall dlc: ", err)
-			}
-		}()
 	}
 
 	result, err := runCrasBench(ctx, param.BenchmarkFilter)
