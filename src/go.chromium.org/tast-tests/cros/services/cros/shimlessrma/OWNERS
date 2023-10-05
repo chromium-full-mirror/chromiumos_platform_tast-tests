@@ -1,0 +1,9 @@
+set noparent
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
+
+# Shimless RMA team
+chenghan@chromium.org
+genechang@google.com
+jeffulin@google.com
