@@ -33,6 +33,12 @@ type gpuRemoteWatcherImpl struct {
 
 func (i *gpuRemoteWatcherImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	i.d = s.DUT()
+	if err := i.d.Conn().CommandContext(ctx, "stat", graphics_common.GraphicsRemoteWatcherRebootFile).Run(); err == nil {
+		s.Log("Detected stale reboot request file on DUT")
+		if err := i.d.Conn().CommandContext(ctx, "rm", "-f", graphics_common.GraphicsRemoteWatcherRebootFile).Run(); err != nil {
+			s.Log("Failed to delete the reboot request file")
+		}
+	}
 	return nil
 }
 
