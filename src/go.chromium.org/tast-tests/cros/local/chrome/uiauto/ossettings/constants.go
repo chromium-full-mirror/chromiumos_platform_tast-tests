@@ -24,38 +24,44 @@ var SearchBoxFinder = nodewith.MultilingualName("Search settings", map[string]st
 // Advanced is a button to expand advanced options.
 var Advanced = nodewith.Role(role.Button).Ancestor(nodewith.Role(role.Heading).Name("Advanced"))
 
+// getMenuItemFinder returns a finder for a menu item with the `name` in the
+// Settings left menu.
+func getMenuItemFinder(name string) *nodewith.Finder {
+	return nodewith.Name(name).Role(role.Link).Focusable()
+}
+
 // Network is a subpage link.
-var Network = nodewith.Name("Network").Role(role.Link).HasClass("item").Focusable()
+var Network = getMenuItemFinder("Network")
 
 // Bluetooth is a subpage link.
-var Bluetooth = nodewith.Name("Bluetooth").Role(role.Link).HasClass("item").Focusable()
+var Bluetooth = getMenuItemFinder("Bluetooth")
 
 // ConnectedDevices is a subpage link.
-var ConnectedDevices = nodewith.Name("Connected devices").Role(role.Link).HasClass("item").Focusable()
+var ConnectedDevices = getMenuItemFinder("Connected devices")
 
 // Accounts is a subpage link.
-var Accounts = nodewith.Name("Accounts").Role(role.Link).HasClass("item").Focusable()
+var Accounts = getMenuItemFinder("Accounts")
 
 // Device is a subpage link.
-var Device = nodewith.Name("Device").Role(role.Link).HasClass("item").Focusable()
+var Device = getMenuItemFinder("Device")
 
 // Personalization is a subpage link.
-var Personalization = nodewith.Name("Personalization").Role(role.Link).HasClass("item").Focusable()
+var Personalization = getMenuItemFinder("Personalization")
 
 // SearchAndAssistant is a subpage link.
-var SearchAndAssistant = nodewith.Name("Search and Assistant").Role(role.Link).HasClass("item").Focusable()
+var SearchAndAssistant = getMenuItemFinder("Search and Assistant")
 
 // SecurityAndPrivacy is a subpage link.
-var SecurityAndPrivacy = nodewith.Name("Security and Privacy").Role(role.Link).HasClass("item").Focusable()
+var SecurityAndPrivacy = getMenuItemFinder("Security and Privacy")
 
 // Apps is a subpage link.
-var Apps = nodewith.Name("Apps").Role(role.Link).HasClass("item").Focusable()
+var Apps = getMenuItemFinder("Apps")
 
 // DateAndTime is a subpage link.
-var DateAndTime = nodewith.Name("Date and time").Role(role.Link).HasClass("item").Focusable()
+var DateAndTime = getMenuItemFinder("Date and time")
 
 // LanguagesAndInputs is a subpage link.
-var LanguagesAndInputs = nodewith.Name("Languages and inputs").Role(role.Link).HasClass("item").Focusable()
+var LanguagesAndInputs = getMenuItemFinder("Languages and inputs")
 
 // Elements in "Languages page"
 var (
@@ -67,23 +73,23 @@ var (
 )
 
 // Files is a subpage link.
-var Files = nodewith.Name("Files").Role(role.Link).HasClass("item").Focusable()
+var Files = getMenuItemFinder("Files")
 
 // PrintersAndScanners is a subpage link.
-var PrintersAndScanners = nodewith.Name("Printers and Scanners").Role(role.Link).HasClass("item").Focusable()
+var PrintersAndScanners = getMenuItemFinder("Printers and scanners")
 
 // Developers is a subpage link.
-var Developers = nodewith.Name("Developers").Role(role.Link).HasClass("item").Focusable()
+var Developers = getMenuItemFinder("Developers")
 
 // Accessibility is a subpage link.
-var Accessibility = nodewith.Name("Accessibility").Role(role.Link).HasClass("item").Focusable()
+var Accessibility = getMenuItemFinder("Accessibility")
 
 // ResetSettings is a subpage link.
-var ResetSettings = nodewith.Name("Reset settings").Role(role.Link).HasClass("item").Focusable()
+var ResetSettings = getMenuItemFinder("Reset settings")
 
 // AboutChromeOS is a subpage link.
 var AboutChromeOS = nodewith.MultilingualName("About ChromeOS", map[string]string{"de": "Über ChromeOS"}).
-	Role(role.Link)
+	Role(role.Link).Focusable()
 
 // MenuButton is a button to show the menu on the left side, only exist when the menu does not exist.
 var MenuButton = nodewith.Name("Main menu").Role(role.Button).Focusable()
