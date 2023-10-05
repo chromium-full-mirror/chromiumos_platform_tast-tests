@@ -332,10 +332,23 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if err != nil {
 		s.Fatal("Failed to check for CCD connection: ", err)
 	}
-	if hasCCD {
+	hasC2D2, err := i.value.Helper.Servo.HasC2D2(ctx)
+	if err != nil {
+		s.Fatal("Failed to check for CCD connection: ", err)
+	}
+	if hasCCD || hasC2D2 {
 		s.Log("Ensuring CCD open, testlab enabled, and capabilities set to factory settings")
 		if err := i.value.Helper.OpenCCD(ctx, true, true); err != nil {
 			s.Fatal("Failed to set CCD open: ", err)
+		}
+	}
+	if hasC2D2 {
+		if err := i.value.Helper.Servo.SetCCDCapability(ctx, map[servo.CCDCap]servo.CCDCapState{
+			servo.OverrideWP:     servo.CapAlways,
+			servo.GscFullConsole: servo.CapAlways,
+			servo.RebootECAP:     servo.CapAlways,
+		}); err != nil {
+			s.Log("Failed to set CCD capability: ", err)
 		}
 	}
 
