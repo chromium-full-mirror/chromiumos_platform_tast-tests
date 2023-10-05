@@ -1,0 +1,8 @@
+set noparent
+
+# Audio team
+aaronyu@google.com
+include chromiumos/owners:v1:/audio/OWNERS.all
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
