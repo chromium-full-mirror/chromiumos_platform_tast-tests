@@ -36,6 +36,8 @@ func NewOption(kind, cache string, caseFold bool) (Option, error) {
 		opt.Tag = "shared"
 		opt.cache = cache
 		opt.caseFold = caseFold
+	} else if kind == "scsi" {
+		opt.Tag = "/dev/sda"
 	} else {
 		return opt, errors.Errorf("invalid storage kind: %v", kind)
 	}
@@ -76,6 +78,8 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, script string, opt Option,
 	} else if opt.Kind == "p9" {
 		storageOpt = vm.SharedDir(vm.SharedDirParam{
 			Src: shared, Tag: opt.Tag, FsType: "p9", Timeout: 5, Writeback: false, DAX: false})
+	} else if opt.Kind == "scsi" {
+		storageOpt = vm.ScsiPaths(block)
 	} else {
 		return nil, errors.Wrap(err, "unknown storage device type")
 	}

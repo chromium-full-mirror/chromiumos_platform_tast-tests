@@ -12,7 +12,7 @@ die() {
 }
 
 usage() {
-  die "Usage: $(basename "$0") <block|virtiofs|virtiofs_dax|p9> <src> " \
+  die "Usage: $(basename "$0") <block|virtiofs|virtiofs_dax|p9|scsi> <src> " \
       "<mountpoint> <output> <jobs>"
 }
 
@@ -38,7 +38,7 @@ main() {
   mount -t tmpfs run /run
 
   case "${kind}" in
-    block | block_packed)
+    block | block_packed | scsi)
       [[ -b "${src}" ]] || die "${src} is not a block device"
       mkfs.ext4 "${src}"
       mount "${src}" "${mountpoint}"
@@ -47,8 +47,8 @@ main() {
       mount -t virtiofs "${src}" "${mountpoint}"
       ;;
     virtiofs_dax)
-        mount -t virtiofs -o dax "${src}" "${mountpoint}"
-        ;;
+      mount -t virtiofs -o dax "${src}" "${mountpoint}"
+      ;;
     *)
       die "Unknown storage type: ${kind}"
   esac

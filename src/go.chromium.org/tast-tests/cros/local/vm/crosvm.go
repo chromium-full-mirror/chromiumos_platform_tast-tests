@@ -65,6 +65,7 @@ type CrosvmParams struct {
 	rootfsPath     string           // optional path to the VM rootfs
 	diskPaths      []string         // paths that will be mounted read only
 	rwDiskPaths    []string         // paths that will be mounted read/write
+	scsiPaths      []string         // paths to the scsi devices
 	socketPath     string           // path to the VM control socket
 	kernelArgs     []string         // string arguments to be passed to the VM kernel
 	sharedDirs     []SharedDirParam // array of configuration of a directory to be shared with the VM
@@ -95,6 +96,13 @@ func Disks(paths ...string) Option {
 func RWDisks(paths ...string) Option {
 	return func(p *CrosvmParams) {
 		p.rwDiskPaths = append(p.rwDiskPaths, paths...)
+	}
+}
+
+// ScsiPaths adds paths to disks that will be exposed as SCSI devices.
+func ScsiPaths(paths ...string) Option {
+	return func(p *CrosvmParams) {
+		p.scsiPaths = append(p.scsiPaths, paths...)
 	}
 }
 
@@ -218,6 +226,10 @@ func (p *CrosvmParams) ToArgs() []string {
 
 	for _, path := range p.rwDiskPaths {
 		args = append(args, "--rwdisk", path)
+	}
+
+	for _, path := range p.scsiPaths {
+		args = append(args, "--scsi-block", path)
 	}
 
 	for _, path := range p.diskPaths {
