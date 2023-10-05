@@ -197,7 +197,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	}
 }
 
-func checkAuthenticationEventWatcher(s *testing.State, ew *dbusutil.EventWatcher) (*xdr.XdrAuthenticateEvent, error) {
+func checkAuthenticationEventWatcher(s *testing.State, ew *dbusutil.EventWatcher) (*xdr.XdrUserEvent, error) {
 	event, ok := <-ew.Events()
 	if !ok {
 		return nil, errors.New("Timed out waiting for expected events")
@@ -217,12 +217,12 @@ func checkAuthenticationEventWatcher(s *testing.State, ew *dbusutil.EventWatcher
 	if enq.GetRecord().GetDestination() != rep.Destination_CROS_SECURITY_USER {
 		return nil, nil
 	}
-	ae := &xdr.XdrAuthenticateEvent{}
+	ae := &xdr.XdrUserEvent{}
 	if err := proto.Unmarshal(enq.GetRecord().GetData(), ae); err != nil {
 		s.Fatal("Failed to unmarshal data for a CROS_SECURITY_USER record: ", err)
 	}
 
-	s.Log("Snooped XdrAuthenticateEvent: ", ae.String())
+	s.Log("Snooped XdrUserEvent: ", ae.String())
 
 	return ae, nil
 }
