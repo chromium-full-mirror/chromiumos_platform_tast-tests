@@ -180,6 +180,10 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 		s.Fatalf("Failed to wait for %q to achieve quiescence: %v", destURL, err)
 	}
 
+	if err := destConn.Navigate(ctx, destURL); err != nil {
+		s.Fatal("Failed to navigate to page: ", err)
+	}
+
 	textBoxNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).First()
 	if err := uiauto.Combine("Select tab and press Ctrl+Z",
 		ui.WaitUntilExists(textBoxNode.Visible()),
