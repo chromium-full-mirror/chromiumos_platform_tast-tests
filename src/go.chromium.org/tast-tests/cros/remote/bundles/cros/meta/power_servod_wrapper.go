@@ -6,8 +6,6 @@ package meta
 
 import (
 	"context"
-	"encoding/json"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -15,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/servod"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
 
 	"go.chromium.org/tast/core/errors"
@@ -60,7 +59,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	subtest := s.Param().(string)
 	resultsDir := filepath.Join(s.OutDir(), "subtest_results")
 
-	// servoCtx is used for async function measuring power
+	// servoCtx is used for async function measuring power.
 	servoCtx, servoCancel := context.WithCancel(ctx)
 
 	cleanupCtx := ctx
@@ -103,7 +102,9 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	}
 
 	ch := make(chan *perf.Values)
+	// TODO: b/304656798 - Investigate timestamps.
 	measureStarted := float64(time.Now().Unix())
+	// TODO: b/304655966 - Implement timeline interface.
 	go func() {
 		if err := pxy.Servo().SetInt(ctx, "ft4232h_generic.CPD_VBAT_acc_clear", 1); err != nil {
 			s.Fatal("Failed to clear accumulator: ", err)
@@ -147,68 +148,37 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 
 	subtestDir := filepath.Join(resultsDir, "tests", subtest)
 
-	logPath := filepath.Join(subtestDir, "log.txt")
-	log, err := os.ReadFile(logPath)
+	measureStarted, err = servod.FindSubtestStartTime(subtestDir)
 	if err != nil {
-		s.Fatalf("Failed to read %q: %v", logPath, err)
+		s.Fatal("Failed to get subtest start time: ", err)
 	}
-	re := regexp.MustCompile("(.*Z) .* Start tracking zram IO stats")
-	match := re.FindStringSubmatch(string(log))
-	if len(match) > 1 {
-		t, err := time.Parse(time.RFC3339Nano, match[1])
-		if err != nil {
-			s.Fatalf("Failed to parse time from %s: %v", match[1], err)
-		}
-		measureStarted = float64(t.Unix())
-	}
-
-	var resultsDict map[string]interface{}
-	jsonData, err := os.ReadFile(filepath.Join(subtestDir, "results-chart.json"))
+	lastTimelineValue, err := servod.FindSubtestLastTimelineValue(subtestDir)
 	if err != nil {
-		s.Fatal("Failed to read results-chart.json: ", err)
-	}
-	if err := json.Unmarshal(jsonData, &resultsDict); err != nil {
-		s.Fatal("Failed to parse results-chart.json: ", err)
+		s.Fatal("Failed to get subtest last timeline value: ", err)
 	}
 
-	var timelineValues []interface{}
-	if resultsDict["Power.t"] != nil {
-		map1 := resultsDict["Power.t"].(map[string]interface{})
-		map2 := map1["summary"].(map[string]interface{})
-		timelineValues = map2["values"].([]interface{})
-	} else if resultsDict["t"] != nil {
-		map1 := resultsDict["t"].(map[string]interface{})
-		map2 := map1["summary"].(map[string]interface{})
-		timelineValues = map2["values"].([]interface{})
-	} else {
-		s.Fatal("No timeline data in original test")
-	}
-
-	var lastTimestamp float64
-	for _, v := range timelineValues {
-		lastTimestamp = v.(float64)
-	}
-	measureEnded := measureStarted + lastTimestamp
+	measureEnded := measureStarted + lastTimelineValue
 
 	// Perf maps metrics to value but they modify key before saving, so dig up metric again.
 	for metric := range servoResult.GetValues() {
 		if metric.Name == intervalMetricName {
 			intervalMetric = metric
+			break
 		}
 	}
 
 	intervalData := servoResult.GetValues()[intervalMetric]
 	overlapStartIdx := 0
 	overlapEndIdx := len(intervalData)
-	for i, x := range intervalData {
-		if x >= measureStarted {
-			overlapStartIdx = i
+	for index, value := range intervalData {
+		if value >= measureStarted {
+			overlapStartIdx = index
 			break
 		}
 	}
-	for i, x := range intervalData {
-		if x > measureEnded {
-			overlapEndIdx = i
+	for index, value := range intervalData {
+		if value > measureEnded {
+			overlapEndIdx = index
 			break
 		}
 	}
