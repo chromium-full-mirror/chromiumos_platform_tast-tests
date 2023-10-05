@@ -14,15 +14,15 @@ import (
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	types "go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/common/tape"
-	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	"go.chromium.org/tast-tests/cros/remote/rollback"
-	"go.chromium.org/tast-tests/cros/services/cros/policy"
 	rpb "go.chromium.org/tast-tests/cros/services/cros/rollback"
+	tape_service "go.chromium.org/tast-tests/cros/services/cros/tape"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -84,6 +84,11 @@ func EnterpriseRollbackEnrolled(ctx context.Context, s *testing.State) {
 	}
 	defer rpcClient.Close(cleanupCtx)
 
+	if err = deprovision(ctx, s.DUT(), s.RPCHint(), s.RequiredVar(tape.ServiceAccountVar)); err != nil {
+		s.Error("Failed to deprovision before test: ", err)
+	}
+	defer deprovision(cleanupCtx, s.DUT(), s.RPCHint(), s.RequiredVar(tape.ServiceAccountVar))
+
 	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
@@ -116,10 +121,6 @@ func EnterpriseRollbackEnrolled(ctx context.Context, s *testing.State) {
 	// We also need to be able to clean up if the device is not enrolled or in a
 	// strange state.
 	defer func(ctx context.Context) {
-		if err := deprovision(ctx, s.DUT(), s.RPCHint(), acc, s.RequiredVar(tape.ServiceAccountVar)); err != nil {
-			s.Error("Failed to deprovision: ", err)
-		}
-
 		if err := rollback.ClearRollbackAndSystemData(ctx, s.DUT(), s.RPCHint()); err != nil {
 			s.Error("Failed to clean rollback data after test: ", err)
 		}
@@ -146,6 +147,22 @@ func EnterpriseRollbackEnrolled(ctx context.Context, s *testing.State) {
 
 	if err := waitForNetwork(ctx, rollbackService, networkID, types.DevicePolicyOS); err != nil {
 		s.Fatal("Network before Rollback check error: ", err)
+	}
+
+	tapeService := tape_service.NewServiceClient(rpcClient.Conn)
+
+	ids, err := tapeService.GetDeviceID(ctx, &empty.Empty{})
+	if err != nil {
+		s.Error("Failed to get device id: ", err)
+	}
+
+	stableDeviceSecret, err := getStableDeviceSecret(ctx, s.DUT())
+	if err != nil {
+		s.Fatal("Failed to get stable device secret: ", err)
+	}
+
+	if err := tapeClient.StoreDeprovisioningIDs(ctx, ids.DeviceID, ids.CustomerID, stableDeviceSecret); err != nil {
+		s.Error("Failed to store ids in tape: ", err)
 	}
 
 	_, err = rollback.SaveRollbackData(ctx, s.DUT())
@@ -221,7 +238,7 @@ func waitForNetwork(ctx context.Context, rollbackService rpb.EnterpriseRollbackS
 	return nil
 }
 
-func deprovision(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, acc *tape.OwnedTestAccount, serviceAccount string) (retErr error) {
+func deprovision(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, serviceAccount string) (retErr error) {
 	testing.ContextLog(ctx, "Deprovisioning")
 	rpcClient, err := rpc.Dial(ctx, dut, rpcHint)
 	if err != nil {
@@ -229,41 +246,34 @@ func deprovision(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, ac
 	}
 	defer rpcClient.Close(ctx)
 
+	stableDeviceSecret, err := getStableDeviceSecret(ctx, dut)
+	if err != nil {
+		return errors.Wrap(err, "failed to get stable device secret")
+	}
+
 	tapeClient, err := tape.NewClient(ctx, []byte(serviceAccount))
 	if err != nil {
-		return errors.Wrap(err, "failed to create tape client")
+		return errors.Wrap(err, "failed to start tape client")
 	}
 
-	if err := tapeClient.DeprovisionHelper(ctx, rpcClient, acc.CustomerID, acc.OrgUnitPath); err == nil {
-		return nil
-	}
-
-	testing.ContextLog(ctx, "Deprovisioning failed, try to re-enroll and deprovision")
-
-	if err := policyutil.EnsureTPMAndSystemStateAreResetRemote(ctx, dut); err != nil {
-		return errors.Wrap(err, "failed to wipe device for deprovisioning")
-	}
-
-	rpcClient, err = rpc.Dial(ctx, dut, rpcHint)
+	provisioned, err := tapeClient.Provisioned(ctx, tape.WithStableDeviceSecret(stableDeviceSecret))
 	if err != nil {
-		return errors.Wrap(err, "failed to connect the rpc client")
-	}
-	defer rpcClient.Close(ctx)
-
-	defer func(ctx context.Context) {
-		if err := tapeClient.DeprovisionHelper(ctx, rpcClient, acc.CustomerID, acc.OrgUnitPath); err != nil {
-			retErr = errors.Wrap(err, "failed to deprovision, even after wiping and re-enrolling")
+		return errors.Wrap(err, "failed to check if the device is provisioned")
+	} else if provisioned {
+		testing.ContextLog(ctx, "Device was provisioned before the test ran, probably because a previous test did not clean up correctly")
+		if err := tapeClient.DeprovisionAndVerify(ctx, tape.WithStableDeviceSecret(stableDeviceSecret)); err != nil {
+			return errors.Wrap(err, "failed to deprovision")
 		}
-	}(ctx)
-
-	policyClient := policy.NewPolicyServiceClient(rpcClient.Conn)
-	if _, err := policyClient.GAIAEnrollAndLoginUsingChrome(ctx, &policy.GAIAEnrollAndLoginUsingChromeRequest{
-		Username:    acc.Username,
-		Password:    acc.Password,
-		DmserverURL: dmServerURL,
-	}); err != nil {
-		return errors.Wrap(err, "failed to re-enroll for deprovisioning")
 	}
 
 	return nil
+}
+
+func getStableDeviceSecret(ctx context.Context, dut *dut.DUT) (string, error) {
+	const stableDeviceSecretFileName = "/sys/firmware/vpd/ro/stable_device_secret_DO_NOT_SHARE"
+	data, err := linuxssh.ReadFile(ctx, dut.Conn(), stableDeviceSecretFileName)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to read %s", stableDeviceSecretFileName)
+	}
+	return string(data), nil
 }
