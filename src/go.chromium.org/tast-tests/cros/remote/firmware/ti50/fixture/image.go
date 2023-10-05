@@ -11,7 +11,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -51,6 +53,12 @@ const (
 
 	// branchImageBin is used instead of imageBin on branch builders.
 	branchImageBin = "ti50_Unknown_PrePVT_ti50-accessory-mp.bin"
+
+	// tastImageGlob matches images in tast/<testbedtype>-<imagetype>/.
+	tastImageGlob = "image*.bin"
+
+	// tastConfigGlob matches fw config json files in tast/<testbedtype>-<imagetype>/.
+	tastConfigGlob = "opentitantool_fw_config.json"
 
 	gsPrefix = "gs://"
 
@@ -166,8 +174,8 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 				// Cloud directory (branch or main) has a "tast/" subdirectory,
 				// use images from there.
 				tastDir := filepath.Join(inputURL[len(gsPrefix):], "tast", imageDir)
-				fullURL = gsPrefix + filepath.Join(tastDir, "image*.bin")
-				jsonURL = gsPrefix + filepath.Join(tastDir, "opentitantool_fw_config.json")
+				fullURL = gsPrefix + filepath.Join(tastDir, tastImageGlob)
+				jsonURL = gsPrefix + filepath.Join(tastDir, tastConfigGlob)
 			} else {
 				// Legacy artifact directory structure.
 				// Assume branch builds have a -channel in the URL.
@@ -268,28 +276,45 @@ func findLatestCompletedBuildURL(ctx context.Context, branch string) (string, er
 		return "", err
 	}
 	builds := strings.Split(string(output), "\n")
-	sort.Strings(builds)
+	sort.Slice(builds, func(i, j int) bool {
+		// buildRe extracts the build number, YYYYY, in .*/Rxxx-xxxxx.x.x-YYYYY-xxxx...
+		var buildRe = regexp.MustCompile(`.*/R\d+-[0-9.]*-(\d+)-\d*/?`)
+		am := buildRe.FindStringSubmatch(builds[i])
+		bm := buildRe.FindStringSubmatch(builds[j])
 
+		// Consider non-matching builds older than matching builds
+		if am == nil {
+			return true
+		}
+		if bm == nil {
+			return false
+		}
+
+		ai, _ := strconv.Atoi(am[1])
+		bi, _ := strconv.Atoi(bm[1])
+		return ai < bi
+	})
+
+Loop:
 	for i := len(builds) - 1; i >= 0; i-- {
-		buildComplete := true
 		build := builds[i]
-	Loop:
 		for _, boardType := range ti50.AllTestbedTypes() {
 			for _, imageType := range AllImageTypes() {
 				dir, err := imageDirectory(boardType, imageType)
 				if err != nil {
 					return "", err
 				}
+				artifactsDir := build + filepath.Join("tast", dir) + "/"
 
-				if !gsURLExists(ctx, build+filepath.Join("tast", dir)) {
-					buildComplete = false
-					break Loop
+				for _, g := range []string{tastImageGlob, tastConfigGlob} {
+					if !gsURLExists(ctx, artifactsDir+g) {
+						testing.ContextLogf(ctx, "Rejecting %s: %s missing", artifactsDir, g)
+						continue Loop
+					}
 				}
 			}
 		}
-		if buildComplete {
-			return build, nil
-		}
+		return build, nil
 	}
 	return "", errors.New("found no completed builds for " + branch)
 }
