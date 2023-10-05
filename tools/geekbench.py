@@ -16,10 +16,11 @@ Required positional argumentss:
 Optional flags:
 1. --binary (-b) Custom binary path
 2. --gb-version -v Geekbench version. Default 5.
-3. --env -e Execute environment; native and/or crostini. Default native.
+3. --env -e Execution environment; native and/or crostini. Default native.
 """
 import argparse
 import os
+import subprocess
 import sys
 from pathlib import Path
 from typing import Optional
@@ -87,10 +88,13 @@ def copy_binary(binary_src) -> None:
 def run_test(tast_command, args) -> None:
     """Run the tast command. Delete binary after it returns."""
     try:
-        # Could fail if sudo password are asked.
-        ret = os.system(tast_command)
-        if ret != 0:
-            print("tast command failed")
+        subprocess.run(
+            tast_command.split(),
+            cwd=CHROMEOS_CHECKOUT_PATH,
+            check=True,
+        )
+    except subprocess.CalledProcessError:
+        print("tast command failed")
     finally:
         # If a binary is copied, delete it after tast command returns.
         if args.binary is not None:
