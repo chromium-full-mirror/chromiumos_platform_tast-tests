@@ -319,6 +319,23 @@ func GetModemType(ctx context.Context) (cellularconst.ModemType, error) {
 	return device.Modem, nil
 }
 
+// GetModemTypeFromDeviceID converts a USB Device ID into ModemType.
+func GetModemTypeFromDeviceID(deviceID string) (cellularconst.ModemType, error) {
+	if deviceID == "usb:2cb7:0007" {
+		return cellularconst.ModemTypeL850, nil
+	} else if deviceID == "pci:14c3:4d75 (External)" {
+		return cellularconst.ModemTypeFM350, nil
+	} else if deviceID == "usb:2cb7:01a0" {
+		return cellularconst.ModemTypeNL668, nil
+	} else if deviceID == "usb:2cb7:01a2" {
+		return cellularconst.ModemTypeFM101, nil
+	} else if deviceID == "usb:2c7c:030b" {
+		return cellularconst.ModemTypeEM060, nil
+	} else {
+		return cellularconst.ModemTypeUnknown, errors.Errorf("cannot convert device ID %q to ModemType", deviceID)
+	}
+}
+
 // IsVariantKnown checks if the DUT's variant is in |KnownVariants|.
 func IsVariantKnown(ctx context.Context) error {
 	if _, err := getDevice(ctx); err != nil {

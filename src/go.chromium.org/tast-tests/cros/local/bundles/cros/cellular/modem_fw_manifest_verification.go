@@ -6,16 +6,19 @@ package cellular
 
 import (
 	"context"
+	"encoding/json"
 	"encoding/xml"
 	"os"
 	"path/filepath"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/modemfwd"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 func init() {
@@ -60,6 +63,13 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 
 		if device.GetDlc() != nil && device.GetDlc().GetDlcId() != "" {
 			dlcCounter++
+			modemType, err := cellular.GetModemTypeFromDeviceID(device.DeviceId)
+			if err != nil {
+				s.Fatalf("Failed to get modem type: %s", err)
+			}
+			if err := verifyDlcManifest(ctx, device.GetDlc().GetDlcId(), modemType); err != nil {
+				s.Fatalf("Invalid DLC manifest : %s", err)
+			}
 			// Only the variant that matches the device's variant will contain a DLC that is
 			// already installed by modemfwd.
 			// Manually install the DLCs for other variants. This won't work on non test
@@ -223,4 +233,107 @@ func getFM101RecoveryFileList(firmwarePath, variant string) ([]string, error) {
 		ret = append(ret, fullPath)
 	}
 	return ret, nil
+}
+
+type dlcSpecs struct {
+	minPreallocSize int64 // Size in MiB
+	// max values should always be defined a little bigger than expected, because dlcservice makes
+	// the number bigger depending on the drive partition configuration.
+	maxPreallocSize int64 // Size in MiB
+	factoryInstall  bool
+}
+
+func newDlcSpec(minPreallocSize, maxPreallocSize int64) *dlcSpecs {
+	return &dlcSpecs{
+		minPreallocSize: minPreallocSize,
+		maxPreallocSize: maxPreallocSize,
+		factoryInstall:  true,
+	}
+}
+
+func (f *dlcSpecs) setFactoryInstall(value bool) *dlcSpecs {
+	f.factoryInstall = value
+	return f
+}
+
+var (
+	// This map should be used to override dlcSpecsPerModem on variants that have special requirements
+	dlcSpecsPerDlcID = map[string]dlcSpecs{
+		"modem-fw-dlc-nipperkin":        *newDlcSpec(30, 32),
+		"modem-fw-dlc-guybrush360-l850": *newDlcSpec(30, 32),
+		"modem-fw-dlc-guybrush-fm350":   *newDlcSpec(50, 52).setFactoryInstall(false),
+	}
+
+	dlcSpecsPerModem = map[cellularconst.ModemType]dlcSpecs{
+		cellularconst.ModemTypeL850:  *newDlcSpec(40, 43),
+		cellularconst.ModemTypeFM350: *newDlcSpec(160, 165),
+		cellularconst.ModemTypeFM101: *newDlcSpec(300, 310),
+		cellularconst.ModemTypeEM060: *newDlcSpec(300, 310)}
+)
+
+// ImageLoaderManifest holds the fields related to a imageloader manifest.
+type imageLoaderManifest struct {
+	CriticalUpdate   bool   `json:"critical-update"`
+	FactoryInstall   bool   `json:"factory-install"`
+	ID               string `json:"id"`
+	PowerwashSafe    bool   `json:"powerwash-safe"`
+	PreAllocatedSize int64  `json:"pre-allocated-size,string"`
+	PreloadAllowed   bool   `json:"preload-allowed"`
+}
+
+// Metadata holds the fields related to the DLC metadata.
+type dlcMetadata struct {
+	Manifest imageLoaderManifest `json:"manifest"`
+	Table    string              `json:"table"`
+}
+
+func getDlcMetadata(ctx context.Context, id string) (*dlcMetadata, error) {
+	buf, err := testexec.CommandContext(ctx, "dlc_metadata_util", "--get", "--id="+id).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get the DLC metadata")
+	}
+
+	var metadata dlcMetadata
+	if err := json.Unmarshal(buf, &metadata); err != nil {
+		return nil, err
+	}
+
+	return &metadata, nil
+}
+
+func verifyDlcManifest(ctx context.Context, dlcID string, modemType cellularconst.ModemType) error {
+	metadata, err := getDlcMetadata(ctx, dlcID)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get manifest for DLC: %s", dlcID)
+	}
+	var specs dlcSpecs
+	origin := ""
+	if val, ok := dlcSpecsPerDlcID[dlcID]; ok {
+		specs = val
+		origin = "DlcId " + dlcID
+	} else if val, ok := dlcSpecsPerModem[modemType]; ok {
+		specs = val
+		origin = "modem " + modemType.String()
+	} else {
+		return errors.Errorf("cannot find DLC specifications for DLC: %s", dlcID)
+	}
+	preallocSizeInMbs := metadata.Manifest.PreAllocatedSize / 1000000.0
+	if preallocSizeInMbs < specs.minPreallocSize {
+		return errors.Errorf("pre-allocated size less than expected for %s. DLC: %s. Got %d, expected >= %d", origin, dlcID, preallocSizeInMbs, specs.minPreallocSize)
+	}
+	if preallocSizeInMbs > specs.maxPreallocSize {
+		return errors.Errorf("pre-allocated size greater than expected for %s. DLC: %s. Got %d, expected <= %d", origin, dlcID, preallocSizeInMbs, specs.maxPreallocSize)
+	}
+
+	if metadata.Manifest.FactoryInstall != specs.factoryInstall {
+		return errors.Errorf("DLC_FACTORY_INSTALL was not configured correctly in DLC %s. Got %t, expected %t", dlcID, metadata.Manifest.FactoryInstall, specs.factoryInstall)
+	}
+	if !metadata.Manifest.PreloadAllowed {
+		return errors.Errorf("DLC_PRELOAD was not set in DLC %s", dlcID)
+	}
+	if !metadata.Manifest.CriticalUpdate {
+		return errors.Errorf("DLC_CRITICAL_UPDATE was not set in DLC %s", dlcID)
+	}
+
+	return nil
 }
