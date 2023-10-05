@@ -62,8 +62,14 @@ func init() {
 			pci.SearchFlag(&policy.ChromeOsReleaseChannel{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.DeviceReleaseLtsTag{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.DeviceTargetVersionPrefix{}, pci.VerifiedValue),
+			{
+				Key: "feature_id",
+				// Configure "Target version" in "Auto-update settings" in Admin Console
+				// and ensure that devices correctly update to the configured version.
+				// COM_FOUND_CUJ13_TASK3_WF1
+				Value: "screenplay-04b1d4dc-1363-46f5-a453-7937fae60bba",
+			},
 		},
-		// TODO(b/279132490): Add a screenplay once it is created.
 		Params: []testing.Param{{
 			Name:    "lts",
 			Timeout: majorVersionPinningE2ETimeout,

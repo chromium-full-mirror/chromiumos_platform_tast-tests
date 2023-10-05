@@ -37,7 +37,20 @@ func init() {
 			"tast.cros.policy.PolicyService",
 		},
 		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.DeviceMinimumVersion{}, pci.VerifiedFunctionalityJS)},
+			pci.SearchFlag(&policy.DeviceMinimumVersion{}, pci.VerifiedFunctionalityJS),
+			{
+				Key: "feature_id",
+				// Configure "Enforce updates" in "Auto-update settings" in Admin
+				// Console:
+				//  - Choose the latest version in "if they are not running at least
+				//    version"
+				//  - Set "Block devices & user sessions after" to "No warning"
+				// Then ensure the user is logged out of a device running an older
+				// version and can no longer log in.
+				// COM_FOUND_CUJ23_TASK4_WF1
+				Value: "screenplay-71c15420-8bf1-4b8b-a1db-e78b6978629d",
+			},
+		},
 		Timeout: 7 * time.Minute,
 	})
 }

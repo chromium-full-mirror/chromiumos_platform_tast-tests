@@ -72,6 +72,14 @@ func init() {
 				// COM_FOUND_CUJ12_TASK3_WF2
 				Value: "screenplay-6c00ff64-eb5d-4176-89ab-a260ad9ea279",
 			},
+			{
+				Key: "feature_id",
+				// 1. Configure an OU with a device policy A set to X
+				// 2. Enroll a device
+				// 3. Ensure that the policy A is set to X on the device
+				// COM_FOUND_CUJ31_TASK2_WF1
+				Value: "screenplay-a66aea3f-5e72-4644-a309-412d58592045",
+			},
 		},
 		ServiceDeps: []string{
 			"tast.cros.nebraska.Service",

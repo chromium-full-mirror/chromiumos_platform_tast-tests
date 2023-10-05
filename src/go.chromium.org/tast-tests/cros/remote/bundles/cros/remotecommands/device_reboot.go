@@ -47,6 +47,13 @@ func init() {
 		ServiceDeps: []string{
 			"tast.cros.policy.PolicyService",
 		},
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Verify that the device is rebooted after receiving the reboot remote
+			// command.
+			// COM_FOUND_CUJ24_TASK2_WF1
+			Value: "screenplay-cbaf3a48-d78e-4a6f-a617-4a1a9c3343c6",
+		}},
 		Timeout: rebootCheckTimeout,
 	})
 }
