@@ -188,13 +188,18 @@ func chargeBattery(ctx context.Context, targetPercentage float64, isPowerQual bo
 
 	screenBrightnessPercentage := screenBrightnessPercentageToSet(ctx, isPowerQual)
 	resetScreenBrightness, err := SetBacklightBrightnessLinearPercent(ctx, screenBrightnessPercentage)
-	defer resetScreenBrightness(cleanupCtx)
+	if err != nil {
+		return errors.Wrap(err, "failed to set screen backlight brightness")
+	}
+	if resetScreenBrightness != nil {
+		defer resetScreenBrightness(cleanupCtx)
+	}
 
 	resetKeyboardBrightness, err := SetKeyboardBrightness(ctx, 0)
 	if err != nil {
 		return errors.Wrap(err, "failed to minimise keyboard brightness")
 	}
-	if resetScreenBrightness != nil {
+	if resetKeyboardBrightness != nil {
 		defer resetKeyboardBrightness(cleanupCtx)
 	}
 
@@ -241,13 +246,15 @@ func drainBattery(ctx context.Context, targetPercentage float64) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to maximise screen brightness")
 	}
-	defer resetScreenBrightness(cleanupCtx)
+	if resetScreenBrightness != nil {
+		defer resetScreenBrightness(cleanupCtx)
+	}
 
 	resetKeyboardBrightness, err := SetKeyboardBrightness(ctx, 100)
 	if err != nil {
 		return errors.Wrap(err, "failed to maximise keyboard brightness")
 	}
-	if resetScreenBrightness != nil {
+	if resetKeyboardBrightness != nil {
 		defer resetKeyboardBrightness(cleanupCtx)
 	}
 
