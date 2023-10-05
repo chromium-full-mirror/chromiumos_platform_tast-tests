@@ -43,6 +43,7 @@ func init() {
 		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.SyncDisabled{}, pci.VerifiedFunctionalityUI),
 		},
 	})
 }
@@ -114,8 +115,8 @@ func ManagedPlayStoreIconTablet(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to clean up: ", err)
 			}
 
-			// Update policies.
-			if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{param.value}); err != nil {
+			// Sync needs to be disabled for shelf icons to show. See b/303237403#comment12
+			if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{param.value, &policy.SyncDisabled{Val: true}}); err != nil {
 				s.Fatal("Failed to update policies: ", err)
 			}
 

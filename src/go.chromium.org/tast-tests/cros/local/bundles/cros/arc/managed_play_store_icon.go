@@ -86,6 +86,7 @@ func init() {
 		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.SyncDisabled{}, pci.VerifiedFunctionalityUI),
 		},
 	})
 }
@@ -103,7 +104,8 @@ func ManagedPlayStoreIcon(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get login creds: ", err)
 	}
 
-	policies := []policy.Policy{args.arcEnabled}
+	// Sync needs to be disabled for shelf icons to show. See b/303237403#comment12
+	policies := []policy.Policy{args.arcEnabled, &policy.SyncDisabled{Val: true}}
 	fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
 	defer fdms.Stop(cleanupCtx)
 
