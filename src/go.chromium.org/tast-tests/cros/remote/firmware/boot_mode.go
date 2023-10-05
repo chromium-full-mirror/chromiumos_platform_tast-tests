@@ -263,6 +263,11 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 		}
 	}
 
+	devModeBypasserParams := RunBypasser{BypasserMethod: ms.bypasser.BypassDevMode, RepeatBypasser: true, WaitUntilDUTConnected: h.Config.DelayRebootToPing}
+	if msOptsContain(opts, WaitSoftwareSync) {
+		devModeBypasserParams.WaitUntilDUTConnected += h.Config.SoftwareSyncUpdate
+	}
+
 	switch toMode {
 	case fwCommon.BootModeNormal:
 		testing.ContextLog(ctx, "Disabling dev request")
@@ -333,7 +338,7 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 			}
 			// Depending on how we got to to dev mode, we might end up in normal mode or the recovery
 			// menu, so navigate to dev mode, but it that fails, fall through to the next attempt below.
-			if err := ms.RecScreenToDevMode(ctx, opts...); err == nil {
+			if err := ms.RunBypasserUntilDUTConnected(ctx, devModeBypasserParams); err == nil {
 				newMode, err := h.Reporter.CurrentBootMode(ctx)
 				if err != nil {
 					return errors.Wrap(err, "determining boot mode after simple reboot")
@@ -373,7 +378,7 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 			}
 			// Depending on how we got to to rec mode, we might end up in normal mode or the recovery
 			// menu, so navigate to dev mode, but it that fails, fall through to the next attempt below.
-			if err := ms.RecScreenToDevMode(ctx, opts...); err == nil {
+			if err := ms.RunBypasserUntilDUTConnected(ctx, devModeBypasserParams); err == nil {
 				newMode, err := h.Reporter.CurrentBootMode(ctx)
 				if err != nil {
 					return errors.Wrap(err, "determining boot mode after simple reboot")
