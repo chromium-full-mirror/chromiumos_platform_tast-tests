@@ -79,6 +79,7 @@ func Ti50Efs2(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f.DevBoard(), s)
 	i := ti50.NewCrOSImage(b)
+	ecUart := b.PhysicalUart(ti50.UartEC, time.Second)
 
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
 
@@ -89,22 +90,22 @@ func Ti50Efs2(ctx context.Context, s *testing.State) {
 	// the preceding tests is commented out, then it doesn't. It does not seem to be flaky if
 	// run in a loop or anything but last.
 	s.Log("Test Preamble Lengths")
-	testPreambleLengths(ctx, s, b, tpm)
+	testPreambleLengths(ctx, s, b, ecUart, tpm)
 
 	s.Log("Test Default Boot Mode")
-	testDefaultBootMode(ctx, s, b, tpm)
+	testDefaultBootMode(ctx, s, b, ecUart, tpm)
 
 	s.Log("Test No Boot Mode")
-	testNoBootMode(ctx, s, b, tpm)
+	testNoBootMode(ctx, s, b, ecUart, tpm)
 
 	s.Log("Test Verified Boot Mode")
-	testVerifiedMode(ctx, s, b, tpm)
+	testVerifiedMode(ctx, s, b, ecUart, tpm)
 
 	s.Log("Test Error Cases")
-	testErrorCases(ctx, s, b, tpm)
+	testErrorCases(ctx, s, b, ecUart, tpm)
 
 	s.Log("Test Kernel File Overwritten")
-	testKernelFileOverwritten(ctx, s, b, tpm)
+	testKernelFileOverwritten(ctx, s, b, ecUart, tpm)
 }
 
 // createEcPacket creates an EFS2 packet with the correct formatting and crc8 data with the
@@ -141,12 +142,17 @@ func makeKernelFile(hash []byte) []byte {
 
 // checkSendEcPacket sends the specified EC EFS2 packet and tests whether the returned EFS2 code
 // is the specified wanted value.
-func checkSendEcPacket(ctx context.Context, s *testing.State, b utils.DevboardHelper, packet, want []byte) {
+func checkSendEcPacket(ctx context.Context, s *testing.State, b utils.DevboardHelper, ecUart ti50.SerialChannel, packet, want []byte) {
 	b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, true)
 	defer b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, false)
 
-	b.ECSerialWrite(ctx, packet)
-	got, err := b.ECSerialRead(ctx, 2)
+	if err := ecUart.ClearInput(ctx); err != nil {
+		s.Error("Could not clear EC serial: ", err)
+	}
+	if err := ecUart.WriteSerial(ctx, packet); err != nil {
+		s.Error("Could not write EC serial: ", err)
+	}
+	got, err := ecUart.ReadSerialBytes(ctx, 2)
 	if err != nil {
 		s.Error("Could not read EC serial: ", err)
 	} else if !bytes.Equal(got, want) {
@@ -156,11 +162,16 @@ func checkSendEcPacket(ctx context.Context, s *testing.State, b utils.DevboardHe
 
 // sendEcPacketNoResponse sends the specified EC EFS2 packet, but does not try to read any response.
 // This is useful when the GSC is expected to reset the EC and does not respond with any value.
-func sendEcPacketNoResponse(ctx context.Context, s *testing.State, b utils.DevboardHelper, packet []byte) {
+func sendEcPacketNoResponse(ctx context.Context, s *testing.State, b utils.DevboardHelper, ecUart ti50.SerialChannel, packet []byte) {
 	b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, true)
 	defer b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, false)
 
-	b.ECSerialWrite(ctx, packet)
+	if err := ecUart.ClearInput(ctx); err != nil {
+		s.Error("Could not clear EC serial: ", err)
+	}
+	if err := ecUart.WriteSerial(ctx, packet); err != nil {
+		s.Error("Could not write EC serial: ", err)
+	}
 }
 
 // checkApBootMode verifies that the boot mode exposed to the AP via TPMV interface returns the
@@ -186,7 +197,7 @@ func resetEc(ctx context.Context, s *testing.State, b utils.DevboardHelper) {
 	b.GpioSet(ctx, ti50.GpioTi50KsiRefresh, true)
 }
 
-func testDefaultBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
+func testDefaultBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelper, ecUart ti50.SerialChannel, tpm *utils.TpmHelper) {
 	resetEc(ctx, s, b)
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
@@ -198,7 +209,7 @@ func testDefaultBootMode(ctx context.Context, s *testing.State, b utils.Devboard
 
 	s.Log("EC sends Verified as Mode. Should be rejected")
 	setVerified := createEcPacket(efs2CmdSetBootMode, []byte{efs2BootModeVerified})
-	checkSendEcPacket(ctx, s, b, setVerified, efs2ReturnErrorBadParm)
+	checkSendEcPacket(ctx, s, b, ecUart, setVerified, efs2ReturnErrorBadParm)
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 
 	events := b.GpioMonitorFinish(ctx, gpioMonitor)
@@ -208,7 +219,7 @@ func testDefaultBootMode(ctx context.Context, s *testing.State, b utils.Devboard
 	}
 }
 
-func testNoBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
+func testNoBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelper, ecUart ti50.SerialChannel, tpm *utils.TpmHelper) {
 	resetEc(ctx, s, b)
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
@@ -219,17 +230,17 @@ func testNoBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 
 	s.Log("EC sends NO_BOOT")
 	setNoBoot := createEcPacket(efs2CmdSetBootMode, []byte{efs2BootModeNoBoot})
-	checkSendEcPacket(ctx, s, b, setNoBoot, efs2ReturnSuccess)
+	checkSendEcPacket(ctx, s, b, ecUart, setNoBoot, efs2ReturnSuccess)
 	checkApBootMode(ctx, s, tpm, efs2BootModeNoBoot)
 
 	// Sending same command from EC should always succeed to handle failed and retried transactions.
 	s.Log("EC sends NO_BOOT again and should succeed")
-	checkSendEcPacket(ctx, s, b, setNoBoot, efs2ReturnSuccess)
+	checkSendEcPacket(ctx, s, b, ecUart, setNoBoot, efs2ReturnSuccess)
 	checkApBootMode(ctx, s, tpm, efs2BootModeNoBoot)
 
 	s.Log("EC sends Verified as Mode. Should be rejected")
 	setVerified := createEcPacket(efs2CmdSetBootMode, []byte{efs2BootModeVerified})
-	checkSendEcPacket(ctx, s, b, setVerified, efs2ReturnErrorBadParm)
+	checkSendEcPacket(ctx, s, b, ecUart, setVerified, efs2ReturnErrorBadParm)
 	checkApBootMode(ctx, s, tpm, efs2BootModeNoBoot)
 
 	events := b.GpioMonitorFinish(ctx, gpioMonitor)
@@ -246,7 +257,7 @@ func testNoBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	if gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] != true {
 		s.Error("EC_RST_L not de-asserted before when starting monitoring")
 	}
-	sendEcPacketNoResponse(ctx, s, b, setTrustedRo)
+	sendEcPacketNoResponse(ctx, s, b, ecUart, setTrustedRo)
 	// Wait for gpio monitoring to see EC_RST edge.
 	testing.Sleep(ctx, 500*time.Millisecond) // GoBigSleepLint: No good way to poll for EC_RST
 	events = b.GpioMonitorFinish(ctx, gpioMonitor)
@@ -262,7 +273,7 @@ func testNoBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 }
 
-func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
+func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHelper, ecUart ti50.SerialChannel, tpm *utils.TpmHelper) {
 	resetEc(ctx, s, b)
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
@@ -307,23 +318,23 @@ func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHel
 
 	s.Log("EC sends verify hash and expected success")
 	verifyEcPacket := createEcPacket(efs2CmdVerifyHash, hash)
-	checkSendEcPacket(ctx, s, b, verifyEcPacket, efs2ReturnSuccess)
+	checkSendEcPacket(ctx, s, b, ecUart, verifyEcPacket, efs2ReturnSuccess)
 	checkApBootMode(ctx, s, tpm, efs2BootModeVerified)
 
 	// GSC needs to be able to handle duplicate requests without adverse side affects to handle
 	// communication retries.
 	s.Log("EC sends same verify hash and expected success with now reboot")
-	checkSendEcPacket(ctx, s, b, verifyEcPacket, efs2ReturnSuccess)
+	checkSendEcPacket(ctx, s, b, ecUart, verifyEcPacket, efs2ReturnSuccess)
 	checkApBootMode(ctx, s, tpm, efs2BootModeVerified)
 
 	s.Log("EC sends Verified as Mode. Should be rejected")
 	setVerified := createEcPacket(efs2CmdSetBootMode, []byte{efs2BootModeVerified})
-	checkSendEcPacket(ctx, s, b, setVerified, efs2ReturnErrorBadParm)
+	checkSendEcPacket(ctx, s, b, ecUart, setVerified, efs2ReturnErrorBadParm)
 	checkApBootMode(ctx, s, tpm, efs2BootModeVerified)
 
 	s.Log("EC sends NO_BOOT and should transition from VERIFIED")
 	setNoBoot := createEcPacket(efs2CmdSetBootMode, []byte{efs2BootModeNoBoot})
-	checkSendEcPacket(ctx, s, b, setNoBoot, efs2ReturnSuccess)
+	checkSendEcPacket(ctx, s, b, ecUart, setNoBoot, efs2ReturnSuccess)
 	checkApBootMode(ctx, s, tpm, efs2BootModeNoBoot)
 
 	events := b.GpioMonitorFinish(ctx, gpioMonitor)
@@ -338,7 +349,7 @@ func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHel
 	if gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] != true {
 		s.Error("EC_RST_L not de-asserted before when starting monitoring")
 	}
-	sendEcPacketNoResponse(ctx, s, b, setTrustedRo)
+	sendEcPacketNoResponse(ctx, s, b, ecUart, setTrustedRo)
 	// Wait for gpio monitoring to see EC_RST edge.
 	testing.Sleep(ctx, 500*time.Millisecond) // GoBigSleepLint: No good way to poll for EC_RST
 	events = b.GpioMonitorFinish(ctx, gpioMonitor)
@@ -354,7 +365,7 @@ func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHel
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 }
 
-func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
+func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelper, ecUart ti50.SerialChannel, tpm *utils.TpmHelper) {
 	resetEc(ctx, s, b)
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
@@ -401,7 +412,7 @@ func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	// Flip the all the bits in the first hash byte from what is stored in kernel file.
 	hash[0] ^= 0xFF
 	verifyEcPacket := createEcPacket(efs2CmdVerifyHash, hash)
-	checkSendEcPacket(ctx, s, b, verifyEcPacket, efs2ReturnErrorBadPayload)
+	checkSendEcPacket(ctx, s, b, ecUart, verifyEcPacket, efs2ReturnErrorBadPayload)
 	checkApBootMode(ctx, s, tpm, efs2BootModeNoBoot)
 
 	// Ensure no EC resets until this point
@@ -424,46 +435,46 @@ func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	s.Log("EC sends verify hash with wrong crc8 and expects error")
 	badCrc := createEcPacket(efs2CmdVerifyHash, hash)
 	badCrc[len(badCrc)-1] ^= 0xFF
-	checkSendEcPacket(ctx, s, b, badCrc, efs2ReturnErrorCrc)
+	checkSendEcPacket(ctx, s, b, ecUart, badCrc, efs2ReturnErrorCrc)
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 
 	s.Log("EC sends unknown command and expects error")
 	badCmd := createEcPacket(efs2Cmd(78), []byte{})
-	checkSendEcPacket(ctx, s, b, badCmd, efs2ReturnErrorUndefinedCmd)
+	checkSendEcPacket(ctx, s, b, ecUart, badCmd, efs2ReturnErrorUndefinedCmd)
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 
 	s.Log("EC sends bad version and expects error")
 	badVersion := createEcPacket(efs2CmdVerifyHash, []byte{})
 	// Increment the version field which should be 5 byte from the end.
 	badVersion[len(badVersion)-5]++
-	checkSendEcPacket(ctx, s, b, badVersion, efs2ReturnErrorVersion)
+	checkSendEcPacket(ctx, s, b, ecUart, badVersion, efs2ReturnErrorVersion)
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 
 	s.Log("EC sends bad magic and expects error")
 	badMagic := createEcPacket(efs2CmdVerifyHash, []byte{})
 	// Increment the second magic field which should be 6 byte from the end.
 	badMagic[len(badMagic)-6]++
-	checkSendEcPacket(ctx, s, b, badMagic, efs2ReturnErrorMagic)
+	checkSendEcPacket(ctx, s, b, ecUart, badMagic, efs2ReturnErrorMagic)
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 
 	s.Log("EC sends too small verified hash and expects error")
 	badSizeVerified := createEcPacket(efs2CmdVerifyHash, []byte{1, 2})
-	checkSendEcPacket(ctx, s, b, badSizeVerified, efs2ReturnErrorSize)
+	checkSendEcPacket(ctx, s, b, ecUart, badSizeVerified, efs2ReturnErrorSize)
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 
 	s.Log("EC sends too large verified hash size and expects error")
 	badSizeVerified2 := createEcPacket(efs2CmdVerifyHash, make([]byte, 30))
-	checkSendEcPacket(ctx, s, b, badSizeVerified2, efs2ReturnErrorSize)
+	checkSendEcPacket(ctx, s, b, ecUart, badSizeVerified2, efs2ReturnErrorSize)
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 
 	s.Log("EC sends too small set boot mode and expects error")
 	badSizeBootMode := createEcPacket(efs2CmdSetBootMode, []byte{})
-	checkSendEcPacket(ctx, s, b, badSizeBootMode, efs2ReturnErrorSize)
+	checkSendEcPacket(ctx, s, b, ecUart, badSizeBootMode, efs2ReturnErrorSize)
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 
 	s.Log("EC sends too large set boot mode and expects error")
 	badSizeBootMode2 := createEcPacket(efs2CmdSetBootMode, make([]byte, 2))
-	checkSendEcPacket(ctx, s, b, badSizeBootMode2, efs2ReturnErrorSize)
+	checkSendEcPacket(ctx, s, b, ecUart, badSizeBootMode2, efs2ReturnErrorSize)
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 
 	events = b.GpioMonitorFinish(ctx, gpioMonitor)
@@ -473,7 +484,7 @@ func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	}
 }
 
-func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
+func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.DevboardHelper, ecUart ti50.SerialChannel, tpm *utils.TpmHelper) {
 	resetEc(ctx, s, b)
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
@@ -519,7 +530,7 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 	s.Log("EC sends verify hash and expects success")
 	// Flip the all the bits in the first hash byte from what is stored in kernel file.
 	verifyEcPacket := createEcPacket(efs2CmdVerifyHash, hash)
-	checkSendEcPacket(ctx, s, b, verifyEcPacket, efs2ReturnSuccess)
+	checkSendEcPacket(ctx, s, b, ecUart, verifyEcPacket, efs2ReturnSuccess)
 	checkApBootMode(ctx, s, tpm, efs2BootModeVerified)
 
 	s.Log("AP changes kernel file without EC reset")
@@ -537,7 +548,7 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 	}
 
 	s.Log("EC sends verify hash with old hash and expects failure")
-	checkSendEcPacket(ctx, s, b, verifyEcPacket, efs2ReturnErrorBadPayload)
+	checkSendEcPacket(ctx, s, b, ecUart, verifyEcPacket, efs2ReturnErrorBadPayload)
 	checkApBootMode(ctx, s, tpm, efs2BootModeNoBoot)
 
 	events := b.GpioMonitorFinish(ctx, gpioMonitor)
@@ -547,7 +558,7 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 	}
 }
 
-func testPreambleLengths(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
+func testPreambleLengths(ctx context.Context, s *testing.State, b utils.DevboardHelper, ecUart ti50.SerialChannel, tpm *utils.TpmHelper) {
 	resetEc(ctx, s, b)
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
@@ -561,7 +572,7 @@ func testPreambleLengths(ctx context.Context, s *testing.State, b utils.Devboard
 	s.Log("EC sends packet with too short of preamble to set NO_BOOT. Should have no affect")
 	tooShortPreamble := createEcPacket(efs2CmdSetBootMode, []byte{efs2BootModeNoBoot})
 	tooShortPreamble = tooShortPreamble[len(efs2Preamble)/2:]
-	sendEcPacketNoResponse(ctx, s, b, tooShortPreamble)
+	sendEcPacketNoResponse(ctx, s, b, ecUart, tooShortPreamble)
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 
 	s.Log("EC sends packet with long preamble to set NO_BOOT. Should work")
@@ -569,7 +580,7 @@ func testPreambleLengths(ctx context.Context, s *testing.State, b utils.Devboard
 	longPreamble = append(efs2Preamble, longPreamble...)
 	longPreamble = append(efs2Preamble, longPreamble...)
 	longPreamble = append(efs2Preamble, longPreamble...)
-	checkSendEcPacket(ctx, s, b, longPreamble, efs2ReturnSuccess)
+	checkSendEcPacket(ctx, s, b, ecUart, longPreamble, efs2ReturnSuccess)
 	checkApBootMode(ctx, s, tpm, efs2BootModeNoBoot)
 
 	events := b.GpioMonitorFinish(ctx, gpioMonitor)

@@ -39,7 +39,6 @@ var (
 type DUTControlAndreiboard struct {
 	client     dutcontrol.DutControlClient
 	gscConsole *common.BufferedConsole
-	ecConsole  *common.BufferedConsole
 }
 
 // NewDUTControlAndreiboard creates a DUTControlAndreiboard.
@@ -70,19 +69,9 @@ func NewDUTControlAndreiboard(grpcConn *grpc.ClientConn, bufSize int, readTimeou
 	}
 	gscConsole := common.NewBufferedConsole("gsc.log", bufSize, gscOpener)
 
-	ecOpener := &DUTControlRawUARTPortOpener{
-		Client:      dutControlClient,
-		Uart:        EcUart,
-		Baud:        UartBaud,
-		DataLen:     consoleDataLen,
-		ReadTimeout: readTimeout,
-	}
-	ecConsole := common.NewBufferedConsole("ec.log", bufSize, ecOpener)
-
 	return &DUTControlAndreiboard{
 		client:     dutControlClient,
 		gscConsole: gscConsole,
-		ecConsole:  ecConsole,
 	}
 }
 
@@ -165,11 +154,9 @@ func (a *DUTControlAndreiboard) EndSession(ctx context.Context) (err error) {
 	return nil
 }
 
-// Open opens the ti50 console and EC consoles.
+// Open opens the ti50 console.
 func (a *DUTControlAndreiboard) Open(ctx context.Context) error {
-	err1 := a.gscConsole.Open(ctx)
-	err2 := a.ecConsole.Open(ctx)
-	return errors.Join(err1, err2)
+	return a.gscConsole.Open(ctx)
 }
 
 // ReadSerialSubmatch reads gsc console output from port until regex is matched.
@@ -187,11 +174,9 @@ func (a *DUTControlAndreiboard) ClearInput(ctx context.Context) error {
 	return a.gscConsole.ClearInput(ctx)
 }
 
-// Close closes all open consoles.
+// Close closes the gsc consoles.
 func (a *DUTControlAndreiboard) Close(ctx context.Context) error {
-	err1 := a.gscConsole.Close(ctx)
-	err2 := a.ecConsole.Close(ctx)
-	return errors.Join(err1, err2)
+	return a.gscConsole.Close(ctx)
 }
 
 // PlainCommand executes a opentitantool subcommand that uses no file arguments.
@@ -331,23 +316,6 @@ func (a *DUTControlAndreiboard) RunTcgTests(ctx context.Context, outdir, testSui
 	}
 
 	return nil
-}
-
-// ECSerialWrite writes the specified bytes to the EC console. This also clears any pending
-// incoming EC console data that hasn't been read yet as this is the most common pattern to
-// interact with EC console.
-func (a *DUTControlAndreiboard) ECSerialWrite(ctx context.Context, bytes []byte) error {
-	// Clear any pending input before we write since we are just writing binary data and the
-	// UART line gets grounded during GSC reset and adds extra \0 bytes that tests do not want to
-	// have to handle
-	err1 := a.ecConsole.ClearInput(ctx)
-	err2 := a.ecConsole.WriteSerial(ctx, bytes)
-	return errors.Join(err1, err2)
-}
-
-// ECSerialRead reads the specified number of bytes from the EC console.
-func (a *DUTControlAndreiboard) ECSerialRead(ctx context.Context, size int) ([]byte, error) {
-	return a.ecConsole.ReadSerialBytes(ctx, size)
 }
 
 // PhysicalUart opens a handle for communication to/from a physical UART on the chip under test.

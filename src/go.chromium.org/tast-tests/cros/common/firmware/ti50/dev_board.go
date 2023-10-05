@@ -60,12 +60,6 @@ type DevBoard interface {
 	GSCToolCommand(ctx context.Context, image string, args ...string) (output []byte, err error)
 	// Executes TCG tests.
 	RunTcgTests(ctx context.Context, outdir, testSuite string) error
-	// ECSerialWrite writes the specified bytes to the EC console. This also clears any pending
-	// incoming EC console data that hasn't been read yet as this is the most common pattern to
-	// interact with EC console.
-	ECSerialWrite(ctx context.Context, bytes []byte) error
-	// ECSerialRead reads the specified number of bytes from the EC console.
-	ECSerialRead(ctx context.Context, size int) ([]byte, error)
 	// PhysicalUart allows reading/writing data to a physical UART of the GSC under test.
 	PhysicalUart(name UartName, readTimeout time.Duration) SerialChannel
 	// CcdSerialInterface allows reading/writing data to a USB interface provided by the GSC under test, which implements the "serial" USB class.
