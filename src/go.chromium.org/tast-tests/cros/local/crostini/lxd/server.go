@@ -41,12 +41,11 @@ type Server struct {
 
 // getIPAddress finds the externally visible IP address of localhost.
 func getIPAddress(ctx context.Context) (net.IP, error) {
-	// Network can sometimes flake and break net.Dial below.
-	// As it doesn't happen too often, make 2 attempts before failing.
-	maxAttempts := 2
 	var connection net.Conn
 
-	if err := action.Retry(maxAttempts, func(context.Context) error {
+	// Retry for up to 1 minute in case the network adapter lost its
+	// connection.
+	if err := action.Retry(60, func(context.Context) error {
 		// Note: we never actually send anything over this connection, the
 		// destination address is irrelevant as long as it is on the external network.
 		c, err := net.Dial("udp", "8.8.8.8:80")
