@@ -35,25 +35,22 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
 		SoftwareDeps: []string{"wilco"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      15 * time.Minute,
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		Params: []testing.Param{{
 			// Verify that Wilco doesn't turn on from S5 (off) by opening the lid.
-			// TODO: When stable, change firmware_unstable to a different attr.
 			Name: "lid_close_open",
 			Val: wilcoPowerBehaviorTestParams{
 				checkLidState: true,
 			},
-			ExtraAttr: []string{"firmware_unstable"},
 		}, {
 			// Verify that Wilco wakes from pressing power, but not from AC.
 			Val: wilcoPowerBehaviorTestParams{
 				checkCharger: true,
 			},
-			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
-			ExtraAttr:         []string{"firmware_bios"},
 		}},
 	})
 }
