@@ -366,6 +366,15 @@ func (s *Servo) GetStringTimeout(ctx context.Context, control StringControl, tim
 	return value, nil
 }
 
+// GetStringArray returns a result array of strings from a specified control string.
+func (s *Servo) GetStringArray(ctx context.Context, control string) ([]string, error) {
+	values := make([]string, 0)
+	if err := s.xmlrpc.Run(ctx, xmlrpc.NewCall("get", control), &values); err != nil {
+		return []string{}, errors.Wrapf(err, "getting values for servo control %q", control)
+	}
+	return values, nil
+}
+
 // GetServoSerials returns a map of servo serial numbers. Interesting map keys are "ccd", "main", "servo_micro", but there are others also.
 func (s *Servo) GetServoSerials(ctx context.Context) (map[string]string, error) {
 	value := make(map[string]string)

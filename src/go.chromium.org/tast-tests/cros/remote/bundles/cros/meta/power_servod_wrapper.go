@@ -20,6 +20,26 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+/**
+Example:
+tast run -var "subtest=power.ExampleUI.ash_kbbl" $DUT_IP meta.PowerServodWrapper.cpd_manual
+
+*/
+
+type testParams struct {
+	// filter is applied when first finding servod rails.
+	filter string
+	// subtest specifies the test to be run within.
+	// If provided, the command line subtest will overwrite testParams.
+	subtest string
+}
+
+var servoPowerMeasureIntervalVar = testing.RegisterVarString(
+	"meta.PowerServodWrapper.interval",
+	defaultServoPowerMeasureInterval,
+	"interval defines seconds between servo power measurements",
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PowerServodWrapper,
@@ -29,34 +49,47 @@ func init() {
 		Contacts:     []string{"cros-pe-pnp@google.com", "khwon@google.com"},
 		Timeout:      24 * time.Hour, // Depends on subtest, so set maximum value here.
 		Params: []testing.Param{
-			// Special test cases can be added as a Param here
+			// Special test cases can be added as a Param here.
 			{
-				Name: "bare",
-				Val:  "",
+				Name: "manual",
+				Val:  testParams{},
 			},
 			{
-				Name:      "cpd_vp_h264_1080_30fps",
-				Val:       "power.VideoPlayback.h264_1080_30fps_ash",
+				Name: "cpd_manual",
+				Val: testParams{
+					filter: cpdFilter,
+				},
+			},
+			{
+				Name: "cpd_vp_h264_1080_30fps",
+				Val: testParams{
+					filter:  cpdFilter,
+					subtest: "power.VideoPlayback.h264_1080_30fps_ash",
+				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
 			},
 			{
-				Name:      "cpd_vp_vp9_1080_30fps",
-				Val:       "power.VideoPlayback.vp9_1080_30fps_ash",
+				Name: "cpd_vp_vp9_1080_30fps",
+				Val: testParams{
+					filter:  cpdFilter,
+					subtest: "power.VideoPlayback.vp9_1080_30fps_ash",
+				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
 			},
 		},
-		Vars: []string{"servo", "test_to_run"},
+		Vars: []string{"servo", "subtest"},
 	})
 }
 
 const (
-	servoPowerMeasureInterval = 2 * time.Second
-	chargeTarget              = 75.
-	intervalMetricName        = "t"
+	// defaultServoPowerMeasureInterval in seconds.
+	defaultServoPowerMeasureInterval = "2"
+	chargeTarget                     = 75.
+	intervalMetricName               = "t"
+	cpdFilter                        = "ft4232h_generic"
 )
 
 func PowerServodWrapper(ctx context.Context, s *testing.State) {
-	subtest := s.Param().(string)
 	resultsDir := filepath.Join(s.OutDir(), "subtest_results")
 
 	// servoCtx is used for async function measuring power.
@@ -66,12 +99,36 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if varTest, ok := s.Var("test_to_run"); ok {
+	param, ok := s.Param().(testParams)
+	if !ok {
+		s.Fatal("Failed to convert test testParams")
+	}
+
+	// Determine subtest, prefer command line subtest.
+	var subtest string
+	varTest, ok := s.Var("subtest")
+
+	if !ok {
+		if param.subtest == "" {
+			s.Fatal("Please specify a subtest or use a pre-defined subtest")
+		}
+		subtest = param.subtest
+
+	} else {
 		subtest = varTest
 	}
-	s.Log("Test to run: ")
-	s.Log(subtest)
 
+	s.Log("Subtest: ", subtest)
+
+	// Determine Servo measurement interval.
+	intervalStrVal := servoPowerMeasureIntervalVar.Value()
+	intervalIntVal, err := strconv.Atoi(intervalStrVal)
+	if err != nil || intervalIntVal <= 0 {
+		s.Fatal("Failed to parse meta.PowerServodWrapper.interval: ", err)
+	}
+	servoPowerMeasureInterval := time.Duration(intervalIntVal) * time.Second
+
+	// Connect to Servo.
 	dut := s.DUT()
 	servoSpec, _ := s.Var("servo")
 	pxy, err := servo.NewProxy(ctx, servoSpec, dut.KeyFile(), dut.KeyDir())
@@ -80,20 +137,24 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	}
 	defer pxy.Close(ctx)
 
+	// Query for available accumulator rails.
+	var sregex *regexp.Regexp
+	if param.filter != "" {
+		sregex = regexp.MustCompile(param.filter)
+	}
+	rails, clearRails, err := servo.FindAccumRailsWithFilter(ctx, pxy.Servo(), sregex)
+	if err != nil {
+		s.Fatal("Failed to get accum rails: ", err)
+	}
+	s.Log("Avg power rail commands found:", rails)
+
 	chargeBattery(cleanupCtx, s)
 
-	// Disable charging
+	// Disable charging.
 	if _, err := s.DUT().Conn().CommandContext(cleanupCtx, "ectool", "chargeoverride", "dontcharge").Output(); err != nil {
 		s.Fatal("Unable to disable charging: ", err)
 	}
 
-	cpdVBATMetric := perf.Metric{
-		Name:      "CPD_VBAT",
-		Unit:      "W",
-		Direction: perf.SmallerIsBetter,
-		Multiple:  true,
-		Interval:  intervalMetricName,
-	}
 	intervalMetric := perf.Metric{
 		Name:      intervalMetricName,
 		Unit:      "s",
@@ -106,23 +167,31 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	measureStarted := float64(time.Now().Unix())
 	// TODO: b/304655966 - Implement timeline interface.
 	go func() {
-		if err := pxy.Servo().SetInt(ctx, "ft4232h_generic.CPD_VBAT_acc_clear", 1); err != nil {
-			s.Fatal("Failed to clear accumulator: ", err)
+		if err = servo.ClearServoAccumulators(ctx, pxy.Servo(), clearRails); err != nil {
+			s.Fatal("Unable to clear servo accumulators: ", err)
 		}
 		pv := perf.NewValues()
 		for {
 			select {
 			case <-time.After(servoPowerMeasureInterval):
-				mw, err := pxy.Servo().GetFloat(ctx, "ft4232h_generic.CPD_VBAT_avg_mw")
-				if err != nil {
-					s.Fatal("Failed to get mw from servo instance: ", err)
+
+				for _, railMw := range rails {
+					mw, err := pxy.Servo().GetFloat(ctx, railMw)
+					if err != nil {
+						s.Fatalf("Failed to get %s mw from servo instance: %s", string(railMw), err)
+					}
+					pv.Append(perf.Metric{
+						Name:      string(railMw),
+						Unit:      "mW",
+						Direction: perf.SmallerIsBetter,
+						Multiple:  true,
+						Interval:  intervalMetricName,
+					}, mw)
 				}
-				// Clear the accumulator at the end of the loop, so that during
-				// the interval we're accumulating.
-				if err := pxy.Servo().SetInt(ctx, "ft4232h_generic.CPD_VBAT_acc_clear", 1); err != nil {
-					s.Fatal("Failed to clear accumulator: ", err)
+				// Clear the accumulator at the end of the loop to measure the interval.
+				if err = servo.ClearServoAccumulators(ctx, pxy.Servo(), clearRails); err != nil {
+					s.Fatal("Unable to clear servo accumulators: ", err)
 				}
-				pv.Append(cpdVBATMetric, mw/1000.)
 				pv.Append(intervalMetric, float64(time.Now().Unix()))
 			case <-servoCtx.Done():
 				ch <- pv
@@ -131,23 +200,24 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	s.Log("Starting subtest: ", subtest)
 	skippedTests := tastrun.RunAndEvaluate(cleanupCtx, s, []string{}, []string{subtest}, resultsDir, tastrun.SkipPolicyDisallowSkipping)
 	if len(skippedTests) > 0 {
 		s.Fatal("Test is skipped, abort post-processing")
 	} else {
-		s.Log("Finished test")
+		s.Log("Finished subtest: ", subtest)
 	}
 
 	servoCancel()
 	servoResult := <-ch
 
-	// Enable charging
+	// Enable charging.
+	// TODO: b/303548068 - Sync CC with setup_battery.go.
 	if _, err := s.DUT().Conn().CommandContext(cleanupCtx, "ectool", "chargeoverride", "off").Output(); err != nil {
 		s.Fatal("Unable to enable charging: ", err)
 	}
 
 	subtestDir := filepath.Join(resultsDir, "tests", subtest)
-
 	measureStarted, err = servod.FindSubtestStartTime(subtestDir)
 	if err != nil {
 		s.Fatal("Failed to get subtest start time: ", err)
@@ -187,6 +257,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		s.Fatal("No data from Servo")
 	}
 
+	// Trim start and end values to subtest timing only.
 	for key, values := range servoResult.GetValues() {
 		servoResult.GetValues()[key] = values[overlapStartIdx:overlapEndIdx]
 	}
@@ -206,10 +277,17 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 			s.Logf("Average power measured by %s: %f W", metric.Name, sum/float64(len(values)))
 		}
 	}
+
+	if err := servoResult.Save(s.OutDir()); err != nil {
+		s.Error("Failed saving perf data: ", err)
+	}
+
 }
 
 func chargeBattery(ctx context.Context, s *testing.State) {
 	s.Logf("Waiting for battery to reach %f", chargeTarget)
+
+	// TODO: b/301489823 - Use dump_power_status.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		out, err := s.DUT().Conn().CommandContext(ctx, "power_supply_info").Output()
 		if err != nil {
