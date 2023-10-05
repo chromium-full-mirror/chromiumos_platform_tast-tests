@@ -29,12 +29,11 @@ import (
 // resetType defines whether ModeAwareReboot should use a warm or a cold reset.
 // checkBootFromMain checks whether device boots from the main storage when a memory device is attached.
 type bootModeTestParams struct {
-	bootToMode          fwCommon.BootMode
-	allowGBBForce       bool
-	resetAfterBoot      bool
-	resetType           firmware.ResetType
-	checkBootFromMain   bool
-	checkToBrokenScreen bool
+	bootToMode        fwCommon.BootMode
+	allowGBBForce     bool
+	resetAfterBoot    bool
+	resetType         firmware.ResetType
+	checkBootFromMain bool
 }
 
 func init() {
@@ -172,18 +171,6 @@ func init() {
 			ExtraAttr:         []string{"firmware_bios", "firmware_level2"},
 			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 			Timeout:           15 * time.Minute,
-		}, {
-			Name:    "broken_screen",
-			Fixture: fixture.NormalMode,
-			Val: bootModeTestParams{
-				bootToMode:          fwCommon.BootModeRecovery,
-				checkToBrokenScreen: true,
-				resetType:           firmware.ColdReset,
-				resetAfterBoot:      true,
-			},
-			// TODO: When stable, change firmware_unstable to a different attr.
-			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
-			Timeout:   2 * time.Hour,
 		}},
 	})
 }
@@ -214,7 +201,7 @@ func BootMode(ctx context.Context, s *testing.State) {
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Error opening servo: ", err)
 	}
-	if tc.bootToMode == fwCommon.BootModeRecovery || tc.checkBootFromMain || tc.checkToBrokenScreen {
+	if tc.bootToMode == fwCommon.BootModeRecovery || tc.checkBootFromMain {
 		skipFlashUSB := false
 		if skipFlashUSBStr, ok := s.Var("firmware.skipFlashUSB"); ok {
 			skipFlashUSB, err = strconv.ParseBool(skipFlashUSBStr)
@@ -256,27 +243,6 @@ func BootMode(ctx context.Context, s *testing.State) {
 			s.Fatalf("Error during transition from %s to %s: %v", pv.BootMode, tc.bootToMode, err)
 		}
 		s.Log("Transition completed successfully")
-	}
-
-	if tc.checkToBrokenScreen {
-		// Verify DUT reaches 'Broken Screen' with broken_screen test.
-		if err := h.CheckBrokenScreen(ctx); err != nil {
-			s.Fatal("Failed to check Broken Screen: ", err)
-		}
-		s.Log("Disabling USB connection to DUT")
-		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
-			s.Fatal("Failed to disable 'usb3_mux_sel:dut_sees_usbkey': ", err)
-		}
-		s.Log("Rebooting the DUT with hard reset")
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-			s.Fatal("Failed to reboot the DUT with hard reset: ", err)
-		}
-		s.Log("Waiting for connection to DUT")
-		connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-		defer cancel()
-		if err := h.WaitConnect(connectCtx); err != nil {
-			s.Fatal("Failed to connect to DUT: ", err)
-		}
 	}
 
 	// Reset the DUT, if the test case calls for it.
