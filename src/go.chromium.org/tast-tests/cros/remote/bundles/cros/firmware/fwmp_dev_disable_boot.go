@@ -162,6 +162,13 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to set power_state to reset: ", err)
 	}
+
+	waitDisconnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancelWaitConnect()
+	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+		s.Fatal("Failed to wait for DUT to become unreachable: ", err)
+	}
+
 	// GoBigSleepLint: wait for firmware screen to appear.
 	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 		s.Fatal("Failed to sleep: ", err)
