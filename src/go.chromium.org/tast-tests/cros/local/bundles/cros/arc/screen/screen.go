@@ -23,12 +23,16 @@ const (
 	KeyTotalFramesRendered = "Total frames rendered"
 	// KeyJankyFrames key for janky frames.
 	KeyJankyFrames = "Janky frames"
+	// KeyJankyFramesLegacy key for legacy janky frames.
+	KeyJankyFramesLegacy = `Janky frames \(legacy\)`
 )
 
 var gfxinfoSamplesRe = regexp.MustCompile(
 	fmt.Sprintf(
 		`(%s): (?P<num_frames>\d+)\s+`+
 			`(%s): (\d+) \((?:\d+\.\d+|-?nan)%%\)\s+`+
+			// The line below exists only on ARC-T or above
+			`(?:(?:%s): (?:\d+) \((?:\d+\.\d+|-?nan)%%\)\s+)?`+
 			`(?:50th percentile: \d+ms\s+)?`+
 			`(90th percentile): (\d+)ms\s+`+
 			`(95th percentile): (\d+)ms\s+`+
@@ -37,7 +41,7 @@ var gfxinfoSamplesRe = regexp.MustCompile(
 			`(Number High input latency): (\d+)\s+`+
 			`(Number Slow UI thread): (\d+)\s+`+
 			`(Number Slow bitmap uploads): (\d+)\s+`+
-			`(Number Slow issue draw commands): (\d+)\s+`, KeyTotalFramesRendered, KeyJankyFrames))
+			`(Number Slow issue draw commands): (\d+)\s+`, KeyTotalFramesRendered, KeyJankyFrames, KeyJankyFramesLegacy))
 
 // WaitForStableFrames waits until no new frames are captured by "dumpsys gfxinfo".
 // This "wait" is needed to prevent "polluting" the next capture from frames that don't belong to
