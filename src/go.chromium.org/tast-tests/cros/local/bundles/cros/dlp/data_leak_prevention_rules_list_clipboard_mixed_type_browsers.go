@@ -203,8 +203,11 @@ func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, 
 		}
 
 	} else {
+		searchBar := nodewith.NameContaining("Search settings").Role(role.SearchBox)
 		if err := uiauto.Combine("Type text into search field and cut it",
-			keyboard.AccelAction("Ctrl+F"),
+			ui.WaitUntilExists(searchBar.Visible()),
+			ui.LeftClick(searchBar),
+			ui.WaitUntilExists(searchBar.Focused()),
 			keyboard.TypeAction("Text to copy"),
 			keyboard.AccelAction("Ctrl+A"),
 			keyboard.AccelAction("Ctrl+X"))(ctx); err != nil {
