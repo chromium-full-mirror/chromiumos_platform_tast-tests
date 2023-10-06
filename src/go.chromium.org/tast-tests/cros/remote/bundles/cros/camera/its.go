@@ -252,6 +252,8 @@ func ITS(ctx context.Context, s *testing.State) {
 			return
 		}
 		p := path.Join(s.OutDir(), "its")
+		// "os.Rename()" causes "invalid cross-device link" when trying to move a file from one filesystem to another,
+		// therefore, use "mv" instead of "os.Rename()" here to avoid such error.
 		if err := testexec.CommandContext(
 			ctx, "mv", itsLogPath, p).Run(testexec.DumpLogOnError); err != nil {
 			s.Errorf("Failed to move ITS log path %v to test output directory: %v", itsLogPath, err)
