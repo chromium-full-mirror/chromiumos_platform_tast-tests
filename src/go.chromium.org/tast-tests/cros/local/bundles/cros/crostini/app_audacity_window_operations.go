@@ -6,9 +6,9 @@ package crostini
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/crostiniapps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/guestos/apps"
@@ -73,8 +73,9 @@ func AppAudacityWindowOperations(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
-	if err := cont.WriteFile(ctx, fmt.Sprintf(".audacity-data/audacity.cfg"), "[GUI]\nShowSplashScreen=0\n"); err != nil {
-		s.Fatal("Failed to configure Audacity: ", err)
+	// Disable the welcome screen.
+	if err := crostiniapps.DisableAudacitySplashScreen(ctx, cont); err != nil {
+		s.Fatal("Failed to disable Audacity splash screen: ", err)
 	}
 
 	for _, err := range apps.TestMaximizeRestoreMinimizeClose(ctx, "Audacity", "Audacity", "File", keyboard, tconn, d, false) {
