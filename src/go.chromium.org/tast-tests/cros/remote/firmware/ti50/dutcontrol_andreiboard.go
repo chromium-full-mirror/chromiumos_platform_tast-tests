@@ -47,6 +47,19 @@ type DUTControlAndreiboard struct {
 // bufSize should be set to the max outstanding chars waiting to be read.
 // readTimeout should be set to the max expected duration between char outputs.
 //
+//	This option provides several advantages:
+//	  1) Reduces the wait time before declaring test failure from a read operation
+//	     that does not match an expected pattern.
+//	  2) Avoids having to use shortened context timeouts for each individual
+//	     read call.
+//	  3) Still allows calling code to optimize by setting a shorter timeout
+//	     in the context if it knows that a particular operation has a shorter
+//	     time bound.
+//	  4) Each test or fixture can adjust the timeout to suit the testcase or
+//	     board under test.
+//	ReadSerialSubmatch will return serial.ErrReadTimeout when this timeout is
+//	exceeded.
+//
 // Example:
 // conn, err := grpc.DialContext(ctx, hostPort, grpc.WithInsecure())
 //

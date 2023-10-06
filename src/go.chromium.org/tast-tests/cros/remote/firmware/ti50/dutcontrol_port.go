@@ -26,6 +26,11 @@ type DUTControlPort struct {
 
 // Read bytes into buffer and return number of bytes read.
 // Bytes already written to the port shall be moved into buf, up to its size.
+// The operation will return serial.ErrReadTimeout, "read timeout", if the
+//
+//	configured ReadTimeout on the port (during port open) is exceeded before
+//	any data is read, whereas if the ctx's timeout is exceeded, the error will
+//	be context.DeadlineExceeded, "context deadline exceeded".
 func (p *DUTControlPort) Read(ctx context.Context, buf []byte) (n int, err error) {
 	if len(p.unreadBuf) >= len(buf) {
 		n := copy(buf, p.unreadBuf)
