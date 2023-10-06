@@ -1,0 +1,7 @@
+set noparent
+
+# factory team
+include chromiumos/owners:v1:/factory/OWNERS.factory
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
