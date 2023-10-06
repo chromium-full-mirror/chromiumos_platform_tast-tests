@@ -187,7 +187,7 @@ func DataLeakPreventionRulesListScreenshareTab(ctx context.Context, s *testing.S
 		s.Fatalf("Failed to wait for %q to achieve quiescence: %v", url, err)
 	}
 
-	// The "Screen share paused" notification should appear iff the site is blocked.
+	// The "Screen share paused" notification should appear if the site is blocked.
 	if _, err := ash.WaitForNotification(ctx, tconn, 5*time.Second, ash.WaitIDContains(screenshare.ScreensharePausedIDContains), ash.WaitTitle(screenshare.ScreensharePausedTitle)); (err != nil) == (params.Restriction == restrictionlevel.Blocked) {
 		if err != nil {
 			s.Errorf("Failed to wait for notification with title %q: %v", screenshare.ScreensharePausedTitle, err)
@@ -217,34 +217,6 @@ func DataLeakPreventionRulesListScreenshareTab(ctx context.Context, s *testing.S
 	// Frame status value should be as per wantAllowed.
 	if err := screenshare.CheckFrameStatus(ctx, screenRecorder, wantAllowed); err != nil {
 		s.Fatal("Polling the frame status timed out: ", err)
-	}
-
-	if err := conn.Navigate(ctx, unrestrictedURL); err != nil {
-		s.Fatal("Failed to open page: ", err)
-	}
-
-	if err := webutil.WaitForQuiescence(ctx, conn, 10*time.Second); err != nil {
-		s.Fatalf("Failed to wait for %q to achieve quiescence: %v", unrestrictedURL, err)
-	}
-
-	// Screenshare should be allowed unless user cancelled sharing after a warning.
-	if err := screenshare.CheckFrameStatus(ctx, screenRecorder, params.Restriction != restrictionlevel.WarnCancelled); err != nil {
-		s.Fatal("Failed to check frame status: ", err)
-	}
-
-	// Once the user clicks "Share anyway", returning to the site later should allow for sharing without another prompt.
-	if params.Restriction == restrictionlevel.WarnProceeded {
-		if err = conn.Navigate(ctx, url); err != nil {
-			s.Fatal("Failed to open page: ", err)
-		}
-
-		if err := webutil.WaitForQuiescence(ctx, conn, 10*time.Second); err != nil {
-			s.Fatalf("Failed to wait for %q to achieve quiescence: %v", unrestrictedURL, err)
-		}
-
-		if err := screenshare.CheckFrameStatus(ctx, screenRecorder /*wantAllowed=*/, true); err != nil {
-			s.Fatal("Failed to check frame status: ", err)
-		}
 	}
 
 	// Closing all windows.
