@@ -1,0 +1,8 @@
+set noparent
+
+# Framework team owners
+brpol@google.com
+yhanada@google.com
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
