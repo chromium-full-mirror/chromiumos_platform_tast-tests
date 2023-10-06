@@ -57,7 +57,7 @@ func Run(ctx context.Context, s *testing.State, p *Params) {
 // ProxyRun is similar to Run but uses proxylppprint instead of lpprint.
 func ProxyRun(ctx context.Context, s *testing.State, p *Params) {
 	run(ctx, s, p, func(ctx context.Context) ([]byte, error) {
-		return proxylpprint.Run(ctx, s.PreValue().(*chrome.Chrome), s.DataPath(p.PPDFile), s.DataPath(p.PrintFile), strings.Join(p.Options, " "))
+		return proxylpprint.Run(ctx, s.FixtValue().(chrome.HasChrome).Chrome(), s.DataPath(p.PPDFile), s.DataPath(p.PrintFile), strings.Join(p.Options, " "))
 	})
 }
 

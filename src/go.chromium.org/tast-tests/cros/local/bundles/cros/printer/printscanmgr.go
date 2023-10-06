@@ -10,7 +10,7 @@ import (
 	"net/http"
 
 	ppb "chromiumos/system_api/printscanmgr_proto"
-	"go.chromium.org/tast-tests/cros/local/chrome"
+
 	"go.chromium.org/tast-tests/cros/local/printing/printer"
 	"go.chromium.org/tast-tests/cros/local/printscanmgr"
 	"go.chromium.org/tast/core/errors"
@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "b:167231",
 		SoftwareDeps: []string{"chrome", "cups", "printscanmgr"},
 		Data:         []string{"GenericPostScript.ppd.gz"},
-		Pre:          chrome.LoggedIn(),
+		Fixture:      "chromeLoggedIn",
 		Attr: []string{
 			"group:mainline",
 			"informational",
