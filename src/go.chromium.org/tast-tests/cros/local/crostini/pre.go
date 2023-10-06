@@ -180,6 +180,12 @@ var StableModelsForAppsTesting = []string{
 	"woomax",
 }
 
+// DisabledModelsForAppsTesting is a list of models on which the Crostini Apps tests are disabled and should not run.
+var DisabledModelsForAppsTesting = []string{
+	// grunt board
+	"liara",
+}
+
 // CrostiniAppStable is a hardware dependency limiting the boards on which the Crostini Apps tests run.
 // App testing uses a large container which needs large space. Many DUTs in the lab do not have enough space.
 // The boards listed have enough space.
@@ -187,7 +193,7 @@ var CrostiniAppStable = hwdep.D(hwdep.Model(StableModelsForAppsTesting...), hwde
 
 // CrostiniAppUnstable is a hardware dependency in addition to CrostiniAppStable.
 // These models are expected to merge with CrostiniAppStable once approved stable.
-var CrostiniAppUnstable = hwdep.D(hwdep.SkipOnModel(StableModelsForAppsTesting...), hwdep.MinStorage(32))
+var CrostiniAppUnstable = hwdep.D(hwdep.SkipOnModel(append(StableModelsForAppsTesting, DisabledModelsForAppsTesting...)...), hwdep.MinStorage(32))
 
 // interface defined for GetInstallerOptions to allow both
 // testing.State and testing.PreState to be passed in as the first
