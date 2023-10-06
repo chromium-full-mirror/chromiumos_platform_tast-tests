@@ -473,14 +473,15 @@ func VerifyUSBDeviceConnectionChangeCount(ctx context.Context, dut *dut.DUT, bef
 	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
 }
 
-// VerifyExternalStorageMounted verifies the external storage is mounted by listing the removable media information.
+// VerifyExternalStorageMounted verifies the external storage is mounted by checking the output of mount command contains "/media/removable".
 func VerifyExternalStorageMounted(ctx context.Context, dut *dut.DUT) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := dut.Conn().CommandContext(ctx, "ls", "/media/removable").Output(exec.DumpLogOnError)
+		out, err := dut.Conn().CommandContext(ctx, "mount").Output(exec.DumpLogOnError)
 		if err != nil {
-			return errors.Wrap(err, "failed to execute ls /media/removable")
-		} else if strings.TrimSpace(string(out)) == "" {
-			return errors.New("failed to check the contents of /media/removable, but got nothing")
+			return errors.Wrap(err, "failed to execute mount")
+		}
+		if !strings.Contains(string(out), "/media/removable") {
+			return errors.New("failed to check the output of mount command contains /media/removable")
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second})
