@@ -28,6 +28,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // noUnexpectedUITestParam contains the options that configure NoUnexpectedUI tests.
@@ -56,6 +57,7 @@ func init() {
 		},
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + verifyPixelsTimeout,
 		SoftwareDeps: []string{"reboot", "chrome", "lacros"},
+		HardwareDeps: hwdep.D(hwdep.Display()),
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Params: []testing.Param{
