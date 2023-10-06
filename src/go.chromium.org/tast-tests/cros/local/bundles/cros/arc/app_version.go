@@ -52,6 +52,8 @@ func AppVersion(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
 		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 		chrome.ARCSupported(),
+		// Sync needs to be disabled for shelf icons to show. See b/303237403#comment12
+		chrome.ExtraArgs("--disable-sync"),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
