@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 
 	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
 )
@@ -40,6 +41,7 @@ func init() {
 			"group:complementary",
 		},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + 30*time.Second,
