@@ -122,8 +122,21 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 15*time.Second)
 	defer cancel()
+
+	// On test failure save off the kernel trace.
+	defer func() {
+		if err := secagentdcommon.OnErrorSaveKernelTrace(cleanupCtx, s.OutDir(), s.HasError); err != nil {
+			s.Logf("Unable to export kernel traces for failure analysis:%s", err)
+		}
+	}()
 	// Restart with default parameter.
 	defer secagentdupstart.RestartSecagentd(cleanupCtx)
+
+	// Clear out old entries from the kernel trace to make an easier failure
+	// analysis.
+	if err := secagentdcommon.ClearKernelTrace(ctx); err != nil {
+		s.Log("Unable to clear the kernel trace file: ", err)
+	}
 
 	// Restart chrome with the network event feature.
 	cr, err := chrome.New(ctx, chrome.EnableFeatures("CrOSLateBootSecagentdXDRNetworkEvents"))
