@@ -1,0 +1,7 @@
+set noparent
+
+akihiroota@chromium.org
+katie@chromium.org
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
