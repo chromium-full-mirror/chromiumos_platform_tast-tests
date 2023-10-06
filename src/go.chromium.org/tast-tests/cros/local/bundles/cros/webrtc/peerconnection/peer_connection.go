@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -21,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/media/logging"
 	"go.chromium.org/tast-tests/cros/local/media/oop"
+	"go.chromium.org/tast-tests/cros/local/media/webrtc"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -101,6 +101,38 @@ type RTCTestParams struct {
 	TraceChromeEvents                     bool
 }
 
+// readRTCReport reads an RTCStat report of the given typ from the specified peer connection.
+// Since there are multiple outbound-rtp in the case of simulcast, the stat is selected whose frame height is the largest.
+// The out can be an arbitrary struct whose members are 'json' tagged, so that they will be filled.
+func readRTCReport(ctx context.Context, conn *chrome.Conn, decode bool, out interface{}) error {
+	// Decode: localPeerConnection, "outbound-rtp"
+	// Encode: remotePeerConnection, "inbound-rtp"
+	isRemote := false
+	typ := "outbound-rtp"
+	if decode {
+		isRemote = true
+		typ = "inbound-rtp"
+	}
+	return conn.Call(ctx, out, `async(isRemote, type) => {
+	  const peerConnection = isRemote ? remotePeerConnection : localPeerConnection;
+	  const stats = await peerConnection.getStats(null);
+	  if (stats == null) {
+	    throw new Error("getStats() failed");
+	  }
+	  var R = null;
+	  for (const [_, report] of stats) {
+	    if (report['type'] === type &&
+	       (!R || R['frameHeight'] < report['frameHeight'])) {
+	      R = report;
+	    }
+	  }
+	  if (R !== null) {
+	    return R;
+	  }
+	  throw new Error("Stat not found");
+	}`, isRemote, typ)
+}
+
 // RunRTCPeerConnection launches a loopback RTCPeerConnection and inspects that the
 // VerifyHWAcceleratorMode codec is hardware accelerated if profile is not NoVerifyHWAcceleratorUsed.
 func RunRTCPeerConnection(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome, fileSystem http.FileSystem, params RTCTestParams) error {
@@ -179,7 +211,7 @@ func verifyDecoderImplementation(ctx context.Context, conn *chrome.Conn, verifyD
 		return nil
 	}
 
-	decImplName, hwDecoderUsed, err := getCodecImplementation(ctx, conn /*decode=*/, true)
+	decImplName, hwDecoderUsed, err := webrtc.GetCodecImplementation(ctx, conn, true, readRTCReport)
 	if err != nil {
 		return errors.Wrap(err, "failed to get decoder implementation name")
 	}
@@ -197,7 +229,7 @@ func verifyEncoderImplementation(ctx context.Context, conn *chrome.Conn, verifyE
 		return nil
 	}
 
-	encImplName, hwEncoderUsed, err := getCodecImplementation(ctx, conn, false)
+	encImplName, hwEncoderUsed, err := webrtc.GetCodecImplementation(ctx, conn, false, readRTCReport)
 	if err != nil {
 		return errors.Wrap(err, "failed to get encoder implementation name")
 	}
@@ -212,108 +244,6 @@ func verifyEncoderImplementation(ctx context.Context, conn *chrome.Conn, verifyE
 		return errors.Errorf("software encode wasn't used, got %s", encImplName)
 	}
 	return nil
-}
-
-type peerConnectionType bool
-
-const (
-	localPeerConnection  peerConnectionType = false
-	remotePeerConnection peerConnectionType = true
-)
-
-// readRTCReport reads an RTCStat report of the given typ from the specified peer connection.
-// Since there are multiple outbound-rtp in the case of simulcast, the stat is selected whose frame height is the largest.
-// The out can be an arbitrary struct whose members are 'json' tagged, so that they will be filled.
-func readRTCReport(ctx context.Context, conn *chrome.Conn, pc peerConnectionType, typ string, out interface{}) error {
-	return conn.Call(ctx, out, `async(isRemote, type) => {
-	  const peerConnection = isRemote ? remotePeerConnection : localPeerConnection;
-	  const stats = await peerConnection.getStats(null);
-	  if (stats == null) {
-	    throw new Error("getStats() failed");
-	  }
-      var R = null;
-	  for (const [_, report] of stats) {
-	    if (report['type'] === type &&
-            (!R || R['frameHeight'] < report['frameHeight'])) {
-          R = report;
-	    }
-	  }
-      if (R !== null) {
-        return R;
-      }
-	  throw new Error("Stat not found");
-	}`, pc, typ)
-}
-
-// getCodecImplementation parses the RTCPeerConnection and returns the implementation name and whether it is
-// a hardware implementation. If decode is true, this returns decoder implementation and otherwise encoder implementation.
-// This method uses the RTCPeerConnection getStats() API [1].
-// [1] https://w3c.github.io/webrtc-pc/#statistics-model
-func getCodecImplementation(ctx context.Context, conn *chrome.Conn, decode bool) (string, bool, error) {
-	// See [1] and [2] for the statNames to use here. The values are browser
-	// specific, for Chrome, "ExternalDecoder" and "{V4L2,Vaapi, etc.}VideoEncodeAccelerator"
-	// means that WebRTC is using hardware acceleration and anything else
-	// (e.g. "libvpx", "ffmpeg", "unknown") means it is not.
-	// A SimulcastEncoderAdapter is actually a grouping of implementations, so it can read e.g.
-	// "SimulcastEncoderAdapter (libvpx, VaapiVideoEncodeAccelerator, VaapiVideoEncodeAccelerator)"
-	// (note that there isn't a SimulcastDecoderAdapter).
-	//
-	// [1] https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-decoderimplementation
-	// [2] https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-encoderimplementation
-	hwImplName := "EncodeAccelerator"
-	readImpl := func(ctx context.Context) (string, error) {
-		var out struct {
-			Encoder string `json:"encoderImplementation"`
-		}
-		if err := readRTCReport(ctx, conn, localPeerConnection, "outbound-rtp", &out); err != nil {
-			return "", err
-		}
-		return out.Encoder, nil
-	}
-
-	if decode {
-		hwImplName = "ExternalDecoder"
-		readImpl = func(ctx context.Context) (string, error) {
-			var out struct {
-				Decoder string `json:"decoderImplementation"`
-			}
-			if err := readRTCReport(ctx, conn, remotePeerConnection, "inbound-rtp", &out); err != nil {
-				return "", err
-			}
-			return out.Decoder, nil
-		}
-	}
-
-	// Poll getStats() to wait until {decoder,encoder}Implementation gets filled in:
-	// RTCPeerConnection needs a few frames to start up encoding/decoding; in the
-	// meantime it returns "unknown".
-	const pollInterval = 100 * time.Millisecond
-	const pollTimeout = 200 * pollInterval
-	var impl string
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		var err error
-		impl, err = readImpl(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to retrieve and/or parse RTCStatsReport")
-		}
-		if impl == "" || impl == "unknown" {
-			return errors.New("getStats() didn't fill in the codec implementation (yet)")
-		}
-		// "ExternalEncoder" is the default value for encoder implementations
-		// before filling the actual one. We need to wait until the implementation name
-		// doesn't contain ExternalEncoder because in simulcast case it is like
-		// SimulcastEncoderAdapter (ExternalEncoder, ExternalEncoder, ExternalEncoder).
-		if strings.Contains(impl, "ExternalEncoder") {
-			return errors.New("getStats() didn't fill in the encoder implementation (yet)")
-		}
-		return nil
-	}, &testing.PollOptions{Interval: pollInterval, Timeout: pollTimeout}); err != nil {
-		return "", false, err
-	}
-	testing.ContextLog(ctx, "Implementation: ", impl)
-
-	isHWImpl := strings.Contains(impl, hwImplName)
-	return impl, isHWImpl, nil
 }
 
 // checkSimulcastEncImpl checks that the given implName is used in given simulcast scenario.
