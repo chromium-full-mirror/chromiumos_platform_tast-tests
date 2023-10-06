@@ -86,7 +86,7 @@ const (
 	defaultMeetTimeout = 10 * time.Minute
 )
 
-var platformEffectsModels = hwdep.Model("yaviks", "pujjoteen", "nirwen", "markarth", "frostflow", "dewatt", "omnigul", "anahera", "gimble", "marasov", "taeko")
+var platformEffectsModels = hwdep.Model("yaviks", "pujjoteen", "markarth", "frostflow", "dewatt", "nipperkin", "omnigul", "anahera", "gimble", "marasov", "taeko", "rex", "rex4es", "screebo", "screebo4es")
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -261,6 +261,24 @@ func init() {
 					split:          true,
 					cam:            true,
 					zoomOut:        true,
+					backgroundBlur: true,
+					browserType:    browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
+			}, {
+				Name:              "docs_background_blur_and_meet_effects",
+				Timeout:           defaultTestTimeout,
+				ExtraAttr:         []string{"group:cuj"},
+				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				Val: meetTest{
+					bots:           []int{1, 3, 15},
+					layout:         googlemeet.TiledLayout,
+					present:        true,
+					docs:           true,
+					split:          true,
+					cam:            true,
+					zoomOut:        true,
+					effects:        true,
 					backgroundBlur: true,
 					browserType:    browser.TypeAsh,
 				},
