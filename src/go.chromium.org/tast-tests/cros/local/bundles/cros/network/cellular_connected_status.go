@@ -24,7 +24,7 @@ func init() {
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_dual_active"},
+		Attr:         []string{"group:cellular", "cellular_sim_dual_active"},
 		Fixture:      "cellular",
 	})
 }

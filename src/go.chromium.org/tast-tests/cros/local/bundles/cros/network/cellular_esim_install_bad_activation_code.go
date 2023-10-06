@@ -31,7 +31,7 @@ func init() {
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
+		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
 		Fixture:      "cellularTestESIM",
 		Timeout:      9 * time.Minute,
 	})
