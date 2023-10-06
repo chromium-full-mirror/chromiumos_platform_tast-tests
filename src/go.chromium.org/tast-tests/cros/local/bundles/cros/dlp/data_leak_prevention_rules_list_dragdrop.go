@@ -68,7 +68,7 @@ func init() {
 func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) {
 	// Reserve time for various cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
