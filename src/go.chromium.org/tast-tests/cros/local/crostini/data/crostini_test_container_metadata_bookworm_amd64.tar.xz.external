@@ -1,5 +1,5 @@
 {
-    "sha256sum": "5a4f0f1d740bedcaf86aad8cff404734785e9c8cb2694959da179d93a749b215",
+    "sha256sum": "8369ad87af5bff6041e454cead34d64ce29581a763218349877a8f402e746ace",
     "size": 672,
-    "url": "gs://cros-containers-staging/119/images/debian/bookworm/amd64/test/20230919_10:39/lxd.tar.xz"
+    "url": "gs://cros-containers-staging/120/images/debian/bookworm/amd64/test/20231006_05:15/lxd.tar.xz"
 }
