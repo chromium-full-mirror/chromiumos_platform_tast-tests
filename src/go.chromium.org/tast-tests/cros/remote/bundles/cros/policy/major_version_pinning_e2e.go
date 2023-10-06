@@ -69,13 +69,13 @@ func init() {
 			Timeout: majorVersionPinningE2ETimeout,
 			Val: majorVersionPinningE2ETestParam{
 				releaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL,
-				targetMilestone:      "108.* (long-term support)",
+				targetMilestone:      "114.* (long-term support)",
 				expectedPolicies: []policy.Policy{
 					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
 					&policy.DeviceReleaseLtsTag{Stat: policy.StatusSet, Val: "lts"},
-					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15183."},
+					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15437."},
 				},
-				expectedParameters: []string{"targetversionprefix=\"15183.\"", "ltstag=\"lts\""},
+				expectedParameters: []string{"targetversionprefix=\"15437.\"", "ltstag=\"lts\""},
 			},
 		}, {
 			Name:    "stable",
@@ -94,17 +94,17 @@ func init() {
 			Timeout: majorVersionPinningE2ETimeout + pinningOmahaUpdateE2ETimeout,
 			Val: majorVersionPinningE2ETestParam{
 				releaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL,
-				targetMilestone:      "108.* (long-term support)",
+				targetMilestone:      "114.* (long-term support)",
 				expectedPolicies: []policy.Policy{
 					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
 					&policy.DeviceReleaseLtsTag{Stat: policy.StatusSet, Val: "lts"},
-					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15183."},
+					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15437."},
 				},
-				expectedParameters: []string{"targetversionprefix=\"15183.\"", "ltstag=\"lts\""},
+				expectedParameters: []string{"targetversionprefix=\"15437.\"", "ltstag=\"lts\""},
 				testOmaha:          true,
 				expectedLSBReleaseRegex: map[string]string{
 					"CHROMEOS_RELEASE_TRACK":   "^stable-channel$",
-					"CHROMEOS_RELEASE_VERSION": "^15183[.].+[.].+$",
+					"CHROMEOS_RELEASE_VERSION": "^15437[.].+[.].+$",
 				},
 			},
 		}, {
