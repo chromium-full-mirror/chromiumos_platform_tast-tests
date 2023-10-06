@@ -7,6 +7,7 @@ package cache
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -414,11 +415,29 @@ func CopyDexOptCache(ctx context.Context, outputDir string) error {
 	}
 	defer cleanupFunc(cleanupCtx)
 
+	dataPath := filepath.Join(androidDataDir, androidDataPath)
+	fileCount := 0
+	err = filepath.Walk(filepath.Join(dataPath, dexOptCacheDirectory), func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.Mode().IsRegular() {
+			fileCount++
+		}
+		return nil
+	})
+	if err != nil {
+		return errors.New("failed to count generated dexopt cache files")
+	}
+	testing.ContextLogf(ctx, "%d files were generated for DexOpt cache", fileCount)
+	if fileCount == 0 {
+		return errors.New("no dexopt cache was generated")
+	}
+
 	targetTar := filepath.Join(outputDir, DexOptCacheArchive)
-	testing.ContextLogf(ctx, "Compressing DexOpt caches to %q", targetTar)
 	// PlayAutoInstall config is ignored because the apk is board-specific and will be ignored on boot.
 	tarExcludeOption := "--exclude=vendor@app@PlayAutoInstallConfig@*"
-	dataPath := filepath.Join(androidDataDir, androidDataPath)
+	testing.ContextLogf(ctx, "Compressing DexOpt caches to %q", targetTar)
 	if err := testexec.CommandContext(ctx, "tar", tarExcludeOption, "-cvpf", targetTar, "-C", dataPath, dexOptCacheDirectory).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to compress DexOpt caches")
 	}
