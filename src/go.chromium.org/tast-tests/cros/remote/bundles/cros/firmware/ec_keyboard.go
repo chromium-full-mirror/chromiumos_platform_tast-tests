@@ -146,11 +146,8 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 			"<alt_l>":  "KEY_LEFTALT",
 			"<esc>":    "KEY_ESC",
 			"<tab>":    "KEY_TAB",
-			// Older devices have overview (scale) on F5, but the spec at https://chromeos.google.com/partner/dlm/docs/hardware-specs/keyboardspec.html uses screenshot (sysrq)
-			"<f5>": "KEY_F5|KEY_SCALE|KEY_SYSRQ",
-			"<f6>": "KEY_F6|KEY_BRIGHTNESSDOWN",
-			"<f7>": "KEY_F7|KEY_BRIGHTNESSUP",
-			" ":    "KEY_SPACE",
+			// Remove F5~F7 as on vivaldi we allow different top row arrangement, see b/303609153.
+			" ": "KEY_SPACE",
 		}
 		keyPressFunc = func(ctx context.Context, key string) error {
 			if err := h.Servo.PressKey(ctx, key, servo.Dur(keyPressDur)); err != nil {
