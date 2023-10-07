@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/procutil"
 	"go.chromium.org/tast-tests/cros/local/saveddesks"
@@ -105,7 +106,10 @@ func (tss *TemplateSyncService) CloseChrome(ctx context.Context, req *empty.Empt
 	if err := saveddesks.DeleteSavedDesks(cleanupCtx, tconn, ac); err != nil {
 		return nil, err
 	}
-
+	// Close all existing windows.
+	if err := ash.CloseAllWindows(cleanupCtx, tconn); err != nil {
+		return nil, err
+	}
 	cleanup(cleanupCtx)
 
 	if tss.cr == nil {
@@ -136,14 +140,51 @@ func (tss *TemplateSyncService) WaitForFloatingWorkspaceCapture(ctx context.Cont
 	defer cleanup(cleanupCtx)
 
 	ac := uiauto.New(tconn)
-	// Wait for saved desk sync.
-	ash.WaitForSavedDeskSync(ctx, ac)
+	// We need to perform a user action here in case the tconn connection is
+	// abruptedly closed. This will keep the connection alive.
+	// TODO(b/305044379): Remove this once the root cause is found and fixed.
+	mouse, err := input.Mouse(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer mouse.Close(ctx)
+	mouse.Click()
+
+	// There is a chance that the network is slow or there is a lot of entries to
+	// sync to the device, so we want to make sure if that happens, we wait for
+	// the resume button to appear to know that we can start the floating
+	// workspace capture and upload.
+	if _, err := getResumeSessionButton(ctx, ac); err != nil {
+		return nil, err
+	}
+	// If we get the sync error message after waiting a minute for the resume
+	// session button, then there's a sync error and we are unlikely to be able to
+	// capture a floating workspace
+	syncErrorMessageLabel := nodewith.ClassName("Label").Name("Can't resume previous session").First()
+	found, err := ac.IsNodeFound(ctx, syncErrorMessageLabel)
+	if err != nil {
+		return nil, err
+	}
+	if found {
+		return nil, errors.New("Sync error, unable to get to the sync server")
+	}
 	// Close all existing windows.
 	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
 		return nil, err
 	}
 	// Open Chrome and Files.
 	if err := saveddesks.OpenApps(ctx, tconn, ac, appsList); err != nil {
+		return nil, err
+	}
+	// There needs to be a manual user action detected so that the service knows
+	// that the user is active and that the capture should be uploaded.
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer kb.Close(ctx)
+	// Press any keyboard key to update the last user activity timestamp.
+	if err := kb.Accel(ctx, "Enter"); err != nil {
 		return nil, err
 	}
 
@@ -170,6 +211,7 @@ func (tss *TemplateSyncService) Signout(ctx context.Context, req *empty.Empty) (
 	if err != nil {
 		return nil, err
 	}
+	defer kb.Close(ctx)
 	// Press the signout shortcut twice, one for bringing up the signout
 	// confirmation, second for confirming the signout operation.
 	if err := kb.Accel(ctx, "Ctrl+Shift+Q"); err != nil {
@@ -246,10 +288,36 @@ func (tss *TemplateSyncService) VerifyFloatingWorkspace(ctx context.Context, req
 	ac := uiauto.New(tconn)
 
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
-
+	resumeSessionButton, err := getResumeSessionButton(ctx, ac)
+	if err != nil {
+		return nil, err
+	}
+	if resumeSessionButton != nil {
+		if err := uiauto.Combine(
+			"Resume the floating workspace",
+			ac.DoDefault(resumeSessionButton),
+		)(ctx); err != nil {
+			return nil, err
+		}
+	}
 	// Wait for apps to launch.
 	if err := saveddesks.WaitforAppsToLaunch(ctx, tconn, ac, appsList); err != nil {
 		return nil, err
 	}
 	return &empty.Empty{}, nil
+}
+
+// getResumeSessionButton checks to see if the resume session button is
+// found. If it exists, then we return the button.
+func getResumeSessionButton(ctx context.Context, ac *uiauto.Context) (*nodewith.Finder, error) {
+	resumeSessionButton := nodewith.ClassName("PillButton").Name("Resume")
+	ac.WithTimeout(time.Minute).WaitUntilExists(resumeSessionButton)(ctx)
+	found, err := ac.IsNodeFound(ctx, resumeSessionButton)
+	if err != nil {
+		return nil, err
+	}
+	if found {
+		return resumeSessionButton, nil
+	}
+	return nil, nil
 }

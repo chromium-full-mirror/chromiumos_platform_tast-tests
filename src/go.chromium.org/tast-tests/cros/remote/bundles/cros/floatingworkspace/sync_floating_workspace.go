@@ -66,7 +66,7 @@ func SyncFloatingWorkspace(ctx context.Context, s *testing.State) {
 	}
 	client2, err := rpc.Dial(ctx, d2, s.RPCHint())
 	if err != nil {
-		s.Fatal("Failed to connect to the RPC service on the compaion device cd1")
+		s.Fatal("Failed to connect to the RPC service on the companion device cd1")
 	}
 	defer client2.Close(ctx)
 	fls2 := floatingworkspace.NewTemplateSyncServiceClient(client2.Conn)
