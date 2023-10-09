@@ -100,11 +100,21 @@ func ShutdownUsingUI(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to click status tray: ", err)
 		}
 
+		powerMenuFinder := &ui.Finder{
+			NodeWiths: []*ui.NodeWith{
+				{Value: &ui.NodeWith_Name{Name: "Power menu"}},
+				{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
+			},
+		}
+
 		shutdownButtonFinder := &ui.Finder{
 			NodeWiths: []*ui.NodeWith{
 				{Value: &ui.NodeWith_Name{Name: "Shut down"}},
-				{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
+				{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_MENU_ITEM}},
 			},
+		}
+		if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: powerMenuFinder}); err != nil {
+			s.Fatal("Failed to click UI Power Menu button: ", err)
 		}
 		if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: shutdownButtonFinder}); err != nil {
 			s.Fatal("Failed to find shutdown button on DUT UI: ", err)
