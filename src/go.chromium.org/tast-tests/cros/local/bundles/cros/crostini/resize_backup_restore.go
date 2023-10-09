@@ -104,23 +104,23 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	}
 
 	// Shrink the container to save time in the test.
-	if err = vm.ShrinkDefaultContainer(ctx, ownerID); err != nil {
+	if err := vm.ShrinkDefaultContainer(ctx, ownerID); err != nil {
 		s.Fatal("Failed to shrink container for backup: ", err)
 	}
 
 	userName := strings.Split(cr.NormalizedUser(), "@")[0]
 
 	runInTerminal := func(cmd, outputFile string) error {
-		var terminalApp *terminalapp.TerminalApp
 		// Try to find Terminal app first.
-		if terminalApp, err = terminalapp.Find(ctx, tconn); err != nil {
+		terminalApp, err := terminalapp.Find(ctx, tconn)
+		if err != nil {
 			// Failed to find the Terminal app. Try to open the Terminal app.
 			terminalApp, err = terminalapp.Launch(ctx, tconn)
 			if err != nil {
 				s.Fatal("Failed to open Terminal app: ", err)
 			}
 		} else {
-			if _, err = ash.BringWindowToForeground(ctx, tconn, fmt.Sprintf("Terminal - %s@penguin: ~", userName)); err != nil {
+			if _, err := ash.BringWindowToForeground(ctx, tconn, fmt.Sprintf("Terminal - %s@penguin: ~", userName)); err != nil {
 				s.Fatal("Failed to bring the Terminal app to the front: ", err)
 			}
 		}
@@ -143,16 +143,15 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 		checksumPreFile    = "/tmp/checksum_pre.txt"
 		checksumPostFile   = "/tmp/checksum_post.txt"
 	)
-	var checksumPreStr, checksumPostStr string
 
-	if err = cont.WriteFile(ctx, existingFile, existingFileStr); err != nil {
+	if err := cont.WriteFile(ctx, existingFile, existingFileStr); err != nil {
 		s.Fatalf("Failed to write file %s: %v", existingFile, err)
 	}
 	// Run checksumFiles, output is used to verify restore later.
-	if err = checksumFiles(checksumPreFile); err != nil {
+	if err := checksumFiles(checksumPreFile); err != nil {
 		s.Fatal("Failed to run command in Terminal window: ", err)
 	}
-	checksumPreStr, err = cont.ReadFile(ctx, checksumPreFile)
+	checksumPreStr, err := cont.ReadFile(ctx, checksumPreFile)
 	if err != nil {
 		s.Fatalf("Failed to read checksum output file %s: %v", checksumPreFile, err)
 	}
@@ -164,35 +163,23 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Linux Settings Backup & restore: ", err)
 	}
 
-	if err = st.LeftClickUI(settings.BackupButton)(ctx); err != nil {
-		s.Fatal("Failed to click Backup button: ", err)
-	}
-	// Set filename.
-	if err = st.WaitForUI(settings.BackupFileWindow)(ctx); err != nil {
-		s.Fatal("Failed to see Backup File dialog: ", err)
-	}
-	// Wait for backup complete.
-	uiauto.Sleep(time.Second)(ctx) // Pause needed so keyboard events are received.
-
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(nodewith.Role(role.TextField).Ancestor(settings.BackupFileWindow).Focused().Editable())(ctx); err != nil {
-		s.Fatal("Failed to focus on file name text field")
-	}
 
-	if err = keyboard.TypeAction(backupFileBaseName)(ctx); err != nil {
-		s.Fatalf("Failed to enter backup name %s: %v", backupFileBaseName, err)
-	}
-	if err = st.LeftClickUI(settings.BackupSave)(ctx); err != nil {
-		s.Fatal("Failed to left click backup Save button: ", err)
+	if err := uiauto.NamedCombine("click backup button, set filename and wait for backup to complete",
+		st.LeftClickUI(settings.BackupButton),
+		st.WaitForUI(settings.BackupFileWindow),
+		uiauto.Sleep(time.Second), // Pause needed so keyboard events are received.
+		ui.WithTimeout(5*time.Second).WaitUntilExists(nodewith.Role(role.TextField).Ancestor(settings.BackupFileWindow).Focused().Editable()),
+		keyboard.TypeAction(backupFileBaseName),
+		st.LeftClickUI(settings.BackupSave),
+		ui.WithTimeout(10*time.Minute).WaitUntilExists(settings.BackupNotification),
+	)(ctx); err != nil {
+		s.Fatal("Failed to backup: ", err)
 	}
 
 	myFilesPath, err := cryptohome.MyFilesPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to get users MyFiles path: ", err)
-	}
-
-	if err = ui.WithTimeout(10 * time.Minute).WaitUntilExists(settings.BackupNotification)(ctx); err != nil {
-		s.Fatal("Backup complete notification not found: ", err)
 	}
 
 	// Remove any files with the .tini extension. This is used because the backup file created may be named differently if there was a delay in using the keyboard.
@@ -214,11 +201,11 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	// Log a listing of dir.
 	logFiles := func(dir string) {
 		const lslRFile = "/tmp/lslR.txt"
-		if err = runInTerminal("sudo ls -lR "+dir, lslRFile); err != nil {
+		if err := runInTerminal("sudo ls -lR "+dir, lslRFile); err != nil {
 			s.Fatal("Failed to ls -lR in container: ", err)
 		}
-		var lslR string
-		if lslR, err = cont.ReadFile(ctx, lslRFile); err != nil {
+		lslR, err := cont.ReadFile(ctx, lslRFile)
+		if err != nil {
 			s.Fatal("Failed to read lslR file: ", err)
 		}
 		s.Log(lslR)
@@ -228,7 +215,7 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 
 	// Delete existingFile. This means if our restore was a no-op we'll fail
 	// later when we use this file to verify the backup integrity.
-	if err = cont.RemoveAll(ctx, existingFile); err != nil {
+	if err := cont.RemoveAll(ctx, existingFile); err != nil {
 		s.Fatalf("Failed to remove %s from container: %v", existingFile, err)
 	}
 
@@ -249,44 +236,32 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open Linux Settings Backup & restore: ", err)
 	}
-	if err = st.LeftClickUI(settings.RestoreButton)(ctx); err != nil {
-		s.Fatal("Failed to click Restore button: ", err)
-	}
-	if err = st.WaitForUI(settings.RestoreConfirmButton)(ctx); err != nil {
-		s.Fatal("Failed to find Confirm Restore dialog and button: ", err)
-	}
-	if err = st.LeftClickUI(settings.RestoreConfirmButton)(ctx); err != nil {
-		s.Fatal("Failed to click confirm restore action button: ", err)
-	}
 
-	// Click on .tini file
-	if err = st.WaitForUI(settings.RestoreFileWindow)(ctx); err != nil {
-		s.Fatal("Failed to find Restore file window: ", err)
-	}
-	if err = ui.LeftClick(settings.RestoreTiniFile)(ctx); err != nil {
-		s.Fatal("Failed to find .tini in file list: ", err)
-	}
-	// Don't want to unfocus the .tini file here, so just use a raw LeftClick.
-	if err = ui.LeftClick(settings.RestoreOpen)(ctx); err != nil {
-		s.Fatal("Failed to click Open button in Restore file window: ", err)
-	}
-	if err = ui.WithTimeout(5 * time.Minute).WaitUntilExists(settings.RestoreNotification)(ctx); err != nil {
-		s.Fatal("Restore complete notification not found: ", err)
+	if err := uiauto.NamedCombine("click restore button and wait for restore to complete",
+		st.LeftClickUI(settings.RestoreButton),
+		st.WaitForUI(settings.RestoreConfirmButton),
+		st.LeftClickUI(settings.RestoreConfirmButton),
+		st.WaitForUI(settings.RestoreFileWindow),
+		ui.LeftClick(settings.RestoreTiniFile),
+		ui.LeftClick(settings.RestoreOpen),
+		ui.WithTimeout(5*time.Minute).WaitUntilExists(settings.RestoreNotification),
+	)(ctx); err != nil {
+		s.Fatal("Failed to restore: ", err)
 	}
 
 	// Write post checksum. This will incidentally restart Linux, which is needed
 	// after restore.
-	if err = checksumFiles(checksumPostFile); err != nil {
+	if err := checksumFiles(checksumPostFile); err != nil {
 		s.Fatal("Failed to run command in Terminal window: ", err)
 	}
-	checksumPostStr, err = cont.ReadFile(ctx, checksumPostFile)
+	checksumPostStr, err := cont.ReadFile(ctx, checksumPostFile)
 	if err != nil {
 		s.Fatalf("Failed to read checksum output file %s: %v", checksumPostFile, err)
 	}
 	s.Log("Post checksum\n" + checksumPostStr)
 	logFiles("/home /tmp")
 
-	if err = cont.CheckFileContent(ctx, existingFile, existingFileStr); err != nil {
+	if err := cont.CheckFileContent(ctx, existingFile, existingFileStr); err != nil {
 		s.Fatal("Failed to verify existingFile: ", err)
 	}
 
