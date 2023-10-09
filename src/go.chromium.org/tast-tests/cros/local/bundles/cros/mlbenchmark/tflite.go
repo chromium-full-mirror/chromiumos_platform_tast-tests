@@ -29,7 +29,8 @@ func init() {
 		Timeout:      30 * time.Minute,
 		Fixture:      fixture.MLBenchmark,
 		// Exclude dedede due to cooldown issues: http://b/289367416#comment39.
-		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("dedede")),
+		// Exclude elm due to GPU issues: http://b/304177300
+		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("dedede", "elm")),
 		Params: []testing.Param{
 			{
 				Name: "mobilenet_v2_1_0_224",
