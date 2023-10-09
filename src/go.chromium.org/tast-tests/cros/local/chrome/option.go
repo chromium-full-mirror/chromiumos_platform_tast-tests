@@ -583,6 +583,19 @@ func EnableStackSampledMetrics() Option {
 	}
 }
 
+// EnableLacrosStackSampledMetrics returns an Option that can be passed to New
+// to turn on the stack-sampling profiler in Lacros.
+// By default, in tast tests, we always force the stack-sampled profiler off in
+// Lacros to avoid strange flakes if the profiler has an issue, and to avoid
+// noise in performance tests. (It will run 20% of the time if we don't force
+// it one way or the other.)
+func EnableLacrosStackSampledMetrics() Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.EnableLacrosStackSampledMetrics = true
+		return nil
+	}
+}
+
 // FieldTrialConfig returns an Option that can be passed to New to control use of fieldtrial_testing_config.json.
 func FieldTrialConfig(opt FieldTrialConfigMode) Option {
 	return func(cfg *config.MutableConfig) error {

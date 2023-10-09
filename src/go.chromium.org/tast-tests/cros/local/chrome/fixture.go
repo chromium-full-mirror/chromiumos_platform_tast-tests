@@ -264,7 +264,7 @@ func init() {
 		Desc:     "Logged into a user session; stack-sampled metrics on turned on",
 		Contacts: []string{"iby@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableStackSampledMetrics(), ExtraArgs("--metrics-recording-only")}, nil
+			return []Option{EnableStackSampledMetrics(), ExtraArgs("--metrics-recording-only", "--record-stack-sampling-data")}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,

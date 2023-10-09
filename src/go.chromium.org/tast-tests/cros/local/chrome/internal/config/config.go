@@ -236,9 +236,13 @@ func (c *Config) TestExtOAuthClientID() string { return c.m.TestExtOAuthClientID
 // detection screen in OOBE.
 func (c *Config) EnableHIDScreenOnOOBE() bool { return c.m.EnableHIDScreenOnOOBE }
 
-// EnableStackSampledMetrics returns true if the browsers should have stack-sampled
+// EnableStackSampledMetrics returns true if ash should have stack-sampled
 // metrics enabled.
 func (c *Config) EnableStackSampledMetrics() bool { return c.m.EnableStackSampledMetrics }
+
+// EnableLacrosStackSampledMetrics returns true if Lacros should have stack-sampled
+// metrics enabled.
+func (c *Config) EnableLacrosStackSampledMetrics() bool { return c.m.EnableLacrosStackSampledMetrics }
 
 // FieldTrialConfig returns [enable|disable] to control whether field trial testing config should be used.
 func (c *Config) FieldTrialConfig() string { return c.m.FieldTrialConfig }
@@ -311,6 +315,7 @@ type MutableConfig struct {
 	TestExtOAuthClientID            string           `reuse_match:"true"`
 	EnableHIDScreenOnOOBE           bool             `reuse_match:"true"`
 	EnableStackSampledMetrics       bool             `reuse_match:"true"`
+	EnableLacrosStackSampledMetrics bool             `reuse_match:"true"`
 	FieldTrialConfig                string           `reuse_match:"true"`
 	EnableHDR                       bool             `reuse_match:"false"`
 	SkipAutoEnrollmentCheck         bool             `reuse_match:"true"`
@@ -352,6 +357,7 @@ func NewConfig(opts []Option) (*Config, error) {
 			UseSandboxGaia:                  false,
 			EnableHIDScreenOnOOBE:           false,
 			EnableStackSampledMetrics:       false,
+			EnableLacrosStackSampledMetrics: false,
 		},
 	}
 

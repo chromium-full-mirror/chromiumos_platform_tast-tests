@@ -41,6 +41,22 @@ var fieldTrialConfig = testing.RegisterVarString(
 	"default",
 	"[enable|disable|default] Whether to force enable / disable fieldtrial_testing_config experiements, or use default.")
 
+// stackProfilerArg returns the command line argument to enable or disable
+// the stack profiler. We always explicitly enable or disable the profiler to
+// avoid flakes.
+func stackProfilerArg(enable bool) string {
+	if enable {
+		// "browser-test" forces the stack profiler into a testing mode, where it
+		// will always run, will run in all renderers, and will sample far more
+		// often than normal (once a second). See IsBrowserTestModeEnabled() in
+		// chrome/common/profiler/thread_profiler_configuration.cc. This is normally
+		// used for Chrome's browser tests, but we want the same behavior for
+		// ChromeOS's integration tests.
+		return "--start-stack-profiler=browser-test"
+	}
+	return "--disable-stack-profiler"
+}
+
 // RestartChromeForTesting restarts the ui job, asks session_manager to enable Chrome testing,
 // and waits for Chrome to listen on its debugging port.
 func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, lacrosExtArgs []string) error {
@@ -231,17 +247,7 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 		args = append(args, "--disable-features="+strings.Join(disabledFeatures, ","))
 	}
 
-	stackProfilerArg := "--disable-stack-profiler"
-	if cfg.EnableStackSampledMetrics() {
-		// "browser-test" forces the stack profiler into a testing mode, where it
-		// will always run, will in run in all renderers, and will sample far more
-		// often than normal (once a second). See IsBrowserTestModeEnabled() in
-		// chrome/common/profiler/thread_profiler_configuration.cc. This is normally
-		// used for Chrome's browser tests, but we want the same behavior for
-		// ChromeOS's integration tests.
-		stackProfilerArg = "--start-stack-profiler=browser-test"
-	}
-	args = append(args, stackProfilerArg)
+	args = append(args, stackProfilerArg(cfg.EnableStackSampledMetrics()))
 
 	var fieldTrialConfigValue = cfg.FieldTrialConfig()
 	if fieldTrialConfigValue == "" {
@@ -277,7 +283,7 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 	if len(lacrosExtArgs) != 0 {
 		largs = append(largs, lacrosExtArgs...)
 	}
-	largs = append(largs, stackProfilerArg)
+	largs = append(largs, stackProfilerArg(cfg.EnableLacrosStackSampledMetrics()))
 	args = append(args, "--lacros-chrome-additional-args="+strings.Join(largs, "####"))
 
 	if cfg.EnablePersonalizationHub() {
