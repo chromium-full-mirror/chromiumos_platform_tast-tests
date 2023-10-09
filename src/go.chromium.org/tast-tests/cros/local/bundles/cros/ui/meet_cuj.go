@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/bond"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/meetcuj"
+	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
@@ -44,6 +45,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/loginstatus"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast-tests/cros/local/webrtcinternals"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -51,6 +53,19 @@ import (
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+// fakeCameraHALCfg defines parameters that are used to generate the fake
+// camera HAL config.
+type fakeCameraHALCfg struct {
+	// videoFileName is the video used by the fake HAL to simulate the
+	// real camera input.
+	videoFileName string
+	// formats defines the supported resolution / frame rates of the fake
+	// camera HAL. Fake HAL will use whatever resolution / frame rates passed
+	// down from upper layer, and this config only affects what's reported in
+	// the camera static metadata.
+	formats []*testutil.FakeCameraFormatsConfig
+}
 
 // meetTest specifies the setting of a Google Meet journey. More info at go/cros-meet-tests.
 type meetTest struct {
@@ -79,12 +94,32 @@ type meetTest struct {
 	typingDuration    time.Duration           // Duration of typing on Google Docs. Must be less than the duration of the meet call. If |typingDuration| is not given, it defaults to |meetTimeout|.
 	browserType       browser.Type            // Ash Chrome browser or Lacros.
 	botsOptions       []bond.AddBotsOption    // Customizes the meeting participant bots.
+	fakeCamHALCfg     *fakeCameraHALCfg       // Enable Fake Camera HAL if the config is present.
 }
 
 const (
 	defaultTestTimeout = 25 * time.Minute
 	defaultMeetTimeout = 10 * time.Minute
+
+	fakeCameraVideoFile720p = "camera_video_720p.y4m"
 )
+
+var fakeCamHALCfg720p = &fakeCameraHALCfg{
+	// The video file used to simulate camera input.
+	videoFileName: fakeCameraVideoFile720p,
+	// Resolutions / frame rates that the fake HAL supports.
+	formats: []*testutil.FakeCameraFormatsConfig{{
+		Width:      320,
+		Height:     180,
+		FrameRates: []int{30}}, {
+		Width:      640,
+		Height:     360,
+		FrameRates: []int{30}}, {
+		Width:      1280,
+		Height:     720,
+		FrameRates: []int{30}},
+	},
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -101,7 +136,10 @@ func init() {
 			hwdep.SkipOnModel("kench"),
 		),
 		SoftwareDeps: []string{"chrome"},
-		Data:         []string{cujrecorder.SystemTraceConfigFile},
+		Data: []string{
+			cujrecorder.SystemTraceConfigFile,
+			fakeCameraVideoFile720p,
+		},
 		Vars: []string{
 			"mute",
 			"ui.MeetCUJ.doc",
@@ -120,6 +158,25 @@ func init() {
 					zoomOut:     true,
 					effects:     true,
 					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				// TODO (b/286531724): Remove this variant and apply fake HAL
+				// to all variants after performance evaluation is done.
+				Name:    "fake_cam_720p",
+				Timeout: defaultTestTimeout,
+				// group:camera_dependent is requested by tast lint for all
+				// tests using camera libraries, so camera team can verify the
+				// tests if there are camera lib changes.
+				ExtraAttr: []string{"group:cuj", "group:camera_dependent"},
+				Val: meetTest{
+					bots:          []int{1, 3, 15},
+					layout:        googlemeet.TiledLayout,
+					cam:           true,
+					zoomOut:       true,
+					effects:       true,
+					browserType:   browser.TypeAsh,
+					fakeCamHALCfg: fakeCamHALCfg720p,
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
 			}, {
@@ -799,6 +856,46 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	closeCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
+
+	if meet.fakeCamHALCfg != nil {
+		const cameraService = "cros-camera"
+		// Always restart cros-camera in the end.
+		defer upstart.RestartJob(closeCtx, cameraService)
+
+		// Configure CrOS to use only fake HAL camera.
+		if err := testutil.SetupTestConfig(ctx, testutil.UseFakeHALCamera); err != nil {
+			s.Fatal("Failed to set up camera test config: ", err)
+		}
+		defer testutil.RemoveTestConfig(closeCtx)
+
+		// Copy the fake camera video to where the camera module can access.
+		dutFakeHALPath, err := testutil.CopyFakeHALFrameImage(s.DataPath(meet.fakeCamHALCfg.videoFileName))
+		if err != nil {
+			s.Fatal("Failed to copy fake camera input: ", err)
+		}
+		defer os.Remove(dutFakeHALPath)
+
+		// Write the fake HAL config to the system.
+		fakeCameraConfig := testutil.FakeCameraConfig{
+			ID:        1,
+			Connected: true,
+			Frames: &testutil.FakeCameraImageConfig{
+				Path: dutFakeHALPath,
+			},
+			SupportedFormats: meet.fakeCamHALCfg.formats,
+		}
+		fakeHALConfig := testutil.FakeHALConfig{
+			Cameras: []testutil.FakeCameraConfig{fakeCameraConfig},
+		}
+		if err := testutil.WriteFakeHALConfig(ctx, fakeHALConfig); err != nil {
+			s.Fatal("Failed to configure HAL camera: ", err)
+		}
+		defer testutil.RemoveFakeHALConfig(closeCtx)
+
+		if err := upstart.RestartJob(ctx, cameraService); err != nil {
+			s.Fatalf("Failed to restart %s after camera setup: %v", cameraService, err)
+		}
+	}
 
 	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
 	if err != nil {
