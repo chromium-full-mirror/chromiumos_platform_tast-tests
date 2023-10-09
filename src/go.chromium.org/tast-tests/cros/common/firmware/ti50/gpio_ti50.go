@@ -116,4 +116,8 @@ const (
 	GpioTi50DeviceI2cSda GpioName = "DEVICE_I2C_SDA"
 	// GpioTi50DeviceI2cScl is the SCL signal for I2C TPM communication with the AP
 	GpioTi50DeviceI2cScl GpioName = "DEVICE_I2C_SCL"
+	// GpioTi50LidOpen is the pin that GSC reads to know if the lid is open.
+	GpioTi50LidOpen GpioName = "LID_OPEN"
+	// GpioTi50CcdModeL is the in/out low-active signal for when CCD cable is detected.
+	GpioTi50CcdModeL GpioName = "CCD_MODE_ODL"
 )
