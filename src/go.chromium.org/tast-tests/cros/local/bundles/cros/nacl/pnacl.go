@@ -38,14 +38,12 @@ func init() {
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
 		},
-		/* Disabled due to <1% pass rate over 30 days. See b/246818291
-		{
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"informational"},
-			Val:               browser.TypeLacros,
-		}
-		*/
+			{
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				ExtraAttr:         []string{"informational"},
+				Val:               browser.TypeLacros,
+			},
 		},
 	})
 }
