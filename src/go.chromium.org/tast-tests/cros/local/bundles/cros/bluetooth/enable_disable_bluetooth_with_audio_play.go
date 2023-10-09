@@ -166,7 +166,7 @@ func EnableDisableBluetoothWithAudioPlay(ctx context.Context, s *testing.State) 
 	// Bluetooth button in the quick setting menu, when Bluetooth is on.
 	bluetoothTurnOffButton := nodewith.NameContaining("Toggle Bluetooth. Connected to a device named " + btHeadset).Role(role.Button)
 	// Bluetooth button in the quick setting menu, when Bluetooth is off.
-	bluetoothTurnOnButton := nodewith.NameContaining("Toggle Bluetooth. Bluetooth is off").Role(role.Button).First()
+	bluetoothTurnOnButton := nodewith.NameContaining("Toggle Bluetooth. Bluetooth is off").Role(role.Button).ClassName("ImageButton")
 
 	for i := 1; i <= iter; i++ {
 		testing.ContextLogf(ctx, "Iteration %d/%d", i, iter)
@@ -198,13 +198,16 @@ func EnableDisableBluetoothWithAudioPlay(ctx context.Context, s *testing.State) 
 		)(ctx); err != nil {
 			s.Fatal("Failed to enable Bluetooth via toggle button: ", err)
 		}
+		if err := btDevice.Connect(ctx); err != nil {
+			s.Fatal("Failed to connect bluetooth device: ", err)
+		}
 
-		// After bluetooth on/off, audio file playback may pause,
-		// play audio file if paused and check audio route on bluetooth device.
-		if err := verifyRunningDevice(ctx, devName); err != nil {
-			playPauseButton := nodewith.Name("Toggle play pause").Role(role.ToggleButton)
+		// Cheking and playing the audio if it is paused after reconnecting the BT device.
+		playPauseButton := nodewith.Name("Toggle play pause").Role(role.ToggleButton)
+		_, err := crastestclient.WaitForStreams(ctx, 3*time.Second)
+		if err != nil {
 			if err := ui.LeftClick(playPauseButton)(ctx); err != nil {
-				s.Fatal("Failed to select btDeviceNode: ", err)
+				s.Fatal("Failed to resume the audio: ", err)
 			}
 		}
 
