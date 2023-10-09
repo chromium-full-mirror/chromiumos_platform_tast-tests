@@ -68,7 +68,7 @@ def construct_command(args) -> str:
         if args.binary is not None:
             tast_command += ".custom"
     elif env in ("crostini", "both"):
-        tast_command += "ui.Geekbench{version}CUJ.crostini"
+        tast_command += " ui.Geekbench{version}CUJ.crostini"
         if args.binary is not None:
             tast_command += "_custom"
     tast_command = tast_command.format(dut=args.dut, email=args.email,
