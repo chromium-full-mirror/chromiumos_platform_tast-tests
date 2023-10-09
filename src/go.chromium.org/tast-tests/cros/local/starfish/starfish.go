@@ -17,6 +17,29 @@ import (
 	"go.chromium.org/tast/core/timing"
 )
 
+// ModuleVersion for figuring out the type of starfish setup.
+type ModuleVersion uint32
+
+// All the ModuleVersion values
+const (
+	ModuleVersion0 ModuleVersion = 0 // starfish
+	ModuleVersion1 ModuleVersion = 1 // starfish+
+)
+
+// Version0Str and Version1Str are the string
+// representations of the two types of starfish setups.
+const (
+	Version0Str = "starfish"
+	Version1Str = "starfishplus"
+)
+
+// StarfishTypeVar indicates type of current starfish setup.
+var starfishTypeVar = testing.RegisterVarString(
+	"starfish.type",
+	Version0Str,
+	"starfish.type",
+)
+
 // StarfishCarrierVar indicates carrier from current active
 // starfish slot.
 var StarfishCarrierVar = testing.RegisterVarString(
@@ -25,7 +48,7 @@ var StarfishCarrierVar = testing.RegisterVarString(
 	"starfish.carrier",
 )
 
-// StarfishNotFound indicates missing startfish index and carrier
+// StarfishNotFound indicates missing startfish type, index and carrier
 // variables.
 const StarfishNotFound = "---"
 
@@ -58,50 +81,49 @@ const MaxSimSlots = 8
 
 // Starfish contains data pertaining to the current state, SIM selected, serial port, etc
 type Starfish struct {
-	sp       *shim
-	devID    string
-	fwVer    string
-	index    int
-	simSlots map[int]struct{}
+	sp        *shim
+	devID     string
+	fwVer     string
+	index     int
+	sfVersion ModuleVersion
+	simSlots  map[int]struct{}
 }
 
 // NewStarfish creates a Starfish object and ensures that it is configured properly.
-func NewStarfish(ctx context.Context) (*Starfish, error) {
+func NewStarfish(ctx context.Context) (*Starfish, int, string, error) {
 	ctx, st := timing.Start(ctx, "Starfish.NewStarfish")
 	defer st.End()
 
+	sfVersionStr := starfishTypeVar.Value()
 	carrier := StarfishCarrierVar.Value()
 	indexVar := StarfishIndexVar.Value()
 	if indexVar == StarfishNotFound {
 		testing.ContextLog(ctx, "starfish setup not supported for carrier: ", carrier)
-		return nil, nil
+		return nil, -1, StarfishNotFound, nil
 	}
 	index, err := strconv.Atoi(indexVar)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse starfish config info: %s", indexVar)
+		return nil, -1, StarfishNotFound, errors.Wrapf(err, "failed to parse starfish config info: %s", indexVar)
 	}
-	testing.ContextLog(ctx, "starfish setup for carrier: ", carrier, " in slot: ", index)
 	sh, logs, err := NewShim(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create shim object")
+		return nil, -1, StarfishNotFound, errors.Wrap(err, "failed to create shim object")
 	}
 	sfish := Starfish{sp: sh}
 	sfish.printLogs(ctx, logs)
+
+	sfish.setModuleVersion(ctx, sfVersionStr)
 
 	if err := sfish.deviceID(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to read DeviceID: ", err.Error())
 	}
 	if err := sfish.simStatus(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to read SIM slots status")
+		return nil, -1, StarfishNotFound, errors.Wrap(err, "failed to read SIM slots status")
 	}
 	if err := sfish.SimEject(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed sim eject command")
+		return nil, -1, StarfishNotFound, errors.Wrap(err, "failed sim eject command")
 	}
-	if err := sfish.SimInsert(ctx, index); err != nil {
-		return nil, errors.Errorf("failed sim insert command: %s", err)
-	}
-
-	return &sfish, nil
+	return &sfish, index, carrier, nil
 }
 
 // deviceID reads the DeviceID of the Starfish module.
@@ -157,6 +179,21 @@ func (s *Starfish) simStatus(ctx context.Context) error {
 		s.simSlots[i] = exists
 	}
 	return nil
+}
+
+// setModuleVersion sets the version/type of the Starfish module based on the string runtime variable.
+func (s *Starfish) setModuleVersion(ctx context.Context, sfVersionStr string) {
+	testing.ContextLog(ctx, "type: ", sfVersionStr)
+	if sfVersionStr == Version1Str {
+		s.sfVersion = ModuleVersion1
+	} else {
+		s.sfVersion = ModuleVersion0
+	}
+}
+
+// GetModuleVersion gets the version/type of the Starfish module (0 - starfish, 1 - starfish+, etc).
+func (s *Starfish) GetModuleVersion(ctx context.Context) ModuleVersion {
+	return s.sfVersion
 }
 
 // SimInsert emulates insertion of SIM into slot n [0-7]

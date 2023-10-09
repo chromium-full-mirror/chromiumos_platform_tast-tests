@@ -307,28 +307,50 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Could not confirm if modem was exported: ", err)
 	}
 
-	// Initialize Starfish before any Modem initialization.
-	sfish, err := starfish.NewStarfish(ctx)
+	// Initialize Starfish.
+	sfish, sfIndex, sfCarrier, err := starfish.NewStarfish(ctx)
 	if err != nil {
 		s.Fatal("Failed to setup starfish module on supported setup: ", err)
 	}
 	f.sf = sfish
 
-	if f.sf != nil {
-		// Check if the modem is exported by ModemManager after Starfish initialization.
-		modem, err = waitForModemToBeExported(ctx)
-		if err != nil {
-			s.Fatal("No modem exported by ModemManager after Starfish initialization: ", err)
-		}
-	}
-
 	// b/289540816: Ensure the APN in the modem doesn't contain a leftover value from a manual test.
 	CheckIfL850VerizonAndFixDefaultAPN(ctx)
 
 	// Ensure that the primary SIM slot has a valid SIM.
-	if !(f.useTestESIM || f.restartMM || sfish != nil) {
-		if err := modem.EnsureValidSIM(ctx); err != nil {
+	if !(f.useTestESIM || f.restartMM || f.sf != nil) {
+		if modem, err = modem.EnsureValidSIM(ctx, false); err != nil {
 			s.Fatal("Failed to ensure valid SIM: ", err)
+		}
+	}
+
+	if f.sf != nil {
+		if _, err := stopJob(ctx, modemfwd.JobName); err != nil {
+			s.Fatalf("Failed to stop %q: %s", modemfwd.JobName, err)
+		}
+		// On starfish setups, PSIM being the active sim slot is required
+		if modem, err = modem.EnsureValidSIM(ctx, true); err != nil {
+			s.Fatal("Failed to switch to PSIM on a starfish setup: ", err)
+		}
+		// Do a SIM insert on starfish
+		if err := f.sf.SimInsert(ctx, sfIndex); err != nil {
+			s.Fatalf("Failed to configure starfish at slot index - %d for %s: %s", sfIndex, sfCarrier, err)
+		}
+		testing.ContextLog(ctx, "starfish configured for ", sfCarrier, " at slot index: ", sfIndex)
+		// if a starfish v0 (regular starfish), a modem restart is required
+		if f.sf.GetModuleVersion(ctx) == starfish.ModuleVersion0 {
+			if modem, err = RestartModemWithHelper(ctx); err != nil {
+				s.Fatal("Failed to restart modem: ", err)
+			}
+		}
+		// on starfish setups, modemfwd needs to be running to be faithful to real world scenario
+		if err := modemfwd.StartAndWaitForQuiescence(ctx); err != nil {
+			s.Fatalf("Failed to start %q: %s", modemfwd.JobName, err)
+		}
+		// modemfwd might get the indication that the modem is ready with the correct firmware above
+		// polling the dbus modem object, just in case.
+		if modem, err = waitForModemToBeExported(ctx); err != nil {
+			s.Fatal("Could not find modem after starting modemfwd: ", err)
 		}
 	}
 
@@ -352,13 +374,6 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 		if err := helper.ClearSIMLockFromHostInfo(ctx); err != nil {
 			s.Fatal("Failed to clear SIM lock: ", err)
-		}
-	}
-
-	if f.sf != nil {
-		// ResetModem needed to detect SIM.
-		if _, err := helper.ResetModem(ctx); err != nil {
-			s.Log("Failed to reset modem for Starfish: ", err)
 		}
 	}
 
@@ -464,7 +479,7 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	}
 
 	if f.restartMM {
-		err := modem.EnsureValidSIM(ctx)
+		modem, err := modem.EnsureValidSIM(ctx, false)
 		if err != nil {
 			s.Fatal("Could not find MM dbus object with a valid sim (precondition): ", err)
 		}

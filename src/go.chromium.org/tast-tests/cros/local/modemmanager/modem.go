@@ -295,7 +295,8 @@ func NewModemWithSim(ctx context.Context) (*Modem, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create modem")
 	}
-	if err := modem.EnsureValidSIM(ctx); err != nil {
+	modem, err = modem.EnsureValidSIM(ctx, false)
+	if err != nil {
 		return nil, errors.Wrap(err, "failed to ensure SIM")
 	}
 	return modem, nil
@@ -304,46 +305,112 @@ func NewModemWithSim(ctx context.Context) (*Modem, error) {
 // EnsureValidSIM ensures that the primary SIM slot is not empty.
 // Useful on dual SIM DUTs where only one SIM is available, and we want to
 // select the slot with the active SIM.
-func (m *Modem) EnsureValidSIM(ctx context.Context) error {
+// On starfish setups, it ensures that a PSIM slot is active (valid or not)
+func (m *Modem) EnsureValidSIM(ctx context.Context, isStarfish bool) (*Modem, error) {
 	props, err := m.GetProperties(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to call GetProperties on modem")
+		return nil, errors.Wrap(err, "failed to call GetProperties on modem")
+	}
+	primarySlot, err := props.GetUint32(mmconst.ModemPropertyPrimarySimSlot)
+	if isStarfish {
+		if err != nil {
+			return nil, errors.Wrap(err, "missing Modem.PrimarySimSlot property")
+		}
+		testing.ContextLog(ctx, "Primary SIM slot: ", primarySlot)
+		if primarySlot == 0 {
+			// for starfish setup in a single SIM scenario: nothing to do here.
+			return m, nil
+		}
 	}
 	simPath, err := props.GetObjectPath(mmconst.ModemPropertySim)
 	if err != nil {
-		return errors.Wrap(err, "missing sim property")
+		return nil, errors.Wrap(err, "missing sim property")
 	}
-	valid, err := m.isValidSIM(ctx, simPath)
-	if err != nil {
-		return errors.Wrap(err, "failed to check if sim is valid")
-	}
-	if valid {
-		return nil
+	if !isStarfish {
+		valid, err := m.isValidSIM(ctx, simPath)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to check if sim is valid")
+		}
+		if valid {
+			return m, nil
+		}
 	}
 
 	simSlots, err := props.GetObjectPaths(mmconst.ModemPropertySimSlots)
 	if err != nil {
-		return errors.Wrap(err, "failed to get simslots property")
+		return nil, errors.Wrap(err, "failed to get simslots property")
 	}
+	if isStarfish {
+		if len(simSlots) == 0 {
+			// for starfish setup in a single SIM scenario: nothing to do here.
+			// shouldn't reach here.
+			return nil, errors.Errorf("unexpected number of simSlots: %d", len(simSlots))
+		}
+		if len(simSlots) != 2 {
+			// unknown SIM scenario: return error.
+			return nil, errors.Errorf("unsupported number of simSlots: %d", len(simSlots))
+		}
+	}
+	var switchSlots bool = false
+	var targetSimSlot uint32
 	for s, path := range simSlots {
-		slotIndex := s + 1
-		valid, err := m.isValidSIM(ctx, path)
-		if err != nil {
-			return errors.Wrap(err, "failed to check if sim is valid")
+		slotIndex := uint32(s + 1)
+		if !isStarfish {
+			valid, err := m.isValidSIM(ctx, path)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to check if sim is valid")
+			}
+			if !valid {
+				continue
+			}
+			targetSimSlot = slotIndex
+			switchSlots = true
+		} else {
+			// starfish case
+			if path == mmconst.EmptySlotPath {
+				continue
+			}
+			simProps, err := m.GetSimProperties(ctx, path)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to read sim properties in slot: %d", slotIndex)
+			}
+			if simProps == nil {
+				testing.ContextLog(ctx, "No SIM properties in slot: ", slotIndex)
+				continue
+			}
+			eid, err := simProps.GetString(mmconst.SimPropertySimEid)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to read eid from sim")
+			}
+			if eid != "" {
+				// current slotIndex is ESIM
+				if primarySlot != slotIndex {
+					// PSIM is already active
+					testing.ContextLog(ctx, "PSIM is already the primary slot: ", primarySlot)
+					return m, nil
+				}
+				// set the PSIM slot index as the active one
+				// if ESIM slot is i = 1, PSIM will be 2
+				// if ESIM slot is i = 2, PSIM will be 1
+				if slotIndex == 1 {
+					targetSimSlot = 2
+				} else {
+					targetSimSlot = 1
+				}
+				switchSlots = true
+			}
 		}
-		if !valid {
-			continue
+		if switchSlots {
+			testing.ContextLog(ctx, "switching the primary slot to: ", targetSimSlot)
+			newm, err := m.SetPrimarySimSlot(ctx, targetSimSlot)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to set primary SIM slot: %d", targetSimSlot)
+			}
+			return newm, nil
 		}
-		testing.ContextLogf(ctx, "Primary slot doesn't have a SIM, switching to slot %d", slotIndex)
-		if c := m.Call(ctx, "SetPrimarySimSlot", uint32(slotIndex)); c.Err != nil {
-			return errors.Wrap(c.Err, "failed to set primary SIM slot")
-		}
-		if _, err = PollModem(ctx, m.String()); err != nil {
-			return errors.Wrapf(err, "could not find modem after switching the primary slot to: %d", slotIndex)
-		}
-		return nil
+		return m, nil
 	}
-	return errors.New("failed to create modem: modemmanager D-Bus object has no valid SIM's")
+	return nil, errors.New("failed to create modem: modemmanager D-Bus object has no valid SIM's")
 }
 
 // isValidSIM checks if a simPath has a connectable sim card.
@@ -576,6 +643,18 @@ func (m *Modem) EnsureDisabled(ctx context.Context) error {
 	return nil
 }
 
+// SetPrimarySimSlot switches primary SIM slot to a given slot
+func (m *Modem) SetPrimarySimSlot(ctx context.Context, primary uint32) (*Modem, error) {
+	if c := m.Call(ctx, "SetPrimarySimSlot", primary); c.Err != nil {
+		return nil, errors.Wrapf(c.Err, "failed while switching the primary sim slot to: %d", primary)
+	}
+	newm, err := PollModem(ctx, m.String())
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not find modem after switching the primary slot to: %d", primary)
+	}
+	return newm, nil
+}
+
 // EnsureConnectState polls for modem state to be connected or disconnected.
 func EnsureConnectState(ctx context.Context, modem, simpleModem *Modem, expectedConnected bool) error {
 	// poll for expected modem state
@@ -688,21 +767,6 @@ func InhibitModem(ctx context.Context) (func(ctx context.Context) error, error) 
 	return uninhibit, nil
 }
 
-// SetPrimarySimSlot switches primary SIM slot to a given slot
-func SetPrimarySimSlot(ctx context.Context, primary uint32) error {
-	modem, err := NewModem(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create modem")
-	}
-	if c := modem.Call(ctx, "SetPrimarySimSlot", primary); c.Err != nil {
-		return errors.Wrapf(c.Err, "failed while switching the primary sim slot to: %d", primary)
-	}
-	if _, err = PollModem(ctx, modem.String()); err != nil {
-		return errors.Wrapf(err, "could not find modem after switching the primary slot to: %d", primary)
-	}
-	return nil
-}
-
 // SwitchSlot switches from current slot to new slot on dual sim duts, returns new primary slot.
 func SwitchSlot(ctx context.Context) (uint32, error) {
 
@@ -737,7 +801,8 @@ func SwitchSlot(ctx context.Context) (uint32, error) {
 	if primary == setSlot {
 		setSlot = 2
 	}
-	if err := SetPrimarySimSlot(ctx, setSlot); err != nil {
+	modem, err = modem.SetPrimarySimSlot(ctx, setSlot)
+	if err != nil {
 		return math.MaxUint32, err
 	}
 

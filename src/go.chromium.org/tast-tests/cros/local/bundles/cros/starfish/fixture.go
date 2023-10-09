@@ -38,7 +38,7 @@ type FixtData struct {
 }
 
 func (f *starfishFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	sfish, err := starfish.NewStarfish(ctx)
+	sfish, _, _, err := starfish.NewStarfish(ctx)
 	if err != nil {
 		s.Fatal("Failed to setup starfish module on supported setup: ", err)
 	}
