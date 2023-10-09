@@ -98,13 +98,8 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
-	ownerID, err := cryptohome.UserHash(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to get user hash: ", err)
-	}
-
 	// Shrink the container to save time in the test.
-	if err := vm.ShrinkDefaultContainer(ctx, ownerID); err != nil {
+	if err := vm.ShrinkContainer(ctx, cont); err != nil {
 		s.Fatal("Failed to shrink container for backup: ", err)
 	}
 

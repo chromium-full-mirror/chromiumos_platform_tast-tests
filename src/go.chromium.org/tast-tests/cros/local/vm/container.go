@@ -762,14 +762,17 @@ func ciceroneDBusMatchSpec(memberName string) dbusutil.MatchSpec {
 	}
 }
 
-// ShrinkDefaultContainer deletes a lot of large files in the
-// container to make the image size smaller.  This makes a big speed
-// difference on slow devices for backup and restore.
-func ShrinkDefaultContainer(ctx context.Context, ownerID string) error {
+// ShrinkContainer deletes a lot of large files in the container to make the
+// image size smaller. This makes a big speed difference on slow devices for
+// backup and restore and reduces disk overhead.
+func ShrinkContainer(ctx context.Context, cont *Container) error {
+	if out, err := cont.Command(ctx, "sudo", "du", "-bsx", "/").Output(testexec.DumpLogOnError); err == nil {
+		testing.ContextLogf(ctx, "du before shrinking: %s", strings.TrimSpace(string(out)))
+	}
 	// This list was constructed by running: `sudo du -bx / | sort -n`,
 	// and then deleting paths and checking that the container can still
 	// be restarted.
-	for _, path := range []string{
+	cleanupPaths := []string{
 		"/usr/lib/gcc",
 		"/usr/lib/git-core",
 		"/usr/lib/python3",
@@ -792,15 +795,17 @@ func ShrinkDefaultContainer(ctx context.Context, ownerID string) error {
 		"/var/cache",
 		"/var/lib/apt",
 		"/var/lib/dpkg",
-	} {
-		cmd := DefaultContainerCommand(ctx, ownerID, "sudo", "rm", "-rf", path)
-		if err := cmd.Run(); err != nil {
-			return err
-		}
 	}
-	cmd := DefaultContainerCommand(ctx, ownerID, "sudo", "journalctl", "--rotate", "--vacuum-size=1")
-	if err := cmd.Run(); err != nil {
+	if err := cont.Command(ctx, "sudo", "sh", "-c", fmt.Sprintf("rm -rf %s", strings.Join(cleanupPaths, " "))).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to delete files")
+	}
+
+	if err := cont.Command(ctx, "sudo", "journalctl", "--rotate", "--vacuum-size=1").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to clear journal")
+	}
+
+	if out, err := cont.Command(ctx, "sudo", "du", "-bsx", "/").Output(testexec.DumpLogOnError); err == nil {
+		testing.ContextLogf(ctx, "du after shrinking:  %s", strings.TrimSpace(string(out)))
 	}
 	return nil
 }

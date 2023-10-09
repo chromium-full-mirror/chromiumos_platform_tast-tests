@@ -135,7 +135,7 @@ func BackupRestore(ctx context.Context, s *testing.State) {
 	if out, err := cont.Command(ctx, "setfacl", "-m", "m::rx", testFileName).CombinedOutput(testexec.DumpLogOnError); err != nil {
 		s.Fatalf("Failed to set acl on file %v in container: %v, %v", testFileName, string(out), err)
 	}
-	if err := vm.ShrinkDefaultContainer(ctx, ownerID); err != nil {
+	if err := vm.ShrinkContainer(ctx, cont); err != nil {
 		s.Fatal("Failed to shrink container for backup: ", err)
 	}
 
