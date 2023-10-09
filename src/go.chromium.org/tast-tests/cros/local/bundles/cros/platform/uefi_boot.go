@@ -21,7 +21,7 @@ func init() {
 		},
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
 		SoftwareDeps: []string{"uefi_firmware"},
-		Attr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 	})
 }
 
