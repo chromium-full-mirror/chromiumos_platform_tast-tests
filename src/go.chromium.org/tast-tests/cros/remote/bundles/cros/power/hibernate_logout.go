@@ -25,6 +25,7 @@ func init() {
 		Timeout:      5 * time.Minute,
 		VarDeps:      []string{tape.ServiceAccountVar},
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService"},
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 

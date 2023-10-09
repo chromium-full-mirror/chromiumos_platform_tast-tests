@@ -33,6 +33,7 @@ func init() {
 		Timeout: 24 * time.Hour,
 		Vars:    []string{hibernateCyclesVars},
 		VarDeps: []string{tape.ServiceAccountVar},
+		Attr:    []string{"group:mainline", "informational"},
 	})
 }
 
