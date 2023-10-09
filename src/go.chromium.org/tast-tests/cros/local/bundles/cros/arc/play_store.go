@@ -31,7 +31,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Timeout: 15 * time.Minute,
