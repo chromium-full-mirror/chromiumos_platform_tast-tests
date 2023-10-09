@@ -106,9 +106,9 @@ func init() {
 			{
 				Name: "kms_busy",
 				Val: graphics.IgtTest{
-					Exe:              "kms_busy",
-					Subtests:         []string{"basic"},
-					DisableHangCheck: true,
+					Exe:                "kms_busy",
+					Subtests:           []string{"basic"},
+					DisableSysLogCheck: true,
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_nightly"},
@@ -382,7 +382,7 @@ func init() {
 						"hang-read-crc",
 						"compare-crc-sanitycheck",
 						"suspend-read-crc"},
-					DisableHangCheck: true,
+					DisableSysLogCheck: true,
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_nightly"},
@@ -542,8 +542,8 @@ func init() {
 
 func DisplayQualityValidation(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(graphics.IgtTest)
-	if testOpt.DisableHangCheck {
-		graphics.DisableHangCheck()
+	if testOpt.DisableSysLogCheck {
+		graphics.DisableSysLogCheck()
 	}
 
 	f, err := os.Create(filepath.Join(s.OutDir(), filepath.Base(testOpt.Exe)+".txt"))

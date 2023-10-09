@@ -111,9 +111,9 @@ func init() {
 			{
 				Name: "kms_flip",
 				Val: graphics.IgtTest{
-					Exe:              "kms_flip",
-					Subtests:         []string{"basic-plain-flip"},
-					DisableHangCheck: true,
+					Exe:                "kms_flip",
+					Subtests:           []string{"basic-plain-flip"},
+					DisableSysLogCheck: true,
 				},
 				Timeout:           30 * time.Minute,
 				ExtraAttr:         []string{"graphics_weekly"},
@@ -141,8 +141,8 @@ func init() {
 			{
 				Name: "kms_pipe_crc_basic",
 				Val: graphics.IgtTest{
-					Exe:              "kms_pipe_crc_basic",
-					DisableHangCheck: true,
+					Exe:                "kms_pipe_crc_basic",
+					DisableSysLogCheck: true,
 				},
 				Timeout:           5 * time.Minute,
 				ExtraAttr:         []string{"graphics_weekly"},
@@ -226,8 +226,8 @@ func init() {
 
 func DisplayHwValidation(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(graphics.IgtTest)
-	if testOpt.DisableHangCheck {
-		graphics.DisableHangCheck()
+	if testOpt.DisableSysLogCheck {
+		graphics.DisableSysLogCheck()
 	}
 
 	f, err := os.Create(filepath.Join(s.OutDir(), filepath.Base(testOpt.Exe)+".txt"))

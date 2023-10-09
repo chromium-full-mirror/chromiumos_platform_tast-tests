@@ -19,10 +19,10 @@ import (
 
 // IgtTest is used to describe the config used to run each test.
 type IgtTest struct {
-	Exe              string   // The test executable name.
-	Subtests         []string // The subtests to run.
-	IsSkipOk         bool     // If true, the test is allowed to be skipped and report as a pass.
-	DisableHangCheck bool     // If true, disable the gpu hang check as the test produces hangs intentionally.
+	Exe                string   // The test executable name.
+	Subtests           []string // The subtests to run.
+	IsSkipOk           bool     // If true, the test is allowed to be skipped and report as a pass.
+	DisableSysLogCheck bool     // If true, disable the syslog check as the test produces hangs intentionally.
 }
 
 // igtResultSummary is a summary of results from an igt test log.

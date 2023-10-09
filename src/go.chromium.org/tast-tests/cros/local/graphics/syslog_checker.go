@@ -22,51 +22,50 @@ import (
 
 var (
 	// Signatures in /var/log/messages to look for.
-	hangSignatures = []string{
-		// i915
-		`drm:i915_hangcheck_elapsed`,
-		`drm:i915_hangcheck_hung`,
-		`GPU HANG: ecode `,
-		`drm/i915: Resetting chip after gpu hang`,
-		`GPU HANG:.+\b[H|h]ang on (rcs0|vcs0|vecs0)`,
-		`Hangcheck timer elapsed...`,
-
-		// msm, freedreno
-		`hangcheck recover!`,
-
-		// amdgpu
-		`Error scheduling IBs`, // b/288942766
-		`GPU reset`,
-		`VM_L2_PROTECTION_FAULT_STATUS`, // b/271644551
-		`VRAM is lost`,
-
-		// mediatek
-		`mtk-mdp.*: cmdq timeout`,
-		`scp ipi .* ack time out !`,
-		`mtk-iommu .*: fault`,
-
-		// Qualcomm
-		`qcom-venus .*video-codec: SFR message from FW:`,
+	sysLogSignatureMap = map[string]*regexp.Regexp{
+		"GPU hangs": regexp.MustCompile(strings.Join([]string{
+			// i915
+			`drm:i915_hangcheck_elapsed`,
+			`drm:i915_hangcheck_hung`,
+			`GPU HANG: ecode `,
+			`drm/i915: Resetting chip after gpu hang`,
+			`GPU HANG:.+\b[H|h]ang on (rcs0|vcs0|vecs0)`,
+			`Hangcheck timer elapsed...`,
+			// msm, freedreno
+			`hangcheck recover!`,
+			// amdgpu
+			`GPU reset`,
+			`IB test failed on gfx`,         // kernel 5.x, b/307550145
+			`failed testing IB on GFX ring`, // kernel 4.x, b/307550145
+			`VRAM is lost`,
+			// mediatek
+			`mtk-mdp.*: cmdq timeout`,
+			`scp ipi .* ack time out !`,
+		}, "|")),
+		"Problematic strings": regexp.MustCompile(strings.Join([]string{
+			// amdgpu
+			`Error scheduling IBs`,          // b/288942766
+			`VM_L2_PROTECTION_FAULT_STATUS`, // b/271644551
+			// mediatek
+			`mtk-iommu .*: fault`,
+			// Qualcomm
+			`qcom-venus .*video-codec: SFR message from FW:`,
+		}, "|")),
 	}
-	disableHangCheck = false
+	disableSysLogCheck = false
 )
 
-// checkHangs checks gpu hangs from the reader. It returns error if failed to read the file or gpu hang patterns are detected.
-func checkHangs(ctx context.Context, reader *syslog.Reader) error {
-	if disableHangCheck {
+// checkSysLog checks signatures from the reader. It returns error if failed to read the file or certain patterns are detected.
+func checkSysLog(ctx context.Context, reader *syslog.Reader) error {
+	if disableSysLogCheck {
 		// Enable hangcheck for the next call.
-		disableHangCheck = false
-		testing.ContextLog(ctx, "DisableHangCheck detected. Skipping checking GPU hangs")
+		disableSysLogCheck = false
+		testing.ContextLog(ctx, "DisableSysLogCheck detected. Skipping checking syslog")
 		return nil
 	}
-
 	if reader == nil {
 		return errors.New("nil syslog.Reader")
 	}
-
-	// Join regexp to save time.
-	joinedHangSignatures := strings.Join(hangSignatures, "|")
-	re := regexp.MustCompile(joinedHangSignatures)
 	for {
 		e, err := reader.Read()
 		if err == io.EOF {
@@ -74,10 +73,13 @@ func checkHangs(ctx context.Context, reader *syslog.Reader) error {
 		} else if err != nil {
 			return errors.Wrap(err, "failed to read syslog")
 		}
-		if re.MatchString(e.Content) {
-			// Only output the full regex once we already found a hang to prevent the reader reads the output itself.
-			testing.ContextLog(ctx, "Found hangs with following regex: ", joinedHangSignatures)
-			return errors.Errorf("GPU hang: %s", e.Content)
+
+		for category, re := range sysLogSignatureMap {
+			if re.MatchString(e.Content) {
+				// Only output the full regex once we already found to prevent the reader reads the output itself.
+				testing.ContextLog(ctx, "Found with following regex: ", re.String())
+				return errors.Errorf("%v: %s", category, e.Content)
+			}
 		}
 
 		if ctx.Err() != nil {
@@ -87,11 +89,11 @@ func checkHangs(ctx context.Context, reader *syslog.Reader) error {
 	return nil
 }
 
-// DisableHangCheck skips the next GPU hang check.
-// Only DisableHangCheck is provided as checkHangs are often called in fixture's preTest function which is out of the test control.
-// And checkHangs would re-enable the flag for the next test run.
-func DisableHangCheck() {
-	disableHangCheck = true
+// DisableSysLogCheck skips the next syslog check.
+// Only DisableSysLogCheck is provided as checkSysLog are often called in fixture's preTest function which is out of the test control.
+// And checkSysLog would re-enable the flag for the next test run.
+func DisableSysLogCheck() {
+	disableSysLogCheck = true
 }
 
 // SetHangCheckTimer sets the hangcheck timer to d to allow longer gpu runtime before hangcheck kicks in.
