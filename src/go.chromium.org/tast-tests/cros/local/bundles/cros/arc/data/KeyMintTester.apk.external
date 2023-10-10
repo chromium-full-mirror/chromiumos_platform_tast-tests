@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromeos-test-assets-private/tast/cros/int/arc/KeyMintTester_20230915.apk",
+  "size": 2733093,
+  "sha256sum": "a8c0b9bfac4c7110efc56a717381a2a998a46c0abfc351b8b98d82f05b0bfb72"
+}

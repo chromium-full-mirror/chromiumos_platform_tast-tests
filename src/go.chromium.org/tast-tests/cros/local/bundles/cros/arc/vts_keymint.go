@@ -17,7 +17,7 @@ func init() {
 		Func:         VTSKeymint,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs the Android VTS module VtsAidlKeyMintTargetTest",
-		Contacts:     []string{"arc-commercial@google.com", "yaohuali@chromium.org"},
+		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Secret Management
 		BugComponent: "b:1284082",
 		Attr:         []string{"group:mainline", "informational"},
