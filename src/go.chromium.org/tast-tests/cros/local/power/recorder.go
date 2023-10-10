@@ -58,6 +58,7 @@ type Recorder struct {
 	dataSources []perf.TimelineDatasource
 	metrics     *perf.Timeline
 	isRecording bool
+	perfValues  *perf.Values
 }
 
 // OptionalRecorderArg is used for denoting optional args for recorder.
@@ -110,10 +111,32 @@ func (r *Recorder) Start(ctx context.Context) error {
 	if err := metrics.StartRecording(ctx); err != nil {
 		return errors.Wrap(err, "failed to start recording")
 	}
-	r.isRecording = true
+
 	r.metrics = metrics
+	r.isRecording = true
+	r.perfValues = nil
 
 	return nil
+}
+
+// Stop recording power metrics and returns unprocessed data. This function does
+// not upload metrics to power dashboard.
+// In:
+// ctx: context for the test.
+// Out:
+// *perf.Values: unprocessed power metrics.
+// error: propagate back to the test.
+func (r *Recorder) Stop(ctx context.Context) (*perf.Values, error) {
+	if !r.isRecording {
+		return nil, errors.New("recorder is not recording")
+	}
+	p, err := r.metrics.StopRecording(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed while recording metrics or stopping recorder")
+	}
+	r.isRecording = false
+	r.perfValues = p
+	return p, nil
 }
 
 // Finish collecting power metrics and post-processing data.
@@ -123,13 +146,10 @@ func (r *Recorder) Start(ctx context.Context) error {
 // Out:
 // error: propagate back to the test.
 func (r *Recorder) Finish(ctx context.Context, vs ...*perf.Values) error {
-	if !r.isRecording {
-		return errors.New("recorder is not recording")
-	}
-	r.isRecording = false
-	p, err := r.metrics.StopRecording(ctx)
-	if err != nil {
-		return errors.Wrap(err, "error while recording power metrics")
+	if r.perfValues == nil {
+		if _, err := r.Stop(ctx); err != nil {
+			return errors.Wrap(err, "failed to finish recording metrics")
+		}
 	}
 
 	if len(strings.TrimSpace(pdashNoteVar.Value())) != 0 {
@@ -142,9 +162,11 @@ func (r *Recorder) Finish(ctx context.Context, vs ...*perf.Values) error {
 		}
 	}
 
-	if err := GeneratePowerLogAndSaveToCrosbolt(ctx, r.outDir, r.testName, p, r.optionalArgs...); err != nil {
+	if err := GeneratePowerLogAndSaveToCrosbolt(ctx, r.outDir, r.testName, r.perfValues, r.optionalArgs...); err != nil {
 		return errors.Wrap(err, "failed to generate power_log.json and/or save perf data for crosbolt")
 	}
+
+	r.perfValues = nil
 	return nil
 }
 
