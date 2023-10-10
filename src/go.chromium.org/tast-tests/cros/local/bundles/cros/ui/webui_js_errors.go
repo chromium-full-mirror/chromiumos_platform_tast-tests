@@ -32,6 +32,7 @@ func init() {
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		Timeout:      chrome.MinLoginTimeout + time.Minute,
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
 		}, {
