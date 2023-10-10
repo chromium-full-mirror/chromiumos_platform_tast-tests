@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	ps "go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -23,8 +25,11 @@ func init() {
 			"chromeos-platform-power@google.com", // CrOS platform power developers
 			"zactu@google.com",                   // test author
 		},
-		ServiceDeps: []string{"tast.cros.power.DeviceSetupService"},
-		Timeout:     1 * time.Minute,
+		ServiceDeps: []string{
+			"tast.cros.power.DeviceSetupService",
+			"tast.cros.power.RecorderService",
+		},
+		Timeout: 2 * time.Minute,
 		Params: []testing.Param{{
 			Name: "default",
 			Val: &ps.DeviceSetupRequest{
@@ -49,18 +54,72 @@ func ExampleRemoteNoUI(ctx context.Context, s *testing.State) {
 	}
 	defer cl.Close(ctx)
 
-	// Creating a device setup service.
+	// Create a device setup service.
 	ds := ps.NewDeviceSetupServiceClient(cl.Conn)
 
 	// Setting up a DUT remotely according to the setup request.
-	request := s.Param().(*ps.DeviceSetupRequest)
-	if _, err = ds.Setup(ctx, request); err != nil {
+	dReq := s.Param().(*ps.DeviceSetupRequest)
+	if _, err = ds.Setup(ctx, dReq); err != nil {
 		s.Fatal("Failed to setup DUT: ", err)
 	}
 	// Restoring the DUT to its original state once the test finishes.
 	defer ds.Cleanup(ctx, &empty.Empty{})
 
-	// Maintaining the power test environment and idle for 10 seconds.
+	// Create a recorder service.
+	rs := ps.NewRecorderServiceClient(cl.Conn)
+
+	// Create a recorder that takes 1 sample every 5 second.
+	rReq := &ps.RecorderRequest{
+		TestName:    s.TestName(),
+		IntervalSec: 5,
+	}
+	if _, err = rs.Create(ctx, rReq); err != nil {
+		s.Fatal("Failed to create a recorder: ", err)
+	}
+	// Close the recorder once the test finishes.
+	defer rs.Close(ctx, &empty.Empty{})
+
+	// Start recording metrics.
+	if _, err = rs.Start(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to start recording metrics: ", err)
+	}
+
+	// Maintaining the power test environment and idle for 30 seconds.
 	// GoBigSleepLint: sleep to let the device idle.
-	testing.Sleep(ctx, 10*time.Second)
+	if err := testing.Sleep(ctx, 30*time.Second); err != nil {
+		s.Fatal("Failed to sleep: ", err)
+	}
+
+	// Stop recording metrics.
+	rRes, err := rs.Stop(ctx, &empty.Empty{})
+	if err != nil {
+		s.Fatal("Failed to stop recording metrics: ", err)
+	}
+	perfVals := perf.NewValuesFromProto(rRes.GetPerfMetrics())
+
+	// Save recorded metrics in remote and upload to dashboard.
+	if _, err := cp.CreateSaveUploadPowerLog(
+		ctx,
+		s.OutDir(),
+		s.TestName(),
+		"",
+		perfVals,
+		cp.FormatDeviceInfoForPowerLog(rRes.GetDeviceInfo()),
+		rRes.GetOneTimeMetrics(),
+	); err != nil {
+		s.Fatal("Failed to save and upload power log: ", err)
+	}
+
+	// Optionally insert custom metrics here. You must not insert
+	// them before uploading to dashboard or upload may fail.
+	perfVals.Set(perf.Metric{
+		Name: "custom_metric.",
+		Unit: "unit",
+	}, 10.0)
+
+	// Save recorded metrics for crosbolt containing custom metrics
+	// if any.
+	if err := perfVals.Save(s.OutDir()); err != nil {
+		s.Fatal("Failed to save perf data for crosbolt: ", err)
+	}
 }
