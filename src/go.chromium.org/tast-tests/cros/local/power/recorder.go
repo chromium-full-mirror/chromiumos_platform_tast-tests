@@ -41,6 +41,9 @@ const (
 	// take. It includes recorder & metrics construction, recorder cooldown,
 	// recorder destruction and data post-processing.
 	RecorderTimeout = RecorderCooldownTimeout + 13*time.Minute
+
+	// OptionalRecorderArgCustomPerfKey is the key used to get optional custom perf values.
+	OptionalRecorderArgCustomPerfKey = "custom_perf"
 )
 
 // Recorder is a utility to measure power metrics during tests.
@@ -133,12 +136,15 @@ func (r *Recorder) Finish(ctx context.Context, vs ...*perf.Values) error {
 		r.AddOptionalRecorderArg("pdash_note", strings.TrimSpace(pdashNoteVar.Value()))
 	}
 
-	p.Merge(vs...)
+	if vs != nil {
+		for _, customValue := range vs {
+			r.AddOptionalRecorderArg(OptionalRecorderArgCustomPerfKey, customValue)
+		}
+	}
 
 	if err := GeneratePowerLogAndSaveToCrosbolt(ctx, r.outDir, r.testName, p, r.optionalArgs...); err != nil {
 		return errors.Wrap(err, "failed to generate power_log.json and/or save perf data for crosbolt")
 	}
-
 	return nil
 }
 

@@ -1406,7 +1406,7 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 				}
 
 				// Save power_log.json and power_log.html.
-				if _, _, err := power.GeneratePowerLog(ctx, dir, "", powerData); err != nil {
+				if err := power.GeneratePowerLog(ctx, dir, "", powerData); err != nil {
 					return errors.Wrap(err, "failed to generate power log")
 				}
 			}

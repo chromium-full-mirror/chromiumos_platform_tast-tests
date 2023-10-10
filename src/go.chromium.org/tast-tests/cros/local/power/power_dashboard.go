@@ -64,47 +64,42 @@ func CollectOneTimeMetrics(ctx context.Context) *pb.OneTimeMetrics {
 	return metrics
 }
 
-// GeneratePowerLog returns the power dict and the power log dict, and
-// stores power_log.json and power_log.html.
-func GeneratePowerLog(ctx context.Context, outDir, testName string, values *perf.Values, args ...OptionalRecorderArg) (map[string]interface{}, map[string]interface{}, error) {
+// GeneratePowerLog generates power_log.{json, html}.
+// It will not save perf values and custom perf values
+// passed as an OptionalRecorderArg will not be handled.
+func GeneratePowerLog(ctx context.Context, outDir, testName string, values *perf.Values, args ...OptionalRecorderArg) error {
 	devInfo := GetDeviceInfo(ctx, args...)
 	metrics := CollectOneTimeMetrics(ctx)
-	powerDict, err := cp.ConvertPowerPerfValue(ctx, values, metrics)
+	pwrLog, err := cp.CreatePowerLogAndUpdatePerfValues(ctx, testName, values, devInfo, metrics)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to convert power perf values to power dictionary")
+		return errors.Wrap(err, "failed to create power log and update perf")
 	}
-	powerLogDict := cp.CreatePowerLogDict(ctx, testName, powerDict, devInfo)
-
-	if err := cp.SavePowerLogJSON(ctx, outDir, powerLogDict); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to generate power_log.json")
+	if err := cp.SavePowerLog(ctx, outDir, pwrLog); err != nil {
+		return errors.Wrap(err, "failed to save power log")
 	}
-
-	if err := cp.SavePowerLogHTML(ctx, outDir, powerLogDict); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to generate power_log.html")
-	}
-	return powerDict, powerLogDict, nil
+	return nil
 }
 
-// GeneratePowerLogAndSaveToCrosbolt generates power_log.{json, html}
-// and upload results to Crosbolt.
+// GeneratePowerLogAndSaveToCrosbolt generates power_log.{json, html},
+// and uploads power_log to dashboard.
+// It will merge custom perf values passed as OptionalRecorderArg
+// and saves perf results to Crosbolt.
 func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName string, values *perf.Values, args ...OptionalRecorderArg) error {
-	powerDict, powerLogDict, err := GeneratePowerLog(ctx, outDir, testName, values, args...)
-	if err != nil {
-		return errors.Wrap(err, "failed to generate power log")
+	devInfo := GetDeviceInfo(ctx, args...)
+	metrics := CollectOneTimeMetrics(ctx)
+	if err := cp.CreateSaveUploadPowerLog(ctx, outDir, testName, values, devInfo, metrics); err != nil {
+		return errors.Wrap(err, "failed to save and upload power log and perf")
 	}
 
-	if powerDict == nil {
-		testing.ContextLog(ctx, "Power dictionary is empty. Don't save perf values for crosbolt")
-		return nil
+	for _, optionalRecorderArg := range args {
+		if optionalRecorderArg.argName == OptionalRecorderArgCustomPerfKey {
+			t := optionalRecorderArg.argValue.(*perf.Values)
+			values.Merge(t)
+		}
 	}
 
 	if err := values.Save(outDir); err != nil {
 		return errors.Wrap(err, "failed to save perf data for crosbolt")
 	}
-
-	if err := cp.UploadToDashboard(ctx, powerLogDict, ""); err != nil {
-		return errors.Wrap(err, "failed to upload to power dashboard")
-	}
-
 	return nil
 }
