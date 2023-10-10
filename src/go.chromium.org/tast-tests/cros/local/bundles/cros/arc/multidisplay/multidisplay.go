@@ -142,7 +142,7 @@ func SharedVirtualPhysical(ctx context.Context, s *testing.State, dc virtualmult
 		s.Fatal("Failed to set tablet mode disabled: ", err)
 	}
 	defer cleanup(cleanupCtx)
-	// TODO(b/187788935): Wait for "tablet mode animation is finished" in a reliable way.
+	// TODO(b/187788935): GoBigSleepLint Wait for "tablet mode animation is finished" in a reliable way.
 	// If an activity is launched while the tablet mode animation is active, the activity
 	// will be launched in an undefined state, making the test flaky.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
@@ -871,6 +871,18 @@ func rotateDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *
 				ccList, err := queryConfigurationChanges(ctx, a)
 				if err != nil {
 					return errors.Wrap(err, "could not query config changes")
+				}
+
+				version, err := arc.SDKVersion()
+				if err != nil {
+					return errors.Wrap(err, "unable to get sdk version")
+				}
+
+				// TODO(b/304444756): Due to a change in T and up, only consider the
+				// first event (yes, this is a hack, but what we're hacking doesn't have
+				// to do with multidisplay).
+				if version >= arc.SDKT && len(ccList) >= 1 {
+					ccList = append([]configChangeEvent(nil), ccList[:(len(ccList)-1)]...)
 				}
 
 				if !reflect.DeepEqual(ccList, param.wantCC) {
@@ -1620,6 +1632,8 @@ func (cursor *cursorOnDisplay) moveTo(ctx context.Context, tconn *chrome.TestCon
 		if err := m.Move(int32(delta.X), int32(delta.Y)); err != nil {
 			return err
 		}
+		// GoBigSleepLint need to wait for a moment before the cursor position is
+		// stabilized in animations/callbacks/etc.
 		testing.Sleep(ctx, 5*time.Millisecond)
 	}
 	cursor.currentDisp = dstDisp
