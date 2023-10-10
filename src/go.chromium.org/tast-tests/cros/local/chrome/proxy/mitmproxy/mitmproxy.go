@@ -112,7 +112,8 @@ func (mp *MitmProxy) IsRunning() bool {
 
 // Start launches the mitmproxy.
 func (mp *MitmProxy) Start(ctx context.Context) error {
-	nowStr := time.Now().Format("20230731-150405")
+	nowStr := time.Now().Format("20060102-150405")
+
 	dumpFileName := fmt.Sprintf("mitmproxy_%s.dump", nowStr)
 	dumpFilePath := filepath.Join(mp.outDir, dumpFileName)
 
