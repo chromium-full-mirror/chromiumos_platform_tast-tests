@@ -1,0 +1,12 @@
+set noparent
+
+# OOBE team
+bohdanty@google.com
+bchikhaoui@google.com
+dkuzmin@google.com
+osamafathy@google.com
+rrsilva@google.com
+ziegltrum@google.com
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
