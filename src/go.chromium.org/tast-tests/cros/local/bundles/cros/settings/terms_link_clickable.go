@@ -6,7 +6,7 @@ package settings
 
 import (
 	"context"
-	"fmt"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -101,10 +101,11 @@ func checkTermsOfService(ctx context.Context, cr *chrome.Chrome, tconn *chrome.T
 		return err
 	}
 
-	return verifyContent(ctx, cr, outDir)
+	return verifyContent(ctx, cr, outDir, ui)
 }
 
-func verifyContent(ctx context.Context, cr *chrome.Chrome, outDir string) (err error) {
+// Verify that the header of the chrome://terms/ page appears and contains the correct string.
+func verifyContent(ctx context.Context, cr *chrome.Chrome, outDir string, ui *uiauto.Context) (err error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -119,9 +120,13 @@ func verifyContent(ctx context.Context, cr *chrome.Chrome, outDir string) (err e
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, outDir, func() bool { return err != nil }, cr, "terms_dump")
 
 	// Verify the content is within the terms page.
-	expected := "Google Chrome and ChromeOS Additional Terms of Service"
-	expr := fmt.Sprintf(`document.querySelector('h2').innerText === '%s'`, expected)
-	if err := conn.WaitForExprWithTimeout(ctx, expr, 10*time.Second); err != nil {
+	// The terms of service page uses a special whitespace character (NBSP) in
+	// "Google Chrome" below. Instead of matching the exact character, match any
+	// whitespace character in the regex. For more information, see discussion in
+	// b/301003113.
+	termsPageHeader := `Google\sChrome and ChromeOS Additional Terms of Service`
+	termsPageHeaderFinder := nodewith.NameRegex(regexp.MustCompile("^" + termsPageHeader + "$")).Role(role.Heading)
+	if err := ui.WaitUntilExists(termsPageHeaderFinder)(ctx); err != nil {
 		return errors.Wrap(err, "unexpected page content")
 	}
 
