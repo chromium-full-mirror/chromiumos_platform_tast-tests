@@ -62,7 +62,7 @@ func init() {
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
 		}},
-		Timeout: 3 * time.Minute,
+		Timeout: 4 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DefaultNotificationsSetting{}, pci.VerifiedFunctionalityUI),
 		},
@@ -250,8 +250,8 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 				}
 				return errors.New("Annotation with matching token not found yet")
 			}, &testing.PollOptions{
-				Timeout:  10 * time.Second,
-				Interval: 1 * time.Second,
+				Timeout:  30 * time.Second,
+				Interval: 5 * time.Second,
 			})
 
 			// Check if there was an error when checking logs.
