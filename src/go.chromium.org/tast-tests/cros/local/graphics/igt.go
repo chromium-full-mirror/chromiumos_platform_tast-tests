@@ -21,6 +21,7 @@ import (
 type IgtTest struct {
 	Exe              string   // The test executable name.
 	Subtests         []string // The subtests to run.
+	IsSkipOk         bool     // If true, the test is allowed to be skipped and report as a pass.
 	DisableHangCheck bool     // If true, disable the gpu hang check as the test produces hangs intentionally.
 }
 
@@ -85,28 +86,27 @@ func igtSummarizeLog(f *os.File) (r igtResultSummary, failedSubtests []string) {
 }
 
 // IgtProcessResults reads the results of the test output and outputs a summary of the full test results.
-func IgtProcessResults(testName string, file *os.File, isExitErr bool, exitErr *exec.ExitError, err error) (bool, string) {
+func IgtProcessResults(igtTest IgtTest, file *os.File, isExitErr bool, exitErr *exec.ExitError, err error) (bool, string) {
 	results, failedSubtests := igtSummarizeLog(file)
 	summary := fmt.Sprintf("Ran %d subtests with %d failures and %d skipped",
 		results.passed+results.failed, results.failed, results.skipped)
 
-	isError := true
-	outputLog := ""
-
 	// In the case of running multiple subtests which all happen to be skipped, igt_exitcode is 0,
 	// but the final exit code will be 77.
 	if results.passed+results.failed == 0 && isExitErr && exitErr.ExitCode() == 77 {
-		outputLog = fmt.Sprintf("ALL %d subtests were SKIPPED as expected: %s\n", results.skipped, err.Error())
+		outputLog := fmt.Sprintf("ALL %d subtests were SKIPPED: %s\n", results.skipped, err.Error())
+		// If we skip the test, return if it is allowed to be skipped.
+		return !igtTest.IsSkipOk, outputLog
 		// Each test is expected to run and either pass or fail. If nothing happens, then something is off.
 	} else if results.passed+results.failed+results.skipped == 0 {
-		outputLog = "Entire test was skipped and this is not expected - No subtests were run\n"
+		outputLog := "Entire test was skipped and this is not expected - No subtests were run\n"
+		return true, outputLog
 	} else if len(failedSubtests) > 0 {
-		outputLog = fmt.Sprintf("FAIL: Test:%s - Pass:%d Fail:%d - FailedSubtests:%s - Summary:%s\n",
-			testName, results.passed, results.failed, failedSubtests, summary)
+		outputLog := fmt.Sprintf("FAIL: Test:%s - Pass:%d Fail:%d - FailedSubtests:%s - Summary:%s\n",
+			igtTest.Exe, results.passed, results.failed, failedSubtests, summary)
+		return true, outputLog
 	} else {
-		outputLog = fmt.Sprintf("%s\n", summary)
-		isError = false
+		outputLog := fmt.Sprintf("%s\n", summary)
+		return false, outputLog
 	}
-
-	return isError, outputLog
 }

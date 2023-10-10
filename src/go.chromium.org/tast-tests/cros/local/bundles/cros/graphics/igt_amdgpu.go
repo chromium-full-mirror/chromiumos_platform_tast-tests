@@ -220,7 +220,7 @@ func IgtAmdgpu(ctx context.Context, s *testing.State) {
 
 	isExitErr, exitErr, err := graphics.IgtExecuteTests(ctx, testOpt, f)
 
-	isError, outputLog := graphics.IgtProcessResults(testOpt.Exe, f, isExitErr, exitErr, err)
+	isError, outputLog := graphics.IgtProcessResults(testOpt, f, isExitErr, exitErr, err)
 
 	if isError {
 		s.Error(outputLog)

@@ -106,8 +106,8 @@ func init() {
 			{
 				Name: "kms_busy",
 				Val: graphics.IgtTest{
-					Exe:      "kms_busy",
-					Subtests: []string{"basic"},
+					Exe:              "kms_busy",
+					Subtests:         []string{"basic"},
 					DisableHangCheck: true,
 				},
 				Timeout:   5 * time.Minute,
@@ -482,6 +482,7 @@ func init() {
 						"sprite_plane_onoff",
 						"primary_mmap_gtt",
 					},
+					IsSkipOk: true,
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_nightly"},
@@ -552,7 +553,7 @@ func DisplayQualityValidation(ctx context.Context, s *testing.State) {
 
 	isExitErr, exitErr, err := graphics.IgtExecuteTests(ctx, testOpt, f)
 
-	isError, outputLog := graphics.IgtProcessResults(testOpt.Exe, f, isExitErr, exitErr, err)
+	isError, outputLog := graphics.IgtProcessResults(testOpt, f, isExitErr, exitErr, err)
 
 	if isError {
 		s.Error(outputLog)

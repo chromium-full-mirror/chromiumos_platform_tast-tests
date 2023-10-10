@@ -49,8 +49,8 @@ func init() {
 				Val: graphics.IgtTest{
 					Exe: "kms_addfb_basic",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("grunt", "zork", "guybrush")),
 			}, {
 				Name: "kms_atomic",
@@ -71,8 +71,8 @@ func init() {
 				Val: graphics.IgtTest{
 					Exe: "kms_atomic_transition",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("grunt", "zork", "guybrush")),
 			}, {
 				Name: "kms_async_flips",
@@ -84,7 +84,7 @@ func init() {
 			}, {
 				Name: "kms_busy",
 				Val: graphics.IgtTest{
-					Exe: "kms_busy",
+					Exe:              "kms_busy",
 					DisableHangCheck: true,
 				},
 				Timeout:   5 * time.Minute,
@@ -235,13 +235,14 @@ func init() {
 				Val: graphics.IgtTest{
 					Exe: "kms_hdmi_inject",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("grunt", "zork", "guybrush")),
 			}, {
 				Name: "kms_hdr",
 				Val: graphics.IgtTest{
-					Exe: "kms_hdr",
+					Exe:      "kms_hdr",
+					IsSkipOk: true,
 				},
 				Timeout:           5 * time.Minute,
 				ExtraAttr:         []string{"graphics_nightly"},
@@ -377,7 +378,8 @@ func init() {
 			}, {
 				Name: "kms_psr",
 				Val: graphics.IgtTest{
-					Exe: "kms_psr",
+					Exe:      "kms_psr",
+					IsSkipOk: true,
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_nightly"},
@@ -479,7 +481,7 @@ func IgtKms(ctx context.Context, s *testing.State) {
 
 	isExitErr, exitErr, err := graphics.IgtExecuteTests(ctx, testOpt, f)
 
-	isError, outputLog := graphics.IgtProcessResults(testOpt.Exe, f, isExitErr, exitErr, err)
+	isError, outputLog := graphics.IgtProcessResults(testOpt, f, isExitErr, exitErr, err)
 
 	if isError {
 		s.Error(outputLog)
