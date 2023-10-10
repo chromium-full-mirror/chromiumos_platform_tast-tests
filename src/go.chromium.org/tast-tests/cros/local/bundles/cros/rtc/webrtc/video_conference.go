@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -18,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -31,11 +33,17 @@ type VCTestParams struct {
 	// Numpeope is the number of persons in a video conference.
 	// This can be set only if Step is false and it must be more than two.
 	NumPeople int
+	// Trace is true, then perfetto tracing is executed and the tracing result
+	// is saved in the result directory.
+	Trace bool
 }
 
 const (
 	// VCHTML is the HTML holding a video conference using WebRTC API.
 	VCHTML = "webrtc/video_conference.html"
+
+	// Peretto configuration file.
+	traceConfigFile = "webrtc/perfetto_trace.txtpb"
 
 	powerInterval   = 5 * time.Second  // Power library metrics collection interval.
 	profileInterval = 30 * time.Second // Sleep interval to measure the performance metrics
@@ -45,6 +53,7 @@ const (
 func TestFiles() []string {
 	return []string{
 		VCHTML,
+		traceConfigFile,
 		"webrtc/video_conference.js",
 		"webrtc/third_party/munge_sdp.js",
 	}
@@ -95,7 +104,7 @@ func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
 
 // runNonStep holds a conference video call in which |numPeople| persons attends
 // and thus |numPeople-1| decoders and 1 encoder run.
-func runNonStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder, params VCTestParams) error {
+func runNonStep(ctx context.Context, s *testing.State, conn *chrome.Conn, pr *power.Recorder, params VCTestParams) error {
 	if params.NumPeople <= 1 {
 		return errors.Errorf("the number of people must be more than 1: NumPeople=%d", params.NumPeople)
 	}
@@ -119,6 +128,11 @@ func runNonStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder, para
 	}
 	if err := pr.Finish(ctx); err != nil {
 		return errors.Wrap(err, "cannot finish collecting power metrics")
+	}
+	if params.Trace {
+		if err := recordTracing(ctx, s.OutDir(), s.DataPath(traceConfigFile)); err != nil {
+			return errors.Wrap(err, "failed in tracing")
+		}
 	}
 	return nil
 }
@@ -166,7 +180,7 @@ func runVCPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
 	if params.Step {
 		return runStep(ctx, conn, r)
 	}
-	return runNonStep(ctx, conn, r, params)
+	return runNonStep(ctx, s, conn, r, params)
 }
 
 // RunVideoConference runs a video conference using WebRTC API and measures the
@@ -186,5 +200,44 @@ func RunVideoConference(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		return err
 	}
 
+	return nil
+}
+
+func recordTracing(ctx context.Context, outDir, configFile string) error {
+	const (
+		tracingInterval = 15 * time.Second // Sleep interval to conduct tracing.
+	)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	defer cancel()
+
+	testing.ContextLog(ctx, "Start tracing")
+	session, err := tracing.StartSession(ctx, configFile,
+		tracing.WithTraceDataPath(
+			filepath.Join(
+				outDir,
+				fmt.Sprintf("perfetto-%d.pb", time.Now().Unix()))),
+		tracing.WithCompression())
+	if err != nil {
+		return errors.Wrap(err, "failed to start tracing")
+	}
+	defer session.Finalize(cleanupCtx)
+	// Stop tracing even if context deadline exceeds during sleep.
+	stopped := false
+	defer func() {
+		if !stopped {
+			session.Stop()
+		}
+	}()
+	// GoBigSleepLint: sleep to collect tracing events
+	if err := testing.Sleep(ctx, tracingInterval); err != nil {
+		return errors.Wrap(err, "failed to sleep to wait for the tracing session")
+	}
+	stopped = true
+	if err := session.Stop(); err != nil {
+		return errors.Wrap(err, "failed to stop tracing")
+	}
+	testing.ContextLog(ctx, "Complete tracing")
 	return nil
 }

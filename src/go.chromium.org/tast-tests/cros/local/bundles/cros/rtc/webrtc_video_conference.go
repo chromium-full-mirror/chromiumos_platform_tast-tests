@@ -7,6 +7,7 @@ package rtc
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
@@ -23,7 +24,10 @@ func init() {
 		Func:         WebRTCVideoConference,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure audio, camera, graphics and video stack performance in a video conference using WebRTC",
-		Vars:         []string{"rtc.WebRTCVideoConference.NumPeople"},
+		Vars: []string{
+			"rtc.WebRTCVideoConference.NumPeople",
+			"rtc.WebRTCVideoConference.Trace",
+		},
 		Contacts: []string{
 			"hiroh@google.com", // Test Author.
 			"chromeos-rtc@google.com",
@@ -78,6 +82,9 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to parse rtc.WebRTCVideoConference.NumPeople")
 		}
 		params.NumPeople = int(numPeople)
+	}
+	if val, ok := s.Var("rtc.WebRTCVideoConference.Trace"); ok {
+		params.Trace = (strings.ToLower(val) == "true")
 	}
 
 	if params.Step {
