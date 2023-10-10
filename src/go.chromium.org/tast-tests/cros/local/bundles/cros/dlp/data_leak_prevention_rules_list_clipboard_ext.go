@@ -58,7 +58,7 @@ func init() {
 		Data: []string{"manifest.json", "background.js", "content.js", "text_1.html", "text_2.html", "editable_text_box.html"},
 		Params: []testing.Param{{
 			Name:      "ash_blocked",
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline"},
 			Val:       browser.TypeAsh,
 		}, {
 			Name:              "lacros_blocked",
