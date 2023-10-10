@@ -50,6 +50,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline"},
 			ExtraSoftwareDeps: []string{"breakpad", "metrics_consent"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "browser_breakpad_mock_consent",
 			Val: chromeCrashLoggedInParams{
@@ -60,6 +61,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline"},
 			ExtraSoftwareDeps: []string{"breakpad"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "browser_crashpad",
 			Val: chromeCrashLoggedInParams{
@@ -70,6 +72,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline"},
 			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "browser_lacros_crashpad",
 			Val: chromeCrashLoggedInParams{
@@ -80,6 +83,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent", "lacros"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "browser_crashpad_mock_consent",
 			Val: chromeCrashLoggedInParams{
@@ -90,6 +94,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"crashpad"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "browser_lacros_crashpad_mock_consent",
 			Val: chromeCrashLoggedInParams{
@@ -100,6 +105,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "gpu_process_breakpad",
 			Val: chromeCrashLoggedInParams{
@@ -122,7 +128,7 @@ func init() {
 			ExtraAttr:         []string{"group:mainline"},
 			ExtraSoftwareDeps: []string{"breakpad", "metrics_consent"},
 			// This test performs 2 logins.
-			Timeout: 2*chrome.LoginTimeout + time.Minute,
+			Timeout: 2*chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "gpu_process_breakpad_mock_consent",
 			Val: chromeCrashLoggedInParams{
@@ -133,6 +139,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline"},
 			ExtraSoftwareDeps: []string{"breakpad"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "gpu_process_crashpad",
 			Val: chromeCrashLoggedInParams{
@@ -143,6 +150,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline"},
 			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "gpu_process_lacros_crashpad",
 			Val: chromeCrashLoggedInParams{
@@ -153,6 +161,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent", "lacros"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "gpu_process_crashpad_mock_consent",
 			Val: chromeCrashLoggedInParams{
@@ -163,6 +172,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"crashpad"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "gpu_process_lacros_crashpad_mock_consent",
 			Val: chromeCrashLoggedInParams{
@@ -173,6 +183,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "broker_breakpad_mock_consent",
 			Val: chromeCrashLoggedInParams{
@@ -184,6 +195,7 @@ func init() {
 			ExtraAttr: []string{"group:mainline"},
 			// If the gpu process is not sandboxed, it will not create a broker.
 			ExtraSoftwareDeps: []string{"breakpad", "gpu_sandboxing"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "broker_crashpad_mock_consent",
 			Val: chromeCrashLoggedInParams{
@@ -195,6 +207,7 @@ func init() {
 			ExtraAttr: []string{"group:mainline"},
 			// If the gpu process is not sandboxed, it will not create a broker.
 			ExtraSoftwareDeps: []string{"crashpad", "gpu_sandboxing"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
 			Name: "broker_lacros_crashpad_mock_consent",
 			Val: chromeCrashLoggedInParams{
@@ -206,6 +219,7 @@ func init() {
 			ExtraAttr: []string{"group:mainline", "informational"},
 			// If the gpu process is not sandboxed, it will not create a broker.
 			ExtraSoftwareDeps: []string{"crashpad", "gpu_sandboxing", "lacros"},
+			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}},
 	})
 }

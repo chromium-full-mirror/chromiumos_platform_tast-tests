@@ -33,6 +33,7 @@ func init() {
 		BugComponent: "b:1032705",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
+		Timeout:      chrome.MinLoginTimeout + time.Minute,
 		Params: []testing.Param{{
 			Name: "breakpad",
 			Val: chromeCrashLoggedInDirectParams{
