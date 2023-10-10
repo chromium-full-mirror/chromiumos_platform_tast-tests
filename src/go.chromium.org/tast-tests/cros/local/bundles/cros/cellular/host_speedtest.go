@@ -23,7 +23,7 @@ func init() {
 		Desc:         "Runs Speedtest on cellular interface and capture power consumption data",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com", "rmao@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active", "group:cellular_crosbolt", "cellular_crosbolt_perf_nightly", "cellular_crosbolt_unstable"},
+		Attr:         []string{"group:cellular_crosbolt", "cellular_crosbolt_perf_nightly", "cellular_crosbolt_unstable"},
 		HardwareDeps: hwdep.D(hwdep.Cellular()),
 		Timeout:      6 * time.Minute,
 		Fixture:      "cellular",
