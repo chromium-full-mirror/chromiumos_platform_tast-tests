@@ -57,7 +57,7 @@ const (
 	FakeEnroll                          // enroll with a fake, local device management server
 	GAIAEnroll                          // real network based enrollment using a real, live device management server
 	GAIAZTEEnroll                       // real network based ZTE enrollment using a real, live device management server
-	SAMLTestIdPEnroll                   // real network based enrollment using a real, live device management server relying on a SAML redirection to a test IdP
+	SAMLTestIDPEnroll                   // real network based enrollment using a real, live device management server relying on a SAML redirection to a test IdP
 )
 
 // AuthType describes the type of authentication to be used in GAIA.

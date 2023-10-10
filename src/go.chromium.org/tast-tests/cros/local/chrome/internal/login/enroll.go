@@ -462,7 +462,7 @@ func submitGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cfg 
 		if err := authenticateWithGAIA(ctx, oobeConn, gaiaConn, creds); err != nil {
 			return errors.Wrap(err, "failed to authenticate with GAIA")
 		}
-	} else if cfg.EnrollMode() == config.SAMLTestIdPEnroll {
+	} else if cfg.EnrollMode() == config.SAMLTestIDPEnroll {
 		if err := authenticateWithSAML(ctx, gaiaConn, creds); err != nil {
 			return errors.Wrap(err, "failed to authenticate with SAML")
 		}

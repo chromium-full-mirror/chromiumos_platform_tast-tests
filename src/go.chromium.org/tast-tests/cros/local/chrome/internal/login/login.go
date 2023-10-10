@@ -40,7 +40,7 @@ func LogIn(ctx context.Context, cfg *config.Config, sess *driver.Session) error 
 		if err := performFakeEnrollment(ctx, cfg, sess); err != nil {
 			return err
 		}
-	case config.GAIAEnroll, config.SAMLTestIdPEnroll:
+	case config.GAIAEnroll, config.SAMLTestIDPEnroll:
 		if err := performGAIAEnrollment(ctx, cfg, sess); err != nil {
 			return err
 		}

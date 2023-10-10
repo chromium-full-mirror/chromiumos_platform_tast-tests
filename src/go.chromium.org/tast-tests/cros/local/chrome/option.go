@@ -318,13 +318,13 @@ func GAIAZTEEnterpriseEnroll() Option {
 	}
 }
 
-// SAMLTestIdPEnterpriseEnroll returns an Option that can be passed to New to enable SAML
+// SAMLTestIDPEnterpriseEnroll returns an Option that can be passed to New to enable SAML
 // Enterprise Enrollment using a test IdP before login. The corresponding user needs to
 // have SAML redirection to the test IdP (https://g-id-test-idp.appspot.com/) enabled
 // either for the domain or the OU.
-func SAMLTestIdPEnterpriseEnroll(creds Creds) Option {
+func SAMLTestIDPEnterpriseEnroll(creds Creds) Option {
 	return func(cfg *config.MutableConfig) error {
-		cfg.EnrollMode = config.SAMLTestIdPEnroll
+		cfg.EnrollMode = config.SAMLTestIDPEnroll
 		cfg.EnrollmentCreds = creds
 		return nil
 	}

@@ -298,7 +298,7 @@ func (c *PolicyService) SAMLTestIdPEnrollUsingChrome(ctx context.Context, req *p
 
 	if err := c.newChrome(
 		ctx,
-		chrome.SAMLTestIdPEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
+		chrome.SAMLTestIDPEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.SkipAutoEnrollmentCheck(),
 		chrome.NoLogin(),
 		chrome.DMSPolicy(req.DmserverURL),
