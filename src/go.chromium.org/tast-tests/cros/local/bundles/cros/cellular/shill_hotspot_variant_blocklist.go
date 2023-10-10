@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Verifies that Hotspot is disabled on devices in which the Hardware or OEM doesn't allow hotspot",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Attr:         []string{"group:cellular", "cellular_sim_active"},
 		Fixture:      "cellular",
 		Timeout:      2 * time.Minute,
 	})
