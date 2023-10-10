@@ -85,6 +85,11 @@ func (c *vkmsMultiDisplayController) AdditionalFixtureSetup(ctx context.Context)
 		return errors.Wrap(err, "could not kill DRM processes")
 	}
 
+	// Remove vkms driver so it can reloaded with the correct configuration.
+	if err := testexec.CommandContext(ctx, "rmmod", "vkms").Run(); err != nil {
+		return errors.Wrap(err, "could not remove vkms driver")
+	}
+
 	// Make sure the config directory exists and that configFS is mounted there
 	if err := os.MkdirAll("/sys/kernel/config", os.ModePerm); err != nil {
 		return errors.Wrap(err, "could not create configfs directory")
@@ -331,7 +336,11 @@ func (c *vkmsMultiDisplayController) AdditionalFixtureTeardown(ctx context.Conte
 		}
 	}
 
-	// Re enable vkms with default parameters.
+	// Disable and re-enable vkms with default parameters.
+	if err := testexec.CommandContext(ctx, "rmmod", "vkms").Run(); err != nil {
+		return errors.Wrap(err, "could not remove vkms driver")
+	}
+
 	if err := testexec.CommandContext(ctx, "modprobe", "vkms").Run(); err != nil {
 		return errors.Wrap(err, "could not load module vkms")
 	}
