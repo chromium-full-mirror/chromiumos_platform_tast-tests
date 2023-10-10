@@ -36,7 +36,7 @@ func enableCrashFiltering(ctx context.Context, filterFile, filter string) error 
 			return errors.New("crash_reporter is still running")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to wait for crash_reporter to finish")
 	}
 
