@@ -6,6 +6,7 @@ package settings
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -208,14 +209,17 @@ func checkOpenSources(resource *chromeOSPageInfo) uiauto.Action {
 }
 
 func checkTermsOfServiceLinks(resource *chromeOSPageInfo) uiauto.Action {
-	title := "Google Chrome and ChromeOS Additional Terms of Service"
-	termsRoot := nodewith.Name("Chrome - " + title).HasClass("BrowserFrame").Role(role.Window)
-	termsOfServiceTitle := nodewith.Name(title).Role(role.Heading).Ancestor(termsRoot)
+	// The terms of service page uses a special whitespace character (NBSP) in
+	// "Google Chrome" below. Instead of matching the exact character, match any
+	// whitespace character in the regex.
+	title := `Google\sChrome and ChromeOS Additional Terms of Service`
+	termsWindowFinder := nodewith.NameRegex(regexp.MustCompile("^Chrome - " + title + "$")).HasClass("BrowserFrame").Role(role.Window)
+	termsTitleFinder := nodewith.NameRegex(regexp.MustCompile("^" + title + "$")).Role(role.Heading).Ancestor(termsWindowFinder)
 
 	return uiauto.Combine("click term of service",
 		resource.settings.FocusAndWait(ossettings.TermsOfService),
 		resource.settings.LeftClick(ossettings.TermsOfService),
-		resource.ui.WaitUntilExists(termsOfServiceTitle),
+		resource.ui.WaitUntilExists(termsTitleFinder),
 		func(ctx context.Context) error { return apps.Close(ctx, resource.tconn, resource.chrome.ID) },
 	)
 }
