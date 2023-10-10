@@ -41,8 +41,7 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_stress"},
 		Vars:         []string{"firmware.consecutiveBootIters", "firmware.consecutiveBootCustomCmd"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      100 * time.Minute,
@@ -202,7 +201,7 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Check for G3 powerstate")
-		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 180*time.Second, "G3"); err != nil {
 			logFailure(errors.Wrap(err, "failed to get G3 powerstate"), i, &failToGetG3)
 		}
 
