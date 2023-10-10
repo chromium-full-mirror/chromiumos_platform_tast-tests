@@ -92,9 +92,9 @@ func init() {
 // (DNS, DHCP, ICMP, ...) emitted by the DUT. The test uses hwsim and virtualnet
 // packages to setup a wifi network and the servers required for the check. The
 // packets are emitted directly from the test and DSCP mark is verified by doing
-// a live capture on the access point virtual interface. It typically verifies
-// that at least one packet of a given protocol has the correct mark.
-// TODO(b/296958870): check ICMPv6 packet marks.
+// a live capture on the access point virtual interface. The test relies on the
+// test environment to guarantee that no other devices are sending network
+// control packets.
 func QosNetworkControl(ctx context.Context, s *testing.State) {
 	// Reserve a little time for cleanup.
 	cleanupCtx := ctx
@@ -235,8 +235,14 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 		select {
 		case p := <-packets:
 			// Check DHCP v4 packet marks. The packets are emitted by the DUT
-			// after layer 2 is connected.
-			if p.DHCPv4 != nil && hasDSCP(p, dscpNetworkControl) {
+			// after layer 2 is connected. As we're only interested by the
+			// Discover and Request packet, we can filter them ensuring the
+			// destination address is a broadcast one.
+			if p.DHCPv4 != nil && p.IPv4.DstIP.Equal(net.IPv4bcast) {
+				// All DHCP emitted by the DUT are expected to be marked with DSCP 48.
+				if !hasDSCP(p, dscpNetworkControl) {
+					return errors.Errorf("DHCPv4 packet marked with DSCP %d", p.DSCP())
+				}
 				switch getDHCPMsgType(p) {
 				case layers.DHCPMsgTypeDiscover:
 					seen |= packetDHCPv4Discover
@@ -252,33 +258,51 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 			}
 
 			// Check DNS packet mark.
-			if p.DNS != nil && hasDSCP(p, dscpNetworkControl) {
+			if p.DNS != nil {
+				if !hasDSCP(p, dscpNetworkControl) {
+					return errors.Errorf("DNS packet marked with DSCP %d", p.DSCP())
+				}
 				seen |= packetDNS
 				continue
 			}
 
 			// Check TCP SYN packet mark.
-			if p.TCP != nil && p.TCP.SYN && hasDSCP(p, dscpNetworkControl) {
+			if p.TCP != nil && p.TCP.SYN {
+				if !hasDSCP(p, dscpNetworkControl) {
+					return errors.Errorf("TCP SYN packet marked with DSCP %d", p.DSCP())
+				}
 				seen |= packetTCPSyn
 				continue
 			}
 
-			if p.ICMPv4 != nil && p.ICMPv4.TypeCode.Type() == layers.ICMPv4TypeEchoRequest && hasDSCP(p, dscpNetworkControl) {
+			if p.ICMPv4 != nil && p.ICMPv4.TypeCode.Type() == layers.ICMPv4TypeEchoRequest {
+				if !hasDSCP(p, dscpNetworkControl) {
+					return errors.Errorf("ICMPv4 packet marked with DSCP %d", p.DSCP())
+				}
 				seen |= packetICMPv4EchoRequest
 				continue
 			}
 
-			if p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeEchoRequest && hasDSCP(p, dscpNetworkControl) {
+			if p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeEchoRequest {
+				if !hasDSCP(p, dscpNetworkControl) {
+					return errors.Errorf("ICMPv6 Echo Request marked with DSCP %d", p.DSCP())
+				}
 				seen |= packetICMPv6EchoRequest
 				continue
 			}
 
-			if p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeRouterSolicitation && hasDSCP(p, dscpNetworkControl) {
+			if p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeRouterSolicitation {
+				if !hasDSCP(p, dscpNetworkControl) {
+					return errors.Errorf("ICMPv6 Router Solicitation marked with DSCP %d", p.DSCP())
+				}
 				seen |= packetICMPv6RouterSolicitation
 				continue
 			}
 
-			if p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeNeighborSolicitation && hasDSCP(p, dscpNetworkControl) {
+			if p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeNeighborSolicitation && !p.IPv6.SrcIP.IsUnspecified() {
+				if !hasDSCP(p, dscpNetworkControl) {
+					return errors.Errorf("ICMPv6 Neighbor Solicitation marked with DSCP %d", p.DSCP())
+				}
 				seen |= packetICMPv6NeighborSolicitation
 			}
 
