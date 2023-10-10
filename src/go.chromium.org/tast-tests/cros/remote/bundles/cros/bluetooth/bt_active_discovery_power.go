@@ -125,19 +125,15 @@ func BTActiveDiscoveryPower(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("Device %s is ready to pair", device.String())
 
+	fv.StartPowerRecording(ctx)
 	s.Log("Keep discovering for ", interval)
 	if _, err = fv.BluetoothService.DiscoverDevice(ctx, &request); err != nil {
 		if strings.Contains(err.Error(), "failed to wait until bluetooth adapter discovered device") {
-			s.Log("Ignore discovery error")
+			s.Logf("Done discovering for %v for power measurement", interval)
 		} else {
 			s.Fatal("Unexpected discovery error: ", err)
 		}
 	}
-
-	fv.StartPowerRecording(ctx)
-	s.Log("Keep discovering for ", interval)
-	// GoBigSleepLint: sleep to keep discovery for measuring power consumption
-	testing.Sleep(ctx, interval)
 
 	pResults, err = fv.StopPowerRecording(ctx, s.TestName()+".discov1")
 	if err != nil {
