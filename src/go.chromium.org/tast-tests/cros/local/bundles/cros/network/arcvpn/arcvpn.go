@@ -79,9 +79,11 @@ func WaitForARCServiceState(ctx context.Context, a *arc.ARC, pkg, svc string, ex
 		matched, matchErr := regexp.Match(`ServiceRecord\{`, o)
 		if matched != expectedRunning || matchErr != nil {
 			if expectedRunning {
-				return errors.Wrap(matchErr, "expected, but didn't find ServiceRecord")
+				// TODO(b/281466593): Stop logging the output, intended as temporary logs for investigation
+				return errors.Wrapf(matchErr, "expected, but didn't find ServiceRecord. dumpsys output: %s", o)
 			}
-			return errors.Wrap(matchErr, "didn't expect, but found ServiceRecord")
+			// TODO(b/281466593): Stop logging the output, intended as temporary logs for investigation
+			return errors.Wrapf(matchErr, "didn't expect, but found ServiceRecord. dumpsys output: %s", o)
 		}
 
 		return nil
