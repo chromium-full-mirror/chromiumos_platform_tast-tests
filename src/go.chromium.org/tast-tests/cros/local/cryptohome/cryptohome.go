@@ -5,13 +5,9 @@
 // Package cryptohome operates on encrypted home directories.
 package cryptohome
 
-// TODO(b/182152667): We should deprecate the usage of this file.
-// Please considering use hwsec.CryptohomeClient directly for new consumer.
-
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -50,11 +46,19 @@ const (
 	persistentTestFileContent = "content"
 )
 
+func newClient() *hwsec.CryptohomeClient {
+	return hwsec.NewCryptohomeClient(hwseclocal.NewLoglessCmdRunner())
+}
+
+func newMountInfo() *hwsec.CryptohomeMountInfo {
+	r := hwseclocal.NewLoglessCmdRunner()
+	return hwsec.NewCryptohomeMountInfo(r, hwsec.NewCryptohomeClient(r))
+}
+
 // UserHash returns user's cryptohome hash.
 func UserHash(ctx context.Context, user string) (string, error) {
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	hash, err := cryptohome.GetUserHash(ctx, user)
+	client := newClient()
+	hash, err := client.GetUserHash(ctx, user)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get user hash")
 	}
@@ -70,9 +74,8 @@ func UserPath(ctx context.Context, user string) (string, error) {
 		return "/home/chronos/user", nil
 	}
 
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	path, err := cryptohome.GetHomeUserPath(ctx, user)
+	client := newClient()
+	path, err := client.GetHomeUserPath(ctx, user)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get user home path")
 	}
@@ -101,9 +104,8 @@ func DownloadsPath(ctx context.Context, user string) (string, error) {
 
 // SystemPath returns the path to user's encrypted system directory.
 func SystemPath(ctx context.Context, user string) (string, error) {
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	path, err := cryptohome.GetRootUserPath(ctx, user)
+	client := newClient()
+	path, err := client.GetRootUserPath(ctx, user)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get user home path")
 	}
@@ -114,9 +116,8 @@ func SystemPath(ctx context.Context, user string) (string, error) {
 // Success is reported if the user directory doesn't exist,
 // but an error will be returned if the user is currently logged in.
 func RemoveUserDir(ctx context.Context, user string) error {
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	if _, err := cryptohome.RemoveVault(ctx, user); err != nil {
+	client := newClient()
+	if _, err := client.RemoveVault(ctx, user); err != nil {
 		return errors.Wrap(err, "failed to remove cryptohome")
 	}
 	return nil
@@ -135,11 +136,9 @@ const (
 // WaitForUserMountAndValidateType waits for user's encrypted home directory to
 // be mounted and validates that it is of correct type.
 func WaitForUserMountAndValidateType(ctx context.Context, user string, mountType MountType) error {
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)
+	cmi := newMountInfo()
 
-	if err := mountInfo.WaitForUserMountAndValidateType(ctx, user, mountType); err != nil {
+	if err := cmi.WaitForUserMountAndValidateType(ctx, user, mountType); err != nil {
 		return errors.Wrap(err, "failed to wait for user mount and validate type")
 	}
 	return nil
@@ -148,11 +147,9 @@ func WaitForUserMountAndValidateType(ctx context.Context, user string, mountType
 // WaitForUserMount waits for user's encrypted home directory to be mounted and
 // validates that it is of permanent type for all users except guest.
 func WaitForUserMount(ctx context.Context, user string) error {
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)
+	cmi := newMountInfo()
 
-	if err := mountInfo.WaitForUserMount(ctx, user); err != nil {
+	if err := cmi.WaitForUserMount(ctx, user); err != nil {
 		return errors.Wrap(err, "failed to wait for user mount")
 	}
 	return nil
@@ -161,16 +158,15 @@ func WaitForUserMount(ctx context.Context, user string) error {
 // CreateVault creates the vault for the user with given password.
 func CreateVault(ctx context.Context, user, password string) error {
 	testing.ContextLogf(ctx, "Creating vault mount for user %q", user)
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)
+	client := newClient()
+	cmi := newMountInfo()
 
-	if err := cryptohome.MountVault(ctx, defaultGaiaPasswordLabel, hwsec.NewPassAuthConfig(user, password), true, hwsec.NewVaultConfig()); err != nil {
+	if err := client.MountVault(ctx, defaultGaiaPasswordLabel, hwsec.NewPassAuthConfig(user, password), true, hwsec.NewVaultConfig()); err != nil {
 		return errors.Wrap(err, "failed to create user vault")
 	}
 
 	err := testing.Poll(ctx, func(ctx context.Context) error {
-		path, err := mountInfo.UserCryptohomePath(ctx, user)
+		path, err := cmi.UserCryptohomePath(ctx, user)
 		if err != nil {
 			return errors.Wrap(err, "failed to locate user cryptohome path")
 		}
@@ -190,10 +186,9 @@ func CreateVault(ctx context.Context, user, password string) error {
 // MountVault mounts the vault for the user with given password.
 func MountVault(ctx context.Context, user, password string) error {
 	testing.ContextLogf(ctx, "Creating vault mount for user %q", user)
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
+	client := newClient()
 
-	if err := cryptohome.MountVault(ctx, defaultGaiaPasswordLabel, hwsec.NewPassAuthConfig(user, password), false, hwsec.NewVaultConfig()); err != nil {
+	if err := client.MountVault(ctx, defaultGaiaPasswordLabel, hwsec.NewPassAuthConfig(user, password), false, hwsec.NewVaultConfig()); err != nil {
 		return errors.Wrap(err, "failed to create user vault")
 	}
 	return nil
@@ -202,15 +197,14 @@ func MountVault(ctx context.Context, user, password string) error {
 // RemoveVault removes the vault for the user.
 func RemoveVault(ctx context.Context, user string) error {
 	testing.ContextLogf(ctx, "Removing vault for user %q", user)
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)
+	client := newClient()
+	cmi := newMountInfo()
 
-	if _, err := cryptohome.RemoveVault(ctx, user); err != nil {
+	if _, err := client.RemoveVault(ctx, user); err != nil {
 		return errors.Wrap(err, "failed to remove cryptohome")
 	}
 
-	path, err := mountInfo.UserCryptohomePath(ctx, user)
+	path, err := cmi.UserCryptohomePath(ctx, user)
 	if err != nil {
 		return errors.Wrap(err, "failed to locate user cryptohome path")
 	}
@@ -225,10 +219,9 @@ func RemoveVault(ctx context.Context, user string) error {
 // UnmountAll unmounts all user vaults.
 func UnmountAll(ctx context.Context) error {
 	testing.ContextLog(ctx, "Unmounting all user vaults")
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
+	client := newClient()
 
-	if err := cryptohome.UnmountAll(ctx); err != nil {
+	if err := client.UnmountAll(ctx); err != nil {
 		return errors.Wrap(err, "failed to unmount vaults")
 	}
 	return nil
@@ -237,15 +230,14 @@ func UnmountAll(ctx context.Context) error {
 // UnmountVault unmounts the vault for the user.
 func UnmountVault(ctx context.Context, user string) error {
 	testing.ContextLogf(ctx, "Unmounting vault for user %q", user)
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)
+	client := newClient()
+	cmi := newMountInfo()
 
-	if _, err := cryptohome.Unmount(ctx, user); err != nil {
+	if _, err := client.Unmount(ctx, user); err != nil {
 		return errors.Wrapf(err, "failed to unmount vault for user %q", user)
 	}
 
-	if mounted, err := mountInfo.IsMounted(ctx, user); err == nil && mounted {
+	if mounted, err := cmi.IsMounted(ctx, user); err == nil && mounted {
 		return errors.Errorf("cryptohome did not unmount user %q", user)
 	}
 	return nil
@@ -253,11 +245,9 @@ func UnmountVault(ctx context.Context, user string) error {
 
 // MountedVaultPath returns the path where the decrypted data for the user is located.
 func MountedVaultPath(ctx context.Context, user string) (string, error) {
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)
+	cmi := newMountInfo()
 
-	path, err := mountInfo.MountedVaultPath(ctx, user)
+	path, err := cmi.MountedVaultPath(ctx, user)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to locate user vault path")
 	}
@@ -267,11 +257,9 @@ func MountedVaultPath(ctx context.Context, user string) (string, error) {
 
 // IsMounted checks if the vault for the user is mounted.
 func IsMounted(ctx context.Context, user string) (bool, error) {
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)
+	cmi := newMountInfo()
 
-	mounted, err := mountInfo.IsMounted(ctx, user)
+	mounted, err := cmi.IsMounted(ctx, user)
 	if err != nil {
 		return false, errors.Errorf("failed to check user %q is mounted", user)
 	}
@@ -282,15 +270,14 @@ func IsMounted(ctx context.Context, user string) (bool, error) {
 // guest user.
 func MountGuest(ctx context.Context) error {
 	testing.ContextLog(ctx, "Mounting guest cryptohome")
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)
+	client := newClient()
+	cmi := newMountInfo()
 
-	if err := cryptohome.MountGuest(ctx); err != nil {
+	if err := client.MountGuest(ctx); err != nil {
 		return errors.Wrap(err, "failed to request mounting guest vault")
 	}
 
-	if err := mountInfo.WaitForUserMount(ctx, hwsec.GuestUser); err != nil {
+	if err := cmi.WaitForUserMount(ctx, hwsec.GuestUser); err != nil {
 		return errors.Wrap(err, "failed to mount guest vault")
 	}
 	return nil
@@ -298,11 +285,9 @@ func MountGuest(ctx context.Context) error {
 
 // CheckMountNamespace checks whether the user session mount namespace has been created.
 func CheckMountNamespace(ctx context.Context) error {
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)
+	cmi := newMountInfo()
 
-	if err := mountInfo.CheckMountNamespace(ctx); err != nil {
+	if err := cmi.CheckMountNamespace(ctx); err != nil {
 		return errors.Wrap(err, "failed to check mount namespace")
 	}
 	return nil
@@ -349,7 +334,7 @@ func WriteFileForPersistence(ctx context.Context, username string) error {
 		return errors.Wrap(err, "user vault path fetch failed")
 	}
 	filePath := filepath.Join(userPath, persistentTestFile)
-	if err := ioutil.WriteFile(filePath, []byte(persistentTestFileContent), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(persistentTestFileContent), 0644); err != nil {
 		return errors.Wrap(err, "write file operation failed")
 	}
 	return nil
@@ -363,7 +348,7 @@ func VerifyFileForPersistence(ctx context.Context, username string) error {
 	}
 	filePath := filepath.Join(userPath, persistentTestFile)
 	// Verify that file is still there.
-	if content, err := ioutil.ReadFile(filePath); err != nil {
+	if content, err := os.ReadFile(filePath); err != nil {
 		return errors.Wrap(err, "failed to read test file")
 	} else if bytes.Compare(content, []byte(persistentTestFileContent)) != 0 {
 		return errors.Wrap(err, "incorrect tests file content")
@@ -380,7 +365,7 @@ func VerifyFileUnreadability(ctx context.Context, username string) error {
 	}
 	filePath := filepath.Join(userPath, persistentTestFile)
 	// Verify non-persistence.
-	if _, err := ioutil.ReadFile(filePath); err == nil {
+	if _, err := os.ReadFile(filePath); err == nil {
 		return errors.Wrap(err, "file is persisted when it is not expected to be")
 	}
 	return nil
@@ -388,10 +373,7 @@ func VerifyFileUnreadability(ctx context.Context, username string) error {
 
 // TestLockScreen does lock screen password checks.
 func TestLockScreen(ctx context.Context, userName, userPassword, wrongPassword, keyLabel string, client *hwsec.CryptohomeClient) error {
-	cmdRunner := hwseclocal.NewCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-
-	accepted, err := cryptohome.CheckVault(ctx, keyLabel, hwsec.NewPassAuthConfig(userName, userPassword))
+	accepted, err := client.CheckVault(ctx, keyLabel, hwsec.NewPassAuthConfig(userName, userPassword))
 	if err != nil {
 		return errors.Wrap(err, "failed to check correct password")
 	}
@@ -399,7 +381,7 @@ func TestLockScreen(ctx context.Context, userName, userPassword, wrongPassword, 
 		return errors.New("correct password rejected")
 	}
 
-	accepted, err = cryptohome.CheckVault(ctx, "" /* label */, hwsec.NewPassAuthConfig(userName, userPassword))
+	accepted, err = client.CheckVault(ctx, "" /* label */, hwsec.NewPassAuthConfig(userName, userPassword))
 	if err == nil {
 		return errors.Wrap(err, "empty key label check succeeded when it shouldn't")
 	}
@@ -407,7 +389,7 @@ func TestLockScreen(ctx context.Context, userName, userPassword, wrongPassword, 
 		return errors.New("wildcard label accepted when AuthFactor should not accept empty label")
 	}
 
-	accepted, err = cryptohome.CheckVault(ctx, keyLabel, hwsec.NewPassAuthConfig(userName, wrongPassword))
+	accepted, err = client.CheckVault(ctx, keyLabel, hwsec.NewPassAuthConfig(userName, wrongPassword))
 	if err == nil {
 		return errors.Wrap(err, "wrong password check succeeded when it shouldn't")
 	}
@@ -421,10 +403,9 @@ func TestLockScreen(ctx context.Context, userName, userPassword, wrongPassword, 
 // MountAndVerify tests that after a successful mount with AuthSession, the testFile still exists.
 // Note: Caller takes care of the unmount operation
 func MountAndVerify(ctx context.Context, userName, authSessionID string, ecryptFs bool) error {
-	cmdRunner := hwseclocal.NewCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
+	client := newClient()
 
-	if _, err := cryptohome.PreparePersistentVault(ctx, authSessionID, ecryptFs); err != nil {
+	if _, err := client.PreparePersistentVault(ctx, authSessionID, ecryptFs); err != nil {
 		return errors.Wrap(err, "prepare persistent vault")
 	}
 
