@@ -79,8 +79,8 @@ const (
 
 // CryptohomeMountInfo is a helper to get cryptohome mount information.
 type CryptohomeMountInfo struct {
-	runner     CmdRunner
-	cryptohome *CryptohomeClient
+	CmdRunner
+	*CryptohomeClient
 }
 
 // NewCryptohomeMountInfo creates a new CryptohomeMountInfo
@@ -98,11 +98,11 @@ func (c *CryptohomeMountInfo) IsMounted(ctx context.Context, user string) (bool,
 		validatePartition = validateGuestPartition
 	}
 
-	userpath, err := c.cryptohome.GetHomeUserPath(ctx, user)
+	userpath, err := c.GetHomeUserPath(ctx, user)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get user home path")
 	}
-	systempath, err := c.cryptohome.GetRootUserPath(ctx, user)
+	systempath, err := c.GetRootUserPath(ctx, user)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get user root path")
 	}
@@ -130,10 +130,10 @@ func (c *CryptohomeMountInfo) IsMounted(ctx context.Context, user string) (bool,
 
 // CleanUpMount cleans up the mount point for the user, and check it's unmounted.
 func (c *CryptohomeMountInfo) CleanUpMount(ctx context.Context, user string) error {
-	if _, err := c.cryptohome.Unmount(ctx, user); err != nil {
+	if _, err := c.Unmount(ctx, user); err != nil {
 		return errors.Wrap(err, "failed to unmount")
 	}
-	if _, err := c.cryptohome.RemoveVault(ctx, user); err != nil {
+	if _, err := c.RemoveVault(ctx, user); err != nil {
 		return errors.Wrap(err, "failed to remove vault")
 	}
 	mounted, err := c.IsMounted(ctx, user)
@@ -152,11 +152,11 @@ func (c *CryptohomeMountInfo) WaitForUserMountAndValidateType(ctx context.Contex
 	ctx, st := timing.Start(ctx, "wait_for_user_mount")
 	defer st.End()
 
-	userpath, err := c.cryptohome.GetHomeUserPath(ctx, user)
+	userpath, err := c.GetHomeUserPath(ctx, user)
 	if err != nil {
 		return errors.Wrap(err, "failed to get user home path")
 	}
-	systempath, err := c.cryptohome.GetRootUserPath(ctx, user)
+	systempath, err := c.GetRootUserPath(ctx, user)
 	if err != nil {
 		return errors.Wrap(err, "failed to get user root path")
 	}
@@ -229,7 +229,7 @@ func (c *CryptohomeMountInfo) CheckMountNamespace(ctx context.Context) error {
 
 // UserCryptohomePath returns the path where the cryptohome data for the user is located.
 func (c *CryptohomeMountInfo) UserCryptohomePath(ctx context.Context, user string) (string, error) {
-	hash, err := c.cryptohome.GetUserHash(ctx, user)
+	hash, err := c.GetUserHash(ctx, user)
 	if err != nil {
 		return "", err
 	}
@@ -247,7 +247,7 @@ func (c *CryptohomeMountInfo) MountedVaultPath(ctx context.Context, user string)
 
 // findMounterPID finds the pid of the given mounter process.
 func (c *CryptohomeMountInfo) findMounterPID(ctx context.Context, mounter string) (int32, error) {
-	bs, err := c.runner.Run(ctx, "pidof", "-s", mounter)
+	bs, err := c.Run(ctx, "pidof", "-s", mounter)
 	var ee *CmdExitError
 	// If the mounter process is not found, don't return an error.
 	if errors.As(err, &ee) && ee.ExitCode == 1 {
@@ -268,7 +268,7 @@ func (c *CryptohomeMountInfo) findMounterPID(ctx context.Context, mounter string
 
 // readMountsInfo returns the list of mounts from a mount information file.
 func (c *CryptohomeMountInfo) readMountsInfo(ctx context.Context, path string) ([]disk.PartitionStat, error) {
-	bs, err := c.runner.Run(ctx, "cat", "--", path)
+	bs, err := c.Run(ctx, "cat", "--", path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get list of mounts from %v", path)
 	}
