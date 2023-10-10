@@ -140,7 +140,8 @@ func proceedThroughPreferencesScreen(ctx context.Context, oobeConn *chrome.Conn,
 	retailerNameInput := nodewith.Role(role.TextField).Name("Retailer Name")
 	storeNumberInput := nodewith.Role(role.TextField).Name("Store Number")
 	if err := uiauto.Combine("Enter Retailer Name And Store Number",
-		ui.LeftClickUntil(retailerNameInput, ui.WaitUntilExists(retailerNameInput.Editable().Focused())),
+		ui.WaitUntilExists(retailerNameInput.Visible()),
+		ui.LeftClickUntilFocused(retailerNameInput),
 		kb.TypeAction("Tast Retailer"),
 		kb.AccelAction("tab"),
 		ui.WaitUntilExists(storeNumberInput.Editable().Focused()),
