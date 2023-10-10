@@ -103,7 +103,7 @@ func init() {
 		Data: []string{"animation.html", "animation.js", loginPerfTraceConfigFileName},
 		Params: []testing.Param{{
 			Name:      "ash_chrome",
-			ExtraAttr: []string{"group:cuj"},
+			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
 			Timeout:   90 * time.Minute,
 			Val: loginPerfTestParam{
 				[]int{2, 8},                 // windows
@@ -117,7 +117,7 @@ func init() {
 			},
 		}, {
 			Name:      "ash_chrome_delay_login",
-			ExtraAttr: []string{"group:cuj"},
+			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
 			Timeout:   30 * time.Minute,
 			Val: loginPerfTestParam{
 				[]int{8},                    // windows
@@ -131,7 +131,7 @@ func init() {
 			},
 		}, {
 			Name:      "ash_chrome_cold_boot",
-			ExtraAttr: []string{"group:cuj"},
+			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
 			Timeout:   40 * time.Minute,
 			Val: loginPerfTestParam{
 				[]int{2, 8},                 // windows
@@ -145,7 +145,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only",
-			ExtraAttr:         []string{"group:cuj"},
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Timeout:           90 * time.Minute,
 			Val: loginPerfTestParam{
@@ -160,7 +160,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_cold_boot",
-			ExtraAttr:         []string{"group:cuj"},
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Timeout:           40 * time.Minute,
 			Val: loginPerfTestParam{
@@ -175,7 +175,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_delay_login",
-			ExtraAttr:         []string{"group:cuj"},
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Timeout:           30 * time.Minute,
 			Val: loginPerfTestParam{
@@ -190,7 +190,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_cold_boot_delay_login",
-			ExtraAttr:         []string{"group:cuj"},
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Timeout:           30 * time.Minute,
 			Val: loginPerfTestParam{
@@ -205,7 +205,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_enable_preload",
-			ExtraAttr:         []string{"group:cuj"},
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Timeout:           40 * time.Minute,
 			Val: loginPerfTestParam{
@@ -220,7 +220,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_enable_preload_cold_boot",
-			ExtraAttr:         []string{"group:cuj"},
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Timeout:           40 * time.Minute,
 			Val: loginPerfTestParam{
