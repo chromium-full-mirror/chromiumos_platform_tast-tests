@@ -450,42 +450,6 @@ func (s *Servo) OpenCCD(ctx context.Context) error {
 	return nil
 }
 
-// CheckUSBPdStatus accepts a port ID and checks for the pd status of this port.
-func (s *Servo) CheckUSBPdStatus(ctx context.Context, portID int, expectedStatus USBPdDualRoleValue) error {
-	// Some DUTs use a different format in checking for pd: 'pd dualrole'.
-	// This format was found on a few models, such as eve, nautilus, soraka,
-	// kench, teemo, and sion. Check for the format that works. This list can be
-	// further expanded using new test results.
-	possibleCmds := []string{fmt.Sprintf("pd %d dualrole", portID), "pd dualrole"}
-	matchList := []string{`dual-role toggling: ([^\n\r]*)[\n\r]`}
-	checkPdCmd := func() string {
-		for _, val := range possibleCmds {
-			_, err := s.RunECCommandGetOutput(ctx, val, matchList)
-			if err != nil {
-				testing.ContextLog(ctx, err.Error())
-				continue
-			}
-			return val
-		}
-		return ""
-	}
-	cmd := checkPdCmd()
-	if cmd == "" {
-		return errors.New("no command found to check for pd")
-	}
-	testing.ContextLogf(ctx, "Checking for pd port %d status", portID)
-	out, err := s.RunECCommandGetOutput(ctx, cmd, matchList)
-	if err != nil {
-		return errors.Wrapf(err, "failed to run cmd %s", cmd)
-	}
-	portStatus := USBPdDualRoleValue(out[0][1])
-	if portStatus != expectedStatus {
-		failStr := fmt.Sprintf("port %d dual-role: %s, expected: %s", portID, portStatus, expectedStatus)
-		return errors.New(failStr)
-	}
-	return nil
-}
-
 // ECHostevent holds int codes for EC hostevents
 type ECHostevent int64
 

@@ -192,24 +192,6 @@ func (s *Servo) DisablePDConsoleDebug(ctx context.Context) error {
 	return nil
 }
 
-// GetDualRole returns true if dual role power is enabled on port.
-func (s *Servo) GetDualRole(ctx context.Context, port int) (bool, error) {
-	if port == PDPortUnderTest {
-		port = s.dutPDInfo.activePort
-	}
-	cmd := fmt.Sprintf("pd %d dualrole", port)
-	onResponse := "on"
-
-	out, err := s.RunECCommandGetOutput(ctx, cmd, []string{`dual-role toggling:\s+([\w ]+)[\r\n]`})
-
-	if err != nil {
-		return false, errors.Wrap(err, "EC pd command failed")
-	}
-	testing.ContextLog(ctx, "DualRole reply: ", out[0][1])
-
-	return out[0][1] == onResponse, nil
-}
-
 // SetPDPowerRole sets the PD power role for a PD port on the DUT.
 func (s *Servo) SetPDPowerRole(ctx context.Context, port int, role string) error {
 	pdState, err := s.GetDUTPDState(ctx, port)
@@ -341,4 +323,37 @@ func (s *Servo) SetDUTConsoleChannelMask(ctx context.Context, mask uint32) error
 	}
 
 	return nil
+}
+
+// GetDUTDualRoleState accepts a port ID and checks for the PD DRP status of this port.
+func (s *Servo) GetDUTDualRoleState(ctx context.Context, port int) (USBPdDualRoleValue, error) {
+	if port == PDPortUnderTest {
+		port = s.dutPDInfo.activePort
+	}
+
+	matchList := []string{`dual-role toggling:\s+([\w ]+)[\r\n]`}
+
+	// Try modern `pd N dualrole` command
+	cmd := fmt.Sprintf("pd %d dualrole", port)
+	out, err := s.RunECCommandGetOutput(ctx, cmd, matchList)
+	if err != nil {
+		testing.ContextLogf(
+			ctx, "EC command %q failed. Trying older version. (%q)",
+			cmd, err,
+		)
+	} else {
+		goto success
+	}
+
+	// Older DUTs running firmware from before cl:1096654 don't have per-port
+	// dualrole settings. Fall back to the old command.
+	out, err = s.RunECCommandGetOutput(ctx, "pd dualrole", matchList)
+	if err != nil {
+		// DUT does not support DRP
+		return "", errors.Wrapf(err, "ec command %q failed. No way to check dual role state", cmd)
+	}
+
+success:
+	testing.ContextLogf(ctx, "Port %d DRP status: %q", port, out[0][1])
+	return USBPdDualRoleValue(out[0][1]), nil
 }

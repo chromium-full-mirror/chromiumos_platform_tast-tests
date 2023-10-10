@@ -59,7 +59,7 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 		s.Fatal("Error in getting PD port info: ", err)
 	}
 
-	if dualRole, err := h.Servo.GetDualRole(ctx, servo.PDPortUnderTest); dualRole == false {
+	if dualRole, err := h.Servo.GetDUTDualRoleState(ctx, servo.PDPortUnderTest); dualRole != servo.USBPdDualRoleOn {
 		if err != nil {
 			s.Fatal("Get DualRole failed: ", err)
 		}

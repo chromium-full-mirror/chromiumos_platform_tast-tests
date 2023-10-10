@@ -160,8 +160,15 @@ func ECPDRole(ctx context.Context, s *testing.State) {
 		}
 		// Verify status of all usb-c port.
 		for _, portID := range usbcPorts {
-			if err := h.Servo.CheckUSBPdStatus(ctx, portID, step.expectStatus); err != nil {
+			drpState, err := h.Servo.GetDUTDualRoleState(ctx, portID)
+			if err != nil {
 				s.Fatal("Failed to check for USB PD: ", err)
+			}
+			if drpState != step.expectStatus {
+				s.Fatalf(
+					"Got DRP state %q but expected %q (port %d)",
+					drpState, step.expectStatus, portID,
+				)
 			}
 		}
 	}
