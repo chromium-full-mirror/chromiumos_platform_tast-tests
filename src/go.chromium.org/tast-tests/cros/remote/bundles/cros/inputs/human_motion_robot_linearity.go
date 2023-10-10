@@ -5,7 +5,9 @@
 package inputs
 
 import (
+	"bufio"
 	"context"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -27,6 +29,13 @@ const (
 	baseFileName     = "linearity"
 	gcodeFileName    = baseFileName + ".nc"
 	touchLogFileName = baseFileName + ".csv"
+
+	xIdx        = 0
+	yIdx        = 1
+	pressureIdx = 2
+	timeIdx     = 3
+
+	maxNumParts = 5
 )
 
 var (
@@ -77,6 +86,9 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to convert inputs.hmr_touchhost_port with value: %s to integer: %v",
 			hmrTouchhostPort.Value(), err)
 	}
+
+	hostTouchLogFilePath := filepath.Join(s.OutDir(), touchLogFileName)
+	hostRawTouchLogFilePath := filepath.Join(s.OutDir(), "raw_"+touchLogFileName)
 
 	// Create a SSH Tunnel to connect to the TouchHost device from the remote drone.
 	sshOptions := &ssh.Options{
@@ -134,9 +146,8 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to run StartStylusDataCapture : ", err)
 		}
 		// Copy file from DUT to Host machine.
-		hostTouchLogFilePath := filepath.Join(s.OutDir(), touchLogFileName)
 		dutTouchLogFilePath := dutResponse.GetStylusLogPath()
-		err = linuxssh.GetFile(ctx, s.DUT().Conn(), dutTouchLogFilePath, hostTouchLogFilePath, linuxssh.PreserveSymlinks)
+		err = linuxssh.GetFile(ctx, s.DUT().Conn(), dutTouchLogFilePath, hostRawTouchLogFilePath, linuxssh.PreserveSymlinks)
 		if err != nil {
 			s.Fatal("Failed to copy file from DUT to Host: ", err)
 		}
@@ -183,6 +194,12 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 	if _, err = DutEvtestService.CleanUp(ctx, &empty.Empty{}); err != nil {
 		s.Error("Failed to run CleanUp: ", err)
 	}
+
+	// Clean stylus touch data of common errors.
+	err = removeCommonDataErrorsFromStylusLogFile(hostRawTouchLogFilePath, hostTouchLogFilePath)
+	if err != nil {
+		s.Error("Failed to clean raw touchlog file: ", err)
+	}
 }
 
 func newHMRInterface(ctx context.Context, host string, port int) (*xmlrpc.CommonRPCInterface, error) {
@@ -201,4 +218,85 @@ func newHMRInterface(ctx context.Context, host string, port int) (*xmlrpc.Common
 	}, 30*time.Second)(ctx)
 
 	return hmrInterface, err
+}
+
+// removeCommonDataErrorsFromStylusLogFile checks for common touch log data errors and generates a cleaned touch log file with these errors removed.
+func removeCommonDataErrorsFromStylusLogFile(rawFilePath, cleanedFilePath string) error {
+	readFile, err := os.Open(rawFilePath)
+	if err != nil {
+		return err
+	}
+	defer readFile.Close()
+
+	writeFile, err := os.Create(cleanedFilePath)
+	if err != nil {
+		return err
+	}
+	defer writeFile.Close()
+
+	scanner := bufio.NewScanner(readFile)
+	writer := bufio.NewWriter(writeFile)
+
+	// All touch log csv files must contain "x,y,pressure,time" as their header.
+	scanner.Scan()
+	line := scanner.Text()
+	if line != "x,y,pressure,time" {
+		return errors.New(rawFilePath + " does not contain csv header")
+	}
+	_, err = writer.WriteString(line + "\n")
+	if err != nil {
+		return err
+	}
+
+	// There are two common data errors that are being checked for:
+
+	// The prefix error occurs when an number of rows at the start of a touch log file are missing elements.
+	// Example:
+	// 	10216,5164,,1691552057.683170,
+	//	10216,,,1691552067.683172,
+	// These errors must occur before the first row with all elements.
+	// prefixDataChecked refers to whether a row with all elements has been read yet.
+	// If a row missing elements is read after a row with all elements has been read, a fatal error is triggered.
+
+	// The suffix error occurs when the final row at the end of a touch log file excludes some delimiters & elements. (The last element may also be only partially written)
+	// Example:
+	// 8200,680
+	// suffixDataChecked refers to whether this row has been read yet.
+	// If any row is read after this row, a fatal error is triggered.
+
+	prefixDataChecked := false
+	suffixDataChecked := false
+	for scanner.Scan() {
+		if err := scanner.Err(); err != nil {
+			return err
+		}
+		line := scanner.Text()
+		splitLine := strings.Split(line, ",")
+		if len(splitLine) == maxNumParts {
+			if splitLine[xIdx] == "" || splitLine[yIdx] == "" || splitLine[pressureIdx] == "" || splitLine[timeIdx] == "" {
+				if !prefixDataChecked {
+					continue
+				} else {
+					return errors.New(rawFilePath + " contains rows with empty elements")
+				}
+			} else {
+				prefixDataChecked = true
+			}
+		} else if len(splitLine) < maxNumParts {
+			if !suffixDataChecked {
+				suffixDataChecked = true
+				continue
+			} else {
+				return errors.New(rawFilePath + " contains rows with less than 4 elements")
+			}
+		} else {
+			return errors.New(rawFilePath + " contains a row with excess columns")
+		}
+		_, err = writer.WriteString(line + "\n")
+		if err != nil {
+			return err
+		}
+	}
+	writer.Flush()
+	return nil
 }
