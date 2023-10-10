@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+  <div id="cleanupTestPage">
+    <h4>Shared MGS Cleanup Test page</h4>
+  </div>
+  <script type="text/javascript">
+    function onLoad() {
+      document.cookie = "test cookie";
+    }
+    function onBeforeUnload() {
+      return "Are you sure you want to leave this page?";
+    }
+
+    window.onload = onLoad;
+    window.onbeforeunload = onBeforeUnload;
+  </script>
+</body>
+</html>

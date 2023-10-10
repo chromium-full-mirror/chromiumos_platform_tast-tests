@@ -6,6 +6,8 @@ package loginapi
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -22,6 +24,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+)
+
+const (
+	// HTML file is the file containing the HTML+JS that will be opened and then closed during the cleanup.
+	cleanupTestPageHTML = "cleanup_test_page.html"
 )
 
 func init() {
@@ -43,6 +50,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
+		Data:         []string{cleanupTestPageHTML},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceLoginScreenExtensions{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.DeviceRestrictedManagedGuestSessionEnabled{}, pci.VerifiedFunctionalityJS),
@@ -173,6 +181,9 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 
 	// Store arbitrary data in localStorage of the test app.
 	if err := testAppConn.Eval(ctx, `new Promise((resolve, reject) => {
+		if (chrome.storage === undefined) {
+			resolve();
+		}
 		chrome.storage.local.set({foo: 1}, () => {
 			if (chrome.runtime.lastError) {
 				reject(new Error(chrome.runtime.lastError.message));
@@ -184,20 +195,27 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set localStorage for test app: ", err)
 	}
 
-	// Open a non-trivial webpage that takes longer to unload.
-	pageConn, err := cr.NewConn(ctx, "https://www.google.com")
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
+
+	// Open a webpage with cookies, load and unload operations.
+	pageConn, err := cr.NewConn(ctx, server.URL+"/"+cleanupTestPageHTML)
 	if err != nil {
-		s.Fatal("Failed to open www.google.com: ", err)
+		s.Fatal("Failed to open test page: ", err)
 	}
 	defer pageConn.Close()
-	// Make sure the webpage has a cookie.
-	if err := pageConn.Eval(ctx, "document.cookie = document.cookie || 'abcdef'", nil); err != nil {
-		s.Fatal("Failed to ensure a cookie: ", err)
-	}
 
 	tConn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
+	}
+
+	// The unload popup only shows up if there was user interaction on the page
+	// (e.g. any click on the page). The cleanup should also be able to close
+	// webpages with onload actions.
+	ui := uiauto.New(tConn)
+	if err := ui.DoDefault(nodewith.Name("Shared MGS Cleanup Test page").First())(ctx); err != nil {
+		s.Fatal("Failed to click the test page: ", err)
 	}
 
 	// Set clipboard data.
@@ -281,6 +299,9 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 
 	// Check that localStorage is cleared.
 	if err := testAppConn2.Eval(ctx, `new Promise((resolve, reject) => {
+		if (chrome.storage === undefined) {
+			resolve();
+		}
 		chrome.storage.local.get((data) => {
 			if (chrome.runtime.lastError) {
 				reject(new Error(chrome.runtime.lastError.message));
@@ -326,8 +347,6 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open chrome://history: ", err)
 	}
 	defer historyConn.Close()
-
-	ui := uiauto.New(tConn)
 
 	// Check that there are no history entries. EnsureGoneFor is needed as the
 	// UI tree is not immediately populated so the node will not be present
