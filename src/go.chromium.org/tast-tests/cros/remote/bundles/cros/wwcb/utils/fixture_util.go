@@ -72,6 +72,9 @@ var (
 
 	// fixture ID length
 	fixtureIDLen = 22
+
+	// USBHubPort is assigned to the 4th port of the IP power supply.
+	USBHubPort = 4
 )
 
 // InitFixture initializes fixtures.
@@ -85,8 +88,8 @@ func InitFixture(ctx context.Context) error {
 		return errors.New("no serial ports found")
 	}
 
-	// In order to prevent switch fixture function not in time.
-	testing.Sleep(ctx, 3000)
+	// GoBigSleepLint: Prevent switch fixture function not in time.
+	testing.Sleep(ctx, 3*time.Second)
 
 	// Print the list of detected ports.
 	for _, port := range ports {
@@ -180,11 +183,9 @@ func ControlFixture(ctx context.Context, uid, cmd string) error {
 
 	usbPort.Close()
 
-	// Sleep for test fixture wake up.
-	t = 7 * time.Second
+	// GoBigSleepLint: Prevent switch fixture function not in time.
+	testing.Sleep(ctx, 7*time.Second)
 
-	// In order to prevent switch fixture function not in time.
-	testing.Sleep(ctx, t)
 	return nil
 }
 
@@ -222,4 +223,18 @@ func GetOnlineDisplayFixture() map[string]string {
 	}
 
 	return displayFixtureOnline
+}
+
+// PowerCycleFixture Turns the IP power supply's 4th port (assigned to the USB hub) off and on to power cycle the fixtures.
+func PowerCycleFixture(ctx context.Context) error {
+	ippowerPorts := []int{USBHubPort}
+	if err := CloseIppower(ctx, ippowerPorts); err != nil {
+		return errors.Wrap(err, "close the 4th port of the IP power supply")
+	}
+	// GoBigSleepLint: Sleep for a second before power on USB hub.
+	testing.Sleep(ctx, 1*time.Second)
+	if err := OpenIppower(ctx, ippowerPorts); err != nil {
+		return errors.Wrap(err, "open the 4th port of the IP power supply")
+	}
+	return nil
 }
