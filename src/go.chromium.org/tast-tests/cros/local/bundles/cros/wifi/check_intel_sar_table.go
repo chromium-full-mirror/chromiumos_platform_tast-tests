@@ -29,7 +29,6 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-			"kglund@google.com",               // Author
 			"chromeos-faft@google.com",
 		},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},
