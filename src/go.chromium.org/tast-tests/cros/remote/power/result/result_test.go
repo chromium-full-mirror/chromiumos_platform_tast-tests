@@ -18,29 +18,29 @@ func TestMarshalResult(t *gotesting.T) {
 		Personas: []Persona{
 			{
 				Name:    "MKT",
-				Power:   Power{Average{MinutesBatteryLife: 320.5}},
+				Power:   Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 120}},
 				Skipped: []string{"power.VideoPlayback.1080p_vp9"},
 				Tests: []Test{
-					{"power.Browsing", 0.6, Power{Average{MinutesBatteryLife: 320.5}}},
-					{"power.VideoPlayback.1080p_h264", 0.2, Power{Average{MinutesBatteryLife: 320.5}}},
+					{"power.Browsing", 0.6, Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60}}},
+					{"power.VideoPlayback.1080p_h264", 0.2, Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60}}},
 				},
 			},
 			{
 				Name:    "EDU",
-				Power:   Power{Average{MinutesBatteryLife: 320.5}},
+				Power:   Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 180}},
 				Skipped: []string{"power.VideoPlayback.1080p_vp9"},
 				Tests: []Test{
-					{"power.Browsing", 0.4, Power{Average{MinutesBatteryLife: 320.5}}},
-					{"power.VideoPlayback.1080p_h264", 0.2, Power{Average{MinutesBatteryLife: 320.5}}},
-					{"power.YoutubeArc.1080p", 0.2, Power{Average{MinutesBatteryLife: 320.5}}},
+					{"power.Browsing", 0.4, Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60}}},
+					{"power.VideoPlayback.1080p_h264", 0.2, Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60}}},
+					{"power.YoutubeArc.1080p", 0.2, Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60}}},
 				},
 			},
 			{
 				Name:    "VideoPlayback",
-				Power:   Power{Average{MinutesBatteryLife: 320.5}},
+				Power:   Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60}},
 				Skipped: []string{"power.VideoPlayback.1080p_vp9"},
 				Tests: []Test{
-					{"power.VideoPlayback.1080p_h264", 0.5, Power{Average{MinutesBatteryLife: 320.5}}},
+					{"power.VideoPlayback.1080p_h264", 0.5, Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60}}},
 				},
 			},
 		},

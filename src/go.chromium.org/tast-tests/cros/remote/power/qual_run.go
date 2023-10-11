@@ -16,6 +16,7 @@ import (
 
 	"gonum.org/v1/gonum/stat"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/power/config"
 	"go.chromium.org/tast-tests/cros/remote/power/result"
@@ -119,7 +120,7 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 }
 
 // GenerateReport generates the power qual run test report.
-func (r *QualRun) GenerateReport(ctx context.Context, outputDir string) error {
+func (r *QualRun) GenerateReport(ctx context.Context, outputDir string, pv *perf.Values) error {
 	// The power qual test final result.
 	res := result.Result{
 		FormatVersion: result.FormatVersion,
@@ -134,6 +135,7 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir string) error {
 
 		var values []float64
 		var weights []float64
+		minutesBatteryLifeTestedTotal := 0.0
 		for _, t := range p.Tests {
 			if r.isTestSkipped(t.Name) {
 				persona.Skipped = append(persona.Skipped, t.Name)
@@ -146,12 +148,32 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir string) error {
 			if power == nil {
 				return errors.Errorf("no power test result for %s", t.Name)
 			}
+			if power.Average.MinutesBatteryLifeTested < t.MinRunningTime {
+				return errors.Errorf("test running time %f is less than min_running_time %f", power.Average.MinutesBatteryLifeTested, t.MinRunningTime)
+			}
+			// Collect minutes_battery_life_tested for each subtest in perf.Values.
+			pv.Set(perf.Metric{
+				Name:      p.Name + "." + t.Name + "." + "minutes_battery_life_tested",
+				Unit:      "minute",
+				Direction: perf.SmallerIsBetter,
+			}, power.Average.MinutesBatteryLifeTested)
 			persona.Tests = append(persona.Tests, result.Test{Name: t.Name, Weight: t.Weight, Power: *power})
 			values = append(values, power.Average.MinutesBatteryLife)
 			weights = append(weights, t.Weight)
+			minutesBatteryLifeTestedTotal += power.Average.MinutesBatteryLifeTested
 		}
+
+		minutesBatteryLife := stat.HarmonicMean(values, weights)
+
+		// Collect minutes_battery_life for each persona in perf.Values.
+		pv.Set(perf.Metric{
+			Name:      p.Name + "." + "minutes_battery_life",
+			Unit:      "minute",
+			Direction: perf.BiggerIsBetter,
+		}, minutesBatteryLife)
+
 		persona.Power = result.Power{
-			Average: result.Average{MinutesBatteryLife: stat.HarmonicMean(values, weights)},
+			Average: result.Average{MinutesBatteryLife: minutesBatteryLife, MinutesBatteryLifeTested: minutesBatteryLifeTestedTotal},
 		}
 
 		res.Personas = append(res.Personas, persona)

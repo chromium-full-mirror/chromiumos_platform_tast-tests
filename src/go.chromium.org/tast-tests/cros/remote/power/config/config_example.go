@@ -25,15 +25,19 @@ const exampleConfig = `
 			"tests": [
 				{
 					"name": "power.Browsing",
-					"weight": 0.6
+					"weight": 0.6,
+					"min_running_time": 60
 				},
 				{
 					"name": "power.VideoPlayback.1080p_vp9",
-					"weight": 0.2
+					"weight": 0.2,
+					"min_running_time": 60
 				},
 				{
 					"name": "power.VideoPlayback.1080p_h264",
-					"weight": 0.2
+					"weight": 0.2,
+					"min_running_time": 60
+
 				}
 			]
 		},
@@ -42,19 +46,23 @@ const exampleConfig = `
 			"tests": [
 				{
 					"name": "power.Browsing",
-					"weight": 0.4
+					"weight": 0.4,
+					"min_running_time": 60
 				},
 				{
 					"name": "power.VideoPlayback.1080p_vp9",
-					"weight": 0.2
+					"weight": 0.2,
+					"min_running_time": 60
 				},
 				{
 					"name": "power.VideoPlayback.1080p_h264",
-					"weight": 0.2
+					"weight": 0.2,
+					"min_running_time": 60
 				},
 				{
 					"name": "power.YoutubeArc.1080p",
-					"weight": 0.2
+					"weight": 0.2,
+					"min_running_time": 60
 				}
 			]
 		},
@@ -63,11 +71,13 @@ const exampleConfig = `
 			"tests": [
 				{
 					"name": "power.VideoPlayback.1080p_vp9",
-					"weight": 0.5
+					"weight": 0.5,
+					"min_running_time": 60
 				},
 				{
 					"name": "power.VideoPlayback.1080p_h264",
-					"weight": 0.5
+					"weight": 0.5,
+					"min_running_time": 60
 				}
 			]
 		}

@@ -17,8 +17,9 @@ var supportedFormatVersions = []int32{1}
 
 // Test has the information for a test in a power test persona.
 type Test struct {
-	Name   string  `json:"name"`
-	Weight float64 `json:"weight"`
+	Name           string  `json:"name"`
+	Weight         float64 `json:"weight"`
+	MinRunningTime float64 `json:"min_running_time"`
 }
 
 // Persona has the inforamtion for one power test persona.
@@ -93,6 +94,13 @@ func ValidateConfig(c *Config) (tests, orderedTests, unorderedTests []string, er
 			if t.Weight < 0 {
 				err = errors.Errorf("test %s in persona %q has negative weight %s", t.Name, persona.Name,
 					strconv.FormatFloat(t.Weight, 'f', -1, 64))
+				return nil, nil, nil, err
+			}
+
+			// MinRnningTIme should be positive numbers.
+			if t.MinRunningTime <= 0 {
+				err = errors.Errorf("test %s in persona %q has nonpositive min running time %s", t.Name, persona.Name,
+					strconv.FormatFloat(t.MinRunningTime, 'f', -1, 64))
 				return nil, nil, nil, err
 			}
 		}

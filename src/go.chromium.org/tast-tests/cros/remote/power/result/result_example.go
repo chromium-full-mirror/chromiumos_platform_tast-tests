@@ -14,7 +14,8 @@ const exampleResult = `{
 			"name": "MKT",
 			"power": {
 				"average": {
-					"minutes_battery_life": 320.5
+					"minutes_battery_life": 320.5,
+					"minutes_battery_life_tested": 120
 				}
 			},
 			"skipped_tests": [
@@ -26,7 +27,8 @@ const exampleResult = `{
 					"weight": 0.6,
 					"power": {
 						"average": {
-							"minutes_battery_life": 320.5
+							"minutes_battery_life": 320.5,
+							"minutes_battery_life_tested": 60
 						}
 					}
 				},
@@ -35,7 +37,8 @@ const exampleResult = `{
 					"weight": 0.2,
 					"power": {
 						"average": {
-							"minutes_battery_life": 320.5
+							"minutes_battery_life": 320.5,
+							"minutes_battery_life_tested": 60
 						}
 					}
 				}
@@ -45,7 +48,8 @@ const exampleResult = `{
 			"name": "EDU",
 			"power": {
 				"average": {
-					"minutes_battery_life": 320.5
+					"minutes_battery_life": 320.5,
+					"minutes_battery_life_tested": 180
 				}
 			},
 			"skipped_tests": [
@@ -57,7 +61,8 @@ const exampleResult = `{
 					"weight": 0.4,
 					"power": {
 						"average": {
-							"minutes_battery_life": 320.5
+							"minutes_battery_life": 320.5,
+							"minutes_battery_life_tested": 60
 						}
 					}
 				},
@@ -66,7 +71,8 @@ const exampleResult = `{
 					"weight": 0.2,
 					"power": {
 						"average": {
-							"minutes_battery_life": 320.5
+							"minutes_battery_life": 320.5,
+							"minutes_battery_life_tested": 60
 						}
 					}
 				},
@@ -75,7 +81,8 @@ const exampleResult = `{
 					"weight": 0.2,
 					"power": {
 						"average": {
-							"minutes_battery_life": 320.5
+							"minutes_battery_life": 320.5,
+							"minutes_battery_life_tested": 60
 						}
 					}
 				}
@@ -85,7 +92,8 @@ const exampleResult = `{
 			"name": "VideoPlayback",
 			"power": {
 				"average": {
-					"minutes_battery_life": 320.5
+					"minutes_battery_life": 320.5,
+					"minutes_battery_life_tested": 60
 				}
 			},
 			"skipped_tests": [
@@ -97,7 +105,8 @@ const exampleResult = `{
 					"weight": 0.5,
 					"power": {
 						"average": {
-							"minutes_battery_life": 320.5
+							"minutes_battery_life": 320.5,
+							"minutes_battery_life_tested": 60
 						}
 					}
 				}

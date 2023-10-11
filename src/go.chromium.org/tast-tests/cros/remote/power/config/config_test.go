@@ -34,25 +34,25 @@ func TestUnmarshalConfig(t *gotesting.T) {
 			{
 				Name: "MKT",
 				Tests: []Test{
-					{"power.Browsing", 0.6},
-					{"power.VideoPlayback.1080p_vp9", 0.2},
-					{"power.VideoPlayback.1080p_h264", 0.2},
+					{"power.Browsing", 0.6, 60},
+					{"power.VideoPlayback.1080p_vp9", 0.2, 60},
+					{"power.VideoPlayback.1080p_h264", 0.2, 60},
 				},
 			},
 			{
 				Name: "EDU",
 				Tests: []Test{
-					{"power.Browsing", 0.4},
-					{"power.VideoPlayback.1080p_vp9", 0.2},
-					{"power.VideoPlayback.1080p_h264", 0.2},
-					{"power.YoutubeArc.1080p", 0.2},
+					{"power.Browsing", 0.4, 60},
+					{"power.VideoPlayback.1080p_vp9", 0.2, 60},
+					{"power.VideoPlayback.1080p_h264", 0.2, 60},
+					{"power.YoutubeArc.1080p", 0.2, 60},
 				},
 			},
 			{
 				Name: "VideoPlayback",
 				Tests: []Test{
-					{"power.VideoPlayback.1080p_vp9", 0.5},
-					{"power.VideoPlayback.1080p_h264", 0.5},
+					{"power.VideoPlayback.1080p_vp9", 0.5, 60},
+					{"power.VideoPlayback.1080p_h264", 0.5, 60},
 				},
 			},
 		},
@@ -98,25 +98,25 @@ func TestValidateConfig(t *gotesting.T) {
 			{
 				Name: "MKT",
 				Tests: []Test{
-					{"power.Browsing", 0.6},
-					{"power.VideoPlayback.1080p_vp9", 0.2},
-					{"power.VideoPlayback.1080p_h264", 0.2},
+					{"power.Browsing", 0.6, 60},
+					{"power.VideoPlayback.1080p_vp9", 0.2, 60},
+					{"power.VideoPlayback.1080p_h264", 0.2, 60},
 				},
 			},
 			{
 				Name: "EDU",
 				Tests: []Test{
-					{"power.Browsing", 0.4},
-					{"power.VideoPlayback.1080p_vp9", 0.2},
-					{"power.VideoPlayback.1080p_h264", 0.2},
-					{"power.YoutubeArc.1080p", 0.2},
+					{"power.Browsing", 0.4, 60},
+					{"power.VideoPlayback.1080p_vp9", 0.2, 60},
+					{"power.VideoPlayback.1080p_h264", 0.2, 60},
+					{"power.YoutubeArc.1080p", 0.2, 60},
 				},
 			},
 			{
 				Name: "VideoPlayback",
 				Tests: []Test{
-					{"power.VideoPlayback.1080p_vp9", 0.5},
-					{"power.VideoPlayback.1080p_h264", 0.5},
+					{"power.VideoPlayback.1080p_vp9", 0.5, 60},
+					{"power.VideoPlayback.1080p_h264", 0.5, 60},
 				},
 			},
 		},
@@ -157,8 +157,8 @@ func TestValidateConfig(t *gotesting.T) {
 		Personas: []Persona{{
 			Name: "VideoPlayback",
 			Tests: []Test{
-				{"power.VideoPlayback.1080p_vp9", 0.5},
-				{"power.VideoPlayback.1080p_h264", 0.5},
+				{"power.VideoPlayback.1080p_vp9", 0.5, 60},
+				{"power.VideoPlayback.1080p_h264", 0.5, 60},
 			},
 		}},
 	}
@@ -205,8 +205,8 @@ func TestValidateConfig(t *gotesting.T) {
 		Personas: []Persona{{
 			Name: "MKT",
 			Tests: []Test{
-				{"power.Browsing", 0.5},
-				{"", 0.5},
+				{"power.Browsing", 0.5, 30},
+				{"", 0.5, 20},
 			},
 		}},
 	}
@@ -224,8 +224,8 @@ func TestValidateConfig(t *gotesting.T) {
 		Personas: []Persona{{
 			Name: "MKT",
 			Tests: []Test{
-				{"power.Browsing", 0.5},
-				{"power.Browsing", 0.5},
+				{"power.Browsing", 0.5, 60},
+				{"power.Browsing", 0.5, 60},
 			},
 		}},
 	}
@@ -243,7 +243,7 @@ func TestValidateConfig(t *gotesting.T) {
 		Personas: []Persona{{
 			Name: "MKT",
 			Tests: []Test{
-				{"power.Browsing", -1},
+				{"power.Browsing", -1, 60},
 			},
 		}},
 	}
@@ -251,6 +251,24 @@ func TestValidateConfig(t *gotesting.T) {
 		t.Error("ValidateConfig didn't return error for negative weight")
 	} else if !strings.Contains(err.Error(), "has negative weight") {
 		t.Error("ValidateConfig returned an incorrect error for negative weight; got:", err)
+	}
+
+	nonpositiveMinRuningTime := Config{
+		FormatVersion: 1,
+		Name:          "LowEndChromebook",
+		Version:       "1.0",
+		Control:       Control{MaxDuration: 0, Retry: 0, FailOnSkippedTest: false},
+		Personas: []Persona{{
+			Name: "MKT",
+			Tests: []Test{
+				{"power.Browsing", 1, -1},
+			},
+		}},
+	}
+	if _, _, _, err = ValidateConfig(&nonpositiveMinRuningTime); err == nil {
+		t.Error("ValidateConfig didn't return error for nonpositive min running time")
+	} else if !strings.Contains(err.Error(), "nonpositive min running time") {
+		t.Error("ValidateConfig returned an incorrect error for nonpositive min running time; got:", err)
 	}
 
 	unknownOrderedTests := Config{
@@ -266,8 +284,8 @@ func TestValidateConfig(t *gotesting.T) {
 		Personas: []Persona{{
 			Name: "MKT",
 			Tests: []Test{
-				{"power.Browsing", 0.5},
-				{"power.YoutubeArc.1080p", 0.5},
+				{"power.Browsing", 0.5, 60},
+				{"power.YoutubeArc.1080p", 0., 60},
 			},
 		}},
 	}
