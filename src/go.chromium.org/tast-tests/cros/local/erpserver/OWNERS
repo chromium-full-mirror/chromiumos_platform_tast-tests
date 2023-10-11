@@ -1,0 +1,11 @@
+set noparent
+
+# Reporting team
+albertojuarez@google.com
+jrhilke@google.com
+lbaraz@chromium.org
+xuhong@chromium.org
+vshenvi@google.com
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
