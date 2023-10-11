@@ -275,7 +275,7 @@ func init() {
 		return []chrome.Option{
 			chrome.ARCEnabled(),
 			chrome.UnRestrictARCCPU(),
-			chrome.ExtraArgs("--force-tablet-mode=touch_view", "--enable-virtual-keyboard"),
+			chrome.ExtraArgs("--force-tablet-mode=touch_view", "--enable-virtual-keyboard", "--disable-sync"),
 		}, nil
 	}
 	// arcBootedInTabletMode is a fixture similar to arcBooted. The only difference from arcBooted is that Chrome is launched in tablet mode in this fixture.
