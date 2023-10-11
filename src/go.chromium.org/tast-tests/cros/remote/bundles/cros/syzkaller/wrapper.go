@@ -62,6 +62,7 @@ var isLocal = testing.RegisterVarString(
 const startupScriptContents = `
 sysctl -w kernel.panic_on_warn=%v
 dmesg --clear
+rm -rf /usr/local/tmp/* || true
 `
 
 var driversToModprobe = [...]string{
