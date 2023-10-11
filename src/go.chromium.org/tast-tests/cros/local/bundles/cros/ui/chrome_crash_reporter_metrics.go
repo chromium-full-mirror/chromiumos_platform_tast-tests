@@ -105,7 +105,6 @@ func init() {
 		}, {
 			Name:              "miss_crashpad_lacros",
 			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Val: chromeCrashReporterMetricsParams{
 				handler:       chromecrash.Crashpad,
 				chromeOptions: []chrome.Option{chrome.CrashNormalMode()},
@@ -139,7 +138,6 @@ func init() {
 		}, {
 			Name:              "success_crashpad_lacros",
 			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Val: chromeCrashReporterMetricsParams{
 				handler:       chromecrash.Crashpad,
 				chromeOptions: []chrome.Option{chrome.CrashNormalMode()},
