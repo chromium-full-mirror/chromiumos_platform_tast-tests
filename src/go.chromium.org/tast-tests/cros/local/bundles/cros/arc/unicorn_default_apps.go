@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
@@ -72,16 +73,25 @@ func UnicornDefaultApps(ctx context.Context, s *testing.State) {
 	}
 
 	// List for ARC++ default apps not to be present on Child Account.
-	apps := []apps.App{
+	disallowedApps := []apps.App{
 		apps.PlayBooks,
 		apps.PlayGames,
 		apps.GoogleTV,
 		apps.Photos,
 		apps.Clock,
-		apps.Contacts,
 	}
 
-	for _, app := range apps {
+	version, err := arc.SDKVersion()
+	if err != nil {
+		s.Fatal("Failed to get ARC version: ", err)
+	}
+
+	if version < arc.SDKT {
+		// Contacts is a required app on T+ so should not be removed.
+		disallowedApps = append(disallowedApps, apps.Contacts)
+	}
+
+	for _, app := range disallowedApps {
 		installed, err := ash.ChromeAppInstalled(ctx, tconn, app.ID)
 		if err != nil {
 			s.Fatal("Failed to check ChromeAppInstalled: ", err)
