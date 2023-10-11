@@ -86,8 +86,6 @@ const (
 	defaultMeetTimeout = 10 * time.Minute
 )
 
-var platformEffectsModels = hwdep.Model("yaviks", "pujjoteen", "markarth", "frostflow", "dewatt", "nipperkin", "omnigul", "anahera", "gimble", "marasov", "taeko", "rex", "rex4es", "screebo", "screebo4es")
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MeetCUJ,
@@ -177,10 +175,12 @@ func init() {
 				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 			}, {
-				Name:              "docs_no_effects",
-				Timeout:           defaultTestTimeout,
-				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				Name:      "docs_no_effects",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj"},
+				// Platform VC effects become available at feature level 1. Refer to
+				// the feature database in platform/feature-management{,-private}.
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetTest{
 					bots:        []int{1, 3, 15},
 					layout:      googlemeet.TiledLayout,
@@ -197,7 +197,7 @@ func init() {
 				Name:              "docs_audio_effects",
 				Timeout:           defaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetTest{
 					bots:              []int{1, 3, 15},
 					layout:            googlemeet.TiledLayout,
@@ -216,7 +216,7 @@ func init() {
 				Name:              "docs_noise_cancellation",
 				Timeout:           defaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetTest{
 					bots:              []int{1, 3, 15},
 					layout:            googlemeet.TiledLayout,
@@ -234,7 +234,7 @@ func init() {
 				Name:              "docs_live_captions",
 				Timeout:           defaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetTest{
 					bots:         []int{1, 3, 15},
 					layout:       googlemeet.TiledLayout,
@@ -252,7 +252,7 @@ func init() {
 				Name:              "docs_background_blur",
 				Timeout:           defaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetTest{
 					bots:           []int{1, 3, 15},
 					layout:         googlemeet.TiledLayout,
@@ -269,7 +269,7 @@ func init() {
 				Name:              "docs_background_blur_and_meet_effects",
 				Timeout:           defaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetTest{
 					bots:           []int{1, 3, 15},
 					layout:         googlemeet.TiledLayout,
@@ -287,7 +287,7 @@ func init() {
 				Name:              "docs_adjust_lighting",
 				Timeout:           defaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetTest{
 					bots:           []int{1, 3, 15},
 					layout:         googlemeet.TiledLayout,
@@ -304,7 +304,7 @@ func init() {
 				Name:              "docs_video_effects",
 				Timeout:           defaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetTest{
 					bots:           []int{1, 3, 15},
 					layout:         googlemeet.TiledLayout,
@@ -322,7 +322,7 @@ func init() {
 				Name:              "docs_platform_effects",
 				Timeout:           defaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetTest{
 					bots:              []int{1, 3, 15},
 					layout:            googlemeet.TiledLayout,
@@ -343,7 +343,7 @@ func init() {
 				Name:              "docs_platform_effects_lacros",
 				Timeout:           defaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetTest{
 					bots:              []int{1, 3, 15},
 					layout:            googlemeet.TiledLayout,
