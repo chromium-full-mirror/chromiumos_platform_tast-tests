@@ -631,7 +631,7 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 
 	// If in dev mode, bypass the TO_DEV screen.
 	if fromMode == fwCommon.BootModeDev && !msOptsContain(opts, AllowGBBForce) {
-		testing.ContextLog(ctx, "Waiting until keyboard is ready")
+		testing.ContextLog(ctx, "Waiting until keyboard is ready before bypassing dev")
 		if err := h.Servo.WaitFirmwareKeyboard(ctx, h.Config.FirmwareScreen); err != nil {
 			// If this fails, this is the same as sleeping for the waitTimeout
 			testing.ContextLog(ctx, "Failed to wait for keyboard: ", err)
@@ -691,7 +691,7 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 // The actual behavior depends on the ModeSwitcherType.
 func (ms *ModeSwitcher) RecScreenToDevMode(ctx context.Context, opts ...ModeSwitchOption) error {
 	h := ms.Helper
-	testing.ContextLog(ctx, "Waiting until keyboard is ready")
+	testing.ContextLog(ctx, "Waiting until keyboard is ready before TriggerRecToDev")
 	if err := h.Servo.WaitFirmwareKeyboard(ctx, h.Config.FirmwareScreen); err != nil {
 		// If this fails, this is the same as sleeping for the waitTimeout
 		testing.ContextLog(ctx, "Failed to wait for keyboard: ", err)
@@ -948,7 +948,7 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 	}
 
 	if usbMux == servo.USBMuxDUT {
-		testing.ContextLog(ctx, "Waiting until keyboard is ready")
+		testing.ContextLog(ctx, "Waiting until keyboard is ready before USB enable")
 		waitTimeout := h.Config.FirmwareScreen
 		if err := h.Servo.WaitFirmwareKeyboard(ctx, waitTimeout); err != nil {
 			// If this fails, this is the same as sleeping for the waitTimeout
