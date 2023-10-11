@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -266,7 +267,7 @@ func BootMode(ctx context.Context, s *testing.State) {
 		if curr, err := h.Reporter.CurrentBootMode(ctx); err != nil {
 			s.Fatal("Failed to determine DUT boot mode: ", err)
 		} else if curr != tc.bootToMode {
-			s.Fatalf("Wrong boot mode: got %q, want %q", curr, pv.BootMode)
+			s.Fatalf("Wrong boot mode: got %q, want %q", curr, tc.bootToMode)
 		} else if curr != fwCommon.BootModeNormal {
 			s.Logf("Transitioning back from %s to normal mode", curr)
 			if err = ms.RebootToMode(ctx, fwCommon.BootModeNormal); err != nil {
@@ -277,6 +278,7 @@ func BootMode(ctx context.Context, s *testing.State) {
 	}
 
 	// Check that DUT can boot from the main storage despite USB device attached.
+	// This doesn't use the dev mode bypasser, it waits 30s for the dev mode screen to timeout and boot to default.
 	if tc.checkBootFromMain {
 		// Save the firmware log file for upload to Stainless at the end of the test.
 		defer func() {
@@ -295,6 +297,15 @@ func BootMode(ctx context.Context, s *testing.State) {
 		// and the number of attempts to three times.
 		if err := firmware.SetFWTries(ctx, h.DUT, fwCommon.RWSectionA, 3); err != nil {
 			s.Fatal("Failed to set FW tries to A: ", err)
+		}
+
+		// The DUT may have something weird set as the default boot target, so set to disk (the default).
+		if pv.BootMode == fwCommon.BootModeDev {
+			testing.ContextLog(ctx, "Setting dev_default_boot=disk")
+			if err := h.DUT.Conn().CommandContext(
+				ctx, "crossystem", "dev_default_boot=disk").Run(ssh.DumpLogOnError); err != nil {
+				s.Fatal("Failed run crossystem: ", err)
+			}
 		}
 
 		s.Log("Enabling USB connection to DUT")
@@ -353,6 +364,12 @@ func BootMode(ctx context.Context, s *testing.State) {
 		}
 		if mainfwAct != "A" {
 			s.Fatalf("Expected mainfw_act:A but got mainfw_act:%s, crossystem params before warm reset: %s", mainfwAct, crossInfo)
+		}
+
+		if curr, err := h.Reporter.CurrentBootMode(ctx); err != nil {
+			s.Fatal("Failed to determine DUT boot mode: ", err)
+		} else if curr != pv.BootMode {
+			s.Fatalf("Wrong boot mode: got %q, want %q", curr, pv.BootMode)
 		}
 	}
 }
