@@ -1,16 +1,16 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
-// TODO(b/290823172) Remove this file when the test is no longer in any PVS plan
 
 package firmware
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -20,13 +20,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ECCbiEeprom,
+		Func: ECCbi,
 		Desc: "Test that ectool can be used to read/write to cbi, and setting write protect prevents writing",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		Attr:    []string{"group:firmware", "firmware_ec"},
 		Fixture: fixture.NormalMode,
 		Timeout: 15 * time.Minute,
 		// Only run on platforms that include CL crrev/c/1234747 so that CBI can be reversibly written to.
@@ -38,10 +39,11 @@ func init() {
 			"ekko",
 			"syndra",
 		)),
+		Requirements: []string{"sys-fw-0022-v02"},
 	})
 }
 
-func ECCbiEeprom(ctx context.Context, s *testing.State) {
+func ECCbi(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
@@ -60,12 +62,12 @@ func ECCbiEeprom(ctx context.Context, s *testing.State) {
 		}
 
 		s.Logf("Removing tag %q", testTag1)
-		if err := removeTagFromEeprom(ctx, h, testTag1); err != nil {
+		if err := removeTagFromCbi(ctx, h, testTag1); err != nil {
 			s.Fatal("Expected remove to succeed: ", err)
 		}
 
 		s.Logf("Removing tag %q", testTag2)
-		if err := removeTagFromEeprom(ctx, h, testTag2); err != nil {
+		if err := removeTagFromCbi(ctx, h, testTag2); err != nil {
 			s.Fatal("Expected remove to succeed: ", err)
 		}
 
@@ -79,22 +81,22 @@ func ECCbiEeprom(ctx context.Context, s *testing.State) {
 	}
 
 	// Test writing data to new tag.
-	if err := writeTagToEeprom(ctx, h, testTag1, testData1, writeSize); err != nil {
+	if err := writeTagToCbi(ctx, h, testTag1, testData1, writeSize); err != nil {
 		s.Fatal("Expected write to succeed: ", err)
 	}
 
-	if out, err := readTagFromEeprom(ctx, h, testTag1); err != nil {
+	if out, err := readTagFromCbi(ctx, h, testTag1); err != nil {
 		s.Fatal("Expected read to succeed: ", err)
 	} else if out != testData1 {
 		s.Fatalf("Read data different than written data, expected %q got %q: %v", testData1, out, err)
 	}
 
 	// Test overwriting data to existing tag.
-	if err := writeTagToEeprom(ctx, h, testTag1, testData2, writeSize); err != nil {
+	if err := writeTagToCbi(ctx, h, testTag1, testData2, writeSize); err != nil {
 		s.Fatal("Expected write to succeed: ", err)
 	}
 
-	if out, err := readTagFromEeprom(ctx, h, testTag1); err != nil {
+	if out, err := readTagFromCbi(ctx, h, testTag1); err != nil {
 		s.Fatal("Expected read to succeed: ", err)
 	} else if out != testData2 {
 		s.Fatalf("Read data different than written data, expected %q got %q: %v", testData2, out, err)
@@ -108,30 +110,65 @@ func ECCbiEeprom(ctx context.Context, s *testing.State) {
 	}
 
 	// Test writing data to new tag with WP enabled.
-	if err := writeTagToEeprom(ctx, h, testTag2, testData1, writeSize); err == nil {
+	if err := writeTagToCbi(ctx, h, testTag2, testData1, writeSize); err == nil {
 		s.Fatal("Expected write to fail")
 	}
 
-	if out, err := readTagFromEeprom(ctx, h, testTag2); err == nil {
+	if out, err := readTagFromCbi(ctx, h, testTag2); err == nil {
 		s.Fatal("Expected read to fail since tag shouldn't exist: ", err)
 	} else if out == testData1 {
 		s.Fatalf("Read data matched written data, read/write should have failed, got %q: %v", out, err)
 	}
 
 	// Test writing data to existing tag with WP enabled.
-	if err := writeTagToEeprom(ctx, h, testTag1, testData1, writeSize); err == nil {
+	if err := writeTagToCbi(ctx, h, testTag1, testData1, writeSize); err == nil {
 		s.Fatal("Expected overwrite to fail: ", err)
 	}
 
 	s.Logf("Reading from tag %q", testTag1)
-	if out, err := readTagFromEeprom(ctx, h, testTag1); err != nil {
+	if out, err := readTagFromCbi(ctx, h, testTag1); err != nil {
 		s.Fatal("Expected read to succeed: ", err)
 	} else if out == testData1 {
 		s.Fatalf("Write should have failed, expected %q, got %q: %v", testData2, out, err)
 	}
 }
 
-func writeTagToEeprom(ctx context.Context, h *firmware.Helper, tag, data, size string) error {
+func setECWriteProtect(ctx context.Context, h *firmware.Helper, enable bool) error {
+	enableStr := "enable"
+	if !enable {
+		enableStr = "disable"
+
+		testing.ContextLog(ctx, "Setting fwwpstate to off")
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+			return errors.Wrap(err, "failed to set fwwpstate to off")
+		}
+	}
+
+	testing.ContextLogf(ctx, "Setting ec write protect to %q with ec console", enableStr)
+	if err := h.Servo.RunECCommand(ctx, fmt.Sprintf("flashwp %t", enable)); err != nil {
+		return errors.Wrap(err, "failed to enable flashwp")
+	}
+
+	if enable {
+		testing.ContextLog(ctx, "Setting fwwpstate to on")
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+			return errors.Wrap(err, "failed to set fwwpstate to on")
+		}
+	}
+
+	testing.ContextLog(ctx, "Rebooting the DUT with cold reset")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		return errors.Wrap(err, "failed to reboot the DUT with cold reset")
+	}
+
+	if err := h.WaitConnect(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for DUT to reconnect")
+	}
+
+	return nil
+}
+
+func writeTagToCbi(ctx context.Context, h *firmware.Helper, tag, data, size string) error {
 	testing.ContextLogf(ctx, "Attempting to write data %q to tag %q", data, tag)
 	writeArgs := []string{tag, data, size}
 	out, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).CBI(ctx, firmware.CBISet, writeArgs...)
@@ -141,7 +178,7 @@ func writeTagToEeprom(ctx context.Context, h *firmware.Helper, tag, data, size s
 	return nil
 }
 
-func readTagFromEeprom(ctx context.Context, h *firmware.Helper, tag string) (string, error) {
+func readTagFromCbi(ctx context.Context, h *firmware.Helper, tag string) (string, error) {
 	testing.ContextLog(ctx, "Attempting to read data from tag ", tag)
 	out, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).CBI(ctx, firmware.CBIGet, tag)
 	if err != nil {
@@ -156,7 +193,7 @@ func readTagFromEeprom(ctx context.Context, h *firmware.Helper, tag string) (str
 	return strMatch, nil
 }
 
-func removeTagFromEeprom(ctx context.Context, h *firmware.Helper, tag string) error {
+func removeTagFromCbi(ctx context.Context, h *firmware.Helper, tag string) error {
 	testing.ContextLog(ctx, "Attempting to remove data from tag ", tag)
 	out, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).CBI(ctx, firmware.CBIRemove, tag)
 	if err != nil {
