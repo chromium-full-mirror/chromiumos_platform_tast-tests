@@ -46,7 +46,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
@@ -58,7 +58,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
@@ -71,7 +71,7 @@ func init() {
 				},
 			},
 			Fixture:   "vpnEnv",
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
 		}, {
 			Name: "l2tp_ipsec_psk_xauth_missing_user",
 			Val: vpnConnectTestParams{
@@ -105,7 +105,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn",
@@ -117,7 +117,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_user_pass",
@@ -129,7 +129,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify",
@@ -141,7 +141,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify_wrong_hash",
@@ -203,7 +203,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnv",
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_generate_key",
@@ -214,7 +214,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnv",
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}},
 	})
