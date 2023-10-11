@@ -99,7 +99,7 @@ func init() {
 				Value: "screenplay-55005668-0de3-4314-accc-baef199664ed",
 			},
 		},
-		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable", "group:mainline", "informational"},
+		Attr:         []string{"group:wificell", "wificell_commercial_unstable"},
 		SoftwareDeps: []string{"chrome"},
 		// SigninProfileTestExtensionID is an id of the test extension which is
 		// allowed for signin profile (see http://crrev.com/772709 for details).
