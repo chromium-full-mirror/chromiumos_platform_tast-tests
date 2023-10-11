@@ -46,11 +46,21 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_container"},
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+			},
+			{
+				Name:              "betty",
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "vm_betty",
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational"},
 			}},
 	})
