@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint/rpcdut"
@@ -32,6 +33,7 @@ func init() {
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService", dutfs.ServiceName},
+		TestBedDeps:  []string{tbdep.Fingerprint},
 		Vars:         []string{"servo"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
