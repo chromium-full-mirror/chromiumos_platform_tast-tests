@@ -125,7 +125,11 @@ func signinAndVerify(ctx context.Context, tconn *chrome.TestConn, kb *input.Keyb
 	}
 
 	testing.ContextLog(ctx, "Start signing in to user ", creds.User)
-	if err := ui.DoDefault(userButton)(ctx); err != nil {
+	field, err := lockscreen.PasswordFieldFinder(creds.User)
+	if err != nil {
+		return errors.Wrap(err, "failed to get password field")
+	}
+	if err := ui.WithInterval(time.Second).DoDefaultUntil(userButton, ui.Exists(field))(ctx); err != nil {
 		return errors.Wrap(err, "failed to focus on the user")
 	}
 	if err := lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass, kb); err != nil {
