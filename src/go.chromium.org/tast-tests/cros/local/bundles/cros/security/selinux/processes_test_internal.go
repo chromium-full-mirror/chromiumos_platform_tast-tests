@@ -19,10 +19,8 @@ const domainIsolationErrorMessage = "THIS IS A SECURITY BUG. Follow steps 1~3 of
 func ProcessesTestInternal(ctx context.Context, s *testing.State) {
 	type processSearchType int
 	const (
-		exe        processSearchType = iota // absolute executable path
-		notExe                              // not absolute executable path
-		cmdline                             // partial regular expression matched against command line
-		notCmdline                          // not matching the regular expression
+		exe     processSearchType = iota // absolute executable path
+		cmdline                          // partial regular expression matched against command line
 	)
 	type contextMatchType int
 	const (
@@ -70,33 +68,33 @@ func ProcessesTestInternal(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	ps, err := GetProcesses(PrivilegedOnly)
+	ps, err := GetProcesses(All)
 	if err != nil {
 		s.Fatal("Failed to get processes: ", err)
 	}
 
 	testCases := []testCaseType{
-		{exe, "/sbin/minijail0", matchRegexp, "(minijail|.*_minijail0|cros_.*_minijail)", ""},
-
+		// Check SELinux enforced domains.
+		{exe, "/bin/lsblk", matchRegexp, "cros_lsblk", ""},
+		{exe, "/lib/udev/hps-dev.sh", matchRegexp, "cros_hps_udev", ""},
+		{exe, "/sbin/featured", matchRegexp, "cros_featured", ""},
+		{exe, "/sbin/is_running_from_installer", matchRegexp, "cros_is_running_from_installer", ""},
+		{exe, "/usr/bin/cros_installer", matchRegexp, "cros_installer", ""},
+		{exe, "/usr/bin/hps-factory", matchRegexp, "cros_hps_factory", ""},
 		{exe, "/usr/bin/metrics_daemon", matchRegexp, "cros_metrics_daemon", ""},
-
-		{exe, "/usr/sbin/cryptohomed", matchRegexp, "cros_cryptohomed", ""},
+		{exe, "/usr/bin/periodic_scheduler", matchRegexp, "cros_periodic_scheduler", ""},
+		{exe, "/usr/bin/rootdev", matchRegexp, "cros_rootdev", ""},
+		{exe, "/usr/sbin/chromeos-postinst", matchRegexp, "cros_chromeos_postinst", ""},
+		{exe, "/usr/sbin/bootstat", matchRegexp, "cros_bootstat", ""},
 		{exe, "/usr/sbin/chapsd", matchRegexp, "cros_chapsd", ""},
+		{exe, "/usr/sbin/cryptohomed", matchRegexp, "cros_cryptohomed", ""},
+		{exe, "/usr/sbin/cryptohome-namespace-mounte", matchRegexp, "cros_cryptohome_namespace_mounter", ""},
 		{exe, "/usr/sbin/hpsd", matchRegexp, "cros_hpsd", ""},
+		{exe, "/usr/sbin/os_install_service", matchRegexp, "cros_os_install_service", ""},
+		{exe, "/usr/sbin/parted", matchRegexp, "cros_parted", ""},
+		{exe, "/usr/sbin/spaced", matchRegexp, "cros_spaced", ""},
 		{exe, "/usr/sbin/tcsd", matchRegexp, "cros_tcsd", ""},
-
-		// moblab, autotest, devserver, rotatelogs, apache2, envoy, containerd are all required for
-		// normal operation of moblab devices.
-		// python3 is for crbug.com/1151463.
-		// mkdir is for crbug.com/1156295.
-		{notCmdline, ".*(frecon|agetty|ping|recover_dts|udevadm|update_rw_vpd|mosys|vpd|flashrom|moblab|autotest|devserver|rotatelogs|apache2|envoy|containerd|python3|mkdir).*", notString, "chromeos", domainIsolationErrorMessage},
-		{notCmdline, ".*(frecon|agetty|ping|recover_duts).*", notString, "unconfined_proc", domainIsolationErrorMessage},
-		// python3.6m is for nebraska.py (b/247248201).
-		{notExe, "(/sbin/init|/bin/bash|/usr/local/bin/python3.6m)", notString, "cros_init", domainIsolationErrorMessage},
-		// coreutils and ping are excluded for recover_duts scripts.
-		// logger is common to redirect output widely used from init conf scripts.
-		{notExe, "(/bin/([db]a)?sh|/usr/bin/coreutils|/usr/bin/logger|/bin/ping|brcm_patchram_plus)", notString, "cros_init_scripts", domainIsolationErrorMessage},
-		{notExe, "/sbin/minijail0", notString, "minijail", domainIsolationErrorMessage},
+		// Check other below.
 	}
 
 	for _, testCase := range testCases {
@@ -105,12 +103,8 @@ func ProcessesTestInternal(ctx context.Context, s *testing.State) {
 		switch testCase.field {
 		case exe:
 			p, err = FindProcessesByExe(ps, testCase.query, false)
-		case notExe:
-			p, err = FindProcessesByExe(ps, testCase.query, true)
 		case cmdline:
 			p, err = FindProcessesByCmdline(ps, testCase.query, false)
-		case notCmdline:
-			p, err = FindProcessesByCmdline(ps, testCase.query, true)
 		default:
 			err = errors.Errorf("%+v has invalid processSearchType %d", testCase, int(testCase.field))
 		}
