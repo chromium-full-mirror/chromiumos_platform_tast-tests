@@ -45,12 +45,18 @@ func WilcoNormalToDev(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get config: ", err)
 	}
 
-	s.Log("Connecting charger")
-	if err := h.SetDUTPower(ctx, true); err != nil {
-		s.Fatal("Unable to connect charger: ", err)
+	deviceStates, err := h.CheckPowerSupplyDeviceStates(ctx)
+	if err != nil {
+		s.Fatal("Failed check power supply state: ", err)
 	}
-	if err := h.CheckChgFrmPwrSuppInfo(ctx, true); err != nil {
-		s.Fatal("Failed to check charger: ", err)
+	if deviceStates.ACOnline != "yes" {
+		s.Log("Connecting charger")
+		if err := h.SetDUTPower(ctx, true); err != nil {
+			s.Fatal("Unable to connect charger: ", err)
+		}
+		if err := h.CheckChgFrmPwrSuppInfo(ctx, true); err != nil {
+			s.Fatal("Failed to check charger: ", err)
+		}
 	}
 
 	defer func() {

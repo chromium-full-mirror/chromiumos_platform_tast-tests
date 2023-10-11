@@ -865,12 +865,16 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 			return errors.Wrap(err, "failed to reset ethernet")
 		}
 	}
+	hasDUTPDDataRole, err := h.Servo.HasControl(ctx, string(servo.DUTPDDataRole))
+	if err != nil {
+		return errors.Wrap(err, "failed to check for control")
+	}
 	testing.ContextLogf(ctx, "Waiting for %s to connect", h.DUT.HostName())
 	dfpFailures := 0
 	for {
 		// SetDUTPDDataRole would fail when DUT is still in the process
 		// of waking up from hibernation.
-		if !wcOptsContain(opts, FromHibernation) {
+		if !wcOptsContain(opts, FromHibernation) && hasDUTPDDataRole {
 			if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
 				testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 				dfpFailures++
