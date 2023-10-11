@@ -733,6 +733,39 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffectsLacros",
+		Desc: "CUJ test fixture with WebRTC event logging, VC platform effects enabled and lacros",
+		Contacts: []string{
+			"ramsaroop@chromium.org",
+			"sammc@chromium.org",
+			"cros-sw-perf@google.com",
+			"cros-pe-pnp@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+				chrome.EnableFeatures(
+					"PreferConstantFrameRate",
+					"CrOSLateBootAudioAPNoiseCancellation",
+					"CrOSLateBootAudioFlexibleLoopback",
+					"ShowLiveCaptionInVideoConferenceTray",
+					"SystemLiveCaption",
+					"VideoConference",
+				),
+			},
+			bt:          browser.TypeLacros,
+			docsBlocker: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingAndHighResTimerOff",
 		Desc: "CUJ test fixture with WebRTC event logging and turn off hrtimer",
 		Contacts: []string{

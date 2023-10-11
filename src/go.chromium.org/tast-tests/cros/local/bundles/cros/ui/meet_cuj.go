@@ -339,6 +339,28 @@ func init() {
 					botsOptions:       []bond.AddBotsOption{bond.WithAudio("what_color_is_cheese_32bit_48k_stereo.raw")},
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
+			}, {
+				Name:              "docs_platform_effects_lacros",
+				Timeout:           defaultTestTimeout,
+				ExtraAttr:         []string{"group:cuj"},
+				ExtraHardwareDeps: hwdep.D(platformEffectsModels),
+				Val: meetTest{
+					bots:              []int{1, 3, 15},
+					layout:            googlemeet.TiledLayout,
+					present:           true,
+					docs:              true,
+					split:             true,
+					cam:               true,
+					zoomOut:           true,
+					backgroundBlur:    true,
+					adjustLighting:    true,
+					liveCaptions:      true,
+					noiseCancellation: true,
+					browserType:       browser.TypeLacros,
+					botsOptions:       []bond.AddBotsOption{bond.WithAudio("what_color_is_cheese_32bit_48k_stereo.raw")},
+				},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffectsLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			// 4p Meet variants.
 			{
