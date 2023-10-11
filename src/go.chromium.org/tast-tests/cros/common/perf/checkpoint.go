@@ -35,10 +35,12 @@ func (s Section) MarshalJSON() ([]byte, error) {
 	return json.Marshal(sectionJSON)
 }
 
-// NewSection initialize a new Section with a start timestamp.
+// NewSection initializes a new Section with both start and end timestamp set to
+// the given time.
 func NewSection(startTs time.Time) *Section {
 	return &Section{
 		startTs: startTs,
+		endTs:   startTs,
 	}
 }
 

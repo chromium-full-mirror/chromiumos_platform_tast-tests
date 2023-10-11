@@ -64,3 +64,13 @@ func TestCheckpoints(t *testing.T) {
 
 	saveCheckpointsAndCompare(t, c, "testdata/TestCheckpoints.json")
 }
+
+func TestCheckpointsNoEnd(t *testing.T) {
+	clock := NewFakeClock()
+	c := NewCheckpoints(SetClock(clock))
+
+	clock.Advance(time.UnixMilli(workStartMs).Sub(time.UnixMilli(idle1EndMs)))
+	c.NewSection("work")
+
+	saveCheckpointsAndCompare(t, c, "testdata/TestCheckpointsNoEnd.json")
+}
