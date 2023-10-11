@@ -32,6 +32,11 @@ func init() {
 		Requirements: []string{
 			tdreq.StorageStable,
 		},
+		Params: []testing.Param{
+			{}, {
+				Name: "iteration_2",
+			},
+		},
 	})
 }
 

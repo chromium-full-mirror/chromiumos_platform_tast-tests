@@ -28,6 +28,11 @@ func init() {
 		Requirements: []string{
 			tdreq.StorageTrim,
 		},
+		Params: []testing.Param{
+			{}, {
+				Name: "iteration_2",
+			},
+		},
 	})
 }
 

@@ -30,6 +30,13 @@ func init() {
 		Requirements: []string{
 			tdreq.StorageSuspend,
 		},
+		Params: []testing.Param{
+			{}, {
+				Name: "iteration_2",
+			}, {
+				Name: "iteration_3",
+			},
+		},
 	})
 }
 
