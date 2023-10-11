@@ -29,7 +29,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:        []string{"group:firmware", "firmware_unstable"},
+		Attr:        []string{"group:firmware", "firmware_unstable", "firmware_usb"},
 		Timeout:     20 * time.Minute,
 		Vars:        []string{"firmware.skipFlashUSB"},
 		ServiceDeps: []string{"tast.cros.firmware.BiosService"},
@@ -40,7 +40,7 @@ func init() {
 			},
 			{
 				Name:    "dev",
-				Fixture: fixture.USBDevModeGBBNoServices,
+				Fixture: fixture.DevMode,
 			},
 		},
 	})
@@ -145,6 +145,5 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 	s.Log("Got output from cbmem: ", string(out))
 	if !strings.Contains(string(out), "MRC: cache data 'RECOVERY_MRC_CACHE' needs update.") {
 		s.Fatal("Output from cbmem did not contain expected message: ", err)
-
 	}
 }
