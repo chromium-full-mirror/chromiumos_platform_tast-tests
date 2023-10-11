@@ -560,3 +560,63 @@ func (ds *DisplayService) GetDisplayIDs(ctx context.Context, req *empty.Empty) (
 
 	return resp, nil
 }
+
+// EnsureSetWindowState checks whether the window is in requested window state. If not, make sure to set window state to the requested window state.
+func (ds *DisplayService) EnsureSetWindowState(ctx context.Context, req *wwcb.QueryRequest) (*empty.Empty, error) {
+	cr := ds.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome is not instantiated")
+	}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
+		return w.Title == string(req.WindowTitle)
+	})
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to find window")
+	}
+
+	windowTypeMap := map[wwcb.WindowStateType]ash.WindowStateType{
+		wwcb.WindowStateType_WINDOW_STATE_NORMAL:     ash.WindowStateNormal,
+		wwcb.WindowStateType_WINDOW_STATE_MAXIMIZED:  ash.WindowStateMaximized,
+		wwcb.WindowStateType_WINDOW_STATE_MINIMIZED:  ash.WindowStateMinimized,
+		wwcb.WindowStateType_WINDOW_STATE_FULLSCREEN: ash.WindowStateFullscreen,
+	}
+	wmType, ok := windowTypeMap[req.WindowState]
+	if !ok {
+		return nil, errors.Errorf("didn't find the type for window state %q", req.WindowState)
+	}
+
+	if wmType == w.State {
+		return &empty.Empty{}, nil
+	}
+
+	windowEventMap := map[wwcb.WindowStateType]ash.WMEventType{
+		wwcb.WindowStateType_WINDOW_STATE_NORMAL:     ash.WMEventNormal,
+		wwcb.WindowStateType_WINDOW_STATE_MAXIMIZED:  ash.WMEventMaximize,
+		wwcb.WindowStateType_WINDOW_STATE_MINIMIZED:  ash.WMEventMinimize,
+		wwcb.WindowStateType_WINDOW_STATE_FULLSCREEN: ash.WMEventFullscreen,
+	}
+	wmEvent, ok := windowEventMap[req.WindowState]
+	if !ok {
+		return nil, errors.Errorf("didn't find the event for window state %q", req.WindowState)
+	}
+
+	state, err := ash.SetARCAppWindowState(ctx, tconn, w.ARCPackageName, wmEvent)
+	if err != nil {
+		return nil, err
+	}
+
+	if state != wmType {
+		return nil, errors.Errorf("unexpected window state; got %s, want %s", state, wmType)
+	}
+	if err := ash.WaitForARCAppWindowState(ctx, tconn, w.ARCPackageName, wmType); err != nil {
+		return nil, errors.Wrapf(err, "failed to wait for activity to enter %v state", wmType)
+	}
+
+	return &empty.Empty{}, nil
+}

@@ -39,6 +39,9 @@ service DisplayService {
 
   // GetDisplayIDs returns the display ID of all monitor from system information.
   rpc GetDisplayIDs(google.protobuf.Empty) returns (GetDisplayIDsResponse) {}
+
+  // EnsureSetWindowState checks whether the window is in requested window state. If not, make sure to set window state to the requested window state.
+  rpc EnsureSetWindowState(QueryRequest) returns (google.protobuf.Empty) {}
 }
 
 message QueryRequest{
@@ -46,9 +49,16 @@ message QueryRequest{
   int32 display_count = 2;
   bool enable = 3;
   string window_title = 4;
+  WindowStateType window_state = 5;
 }
 
 message GetDisplayIDsResponse{
 	repeated string display_ids = 1;
 }
   
+enum WindowStateType {
+  WINDOW_STATE_NORMAL = 0;
+  WINDOW_STATE_MAXIMIZED = 1;
+  WINDOW_STATE_MINIMIZED = 2;
+  WINDOW_STATE_FULLSCREEN = 3;
+}
