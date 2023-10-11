@@ -104,7 +104,8 @@ func (*nearbyRemoteFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	s.Log(string(out))
 
 	// Get the IP Address of the Android phone we want to setup adb-over-tcp with.
-	out, err = d2.CommandContext(ctx, "adb", "-s", companions[0].SerialNumber, "shell", "ip", "route", "|", "awk", "'{print $9}'").Output(ssh.DumpLogOnError)
+	// Filter out the cellular IP address.
+	out, err = d2.CommandContext(ctx, "adb", "-s", companions[0].SerialNumber, "shell", "ip", "route", "|", "grep", "-v", "rmnet", "|", "awk", "'{print $9}'").Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed to get Android phones IP Address")
 	}
