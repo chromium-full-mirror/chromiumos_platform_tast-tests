@@ -321,6 +321,28 @@ func (ec *ECTool) CBI(ctx context.Context, cmd CBICmd, args ...string) (string, 
 	return string(out), nil
 }
 
+// CBIBinCmd type holds commands for interacting with cbi using the ectool.
+type CBIBinCmd string
+
+const (
+	// CBIBinRead for the 'ectool cbibin read <file> <size>'.
+	CBIBinRead CBIBinCmd = "read"
+	// CBIBinWrite for the 'ectool cbibin write <file> <size>'.
+	CBIBinWrite CBIBinCmd = "write"
+)
+
+// CBIBin runs the 'ectool cbibin' with provided command and args.
+func (ec *ECTool) CBIBin(ctx context.Context, cmd CBIBinCmd, args ...string) (string, error) {
+	cmdAndArgs := []string{"cbibin", string(cmd)}
+	cmdAndArgs = append(cmdAndArgs, args...)
+	testing.ContextLogf(ctx, "Running cmd: 'ectool %s'", strings.Join(cmdAndArgs, " "))
+	out, err := ec.Command(ctx, cmdAndArgs...).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrapf(err, "running 'ectool %s' on DUT with args %v, got: %v", string(cmd), args, string(out))
+	}
+	return string(out), nil
+}
+
 // BCFGCmd type holds commands for interacting with BCFG using the ectool.
 type BCFGCmd string
 
