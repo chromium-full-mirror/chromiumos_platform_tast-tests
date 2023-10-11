@@ -129,14 +129,6 @@ func init() {
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
 		}, {
-			// Contact: kerker@google.com
-			Name: "audio_set_volume",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineAudioSetVolume),
-		}, {
-			// Contact: kerker@google.com
-			Name: "audio_set_gain",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineAudioSetGain),
-		}, {
 			// Contact: byronlee@google.com
 			Name:              "bluetooth_power",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothPower),

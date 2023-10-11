@@ -54,8 +54,6 @@ const (
 	RoutineFingerprint                    = "fingerprint"
 	RoutineFingerprintAlive               = "fingerprint_alive"
 	RoutineEMMCLifetime                   = "emmc_lifetime"
-	RoutineAudioSetVolume                 = "audio_set_volume"
-	RoutineAudioSetGain                   = "audio_set_gain"
 	RoutineBluetoothPower                 = "bluetooth_power"
 	RoutineBluetoothDiscovery             = "bluetooth_discovery"
 	RoutineBluetoothScanning              = "bluetooth_scanning"
@@ -119,14 +117,6 @@ func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, 
 			return nil, errors.Wrap(err, "failed to prepare NVME wear-level-threshold")
 		}
 		diagParams = append(diagParams, fmt.Sprintf("--wear_level_threshold=%d", threshold))
-	} else if params.Routine == RoutineAudioSetVolume {
-		// Any node id is fine. What we need to test is audio dbus works.
-		diagParams = append(diagParams, "--node_id=0")
-		diagParams = append(diagParams, "--volume=10")
-	} else if params.Routine == RoutineAudioSetGain {
-		// Any node id is fine. What we need to test is audio dbus works.
-		diagParams = append(diagParams, "--node_id=0")
-		diagParams = append(diagParams, "--gain=10")
 	} else if params.Routine == RoutineBluetoothScanning {
 		// Default runtime for Bluetooth scanning routine is 5 seconds.
 		diagParams = append(diagParams, "--length_seconds=5")
