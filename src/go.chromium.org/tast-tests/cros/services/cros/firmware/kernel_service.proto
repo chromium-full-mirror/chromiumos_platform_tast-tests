@@ -180,7 +180,8 @@ message RootfsVerityHashBackup {
 message KernelVersion {
     string RootDev = 1;
     string Version = 2;
-    CgptPartition Table = 3;
+    reserved 3;
+    PartitionCopy Copy = 4;
 }
 
 // KernelHeaderMagicInfo is used for setting the kernel header magic for a kernel section.

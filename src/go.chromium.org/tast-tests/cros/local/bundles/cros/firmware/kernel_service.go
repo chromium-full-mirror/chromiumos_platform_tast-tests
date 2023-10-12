@@ -292,7 +292,6 @@ func (ks *KernelService) GetCurrentCopy(ctx context.Context, req *pb.Partition) 
 }
 
 // VerifyKernelCopy checks that DUT is currently booted to expected kernel copy.
-// Provide rootdev in req to it check it's the right device (eg. disk or usb) as well as copy.
 func (ks *KernelService) VerifyKernelCopy(ctx context.Context, req *pb.Partition) (*empty.Empty, error) {
 	currRootDevWithPart, err := kernel.GetCurrentRootDevice(ctx, true)
 	if err != nil {
@@ -384,7 +383,7 @@ func (ks *KernelService) GetKernelVersion(ctx context.Context, req *pb.Partition
 	}
 	rootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, rootDevWithPart)
 
-	version, table, err := kernel.GetKernelVersion(ctx, rootDevWithoutPart, kernel.PartitionNameCopyToLabel(req.Name, req.Copy))
+	version, err := kernel.GetKernelVersion(ctx, rootDevWithoutPart, req.Copy)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get kernel version")
 	}
@@ -392,11 +391,13 @@ func (ks *KernelService) GetKernelVersion(ctx context.Context, req *pb.Partition
 	return &pb.KernelVersion{
 		RootDev: rootDevWithPart,
 		Version: version,
-		Table:   table,
+		Copy:    req.Copy,
 	}, nil
 }
 
 // SetKernelVersion uses vbutil_kernel to set the kernel version for a given partition.
+// If caller is passing in root device, be sure to clear the rootdev if it's just being set for currently
+// booted device and not a particular device. If setting a particular device, verify it exists first.
 func (ks *KernelService) SetKernelVersion(ctx context.Context, req *pb.KernelVersion) (*empty.Empty, error) {
 	var rootDevWithPart string
 	if req.RootDev != "" {
@@ -410,7 +411,7 @@ func (ks *KernelService) SetKernelVersion(ctx context.Context, req *pb.KernelVer
 	}
 	rootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, rootDevWithPart)
 
-	if err := kernel.SetKernelVersion(ctx, rootDevWithoutPart, req.Table.Label, req.Version); err != nil {
+	if err := kernel.SetKernelVersion(ctx, rootDevWithoutPart, req.Copy, req.Version); err != nil {
 		return nil, errors.Wrapf(err, "failed to set kernel version to %q", req.Version)
 	}
 	return &empty.Empty{}, nil

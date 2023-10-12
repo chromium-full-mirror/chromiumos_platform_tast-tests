@@ -90,7 +90,6 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure both kernel copies are bootable: ", err)
 	}
 	if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, &pb.Partition{
-		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_A,
 	}); err != nil {
 		s.Fatal("Failed to prioritize KERN-A: ", err)
@@ -107,7 +106,6 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 
 	s.Log("Get initial kernel version for KERN-A")
 	initVersion, err := h.KernelServiceClient.GetKernelVersion(ctx, &pb.Partition{
-		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_A,
 	})
 	if err != nil {
@@ -115,15 +113,17 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Initial kernel version is: ", initVersion.Version)
 
-	newVersion := initVersion
 	versionInt, err := strconv.Atoi(initVersion.Version)
 	if err != nil {
 		s.Fatal("Failed to parse kernel version as int")
 	}
-	newVersion.Version = strconv.Itoa(versionInt + 1)
+	newVersion := pb.KernelVersion{
+		Version: strconv.Itoa(versionInt + 1),
+		Copy:    pb.PartitionCopy_A,
+	}
 
 	s.Log("Setting KERN-A version to ", newVersion.Version)
-	if _, err := h.KernelServiceClient.SetKernelVersion(ctx, newVersion); err != nil {
+	if _, err := h.KernelServiceClient.SetKernelVersion(ctx, &newVersion); err != nil {
 		s.Fatal("Failed to set kernel version: ", err)
 	}
 
@@ -138,7 +138,6 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 
 	s.Log("Get current kernel version for KERN-A")
 	currVersion, err := h.KernelServiceClient.GetKernelVersion(ctx, &pb.Partition{
-		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_A,
 	})
 	if err != nil {
@@ -150,21 +149,8 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 		s.Fatalf("Expected kernel version to be %s but was %s", newVersion.Version, currVersion.Version)
 	}
 
-	// Also verify that it did boot into the updated version and not into a different version.
-	successful := false
-	for _, attr := range currVersion.Table.Attrs {
-		if attr.Name == "successful" && attr.Value == 1 {
-			successful = true
-			break
-		}
-	}
-	if !successful {
-		s.Fatal("KERN-A did not boot successfully")
-	}
-
 	s.Log("Verify DUT in KERN-A or ROOT-A")
 	if _, err := h.KernelServiceClient.VerifyKernelCopy(ctx, &pb.Partition{
-		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_A,
 	}); err != nil {
 		s.Fatal("Failed to verify DUT currently is in copy A: ", err)

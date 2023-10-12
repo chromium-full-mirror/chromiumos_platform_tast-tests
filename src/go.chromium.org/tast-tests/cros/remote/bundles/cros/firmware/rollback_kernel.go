@@ -355,16 +355,19 @@ func changeKernelVersion(ctx context.Context, h *firmware.Helper, rootdev string
 	}
 	testing.ContextLogf(ctx, "Current KERN-%s version is: %v", copy, kernVersion.Version)
 
-	newKernVersion := kernVersion
 	versionInt, err := strconv.Atoi(kernVersion.Version)
 	if err != nil {
 		return -1, errors.Wrap(err, "failed to parse kernel version as int")
 	}
-	newKernVersion.Version = strconv.Itoa(versionInt + change)
+	newKernVersion := pb.KernelVersion{
+		RootDev: rootdev,
+		Version: strconv.Itoa(versionInt + change),
+		Copy:    copy,
+	}
 
 	testing.ContextLogf(ctx, "Setting KERN-%s version to %s", copy, newKernVersion.Version)
-	if _, err := h.KernelServiceClient.SetKernelVersion(ctx, newKernVersion); err != nil {
-		return versionInt, errors.Wrapf(err, "failed to set KERN-%s version to %d", copy, versionInt)
+	if _, err := h.KernelServiceClient.SetKernelVersion(ctx, &newKernVersion); err != nil {
+		return versionInt, errors.Wrapf(err, "failed to set KERN-%s version to %s", copy, newKernVersion.Version)
 	}
 
 	return versionInt, nil

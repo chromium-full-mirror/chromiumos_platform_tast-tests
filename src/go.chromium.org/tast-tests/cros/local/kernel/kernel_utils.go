@@ -649,35 +649,38 @@ func GetNameFromLabel(label string) (string, error) {
 }
 
 // GetKernelVersion uses vbutil_kernel to get the kernel version for a given partition.
-func GetKernelVersion(ctx context.Context, rootDevWithoutPart, label string) (string, *pb.CgptPartition, error) {
+func GetKernelVersion(ctx context.Context, rootDevWithoutPart string, copy pb.PartitionCopy) (string, error) {
 	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
-		return "", nil, errors.Wrap(err, "failed to get cgpt table")
+		return "", errors.Wrap(err, "failed to get cgpt table")
 	}
 
+	label := PartitionNameCopyToLabel(pb.PartitionName_KERNEL, copy)
 	table := partitionTables[label]
 
 	testing.ContextLogf(ctx, "Getting kernel version for %s (label: %s)", table.PartitionPath, table.Label)
 	// TODO(tij@): Update this to use the futility vbutil_kernel library after it gets implemented.
 	out, err := testexec.CommandContext(ctx, "vbutil_kernel", "--verify", table.PartitionPath).Output(testexec.DumpLogOnError)
 	if err != nil {
-		return "", nil, errors.Wrap(err, "failed to get vbutil kernel")
+		return "", errors.Wrap(err, "failed to get vbutil kernel")
 	}
 
 	match := regexp.MustCompile(`Kernel version:\s*(\S+)`).FindStringSubmatch(string(out))
 	if match == nil || len(match) < 2 {
-		return "", nil, errors.Errorf("failed to parse kernel version for label %q, got output: %v", table.Label, string(out))
+		return "", errors.Errorf("failed to parse kernel version for label %q, got output: %v", table.Label, string(out))
 	}
 
-	return match[1], table, nil
+	return match[1], nil
 }
 
 // SetKernelVersion uses vbutil_kernel to set the kernel version for a given partition.
-func SetKernelVersion(ctx context.Context, rootDevWithoutPart, label, version string) error {
+func SetKernelVersion(ctx context.Context, rootDevWithoutPart string, copy pb.PartitionCopy, version string) error {
 	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
 		return errors.Wrap(err, "failed to get cgpt table")
 	}
+
+	label := PartitionNameCopyToLabel(pb.PartitionName_KERNEL, copy)
 	table := partitionTables[label]
 
 	tmpFile, err := os.CreateTemp("/var/tmp", fmt.Sprintf("%s-repack_*.bin", table.Label))
