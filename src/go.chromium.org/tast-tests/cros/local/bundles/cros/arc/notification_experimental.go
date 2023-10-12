@@ -76,16 +76,6 @@ func init() {
 			Name:              "vm",
 			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_vm"},
-		}, {
-			// TODO(b/290289663): Remove this variant once qsRevamp is launched.
-			Name:              "qsrevamp",
-			Fixture:           "arcBootedQsRevampEnabled",
-			ExtraSoftwareDeps: []string{"android_p"},
-		}, {
-			// TODO(b/290289663): Remove this variant once qsRevamp is launched.
-			Name:              "qsrevamp_vm",
-			Fixture:           "arcBootedQsRevampEnabled",
-			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 	})
 }
@@ -202,21 +192,9 @@ func testExpandNotification(ctx, cleanupCtx context.Context, tconn *chrome.TestC
 		return errors.Wrap(err, "failed to compose a notification")
 	}
 
-	// TODO(b/290289663): Remove this check once qsRevamp is launched.
-	qsRevampEnabled, err := quicksettings.QsRevampEnabled(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get QsRevamp state")
-	}
-	if qsRevampEnabled {
-		// Open the notification center to ensure the notification is showing.
-		if err := quicksettings.ShowNotificationCenter(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to show notification center")
-		}
-	} else {
-		if err := quicksettings.ShowWithRetry(ctx, tconn, 10*time.Second); err != nil {
-			return errors.Wrap(err, "failed to open Quick Settings")
-		}
-		defer quicksettings.Hide(cleanupCtx, tconn)
+	// Open the notification center to ensure the notification is showing.
+	if err := quicksettings.ShowNotificationCenter(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to show notification center")
 	}
 
 	// Wait until the ARC notification surface gets ready
@@ -242,21 +220,9 @@ func testCloseNotification(ctx, cleanupCtx context.Context, tconn *chrome.TestCo
 		return errors.Wrap(err, "failed to compose a notification")
 	}
 
-	// TODO(b/290289663): Remove this check once qsRevamp is launched.
-	qsRevampEnabled, err := quicksettings.QsRevampEnabled(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get QsRevamp state")
-	}
-	if qsRevampEnabled {
-		// Open the notification center to ensure the notification is showing.
-		if err := quicksettings.ShowNotificationCenter(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to show notification center")
-		}
-	} else {
-		if err := quicksettings.ShowWithRetry(ctx, tconn, 10*time.Second); err != nil {
-			return errors.Wrap(err, "failed to open Quick Settings")
-		}
-		defer quicksettings.Hide(cleanupCtx, tconn)
+	// Open the notification center to ensure the notification is showing.
+	if err := quicksettings.ShowNotificationCenter(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to show notification center")
 	}
 
 	// Wait until the ARC notification surface gets ready

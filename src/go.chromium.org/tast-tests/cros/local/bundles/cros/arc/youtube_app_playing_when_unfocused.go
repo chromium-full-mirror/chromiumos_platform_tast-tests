@@ -33,7 +33,7 @@ func init() {
 		BugComponent: "b:1052117", // ChromeOS > Software > ARC++ > EngProd
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "arc"},
-		Fixture:      "arcBootedWithPlayStoreQsRevampEnabled",
+		Fixture:      "arcBootedWithPlayStore",
 		Timeout:      3*time.Minute + apputil.InstallationTimeout,
 	})
 }

@@ -218,32 +218,6 @@ func init() {
 	fixtureConfig.PlayStoreOptin = true
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		return []chrome.Option{
-			chrome.EnableFeatures("QsRevamp"),
-			chrome.ExtraArgs(DisableSyncFlags()...),
-			chrome.UnRestrictARCCPU(),
-			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-		}, nil
-	}
-	// arcBootedWithPlayStoreQsRevampEnabled is similar to fixture arcBootedWithPlayStore and has quick settings revamp enabled.
-	testing.AddFixture(&testing.Fixture{
-		Name: "arcBootedWithPlayStoreQsRevampEnabled",
-		Desc: "ARC is booted with sync flags disabled and quick settings revamp enabled",
-		Vars: []string{"ui.gaiaPoolDefault"},
-		Contacts: []string{
-			"jamescook@google.com",
-			"cros-status-area-eng@google.com",
-		},
-		Impl:            NewArcBootedFixture(fixtureConfig),
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
-		ResetTimeout:    ResetTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	fixtureConfig = DefaultBootedFixtureConfig()
-	fixtureConfig.PlayStoreOptin = true
-	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return []chrome.Option{
 			chrome.DisableFeatures("Floss"),
 			chrome.ExtraArgs(DisableSyncFlags()...),
 			chrome.UnRestrictARCCPU(),
@@ -542,29 +516,6 @@ func init() {
 		Contacts: []string{
 			"jasongustaman@google.com",
 			"cros-networking@google.com",
-		},
-		Impl:            NewArcBootedFixture(fixtureConfig),
-		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
-		ResetTimeout:    ResetTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	fixtureConfig = DefaultBootedFixtureConfig()
-	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return []chrome.Option{
-			chrome.ARCEnabled(),
-			chrome.UnRestrictARCCPU(),
-			chrome.EnableFeatures("QsRevamp"),
-		}, nil
-	}
-	// arcBootedQsRevampEnabled is similar to fixture arcBooted and has quick settings revamp enabled.
-	testing.AddFixture(&testing.Fixture{
-		Name: "arcBootedQsRevampEnabled",
-		Desc: "ARC is booted with quick settings revamp enabled",
-		Contacts: []string{
-			"jamescook@google.com",
-			"cros-status-area-eng@google.com",
 		},
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,

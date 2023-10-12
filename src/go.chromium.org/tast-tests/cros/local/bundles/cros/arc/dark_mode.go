@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "b:537221",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
-		Fixture:      "arcBootedQsRevampEnabled",
+		Fixture:      "arcBooted",
 		Timeout:      chrome.GAIALoginTimeout + arcpkg.BootTimeout + 120*time.Second,
 	})
 }

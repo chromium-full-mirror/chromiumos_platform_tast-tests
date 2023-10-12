@@ -44,7 +44,7 @@ func init() {
 		Data:         []string{bundlingNotificationApkFileName},
 		SoftwareDeps: []string{"chrome", "arc"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "arcBootedQsRevampEnabled",
+		Fixture:      "arcBooted",
 	})
 }
 

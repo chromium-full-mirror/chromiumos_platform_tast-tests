@@ -53,7 +53,7 @@ func init() {
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome", "arc"},
-		Fixture:      "arcBootedQsRevampEnabled",
+		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline", "group:audio"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{

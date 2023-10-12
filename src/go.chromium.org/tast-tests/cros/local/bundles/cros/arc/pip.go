@@ -118,7 +118,7 @@ func init() {
 			Val:               pipContainerTests,
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_container"},
-			Fixture:           "arcBootedQsRevampEnabled",
+			Fixture:           "arcBooted",
 		}, {
 			Name:              "lacros",
 			Val:               pipContainerLacrosTests,
@@ -130,7 +130,7 @@ func init() {
 			Val:               pipVMTests,
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Fixture:           "arcBootedQsRevampEnabled",
+			Fixture:           "arcBooted",
 		}, {
 			Name:              "lacros_vm",
 			Val:               pipVMLacrosTests,

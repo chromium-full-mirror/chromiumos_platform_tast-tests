@@ -47,7 +47,7 @@ func init() {
 		Data:         []string{testfile},
 		// There are two apps to be installed in this case.
 		Timeout: 2*time.Minute + 2*apputil.InstallationTimeout,
-		Fixture: "arcBootedWithPlayStoreQsRevampEnabled",
+		Fixture: "arcBootedWithPlayStore",
 	})
 }
 
