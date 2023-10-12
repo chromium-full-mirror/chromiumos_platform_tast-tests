@@ -30,7 +30,7 @@ func init() {
 		// Three subtests each have 200s timeout and one subtest have 300s timeout.
 		// 200s * 4 + 300s = 19 minutes (rounded up)
 		Timeout: 19 * time.Minute,
-		Fixture: "ccaTestBridgeReadyWithTimeLapse",
+		Fixture: "ccaTestBridgeReady",
 	})
 }
 

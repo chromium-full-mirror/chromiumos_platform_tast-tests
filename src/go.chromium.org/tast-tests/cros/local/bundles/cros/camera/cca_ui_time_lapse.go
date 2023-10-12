@@ -25,7 +25,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Timeout:      10 * time.Minute,
-		Fixture:      "ccaLaunchedWithTimeLapseOnFakeHALCamera",
+		Fixture:      "ccaLaunchedWithFakeHALCamera",
 	})
 }
 

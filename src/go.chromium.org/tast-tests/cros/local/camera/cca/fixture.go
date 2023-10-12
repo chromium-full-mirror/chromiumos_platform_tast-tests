@@ -40,10 +40,6 @@ const (
 
 type feature string
 
-const (
-	timeLapse feature = "CameraAppTimeLapse"
-)
-
 var (
 	recordScreen = testing.RegisterVarString(
 		"cca.record_screen",
@@ -260,30 +256,6 @@ func init() {
 		Contacts: []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org", "chromeos-camera-eng@google.com"},
 		// TODO(b/290826477): Fix users of this fixture for the new quick settings UI (QsRevamp).
 		Impl:            &fixture{forceEnableAutoFraming: true, disableFeatures: []feature{"QsRevamp"}},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
-	// TODO(b/236800499): Remove this fixture once the feature flag is enabled by default.
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaLaunchedWithTimeLapseOnFakeHALCamera",
-		Desc:            "Launched CCA with fake camera HAL input and with time-lapse flag enabled",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
-		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{timeLapse}, launchCCA: true},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		PreTestTimeout:  ccaSetUpTimeout,
-		PostTestTimeout: ccaTearDownTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
-	// TODO(b/236800499): Remove this fixture once the feature flag is enabled by default.
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaTestBridgeReadyWithTimeLapse",
-		Desc:            "Set up test bridge for CCA with time-lapse flag enabled",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
-		Impl:            &fixture{enableFeatures: []feature{timeLapse}},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: tearDownTimeout,
