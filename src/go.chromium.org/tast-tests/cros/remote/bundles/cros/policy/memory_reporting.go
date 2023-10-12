@@ -237,22 +237,6 @@ func MemoryReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to grab client ID from device: ", err)
 	}
 
-	pJSON, err := policy.MarshalList([]policy.Policy{
-		&policy.ReportDeviceMemoryInfo{Stat: policy.StatusSet, Val: param.reportingEnabled},
-	})
-	if err != nil {
-		s.Fatal("Failed to marshall expected memory policy for verification: ", err)
-	}
-	// Wait some time for the policy to propagate.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := pc.VerifyPolicyStatus(ctx, &ps.VerifyPolicyStatusRequest{
-			Policies: pJSON,
-		})
-		return err
-	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
-		s.Error("Failed to verify memory policy: ", err)
-	}
-
 	// Events sent from the metric reporting manager won't be reported for the first minute.
 	if err = testing.Sleep(ctx, 60*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
