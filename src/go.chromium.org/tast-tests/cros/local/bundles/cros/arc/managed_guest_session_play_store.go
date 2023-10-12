@@ -35,7 +35,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
 		SoftwareDeps: []string{"reboot", "chrome", "play_store"},
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      5 * time.Minute,
 		VarDeps: []string{
 			arcent.LoginPoolVar,
@@ -46,22 +46,11 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
-			},
-			{
-				Name:              "betty",
-				ExtraSoftwareDeps: []string{"android_container", "qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_container"},
 			},
 			{
 				Name:              "vm",
-				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
-			},
-			{
-				Name:              "vm_betty",
-				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm"},
 			}},
 	})
 }
