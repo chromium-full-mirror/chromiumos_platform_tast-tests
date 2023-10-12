@@ -65,6 +65,8 @@ func (t *timestampSource) Start(_ context.Context) error {
 	} else {
 		t.begin = *t.customStartTime
 	}
+	t.metric.HasStartTs = true
+	t.metric.StartTs = t.begin
 	return nil
 }
 

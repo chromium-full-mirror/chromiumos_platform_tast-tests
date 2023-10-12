@@ -339,6 +339,9 @@ func TestTimestampSource(t *testing.T) {
 		t.Error("Failed to create Timeline: ", err)
 	}
 
+	startTs := time.Unix(3, 0)
+	clock.Advance(startTs.Sub(time.Unix(0, 0)))
+
 	if err := tl.Start(ctx); err != nil {
 		t.Error("Failed to start timeline: ", err)
 	}
@@ -382,6 +385,19 @@ func TestTimestampSource(t *testing.T) {
 	}
 
 	saveAndCompare(t, p, "testdata/TestTimestampSource.json")
+	for metric := range p.GetValues() {
+		if metric.Name == "t" {
+			if !metric.HasStartTs {
+				t.Error("Metric t is missing start timestamp")
+			} else if !metric.StartTs.Equal(startTs) {
+				t.Error("Metric t has wrong start timestamp: ", metric.StartTs)
+			}
+		} else {
+			if metric.HasStartTs {
+				t.Error("Data metric should not have start timestamp")
+			}
+		}
+	}
 }
 
 func TestTimelineStartRecordingTwice(t *testing.T) {
