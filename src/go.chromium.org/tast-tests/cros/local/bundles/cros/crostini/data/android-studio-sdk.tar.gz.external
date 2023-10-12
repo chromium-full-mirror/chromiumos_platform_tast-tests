@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/crostini/android-studio-sdk-20231010.tar.gz",
+  "size": 275097600,
+  "sha256sum": "5e8ced7e1ec674ce05ce6ae104f8320dec93d1c85952fd3acdb3006b86fc6c0c"
+}
