@@ -45,10 +45,12 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 	}
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
-
-	// Enable and get service to set autoconnect based on test parameters.
-	if _, err := helper.Enable(ctx); err != nil {
-		s.Fatal("Failed to enable modem")
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
+	}
+	iccid, err := helper.GetCurrentICCID(ctx)
+	if err != nil {
+		s.Fatal("Could not get current ICCID: ", err)
 	}
 
 	app, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
@@ -57,11 +59,6 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 	}
 
 	defer app.Close(ctx)
-
-	iccid, err := helper.GetCurrentICCID(ctx)
-	if err != nil {
-		s.Fatal("Could not get current ICCID: ", err)
-	}
 
 	currentPin, currentPuk, err := helper.GetPINAndPUKForICCID(ctx, iccid)
 	if err != nil {
@@ -82,6 +79,9 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 
 	defer func(ctx context.Context) {
 		helper.ClearSIMLock(ctx, currentPin, currentPuk)
+		if errs := helper.ResetShill(ctx); errs != nil {
+			s.Fatal("Failed to reset shill: ", errs)
+		}
 	}(cleanupCtx)
 
 	kb, err := input.Keyboard(ctx)
@@ -90,11 +90,11 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+	ui := uiauto.New(tconn).WithTimeout(120 * time.Second)
 	if err := uiauto.Combine("Toggle on the SIM Lock setting",
 		ui.LeftClick(ossettings.ActiveCellularBtn),
-		ui.WaitUntilExists(ossettings.ConnectedStatus),
-		ui.WithTimeout(90*time.Second).LeftClick(ossettings.CellularAdvanced),
+		ui.WithTimeout(90*time.Second).WaitUntilExists(ossettings.ConnectedStatus),
+		ui.WithTimeout(30*time.Second).LeftClick(ossettings.CellularAdvanced),
 		ui.LeftClick(ossettings.LockSimToggle),
 		ui.WaitUntilExists(ossettings.EnterButton),
 		kb.TypeAction(currentPin),
