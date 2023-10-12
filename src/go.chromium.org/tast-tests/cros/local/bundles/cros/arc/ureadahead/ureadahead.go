@@ -24,7 +24,7 @@ const (
 	MinHostPackSizeKB = 300 * 1024
 
 	// MinGuestPackSizeKB is set from lab data showing guest ureadahead pack could be smaller than host.
-	MinGuestPackSizeKB = 100 * 1024
+	MinGuestPackSizeKB = 200 * 1024
 )
 
 // DumpHostPack dumps the ureadahead pack in the host OS. The pack path can be
