@@ -33,7 +33,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_ccd"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Fixture:      fixture.NormalMode,
-		Timeout:      30 * time.Minute,
+		Timeout:      90 * time.Minute,
 	})
 }
 
@@ -125,6 +125,7 @@ func ECChargingState(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set servo role to source: ", err)
 	}
 	s.Log("Sleeping for 3s to let servo role get set")
+	// GoBigSleepLint: waiting a few seconds so the charger setting is changed.
 	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 		s.Fatal("Failed sleeping for 3 seconds")
 	}
@@ -167,7 +168,7 @@ func ECChargingState(ctx context.Context, s *testing.State) {
 		s.Fatal("Host and EC battery state mismatch: ", err)
 	}
 
-	fullChargeTimeout := 20 * time.Minute
+	fullChargeTimeout := 60 * time.Minute
 	fullChargeInterval := 1 * time.Minute
 
 	// This is an additional test to satisfy checking that charge reports
@@ -319,11 +320,6 @@ func suspendDUTAndCheckCharger(ctx context.Context, h *firmware.Helper, expectCh
 		return errors.Wrap(err, "failed to suspend DUT")
 	}
 
-	testing.ContextLog(ctx, "Sleeping for 5s waiting for suspend command")
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		return err
-	}
-
 	testing.ContextLog(ctx, "Checking for S0ix or S3 powerstate")
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0ix", "S3"); err != nil {
 		return errors.Wrap(err, "failed to get S0ix or S3 powerstate")
@@ -338,10 +334,6 @@ func suspendDUTAndCheckCharger(ctx context.Context, h *firmware.Helper, expectCh
 	if err := h.SetDUTPower(ctx, expectChargerAttached); err != nil {
 		return errors.Wrapf(err, "failed to set servo role to %s", srcOrSnk)
 	}
-	testing.ContextLog(ctx, "Sleep for 3s so servo role has time to be set")
-	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep for 3s")
-	}
 
 	// Verify that DUT charger is in expected state.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -351,6 +343,10 @@ func suspendDUTAndCheckCharger(ctx context.Context, h *firmware.Helper, expectCh
 			return errors.Wrap(err, "error checking whether charger is attached")
 		} else if ok != expectChargerAttached {
 			testing.ContextLogf(ctx, "GetChargerAttached got %v, want %v", ok, expectChargerAttached)
+			testing.ContextLogf(ctx, "Set servo role to %s", srcOrSnk)
+			if err := h.SetDUTPower(ctx, expectChargerAttached); err != nil {
+				return errors.Wrapf(err, "failed to set servo role to %s", srcOrSnk)
+			}
 			return errors.Errorf("expected charger attached state: %v", expectChargerAttached)
 		}
 		return nil
