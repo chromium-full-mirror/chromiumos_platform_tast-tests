@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:1253115",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInQsRevampEnabled",
+		Fixture:      "chromeLoggedIn",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-936ea36a-b93f-4127-9260-9975e69365fa",

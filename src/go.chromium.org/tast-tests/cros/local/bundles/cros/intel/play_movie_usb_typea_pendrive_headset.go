@@ -40,7 +40,7 @@ func init() {
 		Attr:         []string{"group:intel-usb-set1"},
 		Data:         []string{"bear-320x240.h264.mp4"},
 		Vars:         []string{"intel.usbDetectionName"},
-		Fixture:      "chromeLoggedInQsRevampEnabled",
+		Fixture:      "chromeLoggedIn",
 		Timeout:      7 * time.Minute,
 	})
 }

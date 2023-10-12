@@ -38,7 +38,7 @@ func init() {
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Attr:         []string{"group:mainline", "group:intel-nda"},
-		Fixture:      "chromeLoggedInQsRevampEnabled",
+		Fixture:      "chromeLoggedIn",
 	})
 }
 

@@ -36,7 +36,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Data:         []string{"audio.flac", "audio.m4a", "audio.ogg", "audio.wav", "audio.mp3", "audio.5.1.mp3"},
-		Fixture:      "chromeLoggedInQsRevampEnabled",
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"audio_stable"},

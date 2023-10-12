@@ -41,11 +41,11 @@ func init() {
 			Value: "screenplay-39d4666a-39dc-40ed-a918-75acf57335a0",
 		}},
 		Params: []testing.Param{{
-			Fixture: "chromeLoggedInQsRevampEnabled",
+			Fixture: "chromeLoggedIn",
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			Fixture:           "lacrosQsRevampEnabled",
+			Fixture:           "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               browser.TypeLacros,
 		}},

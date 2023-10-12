@@ -38,7 +38,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-39d4666a-39dc-40ed-a918-75acf57335a0",
 		}},
-		Fixture:      "chromeLoggedInQsRevampEnabled",
+		Fixture:      "chromeLoggedIn",
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.SkipOnModel("kakadu", "atlas")),
 	})
 }

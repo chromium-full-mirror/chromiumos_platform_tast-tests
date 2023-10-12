@@ -26,7 +26,7 @@ func init() {
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInQsRevampEnabled",
+		Fixture:      "chromeLoggedIn",
 		Timeout:      10 * time.Minute,
 	})
 }

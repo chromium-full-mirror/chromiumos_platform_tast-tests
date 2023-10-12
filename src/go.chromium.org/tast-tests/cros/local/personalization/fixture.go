@@ -35,22 +35,6 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
-	// TODO(b/252870625): Delete this fixture when QsRevamp is on-by-default in
-	// Tast tests.
-	testing.AddFixture(&testing.Fixture{
-		Name: "personalizationWithClamshellQsRevampEnabled",
-		Desc: "Login with Personalization Hub in clamshell mode",
-		Contacts: []string{
-			"thuongphan@google.com",
-			"chromeos-sw-engprod@google.com",
-			"assistive-eng@google.com",
-		},
-		Impl:            &clamshellFixture{},
-		Parent:          "chromeLoggedInQsRevampEnabled",
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "personalizationWithGaiaLogin",
 		Desc: "Login using Gaia account with Personalization Hub enabled",

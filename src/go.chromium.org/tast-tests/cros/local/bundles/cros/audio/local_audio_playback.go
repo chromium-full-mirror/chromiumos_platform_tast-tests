@@ -30,7 +30,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInQsRevampEnabled",
+		Fixture:      "chromeLoggedIn",
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Params: []testing.Param{{
 			Name:      "internal_speaker",

@@ -34,18 +34,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-39d4666a-39dc-40ed-a918-75acf57335a0",
 		}},
-		Params: []testing.Param{
-			{
-				Name:    "qs_revamp_enabled",
-				Fixture: "chromeLoggedInQsRevampEnabled",
-				Val:     true,
-			},
-			{
-				Name:    "qs_revamp_disabled",
-				Fixture: "chromeLoggedIn",
-				Val:     false,
-			},
-		},
+		Fixture: "chromeLoggedIn",
 	})
 }
 

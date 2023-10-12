@@ -45,7 +45,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),
 		Attr:         []string{"group:mainline"},
 		Timeout:      4 * time.Minute,
-		Fixture:      "chromeLoggedInQsRevampEnabled",
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{
 			{
 				Name: "gain",

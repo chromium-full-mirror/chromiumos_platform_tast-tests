@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:1253115",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInQsRevampEnabled",
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{
 			{
 				Name: "fullscreen",
