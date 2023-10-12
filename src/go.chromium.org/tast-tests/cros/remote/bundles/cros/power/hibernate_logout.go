@@ -8,11 +8,9 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast/core/testing"
-
 	"go.chromium.org/tast-tests/cros/common/tape"
-
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/power/hibernate"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -30,18 +28,25 @@ func init() {
 }
 
 func HibernateLogout(ctx context.Context, s *testing.State) {
-	ht := hibernate.NewTester(ctx, s, hibernate.CycleMaxDuration)
+	ht, err := hibernate.NewTester(ctx, s, hibernate.CycleMaxDuration)
+	if err != nil {
+		s.Fatal("Unable to create new tester: ", err)
+	}
 
 	defer ht.CloseGRPCClient(ctx)
 
 	// log in with a user account
-	ht.PreHibernateSteps(ctx)
+	if err := ht.PreHibernateSteps(ctx); err != nil {
+		s.Fatal("pre-hibernate steps failed: ", err)
+	}
 
 	if !ht.HiberimageExists(ctx) {
 		s.Fatal("LV 'hiberimage' does not exist after user login")
 	}
 
-	ht.Logout(ctx)
+	if err := ht.Logout(ctx); err != nil {
+		s.Fatal("logout failed: ", err)
+	}
 
 	if ht.HiberimageExists(ctx) {
 		s.Fatal("LV 'hiberimage' still exists after user logged out")

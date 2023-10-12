@@ -16,15 +16,14 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"go.chromium.org/tast/core/dut"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/rpc"
-	"go.chromium.org/tast/core/testing"
-
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/crosserverutil"
 	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -57,13 +56,13 @@ type Tester struct {
 }
 
 // NewTester creates and returns an instance of Tester.
-func NewTester(ctx context.Context, s *testing.State, maxTestDuration time.Duration) *Tester {
+func NewTester(ctx context.Context, s *testing.State, maxTestDuration time.Duration) (*Tester, error) {
 	testAccount, err := leaseTestAccount(ctx, s.RequiredVar(tape.ServiceAccountVar), maxTestDuration)
 	if err != nil {
-		s.Fatal("Failed to lease test account: ", err)
+		return nil, errors.Wrap(err, "Unable to lease test account")
 	}
 
-	return &Tester{dut: s.DUT(), userAccount: testAccount, isFirstCycle: true, logger: s, rpcHint: s.RPCHint()}
+	return &Tester{dut: s.DUT(), userAccount: testAccount, isFirstCycle: true, logger: s, rpcHint: s.RPCHint()}, nil
 }
 
 // HibernateAndResume performs a full hibernate cycle of hibernating the system
@@ -71,80 +70,110 @@ func NewTester(ctx context.Context, s *testing.State, maxTestDuration time.Durat
 //
 // This function can serve as a template for other hibernate tests that
 // only perform a partial cycle (e.g. due to forced errors).
-func (t *Tester) HibernateAndResume(ctx context.Context) {
+func (t *Tester) HibernateAndResume(ctx context.Context) error {
 	defer t.CloseGRPCClient(ctx)
 
-	t.PreHibernateSteps(ctx)
-
-	if t.isFirstCycle && t.urlsForTabs != nil {
-		t.openChromeTabs(ctx)
+	if err := t.PreHibernateSteps(ctx); err != nil {
+		return errors.Wrap(err, "pre-hibernate steps failed")
 	}
 
-	t.hibernateAndReboot(ctx)
+	if t.isFirstCycle && t.urlsForTabs != nil {
+		if err := t.openChromeTabs(ctx); err != nil {
+			return errors.Wrap(err, "failed to open chrome tabs")
+		}
+	}
 
-	t.resumeFromHibernate(ctx)
+	if err := t.hibernateAndReboot(ctx); err != nil {
+		return errors.Wrap(err, "failed to hibernate and reboot")
+	}
 
-	t.postResumeSteps(ctx)
+	if err := t.resumeFromHibernate(ctx); err != nil {
+		return errors.Wrap(err, "resume from hibernate failed")
+	}
+
+	if err := t.postResumeSteps(ctx); err != nil {
+		return errors.Wrap(err, "post resume steps failed")
+	}
 
 	if t.urlsForTabs != nil {
 		// verify previously open tabs still exist
 		if err := t.login(ctx, true, true); err != nil {
-			t.logger.Fatal("Failed to login: ", err)
+			return errors.Wrap(err, "user login failed on resume")
 		}
 
-		t.verifyOpenChromeTabs(ctx)
+		if err := t.verifyOpenChromeTabs(ctx); err != nil {
+			return errors.Wrap(err, "verification of open tabs failed")
+		}
 	}
 
 	t.isFirstCycle = false
+	return nil
 }
 
 // PreHibernateSteps prepares the system for hibernation. This includes checks
 // and prework for later checks.
-func (t *Tester) PreHibernateSteps(ctx context.Context) {
+func (t *Tester) PreHibernateSteps(ctx context.Context) error {
 	// Create a new context for this hibernate cycle.
 	ctxCycle, cancel := context.WithTimeout(ctx, CycleMaxDuration)
 	defer cancel()
 
 	if t.isFirstCycle {
 		// Make sure the system is in a consistent state.
-		t.reboot(ctxCycle)
+		if err := t.reboot(ctxCycle); err != nil {
+			return err
+		}
 	}
 
 	// Write the id of this hibernate cycle to tmpfs, so we can confirm
 	// that we read the same value on resume.
-	t.writeCycleID(ctxCycle)
+	if err := t.writeCycleID(ctxCycle); err != nil {
+		return err
+	}
 
 	// Get a new GRPC client after the reboot.
-	t.getGRPCClient(ctxCycle)
+	if err := t.getGRPCClient(ctxCycle); err != nil {
+		return err
+	}
 
 	if t.isFirstCycle {
 		// Log in with the user account that is used for hibernate.
 		if err := t.login(ctxCycle, false, false); err != nil {
-			t.logger.Fatal("Failed to login: ", err)
+			return err
 		}
 
 		// Wait for 'hiberman resume' to complete.
-		t.waitHibermanResumeDone(ctxCycle)
+		if err := t.waitHibermanResumeDone(ctxCycle); err != nil {
+			return err
+		}
 	}
 
-	t.checkForFileSystemCorruptions(ctx, t.getKernelLog(ctx))
+	l, err := t.getKernelLog(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := t.checkForFileSystemCorruptions(ctx, l); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Logout logs a signed in user out of the system.
-func (t *Tester) Logout(ctx context.Context) {
+func (t *Tester) Logout(ctx context.Context) error {
 	cl, err := rpc.Dial(ctx, t.dut, t.rpcHint)
 	if err != nil {
-		t.logger.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
 	}
 
 	upstartService := platform.NewUpstartServiceClient(cl.Conn)
-
 	_, err = upstartService.StopJob(ctx, &platform.StopJobRequest{
 		JobName: "ui",
 	})
 	if err != nil {
-		t.logger.Fatal("Failed to stop 'ui' job: ", err)
+		return errors.Wrap(err, "failed to stop 'ui' job")
 	}
+
+	return nil
 }
 
 // HiberimageExists returns true if the 'hiberimage' logical volume exists,
@@ -168,12 +197,12 @@ func (t *Tester) HiberimageExists(ctx context.Context) bool {
 }
 
 // CloseGRPCClient closes the associated GRPC client.
-func (t *Tester) CloseGRPCClient(ctx context.Context) {
+func (t *Tester) CloseGRPCClient(ctx context.Context) error {
 	if t.grpcClient == nil {
-		return
+		return nil
 	}
 
-	t.grpcClient.Close(ctx)
+	return t.grpcClient.Close(ctx)
 }
 
 // SetURLsForTabs allows to specify a list of URLs that should be opened
@@ -182,19 +211,22 @@ func (t *Tester) SetURLsForTabs(urlsForTabs []string) {
 	t.urlsForTabs = urlsForTabs
 }
 
-func (t *Tester) disableConsoleSuspend(ctx context.Context) {
+func (t *Tester) disableConsoleSuspend(ctx context.Context) error {
 	cmdCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	t.logger.Log("Disabling console_suspend")
-	out, err := t.dut.Conn().CommandContext(cmdCtx, "/bin/sh", "-c", "echo N | sudo tee /sys/module/printk/parameters/console_suspend").CombinedOutput()
-	if err != nil {
-		t.logger.Logf("Disabling console_suspend failed: %v %s", err, out)
+	if out, err := t.dut.Conn().CommandContext(cmdCtx, "/bin/sh", "-c", "echo N | sudo tee /sys/module/printk/parameters/console_suspend").CombinedOutput(); err != nil {
+		return errors.Wrapf(err, "Disabling console_suspend failed: %s", out)
 	}
+
+	return nil
 }
 
-func (t *Tester) hibernateAndReboot(ctx context.Context) {
-	t.disableConsoleSuspend(ctx)
+func (t *Tester) hibernateAndReboot(ctx context.Context) error {
+	if err := t.disableConsoleSuspend(ctx); err != nil {
+		return err
+	}
 
 	cmdCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
@@ -207,49 +239,76 @@ func (t *Tester) hibernateAndReboot(ctx context.Context) {
 		if strings.Contains(err.Error(), context.DeadlineExceeded.Error()) ||
 			strings.Contains(err.Error(), (&ssh.ExitMissingError{}).Error()) {
 			// The command is expected to time out if hibernate was successful.
-			return
+			return nil
 		}
-		t.logger.Fatal("failed to hibernate: ", err)
+
+		return errors.Wrap(err, "failed to hibernate")
 	}
 
-	// no timeout or error, something went wrong.
-	t.logger.Fatal("\"hiberman hibernate -r\" should disconnect the DUT")
+	return errors.New("'hiberman -r' did not cause a reboot")
 }
 
-func (t *Tester) resumeFromHibernate(ctx context.Context) {
-	t.waitForDutToBoot(ctx)
+func (t *Tester) resumeFromHibernate(ctx context.Context) error {
+	if err := t.waitForDutToBoot(ctx); err != nil {
+		return err
+	}
 
 	// a new GRPC client is needed after the reboot
-	t.getGRPCClient(ctx)
+	if err := t.getGRPCClient(ctx); err != nil {
+		return err
+	}
 
 	// Console suspend is re-enabled on reboot, disable it again.
-	t.disableConsoleSuspend(ctx)
+	if err := t.disableConsoleSuspend(ctx); err != nil {
+		return err
+	}
 
-	t.loginToResume(ctx)
+	if err := t.loginToResume(ctx); err != nil {
+		return err
+	}
 
 	// a new GRPC client is needed after the resume from hibernate
-	t.getGRPCClient(ctx)
+	if err := t.getGRPCClient(ctx); err != nil {
+		return nil
+	}
+
+	return nil
 }
 
-func (t *Tester) postResumeSteps(ctx context.Context) {
+func (t *Tester) postResumeSteps(ctx context.Context) error {
 	// Check the kernel log for entries that indicate file system corruption. Additionally,
 	// we will check for integrity errors. We do these checks first because we want to
 	// ensure that the original cause is found early rather than failing later
 	// due to a mismatched cycle id.
-	kernelLog := t.getKernelLog(ctx)
-	t.checkForFileSystemCorruptions(ctx, kernelLog)
-	t.checkforHibernateImageErrors(ctx, kernelLog)
+	kernelLog, err := t.getKernelLog(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := t.checkForFileSystemCorruptions(ctx, kernelLog); err != nil {
+		return err
+	}
+
+	if err := t.checkforHibernateImageErrors(ctx, kernelLog); err != nil {
+		return err
+	}
 
 	// Verify that the hibernate cycle id that we wrote earlier to
 	// tmpfs can be read back.
-	t.verifyCycleID(ctx)
+	if err := t.verifyCycleID(ctx); err != nil {
+		return err
+	}
 
 	// Verify that the kernel log contains the expected entries for
 	// a hibernate/resume cycle
-	t.verifyKernelHibernateRestoreLogs(ctx, kernelLog)
+	if err := t.verifyKernelHibernateRestoreLogs(ctx, kernelLog); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (t *Tester) loginToResume(ctx context.Context) {
+func (t *Tester) loginToResume(ctx context.Context) error {
 	loginCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
@@ -259,7 +318,7 @@ func (t *Tester) loginToResume(ctx context.Context) {
 	if err != nil &&
 		!strings.Contains(err.Error(), context.DeadlineExceeded.Error()) &&
 		!strings.Contains(err.Error(), "rpcc: the connection is closing") {
-		t.logger.Fatal("unexpected login error: ", err)
+		return errors.Wrap(err, "unexpected error type from login")
 	}
 
 	// Wait for the hibernated system to resume, otherwise we might reconnect
@@ -267,7 +326,11 @@ func (t *Tester) loginToResume(ctx context.Context) {
 	// the purpose.
 	t.sleepWithContext(ctx, 20*time.Second)
 
-	t.reconnectDUT(ctx)
+	if err := t.reconnectDUT(ctx); err != nil {
+		return errors.Wrap(err, "failed to reconnect to the DUT")
+	}
+
+	return nil
 }
 
 func (t *Tester) login(ctx context.Context, reuseSession, keepState bool) error {
@@ -289,16 +352,18 @@ func (t *Tester) login(ctx context.Context, reuseSession, keepState bool) error 
 	return nil
 }
 
-func (t *Tester) reconnectDUT(ctx context.Context) {
+func (t *Tester) reconnectDUT(ctx context.Context) error {
 	waitConnectCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	if err := t.dut.WaitConnect(waitConnectCtx); err != nil {
-		t.logger.Fatal("Failed to reconnect: ", err)
+		return errors.Wrap(err, "reconnecting to the DUT failed")
 	}
+
+	return nil
 }
 
-func (t *Tester) checkForFileSystemCorruptions(ctx context.Context, kernelLog string) {
+func (t *Tester) checkForFileSystemCorruptions(ctx context.Context, kernelLog string) error {
 	fileCorruptionPatterns := []string{
 		"space map common: bitmap check failed:",
 		"sm_bitmap validator check failed",
@@ -322,13 +387,14 @@ func (t *Tester) checkForFileSystemCorruptions(ctx context.Context, kernelLog st
 	re := regexp.MustCompile(strings.Join(fileCorruptionPatterns, "|"))
 	match := re.FindString(kernelLog)
 	if match != "" {
-		t.logger.Fatalf("the kernel log has entries that indicate system corruptions: '%s'", match)
+		return errors.Errorf("the kernel log has entries that indicate system corruptions: %q", match)
 	}
 
 	t.logger.Log("No file corruption log entries found")
+	return nil
 }
 
-func (t *Tester) checkforHibernateImageErrors(ctx context.Context, kernelLog string) {
+func (t *Tester) checkforHibernateImageErrors(ctx context.Context, kernelLog string) error {
 	patterns := []string{
 		"Unrecognized hibernate image header format!",
 		"hibernation: Image mismatch: architecture specific data",
@@ -338,12 +404,14 @@ func (t *Tester) checkforHibernateImageErrors(ctx context.Context, kernelLog str
 	re := regexp.MustCompile(strings.Join(patterns, "|"))
 	match := re.FindString(kernelLog)
 	if match != "" {
-		t.logger.Fatalf("the kernel log has entries that indicate an error: '%s'", match)
+		return errors.Errorf("the kernel log has entries that indicate an error: %q", match)
 	}
+
 	t.logger.Log("No unexpected kernel error entries were found")
+	return nil
 }
 
-func (t *Tester) verifyKernelHibernateRestoreLogs(ctx context.Context, kernelLog string) {
+func (t *Tester) verifyKernelHibernateRestoreLogs(ctx context.Context, kernelLog string) error {
 	expectedEntries := []string{
 		// suspend
 		"Freezing user space processes ...",
@@ -356,58 +424,65 @@ func (t *Tester) verifyKernelHibernateRestoreLogs(ctx context.Context, kernelLog
 
 	for _, entry := range expectedEntries {
 		if !strings.Contains(kernelLog, entry) {
-			t.logger.Fatalf("Expected entry not found in kernel log: '%s'", entry)
+			return errors.Errorf("expected entry not found in kernel log: %q", entry)
 		}
 	}
+
+	return nil
 }
 
-func (t *Tester) writeCycleID(ctx context.Context) {
+func (t *Tester) writeCycleID(ctx context.Context) error {
 	t.cycleID = rand.Uint32()
 	t.logger.Logf("Writing hibernate cycle id %d to %s", t.cycleID, hibernateCycleIDPath)
 
 	command := fmt.Sprintf("echo %d > %s", t.cycleID, hibernateCycleIDPath)
-	_, err := t.dut.Conn().CommandContext(ctx, "/bin/sh", "-c", command).Output()
-	if err != nil {
-		t.logger.Fatal("failed to write to hibernate cycle id: ", err)
+	if _, err := t.dut.Conn().CommandContext(ctx, "/bin/sh", "-c", command).Output(); err != nil {
+		return errors.Wrap(err, "failed to write to hibernate cycle id")
 	}
+
+	return nil
 }
 
-func (t *Tester) verifyCycleID(ctx context.Context) {
+func (t *Tester) verifyCycleID(ctx context.Context) error {
 	out, err := t.dut.Conn().CommandContext(ctx, "/bin/cat", hibernateCycleIDPath).Output()
 	if err != nil {
-		t.logger.Fatal("failed to read hibernate cycle id: resume from hibernate failed")
+		return errors.Wrapf(err, "Unable to read cycle ID from %s", hibernateCycleIDPath)
 	}
 
 	str := string(out[:])
 	str = strings.ReplaceAll(str, "\n", "")
 	result, err := strconv.ParseUint(str, 10, 32)
 	if err != nil {
-		t.logger.Fatal("failed to parse hibernate cycle id, content: ", str)
+		return errors.Wrapf(err, "Unable to parse cycle id %q", str)
 	}
 
 	cycleID := uint32(result)
-
 	if cycleID != t.cycleID {
-		t.logger.Fatalf("hibernate cycle id %d read from %s is incorrect. Expected value: %d",
-			cycleID, hibernateCycleIDPath, t.cycleID)
+		return errors.Errorf("hibernate cycle id %d read from %s is incorrect. Expected value: %d", cycleID, hibernateCycleIDPath, t.cycleID)
 	}
+
 	t.logger.Logf("Read correct hibernate cycle id %d from %s", cycleID, hibernateCycleIDPath)
+	return nil
 }
 
-func (t *Tester) getGRPCClient(ctx context.Context) {
+func (t *Tester) getGRPCClient(ctx context.Context) error {
 	if t.grpcClient != nil {
 		// Close the existing GRPC client before getting a new one
-		t.grpcClient.Close(ctx)
+		if err := t.grpcClient.Close(ctx); err != nil {
+			return errors.Wrap(err, "Unable to close existing grpc client")
+		}
 	}
 
 	var err error
 	t.grpcClient, err = crosserverutil.GetGRPCClient(ctx, t.dut)
 	if err != nil {
-		t.logger.Fatal("failed to connect to the GRPC server on the DUT: ", err)
+		return errors.Wrap(err, "failed to connect to the GRPC server on the DUT")
 	}
+
+	return nil
 }
 
-func (t *Tester) openChromeTabs(ctx context.Context) {
+func (t *Tester) openChromeTabs(ctx context.Context) error {
 	t.logger.Log("Opening tabs")
 
 	urls := t.urlsForTabs
@@ -417,14 +492,16 @@ func (t *Tester) openChromeTabs(ctx context.Context) {
 	for i := 0; i < len(urls); i++ {
 		res, err := svc.NewConn(ctx, &pb.NewConnRequest{Url: urls[i]})
 		if err != nil {
-			t.logger.Fatalf("failed to open page %v: %o", urls[i], err)
+			return errors.Wrapf(err, "failed to open page %v", urls[i])
 		}
 
 		t.tabTargetIDs[i] = res.TargetId
 	}
+
+	return nil
 }
 
-func (t *Tester) verifyOpenChromeTabs(ctx context.Context) {
+func (t *Tester) verifyOpenChromeTabs(ctx context.Context) error {
 	t.logger.Log("Verifying open tabs")
 
 	svc := pb.NewConnServiceClient(t.grpcClient.Conn)
@@ -433,9 +510,10 @@ func (t *Tester) verifyOpenChromeTabs(ctx context.Context) {
 
 		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
+
 		conn, err := svc.NewConnForTarget(ctx, &pb.NewConnForTargetRequest{TargetId: targetID})
 		if err != nil {
-			t.logger.Fatalf("failed to get connection for target %v failed: %o", targetID, err)
+			return errors.Wrapf(err, "failed to get connection for target %v", targetID)
 		}
 
 		t.logger.Log("Connected to target: ", targetID)
@@ -445,32 +523,38 @@ func (t *Tester) verifyOpenChromeTabs(ctx context.Context) {
 		}
 		_, err = svc.ActivateTarget(ctx, req)
 		if err != nil {
-			t.logger.Fatalf("Failed to activate target %v: %o", targetID, err)
+			return errors.Wrapf(err, "failed to activate target %v", targetID)
 		}
 	}
+
+	return nil
 }
 
-func (t *Tester) reboot(ctx context.Context) {
+func (t *Tester) reboot(ctx context.Context) error {
 	t.logger.Log("Starting reboot")
 
 	if err := t.dut.Reboot(ctx); err != nil {
-		t.logger.Fatal("Failed to reboot DUT: ", err)
+		return errors.Wrap(err, "failed to reboot DUT")
 	}
 
 	t.logger.Log("Reboot completed")
+	return nil
 }
 
-func (t *Tester) waitForDutToBoot(ctx context.Context) {
+func (t *Tester) waitForDutToBoot(ctx context.Context) error {
 	t.logger.Log("Waiting for DUT to boot")
 
 	waitConnectCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
+
 	if err := t.dut.WaitConnect(waitConnectCtx); err != nil {
-		t.logger.Fatal("Failed to reconnect: ", err)
+		return errors.Wrap(err, "failed to reconnect to DUT")
 	}
+
+	return nil
 }
 
-func (t *Tester) waitHibermanResumeDone(ctx context.Context) {
+func (t *Tester) waitHibermanResumeDone(ctx context.Context) error {
 	err := testing.Poll(ctx, func(ctx context.Context) error {
 		err := t.dut.Conn().CommandContext(ctx, "pidof", "hiberman").Run()
 		if err == nil {
@@ -480,18 +564,16 @@ func (t *Tester) waitHibermanResumeDone(ctx context.Context) {
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second})
 
-	if err != nil {
-		t.logger.Fatal(err)
-	}
+	return err
 }
 
-func (t *Tester) getKernelLog(ctx context.Context) string {
+func (t *Tester) getKernelLog(ctx context.Context) (string, error) {
 	out, err := t.dut.Conn().CommandContext(ctx, "dmesg", "--since", "1 minute ago").Output()
 	if err != nil {
-		t.logger.Fatal("Failed to get kernel log: ", err)
+		return "", err
 	}
 
-	return string(out[:])
+	return string(out[:]), nil
 }
 
 func (t *Tester) sleepWithContext(ctx context.Context, d time.Duration) {

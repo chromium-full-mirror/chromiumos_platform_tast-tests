@@ -9,11 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast/core/testing"
-
 	"go.chromium.org/tast-tests/cros/common/tape"
-
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/power/hibernate"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -49,12 +47,17 @@ func Hibernate(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	ht := hibernate.NewTester(ctx, s, time.Duration(numCycles)*hibernate.CycleMaxDuration)
+	ht, err := hibernate.NewTester(ctx, s, time.Duration(numCycles)*hibernate.CycleMaxDuration)
+	if err != nil {
+		s.Fatal("Failed to create a new test: ", err)
+	}
 
 	ht.SetURLsForTabs([]string{"about:blank", "about:blank", "about:blank"})
 
 	for i := 1; i <= numCycles; i++ {
-		ht.HibernateAndResume(ctx)
+		if err := ht.HibernateAndResume(ctx); err != nil {
+			s.Fatalf("Hibernate attempt %d failed: %v", i, err)
+		}
 		s.Logf("Hibernate attempt %d complete", i)
 	}
 }
