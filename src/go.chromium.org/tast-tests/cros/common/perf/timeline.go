@@ -41,6 +41,7 @@ type timestampSource struct {
 	started         bool
 	metric          Metric
 	customStartTime *time.Time
+	clock           Clock
 }
 
 // Setup created the metric used for recording the timestamps with the correct
@@ -60,7 +61,7 @@ func (t *timestampSource) Setup(_ context.Context, prefix, _ string) error {
 func (t *timestampSource) Start(_ context.Context) error {
 	t.started = true
 	if t.customStartTime == nil {
-		t.begin = time.Now()
+		t.begin = t.clock.Now()
 	} else {
 		t.begin = *t.customStartTime
 	}
@@ -72,7 +73,7 @@ func (t *timestampSource) Snapshot(_ context.Context, v *Values) error {
 	if !t.started {
 		return errors.New("failed to snapshot Timeline, Start wasn't called")
 	}
-	v.Append(t.metric, time.Now().Sub(t.begin).Seconds())
+	v.Append(t.metric, t.clock.Now().Sub(t.begin).Seconds())
 	return nil
 }
 
@@ -176,7 +177,11 @@ func NewTimeline(ctx context.Context, sources []TimelineDatasource, setters ...N
 		setter(&args)
 	}
 
-	ss := append(sources, &timestampSource{customStartTime: args.CustomStartTime})
+	timestampSource := &timestampSource{
+		customStartTime: args.CustomStartTime,
+		clock:           args.Clock,
+	}
+	ss := append(sources, timestampSource)
 	for _, s := range ss {
 		if err := s.Setup(ctx, args.Prefix, args.Prefix+"t"); err != nil {
 			return nil, errors.Wrap(err, "failed to setup TimelineDatasource")
@@ -242,10 +247,10 @@ func (t *Timeline) StartRecording(ctx context.Context) error {
 	t.recordingStatus = make(chan error, 1)
 
 	async.Run(ctx, func(ctx context.Context) {
-		var snapshotStart time.Time
+		var snapshotStart time.Time //Initial value is not used.
 		for nextTime := t.clock.Now().Add(t.interval); ; nextTime = nextTime.Add(t.interval) {
 			now := t.clock.Now()
-			lastSnapshotDuration := now.Sub(snapshotStart)
+			lastSnapshotDuration := now.Sub(snapshotStart) //Initial value is not used.
 			sleepTime := nextTime.Sub(now)
 			if sleepTime < 0 {
 				if !t.enableGracePeriod {

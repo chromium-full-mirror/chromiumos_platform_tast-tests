@@ -1,0 +1,31 @@
+{
+    "TestCountMetric": {
+        "summary": {
+        "units": "count",
+        "improvement_direction": "down",
+        "type": "list_of_scalar_values",
+        "interval": "t",
+        "values": [
+            1,
+            2,
+            3,
+            4,
+            5
+        ]
+        }
+    },
+    "t": {
+        "summary": {
+        "units": "s",
+        "improvement_direction": "down",
+        "type": "list_of_scalar_values",
+        "values": [
+            1.05,
+            2.1,
+            3.17,
+            4.24,
+            5.31
+        ]
+        }
+    }
+}

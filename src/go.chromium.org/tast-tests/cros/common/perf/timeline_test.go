@@ -326,6 +326,64 @@ func TestTimeline(t *testing.T) {
 	}
 }
 
+func TestTimestampSource(t *testing.T) {
+	p := NewValues()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	clock := NewFakeClock()
+	d := newDatasource()
+
+	tl, err := NewTimeline(ctx, []TimelineDatasource{d}, Interval(1*time.Second), WithClock(clock))
+	if err != nil {
+		t.Error("Failed to create Timeline: ", err)
+	}
+
+	if err := tl.Start(ctx); err != nil {
+		t.Error("Failed to start timeline: ", err)
+	}
+
+	// First round of recording.
+	if err := tl.StartRecording(ctx); err != nil {
+		t.Error("Failed to start recording: ", err)
+	}
+
+	// Take 2 samples.
+	clock.WaitForSleep()
+	for i := 0; i < 2; i++ {
+		clock.Advance(1050 * time.Millisecond)
+		d.WaitForSnapshot()
+		clock.WaitForSleep()
+	}
+
+	if v, err := tl.StopRecording(ctx); err != nil {
+		t.Error("Error while recording: ", err)
+	} else {
+		p.Merge(v)
+	}
+
+	// Second round of recording.
+	if err := tl.StartRecording(ctx); err != nil {
+		t.Error("Failed to start recording: ", err)
+	}
+
+	// Take 3 more samples.
+	clock.WaitForSleep()
+	for i := 2; i < 5; i++ {
+		clock.Advance(1070 * time.Millisecond)
+		d.WaitForSnapshot()
+		clock.WaitForSleep()
+	}
+
+	if v, err := tl.StopRecording(ctx); err != nil {
+		t.Error("Error while recording: ", err)
+	} else {
+		p.Merge(v)
+	}
+
+	saveAndCompare(t, p, "testdata/TestTimestampSource.json")
+}
+
 func TestTimelineStartRecordingTwice(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
