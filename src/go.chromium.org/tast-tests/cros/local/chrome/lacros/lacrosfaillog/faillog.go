@@ -16,13 +16,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
 	lacrosFaillogDir = "lacros_faillog"
-	lacrosLogPath    = "/home/chronos/user/lacros/lacros.log"
 )
 
 // SaveIf saves a lacros specific faillog if the hasError closure returns true.
@@ -91,11 +89,6 @@ func Save(ctx context.Context, tconn *chrome.TestConn) {
 		testing.ContextLog(ctx, "Lacros is currently not mounted")
 	} else {
 		run(filepath.Join(dir, "lacros-ls.txt"), "ls", "-l", info.LacrosPath)
-	}
-
-	// Copy lacros log at the point of failure.
-	if err := fsutil.CopyFile(lacrosLogPath, filepath.Join(dir, "lacros.log")); err != nil {
-		testing.ContextLog(ctx, "Failed to save lacros logs: ", err)
 	}
 
 	testing.ContextLog(ctx, "Saved lacros faillog")
