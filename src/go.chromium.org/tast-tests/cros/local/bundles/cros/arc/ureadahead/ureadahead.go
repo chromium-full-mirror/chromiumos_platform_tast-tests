@@ -19,6 +19,14 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	// MinHostPackSizeKB is set from normally generated host ureadahead pack being >300MB of data.
+	MinHostPackSizeKB = 300 * 1024
+
+	// MinGuestPackSizeKB is set from lab data showing guest ureadahead pack could be smaller than host.
+	MinGuestPackSizeKB = 100 * 1024
+)
+
 // DumpHostPack dumps the ureadahead pack in the host OS. The pack path can be
 // different between production and non-production test environments.
 func DumpHostPack(ctx context.Context, packPath, logPath string) error {

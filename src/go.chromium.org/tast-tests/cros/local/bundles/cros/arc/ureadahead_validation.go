@@ -52,11 +52,6 @@ func UreadaheadValidation(ctx context.Context, s *testing.State) {
 		// Names of ureadahead dump logs.
 		ureadaheadLogName      = "ureadahead.log"
 		ureadaheadGuestLogName = "guest_ureadahead.log"
-
-		// Normally generated host ureadahead pack covers >300MB of data.
-		minAcceptableUreadaheadPackSizeKB = 300 * 1024
-		// Guest ureadahead pack could be smaller than host from lab data.
-		minAcceptableGuestUreadaheadPackSizeKB = 100 * 1024
 	)
 
 	vmEnabled, err := arc.VMEnabled()
@@ -91,7 +86,7 @@ func UreadaheadValidation(ctx context.Context, s *testing.State) {
 		}
 
 		// Verify the guest pack file dump.
-		if err = ureadahead.CheckPackFileDump(ctx, vmLogPath, minAcceptableGuestUreadaheadPackSizeKB); err != nil {
+		if err = ureadahead.CheckPackFileDump(ctx, vmLogPath, ureadahead.MinGuestPackSizeKB); err != nil {
 			s.Fatalf("Failed to verify guest ureadahead pack file dump, please check %q: %v", ureadaheadGuestLogName, err)
 		}
 		return
@@ -103,7 +98,7 @@ func UreadaheadValidation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to dump host ureadahead pack: ", err)
 	}
 
-	if err = ureadahead.CheckPackFileDump(ctx, logPath, minAcceptableUreadaheadPackSizeKB); err != nil {
+	if err = ureadahead.CheckPackFileDump(ctx, logPath, ureadahead.MinHostPackSizeKB); err != nil {
 		s.Fatalf("Failed to verify ureadahead pack file dump, please check %q: %v", ureadaheadLogName, err)
 	}
 }

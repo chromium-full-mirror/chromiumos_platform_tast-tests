@@ -106,9 +106,9 @@ type GmsCoreCacheResponse struct {
 	TargetDir string `protobuf:"bytes,1,opt,name=target_dir,json=targetDir,proto3" json:"target_dir,omitempty"`
 	// Name of packages cache.
 	PackagesCacheName string `protobuf:"bytes,2,opt,name=packages_cache_name,json=packagesCacheName,proto3" json:"packages_cache_name,omitempty"`
-	//Name of GMS Core caches packed to tar file.
+	// Name of GMS Core caches packed to tar file.
 	GmsCoreCacheName string `protobuf:"bytes,3,opt,name=gms_core_cache_name,json=gmsCoreCacheName,proto3" json:"gms_core_cache_name,omitempty"`
-	//Name of GMS Core manifest file.
+	// Name of GMS Core manifest file.
 	GmsCoreManifestName string `protobuf:"bytes,4,opt,name=gms_core_manifest_name,json=gmsCoreManifestName,proto3" json:"gms_core_manifest_name,omitempty"`
 	// Name of GSF cache.
 	GsfCacheName string `protobuf:"bytes,5,opt,name=gsf_cache_name,json=gsfCacheName,proto3" json:"gsf_cache_name,omitempty"`

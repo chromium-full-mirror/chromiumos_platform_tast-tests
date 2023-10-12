@@ -30,12 +30,16 @@ message UreadaheadPackRequest {
 message UreadaheadPackResponse {
   // Path to generated ureadahead pack.
   string pack_path = 1;
-  // Path to vm generated ureadahead pack.
-  string vm_pack_path = 2;
+  // Path to vm generated ureadahead initial boot pack.
+  string vm_initial_pack_path = 2;
   // Path to log for ureadahead pack generation.
   string log_path = 3;
-  // Path to log for vm ureadahead pack generation.
-  string vm_log_path = 4;
+  // Path to log for vm ureadahead initial pack generation.
+  string vm_initial_log_path = 4;
+  // Path to vm generated ureadahead provisioned boot pack.
+  string vm_provisioned_pack_path = 5;
+  // Path to log for vm ureadahead provisioned pack generation.
+  string vm_provisioned_log_path = 6;
 }
 
 message CheckMinMemoryResponse {

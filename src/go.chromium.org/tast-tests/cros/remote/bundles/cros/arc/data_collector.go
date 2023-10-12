@@ -397,6 +397,12 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		// Name of the log for pack in case of initial boot inside VM.
 		vmInitialPackLog = "vm_initial_pack.log"
 
+		// Name of the pack in case of provisioned boot inside VM.
+		vmProvisionedPack = "vm_provisioned_pack"
+
+		// Name of the log for pack in case of provisioned boot inside VM.
+		vmProvisionedPackLog = "vm_provisioned_pack.log"
+
 		// Number of retries for each flow in case of failure.
 		// Please see b/167697547, b/181832600 for more information. Retries are
 		// needed for occasional OptIn instability on ARC development builds. Only
@@ -497,10 +503,10 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		// Pass initial boot and capture results.
+		// Pass initial (and provisioned boot for VM only) boot and capture results.
 		response, err := service.Generate(shortCtx, &request)
 		if err != nil {
-			return errors.Wrap(err, "ureadaheadPackService.Generate returned an error for initial boot pass")
+			return errors.Wrap(err, "ureadaheadPackService.Generate returned an error")
 		}
 
 		// Prepare target directory on host for pack file.
@@ -517,11 +523,13 @@ func DataCollector(ctx context.Context, s *testing.State) {
 
 		var filesToGet = map[string]string{}
 		if param.vmEnabled {
-			if response.VmPackPath == "" || response.VmLogPath == "" {
+			if response.VmInitialPackPath == "" || response.VmProvisionedPackPath == "" || response.VmInitialLogPath == "" || response.VmProvisionedLogPath == "" {
 				s.Fatal("Failed to obtain VM file paths from ureadaheadPackService.Generate response")
 			}
-			filesToGet[response.VmPackPath] = vmInitialPack
-			filesToGet[response.VmLogPath] = vmInitialPackLog
+			filesToGet[response.VmInitialPackPath] = vmInitialPack
+			filesToGet[response.VmInitialLogPath] = vmInitialPackLog
+			filesToGet[response.VmProvisionedPackPath] = vmProvisionedPack
+			filesToGet[response.VmProvisionedLogPath] = vmProvisionedPackLog
 		} else {
 			if response.PackPath == "" || response.LogPath == "" {
 				s.Fatal("Failed to obtain file paths from ureadaheadPackService.Generate response")

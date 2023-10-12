@@ -7,7 +7,6 @@ package arc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -63,10 +62,14 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		containerPackName = "opt.google.containers.android.rootfs.root.pack"
 		containerRoot     = "/opt/google/containers/android/rootfs/root"
 
+		arcvmInitialPackName     = "arcvm.var.lib.ureadahead.initial.pack"
+		arcvmProvisionedPackName = "arcvm.var.lib.ureadahead.provisioned.pack"
+
 		tracingRoot = "/sys/kernel/tracing"
 
-		logName   = "ureadahead.log"
-		vmLogName = "vm_ureadahead.log"
+		logName              = "ureadahead.log"
+		vmInitialLogName     = "vm_initial_ureadahead.log"
+		vmProvisionedLogName = "vm_provisioned_ureadahead.log"
 
 		ureadaheadTimeout = 30 * time.Second
 
@@ -74,8 +77,7 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		// PFQ / Uprev and ChromeOS build image (BSS) are completed. This is to catch
 		// issues before building full ChromeOS image but post-build testing is still
 		// important to catch any unexpected build infra issues.
-		minAcceptableHostPackSizeKB  = 300 * 1024
-		minAcceptableGuestPackSizeKB = 100 * 1024
+
 	)
 
 	// Create arguments for running ureadahead.
@@ -146,7 +148,7 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 	}
 
 	opts := []chrome.Option{
-		chrome.ARCSupported(), // This does not start ARC automatically
+		chrome.ARCSupported(), // This does not start ARC automatically.
 		chrome.GAIALoginPool(request.Creds),
 		chrome.ExtraArgs(chromeArgs...)}
 
@@ -176,8 +178,8 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		return nil, errors.Wrap(err, "failed to drop caches")
 	}
 
-	var vmPackPath string
-	var vmLogPath string
+	var vmInitialPackPath, vmProvisionedPackPath string
+	var vmInitialLogPath, vmProvisionedLogPath string
 	if vmEnabled {
 		// Opt in.
 		testing.ContextLog(ctx, "Waiting for ARC opt-in flow to complete")
@@ -185,17 +187,24 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 			return nil, errors.Wrap(err, "failed to perform opt-in")
 		}
 
-		vmLogPath = filepath.Join(ureadaheadDataDir, vmLogName)
+		vmInitialLogPath = filepath.Join(ureadaheadDataDir, vmInitialLogName)
+		vmProvisionedLogPath = filepath.Join(ureadaheadDataDir, vmProvisionedLogName)
 
-		// Pull and obtain ARCVM pack from guest OS and dump pack file content to log.
-		vmPackPath, err = getGuestPack(ctx, outDir, vmLogPath, cr.NormalizedUser(), request.UseDevCaches)
+		// Pull and obtain ARCVM initial pack from guest OS and dump pack file content to log.
+		packPath := filepath.Join(ureadaheadDataDir, arcvmInitialPackName)
+		vmInitialPackPath, err = getGuestPack(ctx, outDir, packPath, vmInitialLogPath, cr.NormalizedUser(), request.UseDevCaches)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain ureadahead pack from ARCVM guest OS")
+			return nil, errors.Wrap(err, "failed to obtain ureadahead initial pack from ARCVM guest OS")
 		}
 
-		// Verify the guest pack file dump for VM.
-		if err := ureadahead.CheckPackFileDump(ctx, vmLogPath, minAcceptableGuestPackSizeKB); err != nil {
-			return nil, errors.Wrapf(err, "failed to verify guest ureadahead pack file dump, please check %q", vmLogName)
+		// Verify the initial pack file dump for VM.
+		if err := ureadahead.CheckPackFileDump(ctx, vmInitialLogPath, ureadahead.MinGuestPackSizeKB); err != nil {
+			return nil, errors.Wrapf(err, "failed to verify guest ureadahead initial pack file dump, please check %q", vmInitialLogPath)
+		}
+
+		packPath = filepath.Join(ureadaheadDataDir, arcvmProvisionedPackName)
+		if vmProvisionedPackPath, err = performGuestProvisionedBootTrace(ctx, outDir, packPath, vmProvisionedLogPath, cr.Creds()); err != nil {
+			return nil, errors.Wrap(err, "failed to perform guest provisioned boot with ureadahead tracing")
 		}
 	} else {
 		// Generate host OS pack file.
@@ -221,14 +230,14 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 
 		// Make sure ureadahead flips these flags to confirm it is started.
 		resetFlag := func(flag string) error {
-			return ioutil.WriteFile(flag, []byte("0"), 0644)
+			return os.WriteFile(flag, []byte("0"), 0644)
 		}
 
 		if err := processFlags(resetFlag); err != nil {
 			return nil, errors.Wrap(err, "failed to reset ureadahead flag")
 		}
 
-		if err := ioutil.WriteFile(filepath.Join(tracingRoot, "trace"), []byte(""), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(tracingRoot, "trace"), []byte(""), 0644); err != nil {
 			return nil, errors.Wrap(err, "failed to reset tracing buffer")
 		}
 
@@ -250,7 +259,7 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 
 		// Make sure that content of the flag is set to "1".
 		enusureFlagSet := func(flag string) error {
-			content, err := ioutil.ReadFile(flag)
+			content, err := os.ReadFile(flag)
 			if err != nil {
 				return err
 			}
@@ -314,7 +323,7 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		}
 
 		// Verify the host pack file dump for Container.
-		if err = ureadahead.CheckPackFileDump(ctx, logPath, minAcceptableHostPackSizeKB); err != nil {
+		if err = ureadahead.CheckPackFileDump(ctx, logPath, ureadahead.MinHostPackSizeKB); err != nil {
 			return nil, errors.Wrapf(err, "failed to verify host ureadahead pack file dump, please check %q", logName)
 		}
 
@@ -329,10 +338,12 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 	}
 
 	response := arcpb.UreadaheadPackResponse{
-		PackPath:   packPath,
-		VmPackPath: vmPackPath,
-		LogPath:    logPath,
-		VmLogPath:  vmLogPath,
+		PackPath:              packPath,
+		VmInitialPackPath:     vmInitialPackPath,
+		LogPath:               logPath,
+		VmInitialLogPath:      vmInitialLogPath,
+		VmProvisionedPackPath: vmProvisionedPackPath,
+		VmProvisionedLogPath:  vmProvisionedLogPath,
 	}
 	return &response, nil
 }
@@ -371,7 +382,7 @@ func (c *UreadaheadPackService) CheckMinMemory(ctx context.Context, request *emp
 	result := true
 	if vmEnabled {
 		testing.ContextLog(ctx, "Checking minimum memory requirement for ARCVM")
-		memInfo, err := ioutil.ReadFile("/proc/meminfo")
+		memInfo, err := os.ReadFile("/proc/meminfo")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read /proc/meminfo")
 		}
@@ -414,20 +425,16 @@ func verifyTracedServicesStopped(ctx context.Context, a *arc.ARC) error {
 	return nil
 }
 
-// getGuestPack pulls ureadahead initial pack for requested Chrome login mode from guest OS.
-func getGuestPack(ctx context.Context, outDir, logPath, chromeUsername string, useDevCaches bool) (string, error) {
+// getGuestPack pulls ureadahead initial or provisioned pack for requested Chrome login mode from guest OS.
+func getGuestPack(ctx context.Context, outDir, packPath, logPath, chromeUsername string, useDevCaches bool) (string, error) {
 	const (
 		ureadaheadDataDir = "/var/lib/ureadahead"
-
-		arcvmPackName = "arcvm.var.lib.ureadahead.pack"
 
 		ureadaheadStopTimeout      = 50 * time.Second
 		ureadaheadStopInterval     = 5 * time.Second
 		ureadaheadFileStatTimeout  = 90 * time.Second
 		ureadaheadFileStatInterval = 15 * time.Second
 	)
-
-	packPath := filepath.Join(ureadaheadDataDir, arcvmPackName)
 
 	if err := os.Remove(packPath); err != nil && !os.IsNotExist(err) {
 		return "", errors.Wrapf(err, "failed to clean up %s on the host", packPath)
@@ -511,4 +518,38 @@ func verifyDevCachesInstalled(ctx context.Context, a *arc.ARC, useDevCaches bool
 		}
 	}
 	return nil
+}
+
+// performGuestProvisionedBootTrace performs guest ureadahead trace for provisioned boot and verifies the output.
+func performGuestProvisionedBootTrace(ctx context.Context, outDir, packPath, logPath string, creds chrome.Creds) (string, error) {
+	// Drop caches to simulate cold start when data not in system caches already.
+	if err := disk.DropCaches(ctx); err != nil {
+		return "", errors.Wrap(err, "failed to drop caches")
+	}
+
+	chromeArgs := append(arc.DisableSyncFlags(), "--arcvm-ureadahead-mode=generate")
+	opts := []chrome.Option{
+		chrome.ARCSupported(), // ARC is started automatically since this isn't initial boot.
+		chrome.GAIALogin(creds),
+		chrome.KeepState(), // To make sure this is not initial boot.
+		chrome.ExtraArgs(chromeArgs...)}
+
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to connect to Chrome")
+	}
+	defer cr.Close(ctx)
+
+	// Pull and obtain ARCVM provisioned pack from guest OS and dump pack file content to log.
+	provisionedPackPath, err := getGuestPack(ctx, outDir, packPath, logPath, cr.NormalizedUser(), false /*useDevCaches*/)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to obtain ureadahead provisioned pack from ARCVM guest OS")
+	}
+
+	// Verify the provisioned pack file dump for VM.
+	if err := ureadahead.CheckPackFileDump(ctx, logPath, ureadahead.MinGuestPackSizeKB); err != nil {
+		return "", errors.Wrapf(err, "failed to verify guest ureadahead provisioned pack file dump, please check %q", logPath)
+	}
+
+	return provisionedPackPath, nil
 }
