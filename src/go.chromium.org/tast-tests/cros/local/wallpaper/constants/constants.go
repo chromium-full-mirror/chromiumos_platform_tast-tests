@@ -65,8 +65,8 @@ const DawnToDarkCollection = "Dawn to dark"
 
 // The two time of day wallpapers.
 const (
-	EarthFlowImage = "Dawn to dark - Earth Flow Exclusive to Chromebook"
-	CloudFlowImage = "Dawn to dark - Cloud Flow Exclusive to Chromebook"
+	EarthFlowImage = "Dawn to dark - Earth Flow Exclusive to Chromebook Plus"
+	CloudFlowImage = "Dawn to dark - Cloud Flow Exclusive to Chromebook Plus"
 )
 
 // YellowWallpaperName is the name of a solid yellow wallpaper in the solid colors collection.
