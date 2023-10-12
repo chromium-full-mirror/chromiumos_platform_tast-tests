@@ -88,6 +88,14 @@ func init() {
 				},
 			},
 			{
+				Name:      "pmem_boot",
+				ExtraData: []string{"fio_boot.job"},
+				Val: param{
+					kind: "pmem",
+					job:  "fio_boot.job",
+				},
+			},
+			{
 				Name:      "block_login",
 				ExtraData: []string{"fio_login.job"},
 				Val: param{
@@ -127,6 +135,14 @@ func init() {
 				ExtraData: []string{"fio_login.job"},
 				Val: param{
 					kind: "scsi",
+					job:  "fio_login.job",
+				},
+			},
+			{
+				Name:      "pmem_login",
+				ExtraData: []string{"fio_login.job"},
+				Val: param{
+					kind: "pmem",
 					job:  "fio_login.job",
 				},
 			},
@@ -174,6 +190,14 @@ func init() {
 				},
 			},
 			{
+				Name:      "pmem_surfing",
+				ExtraData: []string{"fio_surfing.job"},
+				Val: param{
+					kind: "pmem",
+					job:  "fio_surfing.job",
+				},
+			},
+			{
 				Name:      "block_randread",
 				ExtraData: []string{"fio_randread.job"},
 				Val: param{
@@ -213,6 +237,14 @@ func init() {
 				ExtraData: []string{"fio_randread.job"},
 				Val: param{
 					kind: "scsi",
+					job:  "fio_randread.job",
+				},
+			},
+			{
+				Name:      "pmem_randread",
+				ExtraData: []string{"fio_randread.job"},
+				Val: param{
+					kind: "pmem",
 					job:  "fio_randread.job",
 				},
 			},
@@ -260,6 +292,14 @@ func init() {
 				},
 			},
 			{
+				Name:      "pmem_randwrite",
+				ExtraData: []string{"fio_randwrite.job"},
+				Val: param{
+					kind: "pmem",
+					job:  "fio_randwrite.job",
+				},
+			},
+			{
 				Name:      "block_seqread",
 				ExtraData: []string{"fio_seqread.job"},
 				Val: param{
@@ -299,6 +339,14 @@ func init() {
 				ExtraData: []string{"fio_seqread.job"},
 				Val: param{
 					kind: "scsi",
+					job:  "fio_seqread.job",
+				},
+			},
+			{
+				Name:      "pmem_seqread",
+				ExtraData: []string{"fio_seqread.job"},
+				Val: param{
+					kind: "pmem",
 					job:  "fio_seqread.job",
 				},
 			},
@@ -346,6 +394,14 @@ func init() {
 				},
 			},
 			{
+				Name:      "pmem_seqwrite",
+				ExtraData: []string{"fio_seqwrite.job"},
+				Val: param{
+					kind: "pmem",
+					job:  "fio_seqwrite.job",
+				},
+			},
+			{
 				Name:      "block_stress_rw",
 				ExtraData: []string{"fio_stress_rw.job"},
 				Val: param{
@@ -385,6 +441,14 @@ func init() {
 				ExtraData: []string{"fio_stress_rw.job"},
 				Val: param{
 					kind: "scsi",
+					job:  "fio_stress_rw.job",
+				},
+			},
+			{
+				Name:      "pmem_stress_rw",
+				ExtraData: []string{"fio_stress_rw.job"},
+				Val: param{
+					kind: "pmem",
 					job:  "fio_stress_rw.job",
 				},
 			},

@@ -38,6 +38,8 @@ func NewOption(kind, cache string, caseFold bool) (Option, error) {
 		opt.caseFold = caseFold
 	} else if kind == "scsi" {
 		opt.Tag = "/dev/sda"
+	} else if kind == "pmem" {
+		opt.Tag = "/dev/pmem0"
 	} else {
 		return opt, errors.Errorf("invalid storage kind: %v", kind)
 	}
@@ -80,6 +82,8 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, script string, opt Option,
 			Src: shared, Tag: opt.Tag, FsType: "p9", Timeout: 5, Writeback: false, DAX: false})
 	} else if opt.Kind == "scsi" {
 		storageOpt = vm.ScsiPaths(block)
+	} else if opt.Kind == "pmem" {
+		storageOpt = vm.PmemPaths(block)
 	} else {
 		return nil, errors.Wrap(err, "unknown storage device type")
 	}
