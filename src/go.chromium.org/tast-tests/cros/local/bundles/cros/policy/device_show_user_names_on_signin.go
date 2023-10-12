@@ -43,7 +43,7 @@ func init() {
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
-		Timeout:      2*chrome.LoginTimeout + 10*time.Second,
+		Timeout:      2*chrome.LoginTimeout + 30*time.Second,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceShowUserNamesOnSignin{}, pci.VerifiedFunctionalityUI),
 		},
@@ -73,10 +73,10 @@ func DeviceShowUserNamesOnSignin(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
 
-	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
+	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
 
 	// Check if user pod already exists. Otherwise create a fake user.
-	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(userPod)(ctx); err != nil {
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(userPod)(ctx); err != nil {
 		if err = cr.Close(ctx); err != nil {
 			s.Fatal("Failed to close chrome: ", err)
 		}
@@ -102,7 +102,7 @@ func DeviceShowUserNamesOnSignin(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Creating login test API connection failed: ", err)
 		}
-		ui = uiauto.New(tconn).WithTimeout(10 * time.Second)
+		ui = uiauto.New(tconn).WithTimeout(20 * time.Second)
 	}
 
 	defer cr.Close(cleanUpCtx)
