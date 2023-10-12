@@ -51,6 +51,11 @@ func Hibernate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a new test: ", err)
 	}
+	defer func() {
+		if err := ht.CleanUp(ctx); err != nil {
+			s.Log("Failed to cleanup: ", err)
+		}
+	}()
 
 	ht.SetURLsForTabs([]string{"about:blank", "about:blank", "about:blank"})
 

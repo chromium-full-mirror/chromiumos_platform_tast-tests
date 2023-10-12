@@ -44,25 +44,33 @@ type logger interface {
 // Tester provides shared functionality for hibernate tests and mainains
 // state between different parts of a test.
 type Tester struct {
-	dut          *dut.DUT
-	cycleID      uint32
-	userAccount  *tape.OwnedTestAccount
-	grpcClient   *crosserverutil.Client
-	urlsForTabs  []string
-	tabTargetIDs []string
-	isFirstCycle bool
-	logger       logger
-	rpcHint      *testing.RPCHint
+	dut            *dut.DUT
+	cycleID        uint32
+	userAccount    *tape.OwnedTestAccount
+	accountManager *tape.OwnedTestAccountManager
+	grpcClient     *crosserverutil.Client
+	urlsForTabs    []string
+	tabTargetIDs   []string
+	isFirstCycle   bool
+	logger         logger
+	rpcHint        *testing.RPCHint
 }
 
 // NewTester creates and returns an instance of Tester.
 func NewTester(ctx context.Context, s *testing.State, maxTestDuration time.Duration) (*Tester, error) {
-	testAccount, err := leaseTestAccount(ctx, s.RequiredVar(tape.ServiceAccountVar), maxTestDuration)
+	testAccount, accountManager, err := leaseTestAccount(ctx, s.RequiredVar(tape.ServiceAccountVar), maxTestDuration)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to lease test account")
 	}
 
-	return &Tester{dut: s.DUT(), userAccount: testAccount, isFirstCycle: true, logger: s, rpcHint: s.RPCHint()}, nil
+	return &Tester{dut: s.DUT(), userAccount: testAccount, accountManager: accountManager, isFirstCycle: true, logger: s, rpcHint: s.RPCHint()}, nil
+}
+
+// Cleanup should be called when the test is about to exit to clean up any resources that
+// might be left behind otherwise.
+func (t *Tester) CleanUp(ctx context.Context) error {
+	t.logger.Log("Cleaning up owned test accounts")
+	return t.accountManager.CleanUp(ctx)
 }
 
 // HibernateAndResume performs a full hibernate cycle of hibernating the system
@@ -585,18 +593,17 @@ func (t *Tester) sleepWithContext(ctx context.Context, d time.Duration) {
 	}
 }
 
-func leaseTestAccount(ctx context.Context, accountID string, duration time.Duration) (*tape.OwnedTestAccount, error) {
+func leaseTestAccount(ctx context.Context, accountID string, duration time.Duration) (*tape.OwnedTestAccount, *tape.OwnedTestAccountManager, error) {
 	tapeClient, err := tape.NewClient(ctx, []byte(accountID))
 	if err != nil {
-		return nil, errors.Errorf("failed to create tape client: %s", err)
+		return nil, nil, errors.Errorf("failed to create tape client: %s", err)
 	}
 
 	timeout := int32(duration.Seconds())
 	accountManager, account, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.DefaultManaged))
 	if err != nil {
-		return nil, errors.Errorf("failed to create an account manager and lease an account: %s", err)
+		return nil, nil, errors.Errorf("failed to create an account manager and lease an account: %s", err)
 	}
-	defer accountManager.CleanUp(ctx)
 
-	return account, nil
+	return account, accountManager, nil
 }
