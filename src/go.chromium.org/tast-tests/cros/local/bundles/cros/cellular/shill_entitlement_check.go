@@ -52,7 +52,7 @@ func init() {
 			ExtraData: []string{"callbox_attach_ipv6.pbf"},
 		}, {
 			Name:      "static_check_nok",
-			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_and_dun_with_entitlement_returns_NOK.pbf", shillconst.TetheringReadinessNotAllowed, false},
+			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_and_dun_with_entitlement_returns_NOK.pbf", shillconst.TetheringReadinessNotAllowedUserNotEntitled, false},
 			ExtraData: []string{"callbox_default_and_dun_with_entitlement_returns_NOK.pbf"},
 		}, {
 			Name:      "dynamic_check_with_imsi_ok",
@@ -60,11 +60,11 @@ func init() {
 			ExtraData: []string{"callbox_default_and_dun_with_entitlement_imsi.pbf"},
 		}, {
 			Name:      "dynamic_check_with_imsi_nok",
-			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_and_dun_with_entitlement_imsi.pbf", shillconst.TetheringReadinessNotAllowed, true},
+			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_and_dun_with_entitlement_imsi.pbf", shillconst.TetheringReadinessNotAllowedUserNotEntitled, true},
 			ExtraData: []string{"callbox_default_and_dun_with_entitlement_imsi.pbf"},
 		}, {
 			Name:      "url_not_reachable",
-			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_unreachable_entitlement_server.pbf", shillconst.TetheringReadinessNotAllowed, false},
+			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_unreachable_entitlement_server.pbf", shillconst.TetheringReadinessNotAllowedUserNotEntitled, false},
 			ExtraData: []string{"callbox_default_unreachable_entitlement_server.pbf"},
 		}},
 		Fixture: "cellularResetShillProfileOnPostTest",
@@ -157,8 +157,8 @@ func ShillEntitlementCheck(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatalf("Failed to check tethering readiness: %s. Status: %q", err, status)
 		}
-		if status != shillconst.TetheringReadinessNotAllowed {
-			s.Fatalf("Entitlement check cached value not reset. Got %q, want %q", status, shillconst.TetheringReadinessNotAllowed)
+		if status != shillconst.TetheringReadinessNotAllowedUserNotEntitled {
+			s.Fatalf("Entitlement check cached value not reset. Got %q, want %q", status, shillconst.TetheringReadinessNotAllowedUserNotEntitled)
 		}
 
 	}

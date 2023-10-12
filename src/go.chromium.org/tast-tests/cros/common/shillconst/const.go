@@ -490,6 +490,10 @@ const (
 
 	// CheckTetheringReadinessFunction return status.
 	TetheringReadinessNotAllowed                  = "not_allowed"
+	TetheringReadinessNotAllowedByCarrier         = "not_allowed_by_carrier"
+	TetheringReadinessNotAllowedOnFW              = "not_allowed_on_fw"
+	TetheringReadinessNotAllowedOnVariant         = "not_allowed_on_variant"
+	TetheringReadinessNotAllowedUserNotEntitled   = "not_allowed_user_not_entitled"
 	TetheringReadinessReady                       = "ready"
 	TetheringReadinessUpstreamNetworkNotAvailable = "upstream_network_not_available"
 
