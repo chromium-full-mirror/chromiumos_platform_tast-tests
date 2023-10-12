@@ -25,8 +25,8 @@ var (
 )
 
 var (
-	// BuildinDisplayFinder is the finder of build-in display.
-	BuildinDisplayFinder = &ui.Finder{
+	// BuiltinDisplayFinder is the finder of built-in display.
+	BuiltinDisplayFinder = &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
 			{Value: &ui.NodeWith_Name{Name: "Built-in display"}},
 			{Value: &ui.NodeWith_HasClass{HasClass: "RootWindow-0"}},
@@ -55,7 +55,7 @@ var (
 	takeWindowScreenshotFinder = &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
 			{Value: &ui.NodeWith_Name{Name: "Take window screenshot"}},
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_TOGGLE_BUTTON}},
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
 			{Value: &ui.NodeWith_First{First: true}},
 		},
 	}
@@ -64,7 +64,7 @@ var (
 	takeFullScreenshotFinder = &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
 			{Value: &ui.NodeWith_Name{Name: "Take full screen screenshot"}},
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_TOGGLE_BUTTON}},
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
 			{Value: &ui.NodeWith_First{First: true}},
 		},
 	}
@@ -106,7 +106,7 @@ func TakeFullScreenshot(ctx context.Context, uiautoSvc ui.AutomationServiceClien
 		{statusAreaFinder},
 		{screenCaptureFinder},
 		{takeFullScreenshotFinder},
-		{BuildinDisplayFinder},
+		{BuiltinDisplayFinder},
 	} {
 		if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: test.finder}); err != nil {
 			return nil, errors.Wrapf(err, "failed to wait for the %q finder from context menu", test.finder)
