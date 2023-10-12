@@ -42,7 +42,6 @@ const (
 	autocorrectToggle
 	diacriticsOnPhysicalKeyboardLongpress
 	handwritingLegacyRecognition
-	qsRevampEnabled
 	emojiPickerGifSupport
 	firstPartyVietnameseInput
 )
@@ -202,8 +201,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"alvinjia@google.com",
 		},
-		// Need QsRevamp to access new audio settings UI.
-		Impl: inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle, qsRevampEnabled, emojiPickerGifSupport),
+		Impl: inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle, emojiPickerGifSupport),
 		// Need aloop for route playback to capture.
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -308,8 +306,7 @@ func init() {
 			"shengjun@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		// Need QsRevamp to access new audio settings UI.
-		Impl: inputsFixture(tabletMode, true, false, browser.TypeAsh, qsRevampEnabled),
+		Impl: inputsFixture(tabletMode, true, false, browser.TypeAsh),
 		// Need aloop for route playback to capture.
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -445,8 +442,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"alvinjia@google.com",
 		},
-		// Need QsRevamp to access new audio settings UI.
-		Impl: inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle, qsRevampEnabled, emojiPickerGifSupport),
+		Impl: inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle, emojiPickerGifSupport),
 		// Need aloop for route playback to capture.
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -552,8 +548,7 @@ func init() {
 			"shengjun@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		// Need QsRevamp to access new audio settings UI.
-		Impl: inputsFixture(tabletMode, true, false, browser.TypeLacros, qsRevampEnabled),
+		Impl: inputsFixture(tabletMode, true, false, browser.TypeLacros),
 		// Need aloop for route playback to capture.
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -705,8 +700,6 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs("--enable-features=FirstPartyVietnameseInput"))
 		case handwritingLegacyRecognition:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=HandwritingLegacyRecognition"))
-		case qsRevampEnabled:
-			opts = append(opts, chrome.EnableFeatures("QsRevamp"))
 		case emojiPickerGifSupport:
 			opts = append(opts, chrome.ExtraArgs(("--enable-features=SystemEmojiPickerGIFSupport")))
 		}

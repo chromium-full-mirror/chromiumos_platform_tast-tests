@@ -34,7 +34,7 @@ func init() {
 			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "assistantQsRevampEnabledWithGaia",
+		Fixture:      "assistantWithGaia",
 	})
 }
 

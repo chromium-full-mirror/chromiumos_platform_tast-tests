@@ -49,7 +49,6 @@ func Oobe(ctx context.Context, s *testing.State) {
 		chrome.Region("us"),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 		chrome.EnableFeatures("CalendarView"),
-		chrome.EnableFeatures("QsRevamp"),
 		chrome.NoLogin())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

@@ -56,7 +56,7 @@ func ChangeInputDevice(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Open chrome with audio settings enabled.
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("AudioSettingsPage", "QsRevamp"))
+	cr, err := chrome.New(ctx, chrome.EnableFeatures("AudioSettingsPage"))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

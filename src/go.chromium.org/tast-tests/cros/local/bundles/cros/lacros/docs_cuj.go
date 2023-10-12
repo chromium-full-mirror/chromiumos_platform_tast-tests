@@ -61,7 +61,6 @@ func DocsCUJ(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	opts := []chrome.Option{
 		chrome.DisableFeatures("FirmwareUpdaterApp"),
-		chrome.EnableFeatures("QsRevamp"),
 		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 	}
 

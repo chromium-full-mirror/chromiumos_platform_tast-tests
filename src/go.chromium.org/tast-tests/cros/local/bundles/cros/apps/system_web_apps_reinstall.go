@@ -54,7 +54,7 @@ func SystemWebAppsReinstall(ctx context.Context, s *testing.State) {
 		ctx, cancel := ctxutil.Shorten(ctx, signoutTimeout)
 		defer cancel()
 
-		cr, tconn, err := createChrome(ctx, chrome.EnableFeatures("QsRevamp"))
+		cr, tconn, err := createChrome(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to create Chrome instance")
 
@@ -96,7 +96,7 @@ func SystemWebAppsReinstall(ctx context.Context, s *testing.State) {
 		ctx, cancel := ctxutil.Shorten(ctx, signoutTimeout)
 		defer cancel()
 
-		cr, tconn, err := createChrome(ctx, chrome.KeepState(), chrome.EnableFeatures("AlwaysReinstallSystemWebApps", "QsRevamp"))
+		cr, tconn, err := createChrome(ctx, chrome.KeepState(), chrome.EnableFeatures("AlwaysReinstallSystemWebApps"))
 		if err != nil {
 			return errors.Wrap(err, "failed to create Chrome instance")
 		}

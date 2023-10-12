@@ -69,31 +69,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "assistantBaseQsRevampEnabledWithGaia",
-		Desc: "Chrome session for assistant testing with QsRevamp feature",
-		Contacts: []string{
-			"assistive-eng@google.com",
-			"jamescook@google.com",
-		},
-		Vars: []string{"assistant.username", "assistant.password"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.GAIALogin(chrome.Creds{
-					User: s.RequiredVar("assistant.username"),
-					Pass: s.RequiredVar("assistant.password"),
-				}),
-				VerboseLogging(),
-				ashNoNudgesExtraArg(),
-				chrome.ExtraArgs(arc.DisableSyncFlags()...),
-				chrome.EnableFeatures("QsRevamp"),
-			}, nil
-		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: "assistantBaseWithStartAudioDecoderOnDemand",
 		Desc: "Chrome session for assistant testing with StartAssistantAudioDecoderOnDemand flag",
 		Contacts: []string{
@@ -193,23 +168,6 @@ func init() {
 			"assistive-eng@google.com",
 		},
 		Parent: "assistantBase",
-		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
-			return FixtData{
-				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
-			}
-		}),
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "assistantQsRevampEnabledWithGaia",
-		Desc: "Assistant is enabled and QsRevamp is enabled",
-		Contacts: []string{
-			"jamescook@google.com",
-			"assistive-eng@google.com",
-		},
-		Parent: "assistantBaseQsRevampEnabledWithGaia",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
 				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),

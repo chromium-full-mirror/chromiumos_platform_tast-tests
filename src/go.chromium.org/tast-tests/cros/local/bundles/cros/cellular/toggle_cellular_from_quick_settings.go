@@ -34,7 +34,7 @@ func init() {
 // ToggleCellularFromQuickSettings tests that a user can successfully toggle
 // the Cellular state using the Quick Settings.
 func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("QsRevamp"))
+	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create new chrome instance: ", err)
 	}
@@ -66,7 +66,7 @@ func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get mobile data toggle: ", err)
 	}
 
-	// QsRevamp does not use a button with a checked state, so look for the name.
+	// Quick settings does not use a button with a checked state, so look for the name.
 	if err := uiauto.Combine("Wait until cellular is enabled in UI and not inhibited",
 		ui.WaitUntilExists(mobileDataToggle.NameContaining("Mobile data is turned on")),
 		ui.WaitUntilEnabled(mobileDataToggle),
@@ -88,7 +88,7 @@ func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to toggle Cellular state: ", err)
 		}
 
-		// QsRevamp does not use a button with a checked state, so look for the name.
+		// Quick settings does not use a button with a checked state, so look for the name.
 		var name string
 		if state {
 			name = "Mobile data is turned on"

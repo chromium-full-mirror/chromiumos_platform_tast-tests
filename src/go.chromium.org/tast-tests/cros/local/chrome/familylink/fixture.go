@@ -92,8 +92,7 @@ func init() {
 		Name:     "familyLinkUnicornLoginNonOwner",
 		Desc:     "Supervised Family Link user login with Unicorn account as second user on device",
 		Contacts: []string{"tobyhuang@chromium.org", "cros-families-eng+test@google.com"},
-		// TODO(b/252870625): Remove QsRevamp flag when all tast tests run with QsRevamp.
-		Impl: NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false, chrome.EnableFeatures("QsRevamp")),
+		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false),
 		Vars: []string{
 			"ui.gaiaPoolDefault",
 			"family.parentEmail",
@@ -112,8 +111,7 @@ func init() {
 		Name:     "familyLinkUnicornLoginNonOwnerWithLacros",
 		Desc:     "Supervised Family Link user login with Unicorn account as second user on device",
 		Contacts: []string{"galenemco@chromium.org", "hyungtaekim@chromium.org", "cros-families-eng+test@google.com"},
-		// TODO(b/252870625): Remove QsRevamp flag when all tast tests run with QsRevamp.
-		Impl: NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false, chrome.EnableFeatures("QsRevamp")),
+		Impl:     NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false),
 		Vars: []string{
 			"ui.gaiaPoolDefault",
 			"family.parentEmail",

@@ -124,7 +124,7 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, chrome.ResetTimeout)
 	defer cancel()
 
-	chromeOpts := append(param.extraChromeOpts, chrome.EnableFeatures("QsRevamp"))
+	chromeOpts := param.extraChromeOpts
 	if param.noiseCancellationEnabled {
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"))
 	}

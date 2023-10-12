@@ -66,7 +66,7 @@ func (n *NearbyService) NewChromeLogin(ctx context.Context, req *nearbyservice.C
 		return nil, errors.New("Chrome already available")
 	}
 	nearbyOpts := []chrome.Option{
-		chrome.EnableFeatures("GwpAsanMalloc", "GwpAsanPartitionAlloc", "QsRevamp"),
+		chrome.EnableFeatures("GwpAsanMalloc", "GwpAsanPartitionAlloc"),
 		chrome.DisableFeatures("SplitSettingsSync"),
 		chrome.ExtraArgs("--nearby-share-certificate-validity-period-hours=4", "--nearby-share-num-private-certificates=1", "--nearby-share-verbose-logging", "--enable-logging", "--vmodule=*blue*=1", "--vmodule=*nearby*=1"),
 	}

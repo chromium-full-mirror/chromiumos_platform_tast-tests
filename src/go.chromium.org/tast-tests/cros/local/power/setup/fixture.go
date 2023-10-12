@@ -544,7 +544,6 @@ func init() {
 			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("AdaptiveCharging"),
-				chrome.EnableFeatures("QsRevamp"),
 			},
 		}),
 		SetUpTimeout:    SetUpTimeout,

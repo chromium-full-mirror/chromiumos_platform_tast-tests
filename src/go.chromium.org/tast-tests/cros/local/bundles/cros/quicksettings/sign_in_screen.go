@@ -71,7 +71,6 @@ func SignInScreen(ctx context.Context, s *testing.State) {
 		ctx,
 		chrome.NoLogin(),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-		chrome.EnableFeatures("QsRevamp"),
 	)
 	if err != nil {
 		s.Fatal("Chrome startup failed: ", err)

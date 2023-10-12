@@ -45,9 +45,7 @@ func (svc *OobeHidBluetoothService) NewChrome(ctx context.Context, req *pb.NewCh
 		chrome.NoLogin(),
 		chrome.EnableHIDScreenOnOOBE(),
 		chrome.LoadSigninProfileExtension(req.SigninProfileTestExtension),
-		chrome.EnableFeatures(
-			"OobeHidDetectionRevamp", "QsRevamp",
-		),
+		chrome.EnableFeatures("OobeHidDetectionRevamp"),
 	}
 	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {

@@ -58,8 +58,7 @@ func LockScreen(ctx context.Context, s *testing.State) {
 		lockTimeout = 30 * time.Second
 	)
 
-	cr, err := chrome.New(ctx, chrome.FakeLogin(chrome.Creds{User: username, Pass: password}),
-		chrome.EnableFeatures("QsRevamp"))
+	cr, err := chrome.New(ctx, chrome.FakeLogin(chrome.Creds{User: username, Pass: password}))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

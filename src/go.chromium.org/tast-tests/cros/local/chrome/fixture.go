@@ -136,8 +136,7 @@ func init() {
 		Desc:     "Logged into a session with Gaia user where there are calendar events",
 		Contacts: []string{"jiamingc@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			// TODO(b/252870625): Remove QsRevamp when it is enabled by default in tast tests.
-			return []Option{GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")), EnableFeatures("CalendarView", "QsRevamp")}, nil
+			return []Option{GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")), EnableFeatures("CalendarView")}, nil
 		}),
 		Vars:            []string{"calendar.googleCalendarAccountPool"},
 		SetUpTimeout:    FixtureSetUpTimeout,
@@ -150,8 +149,7 @@ func init() {
 		Desc:     "Logged into a session with Gaia user where there are events set up to join Hangout meetings",
 		Contacts: []string{"leandre@google.com", "jiamingc@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			// TODO(b/252870625): Remove QsRevamp when it is enabled by default in tast tests.
-			return []Option{GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")), EnableFeatures("PrivacyIndicators", "QsRevamp")}, nil
+			return []Option{GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")), EnableFeatures("PrivacyIndicators")}, nil
 		}),
 		Vars:            []string{"calendar.googleCalendarAccountPool"},
 		SetUpTimeout:    FixtureSetUpTimeout,
@@ -164,8 +162,7 @@ func init() {
 		Desc:     "Logged into a session with Gaia user where there are upcoming events",
 		Contacts: []string{"cros-status-area-eng@google.com", "samcackett@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			// TODO(b/252870625): Remove QsRevamp when it is enabled by default in tast tests.
-			return []Option{GAIALoginPool(s.RequiredVar("calendar.upcomingEventsAccountPool")), EnableFeatures("CalendarJelly", "QsRevamp")}, nil
+			return []Option{GAIALoginPool(s.RequiredVar("calendar.upcomingEventsAccountPool")), EnableFeatures("CalendarJelly")}, nil
 		}),
 		Vars:            []string{"calendar.upcomingEventsAccountPool"},
 		SetUpTimeout:    FixtureSetUpTimeout,

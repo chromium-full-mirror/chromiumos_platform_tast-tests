@@ -52,7 +52,6 @@ func init() {
 				Name: "floss_disabled",
 				Val: enableDisableBluetoothWithDifferentUsersParams{
 					btImpl:          &bluez.BlueZ{},
-					enableFeatures:  []string{"QsRevamp"},
 					disableFeatures: []string{"Floss"},
 				},
 				ExtraAttr: []string{"bluetooth_flaky"},
@@ -60,7 +59,7 @@ func init() {
 				Name: "floss_enabled",
 				Val: enableDisableBluetoothWithDifferentUsersParams{
 					btImpl:         &floss.Floss{},
-					enableFeatures: []string{"QsRevamp", "Floss"},
+					enableFeatures: []string{"Floss"},
 				},
 				ExtraAttr:         []string{"bluetooth_floss_flaky"},
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},

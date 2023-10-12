@@ -33,7 +33,7 @@ func init() {
 // QuickSettingsOnNonCellularDevice tests that quick settings does not display
 // mobile data settings on a non cellular device
 func QuickSettingsOnNonCellularDevice(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("QsRevamp"))
+	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create new chrome instance: ", err)
 	}
