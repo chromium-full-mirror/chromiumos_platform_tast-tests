@@ -45,8 +45,7 @@ const (
 	// Peretto configuration file.
 	traceConfigFile = "webrtc/perfetto_trace.txtpb"
 
-	powerInterval   = 5 * time.Second  // Power library metrics collection interval.
-	profileInterval = 30 * time.Second // Sleep interval to measure the performance metrics
+	powerInterval = 3 * time.Second // Power library metrics collection interval.
 )
 
 // TestFiles returns the files required running the test.
@@ -66,6 +65,8 @@ func TestFiles() []string {
 // 4. Hold 1:1 (2p) call.
 // 5. Hold 9p call.
 func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
+	const profileInterval = 30 * time.Second // Sleep interval to measure the performance metrics.
+
 	if err := pr.Start(ctx); err != nil {
 		return errors.Wrap(err, "cannot start collecting power metrics")
 	}
@@ -105,6 +106,8 @@ func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
 // runNonStep holds a conference video call in which |numPeople| persons attends
 // and thus |numPeople-1| decoders and 1 encoder run.
 func runNonStep(ctx context.Context, s *testing.State, conn *chrome.Conn, pr *power.Recorder, params VCTestParams) error {
+	const profileInterval = 60 * time.Second // Sleep interval to measure the performance metrics.
+
 	if params.NumPeople <= 1 {
 		return errors.Errorf("the number of people must be more than 1: NumPeople=%d", params.NumPeople)
 	}
