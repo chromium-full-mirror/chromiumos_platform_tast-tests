@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // cmd constants for RunAPCommand - these are all U-Boot commands.
@@ -44,7 +43,6 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.DevMode,
 		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.AlternativeFirmware()),
 		Timeout:      4 * time.Minute,
 	})
 }
