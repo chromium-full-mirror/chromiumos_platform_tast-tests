@@ -87,6 +87,10 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to set tethering allowed: ", err)
 	}
 
+	if err := helper.Manager.SetExperimentalTetheringFunctionality(ctx, true); err != nil {
+		s.Fatal("Unable to set ExperimentalTetheringFunctionality: ", err)
+	}
+
 	testing.ContextLog(ctx, "Create fake user profile")
 	if _, err := helper.Manager.CreateFakeUserProfile(ctx, hotspotTestProfileName); err != nil {
 		s.Fatalf("Failed to create fake profile %q", hotspotTestProfileName)

@@ -1020,6 +1020,14 @@ func (m *Manager) SetTetheringAllowed(ctx context.Context, allowed bool) error {
 	return nil
 }
 
+// SetExperimentalTetheringFunctionality sets the ExperimentalTetheringFunctionality property.
+func (m *Manager) SetExperimentalTetheringFunctionality(ctx context.Context, value bool) error {
+	if err := m.SetProperty(ctx, shillconst.ManagerPropertyExperimentalTetheringFunctionality, value); err != nil {
+		return errors.Wrapf(err, "failed to set experimental tethering functionality to %t", value)
+	}
+	return nil
+}
+
 // GetNetworksForGeolocation returns geolocation cache
 func (m *Manager) GetNetworksForGeolocation(ctx context.Context) (*dbusutil.Properties, error) {
 	var geolocationInfoTechnology map[string]interface{}

@@ -29,6 +29,10 @@ func init() {
 func ShillHotspotVariantBlocklist(ctx context.Context, s *testing.State) {
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 
+	if err := helper.Manager.SetExperimentalTetheringFunctionality(ctx, false); err != nil {
+		s.Fatal("Unable to set ExperimentalTetheringFunctionality: ", err)
+	}
+
 	technologies, err := helper.Manager.GetTetheringCapabilityUpstreamTechnologies(ctx)
 	if err != nil {
 		s.Fatal("Failed to get Upstream Technologies property: ", err)

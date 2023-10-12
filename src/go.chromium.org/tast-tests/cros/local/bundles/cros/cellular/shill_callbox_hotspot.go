@@ -176,7 +176,11 @@ func ShillCallboxHotspot(ctx context.Context, s *testing.State) {
 	}
 
 	//TODO(b/267804414): SetTetheringAllowed is only needed during fishfooding and can be removed later.
-	err = helper.Manager.SetTetheringAllowed(ctx, true)
+	helper.Manager.SetTetheringAllowed(ctx, true)
+
+	if err := helper.Manager.SetExperimentalTetheringFunctionality(ctx, true); err != nil {
+		s.Fatal("Unable to set ExperimentalTetheringFunctionality: ", err)
+	}
 
 	if _, err := helper.Manager.CreateFakeUserProfile(ctx, callboxHotspotTestProfileName); err != nil {
 		s.Fatalf("Failed to create fake profile %q", callboxHotspotTestProfileName)
