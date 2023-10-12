@@ -31,6 +31,7 @@ import (
 const (
 	testFile              = "/var/lib/rmad/.test"
 	bypassCalibrationFile = "/var/lib/rmad/.disable_calibration"
+	bypassPowerwashFile   = "/var/lib/rmad/.disable_powerwash"
 	offlineLogFile        = "/var/lib/rmad/offline.log"
 	offlineExecuteSuccess = "Success"
 	googleURL             = "google.com"
@@ -72,6 +73,10 @@ func (shimlessRMA *AppService) NewShimlessRMA(ctx context.Context,
 	// Therefore, we need to create it every time when we new ShimlessRMA
 	if _, err := os.Create(testFile); err != nil {
 		return nil, errors.Wrap(err, "failed to create .test file")
+	}
+
+	if _, err := os.Create(bypassPowerwashFile); err != nil {
+		return nil, errors.Wrap(err, "failed to create .disable_powerwash file")
 	}
 
 	cr, err := chrome.New(ctx, chrome.EnableFeatures("ShimlessRMAFlow"),
