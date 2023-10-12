@@ -61,6 +61,15 @@ func init() {
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
+				Name: "4p",
+				Val: webrtc.VCTestParams{
+					NumPeople: 4,
+				},
+				Fixture:   "chromeRTCPerf",
+				Timeout:   5 * time.Minute,
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
 				Name: "9p",
 				Val: webrtc.VCTestParams{
 					NumPeople: 9,
