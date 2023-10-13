@@ -14699,6 +14699,7 @@ type OnFileAttachedEnterpriseConnectorValue struct {
 	BlockPasswordProtected   bool                                                    `json:"block_password_protected"`
 	BlockUntilVerdict        int                                                     `json:"block_until_verdict"`
 	CustomMessages           []*OnFileAttachedEnterpriseConnectorValueCustomMessages `json:"custom_messages,omitempty"`
+	DefaultAction            string                                                  `json:"default_action"`
 	Disable                  []*OnFileAttachedEnterpriseConnectorValueDisable        `json:"disable,omitempty"`
 	Enable                   []*OnFileAttachedEnterpriseConnectorValueEnable         `json:"enable,omitempty"`
 	RequireJustificationTags []string                                                `json:"require_justification_tags,omitempty"`
@@ -14799,6 +14800,7 @@ type OnFileDownloadedEnterpriseConnectorValue struct {
 	BlockPasswordProtected   bool                                                      `json:"block_password_protected"`
 	BlockUntilVerdict        int                                                       `json:"block_until_verdict"`
 	CustomMessages           []*OnFileDownloadedEnterpriseConnectorValueCustomMessages `json:"custom_messages,omitempty"`
+	DefaultAction            string                                                    `json:"default_action"`
 	Disable                  []*OnFileDownloadedEnterpriseConnectorValueDisable        `json:"disable,omitempty"`
 	Enable                   []*OnFileDownloadedEnterpriseConnectorValueEnable         `json:"enable,omitempty"`
 	RequireJustificationTags []string                                                  `json:"require_justification_tags,omitempty"`
@@ -14865,6 +14867,7 @@ type OnBulkDataEntryEnterpriseConnector struct {
 type OnBulkDataEntryEnterpriseConnectorValue struct {
 	BlockUntilVerdict        int                                                      `json:"block_until_verdict"`
 	CustomMessages           []*OnBulkDataEntryEnterpriseConnectorValueCustomMessages `json:"custom_messages,omitempty"`
+	DefaultAction            string                                                   `json:"default_action"`
 	Disable                  []*OnBulkDataEntryEnterpriseConnectorValueDisable        `json:"disable,omitempty"`
 	Enable                   []*OnBulkDataEntryEnterpriseConnectorValueEnable         `json:"enable,omitempty"`
 	MinimumDataSize          int                                                      `json:"minimum_data_size"`
@@ -20816,6 +20819,7 @@ type OnPrintEnterpriseConnectorValue struct {
 	BlockLargeFiles          bool                                             `json:"block_large_files"`
 	BlockUntilVerdict        int                                              `json:"block_until_verdict"`
 	CustomMessages           []*OnPrintEnterpriseConnectorValueCustomMessages `json:"custom_messages,omitempty"`
+	DefaultAction            string                                           `json:"default_action"`
 	Disable                  []*OnPrintEnterpriseConnectorValueDisable        `json:"disable,omitempty"`
 	Enable                   []*OnPrintEnterpriseConnectorValueEnable         `json:"enable,omitempty"`
 	RequireJustificationTags []string                                         `json:"require_justification_tags,omitempty"`
@@ -22414,37 +22418,6 @@ func (p *OnFileTransferEnterpriseConnector) SetProto(m *protoreflect.Message) {
 }
 func (p *OnFileTransferEnterpriseConnector) Equal(iface interface{}) bool {
 	v, ok := iface.([]*OnFileTransferEnterpriseConnectorValue)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 992. ChromeRootStoreEnabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type ChromeRootStoreEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *ChromeRootStoreEnabled) Name() string          { return "ChromeRootStoreEnabled" }
-func (p *ChromeRootStoreEnabled) Scope() Scope          { return ScopeUser }
-func (p *ChromeRootStoreEnabled) Status() Status        { return p.Stat }
-func (p *ChromeRootStoreEnabled) UntypedV() interface{} { return p.Val }
-func (p *ChromeRootStoreEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *ChromeRootStoreEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *ChromeRootStoreEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
 	if !ok {
 		return ok
 	}
@@ -27100,6 +27073,153 @@ func (p *RelatedWebsiteSetsEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// 1166. DeviceExtendedFkeysModifier
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DeviceExtendedFkeysModifier struct {
+	Stat Status
+	Val  int
+}
+
+func (p *DeviceExtendedFkeysModifier) Name() string          { return "DeviceExtendedFkeysModifier" }
+func (p *DeviceExtendedFkeysModifier) Scope() Scope          { return ScopeDevice }
+func (p *DeviceExtendedFkeysModifier) Status() Status        { return p.Stat }
+func (p *DeviceExtendedFkeysModifier) UntypedV() interface{} { return p.Val }
+func (p *DeviceExtendedFkeysModifier) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *DeviceExtendedFkeysModifier) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "extended_fkeys_modifier", "modifier", p.Val)
+}
+func (p *DeviceExtendedFkeysModifier) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1167. UnaffiliatedDeviceArcAllowed
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type UnaffiliatedDeviceArcAllowed struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *UnaffiliatedDeviceArcAllowed) Name() string          { return "UnaffiliatedDeviceArcAllowed" }
+func (p *UnaffiliatedDeviceArcAllowed) Scope() Scope          { return ScopeUser }
+func (p *UnaffiliatedDeviceArcAllowed) Status() Status        { return p.Stat }
+func (p *UnaffiliatedDeviceArcAllowed) UntypedV() interface{} { return p.Val }
+func (p *UnaffiliatedDeviceArcAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *UnaffiliatedDeviceArcAllowed) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *UnaffiliatedDeviceArcAllowed) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1168. RelatedWebsiteSetsOverrides
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type RelatedWebsiteSetsOverrides struct {
+	Stat Status
+	Val  *RelatedWebsiteSetsOverridesValue
+}
+
+type RelatedWebsiteSetsOverridesValue struct {
+	Additions    []*RelatedWebsiteSetsOverridesValueAdditions    `json:"additions,omitempty"`
+	Replacements []*RelatedWebsiteSetsOverridesValueReplacements `json:"replacements,omitempty"`
+}
+
+type RelatedWebsiteSetsOverridesValueAdditions struct {
+	AssociatedSites []string            `json:"associatedSites,omitempty"`
+	CcTLDs          map[string][]string `json:"ccTLDs"`
+	Primary         string              `json:"primary"`
+	ServiceSites    []string            `json:"serviceSites,omitempty"`
+}
+
+type RelatedWebsiteSetsOverridesValueReplacements struct {
+	AssociatedSites []string            `json:"associatedSites,omitempty"`
+	CcTLDs          map[string][]string `json:"ccTLDs"`
+	Primary         string              `json:"primary"`
+	ServiceSites    []string            `json:"serviceSites,omitempty"`
+}
+
+func (p *RelatedWebsiteSetsOverrides) Name() string          { return "RelatedWebsiteSetsOverrides" }
+func (p *RelatedWebsiteSetsOverrides) Scope() Scope          { return ScopeUser }
+func (p *RelatedWebsiteSetsOverrides) Status() Status        { return p.Stat }
+func (p *RelatedWebsiteSetsOverrides) UntypedV() interface{} { return p.Val }
+func (p *RelatedWebsiteSetsOverrides) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v *RelatedWebsiteSetsOverridesValue
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as *RelatedWebsiteSetsOverridesValue", m)
+	}
+	return v, nil
+}
+func (p *RelatedWebsiteSetsOverrides) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *RelatedWebsiteSetsOverrides) Equal(iface interface{}) bool {
+	v, ok := iface.(*RelatedWebsiteSetsOverridesValue)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1169. ShowHumanPresenceSensorScreenEnabled
+// This policy has a default value of False.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ShowHumanPresenceSensorScreenEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ShowHumanPresenceSensorScreenEnabled) Name() string {
+	return "ShowHumanPresenceSensorScreenEnabled"
+}
+func (p *ShowHumanPresenceSensorScreenEnabled) Scope() Scope          { return ScopeUser }
+func (p *ShowHumanPresenceSensorScreenEnabled) Status() Status        { return p.Stat }
+func (p *ShowHumanPresenceSensorScreenEnabled) UntypedV() interface{} { return p.Val }
+func (p *ShowHumanPresenceSensorScreenEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ShowHumanPresenceSensorScreenEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ShowHumanPresenceSensorScreenEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // JSON deserialization logic (used by policy.Unmarshal).
 // ****************************************************************************
 
@@ -28482,8 +28602,6 @@ func newByName(name string) (Policy, error) {
 		return &OsColorMode{}, nil
 	case "OnFileTransferEnterpriseConnector":
 		return &OnFileTransferEnterpriseConnector{}, nil
-	case "ChromeRootStoreEnabled":
-		return &ChromeRootStoreEnabled{}, nil
 	case "NewWindowsInKioskAllowed":
 		return &NewWindowsInKioskAllowed{}, nil
 	case "EncryptedClientHelloEnabled":
@@ -28770,6 +28888,14 @@ func newByName(name string) (Policy, error) {
 		return &PPAPISharedImagesForVideoDecoderAllowed{}, nil
 	case "RelatedWebsiteSetsEnabled":
 		return &RelatedWebsiteSetsEnabled{}, nil
+	case "DeviceExtendedFkeysModifier":
+		return &DeviceExtendedFkeysModifier{}, nil
+	case "UnaffiliatedDeviceArcAllowed":
+		return &UnaffiliatedDeviceArcAllowed{}, nil
+	case "RelatedWebsiteSetsOverrides":
+		return &RelatedWebsiteSetsOverrides{}, nil
+	case "ShowHumanPresenceSensorScreenEnabled":
+		return &ShowHumanPresenceSensorScreenEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
@@ -28778,12 +28904,6 @@ func newByName(name string) (Policy, error) {
 // ****************************************************************************
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
-
-type RefConfig struct {
-	AccessCodeTtl       int    `json:"access_code_ttl"`
-	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
-	SharedSecret        string `json:"shared_secret"`
-}
 
 type RefTimeUsageLimitEntry struct {
 	LastUpdatedMillis string `json:"last_updated_millis"`
@@ -28795,15 +28915,63 @@ type RefTime struct {
 	Minute int `json:"minute"`
 }
 
-type RefDeviceLoginScreenPowerSettings struct {
-	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
-	IdleAction string                                   `json:"IdleAction"`
+type RefConfig struct {
+	AccessCodeTtl       int    `json:"access_code_ttl"`
+	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
+	SharedSecret        string `json:"shared_secret"`
 }
 
-type RefDeviceLoginScreenPowerSettingsDelays struct {
-	Idle      int `json:"Idle"`
-	ScreenDim int `json:"ScreenDim"`
-	ScreenOff int `json:"ScreenOff"`
+type RefPowerManagementDelays struct {
+	Delays     *RefPowerManagementDelaysDelays `json:"Delays"`
+	IdleAction string                          `json:"IdleAction"`
+}
+
+type RefPowerManagementDelaysDelays struct {
+	Idle        int `json:"Idle"`
+	IdleWarning int `json:"IdleWarning"`
+	ScreenDim   int `json:"ScreenDim"`
+	ScreenOff   int `json:"ScreenOff"`
+}
+
+type RefDisallowedTimeInterval struct {
+	DayOfWeek string `json:"day_of_week"`
+	Hours     int    `json:"hours"`
+	Minutes   int    `json:"minutes"`
+}
+
+type RefDayPercentagePair struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
+}
+
+type Reffile_transfer_enable_disable_schema struct {
+	SourceDestinationList []*Reffile_transfer_enable_disable_schemaSourceDestinationList `json:"source_destination_list,omitempty"`
+	Tags                  []string                                                       `json:"tags,omitempty"`
+}
+
+type Reffile_transfer_enable_disable_schemaSourceDestinationList struct {
+	Destinations []*Reffile_transfer_source_destination_schema                         `json:"destinations,omitempty"`
+	Sources      []*Reffile_transfer_enable_disable_schemaSourceDestinationListSources `json:"sources,omitempty"`
+}
+
+type Reffile_transfer_enable_disable_schemaSourceDestinationListSources struct {
+	FileSystemType string `json:"file_system_type"`
+}
+
+type Reffile_transfer_source_destination_schema struct {
+	FileSystemType string `json:"file_system_type"`
+}
+
+type RefBookmarkType struct {
+	Children     []*RefBookmarkType `json:"children,omitempty"`
+	Name         string             `json:"name"`
+	ToplevelName string             `json:"toplevel_name"`
+	Url          string             `json:"url"`
+}
+
+type RefUsbDeviceId struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
 }
 
 type RefDomainFiletypePair struct {
@@ -28831,57 +28999,15 @@ type RefWeeklyTime struct {
 	Time      int    `json:"time"`
 }
 
-type RefBookmarkType struct {
-	Children     []*RefBookmarkType `json:"children,omitempty"`
-	Name         string             `json:"name"`
-	ToplevelName string             `json:"toplevel_name"`
-	Url          string             `json:"url"`
+type RefDeviceLoginScreenPowerSettings struct {
+	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
+	IdleAction string                                   `json:"IdleAction"`
 }
 
-type Reffile_transfer_enable_disable_schema struct {
-	SourceDestinationList []*Reffile_transfer_enable_disable_schemaSourceDestinationList `json:"source_destination_list,omitempty"`
-	Tags                  []string                                                       `json:"tags,omitempty"`
-}
-
-type Reffile_transfer_enable_disable_schemaSourceDestinationList struct {
-	Destinations []*Reffile_transfer_source_destination_schema                         `json:"destinations,omitempty"`
-	Sources      []*Reffile_transfer_enable_disable_schemaSourceDestinationListSources `json:"sources,omitempty"`
-}
-
-type Reffile_transfer_enable_disable_schemaSourceDestinationListSources struct {
-	FileSystemType string `json:"file_system_type"`
-}
-
-type Reffile_transfer_source_destination_schema struct {
-	FileSystemType string `json:"file_system_type"`
-}
-
-type RefUsbDeviceId struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
-}
-
-type RefDisallowedTimeInterval struct {
-	DayOfWeek string `json:"day_of_week"`
-	Hours     int    `json:"hours"`
-	Minutes   int    `json:"minutes"`
-}
-
-type RefDayPercentagePair struct {
-	Days       int `json:"days"`
-	Percentage int `json:"percentage"`
-}
-
-type RefPowerManagementDelays struct {
-	Delays     *RefPowerManagementDelaysDelays `json:"Delays"`
-	IdleAction string                          `json:"IdleAction"`
-}
-
-type RefPowerManagementDelaysDelays struct {
-	Idle        int `json:"Idle"`
-	IdleWarning int `json:"IdleWarning"`
-	ScreenDim   int `json:"ScreenDim"`
-	ScreenOff   int `json:"ScreenOff"`
+type RefDeviceLoginScreenPowerSettingsDelays struct {
+	Idle      int `json:"Idle"`
+	ScreenDim int `json:"ScreenDim"`
+	ScreenOff int `json:"ScreenOff"`
 }
 
 // ****************************************************************************
