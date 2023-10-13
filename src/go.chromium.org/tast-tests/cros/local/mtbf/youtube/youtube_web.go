@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -384,49 +383,6 @@ func (y *YtWeb) Pause() uiauto.Action {
 			y.IsPlaying(),
 			y.ui.WithTimeout(longUITimeout).RetryUntil(y.kb.TypeAction("k"), y.IsPaused()),
 		),
-	)
-}
-
-// StartCast casts YouTube video to a specified screen connected to ADT-3.
-func (y *YtWeb) StartCast(accessCode string) uiauto.Action {
-	accessCodeTextField := nodewith.Name("Type the access code to start casting").Role(role.TextField).Editable()
-	incorrectPasswordText := nodewith.Name("You've entered an incorrect access code. Try again.").Role(role.StaticText)
-
-	enterCastCode := uiauto.NamedCombine("enter the access code",
-		y.kb.TypeAction(accessCode),
-		y.kb.AccelAction("Enter"),
-	)
-
-	return uiauto.NamedCombine("start casting the video",
-		quicksettings.StartCast(y.tconn),
-		y.ui.WaitUntilExists(accessCodeTextField),
-		enterCastCode,
-		uiauto.IfSuccessThen(y.ui.WithTimeout(shortUITimeout).WaitUntilExists(incorrectPasswordText),
-			uiauto.Combine("input access code again",
-				y.kb.AccelAction("Ctrl+A"),
-				y.kb.AccelAction("Backspace"),
-				enterCastCode,
-			),
-		),
-		y.Pause(),
-		y.Play(),
-	)
-}
-
-// StopCast stops casting YouTube video.
-func (y *YtWeb) StopCast() uiauto.Action {
-	return uiauto.NamedAction("stop casting the video", quicksettings.StopCast(y.tconn))
-}
-
-// ResetCastStatus resets the cast settings if the YouTube video is already casting.
-func (y *YtWeb) ResetCastStatus() uiauto.Action {
-	youtubeWindow := nodewith.NameContaining("YouTube").Role(role.Window).HasClass("Widget")
-	customizeChromeButton := nodewith.Name("Chrome").Role(role.PopUpButton).Ancestor(youtubeWindow)
-	castDialog := nodewith.NameStartingWith("Cast").Role(role.AlertDialog).Ancestor(youtubeWindow)
-	availableButton := nodewith.NameContaining("Available").Role(role.Button).Ancestor(castDialog).First()
-	return uiauto.NamedCombine("reset to available",
-		y.uiHdl.Click(customizeChromeButton),
-		uiauto.IfSuccessThen(y.ui.WithTimeout(shortUITimeout).WaitUntilExists(availableButton), y.uiHdl.Click(availableButton)),
 	)
 }
 

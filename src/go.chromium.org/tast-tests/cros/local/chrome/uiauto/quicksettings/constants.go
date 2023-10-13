@@ -159,7 +159,6 @@ const (
 	SettingPodDoNotDisturb  SettingPod = "Do not disturb"
 	SettingPodNetwork       SettingPod = "network"
 	SettingPodNearbyShare   SettingPod = "Nearby Share"
-	SettingPodCast          SettingPod = "cast"
 	SettingPodCameraFraming SettingPod = "Camera framing"
 )
 
