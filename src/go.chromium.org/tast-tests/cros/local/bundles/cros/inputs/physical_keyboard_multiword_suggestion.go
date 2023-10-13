@@ -107,69 +107,71 @@ func PhysicalKeyboardMultiwordSuggestion(ctx context.Context, s *testing.State) 
 		action   uiauto.Action
 	}{
 		{
-			// Trigger suggestion "how are you" and insert into
+			// Trigger suggestion "look at" and insert into
 			// textfield with tab.
 			name:     "AcceptSuggestionWithTab",
 			scenario: "verify suggestion appears and accepted with tab key",
 			errStr:   "Failed to accept suggestion: %v",
 			action: uiauto.Combine("accept multiword suggestion with tab",
-				keyboard.TypeAction("hi there ho"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "hi there ho"),
+				keyboard.TypeAction("please take a lo"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "please take a lo"),
 				ui.WaitUntilExists(suggestionWindowFinder),
 				keyboard.AccelAction("Tab"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "hi there how are you"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "please take a look at"),
 			),
 		},
 		{
-			// Trigger suggestion "how are you" and insert into
+			// Trigger suggestion "look at" and insert into
 			// textfield with down + enter key.
 			name:     "AcceptSuggestionWithDownAndEnter",
 			scenario: "verify suggestion appears and accepted with down and enter key",
 			errStr:   "Failed to accept suggestion: %v",
 			action: uiauto.Combine("accept multiword suggestion with down and enter",
-				keyboard.TypeAction("hi there ho"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "hi there ho"),
+				keyboard.TypeAction("please take a lo"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "please take a lo"),
 				ui.WaitUntilExists(suggestionWindowFinder),
 				keyboard.AccelAction("Down"),
 				keyboard.AccelAction("Enter"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "hi there how are you"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "please take a look at"),
 			),
 		},
 		{
-			// Trigger suggestion "my name is" and dismiss with
+			// Trigger suggestion "let me know" and dismiss with
 			// multiple white space at the end of the text.
 			name:     "SuggestionShouldAppearOnlyAtEndOfText",
 			scenario: "verify suggestion dismissed with multiple whitespace",
 			errStr:   "Failed to dismiss suggestion with whitespace: %v",
 			action: uiauto.Combine("dismiss multiword suggestion with multiple whitespace",
-				keyboard.TypeAction("my name"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "my name"),
+				keyboard.TypeAction("let me "),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "let me "),
 				ui.WaitUntilExists(suggestionWindowFinder),
-				keyboard.TypeAction("  "),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "my name  "),
+				keyboard.TypeAction(" "),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "let me  "),
 				ui.WaitUntilGone(suggestionWindowFinder),
 			),
 		},
 		{
-			// Trigger suggestion "how are you", partially type
+			// Trigger suggestion "looking for", partially type
 			// suggestion, and dismiss suggestion by deleting text
 			// beyond suggestion trigger point.
 			name:     "SuggestionTrackedAndDismissedWithTextUpdates",
 			scenario: "track typing in suggestion and dismiss when deleting past trigger point",
 			errStr:   "Failed to dismiss suggestion: %v",
 			action: uiauto.Combine("dismiss multiword suggestion by deleting past trigger point",
-				keyboard.TypeAction("hi there h"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "hi there h"),
+				keyboard.TypeAction("I am loo"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "I am loo"),
 				ui.WaitUntilExists(suggestionWindowFinder),
-				keyboard.TypeAction("ow a"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "hi there how a"),
+				keyboard.TypeAction("king f"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "I am looking f"),
 				ui.WaitUntilExists(suggestionWindowFinder),
-				keyboard.AccelAction("Backspace"), // "hi there how "
-				keyboard.AccelAction("Backspace"), // "hi there how"
-				keyboard.AccelAction("Backspace"), // "hi there ho"
-				keyboard.AccelAction("Backspace"), // "hi there h"
+				keyboard.AccelAction("Backspace"), // "I am looking "
+				keyboard.AccelAction("Backspace"), // "I am looking"
+				keyboard.AccelAction("Backspace"), // "I am lookin"
+				keyboard.AccelAction("Backspace"), // "I am looki"
+				keyboard.AccelAction("Backspace"), // "I am look"
+				keyboard.AccelAction("Backspace"), // "I am loo"
 				ui.WaitUntilExists(suggestionWindowFinder),
-				keyboard.AccelAction("Backspace"), // "hi there "
+				keyboard.AccelAction("Backspace"), // "I am lo"
 				ui.WaitUntilGone(suggestionWindowFinder),
 			),
 		},
@@ -179,18 +181,18 @@ func PhysicalKeyboardMultiwordSuggestion(ctx context.Context, s *testing.State) 
 			scenario: "suggestions handles newline gracefully",
 			errStr:   "Failed to accept suggestion: %v",
 			action: uiauto.Combine("suggestion handles newline gracefully",
-				keyboard.TypeAction("hi there h"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "hi there h"),
+				keyboard.TypeAction("I am look"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "I am look"),
 				ui.WaitUntilExists(suggestionWindowFinder),
 				keyboard.AccelAction("Enter"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "hi there h\n"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "I am look\n"),
 				ui.WaitUntilGone(suggestionWindowFinder),
 				keyboard.AccelAction("Backspace"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "hi there h"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "I am look"),
 				ui.WaitUntilExists(suggestionWindowFinder),
 				keyboard.AccelAction("Tab"),
 				ui.WaitUntilGone(suggestionWindowFinder),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "hi there how are you"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "I am looking for"),
 			),
 		},
 	}
