@@ -15,3 +15,8 @@ const (
 	TheQuickBrownFoxWav         = "the-quick-brown-fox.wav"
 	TheQuickBrownFoxWavDuration = 3410 * time.Millisecond
 )
+
+// audio_long16.wav is from https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/data/voice_engine/audio_long16.wav;l=1;drc=9dc45dad1b14680f2ae0ae75dc497250e9ecd384
+const (
+	AudioLong16Wav = "audio_long16.wav"
+)
