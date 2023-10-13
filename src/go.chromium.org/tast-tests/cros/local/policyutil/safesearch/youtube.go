@@ -6,6 +6,7 @@ package safesearch
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -81,7 +82,9 @@ func getYouTubeErrorMessage(ctx context.Context, br ash.ConnSource, url string) 
 	var message string
 	cnt := 0
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := conn.Eval(ctx, `document.getElementById('error-screen').innerText`, &message); err != nil {
+		errorMissing := "!document.getElementById('error-screen')"
+		errorText := "document.getElementById('error-screen').innerText"
+		if err := conn.Eval(ctx, fmt.Sprintf("%s ? '' : %s", errorMissing, errorText), &message); err != nil {
 			return err
 		}
 
