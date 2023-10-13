@@ -136,9 +136,13 @@ func InitWebcam(ctx context.Context, s *testing.State) error {
 	}
 
 	webcamsCount := 0
-	for s := range cams {
-		testing.ContextLog(ctx, "online cam:", s)
-		webcamOnline[webcamsCount] = s
+	for video, cam := range cams {
+		name, err := cam.GetName()
+		if err != nil {
+			name = err.Error()
+		}
+		testing.ContextLogf(ctx, "online cam: %s, %s", video, name)
+		webcamOnline[webcamsCount] = video
 		webcamsCount = webcamsCount + 1
 	}
 
