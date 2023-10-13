@@ -124,11 +124,10 @@ func GoToActiveNetworkApnSubpage(ctx context.Context, tconn *chrome.TestConn, is
 }
 
 // ClickAPNMoreActionsButton will click the 'More Actions' button associated to the APN.
-func ClickAPNMoreActionsButton(ctx context.Context, tconn *chrome.TestConn, apn string) error {
+func ClickAPNMoreActionsButton(ctx context.Context, tconn *chrome.TestConn, userFriendlyAPNName string) error {
 	ui := uiauto.New(tconn)
 
-	// Ensure case insensitivity. For example AT&T's APN is "broadband", but the UI shows "ATT Broadband"
-	apnMoreActionBtn := nodewith.NameRegex(regexp.MustCompile("(?i)\\b" + apn + "\\b")).Role(role.Button).HasClass("icon-more-vert").First()
+	apnMoreActionBtn := nodewith.NameContaining(userFriendlyAPNName).Role(role.Button).HasClass("icon-more-vert").First()
 
 	// More actions button may be temporarily disabled if cellular is connecting or disconnecting.
 	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(apnMoreActionBtn.Focusable())(ctx); err != nil {
@@ -360,11 +359,11 @@ func (s *OSSettings) VerifyAPNSubpageConnectedApnUI(ctx context.Context, tconn *
 }
 
 // VerifyAPNMoreActionsMenuItemsPresent verifies the presence of more actions APN menu items.
-func VerifyAPNMoreActionsMenuItemsPresent(ctx context.Context, tconn *chrome.TestConn, apn string, hasEnable, hasDisable, hasRemove bool) error {
+func VerifyAPNMoreActionsMenuItemsPresent(ctx context.Context, tconn *chrome.TestConn, userFriendlyAPNName string, hasEnable, hasDisable, hasRemove bool) error {
 	ui := uiauto.New(tconn)
 
 	if err := ui.Exists(DetailsBtn)(ctx); err != nil {
-		if err := ClickAPNMoreActionsButton(ctx, tconn, apn); err != nil {
+		if err := ClickAPNMoreActionsButton(ctx, tconn, userFriendlyAPNName); err != nil {
 			return errors.Wrap(err, "failed to click more actions button")
 		}
 		if err := ui.Exists(DetailsBtn)(ctx); err != nil {

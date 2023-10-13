@@ -61,7 +61,7 @@ func CellularAutomaticallyDetectedApn(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	serviceLastGoodAPN, err := helper.GetCellularLastGoodAPN(ctx)
-	serviceLastGoodAPNInfoApnName := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]
+	serviceLastGoodAPNInfoApnUserFriendlyName := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]
 	serviceLastGoodAPNInfoApnSource := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnSource]
 	if err != nil {
 		s.Fatal("Error getting Service properties: ", err)
@@ -82,7 +82,7 @@ func CellularAutomaticallyDetectedApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to go to active cellular network detail page view: ", err)
 	}
 
-	if err := mdp.VerifyApnIsVisibleInSubtext(ctx, tconn, cr, serviceLastGoodAPNInfoApnName); err != nil {
+	if err := mdp.VerifyApnIsVisibleInSubtext(ctx, tconn, cr, serviceLastGoodAPNInfoApnUserFriendlyName); err != nil {
 		s.Fatal("Failed to go to verify active apn subtext: ", err)
 	}
 
@@ -90,11 +90,11 @@ func CellularAutomaticallyDetectedApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to go to apn subpage: ", err)
 	}
 
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, serviceLastGoodAPNInfoApnName, serviceLastGoodAPNInfoApnSource); err != nil {
+	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, serviceLastGoodAPNInfoApnUserFriendlyName, serviceLastGoodAPNInfoApnSource); err != nil {
 		s.Fatal("Failed to verify connected APN UI: ", err)
 	}
 
-	if err := ossettings.VerifyAPNMoreActionsMenuItemsPresent(ctx, tconn, serviceLastGoodAPNInfoApnName, false, false, false); err != nil {
+	if err := ossettings.VerifyAPNMoreActionsMenuItemsPresent(ctx, tconn, serviceLastGoodAPNInfoApnUserFriendlyName, false, false, false); err != nil {
 		s.Fatal("Failed verify items in APN more actions menu: ", err)
 	}
 
