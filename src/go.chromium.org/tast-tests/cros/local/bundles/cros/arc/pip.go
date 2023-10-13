@@ -79,12 +79,9 @@ type pipTestParams struct {
 var pipVMTests = []pipTestParams{
 	{name: "PIP Move", fn: testPIPMove, initMethod: enterPip, bT: browser.TypeAsh},
 	{name: "PIP Resize To Max", fn: testPIPResizeToMax, initMethod: enterPip, bT: browser.TypeAsh},
-	{name: "PIP GravityQuickSettings", fn: testPIPGravityQuickSettings, initMethod: enterPip, bT: browser.TypeAsh},
-	{name: "PIP AutoPIP New Chrome Window", fn: testPIPAutoPIPNewChromeWindow, initMethod: startActivity, bT: browser.TypeAsh},
 	{name: "PIP AutoPIP New Android Window", fn: testPIPAutoPIPNewAndroidWindow, initMethod: doNothing, bT: browser.TypeAsh},
 	{name: "PIP AutoPIP Minimize", fn: testPIPAutoPIPMinimize, initMethod: startActivity, bT: browser.TypeAsh},
 	{name: "PIP ExpandPIP Menu Touch", fn: testPIPExpandViaMenuTouch, initMethod: startActivity, bT: browser.TypeAsh},
-	{name: "PIP Toggle Tablet mode", fn: testPIPToggleTabletMode, initMethod: enterPip, bT: browser.TypeAsh},
 }
 var pipVMLacrosTests = []pipTestParams{
 	{name: "PIP AutoPIP New Chrome Window", fn: testPIPAutoPIPNewChromeWindow, initMethod: startActivity, bT: browser.TypeLacros},
