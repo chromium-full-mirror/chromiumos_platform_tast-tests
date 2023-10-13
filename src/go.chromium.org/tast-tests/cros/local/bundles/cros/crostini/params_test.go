@@ -175,87 +175,27 @@ func TestRestartParams(t *testing.T) {
 	}
 }
 
-// These tests do not include the container version in the full test name for
-// buster. TODO(b/234390590): move these to appTests.
-// Do not add new tests here.
-var oldAppTests = []string{
-	"app_android_studio.go",
-	"app_eclipse.go",
-	"app_emacs.go",
-	"app_gedit.go",
-	"app_gedit_filesharing.go",
-	"app_gedit_unshare_folder.go",
-	"app_vscode_from_file_manager.go",
-	"app_vscode.go",
-	"restart_app.go",
-}
-
-func TestOldAppTestParams(t *testing.T) {
-	for _, filename := range oldAppTests {
-		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
-			{
-				Timeout:             15 * time.Minute,
-				StableHardwareDep:   "crostini.CrostiniAppStable",
-				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
-				ExtraSoftwareDeps:   []string{"crostini_app"},
-				UseLargeContainer:   true,
-				UseFixture:          true,
-				DeviceMode:          devicemode.TabletMode,
-				NoBusterInTestName:  true,
-			},
-			{
-				Timeout:             15 * time.Minute,
-				StableHardwareDep:   "crostini.CrostiniAppStable",
-				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
-				ExtraSoftwareDeps:   []string{"crostini_app"},
-				UseLargeContainer:   true,
-				UseFixture:          true,
-				DeviceMode:          devicemode.ClamshellMode,
-				NoBusterInTestName:  true,
-			}})
-		genparams.Ensure(t, filename, params)
-	}
-}
-
 var appTests = []string{
+	"app_android_studio.go",
 	"app_audacity.go",
 	"app_audacity_terminal.go",
+	"app_eclipse.go",
+	"app_emacs.go",
 	"app_firefox.go",
 	"app_firefox_terminal.go",
+	"app_gedit_filesharing.go",
+	"app_gedit.go",
+	"app_gedit_unshare_folder.go",
 	"app_libre_office.go",
+	"app_vlc.go",
+	"app_vscode_from_file_manager.go",
+	"app_vscode.go",
+	"app_vscode_uninstall.go",
+	"restart_app.go",
 }
 
 func TestAppTestParams(t *testing.T) {
 	for _, filename := range appTests {
-		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
-			{
-				Timeout:             15 * time.Minute,
-				StableHardwareDep:   "crostini.CrostiniAppStable",
-				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
-				ExtraSoftwareDeps:   []string{"crostini_app"},
-				UseLargeContainer:   true,
-				UseFixture:          true,
-				DeviceMode:          devicemode.TabletMode,
-			},
-			{
-				Timeout:             15 * time.Minute,
-				StableHardwareDep:   "crostini.CrostiniAppStable",
-				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
-				ExtraSoftwareDeps:   []string{"crostini_app"},
-				UseLargeContainer:   true,
-				UseFixture:          true,
-				DeviceMode:          devicemode.ClamshellMode,
-			}})
-		genparams.Ensure(t, filename, params)
-	}
-}
-
-var appNoBusterTests = []string{
-	"app_vlc.go",
-}
-
-func TestAppNoBusterTestParams(t *testing.T) {
-	for _, filename := range appNoBusterTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
 			{
 				Timeout:                 15 * time.Minute,
@@ -308,36 +248,6 @@ func TestAppClamshellOnlyTestParams(t *testing.T) {
 				DeviceMode:              devicemode.ClamshellMode,
 				MinimumContainerVersion: vm.DebianBullseye,
 			}})
-		genparams.Ensure(t, filename, params)
-	}
-}
-
-var appWithSnapshotTests = []string{
-	"app_vscode_uninstall.go",
-}
-
-func TestAppWithSnapshotTestParams(t *testing.T) {
-	for _, filename := range appWithSnapshotTests {
-		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
-			{
-				Timeout:             15 * time.Minute,
-				StableHardwareDep:   "crostini.CrostiniAppStable",
-				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
-				ExtraSoftwareDeps:   []string{"crostini_app"},
-				UseLargeContainer:   true,
-				UseFixture:          true,
-				DeviceMode:          devicemode.TabletMode,
-			},
-			{
-				Timeout:             15 * time.Minute,
-				StableHardwareDep:   "crostini.CrostiniAppStable",
-				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
-				ExtraSoftwareDeps:   []string{"crostini_app"},
-				UseLargeContainer:   true,
-				UseFixture:          true,
-				DeviceMode:          devicemode.ClamshellMode,
-			},
-		})
 		genparams.Ensure(t, filename, params)
 	}
 }
