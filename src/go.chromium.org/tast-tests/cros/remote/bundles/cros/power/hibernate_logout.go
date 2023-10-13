@@ -40,7 +40,10 @@ func HibernateLogout(ctx context.Context, s *testing.State) {
 		s.Fatal("pre-hibernate steps failed: ", err)
 	}
 
-	if !ht.HiberimageExists(ctx) {
+	exists, err := ht.HiberimageExists(ctx)
+	if err != nil {
+		s.Fatal("Failed to check if hiberimage exists:", err)
+	} else if !exists {
 		s.Fatal("LV 'hiberimage' does not exist after user login")
 	}
 
@@ -48,7 +51,10 @@ func HibernateLogout(ctx context.Context, s *testing.State) {
 		s.Fatal("logout failed: ", err)
 	}
 
-	if ht.HiberimageExists(ctx) {
+	exists, err = ht.HiberimageExists(ctx)
+	if err != nil {
+		s.Fatal("Failed to check if hiberimage exists:", err)
+	} else if exists {
 		s.Fatal("LV 'hiberimage' still exists after user logged out")
 	}
 }

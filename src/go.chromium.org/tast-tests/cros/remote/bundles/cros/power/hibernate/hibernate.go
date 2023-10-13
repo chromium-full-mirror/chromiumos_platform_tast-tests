@@ -186,10 +186,10 @@ func (t *Tester) Logout(ctx context.Context) error {
 
 // HiberimageExists returns true if the 'hiberimage' logical volume exists,
 // otherwise false.
-func (t *Tester) HiberimageExists(ctx context.Context) bool {
+func (t *Tester) HiberimageExists(ctx context.Context) (bool, error) {
 	out, err := t.dut.Conn().CommandContext(ctx, "/sbin/lvs", "--options=name", "--noheadings").CombinedOutput()
 	if err != nil {
-		t.logger.Fatal("Failed to get list of logical volumes: ", err)
+		return false, err
 	}
 
 	lvs := strings.Split(string(out), "\n")
@@ -197,11 +197,11 @@ func (t *Tester) HiberimageExists(ctx context.Context) bool {
 		lv := strings.TrimSpace(lvs[i])
 
 		if lv == "hiberimage" {
-			return true
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 // CloseGRPCClient closes the associated GRPC client.
