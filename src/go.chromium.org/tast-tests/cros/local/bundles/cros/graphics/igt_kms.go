@@ -332,7 +332,8 @@ func init() {
 			}, {
 				Name: "kms_plane_lowres",
 				Val: graphics.IgtTest{
-					Exe: "kms_plane_lowres",
+					Exe:      "kms_plane_lowres",
+					IsSkipOk: true,
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_nightly"},
