@@ -1,0 +1,6 @@
+set noparent
+
+per-file physical_keyboard_kernel_mode.go=file:chromiumos/owners:v1:/platform/OWNERS.p12s
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast

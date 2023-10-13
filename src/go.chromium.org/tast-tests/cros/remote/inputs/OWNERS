@@ -1,0 +1,6 @@
+set noparent
+
+include chromiumos/owners:v1:/platform/OWNERS.hmr
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast

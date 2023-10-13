@@ -1,0 +1,6 @@
+set noparent
+
+per-file human_motion_robot_linearity.go=file:chromiumos/owners:v1:/platform/OWNERS.hmr
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
