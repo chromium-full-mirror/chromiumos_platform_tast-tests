@@ -23,7 +23,7 @@ func init() {
 		},
 		BugComponent: "b:1361410",
 		Attr:         []string{"group:mainline", "informational"},
-		Timeout:      2 * time.Minute,
+		Timeout:      4 * time.Minute,
 	})
 }
 

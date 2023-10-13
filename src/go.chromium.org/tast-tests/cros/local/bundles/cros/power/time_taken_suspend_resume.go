@@ -39,7 +39,7 @@ func init() {
 			"power.TimeTakenSuspendResume.defaultResumeTime",
 		},
 		Fixture: "chromeLoggedIn",
-		Timeout: 5 * time.Minute,
+		Timeout: 7 * time.Minute,
 	})
 }
 

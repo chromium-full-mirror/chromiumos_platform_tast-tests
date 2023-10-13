@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -96,7 +97,10 @@ func WithoutRetries() Param {
 	return &wakeupCountParam{}
 }
 
-const powerdLatestPath = "/var/log/power_manager/powerd.LATEST"
+const (
+	powerdLatestPath = "/var/log/power_manager/powerd.LATEST"
+	flashromLockFile = "/run/lock/power_override/flashrom.lock"
+)
 
 func checkPowerdRet(ctx context.Context, reader *syslog.LineReader, lineCache *[]string) (int, error) {
 	r := regexp.MustCompile(`powerd_suspend returned ([0-9])`)
@@ -151,6 +155,25 @@ func checkKernelRet() (int, error) {
 	}
 }
 
+func waitForFlashromLock(ctx context.Context) error {
+	if err := testing.Poll(ctx, func(context.Context) error {
+		_, readErr := os.Stat(flashromLockFile)
+		if readErr == nil {
+			return errors.New("flashrom lock still exists")
+		}
+		if !os.IsNotExist(readErr) {
+			return errors.New("could not read file info through os")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  120 * time.Second,
+		Interval: time.Second,
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Return values for the powerd_suspend script
 const (
 	powerdResultSuccess       = 0
@@ -170,6 +193,9 @@ func Request(ctx context.Context, params ...Param) (ResumeInfo, error) {
 			return ResumeInfo{}, err
 		}
 		args = append(args, fmt.Sprintf("--%s=%s", p.Name(), val))
+	}
+	if err := waitForFlashromLock(ctx); err != nil {
+		testing.ContextLog(ctx, "Still attempt suspend even though fail to wait for flashrom lock clearance: ", err)
 	}
 
 	// Open the powerd log and seek to the end. The logs on suspend should soon

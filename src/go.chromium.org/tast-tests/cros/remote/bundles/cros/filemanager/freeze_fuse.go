@@ -38,7 +38,7 @@ func init() {
 			"informational",
 		},
 		Data:    []string{"100000_files_in_one_folder.zip"},
-		Timeout: 15 * time.Minute,
+		Timeout: 20 * time.Minute,
 		VarDeps: []string{
 			"filemanager.user",
 			"filemanager.password",
