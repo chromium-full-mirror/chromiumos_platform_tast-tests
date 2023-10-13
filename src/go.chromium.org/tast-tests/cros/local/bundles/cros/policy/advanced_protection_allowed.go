@@ -112,7 +112,8 @@ func AdvancedProtectionAllowed(ctx context.Context, s *testing.State) {
 				networkrequestmonitor.OptionalServiceParams{
 					Chrome:        cr,
 					Browser:       br,
-					PolicySetting: key}); err != nil {
+					PolicySetting: key,
+					Server:        server}); err != nil {
 				s.Fatal("Failed to trigger upload for scanning: ", err)
 			}
 
