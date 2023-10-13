@@ -132,6 +132,13 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	// Restart with default parameter.
 	defer secagentdupstart.RestartSecagentd(cleanupCtx)
 
+	localAddress := map[string]bool{}
+	addrs, err := net.InterfaceAddrs()
+	for _, addr := range addrs {
+		if ipnet, ok := addr.(*net.IPNet); ok {
+			localAddress[ipnet.IP.String()] = true
+		}
+	}
 	// Clear out old entries from the kernel trace to make an easier failure
 	// analysis.
 	if err := secagentdcommon.ClearKernelTrace(ctx); err != nil {
@@ -238,6 +245,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 
 	foundPid := false
 	foundProtocol := false
+	badRemoteAddress := false
 	for _, method := range calledMethods {
 
 		if len(method.Arguments) == 0 {
@@ -274,6 +282,10 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 			}
 
 			for _, flow := range bFlows {
+				if localAddress[flow.NetworkFlow.GetRemoteIp()] {
+					s.Log("Detected an event flow that has a local ip address as its remote address:", flow.NetworkFlow.String())
+					badRemoteAddress = true
+				}
 				if (flow.GetParentProcess() != nil && flow.GetParentProcess().GetCanonicalPid() == cmdPid) || (flow.GetProcess() != nil && flow.GetProcess().GetCanonicalPid() == cmdPid) {
 					foundPid = true
 					if flow.NetworkFlow.Protocol.String() == details.protocol && (details.ipAddr == "" || *flow.NetworkFlow.RemoteIp == details.ipAddr) {
@@ -294,6 +306,10 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 
 	if !foundProtocol {
 		s.Errorf("Protocol %s is not captured", details.protocol)
+	}
+
+	if badRemoteAddress {
+		s.Error("Found one or more flows where the remote address in the flow is the same as a local ip address")
 	}
 }
 
