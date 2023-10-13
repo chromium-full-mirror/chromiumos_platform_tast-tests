@@ -130,13 +130,13 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(ctx)
 
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), browser.TypeAsh)
+	cr, l, _, err := lacros.Setup(ctx, s.FixtValue(), browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to initialize test: ", err)
 	}
 	defer lacros.CloseLacros(ctx, l)
 
-	if err := webrtc.RunVideoConference(ctx, cs, cr, s, params); err != nil {
+	if err := webrtc.RunVideoConference(ctx, cr, s, params); err != nil {
 		s.Fatal("RunVideoConference failed: ", err)
 	}
 }

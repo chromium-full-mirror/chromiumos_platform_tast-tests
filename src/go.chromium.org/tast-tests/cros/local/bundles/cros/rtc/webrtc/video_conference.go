@@ -140,8 +140,7 @@ func runNonStep(ctx context.Context, s *testing.State, conn *chrome.Conn, pr *po
 	return nil
 }
 
-func runVCPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
-	s *testing.State, vcURL string, params VCTestParams) error {
+func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL string, params VCTestParams) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to test API")
@@ -161,7 +160,7 @@ func runVCPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
 	r := power.NewRecorder(ctx, powerInterval, s.OutDir(), s.TestName())
 	defer r.Close(closeCtx)
 
-	conn, err := cs.NewConn(ctx, vcURL)
+	conn, err := cr.NewConn(ctx, vcURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open %s", vcURL)
 	}
@@ -188,8 +187,7 @@ func runVCPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
 
 // RunVideoConference runs a video conference using WebRTC API and measures the
 // performance metrics while enabling features in order.
-func RunVideoConference(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
-	s *testing.State, params VCTestParams) error {
+func RunVideoConference(ctx context.Context, cr *chrome.Chrome, s *testing.State, params VCTestParams) error {
 	const cleanupTime = 5 * time.Second
 
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
@@ -199,7 +197,7 @@ func RunVideoConference(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
 
-	if err := runVCPerf(ctx, cs, cr, s, vcURL, params); err != nil {
+	if err := runVCPerf(ctx, cr, s, vcURL, params); err != nil {
 		return err
 	}
 
