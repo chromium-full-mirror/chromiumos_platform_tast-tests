@@ -1,0 +1,7 @@
+set noparent
+
+# Camera team
+include chromiumos/owners:v1:/camera/OWNERS.all
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
