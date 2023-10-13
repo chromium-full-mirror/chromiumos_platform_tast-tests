@@ -17,7 +17,7 @@ import (
 const cacheServerPort = 3335
 const tarFileToDownload = "chromeos-moblab-pvs-dev/jackgelinas/hello.tar.gz"
 const fileToExtract = "hi.txt"
-const wantFileSha = "98ea6e4f216f2fb4b69fff9b3a44842c38686ca685f3f55dc48c5d3fb1107be4"
+const wantFileSha = "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4"
 
 func init() {
 	testing.AddTest(&testing.Test{
