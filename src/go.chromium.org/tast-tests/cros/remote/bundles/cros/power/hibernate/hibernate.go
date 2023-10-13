@@ -57,10 +57,16 @@ type Tester struct {
 }
 
 // NewTester creates and returns an instance of Tester.
-func NewTester(ctx context.Context, s *testing.State, maxTestDuration time.Duration) (*Tester, error) {
-	testAccount, accountManager, err := leaseTestAccount(ctx, s.RequiredVar(tape.ServiceAccountVar), maxTestDuration)
-	if err != nil {
-		return nil, errors.Wrap(err, "Unable to lease test account")
+func NewTester(ctx context.Context, s *testing.State, account *tape.OwnedTestAccount, maxTestDuration time.Duration) (*Tester, error) {
+	var accountManager *tape.OwnedTestAccountManager
+	var err error
+	testAccount := account
+
+	if testAccount == nil {
+		testAccount, accountManager, err = leaseTestAccount(ctx, s.RequiredVar(tape.ServiceAccountVar), maxTestDuration)
+		if err != nil {
+			return nil, errors.Wrap(err, "Unable to lease test account")
+		}
 	}
 
 	return &Tester{dut: s.DUT(), userAccount: testAccount, accountManager: accountManager, isFirstCycle: true, logger: s, rpcHint: s.RPCHint()}, nil
@@ -69,8 +75,12 @@ func NewTester(ctx context.Context, s *testing.State, maxTestDuration time.Durat
 // Cleanup should be called when the test is about to exit to clean up any resources that
 // might be left behind otherwise.
 func (t *Tester) CleanUp(ctx context.Context) error {
-	t.logger.Log("Cleaning up owned test accounts")
-	return t.accountManager.CleanUp(ctx)
+	if t.accountManager != nil {
+		t.logger.Log("Cleaning up owned test accounts")
+		return t.accountManager.CleanUp(ctx)
+	}
+
+	return nil
 }
 
 // HibernateAndResume performs a full hibernate cycle of hibernating the system

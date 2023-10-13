@@ -28,7 +28,7 @@ func init() {
 }
 
 func HibernateLogout(ctx context.Context, s *testing.State) {
-	ht, err := hibernate.NewTester(ctx, s, hibernate.CycleMaxDuration)
+	ht, err := hibernate.NewTester(ctx, s, nil, hibernate.CycleMaxDuration)
 	if err != nil {
 		s.Fatal("Unable to create new tester: ", err)
 	}
@@ -42,7 +42,7 @@ func HibernateLogout(ctx context.Context, s *testing.State) {
 
 	exists, err := ht.HiberimageExists(ctx)
 	if err != nil {
-		s.Fatal("Failed to check if hiberimage exists:", err)
+		s.Fatal("Failed to check if hiberimage exists: ", err)
 	} else if !exists {
 		s.Fatal("LV 'hiberimage' does not exist after user login")
 	}
@@ -53,7 +53,7 @@ func HibernateLogout(ctx context.Context, s *testing.State) {
 
 	exists, err = ht.HiberimageExists(ctx)
 	if err != nil {
-		s.Fatal("Failed to check if hiberimage exists:", err)
+		s.Fatal("Failed to check if hiberimage exists: ", err)
 	} else if exists {
 		s.Fatal("LV 'hiberimage' still exists after user logged out")
 	}

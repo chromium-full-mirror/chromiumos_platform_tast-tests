@@ -17,6 +17,8 @@ import (
 const (
 	hibernateCyclesVars    = "cycles"
 	hibernateCyclesDefault = 1
+	hibernateEmailVar      = "email"
+	hibernatePasswordVar   = "password"
 )
 
 func init() {
@@ -29,7 +31,7 @@ func init() {
 		// Allow for a larger number of cycles for stress testing. In case of a hang the
 		// test will time out on one of the shorter context specific timeouts.
 		Timeout: 24 * time.Hour,
-		Vars:    []string{hibernateCyclesVars},
+		Vars:    []string{hibernateCyclesVars, hibernateEmailVar, hibernatePasswordVar},
 		VarDeps: []string{tape.ServiceAccountVar},
 		Attr:    []string{"group:mainline", "informational"},
 	})
@@ -47,7 +49,23 @@ func Hibernate(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	ht, err := hibernate.NewTester(ctx, s, time.Duration(numCycles)*hibernate.CycleMaxDuration)
+	var emailOverride string
+	var passwordOverride string
+	var ok bool
+	if emailOverride, ok = s.Var(hibernateEmailVar); !ok {
+		emailOverride = ""
+	}
+
+	if passwordOverride, ok = s.Var(hibernatePasswordVar); !ok {
+		passwordOverride = ""
+	}
+
+	var account *tape.OwnedTestAccount
+	if len(emailOverride) > 0 && len(passwordOverride) > 0 {
+		account = &tape.OwnedTestAccount{GenericAccount: tape.GenericAccount{Username: emailOverride, Password: passwordOverride}}
+	}
+
+	ht, err := hibernate.NewTester(ctx, s, account, time.Duration(numCycles)*hibernate.CycleMaxDuration)
 	if err != nil {
 		s.Fatal("Failed to create a new test: ", err)
 	}
