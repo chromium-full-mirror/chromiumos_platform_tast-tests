@@ -251,11 +251,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "ccaTestBridgeReadyWithAutoFramingForceEnabled",
-		Desc:     "Set up test bridge for CCA with Auto Framing force enabled",
-		Contacts: []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org", "chromeos-camera-eng@google.com"},
-		// TODO(b/290826477): Fix users of this fixture for the new quick settings UI (QsRevamp).
-		Impl:            &fixture{forceEnableAutoFraming: true, disableFeatures: []feature{"QsRevamp"}},
+		Name:            "ccaTestBridgeReadyWithAutoFramingForceEnabled",
+		Desc:            "Set up test bridge for CCA with Auto Framing force enabled",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org", "chromeos-camera-eng@google.com"},
+		Impl:            &fixture{forceEnableAutoFraming: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: tearDownTimeout,

@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/camera/features"
 	"go.chromium.org/tast-tests/cros/local/camera/histogramutil"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 
@@ -53,6 +54,7 @@ func AutoFramingUIToggle(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to establish connection to the test API extension")
 	}
+	ui := uiauto.New(tconn)
 
 	type Action struct {
 		name string
@@ -71,10 +73,13 @@ func AutoFramingUIToggle(ctx context.Context, s *testing.State) {
 		return Action{
 			name: "toggle \"Camera framing\" in Quick Settings",
 			run: func(ctx context.Context, app *cca.App) error {
-				// TODO(b/290826477): Fix this test for the new quick settings
-				// UI (QsRevamp). Quick settings now uses "feature tiles"
-				// instead of "settings pods".
-				return quicksettings.ToggleSetting(ctx, tconn, quicksettings.SettingPodCameraFraming, enable)
+				// FeatureTiles do not expose an explicit toggled state to the UI node tree so the best we can do is search for the tooltip string.
+				if framingEnabled, err := ui.IsNodeFound(ctx, quicksettings.FeatureTileCameraFraming.NameContaining("Camera framing is on")); err != nil {
+					return err
+				} else if framingEnabled != enable {
+					return ui.LeftClick(quicksettings.FeatureTileCameraFraming)(ctx)
+				}
+				return nil
 			},
 		}
 	}

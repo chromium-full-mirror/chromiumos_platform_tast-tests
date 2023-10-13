@@ -220,16 +220,6 @@ func ShowWithRetry(ctx context.Context, tconn *chrome.TestConn, timeout time.Dur
 	return nil
 }
 
-// PodIconButton generates nodewith.Finder for the specified quick setting feature pod icon button.
-// This function is not supported with QsRevamp. Use the constants quicksettings.FeatureTile*
-// instead.
-// TODO(b/252870625): Remove all calls to this function.
-func PodIconButton(setting SettingPod) *nodewith.Finder {
-	// The pod icon names change based on their state, but a substring containing the setting name stays
-	// the same regardless of state, so we can match that in the name attribute.
-	return nodewith.HasClass("FeaturePodIconButton").NameContaining(string(setting))
-}
-
 // ensureVisible ensures that Quick Settings is shown. If it's not visible, this function will
 // show Quick Settings and return a cleanup function to hide it. If it is already visible,
 // this function will do nothing and the returned function will do nothing, since no cleanup is required.
@@ -358,55 +348,6 @@ func SetNearbyShare(ctx context.Context, tconn *chrome.TestConn, enable bool) er
 	ui := uiauto.New(tconn)
 	if err := ui.DoDefault(FeatureTileNearbyShare)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click Nearby Share tile")
-	}
-	return nil
-}
-
-// SettingEnabled checks if the specified quick setting is on or off.
-// In order to check the setting, Quick Settings will be shown if it's not already,
-// but the original state will be restored once the check is complete.
-func SettingEnabled(ctx context.Context, tconn *chrome.TestConn, setting SettingPod) (bool, error) {
-	cleanup, err := ensureVisible(ctx, tconn)
-	if err != nil {
-		return false, err
-	}
-	defer cleanup(ctx)
-
-	pod := PodIconButton(setting)
-	ui := uiauto.New(tconn)
-	info, err := ui.Info(ctx, pod)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to get the pod icon button info")
-	}
-	switch status := info.Checked; status {
-	case checked.True:
-		return true, nil
-	case checked.False:
-		return false, nil
-	default:
-		return false, errors.New("invalid checked state for pod icon button; quick setting may not be toggleable")
-	}
-}
-
-// ToggleSetting toggles a quick setting by clicking the corresponding pod icon.
-// If Quick Settings is not already shown, it will be opened and then closed once the setting is toggled.
-func ToggleSetting(ctx context.Context, tconn *chrome.TestConn, setting SettingPod, enable bool) error {
-	cleanup, err := ensureVisible(ctx, tconn)
-	if err != nil {
-		return err
-	}
-	defer cleanup(ctx)
-
-	if currentState, err := SettingEnabled(ctx, tconn, setting); err != nil {
-		return errors.Wrap(err, "failed to get initial setting state")
-	} else if currentState == enable {
-		return nil
-	}
-
-	pod := PodIconButton(setting)
-	ui := uiauto.New(tconn)
-	if err := ui.LeftClick(pod)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click the pod icon button")
 	}
 	return nil
 }

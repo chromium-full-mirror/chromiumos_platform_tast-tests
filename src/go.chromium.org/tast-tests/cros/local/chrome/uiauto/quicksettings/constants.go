@@ -34,6 +34,10 @@ var FeatureTileBluetooth = nodewith.HasClass("FeatureTile").NameContaining("Blue
 // of the Bluetooth feature tile.
 var FeatureTileBluetoothToggle = nodewith.Role(role.Button).NameContaining("Toggle Bluetooth").Ancestor(FeatureTileBluetooth)
 
+// FeatureTileCameraFraming is the finder for the "Camera framing" feature tile.
+// It only exists with QsRevamp.
+var FeatureTileCameraFraming = nodewith.Role(role.ToggleButton).NameContaining("Camera framing")
+
 // FeatureTileCast is the finder for the "Cast screen" feature tile.
 var FeatureTileCast = nodewith.HasClass("FeatureTile").NameContaining("cast")
 
@@ -124,20 +128,6 @@ var ManagedInfoView = nodewith.Role(role.Button).HasClass("EnterpriseManagedView
 
 // BatteryView is the finder for the Quick Settings battery display.
 var BatteryView = nodewith.Role(role.LabelText).NameContaining("Battery")
-
-// SettingPod represents the name of a setting pod in Quick Settings.
-// These names are contained in the Name attribute of the automation node
-// for the corresponding pod icon button, so they can be used to find the
-// buttons in the UI.
-type SettingPod string
-
-// List of quick setting names, derived from the corresponding pod icon button node names.
-// Character case in the names should exactly match the pod icon button node Name attribute.
-// These nodes do not exist with QsRevamp.
-// TODO(b/252870625): Delete all these once every test is ported to QsRevamp.
-const (
-	SettingPodCameraFraming SettingPod = "Camera framing"
-)
 
 // AddCellularButton is the finder for adding new SIM profiles in Quick Settings.
 var AddCellularButton = nodewith.Name("Add eSIM").Role(role.Button)
