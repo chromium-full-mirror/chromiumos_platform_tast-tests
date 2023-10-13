@@ -206,6 +206,7 @@ func (t *Tester) HiberimageExists(ctx context.Context) (bool, error) {
 
 // CloseGRPCClient closes the associated GRPC client.
 func (t *Tester) CloseGRPCClient(ctx context.Context) error {
+	defer func() { t.grpcClient = nil }()
 	if t.grpcClient == nil {
 		return nil
 	}
@@ -231,6 +232,16 @@ func (t *Tester) disableConsoleSuspend(ctx context.Context) error {
 	return nil
 }
 
+func (t *Tester) waitForDutUnreachable(ctx context.Context) error {
+	defer t.dut.Close(ctx)
+	if err := t.dut.WaitUnreachable(ctx); err != nil {
+		t.logger.Logf("Error waiting for dut to become unreachable: %v", err)
+		return err
+	}
+	t.logger.Logf("DUT has become unreachable")
+	return nil
+}
+
 func (t *Tester) hibernateAndReboot(ctx context.Context) error {
 	if err := t.disableConsoleSuspend(ctx); err != nil {
 		return err
@@ -240,13 +251,18 @@ func (t *Tester) hibernateAndReboot(ctx context.Context) error {
 	defer cancel()
 
 	t.logger.Log("Starting hibernation ...")
+
+	// We will wait for the dut to become unreachable which is expected. By doing this
+	// we can close the connection earlier allowing the next stages of the test to kick off.
+	go t.waitForDutUnreachable(cmdCtx)
 	out, err := t.dut.Conn().CommandContext(cmdCtx, "/sbin/minijail0", "--config", "/usr/share/minijail/hiberman.conf", "/usr/sbin/hiberman", "hibernate", "-r").CombinedOutput()
 	t.logger.Logf("hiberman output: %s", out)
 
 	if err != nil {
 		if strings.Contains(err.Error(), context.DeadlineExceeded.Error()) ||
-			strings.Contains(err.Error(), (&ssh.ExitMissingError{}).Error()) {
-			// The command is expected to time out if hibernate was successful.
+			strings.Contains(err.Error(), (&ssh.ExitMissingError{}).Error()) ||
+			strings.Contains(err.Error(), context.Canceled.Error()) {
+			// The command is expected to time out or the connection to drop if hibernate was successful.
 			return nil
 		}
 
@@ -552,11 +568,23 @@ func (t *Tester) reboot(ctx context.Context) error {
 func (t *Tester) waitForDutToBoot(ctx context.Context) error {
 	t.logger.Log("Waiting for DUT to boot")
 
-	waitConnectCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
-	defer cancel()
+	ctxReconnect, cancelReconnect := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancelReconnect()
 
-	if err := t.dut.WaitConnect(waitConnectCtx); err != nil {
-		return errors.Wrap(err, "failed to reconnect to DUT")
+	for {
+		ctxConnect, cancelConnect := context.WithTimeout(ctxReconnect, 3*time.Second)
+		defer cancelConnect()
+
+		if err := t.dut.WaitConnect(ctxConnect); err == nil {
+			break
+		}
+
+		select {
+		case <-time.After(time.Second * 1):
+			break
+		case <-ctxReconnect.Done():
+			return ctxReconnect.Err()
+		}
 	}
 
 	return nil
