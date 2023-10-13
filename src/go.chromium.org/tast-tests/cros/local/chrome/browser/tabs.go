@@ -119,3 +119,18 @@ func CloseTabByTitle(ctx context.Context, tconn *TestConn, title string) error {
 	}
 	return CloseTabsByID(ctx, tconn, []int{tab.ID})
 }
+
+// ActivateTabByTitle activates a tab with title |title|. If there are multiple
+// tabs with that tile or activating it fails, it returns an error. The browser
+// is given via |tconn|.
+func ActivateTabByTitle(ctx context.Context, tconn *TestConn, title string) error {
+	tab, err := GetTabByTitle(ctx, tconn, title)
+	if err != nil {
+		return errors.Wrap(err, "failed to get a tab with title")
+	}
+	// Request to activate the tab.
+	if err := tconn.Call(ctx, nil, `async (id) => tast.promisify(chrome.tabs.update)(id, {active: true})`, tab.ID); err != nil {
+		return errors.Wrap(err, "failed to activate the tab")
+	}
+	return nil
+}

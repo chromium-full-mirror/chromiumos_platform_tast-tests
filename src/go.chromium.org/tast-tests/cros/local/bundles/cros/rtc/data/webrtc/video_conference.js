@@ -78,12 +78,12 @@ class VideoConference {
     return null;
   }
 
-  async connect(localPC, remotePC) {
+  async connect(localPC, remotePC, codec) {
     localPC.onicecandidate = e => remotePC.addIceCandidate(e.candidate);
     remotePC.onicecandidate = e => localPC.addIceCandidate(e.candidate);
 
     let offer = await localPC.createOffer();
-    offer.sdp = setSdpDefaultVideoCodec(offer.sdp, 'VP9');
+    offer.sdp = setSdpDefaultVideoCodec(offer.sdp, codec);
 
     await localPC.setLocalDescription(offer);
     await remotePC.setRemoteDescription(localPC.localDescription);
@@ -106,15 +106,16 @@ class VideoConference {
 
   // Start a video call whose attendee is numPeople, which includes myself.
   // |numPeople-1| decoders and one encoder will run.
-  async holdCall(numPeople) {
+  async holdCall(numPeople, present) {
     this.resetCall();
     const numReceivers = numPeople - 1;
 
     let gridStyle;
     // If the number of people is more than 9, then put a camera preview in the
     // bottom right. Otherwise, the camera preview is shown in the same grid
-    // view.
-    if (numPeople > 9) {
+    // view. If present is true, a grid style is forced and screen share preview
+    // is shown in the next video to camera preview in the grid.
+    if (numPeople > 9 && !present) {
       gridStyle = this.getVideoGridStyle(numReceivers);
       this.cameraPreview.width = 320;
       this.cameraPreview.height = 180;
@@ -124,7 +125,12 @@ class VideoConference {
       cameraOverlay.style.bottom = 0;
       cameraOverlay.style.zIndex = 1;
     } else {
-      gridStyle = this.getVideoGridStyle(numPeople);
+      // The display preview is shown in a video in a grid style.
+      if (present) {
+        gridStyle = this.getVideoGridStyle(numPeople + 1);
+      } else {
+        gridStyle = this.getVideoGridStyle(numPeople);
+      }
       this.cameraPreview.width = gridStyle.width;
       this.cameraPreview.height = gridStyle.height;
     }
@@ -139,6 +145,19 @@ class VideoConference {
       sendEncodings.scalabilityMode = 'L3T3_KEY';
     }
 
+
+    if (present) {
+      this.displayPreview = document.createElement('video');
+      this.displayPreview.autoplay = true;
+      this.displayPreview.muted = true;
+      this.displayPreview.width = gridStyle.width;
+      this.displayPreview.height = gridStyle.height;
+      const container = document.getElementById('container');
+      const div = document.createElement('div');
+      div.appendChild(this.displayPreview);
+      container.appendChild(div);
+      await this.present();
+    }
     this.addVideos(numReceivers, gridStyle);
     await this.establishConnections(numReceivers, sendEncodings);
   }
@@ -204,7 +223,8 @@ class VideoConference {
     }
     let ssrcs = new Array(numReceivers - 1);
     for (let i = 0; i < numReceivers; i++) {
-      const ssrc = await this.connect(this.localPCs[i], this.remotePCs[i]);
+      const ssrc = await this.connect(this.localPCs[i], this.remotePCs[i],
+                                      'VP9');
       if (i < ssrcs.length) {
         ssrcs[i] = ssrc;
       }
@@ -245,26 +265,42 @@ class VideoConference {
       container.removeChild(container.lastChild);
     }
   }
-};
 
-/*
-For local testing.
-async function testMain() {
-  console.log("starting camera..");
-  await vc.startCamera();
-  //await new Promise(r => setTimeout(r, 10000));
-  console.log("turning on mic..");
-  await vc.micOn();
-  //await new Promise(r => setTimeout(r, 10000));
-  console.log("showing camera preview...");
-  await vc.showCameraPreview();
-  //await new Promise(r => setTimeout(r, 10000));
-  console.log("starting background blurring...");
-  await vc.turnOnBlurring();
-  // await new Promise(r => setTimeout(r, 10000));
-  console.log("startiing 1:1 call");
-  await vc.holdCall(10);
-  //await vc.closeCall();
-}
-testMain();
-*/
+  async present() {
+    let constraints = {
+      audio: {
+        echoCancellation: true,
+        autoGainControl: true,
+      },
+      video: {
+        framerate: {min: 30, max: 30},
+        displaySurface: "browser", // Tab
+      }
+    };
+    const displayStream =
+          await navigator.mediaDevices.getDisplayMedia(constraints);
+    displayStream.getVideoTracks()[0].applyConstraints(constraints);
+    this.displayPreview.srcObject = displayStream;
+
+    const displayLocalPC =
+          new RTCPeerConnection({encodedInsertableStreams: true});
+    const displayLocalPCStream = displayLocalPC.addTransceiver(
+      displayStream.getVideoTracks()[0], {
+        degradationPreference: 'maintain-resolution',
+        streams : [ displayStream ],
+        sendEncodings : [{'scalabilityMode': 'L1T3'}],
+      }).sender.createEncodedStreams();
+
+    const displayRemotePC = new RTCPeerConnection();
+    displayRemotePC.addTransceiver('video');
+    await this.connect(displayLocalPC, displayRemotePC, 'VP8');
+
+    // Drop all encoded frames so that one encoder runs but no decoder runs for
+    // screen sharing.
+    displayLocalPCStream.readable.pipeThrough(new TransformStream({
+      transform(frame, controller) {
+        return;
+      }
+    })).pipeTo(displayLocalPCStream.writable);
+  }
+};

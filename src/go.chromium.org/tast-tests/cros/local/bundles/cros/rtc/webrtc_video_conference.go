@@ -27,6 +27,7 @@ func init() {
 		Vars: []string{
 			"rtc.WebRTCVideoConference.NumPeople",
 			"rtc.WebRTCVideoConference.Trace",
+			"rtc.WebRTCVideoConference.Present",
 		},
 		Contacts: []string{
 			"hiroh@google.com", // Test Author.
@@ -78,6 +79,16 @@ func init() {
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
+			{
+				Name: "4p_present",
+				Val: webrtc.VCTestParams{
+					NumPeople: 4,
+					Present:   true,
+				},
+				Fixture:   "chromeRTCPerf",
+				Timeout:   5 * time.Minute,
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
 		},
 	})
 }
@@ -94,6 +105,9 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 	}
 	if val, ok := s.Var("rtc.WebRTCVideoConference.Trace"); ok {
 		params.Trace = (strings.ToLower(val) == "true")
+	}
+	if val, ok := s.Var("rtc.WebRTCVideoConference.Present"); ok {
+		params.Present = (strings.ToLower(val) == "true")
 	}
 
 	if params.Step {

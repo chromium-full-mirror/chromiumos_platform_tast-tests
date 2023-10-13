@@ -908,9 +908,12 @@ func init() {
 		Contacts: []string{"chromeos-rtc@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs(chromeSuppressNotificationsArgs...),
 				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
+				// Avoid the need to grant camera/microphone permissions.
+				chrome.ExtraArgs("--auto-accept-camera-and-microphone-capture"),
+				// Chrome automatically selects a tab page whose title contains "test".
+				chrome.ExtraArgs("--auto-select-tab-capture-source-by-title=test"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",

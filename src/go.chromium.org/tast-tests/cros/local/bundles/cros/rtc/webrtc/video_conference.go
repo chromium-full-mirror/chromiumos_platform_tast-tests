@@ -16,6 +16,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -27,20 +28,25 @@ import (
 
 // VCTestParams is a structure about test parameters.
 type VCTestParams struct {
-	// Step is true, then performance values in each step (e.g. idle, only open camera) are collected.
+	// If Step is true, then performance values in each step (e.g. idle, only open camera) are collected.
 	// If it is false, then performance values only in a video conference with |numPeople| persons.
 	Step bool
 	// Numpeope is the number of persons in a video conference.
 	// This can be set only if Step is false and it must be more than two.
 	NumPeople int
-	// Trace is true, then perfetto tracing is executed and the tracing result
-	// is saved in the result directory.
+	// If Trace is true, then perfetto tracing is executed and the tracing
+	// result is saved in the result directory.
 	Trace bool
+	// If Present is true, then opens a tab in background and capture the tab.
+	// One more encoder for the tab capture will run, but no decoder runs for it.
+	Present bool
 }
 
 const (
-	// VCHTML is the HTML holding a video conference using WebRTC API.
-	VCHTML = "webrtc/video_conference.html"
+	// vcHTML is the HTML holding a video conference using WebRTC API.
+	vcHTML = "webrtc/video_conference.html"
+	// presentHTML is the HTML changing the content in 30fps for presentation.
+	presentHTML = "webrtc/presentation.html"
 
 	// Peretto configuration file.
 	traceConfigFile = "webrtc/perfetto_trace.txtpb"
@@ -51,10 +57,12 @@ const (
 // TestFiles returns the files required running the test.
 func TestFiles() []string {
 	return []string{
-		VCHTML,
-		traceConfigFile,
+		vcHTML,
+		presentHTML,
+		"webrtc/canvas_animation.js",
 		"webrtc/video_conference.js",
 		"webrtc/third_party/munge_sdp.js",
+		traceConfigFile,
 	}
 }
 
@@ -105,7 +113,7 @@ func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
 
 // runNonStep holds a conference video call in which |numPeople| persons attends
 // and thus |numPeople-1| decoders and 1 encoder run.
-func runNonStep(ctx context.Context, s *testing.State, conn *chrome.Conn, pr *power.Recorder, params VCTestParams) error {
+func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conn *chrome.Conn, pr *power.Recorder, presentURL string, params VCTestParams) error {
 	const profileInterval = 60 * time.Second // Sleep interval to measure the performance metrics.
 
 	if params.NumPeople <= 1 {
@@ -117,11 +125,15 @@ func runNonStep(ctx context.Context, s *testing.State, conn *chrome.Conn, pr *po
 	if err := conn.Eval(ctx, "VC.showCameraPreview()", nil); err != nil {
 		return errors.Wrap(err, "failed showing camera preview")
 	}
-
-	if err := conn.Eval(ctx, fmt.Sprintf("VC.holdCall(%d)", params.NumPeople), nil); err != nil {
+	if err := conn.Eval(ctx, fmt.Sprintf("VC.holdCall(%d, %t)", params.NumPeople, params.Present), nil); err != nil {
 		return errors.Wrapf(err, "failed holding %dp call", params.NumPeople)
 	}
-
+	if params.Present {
+		// Capturing a tab activates the captured tab. Back to the video conference tab.
+		if err := browser.ActivateTabByTitle(ctx, tconn, "WebRTC VideoConference"); err != nil {
+			return errors.Wrap(err, "failed activating video conference tab")
+		}
+	}
 	if err := pr.Start(ctx); err != nil {
 		return errors.Wrap(err, "cannot start collecting power metrics")
 	}
@@ -140,7 +152,7 @@ func runNonStep(ctx context.Context, s *testing.State, conn *chrome.Conn, pr *po
 	return nil
 }
 
-func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL string, params VCTestParams) error {
+func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, presentURL string, params VCTestParams) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to test API")
@@ -167,6 +179,16 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL s
 	defer conn.Close()
 	defer conn.CloseTarget(ctx)
 
+	if params.Present {
+		// Opens a presentation tab in background.
+		presentConn, err := cr.NewBackgroundConn(ctx, presentURL)
+		if err != nil {
+			return errors.Wrapf(err, "failed to open %s", presentURL)
+		}
+		defer presentConn.Close()
+		defer presentConn.CloseTarget(ctx)
+	}
+
 	// Maximize window size so that the window size to be captured is maximized
 	// and also camera and display capturing is executed in the same situation.
 	if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
@@ -182,7 +204,7 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL s
 	if params.Step {
 		return runStep(ctx, conn, r)
 	}
-	return runNonStep(ctx, s, conn, r, params)
+	return runNonStep(ctx, s, tconn, conn, r, presentURL, params)
 }
 
 // RunVideoConference runs a video conference using WebRTC API and measures the
@@ -192,12 +214,13 @@ func RunVideoConference(ctx context.Context, cr *chrome.Chrome, s *testing.State
 
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
-	vcURL := server.URL + "/" + VCHTML
+	vcURL := server.URL + "/" + vcHTML
+	presentURL := server.URL + "/" + presentHTML
 
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
 
-	if err := runVCPerf(ctx, cr, s, vcURL, params); err != nil {
+	if err := runVCPerf(ctx, cr, s, vcURL, presentURL, params); err != nil {
 		return err
 	}
 
