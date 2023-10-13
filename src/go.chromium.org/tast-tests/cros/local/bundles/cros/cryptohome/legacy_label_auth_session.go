@@ -6,7 +6,6 @@ package cryptohome
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
@@ -84,6 +83,33 @@ func LegacyLabelAuthSession(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
+	// Helper function that will call ListAuthFactors and check that:
+	//   - the configured factors are just a single password with the given label
+	//   - the supported factors always contains password
+	checkListAuthFactors := func(label string) error {
+		listFactorsReply, err := client.ListAuthFactors(ctx, userName)
+		if err != nil {
+			return errors.Wrap(err, "failed to list auth factors")
+		}
+		expectedConfigured := []*uda.AuthFactorWithStatus{
+			{AuthFactor: &uda.AuthFactor{
+				Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
+				Label: label,
+			}},
+		}
+		if err := cryptocommon.ExpectAuthFactorsWithTypeAndLabel(
+			listFactorsReply.ConfiguredAuthFactorsWithStatus, expectedConfigured); err != nil {
+			return errors.Wrap(err, "mismatch in configured auth factors (-got, +want)")
+		}
+		if err := cryptocommon.ExpectContainsAuthFactorType(
+			listFactorsReply.SupportedAuthFactors,
+			uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
+		); err != nil {
+			return errors.Wrap(err, "mismatch in supported auth factors")
+		}
+		return nil
+	}
+
 	// Create the user with a persistent vault and add a kiosk credential.
 	// This should produce a VK factor.
 	if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
@@ -100,13 +126,8 @@ func LegacyLabelAuthSession(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to create VaultKeyset")
 		}
 
-		keys, err := client.ListVaultKeys(ctx, userName)
-		if err != nil {
-			return errors.Wrap(err, "failed to list keys")
-		}
-		if len(keys) != 1 || keys[0] != legacyKeyLabel {
-			keysString := strings.Join(keys, ", ")
-			return errors.Wrap(err, "unexpected keys: "+keysString)
+		if err := checkListAuthFactors(legacyKeyLabel); err != nil {
+			return errors.Wrap(err, "failed list auth factor checks")
 		}
 
 		if err := client.UnmountAll(ctx); err != nil {

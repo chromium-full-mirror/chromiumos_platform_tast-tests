@@ -453,24 +453,6 @@ func (u *CryptohomeClient) CheckPinVault(ctx context.Context, label string, auth
 	return u.checkVaultWithAuthFactor(ctx, label, authConfig, true /*pinAuth*/)
 }
 
-// ListVaultKeys queries the vault associated with user username, and returns nil for error iff the operation is completed successfully, in that case, the returned slice of string contains the labels of keys belonging to that vault.
-func (u *CryptohomeClient) ListVaultKeys(ctx context.Context, username string) ([]string, error) {
-	binaryOutput, err := u.binary.listKeysEx(ctx, username)
-	if err != nil {
-		return []string{}, errors.Wrap(err, "failed to call list keys")
-	}
-
-	output := string(binaryOutput)
-	lines := strings.Split(output, "\n")
-	var result []string
-	for _, s := range lines {
-		if strings.HasPrefix(s, listKeysExLabelPrefix) {
-			result = append(result, s[len(listKeysExLabelPrefix):])
-		}
-	}
-	return result, nil
-}
-
 // RemoveVault remove the vault for username.
 func (u *CryptohomeClient) RemoveVault(ctx context.Context, username string) (bool, error) {
 	_, err := u.binary.remove(ctx, username)
