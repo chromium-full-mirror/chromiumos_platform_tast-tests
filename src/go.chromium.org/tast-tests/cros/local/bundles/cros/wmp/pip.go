@@ -37,7 +37,7 @@ const (
 	arcPipTestPkgName = "org.chromium.arc.testapp.pictureinpicture"
 )
 
-type pipTestFunc func(context.Context, *uiauto.Context, *display.Info, *nodewith.Finder) error
+type pipTestFunc func(context.Context, *uiauto.Context, *display.Info, *display.Orientation, *nodewith.Finder) error
 
 type pipType int
 
@@ -152,6 +152,11 @@ func Pip(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get primary display info: ", err)
 	}
 
+	orientation, err := display.GetOrientation(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to obtain the display orientation: ", err)
+	}
+
 	cleanupShelfAlignment, err := ash.EnsureShelfAlignmentBottom(ctx, tconn, dispInfo.ID)
 	if err != nil {
 		s.Fatal("Failed to ensure shelf alignment is Bottom: ", err)
@@ -200,19 +205,23 @@ func Pip(ctx context.Context, s *testing.State) {
 			nodewith.Name(testParams.pipWindowName).ClassName(testParams.pipClassName).Onscreen().First()
 
 		// Execute the tests.
-		if err := fn(ctx, ac, dispInfo, pipWindow); err != nil {
+		if err := fn(ctx, ac, dispInfo, orientation, pipWindow); err != nil {
 			s.Fatal("Failed to execute test: ", err)
 		}
 	}
 }
 
-func testPipPinchResize(ctx context.Context, ac *uiauto.Context, dispInfo *display.Info, pipWindow *nodewith.Finder) error {
+func testPipPinchResize(ctx context.Context, ac *uiauto.Context, dispInfo *display.Info, orientation *display.Orientation, pipWindow *nodewith.Finder) error {
 	// Get touch event writers.
 	tsw, err := input.Touchscreen(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get touchscreen event writer")
 	}
 	defer tsw.Close(ctx)
+
+	if err := tsw.SetRotation(-orientation.Angle); err != nil {
+		return errors.Wrap(err, "failed to set touchscreen event writer rotation")
+	}
 
 	mtw, err := tsw.NewMultiTouchWriter(2)
 	if err != nil {
