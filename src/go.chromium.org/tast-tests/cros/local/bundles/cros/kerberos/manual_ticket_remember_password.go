@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/kerberos"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -129,7 +128,7 @@ func ManualTicketRememberPassword(ctx context.Context, s *testing.State) {
 		keyboard.TypeAction(password),
 		ui.LeftClick(nodewith.Name("Remember password").Role(role.CheckBox)),
 		ui.LeftClick(nodewith.Name("Advanced").Role(role.Link)),
-		ui.LeftClick(nodewith.Role(role.TextField).State(state.Editable, true).State(state.Multiline, true)),
+		keyboard.AccelAction("Tab"),
 		keyboard.TypeAction(config.RealmsConfig),
 		ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
 		ui.LeftClick(nodewith.Name("Add").HasClass("action-button")),

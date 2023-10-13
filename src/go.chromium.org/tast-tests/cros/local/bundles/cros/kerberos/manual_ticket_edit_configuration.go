@@ -142,7 +142,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 	var defaultConfig = node.Value
 
 	if err := uiauto.Combine("type configuration and Cancel",
-		ui.LeftClick(configFinder),
+		keyboard.AccelAction("Tab"),
 		keyboard.TypeAction(ticketLifetimeConfig),
 		ui.LeftClick(nodewith.Name("Cancel").Role(role.Button)),
 		ui.LeftClick(nodewith.Name("Advanced").Role(role.Link)),
@@ -162,7 +162,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 
 	// Create a ticket with custom lifetime and check if it was actually added.
 	if err := uiauto.Combine("change lifetime of Kerberos ticket",
-		ui.LeftClick(configFinder),
+		keyboard.AccelAction("Tab"),
 		keyboard.TypeAction(ticketLifetimeConfig),
 		ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
 		ui.LeftClick(nodewith.Name("Add").HasClass("action-button")),
@@ -176,7 +176,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 		ui.LeftClick(nodewith.HasClass("icon-more-vert more-actions").Role(role.Button)),
 		ui.LeftClick(nodewith.Name("Refresh now").Role(role.MenuItem)),
 		ui.LeftClick(nodewith.Name("Advanced").Role(role.Link)),
-		ui.LeftClick(configFinder),
+		keyboard.AccelAction("Tab"),
 		keyboard.TypeAction("\n[realms"), // syntax error, no closing bracket for "["
 		ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
 		ui.WaitUntilExists(nodewith.NameContaining("syntax error").Role(role.StaticText)),
@@ -187,7 +187,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("add invalid configuration",
 		ui.LeftClick(nodewith.Name("Advanced").Role(role.Link)),
-		ui.LeftClick(configFinder),
+		keyboard.AccelAction("Tab"),
 		keyboard.TypeAction("\nticket_lifetime: 1337h"), // syntax error, should be "=" instead of ":"
 		ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
 		ui.WaitUntilExists(nodewith.NameContaining("syntax error").Role(role.StaticText)),
@@ -199,7 +199,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 	// Check that configuration can not be saved if some options are blocklisted.
 	if err := uiauto.Combine("add invalid configuration",
 		ui.LeftClick(nodewith.Name("Advanced").Role(role.Link)),
-		ui.LeftClick(configFinder),
+		keyboard.AccelAction("Tab"),
 		keyboard.TypeAction("\nallow_weak_crypto = true"), // "allow_weak_crypto = true" is blocklisted
 		ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
 		ui.WaitUntilExists(nodewith.NameContaining("option not supported").Role(role.StaticText)),
