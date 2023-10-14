@@ -19,6 +19,7 @@ const (
 	hibernateCyclesDefault = 1
 	hibernateEmailVar      = "email"
 	hibernatePasswordVar   = "password"
+	hibernateCycleIDVar    = "cycleID"
 )
 
 func init() {
@@ -31,21 +32,28 @@ func init() {
 		// Allow for a larger number of cycles for stress testing. In case of a hang the
 		// test will time out on one of the shorter context specific timeouts.
 		Timeout: 24 * time.Hour,
-		Vars:    []string{hibernateCyclesVars, hibernateEmailVar, hibernatePasswordVar},
+		Vars:    []string{hibernateCyclesVars, hibernateEmailVar, hibernatePasswordVar, hibernateCycleIDVar},
 		VarDeps: []string{tape.ServiceAccountVar},
 		Attr:    []string{"group:mainline", "informational"},
 	})
 }
 
 func Hibernate(ctx context.Context, s *testing.State) {
+	var err error
 	numCycles := hibernateCyclesDefault
+	cycleID := uint64(0)
 
 	if v, ok := s.Var(hibernateCyclesVars); ok {
-		var err error
-
 		numCycles, err = strconv.Atoi(v)
 		if err != nil {
 			s.Fatalf("Failed to parse %s from string %s", hibernateCyclesVars, v)
+		}
+	}
+
+	if v, ok := s.Var(hibernateCycleIDVar); ok {
+		cycleID, err = strconv.ParseUint(v, 10, 32)
+		if err != nil {
+			s.Fatalf("Failed to parse %s from string %s", hibernateCycleIDVar, v)
 		}
 	}
 
@@ -65,7 +73,8 @@ func Hibernate(ctx context.Context, s *testing.State) {
 		account = &tape.OwnedTestAccount{GenericAccount: tape.GenericAccount{Username: emailOverride, Password: passwordOverride}}
 	}
 
-	ht, err := hibernate.NewTester(ctx, s, account, time.Duration(numCycles)*hibernate.CycleMaxDuration)
+	var ht *hibernate.Tester
+	ht, err = hibernate.NewTester(ctx, s, account, time.Duration(numCycles)*hibernate.CycleMaxDuration)
 	if err != nil {
 		s.Fatal("Failed to create a new test: ", err)
 	}
@@ -74,6 +83,10 @@ func Hibernate(ctx context.Context, s *testing.State) {
 			s.Log("Failed to cleanup: ", err)
 		}
 	}()
+
+	if cycleID > 0 {
+		ht.OverrideCycleID(uint32(cycleID))
+	}
 
 	ht.SetURLsForTabs([]string{"about:blank", "about:blank", "about:blank"})
 

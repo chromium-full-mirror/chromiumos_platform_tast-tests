@@ -44,16 +44,17 @@ type logger interface {
 // Tester provides shared functionality for hibernate tests and mainains
 // state between different parts of a test.
 type Tester struct {
-	dut            *dut.DUT
-	cycleID        uint32
-	userAccount    *tape.OwnedTestAccount
-	accountManager *tape.OwnedTestAccountManager
-	grpcClient     *crosserverutil.Client
-	urlsForTabs    []string
-	tabTargetIDs   []string
-	isFirstCycle   bool
-	logger         logger
-	rpcHint        *testing.RPCHint
+	dut             *dut.DUT
+	cycleID         uint32
+	overrideCycleID bool
+	userAccount     *tape.OwnedTestAccount
+	accountManager  *tape.OwnedTestAccountManager
+	grpcClient      *crosserverutil.Client
+	urlsForTabs     []string
+	tabTargetIDs    []string
+	isFirstCycle    bool
+	logger          logger
+	rpcHint         *testing.RPCHint
 }
 
 // NewTester creates and returns an instance of Tester.
@@ -81,6 +82,11 @@ func (t *Tester) CleanUp(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (t *Tester) OverrideCycleID(cycleID uint32) {
+	t.cycleID = cycleID
+	t.overrideCycleID = true
 }
 
 // HibernateAndResume performs a full hibernate cycle of hibernating the system
@@ -466,7 +472,9 @@ func (t *Tester) verifyKernelHibernateRestoreLogs(ctx context.Context, kernelLog
 }
 
 func (t *Tester) writeCycleID(ctx context.Context) error {
-	t.cycleID = rand.Uint32()
+	if !t.overrideCycleID {
+		t.cycleID = rand.Uint32()
+	}
 	t.logger.Logf("Writing hibernate cycle id %d to %s", t.cycleID, hibernateCycleIDPath)
 
 	command := fmt.Sprintf("echo %d > %s", t.cycleID, hibernateCycleIDPath)
