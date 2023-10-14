@@ -35,7 +35,7 @@ func init() {
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "memfd_create"},
-		Timeout:      2*time.Minute + 2*upstart.UIRestartTimeout,
+		Timeout:      2*time.Minute + 2*upstart.UIRestartTimeout + chrome.MinLoginTimeout,
 		Params: []testing.Param{{
 			Name: "breakpad",
 			Val: chromeCrashLoopV2Params{
