@@ -22,10 +22,6 @@ import (
 func NavigateToNetworkDetailedView(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
 
-	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get QsRevamp state")
-	}
 	networkDetailedView, err := NetworkDetailedView(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to get network detailed view")
@@ -37,15 +33,8 @@ func NavigateToNetworkDetailedView(ctx context.Context, tconn *chrome.TestConn) 
 			return err
 		}
 
-		// The network item depends on whether QsRevamp is enabled or not.
-		var networkItem *nodewith.Finder
-		if qsRevampEnabled {
-			networkItem = FeatureTileNetwork
-		} else {
-			networkItem = nodewith.HasClass("FeaturePodLabelButton").NameContaining("network").Ancestor(LegacyRootFinder)
-		}
 		return uiauto.Combine("click the Network item in quick settings",
-			ui.WithTimeout(5*time.Second).LeftClick(networkItem),
+			ui.WithTimeout(5*time.Second).LeftClick(FeatureTileNetwork),
 			ui.WithTimeout(5*time.Second).WaitUntilExists(networkDetailedView),
 		)(ctx)
 	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second})
@@ -116,36 +105,18 @@ func NetworkListItemView(ctx context.Context, tconn *chrome.TestConn) (*nodewith
 
 // NetworkDetailedViewWifiToggleButton returns the WiFi toggle within the Network detailed view.
 func NetworkDetailedViewWifiToggleButton(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
-	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get QsRevamp state")
-	}
 	networkDetailedView, err := NetworkDetailedView(ctx, tconn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get network detailed view")
 	}
-	// Legacy quick settings uses a TrayToggleButton.
-	if !qsRevampEnabled {
-		return nodewith.HasClass("TrayToggleButton").NameContaining("Wi-Fi").Ancestor(networkDetailedView), nil
-	}
-	// QsRevamp uses an ordinary button.
 	return nodewith.HasClass("Switch").NameContaining("Wi-Fi").Ancestor(networkDetailedView), nil
 }
 
 // NetworkDetailedViewMobileDataToggle returns the switch to enable/disable Mobile data within network quick settings.
 func NetworkDetailedViewMobileDataToggle(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
-	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get QsRevamp state")
-	}
 	networkDetailedView, err := NetworkDetailedView(ctx, tconn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get network detailed view")
 	}
-	// Legacy quick settings uses a TrayToggleButton.
-	if !qsRevampEnabled {
-		return nodewith.Name("Mobile data").HasClass("TrayToggleButton").Ancestor(networkDetailedView), nil
-	}
-	// QsRevamp uses an ordinary button.
 	return nodewith.Role(role.Button).NameContaining("Toggle mobile data").Ancestor(networkDetailedView), nil
 }

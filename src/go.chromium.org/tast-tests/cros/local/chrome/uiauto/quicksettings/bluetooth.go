@@ -13,17 +13,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 // bluetoothDetailedView is the detailed Bluetooth view within the Quick
 // Settings.
 var bluetoothDetailedView = nodewith.ClassNameRegex(regexp.MustCompile(`^BluetoothDetailedView[A-Za-z]*$`))
-
-// bluetoothFeaturePodLabelButton is the label child of the Bluetooth feature pod button.
-// This does not exist with QsRevamp enabled.
-var bluetoothFeaturePodLabelButton = nodewith.HasClass("FeaturePodLabelButton").NameContaining("Bluetooth")
 
 // BluetoothDetailedViewPairNewDeviceButton is the "Pair new device" button
 // child within the detailed Bluetooth view.
@@ -47,26 +42,9 @@ var BluetoothDetailedViewToggleButton = nodewith.Role(role.Button).NameContainin
 func NavigateToBluetoothDetailedView(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
 
-	qsRevampEnabled, err := QsRevampEnabled(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get QsRevamp state")
-	}
-
 	// The Quick Settings may be auto-collapsed after being expanded due to notifications or other
 	// events so we continue attempting to navigate to the Bluetooth page for up to one minute.
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		if !qsRevampEnabled {
-			// Use legacy quick settings.
-			if err := Expand(ctx, tconn); err != nil {
-				return err
-			}
-
-			return uiauto.Combine("Click the Bluetooth feature pod label",
-				ui.LeftClick(bluetoothFeaturePodLabelButton),
-				ui.WaitUntilExists(bluetoothDetailedView),
-			)(ctx)
-		}
-		// Use revamped quick settings.
 		if err := Show(ctx, tconn); err != nil {
 			return err
 		}

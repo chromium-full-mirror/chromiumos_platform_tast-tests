@@ -29,20 +29,8 @@ func DoSystemProxyAuthentication(ctx context.Context, tconn *chrome.TestConn, us
 		uiTimeout         = 10 * time.Second
 	)
 
-	// TODO(b/290289663): Remove this check once qsRevamp is launched.
-	qsRevampEnabled, err := quicksettings.QsRevampEnabled(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get QsRevamp state")
-	}
-
-	if qsRevampEnabled {
-		if err := quicksettings.ShowNotificationCenter(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to show the notification center")
-		}
-	} else {
-		if err := quicksettings.Show(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to show system tray")
-		}
+	if err := quicksettings.ShowNotificationCenter(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to show the notification center")
 	}
 
 	if _, err := ash.WaitForNotification(ctx, tconn, uiTimeout, ash.WaitTitle(notificationTitle)); err != nil {
