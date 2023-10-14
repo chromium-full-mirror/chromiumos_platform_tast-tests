@@ -64,13 +64,13 @@ func init() {
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "crashpad"},
-		Timeout:      upstart.UIRestartTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
 		Params: []testing.Param{{
 			Name: "strict",
 			Val: chromeCrashEarlyParams{
 				looseMode:   false,
 				browserType: browser.TypeAsh,
 			},
+			Timeout:           upstart.UIRestartTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
 			ExtraSoftwareDeps: []string{"chrome_internal"},
 		}, {
 			Name: "strict_lacros",
@@ -78,6 +78,8 @@ func init() {
 				looseMode:   false,
 				browserType: browser.TypeLacros,
 			},
+			// Lacros test logs in so it needs more time.
+			Timeout:           chrome.MinLoginTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
 			ExtraSoftwareDeps: []string{"lacros"}, // There's no such thing as lacros_internal.
 			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 		}, {
@@ -86,6 +88,7 @@ func init() {
 				looseMode:   true,
 				browserType: browser.TypeAsh,
 			},
+			Timeout: upstart.UIRestartTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
 		}}})
 }
 
