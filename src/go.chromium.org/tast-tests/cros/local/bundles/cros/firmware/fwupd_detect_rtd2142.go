@@ -53,13 +53,13 @@ func FwupdDetectRTD2142(ctx context.Context, s *testing.State) {
 	}
 
 	foundInstanceID := false
-	for _, instanceID := range device.InstanceIDs {
+	for _, instanceID := range device.InstanceIds {
 		if instanceID == expectedDeviceInstanceID {
 			foundInstanceID = true
 		}
 	}
 	if !foundInstanceID {
-		s.Errorf("Failed to find expected instance ID %q among %q", expectedDeviceInstanceID, device.InstanceIDs)
+		s.Errorf("Failed to find expected instance ID %q among %q", expectedDeviceInstanceID, device.InstanceIds)
 	}
 
 	if device.Name != expectedDeviceName {

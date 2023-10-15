@@ -6,6 +6,7 @@ package fwupd
 
 import (
 	"context"
+	"reflect"
 	"regexp"
 	"time"
 
@@ -108,14 +109,18 @@ func SetFwupdChargingState(ctx context.Context, charge bool) (setup.CleanupCallb
 }
 
 // Device represents a hardware device supported by fwupd.
+// Names are aligned with dbus properties for reflections below.
+// See https://github.com/fwupd/fwupd/blob/main/libfwupd/fwupd-enums-private.h
 type Device struct {
-	GUIDs         []string
-	DeviceID      string
+	Guid          []string
+	DeviceId      string
 	Name          string
-	InstanceIDs   []string
+	InstanceIds   []string
 	Plugin        string
+	Problems      uint64
+	UpdateError   string
 	Version       string
-	VersionFormat uint
+	VersionFormat uint32
 }
 
 const (
@@ -124,57 +129,66 @@ const (
 	dbusInterface = "org.freedesktop.fwupd"
 )
 
-// GetDeviceByGUID returns a fwupd Device as known to fwupd that has a GUID
-// matching the provided one.
-func GetDeviceByGUID(ctx context.Context, expectedGUID string) (*Device, error) {
+func inspectDevice(ctx context.Context, rawDevice map[string]dbus.Variant) (device *Device, err error) {
+	device = new(Device)
+
+	devst := reflect.ValueOf(device).Elem()
+	if !devst.CanAddr() {
+		return nil, errors.New("cannot assign to the item passed, item must be a pointer in order to assign")
+	}
+
+	for i := 0; i < devst.NumField(); i++ {
+		name := devst.Type().Field(i).Name
+		if value, ok := rawDevice[name]; ok {
+			fieldT := reflect.ValueOf(device).Elem().Field(i)
+			fieldT.Set(reflect.ValueOf(value.Value()))
+		}
+	}
+
+	return device, err
+}
+
+func getDevices() ([]map[string]dbus.Variant, error) {
+	var devices []map[string]dbus.Variant
+	// Don't close the shared connection.
 	conn, err := dbusutil.SystemBus()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to system bus")
 	}
+
 	fwupd := conn.Object(dbusName, dbusPath)
 
-	var devices []map[string]dbus.Variant
 	if err = fwupd.Call(dbusInterface+".GetDevices", 0).Store(&devices); err != nil {
 		return nil, errors.Wrap(err, "failed to call GetDevices")
+	}
+
+	return devices, nil
+}
+
+// GetDeviceByGUID returns a fwupd Device as known to fwupd that has a GUID
+// matching the provided one.
+func GetDeviceByGUID(ctx context.Context, expectedGUID string) (*Device, error) {
+	devices, err := getDevices()
+	if err != nil {
+		return nil, err
 	}
 
 	// Scan all devices to locate one with the expected GUID.
 	for _, rawDevice := range devices {
 		testing.ContextLog(ctx, "Inspecting device: ", rawDevice)
 
-		// Unmarshal variants into our device type.
-		var device Device
-		rawDeviceFields := []interface{}{
-			rawDevice["Guid"],
-			rawDevice["DeviceId"],
-			rawDevice["Name"],
-			rawDevice["Plugin"],
-			rawDevice["Version"],
-			rawDevice["VersionFormat"],
+		device, err := inspectDevice(ctx, rawDevice)
+		if device == nil {
+			testing.ContextLog(ctx, "Failed to inspect the device: ", err)
+			continue
 		}
-		deviceFields := []interface{}{
-			&device.GUIDs,
-			&device.DeviceID,
-			&device.Name,
-			&device.Plugin,
-			&device.Version,
-			&device.VersionFormat,
-		}
-		if err := dbus.Store(rawDeviceFields, deviceFields...); err != nil {
-			return nil, errors.Wrap(err, "failed to read device fields to struct")
+		if err != nil {
+			return nil, err
 		}
 
-		// Not all devices have InstanceIds, so unmarshal those only if defined
-		// because a zero value causes the above Store() to fail.
-		if rawDevice["InstanceIds"].Value() != nil {
-			if err := dbus.Store([]interface{}{rawDevice["InstanceIds"]}, &device.InstanceIDs); err != nil {
-				return nil, errors.Wrap(err, "failed to read device instance IDs")
-			}
-		}
-
-		for _, guid := range device.GUIDs {
+		for _, guid := range device.Guid {
 			if guid == expectedGUID {
-				return &device, nil
+				return device, nil
 			}
 		}
 	}
