@@ -71,7 +71,7 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 		NewPattern(Tree("encrypted/var/lib/cras"), Users("cras"), Groups("cras"), Mode(0644), SkipChildren()), // children
 		NewPattern(Tree("encrypted/var/lib/chaps/database"), Users("chaps"), Groups("chronos-access"), NotMode(027)),
 		// This path is mainly owned by device_management, but it is owned by root in the migration phase.
-		NewPattern(Tree("encrypted/var/lib/device_management"), Users("root"), Groups("root"), NotMode(022)),
+		NewPattern(Tree("encrypted/var/lib/device_management"), Users("root", "device_management"), Groups("root", "device_management"), NotMode(022)),
 		NewPattern(Path("encrypted/var/lib/dhcpcd"), Users("dhcp"), Groups("dhcp"), Mode(0775)),
 		NewPattern(Tree("encrypted/var/lib/dhcpcd"), Users("dhcp"), Groups("dhcp"), NotMode(0113)),
 		NewPattern(Path("encrypted/var/lib/gentoo"), Users("root"), NotMode(022), SkipChildren()),
