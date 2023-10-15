@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -81,9 +82,14 @@ func SearchLocalImageSearchingPower(ctx context.Context, s *testing.State) {
 
 	localFileLocation := filepath.Join(downloadsPath, launcher.ImageSearchPowerTestPictureName)
 
-	// Ensure all required DLCs are installed.
-	if err := launcher.InstallDlc(ctx, []string{"screen-ai", "ml-core-internal"}); err != nil {
+	dlcList := []string{"screen-ai", "ml-core-internal"}
+	// TODO(b/303151432): Ensure all required DLCs are installed.
+	if err := launcher.InstallDlc(ctx, dlcList); err != nil {
 		s.Fatal("Cannot install dlc: ", err)
+	}
+
+	if err := launcher.VerifyDlcInstalled(ctx, dlcList); err != nil {
+		s.Fatal("Cannot find dlc: ", err)
 	}
 
 	// Prepare images.
@@ -112,6 +118,7 @@ func SearchLocalImageSearchingPower(ctx context.Context, s *testing.State) {
 			launcher.ClearSearchField(tconn, kb),
 			launcher.Search(tconn, kb, query),
 		)(ctx); err != nil {
+			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 			s.Fatal("Failed to search image: ", err)
 		}
 

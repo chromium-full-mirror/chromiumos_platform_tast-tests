@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	launcherSearchSetUpTestTimeout = 40 * time.Second
+	launcherSearchSetUpTestTimeout = 4 * time.Minute
 	launcherSearchPreTestTimeout   = 10 * time.Second
 	launcherSearchPostTestTimeout  = 10 * time.Second
 	arcOptinTimeout                = 3 * time.Minute

@@ -74,9 +74,14 @@ func SearchLocalImageFileIndexingPower(ctx context.Context, s *testing.State) {
 
 	localFileLocation := filepath.Join(downloadsPath, launcher.ImageSearchPowerTestPictureName)
 
-	// Ensure all required DLCs are installed.
-	if err := launcher.InstallDlc(ctx, []string{"screen-ai", "ml-core-internal"}); err != nil {
+	dlcList := []string{"screen-ai", "ml-core-internal"}
+	// TODO(b/303151432): Ensure all required DLCs are installed.
+	if err := launcher.InstallDlc(ctx, dlcList); err != nil {
 		s.Fatal("Cannot install dlc: ", err)
+	}
+
+	if err := launcher.VerifyDlcInstalled(ctx, dlcList); err != nil {
+		s.Fatal("Cannot find dlc: ", err)
 	}
 
 	// Start power test for indexing downloaded picture files.

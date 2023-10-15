@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/launcher/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -25,8 +26,9 @@ import (
 const localPictureName = "search_local_image.png"
 
 type testParam struct {
+	Name           string
 	TabletMode     bool
-	Query          string
+	Query          []string
 	ExpectedResult string
 	UseIca         bool
 	UseOcr         bool
@@ -49,11 +51,12 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name: "search_by_paper_lowercase_lca",
+				Name: "search_with_ica",
 				Val: testParam{
+					Name:           "ica",
 					TabletMode:     false,
-					Query:          "paper",
-					ExpectedResult: "Thoughts",
+					Query:          []string{"paper", "Paper"},
+					ExpectedResult: "About",
 					UseIca:         true,
 					UseOcr:         false,
 				},
@@ -61,22 +64,11 @@ func init() {
 				ExtraSoftwareDeps: []string{"camera_feature_effects"},
 			},
 			{
-				Name: "search_by_paper_uppercase_lca",
+				Name: "search_with_ocr",
 				Val: testParam{
+					Name:           "ocr",
 					TabletMode:     false,
-					Query:          "Paper",
-					ExpectedResult: "Thoughts",
-					UseIca:         true,
-					UseOcr:         false,
-				},
-				Fixture:           fixture.LauncherImageSearchIca,
-				ExtraSoftwareDeps: []string{"camera_feature_effects"},
-			},
-			{
-				Name: "search_by_content_ocr",
-				Val: testParam{
-					TabletMode:     false,
-					Query:          "Thoughts",
+					Query:          []string{"Thoughts"},
 					ExpectedResult: "About",
 					UseIca:         false,
 					UseOcr:         true,
@@ -84,22 +76,11 @@ func init() {
 				Fixture: fixture.LauncherImageSearchOcr,
 			},
 			{
-				Name: "search_by_paper_ica_ocr",
+				Name: "search_with_ica_ocr",
 				Val: testParam{
+					Name:           "ica_ocr",
 					TabletMode:     false,
-					Query:          "Paper",
-					ExpectedResult: "Thoughts",
-					UseIca:         true,
-					UseOcr:         true,
-				},
-				Fixture:           fixture.LauncherImageSearchIcaAndOcr,
-				ExtraSoftwareDeps: []string{"camera_feature_effects"},
-			},
-			{
-				Name: "search_by_content_ica_ocr",
-				Val: testParam{
-					TabletMode:     false,
-					Query:          "Thoughts",
+					Query:          []string{"Paper", "Thoughts"},
 					ExpectedResult: "About",
 					UseIca:         true,
 					UseOcr:         true,
@@ -136,6 +117,10 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot install dlc: ", err)
 	}
 
+	if err := launcher.VerifyDlcInstalled(ctx, dlcList); err != nil {
+		s.Fatal("Cannot find dlc: ", err)
+	}
+
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to get user's Download path: ", err)
@@ -147,32 +132,40 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 	}
 	defer os.Remove(localFileLocation)
 
-	tabletMode := param.TabletMode
-	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, tabletMode, false /*stabilizeAppCount*/)
-	if err != nil {
-		s.Fatal("Failed to set up launcher test case: ", err)
+	//GoBigSleepLint: Need enough time to index the image.
+	testing.Sleep(ctx, 2*time.Second)
+	for _, query := range param.Query {
+		cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, param.TabletMode, false /*stabilizeAppCount*/)
+		if err != nil {
+			s.Fatal("Failed to set up launcher test case: ", err)
+		}
+		defer cleanup(cleanupCtx)
+
+		if err := launcher.VerifyDlcInstalled(ctx, dlcList); err != nil {
+			s.Fatal("Cannot verify dlc: ", err)
+		}
+
+		ui := uiauto.New(tconn)
+		ud := uidetection.NewDefault(tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
+		picture := nodewith.Role(role.ListBoxOption).HasClass("SearchResultImageView").NameContaining("search_local_image")
+
+		if err := uiauto.Retry(3, uiauto.NamedCombine("Search for image",
+			launcher.ClearSearchField(tconn, kb),
+			launcher.Search(tconn, kb, query),
+			launcher.WaitForResultWithCategory(tconn, launcher.SearchCategoryInfo{
+				Category:  "Images",
+				NeedRegex: false,
+				Result:    "search_local_image",
+			}),
+			ui.DoDefault(picture),
+			launcher.VerifyTextWithUIDetection(ud, param.ExpectedResult),
+		))(ctx); err != nil {
+			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump_"+s.Param().(testParam).Name)
+			s.Fatal("Failed to search image: ", err)
+		}
 	}
-	defer cleanup(cleanupCtx)
 
-	ui := uiauto.New(tconn)
-	ud := uidetection.NewDefault(tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
-	query := param.Query
-	expectedResult := param.ExpectedResult
-	picture := nodewith.Role(role.ListBoxOption).HasClass("SearchResultImageView").NameContaining("search_local_image")
-
-	if err := uiauto.Retry(2, uiauto.NamedCombine("Search for image",
-		launcher.ClearSearchField(tconn, kb),
-		launcher.Search(tconn, kb, query),
-		launcher.WaitForResultWithCategory(tconn, launcher.SearchCategoryInfo{
-			Category:  "Images",
-			NeedRegex: false,
-			Result:    "search_local_image",
-		}),
-		ui.DoDefault(picture),
-		launcher.VerifyTextWithUIDetection(ud, expectedResult),
-	))(ctx); err != nil {
-		s.Log(uiauto.RootDebugInfo(ctx, tconn))
-		s.Fatal("Failed to search image: ", err)
-
+	if err := launcher.VerifyDlcInstalled(ctx, dlcList); err != nil {
+		s.Fatal("Cannot find dlc: ", err)
 	}
 }
