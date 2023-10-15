@@ -149,8 +149,8 @@ func NToMTest(ctx context.Context, dut *dut.DUT, outDir string, rpcHint *testing
 
 	// Restore original image version with rollback.
 	testing.ContextLog(ctx, "Restoring the original device image")
-	if err := dut.Conn().CommandContext(postCtx, "update_engine_client", "--rollback", "--nopowerwash", "--follow").Run(); err != nil {
-		return errors.Wrap(err, "failed to rollback the DUT")
+	if out, err := dut.Conn().CommandContext(postCtx, "update_engine_client", "--rollback", "--nopowerwash", "--follow").CombinedOutput(); err != nil {
+		return errors.Wrapf(err, "failed to rollback the DUT, command output: %q", string(out))
 	}
 
 	// Reboot the DUT.
