@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/bond"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
@@ -25,7 +24,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -108,6 +109,10 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 	testCase := runParam.Tc
 	closeCtx := ctx
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	// Perform cleanup.
 	if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 		return errors.Wrap(err, "failed to clean up")
@@ -138,9 +143,11 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 	SetBondCredentials(runParam.Creds)
 
 	// Open the net-export page and start logging.
-	if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
-		return errors.Wrap(err, "failed to start logging")
+	netExport, err := netexport.Start(ctx, cr, br, runParam.Bt)
+	if err != nil {
+		return errors.Wrap(err, "failed to start net export")
 	}
+	defer netExport.Cleanup(cleanupCtx)
 
 	if err := TriggerWebRTCLogUploads(ctx,
 		networkrequestmonitor.OptionalServiceParams{
@@ -149,37 +156,14 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 		return errors.Wrap(err, "failed to launch Meet client")
 	}
 
-	start := time.Now()
-	var errorCheckingLogs error
-	var foundAnnotation bool
-	testing.Poll(ctx, func(ctx context.Context) error {
-		if time.Since(start) >= runParam.Timeout {
-			return nil
-		}
-
-		foundAnnotation, errorCheckingLogs = annotations.CheckLogs(ctx, cr, runParam.AnnotationHashCode)
-
-		if foundAnnotation || errorCheckingLogs != nil {
-			return nil
-		}
-
-		// Annotation not found yet, keep polling.
-		return errors.New("annotation ID not found yet")
-	}, &testing.PollOptions{
-		Interval: runParam.Interval,
-	})
-
-	if errorCheckingLogs != nil {
-		return errors.Wrap(errorCheckingLogs, "failed to check network logs")
+	foundAnnotation, err := netExport.FindUntil(ctx, runParam.AnnotationHashCode,
+		&testing.PollOptions{Timeout: runParam.Timeout, Interval: runParam.Interval})
+	if err != nil {
+		return errors.Wrap(err, "failed to check network logs")
 	}
 
-	// Stop logging.
-	if err := annotations.StopLogging(ctx, cr, br); err != nil {
-		return errors.Wrap(err, "failed to stop logging and check logs")
-	}
-
-	if testCase.AnnotationLogExpected != foundAnnotation {
-		return errors.Errorf("unexpected annotation; expected: %t, got: %t", testCase.AnnotationLogExpected, foundAnnotation)
+	if foundAnnotation != testCase.AnnotationLogExpected {
+		return errors.Wrapf(err, "annotation mismatch = got %t, want %t", foundAnnotation, testCase.AnnotationLogExpected)
 	}
 
 	return nil

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
@@ -17,12 +16,13 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/wallpapergooglephotos"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 )
 
@@ -119,9 +119,11 @@ func WallpaperGooglePhotosIntegrationEnabled(ctx context.Context, s *testing.Sta
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
 			// Open the net-export page and start logging.
-			if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
-				s.Fatal("Failed to start logging: ", err)
+			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
+			if err != nil {
+				s.Fatal("Failed to start net export: ", err)
 			}
+			defer netExport.Cleanup(cleanupCtx)
 
 			if err := wallpapergooglephotos.TriggerWallpaperGooglePhotosIntegration(ctx,
 				networkrequestmonitor.OptionalServiceParams{
@@ -131,57 +133,23 @@ func WallpaperGooglePhotosIntegrationEnabled(ctx context.Context, s *testing.Sta
 				s.Fatal("Failure while trigger google photos integration: ", err)
 			}
 
-			foundAnnotations, err := allAnnotationsFound(ctx, cr)
+			hashCodes := []string{
+				wallpapergooglephotos.EnabledHashCode,
+				wallpapergooglephotos.AlbumsHashCode,
+				wallpapergooglephotos.PhotosHashCode,
+			}
+
+			foundAnnotations, err := netExport.FindMultipleAnnotationsUntil(ctx, hashCodes,
+				&testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second})
 			if err != nil {
-				// Log the error but proceed so the annotation check conditions are hit.
-				// This is not an error condition for the disabled test.
-				s.Log("Failed while looking for annotations: ", err)
+				s.Fatal("Failed to poll hashcode in log: ", err)
 			}
 
-			// Stop logging.
-			if err := annotations.StopLogging(ctx, cr, br); err != nil {
-				s.Fatal("Failed to stop logging and check logs: ", err)
-			}
-
-			if param.ShouldFindAnnotations {
-				for id, found := range foundAnnotations {
-					if found == false {
-						s.Fatalf("Annotation with ID %s expected and not found", id)
-					}
-				}
-			} else {
-				for id, found := range foundAnnotations {
-					if found == true {
-						s.Fatalf("Annotation with ID %s found when not expected", id)
-					}
+			for _, annotationID := range hashCodes {
+				if _, exists := foundAnnotations[annotationID]; exists != param.ShouldFindAnnotations {
+					s.Errorf("Unexpected status of annotation = %s, got %t, want %t", annotationID, exists, param.ShouldFindAnnotations)
 				}
 			}
 		})
 	}
-}
-
-func allAnnotationsFound(ctx context.Context, cr *chrome.Chrome) (foundAnnotations map[string]bool, err error) {
-	annotationFoundMap := map[string]bool{
-		wallpapergooglephotos.EnabledHashCode: false,
-		wallpapergooglephotos.AlbumsHashCode:  false,
-		wallpapergooglephotos.PhotosHashCode:  false}
-	err = testing.Poll(ctx, func(ctx context.Context) error {
-		allFound := true
-		for annotationID, alreadyFound := range annotationFoundMap {
-			if !alreadyFound {
-				annotationFoundMap[annotationID], err = annotations.CheckLogs(ctx, cr, annotationID)
-				if err != nil {
-					return errors.Wrap(err, "failed reading logs")
-				}
-			}
-			allFound = allFound && annotationFoundMap[annotationID]
-		}
-
-		if allFound {
-			return nil
-		}
-		return errors.New("All annotations have not been found yet")
-	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second})
-
-	return annotationFoundMap, err
 }

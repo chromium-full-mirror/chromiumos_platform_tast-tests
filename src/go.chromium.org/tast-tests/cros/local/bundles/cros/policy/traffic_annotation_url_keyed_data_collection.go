@@ -14,12 +14,12 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	ukm "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/urlkeydatacollection"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -95,31 +95,26 @@ func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.Sta
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
 			// Open the net-export page and start logging.
-			if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
-				s.Fatal("Failed to start logging: ", err)
+			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			if err != nil {
+				s.Fatal("Failed to start net export: ", err)
 			}
+			defer netExport.Cleanup(cleanupCtx)
 
 			if err := ukm.TriggerAndVerifyUkmAppFromIndex(ctx, br, index); err != nil {
 				s.Fatal("Failed to verify log on ukm app: ", err)
 			}
 
-			hashCodes := []string{ukm.UkmNetworkAnnotationID}
-
 			// wait to allow ukm time to write to log
 			// (writes every 20 seconds, starting after 1 minute).
-			hcLogStatus, err := annotations.PollMultipleAnnotation(ctx, cr, 80*time.Second, 10*time.Second, hashCodes)
+			foundAnnotation, err := netExport.FindUntil(ctx, ukm.UkmNetworkAnnotationID,
+				&testing.PollOptions{Timeout: 80 * time.Second, Interval: 10 * time.Second})
 			if err != nil {
 				s.Fatal("Failed to poll hashcode in log: ", err)
 			}
 
-			// Stop logging.
-			if err := annotations.StopLogging(ctx, cr, br); err != nil {
-				s.Fatal("Failed to stop logging and check logs: ", err)
-			}
-
-			if hcLogStatus[ukm.UkmNetworkAnnotationID] != param.AnnotationLogExpected {
-				s.Fatalf("Unexpected annotation; got: %t, want: %t", hcLogStatus[ukm.UkmNetworkAnnotationID],
-					param.AnnotationLogExpected)
+			if foundAnnotation != param.AnnotationLogExpected {
+				s.Fatalf("Annotation mismatch = got %t, want %t", foundAnnotation, param.AnnotationLogExpected)
 			}
 		})
 	}

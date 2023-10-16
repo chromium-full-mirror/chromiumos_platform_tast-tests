@@ -14,18 +14,20 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+const sampleAnnotationHashCode = "88863520" // autofill_query
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -101,9 +103,11 @@ func TrafficAnnotationSample(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			// Open the net-export page and start logging.
-			if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
-				s.Fatal("Failed to start logging: ", err)
+			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			if err != nil {
+				s.Fatal("Failed to start net export: ", err)
 			}
+			defer netExport.Cleanup(cleanupCtx)
 			// Open the website with the address form.
 			conn, err := br.NewConn(ctx, server.URL+"/"+"autofill_address_enabled.html")
 			if err != nil {
@@ -111,9 +115,11 @@ func TrafficAnnotationSample(ctx context.Context, s *testing.State) {
 			}
 			defer conn.Close()
 
-			// Stop logging and check the logs for given annotation.
-			if _, err := annotations.StopLoggingCheckLogs(ctx, cr, br, "88863520"); err != nil {
-				s.Fatal("Failed to stop logging and check logs: ", err)
+			// Check the logs for given annotation. Note: This test does not actually
+			// verify if the annotation is present or not.
+			_, err = netExport.Find(sampleAnnotationHashCode)
+			if err != nil {
+				s.Fatal("Failed to search net log file for annotation: ", err)
 			}
 		})
 	}

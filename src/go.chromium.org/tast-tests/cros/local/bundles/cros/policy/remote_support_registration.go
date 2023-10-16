@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/remotedesktop"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -25,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 )
 
@@ -142,10 +142,14 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 			// These network calls are only made by the host in the lacros environment.
 			// In the ash clients these calls are handled by the website instead.
 			// So we only perform this check for lacros clients.
+			var netExport netexport.NetExport
 			if isLacros {
-				if err := annotations.StartOSLogging(ctx, cr, br, kb); err != nil {
-					s.Fatal("Failed to start logging: ", err)
+				// Open the net-export page and start logging.
+				netExport, err = netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+				if err != nil {
+					s.Fatal("Failed to start net export: ", err)
 				}
+				defer netExport.Cleanup(cleanupCtx)
 			}
 
 			if err := remotedesktop.TriggerRemoteSupportRegistration(ctx,
@@ -162,8 +166,14 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 				remotedesktop.RemotingRegisterSupportHostRequestHashCode,
 			}
 			if isLacros {
-				if _, err := annotations.StopOSLoggingVerifyAnnotationSet(ctx, cr, br, kb, param.ShouldFindAnnotations, hashCodes); err != nil {
-					s.Fatal("Failed to stop OS logging and verify logs: ", err)
+				foundAnnotations, err := netExport.FindAll()
+				if err != nil {
+					s.Fatal("Unexpected error when verifying net export logs: ", err)
+				}
+				for _, annotationID := range hashCodes {
+					if _, exists := foundAnnotations[annotationID]; exists != param.ShouldFindAnnotations {
+						s.Errorf("Unexpected status of annotation = %s, got %t, want %t", annotationID, exists, param.ShouldFindAnnotations)
+					}
 				}
 			}
 		})

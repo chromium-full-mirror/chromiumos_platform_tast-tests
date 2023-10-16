@@ -13,7 +13,7 @@ There are two key parts to implementing this in a tast test:
 ## Setup: Code Examples
 *Option 1: Browser (recommended)*
 ```go
-// Start network logging using chrome://net-export and os://net-export.
+// Open the net-export page and start logging.
 netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
 if err != nil {
   s.Fatal("Failed to start net export: ", err)
@@ -55,7 +55,7 @@ if err != nil {
   s.Fatal("Failed to search net log file for annotation: ", err)
 }
 if foundAnnotation != param.ShouldFindAnnotation {
-  s.Fatalf("Annotation mismatch = got %t, want: %t", foundAnnotation, param.ShouldFindAnnotation)
+  s.Fatalf("Annotation mismatch = got %t, want %t", foundAnnotation, param.ShouldFindAnnotation)
 }
 ```
 
@@ -85,7 +85,7 @@ if err != nil {
 }
 
 if foundAnnotation != param.ShouldFindAnnotation {
-  s.Fatalf("Annotation mismatch = got %t, want: %t", foundAnnotation, param.ShouldFindAnnotation)
+  s.Fatalf("Annotation mismatch = got %t, want %t", foundAnnotation, param.ShouldFindAnnotation)
 }
 ```
 

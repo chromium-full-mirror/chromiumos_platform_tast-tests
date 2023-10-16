@@ -12,13 +12,13 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/searchsuggestion"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -88,9 +88,11 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 			defer closeBrowser(cleanupCtx)
 
 			// Open the net-export page and start logging.
-			if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
-				s.Fatal("Failed to start logging: ", err)
+			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			if err != nil {
+				s.Fatal("Failed to start net export: ", err)
 			}
+			defer netExport.Cleanup(cleanupCtx)
 
 			if err := searchsuggestion.TriggerSearchSuggestion(ctx,
 				networkrequestmonitor.OptionalServiceParams{
@@ -100,15 +102,13 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to trigger search suggestion: ", err)
 			}
 
-			// Stop logging and check netlog for network annotation.
-			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, searchsuggestion.AnnotationHashCode)
+			// Check netlog for network annotation.
+			foundAnnotation, err := netExport.Find(searchsuggestion.AnnotationHashCode)
 			if err != nil {
-				s.Fatal("Failed to stop logging and check logs: ", err)
+				s.Fatal("Failed to search net log file for annotation: ", err)
 			}
-
-			// Verify network annotation is present when expected.
 			if param.ShouldFindAnnotation != foundAnnotation {
-				s.Fatalf("Annotation mismatch. Expected: %t. Actual: %t", param.ShouldFindAnnotation, foundAnnotation)
+				s.Fatalf("Annotation mismatch = got %t, want %t", foundAnnotation, param.ShouldFindAnnotation)
 			}
 		})
 	}

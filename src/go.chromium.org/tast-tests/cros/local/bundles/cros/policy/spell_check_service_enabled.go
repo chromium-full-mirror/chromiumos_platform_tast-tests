@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/spellcheck"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -22,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -92,9 +92,11 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
 			// Open the net-export page and start logging.
-			if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
-				s.Fatal("Failed to start logging: ", err)
+			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			if err != nil {
+				s.Fatal("Failed to start net export: ", err)
 			}
+			defer netExport.Cleanup(cleanupCtx)
 
 			mp := mitmproxy.New()
 			mp.SetBinaryPath(s.DataPath(mitmproxy.MitmdumpBinFile)).SetOutDir(s.OutDir())
@@ -112,20 +114,15 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to trigger and verify spellcheck: ", err)
 			}
 
-			// Stop logging and check the logs for annotation hashcode associated with
-			// the policy.
-			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, spellcheck.AnnotationHashCode)
+			// Check the logs for annotation hashcode associated with the policy.
+			foundAnnotation, err := netExport.Find(spellcheck.AnnotationHashCode)
 			if err != nil {
-				s.Fatal("Failed to stop logging and check logs: ", err)
+				s.Fatal("Failed to search net log file for annotation: ", err)
+			}
+			if foundAnnotation != param.ShouldFindAnnotation {
+				s.Fatalf("Annotation mismatch = got %t, want %t", foundAnnotation, param.ShouldFindAnnotation)
 			}
 
-			if foundAnnotation && !param.ShouldFindAnnotation {
-				s.Fatal("Found unexpected NetworkTrafficAnnotationTag with id spellcheck_lookup")
-			}
-
-			if !foundAnnotation && param.ShouldFindAnnotation {
-				s.Fatal("Did not find expected NetworkTrafficAnnotationTag with id spellcheck_lookup")
-			}
 		})
 	}
 }
