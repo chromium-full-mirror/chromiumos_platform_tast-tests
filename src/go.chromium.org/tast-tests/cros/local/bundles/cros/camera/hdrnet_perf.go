@@ -124,7 +124,7 @@ func HDRnetPerf(ctx context.Context, s *testing.State) {
 		"--use-fake-ui-for-media-stream",
 	))
 	if err != nil {
-		s.Error("Failed to connect to Chrome: ", err)
+		s.Fatal("Failed to connect to Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
 
