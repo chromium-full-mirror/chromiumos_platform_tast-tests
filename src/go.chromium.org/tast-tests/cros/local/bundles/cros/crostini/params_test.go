@@ -141,17 +141,19 @@ var mainlineExpensiveTests = map[string]time.Duration{
 func TestExpensiveParams(t *testing.T) {
 	for filename, duration := range perfTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:       duration,
-			IsNotMainline: true,
-			UseFixture:    true,
+			Timeout:                 duration,
+			IsNotMainline:           true,
+			UseFixture:              true,
+			MinimumContainerVersion: vm.DebianBullseye,
 		}})
 		genparams.Ensure(t, filename, params)
 	}
 
 	for filename, duration := range mainlineExpensiveTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:    duration,
-			UseFixture: true,
+			Timeout:                 duration,
+			UseFixture:              true,
+			MinimumContainerVersion: vm.DebianBullseye,
 		}})
 		genparams.Ensure(t, filename, params)
 	}
