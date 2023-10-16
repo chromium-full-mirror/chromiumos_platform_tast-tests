@@ -380,18 +380,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInWithJelly,
-		Desc:     "Logged into a user session with Jelly enabled",
-		Contacts: []string{"conniekxu@chromium.org", "chromeos-sw-engprod@google.com"},
-		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("Jelly")}, nil
-		}),
-		SetUpTimeout:    FixtureSetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInWithFieldTrialConfigEnable,
 		Desc:     "Logged into a user session with FieldTrialConfigEnable",
 		Contacts: []string{"mutexlox@chromium.org", "cros-exp-wg@google.com"},
