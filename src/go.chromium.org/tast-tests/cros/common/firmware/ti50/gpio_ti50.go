@@ -14,12 +14,18 @@ const (
 	FfBox GpioStrap = "TI50_FF_BOX"
 )
 
-// All well known gpio straps for tpm bus mode.
+// gpio straps used to setup TPM communication for each type of bus
 const (
-	// TpmSpi boots ti50 image for TPM communication via SPI bus
+	// TpmSpi configures GSC straps to select TPM communication via SPI bus
 	TpmSpi GpioStrap = "TI50_TPM_SPI"
-	// TpmI2c boots ti50 image for TPM communication via I2C bus
+	// TpmI2c configures GSC straps to select TPM communication via I2C bus
 	TpmI2c GpioStrap = "TI50_TPM_I2C"
+	// ApOnSpi simulates the AP turning on and sets up the I2C bus for TPM communication
+	ApOnI2c GpioStrap = "AP_ON_I2C"
+	// ApOnSpi simulates the AP turning on and sets up the SPI bus for TPM communication
+	ApOnSpi GpioStrap = "AP_ON_SPI"
+	// ApOff simulates the AP turning off. Disconnect I2C and SPI
+	ApOff GpioStrap = "AP_OFF"
 )
 
 // Combined gpio straps

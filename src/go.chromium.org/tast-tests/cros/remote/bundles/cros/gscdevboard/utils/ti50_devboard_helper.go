@@ -260,14 +260,21 @@ func (h DevboardHelper) Tpm(ctx context.Context, bus ti50.TpmBus) *TpmHelper {
 // ResetAndTpmStartup resets the board with I2C or SPI TPM strap, reads TpmRegDidVid, then sends
 // tpm2.Startup command.
 func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImage, bus ti50.TpmBus, straps ...ti50.GpioStrap) *TpmHelper {
+	var busConfig ti50.GpioStrap
 	switch bus {
 	case ti50.TpmBusSpi:
 		straps = append(straps, ti50.TpmSpi)
+		busConfig = ti50.ApOnSpi
 	case ti50.TpmBusI2c:
 		straps = append(straps, ti50.TpmI2c)
+		busConfig = ti50.ApOnI2c
 	}
+	// Turn off the AP while reading the straps.
+	straps = append(straps, ti50.ApOff)
+
 	testing.ContextLogf(ctx, "Restarting Ti50 for %s TPM", bus)
 	h.GpioApplyStrap(ctx, straps...)
+
 	th := FirmwareTestingHelper{FirmwareTestingHelperDelegate: h}
 	th.MustSucceed(h.Reset(ctx), "Reset board")
 	m, err := h.ReadSerialSubmatch(ctx, regexp.MustCompile(`Strap config: .* TPM Bus: ([^;]+);`))
@@ -278,7 +285,7 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 
 	// Tell Ti50 that the AP came out of reset.  This will cause Ti50 to start responding to
 	// TPM commands.
-	h.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
+	h.GpioApplyStrap(ctx, busConfig)
 
 	tpmHandle := h.Tpm(ctx, bus)
 
