@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast-tests/cros/local/tracing"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -109,6 +110,11 @@ func GetUserMediaPerf(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
+
+	// Ensure camera service running to avoid bad state from previous tests.
+	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
+		s.Fatal("Failed to start cros-camera: ", err)
+	}
 
 	traceConfigPath := s.DataPath("perfetto/camera_config.pbtxt")
 	traceDataPath := filepath.Join(s.OutDir(), "trace.pb")

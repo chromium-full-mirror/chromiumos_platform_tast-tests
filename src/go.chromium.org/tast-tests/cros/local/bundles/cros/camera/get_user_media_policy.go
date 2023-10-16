@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -58,6 +59,11 @@ func GetUserMediaPolicy(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	// Ensure camera service running to avoid bad state from previous tests.
+	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
+		s.Fatal("Failed to start cros-camera: ", err)
+	}
 
 	if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{&policy.VideoCaptureAllowed{Val: false}}); err != nil {
 		s.Fatal("Failed to serve policy to ban video capture: ", err)
