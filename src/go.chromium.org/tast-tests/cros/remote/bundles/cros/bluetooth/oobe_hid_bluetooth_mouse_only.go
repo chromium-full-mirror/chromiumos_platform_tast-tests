@@ -58,17 +58,17 @@ func init() {
 				ExtraAttr:         []string{"bluetooth_floss_flaky"},
 			},
 		},
-		Timeout: time.Minute * 10,
+		Timeout: time.Minute * 15,
 	})
 }
 
 // OobeHidBluetoothMouseOnly tests that a single Bluetooth mouse is connected to during OOBE.
 func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 	// This test waits for UI elements to become visible that frequently take more than the default of 15 seconds.
-	const defaultTimeout time.Duration = time.Second * 30
+	const defaultTimeout time.Duration = time.Second * 90
 
 	// Bluetooth peers have been observed to take longer than |defaultTimeout| to become ready and be found.
-	const searchingTimeout time.Duration = time.Second * 90
+	const searchingTimeout time.Duration = time.Second * 300
 
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
@@ -90,7 +90,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 	}()
 
 	// Verify pointer device is not found.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForPointerNodeName, defaultTimeout); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForPointerNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
@@ -118,7 +118,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}, &testing.PollOptions{
-			Timeout:  30 * time.Second,
+			Timeout:  defaultTimeout,
 			Interval: 5000 * time.Millisecond,
 		}); err != nil {
 			s.Fatal("Mouse device not paired: ", err)
@@ -143,7 +143,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "Checking that we are searching for pointer")
 
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForPointerNodeName, defaultTimeout); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForPointerNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
@@ -159,7 +159,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Checking that Bluetooth mouse node was found")
 
 	// Verify pointer device is found.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.BluetoothMousePairedNodeName, searchingTimeout); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.BluetoothMousePairedNodeName, defaultTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 

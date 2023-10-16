@@ -61,17 +61,17 @@ func init() {
 				ExtraAttr:         []string{"bluetooth_floss_flaky"},
 			},
 		},
-		Timeout: time.Minute * 10,
+		Timeout: time.Minute * 15,
 	})
 }
 
 // OobeHidBluetoothKeyboardOnly tests that a single Blueooth keyboard is connected to during OOBE.
 func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 	// This test waits for UI elements to become visible that frequently take more than the default of 15 seconds.
-	const defaultTimeout time.Duration = time.Second * 30
+	const defaultTimeout time.Duration = time.Second * 90
 
 	// Bluetooth peers have been observed to take longer than |defaultTimeout| to become ready and be found.
-	const searchingTimeout time.Duration = time.Second * 90
+	const searchingTimeout time.Duration = time.Second * 300
 
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
@@ -94,7 +94,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 
 	util.TurnOffServoKeyboardIfOn(ctx, s)
 
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForKeyboardNodeName, defaultTimeout); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForKeyboardNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
@@ -120,7 +120,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}, &testing.PollOptions{
-			Timeout:  30 * time.Second,
+			Timeout:  defaultTimeout,
 			Interval: 5000 * time.Millisecond,
 		}); err != nil {
 			s.Fatal("Keyboard device not paired: ", err)
@@ -143,7 +143,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn of btpeer adapter: ", err)
 	}
 
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForKeyboardNodeName, defaultTimeout); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForKeyboardNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
