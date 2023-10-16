@@ -40,7 +40,7 @@ func init() {
 			"paper-io_scanning",
 		},
 		SoftwareDeps: []string{"chrome", "virtual_usb_printer"},
-		Fixture:      "virtualUsbPrinterModulesLoaded",
+		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 		Data: []string{
 			scanning.SourceImage,
 			singlePagePDFGoldenFile,
@@ -84,12 +84,7 @@ func MultiPageScan(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	crWithFeature, err := chrome.New(ctx, chrome.EnableFeatures("ScanAppMultiPageScan"))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer crWithFeature.Close(cleanupCtx) // Close our own chrome instance
-	cr := crWithFeature
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
