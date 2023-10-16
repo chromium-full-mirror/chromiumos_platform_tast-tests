@@ -21,6 +21,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// A sub test sets up the auto-connect property for up to 2 networks (series of UI actions)
+// and wait for the connect status of 2 networks to be expected (wireless connection could take a while to respond)
+const subTestTimeout = 2 * time.Minute
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ControlAutoconnectWithUI,
@@ -46,15 +50,17 @@ func init() {
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesWithUI),
 		Params: []testing.Param{
 			{
-				Name: "cycle_wifi",
-				Val:  cycleWifi,
+				Name:    "cycle_wifi",
+				Val:     cycleWifi,
+				Timeout: 3*time.Minute + 4*subTestTimeout, // Each test performs 4 sub tests.
 			}, {
-				Name: "suspend_and_wake",
-				Val:  suspendAndWake,
+				Name:    "suspend_and_wake",
+				Val:     suspendAndWake,
+				Timeout: 3*time.Minute + 4*subTestTimeout, // Each test performs 4 sub tests.
 			}, {
 				Name:    "reboot_dut",
 				Val:     rebootDUT,
-				Timeout: 5*time.Minute + wificell.DUTRebootTimeout,
+				Timeout: 3*time.Minute + 4*subTestTimeout + wificell.DUTRebootTimeout, // Each test performs 4 sub tests.
 			},
 		},
 	})
