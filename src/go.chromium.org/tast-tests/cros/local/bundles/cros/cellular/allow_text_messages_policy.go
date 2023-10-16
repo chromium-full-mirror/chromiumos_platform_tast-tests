@@ -17,6 +17,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
@@ -26,8 +28,10 @@ import (
 )
 
 type allowTextMessagesPolicyTestParam struct {
-	globalNetworkConfig    policy.ONCGlobalNetworkConfiguration
-	uiNotificationExpected bool
+	globalNetworkConfig           policy.ONCGlobalNetworkConfiguration
+	uiNotificationExpected        bool
+	textMessagesToggleRestriction restriction.Restriction
+	textMessagesToggleEnabled     bool
 }
 
 // This test is only run on the cellular_sim_active group. All boards in that group
@@ -37,7 +41,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AllowTextMessagesPolicy,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that admins can suppress text message notifications via network policies",
+		Desc:         "Verifies that admins and users can suppress text message notifications",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "fahadmansoor@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_sms"},
@@ -53,7 +57,9 @@ func init() {
 					globalNetworkConfig: policy.ONCGlobalNetworkConfiguration{
 						AllowTextMessages: "Allow",
 					},
-					uiNotificationExpected: true,
+					uiNotificationExpected:        true,
+					textMessagesToggleRestriction: restriction.Disabled,
+					textMessagesToggleEnabled:     true,
 				},
 			},
 			{
@@ -62,16 +68,31 @@ func init() {
 					globalNetworkConfig: policy.ONCGlobalNetworkConfiguration{
 						AllowTextMessages: "Suppress",
 					},
-					uiNotificationExpected: false,
+					uiNotificationExpected:        false,
+					textMessagesToggleRestriction: restriction.Disabled,
+					textMessagesToggleEnabled:     false,
 				},
 			},
 			{
-				Name: "policy_value_unset",
+				Name: "policy_value_unset_user_allow",
 				Val: allowTextMessagesPolicyTestParam{
 					globalNetworkConfig: policy.ONCGlobalNetworkConfiguration{
 						AllowTextMessages: "Unset",
 					},
-					uiNotificationExpected: true,
+					uiNotificationExpected:        true,
+					textMessagesToggleRestriction: restriction.None,
+					textMessagesToggleEnabled:     true,
+				},
+			},
+			{
+				Name: "policy_value_unset_user_suppress",
+				Val: allowTextMessagesPolicyTestParam{
+					globalNetworkConfig: policy.ONCGlobalNetworkConfiguration{
+						AllowTextMessages: "Unset",
+					},
+					uiNotificationExpected:        false,
+					textMessagesToggleRestriction: restriction.None,
+					textMessagesToggleEnabled:     false,
 				},
 			},
 		},
@@ -81,7 +102,7 @@ func init() {
 	})
 }
 
-// AllowTextMessagesPolicy validates that admins can configure managed devices to allow or suppress text message notifications.
+// AllowTextMessagesPolicy validates that admins and users can configure devices to allow or suppress text message notifications.
 func AllowTextMessagesPolicy(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
@@ -151,6 +172,58 @@ func AllowTextMessagesPolicy(ctx context.Context, s *testing.State) {
 	}
 	if err := policyutil.ServeAndRefresh(ctx, fdms, uiHelper.Cr, []policy.Policy{deviceNetworkPolicy}); err != nil {
 		s.Fatal("Failed to ServeAndRefresh ONC policy: ", err)
+	}
+
+	if _, err := helper.ConnectToDefault(ctx); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
+	}
+
+	networkName, err := helper.GetCurrentNetworkName(ctx)
+	if err != nil || networkName == "" {
+		s.Fatal("Failed to fetch network name by iccid, err: ", err)
+	}
+
+	app, err := ossettings.OpenMobileDataSubpage(ctx, uiHelper.Tconn, uiHelper.Cr)
+	if err != nil {
+		s.Fatal("Failed to open mobile data sub page: ", err)
+	}
+	defer app.Close(ctx)
+
+	ui := uiauto.New(uiHelper.Tconn).WithTimeout(60 * time.Second)
+
+	connectedCellularRow := nodewith.NameContaining(networkName + ", Connected").First()
+	if err = uiauto.Combine("Open the Internet detail subpage and expand the advanced section",
+		ui.LeftClick(connectedCellularRow),
+		ui.DoDefault(ossettings.CellularAdvanced),
+	)(ctx); err != nil {
+		s.Fatal("Failed to click on connected network row and expand the advanced seciton: ", err)
+	}
+
+	showTextMessagesToggle := ossettings.ShowTextMessagesToggle
+
+	if err := ui.CheckRestriction(showTextMessagesToggle,
+		testOpts.textMessagesToggleRestriction)(ctx); err != nil {
+		s.Fatal("Show text messages toggle does not have the correct restriction: ", err)
+	}
+
+	toggleInfo, err := ui.Info(ctx, showTextMessagesToggle)
+	if err != nil {
+		s.Fatal("Failed to find the toggle info: ", err)
+	}
+
+	showTextMessagesToggleName := toggleInfo.Name
+
+	settings := ossettings.New(uiHelper.Tconn)
+	defer settings.Close(cleanupCtx)
+
+	err = settings.SetToggleOption(uiHelper.Cr, showTextMessagesToggleName, testOpts.textMessagesToggleEnabled)(ctx)
+	if err != nil {
+		s.Fatal("Failed to set the state for show text messages toggle: ", err)
+	}
+
+	// Defer reset to enabled to make sure other tests are unaffected by any failed runs of this test.
+	if testOpts.textMessagesToggleRestriction == restriction.None {
+		defer settings.SetToggleOption(uiHelper.Cr, showTextMessagesToggleName, true)(cleanupCtx)
 	}
 
 	// Keyboard to input key inputs.

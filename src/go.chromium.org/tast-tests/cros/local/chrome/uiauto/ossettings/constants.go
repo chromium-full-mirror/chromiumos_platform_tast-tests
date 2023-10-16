@@ -279,6 +279,8 @@ var (
 
 	// NetworkAddedText is the finder for the header to the eSIM cellular setup dialog when an eSIM profile is successfully added.
 	NetworkAddedText = nodewith.NameContaining("Network added").Role(role.StaticText)
+
+	ShowTextMessagesToggle = nodewith.NameStartingWith("Show text").Role(role.ToggleButton)
 )
 
 // Elements in "Access Point Name subpage"
