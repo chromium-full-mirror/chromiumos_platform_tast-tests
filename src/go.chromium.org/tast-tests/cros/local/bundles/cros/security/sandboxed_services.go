@@ -132,8 +132,7 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		{"cros_healthd", "root", "root", mntNS},                                                       // cros_healthd's root-level executor
 		{"cros_healthd", "cros_healthd", "cros_healthd", mntNS | restrictCaps | noNewPrivs | seccomp}, // main cros_healthd daemon
 		{"featured", "root", "root", 0},
-		{"cr50-disable-sl", "root", "root", 0},
-		{"cr50_disable_sl", "root", "root", 0},
+		{"cr50_disable_sleep", "root", "root", 0},
 		{"rmad", "root", "root", mntNS},                                       // rmad's root-level executor
 		{"rmad", "rmad", "rmad", mntNS | restrictCaps | noNewPrivs | seccomp}, // main RMA daemon
 		{"lvmd", "root", "root", 0},                                           // TODO(b/278480982): reduce privileges allowed for lvmd.
@@ -175,8 +174,8 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		// b/228320883, we don't really care about these Cr50 update/log scripts.
 		// src/platform/cr50/extra/usb_updater/gsctool.c
 		{"gsctool", "root", "root", 0},
-		// src/third_party/chromiumos-overlay/chromeos-base/chromeos-cr50-scripts/files/cr50-flash-log.sh
-		{"cr50-flash-log.sh", "root", "root", 0},
+		// src/platform2/hwsec-utils/src/bin/gsc_flash_log.rs
+		{"gsc_flash_log", "root", "root", 0},
 
 		// One-off processes that we see when this test runs together with other tests.
 		// src/overlays/overlay-kip/chromeos-base/modem-watchdog/files/chromeos-kip-modem-watchdog.sh
