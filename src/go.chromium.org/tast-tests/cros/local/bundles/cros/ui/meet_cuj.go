@@ -1152,7 +1152,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	for name := range cujrecorder.WebRTCMetricInfo {
 		names = append(names, name)
 	}
-	webRTCMetricsRecorder, err := metrics.StartRecorder(ctx, tconn, names...)
+	webRTCMetricsRecorder, err := metrics.StartRecorder(ctx, bTconn, names...)
 	if err != nil {
 		s.Fatal("Failed to start recording WebRTC metrics: ", err)
 	}
@@ -2103,7 +2103,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	if err := ui.WaitUntilGone(nodewith.NameContaining("VideoStream").First())(ctx); err != nil {
 		s.Error("Failed to wait for video stream info to disappear: ", err)
 	}
-	if hists, err := webRTCMetricsRecorder.Histogram(ctx, tconn); err != nil {
+	if hists, err := webRTCMetricsRecorder.Histogram(ctx, bTconn); err != nil {
 		s.Error("Failed to gather WebRTC metrics for video streams: ", err)
 	} else {
 		for _, hist := range hists {
