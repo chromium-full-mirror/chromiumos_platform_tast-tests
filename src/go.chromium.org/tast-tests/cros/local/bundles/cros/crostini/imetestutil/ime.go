@@ -79,29 +79,28 @@ func setHiraganaMode(ui *uiauto.Context) uiauto.Action {
 	// The IME menu tray should exist by default when new IMEs are added.
 	imeMenuTrayButtonFinder := nodewith.Name("IME menu button").Role(role.Button)
 	hiraganaOptionFinder := nodewith.Name("Hiragana").Role(role.CheckBox)
-	// Set and check the hiragana mode is set.
-	return uiauto.NamedCombine("set hiragana mode",
-		uiauto.IfFailThen(
-			// If Hiragana is selected, skip to next step.
-			uiauto.Combine("check that hiragana option is selected in the IME tray",
-				ui.DoDefault(imeMenuTrayButtonFinder),
-				ui.WithTimeout(3*time.Second).WaitUntilCheckedState(hiraganaOptionFinder, true),
-			),
-			// If Hiragana is not selected, attempt to select it a few times.
-			uiauto.Retry(5,
-				uiauto.Combine("set Japanese input to hiragana mode, and retry 5 times or until successful",
-					ui.DoDefault(hiraganaOptionFinder),
-					ui.WithTimeout(3*time.Second).WaitUntilGone(hiraganaOptionFinder),
-					// Open and check again.
-					ui.DoDefault(imeMenuTrayButtonFinder),
-					ui.WithTimeout(3*time.Second).WaitUntilCheckedState(hiraganaOptionFinder, true),
-				),
-			),
-		),
-		// Hiragana is selected now, so click the icon in the tray to close the options menu.
-		ui.DoDefaultUntil(
-			imeMenuTrayButtonFinder,
+
+	openIMETray := ui.DoDefaultUntil(
+		imeMenuTrayButtonFinder,
+		ui.WithTimeout(3*time.Second).Exists(hiraganaOptionFinder),
+	)
+	closeIMETray := ui.DoDefaultUntil(
+		imeMenuTrayButtonFinder,
+		ui.WithTimeout(3*time.Second).WaitUntilGone(hiraganaOptionFinder),
+	)
+
+	// Use retries because of flakes when the tray is opened, used and closed too quickly.
+	return uiauto.Retry(5,
+		uiauto.NamedCombine("set Japanese input to hiragana mode",
+			// Open the IME tray and select Hirigana. This works even if Hiragana is already selected.
+			openIMETray,
+			ui.DoDefault(hiraganaOptionFinder),
 			ui.WithTimeout(3*time.Second).WaitUntilGone(hiraganaOptionFinder),
+			// Open and check again.
+			ui.DoDefault(imeMenuTrayButtonFinder),
+			ui.WithTimeout(3*time.Second).WaitUntilCheckedState(hiraganaOptionFinder, true),
+			// Hiragana is selected now, so click the icon in the tray to close the options menu.
+			closeIMETray,
 		),
 	)
 }
