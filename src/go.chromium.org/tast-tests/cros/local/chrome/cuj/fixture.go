@@ -439,6 +439,49 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	// TODO(b/302748186): Remove rounded window fixtures.
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithRoundedWindows",
+		Desc: "UI CUJ tests with Rounded Windows feature enabled",
+		Contacts: []string{
+			"zoraiznaeem@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt: browser.TypeAsh,
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("RoundedWindows"),
+			},
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserLacrosWithRoundedWindows",
+		Desc: "Fixture used for lacros variation of UI CUJ tests with Rounded Windows feature enabled",
+		Contacts: []string{
+			"zoraiznaeem@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt: browser.TypeLacros,
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("RoundedWindows"),
+			},
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserARCSupportedLacros",
 		Desc: "Fixture used for lacros variation of UI CUJ tests with ARC supported",
