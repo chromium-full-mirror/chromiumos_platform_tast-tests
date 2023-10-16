@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/erofs-utils-1.6_20231026.zip",
+  "size": 4092426,
+  "sha256sum": "56819f2b7a315fbd5332fa400e89ca1d4c9134f5c47b05b9ce76222932cc529e"
+}

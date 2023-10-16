@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -23,6 +24,8 @@ type testParamCacheIntegrity struct {
 	vmEnabled bool
 }
 
+const erofsUtilsZip = "erofs-utils.zip"
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CacheIntegrity,
@@ -36,6 +39,7 @@ func init() {
 		BugComponent: "b:168382",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome"},
+		Data:         []string{erofsUtilsZip},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val: testParamCacheIntegrity{
@@ -70,7 +74,7 @@ func CacheIntegrity(ctx context.Context, s *testing.State) {
 	}
 	defer cl.Close(ctx)
 
-	cacheSources, err := extractCacheSources(ctx, d, artifactsDir, param.vmEnabled)
+	cacheSources, err := extractCacheSources(ctx, d, artifactsDir, s.DataPath(erofsUtilsZip), param.vmEnabled)
 	if err != nil {
 		s.Fatal(errors.Wrap(err, "cache source extraction failed"))
 	}
@@ -93,8 +97,8 @@ func CacheIntegrity(ctx context.Context, s *testing.State) {
 }
 
 // extractCacheSources extracts caches from the system image.
-func extractCacheSources(ctx context.Context, d *dut.DUT, artifactsDir string, vmEnabled bool) (string, error) {
-	testing.ContextLog(ctx, "Extracting cache sources")
+func extractCacheSources(ctx context.Context, d *dut.DUT, artifactsDir, erofsUtilsZipPath string, vmEnabled bool) (string, error) {
+	testing.ContextLog(ctx, "Downloading system image from DUT for extracting cache sources")
 	var remoteImg string
 	if vmEnabled {
 		remoteImg = "/opt/google/vms/android/system.raw.img"
@@ -109,20 +113,54 @@ func extractCacheSources(ctx context.Context, d *dut.DUT, artifactsDir string, v
 	}
 	defer os.RemoveAll(localImg)
 
-	if err := testexec.CommandContext(
-		ctx,
-		"unsquashfs",
-		"-no-xattrs",
-		"-f",
-		"-d", artifactsDir,
-		localImg,
-		"/system/etc/file_hash_cache",
-		"/system/etc/packages_cache.xml",
-		"/system/etc/gservices_cache",
-		"/system/etc/gms_core_cache/app_chimera",
-		"/system/etc/tts_state_cache.dat",
-		"/system/etc/ureadahead.pack").Run(testexec.DumpLogOnError); err != nil {
-		return "", errors.Wrapf(err, "failed to decompress Squashfs image: %v", localImg)
+	isSquashfsImage := true
+	if _, stderr, err := testexec.CommandContext(ctx, "unsquashfs", "-s", localImg).SeparatedOutput(); err != nil {
+		if strings.HasPrefix(string(stderr), "Can't find a SQUASHFS superblock") {
+			// Likely an EROFS image.
+			isSquashfsImage = false
+		} else {
+			return "", errors.Wrapf(err, "unsquashfs -s failed: %v", string(stderr))
+		}
+	}
+
+	if isSquashfsImage {
+		testing.ContextLog(ctx, "Decompressing Squashfs system image")
+		if err := testexec.CommandContext(
+			ctx,
+			"unsquashfs",
+			"-no-xattrs",
+			"-f",
+			"-d", artifactsDir,
+			localImg,
+			"/system/etc/file_hash_cache",
+			"/system/etc/packages_cache.xml",
+			"/system/etc/gservices_cache",
+			"/system/etc/gms_core_cache/app_chimera",
+			"/system/etc/tts_state_cache.dat",
+			"/system/etc/ureadahead.pack").Run(testexec.DumpLogOnError); err != nil {
+			return "", errors.Wrapf(err, "failed to decompress Squashfs image: %v", localImg)
+		}
+	} else {
+		testing.ContextLog(ctx, "Decompressing EROFS system image")
+
+		// Need to set up erofs-utils first to process an EROFS image.
+		// TODO(b/293823961): Remove this once erofs-utils is available by default in CFT.
+		const erofsUtilsDir = "/tmp/erofs-utils"
+		if err := os.Mkdir(erofsUtilsDir, 0755); err != nil {
+			return "", errors.Wrapf(err, "failed to create: %v", erofsUtilsDir)
+		}
+		defer os.RemoveAll(erofsUtilsDir)
+		if err := testexec.CommandContext(ctx, "unzip", erofsUtilsZipPath, "-d", erofsUtilsDir).Run(testexec.DumpLogOnError); err != nil {
+			return "", errors.Wrapf(err, "failed to unzip: %v", erofsUtilsZip)
+		}
+
+		if err := testexec.CommandContext(
+			ctx,
+			filepath.Join(erofsUtilsDir, "fsck.erofs"),
+			"--extract="+artifactsDir,
+			localImg).Run(testexec.DumpLogOnError); err != nil {
+			return "", errors.Wrapf(err, "failed to decompress EROFS image: %v", localImg)
+		}
 	}
 
 	etcPath := filepath.Join(artifactsDir, "/system/etc")
