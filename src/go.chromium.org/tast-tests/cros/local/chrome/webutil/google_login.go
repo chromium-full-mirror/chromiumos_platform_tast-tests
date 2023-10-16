@@ -87,6 +87,7 @@ func LoginGoogleAccount(ctx context.Context, cr *chrome.Chrome, account, passwor
 		ui.DoDefault(showPassword),
 		confirmInput(passwordField, password),
 		kb.AccelAction("Enter"),
-		ui.WithTimeout(time.Minute).WaitUntilGone(passwordField),
+		// Sometimes it takes a long time to login Google.
+		ui.WithTimeout(2*time.Minute).WaitUntilGone(passwordField),
 	)(ctx)
 }
