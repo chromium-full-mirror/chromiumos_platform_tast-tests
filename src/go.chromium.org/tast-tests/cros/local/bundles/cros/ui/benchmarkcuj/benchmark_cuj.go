@@ -30,6 +30,7 @@ type BenchmarkTest struct {
 	BrowserType   browser.Type
 	BenchmarkInfo benchmarkInfo
 	RecorderMode  cujrecorder.RecorderMode
+	RunOnBattery  bool
 }
 
 // Score holds values for a single metric along with their improvement direction.
@@ -105,6 +106,7 @@ func Run(ctx context.Context, s *testing.State) {
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{
 		Mode:              testParam.RecorderMode,
 		CooldownBeforeRun: true,
+		RunOnBattery:      testParam.RunOnBattery,
 	})
 
 	if err != nil {

@@ -362,6 +362,10 @@ type RecorderOptions struct {
 	// function in recorder.Run and turn it back on in recorder.StopRecording
 	TurnOffDisplay bool
 
+	// RunOnBattery forces the device to run on battery, regardless of the
+	// set RecorderMode.
+	RunOnBattery bool
+
 	// DischargeThreshold is the battery discharge threshold.
 	// If not set, defaultDischargeThreshold will be used.
 	DischargeThreshold *float64
@@ -632,6 +636,11 @@ func (r *Recorder) Reset(ctx context.Context) error {
 	}
 
 	var err error
+	r.batteryInfoTracker, err = perfSrc.NewBatteryInfoTracker(ctx, r.options.Mode != CUJ /*skipPollingPower*/, tpsMetricPrefix)
+	if err != nil {
+		return errors.Wrap(err, "failed to create BatteryInfoTracker")
+	}
+
 	if r.options.Mode == CUJ {
 		r.frameDataTracker, err = perfSrc.NewFrameDataTracker(tpsMetricPrefix)
 		if err != nil {
@@ -641,11 +650,6 @@ func (r *Recorder) Reset(ctx context.Context) error {
 		r.zramInfoTracker, err = perfSrc.NewZramInfoTracker(tpsMetricPrefix)
 		if err != nil {
 			return errors.Wrap(err, "failed to create ZramInfoTracker")
-		}
-
-		r.batteryInfoTracker, err = perfSrc.NewBatteryInfoTracker(ctx, tpsMetricPrefix)
-		if err != nil {
-			return errors.Wrap(err, "failed to create BatteryInfoTracker")
 		}
 
 		r.memInfoTracker = perfSrc.NewMemoryTracker(r.arc)
@@ -1026,6 +1030,10 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		}
 	}
 
+	if err := r.batteryInfoTracker.Start(ctx, r.startedAtTm); err != nil {
+		return nil, errors.Wrap(err, "failed to start BatteryInfoTracker")
+	}
+
 	if r.options.Mode == CUJ {
 		if err := r.frameDataTracker.Start(ctx, r.tconn, r.startedAtTm); err != nil {
 			return nil, errors.Wrap(err, "failed to start FrameDataTracker")
@@ -1042,10 +1050,6 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 
 		if err := r.zramInfoTracker.Start(ctx); err != nil {
 			return nil, errors.Wrap(err, "failed to start ZramInfoTracker")
-		}
-
-		if err := r.batteryInfoTracker.Start(ctx, r.startedAtTm); err != nil {
-			return nil, errors.Wrap(err, "failed to start BatteryInfoTracker")
 		}
 
 		// Create a power timeline aligned with r.startedAtTm.
@@ -1170,7 +1174,7 @@ func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context
 	// Create batteryDischarge with both discharge and ignoreErr set to true.
 	// Only discharge for CUJ tests, since they are the only test that run for
 	// long enough for the power test to give meaningful values.
-	batteryDischarge := setup.NewBatteryDischarge(r.options.Mode == CUJ, true, dischargeThreshold)
+	batteryDischarge := setup.NewBatteryDischarge(r.options.Mode == CUJ || r.options.RunOnBattery, true, dischargeThreshold)
 
 	var err error
 	setupCleanup, err := setup.PowerTest(ctx, r.tconn, powerTestOptions, batteryDischarge)

@@ -36,6 +36,8 @@ type BatteryInfoTracker struct {
 	batteryChargeEnd          float64
 	batteryCapacityStart      float64
 	batteryCapacityEnd        float64
+	batteryEnergyStart        float64
+	batteryEnergyEnd          float64
 	energy                    float64   // Total energy consumed.
 	power                     []float64 // Power reading every |batteryCheckInterval|.
 	powerTime                 []float64
@@ -46,11 +48,14 @@ type BatteryInfoTracker struct {
 	err                       error
 	duration                  time.Duration
 	trackStartTime            time.Time
+	skipPollingPower          bool
 }
 
-// NewBatteryInfoTracker creates a new instance of BatteryInfoTracker. If battery is not
-// used on the device, available flag is set to false and makes track a no-op.
-func NewBatteryInfoTracker(ctx context.Context, metricPrefix string) (*BatteryInfoTracker, error) {
+// NewBatteryInfoTracker creates a new instance of BatteryInfoTracker. If
+// battery is not used on the device, available flag is set to false and makes
+// track a no-op. If skipPollingPower is set, then energy usage will be
+// estimated based on the beginning and end energy readings from the battery.
+func NewBatteryInfoTracker(ctx context.Context, skipPollingPower bool, metricPrefix string) (*BatteryInfoTracker, error) {
 	batteryPath, err := power.SysfsBatteryPath(ctx)
 	if err != nil {
 		// Some devices (e.g. chromeboxes) do not have the battery, but that's fine
@@ -110,6 +115,7 @@ func NewBatteryInfoTracker(ctx context.Context, metricPrefix string) (*BatteryIn
 		voltageMaxDesign:          voltageMaxDesign,
 		lowBatteryShutdownPercent: lowBatteryShutdownPercent,
 		lowBatteryShutdownTime:    lowBatteryShutdownTime,
+		skipPollingPower:          skipPollingPower,
 	}, nil
 }
 
@@ -137,12 +143,22 @@ func (t *BatteryInfoTracker) Start(ctx context.Context, timeZero time.Time) erro
 	if err != nil {
 		return err
 	}
+	energyNow, err := power.ReadBatteryEnergy(ctx, t.batteryPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to read start battery energy")
+	}
 
-	t.trackStartTime = time.Now() // Reset start time.
 	t.batteryChargeStart = chargeNow
 	t.batteryCapacityStart = capacityNow
+	t.batteryEnergyStart = energyNow
+	testing.ContextLogf(ctx, "charge_now value at start: %f, capacity value at start: %f, energy value at start: %f", chargeNow, capacityNow, energyNow)
+
+	if t.skipPollingPower {
+		return nil
+	}
+
+	t.trackStartTime = time.Now() // Reset start time.
 	t.chargeNow = append(t.chargeNow, chargeNow)
-	testing.ContextLogf(ctx, "charge_now value at start: %f, capacity value at start: %f", chargeNow, capacityNow)
 
 	async.Run(ctx, func(ctx context.Context) {
 		ticker := time.NewTicker(batteryCheckInterval)
@@ -193,7 +209,7 @@ func (t *BatteryInfoTracker) Stop(ctx context.Context) error {
 		return errors.New("not started")
 	}
 
-	if t.trackStartTime.IsZero() {
+	if t.trackStartTime.IsZero() && !t.skipPollingPower {
 		return errors.New("Battery info tracker has not started")
 	}
 
@@ -205,14 +221,23 @@ func (t *BatteryInfoTracker) Stop(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	energyNow, err := power.ReadBatteryEnergy(ctx, t.batteryPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to read battery energy")
+	}
 
 	t.batteryChargeEnd = chargeNow
 	t.batteryCapacityEnd = capacityNow
+	t.batteryEnergyEnd = energyNow
+	testing.ContextLogf(ctx, "charge_now value at end: %f, capacity value at end: %f, energy value at the end: %f", chargeNow, capacityNow, energyNow)
+
+	if t.skipPollingPower {
+		return nil
+	}
+
 	t.chargeNow = append(t.chargeNow, chargeNow)
 	t.duration = time.Since(t.trackStartTime)
 	t.trackStartTime = time.Time{} // Reset to zero for next start.
-	testing.ContextLogf(ctx, "charge_now value at end: %f, capacity value at end: %f", chargeNow, capacityNow)
-
 	t.energyFullDesign = t.chargeFullDesign * t.voltageMinDesign * 1e-12 * 3600
 
 	// Stop energy collecting go routine.
@@ -222,7 +247,7 @@ func (t *BatteryInfoTracker) Stop(ctx context.Context) error {
 		if err != nil {
 			// On boards like `drallion`, power.ReadSystemPower(ctx) could occasionally
 			// fail. Record the error to skip reporting battery info for such boards.
-			testing.ContextLog(ctx, "Energe collecting routine returned error: ", err)
+			testing.ContextLog(ctx, "Energy collecting routine returned error: ", err)
 			testing.ContextLog(ctx, "Battery info will not be reported")
 			t.err = err
 		}
@@ -237,6 +262,7 @@ func (t *BatteryInfoTracker) Record(pv *perf.Values) {
 	if t == nil || t.err != nil {
 		return
 	}
+
 	pv.Set(perf.Metric{
 		Name:      t.prefix + "Battery.Charge.usage",
 		Unit:      "microAh",
@@ -259,6 +285,27 @@ func (t *BatteryInfoTracker) Record(pv *perf.Values) {
 			Direction: perf.SmallerIsBetter,
 		}, (t.batteryChargeStart-t.batteryChargeEnd)/t.chargeFullDesign*100)
 	}
+
+	pv.Set(perf.Metric{
+		Name:      t.prefix + "Battery.Capacity.change",
+		Unit:      "percent",
+		Direction: perf.SmallerIsBetter,
+	}, t.batteryCapacityStart-t.batteryCapacityEnd)
+
+	// Battery energy is in watt hours, so multiply by 3600 to convert to
+	// joules.
+	pv.Set(perf.Metric{
+		Name:      t.prefix + "Battery.EnergyUsageEstimate",
+		Unit:      "J",
+		Direction: perf.SmallerIsBetter,
+	}, (t.batteryEnergyStart-t.batteryEnergyEnd)*3600)
+
+	// If t.skipPollingPower is set, skip reporting metrics that are reliant
+	// on polling.
+	if t.skipPollingPower {
+		return
+	}
+
 	pv.Set(perf.Metric{
 		Name:      t.prefix + "Power.usage",
 		Unit:      "J",
@@ -305,12 +352,6 @@ func (t *BatteryInfoTracker) Record(pv *perf.Values) {
 			Direction: perf.BiggerIsBetter,
 		}, MinutesBatteryLife)
 	}
-	pv.Set(perf.Metric{
-		Name:      t.prefix + "Battery.Capacity.change",
-		Unit:      "percent",
-		Direction: perf.SmallerIsBetter,
-	}, t.batteryCapacityStart-t.batteryCapacityEnd)
-
 	powerTimesName := t.prefix + "Power.Timeline.t"
 	pv.Set(perf.Metric{
 		Name:     powerTimesName,
