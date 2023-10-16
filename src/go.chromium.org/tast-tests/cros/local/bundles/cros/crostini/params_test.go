@@ -35,6 +35,7 @@ var standardTests = map[string]testOptions{
 	"audio_basic.go": {},
 	// Audio playback configurations took about 6 minutes on model with echo reference
 	"audio_playback_configurations.go":  {timeout: 10 * time.Minute},
+	"backup_restore.go":                 {timeout: 10 * time.Minute},
 	"basic.go":                          {},
 	"close_terminal_tabs_and_window.go": {},
 	"command_cd.go":                     {},
@@ -44,19 +45,21 @@ var standardTests = map[string]testOptions{
 	"crash_reporter.go":                 {},
 	"drag_drop.go":                      {},
 	"files_app_watch.go":                {},
+	"fs_corruption.go":                  {timeout: 10 * time.Minute},
 	"home_directory_share.go":           {},
 	"icon_and_username.go":              {},
 	"launch_terminal.go":                {},
 	"nested_vm.go":                      {},
-	"notify.go":                         {},
 	"no_access_to_downloads.go":         {},
 	"no_shared_folder.go":               {},
+	"notify.go":                         {},
 	"open_with_terminal.go":             {},
 	"package_info.go":                   {},
 	"package_install_uninstall.go":      {},
 	"pulse_audio_basic.go":              {},
 	"remove_cancel.go":                  {},
 	"remove_ok.go":                      {},
+	"resize_backup_restore.go":          {timeout: 15 * time.Minute},
 	"resize_cancel.go":                  {},
 	"resize_ok.go":                      {},
 	"resize_restart.go":                 {},
@@ -75,6 +78,7 @@ var standardTests = map[string]testOptions{
 	"share_folders.go":                  {},
 	"share_folder_zip_file.go":          {},
 	"share_invalid_paths.go":            {},
+	"snapshot.go":                       {timeout: 6 * time.Minute},
 	"sshfs_mount.go":                    {},
 	"sync_time.go":                      {},
 	"task_manager.go":                   {},
@@ -129,10 +133,6 @@ var perfTests = map[string]time.Duration{
 	"vim_compile.go":   20 * time.Minute,
 }
 
-var perfTestsExtraData = map[string][]string{
-	"vim_compile.go": {"vim.tar.gz"},
-}
-
 var mainlineExpensiveTests = map[string]time.Duration{
 	"oom_event.go":                   10 * time.Minute,
 	"app_gedit_install_uninstall.go": 12 * time.Minute,
@@ -144,29 +144,11 @@ func TestExpensiveParams(t *testing.T) {
 			Timeout:       duration,
 			IsNotMainline: true,
 			UseFixture:    true,
-			ExtraData:     perfTestsExtraData[filename],
 		}})
 		genparams.Ensure(t, filename, params)
 	}
 
 	for filename, duration := range mainlineExpensiveTests {
-		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:    duration,
-			UseFixture: true,
-		}})
-		genparams.Ensure(t, filename, params)
-	}
-}
-
-var restartTests = map[string]time.Duration{
-	"backup_restore.go":        10 * time.Minute,
-	"fs_corruption.go":         10 * time.Minute,
-	"resize_backup_restore.go": 15 * time.Minute,
-	"snapshot.go":              6 * time.Minute,
-}
-
-func TestRestartParams(t *testing.T) {
-	for filename, duration := range restartTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
 			Timeout:    duration,
 			UseFixture: true,
@@ -317,8 +299,6 @@ func TestContainerTestParams(t *testing.T) {
 	for _, filename := range containerTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
 			Timeout:                 15 * time.Minute,
-			ExtraData:               []string{"hello-world-amd64.tar", "hello-world-arm64.tar"},
-			ExtraSoftwareDeps:       []string{"vm_host"},
 			UseLargeContainer:       true,
 			UseFixture:              true,
 			MinimumContainerVersion: vm.DebianBullseye,
