@@ -1,0 +1,9 @@
+set noparent
+
+# Enterprise XDR team
+aashay@google.com
+jasonling@google.com
+rborzello@google.com
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
