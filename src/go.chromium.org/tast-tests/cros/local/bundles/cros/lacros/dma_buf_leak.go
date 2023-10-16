@@ -26,7 +26,7 @@ func init() {
 		Desc:         "A regression test for crbug.com/1442990 that checks for potential dma buffer leak",
 		Contacts:     []string{"lacros-team@google.com", "diwux@chromium.org", "petermcneeley@chromium.org"},
 		BugComponent: "crbug:OS>LaCrOS",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
 		HardwareDeps: hwdep.D(hwdep.Model("barla", "fleex", "hana", "redrix", "eve", "atlas", "esche")),
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "lacros",
