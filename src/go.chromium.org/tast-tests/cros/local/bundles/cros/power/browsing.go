@@ -18,8 +18,11 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/utils"
+	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/tracing"
@@ -29,6 +32,7 @@ type browsingTestParam struct {
 	ConfigName   string
 	TimeParams   power.TimeParams
 	CollectTrace bool
+	MultiTab     bool
 }
 
 const setupTimeoutBuffer = 5 * time.Minute
@@ -102,6 +106,17 @@ func init() {
 			Val:               browsingTestParam{ConfigName: "light", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
+			Name:    "light_multitab_ash",
+			Fixture: "powerAsh",
+			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:     browsingTestParam{ConfigName: "light", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}, MultiTab: true},
+		}, {
+			Name:              "light_multitab_lacros",
+			Fixture:           "powerLacros",
+			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:               browsingTestParam{ConfigName: "light", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}, MultiTab: true},
+			ExtraSoftwareDeps: []string{"lacros"},
+		}, {
 			Name:      "tracing_ash",
 			Fixture:   "powerAsh",
 			Timeout:   time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
@@ -138,6 +153,12 @@ type urlData struct {
 	Pages []string `json:"pages"`
 }
 
+type tabData struct {
+	Conn     *chrome.Conn
+	TabIndex int
+	WinIndex int
+}
+
 // browsingConfig describes configuration for this test.
 type browsingConfig struct {
 	FormatVersion int        `json:"format_version"`
@@ -156,7 +177,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 
 	// Open a window with about:blank tab on the target browser.
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, "about:blank")
+	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, "about:blank")
 	if err != nil {
 		s.Fatal("Failed to open a blank new tab: ", err)
 	}
@@ -188,6 +209,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 	interval := s.Param().(browsingTestParam).TimeParams.Interval
 	totalTime := s.Param().(browsingTestParam).TimeParams.Total
 	collectTrace := s.Param().(browsingTestParam).CollectTrace
+	multiTab := s.Param().(browsingTestParam).MultiTab
 
 	if configName == "custom" {
 		if v, ok := s.Var("config_name"); ok {
@@ -216,6 +238,54 @@ func Browsing(ctx context.Context, s *testing.State) {
 
 	if err := validateConfig(config, interval, totalTime); err != nil {
 		s.Fatal("Wrong config: ", err)
+	}
+
+	// Get ChromeApp name for window switching
+	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to find the Chrome app: ", err)
+	}
+	chromeName := chromeApp.Name
+
+	// Default tabData for single tab case
+	tab1 := tabData{Conn: conn, TabIndex: 0, WinIndex: 0}
+	tabDataList := []tabData{tab1}
+
+	uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to create action handler: ", err)
+	}
+	defer uiHandler.Close(cleanupCtx)
+
+	// Create Window A with tab 1 & 2 in foreground
+	// Window B with tab 3 & 4 & 5 in background
+	if multiTab {
+		// tab1 was already created above
+		conn2, err := uiHandler.NewChromeTab(ctx, br, "about:blank", false)
+		if err != nil {
+			s.Fatal("Failed to open new Chrome tab: ", err)
+		}
+		tab2 := tabData{Conn: conn2, TabIndex: 1, WinIndex: 0}
+
+		conn3, err := uiHandler.NewChromeTab(ctx, br, "about:blank", true)
+		if err != nil {
+			s.Fatal("Failed to open new Chrome tab: ", err)
+		}
+		tab3 := tabData{Conn: conn3, TabIndex: 0, WinIndex: 1}
+
+		conn4, err := uiHandler.NewChromeTab(ctx, br, "about:blank", false)
+		if err != nil {
+			s.Fatal("Failed to open new Chrome tab: ", err)
+		}
+		tab4 := tabData{Conn: conn4, TabIndex: 1, WinIndex: 1}
+
+		conn5, err := uiHandler.NewChromeTab(ctx, br, "about:blank", false)
+		if err != nil {
+			s.Fatal("Failed to open new Chrome tab: ", err)
+		}
+		tab5 := tabData{Conn: conn5, TabIndex: 2, WinIndex: 1}
+
+		tabDataList = []tabData{tab1, tab2, tab3, tab4, tab5}
 	}
 
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
@@ -259,11 +329,27 @@ func Browsing(ctx context.Context, s *testing.State) {
 	}
 
 	// Start of main test body.
+	tabDataIndex := 0
 	for loop := 0; loop < loopCount; loop++ {
 		for _, site := range config.URLData.Pages {
+			tabData := tabDataList[tabDataIndex]
+			tabDataIndex = (tabDataIndex + 1) % len(tabDataList)
+
 			startTime := time.Now()
+
+			if multiTab {
+				if tabData.TabIndex == 0 {
+					if err := uiHandler.SwitchToAppWindowByIndex(chromeName, tabData.WinIndex)(ctx); err != nil {
+						s.Fatal("Failed to switch Chrome window: ", err)
+					}
+				}
+				if err := uiHandler.SwitchToChromeTabByIndex(tabData.TabIndex)(ctx); err != nil {
+					s.Fatal("Failed to switch Chrome tab: ", err)
+				}
+			}
+
 			url := urlPrefix + redirectFile + "?ver=" + config.URLData.Version + "&dest=" + site
-			if err := conn.Navigate(ctx, url); err != nil {
+			if err := tabData.Conn.Navigate(ctx, url); err != nil {
 				s.Fatal("Failed to navigate: ", err)
 			}
 
@@ -277,7 +363,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 					}
 
 					js := fmt.Sprintf("window.scrollBy(0, %d)", scrollAmount)
-					if err := conn.Eval(ctx, js, nil); err != nil {
+					if err := tabData.Conn.Eval(ctx, js, nil); err != nil {
 						s.Fatal("Failed to scroll: ", err)
 					}
 					scrollAmount = -scrollAmount
