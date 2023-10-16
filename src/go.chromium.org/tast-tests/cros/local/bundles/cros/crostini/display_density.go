@@ -65,7 +65,7 @@ func init() {
 				Val:               guestos.WaylandDemoConfig(),
 			}, {
 				Name:              "wayland_bookworm_stable",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBookworm",
@@ -112,7 +112,7 @@ func init() {
 				Val:               guestos.X11DemoConfig(),
 			}, {
 				Name:              "x11_bookworm_stable",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBookworm",

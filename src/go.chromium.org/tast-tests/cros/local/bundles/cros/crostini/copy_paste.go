@@ -73,7 +73,7 @@ func init() {
 				},
 			}, {
 				Name:              "wayland_to_wayland_bookworm_stable",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBookworm",
@@ -138,7 +138,7 @@ func init() {
 				},
 			}, {
 				Name:              "wayland_to_x11_bookworm_stable",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBookworm",
@@ -203,7 +203,7 @@ func init() {
 				},
 			}, {
 				Name:              "x11_to_wayland_bookworm_stable",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBookworm",
@@ -268,7 +268,7 @@ func init() {
 				},
 			}, {
 				Name:              "x11_to_x11_bookworm_stable",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBookworm",

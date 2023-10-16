@@ -59,7 +59,7 @@ func init() {
 				Val:               "llvmpipe",
 			}, {
 				Name:              "sw_bookworm_stable",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"crosvm_no_gpu", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBookworm",
@@ -106,7 +106,7 @@ func init() {
 				Val:               "virgl",
 			}, {
 				Name:              "gpu_bookworm_stable",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"crosvm_gpu", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBookworm",

@@ -328,7 +328,9 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				extraAttr = append(extraAttr, "informational")
 
 				// TODO(b/269175095): Promote Lacros tests to critical after stabilizing for two weeks.
-				if bt == browser.TypeLacros {
+				// TODO(b/305579517): Promote bookworm tests to critical.
+				if bt == browser.TypeLacros ||
+					(i.debianVersion == vm.DebianBookworm && i.stable) {
 					extraAttr = append(extraAttr, "group:criticalstaging")
 				}
 			}

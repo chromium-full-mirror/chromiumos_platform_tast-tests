@@ -42,7 +42,7 @@ func init() {
 				Timeout:           15 * time.Minute,
 			}, {
 				Name:              "bookworm_stable",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"hello-world-amd64.tar", "hello-world-arm64.tar"},
 				ExtraSoftwareDeps: []string{"vm_host", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniAppStable,

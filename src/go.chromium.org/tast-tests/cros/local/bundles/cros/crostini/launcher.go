@@ -107,7 +107,7 @@ func init() {
 				},
 			}, {
 				Name:              "local_wayland_bookworm_stable",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"launcher_wayland_demo_fixed_size.desktop", "launcher_wayland_demo.png"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -196,7 +196,7 @@ func init() {
 				},
 			}, {
 				Name:              "local_x11_bookworm_stable",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"launcher_x11_demo_fixed_size.desktop", "launcher_x11_demo.png"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -285,7 +285,7 @@ func init() {
 				},
 			}, {
 				Name:              "system_wayland_bookworm_stable",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"launcher_wayland_demo_fixed_size.desktop", "launcher_wayland_demo.png"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -374,7 +374,7 @@ func init() {
 				},
 			}, {
 				Name:              "system_x11_bookworm_stable",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"launcher_x11_demo_fixed_size.desktop", "launcher_x11_demo.png"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
