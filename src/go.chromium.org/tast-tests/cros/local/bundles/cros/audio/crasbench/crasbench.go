@@ -94,11 +94,11 @@ func Run(ctx context.Context, s *testing.State) {
 			p.Set(fps, res.FPS)
 		}
 		if param.Time4096Frame {
-			time4096 := perf.Metric{Name: name, Variant: "time_per_4096_frames", Unit: "ns", Direction: perf.SmallerIsBetter}
+			time4096 := perf.Metric{Name: name, Variant: "time_per_4096_frames", Unit: "s", Direction: perf.SmallerIsBetter}
 			p.Set(time4096, res.Time4096Frame)
 		}
 		if param.MaxTime4096Frame {
-			maxTime4096 := perf.Metric{Name: name, Variant: "max_time_per_4096_frames", Unit: "ns", Direction: perf.SmallerIsBetter}
+			maxTime4096 := perf.Metric{Name: name, Variant: "max_time_per_4096_frames", Unit: "s", Direction: perf.SmallerIsBetter}
 			p.Set(maxTime4096, res.MaxTime4096Frame)
 		}
 	}
