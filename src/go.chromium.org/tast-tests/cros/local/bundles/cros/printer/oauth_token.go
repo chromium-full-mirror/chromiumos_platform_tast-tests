@@ -35,7 +35,7 @@ func init() {
 			"paper-io_printing",
 		},
 		Timeout:      2 * time.Minute,
-		SoftwareDeps: []string{"chrome", "cups", "virtual_usb_printer"},
+		SoftwareDeps: []string{"chrome", "cups"},
 		Data:         []string{"to_print.pdf"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 	})

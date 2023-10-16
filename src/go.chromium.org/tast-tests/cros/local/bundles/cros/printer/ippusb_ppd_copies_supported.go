@@ -26,7 +26,7 @@ func init() {
 			"group:paper-io",
 			"paper-io_printing",
 		},
-		SoftwareDeps: []string{"cups", "virtual_usb_printer"},
+		SoftwareDeps: []string{"cups"},
 		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Data:         []string{"ippusb_copies_supported.json"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",

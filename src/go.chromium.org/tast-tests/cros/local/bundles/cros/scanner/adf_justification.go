@@ -12,6 +12,7 @@ import (
 	"os"
 
 	lpb "chromiumos/system_api/lorgnette_proto"
+
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
 	"go.chromium.org/tast-tests/cros/local/scanner/lorgnette"
 	"go.chromium.org/tast/core/testing"
@@ -30,7 +31,7 @@ func init() {
 			"group:paper-io",
 			"paper-io_scanning",
 		},
-		SoftwareDeps: []string{"virtual_usb_printer", "cups", "chrome"},
+		SoftwareDeps: []string{"cups", "chrome"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 	})
 }

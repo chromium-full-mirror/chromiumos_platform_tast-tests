@@ -26,7 +26,7 @@ func init() {
 			"paper-io_printing",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"cups", "virtual_usb_printer"},
+		SoftwareDeps: []string{"cups"},
 		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Fixture:      "virtualUsbPrinterModulesLoaded",
 	})

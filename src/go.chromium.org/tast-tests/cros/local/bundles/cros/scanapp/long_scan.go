@@ -37,7 +37,7 @@ func init() {
 			"group:paper-io",
 			"paper-io_scanning",
 		},
-		SoftwareDeps: []string{"chrome", "virtual_usb_printer"},
+		SoftwareDeps: []string{"chrome"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 	})
 }

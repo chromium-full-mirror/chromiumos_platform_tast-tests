@@ -42,7 +42,7 @@ func init() {
 			"group:paper-io",
 			"paper-io_scanning",
 		},
-		SoftwareDeps: []string{"virtual_usb_printer", "cups", "chrome"},
+		SoftwareDeps: []string{"cups", "chrome"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 		Params: []testing.Param{{
 			Val: &enumParams{

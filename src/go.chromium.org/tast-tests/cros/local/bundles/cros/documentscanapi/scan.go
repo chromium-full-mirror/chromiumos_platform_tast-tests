@@ -39,7 +39,7 @@ func init() {
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent: "b:860616",
 		Data:         []string{"manifest.json", "background.js", "scan.css", "scan.html", "scan.js", "scan_escl_ipp_source.jpg", "scan_escl_ipp_golden.png"},
-		SoftwareDeps: []string{"chrome", "virtual_usb_printer"},
+		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",

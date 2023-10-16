@@ -29,7 +29,7 @@ func init() {
 			"group:paper-io",
 			"paper-io_printing",
 		},
-		SoftwareDeps: []string{"cups", "ghostscript", "virtual_usb_printer"},
+		SoftwareDeps: []string{"cups", "ghostscript"},
 		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Data: []string{"print_usb_ps.ppd.gz", "print_usb_to_print.pdf",
 			"print_usb_golden.ps"},

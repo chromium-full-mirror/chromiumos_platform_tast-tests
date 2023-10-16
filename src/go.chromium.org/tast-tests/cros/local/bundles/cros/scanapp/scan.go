@@ -32,7 +32,7 @@ func init() {
 			"paper-io_scanning",
 			"group:cq-medium",
 		},
-		SoftwareDeps: []string{"chrome", "virtual_usb_printer"},
+		SoftwareDeps: []string{"chrome"},
 		// TODO(b/202847398): Skip sona devices due to abnormal failures.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("sona")),
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",

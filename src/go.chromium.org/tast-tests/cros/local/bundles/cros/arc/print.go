@@ -43,7 +43,7 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Printing
 		BugComponent: "b:613731",
-		SoftwareDeps: []string{"chrome", "cups", "virtual_usb_printer"},
+		SoftwareDeps: []string{"chrome", "cups"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithArcBooted",
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{

@@ -40,7 +40,7 @@ func init() {
 		// ChromeOS > Software > System Services > Peripherals > Printing
 		BugComponent: "b:1131981",
 		Timeout:      2 * time.Minute,
-		SoftwareDeps: []string{"chrome", "cups", "virtual_usb_printer"},
+		SoftwareDeps: []string{"chrome", "cups"},
 		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Fixture:      "virtualUsbPrinterModulesLoaded",
 	})

@@ -31,7 +31,7 @@ func init() {
 			"group:hw_agnostic",
 		},
 		Timeout:      2 * time.Minute,
-		SoftwareDeps: []string{"cups", "virtual_usb_printer"},
+		SoftwareDeps: []string{"cups"},
 		Data:         []string{"reject_document_format_script.textproto"},
 		Fixture:      "virtualUsbPrinterModulesLoaded",
 	})
