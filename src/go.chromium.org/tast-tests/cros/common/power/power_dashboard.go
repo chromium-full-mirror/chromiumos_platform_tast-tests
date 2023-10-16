@@ -25,149 +25,188 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// Define a type for each metric. Metric "type" will be added as a prefix before the metric name.
-// This is to help categorize each metric in power_log.json/.html, which can also be used as a
-// filter on power_dashboard.
-const (
-	CPUIdleMetricType          = "cpuidle."
-	CPUUsageMetricType         = "cpu_usage."
-	FanMetricType              = "fan."
-	FPSMetricType              = "fps."
-	GeneralPerfMetricType      = "perf."
-	GPUFreqMetricType          = "gpufreq_wavg."
-	GPUUsageMetricType         = "gpu_usage."
-	PackageCstatesMetricType   = "cpupkg."
-	BatterySOCMetricType       = "battery."
-	HistogramMetricType        = "histogram."
-	PowerRelatedMetricType     = "power."
-	ThermalMetricType          = "temperature."
-	WebrtcBitrateMetricType    = "webrtc_bitrate."
-	WebrtcFpsMetricType        = "webrtc_fps."
-	WebrtcLimitationMetricType = "webrtc_limitation."
-	WebrtcPixelMetricType      = "webrtc_pixel."
-	WebrtcTimeMetricType       = "webrtc_time."
-	WebrtcQPMetricType         = "webrtc_qp."
-	ZramMetricType             = "zram."
-	MemoryMetricType           = "memory."
-)
-
-// Units for each metric type.
-const (
-	CPUIdleMetricTypeUnit          = "percent"
-	CPUUsageMetricTypeUnit         = "percent"
-	FanMetricTypeUnit              = "rpm"
-	FPSMetricTypeUnit              = "fps"
-	GeneralPerfMetricTypeUnit      = "point"
-	GPUFreqMetricTypeUnit          = "megahertz"
-	GPUUsageUtilizationTypeUnit    = "percent"
-	GPUUsageMemoryTypeUnit         = "kiB"
-	HistogramLatencyMetricTypeUnit = "us"
-	PackageCstatesMetricTypeUnit   = "percent"
-	PowerRelatedMetricTypeUnit     = "W"
-	ThermalMetricTypeUnit          = "celsius"
-	WebrtcBitrateMetricTypeUnit    = "kbps"
-	WebrtcFpsMetricTypeUnit        = "fps"
-	WebrtcLimitationMetricTypeUnit = "percent"
-	WebrtcPixelMetricTypeUnit      = "pixel"
-	WebrtcTimeMetricTypeUnit       = "ms"
-	WebrtcQPMetricTypeUnit         = "point"
-	ZramMetricTypeUnit             = "requests"
-	MemoryMetricTypeUnit           = "kiB"
-)
-
-// Keys for battery life metrics in power log.
-const (
-	MinutesBatteryLifeKey       = "minutes_battery_life"
-	MinutesBatteryLifeTestedKey = "minutes_battery_life_tested"
-)
-
-// Only keys inside validMetricTypeMap are accepted metric types.
-var validMetricTypeMap = map[string]bool{
-	"battery":           true,
-	"cpuidle":           true,
-	"cpu_usage":         true,
-	"fan":               true,
-	"fps":               true,
-	"perf":              true,
-	"gpufreq_wavg":      true,
-	"gpu_usage":         true,
-	"cpupkg":            true,
-	"histogram":         true,
-	"power":             true,
-	"temperature":       true,
-	"webrtc_bitrate":    true,
-	"webrtc_fps":        true,
-	"webrtc_pixel":      true,
-	"webrtc_limitation": true,
-	"webrtc_time":       true,
-	"webrtc_qp":         true,
-	"zram":              true,
-	"memory":            true,
-	"other":             true,
+// containEmpty is the helper function to check if there is an empty string among args.
+func containEmpty(strs ...string) bool {
+	for _, str := range strs {
+		if str == "" {
+			return true
+		}
+	}
+	return false
 }
 
-// Power log file name.
-const powerLogFileName = "power_log"
+// sortMetricsNumerically is the helper function to sort metrics in numerical order.
+func sortMetricsNumerically(ctx context.Context, metrics []string) {
+	sort.Slice(metrics, func(i, j int) bool {
+		re := regexp.MustCompile("[0-9]+")
+		iSlices := re.FindAllString(metrics[i], -1)
+		jSlices := re.FindAllString(metrics[j], -1)
 
-const htmlChartStr = `
-<!DOCTYPE html>
-<html>
-<head>
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js">
-</script>
-<script type="text/javascript">
-    google.charts.load('current', {'packages':['corechart', 'table']});
-    google.charts.setOnLoadCallback(drawChart);
-    function drawChart() {
-        var dataArray = [
-{data}
-        ];
-        var data = google.visualization.arrayToDataTable(dataArray);
-        var numDataCols = data.getNumberOfColumns() - 1;
-        var unit = '{unit}';
-        var type = '{type}';
-        var options = {
-            width: 1600,
-            height: 1200,
-            lineWidth: 1,
-            legend: { position: 'top', maxLines: 3 },
-            vAxis: {viewWindow: {min: 0}, title: '{type} ({unit})'},
-            hAxis: {viewWindow: {min: 0}, title: 'time (second)'},
-        };
-        var element = document.getElementById('{type}');
-        var chart;
-        if (unit == 'percent' && numDataCols >= 2) {
-            options['isStacked'] = true;
-            if (numDataCols == 2) {
-                options['colors'] = ['#d32f2f', '#43a047']
-            } else if (numDataCols <= 4) {
-                options['colors'] = ['#d32f2f', '#f4c7c3', '#cddc39','#43a047'];
-            } else if (numDataCols <= 9) {
-                options['colors'] = ['#d32f2f', '#e57373', '#f4c7c3', '#ffccbc',
-                        '#f0f4c3', '#c8e6c9', '#cddc39', '#81c784', '#43a047'];
-            }
-            chart = new google.visualization.SteppedAreaChart(element);
-        } else if (data.getNumberOfRows() == 1 && type == 'perf') {
-            var newArray = [['key', 'value']];
-            for (var i = 1; i < dataArray[0].length; i++) {
-                newArray.push([dataArray[0][i], dataArray[1][i]]);
-            }
-            data = google.visualization.arrayToDataTable(newArray);
-            delete options.width;
-            delete options.height;
-            chart = new google.visualization.Table(element);
-        } else {
-            chart = new google.visualization.LineChart(element);
-        }
-        chart.draw(data, options);
-    }
-</script>
-</head>
-<body>
-<div id="{type}"></div>
-</body>
-</html>
-`
+		var si int64
+		var sj int64
+		var err error
+
+		if len(iSlices) >= 1 {
+			si, err = strconv.ParseInt(iSlices[len(iSlices)-1], 10, 64)
+			if err != nil {
+				testing.ContextLog(ctx, "Failed to parse string to int: ", err)
+			}
+		}
+
+		if len(jSlices) >= 1 {
+			sj, err = strconv.ParseInt(jSlices[len(jSlices)-1], 10, 64)
+			if err != nil {
+				testing.ContextLog(ctx, "Failed to parse string to int: ", err)
+			}
+		}
+
+		return si < sj
+	})
+}
+
+// generateDashboardLink generates link to power and thermal dashboard.
+func generateDashboardLink(powerLogDict map[string]interface{}) string {
+	const hwidLinkStr = `
+	<a href="http://goto.google.com/pdash-hwid?query={hwid}">
+	  Link to hwid lookup.
+	</a><br />
+	`
+
+	const pdashLinkStr = `
+	<a href="http://chrome-power.appspot.com/dashboard?board={board}&test={test}&datetime={datetime}">
+	  Link to power dashboard.
+	</a><br />
+	`
+
+	const tdashLinkStr = `
+	<a href="http://chrome-power.appspot.com/thermal_dashboard?note={note}">
+	  Link to thermal dashboard.
+	</a><br />
+	`
+
+	var board, test, hwid, note, datetime string
+	var timeRaw time.Time
+
+	if value, ok := powerLogDict["test"].(string); ok {
+		test = value
+	}
+	if value, ok := powerLogDict["timestamp"].(int64); ok {
+		timeRaw = time.Unix(value, 0).UTC()
+	}
+	datetime = fmt.Sprintf("%d%02d%02d%02d%02d", timeRaw.Year(), int(timeRaw.Month()), timeRaw.Day(), timeRaw.Hour(), timeRaw.Minute())
+	if dutMap, ok := powerLogDict["dut"].(map[string]interface{}); ok {
+		if value, ok := dutMap["board"].(string); ok {
+			board = value
+		}
+		if value, ok := dutMap["note"].(string); ok {
+			note = value
+		}
+		if skuMap, ok := dutMap["sku"].(map[string]interface{}); ok {
+			if value, ok := skuMap["hwid"].(string); ok {
+				hwid = value
+			}
+		}
+	}
+
+	htmlStr := `<!DOCTYPE html><html><body>`
+	r := strings.NewReplacer("{hwid}", hwid, "{board}", board, "{test}", test, "{datetime}", datetime, "{note}", note)
+	if !containEmpty(hwid) {
+		htmlStr += r.Replace(hwidLinkStr)
+	}
+	if !containEmpty(board, test, datetime) {
+		htmlStr += r.Replace(pdashLinkStr)
+	}
+	pattern := `ThermalQual.(full|lab).*`
+	re := regexp.MustCompile(pattern)
+	if re.MatchString(note) && !containEmpty(note) {
+		htmlStr += r.Replace(tdashLinkStr)
+	}
+	htmlStr += `</body></html>`
+	return htmlStr
+}
+
+// getMinutesBatteryLife calculates and returns the projected operating minutes.
+func getMinutesBatteryLife(ctx context.Context, innerDataMap map[string][]float64, innerAverageMap map[string]float64, totalDurationSec float64, metrics *pb.OneTimeMetrics) (minutesBatteryLife float64) {
+	errStr := func(metric string) string {
+		e := "Cannot compute battery life in minutes and defaulting to 0 minute because "
+		e += metric + " cannot be retrieved"
+		return e
+	}
+
+	if metrics.BatteryChargeDesignSize == nil {
+		testing.ContextLog(ctx, errStr("battery charge design size"))
+		return 0
+	}
+	chargeFullDesign := metrics.GetBatteryChargeDesignSize()
+
+	if metrics.BatteryChargeSize == nil {
+		testing.ContextLog(ctx, errStr("battery charge"))
+		return 0
+	}
+	chargeFull := metrics.GetBatteryChargeSize()
+
+	if metrics.BatteryEnergySize == nil {
+		testing.ContextLog(ctx, errStr("battery energy size"))
+		return 0
+	}
+	energyFullDesign := metrics.GetBatteryEnergySize()
+
+	if energyUsed, ok := innerAverageMap["discharge_mwh"]; ok && energyUsed > 0 && totalDurationSec > 0 {
+		var lowBatteryShutdownPercent = 4.0
+		if metrics.BatteryShutdownPercent == nil {
+			es := "Low battery shut down percent cannot be retrieved "
+			es += "while computing battery life in minutes and "
+			es += "4% is used for approximation"
+			testing.ContextLog(ctx, es)
+		} else {
+			lowBatteryShutdownPercent = metrics.GetBatteryShutdownPercent()
+		}
+
+		batSizeScale := 1 - lowBatteryShutdownPercent/100.0
+
+		var chargeUsedInPercent float64
+		if chargeValue, exist := innerDataMap["battery_percent"]; exist && len(chargeValue) > 1 {
+			chargeUsedInPercent = chargeValue[len(chargeValue)-1] - chargeValue[0]
+		}
+		// For longer tests (> 1hr), charge (Ah) consumption is more accurate for calculating projected battery life.
+		// For shorter tests (< 1hr), power integral (Wh) is more accurate for calculating projected battery life.
+		const MinReasonableDuration = 3600
+		if totalDurationSec > MinReasonableDuration && chargeUsedInPercent > 0 {
+			// Use charge to project operation time when test run time > 1 hour.
+			chargeRate := chargeUsedInPercent / (totalDurationSec / 60.0)
+			minutesBatteryLife = batSizeScale * (chargeFullDesign / chargeFull) / chargeRate
+		} else {
+			// Use energy to project operation time when test run time < 1 hour.
+			// Notice energyUsed is in mWh and battery (design) size is in Wh. energyRate is in Wh/min.
+			energyRate := energyUsed / (totalDurationSec / 60.0) / 1000.0
+			minutesBatteryLife = energyFullDesign * batSizeScale / energyRate
+		}
+	} else {
+		// If energy used is 0 (test too short to cover valid samplings, test did not run on battery, ...):
+		// Log that we will not calculate minutes_battery_life.
+		testing.ContextLog(ctx, "Failed to calculate minutes_battery_life: 0 energy usage")
+	}
+	return minutesBatteryLife
+}
+
+// getNonSocSubsystemPowerData calculates and returns all subsystem power data other than SoC.
+func getNonSocSubsystemPowerData(ctx context.Context,
+	innerDataMap map[string][]float64,
+	innerAverageMap map[string]float64) ([]float64, float64) {
+	// System power data.
+	systemPowerNumbers := innerDataMap["system"]
+	// SoC power data.
+	SocPowerNumbers := innerDataMap[Package0]
+	// All subsystem(nonSoc) power data.
+	nonSoCPowerNumbers := make([]float64, 0)
+
+	for index := 0; index < len(systemPowerNumbers); index++ {
+		nonSoCPowerNumbers = append(nonSoCPowerNumbers, systemPowerNumbers[index]-SocPowerNumbers[index])
+	}
+
+	nonSoCPowerAverage := innerAverageMap["system"] - innerAverageMap[Package0]
+	return nonSoCPowerNumbers, nonSoCPowerAverage
+}
 
 // ConvertPowerPerfValue converts raw performance metric values to power dictionary.
 func ConvertPowerPerfValue(ctx context.Context, values *perf.Values, metrics *pb.OneTimeMetrics) (map[string]interface{}, error) {
@@ -310,89 +349,6 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values, metrics *pb
 	return powerDict, nil
 }
 
-// getMinutesBatteryLife calculates and returns the projected operating minutes.
-func getMinutesBatteryLife(ctx context.Context, innerDataMap map[string][]float64, innerAverageMap map[string]float64, totalDurationSec float64, metrics *pb.OneTimeMetrics) (minutesBatteryLife float64) {
-	errStr := func(metric string) string {
-		e := "Cannot compute battery life in minutes and defaulting to 0 minute because "
-		e += metric + " cannot be retrieved"
-		return e
-	}
-
-	if metrics.BatteryChargeDesignSize == nil {
-		testing.ContextLog(ctx, errStr("battery charge design size"))
-		return 0
-	}
-	chargeFullDesign := metrics.GetBatteryChargeDesignSize()
-
-	if metrics.BatteryChargeSize == nil {
-		testing.ContextLog(ctx, errStr("battery charge"))
-		return 0
-	}
-	chargeFull := metrics.GetBatteryChargeSize()
-
-	if metrics.BatteryEnergySize == nil {
-		testing.ContextLog(ctx, errStr("battery energy size"))
-		return 0
-	}
-	energyFullDesign := metrics.GetBatteryEnergySize()
-
-	if energyUsed, ok := innerAverageMap["discharge_mwh"]; ok && energyUsed > 0 && totalDurationSec > 0 {
-		var lowBatteryShutdownPercent = 4.0
-		if metrics.BatteryShutdownPercent == nil {
-			es := "Low battery shut down percent cannot be retrieved "
-			es += "while computing battery life in minutes and "
-			es += "4% is used for approximation"
-			testing.ContextLog(ctx, es)
-		} else {
-			lowBatteryShutdownPercent = metrics.GetBatteryShutdownPercent()
-		}
-
-		batSizeScale := 1 - lowBatteryShutdownPercent/100.0
-
-		var chargeUsedInPercent float64
-		if chargeValue, exist := innerDataMap["battery_percent"]; exist && len(chargeValue) > 1 {
-			chargeUsedInPercent = chargeValue[len(chargeValue)-1] - chargeValue[0]
-		}
-		// For longer tests (> 1hr), charge (Ah) consumption is more accurate for calculating projected battery life.
-		// For shorter tests (< 1hr), power integral (Wh) is more accurate for calculating projected battery life.
-		const MinReasonableDuration = 3600
-		if totalDurationSec > MinReasonableDuration && chargeUsedInPercent > 0 {
-			// Use charge to project operation time when test run time > 1 hour.
-			chargeRate := chargeUsedInPercent / (totalDurationSec / 60.0)
-			minutesBatteryLife = batSizeScale * (chargeFullDesign / chargeFull) / chargeRate
-		} else {
-			// Use energy to project operation time when test run time < 1 hour.
-			// Notice energyUsed is in mWh and battery (design) size is in Wh. energyRate is in Wh/min.
-			energyRate := energyUsed / (totalDurationSec / 60.0) / 1000.0
-			minutesBatteryLife = energyFullDesign * batSizeScale / energyRate
-		}
-	} else {
-		// If energy used is 0 (test too short to cover valid samplings, test did not run on battery, ...):
-		// Log that we will not calculate minutes_battery_life.
-		testing.ContextLog(ctx, "Failed to calculate minutes_battery_life: 0 energy usage")
-	}
-	return minutesBatteryLife
-}
-
-// getNonSocSubsystemPowerData calculates and returns all subsystem power data other than SoC.
-func getNonSocSubsystemPowerData(ctx context.Context,
-	innerDataMap map[string][]float64,
-	innerAverageMap map[string]float64) ([]float64, float64) {
-	// System power data.
-	systemPowerNumbers := innerDataMap["system"]
-	// SoC power data.
-	SocPowerNumbers := innerDataMap[Package0]
-	// All subsystem(nonSoc) power data.
-	nonSoCPowerNumbers := make([]float64, 0)
-
-	for index := 0; index < len(systemPowerNumbers); index++ {
-		nonSoCPowerNumbers = append(nonSoCPowerNumbers, systemPowerNumbers[index]-SocPowerNumbers[index])
-	}
-
-	nonSoCPowerAverage := innerAverageMap["system"] - innerAverageMap[Package0]
-	return nonSoCPowerNumbers, nonSoCPowerAverage
-}
-
 // updatePowerLogPerf adds perf scalar to power log map.
 func updatePowerLogPerf(ctx context.Context, dataMap map[string][]float64, averageMap map[string]float64, typeMap, unitMap map[string]string, metrics *pb.OneTimeMetrics) {
 	// Backlight scalars.
@@ -435,154 +391,6 @@ func CreatePowerLogDict(ctx context.Context, testName string, powerDict map[stri
 	}
 
 	return powerLogDict
-}
-
-// SavePowerLogJSON saves the power log as a json file format.
-func SavePowerLogJSON(ctx context.Context, outDir string, powerLogDict map[string]interface{}) error {
-	filePath := path.Join(outDir, powerLogFileName+".json")
-	j, err := json.MarshalIndent(powerLogDict, "", "  ")
-	if err != nil {
-		return errors.Wrapf(err, "failed to marshall data for %s json file", powerLogFileName)
-	}
-	if err := ioutil.WriteFile(filePath, j, 0644); err != nil {
-		return errors.Wrapf(err, "failed to write %s json file", powerLogFileName)
-	}
-
-	return nil
-}
-
-// containEmpty is the helper function to check if there is an empty string among args.
-func containEmpty(strs ...string) bool {
-	for _, str := range strs {
-		if str == "" {
-			return true
-		}
-	}
-	return false
-}
-
-// generateDashboardLink generates link to power and thermal dashboard.
-func generateDashboardLink(powerLogDict map[string]interface{}) string {
-	const hwidLinkStr = `
-	<a href="http://goto.google.com/pdash-hwid?query={hwid}">
-	  Link to hwid lookup.
-	</a><br />
-	`
-
-	const pdashLinkStr = `
-	<a href="http://chrome-power.appspot.com/dashboard?board={board}&test={test}&datetime={datetime}">
-	  Link to power dashboard.
-	</a><br />
-	`
-
-	const tdashLinkStr = `
-	<a href="http://chrome-power.appspot.com/thermal_dashboard?note={note}">
-	  Link to thermal dashboard.
-	</a><br />
-	`
-
-	var board, test, hwid, note, datetime string
-	var timeRaw time.Time
-
-	if value, ok := powerLogDict["test"].(string); ok {
-		test = value
-	}
-	if value, ok := powerLogDict["timestamp"].(int64); ok {
-		timeRaw = time.Unix(value, 0).UTC()
-	}
-	datetime = fmt.Sprintf("%d%02d%02d%02d%02d", timeRaw.Year(), int(timeRaw.Month()), timeRaw.Day(), timeRaw.Hour(), timeRaw.Minute())
-	if dutMap, ok := powerLogDict["dut"].(map[string]interface{}); ok {
-		if value, ok := dutMap["board"].(string); ok {
-			board = value
-		}
-		if value, ok := dutMap["note"].(string); ok {
-			note = value
-		}
-		if skuMap, ok := dutMap["sku"].(map[string]interface{}); ok {
-			if value, ok := skuMap["hwid"].(string); ok {
-				hwid = value
-			}
-		}
-	}
-
-	htmlStr := `<!DOCTYPE html><html><body>`
-	r := strings.NewReplacer("{hwid}", hwid, "{board}", board, "{test}", test, "{datetime}", datetime, "{note}", note)
-	if !containEmpty(hwid) {
-		htmlStr += r.Replace(hwidLinkStr)
-	}
-	if !containEmpty(board, test, datetime) {
-		htmlStr += r.Replace(pdashLinkStr)
-	}
-	pattern := `ThermalQual.(full|lab).*`
-	re := regexp.MustCompile(pattern)
-	if re.MatchString(note) && !containEmpty(note) {
-		htmlStr += r.Replace(tdashLinkStr)
-	}
-	htmlStr += `</body></html>`
-	return htmlStr
-}
-
-// UploadToDashboard uploads the power test metrics to go/power-dashboard-view.
-func UploadToDashboard(ctx context.Context, powerLogDict map[string]interface{}, uploadurl string) error {
-	var urlActual string
-	if uploadurl == "" {
-		urlActual = "http://chrome-power.appspot.com/rapl"
-	} else {
-		urlActual = uploadurl
-	}
-	powerLogJSON, err := json.Marshal(powerLogDict)
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal data when uploading to dashboard")
-	}
-	urlParams := url.Values{}
-	urlParams.Add("data", string(powerLogJSON))
-
-	const (
-		retryAttempts = 9
-		exponentBase  = 2
-	)
-	return action.RetryWithExponentialBackoff(retryAttempts, func(ctx context.Context) error {
-		resp, err := http.PostForm(urlActual, urlParams)
-		if err != nil {
-			return errors.Wrap(err, "failed to upload to power dashboard")
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			return errors.New("unsuccessful http response from power dashboard: " + resp.Status)
-		}
-
-		return nil
-	}, time.Second, exponentBase)(ctx)
-}
-
-// sortMetricsNumerically is the helper function to sort metrics in numerical order.
-func sortMetricsNumerically(ctx context.Context, metrics []string) {
-	sort.Slice(metrics, func(i, j int) bool {
-		re := regexp.MustCompile("[0-9]+")
-		iSlices := re.FindAllString(metrics[i], -1)
-		jSlices := re.FindAllString(metrics[j], -1)
-
-		var si int64
-		var sj int64
-		var err error
-
-		if len(iSlices) >= 1 {
-			si, err = strconv.ParseInt(iSlices[len(iSlices)-1], 10, 64)
-			if err != nil {
-				testing.ContextLog(ctx, "Failed to parse string to int: ", err)
-			}
-		}
-
-		if len(jSlices) >= 1 {
-			sj, err = strconv.ParseInt(jSlices[len(jSlices)-1], 10, 64)
-			if err != nil {
-				testing.ContextLog(ctx, "Failed to parse string to int: ", err)
-			}
-		}
-
-		return si < sj
-	})
 }
 
 // SavePowerLogHTML saves the power log as a json file format.
@@ -707,4 +515,52 @@ func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 	}
 
 	return nil
+}
+
+// SavePowerLogJSON saves the power log as a json file format.
+func SavePowerLogJSON(ctx context.Context, outDir string, powerLogDict map[string]interface{}) error {
+	filePath := path.Join(outDir, powerLogFileName+".json")
+	j, err := json.MarshalIndent(powerLogDict, "", "  ")
+	if err != nil {
+		return errors.Wrapf(err, "failed to marshall data for %s json file", powerLogFileName)
+	}
+	if err := ioutil.WriteFile(filePath, j, 0644); err != nil {
+		return errors.Wrapf(err, "failed to write %s json file", powerLogFileName)
+	}
+
+	return nil
+}
+
+// UploadToDashboard uploads the power test metrics to go/power-dashboard-view.
+func UploadToDashboard(ctx context.Context, powerLogDict map[string]interface{}, uploadurl string) error {
+	var urlActual string
+	if uploadurl == "" {
+		urlActual = "http://chrome-power.appspot.com/rapl"
+	} else {
+		urlActual = uploadurl
+	}
+	powerLogJSON, err := json.Marshal(powerLogDict)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal data when uploading to dashboard")
+	}
+	urlParams := url.Values{}
+	urlParams.Add("data", string(powerLogJSON))
+
+	const (
+		retryAttempts = 9
+		exponentBase  = 2
+	)
+	return action.RetryWithExponentialBackoff(retryAttempts, func(ctx context.Context) error {
+		resp, err := http.PostForm(urlActual, urlParams)
+		if err != nil {
+			return errors.Wrap(err, "failed to upload to power dashboard")
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return errors.New("unsuccessful http response from power dashboard: " + resp.Status)
+		}
+
+		return nil
+	}, time.Second, exponentBase)(ctx)
 }
