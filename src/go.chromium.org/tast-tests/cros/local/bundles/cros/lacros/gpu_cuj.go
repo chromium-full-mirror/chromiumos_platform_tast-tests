@@ -21,11 +21,11 @@ func init() {
 		Func:         GpuCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Lacros GPU performance CUJ tests",
-		Contacts:     []string{"lacros-team@google.com", "edcourtney@chromium.org", "hidehiko@chromium.org"},
-		BugComponent: "crbug:OS>LaCrOS",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Contacts:     []string{"cros-sw-perf@google.com", "lacros-team@google.com", "ramsaroop@chromium.org", "edcourtney@chromium.org", "hidehiko@chromium.org"},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Timeout:      120 * time.Minute,
+		Timeout:      20 * time.Minute,
 		Data:         []string{"video.html", "continuous_scroll_60fps.html", "gradient_color_60fps.html", "webgl_small_60fps.html", "bbb_1080p60_yuv.vp9.webm"},
 		Params: []testing.Param{{
 			Name: "maximized",

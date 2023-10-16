@@ -85,10 +85,6 @@ var pageSet = []page{
 		url:  "https://webkit.org/blog-files/3d-transforms/poster-circle.html",
 	},
 	{
-		name: "maps", // Google Maps. This page is for testing WebGL.
-		url:  "https://www.google.com/maps/@35.652772,139.6605155,14z",
-	},
-	{
 		name: "video", // Static video. This page is for testing video playback.
 		url:  "/video.html",
 	},
