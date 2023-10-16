@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/cryptohome/cleanup"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/cryptohome/cleanup"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

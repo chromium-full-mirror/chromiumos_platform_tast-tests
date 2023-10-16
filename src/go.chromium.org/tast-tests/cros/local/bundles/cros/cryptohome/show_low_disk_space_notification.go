@@ -9,9 +9,9 @@ import (
 	"os"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/cryptohome/cleanup"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/cryptohome/cleanup"
 	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast/core/testing"
 )
