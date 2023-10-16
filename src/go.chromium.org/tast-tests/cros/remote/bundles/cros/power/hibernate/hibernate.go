@@ -97,7 +97,7 @@ func (t *Tester) OverrideCycleID(cycleID uint32) {
 func (t *Tester) HibernateAndResume(ctx context.Context) error {
 	defer t.CloseGRPCClient(ctx)
 
-	if err := t.PreHibernateSteps(ctx); err != nil {
+	if err := t.PreHibernateSteps(ctx, false); err != nil {
 		return errors.Wrap(err, "pre-hibernate steps failed")
 	}
 
@@ -107,10 +107,46 @@ func (t *Tester) HibernateAndResume(ctx context.Context) error {
 		}
 	}
 
-	if err := t.hibernateAndReboot(ctx); err != nil {
+	if err := t.hibernate(ctx, true); err != nil {
 		return errors.Wrap(err, "failed to hibernate and reboot")
 	}
 
+	if err := t.Resume(ctx); err != nil {
+		return err
+	}
+
+	t.isFirstCycle = false
+	return nil
+}
+
+// HibernateToShutdown performs a hibernate to system shutdown.
+//
+// This mode can be useful for creating VM images which can be replayed via
+// resume multiple times.
+func (t *Tester) HibernateToShutdown(ctx context.Context) error {
+	defer t.CloseGRPCClient(ctx)
+
+	if err := t.PreHibernateSteps(ctx, true); err != nil {
+		return errors.Wrap(err, "pre-hibernate steps failed")
+	}
+
+	if t.urlsForTabs != nil {
+		if err := t.openChromeTabs(ctx); err != nil {
+			return errors.Wrap(err, "failed to open chrome tabs")
+		}
+	}
+
+	if err := t.hibernate(ctx, false); err != nil {
+		return errors.Wrap(err, "failed to hibernate and shutdown")
+	}
+
+	return nil
+}
+
+// Resume performs a system login and resume
+//
+// This is useful when replaying a system vm image
+func (t *Tester) Resume(ctx context.Context) error {
 	if err := t.resumeFromHibernate(ctx); err != nil {
 		return errors.Wrap(err, "resume from hibernate failed")
 	}
@@ -119,8 +155,8 @@ func (t *Tester) HibernateAndResume(ctx context.Context) error {
 		return errors.Wrap(err, "post resume steps failed")
 	}
 
+	// verify previously open tabs still exist
 	if t.urlsForTabs != nil {
-		// verify previously open tabs still exist
 		if err := t.login(ctx, true, true); err != nil {
 			return errors.Wrap(err, "user login failed on resume")
 		}
@@ -130,18 +166,17 @@ func (t *Tester) HibernateAndResume(ctx context.Context) error {
 		}
 	}
 
-	t.isFirstCycle = false
 	return nil
 }
 
 // PreHibernateSteps prepares the system for hibernation. This includes checks
 // and prework for later checks.
-func (t *Tester) PreHibernateSteps(ctx context.Context) error {
+func (t *Tester) PreHibernateSteps(ctx context.Context, skipReboot bool) error {
 	// Create a new context for this hibernate cycle.
 	ctxCycle, cancel := context.WithTimeout(ctx, CycleMaxDuration)
 	defer cancel()
 
-	if t.isFirstCycle {
+	if t.isFirstCycle && !skipReboot {
 		// Make sure the system is in a consistent state.
 		if err := t.reboot(ctxCycle); err != nil {
 			return err
@@ -258,7 +293,7 @@ func (t *Tester) waitForDutUnreachable(ctx context.Context) error {
 	return nil
 }
 
-func (t *Tester) hibernateAndReboot(ctx context.Context) error {
+func (t *Tester) hibernate(ctx context.Context, reboot bool) error {
 	if err := t.disableConsoleSuspend(ctx); err != nil {
 		return err
 	}
@@ -271,7 +306,13 @@ func (t *Tester) hibernateAndReboot(ctx context.Context) error {
 	// We will wait for the dut to become unreachable which is expected. By doing this
 	// we can close the connection earlier allowing the next stages of the test to kick off.
 	go t.waitForDutUnreachable(cmdCtx)
-	out, err := t.dut.Conn().CommandContext(cmdCtx, "/sbin/minijail0", "--config", "/usr/share/minijail/hiberman.conf", "/usr/sbin/hiberman", "hibernate", "-r").CombinedOutput()
+
+	rebootVar := ""
+	if reboot {
+		rebootVar = "-r"
+	}
+
+	out, err := t.dut.Conn().CommandContext(cmdCtx, "/sbin/minijail0", "--config", "/usr/share/minijail/hiberman.conf", "/usr/sbin/hiberman", "hibernate", rebootVar).CombinedOutput()
 	t.logger.Logf("hiberman output: %s", out)
 
 	if err != nil {
@@ -285,7 +326,7 @@ func (t *Tester) hibernateAndReboot(ctx context.Context) error {
 		return errors.Wrap(err, "failed to hibernate")
 	}
 
-	return errors.New("'hiberman -r' did not cause a reboot")
+	return errors.New("'hiberman hibernate' did not cause a shutdown/reboot")
 }
 
 func (t *Tester) resumeFromHibernate(ctx context.Context) error {
@@ -349,14 +390,22 @@ func (t *Tester) postResumeSteps(ctx context.Context) error {
 }
 
 func (t *Tester) loginToResume(ctx context.Context) error {
-	loginCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	loginCtx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
 	// login() may or may not return an error in case of a successful login
 	// that results in resuming the hibernated system.
 	err := t.login(loginCtx, false, true)
+
+	if err != nil && strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
+		// Before we assume that a DeadlineExceeded is valid, let's check if the connection was terminated
+		if t.dut.Health(ctx) != nil {
+			// Eat the error
+			err = nil
+		}
+	}
+
 	if err != nil &&
-		!strings.Contains(err.Error(), context.DeadlineExceeded.Error()) &&
 		!strings.Contains(err.Error(), "rpcc: the connection is closing") {
 		return errors.Wrap(err, "unexpected error type from login")
 	}

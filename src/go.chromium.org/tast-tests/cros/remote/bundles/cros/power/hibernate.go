@@ -22,6 +22,18 @@ const (
 	hibernateCycleIDVar    = "cycleID"
 )
 
+type hibernateMode int
+
+const (
+	hibernateAndResume hibernateMode = iota
+	hibernateToShutdown
+	resume
+)
+
+type hibernateParams struct {
+	mode hibernateMode
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Hibernate,
@@ -35,11 +47,22 @@ func init() {
 		Vars:    []string{hibernateCyclesVars, hibernateEmailVar, hibernatePasswordVar, hibernateCycleIDVar},
 		VarDeps: []string{tape.ServiceAccountVar},
 		Attr:    []string{"group:mainline", "informational"},
+		Params: []testing.Param{{
+			Val: hibernateParams{mode: hibernateAndResume},
+		}, {
+			Name: "hibernate_to_shutdown",
+			Val:  hibernateParams{mode: hibernateToShutdown},
+		}, {
+			Name: "resume",
+			Val:  hibernateParams{mode: resume},
+		}},
 	})
 }
 
 func Hibernate(ctx context.Context, s *testing.State) {
 	var err error
+	mode := s.Param().(hibernateParams).mode
+
 	numCycles := hibernateCyclesDefault
 	cycleID := uint64(0)
 
@@ -48,6 +71,10 @@ func Hibernate(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatalf("Failed to parse %s from string %s", hibernateCyclesVars, v)
 		}
+	}
+
+	if mode != hibernateAndResume && numCycles > 1 {
+		s.Fatal("You cannot specify multiple cycles with param hibernate_to_shutdown or resume")
 	}
 
 	if v, ok := s.Var(hibernateCycleIDVar); ok {
@@ -66,6 +93,10 @@ func Hibernate(ctx context.Context, s *testing.State) {
 
 	if passwordOverride, ok = s.Var(hibernatePasswordVar); !ok {
 		passwordOverride = ""
+	}
+
+	if mode == resume && (emailOverride == "" || passwordOverride == "") {
+		s.Fatal("A username and password is required when doing a Resume only")
 	}
 
 	var account *tape.OwnedTestAccount
@@ -90,10 +121,22 @@ func Hibernate(ctx context.Context, s *testing.State) {
 
 	ht.SetURLsForTabs([]string{"about:blank", "about:blank", "about:blank"})
 
-	for i := 1; i <= numCycles; i++ {
-		if err := ht.HibernateAndResume(ctx); err != nil {
-			s.Fatalf("Hibernate attempt %d failed: %v", i, err)
+	if mode == hibernateAndResume {
+		for i := 1; i <= numCycles; i++ {
+			if err := ht.HibernateAndResume(ctx); err != nil {
+				s.Fatalf("Hibernate attempt %d failed: %v", i, err)
+			}
+			s.Logf("Hibernate attempt %d complete", i)
 		}
-		s.Logf("Hibernate attempt %d complete", i)
+	} else if mode == hibernateToShutdown {
+		if err := ht.HibernateToShutdown(ctx); err != nil {
+			s.Fatal("Hibernate to shutdown failed: ", err)
+		}
+		s.Log("Hibernate to shutdown complete")
+	} else if mode == resume {
+		if err := ht.Resume(ctx); err != nil {
+			s.Fatal("Resume failed: ", err)
+		}
+		s.Log("Resume complete")
 	}
 }

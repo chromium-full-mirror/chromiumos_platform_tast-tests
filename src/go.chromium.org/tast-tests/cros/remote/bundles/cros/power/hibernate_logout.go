@@ -36,7 +36,7 @@ func HibernateLogout(ctx context.Context, s *testing.State) {
 	defer ht.CloseGRPCClient(ctx)
 
 	// log in with a user account
-	if err := ht.PreHibernateSteps(ctx); err != nil {
+	if err := ht.PreHibernateSteps(ctx, false); err != nil {
 		s.Fatal("pre-hibernate steps failed: ", err)
 	}
 
