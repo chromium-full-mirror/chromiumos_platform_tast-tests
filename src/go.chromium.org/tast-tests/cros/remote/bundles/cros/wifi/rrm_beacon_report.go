@@ -43,7 +43,6 @@ func init() {
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters),
-		SoftwareDeps: []string{"rrm_support"},
 		Requirements: []string{tdreq.WiFiGenSupportMBO},
 	})
 }

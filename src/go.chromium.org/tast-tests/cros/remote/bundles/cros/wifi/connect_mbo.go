@@ -33,7 +33,7 @@ func init() {
 		Attr:            []string{"group:wificell", "wificell_func"},
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture | wificell.TFFeaturesRouterAsCapture),
-		SoftwareDeps:    []string{"mbo", "rrm_support"},
+		SoftwareDeps:    []string{"mbo"},
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{

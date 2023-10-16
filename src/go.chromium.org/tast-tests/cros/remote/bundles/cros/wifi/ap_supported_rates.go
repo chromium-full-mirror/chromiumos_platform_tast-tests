@@ -36,8 +36,6 @@ func init() {
 		Attr:         []string{"group:wificell", "wificell_func"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
-		// See b/138406224. ath10k only supports this on CrOS kernels >=4.14
-		SoftwareDeps: []string{"no_ath10k_4_4"},
 		// Low flake rate for Marvell devices that are trending towards AUE. Skip on those platforms.
 		HardwareDeps:    hwdep.D(hwdep.WifiNotMarvell()),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
