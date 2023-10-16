@@ -113,7 +113,7 @@ func deviceNames(ctx context.Context, vendorID, prodID, busNumber, devNumber str
 	arg2 := fmt.Sprintf("-s%s:%s", busNumber, devNumber)
 	b, err := runCommand(ctx, "lsusb", "-v", arg1, arg2)
 	if err != nil {
-		return "", "", err
+		return "", "", errors.Wrap(err, "lsusb command failed")
 	}
 	lsusbOut := string(b)
 	// Example output:
@@ -192,43 +192,51 @@ func matchFwupdDevice(device fwupdDevice, vendorID, prodID, serial string) bool 
 	return matchVendor && matchProduct && matchSerial
 }
 
+// pollForFwupdDevices returns the list of device information from the fwupd CLI
+// tool. It uses polling to wait until fwupd is ready.
+func pollForFwupdDevices(ctx context.Context) ([]fwupdDevice, error) {
+	var fwupdResponse fwupdGetDevicesResponse
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		b, err := runCommand(ctx, "fwupdmgr", "get-devices", "--show-all", "--json")
+		if err != nil {
+			return errors.Wrap(err, "fwupdmgr command failed")
+		}
+		// Example output: (some fields are omitted)
+		// {
+		//  	"Devices": [
+		//  		{
+		//  			"Name" : "Type-C Video Adapter",
+		//  			"Guid" : [
+		//  				"8964759e-69bc-5f6c-a4fa-c89c455d0228",
+		//  				"a01d9cb7-dc1c-52dc-88ad-ba94f473681a"
+		//  			],
+		//  			"Serial" : "0000064ffcb5",
+		//  			"VendorId" : "USB:0x1FC9",
+		//  			"Version" : "6.45",
+		//  			"VersionFormat" : "bcd",
+		//  			...
+		//  		},
+		//  		...
+		//  	]
+		// }
+		if err = json.Unmarshal(b, &fwupdResponse); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to unmarshal fwupdmgr output"))
+		}
+		return nil
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 3 * time.Second}); err != nil {
+		return nil, err
+	}
+	return fwupdResponse.Devices, nil
+}
+
 // deviceFirmwareVersion returns the firmware version info of device with
 // vendorID:prodID:serial. Returns nil if no devices are matched or the matched
 // devices have more than one distinct versions. The matching of serial will be
-// skipped if it is empty. The version info is obtained from fwupd with its
-// command line tool.
-func deviceFirmwareVersion(ctx context.Context, vendorID, prodID, serial string) (*FwupdFirmwareVersionInfo, error) {
-	b, err := runCommand(ctx, "fwupdmgr", "get-devices", "--show-all", "--json")
-	if err != nil {
-		return nil, err
-	}
-	// Example output: (some fields are omitted)
-	// {
-	//  	"Devices": [
-	//  		{
-	//  			"Name" : "Type-C Video Adapter",
-	//  			"Guid" : [
-	//  				"8964759e-69bc-5f6c-a4fa-c89c455d0228",
-	//  				"a01d9cb7-dc1c-52dc-88ad-ba94f473681a"
-	//  			],
-	//  			"Serial" : "0000064ffcb5",
-	//  			"VendorId" : "USB:0x1FC9",
-	//  			"Version" : "6.45",
-	//  			"VersionFormat" : "bcd",
-	//  			...
-	//  		},
-	//  		...
-	//  	]
-	// }
-
-	var fwupdResponse fwupdGetDevicesResponse
-	err = json.Unmarshal(b, &fwupdResponse)
-	if err != nil {
-		return nil, err
-	}
-
+// skipped if it is empty. The version info is obtained from the passed in
+// fwupdDevices.
+func deviceFirmwareVersion(fwupdDevices []fwupdDevice, vendorID, prodID, serial string) *FwupdFirmwareVersionInfo {
 	var resultVersionInfo *FwupdFirmwareVersionInfo
-	for _, device := range fwupdResponse.Devices {
+	for _, device := range fwupdDevices {
 		if matchFwupdDevice(device, vendorID, prodID, serial) {
 			version := ""
 			if device.Version != nil {
@@ -244,20 +252,25 @@ func deviceFirmwareVersion(ctx context.Context, vendorID, prodID, serial string)
 			}
 			// Returns nil when matched versions are not unique.
 			if resultVersionInfo != nil && *resultVersionInfo != versionInfo {
-				return nil, err
+				return nil
 			}
 			resultVersionInfo = &versionInfo
 		}
 	}
 
 	if resultVersionInfo != nil && resultVersionInfo.Version != "" {
-		return resultVersionInfo, err
+		return resultVersionInfo
 	}
-	return nil, err
+	return nil
 }
 
 // AttachedDevices returns attached USB devices, sorted by the fields of Device.
 func AttachedDevices(ctx context.Context) ([]Device, error) {
+	fwupdDevices, err := pollForFwupdDevices(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get devices from fwupd")
+	}
+
 	// Reference: https://www.kernel.org/doc/html/v4.12/driver-api/usb/usb.html#sys-kernel-debug-usb-devices-output-format
 
 	// E.g. T:  Bus=02 Lev=00 Prnt=00 Port=00 Cnt=00 Dev#=  1 Spd=10000 MxCh= 4
@@ -341,9 +354,7 @@ func AttachedDevices(ctx context.Context) ([]Device, error) {
 		if r.VendorName, r.ProductName, err = deviceNames(ctx, r.VendorID, r.ProdID, busNumber, devNumber); err != nil {
 			return nil, err
 		}
-		if r.FwupdFirmwareVersionInfo, err = deviceFirmwareVersion(ctx, r.VendorID, r.ProdID, serial); err != nil {
-			return nil, err
-		}
+		r.FwupdFirmwareVersionInfo = deviceFirmwareVersion(fwupdDevices, r.VendorID, r.ProdID, serial)
 		res = append(res, r)
 	}
 	Sort(res)
