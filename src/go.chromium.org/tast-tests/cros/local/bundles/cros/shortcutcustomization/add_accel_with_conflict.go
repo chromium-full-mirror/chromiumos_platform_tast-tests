@@ -100,7 +100,7 @@ func AddAccelWithConflict(ctx context.Context, s *testing.State) {
 	}
 
 	// Regex for possible default values for the action.
-	defaultShortcutRegex := regexp.MustCompile("meta (search|launcher) c")
+	defaultShortcutRegex := regexp.MustCompile("(search|launcher) c")
 
 	// Capture the default shortcut node based on possible values.
 	defaultShortcut := nodewith.NameRegex(defaultShortcutRegex).Role(role.GenericContainer).First()
@@ -112,7 +112,7 @@ func AddAccelWithConflict(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify the edit dialog is open.
-	editDialog := nodewith.Name("Open/close calendar").Role(role.Dialog)
+	editDialog := nodewith.Name("Open/close calendar").Role(role.Heading)
 	if err := ui.WaitUntilExists(editDialog)(ctx); err != nil {
 		s.Fatal("Failed to find the Edit dialog: ", err)
 	}
@@ -136,9 +136,8 @@ func AddAccelWithConflict(ctx context.Context, s *testing.State) {
 
 	// Verify error message appears due to the conflict
 	conflictMessage := "Shortcut is being used for \"Open Key Shortcuts app\". Press a new shortcut. To replace the original shortcut, press this shortcut again."
-	errorMessage := nodewith.Name(conflictMessage).Role(role.StaticText)
+	errorMessage := nodewith.Name(conflictMessage).Role(role.StaticText).First()
 	if err := ui.WaitUntilExists(errorMessage)(ctx); err != nil {
-		s.Log(uiauto.RootDebugInfo(ctx, tconn))
 		s.Fatal("Failed to find the error message indicating conflict: ", err)
 	}
 
@@ -154,7 +153,7 @@ func AddAccelWithConflict(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify the new accel is now available in the shortcut app.
-	if err := sc.VerifyShortcutsRegex(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "meta (search|launcher) ctrl s", Role: role.GenericContainer}); err != nil {
+	if err := sc.VerifyShortcutsRegex(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "(search|launcher) ctrl s", Role: role.GenericContainer}); err != nil {
 		s.Fatal("Failed to find the ctrl alt m for the shortcut: ", err)
 	}
 

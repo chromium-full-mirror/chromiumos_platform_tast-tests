@@ -113,13 +113,13 @@ func AddCustomAcceleratorAndReset(ctx context.Context, s *testing.State) {
 	}
 
 	// Regex for possible default values for the action.
-	defaultShortcutRegex := regexp.MustCompile("meta (search|launcher) c")
+	defaultShortcutRegex := regexp.MustCompile("(search|launcher) c")
 
 	// Capture the default shortcut node based on possible values.
 	defaultShortcut := nodewith.NameRegex(defaultShortcutRegex).Role(role.GenericContainer).First()
 
 	// Verify shortcut is present in the shortcut app ui.
-	if err := sc.VerifyShortcutsRegex(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "meta (search|launcher) c", Role: role.GenericContainer}); err != nil {
+	if err := sc.VerifyShortcutsRegex(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "(search|launcher) c", Role: role.GenericContainer}); err != nil {
 		s.Fatal("Failed to find the default shortcut search or launcher c for the shortcut: ", err)
 	}
 
@@ -167,7 +167,7 @@ func AddCustomAcceleratorAndReset(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify original shortcut available after reset.
-	if err := sc.VerifyShortcutsRegex(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "meta (search|launcher) c", Role: role.GenericContainer}); err != nil {
+	if err := sc.VerifyShortcutsRegex(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "(search|launcher) c", Role: role.GenericContainer}); err != nil {
 		s.Fatal("Failed to find the default shortcut after resetting: ", err)
 	}
 

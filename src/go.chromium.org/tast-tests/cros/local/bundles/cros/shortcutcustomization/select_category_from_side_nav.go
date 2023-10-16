@@ -119,7 +119,7 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 		keys        sc.ShortcutKeys
 	}{
 		{"Reset zoom level", sc.ShortcutKeys{Keys: "ctrl shift 0", Role: role.GenericContainer}},
-		{"Show stylus tools", sc.ShortcutKeys{Keys: "alt shift p", Role: role.GenericContainer}},
+		{"Toggle stylus tools", sc.ShortcutKeys{Keys: "alt shift p", Role: role.GenericContainer}},
 		{"Switch to last language selected", sc.ShortcutKeys{Keys: "ctrl space", Role: role.GenericContainer}},
 	}
 	for _, shortcut := range shortcutsInDeviceCategory {

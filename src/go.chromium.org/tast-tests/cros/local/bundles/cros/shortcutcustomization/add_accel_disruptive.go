@@ -102,7 +102,7 @@ func AddAccelDisruptive(ctx context.Context, s *testing.State) {
 	}
 
 	// Regex for possible default values for the action.
-	defaultShortcutRegex := regexp.MustCompile("meta (search|launcher) c")
+	defaultShortcutRegex := regexp.MustCompile("(search|launcher) c")
 
 	// Capture the default shortcut node based on possible values.
 	defaultShortcut := nodewith.NameRegex(defaultShortcutRegex).Role(role.GenericContainer).First()
@@ -121,7 +121,7 @@ func AddAccelDisruptive(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify the edit dialog is open.
-	editDialog := nodewith.Name("Open/close calendar").Role(role.Dialog)
+	editDialog := nodewith.Name("Open/close calendar").Role(role.Heading)
 	if err := ui.WaitUntilExists(editDialog)(ctx); err != nil {
 		s.Fatal("Failed to find the Edit dialog: ", err)
 	}
@@ -133,7 +133,7 @@ func AddAccelDisruptive(ctx context.Context, s *testing.State) {
 	}
 
 	// Click Edit shortcut icon.
-	editIcon := nodewith.ClassName("clickable-button").Ancestor(editDialog).First()
+	editIcon := nodewith.Name(("Edit shortcut")).Role(role.Button).First()
 	if err := ui.LeftClick(editIcon)(ctx); err != nil {
 		s.Fatal("Failed to find Edit icon: ", err)
 	}
@@ -145,7 +145,7 @@ func AddAccelDisruptive(ctx context.Context, s *testing.State) {
 
 	// Verify error message appears due to the disruptive shortcut.
 	conflictMessage := "Shortcut is being used for \"Lock device\". Press a new shortcut."
-	errorMessage := nodewith.Name(conflictMessage).Role(role.StaticText)
+	errorMessage := nodewith.Name(conflictMessage).Role(role.StaticText).First()
 	if err := ui.WaitUntilExists(errorMessage)(ctx); err != nil {
 		s.Fatal("Failed to find the error message indicating conflict: ", err)
 	}
@@ -156,7 +156,7 @@ func AddAccelDisruptive(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify the error message stays after retyping disruptive shortcut.
-	errorMessageAgain := nodewith.Name(conflictMessage).Role(role.StaticText)
+	errorMessageAgain := nodewith.Name(conflictMessage).Role(role.StaticText).First()
 	if err := ui.WaitUntilExists(errorMessageAgain)(ctx); err != nil {
 		s.Fatal("Failed to find the error message indicating conflict: ", err)
 	}

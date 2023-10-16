@@ -57,6 +57,7 @@ func EditDefaultAcceleratorForUnlockedAction(ctx context.Context, s *testing.Sta
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to Test API: ", err)
@@ -106,7 +107,7 @@ func EditDefaultAcceleratorForUnlockedAction(ctx context.Context, s *testing.Sta
 	}
 
 	// Regex for possible default values for the action.
-	defaultShortcutRegex := regexp.MustCompile("meta (search|launcher) c")
+	defaultShortcutRegex := regexp.MustCompile("(search|launcher) c")
 
 	// Capture the default shortcut node based on possible values.
 	defaultShortcut := nodewith.NameRegex(defaultShortcutRegex).Role(role.GenericContainer).First()
@@ -114,7 +115,7 @@ func EditDefaultAcceleratorForUnlockedAction(ctx context.Context, s *testing.Sta
 	// Capture the name of the node for shortcut.
 	ShortcutNodeInfo, err := ui.Info(ctx, defaultShortcut)
 	if err != nil {
-		s.Fatal("Failed to find the default shortcut keys")
+		s.Fatal("Failed to find the default shortcut keys: ", err)
 	}
 	shortcutName := ShortcutNodeInfo.Name
 
@@ -125,17 +126,17 @@ func EditDefaultAcceleratorForUnlockedAction(ctx context.Context, s *testing.Sta
 	}
 
 	// Verify the edit dialog is open.
-	editDialog := nodewith.Name("Open/close calendar").Role(role.Dialog)
+	editDialog := nodewith.Name("Open/close calendar").Role(role.Heading)
 	if err := ui.WaitUntilExists(editDialog)(ctx); err != nil {
-		s.Fatal("Failed to find the Edit dialog: ", err)
+		s.Fatal("Failed to find the Edit dialog to edit shortcut: ", err)
 	}
 
 	//Verify editing the default shortcut and input the new accel.
 	if err := uiauto.Combine("Open the Edit dialog and edit default shortcut",
 		ui.WaitUntilExists(nodewith.Name(shortcutName).Role(role.GenericContainer)),
-		ui.LeftClick(nodewith.ClassName("clickable-button").Ancestor(editDialog).First()),
+		ui.LeftClick(nodewith.Name("Edit shortcut").Role(role.Button).First()),
 		kb.AccelAction("ctrl+alt+m"),
-		ui.WaitUntilExists(nodewith.Name(sc.WarnMessageNoSearch).Role(role.StaticText)),
+		ui.WaitUntilExists(nodewith.Name(sc.WarnMessageNoSearch).Role(role.StaticText).First()),
 		kb.AccelAction("ctrl+alt+m"),
 		ui.LeftClick(nodewith.Name("Done").Role(role.Button)),
 	)(ctx); err != nil {

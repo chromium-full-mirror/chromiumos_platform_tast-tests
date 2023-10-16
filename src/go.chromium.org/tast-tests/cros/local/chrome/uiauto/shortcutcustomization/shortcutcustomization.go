@@ -222,10 +222,10 @@ func AddCustomShortcut(ctx context.Context, ui *uiauto.Context, kb *input.Keyboa
 	if warnMessage != "" {
 		testing.ContextLogf(ctx, "Warning message to be checked %q", warnMessage)
 		if err := uiauto.Combine("Add custom shortcut",
-			ui.WaitUntilExists(nodewith.Name(action).Role(role.Dialog)),
+			ui.WaitUntilExists(nodewith.Name(action).Role(role.Heading)),
 			ui.LeftClick(nodewith.Name("Add shortcut").Role(role.Button)),
 			kb.AccelAction(newShortcut),
-			ui.WaitUntilExists(nodewith.Name(warnMessage).Role(role.StaticText)),
+			ui.WaitUntilExists(nodewith.Name(warnMessage).Role(role.StaticText).First()),
 			kb.AccelAction(newShortcut),
 			ui.LeftClick(nodewith.Name("Done").Role(role.Button)),
 		)(ctx); err != nil {
@@ -234,7 +234,7 @@ func AddCustomShortcut(ctx context.Context, ui *uiauto.Context, kb *input.Keyboa
 	} else {
 		// Open the edit dialog and input the custom shortcut for the action with no warning alert
 		if err := uiauto.Combine("Add custom shortcut",
-			ui.WaitUntilExists(nodewith.Name(action).Role(role.Dialog)),
+			ui.WaitUntilExists(nodewith.Name(action).Role(role.Heading)),
 			ui.LeftClick(nodewith.Name("Add shortcut").Role(role.Button)),
 			kb.AccelAction(newShortcut),
 			ui.LeftClick(nodewith.Name("Done").Role(role.Button)),

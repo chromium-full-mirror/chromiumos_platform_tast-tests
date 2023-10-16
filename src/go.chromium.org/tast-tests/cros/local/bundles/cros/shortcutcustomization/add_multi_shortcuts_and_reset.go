@@ -86,10 +86,10 @@ func AddMultiShortcutsAndReset(ctx context.Context, s *testing.State) {
 	}
 
 	// Capture the default shortcut node based on possible values for Open Calendar
-	defaultCalendarShortcut := nodewith.NameRegex(regexp.MustCompile("meta (search|launcher) c")).Role(role.GenericContainer).First()
+	defaultCalendarShortcut := nodewith.NameRegex(regexp.MustCompile("(search|launcher) c")).Role(role.GenericContainer).First()
 
 	// Verify default shortcut is present in the key shortcuts UI.
-	if err := sc.VerifyShortcutsRegex(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "meta (search|launcher) c", Role: role.GenericContainer}); err != nil {
+	if err := sc.VerifyShortcutsRegex(ctx, ui, "Open/close calendar", sc.ShortcutKeys{Keys: "(search|launcher) c", Role: role.GenericContainer}); err != nil {
 		s.Fatal("Failed to find the Open/close calendar: ", err)
 	}
 
@@ -126,7 +126,7 @@ func AddMultiShortcutsAndReset(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add the ctrl search o for the shortcut: ", err)
 	}
 	// Verify the new accel for Screenshot is now available in the shortcut app.
-	if err := sc.VerifyShortcutsRegex(ctx, ui, "Take full screenshot or screen recording", sc.ShortcutKeys{Keys: "meta (search|launcher) ctrl o", Role: role.GenericContainer}); err != nil {
+	if err := sc.VerifyShortcutsRegex(ctx, ui, "Take full screenshot or screen recording", sc.ShortcutKeys{Keys: "(search|launcher) ctrl o", Role: role.GenericContainer}); err != nil {
 		s.Fatal("Failed to find the ctrl search o for the shortcut: ", err)
 	}
 
