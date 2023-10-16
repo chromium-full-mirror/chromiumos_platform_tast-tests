@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -8,26 +8,24 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/apps"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/wmp/wmputils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
-	// deskBarZeroStateHeight is the height of desk bar when it's at zero state.
-	deskBarZeroStateHeight  = 40
-	zeroStateIconButtonName = "ZeroStateIconButton"
-	deskBarViewName         = "LegacyDeskBarView"
+	deskIconButton                   = "CrOSNextDeskIconButton"
+	deskIconButtonExpandedStateWidth = 36
+	deskBarZeroHeight                = 40
+	deskBarName                      = "LegacyDeskBarView"
 )
 
 func init() {
@@ -88,35 +86,19 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 	defer cleanup(cleanupCtx)
 
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	// Ensure there is no window open before test starts.
 	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
 		s.Fatal("Failed to ensure no window is open: ", err)
 	}
 
-	ac := uiauto.New(tconn)
-
-	pc := pointer.NewMouse(tconn)
-	defer pc.Close(ctx)
-
-	// Open a browser window.
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	blankConn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
 	if err != nil {
-		s.Fatal("Could not find browser app info: ", err)
+		s.Fatal("Failed to set up Chrome: ", err)
 	}
-	if err := apps.Launch(ctx, tconn, browserApp.ID); err != nil {
-		s.Fatal("Failed to launch chrome: ", err)
-	}
-	if err := ash.WaitForApp(ctx, tconn, browserApp.ID, time.Minute); err != nil {
-		s.Fatal("Browser did not appear in shelf after launch: ", err)
-	}
-	// Ensure that there is only one open window that is the primary browser. Wait for the browser to be visible to avoid a race that may cause test flakiness.
-	bt := s.Param().(browser.Type)
-	bw, err := wmputils.EnsureOnlyBrowserWindowOpen(ctx, tconn, bt)
-	if err != nil {
-		s.Fatal("Expected the window to be fullscreen but got: ", err)
-	}
+	defer closeBrowser(cleanupCtx)
+	defer blankConn.Close()
 
 	// Enter overview mode.
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
@@ -124,77 +106,101 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 	}
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 
-	// 1. Tests that desk bar will be transformed to expanded state when dragging a window
-	// towards and close enough to the new desk button. And then dropping the window outside
-	// of the new desk button will let desk bar go back to zero state.
-
-	newDeskButtonView := nodewith.ClassName(zeroStateIconButtonName)
-	newDeskButtonViewLoc, err := ac.Location(ctx, newDeskButtonView)
-	if err != nil {
-		s.Fatal(err, "failed to get the location of new desk button view")
-	}
+	// 1. Test that desk bar will be transformed to expanded
+	// state when dragging a window, and the desk bar never
+	// goes back to zero state, even when dropping the window
+	// outside of the new desk button.
 
 	ws, err := ash.GetAllWindows(ctx, tconn)
 	if len(ws) != 1 {
-		s.Fatalf("Got %d window(s), Expected 1 window", len(ws))
+		s.Fatalf("Unexpected number of windows; got %d window(s), expected 1 window", len(ws))
 	}
-	bw = ws[0]
+	bw := ws[0]
 
-	// Drag the window towoard to the new desk button without dropping it. Since it's close
-	// enough to the new desk button, the desk bar view should be transformed to its expanded
-	// state.
-	if err := uiauto.Combine("move mouse on the chrome window and then drag the window to the new desk button",
-		mouse.Move(tconn, bw.BoundsInRoot.CenterPoint(), 0),
+	// Drag the window to the new location without dropping
+	// it, desk bar should be transformed to expanded state
+	// immediately at the beginning of drag.
+	startLoc := bw.BoundsInRoot.CenterPoint()
+	newLoc := coords.NewPoint(startLoc.X+10, startLoc.Y-10)
+	if err := uiauto.Combine("move mouse on the chrome window and then drag the window",
+		mouse.Move(tconn, startLoc, 0),
 		mouse.Press(tconn, mouse.LeftButton),
-		mouse.Move(tconn, newDeskButtonViewLoc.CenterPoint(), 2*time.Second),
+		mouse.Move(tconn, newLoc, time.Second),
 	)(ctx); err != nil {
-		s.Fatal("Failed to drag browser to the new desk button")
+		s.Fatal("Failed to drag browser to the new desk button: ", err)
 	}
+
+	ac := uiauto.New(tconn)
 
 	// Desk bar should be at expanded state now.
-	deskBarView := nodewith.ClassName(deskBarViewName)
+	deskBarView := nodewith.ClassName(deskBarName)
 	deskBarViewLoc, err := ac.Location(ctx, deskBarView)
 	if err != nil {
 		s.Fatal("Failed to get the location of the desk bar view: ", err)
 	}
-	if deskBarViewLoc.Height == deskBarZeroStateHeight {
-		s.Fatalf("Failed to go to desk bar's expanded state, got: %v, expected: >%v", deskBarViewLoc.Height, deskBarZeroStateHeight)
+	if deskBarViewLoc.Height == deskBarZeroHeight {
+		s.Fatalf("Failed to go to desk bar's expanded state, expected height to be greater than %d", deskBarZeroHeight)
 	}
 
-	// Continue dragging the window to the outside of the new desk button and then release mouse
-	// which will drop the window. Since the window is dropped outside of the new desk button,
-	// it will fall back to the current desk and the desk bar should be back to zero state.
-	if err := uiauto.Combine("drag the window to the outside of the new desk button and then release mouse",
-		mouse.Move(tconn, newDeskButtonViewLoc.CenterPoint().Add(coords.NewPoint(100, 100)), time.Second),
-		mouse.Release(tconn, mouse.LeftButton),
-	)(ctx); err != nil {
-		s.Fatal("Failed to drag browser to the new desk button")
+	// Now release the drag and verify the desk bar stays at the expanded state.
+	if err := mouse.Release(tconn, mouse.LeftButton)(ctx); err != nil {
+		s.Fatal("Failed to release the drag: ", err)
 	}
 
-	// Desk bar should be transformed back to the zero state.
-	deskBarView = nodewith.ClassName(deskBarViewName)
+	// Desk bar should stay at expanded state.
 	deskBarViewLoc, err = ac.Location(ctx, deskBarView)
 	if err != nil {
 		s.Fatal("Failed to get the location of the desk bar view: ", err)
 	}
-	if deskBarViewLoc.Height != deskBarZeroStateHeight {
-		s.Fatal("Failed to go back to desk bar's zero state")
+	if deskBarViewLoc.Height == deskBarZeroHeight {
+		s.Fatalf("Failed to keep desk bar at expanded state, expected a value greater than %d", deskBarZeroHeight)
 	}
 
 	// 2. Tests that dragging and dropping a window to the new desk button will create a new
 	// desk and the window being dragged is moved to the new desk at the same time.
 
-	// Drag browser window to the new desk button.
-	newDeskButtonView = nodewith.ClassName(zeroStateIconButtonName)
-	newDeskButtonViewLoc, err = ac.Location(ctx, newDeskButtonView)
+	newDeskButtonView := nodewith.ClassName(deskIconButton)
+	newDeskButtonViewLoc, err := ac.Location(ctx, newDeskButtonView)
 	if err != nil {
 		s.Fatal(err, "Failed to get the location of the new desk button view")
 	}
 
-	if err := pc.Drag(
-		bw.BoundsInRoot.CenterPoint(),
-		pc.DragTo(newDeskButtonViewLoc.CenterPoint(), 2*time.Second))(ctx); err != nil {
-		s.Fatal("Failed to drag browser window into the new desk button: ", err)
+	// Drag the window to make it hover on top of the expanded new desk button for over 500ms,
+	// verify that new desk button is transformed to active state from expanded state.
+	if err := uiauto.Combine("drag the chrome window and make it hover on top of the new desk button for over 500ms",
+		mouse.Move(tconn, startLoc, 0),
+		mouse.Press(tconn, mouse.LeftButton),
+		mouse.Move(tconn, newDeskButtonViewLoc.BottomRight(), time.Second),
+		uiauto.Sleep(550*time.Millisecond),
+	)(ctx); err != nil {
+		s.Fatal("Failed to drag the window and hover it on top of the new desk button: ", err)
+	}
+
+	newDeskButtonViewLoc, err = ac.Location(ctx, newDeskButtonView)
+	if err != nil {
+		s.Fatal(err, "Failed to get the location of the new desk button view: ", err)
+	}
+
+	if newDeskButtonViewLoc.Width == deskIconButtonExpandedStateWidth {
+		s.Fatalf("Failed to activate the new desk button, expected a value greater than %d", deskIconButtonExpandedStateWidth)
+	}
+
+	// Release the drag.
+	if err := uiauto.Combine("release the drag and wait for the animation of new desk button to be done",
+		mouse.Release(tconn, mouse.LeftButton),
+		ac.WaitForLocation(newDeskButtonView),
+	)(ctx); err != nil {
+		s.Fatal("Failed to release the drag: ", err)
+	}
+
+	// Verify that the new desk button goes back to the expanded state from the active state.
+	newDeskButtonViewLoc, err = ac.Location(ctx, newDeskButtonView)
+	if err != nil {
+		s.Fatal("Failed to get the location of the new desk button view: ", err)
+	}
+
+	if newDeskButtonViewLoc.Width != deskIconButtonExpandedStateWidth {
+		s.Fatalf("Failed to go back to new desk button's expanded state, got: %d, expected: %d", newDeskButtonViewLoc.Width, deskIconButtonExpandedStateWidth)
 	}
 
 	// Verifies that a new desk is created.
@@ -203,16 +209,16 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find desks: ", err)
 	}
 	if len(deskMiniViewsInfo) != 2 {
-		s.Fatalf("Got %v desks, want 2 desks", len(deskMiniViewsInfo))
+		s.Fatalf("Unexpected number of desks, got %d, expected %d", len(deskMiniViewsInfo), 2)
 	}
 
 	// Checks that the browser window is in the new desk. The new desk is inactive.
 	ws, err = ash.GetAllWindows(ctx, tconn)
 	if len(ws) != 1 {
-		s.Fatalf("Got %d window(s), Expected 1 window", len(ws))
+		s.Fatalf("Unexpected number of windows; got %d window(s), expected 1 window", len(ws))
 	}
 	bw = ws[0]
-	if bw.OnActiveDesk == true {
+	if bw.OnActiveDesk {
 		s.Fatal("Browser window should be in the inactive desk")
 	}
 }

@@ -264,18 +264,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosJellyEnabled",
-		Desc:     "Lacros Chrome with Jelly enabled",
-		Contacts: []string{"conniekxu@chromium.org", "chromeos-wmp@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return NewConfig(ChromeOptions(chrome.EnableFeatures("Jelly"))).Opts()
-		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	// lacrosPrinterSetupAssistanceEnabled is the same as lacros but has flags
 	// for printer setup assistance feature tests. Jelly flag is enabled to ensure
 	// screenshots look correct.
