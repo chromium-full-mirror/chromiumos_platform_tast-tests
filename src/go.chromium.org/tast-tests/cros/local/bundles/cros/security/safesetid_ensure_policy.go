@@ -89,15 +89,22 @@ func SafesetidEnsurePolicy(ctx context.Context, s *testing.State) {
 	} {
 		err := transitionSetID(ctx, tc.parent, tc.child, tc.capSETUID, tc.expectSuccess, true, s)
 		if err != nil {
-			s.Errorf(" %v unable to setuid to %v with error: %v", tc.parent, tc.child, err)
+			if tc.expectSuccess {
+				s.Errorf(" %v unable to setuid to %v with error: %v", tc.parent, tc.child, err)
+			} else {
+				s.Errorf(" %v incorrectly setuid restricted: %v", tc.parent, err)
+			}
 		}
 		if testGIDEnabled {
 			err = transitionSetID(ctx, tc.parent, tc.child, tc.capSETUID, tc.expectSuccess, false, s)
 			if err != nil {
-				s.Errorf(" %v unable to setgid to %v with error: %v", tc.parent, tc.child, err)
+				if tc.expectSuccess {
+					s.Errorf(" %v unable to setgid to %v with error: %v", tc.parent, tc.child, err)
+				} else {
+					s.Errorf(" %v incorrectly setgid restricted: %v", tc.parent, err)
+				}
 			}
 		}
-
 	}
 }
 
