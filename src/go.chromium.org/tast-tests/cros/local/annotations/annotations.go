@@ -7,6 +7,7 @@ package annotations
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -58,6 +59,21 @@ func StartLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, l
 	// Click Start over button in case this is not first use this session.
 	if err := clickBtnOnPage(ctx, netConn, "startover"); err != nil {
 		errors.Wrap(err, "failed to wait for the Start over")
+	}
+
+	// Perform cleanup in case a previous session was not cleaned up properly.
+	// Deletes existing net log file(s), if they exist.
+	// Get the net export log file.
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		return errors.Wrap(err, "failed to get user's Download path")
+	}
+	logFile := filepath.Join(downloadsPath, DownloadName)
+	if _, err := os.Stat(logFile); !errors.Is(err, fs.ErrNotExist) {
+		testing.ContextLog(ctx, "A previous net log file exists = "+logFile)
+		if err := os.Remove(logFile); err != nil {
+			return errors.Wrap(err, "failed to delete existing net log file")
+		}
 	}
 
 	// Select export type based on logRawBytes. If true, log with raw bytes.
