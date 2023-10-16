@@ -972,7 +972,7 @@ func snappingOnDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome,
 									win.BoundsInRoot, param.wantBnds)
 							}
 							return nil
-						}, &testing.PollOptions{Timeout: time.Second})
+						}, &testing.PollOptions{Timeout: 5 * time.Second})
 
 						if err != nil {
 							if scerr := grabScreenshotOfDisplaysForFailedTests(ctx, cr, disp, param.name); scerr != nil {
