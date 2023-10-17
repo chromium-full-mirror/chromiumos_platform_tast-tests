@@ -91,6 +91,11 @@ const (
 	LegacyConfirmDiag          FwScreenID = 0x303
 )
 
+// Firmware screens that don't have screen ids.
+const (
+	LegacyDebugInfo FwScreenID = iota - 1
+)
+
 // FwScreenType represents a firmware screen.
 type FwScreenType int
 

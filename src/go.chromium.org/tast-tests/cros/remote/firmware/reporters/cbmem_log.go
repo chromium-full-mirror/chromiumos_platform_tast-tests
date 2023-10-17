@@ -8,8 +8,10 @@ import (
 	"context"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/google/go-cmp/cmp"
+
 	"go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -40,16 +42,44 @@ func (r *Reporter) GetDisplayedFWScreens(ctx context.Context) ([]firmware.FwScre
 	if err != nil {
 		return nil, err
 	}
-	reScreenID := regexp.MustCompile(`[vb2ex_display_ui|vboot_draw_|ui_display].*screen=(\w+).*[\n\r]`)
+
+	screenWithNoID := "VbDisplayDebugInfo"
+	reScreenID := regexp.MustCompile(
+		`[vb2ex_display_ui|vboot_draw_|ui_display].*screen=(\w+).*[\n\r]` + `|` + screenWithNoID)
 
 	var foundScreens []firmware.FwScreenID
 	matches := reScreenID.FindAllStringSubmatch(cbmemLogs, -1)
+	var prevMatch string
+	var prevMatchFwScreenID firmware.FwScreenID
 	for _, match := range matches {
-		fwScreenID, err := strconv.ParseInt(match[1], 0, 0)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse firmware screen id")
+		var fwScreenID firmware.FwScreenID
+		switch match[0] {
+		case screenWithNoID:
+			fwScreenID = firmware.LegacyDebugInfo
+		default:
+			id, err := strconv.ParseInt(match[1], 0, 0)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to parse firmware screen id")
+			}
+			fwScreenID = firmware.FwScreenID(id)
 		}
-		foundScreens = append(foundScreens, firmware.FwScreenID(fwScreenID))
+		// For devices with firmware version < 12045 (CL:1548301), pressing tab
+		// prints the debug info directly on the firmware screen, instead of
+		// launching a new page to display the info. When this is the case,
+		// the id of this firmware screen would get recorded twice in the cbmem
+		// logs. Change the duplicate record to firmware.LegacyDebugInfo.
+		matchPrefix := strings.Split(match[0], ":")[0]
+		if prevMatch != "" && fwScreenID == prevMatchFwScreenID {
+			// For LCUI machines, the duplicate record starts with the
+			// "vboot_draw_ui" prefix. For LMUI machines, the exact same
+			// log is printed again.
+			if match[0] == prevMatch || matchPrefix == "vboot_draw_ui" {
+				fwScreenID = firmware.LegacyDebugInfo
+			}
+		}
+		foundScreens = append(foundScreens, fwScreenID)
+		prevMatch = match[0]
+		prevMatchFwScreenID = fwScreenID
 	}
 	return foundScreens, nil
 }

@@ -29,6 +29,9 @@ type baseMenuBypasser struct {
 const (
 	recoveryMenuItemCount   = 7
 	devWarningMenuItemCount = 7
+	// MaxMenuTraverseDistance denotes the greatest distance for
+	// traversing a firmware menu.
+	MaxMenuTraverseDistance = 7
 )
 
 func newBaseMenuBypasser(ctx context.Context, h *Helper) (baseMenuBypasser, error) {
