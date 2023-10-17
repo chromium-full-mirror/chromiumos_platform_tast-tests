@@ -242,6 +242,9 @@ service ShillService {
 
   // GetProperties returns the specified shill properties.
   rpc GetProperties(GetPropertiesRequest) returns (GetPropertiesResponse) {}
+
+  // ScanAndFetchRegion scans and checks if the region is initialized.
+  rpc ScanAndFetchRegion(ScanAndFetchRegionRequest) returns (google.protobuf.Empty) {}
 }
 
 message ConnectRequest {
@@ -687,4 +690,8 @@ message GetPropertiesRequest {
 
 message GetPropertiesResponse {
   map<string, ShillVal> props = 1;
+}
+
+message ScanAndFetchRegionRequest {
+  string if_name = 1;
 }

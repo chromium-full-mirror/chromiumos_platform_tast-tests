@@ -3069,12 +3069,12 @@ func (s *ShillService) StartTethering(ctx context.Context, request *wifi.Tetheri
 		ChannelWidth: uint32(info.Width), ExecutionTime: durationpb.New(time.Since(startTime))}, nil
 }
 
-func (s *ShillService) ScanAndFetchRegion(ctx context.Context, ifName string) error {
+func (s *ShillService) ScanAndFetchRegion(ctx context.Context, request *wifi.ScanAndFetchRegionRequest) (*empty.Empty, error) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		var err error
 
 		// Check if support SSID is present in scan results.
-		scanData, err := local_iw.NewLocalRunner().TimedScan(ctx, ifName, nil, nil)
+		scanData, err := local_iw.NewLocalRunner().TimedScan(ctx, request.IfName, nil, nil)
 		if err != nil || scanData == nil {
 			return errors.Wrap(err, "failed to scan")
 		}
@@ -3090,10 +3090,10 @@ func (s *ShillService) ScanAndFetchRegion(ctx context.Context, ifName string) er
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
-		return errors.Wrap(err, "failed to get a correct regdomain")
+		return &empty.Empty{}, errors.Wrap(err, "failed to get a correct regdomain")
 	}
 
-	return nil
+	return &empty.Empty{}, nil
 }
 
 func (s *ShillService) startSupplicantTethering(ctx context.Context, request *wifi.TetheringRequest) (retErr error) {
@@ -3175,7 +3175,7 @@ func (s *ShillService) startSupplicantTethering(ctx context.Context, request *wi
 	}
 
 	if selfManaged {
-		if err := s.ScanAndFetchRegion(ctx, apIfName); err != nil {
+		if _, err := s.ScanAndFetchRegion(ctx, &wifi.ScanAndFetchRegionRequest{IfName: apIfName}); err != nil {
 			return errors.Wrap(err, "failed to fetch regulatory domain from 11d scan")
 		}
 	}
