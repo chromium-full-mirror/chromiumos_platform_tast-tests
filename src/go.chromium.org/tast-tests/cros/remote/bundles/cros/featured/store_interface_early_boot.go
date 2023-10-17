@@ -32,7 +32,7 @@ func init() {
 			"kendraketsui@google.com",
 			"mutexlox@google.com",
 		},
-		BugComponent: "b:1096648", // ChromeOS > Data > Engineering > Featured
+		BugComponent: "b:1096648",
 		SoftwareDeps: []string{"reboot"},
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      2 * time.Minute,
