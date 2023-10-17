@@ -80,7 +80,7 @@ func TmuxBasicOperations(ctx context.Context, s *testing.State) {
 	vimContent := "abcdefg"
 
 	if err := uiauto.Combine("run simple command in the first tab",
-		ta.ClickNthTabUntilNodeExists(2, terminalapp.CmdPrompt),
+		ta.ClickNthTabUntilNodeExists(2, terminalapp.SSHPrompt),
 		ta.RunSSHCommand("echo "+echoContent),
 		ui.WaitUntilExists(terminalapp.Row(echoContent)),
 	)(ctx); err != nil {
@@ -89,7 +89,7 @@ func TmuxBasicOperations(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("open new tmux tab",
 		ui.LeftClick(nodewith.ClassName("NewTabButton")),
-		ui.WaitUntilExists(terminalapp.CmdPrompt),
+		ui.WaitUntilExists(terminalapp.SSHPrompt),
 		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 2 /*tmuxTabs*/),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open new tmux tab: ", err)
@@ -113,7 +113,7 @@ func TmuxBasicOperations(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("detach the tmux session",
 		ta.ClickNthTabUntilNodeExists(1, terminalapp.TmuxModeMsg),
 		ta.Kb.AccelAction("Ctrl+C"),
-		ui.WaitUntilExists(terminalapp.CmdPrompt),
+		ui.WaitUntilExists(terminalapp.SSHPrompt),
 		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 0 /*tmuxTabs*/),
 	)(ctx); err != nil {
 		s.Fatal("Failed to detach the tmux session: ", err)

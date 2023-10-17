@@ -73,7 +73,7 @@ func TmuxCloseControllingTab(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("open new tmux tab",
 		ui.LeftClick(nodewith.ClassName("NewTabButton")),
-		ui.WaitUntilExists(terminalapp.CmdPrompt),
+		ui.WaitUntilExists(terminalapp.SSHPrompt),
 		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 2 /*tmuxTabs*/),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open new tmux tab: ", err)

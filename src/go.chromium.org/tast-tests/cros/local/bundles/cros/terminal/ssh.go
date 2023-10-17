@@ -8,6 +8,7 @@ package terminal
 import (
 	"context"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -86,7 +87,7 @@ func SSH(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run command in ssh2: ", err)
 	}
 	if err := uiauto.Combine("exit ssh1",
-		ui.LeftClick(nodewith.Name("ssh1$").Role(role.StaticText).Onscreen()),
+		ui.LeftClick(nodewith.NameRegex(regexp.MustCompile(`^ssh1\$ ?$`)).Role(role.StaticText).Onscreen()),
 		ui.WaitUntilExists(nodewith.Name("Terminal input").Role(role.TextField).Focused()),
 		ta1.ExitSSH(),
 	)(ctx); err != nil {

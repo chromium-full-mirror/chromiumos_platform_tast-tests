@@ -83,9 +83,9 @@ func TmuxManageTabs(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("open two new tmux tabs and check list windows",
 		ui.LeftClick(nodewith.ClassName("NewTabButton")),
-		ui.WaitUntilExists(terminalapp.CmdPrompt),
+		ui.WaitUntilExists(terminalapp.SSHPrompt),
 		ui.LeftClick(nodewith.ClassName("NewTabButton")),
-		ui.WaitUntilExists(terminalapp.CmdPrompt),
+		ui.WaitUntilExists(terminalapp.SSHPrompt),
 		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 3 /*tmuxTabs*/),
 		// Switch back to the controlling tab.
 		ta.ClickNthTabUntilNodeExists(1, terminalapp.TmuxModeMsg),
@@ -127,7 +127,7 @@ func TmuxManageTabs(ctx context.Context, s *testing.State) {
 	last := len(nodes) - 1
 	if err := uiauto.Combine("close the only remaining tmux tab",
 		ui.WithTimeout(30*time.Second).WaitForLocation(tabs.Nth(last)),
-		ta.ClickNthTabUntilNodeExists(last, terminalapp.CmdPrompt),
+		ta.ClickNthTabUntilNodeExists(last, terminalapp.SSHPrompt),
 		ta.RunSSHCommand("exit"),
 		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 0 /*tmuxTabs*/),
 		// The controlling tab should be in focus now. We want to check that the

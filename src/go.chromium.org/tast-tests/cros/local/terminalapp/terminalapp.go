@@ -57,8 +57,11 @@ var (
 	// Prompt is the input prefix.
 	Prompt = AsRow(nodewith.NameRegex(regexp.MustCompile(`\$\s*$`)))
 
-	// CmdPrompt is the input prefix of tmux tabs.
-	CmdPrompt = Row("chronos@localhost ~ $")
+	// Newer version of xterm.js preserves the space at the end. Using ` ?`
+	// allows the tests to work across uprev.
+	sshPromptRegex = regexp.MustCompile(`^chronos@localhost ~ \$ ?$`)
+	// SSHPrompt is the prompt for a SSH terminal session.
+	SSHPrompt = AsRow(nodewith.NameRegex(sshPromptRegex))
 	// TmuxModeMsg represents the controlling tab of Tmux.
 	TmuxModeMsg = AsRow(nodewith.NameStartingWith("Tmux integration mode activated"))
 
@@ -225,7 +228,7 @@ func (ta *TerminalApp) OpenSSHConnection() uiauto.Action {
 		ta.ui.LeftClick(nodewith.Name("(chronos@localhost) Password:").Role(role.TextField)),
 		ta.Kb.TypeAction("test0000"),
 		ta.Kb.AccelAction("Enter"),
-		ta.ui.WaitUntilExists(nodewith.Name("chronos@localhost ~ $").Role(role.StaticText).First()),
+		ta.ui.WaitUntilExists(nodewith.NameRegex(sshPromptRegex).Role(role.StaticText).First()),
 	)
 }
 
