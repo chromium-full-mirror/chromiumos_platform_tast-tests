@@ -150,6 +150,56 @@ func InitFixture(ctx context.Context) error {
 	return nil
 }
 
+// TestAllFixtures tests all fixtures are alive.
+func TestAllFixtures(ctx context.Context) error {
+	for uid, port := range fixtureOnline {
+		// Open the serial port detected at 9600bps.
+		mode := &serial.Mode{
+			BaudRate: 9600,
+		}
+
+		usbPort, err := serial.Open(port, mode)
+		if err != nil {
+			return errors.Wrapf(err, "open uid:%s error", uid)
+		}
+		defer usbPort.Close()
+		var t = 3 * time.Second
+		usbPort.SetReadTimeout(t)
+
+		_, err = usbPort.Write([]byte("i"))
+		if err != nil {
+			return errors.Wrapf(err, "write uid:%s error", uid)
+		}
+
+		// Read and print the response.
+		buff := make([]byte, 1000)
+		for {
+			// Reads up to 1000 bytes.
+			n, err := usbPort.Read(buff)
+
+			if err != nil {
+				return errors.Wrapf(err, "uid:%s read error", uid)
+			}
+
+			if n == 0 {
+				break
+			}
+			mString := string(buff[:n])
+			mString = strings.Replace(mString, "\r", "", -1)
+			res := strings.Split(mString, "\n")
+
+			for _, s := range res {
+				if len(s) > fixtureIDLen && strings.Count(s[0:15], "_") == 2 && strings.Count(s[0:15], " ") == 0 {
+					break
+				} else {
+					return errors.Errorf("failed to read uid:%s info", uid)
+				}
+			}
+		}
+	}
+	return nil
+}
+
 // ControlFixture is for control fixture.
 func ControlFixture(ctx context.Context, uid, cmd string) error {
 	s := fmt.Sprintf("Fixture '%s' set '%s' ", uid, cmd)
