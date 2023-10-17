@@ -24,6 +24,7 @@ func init() {
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
 		Attr:         []string{"group:cq-medium", "group:mainline"},
+		SoftwareDeps: []string{"shipping_kernel"},
 		Params: []testing.Param{{
 			Name: "chromeos",
 			Val:  addExtraCheckForChromeOS,
