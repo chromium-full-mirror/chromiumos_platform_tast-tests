@@ -41,7 +41,7 @@ func init() {
 
 func Ti50Fwmp(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f.DevBoard(), s)
+	b := utils.NewDevboardHelper(f, s)
 	i := ti50.NewCrOSImage(b)
 
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)

@@ -49,7 +49,7 @@ func Ti50UartThroughput(ctx context.Context, s *testing.State) {
 	const fpmcuMagic byte = 0xF5
 
 	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f.DevBoard(), s)
+	b := utils.NewDevboardHelper(f, s)
 	i := ti50.NewCrOSImage(b)
 
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}

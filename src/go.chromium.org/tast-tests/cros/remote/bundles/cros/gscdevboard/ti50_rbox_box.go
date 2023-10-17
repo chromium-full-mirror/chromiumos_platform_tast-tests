@@ -40,7 +40,7 @@ func init() {
 
 func Ti50RboxBox(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f.DevBoard(), s)
+	b := utils.NewDevboardHelper(f, s)
 	i := ti50.NewCrOSImage(b)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 

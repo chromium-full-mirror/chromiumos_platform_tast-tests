@@ -44,7 +44,7 @@ func Ti50EcReset(ctx context.Context, s *testing.State) {
 	subTest := s.Param().(func(context.Context, *testing.State, utils.DevboardHelper, *ti50.CrOSImage, utils.FirmwareTestingHelper))
 
 	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f.DevBoard(), s)
+	b := utils.NewDevboardHelper(f, s)
 	i := ti50.NewCrOSImage(b)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 

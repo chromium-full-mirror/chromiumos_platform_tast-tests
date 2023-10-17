@@ -16,6 +16,7 @@ import (
 	"github.com/google/go-tpm/legacy/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
+	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -113,8 +114,8 @@ type DevboardHelper struct {
 }
 
 // NewDevboardHelper creates a new object from a DevBoard and testing state
-func NewDevboardHelper(board ti50.DevBoard, state FirmwareTestingHelperDelegate) DevboardHelper {
-	return DevboardHelper{board, state}
+func NewDevboardHelper(f *fixture.Value, state FirmwareTestingHelperDelegate) DevboardHelper {
+	return DevboardHelper{f.DevBoard(), state}
 }
 
 // GpioSet sets a well-defined gpio to a value, and if there are any errors, set a fatal

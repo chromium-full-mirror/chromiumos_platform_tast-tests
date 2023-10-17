@@ -127,7 +127,7 @@ func noServoMicro(ctx context.Context, b utils.DevboardHelper) {
 
 func Ti50Sleep(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f.DevBoard(), s)
+	b := utils.NewDevboardHelper(f, s)
 	i := ti50.NewCrOSImage(b)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 

@@ -42,7 +42,7 @@ func Ti50Tpm(ctx context.Context, s *testing.State) {
 	bus := s.Param().(ti50.TpmBus)
 
 	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f.DevBoard(), s)
+	b := utils.NewDevboardHelper(f, s)
 	i := ti50.NewCrOSImage(b)
 
 	tpmHandle := b.ResetAndTpmStartup(ctx, i, bus, ti50.CcdSuzyQ, ti50.FfClamshell)

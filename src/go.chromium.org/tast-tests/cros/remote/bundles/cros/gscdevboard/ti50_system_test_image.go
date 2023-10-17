@@ -48,7 +48,7 @@ func init() {
 func Ti50SystemTestImage(ctx context.Context, s *testing.State) {
 
 	f := s.FixtValue().(*fixture.Value)
-	board := utils.NewDevboardHelper(f.DevBoard(), s)
+	board := utils.NewDevboardHelper(f, s)
 
 	err := board.Open(ctx)
 	if err != nil {
