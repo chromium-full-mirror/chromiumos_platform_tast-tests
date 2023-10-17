@@ -151,27 +151,27 @@ func PhysicalKeyboardMultiwordSuggestion(ctx context.Context, s *testing.State) 
 			),
 		},
 		{
-			// Trigger suggestion "looking for", partially type
+			// Trigger suggestion "sounds good", partially type
 			// suggestion, and dismiss suggestion by deleting text
 			// beyond suggestion trigger point.
 			name:     "SuggestionTrackedAndDismissedWithTextUpdates",
 			scenario: "track typing in suggestion and dismiss when deleting past trigger point",
 			errStr:   "Failed to dismiss suggestion: %v",
 			action: uiauto.Combine("dismiss multiword suggestion by deleting past trigger point",
-				keyboard.TypeAction("I am loo"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "I am loo"),
+				keyboard.TypeAction("ok so"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "ok so"),
 				ui.WaitUntilExists(suggestionWindowFinder),
-				keyboard.TypeAction("king f"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "I am looking f"),
+				keyboard.TypeAction("unds g"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "ok sounds g"),
 				ui.WaitUntilExists(suggestionWindowFinder),
-				keyboard.AccelAction("Backspace"), // "I am looking "
-				keyboard.AccelAction("Backspace"), // "I am looking"
-				keyboard.AccelAction("Backspace"), // "I am lookin"
-				keyboard.AccelAction("Backspace"), // "I am looki"
-				keyboard.AccelAction("Backspace"), // "I am look"
-				keyboard.AccelAction("Backspace"), // "I am loo"
+				keyboard.AccelAction("Backspace"), // "ok sounds "
+				keyboard.AccelAction("Backspace"), // "ok sounds"
+				keyboard.AccelAction("Backspace"), // "ok sound"
+				keyboard.AccelAction("Backspace"), // "ok soun"
+				keyboard.AccelAction("Backspace"), // "ok sou"
+				keyboard.AccelAction("Backspace"), // "ok so"
 				ui.WaitUntilExists(suggestionWindowFinder),
-				keyboard.AccelAction("Backspace"), // "I am lo"
+				keyboard.AccelAction("Backspace"), // "ok s"
 				ui.WaitUntilGone(suggestionWindowFinder),
 			),
 		},
