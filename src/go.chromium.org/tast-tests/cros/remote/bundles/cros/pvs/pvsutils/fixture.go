@@ -21,6 +21,8 @@ const gcloudSymlinkPath = "/usr/local/bin/gcloud"
 const uploadConfigJSON = `{"bucket":"chromeos-moblab-pvs-dev","service_account":"/home/chronos/user/.pvs/upload_config/.service_account.json","boto_key":""}`
 const defaultTagAndRef = "prod"
 const containerPVSOutputDir = "/home/pvs/.pvs"
+const pvsRegistry = "us-docker.pkg.dev/chromeos-pvs/cros-pvs/pvs"
+const testServicesRegistry = "us-docker.pkg.dev/cros-registry"
 
 var pvsOutputDir = path.Join(chronosHome, ".pvs")
 var pvsResultsDir = path.Join(pvsOutputDir, "results")
@@ -163,10 +165,20 @@ func (f *pvsFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 
 	// Stop running pvs container
 	stopContainer := fmt.Sprintf(`docker stop %v`, f.containerID)
-	_, _, err := RunAsChronos(ctx, dut, stopContainer)
-	if err != nil {
+	if _, _, err := RunAsChronos(ctx, dut, stopContainer); err != nil {
 		s.Fatal("Error occured when stopping container: ", err)
 	}
+
+	// Remove images from pvs-host
+	listImages := `docker images --format "{{.Repository}}:{{.ID}}"`
+	filterImages := fmt.Sprintf(`grep '%v\|%v'`, pvsRegistry, testServicesRegistry)
+	parseImageIds := `cut -f 2 -d ":"`
+	pruneImages := `xargs docker rmi`
+	removeImages := fmt.Sprintf(`%v | %v | %v | %v`, listImages, filterImages, parseImageIds, pruneImages)
+	if _, _, err := RunAsChronos(ctx, dut, removeImages); err != nil {
+		s.Fatal("Error occured when removing images: ", err)
+	}
+
 }
 
 func (f *pvsFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
