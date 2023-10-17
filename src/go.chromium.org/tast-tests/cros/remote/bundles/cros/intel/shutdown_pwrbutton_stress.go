@@ -24,11 +24,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies stress test shutdown using power button",
 		Contacts: []string{
-			"chromeos-faft@google.com",
 			"intel.chrome.automation.team@intel.com",
 			"pathan.jilani@intel.com",
 		},
-		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable)),
