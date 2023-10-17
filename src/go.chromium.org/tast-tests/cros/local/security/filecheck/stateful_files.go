@@ -74,6 +74,9 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 		NewPattern(Tree("encrypted/var/lib/device_management"), Users("root", "device_management"), Groups("root", "device_management"), NotMode(022)),
 		NewPattern(Path("encrypted/var/lib/dhcpcd"), Users("dhcp"), Groups("dhcp"), Mode(0775)),
 		NewPattern(Tree("encrypted/var/lib/dhcpcd"), Users("dhcp"), Groups("dhcp"), NotMode(0113)),
+		// This directory is created only for the hardware information service (hwis) on the reven board.
+		// When a user logs in, hwis needs to read/write files in this directory.
+		NewPattern(Path("encrypted/var/lib/flex_hwis_tool"), Users("flex_hwis"), Groups("flex_hwis"), Mode(0755)),
 		NewPattern(Path("encrypted/var/lib/gentoo"), Users("root"), NotMode(022), SkipChildren()),
 		NewPattern(Tree("encrypted/var/lib/hpsd"), Users("hpsd"), Groups("hpsd"), NotMode(022)),
 		NewPattern(Tree("encrypted/var/lib/imageloader"), Users("imageloaderd"), Groups("imageloaderd"), NotMode(022)),
