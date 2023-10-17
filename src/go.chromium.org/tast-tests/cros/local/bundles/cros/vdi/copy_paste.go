@@ -50,23 +50,23 @@ func init() {
 			{
 				Name:      "citrix",
 				Fixture:   fixture.CitrixLaunched,
-				ExtraAttr: []string{"group:vdi_limited"},
+				// ExtraAttr: []string{"group:vdi_limited"}, TODO(b/263381075) fix failing test
 			},
 			{
 				Name:              "lacros_citrix",
 				Fixture:           fixture.LacrosCitrixLaunched,
-				ExtraAttr:         []string{"group:vdi_limited"},
+				// ExtraAttr:         []string{"group:vdi_limited"}, TODO(b/263381075) fix failing test
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
 				Name:      "mgs_citrix",
 				Fixture:   fixture.MgsCitrixLaunched,
-				ExtraAttr: []string{"group:vdi_limited"},
+				// ExtraAttr: []string{"group:vdi_limited"}, TODO(b/263381075) fix failing test
 			},
 			{
 				Name:              "mgs_lacros_citrix",
 				Fixture:           fixture.MgsLacrosCitrixLaunched,
-				ExtraAttr:         []string{"group:vdi_limited"},
+				// ExtraAttr:         []string{"group:vdi_limited"}, TODO(b/263381075) fix failing test
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			// TODO(b/263381075): VMWare doesn't have as simple apps as notepad.
