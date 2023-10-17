@@ -173,6 +173,16 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	ctx, cancel := tf.ReserveForClose(ctx)
 	defer cancel()
 
+	initialRegDomain, err := tf.InitializeRegdomainUS(ctx)
+	if err != nil {
+		s.Fatal("Failed to initialize the regulatory domain: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := tf.ResetRegdomain(ctx, initialRegDomain); err != nil {
+			s.Error("Failed to reset the regulatory domain: ", err)
+		}
+	}(ctx)
+
 	r, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect rpc: ", err)
