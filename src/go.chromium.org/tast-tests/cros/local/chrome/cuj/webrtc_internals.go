@@ -26,6 +26,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/webrtcinternals"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const createDumpSectionName = "Create Dump"
@@ -243,6 +246,32 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 		return len(byID[orderedIDs[i]][framesTransmittedAttribute]) > len(byID[orderedIDs[j]][framesTransmittedAttribute])
 	})
 
+	type reportableMetric struct {
+		attribute       string
+		reporter        func(interface{}) (float64, error)
+		attributeSuffix string
+		unit            string
+		direction       perf.Direction
+	}
+
+	metrics := []reportableMetric{
+		{"frameWidth", reportFloat64, ".frameWidth", "px", perf.BiggerIsBetter},
+		{"frameHeight", reportFloat64, ".frameHeight", "px", perf.BiggerIsBetter},
+		{"framesDecoded", reportFloat64, ".framesDecoded", "frames", perf.BiggerIsBetter},
+		{"framesDropped", reportFloat64, ".framesDropped", "frames", perf.SmallerIsBetter},
+		{"framesPerSecond", reportFloat64, ".framesPerSecond", "fps", perf.BiggerIsBetter},
+		{"freezeCount", reportFloat64, ".freezeCount", "count", perf.SmallerIsBetter},
+		{"totalFreezesDuration", reportFloat64, ".totalFreezesDuration", "s", perf.SmallerIsBetter},
+		{"[codec]", reportVideoCodec, ".codec", "unitless", perf.BiggerIsBetter},
+	}
+
+	aggregates := map[string]float64{
+		"framesDecoded":        0,
+		"framesDropped":        0,
+		"freezeCount":          0,
+		"totalFreezesDuration": 0,
+	}
+
 	for _, id := range orderedIDs {
 		byAttribute := byID[id]
 		screenShareSuffix := ""
@@ -257,17 +286,7 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 			}
 		}
 
-		for _, config := range []struct {
-			attribute       string
-			reporter        func(interface{}) (float64, error)
-			attributeSuffix string
-			unit            string
-		}{
-			{"frameWidth", reportFloat64, ".frameWidth", "px"},
-			{"frameHeight", reportFloat64, ".frameHeight", "px"},
-			{"framesPerSecond", reportFloat64, ".framesPerSecond", "fps"},
-			{"[codec]", reportVideoCodec, ".codec", "unitless"},
-		} {
+		for _, config := range metrics {
 			timeline, ok := byAttribute[config.attribute]
 			if !ok {
 				continue
@@ -282,16 +301,45 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 				report = append(report, metric)
 			}
 
+			if _, ok := aggregates[config.attribute]; ok {
+				// The timeline values for the metrics we are trying to
+				// aggregate are always increasing. Thus, the last value in the
+				// list is always the total value of that unit. For example,
+				// the last value in the framesDropped timeline is the total
+				// number of dropped frames.
+				aggregates[config.attribute] += report[len(report)-1]
+			}
+
 			pv.Set(perf.Metric{
-				Name:      fmt.Sprintf("WebRTCInternals.Video%s%s%s", screenShareSuffix, directionSuffix, config.attributeSuffix),
-				Variant:   fmt.Sprintf(variantFormat, totalCount),
+				Name:      fmt.Sprintf("WebRTCInternals.Video%s%s%s.%s", screenShareSuffix, directionSuffix, config.attributeSuffix, fmt.Sprintf(variantFormat, totalCount)),
 				Unit:      config.unit,
-				Direction: perf.BiggerIsBetter,
+				Direction: config.direction,
 				Multiple:  true,
 			}, report...)
 		}
 		totalCount++
 	}
+
+	for _, config := range metrics {
+		// Create a metric in the form:
+		// WebRTCInternals.Video.{Inbound, Outbound}.{title-cased metric name}
+		if aggregate, ok := aggregates[config.attribute]; ok {
+			pv.Set(perf.Metric{
+				Name:      fmt.Sprintf("WebRTCInternals.Video%s.%s", directionSuffix, cases.Title(language.Und, cases.NoLower).String(config.attribute)),
+				Unit:      config.unit,
+				Direction: config.direction,
+			}, aggregate)
+		}
+	}
+
+	if aggregates["framesDecoded"] > 0 {
+		pv.Set(perf.Metric{
+			Name:      fmt.Sprintf("WebRTCInternals.Video%s.PercentDroppedFrames", directionSuffix),
+			Unit:      "frames",
+			Direction: perf.SmallerIsBetter,
+		}, aggregates["framesDropped"]/aggregates["framesDecoded"])
+	}
+
 	return totalCount, screenshareCount, nil
 }
 
