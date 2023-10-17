@@ -156,6 +156,9 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 	if err := h.Servo.SetOnOff(ctx, servoSPIControl, servo.Off); err != nil {
 		s.Fatalf("Failed to enable %v: %+v", servoSPIControl, err)
 	}
+	if img == nil {
+		s.Fatal("No firmware image")
+	}
 
 	cf, sf, err := getFlagsFromImage(img)
 	if err != nil {
