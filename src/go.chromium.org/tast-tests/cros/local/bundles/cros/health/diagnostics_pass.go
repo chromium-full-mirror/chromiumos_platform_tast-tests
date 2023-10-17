@@ -44,10 +44,12 @@ func init() {
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineURandom),
 		}, {
 			// Contact: dennyh@google.com
-			Name:              "smartctl_check",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineSmartctlCheck),
-			ExtraAttr:         []string{"informational"},
+			Name:      "smartctl_check",
+			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineSmartctlCheck),
+			ExtraAttr: []string{"informational"},
+			// TODO(b/306086502): Remove unnecessary software deps.
 			ExtraSoftwareDeps: []string{"smartctl"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 		}, {
 			// Contact: yycheng@google.com
 			Name:      "cpu_cache",
