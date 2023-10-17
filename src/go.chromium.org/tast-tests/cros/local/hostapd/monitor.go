@@ -29,6 +29,10 @@ const (
 	pingInterval = 5 * time.Second
 )
 
+// ErrAssociationTimeout is returned when no association event was received and
+// the deadline is reached.
+var ErrAssociationTimeout = errors.New("association event timeout")
+
 // Event defines functions common for all hostapd events.
 type Event interface {
 	ToLogString() string
@@ -196,7 +200,7 @@ func (m *Monitor) WaitForEvent(ctx context.Context) (Event, error) {
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, errors.New("timeout waiting for event")
+			return nil, ErrAssociationTimeout
 		case <-ticker.C:
 			if _, err := io.WriteString(m.stdin, "ping\n"); err != nil {
 				return nil, errors.Wrap(err, "failed to write 'ping' command to hostapd_cli")
@@ -251,10 +255,10 @@ func waitForSTAAssociationEvent(ctx context.Context, m *Monitor, client string, 
 	for {
 		event, err := m.WaitForEvent(timeoutContext)
 		if err != nil {
-			return errors.Wrap(err, "failed to wait for AP event")
+			return err
 		}
 		if event == nil { // timeout
-			return errors.New("association event timeout")
+			return ErrAssociationTimeout
 		}
 		if e, ok := event.(*ApStaConnectedEvent); ok && association {
 			if bytes.Compare(iface.HardwareAddr, e.Addr) != 0 {
