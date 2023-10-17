@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -130,6 +131,19 @@ func VerifyFirefoxLaunchAndClose(ctx context.Context, tconn *chrome.TestConn, ke
 		ui.WithTimeout(3*time.Second).WaitUntilGone(firefoxWindow),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to close firefox")
+	}
+
+	return nil
+}
+
+// DisableFirefoxCSD forces Firefox to use server-side decorations.
+func DisableFirefoxCSD(ctx context.Context, cont *vm.Container) error {
+	if err := cont.WriteFile(ctx, "titlebar.js", `pref("browser.tabs.inTitlebar", 0);`); err != nil {
+		return errors.Wrap(err, "failed to write file")
+	}
+
+	if err := cont.Command(ctx, "sudo", "mv", "titlebar.js", "/etc/firefox-esr/").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to move file into place")
 	}
 
 	return nil

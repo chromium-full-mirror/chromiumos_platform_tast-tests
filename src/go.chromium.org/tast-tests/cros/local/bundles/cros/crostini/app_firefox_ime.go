@@ -143,6 +143,11 @@ func AppFirefoxIME(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
+	// TODO(b/304160903): Disable CSD to work around IME bug.
+	if err := crostiniapps.DisableFirefoxCSD(ctx, cont); err != nil {
+		s.Fatal("Failed to disable client-side decorations: ", err)
+	}
+
 	// Open Terminal app.
 	terminalApp, err := terminalapp.Launch(ctx, tconn)
 	if err != nil {

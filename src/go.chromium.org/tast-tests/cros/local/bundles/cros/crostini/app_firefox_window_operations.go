@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/crostiniapps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/guestos/apps"
@@ -74,12 +74,8 @@ func AppFirefoxWindowOperations(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(handler, handler)
 
 	// Disable client-side decorations as the test requires system decorations.
-	if err := cont.WriteFile(ctx, "titlebar.js", `pref("browser.tabs.inTitlebar", 0);`); err != nil {
-		s.Fatal("Failed to write file: ", err)
-	}
-
-	if err := cont.Command(ctx, "sudo", "mv", "titlebar.js", "/etc/firefox-esr/").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to set config: ", err)
+	if err := crostiniapps.DisableFirefoxCSD(ctx, cont); err != nil {
+		s.Fatal("Failed to disable client-side decorations: ", err)
 	}
 
 	for _, err := range apps.TestMaximizeRestoreMinimizeClose(ctx, "Firefox ESR", "Mozilla Firefox", "Firefox", keyboard, tconn, d, false) {
