@@ -25,11 +25,10 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EphemeralPolicies,
-		LacrosStatus: testing.LacrosVariantNeeded, // Implemented, but disabled (see below)
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks kiosk state persistance with combinations of policy DeviceEphemeralUsersEnabled and DeviceLocalAccountInfo.EphemeralMode",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
-			"tbastos@google.com", // Test author
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Attr: []string{
@@ -65,6 +64,15 @@ func init() {
 const testCaseTimeout = kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration
 
 func EphemeralPolicies(ctx context.Context, s *testing.State) {
+	isLacros := s.Param().(kioskmode.TestData).IsLacros
+
+	// variant is an AccountID prefix to separate Ash/Lacros profiles and prevent profile migrations
+	// (which would trigger a Lacros restart and cause Lacros tests to fail; e.g. in b/277886466).
+	variant := "ash"
+	if isLacros {
+		variant = "lacros"
+	}
+
 	// Each test case simulates running a different Kiosk app twice: the first time, to "init" the
 	// kiosk homedirs; and the second time, to "verify" if the homedirs were persisted or removed.
 	// These test cases are purposely NOT isolated from each other, to test interactions between them.
@@ -81,22 +89,22 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 		// See: https://crsrc.org/c/components/policy/test_support/request_handler_for_policy.cc;l=236
 		// In production, AccountID can be any string (URLs, for WebKioskApps, etc.)
 		{
-			// Check if the device policy works.
-			AccountID:      "true_unset@managedchrome.com",
+			// Test the DeviceEphemeralUsersEnabled policy alone.
+			AccountID:      variant + "_true_unset@managedchrome.com",
 			DevicePolicy:   &policy.DeviceEphemeralUsersEnabled{Val: true},
 			EphemeralMode:  policy.EphemeralModeUnset,
 			ExpectedResult: "ephemeral",
 		},
 		{
-			// Check if EphemeralModeDisable overrides the device policy.
-			AccountID:      "true_disable@managedchrome.com",
+			// Override the device policy with EphemeralModeDisable.
+			AccountID:      variant + "_true_disable@managedchrome.com",
 			DevicePolicy:   &policy.DeviceEphemeralUsersEnabled{Val: true},
 			EphemeralMode:  policy.EphemeralModeDisable,
 			ExpectedResult: "permanent",
 		},
 		{
-			// Check if EphemeralModeEnable overrides the device policy.
-			AccountID:      "false_enable@managedchrome.com",
+			// Override the device policy with EphemeralModeEnable.
+			AccountID:      variant + "_false_enable@managedchrome.com",
 			DevicePolicy:   &policy.DeviceEphemeralUsersEnabled{Val: false},
 			EphemeralMode:  policy.EphemeralModeEnable,
 			ExpectedResult: "ephemeral",
@@ -117,7 +125,6 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 	}
 
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	isLacros := s.Param().(kioskmode.TestData).IsLacros
 
 	for _, stage := range []string{"init", "verify"} {
 		for i, tc := range testCases {
@@ -135,7 +142,7 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 					),
 				}
 				if stage == "verify" {
-					// KeepState prevents the homedir from being wiped on login
+					// KeepState prevents the homedir from being wiped on login.
 					opts = append(opts, kioskmode.ExtraChromeOptions(chrome.KeepState()))
 				}
 				if isLacros {
