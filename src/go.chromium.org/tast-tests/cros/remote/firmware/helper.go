@@ -1722,3 +1722,15 @@ func (h *Helper) ClearEventlog(ctx context.Context) error {
 	testing.ContextLog(ctx, "Clearing the event log")
 	return h.DUT.Conn().CommandContext(ctx, "elogtool", "clear").Run(ssh.DumpLogOnError)
 }
+
+// EnableDevBootUSB sets crossystem dev_boot_usb to 1.
+func (h *Helper) EnableDevBootUSB(ctx context.Context) error {
+	testing.ContextLog(ctx, "Enabling dev_boot_usb")
+	return h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=1").Run(ssh.DumpLogOnError)
+}
+
+// DisableDevBootUSB sets crossystem dev_boot_usb to 0.
+func (h *Helper) DisableDevBootUSB(ctx context.Context) error {
+	testing.ContextLog(ctx, "Disabling dev_boot_usb")
+	return h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=0").Run(ssh.DumpLogOnError)
+}
