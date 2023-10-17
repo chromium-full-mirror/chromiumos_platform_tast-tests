@@ -8,6 +8,7 @@ package terminal
 import (
 	"context"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -80,6 +81,8 @@ func Crosh(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
+	croshPrompt := nodewith.NameRegex(regexp.MustCompile(`^crosh> ?$`)).Role(role.StaticText).First()
+
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
@@ -87,15 +90,15 @@ func Crosh(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	err = uiauto.Combine("run crosh shell",
 		ui.LeftClick(nodewith.Name("crosh").Role(role.Window).ClassName("BrowserFrame")),
-		ui.WaitUntilExists(nodewith.Name("crosh>").Role(role.StaticText).First()),
+		ui.WaitUntilExists(croshPrompt),
 		kb.TypeAction("shell"),
 		kb.AccelAction("Enter"),
-		ui.WaitUntilExists(nodewith.Name("chronos@localhost / $").Role(role.StaticText).First()),
+		ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile(`^chronos@localhost / \$ ?$`)).Role(role.StaticText).First()),
 		kb.TypeAction("exit"),
 		kb.AccelAction("Enter"),
 		kb.TypeAction("exit"),
 		kb.AccelAction("Enter"),
-		ui.WaitUntilGone(nodewith.Name("crosh>").Role(role.StaticText)),
+		ui.WaitUntilGone(croshPrompt),
 	)(ctx)
 	if err != nil {
 		s.Fatal("Failed: ", err)
