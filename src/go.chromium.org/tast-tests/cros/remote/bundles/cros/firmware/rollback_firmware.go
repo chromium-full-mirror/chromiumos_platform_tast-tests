@@ -23,6 +23,7 @@ import (
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
+	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -182,26 +183,18 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 		}
 		s.Log("Backup on DUT written to ", backupInfo.Path)
 
-		// Extract the full active firmware (APRW?ImageSection), as well as the signature block (FWSign?ImageSection).
-		activeFirmwareBody := bios.FWBodyAImageSection
-		inactiveFirmwareBody := bios.FWBodyBImageSection
+		// Extract the signature blocks (FWSign?ImageSection).
 		activeSignSection := bios.FWSignAImageSection
 		inactiveSignSection := bios.FWSignBImageSection
 		if activeFW == string(fwCommon.RWSectionB) {
-			activeFirmwareBody = bios.FWBodyBImageSection
-			inactiveFirmwareBody = bios.FWBodyAImageSection
 			activeSignSection = bios.FWSignBImageSection
 			inactiveSignSection = bios.FWSignAImageSection
 		}
-		activeBodyFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, activeFirmwareBody)
-		inactiveBodyFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, inactiveFirmwareBody)
 		activeSignFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, activeSignSection)
 		inactiveSignFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, inactiveSignSection)
 		// TODO(b/276861597): Use futility library.
 		if err := h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", backupInfo.Path, "-x",
-			fmt.Sprintf("%s:%s", activeFirmwareBody, activeBodyFile),
 			fmt.Sprintf("%s:%s", activeSignSection, activeSignFile),
-			fmt.Sprintf("%s:%s", inactiveFirmwareBody, inactiveBodyFile),
 			fmt.Sprintf("%s:%s", inactiveSignSection, inactiveSignFile),
 		).Run(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to extract sections: ", err)
@@ -223,49 +216,48 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Downloading files to ", localTempDir)
-		if err := linuxssh.GetFile(ctx, h.DUT.Conn(), activeSignFile, fmt.Sprintf("%s/%s", localTempDir, path.Base(activeSignFile)), linuxssh.DereferenceSymlinks); err != nil {
-			s.Fatal("Failed to download activeSig: ", err)
+		localActiveSignFile := fmt.Sprintf("%s/%s", localTempDir, path.Base(activeSignFile))
+		if err := linuxssh.GetFile(ctx, h.DUT.Conn(), activeSignFile, localActiveSignFile, linuxssh.DereferenceSymlinks); err != nil {
+			s.Fatal("Failed to download active signature: ", err)
 		}
-		if err := linuxssh.GetFile(ctx, h.DUT.Conn(), inactiveSignFile, fmt.Sprintf("%s/%s", localTempDir, path.Base(inactiveSignFile)), linuxssh.DereferenceSymlinks); err != nil {
-			s.Fatal("Failed to download inactiveSig: ", err)
+		localInactiveSignFile := fmt.Sprintf("%s/%s", localTempDir, path.Base(inactiveSignFile))
+		if err := linuxssh.GetFile(ctx, h.DUT.Conn(), inactiveSignFile, localInactiveSignFile, linuxssh.DereferenceSymlinks); err != nil {
+			s.Fatal("Failed to download inactive signature: ", err)
 		}
-		s.Log("Copying file to servohost ", servoTempDir)
+		s.Log("Copying files to ", servoTempDir)
 		if err := h.ServoProxy.PutFiles(ctx, false, map[string]string{
-			fmt.Sprintf("%s/%s.bin", localTempDir, bios.FWSignAImageSection): fmt.Sprintf("%s/%s.bin", servoTempDir, bios.FWSignAImageSection),
-			fmt.Sprintf("%s/%s.bin", localTempDir, bios.FWSignBImageSection): fmt.Sprintf("%s/%s.bin", servoTempDir, bios.FWSignBImageSection),
+			localActiveSignFile:   fmt.Sprintf("%s/%s", servoTempDir, path.Base(activeSignFile)),
+			localInactiveSignFile: fmt.Sprintf("%s/%s", servoTempDir, path.Base(inactiveSignFile)),
 		}); err != nil {
 			s.Fatal("Failed to copy files to servo host: ", err)
 		}
+
+		futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
+		if err != nil {
+			s.Fatal("Failed to get futility instance: ", err)
+		}
+
 		// Change the firmware version to 0 and resign. The normal firmware version is 1 or more, so 0 will be a rollback.
-		activeRollback := fmt.Sprintf("%s/activeRollback", remoteTempDir)
+		rollbackOutputFile := backupInfo.Path + ".ver0.bin"
+		signOptions := futility.NewSignBIOSOptions(backupInfo.Path).WithVersion(0).WithOutputFile(rollbackOutputFile)
+		if _, err = futilityInstance.SignBIOS(ctx, signOptions); err != nil {
+			s.Fatal("Failed to re-sign firmware: ", err)
+		}
+
+		activeRollbackSignFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, activeSignSection)
+		inactiveRollbackSignFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, inactiveSignSection)
 		// TODO(b/276861597): Use futility library.
-		if err := h.DUT.Conn().CommandContext(ctx, "futility", "vbutil_firmware", "--vblock", activeRollback,
-			"--fv", activeBodyFile, "--version", "0",
-			"--keyblock", "/usr/share/vboot/devkeys/firmware.keyblock", "--signprivate", "/usr/share/vboot/devkeys/firmware_data_key.vbprivk",
-			"--kernelkey", "/usr/share/vboot/devkeys/kernel_subkey.vbpubk",
+		if err := h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", rollbackOutputFile, "-x",
+			fmt.Sprintf("%s:%s", activeSignSection, activeRollbackSignFile),
+			fmt.Sprintf("%s:%s", inactiveSignSection, inactiveRollbackSignFile),
 		).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to sign active vblock: ", err)
-		}
-		if err := h.DUT.Conn().CommandContext(ctx, "truncate", "-r", activeSignFile, activeRollback).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatalf("Failed to extend %s: %v", activeRollback, err)
-		}
-		inactiveRollback := fmt.Sprintf("%s/inactiveRollback", remoteTempDir)
-		// TODO(b/276861597): Use futility library.
-		if err := h.DUT.Conn().CommandContext(ctx, "futility", "vbutil_firmware", "--vblock", inactiveRollback,
-			"--fv", inactiveBodyFile, "--version", "0",
-			"--keyblock", "/usr/share/vboot/devkeys/firmware.keyblock", "--signprivate", "/usr/share/vboot/devkeys/firmware_data_key.vbprivk",
-			"--kernelkey", "/usr/share/vboot/devkeys/kernel_subkey.vbpubk",
-		).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to sign inactive vblock: ", err)
-		}
-		if err := h.DUT.Conn().CommandContext(ctx, "truncate", "-r", inactiveSignFile, inactiveRollback).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatalf("Failed to extend %s: %v", inactiveRollback, err)
+			s.Fatal("Failed to extract sections: ", err)
 		}
 
 		shouldRestoreFirmware = true
 		s.Log("Rolling back ", activeSignSection)
 		if out, err := flashromInstance.Write(ctx, "", true /*noVerifyAll=*/, false /*noverify=*/, "", []string{
-			fmt.Sprintf("%s:%s", activeSignSection, activeRollback),
+			fmt.Sprintf("%s:%s", activeSignSection, activeRollbackSignFile),
 		}); err != nil {
 			s.Errorf("Failed to flash: %v output = %s", err, string(out))
 		}
@@ -294,7 +286,7 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 
 		s.Log("Rolling back ", inactiveSignSection)
 		if out, err := flashromInstance.Write(ctx, "", true /*noVerifyAll=*/, false /*noverify=*/, "", []string{
-			fmt.Sprintf("%s:%s", inactiveSignSection, inactiveRollback),
+			fmt.Sprintf("%s:%s", inactiveSignSection, inactiveRollbackSignFile),
 		}); err != nil {
 			s.Errorf("Failed to flash: %v output = %s", err, string(out))
 		}
