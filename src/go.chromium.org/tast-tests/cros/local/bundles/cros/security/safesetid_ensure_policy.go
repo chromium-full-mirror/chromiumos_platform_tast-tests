@@ -39,7 +39,7 @@ func SafesetidEnsurePolicy(ctx context.Context, s *testing.State) {
 	}
 
 	// Need to ensure that all the users in our test exist or have been initialized properly.
-	err = checkUsersandGroupsExist()
+	err = checkUsersAndGroupsExist()
 	if err != nil {
 		s.Fatalf("%v", err)
 	}
@@ -56,7 +56,7 @@ func SafesetidEnsurePolicy(ctx context.Context, s *testing.State) {
 	for _, tc := range []struct {
 		parent        string
 		child         string
-		capSETUID     bool
+		capSetuid     bool
 		expectSuccess bool
 	}{
 		{"cros-disks", "chronos", true, true},
@@ -87,7 +87,7 @@ func SafesetidEnsurePolicy(ctx context.Context, s *testing.State) {
 		{"shill", "chronos", true, false},
 		{"vpn", "root", true, false},
 	} {
-		err := transitionSetID(ctx, tc.parent, tc.child, tc.capSETUID, tc.expectSuccess, true, s)
+		err := transitionSetID(ctx, tc.parent, tc.child, tc.capSetuid, tc.expectSuccess, true, s)
 		if err != nil {
 			if tc.expectSuccess {
 				s.Errorf(" %v unable to setuid to %v with error: %v", tc.parent, tc.child, err)
@@ -96,7 +96,7 @@ func SafesetidEnsurePolicy(ctx context.Context, s *testing.State) {
 			}
 		}
 		if testGIDEnabled {
-			err = transitionSetID(ctx, tc.parent, tc.child, tc.capSETUID, tc.expectSuccess, false, s)
+			err = transitionSetID(ctx, tc.parent, tc.child, tc.capSetuid, tc.expectSuccess, false, s)
 			if err != nil {
 				if tc.expectSuccess {
 					s.Errorf(" %v unable to setgid to %v with error: %v", tc.parent, tc.child, err)
@@ -116,7 +116,7 @@ func transitionSetID(ctx context.Context, parent, child string, giveCapSetID, ex
 	} else {
 		caps = "0x0"
 	}
-	if isUID { //UID case
+	if isUID { // UID case
 		newGroup = parent
 	} else { // GID case
 		newGroup = child
@@ -154,7 +154,7 @@ func transitionSetID(ctx context.Context, parent, child string, giveCapSetID, ex
 	return nil
 }
 
-func checkUsersandGroupsExist() error {
+func checkUsersAndGroupsExist() error {
 
 	// List of all users used in this program.
 	usersList := []user.User{
