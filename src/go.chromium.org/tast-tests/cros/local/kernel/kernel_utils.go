@@ -20,7 +20,6 @@ import (
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -342,9 +341,7 @@ func EnsureBothKernelCopiesBootable(ctx context.Context, rootDevWithPart string)
 	rootA := partitionTable["ROOT-A"]
 	rootB := partitionTable["ROOT-B"]
 
-	// Compare first 64Kb so it checks hash, headers, preamble etc should be sufficient to check files are identical.
-	limit := 64000
-	match, err := comparePartitions(ctx, kernA.PartitionPath, kernB.PartitionPath, limit)
+	match, err := sha1sumsMatch(ctx, kernA.PartitionPath, kernB.PartitionPath)
 	if err != nil {
 		return errors.Wrap(err, "comparing KERN-A and KERN-B failed")
 	}
@@ -376,34 +373,32 @@ func EnsureBothKernelCopiesBootable(ctx context.Context, rootDevWithPart string)
 			return errors.Wrap(err, "failed to make rootfs a and b identical")
 		}
 
-		if err := sha1sumsMatch(ctx, srcKern.PartitionPath, dstKern.PartitionPath); err != nil {
+		if match, err := sha1sumsMatch(ctx, srcKern.PartitionPath, dstKern.PartitionPath); err != nil || !match {
 			return errors.Wrap(err, "Copying KERN failed unexpectedly")
 		}
 
-		if err := sha1sumsMatch(ctx, srcRoot.PartitionPath, dstRoot.PartitionPath); err != nil {
+		if match, err := sha1sumsMatch(ctx, srcRoot.PartitionPath, dstRoot.PartitionPath); err != nil || !match {
 			return errors.Wrap(err, "Copying ROOT failed unexpectedly")
 		}
 
 	}
 
-	// Set attributes of both copies to attributes of currently booted copy.
-	if err := RestoreCgptAttributes(ctx, rootDevWithoutPart, map[string]*pb.CgptPartition{
-		srcKern.Label: srcKern,
-		dstKern.Label: srcKern,
-		srcRoot.Label: srcRoot,
-		dstRoot.Label: srcRoot,
-	}); err != nil {
-		return errors.Wrap(err, "failed to make cgpt attributes identical and force both partitions bootable")
+	if err := forcePartitionBootable(ctx, kernA.PartitionPath, 1); err != nil {
+		return errors.Wrap(err, "failed to make KERN-A bootable")
+	}
+
+	if err := forcePartitionBootable(ctx, kernB.PartitionPath, 1); err != nil {
+		return errors.Wrap(err, "failed to make KERN-B bootable")
 	}
 
 	return nil
 }
 
-func sha1sumsMatch(ctx context.Context, partitionPath1, partitionPath2 string) error {
+func sha1sumsMatch(ctx context.Context, partitionPath1, partitionPath2 string) (bool, error) {
 	sha1sumCmd := testexec.CommandContext(ctx, "sha1sum", partitionPath1, partitionPath2)
 	out, err := sha1sumCmd.Output(testexec.DumpLogOnError)
 	if err != nil {
-		return errors.Wrap(err, "failed to get sha1sums")
+		return false, errors.Wrap(err, "failed to get sha1sums")
 	}
 	/*
 		Sample output from sha1sum looks like:
@@ -416,10 +411,11 @@ func sha1sumsMatch(ctx context.Context, partitionPath1, partitionPath2 string) e
 	sum2 := strings.TrimSpace(strings.Split(lines[1], " ")[0])
 
 	if sum1 != sum2 {
-		return errors.Errorf("sha1sum for %s %s did not match, got %s and %s respectively", partitionPath1, partitionPath2, sum1, sum2)
+		testing.ContextLogf(ctx, "Sha1sum for %s %s did not match, got %s and %s respectively", partitionPath1, partitionPath2, sum1, sum2)
+		return false, nil
 	}
 	testing.ContextLogf(ctx, "sha1sum for %s %s matched, got %s and %s respectively", partitionPath1, partitionPath2, sum1, sum2)
-	return nil
+	return true, nil
 }
 
 // PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B).
@@ -747,19 +743,6 @@ func SetKernelHeaderMagic(ctx context.Context, rootDevWithoutPart, label string,
 		}
 	}
 	return nil
-}
-
-// comparePartitions compares two files at paths up to n bytes and returns true if they're identical.
-func comparePartitions(ctx context.Context, pathA, pathB string, n int) (bool, error) {
-	if err := testexec.CommandContext(ctx, "cmp", "-n", strconv.Itoa(n), pathA, pathB).Run(ssh.DumpLogOnError); err != nil {
-		// Cmp error code 0 == files match, 1 == files differ, 2 == error in running cmp.
-		if errCode, ok := testexec.ExitCode(err); !ok || errCode == 2 {
-			return false, errors.Wrapf(err, "failed to compare %q and %q using 'cmp'", pathA, pathB)
-		}
-		// If error code == 1, then files differ.
-		return false, nil
-	}
-	return true, nil
 }
 
 func getSectorSize(ctx context.Context, rootDevWithPart string) (int64, error) {
