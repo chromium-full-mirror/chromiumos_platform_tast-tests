@@ -1,8 +1,18 @@
 set noparent
 
-# Audio team
+# Audio Bring up + VM + TLs
 aaronyu@google.com
-include chromiumos/owners:v1:/audio/OWNERS.all
+bailideng@google.com
+cujomalainey@chromium.org  #{LAST_RESORT_SUGGESTION}
+cychiang@chromium.org  #{LAST_RESORT_SUGGESTION}
+htcheong@chromium.org
+hychao@chromium.org  #{LAST_RESORT_SUGGESTION}
+judyhsiao@google.com
+normanbt@chromium.org
+paulhsia@chromium.org
+pteerapong@chromium.org
+whalechang@google.com
+yuhsuan@chromium.org
 
 # Tast team for bulk/emergencies
 include /OWNERS.tast
