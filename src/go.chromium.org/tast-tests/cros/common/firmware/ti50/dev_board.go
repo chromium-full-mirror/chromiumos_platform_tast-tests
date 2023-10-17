@@ -103,6 +103,9 @@ const (
 
 	// GscHostEmulation is not a physical testbed, but an emulation on a Linux host computer.
 	GscHostEmulation TestbedType = "gsc_he"
+
+	// GscHavenShield is a small board on top of HyperDebug.
+	GscHavenShield TestbedType = "gsc_h1_shield"
 )
 
 // AllTestbedTypes returns all the possible testbed types.
