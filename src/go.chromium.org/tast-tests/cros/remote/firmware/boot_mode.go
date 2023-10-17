@@ -299,6 +299,9 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 		if err := ms.EnableRecMode(ctx, recType, servo.USBMuxDUT); err != nil {
 			return err
 		}
+		if msOptsContain(opts, SkipWaitConnect) {
+			return nil
+		}
 		// Reconnect to the DUT.
 		testing.ContextLog(ctx, "Reestablishing connection to DUT")
 		connectCtx, cancel := context.WithTimeout(ctx, h.Config.USBImageBootTimeout)
