@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -37,6 +38,7 @@ func init() {
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"pstore"},
+		Timeout:      chrome.MinLoginTimeout + time.Minute,
 		Params: []testing.Param{{
 			Name: "pre_oobe_collection",
 			Val: ephemeralCollectionParams{
