@@ -244,6 +244,51 @@ func simpleConnect80211ax() []*simpleConnectParams {
 	}}
 }
 
+func simpleConnect80211be() []*simpleConnectParams {
+	return []*simpleConnectParams{{
+		Name:      "80211beeht20",
+		Fixture:   defaultFixture,
+		Doc:       simpleConnectDocPref("an open 802.11be network on channel 40 with a channel width of 20MHz."),
+		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+		Val: []simpleConnectParamsVal{{APOpts: `
+			ap.Mode(ap.Mode80211bePure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
+			ap.EHTChWidth(ap.EHTChWidth20Or40),
+		`}},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
+	}, {
+		Name:      "80211beeht40",
+		Fixture:   defaultFixture,
+		Doc:       simpleConnectDocPref("an open 802.11be network on channel 157 with a channel width of 40MHz."),
+		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+		Val: []simpleConnectParamsVal{{APOpts: `
+			ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
+			ap.EHTChWidth(ap.EHTChWidth20Or40),
+		`}},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
+	}, {
+		Name:      "80211beeht80mixed",
+		Fixture:   defaultFixture,
+		Doc:       simpleConnectDocPref("an open 802.11be network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz."),
+		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+		Val: []simpleConnectParamsVal{{APOpts: `
+			ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+			ap.VHTCaps(ap.VHTCapSGI80), ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
+		`}},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
+	}, {
+		Name:      "80211beeht80pure",
+		Fixture:   defaultFixture,
+		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+		Doc: append(simpleConnectDocPref("an open 802.11be network on channel 157 with center channel of 155 and channel width of 80MHz."),
+			"The router is forced to use 80 MHz wide rates only."),
+		Val: []simpleConnectParamsVal{{APOpts: `
+			ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+			ap.VHTCaps(ap.VHTCapSGI80), ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
+		`}},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
+	}}
+}
+
 func simpleConnectOWE() []*simpleConnectParams {
 	return []*simpleConnectParams{{
 		Name:      "owe",
@@ -932,6 +977,7 @@ func TestSimpleConnect(t *testing.T) {
 	ps = append(ps, simpleConnect80211nsgi())
 	ps = append(ps, simpleConnect80211ac()...)
 	ps = append(ps, simpleConnect80211ax()...)
+	ps = append(ps, simpleConnect80211be()...)
 	ps = append(ps, simpleConnectOWE()...)
 	ps = append(ps, simpleConnectHidden()...)
 	ps = append(ps, simpleConnectWEP()...)

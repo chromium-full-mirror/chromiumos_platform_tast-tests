@@ -244,6 +244,55 @@ func init() {
 				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
 			}, {
+				// Verifies that DUT can connect to an open 802.11be network on channel 40 with a channel width of 20MHz.
+				Name:      "80211beeht20",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211bePure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
+						ap.EHTChWidth(ap.EHTChWidth20Or40),
+					},
+				}},
+				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+			}, {
+				// Verifies that DUT can connect to an open 802.11be network on channel 157 with a channel width of 40MHz.
+				Name:      "80211beeht40",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
+						ap.EHTChWidth(ap.EHTChWidth20Or40),
+					},
+				}},
+				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+			}, {
+				// Verifies that DUT can connect to an open 802.11be network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz.
+				Name:      "80211beeht80mixed",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
+					},
+				}},
+				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+			}, {
+				// Verifies that DUT can connect to an open 802.11be network on channel 157 with center channel of 155 and channel width of 80MHz.
+				// The router is forced to use 80 MHz wide rates only.
+				Name:      "80211beeht80pure",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
+					},
+				}},
+				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+			}, {
 				// Verifies that DUT can connect to an OWE network on 2.4GHz.
 				Name:      "owe",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
