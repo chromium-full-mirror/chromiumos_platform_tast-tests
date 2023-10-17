@@ -284,13 +284,32 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 	// Try reading DidVid a few times until Ti50 is ready.
 	const maxDidVidAttempts = 3
 	for r := 1; r <= maxDidVidAttempts; r++ {
-		didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
+		// Avoid using tpmHandle.ReadRegister(), as doing so would instantly fail the test
+		// in case of timeout or other errors, instead directly call lower-level method.
+		didVid, err := tpmHandle.OpenTitanToolTpmCommand("read-register", string(ti50.TpmRegDidVid))
+		if err != nil {
+			if r == maxDidVidAttempts {
+				h.Fatalf("Repeated errors reading TPM DID_VID: %s", err)
+			}
+			continue
+		}
 		if bytes.Equal(didVid, ti50.TpmDidVidValue) {
 			break
 		}
-		if !bytes.Equal(didVid, []byte{0xff, 0xff, 0xff, 0xff}) || r == maxDidVidAttempts {
-			h.Fatalf("Unexpected TPM DID_VID: %v", didVid)
+		if r == maxDidVidAttempts {
+			h.Fatalf("Repeated unexpected TPM DID_VID: %v", didVid)
 		}
+		if bytes.Equal(didVid, []byte{0xff, 0xff, 0xff, 0xff}) {
+			// Common result, in case the GSC is completely unresponsive on the SPI
+			// bus at the time of the request.
+			continue
+		}
+		if bytes.Equal(didVid, []byte{0xff, 0x01, 0xe0, 0x1a}) {
+			// Common way for Cr50 DID_VID to be corrupted on the SPI bus, if Cr50 not
+			// fully initialized at the time of the request.
+			continue
+		}
+		h.Fatalf("Unexpected TPM DID_VID: %v", didVid)
 	}
 
 	if err := tpm2.Startup(tpmHandle, tpm2.StartupClear); err != nil {
