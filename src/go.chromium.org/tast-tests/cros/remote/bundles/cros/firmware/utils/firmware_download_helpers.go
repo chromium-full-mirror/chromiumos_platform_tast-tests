@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -106,13 +105,27 @@ func DownloadFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmwar
 }
 
 // UntarUnknownFileName will try to untar the respective fw bin file from the downloaded tar file.
-func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType FirmwareType) (string, error) {
+func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType FirmwareType) (string, string, error) {
 	// List of possible formats for the binary file found in a downloaded tar file.
+	const ecMonitorFileName = "npcx_monitor.bin"
+	ecMonitorFile := ""
 	var filenamePool []string
 	if fwType == APFirmware {
 		filenamePool = []string{fmt.Sprintf("image-%s.bin", fwidModel), fmt.Sprintf("./image-%s.bin", fwidModel), "image.bin"}
 	} else if fwType == ECFirmware {
 		filenamePool = []string{fmt.Sprintf("%s/ec.bin", fwidModel), fmt.Sprintf("./%s/ec.bin", fwidModel)}
+		// Extract subsidiary binaries for EC
+		// Find a monitor binary for NPCX_UUT chip type, if any.
+		for _, f := range filenamePool {
+			monitorFile := strings.Replace(f, "ec.bin", ecMonitorFileName, 1)
+			if err := testexec.CommandContext(ctx, "tar", "-xvf", tmpDir+"/"+firmwareFileName, "-C", tmpDir, monitorFile).Run(ssh.DumpLogOnError); err != nil {
+				testing.ContextLogf(ctx, "WARNING! failed to untar the image with the name %q: %v", monitorFile, err)
+				continue
+			}
+			ecMonitorFile = monitorFile
+			testing.ContextLogf(ctx, "Found monitor image with the name %q", monitorFile)
+			break
+		}
 	}
 	var err error
 	for _, filename := range filenamePool {
@@ -120,7 +133,7 @@ func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType 
 			testing.ContextLogf(ctx, "WARNING! failed to untar the image with the name %q: %v", filename, err)
 			continue
 		}
-		return filepath.Join(tmpDir, filename), nil
+		return filename, ecMonitorFile, nil
 	}
-	return "", errors.Wrap(err, "failed to untar fw bin file from the downloaded tar file")
+	return "", "", errors.Wrap(err, "failed to untar fw bin file from the downloaded tar file")
 }

@@ -532,7 +532,7 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, tmpDir, fwidM
 
 		if url != "" {
 			if downloadFwFromURL(url) {
-				binToFlash, err := fwUtils.UntarUnknownFileName(ctx, tmpDir, fwidModel, fwUtils.APFirmware)
+				binToFlash, _, err := fwUtils.UntarUnknownFileName(ctx, tmpDir, fwidModel, fwUtils.APFirmware)
 				if err != nil {
 					testing.ContextLogf(ctx, "Unable to untar the firmware file for board: %s, model: %s, firmware ID: %s", fwToTest.Board, fwToTest.Model, fwToTest.FwID)
 				} else {
