@@ -1,0 +1,6 @@
+set noparent
+
+# Tast team for bulk updates/emergencies.
+include /OWNERS.tast
+
+per-file config_verify.go=file:chromiumos/owners:v1:/security/OWNERS.hardening
