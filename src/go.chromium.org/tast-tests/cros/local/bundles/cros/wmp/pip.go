@@ -26,7 +26,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast/core/testing/hwdep"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -100,7 +99,6 @@ func init() {
 		BugComponent: "b:1252568",
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{"180p_60fps_600frames.h264.mp4", "pip_video.html"},
-		HardwareDeps: hwdep.D(hwdep.TouchScreen()),
 		SoftwareDeps: []string{"chrome", "arc", "proprietary_codecs"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute,
