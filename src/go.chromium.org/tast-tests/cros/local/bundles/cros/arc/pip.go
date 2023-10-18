@@ -120,7 +120,7 @@ func init() {
 			Name:              "lacros",
 			Val:               pipContainerLacrosTests,
 			ExtraAttr:         []string{"group:mainline", "informational"},
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
+			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Fixture:           "lacrosWithArcBooted",
 		}, {
 			Name:              "vm",

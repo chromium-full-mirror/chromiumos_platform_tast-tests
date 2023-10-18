@@ -76,6 +76,10 @@ func init() {
 			Val:               append(cujTests, cujTestsP...),
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
+			Name:              "container_r",
+			Val:               cujTests,
+			ExtraSoftwareDeps: []string{"android_container_r"},
+		}, {
 			Name:              "vm",
 			Val:               cujTests,
 			ExtraSoftwareDeps: []string{"android_vm"},

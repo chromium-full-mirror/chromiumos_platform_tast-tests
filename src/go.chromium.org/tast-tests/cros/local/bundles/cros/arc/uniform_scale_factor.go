@@ -30,6 +30,7 @@ func init() {
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		// The feature is not supported on R+.
 		SoftwareDeps: []string{"android_p", "chrome"},
 		Timeout:      4 * time.Minute,
 		Fixture:      "arcBooted",

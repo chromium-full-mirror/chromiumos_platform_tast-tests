@@ -39,6 +39,13 @@ func init() {
 				hasKeysImplemented: false,
 			},
 		}, {
+			Name:              "container_r",
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"android_container_r"},
+			Val: gamepadTestParams{
+				hasKeysImplemented: true,
+			},
+		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: gamepadTestParams{

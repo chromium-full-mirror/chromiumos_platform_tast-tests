@@ -31,7 +31,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedInTabletMode",
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			ExtraAttr:         []string{"informational"}, // TODO(b/236309112): Promote to critical again
 		}, {
 			Name:              "vm",

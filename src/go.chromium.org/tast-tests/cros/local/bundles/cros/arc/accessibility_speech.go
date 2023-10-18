@@ -64,6 +64,36 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
+			Name: "container_r",
+			Val: expectedSpeechLog{
+				CheckBox: []tts.SpeechExpectation{
+					tts.NewStringExpectation("CheckBox"),
+					tts.NewStringExpectation("Check box"),
+					tts.NewStringExpectation("not checked"),
+					tts.NewStringExpectation("Press Search plus Space to toggle"),
+				},
+				CheckBoxWithStateDescription: []tts.SpeechExpectation{
+					tts.NewStringExpectation("CheckBoxWithStateDescription"),
+					tts.NewStringExpectation("Check box"),
+					tts.NewStringExpectation("state description not checked"),
+					tts.NewStringExpectation("Press Search plus Space to toggle"),
+				},
+				SeekBar: []tts.SpeechExpectation{
+					tts.NewStringExpectation("seekBar"),
+					tts.NewStringExpectation("Slider"),
+					tts.NewStringExpectation("state description 25"),
+					tts.NewStringExpectation("Min 0"),
+					tts.NewStringExpectation("Max 100"),
+				},
+				Slider: []tts.SpeechExpectation{
+					tts.NewStringExpectation("Slider"),
+					tts.NewStringExpectation("30 percent"),
+					tts.NewStringExpectation("Min 0"),
+					tts.NewStringExpectation("Max 10"),
+				},
+			},
+			ExtraSoftwareDeps: []string{"android_container_r"},
+		}, {
 			Name: "vm",
 			Val: expectedSpeechLog{
 				CheckBox: []tts.SpeechExpectation{

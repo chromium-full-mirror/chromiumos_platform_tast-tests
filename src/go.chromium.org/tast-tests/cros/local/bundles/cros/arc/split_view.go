@@ -49,7 +49,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:              "clamshell_mode",
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				Fixture:           "arcBooted",
 				Val: splitViewTestParams{
 					tablet:        false,

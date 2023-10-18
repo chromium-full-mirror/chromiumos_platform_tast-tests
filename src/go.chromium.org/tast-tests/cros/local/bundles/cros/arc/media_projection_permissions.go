@@ -40,7 +40,7 @@ func init() {
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		SoftwareDeps: []string{"chrome", "android_p"},
+		SoftwareDeps: []string{"chrome", "android_container"},
 		Fixture:      "arcBooted",
 		Data:         []string{mediaProjAPK},
 	})

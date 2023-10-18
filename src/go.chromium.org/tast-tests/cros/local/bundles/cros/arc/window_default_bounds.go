@@ -32,7 +32,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"android_p", "chrome"},
+		SoftwareDeps: []string{"android_container", "chrome"},
 		Fixture:      "arcBooted",
 	})
 }

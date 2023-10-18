@@ -87,7 +87,7 @@ func init() {
 			// Not in mainline since optin is flaky. b/243451887
 			Name:              "fullrestore",
 			Val:               fullrestoreGwTests,
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			// Not in mainline since optin is flaky. b/243451887
 			Name: "fullrestore_r",

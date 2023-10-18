@@ -26,7 +26,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		Attr:         []string{"informational", "group:mainline"},
-		SoftwareDeps: []string{"android_p", "chrome"},
+		SoftwareDeps: []string{"android_container", "chrome"},
 		Fixture:      "arcBooted",
 		Timeout:      4 * time.Minute,
 	})

@@ -108,6 +108,13 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
+			Name: "container_r",
+			Val: expectedNode{
+				CheckBoxAttributes: map[string]interface{}{"checkedStateDescription": "state description not checked"},
+				SeekBarAttributes:  map[string]interface{}{"value": "state description 25"},
+			},
+			ExtraSoftwareDeps: []string{"android_container_r"},
+		}, {
 			Name: "vm",
 			Val: expectedNode{
 				CheckBoxAttributes: map[string]interface{}{"checkedStateDescription": "state description not checked"},
