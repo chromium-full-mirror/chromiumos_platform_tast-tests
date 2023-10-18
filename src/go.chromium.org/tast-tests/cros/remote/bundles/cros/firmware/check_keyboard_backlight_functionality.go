@@ -27,6 +27,13 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+type checkKeyboardBacklightTest int
+
+const (
+	adjustBacklightWithKeyboardShortcuts checkKeyboardBacklightTest = iota
+	lidCloseAndOpen
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CheckKeyboardBacklightFunctionality,
@@ -46,6 +53,12 @@ func init() {
 			hwdep.KeyboardBacklight(),
 		),
 		Fixture: fixture.NormalMode,
+		Params: []testing.Param{{
+			Val: adjustBacklightWithKeyboardShortcuts,
+		}, {
+			Name: "lid_close_and_open",
+			Val:  lidCloseAndOpen,
+		}},
 	})
 }
 
@@ -101,28 +114,38 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
 
-	s.Log("Screen recorder started")
-	filePath := filepath.Join(s.OutDir(), "kblightRecord.webm")
-	screenRecorder := pb.NewScreenRecorderServiceClient(h.RPCClient.Conn)
-	if _, err := screenRecorder.Start(ctx, &pb.StartRequest{
-		FileName: filePath,
-	}); err != nil {
-		s.Fatal("Failed to start recording: ", err)
-	}
-	defer func(ctx context.Context) {
-		res, err := screenRecorder.Stop(ctx, &empty.Empty{})
-		if err != nil {
-			s.Log("Unable to save the recording: ", err)
-		} else {
-			s.Logf("Screen recording saved to %s", res.FileName)
+	testMethod := s.Param().(checkKeyboardBacklightTest)
+	switch testMethod {
+	case adjustBacklightWithKeyboardShortcuts:
+		s.Log("Screen recorder started")
+		filePath := filepath.Join(s.OutDir(), "kblightRecord.webm")
+		screenRecorder := pb.NewScreenRecorderServiceClient(h.RPCClient.Conn)
+		if _, err := screenRecorder.Start(ctx, &pb.StartRequest{
+			FileName: filePath,
+		}); err != nil {
+			s.Fatal("Failed to start recording: ", err)
 		}
+		defer func(ctx context.Context) {
+			res, err := screenRecorder.Stop(ctx, &empty.Empty{})
+			if err != nil {
+				s.Log("Unable to save the recording: ", err)
+			} else {
+				s.Logf("Screen recording saved to %s", res.FileName)
+			}
 
-		s.Log("Copying screen recording from DUT to local machine")
-		destPath := filepath.Join(s.OutDir(), filepath.Base(res.FileName))
-		if err := linuxssh.GetFile(ctx, s.DUT().Conn(), res.FileName, destPath, linuxssh.DereferenceSymlinks); err != nil {
-			s.Fatal("Failed to copy screen recording to local machine: ", err)
-		}
-	}(cleanupCtx)
+			s.Log("Copying screen recording from DUT to local machine")
+			destPath := filepath.Join(s.OutDir(), filepath.Base(res.FileName))
+			if err := linuxssh.GetFile(ctx, s.DUT().Conn(), res.FileName, destPath, linuxssh.DereferenceSymlinks); err != nil {
+				s.Fatal("Failed to copy screen recording to local machine: ", err)
+			}
+		}(cleanupCtx)
+	case lidCloseAndOpen:
+		defer func(ctx context.Context) {
+			if err := h.Servo.OpenLid(ctx); err != nil {
+				s.Fatal("Failed to open lid: ", err)
+			}
+		}(cleanupCtx)
+	}
 
 	kbLightUp, kbLightDown := getKeyForKbLightUpAndDown(h)
 	// Initialize the method for getting kb light value.
@@ -148,22 +171,60 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 			s.Fatal("Unexpected error: ", err)
 		}
 	}
-	fsClient := dutfs.NewClient(h.RPCClient.Conn)
-	minBrightness, maxBrightness, err := getMaxAndMinBrightness(ctx, h, fsClient)
-	if err != nil {
-		s.Fatal("Failed to get min and max kb backlight brightness level: ", err)
-	}
 
-	kbBacklightTesting := make(map[int]string, 2)
-	kbBacklightTesting[minBrightness] = kbLightDown
-	kbBacklightTesting[maxBrightness] = kbLightUp
+	switch testMethod {
+	case adjustBacklightWithKeyboardShortcuts:
+		fsClient := dutfs.NewClient(h.RPCClient.Conn)
+		minBrightness, maxBrightness, err := getMaxAndMinBrightness(ctx, h, fsClient)
+		if err != nil {
+			s.Fatal("Failed to get min and max kb backlight brightness level: ", err)
+		}
 
-	for extremeValue, key := range kbBacklightTesting {
-		s.Logf("-----Adjusting keyboard backlight till level %d -----", extremeValue)
-		if err := adjustKBBacklight(ctx, h, s.DUT(), extremeValue, 15*time.Second, key, ""); err != nil {
-			s.Fatal("Failed to adjust keyboard backlight: ", err)
+		kbBacklightTesting := make(map[int]string, 2)
+		kbBacklightTesting[minBrightness] = kbLightDown
+		kbBacklightTesting[maxBrightness] = kbLightUp
+
+		for extremeValue, key := range kbBacklightTesting {
+			s.Logf("-----Adjusting keyboard backlight till level %d -----", extremeValue)
+			if err := adjustKBBacklight(ctx, h, s.DUT(), extremeValue, 15*time.Second, key, ""); err != nil {
+				s.Fatal("Failed to adjust keyboard backlight: ", err)
+			}
+		}
+	case lidCloseAndOpen:
+		if err := checkKBLightWhenLidClosedOpen(ctx, h, s.DUT()); err != nil {
+			s.Fatal("Failed to verify keyboard backlight level when lid is closed and reopened: ", err)
 		}
 	}
+}
+
+// checkKBLightWhenLidClosedOpen checks for keyboard backlight turned off
+// when lid is closed, and turned back on when the lid reopens.
+func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper, dut *dut.DUT) error {
+	for _, lidOpen := range []bool{false, true} {
+		var err error
+		if lidOpen {
+			err = h.Servo.OpenLid(ctx)
+		} else {
+			err = h.Servo.CloseLid(ctx)
+		}
+		if err != nil {
+			return err
+		}
+		// Verify keyboard backlight changes when lid state changes.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			currentKBLight, err := h.Servo.GetKBBacklight(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to get kblight")
+			}
+			if lidOpen && currentKBLight == 0 || !lidOpen && currentKBLight != 0 {
+				return errors.Errorf("got unexpected kblight level: %d, when lidOpen: %t", currentKBLight, lidOpen)
+			}
+			return nil
+		}, &testing.PollOptions{Interval: time.Second, Timeout: 10 * time.Second}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // checkInitKBBacklight presses on a key and checks the initial keyboard backlight value.
