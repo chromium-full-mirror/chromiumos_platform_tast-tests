@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -59,9 +60,10 @@ func OpenWithMenuChrome(ctx context.Context, s *testing.State) {
 	arcDevice := s.FixtValue().(*arc.PreData).ARC
 
 	const (
-		appName        = "Intent Picker Test App"
-		intentActionID = "org.chromium.arc.testapp.chromeintentpicker:id/intent_action"
-		expectedAction = "android.intent.action.VIEW"
+		appName         = "Intent Picker Test App"
+		testPackageName = "org.chromium.arc.testapp.chromeintentpicker"
+		intentActionID  = testPackageName + ":id/intent_action"
+		expectedAction  = "android.intent.action.VIEW"
 	)
 
 	// Give 5 seconds to clean up and dump out UI tree.
@@ -84,6 +86,22 @@ func OpenWithMenuChrome(ctx context.Context, s *testing.State) {
 
 	if err := arcDevice.Install(ctx, arc.APKPath("ArcChromeIntentPickerTest.apk")); err != nil {
 		s.Fatal("Failed installing the APK: ", err)
+	}
+
+	// Setup the app link verification for the test app as verified.
+	version, err := arc.SDKVersion()
+	if err != nil {
+		s.Fatal("Failed to get ARC version: ", err)
+	}
+
+	if version >= arc.SDKT {
+		if err := arcDevice.Command(ctx, "pm", "set-app-links", "--package", testPackageName, "2", "all").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to set Android link capturing setting: ", err)
+		}
+	} else {
+		if err := arcDevice.Command(ctx, "pm", "set-app-link", testPackageName, "always").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to set Android link capturing setting: ", err)
+		}
 	}
 
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
