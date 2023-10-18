@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/oobe"
 	"go.chromium.org/tast/core/ctxutil"
@@ -345,6 +346,12 @@ func (m *Manager) waitForProxySettingsOpened(cr *chrome.Chrome, tconn *chrome.Te
 		conn, err := connectToPage(waitCtx)
 		if err != nil {
 			return errors.Wrap(err, "failed to find proxy settings dialog")
+		}
+
+		// The page needs a moment to be stable.
+		// For more information see b/306068737.
+		if err := webutil.WaitForQuiescence(ctx, conn, 15*time.Second); err != nil {
+			return errors.Wrap(err, "failed to wait for Proxy settings to be stable")
 		}
 
 		if m.dialogConn != nil {
