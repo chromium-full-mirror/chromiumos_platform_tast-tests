@@ -283,12 +283,14 @@ var (
 
 // ImageLoaderManifest holds the fields related to a imageloader manifest.
 type imageLoaderManifest struct {
-	CriticalUpdate   bool   `json:"critical-update"`
-	FactoryInstall   bool   `json:"factory-install"`
-	ID               string `json:"id"`
-	PowerwashSafe    bool   `json:"powerwash-safe"`
-	PreAllocatedSize int64  `json:"pre-allocated-size,string"`
-	PreloadAllowed   bool   `json:"preload-allowed"`
+	CriticalUpdate      bool   `json:"critical-update"`
+	FactoryInstall      bool   `json:"factory-install"`
+	ID                  string `json:"id"`
+	LoadPinVerityDigest bool   `json:"loadpin-verity-digest"`
+	PowerwashSafe       bool   `json:"powerwash-safe"`
+	PreAllocatedSize    int64  `json:"pre-allocated-size,string"`
+	PreloadAllowed      bool   `json:"preload-allowed"`
+	UseLogicalVolume    bool   `json:"use-logical-volume"`
 }
 
 // Metadata holds the fields related to the DLC metadata.
@@ -344,6 +346,14 @@ func verifyDlcManifest(ctx context.Context, dlcID string, modemType cellularcons
 	if !metadata.Manifest.CriticalUpdate {
 		return errors.Errorf("DLC_CRITICAL_UPDATE was not set in DLC %s", dlcID)
 	}
-
+	if !metadata.Manifest.PowerwashSafe {
+		return errors.Errorf("DLC_POWERWASH_SAFE was not set in DLC %s", dlcID)
+	}
+	if !metadata.Manifest.UseLogicalVolume {
+		return errors.Errorf("DLC_USE_LOGICAL_VOLUME was not set in DLC %s", dlcID)
+	}
+	if (modemType != cellularconst.ModemTypeL850) && !metadata.Manifest.LoadPinVerityDigest {
+		return errors.Errorf("DLC_LOADPIN_VERITY_DIGEST was not set in DLC %s", dlcID)
+	}
 	return nil
 }
