@@ -230,6 +230,15 @@ var DeviceManagementDaemon = &DaemonInfo{
 	DBusName:   "org.chromium.DeviceManagement",
 }
 
+// OobeConfigRestoreDaemon represents the DaemonsInfo for oobe config restore.
+// It runs when ownership isn't taken yet.
+var OobeConfigRestoreDaemon = &DaemonInfo{
+	Name:       "oobe_config_restore",
+	DaemonName: "oobe_config_restore",
+	HasDBus:    true,
+	DBusName:   "org.chromium.OobeConfigRestore",
+}
+
 // HighLevelTPMDaemons represents the high level TPM daemons.
 var HighLevelTPMDaemons = []*DaemonInfo{
 	TPMManagerDaemon,
@@ -246,6 +255,7 @@ var HighLevelTPMDaemons = []*DaemonInfo{
 // powerwash.
 var StatefulDaemons = []*DaemonInfo{
 	UpdateEngineDaemon,
+	OobeConfigRestoreDaemon,
 }
 
 // DaemonController controls the daemons via upstart commands.
