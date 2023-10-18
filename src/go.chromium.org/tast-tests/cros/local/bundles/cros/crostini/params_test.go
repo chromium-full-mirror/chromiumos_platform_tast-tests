@@ -210,8 +210,7 @@ var appClamshellOnlyTests = []string{
 	"app_emacs_window_operations.go",
 	"app_firefox_window_operations.go",
 	"app_vscode_window_operations.go",
-	// TODO(b/304160903,b/305579517): Removed from generation to promote bookworm tests.
-	// "app_firefox_emoji.go",
+	"app_firefox_emoji.go",
 	"app_gedit_emoji.go",
 	"app_vscode_emoji.go",
 	"app_firefox_nonalphanumeric_input.go",
@@ -239,8 +238,7 @@ func TestAppClamshellOnlyTestParams(t *testing.T) {
 
 var appIMELanguageTests = []string{
 	"app_gedit_ime.go",
-	// TODO(b/304160903,b/305579517): Removed from generation to promote bookworm tests.
-	// "app_firefox_ime.go",
+	"app_firefox_ime.go",
 	"app_vscode_ime.go",
 }
 
