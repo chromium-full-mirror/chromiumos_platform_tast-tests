@@ -340,7 +340,7 @@ func BootMode(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to reboot DUT by servo: ", err)
 		}
 
-		s.Log("Waiting for DUT to power ON")
+		s.Log("Waiting for DUT to power ON (expect beep in dev mode)")
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
 		defer cancelWaitConnect()
 
