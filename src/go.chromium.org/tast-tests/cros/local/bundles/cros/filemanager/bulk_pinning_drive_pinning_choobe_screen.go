@@ -66,7 +66,6 @@ func BulkPinningDrivePinningChoobeScreen(ctx context.Context, s *testing.State) 
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.GAIALoginPool(s.RequiredVar("drivefs.accountPool")),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-		chrome.ExtraArgs("--vmodule=drivefs_pin_manager=1"),
 	}
 
 	cr, err := chrome.New(ctx, chromeOptions...)
