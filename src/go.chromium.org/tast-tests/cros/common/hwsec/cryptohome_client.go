@@ -30,7 +30,6 @@ import (
 const (
 	cryptohomeWrappedKeysetString          = "TPM_WRAPPED"
 	installAttributesFinalizeSuccessOutput = "InstallAttributesFinalize(): 1"
-	listKeysExLabelPrefix                  = "Label: "
 	shadowHome                             = "/home/.shadow"
 )
 

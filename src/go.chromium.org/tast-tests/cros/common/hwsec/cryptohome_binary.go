@@ -149,11 +149,6 @@ func (c *cryptohomeBinary) getSystemSalt(ctx context.Context, useDBus bool) ([]b
 	return c.call(ctx, args...)
 }
 
-// listKeysEx calls "cryptohome --action=list_keys_ex".
-func (c *cryptohomeBinary) listKeysEx(ctx context.Context, username string) ([]byte, error) {
-	return c.call(ctx, "--action=list_keys_ex", "--user="+username)
-}
-
 // remove calls "cryptohome --action=remove".
 func (c *cryptohomeBinary) remove(ctx context.Context, username string) ([]byte, error) {
 	return c.call(ctx, "--action=remove", "--user="+username, "--force")
