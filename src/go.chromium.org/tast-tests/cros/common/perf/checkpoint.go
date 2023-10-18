@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
 	"time"
 )
 
@@ -68,6 +69,12 @@ func (c *Checkpoints) EndSection(section *Section) {
 	section.SetEnd(c.clock.Now())
 }
 
+// AddSectionForTesting adds a new Section under checkpointName. Used in unit
+// tests only.
+func (c *Checkpoints) AddSectionForTesting(checkpointName string, section *Section) {
+	c.checkpoints[checkpointName] = append(c.checkpoints[checkpointName], section)
+}
+
 // Save saves checkpoints as a json file for debugging. outDir should be the
 // output directory path obtained from testing.State.
 func (c *Checkpoints) Save(outDir string) error {
@@ -104,4 +111,47 @@ func SetClock(clock Clock) CheckpointsSetter {
 	return func(c *Checkpoints) {
 		c.clock = clock
 	}
+}
+
+// CheckpointEvent is a step in the middle to process Checkpoints for
+// power_log.json. It represents either the start or the end of a Checkpoint
+// Section.
+type CheckpointEvent struct {
+	CheckpointName string
+	Ts             time.Time
+	IsStart        bool
+}
+
+// Flatten takes all the Checkpoints and flattens them into a sequence of
+// starts / ends of all the Checkpoint Sections, sorted by timestamp.
+func (c Checkpoints) Flatten() []CheckpointEvent {
+	var checkpointEvents []CheckpointEvent
+	for checkpointName, sections := range c.checkpoints {
+		for _, section := range sections {
+			start := CheckpointEvent{
+				CheckpointName: checkpointName,
+				Ts:             section.startTs,
+				IsStart:        true,
+			}
+			end := CheckpointEvent{
+				CheckpointName: checkpointName,
+				Ts:             section.endTs,
+				IsStart:        false,
+			}
+			checkpointEvents = append(checkpointEvents, start)
+			checkpointEvents = append(checkpointEvents, end)
+		}
+	}
+
+	sort.Slice(checkpointEvents, func(i, j int) bool {
+		// Sort events by timestamps.
+		byTs := checkpointEvents[i].Ts.Before(checkpointEvents[j].Ts)
+		// If two events share the same checkpoint name and have the same
+		// timestamps, the start event should be sorted before the end event.
+		startBeforeEnd := checkpointEvents[i].CheckpointName == checkpointEvents[j].CheckpointName &&
+			checkpointEvents[i].Ts.Equal(checkpointEvents[j].Ts) &&
+			checkpointEvents[i].IsStart && !checkpointEvents[j].IsStart
+		return byTs || startBeforeEnd
+	})
+	return checkpointEvents
 }

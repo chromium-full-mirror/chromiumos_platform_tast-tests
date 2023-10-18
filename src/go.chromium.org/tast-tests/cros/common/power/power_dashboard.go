@@ -607,3 +607,46 @@ func uploadToDashboard(ctx context.Context, powerLogDict map[string]interface{},
 		return nil
 	}, time.Second, exponentBase)(ctx)
 }
+
+// tagTimelineWithCheckpoints assumes that values come from perf.Timeline. For
+// every data point, it generates a list of Checkpoint names that describe this
+// data point.
+func tagTimelineWithCheckpoints(ctx context.Context, values *perf.Values, checkpoints *perf.Checkpoints) [][]string {
+	var tsMetric perf.Metric
+	for metric := range values.GetValues() {
+		if metric.HasStartTs {
+			tsMetric = metric
+			break
+		}
+	}
+
+	unixTss := make([]time.Time, len(values.GetValues()[tsMetric]))
+	for i, relativeTs := range values.GetValues()[tsMetric] {
+		unixTss[i] = tsMetric.StartTs.Add(time.Duration(relativeTs * float64(time.Second)))
+	}
+
+	tags := map[string]int{}
+	checkpointTags := make([][]string, len(values.GetValues()[tsMetric]))
+	checkpointEvents := checkpoints.Flatten()
+	j := 0
+
+	for i, unixTs := range unixTss {
+		for j < len(checkpointEvents) &&
+			(checkpointEvents[j].Ts.Before(unixTs) ||
+				checkpointEvents[j].Ts.Equal(unixTs)) {
+			if checkpointEvents[j].IsStart {
+				tags[checkpointEvents[j].CheckpointName]++
+			} else {
+				tags[checkpointEvents[j].CheckpointName]--
+			}
+			j = j + 1
+		}
+		for tag, counter := range tags {
+			if counter > 0 {
+				checkpointTags[i] = append(checkpointTags[i], tag)
+			}
+		}
+	}
+
+	return checkpointTags
+}
