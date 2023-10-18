@@ -2816,7 +2816,16 @@ func (s *ShillService) ResetTest(ctx context.Context, req *wifi.ResetTestRequest
 				return nil, errors.Wrap(err, "failed to reset the WiFi interface")
 			}
 			if err := pingOnce(ctx); err != nil {
-				return nil, errors.Wrap(err, "failed to verify connection after reset")
+				// Marvell chipsets sometime fail to come back quickly, so retry.
+				// See b:303543463.
+				if strings.Contains(resetPath, "mwifiex") {
+					testing.ContextLogf(ctx, "Retrying after failure %s for mwifiex", err)
+					if err = pingOnce(ctx); err != nil {
+						return nil, errors.Wrap(err, "failed to verify connection after reset")
+					}
+				} else {
+					return nil, errors.Wrap(err, "failed to verify connection after reset")
+				}
 			}
 		}
 		testing.ContextLogf(ctx, "Finished %d resetings; Start suspending for %s", resetNum, suspendDuration)
