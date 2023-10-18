@@ -258,7 +258,7 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		return i.value
 	}
 
-	flags := pb.GBBFlagsState{Clear: common.AllGBBFlags(), Set: common.FAFTGBBFlags()}
+	flags := pb.GBBFlagsState{Clear: common.NonpreciousGBBFlags(), Set: common.FAFTGBBFlags()}
 	if i.value.ForcesDevMode {
 		if i.value.BootMode == common.BootModeUSBDev {
 			common.GBBAddFlag(&flags, pb.GBBFlag_FORCE_DEV_SWITCH_ON, pb.GBBFlag_DEV_SCREEN_SHORT_DELAY, pb.GBBFlag_FORCE_DEV_BOOT_USB)
@@ -403,7 +403,6 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		i.origBootMode = &mode
 	}
 
-	s.Log("Get current GBB flags")
 	curr, err := common.GetGBBFlags(ctx, i.value.Helper.DUT)
 	if err != nil {
 		s.Fatal("Failed to read GBB flags: ", err)
@@ -413,6 +412,7 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	// This isn't in SetUp to avoid reading GetGBBFlags twice. (It's very slow)
 	if i.origGBBFlags == nil {
 		i.origGBBFlags = common.CopyGBBFlags(curr)
+		i.value.GBBFlags = common.GBBFlagsStateClearSet(curr, i.value.GBBFlags)
 		// For backwards compatibility with Tauto FAFT tests, firmware.no_ec_sync=true will leave DISABLE_EC_SOFTWARE_SYNC set after the test is over. See b/194807451
 		// TODO(jbettis): Consider revisiting this flag with something better.
 		if common.GBBFlagsContains(i.value.GBBFlags, pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC) {
@@ -426,7 +426,7 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if common.GBBFlagsStatesEqual(i.value.GBBFlags, curr) {
 		s.Log("GBBFlags are already proper")
 	} else {
-		s.Log("Setting GBB flags to ", i.value.GBBFlags.Set)
+		s.Log("Pretest setting GBB flags to ", i.value.GBBFlags.Set)
 		if err := common.SetGBBFlags(ctx, i.value.Helper.DUT, i.value.GBBFlags.Set); err != nil {
 			s.Log("Disabling write protect to allow GBB flags to be set")
 			// Read the hardware WP state, and disable if necessary
@@ -585,7 +585,6 @@ func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 
 	if i.origGBBFlags != nil {
-		testing.ContextLog(ctx, "Get current GBB flags")
 		curr, err := common.GetGBBFlags(ctx, i.value.Helper.DUT)
 		if err != nil {
 			s.Fatal("Getting current GBB Flags failed: ", err)
@@ -605,7 +604,7 @@ func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
 				s.Fatal("Restore GBB flags failed: ", err)
 			}
 			if common.GBBFlagsChanged(curr, tempGBBFlags, common.RebootRequiredGBBFlags()) {
-				s.Log("Resetting DUT due to GBB flag change")
+				s.Log("Resetting DUT due to GBB flag change in fixture")
 				rebootRequired = true
 			}
 		}

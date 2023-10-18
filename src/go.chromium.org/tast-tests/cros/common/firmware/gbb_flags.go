@@ -22,17 +22,27 @@ import (
 
 // allGBBFlags has all the GBB Flags in sorted order.
 var allGBBFlags []pb.GBBFlag
+var nonpreciousGBBFlags []pb.GBBFlag
 
 func init() {
 	for _, v := range pb.GBBFlag_value {
 		allGBBFlags = append(allGBBFlags, pb.GBBFlag(v))
+		if pb.GBBFlag(v) != pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC {
+			nonpreciousGBBFlags = append(nonpreciousGBBFlags, pb.GBBFlag(v))
+		}
 	}
 	sort.Slice(allGBBFlags, func(i, j int) bool { return allGBBFlags[i] < allGBBFlags[j] })
+	sort.Slice(nonpreciousGBBFlags, func(i, j int) bool { return nonpreciousGBBFlags[i] < nonpreciousGBBFlags[j] })
 }
 
 // AllGBBFlags returns all the GBB Flags in order by their int values.
 func AllGBBFlags() []pb.GBBFlag {
 	return allGBBFlags
+}
+
+// NonpreciousGBBFlags returns all the GBB Flags in order by their int values, except for the precious ones like DISABLE_EC_SOFTWARE_SYNC.
+func NonpreciousGBBFlags() []pb.GBBFlag {
+	return nonpreciousGBBFlags
 }
 
 // FAFTGBBFlags returns the flags that faft sets before starting a test.
@@ -184,6 +194,17 @@ func clearAndSetGBBFlagsImpl(ctx context.Context, state *pb.GBBFlagsState, getFl
 		testing.ContextLog(ctx, "No GBB change required")
 	}
 	return gbbFlagChanged, nil
+}
+
+// GBBFlagsStateClearSet takes an initial state, and applies the changes in apply to it. It is identical to ClearAndSetGBBFlags, except that it acts on a proto instead of the DUT.
+func GBBFlagsStateClearSet(initial, apply *pb.GBBFlagsState) *pb.GBBFlagsState {
+	currentGBB := CalcGBBMask(initial.Set)
+	clearMask := CalcGBBMask(apply.Clear)
+	setMask := CalcGBBMask(apply.Set)
+	newGBB := CalcGBBBits(currentGBB, clearMask, setMask)
+	return &pb.GBBFlagsState{
+		Set: CalcGBBFlags(newGBB),
+	}
 }
 
 // CalcGBBBits returns the final GBB bits after applying clear and set to curr.
