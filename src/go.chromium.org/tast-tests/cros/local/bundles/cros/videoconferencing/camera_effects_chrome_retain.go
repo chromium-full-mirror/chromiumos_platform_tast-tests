@@ -38,6 +38,7 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Attr: []string{
 			"group:video_conference", "video_conference_per_build",
+			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
 		Data: []string{
 			"effects_frame_metrics.js",

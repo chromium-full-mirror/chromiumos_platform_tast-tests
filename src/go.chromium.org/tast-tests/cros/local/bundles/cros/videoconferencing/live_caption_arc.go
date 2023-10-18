@@ -42,6 +42,7 @@ func init() {
 			"group:external-dependency",
 			"group:video_conference",
 			"video_conference_per_build",
+			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
 		Data:         []string{data.SpeechInputFile},
 		Fixture:      fixture.GAIALoggedInARCWithInternalCameraAndEffectsEnabled,

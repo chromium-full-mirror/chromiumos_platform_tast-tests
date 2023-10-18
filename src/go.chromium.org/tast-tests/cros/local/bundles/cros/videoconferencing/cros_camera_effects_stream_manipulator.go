@@ -31,6 +31,7 @@ func init() {
 			"group:video_conference",
 			"video_conference_per_build",
 			"video_conference_cq_critical",
+			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
 		Fixture:      fixture.LoggedInWithFakeHALAndEffectsEnabled,
 		SoftwareDeps: []string{"camera_feature_effects"},

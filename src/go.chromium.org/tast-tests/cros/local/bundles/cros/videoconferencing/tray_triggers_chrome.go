@@ -58,6 +58,7 @@ func init() {
 		Timeout:      6 * time.Minute,
 		Attr: []string{
 			"group:video_conference", "video_conference_per_build", "group:external-dependency",
+			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),

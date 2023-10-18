@@ -36,6 +36,7 @@ func init() {
 				// into /usr/bin/
 				ExtraAttr: []string{
 					"group:video_conference",
+					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 				Val:               []string{"ml_core_effects_pipeline_test"},
