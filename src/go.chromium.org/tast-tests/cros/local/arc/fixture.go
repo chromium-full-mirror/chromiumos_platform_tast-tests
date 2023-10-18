@@ -141,7 +141,7 @@ func init() {
 		return []chrome.Option{
 			chrome.ARCSupported(),
 			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-			chrome.EnableFeatures("ArcSwitchToKeyMintOnT", "CrOSLateBootArcSwitchToKeyMintDaemon"),
+			chrome.EnableFeatures("ArcSwitchToKeyMintOnT", "ArcSwitchToKeyMintOnTOverride"),
 			chrome.ExtraArgs(DisableSyncFlags()...),
 		}, nil
 	}
@@ -167,7 +167,7 @@ func init() {
 		return []chrome.Option{
 			chrome.ARCSupported(),
 			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-			chrome.DisableFeatures("ArcSwitchToKeyMintOnT", "CrOSLateBootArcSwitchToKeyMintDaemon"),
+			chrome.DisableFeatures("ArcSwitchToKeyMintOnT", "ArcSwitchToKeyMintOnTOverride"),
 			chrome.ExtraArgs(DisableSyncFlags()...),
 		}, nil
 	}
