@@ -42,13 +42,16 @@ type Service struct {
 }
 
 func computeNetworkConfigNetworkType(networkType pb.OpenNetworkDetailPageRequest_NetworkType) (netconfigtypes.NetworkType, error) {
-	if networkType == pb.OpenNetworkDetailPageRequest_CELLULAR {
+	switch networkType {
+	case pb.OpenNetworkDetailPageRequest_CELLULAR:
 		return netconfigtypes.Cellular, nil
-	}
-	if networkType == pb.OpenNetworkDetailPageRequest_WIFI {
+	case pb.OpenNetworkDetailPageRequest_WIFI:
 		return netconfigtypes.WiFi, nil
+	case pb.OpenNetworkDetailPageRequest_ETHERNET:
+		return netconfigtypes.Ethernet, nil
+	default:
+		return 0, errors.New("network type must be Cellular, WiFi, or Ethernet")
 	}
-	return 0, errors.New("Network type must be Cellular or WiFi")
 }
 
 // LaunchAtNetwork will launch the OS Settings application at Network page.

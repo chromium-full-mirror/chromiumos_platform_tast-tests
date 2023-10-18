@@ -31,6 +31,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/utils"
+	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/network"
 	"go.chromium.org/tast-tests/cros/local/network/cmd"
 	local_firewall "go.chromium.org/tast-tests/cros/local/network/firewall"
@@ -3597,4 +3598,42 @@ func (s *ShillService) SetBSSIDRequested(ctx context.Context, req *wifi.SetBSSID
 		return nil, errors.Wrapf(err, "failed to set BSSIDRequested to %s", req.Bssid)
 	}
 	return &empty.Empty{}, nil
+}
+
+// GetProperties returns the specified shill properties.
+func (s *ShillService) GetProperties(ctx context.Context, req *wifi.GetPropertiesRequest) (*wifi.GetPropertiesResponse, error) {
+	var props *dbusutil.Properties
+	// Getting the properities of default service if the service is not specified.
+	if req.ServicePath == nil {
+		m, err := shill.NewManager(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create a manager object")
+		}
+		if props, err = m.GetProperties(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to get properties")
+		}
+	} else {
+		service, err := shill.NewService(ctx, dbus.ObjectPath(req.GetServicePath()))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create a new shill service")
+		}
+		if props, err = service.GetProperties(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to get properties")
+		}
+	}
+
+	resp := &wifi.GetPropertiesResponse{Props: map[string]*wifi.ShillVal{}}
+	for _, name := range req.GetPropertyNames() {
+		prop, err := props.Get(name)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to get property %q", name)
+		}
+		val, err := protoutil.ToShillVal(prop)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to encode property value to shill value")
+		}
+		resp.Props[name] = val
+	}
+
+	return resp, nil
 }

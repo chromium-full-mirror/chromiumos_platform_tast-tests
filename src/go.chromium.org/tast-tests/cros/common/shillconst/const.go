@@ -126,6 +126,7 @@ const (
 	ManagerPropertyDOHProviders                       = "DNSProxyDOHProviders"
 	ManagerPropertyPortalHTTPSURL                     = "PortalHttpsUrl"
 	ManagerPropertyDefaultService                     = "DefaultService"
+	ManagerPropertyDefaultTechnology                  = "DefaultTechnology"
 	ManagerPropertyTetheringConfig                    = "TetheringConfig"
 	ManagerPropertyEnableDHCPQos                      = "EnableDHCPQoS"
 )

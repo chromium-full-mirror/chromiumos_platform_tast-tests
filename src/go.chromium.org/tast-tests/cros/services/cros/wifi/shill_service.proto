@@ -239,6 +239,9 @@ service ShillService {
 
   // SetBSSIDRequested sets the BSSIDRequested service property value.
   rpc SetBSSIDRequested(SetBSSIDRequestedRequest) returns (google.protobuf.Empty) {}
+
+  // GetProperties returns the specified shill properties.
+  rpc GetProperties(GetPropertiesRequest) returns (GetPropertiesResponse) {}
 }
 
 message ConnectRequest {
@@ -675,4 +678,13 @@ message GetTetheringConfigResponse {
 message SetBSSIDRequestedRequest {
   string service_path = 1;
   string bssid = 2;
+}
+
+message GetPropertiesRequest {
+  optional string service_path = 1;
+  repeated string property_names = 2;
+}
+
+message GetPropertiesResponse {
+  map<string, ShillVal> props = 1;
 }

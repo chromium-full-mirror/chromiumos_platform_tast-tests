@@ -94,6 +94,9 @@ const (
 
 	// ChromeUIServiceName is the name of the chrome ui service.
 	ChromeUIServiceName = "tast.cros.ui.ChromeUIService"
+
+	// WifiUIServiceName is the name of the Wi-Fi ui service.
+	WifiUIServiceName = "tast.cros.wifi.WifiService"
 )
 
 // TODO(b/232150137): Using a different subnet than other ip addrs in Tast.

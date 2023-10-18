@@ -6,6 +6,8 @@
 package protoutil
 
 import (
+	"github.com/godbus/dbus/v5"
+
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/errors"
 )
@@ -95,6 +97,12 @@ func ToShillVal(i interface{}) (*wifi.ShillVal, error) {
 		return &wifi.ShillVal{
 			Val: &wifi.ShillVal_StrArray{
 				StrArray: &wifi.StrArray{Vals: x},
+			},
+		}, nil
+	case dbus.ObjectPath:
+		return &wifi.ShillVal{
+			Val: &wifi.ShillVal_Str{
+				Str: string(x),
 			},
 		}, nil
 	default:

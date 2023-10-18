@@ -61,6 +61,7 @@ message OpenNetworkDetailPageRequest {
   enum NetworkType {
     CELLULAR = 0;
     WIFI = 1;
+    ETHERNET = 2;
   }
 
   // The name of the network.
