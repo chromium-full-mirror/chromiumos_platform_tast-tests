@@ -40,7 +40,7 @@ func init() {
 			Name: "lacros",
 			// TODO(b/239469085): Remove "informational" attribute.
 			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
+			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Val:               browser.TypeLacros,
 			Fixture:           "lacrosWithArcBooted",
 		}, {

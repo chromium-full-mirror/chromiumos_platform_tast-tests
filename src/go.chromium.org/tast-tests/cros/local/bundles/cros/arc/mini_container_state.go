@@ -21,7 +21,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		Attr:         []string{"group:mainline", "informational"},
-		// TODO(crbug.com/952125): Consider to relax the SoftwareDeps.
+		// Container-R doesn't support mini-container.
 		SoftwareDeps: []string{"android_p", "chrome"},
 		Timeout:      4 * time.Minute,
 	})

@@ -33,11 +33,11 @@ func init() {
 		Attr:         []string{"group:arc", "arc_core", "group:arc-functional", "arc_chromeos_vm"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "familyLinkParentArcLogin",
 		}, {
 			Name:              "unicorn",
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "familyLinkUnicornArcLogin",
 		}, {
 			Name:              "vm",

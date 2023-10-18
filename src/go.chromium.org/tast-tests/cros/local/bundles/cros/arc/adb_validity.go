@@ -29,7 +29,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			// b:238260020 - disable aged (>1y) unpromoted informational tests
 			// ExtraAttr:         []string{"group:mainline", "informational"},
 		}, {

@@ -36,7 +36,7 @@ func init() {
 		BugComponent: "b:153255",
 		// TODO(b/245411884): Re-enable this test.
 		// Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"android_p", "chrome", "selinux"},
+		SoftwareDeps: []string{"android_container", "chrome", "selinux"},
 		Timeout:      5 * time.Minute,
 	})
 }
