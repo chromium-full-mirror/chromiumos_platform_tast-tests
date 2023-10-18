@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const imageProcessorUnitTestBin = "image_processor_test"
@@ -77,7 +78,20 @@ func init() {
 					"images/puppets-640x360.yuyv.yuv",
 					"images/puppets-640x360.yuyv.yuv.json",
 				},
-				Val: "*",
+				// Note: this regex tells gtest_filter to execute every test except for the Vulkan ones.
+				Val: "*-*Vulkan*",
+			},
+			{
+				Name:    "image_processor_unit_test_vulkan",
+				Timeout: 5 * time.Minute,
+				ExtraData: []string{
+					"images/bear_320x192.rgba",
+					"images/bear_320x192.rgba.json",
+					"images/puppets-480x270.mm21.yuv",
+					"images/puppets-480x270.mm21.yuv.json",
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				Val:               "*Vulkan*",
 			},
 		},
 	})
