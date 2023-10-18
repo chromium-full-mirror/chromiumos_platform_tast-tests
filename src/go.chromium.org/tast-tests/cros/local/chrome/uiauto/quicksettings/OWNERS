@@ -1,0 +1,13 @@
+set noparent
+
+# ChromeOS status area, notifiers and calendar team.
+amehfooz@chromium.org
+etuck@chromium.org
+jiamingc@chromium.org
+kradtke@chromium.org
+leandre@chromium.org
+newcomer@chromium.org
+sylvieliu@chromium.org
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
