@@ -35,3 +35,11 @@ type ChargeParams struct {
 	// brightness instead of 0 for fast charging.
 	IsPowerQual bool
 }
+
+// IdleParams defines the screen & bluetooth on/off behavior and the time params
+// for a idle test.
+type IdleParams struct {
+	DisplayPower   bool
+	BluetoothPower bool
+	IdleTimeParams TimeParams
+}
