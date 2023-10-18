@@ -222,6 +222,14 @@ var UpdateEngineDaemon = &DaemonInfo{
 	DBusName:   "org.chromium.UpdateEngine",
 }
 
+// DeviceManagementDaemon represents the DaemonsInfo for device_management daemon.
+var DeviceManagementDaemon = &DaemonInfo{
+	Name:       "device_management",
+	DaemonName: "device_managementd",
+	HasDBus:    true,
+	DBusName:   "org.chromium.DeviceManagement",
+}
+
 // HighLevelTPMDaemons represents the high level TPM daemons.
 var HighLevelTPMDaemons = []*DaemonInfo{
 	TPMManagerDaemon,
@@ -231,6 +239,7 @@ var HighLevelTPMDaemons = []*DaemonInfo{
 	AttestationDaemon,
 	U2fdDaemon,
 	CryptohomeDaemon,
+	DeviceManagementDaemon,
 }
 
 // StatefulDaemons represents the daemons using disk state that is wiped on
