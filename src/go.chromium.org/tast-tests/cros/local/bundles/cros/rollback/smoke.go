@@ -5,7 +5,9 @@
 package rollback
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"io/fs"
 	"os"
 	"os/user"
@@ -53,6 +55,16 @@ func init() {
 		}, {
 			Name: "cleanup_files_if_oobe_is_completed",
 			Val:  cleanupFilesIfOobeIsCompletedTest,
+		}, {
+			Name:              "tpm_encryption",
+			Val:               tpmEncryptionTest,
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpmNvramRollbackSpace()),
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+		}, {
+			Name:              "cleanup_zeroes_tpm_space",
+			Val:               cleanupZeroesTpmSpaceTest,
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpmNvramRollbackSpace()),
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
@@ -62,6 +74,8 @@ func init() {
 const corruptData = "54686572652061726520616C7761797320636F7272757074206D656E2077686F20686F61726420706F77" +
 	"657220666F72207468656972206F776E206761696E2E2E2E2E2E6275742074686572652061726520616C776179732068" +
 	"6F6E6F7261626C65206D656E2077686F20686F61726420706F77657220746F206669676874207468656D2E"
+
+var zeroTpmSpace = [32]byte{}
 
 const dataSaveFlag = "/mnt/stateful_partition/.save_rollback_data"
 const sslEncryptedRollbackData = "/mnt/stateful_partition/unencrypted/preserve/rollback_data"
@@ -83,6 +97,7 @@ const oobeCompletedFile = "/home/chronos/.oobe_completed"
 // - Sandboxing configurations
 // - Users, groups and access rights
 // - Upstart configurations
+// - Communication with a real TPM
 // Before adding a test, consider whether your test will contribute towards the above goals.
 // If it does not, it may be more suitable to create a unit test.
 func Smoke(ctx context.Context, s *testing.State) {
@@ -207,6 +222,120 @@ func cleanupFilesIfOobeIsCompletedTest(ctx context.Context, s *testing.State) {
 		metricsData}); err != nil {
 		s.Fatal("Failure when checking that all rollback data was cleaned up: ", err)
 	}
+}
+
+// tpmEncryptionTest runs encryption and decryption using the rollback TPM space.
+// It verifies that encrypted file and decrypted file are present and enforces use of TPM encryption.
+func tpmEncryptionTest(ctx context.Context, s *testing.State) {
+	defer cleanupRollbackFiles(ctx)
+
+	if err := triggerTpmEncryption(ctx); err != nil {
+		s.Fatal("Failed to encrypt with TPM: ", err)
+	}
+
+	// Check that rollback space is not 0.
+	secret, err := readRollbackTpmNvramSpace(ctx)
+	if err != nil {
+		s.Fatal("Failed to read rollback space: ", err)
+	}
+	if bytes.Equal(secret, zeroTpmSpace[:]) {
+		s.Fatal("TPM space is still zero after encrypting")
+	}
+
+	// Delete the fallback openssl encrypted data to force code to use TPM encrypted file.
+	if err := os.Remove(sslEncryptedRollbackData); err != nil {
+		s.Fatal("Failed to remove SSL encrypted rollback data: ", err)
+	}
+
+	// Decrypt.
+	if err := upstart.RestartJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to restart ui to decrypt: ", err)
+	}
+	// Ui will request rollback data, which triggers decryption. Wait for that to finish.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := checkFileExists(decryptedRollbackData); err != nil {
+			return errors.Wrap(err, "could not find decrypted rollback data")
+		}
+		// After decryption, rollback space is reset. Check the space is 0 again.
+		secret, err = readRollbackTpmNvramSpace(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to read rollback space"))
+		}
+		if !bytes.Equal(secret, zeroTpmSpace[:]) {
+			return errors.Wrapf(err, "TPM space is %v, wanted %v", secret, zeroTpmSpace)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: time.Second * 10}); err != nil {
+		s.Fatal("Failure while waiting for successful decryption: ", err)
+	}
+}
+
+// cleanupZeroesTpmSpaceTest verifies that running oobe_config_restore upstart job triggers
+// cleaning the rollback TPM space if OOBE is completed.
+func cleanupZeroesTpmSpaceTest(ctx context.Context, s *testing.State) {
+	defer cleanupRollbackFiles(ctx)
+
+	if err := triggerTpmEncryption(ctx); err != nil {
+		s.Fatal("Failed to encrypt with TPM: ", err)
+	}
+
+	// Check that rollback space is not 0.
+	secret, err := readRollbackTpmNvramSpace(ctx)
+	if err != nil {
+		s.Fatal("Failed to read rollback space: ", err)
+	}
+	if bytes.Equal(secret, zeroTpmSpace[:]) {
+		s.Fatal("TPM space is still zero after encrypting")
+	}
+
+	// Fake oobe is completed and check that the space is cleared.
+	if err := testexec.CommandContext(ctx, "touch", oobeCompletedFile).Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to fake oobe completion: ", err)
+	}
+
+	if err := upstart.RestartJob(ctx, "oobe_config_restore"); err != nil {
+		s.Fatal("Failed to restart oobe_config_restore: ", err)
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		secret, err = readRollbackTpmNvramSpace(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to read rollback space"))
+		}
+		if !bytes.Equal(secret, zeroTpmSpace[:]) {
+			return errors.Wrapf(err, "TPM space is %v, wanted %v", secret, zeroTpmSpace)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: time.Second * 10}); err != nil {
+		s.Fatal("Failure while waiting for TPM space reset: ", err)
+	}
+}
+
+func triggerTpmEncryption(ctx context.Context) error {
+	if err := testexec.CommandContext(ctx, "systemd-tmpfiles", "--create", "--remove", "--clean", "/usr/lib/tmpfiles.d/on-demand/oobe_config_save.conf").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to run tmpfiles for oobe_config_save")
+	}
+	if err := testexec.CommandContext(ctx, "sudo", "-u", "oobe_config_save", "-g", "oobe_config", "--", "oobe_config_save", "-tpm_encrypt").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to run oobe_config_save executable")
+	}
+	return nil
+}
+
+func readRollbackTpmNvramSpace(ctx context.Context) ([]byte, error) {
+	tmpFile, err := os.CreateTemp("", "rollback_space_content_*")
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "failed to create tmp file")
+	}
+	defer os.Remove(tmpFile.Name())
+	defer tmpFile.Close()
+
+	if err := testexec.CommandContext(ctx, "tpm_manager_client", "read_space", "--index=0x100e", fmt.Sprintf("--file=%v", tmpFile.Name())).Run(testexec.DumpLogOnError); err != nil {
+		return []byte{}, errors.Wrap(err, "failed to read NVRAM data")
+	}
+	spaceContent, err := os.ReadFile(tmpFile.Name())
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "failed to read tmp file")
+	}
+	return spaceContent, nil
 }
 
 // fakePrecedingRollback can be used for setup, it creates files that would be left by a preceding rollback.
