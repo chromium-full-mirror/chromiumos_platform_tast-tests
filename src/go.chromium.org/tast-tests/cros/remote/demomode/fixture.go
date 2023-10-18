@@ -22,7 +22,7 @@ import (
 
 const (
 	setUpTimeout    = 350 * time.Second
-	tearDownTimeout = 25 * time.Second
+	tearDownTimeout = 60 * time.Second
 )
 
 func init() {
@@ -109,7 +109,7 @@ type fixtureImpl struct {
 var _ testing.FixtureImpl = &fixtureImpl{}
 
 func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	if err := policyutil.EnsureTPMAndSystemStateAreResetLocal(ctx, s.DUT(), s.RPCHint()); err != nil {
+	if err := policyutil.EnsureTPMAndSystemStateAreResetRemote(ctx, s.DUT()); err != nil {
 		s.Fatal("Failed to reset TPM before tests: ", err)
 	}
 
@@ -192,7 +192,7 @@ func (f *fixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Fatal("Failed to deprovision device: ", err)
 	}
 
-	if err := policyutil.EnsureTPMAndSystemStateAreResetLocal(ctx, s.DUT(), s.RPCHint()); err != nil {
+	if err := policyutil.EnsureTPMAndSystemStateAreResetRemote(ctx, s.DUT()); err != nil {
 		s.Fatal("Failed to reset TPM after tests: ", err)
 	}
 }
