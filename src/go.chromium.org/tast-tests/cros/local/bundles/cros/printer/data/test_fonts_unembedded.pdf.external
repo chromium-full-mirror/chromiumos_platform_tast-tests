@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/test_fonts_unembedded_20231018.pdf",
+  "size": 37840,
+  "sha256sum": "651397defe246c0b854e71be9b88ef91f4530f77d33875f89cad28d3c2036570"
+}

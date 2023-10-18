@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/Example_1_golden_20231024.pwg",
+  "size": 12368668,
+  "sha256sum": "a94d83f95b08157b296fcec32dd6371b09ae2ceadd5168e15de9f014699ff254"
+}
