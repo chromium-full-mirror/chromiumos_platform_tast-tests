@@ -671,7 +671,7 @@ func (t *Tester) waitHibermanResumeDone(ctx context.Context) error {
 }
 
 func (t *Tester) getKernelLog(ctx context.Context) (string, error) {
-	out, err := t.dut.Conn().CommandContext(ctx, "dmesg", "--since", "1 minute ago").Output()
+	out, err := t.dut.Conn().CommandContext(ctx, "dmesg", "-k").Output()
 	if err != nil {
 		return "", err
 	}
