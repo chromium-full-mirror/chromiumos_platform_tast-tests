@@ -1363,8 +1363,13 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			// environment but ignore the PlayStore optin procedure and
 			// avoid the ARC login overhead. It is used for tests involving
 			// no ARC Apps.
+			//
+			// In tests that use ARC Supported, also use
+			// ArcLmkPerceptibleMinStateUpdate, to prevent apps from being
+			// killed under perceptible memory pressure.
+			// TODO(b/279498529) Remove this flag when it is fully rolled out.
 			if f.arcSupported {
-				opts = append(opts, chrome.ARCSupported())
+				opts = append(opts, chrome.ARCSupported(), chrome.EnableFeatures("ArcLmkPerceptibleMinStateUpdate"))
 			} else {
 				opts = append(opts, chrome.ARCEnabled())
 			}
