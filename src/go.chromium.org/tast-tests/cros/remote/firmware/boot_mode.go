@@ -36,7 +36,7 @@ const (
 	PowerStateTimeout = 120 * time.Second
 
 	// powerOffTimeout is the timeout to wait for the DUT reach G3 or ssh to disconnect before trying harder to power off.
-	powerOffTimeout = 20 * time.Second
+	powerOffTimeout = 30 * time.Second
 
 	// PowerStateInterval is the interval to wait before polling DUT powerstate.
 	PowerStateInterval = 1 * time.Second
