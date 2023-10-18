@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -72,8 +73,6 @@ const (
 
 	highResFakeCameraFileName = "1080p_camera_video.mjpeg"
 	lowResFakeCameraFileName  = "720p_camera_video.mjpeg"
-
-	hrtimerPath = "/proc/sys/kernel/timer_highres"
 )
 
 // isLocalVar is a runtime variable that specifies whether to skip
@@ -161,6 +160,32 @@ func init() {
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangs",
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "prepareForCUJHighResTimerOff",
+		Desc: "The fixture to prepare DUT for CUJ tests with high res timer off",
+		Contacts: []string{
+			"hsinyi@google.com",
+			"joelaf@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl:            &prepareCUJFixture{},
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Parent:          fixture.HighResTimerOffGpuWatchHangs,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "prepareForCUJHighResTimerOffWithCharge",
+		Desc: "The fixture to prepare DUT for CUJ tests with high res timer off and charge",
+		Contacts: []string{
+			"hsinyi@google.com",
+			"joelaf@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl:            &prepareCUJFixture{chargeBattery: true},
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Parent:          fixture.HighResTimerOffGpuWatchHangs,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "prepareForCUJWithCharge",
@@ -346,14 +371,13 @@ func init() {
 			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{
-			bt:         browser.TypeAsh,
-			keepState:  true,
-			hrtimerOff: true,
+			bt:        browser.TypeAsh,
+			keepState: true,
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("--allow-insecure-localhost"),
 			},
 		},
-		Parent:          "prepareForCUJWithCharge",
+		Parent:          "prepareForCUJHighResTimerOffWithCharge",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -718,7 +742,7 @@ func init() {
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingAndHighResTimerOff",
-		Desc: "CUJ test fixture with WebRTC event logging and turn off hrtimer",
+		Desc: "CUJ test fixture with WebRTC event logging and turn off high res timer",
 		Contacts: []string{
 			"hsinyi@google.com",
 			"joelaf@google.com",
@@ -731,9 +755,8 @@ func init() {
 			},
 			bt:          browser.TypeAsh,
 			docsBlocker: true,
-			hrtimerOff:  true,
 		},
-		Parent:          "prepareForCUJ",
+		Parent:          "prepareForCUJHighResTimerOff",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -880,10 +903,9 @@ func init() {
 			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{
-			bt:         browser.TypeAsh,
-			hrtimerOff: true,
+			bt: browser.TypeAsh,
 		},
-		Parent:          "prepareForCUJ",
+		Parent:          "prepareForCUJHighResTimerOff",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -925,9 +947,8 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			bt:           browser.TypeAsh,
 			arcSupported: true,
-			hrtimerOff:   true,
 		},
-		Parent:          "prepareForCUJ",
+		Parent:          "prepareForCUJHighResTimerOff",
 		SetUpTimeout:    setUpWithOptinTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -1372,7 +1393,6 @@ type loggedInToCUJUserFixture struct {
 	disableARC         bool
 	arcSupported       bool // Use ARCSupported flag instead of ARCEnabled.
 	enableChromeVox    bool
-	hrtimerOff         bool // Turn off highres timer. TODO(b/298151007): Remove when sufficient data is collected.
 	cleanupTheme       func(ctx context.Context) error
 }
 
@@ -1402,11 +1422,6 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		}
 		if f.keepState {
 			opts = append(opts, chrome.KeepState())
-		}
-		if f.hrtimerOff {
-			if err := os.WriteFile(hrtimerPath, []byte("0"), 0); err != nil {
-				s.Fatal("Failed to turn off hrtimer: ", err)
-			}
 		}
 		if !f.disableARC {
 			// When arcSupported is set, use the chrome.ARCSupported flag to
@@ -1680,12 +1695,6 @@ func (f *loggedInToCUJUserFixture) TearDown(ctx context.Context, s *testing.Fixt
 	if f.cleanupTheme != nil {
 		if err := f.cleanupTheme(ctx); err != nil {
 			s.Log("Failed to cleanup theme: ", err)
-		}
-	}
-
-	if f.hrtimerOff {
-		if err := os.WriteFile(hrtimerPath, []byte("1"), 0); err != nil {
-			s.Fatal("Failed to reset hrtimer: ", err)
 		}
 	}
 

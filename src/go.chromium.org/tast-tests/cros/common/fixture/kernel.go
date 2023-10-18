@@ -10,4 +10,6 @@ const (
 	HighResTimerOff = "highResTimerOff"
 	// HighResTimerOffEnrolled is the same as HighResTimerOff with enrollment.
 	HighResTimerOffEnrolled = "highResTimerOffEnrolled"
+	// HighResTimerOff with gpuWatchHangs as parent.
+	HighResTimerOffGpuWatchHangs = "highResTimerOffGpuWatchHangs"
 )
