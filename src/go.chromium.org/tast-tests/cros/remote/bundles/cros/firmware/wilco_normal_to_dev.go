@@ -45,6 +45,13 @@ func WilcoNormalToDev(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get config: ", err)
 	}
 
+	if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, servo.Off); err != nil {
+		s.Fatal("Failed to turn off usb keyboard: ", err)
+	}
+	if err := h.Servo.SetOnOff(ctx, servo.InitKeyboard, servo.On); err != nil {
+		s.Fatal("Failed to turn on internal keyboard: ", err)
+	}
+
 	deviceStates, err := h.CheckPowerSupplyDeviceStates(ctx)
 	if err != nil {
 		s.Fatal("Failed check power supply state: ", err)
