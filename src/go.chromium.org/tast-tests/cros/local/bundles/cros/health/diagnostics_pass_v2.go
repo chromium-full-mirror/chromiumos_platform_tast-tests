@@ -68,7 +68,14 @@ func init() {
 			// Contact: yycheng@google.com
 			Name: "floating_point_v2",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineFloatingPointV2},
-		}}})
+		}, {
+			// Contact: yycheng@google.com
+			Name: "fan",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.Fan},
+			// TODO(b/306101885): Promote to critical.
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		},
+		}})
 }
 
 // DiagnosticsPassV2 is a paramaterized test that runs supported diagnostic

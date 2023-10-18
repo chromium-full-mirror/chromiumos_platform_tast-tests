@@ -32,6 +32,7 @@ const (
 	RoutineVolumeButton    string = "volume_button"
 	RoutineLedLitUp        string = "led_lit_up"
 	RoutineFloatingPointV2 string = "floating_point_v2"
+	Fan                    string = "fan"
 )
 
 // RoutineResultV2 contains the progress of the routine as a percentage and
