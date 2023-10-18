@@ -477,6 +477,11 @@ func (e *Env) makeNetNS(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to enable ipv6 forwarding in %s", e.NetNSName)
 	}
 
+	// Enable IPv6 accept RA.
+	if err := e.RunWithoutChroot(ctx, "sysctl", "-w", "net.ipv6.conf.default.accept_ra=2"); err != nil {
+		return errors.Wrapf(err, "failed to enable ipv6 accept RA in %s", e.NetNSName)
+	}
+
 	// Veth pair will be removed together with netns, so no explicit cleanup is
 	// needed here.
 	if err := testexec.CommandContext(ctx, "ip", "link",

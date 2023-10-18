@@ -56,8 +56,8 @@ const (
 	// The response of HTTP server on the upstream.
 	httpResp = "pong"
 
-	// The customized MTU
-	customMTU = 1248
+	// The customized MTU. The value should be greater than minimum IPv6 MTU (1280).
+	customMTU = 1300
 
 	// The absolute path of each linux command.
 	curlCmdPath     = "/usr/bin/curl"
@@ -205,8 +205,7 @@ func ShillTethering(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start dhclient in downstream env: ", err)
 	}
 
-	// Verify whether the downstream could get the HTTP response from upstream.
-	// TODO(b/288359516): Verify the IPv6 HTTP request as well.
+	// Verify whether the downstream could get the HTTP response from upstream via IPv4.
 	addrs, err := router.GetVethInAddrs(ctx)
 	if err != nil {
 		s.Fatal("Failed to get router's IP: ", err)
@@ -217,6 +216,22 @@ func ShillTethering(ctx context.Context, s *testing.State) {
 		s.Fatal("Got wrong HTTP response content: ", resp)
 	}
 	s.Log("Got the correct HTTP response via IPv4")
+
+	// Verify whether the downstream could get the HTTP response from upstream via IPv6.
+	if len(addrs.IPv6Addrs) == 0 {
+		s.Fatal("Failed to get router's IPv6 address")
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if resp, errResp, err := dsEnv.CreateCommandWithoutChroot(ctx, curlCmdPath, "["+addrs.IPv6Addrs[0].String()+"]").SeparatedOutput(); err != nil {
+			return errors.Wrapf(err, "failed to get HTTP response via IPv6: %s", string(errResp))
+		} else if strings.TrimSpace(string(resp[:])) != httpResp {
+			return testing.PollBreak(errors.New("Got wrong HTTP response content: " + string(resp)))
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 100 * time.Millisecond}); err != nil {
+		s.Fatal("Timeout waiting for downstream device getting HTTP response from upstream via IPv6")
+	}
+	s.Log("Got the correct HTTP response via IPv6")
 
 	// Verify whether the patchpanel gets the correct hostname.
 	pc, err := patchpanel.New(ctx)
