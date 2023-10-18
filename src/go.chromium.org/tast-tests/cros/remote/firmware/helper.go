@@ -872,6 +872,14 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 	testing.ContextLogf(ctx, "Waiting for %s to connect", h.DUT.HostName())
 	dfpFailures := 0
 	for {
+		deadline, ok := ctx.Deadline()
+		if ok {
+			remainingTime := deadline.Sub(time.Now())
+			if remainingTime < 2*time.Second {
+				// There isn't enough time to connect
+				return errors.Errorf("context timeout too short, need at least %s, got %s", 2*time.Second, remainingTime)
+			}
+		}
 		// SetDUTPDDataRole would fail when DUT is still in the process
 		// of waking up from hibernation.
 		if !wcOptsContain(opts, FromHibernation) && hasDUTPDDataRole {
