@@ -409,34 +409,34 @@ func addExtraCheckForChromeOSKernelCI(kcc *kernelConfigCheck, ver *sysutil.Kerne
 func (c *kernelConfigCheck) test(conf map[string]string, s *testing.State) {
 	for _, k := range c.builtin {
 		if got := conf[k]; got != "y" {
-			s.Errorf("%s: got %s, want y", k, got)
+			s.Errorf("%s: got %q, want y", k, got)
 		}
 	}
 	for _, k := range c.module {
 		if got := conf[k]; got != "m" {
-			s.Errorf("%s: got %s, want m", k, got)
+			s.Errorf("%s: got %q, want m", k, got)
 		}
 	}
 	for _, k := range c.enabled {
 		if got := conf[k]; got != "y" && got != "m" {
-			s.Errorf("%s: got %s, want y or m", k, got)
+			s.Errorf("%s: got %q, want y or m", k, got)
 		}
 	}
 	for k, want := range c.value {
 		if got := conf[k]; got != want {
-			s.Errorf("%s: got %s, want %v", k, got, want)
+			s.Errorf("%s: got %q, want %v", k, got, want)
 		}
 	}
 	for _, k := range c.same {
 		if x, y := conf[k[0]], conf[k[1]]; x != y {
-			s.Errorf("Values of %s and %s should be the same but were %s and %s", k[0], k[1], x, y)
+			s.Errorf("Values of %s and %s should be the same but were %q and %q", k[0], k[1], x, y)
 		} else if x == "" {
 			s.Errorf("%s and %s should exist but didn't", k[0], k[1])
 		}
 	}
 	for _, k := range c.missing {
 		if got, ok := conf[k]; ok {
-			s.Errorf("%s should not exist but was %s", k, got)
+			s.Errorf("%s should not exist but was %q", k, got)
 		}
 	}
 
