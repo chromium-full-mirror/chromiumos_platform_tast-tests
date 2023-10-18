@@ -27,7 +27,7 @@ func init() {
 		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:mainline", "group:audio"},
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Fixture:      "lacrosAudioQsRevampEnabled",
+		Fixture:      "lacrosAudio",
 		Timeout:      7 * time.Minute, // A lenient limit for launching Lacros Chrome.
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"lacros_stable"},

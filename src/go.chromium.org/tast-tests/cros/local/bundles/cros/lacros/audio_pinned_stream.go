@@ -27,7 +27,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:audio"},
 		BugComponent: "crbug:OS>LaCrOS",
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Fixture:      "lacrosAudioQsRevampEnabled",
+		Fixture:      "lacrosAudio",
 		Data:         []string{"media_session_60sec_test.ogg", "audio_playback_test.html"},
 		Params: []testing.Param{{
 			Name:              "play",
