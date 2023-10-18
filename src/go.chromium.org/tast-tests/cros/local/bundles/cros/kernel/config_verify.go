@@ -120,7 +120,6 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		"PROC_FS",
 		"SCSI_PROC_FS",
 		"SND_PROC_FS",
-		"USB_CONFIGFS_F_FS",
 
 		// Partition formats.
 		"EFI_PARTITION",
@@ -159,7 +158,6 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		"UDF_FS",
 		"VFAT_FS",
 		"NFS_FS",
-		"USB_F_FS",
 
 		// Needed for tethering of Android phones
 		"USB_NET_RNDIS_HOST",
@@ -207,6 +205,9 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		"PM_STD_PARTITION",
 		// EROFS_FS is used on newer kernels 5.x and up.
 		"EROFS_FS",
+		// USB_CONFIGFS_F_FS/USB_F_FS is used for USB gadget mode on some boards.
+		"USB_CONFIGFS_F_FS",
+		"USB_F_FS",
 	}
 	missing := []string{
 		// Never going to optimize to this CPU.
