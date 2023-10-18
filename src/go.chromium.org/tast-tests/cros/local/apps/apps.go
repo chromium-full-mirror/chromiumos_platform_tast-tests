@@ -394,6 +394,12 @@ var Microsoft365 = App{
 	Name: "Microsoft 365",
 }
 
+// MxPlayer has details about the Mx Player app.
+var MxPlayer = App{
+	ID:   "jhjhbhgfiiaobdfgpehmfopeepmgceob",
+	Name: "MX Player",
+}
+
 // Launch launches an app specified by appID.
 func Launch(ctx context.Context, tconn *chrome.TestConn, appID string) error {
 	_, err := getInstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool { return app.AppID == appID }, nil)

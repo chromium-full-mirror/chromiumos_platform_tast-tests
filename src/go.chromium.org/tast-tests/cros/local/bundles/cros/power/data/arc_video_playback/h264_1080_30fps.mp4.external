@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/power/full_231030/1080p30fpsH264_foodmarket_sync_20231030.mp4",
+  "size": 220364660,
+  "sha256sum": "d681ac0fd62ae3a4fa0e88c52fa19b2f5e7abac8185e99670c370358806fa189"
+}
