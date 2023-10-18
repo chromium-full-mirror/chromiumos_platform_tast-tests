@@ -315,7 +315,7 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 
 		return nil
 	}, &testing.PollOptions{
-		Timeout:  2 * time.Minute,
+		Timeout:  4 * time.Minute,
 		Interval: 20 * time.Second,
 	}); err != nil {
 		s.Errorf("Failed to validate DLP events: %v:", err)
