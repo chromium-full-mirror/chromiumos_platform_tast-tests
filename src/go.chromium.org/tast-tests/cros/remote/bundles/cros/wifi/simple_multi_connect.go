@@ -47,8 +47,8 @@ func SimpleMultiConnect(ctx context.Context, s *testing.State) {
 	*/
 	tf := s.FixtValue().(*wificell.TestFixture)
 
-	if tf.NumberOfDUTs() != 2 {
-		s.Fatal("Test takes exactly 2 DUTs. You Specified ", tf.NumberOfDUTs())
+	if tf.NumberOfDUTs() < 2 {
+		s.Fatal("Test takes at least 2 DUTs. You Specified ", tf.NumberOfDUTs())
 	}
 
 	apIface, err := tf.DefaultOpenNetworkAP(ctx)
@@ -65,13 +65,13 @@ func SimpleMultiConnect(ctx context.Context, s *testing.State) {
 	defer cancel()
 	s.Log("AP setup done")
 
-	DUTs := []wificell.DutIdx{wificell.DefaultDUT, wificell.PeerDUT1}
+	for n := 0; n < tf.NumberOfDUTs(); n++ {
 
-	for _, i := range DUTs {
+		dutID := wificell.DutIdx(n)
 
-		s.Log("Attempting to connect DUT #", i)
+		s.Log("Attempting to connect DUT #", dutID)
 
-		_, err := tf.ConnectWifiAPFromDUT(ctx, i, apIface)
+		_, err := tf.ConnectWifiAPFromDUT(ctx, dutID, apIface)
 		if err != nil {
 			s.Fatal("Failed to connect to WiFi, err: ", err)
 		}
@@ -80,7 +80,7 @@ func SimpleMultiConnect(ctx context.Context, s *testing.State) {
 			if err := tf.DisconnectDUTFromWifi(ctx, idx); err != nil {
 				s.Error("Failed to disconnect WiFi, err: ", err)
 			}
-		}(ctx, i)
+		}(ctx, dutID)
 
 		ctx, cancel = tf.ReserveForDisconnect(ctx)
 		defer cancel()
@@ -97,12 +97,12 @@ func SimpleMultiConnect(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		verifyConnection(ctx, i)
+		verifyConnection(ctx, dutID)
 
 		defer func(ctx context.Context, idx wificell.DutIdx) {
 			s.Logf("Verifying DUT #%d is still connected", idx)
-			verifyConnection(ctx, i)
-		}(ctx, i)
+			verifyConnection(ctx, dutID)
+		}(ctx, dutID)
 
 		s.Log("Deconfiguring")
 	}

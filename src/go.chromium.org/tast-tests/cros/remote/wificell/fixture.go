@@ -458,14 +458,16 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	// Read companion DUT.
 	if f.features&TFFeaturesCompanionDUT != 0 {
-		cd := s.CompanionDUT("cd1")
-		if cd == nil {
-			s.Fatal("Failed to get companion DUT cd1")
-		}
 		ops.RequirePrimaryRouter(false)
-		ops.DutTarget(cd, s.RPCHint())
-		if err := f.recoverUnhealthyDUT(ctx, cd, s); err != nil {
-			s.Fatal("Failed to recover unhealthy DUT: ", err)
+
+		for role, cd := range s.CompanionDUTs() {
+			if cd == nil {
+				s.Fatalf("Failed to get companion DUT %s", role)
+			}
+			ops.DutTarget(cd, s.RPCHint())
+			if err := f.recoverUnhealthyDUT(ctx, cd, s); err != nil {
+				s.Fatalf("Failed to recover unhealthy DUT %s: %s", role, err)
+			}
 		}
 	}
 
