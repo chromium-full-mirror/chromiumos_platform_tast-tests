@@ -142,60 +142,62 @@ func IsFileManaged(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestCo
 	return nil
 }
 
-// VerifyWarning verifies expected status of a DLP warning dialog.
+// VerifyWarning verifies expected status of a DLP warning notification.
 // If shouldAppear is true, waits for the warning to appear, otherwise ensures it doesn't appear.
-func VerifyWarning(ctx context.Context, ui *uiauto.Context, shouldAppear bool) error {
-	dialogNode := nodewith.NameRegex(regexp.MustCompile("(Copy|Transfer) confidential file?"))
+func VerifyWarning(ctx context.Context, tconn *chrome.TestConn, shouldAppear bool) error {
+	filesApp, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to existing Files app")
+	}
+
+	proceedButton := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("(Copy|Transfer) anyway"))
 	if shouldAppear {
-		if err := ui.WaitUntilExists(dialogNode)(ctx); err != nil {
+		if err := filesApp.WaitUntilExists(proceedButton)(ctx); err != nil {
 			return errors.Wrap(err, "failed to wait for DLP warning")
 		}
 	} else {
-		if err := ui.EnsureGoneFor(dialogNode, 10*time.Second)(ctx); err != nil {
+		if err := filesApp.EnsureGoneFor(proceedButton, 10*time.Second)(ctx); err != nil {
 			return errors.Wrap(err, "failed to ensure DLP warning gone")
 		}
 	}
 	return nil
 }
 
-// AcceptWarningAndVerify accepts the DLP warning dialog and verifies that the file was copied.
+// AcceptWarningAndVerify accepts the DLP warning notification and verifies that the file was copied.
 // Assumes that Files App is opened in the correct directory.
-func AcceptWarningAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, filename string) error {
+func AcceptWarningAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, filename string) error {
 	filesApp, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to existing Files app")
 	}
+	proceedButton := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("(Copy|Transfer) anyway"))
 
-	// Proceed with the paste.
-	if err := kb.Accel(ctx, "Enter"); err != nil {
-		return errors.Wrap(err, "failed to hit Enter")
-	}
-
-	if err := uiauto.Combine("Ensure file was copied",
-		filesApp.WaitForFile(filename),
+	if err := uiauto.Combine("Click proceed button",
+		filesApp.WaitUntilExists(proceedButton),
+		ui.DoDefault(proceedButton),
+		filesApp.WithTimeout(10*time.Second).WaitForFile(filename),
 	)(ctx); err != nil {
-		return errors.Wrap(err, "file was not copied while it should")
+		return errors.Wrap(err, "failed to proceed the warning")
 	}
 	return nil
 }
 
-// CancelWarningAndVerify cancels the DLP warning dialog and verifies that the file wasn't copied.
+// CancelWarningAndVerify cancels the DLP warning notification and verifies that the file wasn't copied.
 // Assumes that Files App is opened in the correct directory.
-func CancelWarningAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, filename string) error {
+func CancelWarningAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, filename string) error {
 	filesApp, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to existing Files app")
 	}
 
-	// Cancel the paste.
-	if err := kb.Accel(ctx, "Esc"); err != nil {
-		return errors.Wrap(err, "failed to hit Esc")
-	}
+	cancelButton := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("Cancel"))
 
-	if err := uiauto.Combine("Ensure file wasn't copied",
+	if err := uiauto.Combine("Click cancel button",
+		filesApp.WaitUntilExists(cancelButton),
+		ui.DoDefault(cancelButton),
 		filesApp.EnsureFileGone(filename, 10*time.Second),
 	)(ctx); err != nil {
-		return errors.Wrap(err, "file was copied while it shouldn't")
+		return errors.Wrap(err, "failed to cancel the warning")
 	}
 	return nil
 }
