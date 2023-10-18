@@ -1,10 +1,5 @@
 set noparent
 include /OWNERS.tast
 
-apronin@chromium.org
-betuls@google.com
-dlunev@chromium.org
-hardikgoyal@chromium.org
-jadmanski@chromium.org
-yich@google.com
-zuan@chromium.org
+# Cryptohome tests are owned by the Cryptohome code owners
+include chromiumos/platform2:/cryptohome/OWNERS.primary
