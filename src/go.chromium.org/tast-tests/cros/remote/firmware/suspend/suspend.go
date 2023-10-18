@@ -122,10 +122,19 @@ func (s *Context) SuspendDUTAllTypes(args SuspendArgs) error {
 		return errors.Errorf("failed to invoke powerd_dbus_suspend: %s", err)
 	}
 
-	if err := s.h.WaitForPowerStates(s.ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S3", "S0ix"); err != nil {
-		return errors.Errorf("failed to suspend: %s", err)
+	if err := s.h.RequireConfig(s.ctx); err != nil {
+		return errors.Wrap(err, "requiring firmware config")
 	}
-
+	if s.h.Config.ChromeEC {
+		if err := s.h.WaitForPowerStates(s.ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S3", "S0ix"); err != nil {
+			return errors.Errorf("failed to suspend: %s", err)
+		}
+	}
+	offCtx, cancel := context.WithTimeout(s.ctx, firmware.PowerStateTimeout)
+	defer cancel()
+	if err := s.h.DUT.WaitUnreachable(offCtx); err != nil {
+		return errors.Wrap(err, "waiting for DUT to be unreachable after suspend")
+	}
 	return nil
 }
 
@@ -135,8 +144,13 @@ func (s *Context) WakeDUT(args WakeArgs) error {
 		return errors.Errorf("failed to press power key on DUT: %s", err)
 	}
 
-	if err := s.h.WaitForPowerStates(s.ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
-		return errors.Errorf("DUT failed to reach S0 after power button pressed: %s", err)
+	if err := s.h.RequireConfig(s.ctx); err != nil {
+		return errors.Wrap(err, "requiring firmware config")
+	}
+	if s.h.Config.ChromeEC {
+		if err := s.h.WaitForPowerStates(s.ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
+			return errors.Errorf("DUT failed to reach S0 after power button pressed: %s", err)
+		}
 	}
 
 	err := testing.Poll(s.ctx, func(ctx context.Context) error {
