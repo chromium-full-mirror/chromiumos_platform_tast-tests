@@ -47,7 +47,7 @@ func init() {
 			"ui.gaiaPoolDefault",
 			"ui.signinProfileTestExtensionManifestKey",
 		},
-		Timeout: chrome.GAIALoginTimeout + 2*chrome.LoginTimeout + userutil.TakingOwnershipTimeout + time.Minute,
+		Timeout: 2*chrome.GAIALoginTimeout + chrome.LoginTimeout + userutil.TakingOwnershipTimeout + time.Minute,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Credentials sync - successful password change.
@@ -64,7 +64,7 @@ func init() {
 }
 
 func ChangePassword(ctx context.Context, s *testing.State) {
-	var fakeCreds chrome.Creds
+	var initialCreds chrome.Creds
 	var gaiaCreds chrome.Creds
 	var normalizedUser string
 
@@ -85,11 +85,12 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to parse creds: ", err)
 		}
 
-		fakeCreds = gaiaCreds
-		// Add something to the password so when user logs in again - password change would be detected.
-		fakeCreds.Pass = "fake" + fakeCreds.Pass
+		initialCreds = gaiaCreds
+		// Add a whitespace to the password, so when user logs in again - password change would be detected.
+		// Note: the password with a whitespace will still be accepted by Gaia.
+		initialCreds.Pass = " " + initialCreds.Pass
 		cr, err := chrome.New(
-			ctx, chrome.FakeLogin(fakeCreds))
+			ctx, chrome.GAIALogin(initialCreds))
 		if err != nil {
 			s.Fatal("Failed to create a user: ", err)
 		}
@@ -135,7 +136,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#gaia-password-changed').hidden", 10*time.Second); err != nil {
 			s.Fatal("Failed to wait for the gaia password changed screen: ", err)
 		}
-		if err := oobeConn.Eval(ctx, fmt.Sprintf("document.querySelector('#gaia-password-changed').$.oldPasswordInput.value = '%s'", fakeCreds.Pass), nil); err != nil {
+		if err := oobeConn.Eval(ctx, fmt.Sprintf("document.querySelector('#gaia-password-changed').$.oldPasswordInput.value = '%s'", initialCreds.Pass), nil); err != nil {
 			s.Fatal("Failed to enter old password: ", err)
 		}
 		if err := oobeConn.Eval(ctx, "document.querySelector('#gaia-password-changed').$.next.click()", nil); err != nil {
@@ -145,7 +146,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for OOBE to be dismissed: ", err)
 		}
 
-		// Write test file to check that data persisted on password change.
+		// Read test file to check that data persisted on password change.
 		if content, err := hwsec.ReadUserTestContent(ctx, cryptohome, cmdRunner, normalizedUser, testFile); err != nil {
 			s.Fatal("Failed to read a user test file: ", err)
 		} else if !bytes.Equal(content, []byte(testData)) {
@@ -187,6 +188,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to login: ", err)
 	}
 
+	// Read test file to check that data persisted after login with updated password.
 	if content, err := hwsec.ReadUserTestContent(ctx, cryptohome, cmdRunner, normalizedUser, testFile); err != nil {
 		s.Fatal("Failed to read a user test file: ", err)
 	} else if !bytes.Equal(content, []byte(testData)) {
