@@ -141,6 +141,11 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to check tethering readiness: %s. Status: %q", err, status)
 	}
+	if status == shillconst.TetheringReadinessNotAllowedByCarrier {
+		// There is nothing else to test. Return early
+		s.Log("Carrier does not allow tethering")
+		return
+	}
 	if status != shillconst.TetheringReadinessReady {
 		s.Fatalf("Got TetheringReadiness %q, want %q", status, shillconst.TetheringReadinessReady)
 	}
