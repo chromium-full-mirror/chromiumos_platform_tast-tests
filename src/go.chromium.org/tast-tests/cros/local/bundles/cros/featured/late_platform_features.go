@@ -35,7 +35,7 @@ func init() {
 		BugComponent: "b:1096648",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      chrome.LoginTimeout + 20*time.Second,
+		Timeout:      chrome.MinLoginTimeout + 20*time.Second,
 		Params: []testing.Param{{
 			Name: "file_exists_enabled",
 			Val: latePlatformParams{
