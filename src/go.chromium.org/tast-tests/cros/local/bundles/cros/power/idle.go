@@ -6,13 +6,9 @@ package power
 
 import (
 	"context"
-	"regexp"
-	"strconv"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	cupstart "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -80,91 +76,11 @@ func stopPowerDrawServices(ctx context.Context) (func(ctx context.Context), erro
 	return cleanup, nil
 }
 
-// TODO(hidehiko): Consolidate with perf.BatteryInfoTracker.
-type batteryState struct {
-	sysfsPowerPath string
-	metrics        map[string]perf.Metric
-}
-
-var _ perf.TimelineDatasource = &batteryState{}
-
-func (b *batteryState) Setup(ctx context.Context, prefix, intervalName string) error {
-	// Obtain the status before modifying internal state.
-	status, err := power.ReadBatteryStatus(ctx, b.sysfsPowerPath)
-	if err != nil {
-		return err
-	}
-
-	b.metrics = map[string]perf.Metric{}
-	b.metrics["percentage"] = perf.Metric{
-		Name:      prefix + "percent",
-		Unit:      "percent",
-		Direction: perf.BiggerIsBetter,
-		Multiple:  true,
-		Interval:  intervalName,
-	}
-	if status == power.BatteryStatusDischarging {
-		b.metrics["energy rate (W)"] = perf.Metric{
-			Name:      prefix + "energyrate_system",
-			Unit:      "W",
-			Direction: perf.SmallerIsBetter,
-			Multiple:  true,
-			Interval:  intervalName,
-		}
-	}
-	return nil
-}
-
-func (b *batteryState) Start(_ context.Context) error {
-	return nil
-}
-
-var fieldRe = regexp.MustCompile(`  ([a-zA-Z() ]+):\s+([0-9.]+)`)
-
-func (b *batteryState) Snapshot(ctx context.Context, pv *perf.Values) error {
-	out, err := testexec.CommandContext(ctx, "power_supply_info").Output(testexec.DumpLogOnError)
-	if err != nil {
-		return err
-	}
-	batteryFound := false
-	for _, line := range strings.Split(string(out), "\n") {
-		if !batteryFound {
-			batteryFound = line == "Device: Battery"
-			continue
-		}
-		m := fieldRe.FindStringSubmatch(line)
-		if m != nil {
-			metric, ok := b.metrics[m[1]]
-			if !ok {
-				continue
-			}
-			v, err := strconv.ParseFloat(m[2], 64)
-			if err != nil {
-				return err
-			}
-			pv.Append(metric, v)
-		}
-	}
-
-	return nil
-}
-
-func (b *batteryState) Stop(_ context.Context, _ *perf.Values) error {
-	return nil
-}
-
 func newIdleTimeline(ctx context.Context) (*perf.Timeline, error) {
 	var srcs []perf.TimelineDatasource
 
 	// Add Power related loggers.
-	if sysfsPowerPath, err := power.SysfsBatteryPath(ctx); err != nil {
-		if err != power.ErrNoBattery {
-			return nil, err
-		}
-		testing.ContextLog(ctx, "Sysfs battery path was not found, so skipping")
-	} else {
-		srcs = append(srcs, &batteryState{sysfsPowerPath: sysfsPowerPath})
-	}
+	srcs = append(srcs, power.NewSysfsBatteryMetrics())
 	srcs = append(srcs, power.NewRAPLPowerMetrics())
 
 	// Add CPUIdle/CPUPKG logger.
@@ -275,6 +191,7 @@ func Idle(ctx context.Context, s *testing.State) {
 			duration += 60 * time.Second
 		}
 		begin := time.Now()
+		// GoBigSleepLint: sleep to let the device idle.
 		if err := testing.Sleep(ctx, duration); err != nil {
 			s.Fatal("Failed to wait for warm up: ", err)
 		}
@@ -283,6 +200,7 @@ func Idle(ctx context.Context, s *testing.State) {
 
 		// Actual measure with idle.
 		begin = time.Now()
+		// GoBigSleepLint: sleep to let the device idle.
 		if err := testing.Sleep(ctx, 120*time.Second); err != nil {
 			s.Fatal("Failed to wait idling: ", err)
 		}
