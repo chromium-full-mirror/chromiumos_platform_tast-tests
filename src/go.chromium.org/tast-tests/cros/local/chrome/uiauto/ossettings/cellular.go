@@ -279,6 +279,30 @@ func EnterPreRevampOtherAPNDetails(ctx context.Context, tconn *chrome.TestConn, 
 	return nil
 }
 
+// VerifyPreRevampAPNSelected checks that the |apn| is selected in the pre-revamp APN UI.
+func (s *OSSettings) VerifyPreRevampAPNSelected(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, apn string) error {
+	if err := ExpandPreRevampCellularNetworkDetails(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to expand APN network details")
+	}
+
+	expr := `var node = shadowPiercingQuery('select#selectApn');
+		if (node == undefined) {
+			throw new Error("APN name not found");
+		}
+		node.innerText.split('\n')[node.selectedIndex];
+		`
+	var selectedApn string
+	if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, &selectedApn); err != nil {
+		return errors.Wrap(err, "failed to find APN dropdown in old UI")
+	}
+
+	if selectedApn != apn {
+		return errors.Errorf("%q is not selected; %q is selected instead", apn, selectedApn)
+	}
+
+	return nil
+}
+
 // SelectPreRevampOtherAPN selects the "Other" old APN dropdown.
 func SelectPreRevampOtherAPN(ctx context.Context, tconn *chrome.TestConn, apn string) error {
 	ui := uiauto.New(tconn)
