@@ -11,9 +11,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
+	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
@@ -154,7 +156,12 @@ func RememberedNetworksPersist(ctx context.Context, s *testing.State) {
 			}
 		}(cleanupAPCtx)
 
-		if _, err := tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, networkConfig.ap); err != nil {
+		// Disable the auto-connect property to avoid the network being connected before the connect attempt since the DUT could be auto-connected to any known network with this property is enabled.
+		// See more at b/306296619.
+		disableAutoConnect := map[string]interface{}{
+			shillconst.ServicePropertyAutoConnect: false,
+		}
+		if _, err := tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, networkConfig.ap, dutcfg.ConnProperties(disableAutoConnect)); err != nil {
 			s.Fatal("Failed to connect network: ", err)
 		}
 		ssids = append(ssids, networkConfig.ap.Config().SSID)
