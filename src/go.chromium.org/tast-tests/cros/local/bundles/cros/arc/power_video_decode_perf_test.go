@@ -68,7 +68,7 @@ func TestPowerVideoDecodePerfParamsAreGenerated(t *testing.T) {
 			attr  []string
 		}{
 			{
-				swdep: "android_p",
+				swdep: "android_container",
 			},
 			{
 				name:  "vm",

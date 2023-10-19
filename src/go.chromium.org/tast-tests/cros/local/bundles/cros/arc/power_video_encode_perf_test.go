@@ -47,7 +47,7 @@ func TestPowerVideoEncodePerfParamsAreGenerated(t *testing.T) {
 			attr  []string
 		}{
 			{
-				swdep: []string{"android_p", "arc_hw_encoder"},
+				swdep: []string{"android_container", "arc_hw_encoder"},
 				pre:   arcBooted,
 				attr:  []string{"group:crosbolt", "crosbolt_nightly"},
 			},

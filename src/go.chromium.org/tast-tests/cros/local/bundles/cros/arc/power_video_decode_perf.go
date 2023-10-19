@@ -59,7 +59,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{
 					caps.HWDecodeH264,
-					"android_p",
+					"android_container",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				ExtraData:         []string{"1080p_30fps_300frames.h264", "1080p_30fps_300frames.h264.json"},
@@ -72,7 +72,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{
 					caps.HWDecodeH264,
-					"android_p",
+					"android_container",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 				ExtraData:         []string{"1080p_30fps_300frames.h264", "1080p_30fps_300frames.h264.json"},
@@ -111,7 +111,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{
 					caps.HWDecodeVP8,
-					"android_p",
+					"android_container",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				ExtraData:         []string{"1080p_30fps_300frames.vp8.ivf", "1080p_30fps_300frames.vp8.ivf.json"},
@@ -124,7 +124,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{
 					caps.HWDecodeVP8,
-					"android_p",
+					"android_container",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 				ExtraData:         []string{"1080p_30fps_300frames.vp8.ivf", "1080p_30fps_300frames.vp8.ivf.json"},
@@ -163,7 +163,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{
 					caps.HWDecodeVP9,
-					"android_p",
+					"android_container",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				ExtraData:         []string{"1080p_30fps_300frames.vp9.ivf", "1080p_30fps_300frames.vp9.ivf.json"},
@@ -176,7 +176,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{
 					caps.HWDecodeVP9,
-					"android_p",
+					"android_container",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 				ExtraData:         []string{"1080p_30fps_300frames.vp9.ivf", "1080p_30fps_300frames.vp9.ivf.json"},
@@ -215,7 +215,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{
 					caps.HWDecodeVP9_60,
-					"android_p",
+					"android_container",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				ExtraData:         []string{"1080p_60fps_600frames.vp9.ivf", "1080p_60fps_600frames.vp9.ivf.json"},
@@ -228,7 +228,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{
 					caps.HWDecodeVP9_60,
-					"android_p",
+					"android_container",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 				ExtraData:         []string{"1080p_60fps_600frames.vp9.ivf", "1080p_60fps_600frames.vp9.ivf.json"},
@@ -267,7 +267,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{
 					caps.HWDecodeVP9_4K,
-					"android_p",
+					"android_container",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				ExtraData:         []string{"2160p_30fps_300frames.vp9.ivf", "2160p_30fps_300frames.vp9.ivf.json"},
@@ -280,7 +280,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{
 					caps.HWDecodeVP9_4K,
-					"android_p",
+					"android_container",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 				ExtraData:         []string{"2160p_30fps_300frames.vp9.ivf", "2160p_30fps_300frames.vp9.ivf.json"},
@@ -319,7 +319,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{
 					caps.HWDecodeVP9_4K60,
-					"android_p",
+					"android_container",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				ExtraData:         []string{"2160p_60fps_600frames.vp9.ivf", "2160p_60fps_600frames.vp9.ivf.json"},
@@ -332,7 +332,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{
 					caps.HWDecodeVP9_4K60,
-					"android_p",
+					"android_container",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 				ExtraData:         []string{"2160p_60fps_600frames.vp9.ivf", "2160p_60fps_600frames.vp9.ivf.json"},
