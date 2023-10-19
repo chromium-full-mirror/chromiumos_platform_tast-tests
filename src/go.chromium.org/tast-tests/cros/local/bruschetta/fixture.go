@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/bruschetta/constants"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -263,13 +262,6 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 
 	s.Log("Starting installed VM")
 
-	// Try to save user logs before cleaning up.
-	defer func(ctx context.Context) {
-		if err := f.saveUserLogs(ctx, s.OutDir(), "setup"); err != nil {
-			s.Fatal("Failed to save user logs from fixture setup: ", err)
-		}
-	}(cleanupCtx)
-
 	// Now use the terminal app to boot the VM.
 	_, err = terminalapp.FindBruschetta(ctx, f.tconn)
 	if err != nil {
@@ -329,10 +321,6 @@ func (f *bruschettaFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 }
 
 func (f *bruschettaFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	if err := f.saveUserLogs(ctx, s.OutDir(), "post_test"); err != nil {
-		s.Error("Failed to save user logs from test: ", err)
-	}
-
 	if err := f.saveLogs(ctx, s.OutDir(), "post_test"); err != nil {
 		s.Error("Failed to save VM logs from test: ", err)
 	}
@@ -346,11 +334,6 @@ func (f *bruschettaFixture) PostTest(ctx context.Context, s *testing.FixtTestSta
 }
 
 func (f *bruschettaFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	// Save any un-captured user logs before removing the VM.
-	if err := f.saveUserLogs(ctx, s.OutDir(), "tear_down"); err != nil {
-		s.Error("Failed to save user logs from fixture teardown: ", err)
-	}
-
 	if err := removeBruschetta(ctx, f.tconn); err != nil {
 		s.Error("Failed to remove VM after setup failure: ", err)
 	}
@@ -385,19 +368,6 @@ func (f *bruschettaFixture) saveLogs(ctx context.Context, outdir, suffix string)
 
 	if _, err := outFile.WriteString(trimmedLogs); err != nil {
 		return errors.Wrap(err, "failed to write to log file")
-	}
-
-	return nil
-}
-
-func (f *bruschettaFixture) saveUserLogs(ctx context.Context, outdir, suffix string) error {
-	logs, err := f.vm.Command(ctx, "journalctl", "--user", "--no-pager", "--quiet", "--cursor-file=/var/tmp/cursor").Output(testexec.DumpLogOnError)
-	if err != nil {
-		return errors.Wrap(err, "failed to get user logs")
-	}
-
-	if err := os.WriteFile(filepath.Join(outdir, fmt.Sprintf("bruschetta_user_%s.log", suffix)), logs, 0644); err != nil {
-		return errors.Wrap(err, "failed to write user log file")
 	}
 
 	return nil
