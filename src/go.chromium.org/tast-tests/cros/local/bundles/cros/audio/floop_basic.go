@@ -25,7 +25,7 @@ func init() {
 			"aaronyu@google.com",
 			"htcheong@google.com",
 		},
-		Fixture:      fixture.FloopEnabled,
+		Fixture:      fixture.FakeCrasClient,
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",

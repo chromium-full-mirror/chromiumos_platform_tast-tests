@@ -27,7 +27,7 @@ func init() {
 		//   - has ended
 
 		Contacts:     []string{"aaronyu@google.com", "htcheong@google.com", "chromeos-audio-bugs@google.com"},
-		Fixture:      audiofixture.AloopLoaded{Channels: 2, Parent: fixture.FloopEnabled}.Instance(),
+		Fixture:      audiofixture.AloopLoaded{Channels: 2, Parent: fixture.FakeCrasClient}.Instance(),
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline", "informational"},
 		// Param.Name encoding:
