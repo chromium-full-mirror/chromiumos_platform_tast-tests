@@ -357,22 +357,27 @@ func Iperf(ctx context.Context, s *testing.State) {
 	clientIperfCmd.Stdout = clientOut
 	clientIperfCmd.Stderr = clientOut
 
-	// Run & retry ping with 20 seconds timeouts to ensure the connection is alive
+	// Run & retry nc with 20 seconds timeouts to ensure the connection is alive
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		clientPingCmd := testexec.CommandContext(ctx, "ping", "-c", "5", "-W", "1", serverAddress)
-		clientPingCmd.Stdout = clientOut
-		clientPingCmd.Stderr = clientOut
+		clientNcCmd := testexec.CommandContext(ctx, "nc", "-vz", serverAddress, "12345")
+		clientNcCmd.Stdout = clientOut
+		clientNcCmd.Stderr = clientOut
 
-		if err := clientPingCmd.Start(); err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to run ping command"))
+		if err := clientNcCmd.Start(); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to run nc command"))
 		}
 
-		if err := clientPingCmd.Wait(testexec.DumpLogOnError); err != nil {
-			return errors.New("failed to complete the ping")
+		if err := clientNcCmd.Wait(testexec.DumpLogOnError); err != nil {
+			return errors.New("failed to complete the nc command")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
-		s.Fatal("Ping failed: ", err)
+	}, &testing.PollOptions{Timeout: 20 * time.Second, Interval: 1 * time.Second}); err != nil {
+		s.Fatal("Nc failed: ", err)
+	}
+
+	// GoBigSleepLint: Wait for server to be set up
+	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
+		s.Fatal("Fail to sleep")
 	}
 
 	// Run client iperf command

@@ -32,6 +32,7 @@ main() {
     ip a
     ip route show all
 
+    nc -lvp 12345 &
     iperf3 -V -J -s -p 1234 -1
 }
 
