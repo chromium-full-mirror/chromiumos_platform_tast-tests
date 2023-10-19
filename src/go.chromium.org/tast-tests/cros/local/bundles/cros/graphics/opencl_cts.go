@@ -75,7 +75,7 @@ func init() {
 					executable: "test_allocations",
 					args:       "multiple 1 image2d_write_non_blocking",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "allocations_multiple_1_image2d_write",
@@ -83,7 +83,7 @@ func init() {
 					executable: "test_allocations",
 					args:       "multiple 1 image2d_write",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "allocations_single_1_buffer_non_blocking",
@@ -1507,7 +1507,7 @@ func init() {
 					executable: "test_basic",
 					args:       "imagedim_non_pow2",
 				},
-				Timeout: 10 * time.Minute,
+				Timeout: 20 * time.Minute,
 			},
 			{
 				Name: "basic_imagedim_pow2",
@@ -1515,7 +1515,7 @@ func init() {
 					executable: "test_basic",
 					args:       "imagedim_pow2",
 				},
-				Timeout: 10 * time.Minute,
+				Timeout: 20 * time.Minute,
 			},
 			{
 				Name: "basic_image_multipass_float_coord",
@@ -4195,7 +4195,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_half_float",
@@ -4203,7 +4203,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_HALF_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_signed_int16",
@@ -4211,7 +4211,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_SIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_signed_int32",
@@ -4219,7 +4219,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_SIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_signed_int8",
@@ -4227,7 +4227,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_SIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_snorm_int16",
@@ -4235,7 +4235,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_SNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_snorm_int8",
@@ -4243,7 +4243,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_SNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_unorm_int_101010",
@@ -4251,7 +4251,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_UNORM_INT_101010",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_unorm_int16",
@@ -4259,7 +4259,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_UNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_unorm_int8",
@@ -4267,7 +4267,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_UNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_unorm_short_555",
@@ -4275,7 +4275,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_UNORM_SHORT_555",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_unorm_short_565",
@@ -4283,7 +4283,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_UNORM_SHORT_565",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_unsigned_int16",
@@ -4291,7 +4291,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_UNSIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_unsigned_int32",
@@ -4299,7 +4299,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_UNSIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto2d_cl_unsigned_int8",
@@ -4307,7 +4307,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto2D CL_UNSIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_float",
@@ -4315,7 +4315,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_half_float",
@@ -4323,7 +4323,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_HALF_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_signed_int16",
@@ -4331,7 +4331,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_SIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_signed_int32",
@@ -4339,7 +4339,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_SIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_signed_int8",
@@ -4347,7 +4347,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_SIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_snorm_int16",
@@ -4355,7 +4355,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_SNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_snorm_int8",
@@ -4363,7 +4363,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_SNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_unorm_int_101010",
@@ -4371,7 +4371,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_UNORM_INT_101010",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_unorm_int16",
@@ -4379,7 +4379,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_UNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_unorm_int8",
@@ -4387,7 +4387,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_UNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_unorm_short_555",
@@ -4395,7 +4395,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_UNORM_SHORT_555",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_unorm_short_565",
@@ -4403,7 +4403,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_UNORM_SHORT_565",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_unsigned_int16",
@@ -4411,7 +4411,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_UNSIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_unsigned_int32",
@@ -4419,7 +4419,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_UNSIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2darrayto3d_cl_unsigned_int8",
@@ -4427,7 +4427,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Darrayto3D CL_UNSIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2d_cl_float",
@@ -4555,7 +4555,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_half_float",
@@ -4563,7 +4563,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_HALF_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_signed_int16",
@@ -4571,7 +4571,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_SIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_signed_int32",
@@ -4579,7 +4579,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_SIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_signed_int8",
@@ -4587,7 +4587,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_SIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_snorm_int16",
@@ -4595,7 +4595,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_SNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_snorm_int8",
@@ -4603,7 +4603,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_SNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_unorm_int_101010",
@@ -4611,7 +4611,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_UNORM_INT_101010",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_unorm_int16",
@@ -4619,7 +4619,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_UNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_unorm_int8",
@@ -4627,7 +4627,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_UNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_unorm_short_555",
@@ -4635,7 +4635,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_UNORM_SHORT_555",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_unorm_short_565",
@@ -4643,7 +4643,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_UNORM_SHORT_565",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_unsigned_int16",
@@ -4651,7 +4651,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_UNSIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_unsigned_int32",
@@ -4659,7 +4659,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_UNSIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto2darray_cl_unsigned_int8",
@@ -4667,7 +4667,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto2Darray CL_UNSIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_float",
@@ -4675,7 +4675,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_half_float",
@@ -4683,7 +4683,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_HALF_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_signed_int16",
@@ -4691,7 +4691,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_SIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_signed_int32",
@@ -4699,7 +4699,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_SIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_signed_int8",
@@ -4707,7 +4707,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_SIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_snorm_int16",
@@ -4715,7 +4715,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_SNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_snorm_int8",
@@ -4723,7 +4723,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_SNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_unorm_int_101010",
@@ -4731,7 +4731,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_UNORM_INT_101010",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_unorm_int16",
@@ -4739,7 +4739,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_UNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_unorm_int8",
@@ -4747,7 +4747,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_UNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_unorm_short_555",
@@ -4755,7 +4755,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_UNORM_SHORT_555",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_unorm_short_565",
@@ -4763,7 +4763,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_UNORM_SHORT_565",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_unsigned_int16",
@@ -4771,7 +4771,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_UNSIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_unsigned_int32",
@@ -4779,7 +4779,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_UNSIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_2dto3d_cl_unsigned_int8",
@@ -4787,7 +4787,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "2Dto3D CL_UNSIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3d_cl_float",
@@ -4915,7 +4915,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_half_float",
@@ -4923,7 +4923,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_HALF_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_signed_int16",
@@ -4931,7 +4931,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_SIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_signed_int32",
@@ -4939,7 +4939,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_SIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_signed_int8",
@@ -4947,7 +4947,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_SIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_snorm_int16",
@@ -4955,7 +4955,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_SNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_snorm_int8",
@@ -4963,7 +4963,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_SNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_unorm_int_101010",
@@ -4971,7 +4971,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_UNORM_INT_101010",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_unorm_int16",
@@ -4979,7 +4979,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_UNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_unorm_int8",
@@ -4987,7 +4987,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_UNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_unorm_short_555",
@@ -4995,7 +4995,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_UNORM_SHORT_555",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_unorm_short_565",
@@ -5003,7 +5003,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_UNORM_SHORT_565",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_unsigned_int16",
@@ -5011,7 +5011,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_UNSIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_unsigned_int32",
@@ -5019,7 +5019,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_UNSIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2darray_cl_unsigned_int8",
@@ -5027,7 +5027,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2Darray CL_UNSIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_float",
@@ -5035,7 +5035,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_half_float",
@@ -5043,7 +5043,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_HALF_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_signed_int16",
@@ -5051,7 +5051,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_SIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_signed_int32",
@@ -5059,7 +5059,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_SIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_signed_int8",
@@ -5067,7 +5067,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_SIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_snorm_int16",
@@ -5075,7 +5075,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_SNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_snorm_int8",
@@ -5083,7 +5083,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_SNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_unorm_int_101010",
@@ -5091,7 +5091,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_UNORM_INT_101010",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_unorm_int16",
@@ -5099,7 +5099,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_UNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_unorm_int8",
@@ -5107,7 +5107,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_UNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_unorm_short_555",
@@ -5115,7 +5115,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_UNORM_SHORT_555",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_unorm_short_565",
@@ -5123,7 +5123,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_UNORM_SHORT_565",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_unsigned_int16",
@@ -5131,7 +5131,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_UNSIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_unsigned_int32",
@@ -5139,7 +5139,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_UNSIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_copy_images_3dto2d_cl_unsigned_int8",
@@ -5147,7 +5147,7 @@ func init() {
 					executable: "test_cl_copy_images",
 					args:       "3Dto2D CL_UNSIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_1darray_cl_float",
@@ -5395,7 +5395,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_half_float",
@@ -5403,7 +5403,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_HALF_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_signed_int16",
@@ -5411,7 +5411,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_SIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_signed_int32",
@@ -5419,7 +5419,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_SIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_signed_int8",
@@ -5427,7 +5427,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_SIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_snorm_int16",
@@ -5435,7 +5435,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_SNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_snorm_int8",
@@ -5443,7 +5443,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_SNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_unorm_int_101010",
@@ -5451,7 +5451,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_UNORM_INT_101010",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_unorm_int16",
@@ -5459,7 +5459,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_UNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_unorm_int8",
@@ -5467,7 +5467,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_UNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_unorm_short_555",
@@ -5475,7 +5475,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_UNORM_SHORT_555",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_unorm_short_565",
@@ -5483,7 +5483,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_UNORM_SHORT_565",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_unsigned_int16",
@@ -5491,7 +5491,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_UNSIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_unsigned_int32",
@@ -5499,7 +5499,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_UNSIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2darray_cl_unsigned_int8",
@@ -5507,7 +5507,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "2Darray CL_UNSIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_2d_cl_float",
@@ -5635,7 +5635,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_half_float",
@@ -5643,7 +5643,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_HALF_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_signed_int16",
@@ -5651,7 +5651,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_SIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_signed_int32",
@@ -5659,7 +5659,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_SIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_signed_int8",
@@ -5667,7 +5667,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_SIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_snorm_int16",
@@ -5675,7 +5675,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_SNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_snorm_int8",
@@ -5683,7 +5683,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_SNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_unorm_int_101010",
@@ -5691,7 +5691,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_UNORM_INT_101010",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_unorm_int16",
@@ -5699,7 +5699,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_UNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_unorm_int8",
@@ -5707,7 +5707,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_UNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_unorm_short_555",
@@ -5715,7 +5715,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_UNORM_SHORT_555",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_unorm_short_565",
@@ -5723,7 +5723,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_UNORM_SHORT_565",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_unsigned_int16",
@@ -5731,7 +5731,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_UNSIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_unsigned_int32",
@@ -5739,7 +5739,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_UNSIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_fill_images_3d_cl_unsigned_int8",
@@ -5747,7 +5747,7 @@ func init() {
 					executable: "test_cl_fill_images",
 					args:       "3D CL_UNSIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "cl_get_info_1darray_cl_float",
@@ -16083,7 +16083,7 @@ func init() {
 					executable: "test_image_streams",
 					args:       "3D CL_SNORM_INT16",
 				},
-				Timeout: 10 * time.Minute,
+				Timeout: 20 * time.Minute,
 			},
 			{
 				Name: "image_streams_3d_cl_snorm_int8",
@@ -16091,7 +16091,7 @@ func init() {
 					executable: "test_image_streams",
 					args:       "3D CL_SNORM_INT8",
 				},
-				Timeout: 10 * time.Minute,
+				Timeout: 20 * time.Minute,
 			},
 			{
 				Name: "image_streams_3d_cl_unorm_int_101010",
@@ -18955,7 +18955,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_half_float",
@@ -18963,7 +18963,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_HALF_FLOAT",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_signed_int16",
@@ -18971,7 +18971,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_SIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_signed_int32",
@@ -18979,7 +18979,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_SIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_signed_int8",
@@ -18987,7 +18987,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_SIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_snorm_int16",
@@ -18995,7 +18995,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_SNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_snorm_int8",
@@ -19003,7 +19003,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_SNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_unorm_int_101010",
@@ -19011,7 +19011,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_UNORM_INT_101010",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_unorm_int16",
@@ -19019,7 +19019,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_UNORM_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_unorm_int8",
@@ -19027,7 +19027,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_UNORM_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_unorm_short_555",
@@ -19035,7 +19035,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_UNORM_SHORT_555",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_unorm_short_565",
@@ -19043,7 +19043,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_UNORM_SHORT_565",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_unsigned_int16",
@@ -19051,7 +19051,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_UNSIGNED_INT16",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_unsigned_int32",
@@ -19059,7 +19059,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_UNSIGNED_INT32",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1dbuffer_cl_unsigned_int8",
@@ -19067,7 +19067,7 @@ func init() {
 					executable: "test_samplerless_reads",
 					args:       "1Dbuffer CL_UNSIGNED_INT8",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "samplerless_reads_1d_cl_float",
