@@ -49,21 +49,8 @@ type DesksInfo struct {
 	DeskContainers  []string `json:"deskContainers"`
 }
 
-func isJellyEnabled(ctx context.Context, ac *uiauto.Context) bool {
-	jellyEnabled, err := ac.IsFeatureEnabled(ctx, "Jelly")
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to check if Jelly is enabled, assuming false")
-		return false
-	}
-	return jellyEnabled
-}
-
 func deskButton(ctx context.Context, ac *uiauto.Context) *nodewith.Finder {
-	if isJellyEnabled(ctx, ac) {
-		return nodewith.HasClass("CrOSNextDeskIconButton")
-	}
-
-	return nodewith.HasClass("ZeroStateIconButton")
+	return nodewith.HasClass("CrOSNextDeskIconButton")
 }
 
 // NewDeskButton returns a `Finder` for the new desk button.
@@ -79,12 +66,8 @@ func DeskLibraryButton(ctx context.Context, ac *uiauto.Context) *nodewith.Finder
 // DeskDialog returns a `Finder` for the saved desk dialog where the title
 // starts with `name`.
 func DeskDialog(ctx context.Context, ac *uiauto.Context, name string) *nodewith.Finder {
-	if isJellyEnabled(ctx, ac) {
-		finder := nodewith.HasClass("Label").NameStartingWith(name)
-		return finder.Ancestor(nodewith.HasClass("SystemDialogDelegateView").First())
-	}
-
-	return nodewith.ClassName("SavedDeskDialog")
+	finder := nodewith.HasClass("Label").NameStartingWith(name)
+	return finder.Ancestor(nodewith.HasClass("SystemDialogDelegateView").First())
 }
 
 // CreateNewDesk requests Ash to create a new Virtual Desk which would fail if
