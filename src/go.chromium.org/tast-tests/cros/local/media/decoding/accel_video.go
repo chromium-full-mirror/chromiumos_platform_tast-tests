@@ -191,8 +191,9 @@ func RunAccelVideoTestWithTestVectors(ctx context.Context, outDir string, testVe
 			exec, "VideoDecoderTest.FlushAtEndOfStream",
 			filepath.Join(outDir, exec+"_"+filename+".log"), args); err != nil {
 			hasFailed = true
-
-			if mustFail {
+			if errors.Is(err, context.DeadlineExceeded) {
+				testing.ContextLog(ctx, "Test vector time out (unexpected): ", filename)
+			} else if mustFail {
 				testing.ContextLog(ctx, "Test vector failed (expected): ", filename)
 			} else {
 				testing.ContextLog(ctx, "Test vector failed (unexpected): ", filename)
