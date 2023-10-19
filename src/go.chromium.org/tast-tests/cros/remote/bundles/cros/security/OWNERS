@@ -1,1 +1,6 @@
+set noparent
+
+# Tast team for bulk updates/emergencies.
+include /OWNERS.tast
+
 include chromiumos/owners:v1:/security/OWNERS.hardening
