@@ -300,7 +300,7 @@ func (h *ITSHelper) PrepareEnvironment(ctx context.Context, numpyPath string) (s
 	}
 	retStr += string(out)
 
-	out, err = testexec.CommandContext(ctx, pipCmd, "install", "opencv-python==3.4.8.29").Output(testexec.DumpLogOnError)
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "opencv-python-headless==3.4.8.29").Output(testexec.DumpLogOnError)
 	if err != nil {
 		return "", errors.Wrap(err, "Fail to install opencv-python")
 	}
