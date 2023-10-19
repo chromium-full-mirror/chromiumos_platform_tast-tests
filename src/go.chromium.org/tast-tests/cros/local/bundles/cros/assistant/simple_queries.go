@@ -31,9 +31,9 @@ func init() {
 		Params: []testing.Param{{
 			Fixture: "assistant",
 		}, {
-			Name:              "with_android_p",
+			Name:              "with_android_container",
 			Fixture:           "assistantWithArc",
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "with_android_vm",
 			Fixture:           "assistantWithArc",
