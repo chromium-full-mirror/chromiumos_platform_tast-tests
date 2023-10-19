@@ -18,6 +18,8 @@ import (
 	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -37,7 +39,7 @@ func init() {
 		// Added "chrome" and Timeout as a workaround, because
 		// it is not blocker, but we should revisit here.
 		SoftwareDeps: []string{"android_container", "chrome"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 	})
 }

@@ -75,7 +75,7 @@ func init() {
 		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
-		Timeout:      5 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 		Vars:         []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{{
 			Name: "general_r",

@@ -37,7 +37,7 @@ func init() {
 		// TODO(b/245411884): Re-enable this test.
 		// Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"android_container", "chrome", "selinux"},
-		Timeout:      5 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 	})
 }
 

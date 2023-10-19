@@ -40,7 +40,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_container"},
-			Timeout:           5 * time.Minute,
+			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
 			Name: "forever",
 			Val: bootConfig{
@@ -63,7 +63,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline"},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           5 * time.Minute,
+			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
 			Name: "vm_virtio_blk",
 			Val: bootConfig{
@@ -74,7 +74,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           5 * time.Minute,
+			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
 			Name: "vm_virtio_blk_data_o_direct",
 			Val: bootConfig{
@@ -86,7 +86,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           5 * time.Minute,
+			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
 			Name: "vm_with_per_vcpu_core_scheduling",
 			Val: bootConfig{
@@ -97,7 +97,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline"},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           5 * time.Minute,
+			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
 			Name: "vm_forever",
 			Val: bootConfig{
@@ -113,7 +113,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           5 * time.Minute,
+			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
 			Name: "vm_stress",
 			Val: bootConfig{
@@ -131,7 +131,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           5 * time.Minute,
+			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}},
 	})
 }

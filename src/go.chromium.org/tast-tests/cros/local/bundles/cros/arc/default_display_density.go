@@ -26,7 +26,7 @@ func init() {
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"android_vm", "chrome"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 	})
 }
 

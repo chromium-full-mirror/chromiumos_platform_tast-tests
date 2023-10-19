@@ -40,7 +40,7 @@ func init() {
 			ExtraAttr:         []string{"group:cq-minimal", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
-		Timeout: 6 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 	})
 }
 

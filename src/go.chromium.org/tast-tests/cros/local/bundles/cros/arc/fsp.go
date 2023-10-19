@@ -45,7 +45,7 @@ func init() {
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Data:         []string{fspZipFile},
 		Params: []testing.Param{

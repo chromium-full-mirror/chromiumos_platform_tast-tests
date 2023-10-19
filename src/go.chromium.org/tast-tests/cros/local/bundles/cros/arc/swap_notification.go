@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/swap"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -35,7 +36,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"android_vm", "chrome", "crosvm_swap"},
 		Fixture:      "arcBootedBoostedVmmSwap",
-		Timeout:      5 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 	})
 }
 

@@ -29,7 +29,7 @@ func init() {
 		BugComponent: "b:157100",
 		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Vars:         []string{"arc.parentUser"},
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"informational"},

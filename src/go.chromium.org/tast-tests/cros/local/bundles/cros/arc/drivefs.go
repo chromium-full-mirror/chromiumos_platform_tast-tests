@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal", "drivefs"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps:      []string{"arc.Drivefs.user1", "arc.Drivefs.password1"},
 		Params: []testing.Param{
 			{

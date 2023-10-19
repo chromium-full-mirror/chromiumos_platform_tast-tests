@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/storage"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/mtp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -37,7 +38,7 @@ func init() {
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mtp"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      5 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 		Fixture:      "mtpWithAndroid",
 		Params: []testing.Param{
 			{

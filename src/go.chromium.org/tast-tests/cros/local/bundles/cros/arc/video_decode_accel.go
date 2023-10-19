@@ -9,8 +9,10 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/c2e2etest"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/video"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -25,7 +27,7 @@ func init() {
 		Attr:         []string{"group:arc-video"},
 		Data:         []string{c2e2etest.X86ApkName, c2e2etest.ArmApkName},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			Name:              "h264",
 			Val:               video.DecodeTestOptions{TestVideo: "test-25fps.h264"},

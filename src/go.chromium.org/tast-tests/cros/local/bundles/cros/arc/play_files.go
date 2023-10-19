@@ -45,7 +45,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               "/media/fuse/android_files",
 		}},
-		Timeout: 6 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 	})
 }

@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -27,7 +28,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		// TODO(b/301629757): Switch back to |arcBooted|, when KeyMint is fully launched on ARC-T.
 		Fixture: "arcBootedWithKeyMintOff",
-		Timeout: 4 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
 			// TODO(b/273223557): Download only one file for the current architecture.

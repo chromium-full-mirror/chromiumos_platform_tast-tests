@@ -55,7 +55,9 @@ const (
 	// LoginTimeout is the maximum amount of time that Chrome is expected to take to perform login.
 	// Tests that call New with the default fake login mode should declare a timeout that's at least this long.
 	// Tast waits for login by checking when all partitions are mounted and ready. For normal login this takes up most of the time.
-	LoginTimeout = cryptohome.WaitForUserTimeout
+	// TODO: Once we are at Go 1.21, change this to
+	// max(cryptohome.WaitForUserTimeout, MinLoginTimeout)
+	LoginTimeout = MinLoginTimeout
 
 	// GAIALoginTimeout is the maximum amount of the time that Chrome is expected
 	// to take to perform actual gaia login. As far as I checked a few samples of

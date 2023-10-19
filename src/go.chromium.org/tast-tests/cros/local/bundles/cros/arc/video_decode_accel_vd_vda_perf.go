@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/media/decoding"
 	"go.chromium.org/tast/core/testing"
 )
@@ -29,7 +31,7 @@ func init() {
 		SoftwareDeps: []string{"arc", "chrome", "video_decoder_direct"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      "graphicsNoChrome",
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			Name:              "h264_1080p_30fps",
 			Val:               videoDecodeAccelVDVDAPerfTestParam{dataPath: "1080p_30fps_300frames.h264"},

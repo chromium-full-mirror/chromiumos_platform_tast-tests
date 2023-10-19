@@ -49,7 +49,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Val:               browser.TypeLacros,
 		}},
-		Timeout: 4 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps: []string{"arc.PlayAutoInstall.username", "arc.PlayAutoInstall.password"},
 	})
 }

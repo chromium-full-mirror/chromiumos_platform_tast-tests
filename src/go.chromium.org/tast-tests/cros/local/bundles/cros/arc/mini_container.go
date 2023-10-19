@@ -27,7 +27,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		// Container-R doesn't support mini-container.
 		SoftwareDeps: []string{"android_p", "chrome"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 	})
 }
 
@@ -75,6 +75,7 @@ func MiniContainer(ctx context.Context, s *testing.State) {
 
 	// Wait for a while after login to make sure the Android mini container is not turned down
 	// even if we do not call arc.New immediately (crbug.com/872135).
+	// GoBigSleepLint: TODO(b/306491449): Justify sleep
 	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 		s.Fatal("Timed out while sleeping after login: ", err)
 	}

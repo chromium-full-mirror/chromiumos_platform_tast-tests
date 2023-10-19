@@ -65,7 +65,7 @@ func init() {
 			Fixture:           "lacrosWithArcBooted",
 			Val:               browser.TypeLacros,
 		}},
-		Timeout: 5 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 		Data: []string{
 			"link_capturing/link_capturing_index.html",
 			"link_capturing/app/app_index.html",

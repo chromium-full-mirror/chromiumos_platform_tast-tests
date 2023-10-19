@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/media/decoding"
 	"go.chromium.org/tast/core/testing"
 )
@@ -28,7 +30,7 @@ func init() {
 		BugComponent: "b:632502",
 		SoftwareDeps: []string{"arc", "chrome", "video_decoder_direct"},
 		Fixture:      "graphicsNoChrome",
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			Name:              "h264",
 			Val:               videoDecodeAccelVDVDATestParam{dataPath: "test-25fps.h264"},

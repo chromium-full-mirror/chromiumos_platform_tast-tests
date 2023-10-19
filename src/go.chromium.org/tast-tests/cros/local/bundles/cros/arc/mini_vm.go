@@ -29,7 +29,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
 		SoftwareDeps: []string{"android_vm", "chrome"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 	})
 }

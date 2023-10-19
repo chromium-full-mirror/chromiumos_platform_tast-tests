@@ -30,7 +30,7 @@ func init() {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
-		Timeout: 4 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 	})
 }
 

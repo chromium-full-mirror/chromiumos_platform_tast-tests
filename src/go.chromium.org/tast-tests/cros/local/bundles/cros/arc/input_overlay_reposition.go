@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/gio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -42,7 +43,7 @@ func init() {
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
 			}},
-		Timeout: 5 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 	})
 }
 

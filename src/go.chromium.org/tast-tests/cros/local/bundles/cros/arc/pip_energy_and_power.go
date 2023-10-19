@@ -41,7 +41,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"180p_60fps_600frames.h264.mp4"},
-		Timeout:      6 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 		Params: []testing.Param{{
 			Name:              "small",
 			Val:               arcPIPEnergyAndPowerTestParams{bigPIP: false, browserType: browser.TypeAsh},
@@ -202,6 +202,7 @@ func PIPEnergyAndPower(ctx context.Context, s *testing.State) {
 	}
 
 	const timelineDuration = time.Minute
+	// GoBigSleepLint: TODO(b/306491449): Justify sleep
 	if err := testing.Sleep(ctx, timelineDuration); err != nil {
 		s.Fatalf("Failed to wait %v: %v", timelineDuration, err)
 	}

@@ -1,4 +1,5 @@
-// Copyright 2023 The ChromiumOS Authors // Use of this source code is governed by a BSD-style license that can be
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 package arc
@@ -25,10 +26,9 @@ func init() {
 		SoftwareDeps: []string{"chrome", "virtual_multidisplay", "android_vm"},
 		Fixture:      virtualmultidisplay.VirtualMultiDisplay,
 		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:hw_agnostic"},
-		Timeout:      arc.BootTimeout + 2*time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 	})
 }
-
 
 func BootMultidisplay(ctx context.Context, s *testing.State) {
 	if err := arc.WriteArcvmDevConf(ctx, ""); err != nil {

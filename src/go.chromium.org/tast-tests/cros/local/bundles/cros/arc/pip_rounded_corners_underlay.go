@@ -32,7 +32,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays()),
 		Data:         []string{"180p_60fps_600frames.h264.mp4"},
 		Fixture:      "gpuWatchDog",
-		Timeout:      5 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
@@ -78,6 +78,7 @@ func PIPRoundedCornersUnderlay(ctx context.Context, s *testing.State) {
 	defer cleanUp(cleanupCtx)
 
 	hists, err := metrics.Run(ctx, tconn, func(ctx context.Context) error {
+		// GoBigSleepLint: TODO(b/306491449): Justify sleep
 		if err := testing.Sleep(ctx, time.Second); err != nil {
 			return errors.Wrap(err, "failed to wait a second")
 		}

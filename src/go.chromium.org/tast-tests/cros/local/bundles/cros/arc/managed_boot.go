@@ -35,7 +35,7 @@ func init() {
 		BugComponent: "b:157100",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "play_store"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps: []string{
 			arcent.LoginPoolVar,
 		},

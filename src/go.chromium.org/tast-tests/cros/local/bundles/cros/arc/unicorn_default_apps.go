@@ -30,7 +30,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
 		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
-		Timeout:      6 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},

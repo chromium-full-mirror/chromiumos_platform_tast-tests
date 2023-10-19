@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -51,7 +52,7 @@ func init() {
 			Fixture:           "lacrosWithArcBootedAndPlayStore",
 			Val:               browser.TypeLacros,
 		}},
-		Timeout: 5 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 	})
 }
 

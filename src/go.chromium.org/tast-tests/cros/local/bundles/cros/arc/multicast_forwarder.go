@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	"go.chromium.org/tast-tests/cros/local/network/multicast"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
@@ -45,7 +46,7 @@ func init() {
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "wifi"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Params: []testing.Param{
 			{

@@ -110,7 +110,7 @@ func init() {
 		BugComponent: "b:537272",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:arc-functional"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			Val:               pipContainerTests,
 			ExtraAttr:         []string{"group:mainline", "informational"},

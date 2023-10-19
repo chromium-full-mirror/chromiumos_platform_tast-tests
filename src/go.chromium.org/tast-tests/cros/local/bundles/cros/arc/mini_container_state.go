@@ -8,7 +8,9 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/minicontainer"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -23,7 +25,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		// Container-R doesn't support mini-container.
 		SoftwareDeps: []string{"android_p", "chrome"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 	})
 }
 

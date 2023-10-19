@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
@@ -32,7 +33,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial > Secret Management
 		BugComponent: "b:1284082",
 		Attr:         []string{"group:mainline", "informational"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		// TODO(b/301629757): Switch back to |arcBooted|, when KeyMint is fully launched on ARC-T.
 		Fixture: "arcBootedWithKeyMintOn",
 		// TODO(b/301347001): Enable this test for ARC T+.

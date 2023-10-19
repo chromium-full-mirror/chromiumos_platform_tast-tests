@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
@@ -45,7 +46,7 @@ func init() {
 		BugComponent: "b:613731",
 		SoftwareDeps: []string{"chrome", "cups"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithArcBooted",
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			Val:               "arc_print_ippusb_golden.pwg",
 			ExtraSoftwareDeps: []string{"android_p"},

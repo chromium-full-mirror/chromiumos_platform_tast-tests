@@ -25,7 +25,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		SoftwareDeps: []string{"chrome", "virtual_multidisplay", "android_vm"},
-		Timeout:      arc.BootTimeout + 2*time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 		Data:         []string{wm.WhiteWallpaperFileName},
 		Fixture:      arc.ArcBootedMultiDisplay,
 		Params: []testing.Param{

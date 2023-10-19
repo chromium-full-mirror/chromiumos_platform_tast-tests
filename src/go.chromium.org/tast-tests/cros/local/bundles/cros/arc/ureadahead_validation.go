@@ -42,8 +42,7 @@ func init() {
 			Name:              "vm_t",
 			ExtraSoftwareDeps: []string{"android_vm_t"},
 		}},
-		// Minimum acceptable.
-		Timeout: 5 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 	})
 }
 

@@ -8,7 +8,9 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/libvda"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -23,7 +25,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		// "no_qemu" disables the test on betty. b/168566159#comment3
 		SoftwareDeps: []string{"android_vm", "chrome", "no_qemu"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 	})
 }
 

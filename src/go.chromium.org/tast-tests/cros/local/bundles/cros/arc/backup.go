@@ -42,7 +42,7 @@ func init() {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
-		Timeout: 6 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 	})
 }

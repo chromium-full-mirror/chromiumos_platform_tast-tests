@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -25,7 +26,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		// TODO(b/301629757): Switch back to |arcBooted|, when KeyMint is fully launched on ARC-T.
 		Fixture: "arcBootedWithKeyMintOn",
-		Timeout: 4 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			Name: "vm_x86_64",
 			// TODO(b/301347001): Enable this test for ARC T+.

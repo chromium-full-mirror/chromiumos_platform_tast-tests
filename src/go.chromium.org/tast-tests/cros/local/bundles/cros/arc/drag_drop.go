@@ -48,7 +48,7 @@ func init() {
 		Data: []string{
 			"drag_drop_manifest.json", "drag_source_background.js", "drag_source_window.js", "drag_source_window.html",
 			"drag_target_background.js", "drag_target_window.js", "drag_target_window.html"},
-		Timeout: 4 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			Name:              "chrome_to_android",
 			ExtraSoftwareDeps: []string{"android_container"},

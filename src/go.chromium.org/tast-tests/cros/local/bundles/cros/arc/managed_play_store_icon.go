@@ -39,7 +39,7 @@ func init() {
 		BugComponent: "b:157100",
 		SoftwareDeps: []string{"chrome", "no_tablet_form_factor"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		Timeout:      4 * time.Minute,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps:      []string{arcent.LoginPoolVar},
 		Params: []testing.Param{{
 			Name: "enabled",

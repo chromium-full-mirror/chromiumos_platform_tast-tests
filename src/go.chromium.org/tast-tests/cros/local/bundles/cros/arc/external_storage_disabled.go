@@ -41,7 +41,7 @@ func init() {
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.ExternalStorageDisabled{}, pci.VerifiedFunctionalityOS),
 		},
-		Timeout: 6 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 	})
 }
 
