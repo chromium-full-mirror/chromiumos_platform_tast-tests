@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
@@ -32,6 +33,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+type googleSheetsCUJTestParam struct {
+	browserType browser.Type
+	imageSearch bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -50,11 +56,16 @@ func init() {
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
-				Val:     browser.TypeAsh,
+				Val: googleSheetsCUJTestParam{
+					browserType: browser.TypeAsh,
+				},
 				Fixture: "loggedInToCUJUser",
-			}, {
-				Name:              "lacros",
-				Val:               browser.TypeLacros,
+			},
+			{
+				Name: "lacros",
+				Val: googleSheetsCUJTestParam{
+					browserType: browser.TypeLacros,
+				},
 				Fixture:           "loggedInToCUJUserLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
@@ -63,20 +74,37 @@ func init() {
 			{
 				Name:      "field_trials",
 				ExtraAttr: []string{"cuj_experimental"},
-				Val:       browser.TypeAsh,
-				Fixture:   "loggedInToCUJUserWithFieldTrials",
+				Val: googleSheetsCUJTestParam{
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithFieldTrials",
 			},
 			{
 				Name:      "battery_saver",
 				ExtraAttr: []string{"cuj_experimental"},
-				Val:       browser.TypeAsh,
-				Fixture:   "loggedInToCUJUserWithBatterySaver",
+				Val: googleSheetsCUJTestParam{
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithBatterySaver",
 			},
 			{
 				Name:      "partial_low_end_mode",
 				ExtraAttr: []string{"cuj_experimental"},
-				Val:       browser.TypeAsh,
-				Fixture:   "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
+				Val: googleSheetsCUJTestParam{
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
+			},
+			{
+				Name:              "local_image_search",
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
+				Val: googleSheetsCUJTestParam{
+					browserType: browser.TypeAsh,
+					imageSearch: true,
+				},
+				ExtraData: []string{launcher.ImageSearchPowerTestPictureName},
+				Fixture:   "loggedInToCUJUserWithLauncherImageSearch",
 			},
 		},
 	})
@@ -88,6 +116,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 		timeout                 = 10 * time.Second
 		overallScrollTimeout    = 10 * time.Minute
 		individualScrollTimeout = overallScrollTimeout / 4
+		imageCopyRepeatTimes    = 150
 	)
 
 	sheetURL, err := cuj.GetTestSheetsURL(ctx)
@@ -105,9 +134,10 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to capture device snapshot: ", err)
 	}
 
+	testParam := s.Param().(googleSheetsCUJTestParam)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	sheetConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	sheetConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, testParam.browserType, chrome.BlankURL)
 	if err != nil {
 		s.Fatal("Failed to setup Chrome: ", err)
 	}
@@ -196,6 +226,17 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 
 	if err := cuj.WaitForValidAccountInCookieJar(ctx, br, tconn); err != nil {
 		s.Fatal("Failed to wait for valid account in cookie jar: ", err)
+	}
+
+	if testParam.imageSearch {
+		// Get file base path.
+		user := cr.NormalizedUser()
+		testPicturePath := s.DataPath(launcher.ImageSearchPowerTestPictureName)
+		cleanup, err := cuj.PrepareImageSearchFiles(ctx, user, testPicturePath, imageCopyRepeatTimes)
+		if err != nil {
+			s.Fatal("Failed to prepare image search files: ", err)
+		}
+		defer cleanup()
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {

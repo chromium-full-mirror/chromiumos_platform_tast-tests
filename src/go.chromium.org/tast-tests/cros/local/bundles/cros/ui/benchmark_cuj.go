@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/benchmarkcuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 
 	"go.chromium.org/tast/core/testing"
@@ -44,6 +45,20 @@ func init() {
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
+			},
+			{
+				Name:              "speedometer_local_image_search",
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
+				Timeout:           defaultTimeout,
+				Fixture:           "loggedInToCUJUserWithLauncherImageSearch",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+					ImageSearch:   true,
+				},
+				ExtraData: []string{launcher.ImageSearchPowerTestPictureName},
 			},
 			{
 				Name:      "lacros_speedometer",
@@ -184,10 +199,10 @@ func init() {
 				},
 			},
 			{
-				Name:              "partial_low_end_mode_speedometer",
-				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
-				Timeout: defaultTimeout,
-				Fixture:           "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
+				Name:      "partial_low_end_mode_speedometer",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
@@ -205,10 +220,10 @@ func init() {
 				},
 			},
 			{
-				Name:              "partial_low_end_mode_motionmark",
-				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
-				Timeout: defaultTimeout,
-				Fixture:           "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
+				Name:      "partial_low_end_mode_motionmark",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
