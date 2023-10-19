@@ -18,6 +18,7 @@ type menuBypasser interface {
 	BypassDevBootUSB(ctx context.Context) error
 	TriggerDevToNormal(ctx context.Context) error
 	PowerOff(ctx context.Context, waitForFirmwareScreen bool) error
+	BypassDevDefaultBoot(ctx context.Context) error
 }
 
 type baseMenuBypasser struct {
@@ -177,6 +178,40 @@ func (lmb *legacyMenuBypasser) PowerOff(ctx context.Context, waitForFirmwareScre
 	return nil
 }
 
+// BypassDevDefaultBoot selects the firmware menu option to boot from
+// default target.
+func (lmb *legacyMenuBypasser) BypassDevDefaultBoot(ctx context.Context) error {
+	// Menu options seen in DEVELOPER WARNING screen:
+	//	0. Developer Options
+	//	1. Show Debug Info
+	//	2. Enable Root Verification
+	//	*3. Power Off
+	//	4. Language
+	//	(*) is the default selection.
+
+	// Menu options seen in DEV screen:
+	//	0. Boot legacy BIOS*      (default if dev_default_boot=legacy)
+	//	1. Boot USB image*        (default if dev_default_boot=usb)
+	//	2. Boot developer image*  (default if dev_default_boot=disk)
+	//	3. Cancel
+	//	4. Power off
+	//	5. Language
+	h := lmb.helper
+	// Transition from DEVELOPER WARNING to DEV screen.
+	if err := MoveTo(ctx, h, lmb.navigator, 3, 0); err != nil {
+		return err
+	}
+	if err := lmb.navigator.SelectOption(ctx); err != nil {
+		return err
+	}
+	// GoBigSleepLint: Simulate a specific speed of key press.
+	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+		return errors.Wrapf(err, "sleeping for %s (KeypressDelay) while at developer screen", h.Config.KeypressDelay)
+	}
+	testing.ContextLog(ctx, "Selecting default option on developer screen")
+	return lmb.navigator.SelectOption(ctx)
+}
+
 // menuOperator performs menu operations for menu UI.
 // The "menu UI" aims to replace both "legacy clamshell UI" and "legacy
 // menu UI".
@@ -195,6 +230,7 @@ type menuOperator struct {
 	miniOSEnabled   bool
 }
 
+// NewMenuOperator creates a new menuOperator.
 func NewMenuOperator(ctx context.Context, h *Helper) (menuOperator, error) {
 	newBaseMenuBypasser, err := newBaseMenuBypasser(ctx, h)
 	if err != nil {
@@ -563,6 +599,16 @@ func (mo *menuOperator) TriggerRecToMiniOS(ctx context.Context, olderVersion boo
 	return nil
 }
 
+// BypassDevDefaultBoot selects the firmware menu option to boot from
+// default target.
+func (mo *menuOperator) BypassDevDefaultBoot(ctx context.Context) error {
+	testing.ContextLog(ctx, "Selecting default option on developer screen")
+	return mo.navigator.SelectOption(ctx)
+}
+
+// NewMenuBypasser creates a new menuBypasser. It relies on a firmware
+// Helper to identify the required class for the menu bypass logic,
+// as well as other dependent objects.
 func NewMenuBypasser(ctx context.Context, h *Helper) (menuBypasser, error) {
 	newBaseMenuBypasser, err := newBaseMenuBypasser(ctx, h)
 	if err != nil {
