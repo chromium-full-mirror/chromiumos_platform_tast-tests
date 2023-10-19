@@ -21,6 +21,7 @@ var h264FilesFromBugs = map[string]string{
 	"277849540_1": "test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264",
 	"277849540_2": "test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264",
 	"277849540_3": "test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264",
+	"276358257": "test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264",
 }
 
 var h2644kFilesFromBugs = map[string]string{

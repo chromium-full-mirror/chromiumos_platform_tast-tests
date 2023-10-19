@@ -1,0 +1,5 @@
+{
+  "sha256sum": "8dff81ae79c2c00b306e18e2e2ef7f8a849dabcf7dffd3dc780d4628ca854e1d",
+  "size": 6580,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup_20231017.h264.json"
+}

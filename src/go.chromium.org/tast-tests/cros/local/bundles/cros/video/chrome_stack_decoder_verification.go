@@ -1012,6 +1012,19 @@ func init() {
 				},
 			},
 			{
+				Name:              "h264_files_from_bugs_276358257",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264"}),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
+				},
+			},
+			{
 				Name:              "h264_files_from_bugs_277849540_1",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
