@@ -21,16 +21,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: IPPeripheralService,
+		Func:         IPPeripheralService,
 		LacrosStatus: testing.LacrosVariantUnknown,
-		Desc: "Checks that the ip-peripheral service is running and can be started and stopped",
+		Desc:         "Checks that the ip-peripheral service is running and can be started and stopped",
 		Contacts: []string{
 			"core-devices@google.com",
 			"joshuapius@google.com", // Test author
 		},
 		BugComponent: "b:543707", // Communications > Video (Meet) > Platforms > Rooms > Core Devices (OS & Hardware)
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome", "chrome_internal", "cros_internal"},
+		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Platform("fizz", "kalista")),
 	})
 }
