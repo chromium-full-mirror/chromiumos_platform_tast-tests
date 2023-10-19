@@ -124,6 +124,7 @@ func Mtab(ctx context.Context, s *testing.State) {
 		"/sys/kernel/tracing":       {nil, "tracefs", defaultRW + ",mode=755"},
 
 		"/usr/share/chromeos-assets/quickoffice/_platform_specific": {loopDev, "squashfs", defaultRO},
+		"/usr/share/chromeos-assets/quickoffice/wasm": {loopDev, "squashfs", defaultRO},
 		"/usr/share/chromeos-assets/speech_synthesis/patts":         {loopDev, "squashfs", "nodev,nosuid"},
 		"/usr/share/cros-camera/libfs":                              {loopDev, "squashfs", "ro,nosuid,nodev"},
 
