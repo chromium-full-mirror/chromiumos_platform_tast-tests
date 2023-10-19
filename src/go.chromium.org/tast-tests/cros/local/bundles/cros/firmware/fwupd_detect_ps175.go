@@ -41,7 +41,7 @@ func FwupdDetectPS175(ctx context.Context, s *testing.State) {
 		expectedPlugin           = "parade_lspcon"
 	)
 
-	device, err := fwupd.GetDeviceByGUID(ctx, expectedDeviceGUID)
+	device, err := fwupd.DeviceByGUID(ctx, expectedDeviceGUID)
 	if err != nil {
 		s.Fatal("Failed to detect expected device: ", err)
 	}

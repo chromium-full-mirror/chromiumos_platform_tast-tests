@@ -124,14 +124,17 @@ type Device struct {
 }
 
 const (
-	dbusName      = "org.freedesktop.fwupd"
-	dbusPath      = "/"
-	dbusInterface = "org.freedesktop.fwupd"
+	// DbusName bus
+	DbusName = "org.freedesktop.fwupd"
+	// DbusPath object path
+	DbusPath = "/"
+	// DbusInterface interface
+	DbusInterface = "org.freedesktop.fwupd"
 )
 
 func inspectDevice(ctx context.Context, rawDevice map[string]dbus.Variant) (device *Device, err error) {
+	testing.ContextLog(ctx, "Inspecting device: ", rawDevice)
 	device = new(Device)
-
 	devst := reflect.ValueOf(device).Elem()
 	if !devst.CanAddr() {
 		return nil, errors.New("cannot assign to the item passed, item must be a pointer in order to assign")
@@ -156,18 +159,18 @@ func getDevices() ([]map[string]dbus.Variant, error) {
 		return nil, errors.Wrap(err, "failed to connect to system bus")
 	}
 
-	fwupd := conn.Object(dbusName, dbusPath)
+	fwupd := conn.Object(DbusName, DbusPath)
 
-	if err = fwupd.Call(dbusInterface+".GetDevices", 0).Store(&devices); err != nil {
+	if err = fwupd.Call(DbusInterface+".GetDevices", 0).Store(&devices); err != nil {
 		return nil, errors.Wrap(err, "failed to call GetDevices")
 	}
 
 	return devices, nil
 }
 
-// GetDeviceByGUID returns a fwupd Device as known to fwupd that has a GUID
+// DeviceByGUID returns a fwupd Device as known to fwupd that has a GUID
 // matching the provided one.
-func GetDeviceByGUID(ctx context.Context, expectedGUID string) (*Device, error) {
+func DeviceByGUID(ctx context.Context, expectedGUID string) (*Device, error) {
 	devices, err := getDevices()
 	if err != nil {
 		return nil, err
@@ -175,11 +178,9 @@ func GetDeviceByGUID(ctx context.Context, expectedGUID string) (*Device, error) 
 
 	// Scan all devices to locate one with the expected GUID.
 	for _, rawDevice := range devices {
-		testing.ContextLog(ctx, "Inspecting device: ", rawDevice)
-
 		device, err := inspectDevice(ctx, rawDevice)
 		if device == nil {
-			testing.ContextLog(ctx, "Failed to inspect the device: ", err)
+			testing.ContextLogf(ctx, "Failed to inspect the device: %s, Error: %v", rawDevice, err)
 			continue
 		}
 		if err != nil {
@@ -188,10 +189,84 @@ func GetDeviceByGUID(ctx context.Context, expectedGUID string) (*Device, error) 
 
 		for _, guid := range device.Guid {
 			if guid == expectedGUID {
+				testing.ContextLog(ctx, "Found device: ", device)
 				return device, nil
 			}
 		}
 	}
 
 	return nil, errors.New("No device found with GUID " + expectedGUID)
+}
+
+// DeviceByID returns a fwupd Device ID matching the provided one.
+func DeviceByID(ctx context.Context, expectedID string) (*Device, error) {
+	devices, err := getDevices()
+	if err != nil {
+		return nil, err
+	}
+	// Scan all devices to locate one with the expected GUID.
+	for _, rawDevice := range devices {
+		device, err := inspectDevice(ctx, rawDevice)
+		if device == nil {
+			testing.ContextLogf(ctx, "Failed to inspect the device: %s, Error: %v", rawDevice, err)
+			continue
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		if device.DeviceId == expectedID {
+			testing.ContextLog(ctx, "Found device: ", device)
+			return device, nil
+		}
+	}
+
+	return nil, errors.New("No device found with ID " + expectedID)
+}
+
+// DeviceDowngradeVersion returns the first available version to downgrade.
+func DeviceDowngradeVersion(ctx context.Context, deviceID string) (string, error) {
+	// Don't close the shared connection.
+	conn, err := dbusutil.SystemBus()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to connect to system bus")
+	}
+	fwupd := conn.Object(DbusName, DbusPath)
+
+	var downgrades []map[string]dbus.Variant
+	if err := fwupd.Call(DbusInterface+".GetDowngrades", 0, deviceID).Store(&downgrades); err != nil {
+		return "", errors.Wrap(err, "error fetching downgrades for device "+deviceID)
+	}
+
+	// Using the first available downgrade version.
+	for _, downgrade := range downgrades {
+		testing.ContextLog(ctx, "Downgrade version:", downgrade["Version"])
+		if _, ok := downgrade["Version"]; ok {
+			var version string
+			if err := dbus.Store([]interface{}{downgrade["Version"]}, &version); err != nil {
+				return "", errors.Wrap(err, "failed to read version for downgrade")
+			}
+			return version, nil
+		}
+	}
+
+	return "", errors.New("No usable updates found for " + deviceID)
+}
+
+// Version returns the version of fwupd daemon.
+func Version(ctx context.Context) (string, error) {
+	// Don't close the shared connection.
+	conn, err := dbusutil.SystemBus()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to connect to system bus")
+	}
+	fwupd := conn.Object(DbusName, DbusPath)
+
+	var version dbus.Variant
+	if version, err = fwupd.GetProperty(DbusInterface + ".DaemonVersion"); err != nil {
+		return "", errors.Wrap(err, "failed to get FWUPD version")
+	}
+
+	return version.String(), nil
 }
