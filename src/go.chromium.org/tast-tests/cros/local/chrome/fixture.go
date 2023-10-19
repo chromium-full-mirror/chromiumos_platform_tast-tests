@@ -309,10 +309,10 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInWithPrinterSetupAssistance,
-		Desc:     "Logged into a user session with all printer setup assistance and jelly flags enabled",
+		Desc:     "Logged into a user session with all printer setup assistance flags enabled",
 		Contacts: []string{"cros-peripherals@google.com", "ashleydp@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("PrintManagementSetupAssistance", "PrintPreviewDiscoveredPrinters", "PrintPreviewSetupAssistance", "PrintSettingsRevamp", "PrintSettingsPrinterStatus", "Jelly")}, nil
+			return []Option{EnableFeatures("PrintManagementSetupAssistance", "PrintPreviewDiscoveredPrinters", "PrintPreviewSetupAssistance", "PrintSettingsRevamp", "PrintSettingsPrinterStatus")}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,

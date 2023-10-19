@@ -263,15 +263,14 @@ func init() {
 	})
 
 	// lacrosPrinterSetupAssistanceEnabled is the same as lacros but has flags
-	// for printer setup assistance feature tests. Jelly flag is enabled to ensure
-	// screenshots look correct.
+	// for printer setup assistance feature tests.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "lacrosPrinterSetupAssistanceEnabled",
 		Desc:     "Lacros Chrome from a pre-built image with printer setup assistance and jelly flags enabled",
 		Contacts: []string{"cros-peripherals@google.com", "ashleydp@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(
-				chrome.EnableFeatures("PrintManagementSetupAssistance", "PrintPreviewDiscoveredPrinters", "PrintSettingsRevamp", "PrintSettingsPrinterStatus", "Jelly"),
+				chrome.EnableFeatures("PrintManagementSetupAssistance", "PrintPreviewDiscoveredPrinters", "PrintSettingsRevamp", "PrintSettingsPrinterStatus"),
 				chrome.LacrosEnableFeatures("PrintPreviewSetupAssistance"))).Opts()
 		}),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
