@@ -46,6 +46,9 @@ const (
 
 	// UsbDisableTime is the time to wait for USB to be disabled.
 	UsbDisableTime = 5 * time.Second
+
+	// DevScreenShortDelay is the time to wait for dev screen timeout.
+	DevScreenShortDelay = 2 * time.Second
 )
 
 // ModeSwitcher enables booting the DUT into different firmware boot modes (normal, dev, rec).

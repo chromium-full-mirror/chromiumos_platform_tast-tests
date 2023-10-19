@@ -1759,3 +1759,9 @@ func (h *Helper) RestartUI(ctx context.Context) error {
 	}
 	return nil
 }
+
+// ClearEventlog runs 'elogtool clear' to clear elog.
+func (h *Helper) ClearEventlog(ctx context.Context) error {
+	testing.ContextLog(ctx, "Clearing the event log")
+	return h.DUT.Conn().CommandContext(ctx, "elogtool", "clear").Run(ssh.DumpLogOnError)
+}
