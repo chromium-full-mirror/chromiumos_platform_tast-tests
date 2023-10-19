@@ -11,11 +11,13 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	"go.chromium.org/tast-tests/cros/common/mmconst"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/cellularconst"
 )
@@ -82,6 +84,7 @@ func MMMultiApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get MaxActiveMultiplexedBearers: ", err)
 	}
 
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 	var bearerPaths = []dbus.ObjectPath{}
 	usedApns := map[string]struct{}{}
 	for _, knownAPN := range knownAPNs {
@@ -123,6 +126,23 @@ func MMMultiApn(ctx context.Context, s *testing.State) {
 		// should not try to create more bearers than the maximum supported by the modem.
 		if uint32(len(bearerPaths)) >= maxActiveBearers {
 			break
+		}
+
+		ipv4, ipv6, err := helper.GetNetworkProvisionedCellularIPTypes(ctx)
+		if err != nil {
+			s.Fatal("Failed to read network provisioned IP types: ", err)
+		}
+		s.Log("ipv4: ", ipv4, " ipv6: ", ipv6)
+
+		verifyHostIPConnectivity := func(ctx context.Context) error {
+			if err := cellular.VerifyIPConnectivityUsingCurl(ctx, testexec.CommandContext, ipv4, ipv6, "/usr/bin"); err != nil {
+				return errors.Wrap(err, "failed connectivity test")
+			}
+			return nil
+		}
+
+		if err := helper.RunTestOnCellularInterface(ctx, verifyHostIPConnectivity); err != nil {
+			s.Fatal("Failed to run test on cellular interface: ", err)
 		}
 	}
 }
