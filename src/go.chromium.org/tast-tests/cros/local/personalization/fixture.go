@@ -15,7 +15,6 @@ import (
 
 func getTimeOfDayOption() chrome.Option {
 	return chrome.EnableFeatures(
-		"Jelly",
 		"TimeOfDayScreenSaver",
 		"TimeOfDayWallpaper")
 }
