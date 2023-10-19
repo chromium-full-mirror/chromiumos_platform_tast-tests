@@ -214,8 +214,9 @@ func init() {
 				Val: graphics.IgtTest{
 					Exe: "kms_force_connector_basic",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.HdmiConnected()),
 			}, {
 				Name: "kms_frontbuffer_tracking",
 				Val: graphics.IgtTest{
@@ -237,7 +238,7 @@ func init() {
 				},
 				Timeout:           5 * time.Minute,
 				ExtraAttr:         []string{"graphics_nightly"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("grunt", "zork", "guybrush")),
+				ExtraHardwareDeps: hwdep.D(hwdep.HdmiConnected()),
 			}, {
 				Name: "kms_hdr",
 				Val: graphics.IgtTest{

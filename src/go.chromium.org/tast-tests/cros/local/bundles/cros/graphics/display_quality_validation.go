@@ -322,8 +322,9 @@ func init() {
 					Exe:      "kms_force_connector_basic",
 					Subtests: []string{"force-connector-state", "force-edid", "force-load-detect", "prune-stale-modes"},
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.HdmiConnected()),
 			},
 			{
 				Name: "kms_frontbuffer_tracking",
