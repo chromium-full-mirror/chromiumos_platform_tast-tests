@@ -136,7 +136,7 @@ func ContextMenuClipboard(ctx context.Context, s *testing.State) {
 	// Enable the clipboard history refresh feature if the paste source requires
 	// the clipboard history submenu.
 	var option chrome.Option
-	var features = []string{"ClipboardHistoryRefresh", "Jelly"}
+	var features = []string{"ClipboardHistoryRefresh"}
 	if testParam.source == clipboardhistory.ClipboardHistorySubmenu ||
 		testParam.source == clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu {
 		option = chrome.EnableFeatures(features...)
