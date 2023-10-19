@@ -93,6 +93,11 @@ func ChromeCrashLoopV2(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not stat ", chromecrash.TestModeSuccessfulFile, ": ", err)
 	}
 
+	// Ensure that some stale session is not leaked from previous tests.
+	if err := upstart.RestartJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to restart ui job: ", err)
+	}
+
 	// Make sure debugd is running before we try to connect to it (in case some
 	// other test killed it).
 	if err := upstart.EnsureJobRunning(ctx, "debugd"); err != nil {
