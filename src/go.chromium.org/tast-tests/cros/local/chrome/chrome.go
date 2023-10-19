@@ -108,6 +108,10 @@ const (
 	// NOTE: A trailing slash is added to the URL in case that it could be passed over to NewConnForTarget.
 	VersionURL = "chrome://version/"
 
+	// SigninInternalsURL is the URL corresponding to the chrome signin-internals page.
+	// NOTE: A trailing slash is added to the URL in case that it could be passed over to NewConnForTarget.
+	SigninInternalsURL = "chrome://signin-internals/"
+
 	// persistentDir is a directory to save files that should persist even
 	// after Tast finishes. For instance, we save test extensions here so
 	// that Chrome does not malfunction on post-test manual inspection.
