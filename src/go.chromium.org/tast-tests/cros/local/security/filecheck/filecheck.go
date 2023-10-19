@@ -21,25 +21,30 @@ import (
 // Pattern matches one or more paths.
 // It can be used to verify that matched paths have expected ownership and permissions.
 type Pattern struct {
-	match        Matcher
-	uids, gids   []uint32     // allowed IDs; nil or empty to not check
-	mode         *os.FileMode // mode perm bits must exactly match
-	notMode      *os.FileMode // none of these perm bits may be set
-	skipChildren bool         // should children (if this is a dir) be skipped?
-	errors       []string     // set when the pattern is invalid
+	match         Matcher
+	uids, gids    []uint32     // allowed IDs; nil or empty to not check
+	mode          *os.FileMode // mode perm bits must exactly match
+	notMode       *os.FileMode // none of these perm bits may be set
+	skipPermCheck bool         // should general Unix permissions check be skipped
+	skipChildren  bool         // should children (if this is a dir) be skipped?
+	errors        []string     // set when the pattern is invalid
 }
 
 // NewPattern returns a new Pattern that verifies that paths matched by m meet the requirements specified by rs.
 func NewPattern(m Matcher, opts ...Option) *Pattern {
-	pat := &Pattern{match: m}
+	pattern := &Pattern{match: m}
 	for _, o := range opts {
-		o(pat)
+		o(pattern)
 	}
-	return pat
+	return pattern
 }
 
 // modeMask contains permission-related os.FileMode bits.
 const modeMask = os.ModePerm | os.ModeSetuid | os.ModeSetgid | os.ModeSticky
+
+// These are used for performing baseline checks on file/directory permission bits.
+const filePermMask = 0b001001011 // Files should not be less restrictive than rw-rw-r--
+const dirPermMask = 0b000000010  // Directories should not be less restrictive than rwxrwxr-x
 
 // check inspects fi and returns a list of problems.
 func (p *Pattern) check(fi os.FileInfo) (problems []string) {
@@ -69,15 +74,30 @@ func (p *Pattern) check(fi os.FileInfo) (problems []string) {
 		}
 	}
 
-	// Skip checking meaningless permissions on symbolic links.
-	if fi.Mode()&os.ModeSymlink == 0 {
-		mode := fi.Mode() & modeMask
-		if p.mode != nil && mode != *p.mode {
-			problems = append(problems, fmt.Sprintf("mode %04o (want %04o)", mode, *p.mode))
+	// Skip all permission checks and return early as they are meaningless on symbolic links.
+	if fi.Mode()&os.ModeSymlink != 0 {
+		return problems
+	}
+
+	mode := fi.Mode() & modeMask
+	if p.mode != nil && mode != *p.mode {
+		problems = append(problems, fmt.Sprintf("mode %04o (want %04o)", mode, *p.mode))
+	}
+	if p.notMode != nil {
+		if bad := mode & *p.notMode; bad != 0 {
+			problems = append(problems, fmt.Sprintf("mode %04o (%04o disallowed)", mode, bad))
 		}
-		if p.notMode != nil {
-			if bad := mode & *p.notMode; bad != 0 {
-				problems = append(problems, fmt.Sprintf("mode %04o (%04o disallowed)", mode, bad))
+	}
+
+	if !p.skipPermCheck {
+		perm := fi.Mode().Perm()
+		if fi.IsDir() {
+			if bad := dirPermMask & perm; bad != 0 {
+				problems = append(problems, fmt.Sprintf("directory too permissive: %3o)", perm))
+			}
+		} else {
+			if bad := filePermMask & perm; bad != 0 {
+				problems = append(problems, fmt.Sprintf("file too permissive: %3o", perm))
 			}
 		}
 	}
@@ -101,6 +121,9 @@ func (p *Pattern) String() string {
 	}
 	if p.notMode != nil {
 		fields = append(fields, fmt.Sprintf("notMode=%04o", *p.notMode))
+	}
+	if p.skipPermCheck {
+		fields = append(fields, "skipPermCheck")
 	}
 	if p.skipChildren {
 		fields = append(fields, "skipChildren")
@@ -174,6 +197,10 @@ func NotMode(nm os.FileMode) Option {
 	}
 }
 
+// SkipPermCheck skips the general Unix permissions check for the target file/directory.
+// This is useful for files/directories on dev images that are too permissive.
+func SkipPermCheck() Option { return func(p *Pattern) { p.skipPermCheck = true } }
+
 // SkipChildren indicates that any child paths should not be checked.
 // The directory itself will still be checked. This has no effect for non-directories.
 func SkipChildren() Option { return func(p *Pattern) { p.skipChildren = true } }
@@ -217,12 +244,12 @@ func Tree(path string) Matcher {
 }
 
 // Check inspects all files within (and including) root.
-// pats are executed in-order against each path.
+// patterns are executed in-order against each path.
 // If a pattern matches a path, no later patterns are evaluated against it.
-// If SkipChildren is included in a pattern , any matched directories' children are skipped.
+// If SkipChildren is included in a pattern, any matched directories' children are skipped.
 // A map from absolute path names to strings describing problems is returned,
 // along with the number of paths (not including ones skipped by SkipChildren) that were inspected.
-func Check(ctx context.Context, root string, pats []*Pattern) (
+func Check(ctx context.Context, root string, patterns []*Pattern) (
 	problems map[string][]string, numPaths int, err error) {
 	problems = make(map[string][]string)
 	err = filepath.Walk(root, func(fullPath string, fi os.FileInfo, err error) error {
@@ -245,12 +272,12 @@ func Check(ctx context.Context, root string, pats []*Pattern) (
 		}
 		numPaths++
 
-		for _, pat := range pats {
-			if pat.match(relPath) {
-				if msgs := pat.check(fi); len(msgs) > 0 {
+		for _, pattern := range patterns {
+			if pattern.match(relPath) {
+				if msgs := pattern.check(fi); len(msgs) > 0 {
 					problems[fullPath] = append(problems[fullPath], msgs...)
 				}
-				if pat.skipChildren && fi.IsDir() {
+				if pattern.skipChildren && fi.IsDir() {
 					return filepath.SkipDir
 				}
 				break

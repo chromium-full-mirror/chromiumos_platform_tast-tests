@@ -6,6 +6,7 @@ package filecheck
 
 import (
 	"context"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -26,12 +27,12 @@ func (fi *fakeFileInfo) Name() string       { return "" }
 func (fi *fakeFileInfo) Size() int64        { return 0 }
 func (fi *fakeFileInfo) Mode() os.FileMode  { return fi.mode }
 func (fi *fakeFileInfo) ModTime() time.Time { return time.Time{} }
-func (fi *fakeFileInfo) IsDir() bool        { return false }
+func (fi *fakeFileInfo) IsDir() bool        { return fi.mode.IsDir() }
 func (fi *fakeFileInfo) Sys() interface{}   { return &fi.st }
 
 func TestOptions(t *testing.T) {
 	const (
-		mode = os.ModeSticky | 0755
+		mode = os.ModeSticky | 0b110110100 // rw-rw-r--
 		uid  = 1000
 		gid  = 2000
 	)
@@ -58,6 +59,38 @@ func TestOptions(t *testing.T) {
 	} {
 		pat := NewPattern(AllPaths(), tc.opts...)
 		probs := pat.check(fi)
+		if len(probs) != tc.numProbs {
+			t.Errorf("%v returned %v; want %v problem(s)", pat.String(), probs, tc.numProbs)
+		}
+	}
+}
+
+func TestSkipPermCheckOption(t *testing.T) {
+	const (
+		filePassingMode = 0b110110100              // -rw-rw-r--
+		fileFailingMode = 0b111110100              // -rwxrw-r--
+		dirPassingMode  = fs.ModeDir | 0b111111101 // drwxrwxr-x
+		dirFailingMode  = fs.ModeDir | 0b111111111 // drwxrwxrwx
+		uid             = 1000
+		gid             = 2000
+	)
+
+	for _, tc := range []struct {
+		fi       fakeFileInfo
+		opts     []Option
+		numProbs int
+	}{
+		{fakeFileInfo{filePassingMode, syscall.Stat_t{Uid: uid, Gid: gid}}, []Option{SkipPermCheck()}, 0},
+		{fakeFileInfo{filePassingMode, syscall.Stat_t{Uid: uid, Gid: gid}}, []Option{}, 0},
+		{fakeFileInfo{fileFailingMode, syscall.Stat_t{Uid: uid, Gid: gid}}, []Option{SkipPermCheck()}, 0},
+		{fakeFileInfo{fileFailingMode, syscall.Stat_t{Uid: uid, Gid: gid}}, []Option{}, 1},
+		{fakeFileInfo{dirPassingMode, syscall.Stat_t{Uid: uid, Gid: gid}}, []Option{SkipPermCheck()}, 0},
+		{fakeFileInfo{dirPassingMode, syscall.Stat_t{Uid: uid, Gid: gid}}, []Option{}, 0},
+		{fakeFileInfo{dirFailingMode, syscall.Stat_t{Uid: uid, Gid: gid}}, []Option{SkipPermCheck()}, 0},
+		{fakeFileInfo{dirFailingMode, syscall.Stat_t{Uid: uid, Gid: gid}}, []Option{}, 1},
+	} {
+		pat := NewPattern(AllPaths(), tc.opts...)
+		probs := pat.check(&tc.fi)
 		if len(probs) != tc.numProbs {
 			t.Errorf("%v returned %v; want %v problem(s)", pat.String(), probs, tc.numProbs)
 		}
