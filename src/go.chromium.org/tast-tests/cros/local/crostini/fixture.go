@@ -219,20 +219,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBusterLargeContainer",
-		Desc:            "Install Crostini with Buster in large container with apps installed",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		Impl:            &crostiniFixture{preData: preTestDataBusterLC},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostiniWithoutArc",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("buster", true), GetContainerRootfsArtifact("buster", true)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBullseyeLargeContainer",
 		Desc:            "Install Crostini with Bullseye in large container with apps installed",
 		Contacts:        []string{"clumptini+oncall@google.com"},
@@ -396,11 +382,6 @@ var preTestDataBullseye = &preTestData{
 var preTestDataBookworm = &preTestData{
 	container:     normal,
 	debianVersion: vm.DebianBookworm,
-}
-
-var preTestDataBusterLC = &preTestData{
-	container:     largeContainer,
-	debianVersion: vm.DebianBuster,
 }
 
 var preTestDataBullseyeLC = &preTestData{

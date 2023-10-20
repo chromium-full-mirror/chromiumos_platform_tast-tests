@@ -21,32 +21,6 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBusterLargeContainerTablet",
-		Desc:            "Install Crostini with Buster in large container with apps installed in tablet mode",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		Impl:            &crostiniAppsFixture{deviceMode: devicemode.TabletMode},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout + restartCrostiniTimeout,
-		Parent:          "crostiniBusterLargeContainer",
-		Vars:            append([]string{"keepState"}, screenshot.ScreenDiffVars...),
-		Data:            []string{GetContainerMetadataArtifact("buster", true), GetContainerRootfsArtifact("buster", true)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBusterLargeContainerClamshell",
-		Desc:            "Install Crostini with Buster in large container with apps installed in clamshell mode",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		Impl:            &crostiniAppsFixture{deviceMode: devicemode.ClamshellMode},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout + restartCrostiniTimeout,
-		Parent:          "crostiniBusterLargeContainer",
-		Vars:            append([]string{"keepState"}, screenshot.ScreenDiffVars...),
-		Data:            []string{GetContainerMetadataArtifact("buster", true), GetContainerRootfsArtifact("buster", true)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBullseyeLargeContainerTablet",
 		Desc:            "Install Crostini with Bullseye in large container with apps installed in tablet mode",
 		Contacts:        []string{"clumptini+oncall@google.com"},
