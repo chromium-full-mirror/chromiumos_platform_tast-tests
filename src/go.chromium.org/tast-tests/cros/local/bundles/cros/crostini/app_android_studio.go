@@ -196,7 +196,7 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 			ud.Exists(uidetection.Word("Templates")),
 		),
 		ud.LeftClick(nextButton),
-		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Empty Activity", " ")).First()),
+		ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).WaitUntilExists(uidetection.TextBlock(strings.Split("Empty Activity", " ")).First()),
 		ud.LeftClick(finishButton),
 		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilExists(newProjectWindow),
 	)(ctx); err != nil {
