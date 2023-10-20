@@ -52,6 +52,11 @@ func init() {
 				Val:       "docomo",
 				ExtraAttr: []string{"cellular_carrier_docomo"},
 			},
+			{
+				Name:      "softbank",
+				Val:       "softbank",
+				ExtraAttr: []string{"cellular_carrier_softbank"},
+			},
 		},
 	})
 }
