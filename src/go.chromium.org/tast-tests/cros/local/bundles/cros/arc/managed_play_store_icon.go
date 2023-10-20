@@ -55,7 +55,6 @@ func init() {
 				arcEnabled:  &policy.ArcEnabled{Val: false},
 				wantEnabled: false,
 			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name: "unset",
@@ -79,7 +78,6 @@ func init() {
 				arcEnabled:  &policy.ArcEnabled{Val: false},
 				wantEnabled: false,
 			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name: "unset_vm",
