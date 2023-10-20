@@ -144,8 +144,12 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 					s.Fatalf("There is no carrier id defined for carrier FW %q", carrierFW.Version)
 				}
 			}
+			modemType, err := cellular.GetModemTypeFromDeviceID(device.DeviceId)
+			if err != nil {
+				s.Fatalf("Failed to get modem type: %s", err)
+			}
 			// Verify recovery on FM101
-			if device.DeviceId == "usb:2cb7:01a2" {
+			if modemType == cellularconst.ModemTypeFM101 {
 				recoveryFileList, err := getFM101RecoveryFileList(modemFirmwarePath, device.Variant)
 				if err != nil {
 					s.Fatal("Failed to get recovery file list: ", err)
