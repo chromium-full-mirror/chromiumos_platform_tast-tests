@@ -12,9 +12,9 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/mgs"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -99,7 +99,6 @@ func init() {
 					StressConfig:        nil,
 					ShouldFail:          true,
 				},
-				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "rr10_1thread_10ms",
@@ -115,7 +114,6 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 				},
-				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "rr10_1thread_10ms_hrtimer_off",
@@ -131,7 +129,7 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 				},
-				Fixture:           fixture.FakeDMSEnrolledWithHighResTimerOff,
+				Fixture:           fixture.HighResTimerOffEnrolled,
 				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
 			},
 			{
@@ -148,7 +146,6 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 				},
-				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "rr10_4thread_10ms",
@@ -164,7 +161,6 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 				},
-				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "rr12_1thread_10ms_stress_rr20_2workers_per_cpu",
@@ -183,7 +179,6 @@ func init() {
 						Priority: defaultStressPriority,
 					},
 				},
-				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "rr12_1thread_10ms_stress_nice_p0_2workers_per_cpu",
@@ -203,7 +198,6 @@ func init() {
 					},
 					ShouldFail: true,
 				},
-				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "nice_p0_1thread_10ms",
@@ -219,7 +213,6 @@ func init() {
 					MaxLatencyThreshold: 10000 * time.Microsecond,
 					StressConfig:        nil,
 				},
-				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "nice_p0_1thread_10ms_hrtimer_off",
@@ -235,7 +228,7 @@ func init() {
 					MaxLatencyThreshold: 10000 * time.Microsecond,
 					StressConfig:        nil,
 				},
-				Fixture:           fixture.FakeDMSEnrolledWithHighResTimerOff,
+				Fixture:           fixture.HighResTimerOffEnrolled,
 				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
 			},
 			{
@@ -252,7 +245,6 @@ func init() {
 					MaxLatencyThreshold: 5000 * time.Microsecond,
 					StressConfig:        nil,
 				},
-				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "nice_n20_1thread_10ms_hrtimer_off",
@@ -268,7 +260,7 @@ func init() {
 					MaxLatencyThreshold: 5000 * time.Microsecond,
 					StressConfig:        nil,
 				},
-				Fixture:           fixture.FakeDMSEnrolledWithHighResTimerOff,
+				Fixture:           fixture.HighResTimerOffEnrolled,
 				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
 			},
 			{
@@ -285,7 +277,6 @@ func init() {
 					MaxLatencyThreshold: 20000 * time.Microsecond,
 					StressConfig:        nil,
 				},
-				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "nice_p0_1thread_10ms_stress_nice_p0_2workers_per_cpu",
@@ -304,7 +295,6 @@ func init() {
 						Priority: 0,
 					},
 				},
-				Fixture: fixture.FakeDMSEnrolled,
 			},
 			{
 				Name: "rr12_1thread_10ms_small_core",
@@ -320,7 +310,6 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 				},
-				Fixture:           fixture.FakeDMSEnrolled,
 				ExtraSoftwareDeps: []string{"cpu_heterogeneous"},
 			},
 			{
@@ -337,7 +326,6 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 				},
-				Fixture:           fixture.FakeDMSEnrolled,
 				ExtraSoftwareDeps: []string{"cpu_heterogeneous"},
 			},
 		},
@@ -353,17 +341,20 @@ func (a affinity) String() string {
 }
 
 func CyclicBench(ctx context.Context, s *testing.State) {
-	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	mgs, _, err := mgs.New(
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, chrome.ResetTimeout)
+	defer cancel()
+
+	chrome, err := chrome.New(
 		ctx,
-		fdms,
-		mgs.DefaultAccount(),
-		mgs.AutoLaunch(mgs.MgsAccountID),
+		// org.chromium.ChromeFeaturesService does not need login to work.
+		// Don't login to speed up the test.
+		chrome.NoLogin(),
 	)
 	if err != nil {
-		s.Fatal("Failed to start MGS: ", err)
+		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer mgs.Close(ctx)
+	defer chrome.Close(cleanupCtx)
 
 	param := s.Param().(cyclicTestParameters)
 
