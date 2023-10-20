@@ -88,7 +88,7 @@ func PDProtocol(ctx context.Context, s *testing.State) {
 	// Sleep for 30 seconds to wait for recovery mode
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Get the PD state for the port under test
-		state, err := h.Servo.GetDUTPDState(ctx, servo.PDPortUnderTest)
+		state, err := h.Servo.GetDUTPDState(ctx)
 		if err != nil {
 			return err
 		}

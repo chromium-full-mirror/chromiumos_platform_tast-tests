@@ -342,20 +342,11 @@ func (s *Servo) GetServoChargerPortPDState(ctx context.Context) (*PDState, error
 	return s.getPDStateByTargetAndVersion(ctx, pdStateServo, TCPMv1, 0)
 }
 
-// GetDUTPDState returns PD state info for a PD port on the EC/DUT.
-func (s *Servo) GetDUTPDState(ctx context.Context, port int) (*PDState, error) {
+// GetDUTPDState returns PD state info for the PD port on the EC/DUT.
+func (s *Servo) GetDUTPDState(ctx context.Context) (*PDState, error) {
 	// This function requires TCPM version info discovered by Servo.RequireDUTPDInfo()
 	if err := s.RequireDUTPDInfo(ctx); err != nil {
 		return nil, errors.Wrap(err, "cannot discover DUT PD info")
 	}
-
-	if port == PDPortUnderTest {
-		port = s.dutPDInfo.activePort
-	} else if port > s.dutPDInfo.portCount {
-		return nil, errors.Errorf(
-			"invalid PD port number %d (DUT has %d ports)", port, s.dutPDInfo.portCount,
-		)
-	}
-
-	return s.getPDStateByTargetAndVersion(ctx, pdStateDUT, s.dutPDInfo.version, port)
+	return s.getPDStateByTargetAndVersion(ctx, pdStateDUT, s.dutPDInfo.version, s.dutPDInfo.activePort)
 }

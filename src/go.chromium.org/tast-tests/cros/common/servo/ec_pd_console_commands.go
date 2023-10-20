@@ -121,13 +121,8 @@ const (
 )
 
 // SendPowerSwapRequest sends power swap request to be initiated by the DUT.
-func (s *Servo) SendPowerSwapRequest(ctx context.Context, port int) error {
-	if port == PDPortUnderTest {
-		port = s.dutPDInfo.activePort
-	} else if port > MaxPorts {
-		return errors.Errorf("invalid PD port number %d", port)
-	}
-	cmd := fmt.Sprintf("pd %d swap power", port)
+func (s *Servo) SendPowerSwapRequest(ctx context.Context) error {
+	cmd := fmt.Sprintf("pd %d swap power", s.dutPDInfo.activePort)
 
 	s.EnablePDConsoleDebug(ctx)
 	defer s.DisablePDConsoleDebug(ctx)
@@ -145,13 +140,8 @@ func (s *Servo) SendPowerSwapRequest(ctx context.Context, port int) error {
 }
 
 // SendDataSwapRequest sends data swap request to be initiated by the DUT.
-func (s *Servo) SendDataSwapRequest(ctx context.Context, port int) error {
-	if port == PDPortUnderTest {
-		port = s.dutPDInfo.activePort
-	} else if port > MaxPorts {
-		return errors.Errorf("invalid PD port number %d", port)
-	}
-	cmd := fmt.Sprintf("pd %d swap data", port)
+func (s *Servo) SendDataSwapRequest(ctx context.Context) error {
+	cmd := fmt.Sprintf("pd %d swap data", s.dutPDInfo.activePort)
 
 	s.EnablePDConsoleDebug(ctx)
 	defer s.DisablePDConsoleDebug(ctx)
@@ -193,20 +183,20 @@ func (s *Servo) DisablePDConsoleDebug(ctx context.Context) error {
 }
 
 // SetPDPowerRole sets the PD power role for a PD port on the DUT.
-func (s *Servo) SetPDPowerRole(ctx context.Context, port int, role string) error {
-	pdState, err := s.GetDUTPDState(ctx, port)
+func (s *Servo) SetPDPowerRole(ctx context.Context, role string) error {
+	pdState, err := s.GetDUTPDState(ctx)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to get PD State")
 	}
 
 	if string(pdState.PowerRole) != role {
-		if err := s.SendPowerSwapRequest(ctx, port); err != nil {
+		if err := s.SendPowerSwapRequest(ctx); err != nil {
 			return errors.Wrap(err, "send power swap failed")
 		}
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if pdState, err := s.GetDUTPDState(ctx, port); err == nil {
+			if pdState, err := s.GetDUTPDState(ctx); err == nil {
 				testing.ContextLogf(ctx, "PD state after: %#v", pdState)
 				testing.ContextLog(ctx, "PD Role after: ", pdState.PowerRole)
 				if role != string(pdState.PowerRole) {
@@ -229,13 +219,9 @@ func (s *Servo) SetPDPowerRole(ctx context.Context, port int, role string) error
 }
 
 // RestorePDPort restores DUT PD port state to the SNK role.
-func (s *Servo) RestorePDPort(ctx context.Context, port int) error {
-	if port == PDPortUnderTest {
-		port = s.dutPDInfo.activePort
-	}
-
+func (s *Servo) RestorePDPort(ctx context.Context) error {
 	// Set DUT PD to SNK so battery charges.
-	if err := s.SetPDPowerRole(ctx, port, "SNK"); err != nil {
+	if err := s.SetPDPowerRole(ctx, "SNK"); err != nil {
 		return errors.Wrap(err, "failed to set PD role to SNK")
 	}
 
@@ -245,7 +231,7 @@ func (s *Servo) RestorePDPort(ctx context.Context, port int) error {
 // TriggerPDSoftReset triggers a USB-PD Soft Reset from the EC/DUT-side
 func (s *Servo) TriggerPDSoftReset(ctx context.Context) error {
 	// Get port status
-	pdStateBefore, err := s.GetDUTPDState(ctx, PDPortUnderTest)
+	pdStateBefore, err := s.GetDUTPDState(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get pre-test EC/DUT-side PD port status")
 	}
@@ -269,7 +255,7 @@ func (s *Servo) TriggerPDSoftReset(ctx context.Context) error {
 	}
 
 	// Compare PD state before and after (should be the same)
-	pdStateAfter, err := s.GetDUTPDState(ctx, PDPortUnderTest)
+	pdStateAfter, err := s.GetDUTPDState(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get post-test EC/DUT-side PD port status")
 	}

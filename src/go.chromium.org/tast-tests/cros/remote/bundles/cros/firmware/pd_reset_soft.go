@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -146,7 +145,7 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 	// The DUT may not support this, in which case the swap will fail and we
 	// will stop the test early.
 	s.Log("Attempting a power role swap")
-	if err := h.Servo.SetPDPowerRole(ctx, servo.PDPortUnderTest, "SRC"); err != nil {
+	if err := h.Servo.SetPDPowerRole(ctx, "SRC"); err != nil {
 		s.Log("EC/DUT cannot swap power roles. End test here: ", err)
 		return
 	}
@@ -155,7 +154,7 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 	defer func() {
 		// Restore the DUT's port back to normal operation (i.e. a sink)
 		s.Log("Restoring EC/DUT's port to sink")
-		if err := h.Servo.RestorePDPort(ctx, servo.PDPortUnderTest); err != nil {
+		if err := h.Servo.RestorePDPort(ctx); err != nil {
 			s.Fatal("Could not restore EC/DUT port: ", err)
 		}
 	}()

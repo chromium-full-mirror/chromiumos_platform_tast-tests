@@ -165,7 +165,7 @@ func dataRoleSwap(ctx context.Context, h *firmware.Helper, swapSrc dataSwapSrc) 
 	if swapSrc == dutDataSwap {
 		// Initiate swap from the DUT.
 		testing.ContextLog(ctx, "DUT initiates data swap")
-		err = h.Servo.SendDataSwapRequest(ctx, servo.PDPortUnderTest)
+		err = h.Servo.SendDataSwapRequest(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to initiate data swap on DUT")
 		}
