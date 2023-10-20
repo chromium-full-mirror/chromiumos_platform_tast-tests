@@ -82,7 +82,7 @@ func HotspotAbortEnable(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	const toggleName = "Hotspot enable"
+	const toggleName = "Hotspot"
 	if enabled, err := networkPage.IsToggleOptionEnabled(ctx, cr, toggleName); err != nil {
 		s.Fatal("Hotspot toggle should not be enabled: ", err)
 	} else if enabled {

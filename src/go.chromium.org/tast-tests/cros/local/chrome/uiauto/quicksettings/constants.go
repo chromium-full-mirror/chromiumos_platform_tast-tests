@@ -152,7 +152,7 @@ var HotspotDetailedViewToggle = nodewith.Name("Toggle hotspot").Role(role.Switch
 var HotspotPolicyImage = nodewith.Name("This setting is managed by your administrator").Role(role.Image)
 
 // HotspotOnNoDeviceConnectedText is the finder for the text that showing hotspot is on but no devices connected in Hotspot detailed view.
-var HotspotOnNoDeviceConnectedText = nodewith.Name("On, no devices connected").Role(role.StaticText)
+var HotspotOnNoDeviceConnectedText = nodewith.Name("No devices connected").Role(role.StaticText)
 
 // HotspotTurningOnText is the finder for the text that showing hotspot is turning on in Hotspot detailed view.
 var HotspotTurningOnText = nodewith.NameStartingWith("Turning on").Role(role.StaticText)

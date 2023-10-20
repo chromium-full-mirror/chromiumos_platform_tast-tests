@@ -162,13 +162,13 @@ var mobileButton = nodewith.Name("Mobile data").Role(role.Button)
 var MobileDataToggle = nodewith.NameStartingWith("Mobile data").Role(role.ToggleButton)
 
 // HotspotToggle is the finder for the hotspot toggle UI in both Network page and Hotspot subpage.
-var HotspotToggle = nodewith.Name("Hotspot enable").Role(role.ToggleButton)
+var HotspotToggle = nodewith.Name("Hotspot").Role(role.ToggleButton)
 
 // HotspotOnSublabel is the finder for the enabled hotspot status label in both Network page and Hotspot subpage.
 var HotspotOnSublabel = nodewith.Name("On").Role(role.StaticText)
 
 // HotspotTurningOnSublabel is the finder for the enabling hotspot status label in both Network page and Hotspot subpage.
-var HotspotTurningOnSublabel = nodewith.Name("Turning On…").Role(role.StaticText)
+var HotspotTurningOnSublabel = nodewith.Name("Turning on…").Role(role.StaticText)
 
 // HotspotOffSublabel is the finder for the disabled hotspot status label in both Network page and Hotspot subpage.
 var HotspotOffSublabel = nodewith.Name("Off").Role(role.StaticText)

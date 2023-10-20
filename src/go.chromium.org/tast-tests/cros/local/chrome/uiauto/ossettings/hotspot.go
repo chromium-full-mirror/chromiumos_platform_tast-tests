@@ -26,7 +26,7 @@ func LaunchAtHotspotSubpage(ctx context.Context, tconn *chrome.TestConn, cr *chr
 // ToggleHotspot toggles on/off hotspot and verify its status changes to expected.
 // It does nothing if the hotspot status is already expected.
 func (s *OSSettings) ToggleHotspot(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, expected bool) error {
-	const toggleName = "Hotspot enable"
+	const toggleName = "Hotspot"
 	if enabled, err := s.IsToggleOptionEnabled(ctx, cr, toggleName); err != nil {
 		return errors.Wrap(err, "faled to check option enabled")
 	} else if enabled == expected {
@@ -45,9 +45,9 @@ func (s *OSSettings) ToggleHotspot(ctx context.Context, tconn *chrome.TestConn, 
 	statusLabel := HotspotOffSublabel
 	if expected {
 		statusLabel = HotspotOnSublabel
-		const notificationTitle = "Hotspot is on"
+		const notificationTitle = "With hotspot on, Wi-Fi is off"
 		if _, err := ash.WaitForNotification(ctx, tconn, time.Minute, ash.WaitTitle(notificationTitle)); err != nil {
-			return errors.Wrap(err, "failed to wait for notification with title: Hotspot is on")
+			return errors.Wrap(err, "failed to wait for notification with title: With hotspot on, Wi-Fi is off")
 		}
 
 		// Close all notifications.

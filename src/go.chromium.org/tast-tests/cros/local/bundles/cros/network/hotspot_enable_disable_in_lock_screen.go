@@ -107,13 +107,14 @@ func HotspotEnableDisableInLockScreen(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to navigate to hotspot detailed view: ", err)
 	}
 
-	// Navigate to the hotspot detailed view should also toggle on hotspot.
 	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("Toggle off hotspot in Hotspot detailed view",
+	if err := uiauto.Combine("Toggle on and off hotspot in Hotspot detailed view",
+		ui.EnsureGoneFor(quicksettings.HotspotOnNoDeviceConnectedText, 3*time.Second),
+		ui.LeftClick(quicksettings.HotspotDetailedViewToggle),
 		ui.WaitUntilExists(quicksettings.HotspotOnNoDeviceConnectedText),
 		ui.LeftClick(quicksettings.HotspotDetailedViewToggle),
 		ui.EnsureGoneFor(quicksettings.HotspotOnNoDeviceConnectedText, 5*time.Second),
 	)(ctx); err != nil {
-		s.Fatal("Failed to toggle off hotspot in Hotspot detailed view: ", err)
+		s.Fatal("Failed to toggle on and off hotspot in Hotspot detailed view: ", err)
 	}
 }
