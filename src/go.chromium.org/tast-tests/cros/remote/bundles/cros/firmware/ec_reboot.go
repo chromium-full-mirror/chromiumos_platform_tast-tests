@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -26,6 +25,7 @@ func init() {
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
+		Timeout:      12 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 	})
 }
@@ -35,6 +35,9 @@ func ECReboot(ctx context.Context, s *testing.State) {
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servod")
+	}
+	if err := h.RequireConfig(ctx); err != nil {
+		s.Fatal("Failed to get configs")
 	}
 
 	type rebootTestCase struct {
@@ -78,20 +81,13 @@ func ECReboot(ctx context.Context, s *testing.State) {
 
 		if tc.shouldBeOn {
 			s.Log("Reestablishing connection to DUT")
-			if err := h.DUT.WaitConnect(ctx); err != nil {
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+			defer cancelWaitConnect()
+			if err := h.DUT.WaitConnect(waitConnectCtx); err != nil {
 				s.Fatalf("Failed to reconnect to DUT after rebooting via %s: %s", tc.rebootName, err)
 			}
 		} else {
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				state, err := h.Servo.GetECSystemPowerState(ctx)
-				if err != nil {
-					return testing.PollBreak(errors.Wrap(err, "failed to get EC system power state"))
-				}
-				if state != "G3" {
-					return errors.New("power state is " + state)
-				}
-				return nil
-			}, &testing.PollOptions{Timeout: 3 * time.Minute}); err != nil {
+			if err := h.WaitForPowerStates(ctx, 1*time.Second, 3*time.Minute, "G3"); err != nil {
 				s.Fatalf("Failed to put system off after rebooting via %s: %s", tc.rebootName, err)
 			}
 		}
