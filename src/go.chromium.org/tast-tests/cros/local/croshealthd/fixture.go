@@ -42,6 +42,36 @@ func init() {
 		// ran before the healthd fixture.
 		Parent: fixture.CrosHealthdRebootDUT,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crosHealthdRunningAndBluetoothEnabledWithBlueZ",
+		Desc: "The croshealthd daemon is running and the Bluetooth is using BlueZ",
+		Contacts: []string{
+			"cros-tdm-tpe-eng@google.com", // Team mailing list
+			"byronlee@google.com",         // Fixture maintainer
+		},
+		SetUpTimeout:    30 * time.Second,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  5 * time.Second,
+		PostTestTimeout: 5 * time.Second,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            newCrosHealthdFixture(),
+		Parent:          "bluetoothEnabledWithBlueZ",
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crosHealthdRunningAndBluetoothEnabledWithFloss",
+		Desc: "The croshealthd daemon is running and the Bluetooth is using Floss",
+		Contacts: []string{
+			"cros-tdm-tpe-eng@google.com", // Team mailing list
+			"byronlee@google.com",         // Fixture maintainer
+		},
+		SetUpTimeout:    30 * time.Second,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  5 * time.Second,
+		PostTestTimeout: 5 * time.Second,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            newCrosHealthdFixture(),
+		Parent:          "bluetoothEnabledWithFloss",
+	})
 }
 
 // checkNewCrashes checks if there are new healthd related crash files.

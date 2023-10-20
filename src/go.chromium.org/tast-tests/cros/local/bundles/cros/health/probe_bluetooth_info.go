@@ -52,6 +52,11 @@ type bluetoothInfo struct {
 	Adapters []adapterInfo `json:"adapters"`
 }
 
+type bluetoothInfoTestParams struct {
+	// If true, validate Bluetooth info via Bluez. Otherwise, via Floss.
+	BluezValidation bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ProbeBluetoothInfo,
@@ -64,8 +69,30 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
-		Fixture:      "crosHealthdRunning",
-		HardwareDeps: hwdep.D(hwdep.Bluetooth()),
+		Params: []testing.Param{{
+			Name: "",
+			Val: bluetoothInfoTestParams{
+				BluezValidation: true,
+			},
+			Fixture:           "crosHealthdRunning",
+			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
+		}, {
+			Name: "bluez",
+			Val: bluetoothInfoTestParams{
+				BluezValidation: true,
+			},
+			Fixture: "crosHealthdRunningAndBluetoothEnabledWithBlueZ",
+			// TODO(b/303370425): Promote tast to critical
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			Name: "floss",
+			Val: bluetoothInfoTestParams{
+				BluezValidation: false,
+			},
+			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
+			// TODO(b/303370425): Promote tast to critical
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}},
 	})
 }
 
@@ -286,8 +313,11 @@ func validateConnectedDevices(ctx context.Context, got []deviceInfo) error {
 
 // ProbeBluetoothInfo is the main function of this tast test.
 func ProbeBluetoothInfo(ctx context.Context, s *testing.State) {
-	if err := initiateBluetoothAdapterData(ctx); err != nil {
-		s.Fatal("Failed to initiate bluetooth adapter data: ", err)
+	bluezValidation := s.Param().(bluetoothInfoTestParams).BluezValidation
+	if bluezValidation {
+		if err := initiateBluetoothAdapterData(ctx); err != nil {
+			s.Fatal("Failed to initiate bluetooth adapter data: ", err)
+		}
 	}
 
 	params := croshealthd.TelemParams{Category: croshealthd.TelemCategoryBluetooth}
@@ -300,17 +330,20 @@ func ProbeBluetoothInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get Bluetooth adapter data: empty adapters slice")
 	}
 
-	if err := validateBluetoothAdapterData(ctx, &info); err != nil {
-		s.Fatal("Failed to validate bluetooth adapter data: ", err)
-	}
+	if bluezValidation {
+		if err := validateBluetoothAdapterData(ctx, &info); err != nil {
+			s.Fatal("Failed to validate bluetooth adapter data: ", err)
+		}
 
-	if err := resetBluetoothAdapterData(ctx); err != nil {
-		s.Fatal("Failed to reset bluetooth adapter data: ", err)
-	}
+		if err := resetBluetoothAdapterData(ctx); err != nil {
+			s.Fatal("Failed to reset bluetooth adapter data: ", err)
+		}
 
-	// Note that this validation does not mean we have test coverage of Bluetooth
-	// devices. There are currently no Bluetooth devices available in the lab.
-	if err := validateConnectedDevices(ctx, info.Adapters[0].ConnectedDevices); err != nil {
-		s.Fatal("Failed to validate bluetooth device data: ", err)
+		// Note that this validation doesn't mean we have test coverage of Bluetooth
+		// devices. There are currently no Bluetooth devices available in the lab.
+		if err := validateConnectedDevices(ctx, info.Adapters[0].ConnectedDevices); err != nil {
+			s.Fatal("Failed to validate bluetooth device data: ", err)
+		}
 	}
+	// TODO(b/303370425): Validate Bluetooth info via Floss.
 }
