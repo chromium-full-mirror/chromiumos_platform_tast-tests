@@ -6,16 +6,24 @@
 package utils
 
 import (
+	"bytes"
 	"context"
+	"image"
+	"image/png"
 	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/media/imgcmp"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -308,4 +316,127 @@ func FindInfoOnCameraApp(ctx context.Context, uiautoSvc ui.AutomationServiceClie
 		return errors.Wrap(err, "failed to wait for the info from context menu")
 	}
 	return nil
+}
+
+// ConnectExternalCamera connects an external camera through a fixture and returns device information.
+func ConnectExternalCamera(ctx context.Context, dut *dut.DUT, extCameraID string) (string, error) {
+	before, err := USBCamerasFromV4L2Test(ctx, dut)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get v4l2 devices before connecting external camera")
+	}
+
+	if err := ControlFixture(ctx, extCameraID, "on"); err != nil {
+		return "", errors.Wrap(err, "failed to control fixture to connect external camera")
+	}
+
+	var extCamera string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		after, err := USBCamerasFromV4L2Test(ctx, dut)
+		if err != nil {
+			return errors.Wrap(err, "failed to get v4l2 devices after connecting external camera")
+		}
+
+		diff := FindDifference(after, before)
+		if len(diff) == 1 {
+			extCamera = diff[0]
+			return nil
+		}
+		return errors.New("Unable to find the external camera")
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}); err != nil {
+		return "", err
+	}
+	return extCamera, nil
+}
+
+// SwitchCCADevice clicks the "switch device" button on the CCA app.
+func SwitchCCADevice(ctx context.Context, dut *dut.DUT, uiautoSvc ui.AutomationServiceClient, expectedDevice string) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		currentDevice, err := CCAUseDevice(ctx, dut)
+		if err != nil {
+			return errors.Wrap(err, "failed to retrieve CCA app is using which camera")
+		}
+
+		if expectedDevice == currentDevice {
+			return nil
+		}
+
+		if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: switchDeviceFinder}); err != nil {
+			return errors.Wrap(err, "failed to wait for switch button")
+		}
+
+		if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: switchDeviceFinder}); err != nil {
+			return errors.Wrap(err, "failed to to click switch button")
+		}
+
+		return errors.Errorf("CCA app is not using the expected camera; current: %s, expected: %v", currentDevice, expectedDevice)
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 3 * time.Second})
+}
+
+// CCAUseDevice returns the device currently being used by the CCA application.
+func CCAUseDevice(ctx context.Context, dut *dut.DUT) (string, error) {
+	devices, err := USBCamerasFromV4L2Test(ctx, dut)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get v4l2 devices")
+	}
+
+	out, err := dut.Conn().CommandContext(ctx, "lsof").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "execute lsof command")
+	}
+	output := string(out)
+
+	for _, device := range devices {
+		if strings.Contains(output, device) && strings.Contains(output, "arc-camera") {
+			return device, nil
+		}
+	}
+	return "", errors.New("Unable to find CCA app is using which v4l2 devices")
+}
+
+// CropCCAPreview returns the preview image of the CCA application.
+func CropCCAPreview(ctx context.Context, uiautoSvc ui.AutomationServiceClient, savedFolder string) (image.Image, error) {
+	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 10e6)
+	resp, err := uiautoSvc.CaptureScreenshot(ctx, &ui.CaptureScreenshotRequest{}, maxSizeOption)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to take screenshot")
+	}
+
+	img, err := png.Decode(bytes.NewReader(resp.PngBase64))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to decode PNG file")
+	}
+
+	builtinDisplayInfo, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: BuiltinDisplayFinder})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get built-in display info")
+	}
+
+	previewContentInfo, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: previewContentFinder})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get CCA preview content info")
+	}
+
+	zoomW := img.Bounds().Max.X / int(builtinDisplayInfo.NodeInfo.Location.Width)
+	zoomH := img.Bounds().Max.Y / int(builtinDisplayInfo.NodeInfo.Location.Height)
+
+	subX0 := int(previewContentInfo.NodeInfo.Location.Left) * zoomW
+	subY0 := int(previewContentInfo.NodeInfo.Location.Top) * zoomH
+	subX1 := int(previewContentInfo.NodeInfo.Location.Left+previewContentInfo.NodeInfo.Location.Width) * zoomW
+	subY1 := int(previewContentInfo.NodeInfo.Location.Top+previewContentInfo.NodeInfo.Location.Height) * zoomH
+
+	subImage := img.(interface {
+		SubImage(r image.Rectangle) image.Image
+	}).SubImage(image.Rect(subX0, subY0, subX1, subY1))
+
+	builtinDisplayFilepath := filepath.Join(savedFolder, "builtin_display.png")
+	if err := imgcmp.DumpImageToPNG(ctx, &img, builtinDisplayFilepath); err != nil {
+		return nil, errors.Wrap(err, "failed to save built-in display")
+	}
+
+	ccaPreviewFilepath := filepath.Join(savedFolder, "cca_preview.png")
+	if err := imgcmp.DumpImageToPNG(ctx, &subImage, ccaPreviewFilepath); err != nil {
+		return nil, errors.Wrap(err, "failed to save CCA preview content image")
+	}
+
+	return subImage, nil
 }
