@@ -9,6 +9,7 @@ import (
 	"time"
 
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/ctxutil"
@@ -35,6 +36,7 @@ func init() {
 			"tast.cros.bluetooth.BluetoothService",
 			"tast.cros.bluetooth.BluetoothUIService",
 		},
+		TestBedDeps: []string{tbdep.WorkingBluetoothPeers(1)},
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled__le_keyboard",

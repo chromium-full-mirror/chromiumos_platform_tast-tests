@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chameleon"
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/bluetooth/bluetoothutil"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
@@ -39,6 +40,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService", "tast.cros.power.MetricsService"},
 		HardwareDeps: hwdep.D(hwdep.Battery()),
+		TestBedDeps:  []string{tbdep.WorkingBluetoothPeers(2)},
 		Timeout:      25 * time.Minute,
 		Params: []testing.Param{
 			{

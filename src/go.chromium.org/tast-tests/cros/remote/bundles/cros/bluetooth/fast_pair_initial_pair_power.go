@@ -10,6 +10,7 @@ import (
 	"time"
 
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/testing"
@@ -37,8 +38,9 @@ func init() {
 			"tast.cros.bluetooth.BluetoothUIService",
 			"tast.cros.power.MetricsService",
 		},
-		Timeout: 12 * time.Minute,
-		Vars:    []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
+		TestBedDeps: []string{tbdep.WorkingBluetoothPeers(1)},
+		Timeout:     12 * time.Minute,
+		Vars:        []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled",
