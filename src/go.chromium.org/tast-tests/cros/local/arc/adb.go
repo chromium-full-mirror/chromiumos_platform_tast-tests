@@ -85,3 +85,11 @@ func (a *ARC) Uninstall(ctx context.Context, pkg string) error {
 func (a *ARC) IsConnected(ctx context.Context) error {
 	return a.device.IsConnected(ctx)
 }
+
+// Root restarts ADB as root and waits until it is fully restarted.
+func (a *ARC) Root(ctx context.Context) error {
+	if err := a.device.Root(ctx); err != nil {
+		return err
+	}
+	return a.device.WaitForState(ctx, adb.StateDevice, ctxutil.MaxTimeout)
+}

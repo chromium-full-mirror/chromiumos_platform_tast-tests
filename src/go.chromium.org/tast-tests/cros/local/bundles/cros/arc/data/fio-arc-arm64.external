@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromeos-test-assets-private/tast/crosint/arc/fio-3.34-arc-arm64-20231127.bin",
+  "size": 4366864,
+  "sha256sum": "e4d3d74a40c874331cb468f45e3902685a631b8cdf705e69c6aa86eb4fdc6e94"
+}
