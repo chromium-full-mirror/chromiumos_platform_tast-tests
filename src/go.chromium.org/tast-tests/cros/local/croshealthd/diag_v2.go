@@ -23,16 +23,18 @@ import (
 
 // List of cros_healthd diagnostic routines.
 const (
-	RoutineMemoryV2        string = "memory_v2"
-	RoutineCPUStressV2     string = "cpu_stress_v2"
-	RoutineAudioDriver     string = "audio_driver"
-	RoutineCPUCacheV2      string = "cpu_cache_v2"
-	RoutineUFSLifetime     string = "ufs_lifetime"
-	RoutinePrimeSearchV2   string = "prime_search_v2"
-	RoutineVolumeButton    string = "volume_button"
-	RoutineLedLitUp        string = "led_lit_up"
-	RoutineFloatingPointV2 string = "floating_point_v2"
-	Fan                    string = "fan"
+	RoutineMemoryV2             string = "memory_v2"
+	RoutineCPUStressV2          string = "cpu_stress_v2"
+	RoutineAudioDriver          string = "audio_driver"
+	RoutineCPUCacheV2           string = "cpu_cache_v2"
+	RoutineUFSLifetime          string = "ufs_lifetime"
+	RoutinePrimeSearchV2        string = "prime_search_v2"
+	RoutineVolumeButton         string = "volume_button"
+	RoutineLedLitUp             string = "led_lit_up"
+	RoutineFloatingPointV2      string = "floating_point_v2"
+	Fan                         string = "fan"
+	RoutineBluetoothPowerV2     string = "bluetooth_power_v2"
+	RoutineBluetoothDiscoveryV2 string = "bluetooth_discovery_v2"
 )
 
 // RoutineResultV2 contains the progress of the routine as a percentage and

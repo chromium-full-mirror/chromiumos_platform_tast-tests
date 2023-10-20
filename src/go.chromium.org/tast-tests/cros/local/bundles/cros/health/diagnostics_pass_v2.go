@@ -23,59 +23,83 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"diagnostics"},
 		Attr:         []string{"group:mainline"},
-		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
 			// Contact: yycheng@google.com
-			Name: "memory_v2",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineMemoryV2},
+			Name:    "memory_v2",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineMemoryV2},
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: yycheng@google.com
-			Name: "cpu_stress_v2",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
+			Name:    "cpu_stress_v2",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
+			Fixture: "crosHealthdRunning",
 			// TODO(b/295497926): Promote tast to critical
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: kerker@google.com
-			Name: "audio_driver",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
+			Name:    "audio_driver",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
+			Fixture: "crosHealthdRunning",
 			// TODO(b/295499944): Promote tast to critical
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: yycheng@google.com
-			Name: "cpu_cache_v2",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
+			Name:    "cpu_cache_v2",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
+			Fixture: "crosHealthdRunning",
 			// TODO(b/281766836): Promote tast to critical
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: dennyh@google.com
 			Name:              "ufs_lifetime",
 			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineUFSLifetime},
+			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 		}, {
 			// Contact: yycheng@google.com
-			Name: "prime_search_v2",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutinePrimeSearchV2},
+			Name:    "prime_search_v2",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutinePrimeSearchV2},
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
-			Name: "volume_button",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
+			Name:    "volume_button",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
 			Name:              "led_lit_up",
 			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineLedLitUp},
+			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		}, {
 			// Contact: yycheng@google.com
-			Name: "floating_point_v2",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineFloatingPointV2},
+			Name:    "floating_point_v2",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineFloatingPointV2},
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: yycheng@google.com
-			Name: "fan",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.Fan},
+			Name:    "fan",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.Fan},
+			Fixture: "crosHealthdRunning",
 			// TODO(b/306101885): Promote to critical.
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
-		},
-		}})
+		}, {
+			// Contact: byronlee@google.com
+			Name: "bluetooth_power",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineBluetoothPowerV2},
+			// Bluetooth v2 routines are only supported when Floss is enabled.
+			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
+			// TODO(b/303370425): Promote tast to critical
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			// Contact: byronlee@google.com
+			Name: "bluetooth_discovery",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineBluetoothDiscoveryV2},
+			// Bluetooth v2 routines are only supported when Floss is enabled.
+			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
+			// TODO(b/303370425): Promote tast to critical
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}}})
 }
 
 // DiagnosticsPassV2 is a paramaterized test that runs supported diagnostic
