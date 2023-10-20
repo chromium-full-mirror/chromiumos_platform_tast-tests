@@ -96,7 +96,7 @@ func killLacros(ctx context.Context, lacrosExecPath string) error {
 
 	testing.ContextLogf(ctx, "Waiting for %d processes", len(procs))
 	for _, proc := range procs {
-		if err := procutil.WaitForTerminated(ctx, proc, 3*time.Second); err != nil {
+		if err := procutil.WaitForTerminated(ctx, proc, 5*time.Second); err != nil {
 			return errors.Wrap(err, "failed to wait for process termination")
 		}
 	}
