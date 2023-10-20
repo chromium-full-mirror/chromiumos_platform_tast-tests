@@ -1,5 +1,5 @@
 {
-    "sha256sum": "4747563a978d30870b5bff6178b07729f93d83b85b6ea4026efded9a45413a77",
-    "size": 617491050,
-    "url": "gs://refvm-images/2023-10/refvm-20231011_232458.qcow2"
+    "sha256sum": "481a04a3f749a5c7cbb2f700b1439d28c9ffe5b50607eccde5fe22e5d6a6ba42",
+    "size": 620635925,
+    "url": "gs://refvm-images/2023-10/refvm-20231019_083422.qcow2"
 }
