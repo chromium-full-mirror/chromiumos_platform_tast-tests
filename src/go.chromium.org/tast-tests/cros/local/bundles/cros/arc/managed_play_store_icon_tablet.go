@@ -171,9 +171,6 @@ func checkAndDismissPlayStoreUnavailablePopup(ctx context.Context, uia *uiauto.C
 		return errors.Wrap(err, "failed to see pop-up window")
 	}
 
-	// If we click the OK button immediately when the pop-up appears, the pop-up don't be dismissed.
-	testing.Sleep(ctx, 1*time.Second)
-
 	// Click OK button to dismiss pop-up window.
 	button := nodewith.Name("OK").Role(role.Button).Ancestor(popupUI)
 	if err := uia.WithTimeout(3 * time.Second).LeftClick(button)(ctx); err != nil {
