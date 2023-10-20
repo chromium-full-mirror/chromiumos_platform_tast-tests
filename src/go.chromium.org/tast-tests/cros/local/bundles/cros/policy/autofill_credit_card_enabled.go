@@ -26,6 +26,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -123,6 +124,13 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 			defer closeBrowser(cleanupCtx)
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
+			// Open the net-export page and start logging.
+			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			if err != nil {
+				s.Fatal("Failed to start net export: ", err)
+			}
+			defer netExport.Cleanup(cleanupCtx)
+
 			// TODO(crbug.com/1298550): Don't rely on all files being in same directory.
 			baseDirectory := filepath.Dir(s.DataPath(autofillCreditCardCertFile))
 			if err := autofillpayments.TriggerAutofillCreditCardEnabled(ctx,
@@ -133,6 +141,14 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 					BaseDirectory: baseDirectory,
 					PolicySetting: key}); err != nil {
 				s.Fatal("Failed to trigger autofill for payments: ", err)
+			}
+
+			foundAnnotation, err := netExport.Find(autofillpayments.AutofillCreditCardAnnotationHash)
+			if err != nil {
+				s.Fatal("Failed to search net log file for annotation: ", err)
+			}
+			if foundAnnotation != param.ShouldFindAnnotation {
+				s.Fatalf("Annotation mismatch = got %t, want %t", foundAnnotation, param.ShouldFindAnnotation)
 			}
 		})
 	}

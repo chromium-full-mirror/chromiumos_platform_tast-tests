@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 
@@ -130,10 +129,6 @@ func TriggerAutofillCreditCardEnabled(ctx context.Context, params networkrequest
 			htmlFieldID: "cc-exp",
 		},
 	}
-	// Open the net-export page and start logging.
-	if err := annotations.StartLogging(ctx, cr, br, false); err != nil {
-		return errors.Wrap(err, "failed to start logging")
-	}
 
 	// Ensure saving payment methods toggle is accordingly enabled/disabled.
 	if err := policyutil.SettingsPage(ctx, cr, br, "payments").
@@ -235,14 +230,6 @@ func TriggerAutofillCreditCardEnabled(ctx context.Context, params networkrequest
 
 			}
 		}
-	}
-	foundAnnotation := false
-	if foundAnnotation, err = annotations.StopLoggingCheckLogs(ctx, cr, br, AutofillCreditCardAnnotationHash); err != nil {
-		return errors.Wrap(err, "failed to save credit card")
-	}
-
-	if foundAnnotation != param.ShouldFindAnnotation {
-		return errors.Errorf("unexpected autofill annotation result: got %t expected %t", foundAnnotation, param.ShouldFindAnnotation)
 	}
 	return nil
 
