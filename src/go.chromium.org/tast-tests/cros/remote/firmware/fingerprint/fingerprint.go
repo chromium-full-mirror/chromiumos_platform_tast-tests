@@ -118,6 +118,9 @@ var keyIDMap = map[string]KeyType{
 	// nami.
 	"754aea623d69975a22998f7b97315dd53115d723": KeyTypePreMp,
 	"35486c0090ca390408f1fbbf2a182966084fe2f8": KeyTypeMp,
+
+	// helipilot.
+	"ff60ba1fe2cf13f60d0debfb350f7c321115e59a": KeyTypePreMp,
 }
 
 // Map of attributes for a given board's various firmware file releases.
@@ -162,6 +165,14 @@ var firmwareVersionMap = map[fp.BoardName]map[string]firmwareMetadata{
 			roVersion: "dartmonkey_v2.0.2887-311310808",
 			rwVersion: "dartmonkey_v2.0.22080-23c953957",
 			keyID:     "257a0aa3ac9e81aa4bc3aabdb6d3d079117c5799",
+		},
+	},
+	fp.BoardNameHelipilot: {
+		"helipilot_v2.0.22861-6d50c1e39d-RO_v2.0.22861-6d50c1e39d-RW.bin": {
+			sha256sum: "0506e8378917fd3b32ac65c3e1337f19aba98f0295b3398def212cb2000fd28f",
+			roVersion: "helipilot_v2.0.22861-6d50c1e39d",
+			rwVersion: "helipilot_v2.0.22861-6d50c1e39d",
+			keyID:     "ff60ba1fe2cf13f60d0debfb350f7c321115e59a",
 		},
 	},
 }
