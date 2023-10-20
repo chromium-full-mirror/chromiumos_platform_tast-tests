@@ -60,7 +60,7 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 	for _, device := range manifest.Device {
 		// rootfs path
 		modemFirmwarePaths := []string{cellular.GetModemFirmwarePath()}
-
+		uninstallDlc := false
 		if device.GetDlc() != nil && device.GetDlc().GetDlcId() != "" {
 			dlcCounter++
 			modemType, err := cellular.GetModemTypeFromDeviceID(device.DeviceId)
@@ -76,6 +76,7 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 			// images since the DLCs are purged.  It works on test images because the modem
 			// DLCs have the DLC_PRELOAD flag in their ebuilds.
 			if dutVariant != device.Variant {
+				uninstallDlc = true
 				dlc.Install(ctx, device.Dlc.DlcId, "")
 			}
 			state, err := dlc.GetDlcState(ctx, device.Dlc.DlcId)
@@ -160,6 +161,11 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 					}
 				}
 			}
+		}
+		// Remove the DLC after each test, otherwise we might run out of disk
+		// space on devices with many DLCs and small hard drives.
+		if uninstallDlc {
+			dlc.Uninstall(ctx, device.Dlc.DlcId)
 		}
 	}
 
