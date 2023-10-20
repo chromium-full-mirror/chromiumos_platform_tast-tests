@@ -860,29 +860,43 @@ func (im InputMethod) WaitUntilRemoved(tconn *chrome.TestConn) action.Action {
 	return im.actionWithFullyQualifiedID(tconn, f)
 }
 
-// Activate sets the input method to use via Chrome API.
-// It does nothing if the IME is already in use.
+// Activate sets the current input method and waits for its readiness.
+// Refer to setInputMethod function for more details.
 func (im InputMethod) Activate(tconn *chrome.TestConn) action.Action {
-	return uiauto.NamedCombine(fmt.Sprintf("activating input method %q", im.Name),
-		im.SetCurrentInputMethod(tconn),
-		im.WaitUntilActivated(tconn),
-	)
+	return im.setInputMethod(tconn, true)
 }
 
-// SetCurrentInputMethod sets the current input method to use via Chrome API.
-// Note: The IME might still need sometime to warm up after this.
-// It's recommended to use im.Activate for input functional testing.
+// SetCurrentInputMethod sets the current input method without waiting for its readiness.
+// Refer to setInputMethod function for more details.
 func (im InputMethod) SetCurrentInputMethod(tconn *chrome.TestConn) action.Action {
+	return im.setInputMethod(tconn, false)
+}
+
+// setInputMethod sets the current input method to use via Chrome API.
+// Note: The IME might still need sometime to warm up.
+// It's recommended to use im.Activate for input functional testing.
+func (im InputMethod) setInputMethod(tconn *chrome.TestConn, waitForWarmUp bool) action.Action {
 	f := func(ctx context.Context, fullyQualifiedIMEID string) error {
 		activeIME, err := ActiveInputMethod(ctx, tconn)
 		if err != nil {
 			return errors.Wrap(err, "failed to get active input method")
 		}
+
+		// Skip action if the target input method is already current.
 		if activeIME.Equal(im) {
 			return nil
 		}
 
-		return tconn.Call(ctx, nil, `chrome.inputMethodPrivate.setCurrentInputMethod`, fullyQualifiedIMEID)
+		if err := tconn.Call(ctx, nil, `chrome.inputMethodPrivate.setCurrentInputMethod`, fullyQualifiedIMEID); err != nil {
+			return errors.Wrap(err, "failed to set input method")
+		}
+
+		// Default input method does not require warm up.
+		if im == DefaultInputMethod || !waitForWarmUp {
+			return nil
+		}
+
+		return im.WaitUntilActivated(tconn)(ctx)
 	}
 	return im.actionWithFullyQualifiedID(tconn, f)
 }
