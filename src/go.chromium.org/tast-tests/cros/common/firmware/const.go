@@ -90,3 +90,13 @@ const (
 	LegacyConfirmVendorData    FwScreenID = 0x302
 	LegacyConfirmDiag          FwScreenID = 0x303
 )
+
+// FwScreenType represents a firmware screen.
+type FwScreenType int
+
+// FwScreenType contains the following firmware screens.
+const (
+	FwDeveloperScreen FwScreenType = iota
+	FwRecoveryScreen
+	FwBrokenScreen
+)

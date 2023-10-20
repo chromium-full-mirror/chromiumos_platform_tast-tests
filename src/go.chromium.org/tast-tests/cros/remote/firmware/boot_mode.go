@@ -1003,3 +1003,63 @@ func (ms *ModeSwitcher) RunBypasserUntilDUTConnected(ctx context.Context, params
 	}
 	return nil
 }
+
+// RebootToFirmwareScreen requires that the DUT be connected initially, and runs
+// the respective logic to reboot the DUT to the given firmware screen.
+func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwCommon.FwScreenType) error {
+	h := ms.Helper
+	switch fwScreen {
+	case fwCommon.FwBrokenScreen:
+		testing.ContextLog(ctx, "Setting crossystem recovery_request to 193")
+		if !h.DUT.Connected(ctx) {
+			return errors.New("requiring DUT to be connected initially")
+		}
+		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "recovery_request=193").Run(); err != nil {
+			return errors.Wrap(err, "failed to set crossystem recovery_request to 193")
+		}
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+			return errors.Wrap(err, "failed to warm reset the DUT")
+		}
+	case fwCommon.FwDeveloperScreen:
+		if !h.DUT.Connected(ctx) {
+			return errors.New("requiring DUT to be connected initially")
+		}
+		curr, err := h.Reporter.CurrentBootMode(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get current boot mode")
+		}
+		if curr != fwCommon.BootModeDev {
+			if err := ms.RebootToMode(ctx, fwCommon.BootModeDev, ExpectDevModeAfterReboot); err != nil {
+				return errors.Wrap(err, "failed to reboot to developer mode")
+			}
+		}
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+			return errors.Wrap(err, "failed to warm reset the DUT")
+		}
+	case fwCommon.FwRecoveryScreen:
+		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
+			return errors.Wrap(err, "failed to reboot to recovery screen")
+		}
+	}
+	return nil
+}
+
+// PowerOn powers on the DUT by calling servo.PowerStateOn and BypassDevMode
+// to boot up the device, regardless of its boot mode.
+func (ms *ModeSwitcher) PowerOn(ctx context.Context) error {
+	h := ms.Helper
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
+		return errors.Wrap(err, "failed to set DUT's power")
+	}
+	// Repeat BypassDevMode for the machine to boot up
+	// as fast as possible.
+	params := RunBypasser{
+		BypasserMethod:        ms.bypasser.BypassDevMode,
+		RepeatBypasser:        true,
+		WaitUntilDUTConnected: h.Config.DelayRebootToPing,
+	}
+	if err := ms.RunBypasserUntilDUTConnected(ctx, params); err != nil {
+		return errors.Wrap(err, "failed to bypass dev mode")
+	}
+	return nil
+}

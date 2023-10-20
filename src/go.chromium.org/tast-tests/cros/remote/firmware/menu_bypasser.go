@@ -17,7 +17,7 @@ type menuBypasser interface {
 	BypassDevMode(ctx context.Context) error
 	BypassDevBootUSB(ctx context.Context) error
 	TriggerDevToNormal(ctx context.Context) error
-	PowerOff(ctx context.Context, waitForFirmwareScreen bool) error
+	PowerOff(ctx context.Context) error
 	BypassDevDefaultBoot(ctx context.Context) error
 }
 
@@ -174,16 +174,8 @@ func (lmb *legacyMenuBypasser) TriggerDevToNormal(ctx context.Context) error {
 }
 
 // PowerOff powers off the device.
-// This method should work in both developer and recovery screens.
-func (lmb *legacyMenuBypasser) PowerOff(ctx context.Context, waitForFirmwareScreen bool) error {
-	h := lmb.helper
-	if waitForFirmwareScreen {
-		testing.ContextLogf(ctx, "Waiting for %s (firmware screen)", h.Config.FirmwareScreen)
-		// GoBigSleepLint: Sleep for model specific time.
-		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-			return errors.Wrapf(err, "failed to wait for %s", h.Config.FirmwareScreen)
-		}
-	}
+// This method should work on developer, recovery and broken screens.
+func (lmb *legacyMenuBypasser) PowerOff(ctx context.Context) error {
 	if err := lmb.navigator.SelectOption(ctx); err != nil {
 		return errors.Wrap(err, "failed to select \"Power Off\"")
 	}
@@ -400,16 +392,9 @@ func (mo *menuOperator) TriggerDevToNormal(ctx context.Context) error {
 }
 
 // PowerOff powers off the device.
-// This method should work in both developer and recovery screens.
-func (mo *menuOperator) PowerOff(ctx context.Context, waitForFirmwareScreen bool) error {
+// This method should work on developer, recovery and broken screens.
+func (mo *menuOperator) PowerOff(ctx context.Context) error {
 	h := mo.helper
-	if waitForFirmwareScreen {
-		testing.ContextLogf(ctx, "Waiting for %s (firmware screen)", h.Config.FirmwareScreen)
-		// GoBigSleepLint: Sleep for model specific time.
-		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-			return errors.Wrapf(err, "failed to wait for %s", h.Config.FirmwareScreen)
-		}
-	}
 	if err := MoveTo(ctx, h, mo.navigator, 0, 6); err != nil {
 		return err
 	}
