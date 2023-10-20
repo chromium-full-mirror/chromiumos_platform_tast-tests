@@ -308,16 +308,17 @@ func (e *Element) CreateRoom(roomName string) uiauto.Action {
 		apputil.FindAndClick(createRoomText, defaultUITimeout),
 	)
 
-	roomSettingsText := e.d.Object(ui.Text("Room settings"), ui.ResourceID(elementIDPrefix+"settings_section_title_text"))
+	roomAccessText := e.d.Object(ui.Text("Room access"), ui.ResourceID(elementIDPrefix+"settings_section_title_text"))
 	roomNameFieldWithText := e.d.Object(ui.Text(roomName), ui.ResourceID(roomNameFieldID))
 	createButton := e.d.Object(ui.Text("CREATE"), ui.ResourceID(elementIDPrefix+"form_submit_button"))
 	roomTitle := e.d.Object(ui.Text(roomName), ui.ClassName(textClass))
 	return uiauto.NamedCombine("create room",
 		enterRoomCreationPage,
 		e.typeText(roomNameFieldID, roomName),
-		e.swipeFromObjectToObject(roomSettingsText, roomNameFieldWithText, swipeDuration),
+		e.swipeFromObjectToObject(roomAccessText, roomNameFieldWithText, swipeDuration),
 		apputil.FindAndClick(createButton, defaultUITimeout),
-		apputil.WaitForExists(roomTitle, defaultUITimeout),
+		uiauto.NamedAction("wait for room title "+roomName,
+			apputil.WaitForExists(roomTitle, longUITimeout)),
 	)
 }
 
@@ -446,7 +447,8 @@ func (e *Element) SearchPublicRoom(roomID, roomName string) uiauto.Action {
 		apputil.FindAndClick(createRoomButton, defaultUITimeout),
 		apputil.FindAndClick(exploreRoomsText, defaultUITimeout),
 		e.typeText(searchFieldID, roomID),
-		apputil.WaitForExists(publicRoom, defaultUITimeout),
+		uiauto.NamedAction("wait for public room "+roomName,
+			apputil.WaitForExists(publicRoom, longUITimeout)),
 	)
 }
 
