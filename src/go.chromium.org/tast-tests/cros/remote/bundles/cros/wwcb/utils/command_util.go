@@ -313,7 +313,7 @@ func ListProcessInfo(ctx context.Context, dut *dut.DUT, file string) ([]string, 
 	if err != nil {
 		return nil, errors.Wrap(err, "execute lsof command")
 	}
-	return strings.Fields(string(out)), err
+	return strings.Fields(string(out)), nil
 }
 
 // BuiltinUsbCamerasFromV4L2Test returns a list of builtin usb camera paths.
