@@ -62,7 +62,7 @@ func init() {
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
 		}},
-		Timeout: 4 * time.Minute,
+		Timeout: 5 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DefaultNotificationsSetting{}, pci.VerifiedFunctionalityUI),
 		},
@@ -194,8 +194,15 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 					if err := ui.DoDefault(allowButton)(ctx); err != nil {
 						s.Fatal("Failed to click the allow button: ", err)
 					}
+					// Verify the allow button has been removed.
+					if err := ui.WaitUntilGone(allowButton)(ctx); err != nil {
+						s.Fatal("Allow button did not go away after clicking: ", err)
+					}
 					if strings.HasPrefix(param.name, "ask") {
 						// When policy is set to "ask", the permission panel occasionally shows up twice. See crbug.com/614632.
+						if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(allowButton)(ctx); err != nil {
+							s.Log("Failed to find additional allow button: ", err)
+						}
 						if err := ui.DoDefault(allowButton)(ctx); err != nil {
 							s.Log("Failed to click additional allow button: ", err)
 						}
@@ -250,7 +257,7 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 				}
 				return errors.New("Annotation with matching token not found yet")
 			}, &testing.PollOptions{
-				Timeout:  30 * time.Second,
+				Timeout:  45 * time.Second,
 				Interval: 5 * time.Second,
 			})
 
