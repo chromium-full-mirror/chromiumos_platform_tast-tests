@@ -196,6 +196,7 @@ func (uda *Context) WithOptions(optionList ...Option) *Context {
 // click attempts to locate and click on an element.
 func (uda *Context) click(s *Finder, button mouse.Button) uiauto.Action {
 	return func(ctx context.Context) error {
+		testing.ContextLogf(ctx, "Attempting to locate and click element %q", s.desc)
 		loc, err := uda.Location(ctx, s)
 		if err != nil {
 			return errors.Wrapf(err, "failed to find the location of %q", s.desc)
@@ -248,7 +249,7 @@ func (uda *Context) clickUntil(finder *Finder, condition func(context.Context) e
 	}
 }
 
-// LeftClick returns an action that left-clicks a finder.
+// LeftClick returns an action that left-clicks a finder. Waits until the element exists.
 func (uda *Context) LeftClick(s *Finder) uiauto.Action {
 	return uda.attemptClickUntilSuccess(s, mouse.LeftButton)
 }
@@ -261,7 +262,7 @@ func (uda *Context) LeftClickUntil(finder *Finder, condition func(context.Contex
 	return uda.clickUntil(finder, condition, mouse.LeftButton)
 }
 
-// RightClick returns an action that right-clicks a finder.
+// RightClick returns an action that right-clicks a finder. Waits until the element exists.
 func (uda *Context) RightClick(s *Finder) uiauto.Action {
 	return uda.attemptClickUntilSuccess(s, mouse.RightButton)
 }
