@@ -10,8 +10,6 @@ import (
 	"os"
 	"time"
 
-	"go.chromium.org/tast/core/testing"
-
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -19,6 +17,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -217,3 +218,52 @@ func (f *fakeHALFixture) Reset(ctx context.Context) error {
 func (f *fakeHALFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
 
 func (f *fakeHALFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+
+type work func(ctx context.Context, browserType browser.Type, cr *chrome.Chrome) ([]action.Action, error)
+
+// PowerEstimationRoutine provides a workflow for PNP.
+func PowerEstimationRoutine(ctx context.Context, w work, browserType browser.Type, cr *chrome.Chrome, outDir, testName string) error {
+	// Reserve some time for the cleanup, even if it fails due to ctx timeout.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	rec := power.NewRecorder(ctx, PNPTimeParams.Interval, outDir, testName)
+	defer rec.Close(cleanupCtx)
+
+	testing.ContextLog(ctx, "[Cool Down Phase]")
+	if err := rec.Cooldown(ctx); err != nil {
+		return errors.Wrap(err, "cooldown failed")
+	}
+
+	testing.ContextLog(ctx, "[Start Work Phase]")
+	cleanupFuncs, err := w(ctx, browserType, cr)
+	for _, cleanupFunc := range cleanupFuncs {
+		defer cleanupFunc(cleanupCtx)
+	}
+	if err != nil {
+		return errors.Wrap(err, "failed to start the work")
+	}
+
+	testing.ContextLog(ctx, "[Warm Up Phase] Start warming up for ", 15*time.Second)
+	// GoBigSleepLint: Warming up.
+	if err := testing.Sleep(ctx, 15*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep to warm up")
+	}
+
+	testing.ContextLog(ctx, "[Record Phase] Start recording trace for ", PNPTimeParams.Total)
+	if err := rec.Start(ctx); err != nil {
+		return errors.Wrap(err, "cannot start collecting power metrics")
+	}
+
+	// GoBigSleepLint: Collect power metrics.
+	if err := testing.Sleep(ctx, PNPTimeParams.Total); err != nil {
+		return errors.Wrap(err, "failed to sleep to collect power metrics")
+	}
+
+	if err := rec.Finish(ctx); err != nil {
+		return errors.Wrap(err, "cannot finish collecting power metrics")
+	}
+
+	return nil
+}

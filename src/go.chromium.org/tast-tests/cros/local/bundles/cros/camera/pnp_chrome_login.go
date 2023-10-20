@@ -8,14 +8,16 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/testing"
-
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/power"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -38,51 +40,37 @@ func init() {
 	})
 }
 
-func PNPChromeLogin(ctx context.Context, s *testing.State) {
-	// Reserve some time to cleanup, even if it fails due to ctx timeout.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
+func pnpChromeLoginWorkload(ctx context.Context, browserType browser.Type, cr *chrome.Chrome) ([]action.Action, error) {
 
-	browserType := s.FixtValue().(powersetup.PowerUIFixtureData).Bt
-	cr := s.FixtValue().(powersetup.PowerUIFixtureData).Cr
+	var cleanupFuncs []action.Action
 
 	// Open a window with about:blank tab on the target browser.
 	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, "about:blank")
 	if err != nil {
-		s.Fatal("Failed to open a blank new tab: ", err)
+		return cleanupFuncs, errors.Wrap(err, "failed to open a blank new tab")
 	}
-	defer cleanup(cleanupCtx)
-	defer conn.Close()
+	cleanupFuncs = append(cleanupFuncs, cleanup)
+	cleanupFuncs = append(cleanupFuncs, func(ctx context.Context) error {
+		return conn.Close()
+	})
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to get test API connection: ", err)
+		return cleanupFuncs, errors.Wrap(err, "failed to get test API connection")
 	}
 
 	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(browserType))
 	if err != nil {
-		s.Fatal("Failed to open a browser window: ", err)
-	}
-	if err := ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized); err != nil {
-		s.Fatal("Failed to maximize the browser window: ", err)
+		return cleanupFuncs, errors.Wrap(err, "failed to open a browser window")
 	}
 
-	rec := power.NewRecorder(ctx, pnp.PNPTimeParams.Interval, s.OutDir(), s.TestName())
-	defer rec.Close(cleanupCtx)
-	if err := rec.Cooldown(ctx); err != nil {
-		s.Fatal("Cooldown failed: ", err)
-	}
-	if err := rec.Start(ctx); err != nil {
-		s.Fatal("Cannot start collecting power metrics: ", err)
-	}
+	return cleanupFuncs, ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
+}
 
-	// GoBigSleepLint: Collecting power metrics.
-	if err := testing.Sleep(ctx, pnp.PNPTimeParams.Total); err != nil {
-		s.Fatal("Failed to sleep: ", err)
-	}
-
-	if err := rec.Finish(ctx); err != nil {
-		s.Error("Cannot finish collecting power metrics: ", err)
+func PNPChromeLogin(ctx context.Context, s *testing.State) {
+	browserType := s.FixtValue().(powersetup.PowerUIFixtureData).Bt
+	cr := s.FixtValue().(powersetup.PowerUIFixtureData).Cr
+	if err := pnp.PowerEstimationRoutine(ctx, pnpChromeLoginWorkload, browserType, cr, s.OutDir(), s.TestName()); err != nil {
+		s.Fatal("Failed to estimate power: ", err)
 	}
 }
