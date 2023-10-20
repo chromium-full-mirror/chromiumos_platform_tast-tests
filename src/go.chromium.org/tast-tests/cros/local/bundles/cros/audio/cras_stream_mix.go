@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -40,8 +41,11 @@ func init() {
 		BugComponent: "b:776546",
 		// b/291180821: Remove no_qemu after making the test pass on betty.
 		SoftwareDeps: []string{"audio_stable", "chrome", "no_qemu"},
-		Pre:          chrome.LoggedIn(),
-		Timeout:      3 * time.Minute,
+		Fixture: fixture.AloopLoaded{
+			Channels: 2,
+			Parent:   fixture.Chrome(),
+		}.Instance(),
+		Timeout: 3 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name: "rate",
@@ -101,6 +105,7 @@ func CrasStreamMix(ctx context.Context, s *testing.State) {
 		waitForStreamTimeout = 2 * time.Second
 		goldenFrequency      = 440 // Hz
 		incorrectLimit       = 3
+		rate                 = 48000
 	)
 
 	// Reserve time to remove input file and unload ALSA loopback at the end of the test.
@@ -108,12 +113,8 @@ func CrasStreamMix(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
 
-	cr := s.PreValue().(*chrome.Chrome)
-	// Load ALSA loopback module.
-	unload, err := audio.LoadAloop(ctx)
-	if err != nil {
-		s.Fatal("Failed to load ALSA loopback module: ", err)
-	}
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
 	defer func(ctx context.Context) {
 		if err := crastestclient.WaitForNoStream(ctx, 15*time.Second); err != nil {
 			// There are still active stream, mark as error and dump audio diagnostic to see the stream info.
@@ -122,10 +123,9 @@ func CrasStreamMix(ctx context.Context, s *testing.State) {
 				s.Error("Failed to dump audio diagnostics: ", err)
 			}
 		}
-		unload(ctx)
 	}(cleanupCtx)
 
-	if err = audio.SetupLoopback(ctx, cr); err != nil {
+	if err := audio.SetupLoopback(ctx, cr); err != nil {
 		s.Fatal("Failed to setup loopback device: ", err)
 	}
 
@@ -136,7 +136,7 @@ func CrasStreamMix(ctx context.Context, s *testing.State) {
 	playback1 := testexec.CommandContext(
 		ctx, "sox",
 		"-b", "16",
-		"-r", "48000",
+		"-r", strconv.Itoa(rate),
 		"-c", "2",
 		"--buffer", strconv.Itoa(8192),
 		"-n",
@@ -167,25 +167,40 @@ func CrasStreamMix(ctx context.Context, s *testing.State) {
 		s.Fatal(err, "failed to playback within timeout")
 	}
 
-	filename := fmt.Sprintf("%d_%d_%d.raw", param.rate, param.channel, param.blockSize)
+	filename := fmt.Sprintf("%d_%d_%d", param.rate, param.channel, param.blockSize)
 	recording := audio.TestRawData{
 		Path:          filepath.Join(s.OutDir(), filename),
 		BitsPerSample: 16,
-		Channels:      8, // Loopback module has 8 channels.
-		Rate:          48000,
+		Channels:      2,
+		Rate:          rate,
 		Duration:      captureDuration,
 	}
 
-	testing.ContextLog(ctx, "Capture output to ", recording.Path)
-	if err := crastestclient.CaptureFileCommand(
-		ctx, recording.Path,
-		recording.Duration,
-		recording.Channels,
-		recording.Rate).Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal(err, "failed to capture")
+	testing.ContextLog(ctx, "Capture output to ", recording.Path+".wav")
+	// Capture to arecord to bypass all processing in CRAS.
+	if err := testexec.CommandContext(ctx,
+		"arecord",
+		"-Dhw:Loopback,1",
+		fmt.Sprintf("--channels=%d", recording.Channels),
+		fmt.Sprintf("--duration=%d", recording.Duration),
+		"--format=S16_LE",
+		recording.Path+".wav",
+	).Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal(err, "failed to capture data")
+	}
+	testing.ContextLog(ctx, "Convert output to ", recording.Path+".raw")
+	// Read file
+	// TODO(b/298468964): Deal with wav directly.
+	if err := testexec.CommandContext(ctx,
+		"sox",
+		recording.Path+".wav",
+		fmt.Sprintf("--rate=%d", recording.Rate),
+		recording.Path+".raw",
+	).Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal(err, "failed to convert to RAW")
 	}
 
-	tone, err := audio.ReadS16LEPCM(recording.Path, recording.Channels)
+	tone, err := audio.ReadS16LEPCM(recording.Path+".raw", recording.Channels)
 	if err != nil {
 		s.Fatal(err, "failed to read recording from file")
 	}
