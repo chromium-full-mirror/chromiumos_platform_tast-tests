@@ -24,6 +24,11 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 )
 
+const (
+	connectToKnownNetworkTimeout  = 30 * time.Second // Waiting for the known network to be connected could take a while.
+	configureProxySettingsTimeout = 30 * time.Second // Configure proxy is a series of UI operations and it could take a while.
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: SetProxyForRememberedNetwork,
@@ -51,6 +56,10 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
+		// This test contains 3 sub-tests, all of them having 2 steps that consume the
+		// majority of the time: configuring proxies and connecting to the network.
+		// Each sub-test configures proxy for up to 2 times and connects to up to 1 other network.
+		Timeout: 5*time.Minute + 3*(connectToKnownNetworkTimeout+2*configureProxySettingsTimeout),
 	})
 }
 
