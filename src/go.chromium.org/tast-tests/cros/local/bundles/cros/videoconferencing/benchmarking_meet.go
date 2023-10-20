@@ -45,6 +45,63 @@ type meetParams struct {
 
 const botDuration = 7 * time.Minute
 
+func disabledTests() {
+	// Disabled tests to reduce suite time, see http://b/306534118
+	_ = []testing.Param{
+		{
+			Name: "app_relight_720p",
+			Val: meetParams{
+				appRelight: true,
+			},
+		},
+		{
+			Name: "platform_relight_720p",
+			Val: meetParams{
+				platformRelight: true,
+				modelType:       effects.KAuto,
+			},
+		},
+		{
+			Name: "no_effects_720p_4ppl",
+			Val: meetParams{
+				botCount: 3,
+			},
+		},
+		{
+			Name: "app_blur_720p_4ppl",
+			Val: meetParams{
+				appBlur:  true,
+				botCount: 3,
+			},
+		},
+		{
+			Name: "platform_relight_720p_4ppl",
+			Val: meetParams{
+				platformRelight: true,
+				modelType:       effects.KAuto,
+				botCount:        3,
+			},
+		},
+		{
+			Name: "platform_blur_720p_4ppl",
+			Val: meetParams{
+				platformBlur: true,
+				modelType:    effects.KAuto,
+				botCount:     3,
+			},
+		},
+		{
+			Name: "platform_blur_relight_720p_4ppl",
+			Val: meetParams{
+				platformBlur:    true,
+				platformRelight: true,
+				modelType:       effects.KAuto,
+				botCount:        3,
+			},
+		},
+	}
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BenchmarkingMeet,
@@ -96,19 +153,6 @@ func init() {
 				},
 			},
 			{
-				Name: "app_relight_720p",
-				Val: meetParams{
-					appRelight: true,
-				},
-			},
-			{
-				Name: "platform_relight_720p",
-				Val: meetParams{
-					platformRelight: true,
-					modelType:       effects.KAuto,
-				},
-			},
-			{
 				Name: "app_blur_relight_720p",
 				Val: meetParams{
 					appBlur:    true,
@@ -129,44 +173,6 @@ func init() {
 					platformBlur:    true,
 					platformRelight: true,
 					modelType:       effects.KEffnet384,
-				},
-			},
-			{
-				Name: "no_effects_720p_4ppl",
-				Val: meetParams{
-					botCount: 3,
-				},
-			},
-			{
-				Name: "app_blur_720p_4ppl",
-				Val: meetParams{
-					appBlur:  true,
-					botCount: 3,
-				},
-			},
-			{
-				Name: "platform_relight_720p_4ppl",
-				Val: meetParams{
-					platformRelight: true,
-					modelType:       effects.KAuto,
-					botCount:        3,
-				},
-			},
-			{
-				Name: "platform_blur_720p_4ppl",
-				Val: meetParams{
-					platformBlur: true,
-					modelType:    effects.KAuto,
-					botCount:     3,
-				},
-			},
-			{
-				Name: "platform_blur_relight_720p_4ppl",
-				Val: meetParams{
-					platformBlur:    true,
-					platformRelight: true,
-					modelType:       effects.KAuto,
-					botCount:        3,
 				},
 			},
 			// Audio is explicitly muted for all live caption tests, as
