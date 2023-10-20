@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/media/imgcmp"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast/core/errors"
 )
@@ -103,6 +104,19 @@ func WriteImageOnDUT(ctx context.Context, fs *dutfs.Client, img image.Image, img
 	}
 	if !exists {
 		return errors.Errorf("file does not exist: %q", imgFile)
+	}
+	return nil
+}
+
+// ValidateImageColor checks the percentage of the color in the image and returns error if it's less than expected percent.
+func ValidateImageColor(ctx context.Context, img image.Image, clr color.Color, expectedPercent int) error {
+	maxDiff := 80
+	rect := img.Bounds()
+	correctPixels := imgcmp.CountPixelsWithDiff(img, clr, uint8(maxDiff))
+	totalPixels := rect.Dx() * rect.Dy()
+	percent := correctPixels * 100 / totalPixels
+	if percent < expectedPercent {
+		return errors.Errorf("unexpected pixels percentage: got %d / %d = %d%%; want at least %d%%", correctPixels, totalPixels, percent, expectedPercent)
 	}
 	return nil
 }
