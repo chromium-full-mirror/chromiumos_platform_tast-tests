@@ -76,10 +76,9 @@ func ManagedAppApkCache(ctx context.Context, s *testing.State) {
 		Logf:        s.Logf}
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	packages := []string{testPackage}
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		s.Log("Deleting apk cache directory")
 		if err := os.RemoveAll(apkCacheDir); err != nil {
@@ -91,7 +90,7 @@ func ManagedAppApkCache(ctx context.Context, s *testing.State) {
 			rl.Exit("get login creds", err)
 		}
 
-		// Enroll managed device and log in managed user
+		packages := []string{testPackage}
 		a, cr, err := loginAndWaitForARC(ctx, cleanupCtx, s, chrome.FakeEnterpriseEnroll(creds[0]), creds[0], packages, rl)
 		if err != nil {
 			return err
@@ -163,7 +162,7 @@ func loginAndWaitForARC(ctx, cleanupCtx context.Context, s *testing.State, enrol
 	const provisioningTimeout = 4 * time.Minute
 
 	login := chrome.GAIALogin(creds)
-	fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeForceInstalled, arcent.PlayStoreModeAllowList)
+	fdms, err := arcent.SetupPolicyServerWithArcAppsAffiliated(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeForceInstalled, arcent.PlayStoreModeAllowList, true /*affiliated*/)
 	if err != nil {
 		return nil, nil, rl.Exit("setup fake policy server", err)
 	}
@@ -176,7 +175,7 @@ func loginAndWaitForARC(ctx, cleanupCtx context.Context, s *testing.State, enrol
 		chrome.ARCSupported(),
 		chrome.UnRestrictARCCPU(),
 		chrome.DMSPolicy(fdms.URL),
-		chrome.ExtraArgs(append(arc.DisableSyncFlags(), "--arc-force-enable-apk-cache")...))
+		chrome.ExtraArgs(append(arc.DisableSyncFlags())...))
 	if err != nil {
 		return nil, nil, rl.Retry("connect to Chrome", err)
 	}

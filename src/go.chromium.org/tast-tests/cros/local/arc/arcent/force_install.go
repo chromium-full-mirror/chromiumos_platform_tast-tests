@@ -51,11 +51,44 @@ var UIAutomatorPackages = []string{"com.github.uiautomator.test", "com.github.ui
 
 // SetupPolicyServerWithArcApps sets up a fake policy server with ARC enabled and a list of packages with the corresponding install type.
 func SetupPolicyServerWithArcApps(ctx context.Context, outDir, policyUser string, packages []string, installType, playStoreMode string) (fdms *fakedms.FakeDMS, retErr error) {
+	return SetupPolicyServerWithArcAppsAffiliated(ctx, outDir, policyUser, packages, installType, playStoreMode, false /*affiliated*/)
+}
+
+// SetupPolicyServerWithArcAppsAffiliated sets up a fake policy affiliated server with ARC enabled and a list of packages with the corresponding install type.
+func SetupPolicyServerWithArcAppsAffiliated(ctx context.Context, outDir, policyUser string, packages []string, installType, playStoreMode string, affiliated bool) (fdms *fakedms.FakeDMS, retErr error) {
 	arcPolicy := CreateArcPolicyWithApps(packages, installType, playStoreMode)
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 
-	return policyutil.SetUpFakePolicyServer(ctx, outDir, policyUser, policies)
+	return SetUpFakePolicyServer(ctx, outDir, policyUser, policies, affiliated)
+}
+
+// SetUpFakePolicyServer creates a FakeDMS that enforces the provided policies and optionally also sets up affiliation.
+func SetUpFakePolicyServer(ctx context.Context, outdir, policyUser string, policies []policy.Policy, affiliated bool) (fdms *fakedms.FakeDMS, retErr error) {
+	fdms, err := fakedms.New(ctx, outdir)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create fakedms")
+	}
+	defer func() {
+		if retErr != nil {
+			fdms.Stop(ctx)
+		}
+	}()
+
+	blob := policy.NewBlob()
+	blob.PolicyUser = policyUser
+	if affiliated {
+		blob.DeviceAffiliationIds = []string{"default"}
+		blob.UserAffiliationIds = []string{"default"}
+	}
+	if err := blob.AddPolicies(policies); err != nil {
+		return nil, errors.Wrap(err, "failed to add policy to policy blob")
+	}
+	if err := fdms.WritePolicyBlob(blob); err != nil {
+		return nil, errors.Wrap(err, "failed to write policy blob to fdms")
+	}
+
+	return fdms, nil
 }
 
 // VerifyArcPolicyForceInstalled matches ArcPolicy FORCE_INSTALLED apps list with expected packages.
