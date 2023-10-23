@@ -26,11 +26,45 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// TestParam represents data that can be used to configure a test.
+type TestParam struct {
+	BrowserType browser.Type
+	HTML        string
+}
+
+// conn represents a connection to the Dictation background page.
+type conn struct {
+	*chrome.Conn
+}
+
+// NewConn returns a connection to the Dictation extension's background page.
+// If the extension is not ready, the connection will be closed before returning.
+// Otherwise the calling function will close the connection.
+func NewConn(ctx context.Context, c *chrome.Chrome) (_ *conn, e error) {
+	extConn, err := c.NewConnForTarget(ctx, chrome.MatchTargetURL(a11y.AccessibilityCommonExtensionURL))
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		if e != nil {
+			extConn.Close()
+		}
+	}()
+
+	if err := extConn.WaitForExpr(ctx, "Boolean(globalThis.accessibilityCommon.dictation_)"); err != nil {
+		return nil, errors.Wrap(err, "Dictation is unavailable")
+	}
+
+	return &conn{extConn}, nil
+}
+
 // driver contains useful objects for driving Dictation tests and is
 // returned by SetUp. Most notably, TearDown() should be run in a defer
 // statement by the calling test to properly clean up Dictation.
 type driver struct {
 	ctx      context.Context
+	conn     *conn
 	ui       *uiauto.Context
 	bubble   *nodewith.Finder
 	editable *nodewith.Finder
@@ -188,6 +222,16 @@ func SetUp(ctx context.Context, html, className string, bt browser.Type) (d driv
 		return nil
 	})
 
+	// Create a new connection to the Dictation extension background page.
+	conn, err := NewConn(ctx, cr)
+	if err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to create a new connection to the Dictation extension background page")
+	}
+	tdh.Append(func() error {
+		conn.Close()
+		return nil
+	})
+
 	// Wait until dlc libsoda and libsoda-model-en-us are installed.
 	if err := testing.Poll(ctx, a11y.VerifySodaInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to wait for libsoda dlc to be installed")
@@ -208,7 +252,7 @@ func SetUp(ctx context.Context, html, className string, bt browser.Type) (d driv
 	}
 
 	bubble := nodewith.Role(role.GenericContainer).HasClass("DictationBubbleView").Onscreen().First()
-	return driver{ctx, ui, bubble, editable, tdh}, nil
+	return driver{ctx, conn, ui, bubble, editable, tdh}, nil
 }
 
 // maybeClosePrivacyDialog closes the dialog that is shown when Dictation is first
@@ -247,6 +291,31 @@ func activeCrasNode(ctx context.Context, cras *audio.Cras) (*audio.CrasNode, err
 		}
 	}
 	return nil, errors.New("failed to find active node")
+}
+
+// WaitForPumpkinTaggerReady waits until the sandboxed Pumpkin Tagger is ready
+// in JavaScript.
+func (d driver) WaitForPumpkinTaggerReady() error {
+	isReady := `(() => {
+		return globalThis.accessibilityCommon.dictation_.speechParser_.pumpkinParseStrategy_.pumpkinTaggerReady_;
+	})()`
+
+	if err := testing.Poll(d.ctx, func(ctx context.Context) error {
+		var ready bool
+		if err := d.conn.Eval(ctx, isReady, &ready); err != nil {
+			return err
+		}
+
+		if !ready {
+			return errors.New("Pumpkin Tagger not yet ready")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
+		return errors.Wrap(err, "timed out waiting for Pumpkin Tagger to be ready")
+	}
+
+	return nil
 }
 
 // ToggleOn uses the keyboard to activate Dictation and waits for the bubble UI

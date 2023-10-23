@@ -1,4 +1,4 @@
-// Copyright 2021 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -18,9 +18,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Dictation,
+		Func:         DictationWithPumpkin,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests that the Dictation feature can be used to input text using voice",
+		Desc:         "Tests that the Dictation feature can use the Pumpkin semantic parser to input text",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"akihiroota@chromium.org",      // Test author
@@ -29,7 +29,7 @@ func init() {
 		Timeout:      3 * time.Minute,
 		Attr:         []string{"group:mainline", "informational"},
 		// Load audio file used for Dictation.
-		Data:         []string{"voice_en_hello.wav"},
+		Data:         []string{"voice_en_dictate_hello.wav"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone(), hwdep.Keyboard()),
 		SoftwareDeps: []string{"chrome", "ondevice_speech"},
 		Params: []testing.Param{{
@@ -45,37 +45,11 @@ func init() {
 				BrowserType: browser.TypeLacros,
 				HTML:        "<textarea class='myEditable'></textarea>",
 			},
-		}, {
-			Name: "ash_input",
-			Val: dictation.TestParam{
-				BrowserType: browser.TypeAsh,
-				HTML:        "<input class='myEditable'></input>",
-			},
-		}, {
-			Name:              "lacros_input",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: dictation.TestParam{
-				BrowserType: browser.TypeLacros,
-				HTML:        "<input class='myEditable'></input>",
-			},
-		}, {
-			Name: "ash_contenteditable",
-			Val: dictation.TestParam{
-				BrowserType: browser.TypeAsh,
-				HTML:        "<div class='myEditable' contenteditable></div>",
-			},
-		}, {
-			Name:              "lacros_contenteditable",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: dictation.TestParam{
-				BrowserType: browser.TypeLacros,
-				HTML:        "<div class='myEditable' contenteditable></div>",
-			},
 		}},
 	})
 }
 
-func Dictation(ctx context.Context, s *testing.State) {
+func DictationWithPumpkin(ctx context.Context, s *testing.State) {
 	bt := s.Param().(dictation.TestParam).BrowserType
 	html := s.Param().(dictation.TestParam).HTML
 	const className = "myEditable"
@@ -90,11 +64,17 @@ func Dictation(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	if err := driver.WaitForPumpkinTaggerReady(); err != nil {
+		s.Fatal("Failed to wait for Pumpkin to setup: ", err)
+	}
+
 	if err := driver.ToggleOn(); err != nil {
 		s.Fatal("Failed to toggle Dictation on: ", err)
 	}
 
-	audioFile := s.DataPath("voice_en_hello.wav")
+	// The audio file will play "Dictate hello" - if Pumpkin is working correctly,
+	// Dictation should just enter "Hello" into the text field.
+	audioFile := s.DataPath("voice_en_dictate_hello.wav")
 	if err := driver.DictateAndWaitForEditableValue(audioFile, "Hello"); err != nil {
 		s.Fatal("Failed to dictate and verify editable value: ", err)
 	}

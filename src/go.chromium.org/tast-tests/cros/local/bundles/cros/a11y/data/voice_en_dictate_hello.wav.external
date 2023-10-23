@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/inputs/voice_en_dictate_hello_20231025.wav",
+  "size": 425628,
+  "sha256sum": "87bb859eb4e7866a5c6682eb2dfdd5f864ab708a9555d55a6995e72a2e76dcba"
+}
