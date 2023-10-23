@@ -94,6 +94,25 @@ func init() {
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
+			// TODO(b/302748186): Remove rounded window tests once A/B testing
+			// for rounded windows is done.
+			{
+				Name: "rounded_windows",
+				Val: windowarrangementcuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
+				ExtraAttr: []string{"cuj_experimental"},
+				Fixture:   "loggedInToCUJUserWithRoundedWindows",
+			},
+			{
+				Name: "rounded_windows_lacros",
+				Val: windowarrangementcuj.TestParam{
+					BrowserType: browser.TypeLacros,
+				},
+				ExtraSoftwareDeps: []string{"lacros"},
+				ExtraAttr:         []string{"cuj_experimental"},
+				Fixture:           "loggedInToCUJUserLacrosWithRoundedWindows",
+			},
 		},
 	})
 }
