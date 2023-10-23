@@ -92,7 +92,7 @@ func OdfsManageInSettings(ctx context.Context, s *testing.State) {
 
 	settingsApp := ossettings.New(tconn)
 	oneDriveConnectedLink := nodewith.NameStartingWith("OneDrive Signed in as").Role(role.Link)
-	disconnectButton := nodewith.Name("Remove").Role(role.Button)
+	disconnectButton := nodewith.Name("Remove access").Role(role.Button)
 	if err := uiauto.Combine("Disconnect from OneDrive via the Files settings page",
 		filesApp.ClickMoreMenuItem("Files settings"),
 		settingsApp.WaitUntilExists(oneDriveConnectedLink),
