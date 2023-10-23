@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package firmware
 
 import (
 	"context"
@@ -106,7 +106,7 @@ func SuspendBattery(ctx context.Context, s *testing.State) {
 		}
 
 		//Charge up if we've dipped below our minimum battery level
-		pct, err := getBatteryPercent(ctx, h)
+		pct, err := getBatteryPct(ctx, h)
 		if err != nil {
 			s.Fatal("Failed to get battery level")
 		}
@@ -126,7 +126,7 @@ func waitForCharge(ctx context.Context, h *firmware.Helper, target int) error {
 	}
 
 	err := testing.Poll(ctx, func(ctx context.Context) error {
-		pct, err := getBatteryPercent(ctx, h)
+		pct, err := getBatteryPct(ctx, h)
 		if err != nil {
 			// Failed to get battery level so stop trying
 			return testing.PollBreak(err)
@@ -151,7 +151,7 @@ func waitForCharge(ctx context.Context, h *firmware.Helper, target int) error {
 	return nil
 }
 
-func getBatteryPercent(ctx context.Context, h *firmware.Helper) (int, error) {
+func getBatteryPct(ctx context.Context, h *firmware.Helper) (int, error) {
 	// Attempt to determine the battery percentage
 	// Each servo communication attempt is retried to account for any transient
 	// communication problems
