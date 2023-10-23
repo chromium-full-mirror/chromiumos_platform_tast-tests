@@ -9,6 +9,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -44,16 +45,6 @@ func KioskEphemeralMount(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Helper creation error: ", err)
-	}
-	daemonController := helper.DaemonController()
-
-	// Wait for cryptohomed to become available if needed.
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
-		s.Fatal("Failed to ensure cryptohomed: ", err)
-	}
 
 	// Clean up old state or mounts for the test user, if any exists.
 	if err := client.UnmountAll(ctx); err != nil {
@@ -65,7 +56,7 @@ func KioskEphemeralMount(ctx context.Context, s *testing.State) {
 
 	// Set up an owner. This is needed for ephemeral users. Once this is done
 	// unmount everything to put things in a clean state for the test proper.
-	if err := hwseclocal.SetUpVaultAndUserAsOwner(ctx, s.DataPath("testcert.p12"), ownerName, "whatever", "whatever", helper.CryptohomeClient()); err != nil {
+	if err := hwseclocal.SetUpVaultAndUserAsOwner(ctx, s.DataPath("testcert.p12"), ownerName, "whatever", "whatever", client); err != nil {
 		client.UnmountAll(ctx)
 		client.RemoveVault(ctx, ownerName)
 		s.Fatal("Failed to setup vault and user as owner: ", err)

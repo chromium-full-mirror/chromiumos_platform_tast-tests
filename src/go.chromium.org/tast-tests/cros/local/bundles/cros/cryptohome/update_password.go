@@ -12,6 +12,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -37,7 +38,6 @@ func init() {
 
 func UpdatePassword(ctx context.Context, s *testing.State) {
 	const (
-		userName        = "foo@bar.baz"
 		oldUserPassword = "old secret"
 		newUserPassword = "new secret"
 		passwordLabel   = "online-password"
@@ -46,30 +46,15 @@ func UpdatePassword(ctx context.Context, s *testing.State) {
 		testFileContent = "content"
 	)
 
+	fixture := s.FixtValue().(*cryptohome.AuthSessionFixture)
+	userName := fixture.TestUserName
+
 	ctxForCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-	daemonController := helper.DaemonController()
-
-	// Wait for cryptohomed becomes available if needed.
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
-		s.Fatal("Failed to ensure cryptohomed: ", err)
-	}
-
-	// Clean up obsolete state, in case there's any.
-	if err := client.UnmountAll(ctx); err != nil {
-		s.Fatal("Failed to unmount vaults for preparation: ", err)
-	}
-	if err := cryptohome.RemoveVault(ctx, userName); err != nil {
-		s.Fatal("Failed to remove old vault for preparation: ", err)
-	}
 
 	// Create and mount the persistent user.
 	_, authSessionID, err := client.StartAuthSession(ctx, userName /*ephemeral=*/, false, uda.AuthIntent_AUTH_INTENT_DECRYPT)
@@ -79,11 +64,9 @@ func UpdatePassword(ctx context.Context, s *testing.State) {
 	if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
 		s.Fatal("Failed to create persistent user: ", err)
 	}
-	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
 	if _, err := client.PreparePersistentVault(ctx, authSessionID /*ecryptfs=*/, false); err != nil {
 		s.Fatal("Failed to prepare persistent vault: ", err)
 	}
-	defer client.UnmountAll(ctxForCleanUp)
 
 	// Write a test file to verify persistence.
 	userPath, err := cryptohome.UserPath(ctx, userName)

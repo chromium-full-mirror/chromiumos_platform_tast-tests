@@ -9,10 +9,10 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -35,7 +35,6 @@ func init() {
 
 func RemovePassword(ctx context.Context, s *testing.State) {
 	const (
-		userName                   = "foo@bar.baz"
 		userPassword               = "secret"
 		userPin                    = "123456"
 		passwordLabel              = "online-password"
@@ -43,37 +42,25 @@ func RemovePassword(ctx context.Context, s *testing.State) {
 		cryptohomeErrorKeyNotFound = 15
 	)
 
-	ctxForCleanUp := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
+	fixture := s.FixtValue().(*cryptohome.AuthSessionFixture)
+	userName := fixture.TestUserName
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-
-	// Clean up obsolete state, in case there's any.
-	if err := client.UnmountAll(ctx); err != nil {
-		s.Fatal("Failed to unmount vaults for preparation: ", err)
-	}
-	if err := cryptohome.RemoveVault(ctx, userName); err != nil {
-		s.Fatal("Failed to remove old vault for preparation: ", err)
-	}
 
 	// Create and mount the persistent user.
 	_, authSessionID, err := client.StartAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
 	if err != nil {
 		s.Fatal("Failed to start auth session: ", err)
 	}
-	defer client.InvalidateAuthSession(ctxForCleanUp, authSessionID)
 
 	if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
 		s.Fatal("Failed to create persistent user: ", err)
 	}
-	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
 
 	if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
 		s.Fatal("Failed to prepare new persistent vault: ", err)
 	}
-	defer client.UnmountAll(ctxForCleanUp)
 
 	// Write a test file to verify persistence.
 	if err := cryptohome.WriteFileForPersistence(ctx, userName); err != nil {
@@ -131,14 +118,14 @@ func RemovePassword(ctx context.Context, s *testing.State) {
 	if err := client.AddPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
 		s.Fatal("Failed to add pin auth factor: ", err)
 	}
-	client.InvalidateAuthSession(ctxForCleanUp, authSessionID)
+	client.InvalidateAuthSession(ctx, authSessionID)
 
 	// Authenticate.
 	authSessionID, err = authenticateWithPinAuthFactor()
 	if err != nil {
 		s.Fatal("Failed to authenticate with pin authfactor: ", err)
 	}
-	client.InvalidateAuthSession(ctxForCleanUp, authSessionID)
+	client.InvalidateAuthSession(ctx, authSessionID)
 
 	// Can unlock with password.
 	err = unlockWithPassword()
@@ -163,7 +150,6 @@ func RemovePassword(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start auth session: ", err)
 	}
-	defer client.InvalidateAuthSession(ctxForCleanUp, authSessionID)
 	var exitErr *hwsec.CmdExitError
 	_, err = client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword)
 	if !errors.As(err, &exitErr) {
@@ -184,7 +170,6 @@ func RemovePassword(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start auth session: ", err)
 	}
-	defer client.InvalidateAuthSession(ctxForCleanUp, authSessionID)
 	_, err = client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword)
 	if !errors.As(err, &exitErr) {
 		s.Fatalf("Unexpected error during authentication with password: got %q; want *hwsec.CmdExitError", err)

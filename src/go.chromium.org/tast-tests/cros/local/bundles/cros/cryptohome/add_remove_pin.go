@@ -6,14 +6,13 @@ package cryptohome
 
 import (
 	"context"
-	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -35,44 +34,29 @@ func init() {
 
 func AddRemovePIN(ctx context.Context, s *testing.State) {
 	const (
-		userName      = "foo@bar.baz"
 		userPassword  = "secret"
 		userPIN       = "123456"
 		passwordLabel = "online-password"
 		pinLabel      = "test-pin"
 	)
 
-	ctxForCleanUp := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
+	fixture := s.FixtValue().(*cryptohome.AuthSessionFixture)
+	userName := fixture.TestUserName
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-
-	// Clean up obsolete state, in case there's any.
-	if err := client.UnmountAll(ctx); err != nil {
-		s.Fatal("Failed to unmount vaults for preparation: ", err)
-	}
-	if err := cryptohome.RemoveVault(ctx, userName); err != nil {
-		s.Fatal("Failed to remove old vault for preparation: ", err)
-	}
 
 	// Create and mount the persistent user.
 	_, authSessionID, err := client.StartAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
 	if err != nil {
 		s.Fatal("Failed to start auth session: ", err)
 	}
-	defer client.InvalidateAuthSession(ctxForCleanUp, authSessionID)
-
 	if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
 		s.Fatal("Failed to create persistent user: ", err)
 	}
-	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
-
 	if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
 		s.Fatal("Failed to prepare new persistent vault: ", err)
 	}
-	defer client.UnmountAll(ctxForCleanUp)
 
 	// Write a test file to verify persistence.
 	if err := cryptohome.WriteFileForPersistence(ctx, userName); err != nil {

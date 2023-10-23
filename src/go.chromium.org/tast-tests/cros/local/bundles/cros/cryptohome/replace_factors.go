@@ -6,7 +6,6 @@ package cryptohome
 
 import (
 	"context"
-	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 
@@ -14,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -35,37 +33,17 @@ func init() {
 
 func ReplaceFactors(ctx context.Context, s *testing.State) {
 	const (
-		userName         = "foo@bar.baz"
 		userPassword     = "secret"
 		newUserPassword  = "double-secret"
 		passwordLabel    = "online-password"
 		newPasswordLabel = "offline-password"
 	)
 
-	ctxForCleanUp := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
+	fixture := s.FixtValue().(*cryptohome.AuthSessionFixture)
+	userName := fixture.TestUserName
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-	daemonController := helper.DaemonController()
-
-	// Wait for cryptohomed becomes available if needed.
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
-		s.Fatal("Failed to ensure cryptohomed: ", err)
-	}
-
-	// Clean up obsolete state, in case there's any.
-	if err := client.UnmountAll(ctx); err != nil {
-		s.Fatal("Failed to unmount vaults for preparation: ", err)
-	}
-	if err := cryptohome.RemoveVault(ctx, userName); err != nil {
-		s.Fatal("Failed to remove old vault for preparation: ", err)
-	}
 
 	// Helper function that will call ListAuthFactors and check that:
 	//   - the configured factors are just a single password with the given label
@@ -109,19 +87,17 @@ func ReplaceFactors(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to set up a user with a password: ", err)
 	}
-	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
-	defer client.UnmountAll(ctxForCleanUp)
 	if err := checkListAuthFactors(passwordLabel); err != nil {
 		s.Fatal("Failed list auth factor checks after adding password: ", err)
 	}
 
 	// Verify that the user password can be used to authenticate.
 	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
-		var authReply *uda.AuthenticateAuthFactorReply
 		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, newPasswordLabel, newUserPassword); err == nil {
 			return errors.New("replacement factor works before the actual replacement")
 		}
-		if authReply, err = client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
+		authReply, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword)
+		if err != nil {
 			return errors.Wrap(err, "failed to authenticate user")
 		}
 		if err := cryptohomecommon.ExpectContainsAuthIntent(
@@ -136,7 +112,7 @@ func ReplaceFactors(ctx context.Context, s *testing.State) {
 
 	// Replace the password with a new one.
 	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-		if _, err = client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
 			return errors.Wrap(err, "failed to authenticate user")
 		}
 		if err := client.ReplacePasswordAuthFactor(ctx, authSessionID, passwordLabel, newPasswordLabel, newUserPassword); err != nil {
@@ -152,11 +128,11 @@ func ReplaceFactors(ctx context.Context, s *testing.State) {
 
 	// Verify that the new label and password can be used to authenticate.
 	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
-		var authReply *uda.AuthenticateAuthFactorReply
 		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err == nil {
 			return errors.New("old label still unexpectedly works")
 		}
-		if authReply, err = client.AuthenticateAuthFactor(ctx, authSessionID, newPasswordLabel, newUserPassword); err != nil {
+		authReply, err := client.AuthenticateAuthFactor(ctx, authSessionID, newPasswordLabel, newUserPassword)
+		if err != nil {
 			return errors.Wrap(err, "failed to authenticate user")
 		}
 		if err := cryptohomecommon.ExpectContainsAuthIntent(

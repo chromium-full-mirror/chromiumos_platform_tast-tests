@@ -6,13 +6,12 @@ package cryptohome
 
 import (
 	"context"
-	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -32,27 +31,8 @@ func init() {
 }
 
 func KioskPersistentMount(ctx context.Context, s *testing.State) {
-	const (
-		ownerName   = "owner@bar.baz"
-		cleanupTime = 20 * time.Second
-	)
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
-	defer cancel()
-
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-	daemonController := helper.DaemonController()
-
-	// Wait for cryptohomed to become available if needed.
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
-		s.Fatal("Failed to ensure cryptohomed: ", err)
-	}
 
 	// Clean up old state or mounts for the test user, if any exists.
 	if err := client.UnmountAll(ctx); err != nil {
@@ -80,7 +60,6 @@ func KioskPersistentMount(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to create and set up the user: ", err)
 	}
-	defer client.RemoveVault(cleanupCtx, ownerName)
 
 	// Unmount all user vaults before we start.
 	if err := cryptohome.UnmountAll(ctx); err != nil {

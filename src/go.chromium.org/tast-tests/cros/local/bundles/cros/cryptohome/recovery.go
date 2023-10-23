@@ -6,7 +6,6 @@ package cryptohome
 
 import (
 	"context"
-	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 
@@ -14,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -37,7 +35,6 @@ func init() {
 
 func Recovery(ctx context.Context, s *testing.State) {
 	const (
-		userName             = "foo@bar.baz"
 		userPassword         = "secret"
 		userNewPassword      = "don't-forget-this-one"
 		passwordLabel        = "online-password"
@@ -49,20 +46,11 @@ func Recovery(ctx context.Context, s *testing.State) {
 		recoveryDeviceUserID = "123-456-AA-BB"
 	)
 
-	ctxForCleanUp := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
+	fixture := s.FixtValue().(*cryptohome.AuthSessionFixture)
+	userName := fixture.TestUserName
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-
-	// Clean up obsolete state, in case there's any.
-	if err := client.UnmountAll(ctx); err != nil {
-		s.Fatal("Failed to unmount vaults for preparation: ", err)
-	}
-	if err := cryptohome.RemoveVault(ctx, userName); err != nil {
-		s.Fatal("Failed to remove old vault for preparation: ", err)
-	}
 
 	// Setup the recovery test tool and fakes.
 	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
@@ -115,7 +103,6 @@ func Recovery(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to create and set up the user: ", err)
 	}
-	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
 
 	// Authenticate a new auth session via the new added recovery auth factor and mount the user.
 	if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {

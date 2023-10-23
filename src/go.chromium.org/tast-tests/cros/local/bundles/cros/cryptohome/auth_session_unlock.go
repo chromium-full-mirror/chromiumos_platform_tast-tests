@@ -9,6 +9,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -34,7 +35,6 @@ func init() {
 
 func AuthSessionUnlock(ctx context.Context, s *testing.State) {
 	const (
-		ownerName               = "owner@bar.baz"
 		userName                = "foo@bar.baz"
 		userPassword            = "secret"
 		userPasswordAfterUpdate = "i-forgot-secret"
@@ -49,11 +49,6 @@ func AuthSessionUnlock(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-	daemonController := helper.DaemonController()
 
 	// verifyPassword will create a verify-only session that will ensure that
 	// the given user cannot authenticate with the given "wrong" passwords and
@@ -61,14 +56,14 @@ func AuthSessionUnlock(ctx context.Context, s *testing.State) {
 	// failure and nil on success.
 	verifyPassword := func(user, password, badPassword, otherUsersPassword string) error {
 		return client.WithAuthSession(ctx, user, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
-			var authReply *uda.AuthenticateAuthFactorReply
 			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, badPassword); err == nil {
 				return errors.New("authenticated user with the wrong password")
 			}
 			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, otherUsersPassword); err == nil {
 				return errors.New("authenticated user with the other user's password which should have failed")
 			}
-			if authReply, err = client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, password); err != nil {
+			authReply, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, password)
+			if err != nil {
 				return errors.Wrap(err, "failed to authenticate user")
 			}
 			if err := cryptohomecommon.ExpectContainsAuthIntent(
@@ -78,11 +73,6 @@ func AuthSessionUnlock(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		})
-	}
-
-	// Wait for cryptohomed to become available if needed.
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
-		s.Fatal("Failed to ensure cryptohomed: ", err)
 	}
 
 	// Clean up old state or mounts for the test user, if any exists.
@@ -157,8 +147,8 @@ func AuthSessionUnlock(ctx context.Context, s *testing.State) {
 
 	// Change the user's password.
 	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-		var authReply *uda.AuthenticateAuthFactorReply
-		if authReply, err = client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
+		authReply, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword)
+		if err != nil {
 			return errors.Wrap(err, "failed to authenticate user")
 		}
 		if err := cryptohomecommon.ExpectContainsAuthIntent(

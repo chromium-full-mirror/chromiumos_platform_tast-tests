@@ -49,16 +49,6 @@ func AddRemoveFactorsEphemeral(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-	daemonController := helper.DaemonController()
-
-	// Wait for cryptohomed becomes available if needed.
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
-		s.Fatal("Failed to ensure cryptohomed: ", err)
-	}
 
 	// Clean up obsolete state, in case there's any.
 	if err := client.UnmountAll(ctx); err != nil {
@@ -69,7 +59,7 @@ func AddRemoveFactorsEphemeral(ctx context.Context, s *testing.State) {
 	}
 
 	// Set up an owner. This is needed for ephemeral users.
-	if err := hwseclocal.SetUpVaultAndUserAsOwner(ctx, s.DataPath("testcert.p12"), ownerName, "whatever", "whatever", helper.CryptohomeClient()); err != nil {
+	if err := hwseclocal.SetUpVaultAndUserAsOwner(ctx, s.DataPath("testcert.p12"), ownerName, "whatever", "whatever", client); err != nil {
 		client.UnmountAll(ctx)
 		client.RemoveVault(ctx, ownerName)
 		s.Fatal("Failed to setup vault and user as owner: ", err)
