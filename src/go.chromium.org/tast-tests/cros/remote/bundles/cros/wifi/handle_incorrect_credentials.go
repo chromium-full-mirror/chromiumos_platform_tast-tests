@@ -379,7 +379,9 @@ func openJoinWiFiDialogAndVerifyErrorMessage(ctx context.Context, conn *grpc.Cli
 
 	uiSvc := ui.NewAutomationServiceClient(conn)
 	networkFinder := ui.Node().Name(fmt.Sprintf("Connect to %s", ssid)).Role(ui.Role_ROLE_BUTTON).Finder()
-	if _, err := uiSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: networkFinder}); err != nil {
+	// DoDefault is used to avoid clicking on the notification since the Quick Settings
+	// could be overlapped by notification, and this test can potentially generate one.
+	if _, err := uiSvc.DoDefault(ctx, &ui.DoDefaultRequest{Finder: networkFinder}); err != nil {
 		return errors.Wrap(err, "failed to click the network from detail list")
 	}
 
