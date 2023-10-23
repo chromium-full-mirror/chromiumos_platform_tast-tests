@@ -10,8 +10,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"hash"
-	"regexp"
-	"strconv"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
@@ -20,6 +18,23 @@ import (
 	hwsecremote "go.chromium.org/tast-tests/cros/remote/hwsec"
 	"go.chromium.org/tast/core/testing"
 )
+
+var (
+	tpmVersion string
+)
+
+const (
+	keyblockUnknown = 0
+	keyblockNormal  = 1
+)
+
+type bootModeArgs struct {
+	devMode       byte
+	recMode       byte
+	keyBlockFlags byte
+	devsw         string
+	mainfw        string
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -31,35 +46,62 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "normal",
-				Val:     fixture.NormalMode,
 				Fixture: fixture.NormalMode,
+				Val: &bootModeArgs{
+					devMode:       0,
+					recMode:       0,
+					keyBlockFlags: keyblockNormal,
+					devsw:         "0",
+					mainfw:        "normal",
+				},
 			},
 			{
 				Name:      "recovery",
-				Val:       fixture.RecModeNoServices,
 				Fixture:   fixture.RecModeNoServices,
 				ExtraAttr: []string{"firmware_usb"},
+				Val: &bootModeArgs{
+					devMode:       0,
+					recMode:       1,
+					keyBlockFlags: keyblockUnknown,
+					devsw:         "0",
+					mainfw:        "recovery",
+				},
 			},
 			{
 				Name:    "dev",
-				Val:     fixture.DevModeGBB,
 				Fixture: fixture.DevModeGBB,
+				Val: &bootModeArgs{
+					devMode:       1,
+					recMode:       0,
+					keyBlockFlags: keyblockNormal,
+					devsw:         "1",
+					mainfw:        "developer",
+				},
 			},
 			{
 				Name:      "dev_recovery",
-				Val:       fixture.DevRecModeNoServices,
 				Fixture:   fixture.DevRecModeNoServices,
 				ExtraAttr: []string{"firmware_usb"},
+				Val: &bootModeArgs{
+					devMode:       1,
+					recMode:       1,
+					keyBlockFlags: keyblockUnknown,
+					devsw:         "1",
+					mainfw:        "recovery",
+				},
 			},
 		},
 	})
 }
 
-func tpm1CheckPCR(ctx context.Context, s *testing.State, num string, hashObj hash.Hash) bool {
+func tpm1CheckPCR(ctx context.Context, s *testing.State, num int, hashObj hash.Hash) {
 	h := s.FixtValue().(*fixture.Value).Helper
-	s.Logf("Reading PCR%s from the device", num)
+	s.Logf("Reading PCR%d from the device", num)
 	pcrs_file := "/sys/class/*/tpm0/device/pcrs"
-	pcr_bytes, _ := h.DUT.Conn().CommandContext(ctx, "cat", pcrs_file).Output()
+	pcr_bytes, err := h.DUT.Conn().CommandContext(ctx, "cat", pcrs_file).Output()
+	if err != nil {
+		s.Fatal("Failed to read TPM1 PCR: ", err)
+	}
 	var pcr = string(pcr_bytes)
 
 	padded := append(make([]byte, 20), hashObj.Sum(nil)[:20]...)
@@ -69,56 +111,44 @@ func tpm1CheckPCR(ctx context.Context, s *testing.State, num string, hashObj has
 	for i := 0; i < len(extended_string); i += 2 {
 		spaced += extended_string[i:i+2] + " "
 	}
-	num_int, _ := strconv.Atoi(num)
-	extended_string = fmt.Sprintf("PCR-%.2d: %s", num_int, spaced)
 
-	return strings.Contains(pcr, extended_string)
+	extended_string = fmt.Sprintf("PCR-%.2d: %s", num, spaced)
+
+	if !strings.Contains(pcr, extended_string) {
+		s.Fatalf("PCR%d was not extended with SHA256 of HWID!", num)
+	}
 }
 
-func tpm2CheckPCR(ctx context.Context, s *testing.State, num string, hashObj hash.Hash) bool {
+func tpm2CheckPCR(ctx context.Context, s *testing.State, num int, hashObj hash.Hash) {
 	h := s.FixtValue().(*fixture.Value).Helper
-	s.Logf("Reading PCR%s from the device", num)
-	pcr_bytes, _ := h.DUT.Conn().CommandContext(ctx, "trunks_client", "--read_pcr", "--index="+num).Output()
+	s.Logf("Reading PCR%d from the device", num)
+
+	pcrIndex := fmt.Sprintf("--index=%d", num)
+	pcr_bytes, err := h.DUT.Conn().CommandContext(ctx, "trunks_client", "--read_pcr", pcrIndex).Output()
+	if err != nil {
+		s.Fatal("Failed to read TPM2 PCR: ", err)
+	}
 	var pcr = string(pcr_bytes)
 
 	padded := append(hashObj.Sum(nil), make([]byte, 12)...)[:32]
 	extended := sha256.Sum256((append(make([]byte, 32), padded...))[:])
 	extended_string := fmt.Sprintf("%X", extended)
 
-	return strings.Contains(pcr, extended_string)
+	if !strings.Contains(pcr, extended_string) {
+		s.Fatalf("PCR%d was not extended with SHA256 of HWID!", num)
+	}
 }
 
-func checkPCR(ctx context.Context, s *testing.State, num string, hashObj hash.Hash) bool {
-
-	cmdRunner := hwsecremote.NewCmdRunner(s.DUT())
-	tpmVersion, err := hwsec.NewCmdHelper(cmdRunner).GetTPMVersion(ctx)
-	if err != nil {
-		s.Fatal("Failed to get TPM version ", err)
-	}
-	s.Log("TPM version is:", tpmVersion)
-
+func checkPCR(ctx context.Context, s *testing.State, num int, hashObj hash.Hash) {
 	if strings.Contains(tpmVersion, "1.") {
-		return tpm1CheckPCR(ctx, s, num, hashObj)
+		tpm1CheckPCR(ctx, s, num, hashObj)
 	} else {
-		return tpm2CheckPCR(ctx, s, num, hashObj)
+		tpm2CheckPCR(ctx, s, num, hashObj)
 	}
 }
 
 func hwIdCheck(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
-
-	// Get the firmware version using 'crossystem fwid'.
-	fwVersion, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
-	if err != nil {
-		s.Fatal("Could not determine firmware version: ", err)
-	}
-	re := regexp.MustCompile(`Google_([a-z-A-Z-0-9]*)\.(\d*)\.\d*.\d*`)
-	match := re.FindStringSubmatch(fwVersion)
-	if len(match) != 3 {
-		s.Fatalf("Unexpected fw id format from crossystem %v, got: %s", reporters.CrossystemParamFwid, fwVersion)
-	}
-	fwVersion = match[2]
-	s.Log("Firmware Version: ", fwVersion)
 
 	// Get the hardware version using 'crossystem hwid'
 	s.Log("Verifying HWID digest in PCR1")
@@ -131,53 +161,43 @@ func hwIdCheck(ctx context.Context, s *testing.State) {
 	hashObj := sha256.New()
 	hashObj.Write([]byte(hwVersion))
 
-	var isExtended = checkPCR(ctx, s, "1", hashObj)
-	if !isExtended {
-		s.Fatal("PCR1 was not extended with SHA256 of HWID!")
-	}
-}
-
-func checkPCRBootmode(ctx context.Context, s *testing.State, dev_mode rune, rec_mode rune, keyblock_flags rune) {
-	var bootmode = []byte(string(dev_mode) + string(rec_mode) + string(keyblock_flags))
-	hashObj := sha1.New()
-	hashObj.Write(bootmode)
-
-	var isExtended = checkPCR(ctx, s, "0", hashObj)
-	if !isExtended {
-		s.Fatal("PCR0 was not extended with SHA256 of HWID!")
-	}
+	checkPCR(ctx, s, 1, hashObj)
 }
 
 func bootModeVerify(ctx context.Context, s *testing.State, devsw string, mainfw string) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	s.Logf("Verifying bootmode digest in PCR0 in (devsw=%s, mainfw=%s) mode", devsw, mainfw)
-	if csMap, err := h.Reporter.Crossystem(ctx, reporters.CrossystemParamDevswBoot, reporters.CrossystemParamMainfwType); err != nil {
+	if csMap, err := h.Reporter.Crossystem(ctx, reporters.CrossystemParamDevswBoot,
+		reporters.CrossystemParamMainfwType); err != nil {
 		s.Fatal("Failed to get crossystem")
-	} else if csMap[reporters.CrossystemParamDevswBoot] != devsw || csMap[reporters.CrossystemParamMainfwType] != mainfw {
-		s.Fatalf("Expected (devsw, mainfw) to be (%q, %q), got (%q, %q)", devsw, mainfw, csMap[reporters.CrossystemParamDevswBoot], csMap[reporters.CrossystemParamMainfwType])
+	} else if csMap[reporters.CrossystemParamDevswBoot] != devsw ||
+		csMap[reporters.CrossystemParamMainfwType] != mainfw {
+		s.Fatalf("Expected (devsw, mainfw) to be (%q, %q), got (%q, %q)", devsw, mainfw,
+			csMap[reporters.CrossystemParamDevswBoot],
+			csMap[reporters.CrossystemParamMainfwType])
 	}
 }
 
 func TPMExtend(ctx context.Context, s *testing.State) {
-	s.Log("TPMExtend Test Starts")
-	hwIdCheck(ctx, s)
-	switch s.Param().(string) {
-	case fixture.NormalMode:
-		bootModeVerify(ctx, s, "0", "normal")
-		// dev_mode: 0, rec_mode: 0, keyblock_flags: "normal" (1)
-		checkPCRBootmode(ctx, s, 0, 0, 1)
-	case fixture.RecModeNoServices:
-		bootModeVerify(ctx, s, "0", "recovery")
-		// dev_mode: 0, rec_mode: 1, keyblock_flags: "unknown" (0)
-		checkPCRBootmode(ctx, s, 0, 1, 0)
-	case fixture.DevModeGBB:
-		bootModeVerify(ctx, s, "1", "developer")
-		// dev_mode: 1, rec_mode: 0, keyblock_flags: "normal" (1)
-		checkPCRBootmode(ctx, s, 1, 0, 1)
-	case fixture.DevRecModeNoServices:
-		bootModeVerify(ctx, s, "1", "recovery")
-		// dev_mode: 1, rec_mode: 1, keyblock_flags: "unknown" (0)
-		checkPCRBootmode(ctx, s, 1, 1, 0)
+	arguments := s.Param().(*bootModeArgs)
+
+	// Get the current TPM version
+	cmdRunner := hwsecremote.NewCmdRunner(s.DUT())
+	tpmVersion, err := hwsec.NewCmdHelper(cmdRunner).GetTPMVersion(ctx)
+	if err != nil {
+		s.Fatal("Failed to get TPM version ", err)
 	}
-	s.Log("TPMExtend Test Completes")
+	s.Log("TPM version is:", tpmVersion)
+
+	// Verify hardware id digest
+	hwIdCheck(ctx, s)
+
+	// Verify bootmode
+	bootModeVerify(ctx, s, arguments.devsw, arguments.mainfw)
+
+	// Verify PCR
+	hashObj := sha1.New()
+	hashObj.Write([]byte{arguments.devMode, arguments.recMode, arguments.keyBlockFlags})
+	s.Log("bootmode:", []byte{arguments.devMode, arguments.recMode, arguments.keyBlockFlags})
+	checkPCR(ctx, s, 0, hashObj)
 }
