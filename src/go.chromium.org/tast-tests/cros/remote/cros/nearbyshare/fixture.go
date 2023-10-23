@@ -142,10 +142,10 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	remoteDir := strings.TrimSpace(string(tempdir))
 	f.remoteFilePath = remoteDir
 
-	// TODO(crbug/1127165): Remove after data is supported in fixture.
+	// TODO(b/307335239): Refactor to use fixture data instead of hardcoded path.
 	// Workaround to use data files downloaded in other tests.
 	const (
-		prebuiltLocalDataPath = "/usr/local/tast/data/go.chromium.org/tast-tests/cros/remote/bundles/cros/nearbyshare/data"
+		prebuiltLocalDataPath = "/usr/share/tast/data/go.chromium.org/tast-tests/cros/remote/bundles/cros/nearbyshare/data"
 		builtLocalDataPath    = "../platform/tast-tests/src/go.chromium.org/tast-tests/cros/remote/bundles/cros/nearbyshare/data"
 	)
 	pathToUse := builtLocalDataPath
