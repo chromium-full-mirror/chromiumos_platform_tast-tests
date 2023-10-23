@@ -1,0 +1,5 @@
+# Team OWNERS
+include chromiumos/owners:v1:/printscan/OWNERS.printscan
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
