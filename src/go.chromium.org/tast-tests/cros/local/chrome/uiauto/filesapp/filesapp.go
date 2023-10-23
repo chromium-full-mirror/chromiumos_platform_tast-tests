@@ -493,7 +493,7 @@ func (f *FilesApp) SelectMultipleFiles(kb *input.KeyboardEventWriter, fileList .
 
 			if err := uiauto.Combine("Ctrl select a file",
 				f.WaitForFile(fileName),
-				f.LeftClickUntil(file(fileName), f.Exists(selectionLabel)),
+				f.LeftClickUntil(file(fileName), f.WaitUntilExists(selectionLabel)),
 			)(ctx); err != nil {
 				return errors.Wrapf(err, "failed to select %s", fileName)
 			}
