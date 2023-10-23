@@ -10,7 +10,6 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -36,8 +35,7 @@ const (
 	arcPipTestPkgName = "org.chromium.arc.testapp.pictureinpicture"
 )
 
-type pipTestFunc func(context.Context, *uiauto.Context, *display.Info, *display.Orientation, *nodewith.Finder) error
-
+type pipTestFunc func(context.Context, *chrome.TestConn, *uiauto.Context, *display.Info, *input.TouchscreenEventWriter) error
 type pipType int
 
 const (
@@ -181,56 +179,69 @@ func Pip(ctx context.Context, s *testing.State) {
 
 	ac := uiauto.New(tconn)
 
+	var a *arc.ARC
+	var pipAct *arc.Activity
+	if testParams.pipType == arcPip {
+		a, err = arc.New(ctx, s.OutDir(), cr.NormalizedUser())
+		if err != nil {
+			s.Fatal("Failed to launch ARC: ", err)
+		}
+
+		const apkName = "ArcPipTest.apk"
+		if err := a.Install(ctx, arc.APKPath(apkName)); err != nil {
+			s.Fatal("Failed installing PiP app: ", err)
+		}
+	}
+
 	// Run each of the tests.
 	for _, fn := range testParams.tests {
-		// Show a new PiP window.
-		if testParams.pipType == arcPip {
-			if err := createArcPip(ctx, cr, tconn, dispInfo, s.OutDir(), testParams); err != nil {
-				s.Fatal("Failed to create an ARC PiP window: ", err)
+		func() {
+			// Show a new PiP window.
+			if testParams.pipType == arcPip {
+				pipAct, err = createArcPip(ctx, cr, tconn, a, dispInfo, testParams)
+				if err != nil {
+					s.Fatal("Failed to create an ARC PiP window: ", err)
+				}
+				defer cleanUpArcTest(cleanupCtx, tconn, pipAct)
+			} else {
+				closeBrowser, err := createBrowserPip(ctx, cr, tconn, ac, s.DataFileSystem(), testParams)
+				if err != nil {
+					s.Fatal("Failed to create a browser PiP window: ", err)
+				}
+				defer closeBrowser(cleanupCtx)
 			}
-		} else {
-			closeBrowser, err := createBrowserPip(ctx, cr, tconn, ac, s.DataFileSystem(), testParams)
+
+			// Get touch event writers.
+			tsw, err := input.Touchscreen(ctx)
 			if err != nil {
-				s.Fatal("Failed to create a browser PiP window: ", err)
+				s.Fatal("Failed to get touchscreen event writer: ", err)
 			}
-			defer closeBrowser(cleanupCtx)
-		}
+			defer tsw.Close(ctx)
 
-		// Get the PiP window. Browser PiP window cannot be able to be
-		// retrieved with `ash.FindWindow()`, as it's not included in
-		// `mruWindowTracker::BuildAppWindowList`.
-		pipWindow :=
-			nodewith.Name(testParams.pipWindowName).ClassName(testParams.pipClassName).Onscreen().First()
+			if err := tsw.SetRotation(-orientation.Angle); err != nil {
+				s.Fatal("Failed to set touchscreen event writer rotation: ", err)
+			}
 
-		// Execute the tests.
-		if err := fn(ctx, ac, dispInfo, orientation, pipWindow); err != nil {
-			s.Fatal("Failed to execute test: ", err)
-		}
+			// Execute the tests.
+			if err := fn(ctx, tconn, ac, dispInfo, tsw); err != nil {
+				s.Fatal("Failed to execute test: ", err)
+			}
+		}()
 	}
 }
 
-func testPipPinchResize(ctx context.Context, ac *uiauto.Context, dispInfo *display.Info, orientation *display.Orientation, pipWindow *nodewith.Finder) error {
-	// Get touch event writers.
-	tsw, err := input.Touchscreen(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get touchscreen event writer")
-	}
-	defer tsw.Close(ctx)
-
-	if err := tsw.SetRotation(-orientation.Angle); err != nil {
-		return errors.Wrap(err, "failed to set touchscreen event writer rotation")
-	}
-
+func testPipPinchResize(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
 	mtw, err := tsw.NewMultiTouchWriter(2)
 	if err != nil {
 		return errors.Wrap(err, "failed to get touch event writer")
 	}
 	defer mtw.Close()
 
-	beforeBounds, err := ac.Location(ctx, pipWindow)
+	window, err := getPIPWindow(ctx, tconn)
 	if err != nil {
-		return errors.Wrap(err, "failed to get bounds")
+		return errors.Wrap(err, "failed to get PiP window")
 	}
+	beforeBounds := window.BoundsInRoot
 
 	// Perform pinch gesture on the PiP window.
 	tcc := tsw.NewTouchCoordConverter(dispInfo.Bounds.Size())
@@ -252,7 +263,11 @@ func testPipPinchResize(ctx context.Context, ac *uiauto.Context, dispInfo *displ
 	}
 
 	// Confirm that the window has resized due to the gesture.
-	afterBounds, err := ac.Location(ctx, pipWindow)
+	window, err = getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	afterBounds := window.BoundsInRoot
 	if err != nil {
 		return errors.Wrap(err, "failed to get bounds for the PiP window")
 	}
@@ -265,62 +280,38 @@ func testPipPinchResize(ctx context.Context, ac *uiauto.Context, dispInfo *displ
 	return nil
 }
 
-func createArcPip(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, dispInfo *display.Info, outDir string, test pipTestParams) error {
-	a, err := arc.New(ctx, outDir, cr.NormalizedUser())
-	if err != nil {
-		return errors.Wrap(err, "failed to launch ARC")
-	}
-
-	const apkName = "ArcPipTest.apk"
-	if err := a.Install(ctx, arc.APKPath(apkName)); err != nil {
-		return errors.Wrap(err, "failed installing PiP app")
-	}
-
+func createArcPip(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC, dispInfo *display.Info, test pipTestParams) (*arc.Activity, error) {
 	pipAct, err := arc.NewActivity(a, arcPipTestPkgName, ".PipActivity")
 	if err != nil {
-		return errors.Wrap(err, "failed to create PiP activity")
+		return nil, errors.Wrap(err, "failed to create PiP activity")
 	}
-	defer pipAct.Close(ctx)
 
 	if err := pipAct.Start(ctx, tconn); err != nil {
-		return errors.Wrapf(err, "failed to start %s", pipAct.ActivityName())
+		return pipAct, errors.Wrapf(err, "failed to start %s", pipAct.ActivityName())
 	}
 
 	if err := ash.WaitForVisible(ctx, tconn, pipAct.PackageName()); err != nil {
-		return errors.Wrap(err, "failed to wait for PiP activity to be visible")
+		return pipAct, errors.Wrap(err, "failed to wait for PiP activity to be visible")
 	}
 
 	window, err := ash.GetARCAppWindowInfo(ctx, tconn, pipAct.PackageName())
 	if err != nil {
-		return errors.Wrapf(err, "failed to get ARC window infomation for package name %s", pipAct.ActivityName())
+		return pipAct, errors.Wrapf(err, "failed to get ARC window infomation for package name %s", pipAct.ActivityName())
 	}
 
 	// The window is minimized here, but the expected state is PiP, so the async API must used.
 	if _, err := ash.SetWindowState(ctx, tconn, window.ID, ash.WMEventMinimize, false /* waitForStateChange */); err != nil {
-		return errors.Wrapf(err, "failed to minimize %s", pipAct.ActivityName())
+		return pipAct, errors.Wrapf(err, "failed to minimize %s", pipAct.ActivityName())
 	}
 
-	if err := waitForArcPipWindow(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to wait for PiP window")
+	if err := waitForPipWindow(ctx, tconn); err != nil {
+		return pipAct, errors.Wrap(err, "failed to enter PiP mode")
 	}
 
-	if err := waitForArcPipWindow(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to enter PiP mode")
-	}
-
-	return nil
+	return pipAct, nil
 }
 
 func createBrowserPip(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, ac *uiauto.Context, dataFS http.FileSystem, test pipTestParams) (func(ctx context.Context) error, error) {
-	var pipClassName string
-
-	switch test.browserType {
-	case browser.TypeAsh:
-		pipClassName = "PictureInPictureWindow"
-	case browser.TypeLacros:
-		pipClassName = "Widget"
-	}
-
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, test.browserType)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open the browser")
@@ -350,29 +341,52 @@ func createBrowserPip(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Test
 
 	// Show the PiP window.
 	pipButton := nodewith.Name("PIP").Role(role.Button)
-	pipWindow := nodewith.Name("Picture in picture").ClassName(pipClassName).Onscreen().First()
-
-	if err := action.Combine(
-		"show PiP window",
-		ac.LeftClick(pipButton),
-		ac.WithTimeout(10*time.Second).WaitUntilExists(pipWindow),
-	)(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to show the PiP window")
+	if err := ac.WithTimeout(10 * time.Second).LeftClick(pipButton)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to click on the PiP button")
 	}
 
-	return closeBrowser, nil
+	if err := waitForPipWindow(ctx, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to enter PiP mode")
+	}
+
+	return func(ctx context.Context) error {
+		if err := closeBrowser(ctx); err != nil {
+			return errors.Wrap(err, "failed to close browser window")
+		}
+		if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to close all windows")
+		}
+		return nil
+	}, nil
 }
 
-// waitForArcPipWindow keeps looking for a PiP window until it appears on the Chrome side.
-func waitForArcPipWindow(ctx context.Context, tconn *chrome.TestConn) error {
+// waitForPipWindow keeps looking for a PiP window until it appears on the Chrome side.
+func waitForPipWindow(ctx context.Context, tconn *chrome.TestConn) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
-			return w.State == ash.WindowStatePIP
-		})
-
+		w, err := getPIPWindow(ctx, tconn)
 		if err != nil {
 			return errors.Wrap(err, "the PiP window hasn't been created yet")
 		}
+		if !w.IsVisible || w.IsAnimating {
+			return errors.New("the PiP window is not in a stable state yet")
+		}
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second})
+}
+
+// getPIPWindow returns the PIP window if any.
+func getPIPWindow(ctx context.Context, tconn *chrome.TestConn) (*ash.Window, error) {
+	return ash.FindWindow(ctx, tconn, func(w *ash.Window) bool { return w.State == ash.WindowStatePIP })
+}
+
+// cleanUpArcTest cleans up all the windows that get shown at the set-up of an test for ARC.
+func cleanUpArcTest(ctx context.Context, tconn *chrome.TestConn, pipAct *arc.Activity) error {
+	if err := pipAct.Stop(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to stop ARC PiP activity")
+	}
+	pipAct.Close(ctx)
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to close all windows")
+	}
+	return nil
 }
