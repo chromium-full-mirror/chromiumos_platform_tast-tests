@@ -347,9 +347,8 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 
 	chrome, err := chrome.New(
 		ctx,
-		// org.chromium.ChromeFeaturesService does not need login to work.
-		// Don't login to speed up the test.
-		chrome.NoLogin(),
+		chrome.GuestLogin(),
+		chrome.KeepEnrollment(),
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
