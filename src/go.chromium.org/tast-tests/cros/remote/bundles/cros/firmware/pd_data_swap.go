@@ -16,12 +16,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type pdDataSwapTestParams struct {
-	cc       firmware.CCPolarity
-	dts      firmware.DTSMode
-	shutdown bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: PDDataSwap,
@@ -40,31 +34,31 @@ func init() {
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
 			Name: "normal",
-			Val: pdDataSwapTestParams{
-				cc:       firmware.CCPolarityStandard,
-				dts:      firmware.DTSModeOn,
-				shutdown: false,
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityStandard,
+				DTS:      firmware.DTSModeOn,
+				Shutdown: false,
 			},
 		}, {
 			Name: "flipcc",
-			Val: pdDataSwapTestParams{
-				cc:       firmware.CCPolarityFlipped,
-				dts:      firmware.DTSModeOn,
-				shutdown: false,
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityFlipped,
+				DTS:      firmware.DTSModeOn,
+				Shutdown: false,
 			},
 		}, {
 			Name: "dtsoff",
-			Val: pdDataSwapTestParams{
-				cc:       firmware.CCPolarityStandard,
-				dts:      firmware.DTSModeOff,
-				shutdown: false,
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityStandard,
+				DTS:      firmware.DTSModeOff,
+				Shutdown: false,
 			},
 		}, {
 			Name: "flipcc_dtsoff",
-			Val: pdDataSwapTestParams{
-				cc:       firmware.CCPolarityFlipped,
-				dts:      firmware.DTSModeOff,
-				shutdown: false,
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityFlipped,
+				DTS:      firmware.DTSModeOff,
+				Shutdown: false,
 			},
 		}},
 		// TODO: b/194910842 - [faft-pd] Convert firmware_PDDataSwap to TAST
@@ -94,15 +88,10 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
-	testParams := s.Param().(pdDataSwapTestParams)
+	testParams := s.Param().(firmware.PDTestParams)
 
-	if err := firmware.SetupPDTester(ctx, h, testParams.cc, testParams.dts); err != nil {
+	if err := firmware.SetupPDTester(ctx, h, testParams.CC, testParams.DTS, testParams.RequiredPort); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
-	}
-
-	err := h.Servo.RequireDUTPDInfo(ctx)
-	if err != nil {
-		s.Fatal("Error in getting PD port info: ", err)
 	}
 
 	pdState, err := h.Servo.GetServoPDState(ctx)

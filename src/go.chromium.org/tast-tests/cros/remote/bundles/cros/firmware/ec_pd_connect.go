@@ -16,11 +16,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type ecPDConnectParams struct {
-	cc  firmware.CCPolarity
-	dts firmware.DTSMode
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ECPDConnect,
@@ -39,27 +34,27 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
 			Name: "normal",
-			Val: ecPDConnectParams{
-				cc:  firmware.CCPolarityStandard,
-				dts: firmware.DTSModeOn,
+			Val: firmware.PDTestParams{
+				CC:  firmware.CCPolarityStandard,
+				DTS: firmware.DTSModeOn,
 			},
 		}, {
 			Name: "flipcc",
-			Val: ecPDConnectParams{
-				cc:  firmware.CCPolarityFlipped,
-				dts: firmware.DTSModeOn,
+			Val: firmware.PDTestParams{
+				CC:  firmware.CCPolarityFlipped,
+				DTS: firmware.DTSModeOn,
 			},
 		}, {
 			Name: "dtsoff",
-			Val: ecPDConnectParams{
-				cc:  firmware.CCPolarityStandard,
-				dts: firmware.DTSModeOff,
+			Val: firmware.PDTestParams{
+				CC:  firmware.CCPolarityStandard,
+				DTS: firmware.DTSModeOff,
 			},
 		}, {
 			Name: "flipcc_dtsoff",
-			Val: ecPDConnectParams{
-				cc:  firmware.CCPolarityFlipped,
-				dts: firmware.DTSModeOff,
+			Val: firmware.PDTestParams{
+				CC:  firmware.CCPolarityFlipped,
+				DTS: firmware.DTSModeOff,
 			},
 		}},
 	})
@@ -114,12 +109,12 @@ func setServoPowerRole(ctx context.Context, svo *servo.Servo, role servo.PDRoleV
 // and as Source. This test is based on firmware_PDConnect in Autotest.
 func ECPDConnect(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
-	p := s.Param().(ecPDConnectParams)
+	p := s.Param().(firmware.PDTestParams)
 
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to create config: ", err)
 	}
-	if err := firmware.SetupPDTester(ctx, h, p.cc, p.dts); err != nil {
+	if err := firmware.SetupPDTester(ctx, h, p.CC, p.DTS, p.RequiredPort); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
 	defer cleanup(ctx, s)

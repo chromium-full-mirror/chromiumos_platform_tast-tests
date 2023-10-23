@@ -115,6 +115,11 @@ func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 	return nil
 }
 
+// DUTPDPort returns the active PD port on the DUT.
+func (s *Servo) DUTPDPort() int {
+	return s.dutPDInfo.activePort
+}
+
 const (
 	pdStatePollTimeout  time.Duration = 10 * time.Second
 	pdStatePollInterval time.Duration = 500 * time.Millisecond

@@ -10,9 +10,13 @@ import (
 	"context"
 	"time"
 
+	"fmt"
+
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // DTSMode is a type for DTS Mode control in SetupPDTester
@@ -35,13 +39,50 @@ const (
 	CCPolarityFlipped
 )
 
+// PDTestParams contains common test params for PD tests.
+type PDTestParams struct {
+	CC           CCPolarity
+	DTS          DTSMode
+	Shutdown     bool
+	RequiredPort *int
+}
+
+// AddPDPorts takes a list of testing.Params that use PDTestParams as their value and populates the PVS requirements and creates parameterized tests for each PD port.
+// This is a somewhat hacky workaround for the PD port not being a first class dimension in PVS. See b/291571959 for more info.
+func AddPDPorts(params []testing.Param, attrs []string) []testing.Param {
+	var result []testing.Param
+	for _, test := range params {
+		test.ExtraAttr = attrs
+		result = append(result, test)
+	}
+	for port := 0; port < servo.MaxPorts; port++ {
+		for _, test := range params {
+			if test.Name == "" {
+				test.Name = fmt.Sprintf("port%d", port)
+			} else {
+				test.Name = fmt.Sprintf("%s_port%d", test.Name, port)
+			}
+			test.ExtraAttr = nil
+			test.ExtraRequirements = []string{"sys-fw-0023-v01"}
+			test.ExtraHardwareDeps = hwdep.D(hwdep.HasPDPort(uint32(port)))
+			val := test.Val.(PDTestParams)
+			val.RequiredPort = new(int)
+			*val.RequiredPort = port
+			test.Val = val
+			result = append(result, test)
+		}
+	}
+	return result
+}
+
 // SetupPDTester handles some boilerplate tasks to prepare the Servo for PD testing:
 //  1. Make sure a suitable pair of Servos is attached (e.g. ServoV4 + Servo Micro)
-//  2. If the DUT has a battery, charge it up to >= 10%
-//  3. Configure DTS mode and CC polarity per user request
-//  4. Ensure a UDB-PD charger brick is attached and sourcing power
-//  5. Disable CCD Watchdogs
-func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMode DTSMode) error {
+//  2. Call RequireDUTPDInfo to get info about the connected port.
+//  3. If the DUT has a battery, charge it up to >= 10%
+//  4. Configure DTS mode and CC polarity per user request
+//  5. Ensure a UDB-PD charger brick is attached and sourcing power
+//  6. Disable CCD Watchdogs
+func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMode DTSMode, requiredPort *int) error {
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "failed to require servo")
 	}
@@ -51,6 +92,13 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 		return errors.Wrap(err, "servo configuration does not support PD testing")
 	}
 	testing.ContextLog(ctx, "PD Tester found")
+
+	if err := h.Servo.RequireDUTPDInfo(ctx); err != nil {
+		return errors.Wrap(err, "RequireDUTPDInfo failed")
+	}
+	if requiredPort != nil && h.Servo.DUTPDPort() != *requiredPort {
+		return errors.Errorf("Incorrect PD port. Test wants port %d, got %d", *requiredPort, h.Servo.DUTPDPort())
+	}
 
 	// Make sure the Servo is a PD source from the DUT's perspective. This
 	// helps in case a previous test left the port in a strange state.

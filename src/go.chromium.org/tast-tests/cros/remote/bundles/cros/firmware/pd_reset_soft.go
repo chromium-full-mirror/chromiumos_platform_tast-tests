@@ -15,12 +15,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type pdSoftResetTestParams struct {
-	cc       firmware.CCPolarity
-	dts      firmware.DTSMode
-	shutdown bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: PDResetSoft,
@@ -39,38 +33,38 @@ func init() {
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
 			Name: "normal",
-			Val: pdSoftResetTestParams{
-				cc:       firmware.CCPolarityStandard,
-				dts:      firmware.DTSModeOn,
-				shutdown: false,
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityStandard,
+				DTS:      firmware.DTSModeOn,
+				Shutdown: false,
 			},
 		}, {
 			Name: "flipcc",
-			Val: pdSoftResetTestParams{
-				cc:       firmware.CCPolarityFlipped,
-				dts:      firmware.DTSModeOn,
-				shutdown: false,
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityFlipped,
+				DTS:      firmware.DTSModeOn,
+				Shutdown: false,
 			},
 		}, {
 			Name: "dtsoff",
-			Val: pdSoftResetTestParams{
-				cc:       firmware.CCPolarityStandard,
-				dts:      firmware.DTSModeOff,
-				shutdown: false,
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityStandard,
+				DTS:      firmware.DTSModeOff,
+				Shutdown: false,
 			},
 		}, {
 			Name: "flipcc_dtsoff",
-			Val: pdSoftResetTestParams{
-				cc:       firmware.CCPolarityFlipped,
-				dts:      firmware.DTSModeOff,
-				shutdown: false,
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityFlipped,
+				DTS:      firmware.DTSModeOff,
+				Shutdown: false,
 			},
 		}, {
 			Name: "shutdown",
-			Val: pdSoftResetTestParams{
-				cc:       firmware.CCPolarityStandard,
-				dts:      firmware.DTSModeOn,
-				shutdown: true,
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityStandard,
+				DTS:      firmware.DTSModeOn,
+				Shutdown: true,
 			},
 		}},
 	})
@@ -102,21 +96,16 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
-	testParams := s.Param().(pdSoftResetTestParams)
+	testParams := s.Param().(firmware.PDTestParams)
 
-	if testParams.shutdown {
+	if testParams.Shutdown {
 		if err := shutdownDUT(ctx, h); err != nil {
 			s.Fatal("Could not shut down DUT: ", err)
 		}
 	}
 
-	if err := firmware.SetupPDTester(ctx, h, testParams.cc, testParams.dts); err != nil {
+	if err := firmware.SetupPDTester(ctx, h, testParams.CC, testParams.DTS, testParams.RequiredPort); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
-	}
-
-	// Gather info on the DUT's USB-PD config
-	if err := h.Servo.RequireDUTPDInfo(ctx); err != nil {
-		s.Fatal("Could not gather DUT PD info: ", err)
 	}
 
 	//
@@ -137,7 +126,7 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 
 	// Testing soft resets after a power role swap (DUT is SRC) is not currently
 	// supported.
-	if testParams.shutdown {
+	if testParams.Shutdown {
 		return
 	}
 
