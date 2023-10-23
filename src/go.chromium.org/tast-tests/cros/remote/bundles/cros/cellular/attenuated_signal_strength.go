@@ -39,6 +39,9 @@ type signalStrengthTest struct {
 	callboxOpts *manager.ConfigureCallboxRequestBody
 }
 
+// passThreshold is the threshold at which it's ok if we can't detect the cellular network.
+const passThreshold = -120
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AttenuatedSignalStrength,
@@ -67,7 +70,9 @@ func init() {
 						Hardware:     manager.CallboxHardwareCMW,
 						CellularType: manager.CellularTechnologyLTE,
 						Parameters: []manager.CellConfiguration{
-							manager.NewLteCellConfiguration(),
+							manager.NewLteCellConfiguration(
+								manager.RxPowerOption(manager.NewRxPower(-70)),
+							),
 						},
 					},
 				},
@@ -85,13 +90,11 @@ func AttenuatedSignalStrength(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initialize cellular connection: ", err)
 	}
 
-	// get initial power set on the callbox
-	// NOTE: callbox power is in RS EPRE while lte is reported by the modem in RSRP, the two should be nearly identical in this scenario
-	rxResp, err := tf.CallboxManagerClient.FetchRxPower(ctx, &manager.FetchRxPowerRequestBody{})
-	if err != nil {
-		s.Fatal("Failed to fetch callbox downlink power: ", err)
+	req := &manager.ConfigureRxPowerRequestBody{Power: manager.NewRxPower(tc.maxPower)}
+	if err := tf.CallboxManagerClient.ConfigureRxPower(ctx, req); err != nil {
+		s.Fatal("Failed to change callbox uplink power: ", err)
 	}
-	pReq := rxResp.Power
+	pReq := tc.maxPower
 
 	// wait for received power at the DUT to update
 	pMeas, err := waitForPower(ctx, tc, tf.RemoteCellularClient, pReq)
@@ -117,6 +120,11 @@ func AttenuatedSignalStrength(ctx context.Context, s *testing.State) {
 		powerOld := pMeas
 		pMeas, err = waitForPower(ctx, tc, tf.RemoteCellularClient, pReq)
 		if err != nil {
+			if pReq <= passThreshold {
+				// Power is too low for detection, so just break here.
+				s.Log("Unable to detect cellular network signal: ", err)
+				break
+			}
 			s.Fatal("Failed to wait for requested power: ", err)
 		}
 
