@@ -38,19 +38,13 @@ func init() {
 		SoftwareDeps: []string{"chrome", "tpm"},
 		Attr:         []string{"group:mainline", "group:cryptohome"},
 		Params: []testing.Param{{
-			Name:              "rsassa_sha1",
-			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
-			Val: []cpb.ChallengeSignatureAlgorithm{
-				cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
-			},
-		}, {
 			Name:              "rsassa_all",
 			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 			Val:               hwsec.SmartCardAlgorithms,
 		}, {
 			Name:              "rsassa_sha1_tpm_dynamic",
 			ExtraSoftwareDeps: []string{"tpm_dynamic"},
-			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm1()),
 			Val: []cpb.ChallengeSignatureAlgorithm{
 				cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
 			},
@@ -131,6 +125,10 @@ func UssMigrationChallengeCredential(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
+	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
+	if err != nil {
+		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
+	}
 
 	// Wait for cryptohomed to become available if needed.
 	if err := cryptohome.CheckService(ctx); err != nil {
@@ -153,15 +151,8 @@ func UssMigrationChallengeCredential(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup()
 
-	// 1. Create a new smartcard (challenge credential) user with VaultKeysets. Disable USS
-	// and USS migration for this initial setup.
+	// 1. Create a new smartcard (challenge credential) user with VaultKeysets.
 	if err := func() error {
-		cleanupUSSDisabled, err := helper.DisableUserSecretStash(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to disable UserSecretStash")
-		}
-		defer cleanupUSSDisabled(ctxForCleanup)
-
 		if err := client.WithAuthSession(ctx, testUser, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 			// Create user vault.
 			if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
@@ -172,9 +163,9 @@ func UssMigrationChallengeCredential(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to mount user profile after creation")
 			}
 			defer client.Unmount(ctxForCleanup, testUser)
-			// Add smartcard AuthFactor.
-			if err := client.AddSmartCardAuthFactor(ctx, authSessionID, smartCardLabel, authConfig); err != nil {
-				return errors.Wrap(err, "failed to add smartcard AuthFactor")
+			// Add smartcard VaultKeyset/AuthFactor.
+			if err := testTool.CreateSmartCardVaultKeyset(ctx, authSessionID, smartCardLabel, authConfig); err != nil {
+				return errors.Wrap(err, "failed to create VaultKeyset")
 			}
 			// Check that the smartcard VaultKeyset file is created.
 			if err := cryptohome.CheckKeyBackingStoreExists(ctx, smartcardKeysetFile, testUser); err != nil {

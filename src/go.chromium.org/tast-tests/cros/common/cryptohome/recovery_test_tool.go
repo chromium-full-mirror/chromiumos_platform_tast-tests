@@ -249,6 +249,21 @@ func (c *RecoveryTestTool) CreateVaultKeyset(ctx context.Context, authSessionID,
 	return err
 }
 
+// CreateSmartCardVaultKeyset calls "--action=create_vault_keyset" with extra flags for challenge credentials.
+func (c *RecoveryTestTool) CreateSmartCardVaultKeyset(ctx context.Context, authSessionID, keyDataLabel string, authConfig *hwsec.AuthConfig) error {
+	args := []string{
+		"--action=create_vault_keyset",
+		"--auth_session_id=" + authSessionID,
+		"--key_data_label=" + keyDataLabel,
+		"--auth_factor_type=smart_card",
+		"--challenge_spki=" + hex.EncodeToString(authConfig.ChallengeSPKI),
+		"--key_delegate_name=" + authConfig.KeyDelegateName,
+	}
+
+	_, err := c.call(ctx, args...)
+	return err
+}
+
 // FakeMediate calls "--action=recovery_crypto_mediate" step.
 func (c *RecoveryTestTool) FakeMediate(ctx context.Context) error {
 	if !c.useFakeMediator() {
