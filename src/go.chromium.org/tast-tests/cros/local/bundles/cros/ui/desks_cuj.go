@@ -65,6 +65,21 @@ func init() {
 				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithBatterySaver",
 			},
+			// TODO(b/302748186): Remove rounded window tests once A/B testing
+			// for rounded windows is done.
+			{
+				Name:      "rounded_windows",
+				Val:       browser.TypeAsh,
+				ExtraAttr: []string{"cuj_experimental"},
+				Fixture:   "loggedInToCUJUserWithRoundedWindows",
+			},
+			{
+				Name:              "rounded_windows_lacros",
+				Val:               browser.TypeLacros,
+				ExtraSoftwareDeps: []string{"lacros"},
+				ExtraAttr:         []string{"cuj_experimental"},
+				Fixture:           "loggedInToCUJUserLacrosWithRoundedWindows",
+			},
 			// TODO(b/298151007): Remove when sufficient data is collected.
 			{
 				Name:              "hrtimer_off",
