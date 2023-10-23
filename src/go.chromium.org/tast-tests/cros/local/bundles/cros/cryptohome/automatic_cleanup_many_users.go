@@ -13,11 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/cryptohome/cleanup"
-	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -55,13 +53,6 @@ func init() {
 }
 
 func AutomaticCleanupManyUsers(ctx context.Context, s *testing.State) {
-	cmdRunner := hwseclocal.NewCmdRunner()
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-	daemonController := helper.DaemonController()
-
 	userCount := s.Param().(int)
 
 	const (
@@ -72,15 +63,13 @@ func AutomaticCleanupManyUsers(ctx context.Context, s *testing.State) {
 	)
 
 	// Start cryptohomed and wait for it to be available
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
+	if err := cryptohome.CheckService(ctx); err != nil {
 		s.Fatal("Failed to start cryptohomed: ", err)
 	}
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
-
-	defer daemonController.Restart(cleanupCtx, hwsec.CryptohomeDaemon)
 
 	if err := cleanup.RunOnExistingUsers(ctx); err != nil {
 		s.Fatal("Failed to perform initial cleanup: ", err)

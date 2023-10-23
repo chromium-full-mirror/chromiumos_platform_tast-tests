@@ -64,10 +64,9 @@ func UssMigrationPasswordPin(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
-	daemonController := helper.DaemonController()
 
 	// Wait for cryptohomed to become available if needed.
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
+	if err := cryptohome.CheckService(ctx); err != nil {
 		s.Fatal("Failed to ensure cryptohomed: ", err)
 	}
 

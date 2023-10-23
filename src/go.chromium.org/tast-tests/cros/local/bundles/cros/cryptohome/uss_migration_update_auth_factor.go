@@ -64,7 +64,6 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
-	daemonController := helper.DaemonController()
 
 	// Setup the recovery test tool and fakes.
 	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
@@ -73,7 +72,7 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for cryptohomed to become available if needed.
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
+	if err := cryptohome.CheckService(ctx); err != nil {
 		s.Fatal("Failed to ensure cryptohomed: ", err)
 	}
 

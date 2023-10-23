@@ -11,9 +11,7 @@ import (
 
 	"github.com/google/fscrypt/metadata"
 
-	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -50,15 +48,8 @@ func FscryptEncryptionPolicy(ctx context.Context, s *testing.State) {
 		password = "pass"
 	)
 
-	cmdRunner := hwseclocal.NewCmdRunner()
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-	daemonController := helper.DaemonController()
-
 	// Make sure cryptohomed is running.
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
+	if err := cryptohome.CheckService(ctx); err != nil {
 		s.Fatal("Failed to start cryptohomed: ", err)
 	}
 

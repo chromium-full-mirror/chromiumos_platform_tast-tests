@@ -9,6 +9,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -43,14 +44,9 @@ func GuestAuthSession(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-	daemonController := helper.DaemonController()
 
 	// Ensure cryptohomed is started and wait for it to be available.
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
+	if err := cryptohome.CheckService(ctx); err != nil {
 		s.Fatal("Failed to ensure cryptohomed: ", err)
 	}
 

@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -19,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/cryptohome/cleanup"
 	"go.chromium.org/tast-tests/cros/local/disk"
-	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -118,18 +116,10 @@ func AutomaticCleanupCritical(ctx context.Context, s *testing.State) {
 				password      = "1234"
 			)
 
-			cmdRunner := hwseclocal.NewCmdRunner()
-			helper, err := hwseclocal.NewHelper(cmdRunner)
-			if err != nil {
-				s.Fatal("Failed to create hwsec local helper: ", err)
-			}
-			daemonController := helper.DaemonController()
-
 			// Start cryptohomed and wait for it to be available.
-			if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
+			if err := cryptohome.CheckService(ctx); err != nil {
 				s.Fatal("Failed to start cryptohomed: ", err)
 			}
-			defer daemonController.Restart(ctx, hwsec.CryptohomeDaemon)
 
 			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 			defer cancel()

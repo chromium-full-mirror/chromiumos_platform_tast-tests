@@ -9,6 +9,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	cryptocommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -59,18 +60,13 @@ func LegacyLabelAuthSession(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	cmdRunner := hwseclocal.NewCmdRunner()
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
 	testTool, err := cryptocommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
 	if err != nil {
 		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
 	}
-	daemonController := helper.DaemonController()
 
 	// Ensure cryptohomed is started and wait for it to be available.
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
+	if err := cryptohome.CheckService(ctx); err != nil {
 		s.Fatal("Failed to ensure cryptohomed: ", err)
 	}
 

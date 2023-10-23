@@ -9,6 +9,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -53,14 +54,9 @@ func VaultMigration(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-	daemonController := helper.DaemonController()
 
 	// Ensure cryptohomed is started and wait for it to be available.
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
+	if err := cryptohome.CheckService(ctx); err != nil {
 		s.Fatal("Failed to ensure cryptohomed: ", err)
 	}
 
@@ -105,7 +101,7 @@ func VaultMigration(ctx context.Context, s *testing.State) {
 
 	// Migrate the user vault.
 	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-		if _, err = client.AuthenticateAuthFactor(ctx, authSessionID, keyLabel, userPassword); err != nil {
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, keyLabel, userPassword); err != nil {
 			return errors.Wrap(err, "failed to authenticate user")
 		}
 		if err := client.PrepareVaultForMigration(ctx, authSessionID); err != nil {
@@ -121,7 +117,7 @@ func VaultMigration(ctx context.Context, s *testing.State) {
 
 	// Mount the user vault as fscrypt.
 	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-		if _, err = client.AuthenticateAuthFactor(ctx, authSessionID, keyLabel, userPassword); err != nil {
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, keyLabel, userPassword); err != nil {
 			return errors.Wrap(err, "failed to authenticate user")
 		}
 		s.Log("Mount as fscrypt")
