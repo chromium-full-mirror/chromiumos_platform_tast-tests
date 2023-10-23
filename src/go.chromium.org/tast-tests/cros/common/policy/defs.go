@@ -18293,39 +18293,6 @@ func (p *DevicePciPeripheralDataAccessEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 826. ContextAwareAccessSignalsAllowlist
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type ContextAwareAccessSignalsAllowlist struct {
-	Stat Status
-	Val  []string
-}
-
-func (p *ContextAwareAccessSignalsAllowlist) Name() string {
-	return "ContextAwareAccessSignalsAllowlist"
-}
-func (p *ContextAwareAccessSignalsAllowlist) Scope() Scope          { return ScopeUser }
-func (p *ContextAwareAccessSignalsAllowlist) Status() Status        { return p.Stat }
-func (p *ContextAwareAccessSignalsAllowlist) UntypedV() interface{} { return p.Val }
-func (p *ContextAwareAccessSignalsAllowlist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v []string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as []string", m)
-	}
-	return v, nil
-}
-func (p *ContextAwareAccessSignalsAllowlist) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *ContextAwareAccessSignalsAllowlist) Equal(iface interface{}) bool {
-	v, ok := iface.([]string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 827. FetchKeepaliveDurationSecondsOnShutdown
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
@@ -25424,7 +25391,6 @@ func (p *PdfUseSkiaRendererEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1109. DataUrlInSvgUseEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DataUrlInSvgUseEnabled struct {
 	Stat Status
@@ -26748,40 +26714,6 @@ func (p *FullRestoreMode) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1156. MicrosoftOneDriveAccountRestriction
-// This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type MicrosoftOneDriveAccountRestriction struct {
-	Stat Status
-	Val  string
-}
-
-func (p *MicrosoftOneDriveAccountRestriction) Name() string {
-	return "MicrosoftOneDriveAccountRestriction"
-}
-func (p *MicrosoftOneDriveAccountRestriction) Scope() Scope          { return ScopeUser }
-func (p *MicrosoftOneDriveAccountRestriction) Status() Status        { return p.Stat }
-func (p *MicrosoftOneDriveAccountRestriction) UntypedV() interface{} { return p.Val }
-func (p *MicrosoftOneDriveAccountRestriction) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as string", m)
-	}
-	return v, nil
-}
-func (p *MicrosoftOneDriveAccountRestriction) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *MicrosoftOneDriveAccountRestriction) Equal(iface interface{}) bool {
-	v, ok := iface.(string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1157. SafeBrowsingDeepScanningEnabled
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -27243,6 +27175,207 @@ func (p *PasswordSharingEnabled) SetProto(m *protoreflect.Message) {
 }
 func (p *PasswordSharingEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1171. ZstdContentEncodingEnabled
+// ****************************************************************************
+type ZstdContentEncodingEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ZstdContentEncodingEnabled) Name() string          { return "ZstdContentEncodingEnabled" }
+func (p *ZstdContentEncodingEnabled) Scope() Scope          { return ScopeUser }
+func (p *ZstdContentEncodingEnabled) Status() Status        { return p.Stat }
+func (p *ZstdContentEncodingEnabled) UntypedV() interface{} { return p.Val }
+func (p *ZstdContentEncodingEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ZstdContentEncodingEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ZstdContentEncodingEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1172. IPv6ReachabilityOverrideEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type IPv6ReachabilityOverrideEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *IPv6ReachabilityOverrideEnabled) Name() string          { return "IPv6ReachabilityOverrideEnabled" }
+func (p *IPv6ReachabilityOverrideEnabled) Scope() Scope          { return ScopeUser }
+func (p *IPv6ReachabilityOverrideEnabled) Status() Status        { return p.Stat }
+func (p *IPv6ReachabilityOverrideEnabled) UntypedV() interface{} { return p.Val }
+func (p *IPv6ReachabilityOverrideEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *IPv6ReachabilityOverrideEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *IPv6ReachabilityOverrideEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1173. UserFeedbackWithLowLevelDebugDataAllowed
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type UserFeedbackWithLowLevelDebugDataAllowed struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *UserFeedbackWithLowLevelDebugDataAllowed) Name() string {
+	return "UserFeedbackWithLowLevelDebugDataAllowed"
+}
+func (p *UserFeedbackWithLowLevelDebugDataAllowed) Scope() Scope          { return ScopeUser }
+func (p *UserFeedbackWithLowLevelDebugDataAllowed) Status() Status        { return p.Stat }
+func (p *UserFeedbackWithLowLevelDebugDataAllowed) UntypedV() interface{} { return p.Val }
+func (p *UserFeedbackWithLowLevelDebugDataAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *UserFeedbackWithLowLevelDebugDataAllowed) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *UserFeedbackWithLowLevelDebugDataAllowed) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1174. MicrosoftOneDriveAccountRestrictions
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type MicrosoftOneDriveAccountRestrictions struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *MicrosoftOneDriveAccountRestrictions) Name() string {
+	return "MicrosoftOneDriveAccountRestrictions"
+}
+func (p *MicrosoftOneDriveAccountRestrictions) Scope() Scope          { return ScopeUser }
+func (p *MicrosoftOneDriveAccountRestrictions) Status() Status        { return p.Stat }
+func (p *MicrosoftOneDriveAccountRestrictions) UntypedV() interface{} { return p.Val }
+func (p *MicrosoftOneDriveAccountRestrictions) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *MicrosoftOneDriveAccountRestrictions) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *MicrosoftOneDriveAccountRestrictions) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1175. DeviceFlexHwDataForProductImprovementEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type DeviceFlexHwDataForProductImprovementEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DeviceFlexHwDataForProductImprovementEnabled) Name() string {
+	return "DeviceFlexHwDataForProductImprovementEnabled"
+}
+func (p *DeviceFlexHwDataForProductImprovementEnabled) Scope() Scope          { return ScopeDevice }
+func (p *DeviceFlexHwDataForProductImprovementEnabled) Status() Status        { return p.Stat }
+func (p *DeviceFlexHwDataForProductImprovementEnabled) UntypedV() interface{} { return p.Val }
+func (p *DeviceFlexHwDataForProductImprovementEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DeviceFlexHwDataForProductImprovementEnabled) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "device_flex_hw_data_for_product_improvement_enabled", "enabled", p.Val)
+}
+func (p *DeviceFlexHwDataForProductImprovementEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1176. SiteSearchSettings
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type SiteSearchSettings struct {
+	Stat Status
+	Val  []*SiteSearchSettingsValue
+}
+
+type SiteSearchSettingsValue struct {
+	Featured bool   `json:"featured"`
+	Name     string `json:"name"`
+	Shortcut string `json:"shortcut"`
+	Url      string `json:"url"`
+}
+
+func (p *SiteSearchSettings) Name() string          { return "SiteSearchSettings" }
+func (p *SiteSearchSettings) Scope() Scope          { return ScopeUser }
+func (p *SiteSearchSettings) Status() Status        { return p.Stat }
+func (p *SiteSearchSettings) UntypedV() interface{} { return p.Val }
+func (p *SiteSearchSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []*SiteSearchSettingsValue
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []*SiteSearchSettingsValue", m)
+	}
+	return v, nil
+}
+func (p *SiteSearchSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *SiteSearchSettings) Equal(iface interface{}) bool {
+	v, ok := iface.([]*SiteSearchSettingsValue)
 	if !ok {
 		return ok
 	}
@@ -28380,8 +28513,6 @@ func newByName(name string) (Policy, error) {
 		return &WebAppSettings{}, nil
 	case "DevicePciPeripheralDataAccessEnabled":
 		return &DevicePciPeripheralDataAccessEnabled{}, nil
-	case "ContextAwareAccessSignalsAllowlist":
-		return &ContextAwareAccessSignalsAllowlist{}, nil
 	case "FetchKeepaliveDurationSecondsOnShutdown":
 		return &FetchKeepaliveDurationSecondsOnShutdown{}, nil
 	case "SuppressDifferentOriginSubframeDialogs":
@@ -28900,8 +29031,6 @@ func newByName(name string) (Policy, error) {
 		return &QuickOfficeForceFileDownloadEnabled{}, nil
 	case "FullRestoreMode":
 		return &FullRestoreMode{}, nil
-	case "MicrosoftOneDriveAccountRestriction":
-		return &MicrosoftOneDriveAccountRestriction{}, nil
 	case "SafeBrowsingDeepScanningEnabled":
 		return &SafeBrowsingDeepScanningEnabled{}, nil
 	case "DriveFileSyncAvailable":
@@ -28928,6 +29057,18 @@ func newByName(name string) (Policy, error) {
 		return &ShowHumanPresenceSensorScreenEnabled{}, nil
 	case "PasswordSharingEnabled":
 		return &PasswordSharingEnabled{}, nil
+	case "ZstdContentEncodingEnabled":
+		return &ZstdContentEncodingEnabled{}, nil
+	case "IPv6ReachabilityOverrideEnabled":
+		return &IPv6ReachabilityOverrideEnabled{}, nil
+	case "UserFeedbackWithLowLevelDebugDataAllowed":
+		return &UserFeedbackWithLowLevelDebugDataAllowed{}, nil
+	case "MicrosoftOneDriveAccountRestrictions":
+		return &MicrosoftOneDriveAccountRestrictions{}, nil
+	case "DeviceFlexHwDataForProductImprovementEnabled":
+		return &DeviceFlexHwDataForProductImprovementEnabled{}, nil
+	case "SiteSearchSettings":
+		return &SiteSearchSettings{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
@@ -28937,41 +29078,7 @@ func newByName(name string) (Policy, error) {
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
 
-type RefDayPercentagePair struct {
-	Days       int `json:"days"`
-	Percentage int `json:"percentage"`
-}
-
-type RefDisallowedTimeInterval struct {
-	DayOfWeek string `json:"day_of_week"`
-	Hours     int    `json:"hours"`
-	Minutes   int    `json:"minutes"`
-}
-
-type RefDeviceLoginScreenPowerSettings struct {
-	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
-	IdleAction string                                   `json:"IdleAction"`
-}
-
-type RefDeviceLoginScreenPowerSettingsDelays struct {
-	Idle      int `json:"Idle"`
-	ScreenDim int `json:"ScreenDim"`
-	ScreenOff int `json:"ScreenOff"`
-}
-
-type RefBookmarkType struct {
-	Children     []*RefBookmarkType `json:"children,omitempty"`
-	Name         string             `json:"name"`
-	ToplevelName string             `json:"toplevel_name"`
-	Url          string             `json:"url"`
-}
-
 type RefUsbDeviceIdInclusive struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
-}
-
-type RefUsbDeviceId struct {
 	ProductId int `json:"product_id"`
 	VendorId  int `json:"vendor_id"`
 }
@@ -28994,6 +29101,18 @@ type Reffile_transfer_source_destination_schema struct {
 	FileSystemType string `json:"file_system_type"`
 }
 
+type RefBookmarkType struct {
+	Children     []*RefBookmarkType `json:"children,omitempty"`
+	Name         string             `json:"name"`
+	ToplevelName string             `json:"toplevel_name"`
+	Url          string             `json:"url"`
+}
+
+type RefUsbDeviceId struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
+}
+
 type RefWeeklyTimeIntervals struct {
 	End   *RefWeeklyTime               `json:"end"`
 	Start *RefWeeklyTimeIntervalsStart `json:"start"`
@@ -29014,16 +29133,26 @@ type RefDomainFiletypePair struct {
 	FileExtension string   `json:"file_extension"`
 }
 
-type RefPowerManagementDelays struct {
-	Delays     *RefPowerManagementDelaysDelays `json:"Delays"`
-	IdleAction string                          `json:"IdleAction"`
+type RefDeviceLoginScreenPowerSettings struct {
+	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
+	IdleAction string                                   `json:"IdleAction"`
 }
 
-type RefPowerManagementDelaysDelays struct {
-	Idle        int `json:"Idle"`
-	IdleWarning int `json:"IdleWarning"`
-	ScreenDim   int `json:"ScreenDim"`
-	ScreenOff   int `json:"ScreenOff"`
+type RefDeviceLoginScreenPowerSettingsDelays struct {
+	Idle      int `json:"Idle"`
+	ScreenDim int `json:"ScreenDim"`
+	ScreenOff int `json:"ScreenOff"`
+}
+
+type RefDisallowedTimeInterval struct {
+	DayOfWeek string `json:"day_of_week"`
+	Hours     int    `json:"hours"`
+	Minutes   int    `json:"minutes"`
+}
+
+type RefDayPercentagePair struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
 }
 
 type RefTimeUsageLimitEntry struct {
@@ -29040,6 +29169,18 @@ type RefConfig struct {
 	AccessCodeTtl       int    `json:"access_code_ttl"`
 	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
 	SharedSecret        string `json:"shared_secret"`
+}
+
+type RefPowerManagementDelays struct {
+	Delays     *RefPowerManagementDelaysDelays `json:"Delays"`
+	IdleAction string                          `json:"IdleAction"`
+}
+
+type RefPowerManagementDelaysDelays struct {
+	Idle        int `json:"Idle"`
+	IdleWarning int `json:"IdleWarning"`
+	ScreenDim   int `json:"ScreenDim"`
+	ScreenOff   int `json:"ScreenOff"`
 }
 
 // ****************************************************************************
