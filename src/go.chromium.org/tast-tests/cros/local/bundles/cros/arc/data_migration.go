@@ -95,7 +95,7 @@ func init() {
 				dataFileName: homeDataNamePiX86,
 				managed:      false,
 			},
-			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 			ExtraData: []string{homeDataNamePiX86},
 			ExtraSoftwareDeps: []string{
 				"android_r",
@@ -109,7 +109,7 @@ func init() {
 				dataFileName: homeDataNamePiArm,
 				managed:      false,
 			},
-			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 			ExtraData: []string{homeDataNamePiArm},
 			ExtraSoftwareDeps: []string{
 				"android_r",
@@ -123,6 +123,7 @@ func init() {
 				dataFileName: homeDataNameRvcX86Virtiofs,
 				managed:      false,
 			},
+			// Use arc_core so that this test case runs on ARC variant boards.
 			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
 			ExtraData: []string{homeDataNameRvcX86Virtiofs},
 			ExtraSoftwareDeps: []string{
@@ -138,7 +139,7 @@ func init() {
 				dataFileName: homeDataNameManagedPiX86,
 				managed:      true,
 			},
-			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 			ExtraData: []string{homeDataNameManagedPiX86},
 			ExtraSearchFlags: []*testing.StringPair{
 				pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
@@ -155,6 +156,7 @@ func init() {
 				dataFileName: homeDataNameManagedRvcX86Virtiofs,
 				managed:      true,
 			},
+			// Use arc_core so that this test case runs on ARC variant boards.
 			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
 			ExtraData: []string{homeDataNameManagedRvcX86Virtiofs},
 			ExtraSearchFlags: []*testing.StringPair{
