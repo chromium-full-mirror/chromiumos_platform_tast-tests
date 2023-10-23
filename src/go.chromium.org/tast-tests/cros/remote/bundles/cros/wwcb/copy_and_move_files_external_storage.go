@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -19,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/grpc"
@@ -98,6 +98,7 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to plug the external storage media: ", err)
 	}
 	usbCount := 1
+	const verifyTimeout, verifyInterval = 10 * time.Second, 1 * time.Second
 	// Expect number of USB devices is not less than number of input parameters.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		after, err := utils.GetUSBDevice(ctx, dut)
@@ -109,21 +110,24 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to unexpected change in the number of USB devices detected; expect: %d, actual: %d (from %d to %d) after plug", usbCount, (len(after) - len(before)), len(before), len(after))
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 200 * time.Millisecond}); err != nil {
+	}, &testing.PollOptions{Timeout: verifyTimeout, Interval: verifyInterval}); err != nil {
 		s.Fatal("Failed to check number of USB devices after plug: ", err)
 	}
 
+	var mountPoints = []string{}
 	// Retrieve USB path.
-	cmd := fmt.Sprint("lsblk -l -o mountpoint | grep removable")
-	output, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed to retrieve USB path after plug: ", err)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		mountPoints, err = utils.GetMountPoints(ctx, dut)
+		if err != nil {
+			return errors.Wrap(err, "failed to get mount point")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: verifyTimeout, Interval: verifyInterval}); err != nil {
+		s.Fatal("Failed to retrieve USB path after plug")
 	}
 
-	ctxVerify, cancelVerify := context.WithTimeout(ctx, 3*time.Second)
-	defer cancelVerify()
-	for _, path := range strings.Split(strings.TrimSpace(string(output)), "\n") {
-
+	for _, path := range mountPoints {
+		testing.ContextLogf(ctx, "Format %s", path)
 		if err := utils.FormatStorageToFAT(ctx, path, dut, fs); err != nil {
 			s.Fatalf("Failed to format %s: %v", path, err)
 		}
@@ -131,12 +135,12 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 		usbTextPathCopy := filepath.Join(path, "sample.txt")
 		usbTextPathMove := filepath.Join(path, "sample_move.txt")
 		testing.ContextLogf(ctx, "Copy file to %s", usbTextPathCopy)
-
 		// Copy file to external storage.
-		if err := dut.Conn().CommandContext(ctxVerify, "cp", remoteTextPath, usbTextPathCopy).Run(testexec.DumpLogOnError); err != nil {
+		if err := fs.CopyFile(ctx, remoteTextPath, usbTextPathCopy); err != nil {
 			s.Fatal("Failed to copy file to external storage: ", err)
 		}
-		defer dut.Conn().CommandContext(cleanupCtx, "rm", usbTextPathCopy).Output()
+		defer fs.Remove(cleanupCtx, usbTextPathCopy)
+
 		// Compare texts line by line in two files.
 		diffCmd := fmt.Sprintf("diff '%s' '%s'", remoteTextPath, usbTextPathCopy)
 		if err := dut.Conn().CommandContext(ctx, "sh", "-c", diffCmd).Run(testexec.DumpLogOnError); err != nil {
@@ -145,7 +149,7 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 
 		// Move file to external storage.
 		testing.ContextLogf(ctx, "Move file to %s", usbTextPathMove)
-		if err := dut.Conn().CommandContext(ctxVerify, "mv", remoteTextPath, usbTextPathMove).Run(testexec.DumpLogOnError); err != nil {
+		if err := dut.Conn().CommandContext(ctx, "mv", remoteTextPath, usbTextPathMove).Run(testexec.DumpLogOnError); err != nil {
 			s.Fatal("Failed to move file to external storage: ", err)
 		}
 		defer dut.Conn().CommandContext(cleanupCtx, "rm", usbTextPathMove).Output()
