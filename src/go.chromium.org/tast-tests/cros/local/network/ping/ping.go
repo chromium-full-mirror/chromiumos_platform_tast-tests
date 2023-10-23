@@ -27,7 +27,7 @@ func expectPingSuccess(ctx context.Context, addr, user string) error {
 	// Only ping once, continuous pings will be very likely to be affected by the
 	// connection pinging so it does not make sense. In the routing tests, all the
 	// ping targets are in the DUT, so use a small timeout value here.
-	res, err := pr.Ping(ctx, addr, ping.Count(1), ping.User(user), ping.Timeout(2*time.Second))
+	res, err := pr.Ping(ctx, addr, ping.Count(1), ping.User(user), ping.MaxDuration(2*time.Second))
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func ExpectPingFailure(ctx context.Context, addr, user string) (retErr error) {
 	// Only ping once, continuous pings will be very likely to be affected by the
 	// connection pinging so it does not make sense. In the routing tests, all the
 	// ping targets are in the DUT, so use a small timeout value here.
-	res, err := pr.Ping(ctx, addr, ping.Count(1), ping.User(user), ping.Timeout(2*time.Second))
+	res, err := pr.Ping(ctx, addr, ping.Count(1), ping.User(user), ping.MaxDuration(2*time.Second))
 	if err != nil {
 		// An error definitely means a ping failure.
 		return nil

@@ -41,7 +41,7 @@ type config struct {
 	sourceIface string
 	user        string
 	savePath    string
-	timeout     time.Duration
+	maxDuration time.Duration
 }
 
 // Option is a function used to configure ping command.
@@ -99,7 +99,14 @@ func (r *Runner) Ping(ctx context.Context, targetIP string, options ...Option) (
 		args = []string{"-u", cfg.user, "bash", "-c", userCmd}
 	}
 
-	output, cmdErr := r.cmd.Output(ctx, command, args...)
+	pingCtx := ctx
+	if cfg.maxDuration != 0 {
+		var cancelFunc context.CancelFunc
+		pingCtx, cancelFunc = context.WithDeadline(ctx, time.Now().Add(cfg.maxDuration))
+		defer cancelFunc()
+	}
+
+	output, cmdErr := r.cmd.Output(pingCtx, command, args...)
 
 	// Save output regardless of command error.
 	if cfg.savePath != "" {
@@ -164,10 +171,13 @@ func SaveOutput(filePath string) Option {
 	return func(c *config) { c.savePath = filePath }
 }
 
-// Timeout returns an Option that can be passed to Ping to set the timeout
-// value.
-func Timeout(timeout time.Duration) Option {
-	return func(c *config) { c.timeout = timeout }
+// MaxDuration returns an Option that set maximum duration to run the ping
+// command. Note that this is different from the timeout option (`-W`) in ping
+// which 1) is the timeout for a single ping request (each ping execution can
+// contain several ping requests), and 2) may not guarantee to work (see
+// b/286348339 for a bad case).
+func MaxDuration(maxDuration time.Duration) Option {
+	return func(c *config) { c.maxDuration = maxDuration }
 }
 
 // cmdArgs converts a config into a string of arguments for the ping command.
@@ -188,9 +198,6 @@ func (cfg *config) cmdArgs(targetIP string) ([]string, error) {
 	}
 	if cfg.qos != 0 {
 		args = append(args, "-Q", fmt.Sprintf("0x%x", cfg.qos))
-	}
-	if cfg.timeout != 0 {
-		args = append(args, "-W", fmt.Sprintf("%f", cfg.timeout.Seconds()))
 	}
 	args = append(args, targetIP)
 	return args, nil
