@@ -217,6 +217,8 @@ func Run(ctx context.Context, s *testing.State) {
 		const videoPrefix = "CrosVideo"
 		var totalDroppedFrames int
 		var totalDecodedFrames int
+		// Record a trace of the first iteration of the test.
+		shouldRecordTrace := true
 		for _, codec := range codecs {
 			// Open the video with the given codec.
 			if err := videoConn.Navigate(ctx, fmt.Sprintf(videoURL, codec.crosVideoName)); err != nil {
@@ -283,6 +285,13 @@ func Run(ctx context.Context, s *testing.State) {
 				stopSnapshot, err := recorder.StartSnapshot(ctx, fmt.Sprintf("%s.%s.%s", videoPrefix, format.name, codec.displayName), ashMetrics, browserMetrics)
 				if err != nil {
 					return errors.Wrap(err, "failed to start recording a snapshot")
+				}
+
+				// See go/trace-in-cuj-tests about rules for tracing.
+				if shouldRecordTrace {
+					if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+						return errors.Wrap(err, "failed to start tracing")
+					}
 				}
 
 				// Consider a "cycle" to be 90 seconds. This cycle should
@@ -389,6 +398,13 @@ func Run(ctx context.Context, s *testing.State) {
 					return errors.Wrap(err, "failed to sleep")
 				}
 
+				if shouldRecordTrace {
+					if err := recorder.StopTracing(ctx); err != nil {
+						return errors.Wrap(err, "failed to stop tracing")
+					}
+					shouldRecordTrace = false
+				}
+
 				// Before cleaning up, track how many frames were dropped in
 				// this section.
 				droppedFrames, decodedFrames, err := getFrameData(ctx, videoConn)
@@ -491,6 +507,9 @@ func Run(ctx context.Context, s *testing.State) {
 
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to report: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to store values: ", err)
