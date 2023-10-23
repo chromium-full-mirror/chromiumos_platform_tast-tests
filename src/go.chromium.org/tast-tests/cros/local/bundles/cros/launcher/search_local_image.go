@@ -61,7 +61,7 @@ func init() {
 					UseOcr:         false,
 				},
 				Fixture:           fixture.LauncherImageSearchIca,
-				ExtraSoftwareDeps: []string{"camera_feature_effects"},
+				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
 			},
 			{
 				Name: "search_with_ocr",
@@ -86,7 +86,7 @@ func init() {
 					UseOcr:         true,
 				},
 				Fixture:           fixture.LauncherImageSearchIcaAndOcr,
-				ExtraSoftwareDeps: []string{"camera_feature_effects"},
+				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
 			},
 		},
 	})
@@ -132,8 +132,6 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 	}
 	defer os.Remove(localFileLocation)
 
-	//GoBigSleepLint: Need enough time to index the image.
-	testing.Sleep(ctx, 2*time.Second)
 	for _, query := range param.Query {
 		cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, param.TabletMode, false /*stabilizeAppCount*/)
 		if err != nil {
@@ -145,11 +143,14 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 			s.Fatal("Cannot verify dlc: ", err)
 		}
 
+		//GoBigSleepLint: Indexing may be slow on low-end devices.
+		testing.Sleep(ctx, 5*time.Second)
+
 		ui := uiauto.New(tconn)
 		ud := uidetection.NewDefault(tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
 		picture := nodewith.Role(role.ListBoxOption).HasClass("SearchResultImageView").NameContaining("search_local_image")
 
-		if err := uiauto.Retry(3, uiauto.NamedCombine("Search for image",
+		if err := uiauto.Retry(20, uiauto.NamedCombine("Search for image",
 			launcher.ClearSearchField(tconn, kb),
 			launcher.Search(tconn, kb, query),
 			launcher.WaitForResultWithCategory(tconn, launcher.SearchCategoryInfo{
