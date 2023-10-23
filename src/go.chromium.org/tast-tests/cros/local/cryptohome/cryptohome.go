@@ -243,6 +243,17 @@ func UnmountVault(ctx context.Context, user string) error {
 	return nil
 }
 
+// ForceRemoveVault unmounts all vaults and remove the vault for the specified user.
+func ForceRemoveVault(ctx context.Context, user string) error {
+	if err := UnmountAll(ctx); err != nil {
+		return err
+	}
+	if err := RemoveVault(ctx, user); err != nil {
+		return err
+	}
+	return nil
+}
+
 // MountedVaultPath returns the path where the decrypted data for the user is located.
 func MountedVaultPath(ctx context.Context, user string) (string, error) {
 	cmi := newMountInfo()

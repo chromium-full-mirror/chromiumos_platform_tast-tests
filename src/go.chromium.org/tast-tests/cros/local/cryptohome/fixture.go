@@ -6,6 +6,7 @@ package cryptohome
 
 import (
 	"context"
+	"math/rand"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
@@ -20,6 +21,8 @@ const (
 
 	ussAuthSessionFixtureName = "ussAuthSessionFixture"
 )
+
+var usernamePool = []string{"foo@bar.baz", "test@gmail.com"}
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -37,41 +40,46 @@ func init() {
 }
 
 type fixtureImpl struct {
-	ussFlagCleanup        hwsec.CleanupFunc
-	ussDisableFlagCleanup hwsec.CleanupFunc
+	testUserName   string
+	ussFlagCleanup hwsec.CleanupFunc
 }
 
 // AuthSessionFixture provides data on how the session has been configured by the fixture.
 type AuthSessionFixture struct {
-	UssEnabled bool
+	TestUserName string
+	UssEnabled   bool
 }
 
 func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	cmdRunner := hwseclocal.NewCmdRunner()
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-
 	// Wait for cryptohomed becomes available.
-	daemonController := helper.DaemonController()
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
+	if err := CheckService(ctx); err != nil {
 		s.Fatal("Failed to ensure cryptohomed: ", err)
 	}
-	if err := UnmountAll(ctx); err != nil {
-		s.Fatal("Failed to unmount all: ", err)
+
+	// Pick a user name, and ensure it is a clean slate to start a test.
+	testUserName := usernamePool[rand.Intn(len(usernamePool))]
+	f.testUserName = testUserName
+	// Remove test user vault as a previous
+	// test may crash and have an old user directory partially setup.
+	if err := ForceRemoveVault(ctx, testUserName); err != nil {
+		s.Fatal("Failed to remove old test user vault: ", err)
 	}
 
 	// Enable the UserSecretStash experiment for the duration of the test by
 	// creating a flag file that's checked by cryptohomed.
 	// A cleanup routine is returned by the helper function. We will run it
 	// when tearing down the test environment.
+	helper, err := hwseclocal.NewHelper(hwseclocal.NewCmdRunner())
+	if err != nil {
+		s.Fatal("Failed to create hwsec local helper: ", err)
+	}
 	f.ussFlagCleanup, err = helper.EnableUserSecretStash(ctx)
 	if err != nil {
 		s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
 	}
 	return &AuthSessionFixture{
-		UssEnabled: true,
+		TestUserName: testUserName,
+		UssEnabled:   true,
 	}
 }
 
@@ -92,8 +100,14 @@ func (f *fixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 func (f *fixtureImpl) Reset(ctx context.Context) error {
-	// Clean up obsolete state, in case there's any.
-	if err := UnmountAll(ctx); err != nil {
+	// After each test, clean up by removing user vault.
+	if f.testUserName != "" {
+		if err := ForceRemoveVault(ctx, f.testUserName); err != nil {
+			return err
+		}
+	}
+	// Ensure cryptohomed is running.
+	if err := CheckService(ctx); err != nil {
 		return err
 	}
 	return nil

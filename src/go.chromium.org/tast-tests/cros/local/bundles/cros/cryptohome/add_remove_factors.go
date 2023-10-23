@@ -9,15 +9,14 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"math/rand"
-	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -37,7 +36,6 @@ func init() {
 
 func AddRemoveFactors(ctx context.Context, s *testing.State) {
 	const (
-		userName       = "foo@bar.baz"
 		userPassword   = "secret"
 		passwordLabel  = "online-password"
 		backupPassword = "i-forgot-secret"
@@ -50,29 +48,13 @@ func AddRemoveFactors(ctx context.Context, s *testing.State) {
 	)
 
 	fixture := s.FixtValue().(*cryptohome.AuthSessionFixture)
-	ctxForCleanUp := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
+	userName := fixture.TestUserName
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
 	helper, err := hwseclocal.NewHelper(cmdRunner)
 	if err != nil {
 		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-	daemonController := helper.DaemonController()
-
-	// Wait for cryptohomed becomes available if needed.
-	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
-		s.Fatal("Failed to ensure cryptohomed: ", err)
-	}
-
-	// Clean up obsolete state, in case there's any.
-	if err := client.UnmountAll(ctx); err != nil {
-		s.Fatal("Failed to unmount vaults for preparation: ", err)
-	}
-	if err := cryptohome.RemoveVault(ctx, userName); err != nil {
-		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
 	// Determine if the client supports using PIN auth.
@@ -134,11 +116,9 @@ func AddRemoveFactors(ctx context.Context, s *testing.State) {
 	if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
 		s.Fatal("Failed to create persistent user: ", err)
 	}
-	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
 	if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
 		s.Fatal("Failed to prepare new persistent vault: ", err)
 	}
-	defer client.UnmountAll(ctxForCleanUp)
 
 	// Expected configured factors at the start and the end.
 	var expectedOnlyPassword = []*uda.AuthFactorWithStatus{{
