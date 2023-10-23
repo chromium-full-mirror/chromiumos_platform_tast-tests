@@ -64,7 +64,7 @@ func (s *OSSettings) ToggleHotspot(ctx context.Context, tconn *chrome.TestConn, 
 }
 
 // RenameHotspotSsid renames the hotspot ssid to newSsid in hotspot config dialog
-func (s *OSSettings) RenameHotspotSsid(ctx context.Context, oldSsid, newSsid string) uiauto.Action {
+func (s *OSSettings) RenameHotspotSsid(ctx context.Context, newSsid string) uiauto.Action {
 	return func(ctx context.Context) error {
 		kb, err := input.Keyboard(ctx)
 		if err != nil {
@@ -74,7 +74,7 @@ func (s *OSSettings) RenameHotspotSsid(ctx context.Context, oldSsid, newSsid str
 
 		return uiauto.Combine("Rename hotspot ssid in config dialog",
 			s.ui.LeftClick(HotspotConfigureButton),
-			s.ui.LeftClick(nodewith.Name(oldSsid).Role(role.InlineTextBox)),
+			s.ui.LeftClick(HotspotNameTextField),
 			kb.AccelAction("Ctrl+A"),
 			kb.AccelAction("Backspace"),
 			kb.TypeAction(newSsid),

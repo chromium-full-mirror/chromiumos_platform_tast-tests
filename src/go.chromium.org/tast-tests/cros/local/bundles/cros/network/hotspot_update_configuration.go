@@ -101,7 +101,7 @@ func HotspotUpdateConfiguration(ctx context.Context, s *testing.State) {
 	}
 
 	const newSsid = "new_ssid"
-	if err := hs.RenameHotspotSsid(ctx, tc.Ssid, newSsid)(ctx); err != nil {
+	if err := hs.RenameHotspotSsid(ctx, newSsid)(ctx); err != nil {
 		s.Fatal("Failed to rename hotspot ssid: ", err)
 	}
 

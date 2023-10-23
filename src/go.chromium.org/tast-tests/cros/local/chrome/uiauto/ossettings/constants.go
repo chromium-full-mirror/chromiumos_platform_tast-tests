@@ -173,6 +173,9 @@ var HotspotTurningOnSublabel = nodewith.Name("Turning on…").Role(role.StaticTe
 // HotspotOffSublabel is the finder for the disabled hotspot status label in both Network page and Hotspot subpage.
 var HotspotOffSublabel = nodewith.Name("Off").Role(role.StaticText)
 
+// HotspotNameTextField is the finder for the hotspot ssid text field in the hotspot configuration dialog
+var HotspotNameTextField = nodewith.Name("Hotspot name").Role(role.TextField)
+
 // HotspotConfigureButton is the finder for the button to open up hotspot configuration dialog.
 var HotspotConfigureButton = nodewith.Name("Configure").Role(role.Button)
 
