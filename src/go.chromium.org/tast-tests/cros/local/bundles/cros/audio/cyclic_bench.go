@@ -7,6 +7,8 @@ package audio
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -14,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -81,8 +84,9 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "eddyhsu@chromium.org", "paulhsia@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Data:         []string{"perfetto_trace.txtpb"},
 		SoftwareDeps: []string{"cras", "chrome"},
-		Timeout:      3 * time.Minute,
+		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name: "rr12_1thread_10ms",
@@ -372,9 +376,34 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 			"--stress_priority="+strconv.Itoa(param.StressConfig.Priority),
 			"--workers_per_cpu="+strconv.Itoa(defaultStressWorker))
 	}
+
+	testing.ContextLog(ctx, "Start tracing")
+	cleanupTraceCtx := ctx
+	ctx, cancel2 := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel2()
+
+	filepath := filepath.Join(
+		s.OutDir(),
+		fmt.Sprintf("perfetto-%d.pb", time.Now().Unix()))
+
+	session, err := tracing.StartSession(ctx, s.DataPath("perfetto_trace.txtpb"),
+		tracing.WithTraceDataPath(filepath),
+		tracing.WithCompression(),
+	)
+	if err != nil {
+		s.Error(err, "failed to start tracing")
+	}
+	defer session.Finalize(cleanupTraceCtx)
+
+	testing.ContextLog(ctx, "Start to execute cyclic_bench.py")
 	out, err := testexec.CommandContext(ctx, cmdStr[0], cmdStr[1:]...).Output(testexec.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed to execute cyclic_bench.py: ", err)
+	}
+
+	testing.ContextLog(ctx, "Stop tracing: "+filepath)
+	if err := session.Stop(); err != nil {
+		s.Error(err, "failed to stop tracing")
 	}
 
 	stats := struct {
@@ -434,4 +463,5 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 	if err := p.Save(s.OutDir()); err != nil {
 		s.Error("Failed saving perf data: ", err)
 	}
+
 }
