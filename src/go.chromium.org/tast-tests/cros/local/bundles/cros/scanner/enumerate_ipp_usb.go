@@ -49,8 +49,7 @@ func init() {
 				AsyncDiscovery: false,
 			},
 		}, {
-			Name:      "async",
-			ExtraAttr: []string{"informational"},
+			Name: "async",
 			Val: &enumParams{
 				AsyncDiscovery: true,
 			},

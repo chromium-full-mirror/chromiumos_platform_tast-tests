@@ -40,7 +40,6 @@ func init() {
 			"group:mainline",
 			"group:paper-io",
 			"paper-io_scanning",
-			"informational",
 		},
 		SoftwareDeps: []string{"cups", "chrome"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
