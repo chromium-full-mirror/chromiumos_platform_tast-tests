@@ -10,7 +10,6 @@ import (
 	"time"
 
 	fixture "go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/fixture/appcompat"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/pre"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -21,7 +20,6 @@ import (
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -30,12 +28,11 @@ func init() {
 		Desc:         "Checks that virtual keyboard can perform typing in playstore search field",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
+		Attr:         []string{"group:inputs_appcompat_arc_perbuild"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		Timeout:      5 * time.Minute,
 		Fixture:      fixture.PlayStoreWithVK,
-		HardwareDeps: hwdep.D(pre.InputsAppCompatArcModels),
 	})
 }
 
