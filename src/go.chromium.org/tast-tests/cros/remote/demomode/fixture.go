@@ -8,8 +8,12 @@ import (
 	"context"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/common/demomode/constants"
@@ -17,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	ps "go.chromium.org/tast-tests/cros/services/cros/demomode"
+	tape_service "go.chromium.org/tast-tests/cros/services/cros/tape"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 )
 
@@ -132,6 +137,8 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 		"--component-updater=test-request",
 		"--device-management-url=" + f.dmServerURL}
 
+	defer uploadTapeDeprovisioningIDs(ctx, s, cl)
+
 	chromeService := ui.NewChromeServiceClient(cl.Conn)
 	if _, err := chromeService.New(ctx, &ui.NewRequest{
 		LoginMode:                    ui.LoginMode_LOGIN_MODE_NO_LOGIN,
@@ -182,17 +189,51 @@ func (f *fixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}
-	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, false /*lock*/, tape.WithTimeout(30), tape.WithPoolID(tape.DemoMode))
-	if err != nil {
-		s.Fatal("Failed to create account manager and lease an account: ", err)
-	}
-	defer accManager.CleanUp(ctx)
 
-	if err := tapeClient.DeprovisionHelper(ctx, cl, acc.CustomerID, acc.OrgUnitPath); err != nil {
+	stableDeviceSecret, err := getStableDeviceSecret(ctx, s.DUT())
+	if err != nil {
+		s.Fatal("Failed to get device stable secret: ", err)
+	}
+	s.Log("Deprovisioning device")
+
+	if err := tapeClient.DeprovisionAndVerify(ctx, tape.WithStableDeviceSecret(stableDeviceSecret)); err != nil {
 		s.Fatal("Failed to deprovision device: ", err)
 	}
 
 	if err := policyutil.EnsureTPMAndSystemStateAreResetRemote(ctx, s.DUT()); err != nil {
 		s.Fatal("Failed to reset TPM after tests: ", err)
 	}
+}
+
+func uploadTapeDeprovisioningIDs(ctx context.Context, s *testing.FixtState, rpcClient *rpc.Client) error {
+	tapeService := tape_service.NewServiceClient(rpcClient.Conn)
+
+	ids, err := tapeService.GetDeviceID(ctx, &empty.Empty{})
+	if err != nil {
+		return errors.Wrap(err, "failed to get device IDs")
+	}
+	stableDeviceSecret, err := getStableDeviceSecret(ctx, s.DUT())
+	if err != nil {
+		return errors.Wrap(err, "failed to get stable device secret")
+	}
+
+	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	if err != nil {
+		return errors.Wrap(err, "failed to create tape client")
+	}
+
+	s.Log("Uploading Tape deprovisioning IDs, customer ID: " + ids.CustomerID + " - device ID: " + ids.DeviceID)
+	if err := tapeClient.StoreDeprovisioningIDs(ctx, ids.DeviceID, ids.CustomerID, stableDeviceSecret); err != nil {
+		return errors.Wrap(err, "failed to store IDs in TAPE")
+	}
+	return nil
+}
+
+func getStableDeviceSecret(ctx context.Context, dut *dut.DUT) (string, error) {
+	const stableDeviceSecretFileName = "/sys/firmware/vpd/ro/stable_device_secret_DO_NOT_SHARE"
+	data, err := linuxssh.ReadFile(ctx, dut.Conn(), stableDeviceSecretFileName)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to read %s", stableDeviceSecretFileName)
+	}
+	return string(data), nil
 }
