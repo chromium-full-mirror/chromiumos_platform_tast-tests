@@ -55,6 +55,7 @@ var mergeThresholdSize480Models = []string{
 	"elemi",
 	"felwinter",
 	"gimble",
+	"joxer",
 	"kano",
 	"lillipup",
 	"lindar",
