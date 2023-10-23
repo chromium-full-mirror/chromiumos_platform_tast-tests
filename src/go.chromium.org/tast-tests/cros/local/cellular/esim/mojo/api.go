@@ -53,7 +53,7 @@ const (
 // ESimManager provides access to the Mojo eSIM management methods and holds the
 // underlying JS config object.
 type ESimManager struct {
-	js *chrome.JSObject
+	JS *chrome.JSObject
 }
 
 // Euicc represents an EUICC (Embedded Universal Integrated
@@ -108,7 +108,7 @@ func (m *ESimManager) AvailableEuicc(ctx context.Context) ([]Euicc, error) {
 	var result []string
 
 	js := "function() {return this.getAvailableEuiccEids()}"
-	if err := m.js.Call(ctx, &result, js); err != nil {
+	if err := m.JS.Call(ctx, &result, js); err != nil {
 		return nil, errors.Wrap(err, "getAvailableEuiccs call failed")
 	}
 
@@ -125,7 +125,7 @@ func (e *Euicc) Properties(ctx context.Context) (EuiccProperties, error) {
 	var result EuiccProperties
 
 	js := `function(eid) {return this.getEuiccProperties(eid)}`
-	if err := e.manager.js.Call(ctx, &result, js, e.Eid); err != nil {
+	if err := e.manager.JS.Call(ctx, &result, js, e.Eid); err != nil {
 		return result, errors.Wrap(err, "getProperties call failed")
 	}
 
@@ -137,7 +137,7 @@ func (e *Euicc) ProfileList(ctx context.Context) ([]ESimProfile, error) {
 	var result []string
 
 	js := "function(eid) {return this.getProfileIccids(eid)}"
-	if err := e.manager.js.Call(ctx, &result, js, e.Eid); err != nil {
+	if err := e.manager.JS.Call(ctx, &result, js, e.Eid); err != nil {
 		return nil, errors.Wrap(err, "getProfileIccids call failed")
 	}
 
@@ -159,7 +159,7 @@ func (e *Euicc) RequestAvailableProfiles(ctx context.Context) (ESimOperationResu
 	}
 
 	js := "function(eid) {return this.requestAvailableProfiles(eid)}"
-	if err := e.manager.js.Call(ctx, &result, js, e.Eid); err != nil {
+	if err := e.manager.JS.Call(ctx, &result, js, e.Eid); err != nil {
 		return ESimOperationFailure, nil, errors.Wrap(err, "requestAvailableProfiles call failed")
 	}
 
@@ -172,7 +172,7 @@ func (e *Euicc) RequestPendingProfiles(ctx context.Context) (ESimOperationResult
 	var result ESimOperationResult
 
 	js := "function(eid) {return this.requestPendingProfiles(eid)}"
-	if err := e.manager.js.Call(ctx, &result, js, e.Eid); err != nil {
+	if err := e.manager.JS.Call(ctx, &result, js, e.Eid); err != nil {
 		return result, errors.Wrap(err, "requestPendingProfiles call failed")
 	}
 
@@ -190,7 +190,7 @@ func (e *Euicc) InstallProfileFromActivationCode(
 	}
 
 	js := "function(eid, ac, cc) {return this.installProfileFromActivationCode(eid, ac, cc)}"
-	if err := e.manager.js.Call(ctx, &result, js, e.Eid, activationCode, confirmationCode); err != nil {
+	if err := e.manager.JS.Call(ctx, &result, js, e.Eid, activationCode, confirmationCode); err != nil {
 		return result.Result, nil, errors.Wrap(err, "installProfileFromActivationCode call failed")
 	}
 
@@ -203,7 +203,7 @@ func (e *Euicc) EidQRCode(ctx context.Context) (QRCode, error) {
 	var result QRCode
 
 	js := "function(eid) {return this.getEidQrCode(eid)}"
-	if err := e.manager.js.Call(ctx, &result, js, e.Eid); err != nil {
+	if err := e.manager.JS.Call(ctx, &result, js, e.Eid); err != nil {
 		return result, errors.Wrap(err, "getEidQrCode call failed")
 	}
 
@@ -224,7 +224,7 @@ func (e *ESimProfile) Properties(ctx context.Context) (ESimProfileProperties, er
 	var result ESimProfileProperties
 
 	js := "function(iccid) {return this.getProfileProperties(iccid)}"
-	if err := e.manager.js.Call(ctx, &result, js, e.Iccid); err != nil {
+	if err := e.manager.JS.Call(ctx, &result, js, e.Iccid); err != nil {
 		return result, errors.Wrap(err, "getProfileProperties call failed")
 	}
 
@@ -237,7 +237,7 @@ func (e *ESimProfile) InstallProfile(ctx context.Context, confirmationCode strin
 	var result ProfileInstallResult
 
 	js := "function(iccid, cc) {return this.installProfile(iccid, cc)}"
-	if err := e.manager.js.Call(ctx, &result, js, e.Iccid, confirmationCode); err != nil {
+	if err := e.manager.JS.Call(ctx, &result, js, e.Iccid, confirmationCode); err != nil {
 		return result, errors.Wrap(err, "installProfile call failed")
 	}
 
@@ -249,7 +249,7 @@ func (e *ESimProfile) UninstallProfile(ctx context.Context) (ESimOperationResult
 	var result ESimOperationResult
 
 	js := "function(iccid) {return this.uninstallProfile(iccid)}"
-	if err := e.manager.js.Call(ctx, &result, js, e.Iccid); err != nil {
+	if err := e.manager.JS.Call(ctx, &result, js, e.Iccid); err != nil {
 		return result, errors.Wrap(err, "uninstallProfile call failed")
 	}
 
@@ -262,7 +262,7 @@ func (e *ESimProfile) SetProfileNickname(ctx context.Context, nickname String16)
 	var result ESimOperationResult
 
 	js := "function(iccid, name) {return this.setProfileNickname(iccid, name)}"
-	if err := e.manager.js.Call(ctx, &result, js, e.Iccid, nickname); err != nil {
+	if err := e.manager.JS.Call(ctx, &result, js, e.Iccid, nickname); err != nil {
 		return result, errors.Wrap(err, "setProfileNickname call failed")
 	}
 

@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/hermesconst"
-	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/hermes"
 	"go.chromium.org/tast/core/errors"
@@ -137,19 +136,13 @@ func (f *eSimMojoFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Chrome login failed: ", err)
 	}
 
-	conn, err := apps.LaunchOSSettings(ctx, cr, "chrome://os-settings/internet")
+	manager, err := Manager(ctx, cr, slot)
 	if err != nil {
-		s.Fatal("Failed to open settings app: ", err)
-	}
-
-	var js chrome.JSObject
-
-	if err := conn.Call(ctx, &js, ESimManagerJS); err != nil {
-		s.Fatal("Failed to create eSIM mojo JS object: ", err)
+		s.Fatal("Failed to create Mojo interface to esim_manager")
 	}
 
 	f.cr = cr
-	f.manager = &ESimManager{js: &js}
+	f.manager = manager
 
 	euiccs, err := f.manager.AvailableEuicc(ctx)
 	if err != nil {
@@ -172,7 +165,7 @@ func (f *eSimMojoFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 }
 
 func (f *eSimMojoFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if err := f.manager.js.Release(ctx); err != nil {
+	if err := f.manager.JS.Release(ctx); err != nil {
 		s.Fatal("Failed to release eSIM Mojo JS object: ", err)
 	}
 
