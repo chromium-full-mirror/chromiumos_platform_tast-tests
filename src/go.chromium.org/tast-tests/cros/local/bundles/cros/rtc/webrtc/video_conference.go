@@ -325,24 +325,32 @@ func readRTCReport(id int, displayCapture bool) webrtc.ReadRTCReportFunc {
 
 // measureWebRTCStats records the webrtc decoder and encoder performance metrics from webrtc stats.
 func measureWebRTCStats(ctx context.Context, conn *chrome.Conn, rtcPerf *perf.Values, params VCTestParams) error {
-	type cameraResolution struct {
+	type resolution struct {
 		Width  int `json:"width"`
 		Height int `json:"height"`
 	}
-	var resolution cameraResolution
-	if err := conn.Call(ctx, &resolution, "() => { return VC.getCameraResolution(); }", nil); err != nil {
+	var cameraResolution resolution
+	if err := conn.Call(ctx, &cameraResolution, "() => { return VC.getCameraResolution(); }", nil); err != nil {
 		return errors.Wrap(err, "failed getting a camera resolution")
 	}
-	testing.ContextLog(ctx, "Camera resolution: ", resolution)
-	// If a camera resolution is more than 720p, then we set scaleResolutionDownBy to 2.
-	// So the video encoder and decoder resolution is a half of camera resolution.
-	if params.NumPeople > 2 && resolution.Width > 1280 && resolution.Height > 720 {
-		resolution.Width /= 2
-		resolution.Height /= 2
-	}
+	testing.ContextLog(ctx, "Camera resolution: ", cameraResolution)
 
-	testing.ContextLog(ctx, "Expected video resolution: ", resolution)
-	if err := webrtc.WaitForPeerConnectionStabilized(ctx, conn, resolution.Width, resolution.Height, false, readRTCReport(params.NumPeople-2, false)); err != nil {
+	type encoderConfig struct {
+		InputHeight     int    `json:"inputHeight"`
+		OutputHeight    int    `json:"outputHeight"`
+		ScalabilityMode string `json:"scalabilityMode"`
+	}
+	var encCfg encoderConfig
+	if err := conn.Call(ctx, &encCfg, fmt.Sprintf("() => { return VC.getEncoderConfig(%d); }", params.NumPeople), nil); err != nil {
+		return errors.Wrap(err, "failed getting a camera resolution")
+	}
+	testing.ContextLogf(ctx, "Video encoder config: %dp %s , scaleResolutionDownBy: %.2f (=%d/%d)",
+		encCfg.OutputHeight, encCfg.ScalabilityMode,
+		float32(encCfg.InputHeight)/float32(encCfg.OutputHeight), encCfg.InputHeight, encCfg.OutputHeight)
+
+	videoHeight := encCfg.OutputHeight
+	videoWidth := videoHeight * 16 / 9
+	if err := webrtc.WaitForPeerConnectionStabilized(ctx, conn, videoWidth, videoHeight, false, readRTCReport(params.NumPeople-2, false)); err != nil {
 		return err
 	}
 	var wg sync.WaitGroup
@@ -365,7 +373,7 @@ func measureWebRTCStats(ctx context.Context, conn *chrome.Conn, rtcPerf *perf.Va
 				rtcPerf.MergeWithSuffix("_camera", p)
 			}
 			p := perf.NewValues()
-			if err := webrtc.MeasureRTCDecodeStats(ctx, conn, framesEncoded, resolution.Width, resolution.Height, readRTCReportFunc, placeHolderValidateFrame, p); err != nil {
+			if err := webrtc.MeasureRTCDecodeStats(ctx, conn, framesEncoded, videoWidth, videoHeight, readRTCReportFunc, placeHolderValidateFrame, p); err != nil {
 				statErrs[i] = err
 				return
 			}
