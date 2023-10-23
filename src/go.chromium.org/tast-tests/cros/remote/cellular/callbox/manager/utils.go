@@ -105,10 +105,10 @@ func GetCellConfiguration(ctx context.Context, hw CallboxHardware, modemType uin
 		bands := []int{3, 3, 7}
 		return Get3CAConfiguration(ctx, hw, CellularTechnologyLTE, bands, MimoMode2x2, TransmissionMode3)
 	case cellularconst.ModemTypeNL668:
-		return GetConfiguration(ctx, hw, CellularTechnologyLTE, 2, MimoMode1x1, TransmissionMode1)
+		return GetConfiguration(ctx, hw, CellularTechnologyLTE, 2, MimoMode1x1, TransmissionMode3)
 	case cellularconst.ModemTypeFM101:
 		bands := []int{3, 7}
-		return Get2CAConfiguration(ctx, hw, CellularTechnologyLTE, bands, MimoMode2x2, TransmissionMode1)
+		return Get2CAConfiguration(ctx, hw, CellularTechnologyLTE, bands, MimoMode2x2, TransmissionMode3)
 	case cellularconst.ModemTypeFM350:
 		bands := []int{3, 3, 7}
 		return Get3CAConfiguration(ctx, hw, CellularTechnologyLTE, bands, MimoMode2x2, TransmissionMode3)
