@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
@@ -34,15 +36,29 @@ func init() {
 		VarDeps: []string{
 			"ui.gaiaPoolDefault",
 		},
+		Params: []testing.Param{{
+			Name: "",
+		}, {
+			Name:      "enrolled",
+			Fixture:   fixture.FakeDMSEnrolled,
+			ExtraAttr: []string{"informational"},
+		}},
 		Timeout: chrome.GAIALoginTimeout + time.Minute,
 	})
 }
 
 func ChromeGAIA(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(
-		ctx,
+	fdms, ok := s.FixtValue().(*fakedms.FakeDMS)
+
+	opts := []chrome.Option{
 		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-	)
+	}
+
+	if ok {
+		opts = append(opts, chrome.KeepEnrollment())
+		opts = append(opts, chrome.DMSPolicy(fdms.URL))
+	}
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
