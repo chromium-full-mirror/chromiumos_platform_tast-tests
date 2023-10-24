@@ -152,7 +152,7 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	r.RegisterMetrics(
 		power.NewVideoFpsMetrics(videoConn),
 		power.NewWebRTCMetrics(videoConn),
-		power.NewHistogramMetrics(bTconn, []string{"Event.Latency.EndToEnd.KeyPress", "EventLatency.KeyPressed.TotalLatency"}),
+		power.NewHistogramMetrics(bTconn, []string{"EventLatency.KeyPressed.TotalLatency"}),
 	)
 
 	if err := r.Cooldown(ctx); err != nil {

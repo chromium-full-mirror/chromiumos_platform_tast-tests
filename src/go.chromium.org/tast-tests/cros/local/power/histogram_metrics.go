@@ -35,7 +35,6 @@ type histogramMetadata struct {
 
 // A map of supported histogram name to {unit, direction}
 var validHistogramsMap = map[string]histogramMetadata{
-	"Event.Latency.EndToEnd.KeyPress":      {cp.HistogramLatencyMetricTypeUnit, perf.SmallerIsBetter},
 	"EventLatency.KeyPressed.TotalLatency": {cp.HistogramLatencyMetricTypeUnit, perf.SmallerIsBetter},
 }
 
