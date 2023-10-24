@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/saml"
 	"go.chromium.org/tast/core/testing"
@@ -38,6 +40,12 @@ func init() {
 			"saml.testidp_password",
 			"ui.signinProfileTestExtensionManifestKey",
 		},
+		Params: []testing.Param{{
+			Name: "",
+		}, {
+			Name:    "enrolled",
+			Fixture: fixture.FakeDMSEnrolled,
+		}},
 		Timeout: chrome.GAIALoginTimeout + time.Minute,
 	})
 }
@@ -45,12 +53,21 @@ func init() {
 func ChromeSAML(ctx context.Context, s *testing.State) {
 	username := s.RequiredVar("saml.testidp_username")
 	password := s.RequiredVar("saml.testidp_password")
+	fdms, ok := s.FixtValue().(*fakedms.FakeDMS)
+
+	opts := []chrome.Option{
+		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+	}
+	if ok {
+		opts = append(opts, chrome.KeepEnrollment())
+		opts = append(opts, chrome.DMSPolicy(fdms.URL))
+	}
 
 	cr, err := saml.LoginWithSAMLAccount(
 		ctx,
 		username,
 		saml.HandleTestIdPLogin(username, password),
-		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+		opts...,
 	)
 	if err != nil {
 		s.Fatal("Chrome SAML login failed: ", err)
