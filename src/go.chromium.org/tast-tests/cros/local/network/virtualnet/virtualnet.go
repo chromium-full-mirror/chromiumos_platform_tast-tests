@@ -69,6 +69,9 @@ type EnvOptions struct {
 	// IPv4DomainSearchList specifies the IPv4 DNS search list to be advertised
 	// by the router (dnsmasq). EnableDHCP must be set for this option.
 	IPv4DomainSearchList []string
+	// IPv4MTU specifies the customized MTU to be advertised by the router (dnsmasq).
+	// EnableDHCP must be set for this option.
+	IPv4MTU int
 	// RAServer enables the RA server in the Env. IPv6 addresses can be obtained
 	// on the interface by SLAAC.
 	RAServer bool
@@ -218,6 +221,9 @@ func startServersInRouter(ctx context.Context, router *Env, pool *subnet.Pool, o
 	}
 	if opts.EnableDNS {
 		dnsmasqOpts = append(dnsmasqOpts, dnsmasq.WithResolveHost(opts.ResolvedHost, opts.ResolveHostToIP))
+	}
+	if opts.IPv4MTU > 0 {
+		dnsmasqOpts = append(dnsmasqOpts, dnsmasq.WithMTU(opts.IPv4MTU))
 	}
 	if len(dnsmasqOpts) > 0 {
 		dnsmasq := dnsmasq.New(dnsmasqOpts...)

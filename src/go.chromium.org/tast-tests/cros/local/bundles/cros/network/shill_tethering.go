@@ -56,6 +56,9 @@ const (
 	// The response of HTTP server on the upstream.
 	httpResp = "pong"
 
+	// The customized MTU
+	customMTU = 1248
+
 	// The absolute path of each linux command.
 	curlCmdPath     = "/usr/bin/curl"
 	ifconfigCmdPath = "/bin/ifconfig"
@@ -129,6 +132,7 @@ func ShillTethering(ctx context.Context, s *testing.State) {
 		HTTPServerResponseHandler: func(w http.ResponseWriter, r *http.Request) {
 			io.WriteString(w, httpResp)
 		},
+		IPv4MTU: customMTU,
 	}
 	svc, router, err := virtualnet.CreateRouterEnv(ctx, shillMgr, pool, opt)
 	if err != nil {
@@ -232,7 +236,14 @@ func ShillTethering(ctx context.Context, s *testing.State) {
 	}
 	s.Log("The client's hostname is verified")
 
-	// TODO(b/288359516): Verify if the downstream device could get the custom MTU from upstream.
+	// Verify whether the downstream device could get the custom MTU from upstream.
+	cmd := fmt.Sprintf(`ip -j addr show %s | jq .[0].mtu`, clientIface)
+	if resp, _, err := dsEnv.CreateCommandWithoutChroot(ctx, "sh", "-c", cmd).SeparatedOutput(); err != nil {
+		s.Fatal("Failed to get the MTU of downstream device: ", err)
+	} else if strings.TrimSpace(string(resp[:])) != strconv.Itoa(customMTU) {
+		s.Fatalf("The MTU of downstream (%s) is different from expected (%d)", resp[:], customMTU)
+	}
+
 	// TODO(b/273749806): Verify if the upstream device could not reach the downstream device.
 }
 

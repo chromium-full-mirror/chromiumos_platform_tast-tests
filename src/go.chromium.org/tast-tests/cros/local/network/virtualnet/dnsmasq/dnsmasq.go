@@ -47,6 +47,9 @@ dhcp-option=121,{{.classless_static_routes}}
 {{if .wpad}}
 dhcp-option=252,{{.wpad}}
 {{end}}
+{{if .mtu}}
+dhcp-option=option:mtu,{{.mtu}}
+{{end}}
 log-queries
 log-dhcp
 `
@@ -84,6 +87,7 @@ type dnsmasq struct {
 	ifname                string
 	noIfname              bool
 	wpad                  string
+	mtu                   int
 
 	cmd *testexec.Cmd
 }
@@ -129,6 +133,13 @@ func WithDHCPClasslessStaticRoutes(routes []Route) Option {
 func WithDHCPWPAD(wpad string) Option {
 	return func(d *dnsmasq) {
 		d.wpad = wpad
+	}
+}
+
+// WithMTU configures the MTU field in DHCP (option 26).
+func WithMTU(mtu int) Option {
+	return func(d *dnsmasq) {
+		d.mtu = mtu
 	}
 }
 
@@ -238,6 +249,10 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 			return errors.New("WPAD option is set but DHCP is not enabled")
 		}
 		confVals["wpad"] = d.wpad
+	}
+
+	if d.mtu > 0 {
+		confVals["mtu"] = d.mtu
 	}
 
 	var addressLines []string
