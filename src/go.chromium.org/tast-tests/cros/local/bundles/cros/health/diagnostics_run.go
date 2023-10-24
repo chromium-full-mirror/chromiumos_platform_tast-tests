@@ -69,7 +69,7 @@ func init() {
 			// Contact: weiluanwang@google.com
 			Name:      "captive_portal",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: weiluanwang@google.com
 			// Cannot be added to DiagnosticsPass.* since the result would be
@@ -130,14 +130,14 @@ func init() {
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 			// TODO(b/279374234): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: kerker@google.com
 			Name:              "fingerprint_alive",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 			// TODO(b/279374234): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: dennyh@google.com
 			Name:              "emmc_lifetime",

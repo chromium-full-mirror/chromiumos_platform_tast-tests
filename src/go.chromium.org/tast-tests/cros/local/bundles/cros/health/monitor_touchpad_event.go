@@ -57,7 +57,7 @@ func init() {
 			// TODO(b/299568777): Enforce laptop mode to run th test on non-calmshell devices.
 			Name:              "clamshell",
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Clamshell)),
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 		}},
 	})
 }
