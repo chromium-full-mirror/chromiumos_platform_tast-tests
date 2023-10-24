@@ -2306,6 +2306,14 @@ func (tf *TestFixture) APConn() *ssh.Conn {
 	return tf.routers[0].host
 }
 
+// APConnByID returns connection object to the AP.
+func (tf *TestFixture) APConnByID(routerID int) *ssh.Conn {
+	if len(tf.routers) <= routerID {
+		return nil
+	}
+	return tf.routers[routerID].host
+}
+
 // RouterByID returns the respective router object in the fixture.
 func (tf *TestFixture) RouterByID(idx int) router.Base {
 	return tf.routers[idx].object
