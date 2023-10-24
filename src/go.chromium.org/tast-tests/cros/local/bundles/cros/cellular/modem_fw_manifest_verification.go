@@ -275,9 +275,9 @@ var (
 	}
 
 	dlcSpecsPerModem = map[cellularconst.ModemType]dlcSpecs{
-		cellularconst.ModemTypeL850:  *newDlcSpec(40, 43),
-		cellularconst.ModemTypeFM350: *newDlcSpec(160, 165),
-		cellularconst.ModemTypeFM101: *newDlcSpec(300, 310),
+		cellularconst.ModemTypeL850:  *newDlcSpec(39, 43),
+		cellularconst.ModemTypeFM350: *newDlcSpec(156, 165),
+		cellularconst.ModemTypeFM101: *newDlcSpec(200, 310),
 		cellularconst.ModemTypeEM060: *newDlcSpec(300, 310)}
 )
 
@@ -327,7 +327,7 @@ func verifyDlcManifest(ctx context.Context, dlcID string, modemType cellularcons
 	} else {
 		return errors.Errorf("cannot find DLC specifications for DLC: %s", dlcID)
 	}
-	preallocSizeInMbs := metadata.Manifest.PreAllocatedSize / 1000000.0
+	preallocSizeInMbs := metadata.Manifest.PreAllocatedSize / 1024.0 / 1024
 	if preallocSizeInMbs < specs.minPreallocSize {
 		return errors.Errorf("pre-allocated size less than expected for %s. DLC: %s. Got %d, expected >= %d", origin, dlcID, preallocSizeInMbs, specs.minPreallocSize)
 	}
