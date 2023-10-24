@@ -184,8 +184,6 @@ func TestAppTestParams(t *testing.T) {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
 			{
 				Timeout:                 15 * time.Minute,
-				StableHardwareDep:       "crostini.CrostiniAppStable",
-				UnstableHardwareDep:     "crostini.CrostiniAppUnstable",
 				ExtraSoftwareDeps:       []string{"crostini_app"},
 				UseLargeContainer:       true,
 				UseFixture:              true,
@@ -194,8 +192,6 @@ func TestAppTestParams(t *testing.T) {
 			},
 			{
 				Timeout:                 15 * time.Minute,
-				StableHardwareDep:       "crostini.CrostiniAppStable",
-				UnstableHardwareDep:     "crostini.CrostiniAppUnstable",
 				ExtraSoftwareDeps:       []string{"crostini_app"},
 				UseLargeContainer:       true,
 				UseFixture:              true,
@@ -225,8 +221,6 @@ func TestAppClamshellOnlyTestParams(t *testing.T) {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
 			{
 				Timeout:                 15 * time.Minute,
-				StableHardwareDep:       "crostini.CrostiniAppStable",
-				UnstableHardwareDep:     "crostini.CrostiniAppUnstable",
 				ExtraSoftwareDeps:       []string{"crostini_app"},
 				UseLargeContainer:       true,
 				UseFixture:              true,
@@ -254,14 +248,12 @@ func TestAppIMELanguageTestParams(t *testing.T) {
 
 	for _, imeName := range imeTestCases {
 		imeParams = append(imeParams, crostini.Param{
-			Timeout:             15 * time.Minute,
-			StableHardwareDep:   "crostini.CrostiniAppStable",
-			UnstableHardwareDep: "crostini.CrostiniAppUnstable",
-			ExtraSoftwareDeps:   []string{"crostini_app"},
-			UseLargeContainer:   true,
-			UseFixture:          true,
-			IMEName:             imeName,
-			Val:                 "\"" + imeName + "\"",
+			Timeout:           15 * time.Minute,
+			ExtraSoftwareDeps: []string{"crostini_app"},
+			UseLargeContainer: true,
+			UseFixture:        true,
+			IMEName:           imeName,
+			Val:               "\"" + imeName + "\"",
 		})
 	}
 	for _, filename := range appIMELanguageTests {

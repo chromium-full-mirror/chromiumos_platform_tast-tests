@@ -102,17 +102,6 @@ type Param struct {
 	// no crostini install precondition set.
 	SelfManagedInstall bool
 
-	// StableHardwareDep contains a go expression that evaluates
-	// to a hardware dependency which controls the collection of
-	// boards considered stable.
-	StableHardwareDep string
-
-	// UnstableHardwareDep contains a go expression that evaluates
-	// to a hardware dependency which controls the collection of
-	// boards considered unstable. It should be the inverse of
-	// StableHardwareDep.
-	UnstableHardwareDep string
-
 	// MinimalSet - if true, generate only a minimal set of test
 	// parameters such that each device will have at most one test
 	// case it can run. This is useful for things like performance
@@ -337,19 +326,15 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 
 			var hardwareDeps string
 			if !testCase.IsNotMainline {
-				if i.stable {
-					if testCase.StableHardwareDep != "" {
-						hardwareDeps = testCase.StableHardwareDep
-					} else if testCase.UseLargeContainer {
+				if testCase.UseLargeContainer {
+					if i.stable {
 						hardwareDeps = "crostini.CrostiniAppStable"
 					} else {
-						hardwareDeps = "crostini.CrostiniStable"
+						hardwareDeps = "crostini.CrostiniAppUnstable"
 					}
 				} else {
-					if testCase.UnstableHardwareDep != "" {
-						hardwareDeps = testCase.UnstableHardwareDep
-					} else if testCase.UseLargeContainer {
-						hardwareDeps = "crostini.CrostiniAppUnstable"
+					if i.stable {
+						hardwareDeps = "crostini.CrostiniStable"
 					} else {
 						hardwareDeps = "crostini.CrostiniUnstable"
 					}
