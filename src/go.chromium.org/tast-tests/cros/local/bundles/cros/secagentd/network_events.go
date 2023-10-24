@@ -7,7 +7,6 @@ package secagentd
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"strconv"
 	"time"
@@ -37,6 +36,7 @@ type networkProtocolDetails struct {
 	receiverCmd *testexec.Cmd
 	protocol    string
 	ipAddr      string
+	pipeInText  string
 }
 
 type networkType string
@@ -205,10 +205,19 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 			s.Fatalf("Error starting %q: %v ", receiverCmd, err)
 		}
 	}
+	cmdStdin, err := senderCmd.StdinPipe()
+	if err != nil {
+		s.Fatalf("Unable to attach to the pipe of %q:%v", senderCmd.String(), err)
+	}
 
 	if err := senderCmd.Start(); err != nil {
 		s.Fatalf("Error starting %q: %v ", senderCmd, err)
 	}
+	if details.pipeInText != "" {
+		cmdStdin.Write([]byte(details.pipeInText))
+	}
+
+	cmdStdin.Close()
 	cmdPid := uint64(senderCmd.Process.Pid)
 	s.Logf("Pid is %d", cmdPid)
 
@@ -286,7 +295,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 					s.Log("Detected an event flow that has a local ip address as its remote address:", flow.NetworkFlow.String())
 					badRemoteAddress = true
 				}
-				if (flow.GetParentProcess() != nil && flow.GetParentProcess().GetCanonicalPid() == cmdPid) || (flow.GetProcess() != nil && flow.GetProcess().GetCanonicalPid() == cmdPid) {
+				if flow.GetProcess() != nil && flow.GetProcess().GetCanonicalPid() == cmdPid {
 					foundPid = true
 					if flow.NetworkFlow.Protocol.String() == details.protocol && (details.ipAddr == "" || *flow.NetworkFlow.RemoteIp == details.ipAddr) {
 						foundProtocol = true
@@ -383,53 +392,54 @@ func setupL4server(ctx context.Context, network networkType, networkFam l4server
 }
 
 func getNetworkProtocolDetails(ctx context.Context, network networkType, externIP, externPort string) (networkProtocolDetails, error) {
+	const ncCmd = "/usr/local/bin/nc"
 	switch network {
 	case icmp:
 		ipAddr := externIP
-		cmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("ping %s", ipAddr))
-
+		cmd := testexec.CommandContext(ctx, "/bin/ping", ipAddr)
 		return networkProtocolDetails{
 			senderCmd:   cmd,
 			receiverCmd: nil,
 			protocol:    "ICMP",
 			// TODO(jasonling): ICMP doesn't capture IP addr in the event.
-			ipAddr: "",
+			ipAddr:     "",
+			pipeInText: "",
 		}, nil
 	case tcp:
-		cmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, TCP\" | nc -v %s %s", externIP, externPort))
-
+		cmd := testexec.CommandContext(ctx, ncCmd, "-v", externIP, externPort)
 		return networkProtocolDetails{
 			senderCmd:   cmd,
 			receiverCmd: nil,
 			protocol:    "TCP",
 			ipAddr:      externIP,
+			pipeInText:  "Hello, TCP",
 		}, nil
 	case tcpV6:
-		senderCmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, TCP\" | nc -v -6 %s %s", externIP, externPort))
-
+		senderCmd := testexec.CommandContext(ctx, ncCmd, "-6", externIP, externPort)
 		return networkProtocolDetails{
 			senderCmd:   senderCmd,
 			receiverCmd: nil,
 			protocol:    "TCP",
 			ipAddr:      externIP,
+			pipeInText:  "Hello TCPv6",
 		}, nil
 	case udp:
-		senderCmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, UDP\" | nc -u %s %s", externIP, externPort))
-
+		senderCmd := testexec.CommandContext(ctx, ncCmd, "-u", externIP, externPort)
 		return networkProtocolDetails{
 			senderCmd:   senderCmd,
 			receiverCmd: nil,
 			protocol:    "UDP",
 			ipAddr:      externIP,
+			pipeInText:  "Hello UDP",
 		}, nil
 	case udpV6:
-		senderCmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, UDP\" | nc -6 -u %s %s", externIP, externPort))
-
+		senderCmd := testexec.CommandContext(ctx, ncCmd, "-6", "-u", externIP, externPort)
 		return networkProtocolDetails{
 			senderCmd:   senderCmd,
 			receiverCmd: nil,
 			protocol:    "UDP",
 			ipAddr:      externIP,
+			pipeInText:  "Hello UDPv6",
 		}, nil
 	}
 	return networkProtocolDetails{}, errors.Errorf("An unexpected network type is received: %s", network)
