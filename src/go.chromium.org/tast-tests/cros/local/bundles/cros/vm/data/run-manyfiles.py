@@ -100,7 +100,7 @@ def test_open():
         fd = os.open(f, os.O_RDONLY)
         os.close(fd)
 
-def test_lookup_non_existent():
+def test_open_non_existent():
     """Tries to open many non-existing files"""
     f_gen = file_path_generator()
     for f in f_gen:
@@ -198,7 +198,7 @@ def main():
     test_cases = [
         'create',
         'open',
-        'lookup_non_existent',
+        'open_non_existent',
         'remove',
     ]
     results = {}
