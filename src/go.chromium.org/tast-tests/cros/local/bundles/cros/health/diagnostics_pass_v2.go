@@ -78,9 +78,10 @@ func init() {
 			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: yycheng@google.com
-			Name:    "fan",
-			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.Fan},
-			Fixture: "crosHealthdRunning",
+			Name:              "fan",
+			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.Fan},
+			Fixture:           "crosHealthdRunning",
+			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 			// TODO(b/306101885): Promote to critical.
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
