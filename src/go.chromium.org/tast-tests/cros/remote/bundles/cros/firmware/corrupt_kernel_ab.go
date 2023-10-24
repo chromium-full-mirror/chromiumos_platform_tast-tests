@@ -78,24 +78,29 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to back up KERN-A and KERN-B: ", err)
 	}
+	needsRestore := true
 
 	cleanupContext := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
 	defer cancel()
 	defer func(ctx context.Context) {
-		if err := h.RequireKernelServiceClient(ctx); err != nil {
-			s.Fatal("Failed to connect to kernel service: ", err)
+		if needsRestore {
+			h.DisconnectDUT(ctx)
+			if err := h.RequireKernelServiceClient(ctx); err != nil {
+				s.Fatal("Failed to connect to kernel service: ", err)
+			}
+
+			s.Log("Restoring kernel from backup")
+			if _, err := h.KernelServiceClient.RestoreKernel(ctx, kernelBackup); err != nil {
+				s.Fatal("Failed to restore kernel from backup: ", err)
+			}
+
+			s.Log("Performing mode aware reboot to ensure restored kernel takes effect")
+			if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
+				s.Fatal("Failed to reboot: ", err)
+			}
 		}
 
-		s.Log("Restoring kernel from backup")
-		if _, err := h.KernelServiceClient.RestoreKernel(ctx, kernelBackup); err != nil {
-			s.Fatal("Failed to restore kernel from backup: ", err)
-		}
-
-		s.Log("Performing mode aware reboot to ensure restored kernel takes effect")
-		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
-			s.Fatal("Failed to reboot: ", err)
-		}
 		s.Log("Delete backup files from DUT")
 		rmargs := []string{
 			kernelBackup.KernA.BackupPath,
@@ -189,4 +194,6 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatalf("Failed to verify DUT currently is in copy %s: %v", copyToCorrupt, err)
 	}
+
+	needsRestore = false
 }
