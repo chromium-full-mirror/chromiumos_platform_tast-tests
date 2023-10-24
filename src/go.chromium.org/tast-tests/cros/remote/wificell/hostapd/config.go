@@ -91,6 +91,82 @@ const (
 	VHTCapTxAntennaPattern   VHTCap = "[TX-ANTENNA-PATTERN]"
 )
 
+// ChWidthEnum is the type for specifying operating channel width in hostapd config.
+type ChWidthEnum int
+
+// ChWidth enums.
+const (
+	ChWidth20 ChWidthEnum = iota
+	ChWidth40
+	ChWidth40Minus
+	ChWidth40Plus
+	ChWidth80
+	ChWidth160
+	ChWidth80Plus80
+	ChWidth160Plus80
+	ChWidth160Plus160
+	ChWidthUnknown
+)
+
+// String returns ChWidthEnum as a string.
+func (cw ChWidthEnum) String() string {
+	var typeStr string
+	switch cw {
+	case ChWidth20:
+		typeStr = "20"
+	case ChWidth40:
+		typeStr = "40"
+	case ChWidth40Minus:
+		typeStr = "40m"
+	case ChWidth40Plus:
+		typeStr = "40p"
+	case ChWidth80:
+		typeStr = "80"
+	case ChWidth160:
+		typeStr = "160"
+	case ChWidth80Plus80:
+		typeStr = "80+80"
+	case ChWidth160Plus80:
+		typeStr = "160+80"
+	case ChWidth160Plus160:
+		typeStr = "160+160"
+	case ChWidthUnknown:
+		typeStr = ""
+	default:
+		typeStr = string(rune(cw))
+	}
+	return typeStr
+}
+
+// OpModeEnum is the type for specifying operating mode in hostapd config.
+type OpModeEnum int
+
+// Mode enums.
+const (
+	ModeVHT OpModeEnum = iota
+	ModeHT
+	ModeHE
+	ModeEHT
+)
+
+// String returns OpMode as a string.
+func (om OpModeEnum) String() string {
+	var typeStr string
+	switch om {
+	case ModeVHT:
+		typeStr = "VHT"
+	case ModeHT:
+		typeStr = "HT"
+	case ModeHE:
+		typeStr = "HE"
+	case ModeEHT:
+		typeStr = "EHT"
+	default:
+		typeStr = string(rune(om))
+	}
+	return typeStr
+}
+
 // VHTChWidthEnum is the type for specifying operating channel width in hostapd config (vht_oper_chwidth=).
 type VHTChWidthEnum int
 
@@ -946,61 +1022,71 @@ func (c *Config) PcapFreqOptions() ([]iw.SetFreqOption, error) {
 // PerfDesc returns the description of this config.
 // Useful for reporting perf metrics.
 func (c *Config) PerfDesc() string {
-	var mode, width string
+	width, mode := c.ChannelWidthAndMode()
+	return fmt.Sprintf("ch%03d_mode%s%s_%s", c.Channel, mode, width.String(), c.SecurityConfig.Class())
+}
+
+// ChannelWidthAndMode returns the channel width and the operation mode.
+func (c *Config) ChannelWidthAndMode() (ChWidthEnum, string) {
+	var width ChWidthEnum
+	var mode OpModeEnum
 	if c.is80211ac() {
-		mode = "VHT"
+		mode = ModeVHT
 		switch c.VHTChWidth {
 		case VHTChWidth80:
-			width = "80"
+			width = ChWidth80
 		case VHTChWidth160:
-			width = "160"
+			width = ChWidth160
 		case VHTChWidth80Plus80:
-			width = "80+80"
+			width = ChWidth80Plus80
 		default:
-			width = "40"
+			if c.HTCaps == HTCapHT20 {
+				width = ChWidth20
+			}
+			width = ChWidth40
 		}
 	} else if c.is80211n() {
-		mode = "HT"
+		mode = ModeHT
 		switch c.htMode() {
 		case HTCapHT40Minus:
-			width = "40m"
+			width = ChWidth40Minus
 		case HTCapHT40Plus:
-			width = "40p"
+			width = ChWidth40Plus
 		default:
-			width = "20"
+			width = ChWidth20
 		}
 	} else if c.is80211ax() {
-		mode = "HE"
+		mode = ModeHE
 		switch c.HEChWidth {
 		case HEChWidth80:
-			width = "80"
+			width = ChWidth80
 		case HEChWidth160:
-			width = "160"
+			width = ChWidth160
 		case HEChWidth80Plus80:
-			width = "80+80"
+			width = ChWidth80Plus80
 		default:
-			width = "40"
+			width = ChWidth40
 		}
 	} else if c.is80211be() {
-		mode = "EHT"
+		mode = ModeEHT
 		switch c.EHTChWidth {
 		case EHTChWidth80:
-			width = "80"
+			width = ChWidth80
 		case EHTChWidth160:
-			width = "160"
+			width = ChWidth160
 		case EHTChWidth80Plus80:
-			width = "80+80"
+			width = ChWidth80Plus80
 		case EHTChWidth160Plus80:
-			width = "160+80"
+			width = ChWidth160Plus80
 		case EHTChWidth160Plus160:
-			width = "160+160"
+			width = ChWidth160Plus160
 		default:
-			width = "40"
+			width = ChWidth40
 		}
 	} else {
-		mode = "11" + string(c.Mode)
+		return ChWidthUnknown, "11" + string(c.Mode)
 	}
-	return fmt.Sprintf("ch%03d_mode%s%s_%s", c.Channel, mode, width, c.SecurityConfig.Class())
+	return width, mode.String()
 }
 
 // validate validates the Config, c.
