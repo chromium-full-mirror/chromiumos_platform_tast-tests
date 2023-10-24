@@ -38,6 +38,9 @@ func init() {
 		}.Instance(),
 		Data:    []string{data.TheQuickBrownFoxWav},
 		Timeout: 3 * time.Minute,
+		// For the testplan, refer to the following document.
+		// Note that not all items in the test matrix are implemented.
+		// https://docs.google.com/document/d/1-fcHs7SKgYXdgClUj2MlJUa36K5WjG7Ohp84PQOaUhA/edit#bookmark=id.c9la31peiyyq
 		Params: []testing.Param{
 			{
 				Name: "rtc_stream_with_apm", // testplan#1
