@@ -38,9 +38,9 @@ func OpenPersonalizationHub(ui *uiauto.Context) uiauto.Action {
 			ui.WithInterval(500*time.Millisecond).RetryUntil(ui.MouseClickAtLocation(1, coords.Point{X: rand.Intn(200), Y: rand.Intn(200)}), ui.Exists(SetPersonalizationMenu)),
 		),
 		// Click the menu item to open Personalization.
-		ui.WithTimeout(500*time.Millisecond).RetryUntil(ui.LeftClick(SetPersonalizationMenu), ui.Gone(SetPersonalizationMenu)),
+		ui.WithInterval(500*time.Millisecond).RetryUntil(ui.LeftClick(SetPersonalizationMenu), ui.Gone(SetPersonalizationMenu)),
 		// Wait for Personalization window to appear.
-		ui.WithTimeout(3*time.Second).WaitUntilExists(PersonalizationHubWindow),
+		ui.WithTimeout(20*time.Second).WaitUntilExists(PersonalizationHubWindow),
 	))
 }
 
