@@ -9,6 +9,7 @@ package graphics
 
 // See src/go.chromium.org/tast-tests/cros/local/crostini/params.go for more documentation
 
+/* TODO(b/307460167): Update this test to use modern Crostini fixtures.
 import (
 	"testing"
 	"time"
@@ -44,4 +45,4 @@ func TestGlBenchParams(t *testing.T) {
 		}})
 
 	genparams.Ensure(t, "glbench.go", params)
-}
+} */
