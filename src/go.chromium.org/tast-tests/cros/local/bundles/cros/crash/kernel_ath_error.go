@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
+	"go.chromium.org/tast/core/testing/wlan"
 )
 
 const (
@@ -90,6 +91,8 @@ func init() {
 						crashAth11kLogFileName,
 						crashAth11kMetaName},
 				},
+				// Only run on WiFi chips that use ath11k WiFi.
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiDevice(wlan.QualcommWCN6855)),
 			},
 		},
 	})
