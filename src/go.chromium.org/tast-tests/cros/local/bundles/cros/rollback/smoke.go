@@ -260,6 +260,10 @@ func runSaveAndRestore(ctx context.Context) error {
 	if err := runOobeConfigSave(ctx); err != nil {
 		return errors.Wrap(err, "failed to run oobe_config_save")
 	}
+	// Restart oobe_config_restore as would usually happen during boot after rollback.
+	if err := upstart.RestartJob(ctx, "oobe_config_restore"); err != nil {
+		return errors.Wrap(err, "failed to restart oobe_config_restore")
+	}
 
 	// Restarting Chrome should trigger a request to oobe_config_restore, hence attempts to decrypt.
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {

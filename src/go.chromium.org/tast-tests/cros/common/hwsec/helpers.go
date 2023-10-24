@@ -447,18 +447,6 @@ func (h *CmdTPMClearHelper) restartDaemonsAndInvoke(ctx context.Context, f func(
 		}
 	}(ctx)
 
-	if err := h.daemonController.TryStopDaemons(ctx, HighLevelTPMDaemons); err != nil {
-		// High-level TPM daemons might not be running because there's no guarantee that it's running when we start the test.
-		// If we actually failed to stop them and something ends up being wrong, then we can use the logging
-		// below to let whoever that's debugging this problem find out.
-		testing.ContextLog(ctx, "Failed to stop High-level TPM daemons, this is normal if they were not running: ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := h.daemonController.EnsureDaemons(ctx, HighLevelTPMDaemons); err != nil {
-			testing.ContextLog(ctx, "Failed to ensure High-level TPM daemons: ", err)
-		}
-	}(ctx)
-
 	if err := h.daemonController.TryStopDaemons(ctx, StatefulDaemons); err != nil {
 		// Stateful daemons might not be running because there is no guarantee
 		// that it is running when we start the test. If we actually failed to
@@ -469,6 +457,18 @@ func (h *CmdTPMClearHelper) restartDaemonsAndInvoke(ctx context.Context, f func(
 	defer func(ctx context.Context) {
 		if err := h.daemonController.EnsureDaemons(ctx, StatefulDaemons); err != nil {
 			testing.ContextLog(ctx, "Failed to ensure Stateful daemons: ", err)
+		}
+	}(ctx)
+
+	if err := h.daemonController.TryStopDaemons(ctx, HighLevelTPMDaemons); err != nil {
+		// High-level TPM daemons might not be running because there's no guarantee that it's running when we start the test.
+		// If we actually failed to stop them and something ends up being wrong, then we can use the logging
+		// below to let whoever that's debugging this problem find out.
+		testing.ContextLog(ctx, "Failed to stop High-level TPM daemons, this is normal if they were not running: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := h.daemonController.EnsureDaemons(ctx, HighLevelTPMDaemons); err != nil {
+			testing.ContextLog(ctx, "Failed to ensure High-level TPM daemons: ", err)
 		}
 	}(ctx)
 
