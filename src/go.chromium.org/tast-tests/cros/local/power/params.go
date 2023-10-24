@@ -43,3 +43,15 @@ type IdleParams struct {
 	BluetoothPower bool
 	IdleTimeParams TimeParams
 }
+
+// VideoEncodeFormatParams defines video encoding format.
+type VideoEncodeFormatParams struct {
+	// Video coding format, such as vp9, vp8, h264, av1, etc.
+	Codec string
+	// Display of resolution, such as fd, hfd, vga, qvga, hvga, qhvgs, etc.
+	Resolution string
+	// Framerate of video content.
+	Framerate int64
+
+	VideoEncodeTimeParams TimeParams
+}
