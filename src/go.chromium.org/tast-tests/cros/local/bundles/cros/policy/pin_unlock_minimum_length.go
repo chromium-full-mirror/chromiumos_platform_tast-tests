@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Follows the user flow to set unlock pin",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"mbid@google.com",
+			"emaamari@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS

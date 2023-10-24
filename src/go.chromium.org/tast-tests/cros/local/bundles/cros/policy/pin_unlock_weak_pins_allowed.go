@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Verify the user cannot set a weak PIN if disallowed by policy",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"mbid@google.com",
+			"emaamari@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS

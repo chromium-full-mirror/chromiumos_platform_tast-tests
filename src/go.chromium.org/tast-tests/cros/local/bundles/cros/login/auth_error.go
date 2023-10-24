@@ -26,7 +26,6 @@ func init() {
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"anastasiian@chromium.org",
-			"mbid@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS

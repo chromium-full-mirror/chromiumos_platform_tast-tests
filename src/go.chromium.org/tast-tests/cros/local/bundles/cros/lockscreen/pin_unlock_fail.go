@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Checks that password field is shown after incorrect PIN was entered multiple times",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"mbid@google.com",
+			"anastasiian@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS

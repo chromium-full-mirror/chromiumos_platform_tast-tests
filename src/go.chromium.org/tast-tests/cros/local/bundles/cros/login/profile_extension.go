@@ -18,7 +18,7 @@ func init() {
 		Desc:         "Check private signin profile extension loads",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"mbid@google.com",
+			"antrim@google.com",
 			"cros-oac@google.com",
 			"chromeos-sw-engprod@google.com",
 		},

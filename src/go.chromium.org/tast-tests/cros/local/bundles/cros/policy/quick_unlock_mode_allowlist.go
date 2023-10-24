@@ -39,7 +39,7 @@ func init() {
 		Desc:         "Checks that quick unlock options are enabled or disabled based on the policy value",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"mbid@google.com",
+			"iscsi@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS

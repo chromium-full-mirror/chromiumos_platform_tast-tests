@@ -29,7 +29,6 @@ func init() {
 		Desc:         "Verify that the sign in page shows after signing out multi-users by clicking button from uber tray",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"mbid@google.com",
 			"awendy@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
