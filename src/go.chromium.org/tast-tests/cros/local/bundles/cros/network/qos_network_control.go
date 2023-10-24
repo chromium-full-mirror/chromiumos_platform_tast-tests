@@ -205,11 +205,11 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 	}
 
 	// Ping all the addresses of the gateway address to generate ICMP echo requests.
-	ifAddrs, err := wifi.Router.GetVethInAddrs(ctx)
+	gwAddrs, err := wifi.Router.GetVethInAddrs(ctx)
 	if err != nil {
 		s.Fatal("Failed to obtain gateway addresses: ", err)
 	}
-	for _, addr := range ifAddrs.All() {
+	for _, addr := range gwAddrs.All() {
 		if err := ping.ExpectPingSuccessWithTimeout(ctx, addr.String(), "root", 10*time.Second); err != nil {
 			s.Fatalf("Failed to ping %s: %v", addr, err)
 		}
@@ -221,14 +221,12 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 	shortCtx, cancel := context.WithDeadline(ctx, d)
 	defer cancel()
 
-	if err := checkPacketsMarks(shortCtx, capturer.Packets(), props.Address); err != nil {
+	if err := checkPacketsMarks(shortCtx, capturer.Packets(), gwAddrs.All()); err != nil {
 		s.Fatal("Failed to check packets marks: ", err)
 	}
 }
 
-func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, clientIP string) error {
-	clientAddr := net.ParseIP(clientIP)
-
+func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, gwAddrs []net.IP) error {
 	// Check for the packets received
 	seen := packetType(0)
 	for seen != packetAll {
@@ -249,29 +247,6 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 				case layers.DHCPMsgTypeRequest:
 					seen |= packetDHCPv4Request
 				}
-				continue
-			}
-
-			if p.IPv4 != nil && !p.IPv4.SrcIP.Equal(clientAddr) {
-				// For now ignore IPv6 packets or packets not explicitly emitted by the client.
-				continue
-			}
-
-			// Check DNS packet mark.
-			if p.DNS != nil {
-				if !hasDSCP(p, dscpNetworkControl) {
-					return errors.Errorf("DNS packet marked with DSCP %d", p.DSCP())
-				}
-				seen |= packetDNS
-				continue
-			}
-
-			// Check TCP SYN packet mark.
-			if p.TCP != nil && p.TCP.SYN {
-				if !hasDSCP(p, dscpNetworkControl) {
-					return errors.Errorf("TCP SYN packet marked with DSCP %d", p.DSCP())
-				}
-				seen |= packetTCPSyn
 				continue
 			}
 
@@ -306,6 +281,27 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 				seen |= packetICMPv6NeighborSolicitation
 			}
 
+			// Check outgoing DNS packet mark. Outgoing packets are filtered
+			// using the gateway address based on the assumption that in the
+			// test environment, network control packets are only sent to the
+			// gateway.
+			if isOutgoingPacket(p, gwAddrs) && p.DNS != nil {
+				if !hasDSCP(p, dscpNetworkControl) {
+					return errors.Errorf("DNS packet marked with DSCP %d", p.DSCP())
+				}
+				seen |= packetDNS
+				continue
+			}
+
+			// Check outgoing TCP SYN packet mark.
+			if isOutgoingPacket(p, gwAddrs) && p.TCP != nil && p.TCP.SYN {
+				if !hasDSCP(p, dscpNetworkControl) {
+					return errors.Errorf("TCP SYN packet marked with DSCP %d", p.DSCP())
+				}
+				seen |= packetTCPSyn
+				continue
+			}
+
 		case <-ctx.Done():
 			return errors.Errorf("timeout waiting for packets: %s", listPackets(seen^packetAll))
 		}
@@ -315,6 +311,24 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 		}
 	}
 	return nil
+}
+
+func isOutgoingPacket(p *capture.Packet, gw []net.IP) bool {
+	if p.IPv4 != nil {
+		for _, addr := range gw {
+			if p.IPv4.DstIP.Equal(addr) {
+				return true
+			}
+		}
+	}
+	if p.IPv6 != nil {
+		for _, addr := range gw {
+			if p.IPv6.DstIP.Equal(addr) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func hasDSCP(p *capture.Packet, dscp uint8) bool {
