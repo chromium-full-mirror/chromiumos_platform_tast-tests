@@ -295,6 +295,86 @@ func (s *Servo) TriggerPDSoftReset(ctx context.Context) error {
 	return nil
 }
 
+// TriggerPDHardReset triggers a USB-PD Hard Reset from the EC/DUT-side
+func (s *Servo) TriggerPDHardReset(ctx context.Context) error {
+
+	// Because the pass criteria expects the PE state to be the same after
+	// the hard reset as before, make sure the PE/PD state is in either
+	// the SNK_READY or SRC_READY state
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if pdState, err := s.GetDUTPDState(ctx); err == nil {
+
+			var activePEStates = map[string]bool{
+				"PD_STATE_SNK_READY": true,
+				"PD_STATE_SRC_READY": true,
+				"PE_SNK_Ready":       true,
+				"PE_SRC_Ready":       true,
+			}
+
+			if _, ok := activePEStates[pdState.PEStateName]; !ok {
+				testing.ContextLogf(ctx, "PD State = %s", pdState.PEStateName)
+				return errors.Wrap(err, "Post hard reset, PE state does not match")
+			}
+		} else {
+			return errors.Wrap(err, "failed to get PD state")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: pdStatePollTimeout, Interval: pdStatePollInterval}); err != nil {
+		return errors.Wrap(err, "DUT port is not in Ready state")
+	}
+
+	// Get port status
+	pdStateBefore, err := s.GetDUTPDState(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get pre-test EC/DUT-side PD port status")
+	}
+	testing.ContextLogf(ctx, "Before status: %s/%s %s", pdStateBefore.PowerRole, pdStateBefore.DataRole, pdStateBefore.PEStateName)
+
+	if err := s.EnablePDConsoleDebug(ctx); err != nil {
+		return errors.Wrap(err, "could not enable EC/DUT's PD debug logs")
+	}
+
+	// Initiate hard reset from DUT
+	err = s.RunECCommand(
+		ctx,
+		fmt.Sprintf("pd %d hard", s.dutPDInfo.activePort),
+	)
+	if err != nil {
+		return errors.Wrap(err, "could not trigger hard reset on EC/DUT")
+	}
+
+	// Hard reset should result in the DUT port being in the same power/data
+	// role and PE state it was in prior to the hard reset being initiated.
+	// Poll for this condition, if not reached, then return an error
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if pdState, err := s.GetDUTPDState(ctx); err == nil {
+			testing.ContextLogf(ctx, "After status: %s/%s %s", pdState.PowerRole, pdState.DataRole, pdState.PEStateName)
+			if pdState.PEStateName != pdStateBefore.PEStateName {
+				return errors.Wrap(err, "Post hard reset, PE state does not match")
+			}
+			if pdState.DataRole != pdStateBefore.DataRole {
+				return errors.Wrap(err, "Post hard reset, data role does not match")
+			}
+			if pdState.PowerRole != pdStateBefore.PowerRole {
+				return errors.Wrap(err, "Post hard reset, power role does not match")
+			}
+		} else {
+			return errors.Wrap(err, "failed to get PD state")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: pdStatePollTimeout, Interval: pdStatePollInterval}); err != nil {
+		return errors.Wrap(err, "Post Hard Reset connection does not match before")
+	}
+
+	// Go back to `pd dump 0` after.
+	if err := s.DisablePDConsoleDebug(ctx); err != nil {
+		return errors.Wrap(err, "could not disable EC/DUT's PD debug logs")
+	}
+
+	return nil
+}
+
 // SaveDUTConsoleChannelMask stores the current console channel mask on the DUT
 func (s *Servo) SaveDUTConsoleChannelMask(ctx context.Context) error {
 	return s.RunECCommand(ctx, "chan save")

@@ -183,3 +183,21 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 
 	return nil
 }
+
+// shutdownDUT is a helper function for commanding the DUT to shutdown and waiting
+// until it does so with a timeout.
+func ShutdownDUT(ctx context.Context, h *Helper) error {
+	// Run shutdown command via SSH
+	testing.ContextLog(ctx, "Shutting down DUT")
+	if err := h.DUT.Conn().CommandContext(ctx, "/sbin/shutdown", "-P", "now").Start(); err != nil {
+		return errors.Wrap(err, "failed to run `/sbin/shutdown -P now` cmd")
+	}
+
+	// Wait for shutdown
+	testing.ContextLog(ctx, "Waiting for G3 power state")
+	if err := h.WaitForPowerStates(ctx, PowerStateInterval, PowerStateTimeout, "G3"); err != nil {
+		return errors.Wrap(err, "failed to get G3 power state")
+	}
+
+	return nil
+}

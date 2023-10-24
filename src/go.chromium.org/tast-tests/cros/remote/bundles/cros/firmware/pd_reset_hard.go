@@ -10,19 +10,20 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: PDResetSoft,
-		Desc: "USB PD soft reset test",
+		Func: PDResetHard,
+		Desc: "USB PD hard reset test",
 		Contacts: []string{
 			"chromeos-faft@google.com", // Owning team list
-			"honscheid@google.com",     // Test author
+			"scollyer@google.com",      // Test author
 		},
-		BugComponent: "b:194910842", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		BugComponent: "b:194910686", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, move to firmware_pd.
 		Data:         []string{firmware.ConfigFile},
 		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
@@ -30,7 +31,6 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      15 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "normal",
 			Val: firmware.PDTestParams{
@@ -70,8 +70,30 @@ func init() {
 	})
 }
 
-// PDResetSoft - USB PD soft reset
-func PDResetSoft(ctx context.Context, s *testing.State) {
+func executeHardReset(ctx context.Context, s *testing.State, count int) error {
+	h := s.FixtValue().(*fixture.Value).Helper
+
+	for i := 0; i < count; i++ {
+
+		// Servo (PD Tester) initiated hard reset
+		testing.ContextLog(ctx, "Servo initiated hard reset attempt ", i+1)
+		if err := h.Servo.TriggerServoPDHardReset(ctx); err != nil {
+			return errors.Wrap(err, "Servo initiated hard reset failed")
+		}
+
+		// EC/DUT initiates hard reset
+		testing.ContextLog(ctx, "DUT initiated hard reset attempt ", i+1)
+		if err := h.Servo.TriggerPDHardReset(ctx); err != nil {
+			return errors.Wrap(err, "DUT initiated hard reset failed")
+		}
+	}
+	return nil
+}
+
+// PDResetHard - USB PD hard reset
+func PDResetHard(ctx context.Context, s *testing.State) {
+	const iterationCount = 3
+
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	if err := h.RequireConfig(ctx); err != nil {
@@ -91,25 +113,12 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 	}
 
 	//
-	// Move on to the actual Soft Reset test
+	// Move on to the actual Hard Reset test
 	//
 
-	// Servo (PD Tester) initiates soft reset
-	s.Log("Attempting Servo-initiated soft reset")
-	if err := h.Servo.TriggerServoPDSoftReset(ctx); err != nil {
-		s.Fatal("Servo-initiated soft reset did not succeed: ", err)
-	}
-
-	// EC/DUT initiates soft reset
-	s.Log("Attempting EC/DUT-initiated soft reset")
-	if err := h.Servo.TriggerPDSoftReset(ctx); err != nil {
-		s.Fatal("EC-initiated soft reset did not succeed: ", err)
-	}
-
-	// Testing soft resets after a power role swap (DUT is SRC) is not currently
-	// supported.
-	if testParams.Shutdown {
-		return
+	// Test Hard Reset with DUT as power role SNK
+	if err := executeHardReset(ctx, s, iterationCount); err != nil {
+		s.Fatal("DUT power role SNK hard reset test failed: ", err)
 	}
 
 	// Attempt to do a power role swap by forcing the EC/DUT to be a source.
@@ -117,10 +126,9 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 	// will stop the test early.
 	s.Log("Attempting a power role swap")
 	if err := h.Servo.SetPDPowerRole(ctx, "SRC"); err != nil {
-		s.Log("EC/DUT cannot swap power roles. End test here: ", err)
-		return
+		s.Fatal("EC/DUT cannot swap power roles. End test here: ", err)
 	}
-	s.Log("Power role swap succeeded. Repeating soft reset test from each side")
+	s.Log("Power role swap succeeded. Repeating hard reset test from each side")
 
 	defer func() {
 		// Restore the DUT's port back to normal operation (i.e. a sink)
@@ -130,16 +138,8 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Repeat the previous tests - Servo (PD Tester) initiates soft reset
-	s.Log("Attempting Servo-initiated soft reset")
-	if err := h.Servo.TriggerServoPDSoftReset(ctx); err != nil {
-		s.Fatal("Servo-initiated soft reset did not succeed after swapping power roles: ", err)
+	// Test Hard Reset with DUT as power role SRC
+	if err := executeHardReset(ctx, s, iterationCount); err != nil {
+		s.Fatal("DUT power role SNK hard reset test failed: ", err)
 	}
-
-	// EC/DUT initiates soft reset
-	s.Log("Attempting EC/DUT-initiated soft reset")
-	if err := h.Servo.TriggerPDSoftReset(ctx); err != nil {
-		s.Fatal("EC-initiated soft reset did not succeed after swapping power roles: ", err)
-	}
-
 }

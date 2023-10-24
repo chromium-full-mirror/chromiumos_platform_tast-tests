@@ -15,6 +15,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	servoPDStatePollTimeout  time.Duration = 5 * time.Second
+	servoPDStatePollInterval time.Duration = 500 * time.Millisecond
+)
+
 // ServoSendDataSwapRequest initiates a data swap request from the servo's PD port.
 func (s *Servo) ServoSendDataSwapRequest(ctx context.Context) (pdControlMsgType, error) {
 	// Enable PD message so we can check the response from the DUT.
@@ -112,6 +117,33 @@ func checkSequenceInConsoleLog(log string, port int, sequenceList []string) bool
 		// log line
 		i += idx[1]
 	}
+	return true
+}
+
+// verifyStatesInConsoleLog is a helper function which extracts all of the PD
+// state messages from servo console output and then verifies the states match
+// in exact order tp the states in the parameter sequenceList
+func verifyStatesInConsoleLog(ctx context.Context, log string, port int, sequenceList []string) bool {
+	// Create a regexp object that extracts all PD state entries from the log
+	re := regexp.MustCompile(
+		fmt.Sprintf(`C%d\s+st[\d]+\s([\w]+)`, port),
+	)
+	matches := re.FindAllStringSubmatch(log, -1)
+	states := make([]string, len(matches))
+	for idx, row := range matches {
+		states[idx] = row[1]
+		testing.ContextLogf(ctx, "act = %s <--> exp = %s", row[1], sequenceList[idx])
+		// As long as the states have matched all the expected states,
+		// then treat this as a match even if additional state messages
+		// exist beyond what was expected.
+		if idx >= len(sequenceList) {
+			break
+		}
+		if states[idx] != sequenceList[idx] {
+			testing.ContextLogf(ctx, "state list mismatch: %s", states)
+			return false
+		}
+	}
 
 	return true
 }
@@ -167,6 +199,87 @@ func (s *Servo) TriggerServoPDSoftReset(ctx context.Context) error {
 	}
 	if checkSequenceInConsoleLog(out[0][0], 1, expectedResetSequence) {
 		return errors.New("expected reset state sequence not seen in Servo PD soft reset command console output")
+	}
+
+	return nil
+}
+
+// TriggerServoPDHardReset triggers a USB-PD Hard Reset from the Servo-side
+func (s *Servo) TriggerServoPDHardReset(ctx context.Context) error {
+	// Get current port status
+	pdState, err := s.GetServoPDState(ctx)
+	if err != nil {
+		return errors.Wrap(err, "could not get Servo PD state")
+	}
+
+	if pdState.Connection != PDEnabled {
+		return errors.New("servo PD status reads disabled. Cannot test without a port partner")
+	}
+
+	if err := s.EnableServoPDConsoleDebug(ctx); err != nil {
+		return errors.Wrap(err, "could not enable Servo's PD debug logs")
+	}
+
+	// Go back to `pd dump 0` after.
+	defer s.DisableServoPDConsoleDebug(ctx)
+
+	// Depending on the current power role, set the list of expected
+	// PD states following the soft reset
+	var expectedResetSequence []string
+	if pdState.PowerRole == PowerRoleSNK {
+		expectedResetSequence = []string{
+			"HARD_RESET_SEND",
+			"HARD_RESET_EXECUTE",
+			"SNK_HARD_RESET_RECOVER",
+			"SNK_DISCOVERY",
+			"SNK_REQUESTED",
+			"SNK_TRANSITION",
+			"SNK_READY",
+		}
+	} else if pdState.PowerRole == PowerRoleSRC {
+		expectedResetSequence = []string{
+			"HARD_RESET_SEND",
+			"HARD_RESET_EXECUTE",
+			"SRC_HARD_RESET_RECOVER",
+			"SRC_STARTUP",
+			"SRC_DISCOVERY",
+			"SRC_NEGOCIATE", // [sic]
+			"SRC_ACCEPTED",
+			"SRC_POWERED",
+			"SRC_TRANSITION",
+			"SRC_READY",
+		}
+	} else {
+		return errors.New("unknown power role state")
+	}
+
+	// Run the command
+	out, err := s.RunServoCommandGetOutput(ctx, "pd 1 hard", []string{`(.*)(C1)\s+[\w]+:?\s([\w]+_READY)`})
+	if err != nil {
+		return errors.Wrap(err, "could not trigger hard reset on Servo")
+	}
+	// Verify hard reset happened and that the connection recovers as expected
+	if !verifyStatesInConsoleLog(ctx, out[0][0], 1, expectedResetSequence) {
+		return errors.New("expected reset state sequence not seen in Servo console output")
+	}
+
+	// Hard reset should result in the same power after as before, but the data
+	// role may be different as it be the data role associated with the power
+	// role. Poll here to wait for the data role after the hard reset to be
+	// the same as before to ensure the PD connection is back to its steady
+	// state condition
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if pdStateAfter, err := s.GetServoPDState(ctx); err == nil {
+			if pdState.DataRole != pdStateAfter.DataRole {
+				return errors.Wrap(err, "Data role does not match expected")
+			}
+		} else {
+			return errors.Wrap(err, "failed to get Servo PD state")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: servoPDStatePollTimeout, Interval: servoPDStatePollInterval}); err != nil {
+		return errors.Wrap(err, "Data roles did not match following servo initiated hard reset")
 	}
 
 	return nil
