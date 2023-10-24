@@ -1,0 +1,7 @@
+set noparent
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
+
+# The power team owns the code in this dir.
+include chromiumos/owners:v1:/power/OWNERS.tast
