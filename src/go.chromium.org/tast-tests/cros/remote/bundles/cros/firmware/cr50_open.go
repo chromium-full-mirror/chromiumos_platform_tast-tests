@@ -29,6 +29,7 @@ func init() {
 		SoftwareDeps: []string{"gsc"},
 		Fixture:      fixture.DevMode,
 		Timeout:      15 * time.Minute,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

@@ -36,6 +36,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
 		Vars:         []string{"firmware.skipFlashUSB"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name:      "normal",

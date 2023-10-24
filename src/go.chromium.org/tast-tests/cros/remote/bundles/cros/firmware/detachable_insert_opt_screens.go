@@ -65,6 +65,7 @@ func init() {
 		// under coreboot. Skip because they will soon become EOF devices.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable), hwdep.SkipOnModel("soraka", "nocturne")),
 		Timeout:      30 * time.Minute,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

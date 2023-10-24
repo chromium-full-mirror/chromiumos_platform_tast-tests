@@ -40,6 +40,7 @@ func init() {
 		Timeout:      25 * time.Minute,
 		Data:         []string{firmware.ConfigFile},
 		SoftwareDeps: []string{"gsc", "gsc_can_wake_ec_with_reset", "ec_hibernate"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

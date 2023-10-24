@@ -28,6 +28,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"gsc"},
 		Attr:         []string{"group:mainline", "group:labqual"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

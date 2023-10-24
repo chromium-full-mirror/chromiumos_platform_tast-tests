@@ -36,6 +36,7 @@ func init() {
 		Attr:         []string{"group:firmware"},
 		Timeout:      15 * time.Minute,
 		SoftwareDeps: []string{"crossystem", "flashrom"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name:              "normal_mode",

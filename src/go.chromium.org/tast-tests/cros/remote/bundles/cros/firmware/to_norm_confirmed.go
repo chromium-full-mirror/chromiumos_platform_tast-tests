@@ -35,6 +35,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable), hwdep.SkipOnModel("coachz", "homestar", "wormdingler", "quackingstick")),
 		Fixture:      fixture.DevMode,
 		Timeout:      2 * time.Hour,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

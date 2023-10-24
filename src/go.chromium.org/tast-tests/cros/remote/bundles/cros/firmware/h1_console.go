@@ -24,6 +24,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_cr50", "firmware_bringup"},
 		Vars:         []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.GSCUART()),
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

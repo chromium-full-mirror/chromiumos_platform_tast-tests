@@ -32,6 +32,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService", dutfs.ServiceName},
 		Vars:         []string{"servo"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

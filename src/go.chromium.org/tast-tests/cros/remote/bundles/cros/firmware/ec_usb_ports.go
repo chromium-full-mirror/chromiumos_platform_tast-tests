@@ -40,6 +40,7 @@ func init() {
 		Requirements: []string{"sys-fw-0022-v02"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      5 * time.Minute,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name:              "usb_pins_on_lid_close",

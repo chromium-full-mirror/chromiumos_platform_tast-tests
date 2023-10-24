@@ -33,6 +33,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
 		Fixture:      fixture.DevModeGBB,
 		Timeout:      15 * time.Minute,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

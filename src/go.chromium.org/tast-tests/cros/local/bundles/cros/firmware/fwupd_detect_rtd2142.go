@@ -27,6 +27,7 @@ func init() {
 		HardwareDeps: hwdep.D(
 			hwdep.DisplayPortConverter("RTD2142"),
 		),
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

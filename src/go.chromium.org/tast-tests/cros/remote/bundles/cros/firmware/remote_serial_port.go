@@ -27,6 +27,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		ServiceDeps:  []string{"tast.cros.firmware.SerialPortService"},
 		Attr:         []string{"group:firmware", "firmware_smoke"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

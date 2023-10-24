@@ -28,6 +28,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		Timeout:      1 * time.Minute,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

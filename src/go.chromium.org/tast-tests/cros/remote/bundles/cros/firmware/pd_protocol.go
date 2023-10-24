@@ -30,6 +30,7 @@ func init() {
 		Vars:         []string{"servo"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnFormFactor(hwdep.Chromebox)),
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

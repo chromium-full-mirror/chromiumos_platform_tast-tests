@@ -33,6 +33,7 @@ func init() {
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Fixture:      fixture.DevMode,
 		Timeout:      2 * time.Hour,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

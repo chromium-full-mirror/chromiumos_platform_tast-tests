@@ -39,6 +39,7 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		// b/111215677: CCD servo detection doesn't work on soraka.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("soraka")),
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

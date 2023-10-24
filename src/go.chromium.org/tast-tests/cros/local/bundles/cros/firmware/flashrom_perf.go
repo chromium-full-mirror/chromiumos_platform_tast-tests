@@ -33,6 +33,7 @@ func init() {
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"flashrom"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Val: params{
 				regions:  nil, // nil implies a full read.

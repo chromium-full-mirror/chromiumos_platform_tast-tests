@@ -31,6 +31,7 @@ func init() {
 		Vars:         []string{"servo", "image"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Data:         []string{firmware.ConfigFile},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

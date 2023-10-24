@@ -32,6 +32,7 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"gsc"},
 		Timeout:      60 * time.Minute, // Long timeout to account for the long PP sequence.
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

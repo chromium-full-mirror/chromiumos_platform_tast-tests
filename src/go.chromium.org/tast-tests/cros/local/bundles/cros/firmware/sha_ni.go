@@ -24,6 +24,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_ec"},
 		HardwareDeps: hwdep.D(hwdep.CPUSupportsSHANI()),
 		Requirements: []string{"sys-fw-0022-v02"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

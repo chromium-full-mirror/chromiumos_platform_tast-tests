@@ -39,6 +39,7 @@ func init() {
 		SoftwareDeps: []string{"crossystem"},
 		Fixture:      fixture.DevMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable)),
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Timeout: 2 * time.Hour,
 			Val: devFwParam{

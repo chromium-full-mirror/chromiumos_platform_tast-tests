@@ -26,6 +26,7 @@ func init() {
 		},
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"fwupd"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

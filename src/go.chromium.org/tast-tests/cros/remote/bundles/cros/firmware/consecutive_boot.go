@@ -45,6 +45,7 @@ func init() {
 		Vars:         []string{"firmware.consecutiveBootIters", "firmware.consecutiveBootCustomCmd"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      100 * time.Minute,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name:    "power_button_normal_mode",

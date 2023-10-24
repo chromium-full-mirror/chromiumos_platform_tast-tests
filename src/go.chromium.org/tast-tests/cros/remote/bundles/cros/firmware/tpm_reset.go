@@ -27,7 +27,8 @@ func init() {
 				Fixture: fixture.RecModeCopyServices,
 			},
 		},
-		VarDeps: []string{"servo"},
+		VarDeps:      []string{"servo"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

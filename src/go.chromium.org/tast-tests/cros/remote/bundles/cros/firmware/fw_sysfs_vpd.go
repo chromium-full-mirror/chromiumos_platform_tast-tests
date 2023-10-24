@@ -39,6 +39,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel("hana", "elm", "sycamore", "sycamore360", "telesu", "birch", "maple", "maple14")),
 		Timeout:      20 * time.Minute,
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

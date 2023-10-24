@@ -32,6 +32,7 @@ func init() {
 		Timeout:      10 * time.Minute,
 		SoftwareDeps: []string{"crossystem"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name:    "normal_mode",

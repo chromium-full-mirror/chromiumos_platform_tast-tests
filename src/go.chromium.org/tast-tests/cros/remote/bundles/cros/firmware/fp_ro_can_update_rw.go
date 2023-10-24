@@ -36,6 +36,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService", dutfs.ServiceName},
 		Vars:         []string{"servo"},
 		Fixture:      fixture.FingerprintImages,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

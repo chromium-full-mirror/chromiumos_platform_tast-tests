@@ -25,6 +25,7 @@ func init() {
 		BugComponent: "b:750299", // ChromeOS > Platform > Enablement > Firmware > Flashrom
 		Attr:         []string{"group:flashrom"},
 		SoftwareDeps: []string{"flashrom", "arm"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

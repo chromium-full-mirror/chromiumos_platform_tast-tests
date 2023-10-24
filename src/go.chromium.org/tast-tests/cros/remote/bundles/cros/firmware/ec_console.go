@@ -25,6 +25,7 @@ func init() {
 		Vars:         []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Requirements: []string{"sys-fw-0022-v02"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

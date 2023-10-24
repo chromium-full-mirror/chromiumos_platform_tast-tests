@@ -37,6 +37,7 @@ func init() {
 		Fixture:      fixture.DevModeWPEnabledZeroGBB,
 		Timeout:      5 * time.Minute,
 		Vars:         []string{"reboots", "block_unverified_ro"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

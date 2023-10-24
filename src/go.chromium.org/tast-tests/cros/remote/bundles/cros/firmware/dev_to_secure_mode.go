@@ -31,7 +31,8 @@ func init() {
 				Fixture: fixture.DevMode,
 			},
 		},
-		VarDeps: []string{"servo"},
+		VarDeps:      []string{"servo"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

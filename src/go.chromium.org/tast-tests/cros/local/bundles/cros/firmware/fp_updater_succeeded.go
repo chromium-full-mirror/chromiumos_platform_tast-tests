@@ -26,6 +26,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:fingerprint-cq", "group:cq-medium"},
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

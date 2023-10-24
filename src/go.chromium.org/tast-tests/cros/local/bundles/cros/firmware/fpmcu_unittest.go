@@ -63,7 +63,8 @@ func init() {
 		Attr:         []string{"group:fingerprint-mcu"},
 		Data:         []string{"fpmcu_unittests.tar.bz2"},
 		// Flashing the FPMCU can take 2 minutes, so allow more time.
-		Timeout: 4 * time.Minute,
+		Timeout:      4 * time.Minute,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_aes",

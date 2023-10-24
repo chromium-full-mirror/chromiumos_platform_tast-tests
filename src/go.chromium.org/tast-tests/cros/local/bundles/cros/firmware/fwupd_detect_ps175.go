@@ -27,6 +27,7 @@ func init() {
 		HardwareDeps: hwdep.D(
 			hwdep.DisplayPortConverter("PS175"),
 		),
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

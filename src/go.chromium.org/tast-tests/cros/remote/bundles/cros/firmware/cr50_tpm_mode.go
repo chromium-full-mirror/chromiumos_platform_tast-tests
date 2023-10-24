@@ -59,6 +59,7 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		Timeout:      15 * time.Minute,
 		SoftwareDeps: []string{"gsc", "reboot"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name: "long_opt",

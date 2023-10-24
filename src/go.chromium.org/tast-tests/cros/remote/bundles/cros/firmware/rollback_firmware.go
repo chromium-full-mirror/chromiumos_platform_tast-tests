@@ -44,6 +44,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"flashrom"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name:    "normal",
 			Fixture: fixture.NormalMode,

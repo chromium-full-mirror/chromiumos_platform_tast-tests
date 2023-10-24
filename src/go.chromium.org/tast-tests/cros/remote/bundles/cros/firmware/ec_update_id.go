@@ -41,6 +41,7 @@ func init() {
 		Requirements: []string{"sys-fw-0022-v02"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
 		Timeout:      15 * time.Minute,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name:    "normal_mode",

@@ -52,6 +52,7 @@ func init() {
 		Vars:         []string{"firmware.skipFlashUSB"},
 		HardwareDeps: hwdep.D(hwdep.Battery()),
 		Fixture:      fixture.DevMode,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Val: &params{
 				usbPresent: false,

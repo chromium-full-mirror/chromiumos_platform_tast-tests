@@ -38,6 +38,7 @@ func init() {
 		SoftwareDeps: []string{"crossystem"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Fixture:      fixture.DevMode,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Val: &ctrluParams{
 				validUSB: true, // Test b:200305066.

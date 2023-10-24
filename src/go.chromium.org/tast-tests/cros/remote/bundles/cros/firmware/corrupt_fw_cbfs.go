@@ -43,6 +43,7 @@ func init() {
 		Timeout:      30 * time.Minute,
 		SoftwareDeps: []string{"chromeos_firmware", "crossystem", "flashrom"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name:    "normal_mode_a_file_header",

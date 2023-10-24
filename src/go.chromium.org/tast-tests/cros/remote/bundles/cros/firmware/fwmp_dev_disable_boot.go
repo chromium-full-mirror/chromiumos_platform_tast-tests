@@ -41,6 +41,7 @@ func init() {
 		Fixture:      fixture.DevMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		SoftwareDeps: []string{"tpm2"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

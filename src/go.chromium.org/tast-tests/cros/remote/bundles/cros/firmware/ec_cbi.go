@@ -27,9 +27,9 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:    []string{"group:firmware", "firmware_ec"},
-		Fixture: fixture.NormalMode,
-		Timeout: 15 * time.Minute,
+		Attr:         []string{"group:firmware", "firmware_ec"},
+		Fixture:      fixture.NormalMode,
+		Timeout:      15 * time.Minute,
 		// Only run on platforms that include CL crrev/c/1234747 so that CBI can be reversibly written to.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureCBI(), hwdep.SkipOnModel(
 			"jax", // Fizz models
@@ -40,6 +40,7 @@ func init() {
 			"syndra",
 		)),
 		Requirements: []string{"sys-fw-0022-v02"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

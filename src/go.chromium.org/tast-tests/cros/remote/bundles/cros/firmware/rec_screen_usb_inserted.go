@@ -26,9 +26,10 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:    []string{"group:firmware", "firmware_unstable", "firmware_usb"},
-		Vars:    []string{"firmware.skipFlashUSB"},
-		Timeout: 2 * time.Hour,
+		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
+		Vars:         []string{"firmware.skipFlashUSB"},
+		Timeout:      2 * time.Hour,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name:    "dev",
 			Fixture: fixture.DevMode,

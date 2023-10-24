@@ -31,6 +31,7 @@ func init() {
 		Requirements: []string{"sys-fw-0022-v02"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

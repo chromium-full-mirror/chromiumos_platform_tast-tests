@@ -24,6 +24,7 @@ func init() {
 		BugComponent: "b:1032353", // Chrome Operations > Fleet > Software > OS Fleet Automation
 		Attr:         []string{"group:labqual_informational"},
 		Fixture:      fixture.NormalMode,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

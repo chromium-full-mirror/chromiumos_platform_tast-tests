@@ -44,6 +44,7 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		Timeout:      3 * time.Hour, // Allow time for the battery to potentially charge up
 		Vars:         []string{varCycles},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

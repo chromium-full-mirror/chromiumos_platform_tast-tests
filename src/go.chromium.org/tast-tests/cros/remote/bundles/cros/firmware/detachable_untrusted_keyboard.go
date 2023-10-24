@@ -43,6 +43,7 @@ func init() {
 		// To-do: Find a way to preserve firmware logs on soraka and nocturne.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable), hwdep.SkipOnModel("soraka", "nocturne")),
 		Timeout:      20 * time.Minute,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

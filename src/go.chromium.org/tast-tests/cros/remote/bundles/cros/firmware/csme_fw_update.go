@@ -53,6 +53,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Timeout:      40 * time.Minute,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name:    "normal",

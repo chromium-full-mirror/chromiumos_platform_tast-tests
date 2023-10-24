@@ -53,6 +53,7 @@ func init() {
 			"nami_fp_v2.0.3266-99b5e2c98_20201214.bin",
 			"bloonchipper_v2.0.14206-ad46faf_20220718.bin",
 			"dartmonkey_v2.0.2887-311310808_20201214.bin"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 
