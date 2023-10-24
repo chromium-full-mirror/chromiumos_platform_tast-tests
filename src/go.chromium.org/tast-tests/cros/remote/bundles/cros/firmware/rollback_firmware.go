@@ -72,11 +72,11 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 		}
 		remoteTempDir := strings.TrimSuffix(string(remoteTmpFile), "\n")
 
-		remoteTmpFile, err = h.ServoProxy.OutputCommand(ctx, false, "mktemp", "-d", "-p", "/var/tmp", "-t", "fwservoXXXXXX")
+		servoTmpFile, err := h.ServoProxy.OutputCommand(ctx, false, "mktemp", "-d", "-p", "/var/tmp", "-t", "fwservoXXXXXX")
 		if err != nil {
 			s.Fatal("Failed to create remote temp dir")
 		}
-		servoTempDir := strings.TrimSuffix(string(remoteTmpFile), "\n")
+		servoTempDir := strings.TrimSuffix(string(servoTmpFile), "\n")
 
 		cleanupContext := ctx
 		ctx, closeFunc := ctxutil.Shorten(ctx, 1*time.Minute)
@@ -244,8 +244,8 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to re-sign firmware: ", err)
 		}
 
-		activeRollbackSignFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, activeSignSection)
-		inactiveRollbackSignFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, inactiveSignSection)
+		activeRollbackSignFile := fmt.Sprintf("%s/%s.ver0.bin", remoteTempDir, activeSignSection)
+		inactiveRollbackSignFile := fmt.Sprintf("%s/%s.ver0.bin", remoteTempDir, inactiveSignSection)
 		// TODO(b/276861597): Use futility library.
 		if err := h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", rollbackOutputFile, "-x",
 			fmt.Sprintf("%s:%s", activeSignSection, activeRollbackSignFile),
