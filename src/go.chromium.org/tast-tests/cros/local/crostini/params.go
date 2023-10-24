@@ -109,12 +109,6 @@ type Param struct {
 	// configuration.
 	MinimalSet bool
 
-	// MinimalSetIsBullseye - if true and MinimalSet is true, the fixture
-	// is bullseye. For incrementally migrating MinimalSet tests to
-	// bullseye.
-	// TODO(b/283027529): Remove when all tests are migrated.
-	MinimalSetIsBullseye bool
-
 	// IsNotMainline indicates whether the test case is in
 	// group:mainline or not. This is important to get right
 	// because we can't add the "informational" attribute to
@@ -158,11 +152,6 @@ type Param struct {
 	// The fixtures will force enable the given display mode in PreTest and
 	// reset in PostTest.
 	DeviceMode devicemode.DeviceMode
-
-	// Do not attach "buster" to the test name if true.
-	// Add this for backward-compatibility to preserve names when removing
-	// MinimalSet to add bullseye coverage.
-	NoBusterInTestName bool
 
 	// IMEName is used to specify the name of the input method being tested.
 	// This name will be used in naming the test and as a test Val.
@@ -228,7 +217,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 	}
 	var itChrome = []iterator{}
 
-	for _, debianVersion := range []vm.ContainerDebianVersion{vm.DebianBuster, vm.DebianBullseye, vm.DebianBookworm} {
+	for _, debianVersion := range []vm.ContainerDebianVersion{vm.DebianBullseye, vm.DebianBookworm} {
 		for _, stable := range []bool{true, false} {
 			itChrome = append(itChrome, iterator{
 				debianVersion: debianVersion,
@@ -262,13 +251,8 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				return
 			}
 
-			if testCase.MinimalSet && testCase.MinimalSetIsBullseye && i.debianVersion != vm.DebianBullseye {
-				// The minimal set is Bullseye, opted-in.
-				return
-			}
-
-			if testCase.MinimalSet && !testCase.MinimalSetIsBullseye && i.debianVersion != vm.DebianBuster {
-				// The minimal set is currently Buster.
+			if testCase.MinimalSet && i.debianVersion != vm.DebianBullseye {
+				// The minimal set is currently Bullseye.
 				return
 			}
 
@@ -278,7 +262,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			}
 
 			name := testCase.Name
-			if !testCase.MinimalSet && (i.debianVersion == vm.DebianBullseye || i.debianVersion == vm.DebianBookworm || !testCase.NoBusterInTestName) {
+			if !testCase.MinimalSet && (i.debianVersion == vm.DebianBullseye || i.debianVersion == vm.DebianBookworm) {
 				// If we're generating a minimal set
 				// then the debian version is always
 				// the same and we don't need to
@@ -307,12 +291,10 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			}
 
 			// _unstable tests can never be CQ critical.
-			// Buster support is deprecated, therefore the tests (other than MinimalSet) are informational.
 			var extraAttr []string
 			if !testCase.IsNotMainline && ((!i.stable && canBeCritical) ||
 				bt == browser.TypeLacros ||
-				testCase.DeviceMode == devicemode.TabletMode ||
-				((i.debianVersion == vm.DebianBuster) && !testCase.MinimalSet)) {
+				testCase.DeviceMode == devicemode.TabletMode) {
 				extraAttr = append(extraAttr, "informational")
 
 				// TODO(b/269175095): Promote Lacros tests to critical after stabilizing for two weeks.

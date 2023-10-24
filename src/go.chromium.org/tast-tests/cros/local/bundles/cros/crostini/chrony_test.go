@@ -20,10 +20,9 @@ import (
 // MinimalSet is used because this test does not actually involve the container.
 func TestChronyParams(t *testing.T) {
 	params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-		Timeout:              2 * time.Minute,
-		MinimalSet:           true,
-		MinimalSetIsBullseye: true,
-		UseFixture:           true,
+		Timeout:    2 * time.Minute,
+		MinimalSet: true,
+		UseFixture: true,
 	}})
 	genparams.Ensure(t, "chrony.go", params)
 }

@@ -19,11 +19,10 @@ import (
 
 func TestDebianUpgradeAlertParams(t *testing.T) {
 	params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-		Timeout:              14 * time.Minute,
-		MinimalSet:           true,
-		MinimalSetIsBullseye: true,
-		SelfManagedInstall:   false,
-		UseFixture:           true,
+		Timeout:            14 * time.Minute,
+		MinimalSet:         true,
+		SelfManagedInstall: false,
+		UseFixture:         true,
 	}})
 	genparams.Ensure(t, "debian_upgrade_alert.go", params)
 }

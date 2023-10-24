@@ -18,9 +18,8 @@ import (
 
 func TestSecurityParams(t *testing.T) {
 	params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-		MinimalSet:           true,
-		MinimalSetIsBullseye: true,
-		UseFixture:           true,
+		MinimalSet: true,
+		UseFixture: true,
 	}})
 	genparams.Ensure(t, "cpu_vulnerabilities_crostini.go", params)
 }

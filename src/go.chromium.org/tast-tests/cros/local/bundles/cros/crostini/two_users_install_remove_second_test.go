@@ -19,10 +19,9 @@ import (
 
 func TestTwoUsersInstallRemoveSecondParams(t *testing.T) {
 	params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-		Timeout:              14 * time.Minute,
-		SelfManagedInstall:   true,
-		MinimalSet:           true,
-		MinimalSetIsBullseye: true,
+		Timeout:            14 * time.Minute,
+		SelfManagedInstall: true,
+		MinimalSet:         true,
 	}})
 	genparams.Ensure(t, "two_users_install_remove_second.go", params)
 }
