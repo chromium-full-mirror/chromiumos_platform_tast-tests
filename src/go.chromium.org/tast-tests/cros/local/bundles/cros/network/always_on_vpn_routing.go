@@ -125,12 +125,13 @@ func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 	defer conn.Cleanup(cleanupCtx)
 
 	// Use set up host VPN as service and change the Always-on VPN mode.
+	vpnMode := s.Param().(alwaysOnVPNRoutingTestCase).mode
+	s.Logf("Setting always-on-vpn mode in shill to %s and waiting for VPN connected", vpnMode)
 	profile, err := m.ActiveProfile(ctx)
 	if err != nil {
 		s.Fatal("Failed to get active profile: ", err)
 	}
 	// We use a test profile here so don't need to reset the value.
-	vpnMode := s.Param().(alwaysOnVPNRoutingTestCase).mode
 	if err := profile.SetAlwaysOnVPN(ctx, vpnMode, conn.Service()); err != nil {
 		s.Fatal("Failed to set Always-on VPN properties: ", err)
 	}
@@ -152,6 +153,7 @@ func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 	}
 
 	// Disconnect VPN and block all traffic in VPN netNS, make sure VPN does not re-connect.
+	s.Log("VPN has been connected. Disconnect and block the VPN connection and then verify the routing")
 	if err := conn.Disconnect(ctx); err != nil {
 		s.Fatal("Failed to disconnect from VPN: ", err)
 	}

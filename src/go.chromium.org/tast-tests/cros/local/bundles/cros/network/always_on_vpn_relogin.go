@@ -145,11 +145,12 @@ func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 	}()
 
 	// Use set up host VPN as service and change the Always-on VPN mode.
+	vpnMode := s.Param().(alwaysOnVPNReloginTestCase).mode
+	s.Logf("Setting always-on-vpn mode in shill to %s and waiting for VPN connected", vpnMode)
 	profile, err := m.ActiveProfile(ctx)
 	if err != nil {
 		s.Fatal("Failed to get active profile: ", err)
 	}
-	vpnMode := s.Param().(alwaysOnVPNReloginTestCase).mode
 	if err := profile.SetAlwaysOnVPN(ctx, vpnMode, service); err != nil {
 		s.Fatal("Failed to set Always-on VPN properties: ", err)
 	}
@@ -183,6 +184,8 @@ func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 	// Reset server variable here to avoid the defer function above to be call
 	// again on the same server object.
 	server = nil
+
+	s.Log("VPN has been connected. Re-login Chrome and then check the VPN state again")
 
 	// Restart UI to logout.
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
