@@ -249,6 +249,24 @@ func (r *Runner) DeleteIPRoute(ctx context.Context, iface string, ip net.IP) err
 	return nil
 }
 
+// RouteIPVia adds ip route to the interface (iface).
+func (r *Runner) RouteIPVia(ctx context.Context, iface string, ip, viaIP net.IP) error {
+	args := []string{"route", "replace", "table", "255", ip.String(), "dev", iface, "via", viaIP.String()}
+	if err := r.cmd.Run(ctx, "ip", args...); err != nil {
+		return errors.Wrapf(err, "failed to route IP address on %s", iface)
+	}
+	return nil
+}
+
+// DeleteIPViaRoute deletes ip route from the interface (iface).
+func (r *Runner) DeleteIPViaRoute(ctx context.Context, iface string, ip, viaIP net.IP) error {
+	args := []string{"route", "del", "table", "255", ip.String(), "dev", iface, "via", viaIP.String()}
+	if err := r.cmd.Run(ctx, "ip", args...); err != nil {
+		return errors.Wrapf(err, "failed to delete IP address route on %s", iface)
+	}
+	return nil
+}
+
 // FlushIP flushes IP setting on iface.
 func (r *Runner) FlushIP(ctx context.Context, iface string) error {
 	if err := r.cmd.Run(ctx, "ip", "addr", "flush", iface); err != nil {
