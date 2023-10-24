@@ -287,8 +287,7 @@ func init() {
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_p"},
 			// x86-64 ARC: pyro(reef-Intel), sand(reef-Intel), snappy(reef-Intel)
-			// arm ARC: elm(elm) - 1 model exception with all other devices either reached AUE or migrated to R.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("pyro", "sand", "snappy", "elm")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("pyro", "sand", "snappy")),
 			Val: testParam{
 				vmEnabled:                     false,
 				androidPackage:                "android-container-pi",
@@ -296,7 +295,7 @@ func init() {
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				dexOptCacheGen:                false,
-				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "arm-native"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
