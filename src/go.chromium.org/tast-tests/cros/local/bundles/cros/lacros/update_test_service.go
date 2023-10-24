@@ -26,7 +26,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/versionutil"
-	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	lacrosservice "go.chromium.org/tast-tests/cros/services/cros/lacros"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -85,16 +84,6 @@ func (uts *UpdateTestService) VerifyUpdate(ctx context.Context, req *lacrosservi
 	}
 	expectedLacrosPath := filepath.Join(expectedLacrosDir, "chrome")
 
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get user's Downloads path")
-	}
-
-	// Start a screen record before launching Lacros for troubleshooting a failure in launching Lacros.
-	hasRecordStarted := true
-	if err := lacrosfaillog.StartRecord(ctx, tconn, downloadsPath); err != nil {
-		hasRecordStarted = false
-	}
 	hasError := true
 	ctxForFailLog := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
@@ -102,7 +91,6 @@ func (uts *UpdateTestService) VerifyUpdate(ctx context.Context, req *lacrosservi
 	defer func(ctx context.Context) {
 		// Save faillogs and screen record only when it fails or returns with an error.
 		lacrosfaillog.SaveIf(ctx, tconn, func() bool { return hasError })
-		lacrosfaillog.StopRecordAndSaveOnError(ctx, tconn, hasRecordStarted, downloadsPath, func() bool { return hasError })
 	}(ctxForFailLog)
 
 	l, err := lacros.Launch(ctx, tconn)

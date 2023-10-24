@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chrome/version"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/lacros/provision"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/lacros/update"
 	lacrosupdate "go.chromium.org/tast-tests/cros/remote/bundles/cros/lacros/update"
 	lacrosservice "go.chromium.org/tast-tests/cros/services/cros/lacros"
 
@@ -98,7 +97,6 @@ func UpdateStatefulToRootfs(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Minute)
 	defer cancel()
 	defer func(ctx context.Context) {
-		update.SaveLogsFromDut(ctx, s.DUT(), s.OutDir())
 		if err := lacrosupdate.ClearLacrosUpdate(ctx, utsClient); err != nil {
 			s.Log("Failed to clean up provisioned Lacros: ", err)
 		}
