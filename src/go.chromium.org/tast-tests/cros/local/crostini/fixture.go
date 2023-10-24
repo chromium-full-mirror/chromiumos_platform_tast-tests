@@ -457,14 +457,11 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err != nil {
 		s.Log("Can't record initial restart metrics: ", err)
 	}
-
-	skippedInstall := false
 	if checkKeepState(s) && terminaDiskExists(ownerID) {
 		s.Log("keepState attempting to start the existing VM and container by launching Terminal")
 		if err = f.launchExitTerminal(ctx); err != nil {
 			s.Fatal("KeepState error: ", err)
 		}
-		skippedInstall = true
 	} else {
 		// Install Crostini.
 		iOptions := GetInstallerOptions(s, f.preData.debianVersion, f.preData.container == largeContainer, f.cr.NormalizedUser())
@@ -499,23 +496,6 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to verify automatic updates are disabled: ", err)
 	}
 
-	if skippedInstall {
-		if err := f.cont.RestoreSnapshot(ctx, snapshotName, f.logDir); err != nil {
-			s.Fatal("KeepState failed to restore snapshot: ", err)
-		}
-	} else {
-		if err := f.cont.CreateSnapshot(ctx, snapshotName, s.OutDir()); err != nil {
-			s.Fatal("Failed to take snapshot before test: ", err)
-		}
-	}
-
-	// Launching Terminal after restart container by lxc is needed to
-	// ensure a bunch of things work, e.g., mouting files in FilesApp.
-	// See b/271947202.
-	if err := f.launchExitTerminal(ctx); err != nil {
-		s.Fatal("Failed to re-launch terminal and exit after creating snapshot: ", err)
-	}
-
 	// If the wayland backend is used, the fonctconfig cache will be
 	// generated the first time the app starts. On a low-end device, this
 	// can take a long time and timeout the app executions below.
@@ -532,6 +512,16 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, f.cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to get user's Downloads path: ", err)
+	}
+
+	if err := f.cont.CreateSnapshot(ctx, snapshotName, s.OutDir()); err != nil {
+		s.Fatal("Failed to take snapshot before test: ", err)
+	}
+	// Launching Terminal after restart container by lxc is needed to
+	// ensure a bunch of things work, e.g., mouting files in FilesApp.
+	// See b/271947202.
+	if err := f.launchExitTerminal(ctx); err != nil {
+		s.Fatal("Failed to re-launch terminal and exit after creating snapshot: ", err)
 	}
 
 	if err := f.cr.ResetState(ctx); err != nil {
