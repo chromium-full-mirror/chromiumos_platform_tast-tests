@@ -157,7 +157,7 @@ func init() {
 				},
 			}, {
 				Name:      "ash_blocked",
-				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				ExtraAttr: []string{"group:mainline"},
 				Fixture:   fixture.ChromePolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeAsh,
