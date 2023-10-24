@@ -27,6 +27,7 @@ func CbxFeatures() []string {
 		"TimeOfDayScreenSaver",
 		"TimeOfDayWallpaper",
 		"FeatureAwareDeviceDemoMode",
+		"VideoConference",
 	}
 }
 
