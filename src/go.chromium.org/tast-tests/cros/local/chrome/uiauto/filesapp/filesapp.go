@@ -344,16 +344,16 @@ func (f *FilesApp) EnsureFileGone(fileName string, duration time.Duration) uiaut
 
 // FileExists calls ui.Exists to check whether a folder or a file exists in the Files App.
 func (f *FilesApp) FileExists(fileName string) uiauto.Action {
-	return f.ui.Exists(file(fileName))
+	return f.Exists(file(fileName))
 }
 
 // IsFileSelected returns an Action that returns `nil` when the file exists.
 // When it doesn't exist it returns an error. This is useful to use with some polling functions e.g.:
-// f.ui.LeftClikcUntil(aFinder, f.IsFileSelected("leFile"))
+// f.LeftClickUntil(aFinder, f.IsFileSelected("leFile"))
 func (f *FilesApp) IsFileSelected(fileName string) uiauto.Action {
 	return func(ctx context.Context) error {
 		// The ARIA label for the file row starts with the file name and is followed by " Size" and the content of the other colunmns.
-		nodeInfo, err := f.ui.Info(ctx, nodewith.Role(role.ListBoxOption).NameStartingWith(fileName+" Size"))
+		nodeInfo, err := f.Info(ctx, nodewith.Role(role.ListBoxOption).NameStartingWith(fileName+" Size"))
 		if err != nil {
 			return err
 		}
@@ -371,7 +371,7 @@ func (f *FilesApp) IsFileSelected(fileName string) uiauto.Action {
 func (f *FilesApp) SelectFile(fileName string) uiauto.Action {
 	return uiauto.Combine("select file",
 		f.WaitForFile(fileName),
-		f.ui.LeftClickUntil(file(fileName), f.IsFileSelected(fileName)),
+		f.LeftClickUntil(file(fileName), f.IsFileSelected(fileName)),
 	)
 }
 
@@ -386,7 +386,7 @@ func (f *FilesApp) OpenContextMenu(fileName string) uiauto.Action {
 	// sized before it is shown and positioned.
 	return uiauto.Combine(fmt.Sprintf("OpenContextMenu(%s)", fileName),
 		f.SelectFile(fileName),
-		f.ui.RightClickUntil(file(fileName), f.WaitUntilExists(nodewith.Role(role.MenuItem).First())),
+		f.RightClickUntil(file(fileName), f.WaitUntilExists(nodewith.Role(role.MenuItem).First())),
 	)
 }
 
@@ -638,7 +638,7 @@ func (f *FilesApp) ToggleAvailableOfflineForFile(fileName string) uiauto.Action 
 	toggleOfflineErrorOkButton := nodewith.Name("OK").Role(role.Button)
 	// Just after startup there's a period of time where making Docs/Sheets/Slides files available offline errors out
 	// as DriveFS has not established communication with the Docs Offline extension, so retry if the error appears.
-	return f.ui.RetryUntil(
+	return f.RetryUntil(
 		uiauto.Combine(fmt.Sprintf("Try toggle Available offline for %q", fileName),
 			f.SelectFile(fileName),
 			f.LeftClick(nodewith.Name("Available offline").Role(role.ToggleButton)),
@@ -673,7 +673,7 @@ func (f *FilesApp) DragAndDropFiles(listFileNames []string, dropPoint coords.Poi
 		// Focus back to FilesApp after drop.
 		defer f.LeftClick(nodewith.Role(role.ListBox))(ctx)
 
-		srcPoint, err := f.ui.Location(ctx, file(listFileNames[0]))
+		srcPoint, err := f.Location(ctx, file(listFileNames[0]))
 		if err != nil {
 			return errors.Wrap(err, "failed to find the location for the file")
 		}

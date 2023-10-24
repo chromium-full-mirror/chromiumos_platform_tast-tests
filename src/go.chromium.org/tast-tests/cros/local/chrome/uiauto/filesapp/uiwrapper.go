@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -54,6 +55,11 @@ func (f *FilesApp) Info(ctx context.Context, finder *nodewith.Finder) (*uiauto.N
 // NodesInfo calls ui.NodesInfo scoping the finder to the Files App.
 func (f *FilesApp) NodesInfo(ctx context.Context, finder *nodewith.Finder) ([]uiauto.NodeInfo, error) {
 	return f.ui.NodesInfo(ctx, finder.FinalAncestor(WindowFinder(f.appID)))
+}
+
+// Location calls ui.Location scoping the finder to the Files App.
+func (f *FilesApp) Location(ctx context.Context, finder *nodewith.Finder) (*coords.Rect, error) {
+	return f.ui.Location(ctx, finder.FinalAncestor(WindowFinder(f.appID)))
 }
 
 // Exists calls ui.Exists scoping the finder to the Files App.
@@ -104,6 +110,11 @@ func (f *FilesApp) DoubleClick(finder *nodewith.Finder) uiauto.Action {
 // LeftClickUntil calls ui.LeftClickUntil scoping the finder to the Files App.
 func (f *FilesApp) LeftClickUntil(finder *nodewith.Finder, condition uiauto.Action) uiauto.Action {
 	return f.ui.LeftClickUntil(finder.FinalAncestor(WindowFinder(f.appID)), condition)
+}
+
+// RightClickUntil calls ui.LeftClickUntil scoping the finder to the Files App.
+func (f *FilesApp) RightClickUntil(finder *nodewith.Finder, condition uiauto.Action) uiauto.Action {
+	return f.ui.RightClickUntil(finder.FinalAncestor(WindowFinder(f.appID)), condition)
 }
 
 // FocusAndWait calls ui.FocusAndWait scoping the finder to the Files App.
