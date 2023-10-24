@@ -22,7 +22,6 @@ func init() {
 		Desc:         "Verify it is possible to go through a one-time purchase flow in the DGAPI2 test app",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
-			"jshikaram@chromium.org",
 		},
 		BugComponent: "crbug:Platform>Apps>Foundation>Stores",
 		Attr:         []string{"group:hw_agnostic"}, // TODO(crbug.com/1441386) reintroduce the test once sample app is restored

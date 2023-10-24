@@ -22,7 +22,6 @@ func init() {
 		Desc:         "Verify DGAPI2 test app returns expected details",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
-			"jshikaram@chromium.org",
 		},
 		BugComponent: "crbug:Platform>Apps>Foundation>Stores",
 		Attr:         []string{"group:hw_agnostic"}, // TODO(crbug.com/1441386) reintroduce the test once sample app is restored

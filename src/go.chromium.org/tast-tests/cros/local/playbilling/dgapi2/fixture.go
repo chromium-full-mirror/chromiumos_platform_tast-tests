@@ -23,8 +23,6 @@ func init() {
 		Impl: &playBillingDgapi2Fixture{},
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
-			"jshikaram@chromium.org",
-			"ashpakov@google.com", // until Sept 2022
 		},
 		Parent:          "arcBootedForPlayBilling",
 		SetUpTimeout:    30 * time.Second,

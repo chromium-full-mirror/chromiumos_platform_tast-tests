@@ -19,7 +19,6 @@ func init() {
 		Desc:         "Verify the ARC Payments overlay appears and can be navigated",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
-			"jshikaram@chromium.org",
 		},
 		BugComponent: "crbug:Platform>Apps>Foundation>Stores",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
