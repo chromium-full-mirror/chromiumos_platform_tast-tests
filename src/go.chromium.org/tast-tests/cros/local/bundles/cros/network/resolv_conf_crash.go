@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
-	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -81,7 +80,7 @@ func ResolvConfCrash(ctx context.Context, s *testing.State) {
 	// If the main body of the test times out, we still want to reserve a few
 	// seconds to allow for our cleanup code to run.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
 	defer cancel()
 
 	// Shill-related setup.
@@ -130,6 +129,14 @@ func ResolvConfCrash(ctx context.Context, s *testing.State) {
 	}
 
 	// Trigger the crash.
+	// Cleanup by restarting DNS proxy to avoid unexpected bad state after
+	// the test. For instance, upon shill restart, DNS proxy needs to
+	// re-connect to shill failing other tests on slow devices.
+	defer func() {
+		if err := dns.RestartDNSProxy(cleanupCtx); err != nil {
+			testing.ContextLog(cleanupCtx, "Failed to start DNS proxy: ", err)
+		}
+	}()
 	if params.shillCrash {
 		if err := testexec.CommandContext(ctx, "pkill", "-9", shill.JobName).Run(testexec.DumpLogOnError); err != nil {
 			s.Fatal("Failed to restart shill: ", err)
@@ -152,11 +159,8 @@ func ResolvConfCrash(ctx context.Context, s *testing.State) {
 		}
 		// This results in zombie child processes.
 		defer func() {
-			if err := testexec.CommandContext(cleanupCtx, "pkill", dns.ProxyProcName).Run(testexec.DumpLogOnError); err != nil {
+			if err := testexec.CommandContext(cleanupCtx, "pkill", "-9", dns.ProxyProcName).Run(testexec.DumpLogOnError); err != nil {
 				testing.ContextLog(cleanupCtx, "Failed to stop unwanted DNS proxy processes: ", err)
-			}
-			if err := upstart.RestartJob(ctx, dns.ProxyJobName); err != nil {
-				testing.ContextLog(cleanupCtx, "Failed to start DNS proxy: ", err)
 			}
 		}()
 	} else if params.systemProxyCrash {

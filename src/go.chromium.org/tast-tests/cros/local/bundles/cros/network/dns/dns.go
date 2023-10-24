@@ -524,7 +524,7 @@ func (e *Env) Cleanup(ctx context.Context) {
 	}
 	if e.cleanupCerts != nil {
 		e.cleanupCerts(ctx)
-		if err := restartDNSProxy(ctx); err != nil {
+		if err := RestartDNSProxy(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to restart DNS proxy: ", err)
 		}
 	}
@@ -566,7 +566,7 @@ func NewEnv(ctx context.Context, pool *subnet.Pool) (env *Env, err error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to setup certificates")
 	}
-	if err := restartDNSProxy(ctx); err != nil {
+	if err := RestartDNSProxy(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to restart DNS proxy")
 	}
 

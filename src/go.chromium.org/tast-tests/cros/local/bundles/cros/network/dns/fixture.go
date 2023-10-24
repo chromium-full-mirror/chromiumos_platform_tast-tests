@@ -54,7 +54,7 @@ func (f *dnsProxyFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 
-	if err := restartDNSProxy(ctx); err != nil {
+	if err := RestartDNSProxy(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to restart DNS proxy: ", err)
 	}
 	if d, err := isDisabled(ctx); err != nil {
@@ -84,7 +84,7 @@ func (f *dnsProxyFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if _, err := chrome.New(ctx, chrome.DisableFeatures("DisableDnsProxy"), chrome.ARCDisabled()); err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	if err := restartDNSProxy(ctx); err != nil {
+	if err := RestartDNSProxy(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to restart DNS proxy: ", err)
 	}
 	if d, err := isDisabled(ctx); err != nil {

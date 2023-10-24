@@ -333,8 +333,8 @@ func waitForDNSProxyProcesses(ctx context.Context) error {
 	return nil
 }
 
-// restartDNSProxy stops dnsproxyd processes and re-start them.
-func restartDNSProxy(ctx context.Context) error {
+// RestartDNSProxy stops dnsproxyd processes and re-start them.
+func RestartDNSProxy(ctx context.Context) error {
 	if err := testexec.CommandContext(ctx, "initctl", "restart", "dns-proxy").Run(); err != nil {
 		return errors.Wrap(err, "failed to restart DNS proxy")
 	}
