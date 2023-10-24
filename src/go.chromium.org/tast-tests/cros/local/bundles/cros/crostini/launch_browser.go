@@ -59,7 +59,6 @@ func init() {
 				Val:               browser.TypeAsh,
 			}, {
 				Name:              "bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBookworm",

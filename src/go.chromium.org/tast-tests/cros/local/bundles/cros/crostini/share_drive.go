@@ -69,7 +69,6 @@ func init() {
 				Timeout:           7 * time.Minute,
 			}, {
 				Name:              "bookworm_stable_gaia",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBookwormGaia",

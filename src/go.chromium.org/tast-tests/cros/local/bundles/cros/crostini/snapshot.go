@@ -53,7 +53,6 @@ func init() {
 				Timeout:           6 * time.Minute,
 			}, {
 				Name:              "bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBookworm",

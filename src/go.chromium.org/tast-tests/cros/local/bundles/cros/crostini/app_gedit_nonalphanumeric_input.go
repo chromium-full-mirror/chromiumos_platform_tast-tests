@@ -46,7 +46,6 @@ func init() {
 				Timeout:           15 * time.Minute,
 			}, {
 				Name:              "bookworm_clamshell_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"crostini_app", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniAppStable,
 				Fixture:           "crostiniBookwormLargeContainerClamshell",

@@ -75,7 +75,6 @@ func init() {
 				},
 			}, {
 				Name:              "gtk3_wayland_bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_gtk3_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -146,7 +145,6 @@ func init() {
 				},
 			}, {
 				Name:              "gtk3_x11_bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_gtk3_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -170,7 +168,6 @@ func init() {
 				},
 			}, {
 				Name:              "gtk4_wayland_bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_gtk4_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -194,7 +191,6 @@ func init() {
 				},
 			}, {
 				Name:              "gtk4_x11_bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_gtk4_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -265,7 +261,6 @@ func init() {
 				},
 			}, {
 				Name:              "qt5_x11_bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_qt5_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -337,7 +332,7 @@ func init() {
 				},
 			}, {
 				Name:              "qt5_wayland_bookworm_stable",
-				ExtraAttr:         []string{"informational", "informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"informational"},
 				ExtraData:         []string{"toolkit_qt5_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -349,7 +344,7 @@ func init() {
 				},
 			}, {
 				Name:              "qt5_wayland_bookworm_unstable",
-				ExtraAttr:         []string{"informational", "informational"},
+				ExtraAttr:         []string{"informational"},
 				ExtraData:         []string{"toolkit_qt5_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
@@ -361,7 +356,6 @@ func init() {
 				},
 			}, {
 				Name:              "qt6_x11_bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_qt6_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -385,7 +379,6 @@ func init() {
 				},
 			}, {
 				Name:              "qt6_wayland_bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_qt6_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -456,7 +449,6 @@ func init() {
 				},
 			}, {
 				Name:              "tkinter_bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_tkinter_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,

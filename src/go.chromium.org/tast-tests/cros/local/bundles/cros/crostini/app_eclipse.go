@@ -48,7 +48,7 @@ func init() {
 				Timeout:           15 * time.Minute,
 			}, {
 				Name:              "bookworm_tablet_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"crostini_app", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniAppStable,
 				Fixture:           "crostiniBookwormLargeContainerTablet",
@@ -75,7 +75,6 @@ func init() {
 				Timeout:           15 * time.Minute,
 			}, {
 				Name:              "bookworm_clamshell_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"crostini_app", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniAppStable,
 				Fixture:           "crostiniBookwormLargeContainerClamshell",

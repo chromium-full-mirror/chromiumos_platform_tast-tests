@@ -319,18 +319,15 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 
 			// _unstable tests can never be CQ critical.
 			// Buster support is deprecated, therefore the tests (other than MinimalSet) are informational.
-			// Bookworm support is experimental.
 			var extraAttr []string
 			if !testCase.IsNotMainline && ((!i.stable && canBeCritical) ||
 				bt == browser.TypeLacros ||
 				testCase.DeviceMode == devicemode.TabletMode ||
-				((i.debianVersion == vm.DebianBuster || i.debianVersion == vm.DebianBookworm) && !testCase.MinimalSet)) {
+				((i.debianVersion == vm.DebianBuster) && !testCase.MinimalSet)) {
 				extraAttr = append(extraAttr, "informational")
 
 				// TODO(b/269175095): Promote Lacros tests to critical after stabilizing for two weeks.
-				// TODO(b/305579517): Promote bookworm tests to critical.
-				if bt == browser.TypeLacros ||
-					(i.debianVersion == vm.DebianBookworm && i.stable) {
+				if bt == browser.TypeLacros {
 					extraAttr = append(extraAttr, "group:criticalstaging")
 				}
 			}

@@ -9,6 +9,7 @@ package crostini
 
 // See src/go.chromium.org/tast-tests/cros/local/crostini/params.go for more documentation
 
+/* TODO(b/304170307): Mali-G57 crashes on bookworm.
 import (
 	"testing"
 
@@ -32,3 +33,4 @@ func TestGpuEnabledParams(t *testing.T) {
 		}})
 	genparams.Ensure(t, "gpu_enabled.go", params)
 }
+*/

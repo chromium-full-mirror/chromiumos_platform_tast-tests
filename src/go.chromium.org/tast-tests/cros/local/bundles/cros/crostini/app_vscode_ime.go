@@ -54,7 +54,6 @@ func init() {
 				Val:               "arabic",
 			}, {
 				Name:              "bookworm_clamshell_arabic_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"crostini_app", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniAppStable,
 				Fixture:           "crostiniBookwormLargeContainerClamshell",
@@ -85,7 +84,6 @@ func init() {
 				Val:               "english",
 			}, {
 				Name:              "bookworm_clamshell_english_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"crostini_app", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniAppStable,
 				Fixture:           "crostiniBookwormLargeContainerClamshell",
@@ -116,7 +114,6 @@ func init() {
 				Val:               "japanese",
 			}, {
 				Name:              "bookworm_clamshell_japanese_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"crostini_app", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniAppStable,
 				Fixture:           "crostiniBookwormLargeContainerClamshell",

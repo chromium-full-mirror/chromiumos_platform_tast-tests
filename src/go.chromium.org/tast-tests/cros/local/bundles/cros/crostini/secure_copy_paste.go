@@ -102,7 +102,6 @@ func init() {
 				},
 			}, {
 				Name:              "copy_wayland_bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"secure_copy.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -179,7 +178,6 @@ func init() {
 				},
 			}, {
 				Name:              "copy_x11_bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"secure_copy.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -256,7 +254,6 @@ func init() {
 				},
 			}, {
 				Name:              "paste_wayland_bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"secure_paste.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -333,7 +330,6 @@ func init() {
 				},
 			}, {
 				Name:              "paste_x11_bookworm_stable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"secure_paste.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
