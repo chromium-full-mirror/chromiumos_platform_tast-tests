@@ -6,6 +6,8 @@ package platform
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"time"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/metrics/github.com/google/perfetto/perfetto_proto"
@@ -96,7 +98,11 @@ func LocalPerfettoTBMTracedProbes(ctx context.Context, s *testing.State) {
 
 	// Start a trace session using the perfetto command line tool.
 	traceConfigPath := s.DataPath(tracing.TBMTracedProbesConfigFile)
-	sess, err := tracing.StartSession(ctx, traceConfigPath)
+	traceDataPath := filepath.Join(s.OutDir(), "perfetto-trace.pb")
+	sess, err := tracing.StartSession(ctx, traceConfigPath,
+		tracing.WithTraceDataPath(traceDataPath),
+		tracing.WithCompression())
+
 	if err != nil {
 		s.Fatal("Failed to start tracing: ", err)
 	}
@@ -121,4 +127,9 @@ func LocalPerfettoTBMTracedProbes(ctx context.Context, s *testing.State) {
 
 	processCPUMetric(metrics.GetAndroidCpu(), s)
 	processMemMetric(metrics.GetAndroidMem(), s)
+
+	// We don't need the trace data for debugging on test success.
+	if err := os.Remove(traceDataPath); err != nil {
+		s.Error("Failed to remove the trace data file: ", err)
+	}
 }
