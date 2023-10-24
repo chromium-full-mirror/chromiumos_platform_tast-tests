@@ -176,6 +176,28 @@ func init() {
 					},
 				},
 			},
+
+			// Huge block sizes.
+			{
+				Name: "rpbp_p4096blocks",
+				Val: &lifecycle.Param{
+					Playback: lifecycle.PlaybackWithBlockSize(2, 9, 4096),
+					Capture:  lifecycle.CaptureFloop(0, 4, 7),
+					Checks: []lifecycle.Checker{
+						lifecycle.CheckCaptureSample(5, 6),
+					},
+				},
+			},
+			{
+				Name: "rpbp_p8192blocks",
+				Val: &lifecycle.Param{
+					Playback: lifecycle.PlaybackWithBlockSize(2, 9, 8192),
+					Capture:  lifecycle.CaptureFloop(0, 4, 7),
+					Checks: []lifecycle.Checker{
+						lifecycle.CheckCaptureSample(5, 6),
+					},
+				},
+			},
 		},
 	})
 }
