@@ -61,6 +61,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/devicemode"
 	"go.chromium.org/tast-tests/cros/local/vm"
+
+	"golang.org/x/exp/slices"
 )
 
 // Param specifies how each set of crostini tests should be generated.
@@ -229,17 +231,6 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 	var itLacros = []iterator{{debianVersion: vm.DebianBullseye, stable: true}, {debianVersion: vm.DebianBookworm, stable: true}}
 
 	for _, testCase := range baseCases {
-		// Check here if it's possible for any iteration of
-		// this test to be critical, i.e. if it doesn't
-		// already have the "informational" attribute, and is
-		// a mainline test.
-		canBeCritical := true
-		for _, attr := range testCase.ExtraAttr {
-			if attr == "informational" {
-				canBeCritical = false
-			}
-		}
-
 		if testCase.IMEName != "" {
 			testCase.MinimumContainerVersion = vm.DebianBullseye
 			testCase.DeviceMode = devicemode.ClamshellMode
@@ -290,11 +281,18 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				name = combineName(name, "gaia")
 			}
 
-			// _unstable tests can never be CQ critical.
 			var extraAttr []string
-			if !testCase.IsNotMainline && ((!i.stable && canBeCritical) ||
-				bt == browser.TypeLacros ||
-				testCase.DeviceMode == devicemode.TabletMode) {
+
+			// Check if the test is explicitly marked as informational.
+			alreadyInformational := slices.Contains(testCase.ExtraAttr, "informational")
+
+			// Unstable test variants are informational.
+			// Lacros tests are informational.
+			// Tablet mode tests are informational.
+			informational := !i.stable || bt == browser.TypeLacros || testCase.DeviceMode == devicemode.TabletMode
+			// Informational status is only applicable to mainline tests.
+			// Don't add informational status if the test is already informational.
+			if !testCase.IsNotMainline && !alreadyInformational && informational {
 				extraAttr = append(extraAttr, "informational")
 
 				// TODO(b/269175095): Promote Lacros tests to critical after stabilizing for two weeks.
