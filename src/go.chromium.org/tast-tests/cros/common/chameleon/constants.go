@@ -45,6 +45,12 @@ const (
 	// PortTypeUSBAudioOut is the PortType for a USB audio-out chameleon port.
 	PortTypeUSBAudioOut PortType = "USBOut"
 
+	// PortTypeUSBMFGAudioIn is the PortType for a USB audio-out chameleon port.
+	PortTypeUSBMFGAudioIn PortType = "USBMFGAudioIn"
+
+	// PortTypeUSBMFGAudioOut is the PortType for a USB audio-out chameleon port.
+	PortTypeUSBMFGAudioOut PortType = "USBMFGAudioOut"
+
 	// PortTypeUSBKeyboard is the PortType for a USB keyboard chameleon port.
 	PortTypeUSBKeyboard PortType = "USBKeyboard"
 
@@ -189,6 +195,8 @@ var chameleonV2PortIDToPortTypeMap = map[PortID]PortType{
 	31: PortTypeBLEPhone,
 	32: PortTypeBluetoothAudio,
 	33: PortTypeBLEFastPair,
+	34: PortTypeUSBMFGAudioIn,
+	35: PortTypeUSBMFGAudioOut,
 }
 
 // IntsToPortIDs returns an int array as a PortID array.

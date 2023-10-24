@@ -16,22 +16,22 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// PlaybackInitSleepDuration is the time to buffer after playback started
+const PlaybackInitSleepDuration = 500 * time.Millisecond
+
+// RecordStopDuration is the time to stop recording before playback ends
+const RecordStopDuration = 500 * time.Millisecond
+
 // PlayFileByPortType plays an audio stream (specified by a token) to a
-// designated port in Chameleon. It plays for playbackDuration seconds and then stop.
+// designated port in Chameleon.
 // The token can be obtained by CopyFileToChameleon(), and
 // a) decoupled how the audio data is internally stored in chameleon with how
 // it's going to be played
 // b) eliminated the usage of SSH connection, which will be compatible with v3.
 // See more at b/262479811 and b/234744284
-func PlayFileByPortType(ctx context.Context, chameleond chameleon.Chameleond, token string, portType chameleon.PortType, playbackDuration time.Duration) (err error) {
-	ctxCleanUp := ctx
+func PlayFileByPortType(ctx context.Context, chameleond chameleon.Chameleond, token string, portType chameleon.PortType, audioFormat *chameleon.AudioDataFormat) error {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-	defer func(ctx context.Context) {
-		if tempErr := chameleond.DeleteFileInChameleon(ctx, token); tempErr != nil {
-			err = tempErr
-		}
-	}(ctxCleanUp)
 
 	portID, err := chameleond.FetchSupportedPortIDByType(ctx, portType, 0)
 	if err != nil {
@@ -52,22 +52,27 @@ func PlayFileByPortType(ctx context.Context, chameleond chameleon.Chameleond, to
 	if err = chameleond.Plug(ctx, portID); err != nil {
 		return errors.Wrap(err, "unable to plug the port")
 	}
-	if err = chameleond.SetUSBDriverPlaybackConfigs(ctx, chameleon.SupportedAudioDataFormat); err != nil {
+	if err = chameleond.SetUSBDriverPlaybackConfigs(ctx, audioFormat); err != nil {
 		return errors.Wrap(err, "failed to set the USB driver playback config")
 	}
 
-	if err = chameleond.StartPlayingAudioWithToken(ctx, portID, token, chameleon.SupportedAudioDataFormat); err != nil {
+	if err = chameleond.StartPlayingAudioWithToken(ctx, portID, token, audioFormat); err != nil {
 		return errors.Wrap(err, "failed when calling StartPlayingAudioWithToken")
 	}
-	defer func(ctx context.Context) {
-		if tempErr := chameleond.StopPlayingAudio(ctx, portID); tempErr != nil {
-			err = tempErr
-		}
-	}(ctxCleanUp)
 
-	if err = testing.Sleep(ctx, playbackDuration); err != nil {
-		return errors.Wrap(err, "failed while sampling: ctx could be expired")
+	// GoBigSleepLint wait chameleon to start playing audio
+	testing.Sleep(ctx, PlaybackInitSleepDuration)
+
+	return nil
+}
+
+// CalculateRecordDuration used playbackDuration to calculate the require time
+// to sleep while waiting for recording.
+// If recordDuration is too small, it default the duration to 1 second.
+func CalculateRecordDuration(playbackDuration time.Duration) time.Duration {
+	recordDuration := playbackDuration - PlaybackInitSleepDuration - RecordStopDuration
+	if recordDuration < time.Second {
+		recordDuration = time.Second
 	}
-
-	return err
+	return recordDuration
 }

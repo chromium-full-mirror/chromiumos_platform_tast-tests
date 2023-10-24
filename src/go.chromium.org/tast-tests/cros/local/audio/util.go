@@ -14,6 +14,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -303,5 +304,73 @@ func CheckFrequency(ctx context.Context, data []int16, sampleRate, expectedFreq,
 	} else if incorrectSlices > incorrectLimit {
 		return errors.Errorf("incorrect slices count over limit, incorrect slices: %v, limit: %v", incorrectSlices, incorrectLimit)
 	}
+	return nil
+}
+
+// CheckRecordedFrequency similar to CheckFrequency but uses DUT's check_recorded_frequency.py script
+// TODO(b/309390542): Don't use this function unless migrating from autotest.
+// This script has functional partiy with autotest method of checking frequency.
+// The audioFormat.frequencies contains the frequency to check. for example [440, 440] means
+// 440 frequency in first channel and 440 frequency in second channel.
+func CheckRecordedFrequency(
+	ctx context.Context,
+	recordingFile *os.File,
+	audioFormat *TestRawData,
+) error {
+
+	if audioFormat.BitsPerSample != 16 && audioFormat.BitsPerSample != 32 {
+		return errors.Errorf("CheckRecordedFrequency only supports bits per sample of 16 or 32 got %d", audioFormat.BitsPerSample)
+	}
+
+	if audioFormat.Channels == 0 {
+		return errors.Errorf("Missing argument channels %d", audioFormat.Channels)
+	}
+
+	if audioFormat.Rate == 0 {
+		return errors.Errorf("Missing argument rate %d", audioFormat.Rate)
+	}
+
+	if audioFormat.Frequencies == nil {
+		return errors.New("Missing argument frequencies")
+	}
+
+	args := []string{
+		"-t", recordingFile.Name(),
+		// format 16 -> S16_LE and 32 -> S32_LE
+		"-f", "S" + strconv.Itoa(audioFormat.BitsPerSample) + "_LE",
+		"-c", strconv.Itoa(audioFormat.Channels),
+		"-r", strconv.Itoa(audioFormat.Rate),
+	}
+
+	// golden file frequencies
+	args = append(args, "-g")
+	for _, f := range audioFormat.Frequencies {
+		args = append(args, strconv.Itoa(f))
+	}
+
+	// frequency map usually directly ie. playing channel i -> recording channel i
+	args = append(args, "-m")
+	for i := range audioFormat.Frequencies {
+		args = append(args, strconv.Itoa(i))
+	}
+
+	cmd := testexec.CommandContext(ctx, "check_recorded_frequency.py", args...)
+
+	cmdOutputBytes, err := cmd.CombinedOutput(testexec.DumpLogOnError)
+	cmdOutput := string(cmdOutputBytes)
+	testing.ContextLogf(ctx, "Output for check_recorded_frequency.py: %s", cmdOutput)
+
+	if err != nil {
+		if cmdOutput != "" {
+			if strings.Contains(cmdOutput, "is away from golden") {
+				errorMsg := cmdOutput[strings.LastIndex(cmdOutput, ":")+1:]
+				return errors.Wrapf(err, "Frequency does not match: %s", errorMsg)
+			}
+			return errors.Wrap(err, "Command check_recorded_frequency.py returns error")
+		}
+		return errors.Wrap(err, "Unable to run command check_recorded_frequency.py")
+	}
+	testing.ContextLogf(ctx, "Obtained frequencies: %s", cmdOutput)
+
 	return nil
 }
