@@ -165,7 +165,7 @@ func init() {
 				},
 			}, {
 				Name:              "lacros_blocked",
-				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.LacrosPolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
@@ -174,7 +174,7 @@ func init() {
 				},
 			}, {
 				Name:      "ash_warn_proceeded",
-				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				ExtraAttr: []string{"group:mainline", "informational"},
 				Fixture:   fixture.ChromePolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
 					browserType: browser.TypeAsh,
@@ -182,7 +182,7 @@ func init() {
 				},
 			}, {
 				Name:              "lacros_warn_proceeded",
-				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.LacrosPolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{

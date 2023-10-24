@@ -38,7 +38,7 @@ func init() {
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome", "vm_host", "dlc"},
 		HardwareDeps: crostini.CrostiniStable,
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),
 		},

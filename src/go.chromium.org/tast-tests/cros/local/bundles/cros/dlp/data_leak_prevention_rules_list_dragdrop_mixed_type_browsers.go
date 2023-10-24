@@ -66,7 +66,7 @@ func init() {
 			},
 		}, {
 			Name:      "blocked_lacros_to_ash",
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 			Val: dragdrop.MixedBrowsersParams{
 				Source: dragdrop.Chrome,
 			},
