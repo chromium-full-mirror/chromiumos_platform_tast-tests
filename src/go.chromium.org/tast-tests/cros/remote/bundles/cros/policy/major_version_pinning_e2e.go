@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
@@ -70,6 +71,7 @@ func init() {
 				Value: "screenplay-04b1d4dc-1363-46f5-a453-7937fae60bba",
 			},
 		},
+		Fixture: fixture.UpdateEngine, // Ensures update engine is ready and resets its status.
 		Params: []testing.Param{{
 			Name:    "lts",
 			Timeout: majorVersionPinningE2ETimeout,
