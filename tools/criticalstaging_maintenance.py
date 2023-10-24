@@ -36,6 +36,7 @@ import time
 import logging
 
 PATTERN = re.compile(r'(?<!^)(?=[A-Z])')
+REG_MATCH_MULT_LINE = r"^.*{}.*$\n".format('"group:criticalstaging",')
 FUNC_MATCH = 'func init() {'
 COMMIT_MESSAGE = """
 This CL is Automatically generated. This tests has been detected by Criticalstaging maintenance script which already in criticalStaging group more than 21 builds (14 is max limit)
@@ -168,6 +169,7 @@ def replace_data(data):
     # Order matters here.
     data = data.replace(', "group:criticalstaging"', "")
     data = data.replace('"group:criticalstaging", ', "")
+    data = re.sub(REG_MATCH_MULT_LINE, "",data, flags=re.MULTILINE)
     data = data.replace('"group:criticalstaging"', "")
     return data
 
