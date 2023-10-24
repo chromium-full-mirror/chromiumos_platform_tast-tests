@@ -37,6 +37,7 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f, s)
 	i := ti50.NewCrOSImage(b)
+	gscProps := b.GscProperties()
 
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
@@ -60,7 +61,9 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	// Test forwarding on each of three ports.
 	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, true)
 	testForwarding(ctx, s, f, th, r, ti50.UartAP, false, false)
-	testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, true)
+	if gscProps.HasFpmcuUart() {
+		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, true)
+	}
 
 	// Simulate the AP processor being turned on, in order to enable AP forwarding.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
@@ -68,7 +71,9 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	// Test forwarding on each of three ports.
 	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, true)
 	testForwarding(ctx, s, f, th, r, ti50.UartAP, true, true)
-	testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, true)
+	if gscProps.HasFpmcuUart() {
+		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, true)
+	}
 
 	//
 	// Boot Ti50 simulating a uServo being connected simultaneously with CCD.  Verify that
@@ -84,7 +89,9 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	// Test forwarding on each of three ports.
 	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, false)
 	testForwarding(ctx, s, f, th, r, ti50.UartAP, false, false)
-	testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, false)
+	if gscProps.HasFpmcuUart() {
+		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, false)
+	}
 
 	// Simulate the AP processor being turned on, in order to enable AP forwarding.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
@@ -92,7 +99,9 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	// Test forwarding on each of three ports.
 	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, false)
 	testForwarding(ctx, s, f, th, r, ti50.UartAP, true, false)
-	testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, false)
+	if gscProps.HasFpmcuUart() {
+		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, false)
+	}
 }
 
 func testForwarding(ctx context.Context, s *testing.State, f *fixture.Value, th utils.FirmwareTestingHelper, r *rand.Rand, port ti50.UartName, expectUartToUsb, expectUsbToUart bool) {

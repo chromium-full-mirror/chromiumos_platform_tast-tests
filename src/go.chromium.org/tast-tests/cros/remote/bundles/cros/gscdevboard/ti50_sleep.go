@@ -192,7 +192,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	s.Log("Simulating AP SPI request")
 	tpmHandle := b.Tpm(ctx, ti50.TpmBusSpi)
 	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
-	expectedDidVidValue := b.ExpectedDidVidValue(ctx)
+	expectedDidVidValue := b.GscProperties().ExpectedDidVidValue()
 	if !bytes.Equal(didVid, expectedDidVidValue) {
 		s.Error("Unexpected TPM DID_VID immediately after wakeup: ", didVid)
 	}

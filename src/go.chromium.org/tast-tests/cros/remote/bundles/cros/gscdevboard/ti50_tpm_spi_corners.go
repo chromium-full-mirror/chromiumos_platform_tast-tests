@@ -47,7 +47,7 @@ func Ti50TpmSpiCorners(ctx context.Context, s *testing.State) {
 	// Now read DIDVID register again.  This should cause previously enqueued status register
 	// data to be discarded from the Dauntless SPI fifo.
 	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
-	expectedDidVidValue := b.ExpectedDidVidValue(ctx)
+	expectedDidVidValue := b.GscProperties().ExpectedDidVidValue()
 	if !bytes.Equal(didVid, expectedDidVidValue) {
 		s.Error("Unexpected TPM DID_VID after partial SPI transaction: ", didVid)
 	}

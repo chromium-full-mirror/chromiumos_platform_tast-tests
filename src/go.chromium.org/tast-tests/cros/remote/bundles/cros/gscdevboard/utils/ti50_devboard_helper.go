@@ -119,6 +119,15 @@ func NewDevboardHelper(f *fixture.Value, state FirmwareTestingHelperDelegate) De
 	return DevboardHelper{f.DevBoard(), state, f.TestbedType}
 }
 
+// GscProperties returns an object that can be queried about varios aspects of the GSC currently
+// under test.
+func (h DevboardHelper) GscProperties() GscProperties {
+	if h.TestbedType == ti50.GscHavenShield {
+		return &gscCr50{}
+	}
+	return &gscTi50{}
+}
+
 // GpioSet sets a well-defined gpio to a value, and if there are any errors, set a fatal
 // condition on the test state
 func (h DevboardHelper) GpioSet(ctx context.Context, g ti50.GpioName, val bool) {
@@ -258,15 +267,6 @@ func (h DevboardHelper) Tpm(ctx context.Context, bus ti50.TpmBus) *TpmHelper {
 	return &TpmHelper{ti50.NewTpmHandle(ctx, h, bus), h}
 }
 
-// ExpectedDidVidValue returns the value expected when reading the TPM DID_VID register (differs
-// between Cr50 and Ti50).
-func (h DevboardHelper) ExpectedDidVidValue(ctx context.Context) []byte {
-	if h.TestbedType == ti50.GscHavenShield {
-		return ti50.TpmCr50DidVidValue
-	}
-	return ti50.TpmTi50DidVidValue
-}
-
 // ResetAndTpmStartup resets the board with I2C or SPI TPM strap, reads TpmRegDidVid, then sends
 // tpm2.Startup command.
 func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImage, bus ti50.TpmBus, straps ...ti50.GpioStrap) *TpmHelper {
@@ -301,7 +301,7 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 
 	// Try reading DidVid a few times until Ti50 is ready.
 	const maxDidVidAttempts = 3
-	expectedDidVidValue := h.ExpectedDidVidValue(ctx)
+	expectedDidVidValue := h.GscProperties().ExpectedDidVidValue()
 	for r := 1; r <= maxDidVidAttempts; r++ {
 		// Avoid using tpmHandle.ReadRegister(), as doing so would instantly fail the test
 		// in case of timeout or other errors, instead directly call lower-level method.
