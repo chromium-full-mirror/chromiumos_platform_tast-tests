@@ -29,7 +29,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "playBillingDgapi2Fixture",
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},

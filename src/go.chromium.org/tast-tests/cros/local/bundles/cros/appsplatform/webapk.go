@@ -60,7 +60,7 @@ func init() {
 		},
 		Params: []testing.Param{{
 			Val:               browser.TypeAsh,
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
 			Val:               browser.TypeAsh,
@@ -68,7 +68,7 @@ func init() {
 		}, {
 			Name:              "lacros",
 			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
+			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 		}, {
 			Name:              "lacros_vm",
 			Val:               browser.TypeLacros,

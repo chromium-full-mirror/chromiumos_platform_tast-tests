@@ -46,7 +46,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "arcBooted",
 			Val:               browser.TypeAsh,
 		}, {
@@ -56,7 +56,7 @@ func init() {
 			Val:               browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
+			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Fixture:           "lacrosWithArcBooted",
 			Val:               browser.TypeLacros,
 		}, {

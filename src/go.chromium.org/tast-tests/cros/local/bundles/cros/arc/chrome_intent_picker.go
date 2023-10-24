@@ -44,7 +44,7 @@ func init() {
 			Val:               browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
+			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Fixture:           "lacrosWithArcBooted",
 			Val:               browser.TypeLacros,
 		}, {
