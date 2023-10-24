@@ -71,6 +71,8 @@ const (
 const (
 	// GpioTi50ResetL is reset pin to GSC (active low)
 	GpioTi50ResetL GpioName = "RESET"
+	// GpioTi50SysRstL is the SYS reset signal to the AP (active low)
+	GpioTi50SysRstL GpioName = "SYS_RST_L"
 	// GpioTi50PltRstL is the PLT reset signal to GSC (active low)
 	GpioTi50PltRstL GpioName = "PLT_RST_L"
 	// GpioTi50EcRstL is the EC reset signal (active low)
