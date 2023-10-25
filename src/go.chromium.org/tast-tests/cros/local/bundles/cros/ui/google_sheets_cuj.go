@@ -72,6 +72,12 @@ func init() {
 				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithBatterySaver",
 			},
+			{
+				Name:              "partial_low_end_mode",
+				ExtraAttr:         []string{"cuj_experimental"},
+				Val:               browser.TypeAsh,
+				Fixture:           "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
+			},
 		},
 	})
 }

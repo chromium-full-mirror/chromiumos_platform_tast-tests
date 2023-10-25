@@ -419,6 +419,23 @@ func init() {
 				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffectsLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
+			{
+				Name:      "docs_partial_low_end_mode",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					bots:        []int{1, 3, 15},
+					layout:      googlemeet.TiledLayout,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					zoomOut:     true,
+					effects:     true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture:           "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
+			},
 			// 4p Meet variants.
 			{
 				Name:      "4p_present_notes_split",
