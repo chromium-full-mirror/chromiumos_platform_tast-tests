@@ -93,6 +93,7 @@ type FloatControl string
 
 // These are the Servo controls with floating-point values.
 const (
+	ChargerVoltageMV          FloatControl = "ppchg5_mv"
 	BatteryTemperatureCelsius FloatControl = "battery_tempc"
 	VBusVoltage               FloatControl = "vbus_voltage"
 	VBusPower                 FloatControl = "vbus_power"
