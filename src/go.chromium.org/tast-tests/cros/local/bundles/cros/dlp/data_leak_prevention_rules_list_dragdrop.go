@@ -53,7 +53,7 @@ func init() {
 		Data:         []string{"draggable_link.html", "text_2.html", "editable_text_box.html"},
 		Params: []testing.Param{{
 			Name:      "ash_blocked",
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val:       browser.TypeAsh,
 		}, {
