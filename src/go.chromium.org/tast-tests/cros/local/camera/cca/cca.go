@@ -620,22 +620,23 @@ func (a *App) PreviewFrame(ctx context.Context) (*Frame, error) {
 	return &Frame{&f}, nil
 }
 
-// TakeSinglePhoto takes a photo and save to default location.
+// TakeSinglePhoto takes a photo and saves it to the default location.
 func (a *App) TakeSinglePhoto(ctx context.Context, timerState TimerState) ([]os.FileInfo, error) {
-	var patterns []*regexp.Regexp
+	return a.TakeSinglePhotoAndVerifySavedFiles(ctx, timerState, []*regexp.Regexp{PhotoPattern})
+}
 
-	isPortrait, err := a.State(ctx, string(Portrait))
+// TakePortraitPhoto takes a photo in portrait mode and saves it to the default location.
+func (a *App) TakePortraitPhoto(ctx context.Context, timerState TimerState, hasHumanFace bool) ([]os.FileInfo, error) {
+	if hasHumanFace {
+		return a.TakeSinglePhotoAndVerifySavedFiles(ctx, timerState, []*regexp.Regexp{portraitRefPattern, portraitPattern})
+	}
+	return a.TakeSinglePhotoAndVerifySavedFiles(ctx, timerState, []*regexp.Regexp{portraitRefPattern})
+}
+
+// TakeSinglePhotoAndVerifySavedFiles verifies the saved photos files.
+func (a *App) TakeSinglePhotoAndVerifySavedFiles(ctx context.Context, timerState TimerState, patterns []*regexp.Regexp) ([]os.FileInfo, error) {
+	err := a.SetTimerOption(ctx, timerState)
 	if err != nil {
-		return nil, err
-	}
-	if isPortrait {
-		patterns = append(patterns, portraitRefPattern)
-		patterns = append(patterns, portraitPattern)
-	} else {
-		patterns = append(patterns, PhotoPattern)
-	}
-
-	if err = a.SetTimerOption(ctx, timerState); err != nil {
 		return nil, err
 	}
 	start := time.Now()
