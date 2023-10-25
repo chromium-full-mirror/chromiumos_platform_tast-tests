@@ -81,7 +81,6 @@ func init() {
 			// Lacros test logs in so it needs more time.
 			Timeout:           chrome.MinLoginTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
 			ExtraSoftwareDeps: []string{"lacros"}, // There's no such thing as lacros_internal.
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "loose",
 			Val: chromeCrashEarlyParams{
