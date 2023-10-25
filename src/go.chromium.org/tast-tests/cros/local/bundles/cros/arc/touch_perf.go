@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/inputlatency"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/testing"
 )
@@ -93,6 +94,9 @@ func TouchPerf(ctx context.Context, s *testing.State) {
 
 	if err := act.SetWindowState(ctx, tconn, arc.WindowStateFullscreen); err != nil {
 		s.Fatal("Could not maximize test app: ", err)
+	}
+	if err := ash.WaitForARCAppWindowState(ctx, tconn, appName, ash.WindowStateFullscreen); err != nil {
+		s.Fatal("The test app is not in fullscreen: ", err)
 	}
 
 	if err := inputlatency.WaitForCPUStabilized(ctx); err != nil {
