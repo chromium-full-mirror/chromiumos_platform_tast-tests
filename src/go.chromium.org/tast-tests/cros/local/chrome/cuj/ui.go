@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
@@ -29,6 +30,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/touch"
 	"go.chromium.org/tast-tests/cros/local/input"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -536,4 +538,56 @@ func LogWindowMismatch(ctx context.Context, initialWindows, finalWindows []*ash.
 	completeLog := strings.Join(logs, "; ")
 	testing.ContextLog(ctx, "Found window mismatch: ", completeLog)
 	return completeLog
+}
+
+// WaitForValidAccountInCookieJar opens the "signin-internals/" page
+// and verifies if there is a valid account in the cookie jar.
+func WaitForValidAccountInCookieJar(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) (retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	conn, err := br.NewConn(ctx, chrome.SigninInternalsURL)
+	if err != nil {
+		return errors.Wrapf(err, "failed to open %q page", chrome.SigninInternalsURL)
+	}
+	defer func(ctx context.Context) {
+		hasErr := func() bool { return retErr != nil }
+		faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(
+			ctx, hasErr, tconn, "account_dump")
+		if err := conn.CloseTarget(ctx); err != nil {
+			testing.ContextLogf(ctx, "Failed to close %q page: %v", chrome.SigninInternalsURL, err)
+			// If the account page is not closed, it's likely to cause the test to fail.
+			// Return error if failed to close the page.
+			if !hasErr() {
+				retErr = errors.Wrapf(err, "failed to close %q page", chrome.SigninInternalsURL)
+			}
+		}
+		conn.Close()
+	}(cleanupCtx)
+
+	// Account profile could be in the browser, but not in the cookie Jar yet.
+	// Before the account being sync-ed to the cookie Jar, we will see the
+	// account signin issue when opening Google applications.
+	// See crbug/1375314 for details.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// In the chrome://signin-internals page, look for the "Accounts in
+		// Cookie Jar" table and check if there is a valid account.
+		const script = `() => {
+			let rows = document.querySelectorAll("#cookie-info tr");
+			// The first row is the header. Start from the second row.
+			for (i = 1; i< rows.length; i++){
+				let row = rows[i];
+				let validColumn = row.querySelector('[jscontent="valid"]');
+				if (validColumn !== null && validColumn.textContent === "Valid") {
+					return;
+				}
+			}
+			throw new Error("no valid account in cookie jar");
+		}`
+		return conn.Call(ctx, nil, script)
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
+		return errors.Wrap(err, "failed to wait for accounts to be synced to Cookie Jar")
+	}
+	return nil
 }

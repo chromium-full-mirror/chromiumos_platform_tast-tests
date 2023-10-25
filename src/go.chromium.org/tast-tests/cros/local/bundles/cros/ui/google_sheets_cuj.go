@@ -73,10 +73,10 @@ func init() {
 				Fixture:   "loggedInToCUJUserWithBatterySaver",
 			},
 			{
-				Name:              "partial_low_end_mode",
-				ExtraAttr:         []string{"cuj_experimental"},
-				Val:               browser.TypeAsh,
-				Fixture:           "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
+				Name:      "partial_low_end_mode",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val:       browser.TypeAsh,
+				Fixture:   "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
 			},
 		},
 	})
@@ -107,7 +107,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	sheetConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.SigninInternalsURL)
+	sheetConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
 	if err != nil {
 		s.Fatal("Failed to setup Chrome: ", err)
 	}
@@ -192,30 +192,10 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the primary display info: ", err)
 	}
 
-	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
-	// Account profile could be in the browser, but not in the cookie Jar yet.
-	// Before the account being sync-ed to the cookie Jar, we will see the
-	// account signin issue when opening Google applications.
-	// See crbug/1375314 for details.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// In the chrome://signin-internals page, look for the "Accounts in
-		// Cookie Jar" table and check if there is a valid account.
-		const script = `() => {
-			let rows = document.querySelectorAll("#cookie-info tr");
-			// The first row is the header. Start from the second row.
-			for (i = 1; i< rows.length; i++){
-				let row = rows[i];
-				let validColumn = row.querySelector('[jscontent="valid"]');
-				if (validColumn != null && validColumn.textContent == "Valid") {
-					return;
-				}
-			}
-			throw new Error("no valid account in cookie jar");
-		}`
-		return sheetConn.Call(ctx, nil, script)
-	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
-		s.Fatal("Failed to wait for accounts to be synced to Cookie Jar: ", err)
+	if err := cuj.WaitForValidAccountInCookieJar(ctx, br, tconn); err != nil {
+		s.Fatal("Failed to wait for valid account in cookie jar: ", err)
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {

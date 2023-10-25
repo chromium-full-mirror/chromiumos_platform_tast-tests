@@ -434,7 +434,7 @@ func init() {
 					effects:     true,
 					browserType: browser.TypeAsh,
 				},
-				Fixture:           "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
+				Fixture: "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
 			},
 			// 4p Meet variants.
 			{
@@ -1093,6 +1093,10 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			s.Error("Failed to stop recorder: ", err)
 		}
 	}()
+
+	if err := cuj.WaitForValidAccountInCookieJar(ctx, br, tconn); err != nil {
+		s.Fatal("Failed to wait for valid account in cookie jar: ", err)
+	}
 
 	// Open chrome://webrtc-internals now so it will collect data on the meeting's streams.
 	webrtcInternals, err := recorder.NewConn(ctx, br, "WebRTC_Internals", "chrome://webrtc-internals", browser.WithNewWindow())

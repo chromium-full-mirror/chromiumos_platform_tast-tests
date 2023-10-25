@@ -55,12 +55,12 @@ func init() {
 			Fixture:           "loggedInToCUJUserLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 		},
-		{
-			Name:              "partial_low_end_mode",
-			ExtraAttr:         []string{"cuj_experimental"},
-			Val:               browser.TypeAsh,
-			Fixture:           "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
-		}},
+			{
+				Name:      "partial_low_end_mode",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val:       browser.TypeAsh,
+				Fixture:   "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
+			}},
 	})
 }
 
@@ -144,7 +144,11 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 	}
 	defer pc.Close(ctx)
 
-	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+
+	if err := cuj.WaitForValidAccountInCookieJar(ctx, br, tconn); err != nil {
+		s.Fatal("Failed to wait for valid account in cookie jar: ", err)
+	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
 		// Open Google Slides file.
