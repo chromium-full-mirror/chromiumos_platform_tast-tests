@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -34,7 +35,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SharedManagedGuestSessionCleanup,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test chrome.login.endSharedSession Extension API properly performs cleanup",
 		Contacts: []string{
 			"chromeos-commercial-identity@google.com",
@@ -56,12 +57,21 @@ func init() {
 			pci.SearchFlag(&policy.DeviceRestrictedManagedGuestSessionEnabled{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.ExtensionInstallForcelist{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.RestrictedManagedGuestSessionExtensionCleanupExemptList{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityJS),
 			{
 				Key: "feature_id",
 				// Clean shared MGS on clinician logout (COM_HEALTH_CUJ2_TASK1_WF1).
 				Value: "screenplay-3422ba87-53ab-4a6b-9ee2-135ad7eca0f5",
 			},
 		},
+		Params: []testing.Param{{
+			Name: "ash",
+			Val:  browser.TypeAsh,
+		}, {
+			Name:              "lacros",
+			Val:               browser.TypeLacros,
+			ExtraSoftwareDeps: []string{"lacros"},
+		}},
 	})
 }
 
@@ -94,9 +104,7 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 	// ID for the Test API extension.
 	testAPIExtensionID := "behllobkkfkfnphdnhnkndlbkcpglgmj"
 
-	m, cr, err := mgs.New(
-		ctx,
-		fdms,
+	opts := []mgs.Option{
 		mgs.Accounts(accountID),
 		mgs.AddPublicAccountPolicies(accountID, []policy.Policy{
 			&policy.ExtensionInstallForcelist{
@@ -114,8 +122,20 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 				Val: true,
 			},
 		}),
-		mgs.ExtraChromeOptions(chrome.ExtraArgs("--force-devtools-available")),
-	)
+		mgs.ExtraChromeOptions(
+			chrome.ExtraArgs("--force-devtools-available"),
+			chrome.LacrosExtraArgs("--force-devtools-available"),
+		),
+	}
+
+	bt := s.Param().(browser.Type)
+	if bt == browser.TypeLacros {
+		opts = append(opts, mgs.AddPublicAccountPolicies(accountID, []policy.Policy{
+			&policy.LacrosAvailability{Val: "lacros-only"},
+		}))
+	}
+
+	m, cr, err := mgs.New(ctx, fdms, opts...)
 	if err != nil {
 		s.Error("Failed to start Chrome on Signin screen with MGS accounts: ", err)
 	}
