@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/vm"
@@ -24,14 +25,15 @@ const VirtioFSCacheTimeoutSecond = 1
 
 // Option holds parameters for a guest storage.
 type Option struct {
-	Kind     string
-	Tag      string
-	cache    string
-	caseFold bool
+	Kind            string
+	Tag             string
+	cache           string
+	caseFold        bool
+	negativeTimeout time.Duration
 }
 
 // NewOption creates a new instance of Option.
-func NewOption(kind, cache string, caseFold bool) (Option, error) {
+func NewOption(kind, cache string, caseFold bool, negativeTimeout int) (Option, error) {
 	var opt Option
 	opt.Kind = kind
 	if strings.HasPrefix(kind, "block") {
@@ -40,6 +42,7 @@ func NewOption(kind, cache string, caseFold bool) (Option, error) {
 		opt.Tag = "shared"
 		opt.cache = cache
 		opt.caseFold = caseFold
+		opt.negativeTimeout = time.Duration(negativeTimeout) * time.Second
 	} else if kind == "scsi" {
 		opt.Tag = "/dev/sda"
 	} else if kind == "pmem" {
@@ -123,7 +126,16 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, block, script string, opt 
 		storageOpt = vm.RWDisks(blockOption)
 	} else if opt.Kind == "virtiofs" || opt.Kind == "virtiofs_dax" {
 		storageOpt = vm.SharedDir(vm.SharedDirParam{
-			Src: shared, Tag: opt.Tag, FsType: "fs", Cache: opt.cache, Timeout: VirtioFSCacheTimeoutSecond, Writeback: true, DAX: opt.Kind == "virtiofs_dax", CaseFold: opt.caseFold})
+			Src:             shared,
+			Tag:             opt.Tag,
+			FsType:          "fs",
+			Cache:           opt.cache,
+			Timeout:         VirtioFSCacheTimeoutSecond,
+			Writeback:       true,
+			DAX:             opt.Kind == "virtiofs_dax",
+			CaseFold:        opt.caseFold,
+			NegativeTimeout: uint(opt.negativeTimeout.Seconds()),
+		})
 	} else if opt.Kind == "p9" {
 		storageOpt = vm.SharedDir(vm.SharedDirParam{
 			Src: shared, Tag: opt.Tag, FsType: "p9", Timeout: 5, Writeback: false, DAX: false})

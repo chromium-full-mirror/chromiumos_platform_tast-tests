@@ -41,10 +41,11 @@ var enableTraceCmdVar = testing.RegisterVarString(
 )
 
 type manyFilesParams struct {
-	kind     string
-	kernel   string
-	cache    string
-	caseFold bool
+	kind            string
+	kernel          string
+	cache           string
+	caseFold        bool
+	negativeTimeout int
 }
 
 func init() {
@@ -69,10 +70,11 @@ func init() {
 			{
 				Name: "block_arcvm",
 				Val: manyFilesParams{
-					kernel:   "arcvm",
-					kind:     "block",
-					cache:    "",
-					caseFold: false,
+					kernel:          "arcvm",
+					kind:            "block",
+					cache:           "",
+					caseFold:        false,
+					negativeTimeout: 0,
 				},
 				Fixture:           "chromeLoggedIn",
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -80,10 +82,11 @@ func init() {
 			{
 				Name: "block_lvm_arcvm",
 				Val: manyFilesParams{
-					kernel:   "arcvm",
-					kind:     "block_lvm",
-					cache:    "",
-					caseFold: false,
+					kernel:          "arcvm",
+					kind:            "block_lvm",
+					cache:           "",
+					caseFold:        false,
+					negativeTimeout: 0,
 				},
 				Fixture:           "chromeLoggedIn",
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -91,10 +94,11 @@ func init() {
 			{
 				Name: "virtiofs_arcvm",
 				Val: manyFilesParams{
-					kernel:   "arcvm",
-					kind:     "virtiofs",
-					cache:    "auto",
-					caseFold: false,
+					kernel:          "arcvm",
+					kind:            "virtiofs",
+					cache:           "auto",
+					caseFold:        false,
+					negativeTimeout: 0,
 				},
 				Fixture:           "chromeLoggedIn",
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -102,10 +106,11 @@ func init() {
 			{
 				Name: "virtiofs_casefold_arcvm",
 				Val: manyFilesParams{
-					kernel:   "arcvm",
-					kind:     "virtiofs",
-					cache:    "auto",
-					caseFold: true,
+					kernel:          "arcvm",
+					kind:            "virtiofs",
+					cache:           "auto",
+					caseFold:        true,
+					negativeTimeout: 0,
 				},
 				Fixture:           "chromeLoggedIn",
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -113,10 +118,11 @@ func init() {
 			{
 				Name: "virtiofs_cached_arcvm",
 				Val: manyFilesParams{
-					kernel:   "arcvm",
-					kind:     "virtiofs",
-					cache:    "always",
-					caseFold: false,
+					kernel:          "arcvm",
+					kind:            "virtiofs",
+					cache:           "always",
+					caseFold:        false,
+					negativeTimeout: 0,
 				},
 				Fixture:           "chromeLoggedIn",
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -124,10 +130,23 @@ func init() {
 			{
 				Name: "virtiofs_cached_casefold_arcvm",
 				Val: manyFilesParams{
-					kernel:   "arcvm",
-					kind:     "virtiofs",
-					cache:    "always",
-					caseFold: true,
+					kernel:          "arcvm",
+					kind:            "virtiofs",
+					cache:           "always",
+					caseFold:        true,
+					negativeTimeout: 0,
+				},
+				Fixture:           "chromeLoggedIn",
+				ExtraSoftwareDeps: []string{"android_vm"},
+			},
+			{
+				Name: "virtiofs_cached_negativecache_arcvm",
+				Val: manyFilesParams{
+					kernel:          "arcvm",
+					kind:            "virtiofs",
+					cache:           "always",
+					caseFold:        false,
+					negativeTimeout: 3600,
 				},
 				Fixture:           "chromeLoggedIn",
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -135,10 +154,11 @@ func init() {
 			{
 				Name: "block_termina",
 				Val: manyFilesParams{
-					kernel:   "termina",
-					kind:     "block",
-					cache:    "",
-					caseFold: false,
+					kernel:          "termina",
+					kind:            "block",
+					cache:           "",
+					caseFold:        false,
+					negativeTimeout: 0,
 				},
 				Fixture:           "vmDLC",
 				ExtraSoftwareDeps: []string{"dlc"},
@@ -146,10 +166,11 @@ func init() {
 			{
 				Name: "block_lvm_termina",
 				Val: manyFilesParams{
-					kernel:   "termina",
-					kind:     "block_lvm",
-					cache:    "",
-					caseFold: false,
+					kernel:          "termina",
+					kind:            "block_lvm",
+					cache:           "",
+					caseFold:        false,
+					negativeTimeout: 0,
 				},
 				Fixture:           "vmDLC",
 				ExtraSoftwareDeps: []string{"dlc"},
@@ -157,10 +178,11 @@ func init() {
 			{
 				Name: "virtiofs_termina",
 				Val: manyFilesParams{
-					kernel:   "termina",
-					kind:     "virtiofs",
-					cache:    "auto",
-					caseFold: false,
+					kernel:          "termina",
+					kind:            "virtiofs",
+					cache:           "auto",
+					caseFold:        false,
+					negativeTimeout: 0,
 				},
 				Fixture:           "vmDLC",
 				ExtraSoftwareDeps: []string{"dlc"},
@@ -168,10 +190,11 @@ func init() {
 			{
 				Name: "virtiofs_casefold_termina",
 				Val: manyFilesParams{
-					kernel:   "termina",
-					kind:     "virtiofs",
-					cache:    "auto",
-					caseFold: true,
+					kernel:          "termina",
+					kind:            "virtiofs",
+					cache:           "auto",
+					caseFold:        true,
+					negativeTimeout: 0,
 				},
 				Fixture:           "vmDLC",
 				ExtraSoftwareDeps: []string{"dlc"},
@@ -179,10 +202,11 @@ func init() {
 			{
 				Name: "virtiofs_cached_termina",
 				Val: manyFilesParams{
-					kernel:   "termina",
-					kind:     "virtiofs",
-					cache:    "always",
-					caseFold: false,
+					kernel:          "termina",
+					kind:            "virtiofs",
+					cache:           "always",
+					caseFold:        false,
+					negativeTimeout: 0,
 				},
 				Fixture:           "vmDLC",
 				ExtraSoftwareDeps: []string{"dlc"},
@@ -190,10 +214,23 @@ func init() {
 			{
 				Name: "virtiofs_cached_casefold_termina",
 				Val: manyFilesParams{
-					kernel:   "termina",
-					kind:     "virtiofs",
-					cache:    "always",
-					caseFold: true,
+					kernel:          "termina",
+					kind:            "virtiofs",
+					cache:           "always",
+					caseFold:        true,
+					negativeTimeout: 0,
+				},
+				Fixture:           "vmDLC",
+				ExtraSoftwareDeps: []string{"dlc"},
+			},
+			{
+				Name: "virtiofs_cached_negativecache_termina",
+				Val: manyFilesParams{
+					kernel:          "termina",
+					kind:            "virtiofs",
+					cache:           "always",
+					caseFold:        false,
+					negativeTimeout: 3600,
 				},
 				Fixture:           "vmDLC",
 				ExtraSoftwareDeps: []string{"dlc"},
@@ -294,7 +331,7 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	ud, err := ioutil.TempDir(rootCryptDir, "tast.vm.ManyFiles.")
 	defer os.RemoveAll(ud)
 
-	opt, err := storage.NewOption(p.kind, p.cache, p.caseFold)
+	opt, err := storage.NewOption(p.kind, p.cache, p.caseFold, p.negativeTimeout)
 	if err != nil {
 		s.Fatal("Failed to create storage option: ", err)
 	}
@@ -361,6 +398,8 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	cmd.Stdout = output
 	cmd.Stderr = output
 
+	s.Log("Start crosvm command: ", cmd)
+
 	if err := cmd.Start(); err != nil {
 		s.Fatal("Failed to run crosvm: ", err)
 	}
@@ -407,7 +446,6 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to wait for 'READY' or 'COMPLETE': ", err)
 		}
-
 		// "COMPLETE" means that the all test cases completed
 		if strings.HasPrefix(line, prefixComplete) {
 			s.Log("All the guest test cases are completed")

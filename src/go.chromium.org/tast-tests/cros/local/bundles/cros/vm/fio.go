@@ -444,7 +444,7 @@ func Fio(ctx context.Context, s *testing.State) {
 	job := p.job
 	fioOutput := filepath.Join(s.OutDir(), "fio-output.json")
 
-	opt, err := storage.NewOption(kind, "auto", false)
+	opt, err := storage.NewOption(kind, "auto", false, 0)
 	if err != nil {
 		s.Fatal("Failed to create storage option: ", err)
 	}

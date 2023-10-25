@@ -15,13 +15,19 @@ import (
 
 func TestManyFiles(t *testing.T) {
 	type paramData struct {
-		Name     string
-		Kind     string
-		Kernel   string
-		Cache    string
-		CaseFold bool
-		Dep      string
-		Fixture  string
+		Name            string
+		Kind            string
+		Kernel          string
+		Cache           string
+		CaseFold        bool
+		Dep             string
+		Fixture         string
+		NegativeTimeout int
+	}
+
+	type fsCacheParam struct {
+		policy          string
+		negativeTimeout int
 	}
 
 	var params []paramData
@@ -42,11 +48,23 @@ func TestManyFiles(t *testing.T) {
 		}
 
 		// Virtiofs
-		for _, cache := range []string{"auto", "always"} {
+		for _, cache := range []fsCacheParam{
+			{policy: "auto", negativeTimeout: 0},
+			{policy: "always", negativeTimeout: 0},
+			{policy: "always", negativeTimeout: 3600},
+		} {
 			for _, caseFold := range []bool{false, true} {
+				if cache.negativeTimeout > 0 && caseFold {
+					// Negative cache is not supported with case-folding.
+					continue
+				}
+
 				name := "virtiofs"
-				if cache == "always" {
+				if cache.policy == "always" {
 					name += "_cached"
+				}
+				if cache.negativeTimeout > 0 {
+					name += "_negativecache"
 				}
 				if caseFold {
 					name += "_casefold"
@@ -54,13 +72,14 @@ func TestManyFiles(t *testing.T) {
 				name = fmt.Sprintf("%s_%s", name, p.kernel)
 
 				params = append(params, paramData{
-					Name:     name,
-					Kind:     "virtiofs",
-					Kernel:   p.kernel,
-					Cache:    cache,
-					CaseFold: caseFold,
-					Dep:      p.dep,
-					Fixture:  p.fixture,
+					Name:            name,
+					Kind:            "virtiofs",
+					Kernel:          p.kernel,
+					Cache:           cache.policy,
+					CaseFold:        caseFold,
+					NegativeTimeout: cache.negativeTimeout,
+					Dep:             p.dep,
+					Fixture:         p.fixture,
 				})
 			}
 		}
@@ -74,6 +93,7 @@ func TestManyFiles(t *testing.T) {
 				kind: {{ .Kind | fmt }},
 				cache: {{ .Cache | fmt }},
 				caseFold: {{ .CaseFold }},
+				negativeTimeout: {{ .NegativeTimeout }},
 			},
 			Fixture: {{ .Fixture | fmt }},
 			ExtraSoftwareDeps: []string { {{ .Dep | fmt }} },
