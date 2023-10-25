@@ -48,7 +48,7 @@ func init() {
 			Name:              "container",
 			Val:               memoryPressureParams{enableARC: true, useHugePages: false, bt: browser.TypeAsh},
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "lacros",
 			Val:               memoryPressureParams{enableARC: false, useHugePages: false, bt: browser.TypeLacros},
