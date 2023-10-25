@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -24,6 +25,7 @@ import (
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -234,6 +236,7 @@ func FixtureID(enum TFFeatures) string {
 type tastFixtureImpl struct {
 	features TFFeatures
 	tf       *TestFixture
+	rtd      []*linuxssh.RemoteFileDelta
 }
 
 // newTastFixture creates a Tast fixture with given features.
@@ -585,6 +588,24 @@ func (f *tastFixtureImpl) Reset(ctx context.Context) error {
 }
 
 func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	const maxLogSize = 20 * 1024 * 1024 //20mb
+
+	//Create rtd for Main DUT
+	if file, err := linuxssh.NewRemoteFileDelta(ctx, s.DUT().Conn(), "/var/log/net.log", filepath.Join(s.OutDir(), fmt.Sprintf("net_%s.log", s.TestName())), maxLogSize); err != nil {
+		s.Fatal("File transfer failed: ", err)
+	} else {
+		f.rtd = append(f.rtd, file)
+	}
+
+	//Create rtd for CompanionDUTs
+	for role, cd := range s.CompanionDUTs() {
+		if file, err := linuxssh.NewRemoteFileDelta(ctx, cd.Conn(), "/var/log/net.log", filepath.Join(s.OutDir(), fmt.Sprintf("net_%s_%s.log", s.TestName(), role)), maxLogSize); err != nil {
+			s.Fatal("File transfer failed: ", err)
+		} else {
+			f.rtd = append(f.rtd, file)
+		}
+	}
+
 	if f.features&TFFeaturesCompanionDUT != 0 {
 		if err := f.tf.SeedRegdomain(ctx); err != nil {
 			s.Fatal("Failed to configure Regdomain seeding AP: ", err)
@@ -599,6 +620,13 @@ func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState)
 }
 
 func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	//Save all rtds
+	if f.rtd != nil {
+		for _, rtd := range f.rtd {
+			defer rtd.Save(ctx)
+		}
+	}
+
 	if f.features&TFFeaturesPower != 0 {
 		request := power.FinishRequest{Upload: false}
 		values, err := f.tf.powerClient.Finish(s.TestContext(), &request)
