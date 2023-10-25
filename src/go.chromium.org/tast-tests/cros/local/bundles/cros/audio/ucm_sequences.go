@@ -164,8 +164,7 @@ func (p listCommander) commands(ctx context.Context, ucmName string) ([]alsaucmC
 		parts := strings.SplitN(line, ": ", 2)
 		if len(parts) == 2 {
 			name := parts[1]
-			commands = append(commands, alsaucmCommand{name, []string{"set", p.enable, name}})
-			commands = append(commands, alsaucmCommand{name, []string{"set", p.disable, name}})
+			commands = append(commands, alsaucmCommand{name, []string{"set", p.enable, name, "set", p.disable, name}})
 		}
 	}
 	return commands, nil
