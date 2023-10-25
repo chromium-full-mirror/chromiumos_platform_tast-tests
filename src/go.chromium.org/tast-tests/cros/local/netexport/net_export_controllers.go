@@ -56,7 +56,7 @@ func (c chromeController) Stop(ctx context.Context) error {
 	defer netConn.Close()
 
 	// Click Stop Logging button.
-	stopButton := nodewith.Name("Stop Logging").Role(role.Button)
+	stopButton := nodewith.Name("Stop Logging").Role(role.Button).First()
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("Stop net export session",
 		ui.WaitUntilExists(stopButton),
