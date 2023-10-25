@@ -43,7 +43,7 @@ func init() {
 		Attr: []string{
 			"group:cbx",
 			"cbx_feature_enabled",
-			"cbx_stable",
+			"cbx_unstable",
 		},
 		Data: []string{
 			"test_1KB.txt",

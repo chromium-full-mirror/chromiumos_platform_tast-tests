@@ -40,7 +40,7 @@ func init() {
 		Attr: []string{
 			"group:cbx",
 			"cbx_feature_enabled",
-			"cbx_stable",
+			"cbx_unstable",
 		},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
