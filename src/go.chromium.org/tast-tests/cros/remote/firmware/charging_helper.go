@@ -478,3 +478,41 @@ func GetKernelBatteryState(ctx context.Context, h *Helper) (string, error) {
 		return "", errors.Errorf("got unexpected battery state from kernel %v", batteryState)
 	}
 }
+
+// WaitForBatteryConnection waits for battery to be connected.
+func WaitForBatteryConnection(ctx context.Context, h *Helper, timeout, interval time.Duration) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		chgState, err := GetChargingState(ctx, h)
+		if err != nil {
+			return err
+		}
+		var val string
+		var ok bool
+		// To-do: There might be different keywords for battery disconnected
+		// in the ec console. Add more keywords in the future if needed.
+		for _, batteryDisconnected := range []string{
+			"global.battery_seems_to_be_disconnected",
+			"global.battery_seems_disconnected",
+		} {
+			val, ok = chgState[batteryDisconnected]
+			if ok {
+				break
+			}
+		}
+		if !ok {
+			testing.ContextLog(ctx, "Charging state:")
+			for key, val := range chgState {
+				testing.ContextLogf(ctx, "\t%s = %s", key, val)
+			}
+			err = errors.New("no battery disconnected keywords found in charging state output")
+			return testing.PollBreak(err)
+		}
+		if val == "1" {
+			return errors.New("battery seems to be disconnected")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: timeout, Interval: interval}); err != nil {
+		return errors.Wrap(err, "failed to check if battery is connected")
+	}
+	return nil
+}

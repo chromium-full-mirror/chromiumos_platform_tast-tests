@@ -40,7 +40,7 @@ func init() {
 		Fixture:      fixture.DevModeGBB,
 		SoftwareDeps: []string{"crossystem"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
-		Timeout:      30 * time.Minute,
+		Timeout:      50 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
@@ -103,11 +103,11 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	// Target crossystem params and their values to be tested.
-	targetCrossystemMap := map[string]string{
-		"dev_boot_usb":   "1",
-		"dev_boot_altfw": "1",
-		"fwupdate_tries": "2",
-		"loc_idx":        "3",
+	targetCrossystemMap := map[reporters.CrossystemParam]string{
+		reporters.CrossystemParamDevBootUsb:    "1",
+		reporters.CrossystemParamDevBootAltfw:  "1",
+		reporters.CrossystemParamFWUpdatetries: "2",
+		reporters.CrossystemParamLocIdx:        "3",
 	}
 
 	s.Log("Setting crossystem params with target values")
@@ -121,7 +121,7 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 	// for ro, or for rw. In case that the dut doesn't wake up during power cycles, include
 	// information from needFwUpdate for debugging purposes.
 	needFwUpdate := func() string {
-		for _, programmer := range []string{"ec", "host"} {
+		for _, programmer := range []firmware.FWType{firmware.ECFirmware, firmware.APFirmware} {
 			if val, err := compareForFwUpdate(ctx, h, programmer); err != nil {
 				s.Log("Failed to determine if fw update is required: ", err)
 				return "unknown"
@@ -199,15 +199,6 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			// For debugging purposes, log servo serials to check
-			// whether servo v4 or v4.1 is used.
-			servoSerials, err := h.Servo.GetServoSerials(ctx)
-			if err != nil {
-				s.Fatal("Failed to get servo serials: ", err)
-			}
-			for serial, val := range servoSerials {
-				s.Logf("Found serial for %s: %s", serial, val)
-			}
 			// Dirinboz [zork] did not wake from battery cutoff with a 45W charger,
 			// but it did with a 65W. Also, when connected to a servo v4 board, the
 			// same 65W charger only outputs 60W to DUT. On servo v4.1, it output the
@@ -218,7 +209,7 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 			}
 
 			s.Log("Power-cycling DUT by disconnecting AC and removing battery")
-			if err := h.SetDUTPower(ctx, false); err != nil {
+			if err := firmware.PollToSetChargerStatus(ctx, h, false); err != nil {
 				s.Fatal("Failed to remove charger: ", err)
 			}
 
@@ -235,36 +226,6 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 				s.Log("Unable to check PD communication status: ", err)
 			} else {
 				s.Logf("PD communication status: %s", pdStatus)
-			}
-
-			// Check that charger was removed.
-			getChargerPollOptions := testing.PollOptions{
-				Timeout:  20 * time.Second,
-				Interval: 1 * time.Second,
-			}
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				if attached, err := h.Servo.GetChargerAttached(ctx); err != nil {
-					return err
-				} else if attached {
-					return errors.New("charger is still attached - use Servo V4 Type-C or supply RPM vars")
-				}
-				return nil
-			}, &getChargerPollOptions); err != nil {
-				s.Logf("Check for charger failed: %v Attempting to check DUT's battery status", err)
-				status, err := h.Reporter.BatteryStatus(ctx)
-				if err != nil {
-					s.Fatal("Check for battery status failed: ", err)
-				} else if status != "Discharging" {
-					s.Fatalf("Unexpected battery status after removing charger: %s", status)
-				}
-				s.Logf("Battery Status: %s", status)
-			}
-
-			s.Log("Sleeping for 30 seconds")
-			// GoBigSleepLint: Between removing charger, and sending battery cutoff,
-			// waiting for some delay seems to help prevent servo exit.
-			if err := testing.Sleep(ctx, 30*time.Second); err != nil {
-				s.Fatal("Failed to sleep: ", err)
 			}
 
 			s.Log("Removing CCD watchdog")
@@ -285,7 +246,7 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 						}
 						s.Log("Sleeping for 5 seconds")
 						// GoBigSleepLint: To-do: depending on how the results turn out, we could
-						// extend the sleep in WatchdogRemove(), instead of adding another sleep here.
+						// extend the sleep in RemoveCCDWatchdogs(), instead of adding another sleep here.
 						if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 							s.Fatal("Failed to sleep: ", err)
 						}
@@ -294,7 +255,7 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 							s.Fatal("Failed to set pd role: ", err)
 						}
 						s.Log("Sleeping for 60 seconds")
-						// GoBigSleepLint: Wait for DUT to go online.
+						// GoBigSleepLint: Allow some time before reconnecting charger.
 						if err := testing.Sleep(ctx, 60*time.Second); err != nil {
 							s.Fatal("Failed to sleep: ", err)
 						}
@@ -335,8 +296,32 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 			}
 
 			s.Log("Powering on DUT by reconnecting AC")
-			if err := h.SetDUTPower(ctx, true); err != nil {
+			if err := firmware.PollToSetChargerStatus(ctx, h, true); err != nil {
 				s.Fatal("Failed to reconnect charger: ", err)
+			}
+
+			s.Log("Waiting for battery to be connected")
+			if err := firmware.WaitForBatteryConnection(ctx, h, 1*time.Minute, 5*time.Second); err != nil {
+				s.Fatal("Failed to wait for battery connection: ", err)
+			}
+
+			// After reconnecting AC, DUT should get into S0.
+			// If it's not in S0, try with a press on power.
+			s.Log("Waiting for powerstate S0")
+			if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 1*time.Minute, "S0"); err != nil {
+				s.Log("Failed to get power state at S0: ", err)
+			}
+
+			pwrState, err := checkPowerState(ctx, h)
+			if err != nil {
+				s.Fatal("Failed to check power state: ", err)
+			}
+			s.Log("Powerstate: ", pwrState)
+			if pwrState != "S0" {
+				s.Logf("Pressing power button for %s to wake DUT into S0", h.Config.HoldPwrButtonPowerOn)
+				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
+					s.Fatal("Failed to press power button: ", err)
+				}
 			}
 		}
 
@@ -344,7 +329,7 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 8*time.Minute)
 		defer cancelWaitConnect()
 
-		if err := h.WaitConnect(waitConnectCtx); err != nil {
+		if err := h.WaitConnect(waitConnectCtx, firmware.SkipPDRoleSnk); err != nil {
 			// When reconnecting to the DUT fails from plugging in AC,
 			// check for its power state, charge state, and whether
 			// the battery is detected (present). Also, log gpio output
@@ -387,12 +372,12 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 	}
 }
 
-func createCsMap(cs *crossystemValues) map[string]string {
-	var csParamsMap = map[string]string{
-		"dev_boot_usb":   cs.devBootUSBVal,
-		"dev_boot_altfw": cs.devBootAltfw,
-		"fwupdate_tries": cs.fwUpdateTriesVal,
-		"loc_idx":        cs.locIdxVal,
+func createCsMap(cs *crossystemValues) map[reporters.CrossystemParam]string {
+	var csParamsMap = map[reporters.CrossystemParam]string{
+		reporters.CrossystemParamDevBootUsb:    cs.devBootUSBVal,
+		reporters.CrossystemParamDevBootAltfw:  cs.devBootAltfw,
+		reporters.CrossystemParamFWUpdatetries: cs.fwUpdateTriesVal,
+		reporters.CrossystemParamLocIdx:        cs.locIdxVal,
 	}
 	return csParamsMap
 }
@@ -416,7 +401,7 @@ func readTargetCsVals(ctx context.Context, s *testing.State, h *firmware.Helper,
 	return &cs, nil
 }
 
-func setTargetCsVals(ctx context.Context, s *testing.State, h *firmware.Helper, targetMap map[string]string) error {
+func setTargetCsVals(ctx context.Context, s *testing.State, h *firmware.Helper, targetMap map[reporters.CrossystemParam]string) error {
 	targetArgs := make([]string, len(targetMap))
 	i := 0
 	for targetKey, targetVal := range targetMap {
@@ -429,7 +414,7 @@ func setTargetCsVals(ctx context.Context, s *testing.State, h *firmware.Helper, 
 	return nil
 }
 
-func equal(ctx context.Context, mapBefore, mapAfter map[string]string) (bool, error) {
+func equal(ctx context.Context, mapBefore, mapAfter map[reporters.CrossystemParam]string) (bool, error) {
 	if len(mapBefore) != len(mapAfter) {
 		return false, errors.New("Lengths of maps under evaluation do not match")
 	}
@@ -519,28 +504,12 @@ func checkMaxChargerPower(ctx context.Context, h *firmware.Helper) error {
 // checkChgstateBatt runs ec command 'chgstate' and collects information
 // from the battery section.
 func checkChgstateBatt(ctx context.Context, h *firmware.Helper, attr string) (string, error) {
-	if err := h.Servo.RunECCommand(ctx, "chan save"); err != nil {
-		return "unknown", errors.Wrap(err, "failed to send 'chan save' to EC")
-	}
-	if err := h.Servo.RunECCommand(ctx, "chan 0"); err != nil {
-		return "unknown", errors.Wrap(err, "failed to send 'chan 0' to EC")
-	}
-	defer func() {
-		if err := h.Servo.RunECCommand(ctx, "chan restore"); err != nil {
-			testing.ContextLog(ctx, "Failed to send 'chan restore' to EC: ", err)
-		}
-	}()
-	match := `batt.*:((\n|.)*?is_present = \S*)[\n\r]`
-	chgstateBatt, err := h.Servo.RunECCommandGetOutput(ctx, "chgstate", []string{match})
+	chgState, err := firmware.GetChargingState(ctx, h)
 	if err != nil {
-		return "unknwon", errors.Wrap(err, "failed to run command chgstate")
+		return "unknown", errors.Wrap(err, "failed to get charging state")
 	}
-	for _, val := range strings.Split(chgstateBatt[0][1], "\r\n\t") {
-		if strings.Contains(val, attr) {
-			return val, nil
-		}
-	}
-	return "unknown", nil
+	key := "batt." + attr
+	return chgState[key], nil
 }
 
 // grepGpio runs ec command 'gpioget' to check for a gpio's value.
@@ -577,7 +546,7 @@ func checkPowerState(ctx context.Context, h *firmware.Helper) (string, error) {
 
 // checkUpdaterFirmware checks for the fw versions contained in the firmware updater archive
 // for a specific programmer and dut model.
-func checkUpdaterFirmware(ctx context.Context, h *firmware.Helper, programmer string) (fwUpdaterVersions, error) {
+func checkUpdaterFirmware(ctx context.Context, h *firmware.Helper, programmer firmware.FWType) (fwUpdaterVersions, error) {
 	testing.ContextLogf(ctx, "Checking %s firmware updater version for %s", programmer, h.Model)
 	checkFirmwareUpdaterManifest := fmt.Sprintf(
 		"chromeos-firmwareupdate --manifest | jq -c .%s.%s.versions", h.Model, programmer)
@@ -595,35 +564,33 @@ func checkUpdaterFirmware(ctx context.Context, h *firmware.Helper, programmer st
 // checkCurrentFirmware checks for the current fw versions running on the dut.
 // For ec, it runs 'ectool version' to find both the ro and rw versions.
 // For ap, it runs 'crossystem ro_fwid', and 'crossystem fwid' to find ro and rw respectively.
-func checkCurrentFirmware(ctx context.Context, h *firmware.Helper, programmer string) (currentFwVersions, error) {
+func checkCurrentFirmware(ctx context.Context, h *firmware.Helper, programmer firmware.FWType) (currentFwVersions, error) {
 	var data currentFwVersions
 	switch programmer {
-	case "ec":
-		var (
-			reROVersion = regexp.MustCompile(`RO version:\s*(\S+)\s`)
-			reRWVersion = regexp.MustCompile(`RW version:\s*(\S+)\s`)
-		)
+	case firmware.ECFirmware:
 		ec := firmware.NewECTool(h.DUT, firmware.ECToolNameMain)
 		output, err := ec.Command(ctx, "version").Output(ssh.DumpLogOnError)
 		if err != nil {
 			return currentFwVersions{}, errors.Wrap(err, "failed to run 'ectool version' on DUT")
 		}
+		reROVersion := regexp.MustCompile(`RO version:\s*(\S+)\s`)
 		roVersion := reROVersion.FindSubmatch(output)
 		if len(roVersion) == 0 {
 			return data, errors.Errorf("failed to match regexp %s in ectool version output: %s", reROVersion, output)
 		}
+		reRWVersion := regexp.MustCompile(`RW version:\s*(\S+)\s`)
 		rwVersion := reRWVersion.FindSubmatch(output)
 		if len(rwVersion) == 0 {
 			return data, errors.Errorf("failed to match regexp %s in ectool version output: %s", reRWVersion, output)
 		}
 		data.ro = string(roVersion[1])
 		data.rw = string(rwVersion[1])
-	case "host":
-		rofwid, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamRoFwid)
+	case firmware.APFirmware:
+		rofwid, err := firmware.GetFwVersion(ctx, h, reporters.CrossystemParamRoFwid)
 		if err != nil {
 			return data, errors.Wrap(err, "failed to get crosystem ro_fwid")
 		}
-		rwfwid, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
+		rwfwid, err := firmware.GetFwVersion(ctx, h, reporters.CrossystemParamFwid)
 		if err != nil {
 			return data, errors.Wrap(err, "failed to get crossystem fwid")
 		}
@@ -637,11 +604,11 @@ func checkCurrentFirmware(ctx context.Context, h *firmware.Helper, programmer st
 
 // checkUpdaterVersionBigger checks whether fw updater has newer versions (higher version numbers) than
 // the current ones running on the dut.
-func checkUpdaterVersionBigger(ctx context.Context, h *firmware.Helper, fwUpdater, current, programmer string) (bool, error) {
+func checkUpdaterVersionBigger(ctx context.Context, h *firmware.Helper, fwUpdater, current string, programmer firmware.FWType) (bool, error) {
 	var fwUpdaterIDs, currentIDs []string
 	testing.ContextLogf(ctx, "Full fw updater version value: %s, current fw version value: %s", fwUpdater, current)
 	switch programmer {
-	case "ec":
+	case firmware.ECFirmware:
 		// As an example, before parsed into ids, ec fw version is represented by
 		// the following format, "cret_v2.0.11733-88ee536526", where cret is the
 		// dut's model name. Use parseECVerIntoID to extract 2, 0, and 11733.
@@ -653,7 +620,7 @@ func checkUpdaterVersionBigger(ctx context.Context, h *firmware.Helper, fwUpdate
 		}
 		fwUpdaterIDs = strings.Split(parseECVerIntoID(fwUpdater), ".")
 		currentIDs = strings.Split(parseECVerIntoID(current), ".")
-	case "host":
+	case firmware.APFirmware:
 		// As an example, before parsed into ids, host fw version is represented by
 		// the following format, "Google_Cret.13606.426.0". Use parseHostVerIntoID
 		// to extract 13606, 426, and 0.
@@ -689,7 +656,7 @@ func checkUpdaterVersionBigger(ctx context.Context, h *firmware.Helper, fwUpdate
 
 // compareForFwUpdate returns true if either the ro or rw version number is found bigger from fw updater,
 // denoting that the dut needs a fw update.
-func compareForFwUpdate(ctx context.Context, h *firmware.Helper, programmer string) (bool, error) {
+func compareForFwUpdate(ctx context.Context, h *firmware.Helper, programmer firmware.FWType) (bool, error) {
 	updater, err := checkUpdaterFirmware(ctx, h, programmer)
 	if err != nil {
 		return false, err
