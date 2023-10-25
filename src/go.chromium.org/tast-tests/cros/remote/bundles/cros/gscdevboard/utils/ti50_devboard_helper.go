@@ -287,9 +287,13 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 
 	th := FirmwareTestingHelper{FirmwareTestingHelperDelegate: h}
 	th.MustSucceed(h.Reset(ctx), "Reset board")
-	m, err := h.ReadSerialSubmatch(ctx, regexp.MustCompile(`Strap config: .* TPM Bus: ([^;]+);`))
-	if err != nil || strings.ToLower(string(m[1])) != string(bus) {
-		h.Fatalf("Wrong TPM strap")
+	// TODO(b/305814102): check board properties on H1 to verify SPI vs I2C
+	if h.TestbedType != ti50.GscHavenShield {
+		// Ti50 prints "I2C" or "SPI" based on the TPM Bus type.
+		m, err := h.ReadSerialSubmatch(ctx, regexp.MustCompile(`Strap config: .* TPM Bus: ([^;]+);`))
+		if err != nil || strings.ToLower(string(m[1])) != string(bus) {
+			h.Fatalf("Wrong TPM strap")
+		}
 	}
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
