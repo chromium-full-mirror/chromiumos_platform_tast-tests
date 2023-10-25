@@ -9,6 +9,7 @@ import (
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CurrentBootMode reports the DUT's active firmware boot mode (normal, dev, rec).
@@ -49,5 +50,6 @@ func (r *Reporter) CheckBootMode(ctx context.Context, expected fwCommon.BootMode
 	if err != nil {
 		return false, errors.Wrap(err, "determining DUT boot mode")
 	}
+	testing.ContextLogf(ctx, "Current boot mode is %s", curr)
 	return curr == expected, nil
 }

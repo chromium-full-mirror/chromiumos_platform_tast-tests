@@ -1596,56 +1596,13 @@ func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bo
 		return errors.Wrap(err, "expected DUT at the firmware screen. But, DUT booted to the welcome page")
 	default:
 		if !expBoot {
-			if !errors.Is(err, context.DeadlineExceeded) {
+			if !errors.As(err, &context.DeadlineExceeded) {
 				return errors.Wrap(err, "expected dut disconnected")
 			}
 			return nil
 		}
 		return errors.Wrapf(err, "expected dut reconnected: %t", expBoot)
 	}
-}
-
-// CheckBrokenScreen checks if the DUT reaches Broken Screen.
-func (h *Helper) CheckBrokenScreen(ctx context.Context) error {
-	testing.ContextLog(ctx, "Setting crossystem recovery_request to 1")
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "recovery_request=1").Run(); err != nil {
-			return errors.Wrap(err, "failed to set crossystem recovery_request")
-		}
-
-		recoveryRequest, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamRecoveryRequest)
-		if err != nil {
-			return errors.Wrap(err, "failed to get crossystem recovery_request")
-		} else if recoveryRequest != "1" {
-			return errors.Errorf("expected crossystem recovery_request to be 1, got %s", recoveryRequest)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to set the crossystem recovery_request to 1")
-	}
-
-	testing.ContextLog(ctx, "Rebooting the DUT with warm reset")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		return errors.Wrap(err, "failed to reboot the DUT with warm reset")
-	}
-	waitDisconnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 10*time.Second)
-	defer cancelWaitConnect()
-	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
-		testing.ContextLog(ctx, "DUT is still connected. Attempting the local reboot command on DUT")
-		if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil {
-			return errors.Wrap(err, "failed to run the reboot cmd")
-		}
-	}
-	testing.ContextLog(ctx, "Waiting until keyboard is ready")
-	if err := h.Servo.WaitFirmwareKeyboard(ctx, h.Config.FirmwareScreen); err != nil {
-		// If this fails, this is the same as sleeping for the FirmwareScreen time.
-		testing.ContextLog(ctx, "Failed to wait for keyboard: ", err)
-	}
-	testing.ContextLog(ctx, "Checking if it reaches Broken Screen")
-	if err := h.WaitDUTConnectDuringBootFromUSB(ctx, false); err != nil {
-		return errors.Wrap(err, "failed to reach Broken Screen")
-	}
-	return nil
 }
 
 // powerSupplyDeviceStates contains status info for ac and battery.

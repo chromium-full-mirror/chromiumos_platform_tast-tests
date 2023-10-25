@@ -155,12 +155,12 @@ func (r *Reporter) ContainsRecoveryReason(ctx context.Context, expectedReasons [
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get recovery reason")
 	}
+	testing.ContextLogf(ctx, "Current recovery reason is %s(%s)", recoveryReasonCodesMap[RecoveryReasonValue(csRecReason)], csRecReason)
 	for _, expReason := range expectedReasons {
 		if recoveryReasonCodesMap[RecoveryReasonValue(csRecReason)] == expReason {
 			return true, nil
 		}
 	}
-	testing.ContextLogf(ctx, "Recovery reason was %q", recoveryReasonCodesMap[RecoveryReasonValue(csRecReason)])
 
 	return false, nil
 }
