@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/mgs"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast/core/testing"
@@ -20,7 +21,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LaunchSharedManagedGuestSession,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test chrome.login.launchSharedManagedGuestSession Extension API",
 		Contacts: []string{
 			"chromeos-commercial-identity@google.com",
@@ -40,7 +41,16 @@ func init() {
 			pci.SearchFlag(&policy.DeviceLoginScreenExtensions{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.DeviceRestrictedManagedGuestSessionEnabled{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.ExtensionInstallForcelist{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityJS),
 		},
+		Params: []testing.Param{{
+			Name: "ash",
+			Val:  browser.TypeAsh,
+		}, {
+			Name:              "lacros",
+			Val:               browser.TypeLacros,
+			ExtraSoftwareDeps: []string{"lacros"},
+		}},
 	})
 }
 
@@ -49,9 +59,7 @@ func LaunchSharedManagedGuestSession(ctx context.Context, s *testing.State) {
 
 	accountID := "foo@managedchrome.com"
 
-	m, cr, err := mgs.New(
-		ctx,
-		fdms,
+	opts := []mgs.Option{
 		mgs.Accounts(accountID),
 		mgs.AddPublicAccountPolicies(accountID, []policy.Policy{
 			&policy.ExtensionInstallForcelist{Val: []string{mgs.InSessionExtensionID}},
@@ -62,8 +70,18 @@ func LaunchSharedManagedGuestSession(ctx context.Context, s *testing.State) {
 		}),
 		mgs.ExtraChromeOptions(
 			chrome.ExtraArgs("--force-devtools-available"),
+			chrome.LacrosExtraArgs("--force-devtools-available"),
 		),
-	)
+	}
+
+	bt := s.Param().(browser.Type)
+	if bt == browser.TypeLacros {
+		opts = append(opts, mgs.AddPublicAccountPolicies(accountID, []policy.Policy{
+			&policy.LacrosAvailability{Val: "lacros-only"},
+		}))
+	}
+
+	m, cr, err := mgs.New(ctx, fdms, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome on Signin screen with MGS accounts: ", err)
 	}
