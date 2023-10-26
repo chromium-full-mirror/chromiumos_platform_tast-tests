@@ -19,6 +19,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type videoPlaybackTestParam struct {
+	VideoName  string
+	TimeParams power.TimeParams
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoPlayback,
@@ -31,248 +36,248 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "h264_720_30fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "h264_720_30fps",
+			Val:       videoPlaybackTestParam{VideoName: "h264_720_30fps"},
 			ExtraData: []string{"video_playback/h264_720_30fps.mp4"},
 		}, {
 			Name:      "h264_720_60fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "h264_720_60fps",
+			Val:       videoPlaybackTestParam{VideoName: "h264_720_60fps"},
 			ExtraData: []string{"video_playback/h264_720_60fps.mp4"},
 		}, {
 			Name:      "h264_1080_30fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "h264_1080_30fps",
+			Val:       videoPlaybackTestParam{VideoName: "h264_1080_30fps"},
 			ExtraData: []string{"video_playback/h264_1080_30fps.mp4"},
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "group:power", "power_regression"},
 		}, {
 			Name:      "h264_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "h264_1080_60fps",
+			Val:       videoPlaybackTestParam{VideoName: "h264_1080_60fps"},
 			ExtraData: []string{"video_playback/h264_1080_60fps.mp4"},
 		}, {
 			Name:      "h264_4k_30fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "h264_4k_30fps",
+			Val:       videoPlaybackTestParam{VideoName: "h264_4k_30fps"},
 			ExtraData: []string{"video_playback/h264_4k_30fps.mp4"},
 		}, {
 			Name:      "h264_4k_60fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "h264_4k_60fps",
+			Val:       videoPlaybackTestParam{VideoName: "h264_4k_60fps"},
 			ExtraData: []string{"video_playback/h264_4k_60fps.mp4"},
 		}, {
 			Name:      "vp8_720_30fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "vp8_720_30fps",
+			Val:       videoPlaybackTestParam{VideoName: "vp8_720_30fps"},
 			ExtraData: []string{"video_playback/vp8_720_30fps.webm"},
 		}, {
 			Name:      "vp8_720_60fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "vp8_720_60fps",
+			Val:       videoPlaybackTestParam{VideoName: "vp8_720_60fps"},
 			ExtraData: []string{"video_playback/vp8_720_60fps.webm"},
 		}, {
 			Name:      "vp8_1080_30fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "vp8_1080_30fps",
+			Val:       videoPlaybackTestParam{VideoName: "vp8_1080_30fps"},
 			ExtraData: []string{"video_playback/vp8_1080_30fps.webm"},
 		}, {
 			Name:      "vp8_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "vp8_1080_60fps",
+			Val:       videoPlaybackTestParam{VideoName: "vp8_1080_60fps"},
 			ExtraData: []string{"video_playback/vp8_1080_60fps.webm"},
 		}, {
 			Name:      "vp8_4k_30fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "vp8_4k_30fps",
+			Val:       videoPlaybackTestParam{VideoName: "vp8_4k_30fps"},
 			ExtraData: []string{"video_playback/vp8_4k_30fps.webm"},
 		}, {
 			Name:      "vp8_4k_60fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "vp8_4k_60fps",
+			Val:       videoPlaybackTestParam{VideoName: "vp8_4k_60fps"},
 			ExtraData: []string{"video_playback/vp8_4k_60fps.webm"},
 		}, {
 			Name:      "vp9_720_30fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "vp9_720_30fps",
+			Val:       videoPlaybackTestParam{VideoName: "vp9_720_30fps"},
 			ExtraData: []string{"video_playback/vp9_720_30fps.webm"},
 		}, {
 			Name:      "vp9_720_60fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "vp9_720_60fps",
+			Val:       videoPlaybackTestParam{VideoName: "vp9_720_60fps"},
 			ExtraData: []string{"video_playback/vp9_720_60fps.webm"},
 		}, {
 			Name:      "vp9_1080_30fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "vp9_1080_30fps",
+			Val:       videoPlaybackTestParam{VideoName: "vp9_1080_30fps"},
 			ExtraData: []string{"video_playback/vp9_1080_30fps.webm"},
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "group:power", "power_regression"},
 		}, {
 			Name:      "vp9_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "vp9_1080_60fps",
+			Val:       videoPlaybackTestParam{VideoName: "vp9_1080_60fps"},
 			ExtraData: []string{"video_playback/vp9_1080_60fps.webm"},
 		}, {
 			Name:      "vp9_4k_30fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "vp9_4k_30fps",
+			Val:       videoPlaybackTestParam{VideoName: "vp9_4k_30fps"},
 			ExtraData: []string{"video_playback/vp9_4k_30fps.webm"},
 		}, {
 			Name:      "vp9_4k_60fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "vp9_4k_60fps",
+			Val:       videoPlaybackTestParam{VideoName: "vp9_4k_60fps"},
 			ExtraData: []string{"video_playback/vp9_4k_60fps.webm"},
 		}, {
 			Name:      "av1_720_30fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "av1_720_30fps",
+			Val:       videoPlaybackTestParam{VideoName: "av1_720_30fps"},
 			ExtraData: []string{"video_playback/av1_720_30fps.mp4"},
 		}, {
 			Name:      "av1_720_60fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "av1_720_60fps",
+			Val:       videoPlaybackTestParam{VideoName: "av1_720_60fps"},
 			ExtraData: []string{"video_playback/av1_720_60fps.mp4"},
 		}, {
 			Name:      "av1_1080_30fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "av1_1080_30fps",
+			Val:       videoPlaybackTestParam{VideoName: "av1_1080_30fps"},
 			ExtraData: []string{"video_playback/av1_1080_30fps.mp4"},
 		}, {
 			Name:      "av1_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       "av1_1080_60fps",
+			Val:       videoPlaybackTestParam{VideoName: "av1_1080_60fps"},
 			ExtraData: []string{"video_playback/av1_1080_60fps.mp4"},
 		}, {
 			Name:              "h264_720_30fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "h264_720_30fps",
+			Val:               videoPlaybackTestParam{VideoName: "h264_720_30fps"},
 			ExtraData:         []string{"video_playback/h264_720_30fps.mp4"},
 		}, {
 			Name:              "h264_720_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "h264_720_60fps",
+			Val:               videoPlaybackTestParam{VideoName: "h264_720_60fps"},
 			ExtraData:         []string{"video_playback/h264_720_60fps.mp4"},
 		}, {
 			Name:              "h264_1080_30fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "h264_1080_30fps",
+			Val:               videoPlaybackTestParam{VideoName: "h264_1080_30fps"},
 			ExtraData:         []string{"video_playback/h264_1080_30fps.mp4"},
 			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
 			Name:              "h264_1080_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "h264_1080_60fps",
+			Val:               videoPlaybackTestParam{VideoName: "h264_1080_60fps"},
 			ExtraData:         []string{"video_playback/h264_1080_60fps.mp4"},
 		}, {
 			Name:              "h264_4k_30fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "h264_4k_30fps",
+			Val:               videoPlaybackTestParam{VideoName: "h264_4k_30fps"},
 			ExtraData:         []string{"video_playback/h264_4k_30fps.mp4"},
 		}, {
 			Name:              "h264_4k_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "h264_4k_60fps",
+			Val:               videoPlaybackTestParam{VideoName: "h264_4k_60fps"},
 			ExtraData:         []string{"video_playback/h264_4k_60fps.mp4"},
 		}, {
 			Name:              "vp8_720_30fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "vp8_720_30fps",
+			Val:               videoPlaybackTestParam{VideoName: "vp8_720_30fps"},
 			ExtraData:         []string{"video_playback/vp8_720_30fps.webm"},
 		}, {
 			Name:              "vp8_720_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "vp8_720_60fps",
+			Val:               videoPlaybackTestParam{VideoName: "vp8_720_60fps"},
 			ExtraData:         []string{"video_playback/vp8_720_60fps.webm"},
 		}, {
 			Name:              "vp8_1080_30fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "vp8_1080_30fps",
+			Val:               videoPlaybackTestParam{VideoName: "vp8_1080_30fps"},
 			ExtraData:         []string{"video_playback/vp8_1080_30fps.webm"},
 		}, {
 			Name:              "vp8_1080_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "vp8_1080_60fps",
+			Val:               videoPlaybackTestParam{VideoName: "vp8_1080_60fps"},
 			ExtraData:         []string{"video_playback/vp8_1080_60fps.webm"},
 		}, {
 			Name:              "vp8_4k_30fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "vp8_4k_30fps",
+			Val:               videoPlaybackTestParam{VideoName: "vp8_4k_30fps"},
 			ExtraData:         []string{"video_playback/vp8_4k_30fps.webm"},
 		}, {
 			Name:              "vp8_4k_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "vp8_4k_60fps",
+			Val:               videoPlaybackTestParam{VideoName: "vp8_4k_60fps"},
 			ExtraData:         []string{"video_playback/vp8_4k_60fps.webm"},
 		}, {
 			Name:              "vp9_720_30fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "vp9_720_30fps",
+			Val:               videoPlaybackTestParam{VideoName: "vp9_720_30fps"},
 			ExtraData:         []string{"video_playback/vp9_720_30fps.webm"},
 		}, {
 			Name:              "vp9_720_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "vp9_720_60fps",
+			Val:               videoPlaybackTestParam{VideoName: "vp9_720_60fps"},
 			ExtraData:         []string{"video_playback/vp9_720_60fps.webm"},
 		}, {
 			Name:              "vp9_1080_30fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "vp9_1080_30fps",
+			Val:               videoPlaybackTestParam{VideoName: "vp9_1080_30fps"},
 			ExtraData:         []string{"video_playback/vp9_1080_30fps.webm"},
 			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
 			Name:              "vp9_1080_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "vp9_1080_60fps",
+			Val:               videoPlaybackTestParam{VideoName: "vp9_1080_60fps"},
 			ExtraData:         []string{"video_playback/vp9_1080_60fps.webm"},
 		}, {
 			Name:              "vp9_4k_30fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "vp9_4k_30fps",
+			Val:               videoPlaybackTestParam{VideoName: "vp9_4k_30fps"},
 			ExtraData:         []string{"video_playback/vp9_4k_30fps.webm"},
 		}, {
 			Name:              "vp9_4k_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "vp9_4k_60fps",
+			Val:               videoPlaybackTestParam{VideoName: "vp9_4k_60fps"},
 			ExtraData:         []string{"video_playback/vp9_4k_60fps.webm"},
 		}, {
 			Name:              "av1_720_30fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "av1_720_30fps",
+			Val:               videoPlaybackTestParam{VideoName: "av1_720_30fps"},
 			ExtraData:         []string{"video_playback/av1_720_30fps.mp4"},
 		}, {
 			Name:              "av1_720_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "av1_720_60fps",
+			Val:               videoPlaybackTestParam{VideoName: "av1_720_60fps"},
 			ExtraData:         []string{"video_playback/av1_720_60fps.mp4"},
 		}, {
 			Name:              "av1_1080_30fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "av1_1080_30fps",
+			Val:               videoPlaybackTestParam{VideoName: "av1_1080_30fps"},
 			ExtraData:         []string{"video_playback/av1_1080_30fps.mp4"},
 		}, {
 			Name:              "av1_1080_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               "av1_1080_60fps",
+			Val:               videoPlaybackTestParam{VideoName: "av1_1080_60fps"},
 			ExtraData:         []string{"video_playback/av1_1080_60fps.mp4"},
 		}},
 	})
@@ -310,7 +315,18 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 
 	// Copy file to ramfs. We don't want the difference between storage type to affect this test.
 	// The reason is that the most common usecase, video streaming, the data load from RAM.
-	format := s.Param().(string)
+	format := s.Param().(videoPlaybackTestParam).VideoName
+	interval := s.Param().(videoPlaybackTestParam).TimeParams.Interval
+	total := s.Param().(videoPlaybackTestParam).TimeParams.Total
+
+	// Use default value for timeParam if not set
+	defaultTimeParams := power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute}
+	if interval == time.Duration(0) {
+		interval = defaultTimeParams.Interval
+	}
+	if total == time.Duration(0) {
+		total = defaultTimeParams.Total
+	}
 
 	// VP8 and VP9 use webm, h264, av1 use mp4.
 	var fileName = format
@@ -326,7 +342,7 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 		s.Fatalf("Can't copy video from %s to %s : %v", filePathOnDisk, filePathOnRAM, err)
 	}
 
-	r := power.NewRecorder(ctx, 5*time.Second, s.OutDir(), s.TestName())
+	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 	// Register test specific metrics.
 	r.RegisterMetrics(power.NewVideoFpsMetrics(conn))
@@ -349,7 +365,7 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 	}
 
 	// GoBigSleepLint: sleep to let device play the video.
-	if err := testing.Sleep(ctx, 3*time.Minute); err != nil {
+	if err := testing.Sleep(ctx, total); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
 	// End of main test body.
