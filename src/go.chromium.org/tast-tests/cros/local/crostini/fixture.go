@@ -132,6 +132,36 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeLoggedInForCrostiniWithLacrosWithoutArc",
+		Desc:     "Logged into a session and enable Lacros without Arc enabled",
+		Contacts: []string{"clumptini+oncall@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			opts := generateChromeOpts(s)
+			opts = append(opts, chrome.ARCDisabled())
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
+		}),
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Vars:            []string{"keepState"},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeLoggedInWithGaiaForCrostiniWithoutArc",
+		Desc:     "Logged into a session with Gaia user without Arc enabled",
+		Contacts: []string{"clumptini+oncall@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			opts := generateChromeOpts(s)
+			opts = append(opts, chrome.ARCDisabled())
+			return append(opts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))), nil
+		}),
+		SetUpTimeout:    chrome.GAIALoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Vars:            []string{"ui.gaiaPoolDefault", "keepState"},
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBuster",
 		Desc:            "Install Crostini with Buster",
 		Contacts:        []string{"clumptini+oncall@google.com"},
@@ -163,6 +193,20 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBullseyeWithoutArc",
+		Desc:            "Install Crostini with Bullseye without ARC enabled",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBullseye},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInForCrostiniWithoutArc",
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBookworm",
 		Desc:            "Install Crostini with Bookworm",
 		Contacts:        []string{"clumptini+oncall@google.com"},
@@ -172,6 +216,20 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInForCrostini",
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBookwormWithoutArc",
+		Desc:            "Install Crostini with Bookworm without ARC enabled",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBookworm},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInForCrostiniWithoutArc",
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
 	})
@@ -205,6 +263,20 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBullseyeGaiaWithoutArc",
+		Desc:            "Install Crostini with Bullseye in Chrome logged in with Gaia without ARC enabled",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBullseye},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInWithGaiaForCrostiniWithoutArc",
+		Vars:            []string{"keepState", "ui.gaiaPoolDefault"},
+		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBookwormGaia",
 		Desc:            "Install Crostini with Bookworm in Chrome logged in with Gaia",
 		Contacts:        []string{"clumptini+oncall@google.com"},
@@ -214,6 +286,20 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInWithGaiaForCrostini",
+		Vars:            []string{"keepState", "ui.gaiaPoolDefault"},
+		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBookwormGaiaWithoutArc",
+		Desc:            "Install Crostini with Bookworm in Chrome logged in with Gaia without ARC enabled",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBookworm},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInWithGaiaForCrostiniWithoutArc",
 		Vars:            []string{"keepState", "ui.gaiaPoolDefault"},
 		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
 	})
@@ -261,6 +347,20 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBullseyeWithLacrosWithoutArc",
+		Desc:            "Install Crostini with Bullseye and enable Lacros without ARC enabled",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBullseye},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInForCrostiniWithLacrosWithoutArc",
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBookwormWithLacros",
 		Desc:            "Install Crostini with Bookworm and enable Lacros",
 		Contacts:        []string{"clumptini+oncall@google.com"},
@@ -270,6 +370,20 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInForCrostiniWithLacros",
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBookwormWithLacrosWithoutArc",
+		Desc:            "Install Crostini with Bookworm and enable Lacros without ARC enabled",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBookworm},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInForCrostiniWithLacrosWithoutArc",
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
 	})

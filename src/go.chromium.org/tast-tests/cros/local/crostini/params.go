@@ -54,6 +54,7 @@ package crostini
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -165,6 +166,16 @@ type Param struct {
 	// MinimumContainerVersion is the minimum version of the container to
 	// run tests for.
 	MinimumContainerVersion vm.ContainerDebianVersion
+
+	// LowPerfEligible generates "stable" and "lowperf", both critical
+	// variants of a test, rather than the default "stable" critical and
+	// "unstable" informational variants. The "lowperf" variant uses
+	// ARC-disabled fixtures.
+	LowPerfEligible bool
+
+	// RequiresARC disables generation of "lowperf" variants of a test
+	// which depends on ARC.
+	RequiresARC bool
 }
 
 type generatedParam struct {
@@ -237,6 +248,16 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 		}
 
 		iterate := func(i iterator, bt browser.Type) {
+			if testCase.LowPerfEligible {
+				if testCase.OnlyStableBoards {
+					log.Fatal("LowPerfEligible and OnlyStableBoards are mutually exclusive")
+				} else if testCase.IsNotMainline {
+					log.Fatal("LowPerfEligible test must be mainline")
+				} else if testCase.UseLargeContainer {
+					log.Fatal("LowPerfEligible test must not UseLargeContainer")
+				}
+			}
+
 			if (testCase.IsNotMainline || testCase.OnlyStableBoards) && !i.stable {
 				// The stable/unstable distinction is only important for mainline tests
 				return
@@ -249,6 +270,11 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 
 			if i.debianVersion.Version < testCase.MinimumContainerVersion.Version {
 				// Minimum version requirement not satisfied.
+				return
+			}
+
+			if testCase.LowPerfEligible && testCase.RequiresARC && !i.stable {
+				// Test case requires ARC.
 				return
 			}
 
@@ -272,6 +298,8 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			if !testCase.IsNotMainline && !testCase.OnlyStableBoards {
 				if i.stable {
 					name = combineName(name, "stable")
+				} else if testCase.LowPerfEligible {
+					name = combineName(name, "lowperf")
 				} else {
 					name = combineName(name, "unstable")
 				}
@@ -296,7 +324,9 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				extraAttr = append(extraAttr, "informational")
 
 				// TODO(b/269175095): Promote Lacros tests to critical after stabilizing for two weeks.
-				if bt == browser.TypeLacros {
+				if bt == browser.TypeLacros ||
+					// TODO(b/307851860): Promote lowperf tests to critical.
+					!i.stable && testCase.LowPerfEligible {
 					extraAttr = append(extraAttr, "group:criticalstaging")
 				}
 			}
@@ -311,6 +341,12 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 						hardwareDeps = "crostini.CrostiniAppStable"
 					} else {
 						hardwareDeps = "crostini.CrostiniAppUnstable"
+					}
+				} else if testCase.LowPerfEligible {
+					if i.stable {
+						hardwareDeps = "crostini.CrostiniOptimalPerf"
+					} else {
+						hardwareDeps = "crostini.CrostiniLowPerf"
 					}
 				} else {
 					if i.stable {
@@ -332,6 +368,11 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			var testParam generatedParam
 			var fixture, precondition string
 			if testCase.UseFixture {
+				arcStatus := ""
+				if testCase.LowPerfEligible && !i.stable {
+					arcStatus = "WithoutArc"
+				}
+
 				if testCase.SelfManagedInstall {
 					fixture = ""
 				} else if testCase.UseLargeContainer {
@@ -343,11 +384,11 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 					}
 					fixture = fmt.Sprintf("\"crostini%sLargeContainer%s\"", strings.Title(i.debianVersion.Codename), suffix)
 				} else if testCase.UseGaiaLogin {
-					fixture = fmt.Sprintf("\"crostini%sGaia\"", strings.Title(i.debianVersion.Codename))
+					fixture = fmt.Sprintf("\"crostini%sGaia%s\"", strings.Title(i.debianVersion.Codename), arcStatus)
 				} else if bt == browser.TypeLacros {
-					fixture = fmt.Sprintf("\"crostini%sWithLacros\"", strings.Title(i.debianVersion.Codename))
+					fixture = fmt.Sprintf("\"crostini%sWithLacros%s\"", strings.Title(i.debianVersion.Codename), arcStatus)
 				} else {
-					fixture = fmt.Sprintf("\"crostini%s\"", strings.Title(i.debianVersion.Codename))
+					fixture = fmt.Sprintf("\"crostini%s%s\"", strings.Title(i.debianVersion.Codename), arcStatus)
 				}
 
 			} else {

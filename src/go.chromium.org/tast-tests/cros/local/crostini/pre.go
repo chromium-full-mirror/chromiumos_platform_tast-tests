@@ -55,6 +55,188 @@ var UnstableModels = []string{
 	"chell",
 }
 
+// LowPerfModels is list of models on which the Crostini tests will run with
+// ARC disabled to reduce performance requirements.
+var LowPerfModels = []string{
+	// board atlas
+	"atlas",
+	// board coral
+	"astronaut",
+	"babymega",
+	"babytiger",
+	"blacktip",
+	"blacktip360",
+	"blacktiplte",
+	"bruce",
+	"epaulette",
+	"lava",
+	"nasher",
+	"nasher360",
+	"rabbid",
+	"robo",
+	"robo360",
+	"santa",
+	"whitetip",
+	// board corsola
+	"magneton",
+	"ponyta",
+	"rusty",
+	"steelix",
+	"tentacool",
+	"tentacruel",
+	"voltorb",
+	// board dedede
+	"beadrix",
+	"beetley",
+	"blipper",
+	"bookem",
+	"boten",
+	"boxy",
+	"bugzzy",
+	"cret",
+	"cret360",
+	"dibbi",
+	"drawcia",
+	"drawlat",
+	"drawman",
+	"drawper",
+	"galith",
+	"galith360",
+	"gallop",
+	"galnat",
+	"galnat360",
+	"galtic",
+	"galtic360",
+	"kracko",
+	"kracko360",
+	"landia",
+	"landrid",
+	"lantis",
+	"madoo",
+	"magister",
+	"maglet",
+	"maglia",
+	"maglith",
+	"magma",
+	"magneto",
+	"magolor",
+	"magpie",
+	"metaknight",
+	"pasara",
+	"peezer",
+	"pirette",
+	"pirika",
+	"sasuke",
+	"sasukette",
+	"storo",
+	"storo360",
+	"taranza",
+	// board elm
+	"elm",
+	// board eve
+	"eve",
+	// board grunt
+	"aleena",
+	"barla",
+	"careena",
+	"kasumi",
+	"kasumi360",
+	"liara",
+	"treeya",
+	"treeya360",
+	// board hana
+	"hana",
+	// board hatch
+	"kohaku",
+	// board jacuzzi
+	"burnet",
+	"cerise",
+	"cozmo",
+	"damu",
+	"esche",
+	"fennel",
+	"fennel14",
+	"juniper",
+	"kappa",
+	"kenzo",
+	"pico",
+	"stern",
+	"willow",
+	// board kukui
+	"kakadu",
+	"katsu",
+	"kodama",
+	"krane",
+	// board nautilus
+	"nautilus",
+	"nautiluslte",
+	// board nocturne
+	"nocturne",
+	// board octopus
+	"ampton",
+	"apel",
+	"bloog",
+	"blooglet",
+	"blooguard",
+	"blorb",
+	"bluebird",
+	"bobba",
+	"bobba360",
+	"casta",
+	"dood",
+	"dorp",
+	"droid",
+	"fleex",
+	"foob",
+	"foob360",
+	"garfour",
+	"garg",
+	"garg360",
+	"grabbiter",
+	"laser14",
+	"lick",
+	"meep",
+	"mimrock",
+	"nospike",
+	"orbatrix",
+	"phaser",
+	"phaser360",
+	"sparky",
+	"sparky360",
+	"vorticon",
+	"vortininja",
+	// board pyro
+	"pyro",
+	// board rammus
+	"leona",
+	"shyvana",
+	// board reef
+	"basking",
+	"electro",
+	// board sand
+	"sand",
+	// board snappy
+	"snappy",
+	// board soraka
+	"soraka",
+	// board staryu
+	"starmie",
+	// board strongbad
+	"coachz",
+	"homestar",
+	"quackingstick",
+	"wormdingler",
+	// board trogdor
+	"kingoftown",
+	"lazor",
+	"limozeen",
+	"pazquel",
+	"pazquel360",
+	"pompom",
+}
+
+var optimalMemoryMegabytes = 7 * 1024
+
 // CrostiniMinDiskSizeCond is a hardware condition that only runs tests on models with > 12GB of disk size.
 // Crostini needs a minimum of 3GB of free space to install which is frequently not available on devices with 8GB
 // disks. For more see http://crbug.com/1039403
@@ -63,6 +245,15 @@ var CrostiniMinDiskSizeCond = hwdep.MinStorage(16)
 // CrostiniMinDiskSize is a hardware dependency that only runs tests
 // on devices with at least 16 GB of storage.
 var CrostiniMinDiskSize = hwdep.D(CrostiniMinDiskSizeCond)
+
+// CrostiniOptimalMemoryCond is a hardware condition that only runs tests on
+// models with > 7 GiB of memory. This includes devices with 8 GiB of memory or
+// more and is the preferred amount of memory for running Crostini with ARCVM.
+var CrostiniOptimalMemoryCond = hwdep.MinMemory(optimalMemoryMegabytes)
+
+// CrostiniLowMemoryCond is a hardware condition that only runs tests on models
+// with < 7 GiB of memory. This includes devices with 4 GiB of memory or less.
+var CrostiniLowMemoryCond = hwdep.MaxMemory(optimalMemoryMegabytes)
 
 // CrostiniStableCond is a hardware condition that only runs a test on models that can run Crostini tests without
 // known flakiness issues.
@@ -79,6 +270,26 @@ var CrostiniUnstableCond = hwdep.Model(UnstableModels...)
 // CrostiniUnstable is a hardware dependency that is the inverse of CrostiniStable. It only runs a test on
 // models that are known to be flaky when running Crostini tests.
 var CrostiniUnstable = hwdep.D(CrostiniUnstableCond, CrostiniMinDiskSizeCond)
+
+// CrostiniOptimalPerfCond is a hardware condition that only runs a test on
+// models that can run Crostini tests with sufficient CPU overhead to also run
+// ARCVM.
+var CrostiniOptimalPerfCond = hwdep.SkipOnModel(LowPerfModels...)
+
+// CrostiniOptimalPerf is a hardware dependency that only runs tests on models
+// that can run Crostini tests with sufficient CPU and memory overhead to to
+// also run ARCVM.
+var CrostiniOptimalPerf = hwdep.D(CrostiniOptimalPerfCond, CrostiniOptimalMemoryCond, CrostiniMinDiskSizeCond)
+
+// CrostiniLowPerfCond is a hardware condition that only runs a test on models
+// that cannot run Crostini tests with sufficient CPU overhead to also run
+// ARCVM.
+var CrostiniLowPerfCond = hwdep.Model(LowPerfModels...)
+
+// CrostiniLowPerf is a hardware dependency that only runs a test on models
+// that cannot run Crostini tests with sufficient CPU overhead to also run
+// ARCVM.
+var CrostiniLowPerf = hwdep.D(hwdepOr(CrostiniLowPerfCond, CrostiniLowMemoryCond), CrostiniMinDiskSizeCond)
 
 // StableModelsForAppsTesting is a list of models on which the Crostini Apps tests are stable.
 var StableModelsForAppsTesting = []string{
