@@ -41,9 +41,8 @@ func init() {
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",
-			"kinwang.lao@cienet.com",
-			"cienet-development@googlegroups.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
