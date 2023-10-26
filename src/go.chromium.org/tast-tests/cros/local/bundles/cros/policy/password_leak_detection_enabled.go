@@ -41,7 +41,6 @@ func init() {
 			"group:golden_tier",
 			"group:mainline",
 			"informational",
-			"group:criticalstaging",
 		},
 		Data:         passwordleakdetection.DataFiles(),
 		SoftwareDeps: []string{"chrome"},
