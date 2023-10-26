@@ -162,23 +162,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBuster",
-		Desc:            "Install Crostini with Buster",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		Impl:            &crostiniFixture{preData: preTestDataBuster},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostini",
-
-		// TODO (jinrongwu): switch to Global RunTime Variable when deprecating pre.go.
-		// The same for the rest keepState var.
-		Vars: []string{"keepState"},
-		Data: []string{GetContainerMetadataArtifact("buster", false), GetContainerRootfsArtifact("buster", false)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBullseye",
 		Desc:            "Install Crostini with Bullseye",
 		Contacts:        []string{"clumptini+oncall@google.com"},
@@ -188,8 +171,10 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInForCrostini",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
+		// TODO(jinrongwu): switch to Global RunTime Variable when deprecating pre.go.
+		// The same for the rest keepState var.
+		Vars: []string{"keepState"},
+		Data: []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -232,20 +217,6 @@ func init() {
 		Parent:          "chromeLoggedInForCrostiniWithoutArc",
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBusterGaia",
-		Desc:            "Install Crostini with Buster in Chrome logged in with Gaia",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		Impl:            &crostiniFixture{preData: preTestDataBuster},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInWithGaiaForCrostini",
-		Vars:            []string{"keepState", "ui.gaiaPoolDefault"},
-		Data:            []string{GetContainerMetadataArtifact("buster", false), GetContainerRootfsArtifact("buster", false)},
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -481,11 +452,6 @@ type FixtureData struct {
 	Screendiffer  *Screendiffer
 	DownloadsPath string
 	FakeDMS       *fakedms.FakeDMS
-}
-
-var preTestDataBuster = &preTestData{
-	container:     normal,
-	debianVersion: vm.DebianBuster,
 }
 
 var preTestDataBullseye = &preTestData{

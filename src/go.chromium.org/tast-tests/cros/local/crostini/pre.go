@@ -487,19 +487,9 @@ func StartedByDlcBuster() testing.Precondition { return startedByDlcBusterPre }
 // Tip: Run tests with -var=keepState=true to speed up local development
 func StartedByDlcBullseye() testing.Precondition { return startedByDlcBullseyePre }
 
-// StartedByDlcBusterGaia is similar to StartedByDlcBuster, except for
-// logging in to Chrome using gaia user.
-func StartedByDlcBusterGaia() testing.Precondition { return startedByDlcBusterGaiaPre }
-
 // StartedByDlcBullseyeGaia is similar to StartedByDlcBullseye, except for
 // logging in to Chrome using gaia user.
 func StartedByDlcBullseyeGaia() testing.Precondition { return startedByDlcBullseyeGaiaPre }
-
-// StartedByDlcBusterLargeContainer is similar to StartedByDlcBuster,
-// but will download the large container which has apps (Gedit, Emacs, Eclipse, Android Studio, and Visual Studio) installed.
-func StartedByDlcBusterLargeContainer() testing.Precondition {
-	return startedByDlcBusterLargeContainerPre
-}
 
 type containerType int
 
@@ -529,27 +519,12 @@ var startedByDlcBullseyePre = &preImpl{
 	debianVersion: vm.DebianBullseye,
 }
 
-var startedByDlcBusterGaiaPre = &preImpl{
-	name:          "crostini_started_by_dlc_buster_gaia",
-	timeout:       chrome.GAIALoginTimeout + 7*time.Minute,
-	container:     normal,
-	debianVersion: vm.DebianBuster,
-	loginType:     loginGaia,
-}
-
 var startedByDlcBullseyeGaiaPre = &preImpl{
 	name:          "crostini_started_by_dlc_bullseye_gaia",
 	timeout:       chrome.GAIALoginTimeout + 7*time.Minute,
 	container:     normal,
 	debianVersion: vm.DebianBullseye,
 	loginType:     loginGaia,
-}
-
-var startedByDlcBusterLargeContainerPre = &preImpl{
-	name:          "crostini_started_by_dlc_buster_large_container",
-	timeout:       chrome.LoginTimeout + 10*time.Minute,
-	container:     largeContainer,
-	debianVersion: vm.DebianBuster,
 }
 
 // PostTestData contains data for post test tasks in post.go that should be persistent across tests.
