@@ -320,10 +320,10 @@ func init() {
 			Name:              "vm_r_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_r"},
-			// x86-64 ARC: kohaku(hatch-Intel), eve(eve-Intel), gimble(brya-Intel), dewatt(guybrush-AMD), nipperkin(guybrush-AMD)
+			// x86-64 ARC: eve(eve-Intel), gimble(brya-Intel), dewatt(guybrush-AMD), nipperkin(guybrush-AMD)
 			// arm ARC: kodama(kukui), katsu(kukui)
 			// arm64 ARC: pompom(trogdor), pazquel(trogdor)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "eve", "gimble", "dewatt", "nipperkin", "kodama", "katsu", "pompom", "pazquel")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("eve", "gimble", "dewatt", "nipperkin", "kodama", "katsu", "pompom", "pazquel")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-rvc",
@@ -339,9 +339,9 @@ func init() {
 			Name:              "vm_t_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_t"},
-			// x86-64 ARC: kohaku(hatch-Intel), jinlon(hatch-Intel)
-			// arm64 ARC: steelix(corsola), magneton(corsola)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "jinlon", "steelix", "magneton")),
+			// x86-64 ARC: kohaku(hatch-Intel), jinlon(hatch-Intel), berknip(zork-AMD), jelboz360(zork-AMD), vilboz(zork-AMD)
+			// arm64 ARC: steelix(corsola), magneton(corsola), starmie(staryu-64only)
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "jinlon", "berknip", "jelboz360", "vilboz", "steelix", "magneton", "starmie")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-tm",
@@ -349,7 +349,7 @@ func init() {
 				uploadPackagesReference:       true,
 				uprevBranch:                   true,
 				dexOptCacheGen:                true,
-				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "arm64-native"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "x86_64-ndk", "arm64-native"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
