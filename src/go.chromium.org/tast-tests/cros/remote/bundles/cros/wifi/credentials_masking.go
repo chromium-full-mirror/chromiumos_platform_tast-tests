@@ -53,11 +53,11 @@ func init() {
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",
-			"kinwang.lao@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
-		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
+		Attr:         []string{"group:wificell", "wificell_e2e"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		ServiceDeps: append(
