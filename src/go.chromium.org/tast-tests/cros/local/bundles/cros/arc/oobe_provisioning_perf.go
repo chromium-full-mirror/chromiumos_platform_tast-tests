@@ -81,7 +81,6 @@ func init() {
 			},
 		}, {
 			Name:              "unmanaged_vm",
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParamOobeProvisioningPerf{
 				browserType: browser.TypeAsh,
