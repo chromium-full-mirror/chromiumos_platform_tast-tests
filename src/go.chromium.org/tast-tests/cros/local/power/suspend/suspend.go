@@ -155,6 +155,37 @@ func checkKernelRet() (int, error) {
 	}
 }
 
+const ecSuspendResultPath = "/sys/kernel/debug/cros_ec/last_resume_result"
+
+func checkECRet() (uint32, error) {
+	if _, err := os.Stat(ecSuspendResultPath); err != nil {
+		// EC suspend result doesn't exist on this platform.
+		if os.IsNotExist(err) {
+			return 0, nil
+		}
+		return 0, errors.Wrapf(err, "failed to stat EC suspend result path %s", ecSuspendResultPath)
+	}
+	out, err := ioutil.ReadFile(ecSuspendResultPath)
+	if err != nil {
+		return 0, err
+	}
+
+	// Convert the string to the format that ParseUint expects.
+	strOut := strings.Replace(string(out), "0x", "", -1)
+	strOut = strings.Replace(strOut, "0X", "", -1)
+	strOut = strings.TrimSpace(strOut)
+
+	// The last_resume_result file contains a 32-bit hex int. The most
+	// significant bit shows if the EC timed out waiting for the SoC to enter
+	// S0ix. This is the only bit we care about, so mask out the rest.
+	ret, err := strconv.ParseUint(strOut, 16, 32)
+	if err != nil {
+		return 0, err
+	}
+
+	return uint32(ret & (1 << 31)), nil
+}
+
 func waitForFlashromLock(ctx context.Context) error {
 	if err := testing.Poll(ctx, func(context.Context) error {
 		_, readErr := os.Stat(flashromLockFile)
@@ -226,6 +257,14 @@ func Request(ctx context.Context, params ...Param) (ResumeInfo, error) {
 	}
 	switch powerdRet {
 	case powerdResultSuccess:
+		// Even if powerd reports a success, it might later fail due to the EC
+		// reporting a suspend to idle timeout.
+		ecRet, err := checkECRet()
+		if err != nil {
+			return ResumeInfo{}, errors.Wrap(err, "failed reading EC suspend result")
+		} else if ecRet != 0 {
+			return ResumeInfo{}, errors.Errorf("EC reported suspend to idle timeout: 0x%x", ecRet)
+		}
 		return ResumeInfo{}, nil
 	case powerdResultFailure:
 		kernelRet, err := checkKernelRet()
