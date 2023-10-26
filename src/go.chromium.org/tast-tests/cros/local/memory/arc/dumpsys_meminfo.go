@@ -328,6 +328,33 @@ func ReportDumpsysMeminfoMetrics(vmSummary *VMSummary, p *perf.Values, suffix st
 
 	p.Set(
 		perf.Metric{
+			Name:      fmt.Sprintf("arc_cached_pss%s", suffix),
+			Unit:      "KiB",
+			Direction: perf.SmallerIsBetter,
+		},
+		float64(vmSummary.CachedPss),
+	)
+
+	p.Set(
+		perf.Metric{
+			Name:      fmt.Sprintf("arc_cached_kernel%s", suffix),
+			Unit:      "KiB",
+			Direction: perf.SmallerIsBetter,
+		},
+		float64(vmSummary.CachedKernel),
+	)
+
+	p.Set(
+		perf.Metric{
+			Name:      fmt.Sprintf("arc_free_minus_cache%s", suffix),
+			Unit:      "KiB",
+			Direction: perf.SmallerIsBetter,
+		},
+		float64(uint64(vmSummary.FreeRAM)-vmSummary.CachedKernel-vmSummary.CachedPss),
+	)
+
+	p.Set(
+		perf.Metric{
 			Name:      fmt.Sprintf("arc_lost_ram%s", suffix),
 			Unit:      "KiB",
 			Direction: perf.SmallerIsBetter,

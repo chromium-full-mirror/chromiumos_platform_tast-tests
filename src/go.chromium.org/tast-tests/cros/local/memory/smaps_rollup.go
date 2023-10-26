@@ -39,10 +39,11 @@ type CategoryHostMetrics struct {
 // overall system memory status.
 // All values are expressed in Kilobytes.
 type HostSummary struct {
-	MemTotal         uint64
-	MemFree          uint64
-	HostCachedKernel uint64
-	CategoryMetrics  NameToCategoryMetricsMap
+	MemTotal        uint64
+	MemFree         uint64
+	HostCached      uint64
+	LinuxUsed       uint64
+	CategoryMetrics NameToCategoryMetricsMap
 }
 
 // SharedInfo holds shared memory use information for one process.
@@ -330,7 +331,8 @@ func GetHostMetrics(ctx context.Context, outdir, suffix string) (*HostSummary, e
 	// Convert reported totals in bytes into the common KiB unit.
 	summary.MemTotal = uint64(meminfo["MemTotal"]) / KiB
 	summary.MemFree = uint64(meminfo["MemFree"]) / KiB
-	summary.HostCachedKernel = uint64(meminfo["SReclaimable"]+meminfo["Buffers"]+meminfo["Cached"]-meminfo["Mapped"]) / KiB
+	summary.HostCached = uint64(meminfo["SReclaimable"]+meminfo["Buffers"]+meminfo["Cached"]-meminfo["Mapped"]) / KiB
+	summary.LinuxUsed = summary.MemTotal - uint64(meminfo["MemAvailable"])/KiB
 
 	metrics := summary.CategoryMetrics // Shallow copy, as it is a map.
 	for _, rollup := range rollups {
