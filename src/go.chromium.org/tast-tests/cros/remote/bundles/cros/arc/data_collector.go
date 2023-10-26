@@ -304,7 +304,8 @@ func init() {
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_container_r"},
 			// x86-64 ARC: careena(grunt-AMD), treeya(grunt-AMD)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("treeya", "careena")),
+			// arm ARC: hana(hana)
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("treeya", "careena", "hana")),
 			Val: testParam{
 				vmEnabled:                     false,
 				androidPackage:                "android-container-rvc",
@@ -312,7 +313,7 @@ func init() {
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				dexOptCacheGen:                false,
-				requiredCPUAbisForBranchUprev: []string{"x86_64-ndk"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-ndk", "arm-native"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
