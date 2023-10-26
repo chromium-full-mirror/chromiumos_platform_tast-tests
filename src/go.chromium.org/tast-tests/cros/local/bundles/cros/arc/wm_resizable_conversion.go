@@ -444,8 +444,7 @@ func wmRV22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 			return errors.Wrap(err, "failed to switch tablet mode")
 		}
 
-		// TODO(b/187788935): switching device modes isn't easy to detect so wait for the operation to finish.
-		if err := testing.Sleep(ctx, time.Second*5); err != nil {
+		if err := wm.WaitForDeviceModeChangeApplied(ctx); err != nil {
 			return errors.Wrap(err, "failed to wait for switch to settle")
 		}
 

@@ -95,6 +95,8 @@ const (
 
 	// PinButton is the id of the button to enter screen lock/pinned state.
 	PinButton = "org.chromium.arc.testapp.windowmanager:id/button_pin"
+
+	deviceModeChangeWaitDuration = 5 * time.Second
 )
 
 // CheckFunc represents a function that checks certain criteria for tests.
@@ -851,5 +853,14 @@ func ActivatePinModeInWmTestApp(ctx context.Context, d *ui.Device) error {
 		return errors.Wrap(err, "Button click failed")
 	}
 
+	return nil
+}
+
+// WaitForDeviceModeChangeApplied waits for device mode change is applied to both ARC and ash.
+func WaitForDeviceModeChangeApplied(ctx context.Context) error {
+	// TODO(b/187788935): GoBigSleepLint There is no easy way to wait for the device mode change to finish in ARC++. Please see b/187788935 for details.
+	if err := testing.Sleep(ctx, deviceModeChangeWaitDuration); err != nil {
+		return errors.Wrap(err, "failed to wait for device mode change")
+	}
 	return nil
 }

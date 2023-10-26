@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/wm"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -121,11 +122,9 @@ func SetupTestApp(ctx context.Context, s *testing.State, testFunc PerformTestFun
 		s.Fatal("Failed to set tablet mode disabled: ", err)
 	}
 	defer cleanup(cleanupCtx)
-	// GoBigSleepLint:
-	// TODO(b/187788935): Wait for "tablet mode animation is finished" in a reliable way.
 	// If an activity is launched while the tablet mode animation is active, the activity
 	// will be launched in un undefined state, making the test flaky.
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+	if err := wm.WaitForDeviceModeChangeApplied(ctx); err != nil {
 		s.Fatal("Failed to wait until tablet-mode animation finished: ", err)
 	}
 

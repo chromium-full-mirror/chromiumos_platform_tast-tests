@@ -142,10 +142,9 @@ func SharedVirtualPhysical(ctx context.Context, s *testing.State, dc virtualmult
 		s.Fatal("Failed to set tablet mode disabled: ", err)
 	}
 	defer cleanup(cleanupCtx)
-	// TODO(b/187788935): GoBigSleepLint Wait for "tablet mode animation is finished" in a reliable way.
 	// If an activity is launched while the tablet mode animation is active, the activity
 	// will be launched in an undefined state, making the test flaky.
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+	if err := wm.WaitForDeviceModeChangeApplied(ctx); err != nil {
 		s.Fatal("Failed to wait until tablet-mode animation finished: ", err)
 	}
 

@@ -175,6 +175,10 @@ func WindowState(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
+	if err := wm.WaitForDeviceModeChangeApplied(ctx); err != nil {
+		s.Fatal("Failed to wait for device mode change: ", err)
+	}
+
 	// Run the different test cases.
 	for _, test := range testParams.tests {
 		s.Log("Testing ", test.name)
