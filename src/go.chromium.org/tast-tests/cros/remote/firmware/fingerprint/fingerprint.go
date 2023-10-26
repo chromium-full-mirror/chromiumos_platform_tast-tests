@@ -96,7 +96,7 @@ const (
 	flashFpMcuTimeout    = 90 * time.Second
 	biodUpstartJobName   = "biod"
 	powerdUpstartJobName = "powerd"
-	disableFpUpdaterPath = "/mnt/stateful_partition/.disable_fp_updater"
+	disableFpUpdaterPath = "/var/lib/bio_fw_updater/.disable_fp_updater"
 	dutTempPathPattern   = "fp_test_*"
 )
 
