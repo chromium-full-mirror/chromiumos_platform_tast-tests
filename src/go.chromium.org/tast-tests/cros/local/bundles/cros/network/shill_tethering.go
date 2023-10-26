@@ -114,20 +114,30 @@ func ShillTethering(ctx context.Context, s *testing.State) {
 	}
 	defer shillMgr.RemoveFakeUserProfile(cleanupCtx, profileName)
 
+	testing.ContextLog(ctx, "Disabling portal detection on ethernet")
+	if err := shillMgr.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
+		s.Fatal("Failed to disable portal detection on ethernet: ", err)
+	}
+	defer shillMgr.SetProperty(cleanupCtx, shillconst.ProfilePropertyCheckPortalList, "ethernet,wifi,cellular")
+
 	// Setup the virtual ethernet upstream.
 	pool := subnet.NewPool()
 	opt := virtualnet.EnvOptions{
+		Priority:   5, // Make the virtual ethernet is chose by TetheringManager.
 		EnableDHCP: true,
 		RAServer:   true,
 		HTTPServerResponseHandler: func(w http.ResponseWriter, r *http.Request) {
 			io.WriteString(w, httpResp)
 		},
 	}
-	_, router, err := virtualnet.CreateRouterEnv(ctx, shillMgr, pool, opt)
+	svc, router, err := virtualnet.CreateRouterEnv(ctx, shillMgr, pool, opt)
 	if err != nil {
 		s.Fatal("Failed to create router env: ", err)
 	}
 	defer router.Cleanup(cleanupCtx)
+	if err := svc.WaitForConnectedOrError(ctx); err != nil {
+		s.Fatal("Failed to wait router being connected: ", err)
+	}
 
 	// Configure and enable the tethering, and wait until the tethering is enabled.
 	s.Log("Enable the tething with the interface ", apIface, " with phy_index ", apPhyIndex, " into shill")
