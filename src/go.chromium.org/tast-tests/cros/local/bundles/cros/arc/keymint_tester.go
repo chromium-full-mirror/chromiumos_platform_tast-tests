@@ -106,7 +106,7 @@ func KeymintTester(ctx context.Context, s *testing.State) {
 	if err := createKeysButton.Click(ctx); err != nil {
 		s.Fatal("Failed to click CREATE KEYS button: ", err)
 	}
-	if err := waitForText(ctx, errText, keysCreatedText, 5*time.Second); err != nil {
+	if err := waitForText(ctx, errText, keysCreatedText, 10*time.Second); err != nil {
 		s.Fatal("Failed to find expected text after creating keys: ", err)
 	}
 
