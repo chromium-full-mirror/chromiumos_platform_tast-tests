@@ -880,7 +880,7 @@ func rotateDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *
 				// TODO(b/304444756): Due to a change in T and up, only consider the
 				// first event (yes, this is a hack, but what we're hacking doesn't have
 				// to do with multidisplay).
-				if version >= arc.SDKT && len(ccList) >= 1 {
+				if version >= arc.SDKT && len(ccList) > 1 {
 					ccList = append([]configChangeEvent(nil), ccList[:(len(ccList)-1)]...)
 				}
 
