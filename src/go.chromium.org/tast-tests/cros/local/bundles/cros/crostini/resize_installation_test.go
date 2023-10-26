@@ -20,6 +20,7 @@ func TestResizeInstallationParams(t *testing.T) {
 	params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
 		SelfManagedInstall: true,
 		MinimalSet:         true,
+		LowPerfEligible:    true,
 	}})
 	genparams.Ensure(t, "resize_installation.go", params)
 }

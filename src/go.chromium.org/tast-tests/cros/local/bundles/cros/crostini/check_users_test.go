@@ -22,6 +22,7 @@ func TestCheckUsersParams(t *testing.T) {
 		Timeout:            7 * time.Minute,
 		MinimalSet:         true,
 		SelfManagedInstall: true,
+		LowPerfEligible:    true,
 	}})
 	genparams.Ensure(t, "check_users.go", params)
 }

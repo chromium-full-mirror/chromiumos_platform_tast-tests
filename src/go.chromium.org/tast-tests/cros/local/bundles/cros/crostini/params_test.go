@@ -25,14 +25,16 @@ import (
 // Struct used to specify extra test options for standard tests.  If the timeout
 // is not changed, we set it to the default value.
 type testOptions struct {
-	timeout time.Duration
+	timeout     time.Duration
+	requiresARC bool
 }
 
 const DefaultStandardTimeout = 7 * time.Minute
 
 // Map crostini tests by file and their extra test options (if any).
 var standardTests = map[string]testOptions{
-	"audio_basic.go": {},
+	"app_gedit_install_uninstall.go": {timeout: 12 * time.Minute},
+	"audio_basic.go":                 {},
 	// Audio playback configurations took about 6 minutes on model with echo reference
 	"audio_playback_configurations.go":  {timeout: 10 * time.Minute},
 	"backup_restore.go":                 {timeout: 10 * time.Minute},
@@ -53,6 +55,7 @@ var standardTests = map[string]testOptions{
 	"no_access_to_downloads.go":         {},
 	"no_shared_folder.go":               {},
 	"notify.go":                         {},
+	"oom_event.go":                      {timeout: 10 * time.Minute},
 	"open_with_terminal.go":             {},
 	"package_info.go":                   {},
 	"package_install_uninstall.go":      {},
@@ -66,7 +69,7 @@ var standardTests = map[string]testOptions{
 	"resize_space_constrained.go":       {},
 	"restart.go":                        {},
 	"restart_icon.go":                   {},
-	"run_with_arc.go":                   {},
+	"run_with_arc.go":                   {requiresARC: true},
 	"shared_font_files.go":              {},
 	"share_downloads_add_files.go":      {},
 	"share_downloads.go":                {},
@@ -98,8 +101,10 @@ func TestFixTestParams(t *testing.T) {
 			customTimeout = DefaultStandardTimeout
 		}
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:    customTimeout,
-			UseFixture: true,
+			Timeout:         customTimeout,
+			UseFixture:      true,
+			LowPerfEligible: true,
+			RequiresARC:     options.requiresARC,
 		}})
 		genparams.Ensure(t, filename, params)
 	}
@@ -113,10 +118,11 @@ var lacrosTests = []string{
 func TestLacrosTestParams(t *testing.T) {
 	for _, filename := range lacrosTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:    3 * time.Minute,
-			UseFixture: true,
-			TestLacros: true,
-			Val:        "browser.TypeAsh",
+			Timeout:         3 * time.Minute,
+			UseFixture:      true,
+			TestLacros:      true,
+			Val:             "browser.TypeAsh",
+			LowPerfEligible: true,
 		}})
 		genparams.Ensure(t, filename, params)
 	}
@@ -133,25 +139,11 @@ var perfTests = map[string]time.Duration{
 	"vim_compile.go":   20 * time.Minute,
 }
 
-var mainlineExpensiveTests = map[string]time.Duration{
-	"oom_event.go":                   10 * time.Minute,
-	"app_gedit_install_uninstall.go": 12 * time.Minute,
-}
-
 func TestExpensiveParams(t *testing.T) {
 	for filename, duration := range perfTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
 			Timeout:                 duration,
 			IsNotMainline:           true,
-			UseFixture:              true,
-			MinimumContainerVersion: vm.DebianBullseye,
-		}})
-		genparams.Ensure(t, filename, params)
-	}
-
-	for filename, duration := range mainlineExpensiveTests {
-		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:                 duration,
 			UseFixture:              true,
 			MinimumContainerVersion: vm.DebianBullseye,
 		}})
@@ -262,18 +254,25 @@ func TestAppIMELanguageTestParams(t *testing.T) {
 	}
 }
 
-var gaiaTests = []string{
-	"no_access_to_drive.go",
-	"share_drive.go",
-	"share_movies.go",
+var gaiaTests = map[string]testOptions{
+	"no_access_to_drive.go": {},
+	"share_drive.go":        {},
+	"share_movies.go":       {requiresARC: true},
 }
 
 func TestGaiaTestParams(t *testing.T) {
-	for _, filename := range gaiaTests {
+	for filename, options := range gaiaTests {
+		customTimeout := options.timeout
+		// Use the default timeout if we didn't specify a custom timeout
+		if customTimeout == 0 {
+			customTimeout = DefaultStandardTimeout
+		}
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:      7 * time.Minute,
-			UseGaiaLogin: true,
-			UseFixture:   true,
+			Timeout:         customTimeout,
+			UseGaiaLogin:    true,
+			UseFixture:      true,
+			LowPerfEligible: true,
+			RequiresARC:     options.requiresARC,
 		}})
 		genparams.Ensure(t, filename, params)
 	}

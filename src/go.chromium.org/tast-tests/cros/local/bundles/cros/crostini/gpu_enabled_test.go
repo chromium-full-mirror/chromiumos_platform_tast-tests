@@ -24,12 +24,14 @@ func TestGpuEnabledParams(t *testing.T) {
 			Val:               `"llvmpipe"`,
 			ExtraSoftwareDeps: []string{"crosvm_no_gpu"},
 			UseFixture:        true,
+			LowPerfEligible:   true,
 		},
 		{
 			Name:              "gpu",
 			Val:               `"virgl"`,
 			ExtraSoftwareDeps: []string{"crosvm_gpu"},
 			UseFixture:        true,
+			LowPerfEligible:   true,
 		}})
 	genparams.Ensure(t, "gpu_enabled.go", params)
 }

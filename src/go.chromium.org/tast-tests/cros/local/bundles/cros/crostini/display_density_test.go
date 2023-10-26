@@ -19,14 +19,16 @@ import (
 func TestDisplayDensityParams(t *testing.T) {
 	params := crostini.MakeTestParamsFromList(t, []crostini.Param{
 		{
-			Name:       "wayland",
-			Val:        "guestos.WaylandDemoConfig()",
-			UseFixture: true,
+			Name:            "wayland",
+			Val:             "guestos.WaylandDemoConfig()",
+			UseFixture:      true,
+			LowPerfEligible: true,
 		},
 		{
-			Name:       "x11",
-			Val:        "guestos.X11DemoConfig()",
-			UseFixture: true,
+			Name:            "x11",
+			Val:             "guestos.X11DemoConfig()",
+			UseFixture:      true,
+			LowPerfEligible: true,
 		}})
 	genparams.Ensure(t, "display_density.go", params)
 }

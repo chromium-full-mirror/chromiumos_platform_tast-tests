@@ -22,6 +22,7 @@ func TestTwoUsersInstallParams(t *testing.T) {
 		Timeout:            14 * time.Minute,
 		SelfManagedInstall: true,
 		MinimalSet:         true,
+		LowPerfEligible:    true,
 	}})
 	genparams.Ensure(t, "two_users_install.go", params)
 }

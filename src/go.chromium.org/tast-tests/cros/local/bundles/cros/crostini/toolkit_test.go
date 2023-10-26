@@ -26,7 +26,8 @@ func TestToolkitParams(t *testing.T) {
 				Data:    "toolkit_gtk3_demo.py",
 				Command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
 			}`,
-			UseFixture: true,
+			UseFixture:      true,
+			LowPerfEligible: true,
 		}, {
 			Name:      "gtk3_x11",
 			ExtraData: []string{"toolkit_gtk3_demo.py"},
@@ -34,7 +35,8 @@ func TestToolkitParams(t *testing.T) {
 				Data:    "toolkit_gtk3_demo.py",
 				Command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
 			}`,
-			UseFixture: true,
+			UseFixture:      true,
+			LowPerfEligible: true,
 		}, {
 			Name:      "gtk4_wayland",
 			ExtraData: []string{"toolkit_gtk4_demo.py"},
@@ -43,6 +45,7 @@ func TestToolkitParams(t *testing.T) {
 				Command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk4_demo.py"},
 			}`,
 			UseFixture:              true,
+			LowPerfEligible:         true,
 			MinimumContainerVersion: vm.DebianBookworm,
 		}, {
 			Name:      "gtk4_x11",
@@ -52,6 +55,7 @@ func TestToolkitParams(t *testing.T) {
 				Command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk4_demo.py"},
 			}`,
 			UseFixture:              true,
+			LowPerfEligible:         true,
 			MinimumContainerVersion: vm.DebianBookworm,
 		}, {
 			Name:      "qt5_x11",
@@ -60,7 +64,8 @@ func TestToolkitParams(t *testing.T) {
 				Data:    "toolkit_qt5_demo.py",
 				Command: []string{"python3", "toolkit_qt5_demo.py"},
 			}`,
-			UseFixture: true,
+			UseFixture:      true,
+			LowPerfEligible: true,
 		}, {
 			// This was not previously tested in bullseye.
 			Name:      "qt5_wayland",
@@ -70,7 +75,8 @@ func TestToolkitParams(t *testing.T) {
 				Data:    "toolkit_qt5_demo.py",
 				Command: []string{"python3", "toolkit_qt5_demo.py"},
 			}`,
-			UseFixture: true,
+			UseFixture:      true,
+			LowPerfEligible: true,
 		}, {
 			Name:      "qt6_x11",
 			ExtraData: []string{"toolkit_qt6_demo.py"},
@@ -79,6 +85,7 @@ func TestToolkitParams(t *testing.T) {
 				Command: []string{"python3", "toolkit_qt6_demo.py"},
 			}`,
 			UseFixture:              true,
+			LowPerfEligible:         true,
 			MinimumContainerVersion: vm.DebianBookworm,
 		}, {
 			Name:      "qt6_wayland",
@@ -88,6 +95,7 @@ func TestToolkitParams(t *testing.T) {
 				Command: []string{"python3", "toolkit_qt6_demo.py"},
 			}`,
 			UseFixture:              true,
+			LowPerfEligible:         true,
 			MinimumContainerVersion: vm.DebianBookworm,
 		}, {
 			Name:      "tkinter",
@@ -96,7 +104,8 @@ func TestToolkitParams(t *testing.T) {
 				Data:    "toolkit_tkinter_demo.py",
 				Command: []string{"python3", "toolkit_tkinter_demo.py"},
 			}`,
-			UseFixture: true,
+			LowPerfEligible: true,
+			UseFixture:      true,
 		}})
 	genparams.Ensure(t, "toolkit.go", params)
 }
