@@ -124,11 +124,7 @@ func SuspendConsumption(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Waking DUT")
-	wakeArgs := suspend.DefaultWakeArgs()
-	// The DUT may not reconnect automatically after a long suspend
-	// So attempt to manually reconnect if that happens
-	wakeArgs.ForceReconnect = true
-	if err := suspendContext.WakeDUT(wakeArgs); err != nil {
+	if err := suspendContext.WakeDUT(); err != nil {
 		s.Fatalf("Failed to wake DUT: %s", err)
 	}
 

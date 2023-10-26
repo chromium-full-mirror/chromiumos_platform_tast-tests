@@ -240,7 +240,7 @@ func Eventlog(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Waking DUT")
-		if err := suspendContext.WakeDUT(suspend.DefaultWakeArgs()); err != nil {
+		if err := suspendContext.WakeDUT(); err != nil {
 			s.Fatal("Failed to wake DUT: ", err)
 		}
 

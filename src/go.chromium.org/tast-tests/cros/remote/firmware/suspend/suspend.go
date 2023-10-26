@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -51,22 +50,6 @@ type SuspendArgs struct {
 func DefaultSuspendArgs() SuspendArgs {
 	return SuspendArgs{
 		Delay: suspendDelaySeconds,
-	}
-}
-
-// WakeArgs are arguments for WakeDUT
-type WakeArgs struct {
-	Timeout        time.Duration // Duration to wait for DUT to wakeup/reconnect
-	Interval       time.Duration // How often to check for DUT wakeup/reconnect
-	ForceReconnect bool          // Attempt to reconnect to the DUT if it doesn't automatically
-}
-
-// DefaultWakeArgs creates default arguments for WakeDUT
-func DefaultWakeArgs() WakeArgs {
-	return WakeArgs{
-		Timeout:        wakeTimeout,
-		Interval:       wakeInterval,
-		ForceReconnect: false,
 	}
 }
 
@@ -139,7 +122,7 @@ func (s *Context) SuspendDUTAllTypes(args SuspendArgs) error {
 }
 
 // WakeDUT attempts to wake the DUT by simulating a power button press.
-func (s *Context) WakeDUT(args WakeArgs) error {
+func (s *Context) WakeDUT() error {
 	if err := s.h.Servo.KeypressWithDuration(s.ctx, servo.PowerKey, servo.DurPress); err != nil {
 		return errors.Errorf("failed to press power key on DUT: %s", err)
 	}
@@ -153,30 +136,13 @@ func (s *Context) WakeDUT(args WakeArgs) error {
 		}
 	}
 
-	err := testing.Poll(s.ctx, func(ctx context.Context) error {
-		if !s.h.DUT.Connected(ctx) {
-			return errors.New("waiting for DUT to reconnect")
-		}
-
-		return nil
-
-	}, &testing.PollOptions{Timeout: args.Timeout, Interval: args.Interval})
-
-	if err == nil {
-		return nil
+	connectCtx, cancel := context.WithTimeout(s.ctx, wakeTimeout)
+	defer cancel()
+	if err := s.h.WaitConnect(connectCtx); err != nil {
+		return errors.Wrap(err, "failed to reconnect to DUT after wake with powerkey")
 	}
 
-	// After a long suspend the DUT may not reconnect automatically
-	// So we can attempt to trigger a reconnection
-	if args.ForceReconnect {
-		connectCtx, cancel := context.WithTimeout(s.ctx, args.Timeout)
-		defer cancel()
-		if err = s.h.WaitConnect(connectCtx); err == nil {
-			return nil
-		}
-	}
-
-	return errors.New("failed to reconnect to DUT after entering S0")
+	return nil
 }
 
 // VerifySupendWake determines if the DUT supports a given state.
@@ -192,8 +158,7 @@ func (s *Context) VerifySupendWake(state State) error {
 		return err
 	}
 
-	wakeArgs := DefaultWakeArgs()
-	if err := s.WakeDUT(wakeArgs); err != nil {
+	if err := s.WakeDUT(); err != nil {
 		return err
 	}
 
