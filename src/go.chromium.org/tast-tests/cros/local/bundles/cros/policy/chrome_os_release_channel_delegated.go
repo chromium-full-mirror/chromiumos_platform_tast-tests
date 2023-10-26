@@ -16,12 +16,14 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -100,7 +102,11 @@ func waitForTargetChannel(ctx context.Context, channel string) error {
 // applyPoliciesAndCheckSettingsPage sets policies and restarts Chrome to apply
 // them, then checks the settings page for the restriction on channel
 // selection.
-func applyPoliciesAndCheckSettingsPage(ctx context.Context, s *testing.State, fdms *fakedms.FakeDMS, policies []policy.Policy, expectedRestriction restriction.Restriction) (*chrome.Chrome, error) {
+func applyPoliciesAndCheckSettingsPage(ctx context.Context, s *testing.State, fdms *fakedms.FakeDMS, policies []policy.Policy, expectedRestriction restriction.Restriction, dumpPrefix string) (*chrome.Chrome, error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	// ChromeOsReleaseChannelDelegated only works for affiliated users.
 	pb := policy.NewBlob()
 	affiliationID := []string{"affiliation_id"}
@@ -122,6 +128,8 @@ func applyPoliciesAndCheckSettingsPage(ctx context.Context, s *testing.State, fd
 		return nil, err
 	}
 
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, dumpPrefix+"_ui_tree_settings_page")
+
 	// Restart update-engine to force reload policies.
 	if err := upstart.RestartJob(ctx, "update-engine"); err != nil {
 		return nil, err
@@ -129,10 +137,19 @@ func applyPoliciesAndCheckSettingsPage(ctx context.Context, s *testing.State, fd
 
 	channelButton := nodewith.Name("Change channel").Role(role.Button)
 
-	// Open the channel settings page and check if the channel selection is disabled.
-	if err := policyutil.OSSettingsPage(ctx, cr, "help/details").
-		SelectNode(ctx, channelButton).Restriction(expectedRestriction).
-		Verify(); err != nil {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Open the channel settings page and check if the channel selection is disabled.
+		if err := policyutil.OSSettingsPage(ctx, cr, "help/details").
+			SelectNode(ctx, channelButton).Restriction(expectedRestriction).
+			Verify(); err != nil {
+
+			return err
+		}
+
+		return nil
+	}, &testing.PollOptions{
+		Timeout: 10 * time.Second,
+	}); err != nil {
 		return nil, err
 	}
 
@@ -156,7 +173,7 @@ func ChromeOSReleaseChannelDelegated(ctx context.Context, s *testing.State) {
 		cr, err := applyPoliciesAndCheckSettingsPage(ctx, s, fdms, []policy.Policy{
 			&policy.ChromeOsReleaseChannelDelegated{Val: true},
 			&policy.ChromeOsReleaseChannel{Val: "beta-channel"},
-		}, restriction.None)
+		}, restriction.None, "delegated_first")
 		if err != nil {
 			s.Fatal("Failed to check settings page: ", err)
 		}
@@ -197,7 +214,7 @@ func ChromeOSReleaseChannelDelegated(ctx context.Context, s *testing.State) {
 		cr, err := applyPoliciesAndCheckSettingsPage(ctx, s, fdms, []policy.Policy{
 			&policy.ChromeOsReleaseChannelDelegated{Val: false},
 			&policy.ChromeOsReleaseChannel{Val: "beta-channel"},
-		}, restriction.Disabled)
+		}, restriction.Disabled, "policy_override")
 		if err != nil {
 			s.Fatal("Failed to check settings page: ", err)
 		}
@@ -212,7 +229,7 @@ func ChromeOSReleaseChannelDelegated(ctx context.Context, s *testing.State) {
 		cr, err := applyPoliciesAndCheckSettingsPage(ctx, s, fdms, []policy.Policy{
 			&policy.ChromeOsReleaseChannelDelegated{Val: true},
 			&policy.ChromeOsReleaseChannel{Val: "stable-channel"},
-		}, restriction.None)
+		}, restriction.None, "delegated_again")
 		if err != nil {
 			s.Fatal("Failed to check settings page: ", err)
 		}
