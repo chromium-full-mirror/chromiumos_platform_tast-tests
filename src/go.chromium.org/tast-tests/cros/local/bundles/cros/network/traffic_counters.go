@@ -63,7 +63,7 @@ func init() {
 		}, {
 			Name:    "crostini",
 			Val:     tcParams{cros: true},
-			Fixture: "crostiniBuster",
+			Fixture: "crostiniBullseye",
 		}, {
 			Name:    "arc",
 			Val:     tcParams{arc: true},
