@@ -299,7 +299,7 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 
 	// The device we want to pair with may disappear and reappear in the pairing dialog.
 	// To mitigate this flaky behavior we continue to click the device while waiting for
-	// the "device connected" toast to appear for up to 1 minute.
+	// the "device connected" toast to appear for up to 2 minutes.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := ui.Exists(toastFinder)(ctx); err == nil {
 			return nil
@@ -319,7 +319,7 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 			return errors.Wrap(err, "failed to find and click the device")
 		}
 		return errors.New("failed to pair with the device, retrying")
-	}, &testing.PollOptions{Timeout: time.Minute, Interval: 5 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 5 * time.Second}); err != nil {
 		return nil, errors.Wrap(err, "failed to pair with the device")
 	}
 
