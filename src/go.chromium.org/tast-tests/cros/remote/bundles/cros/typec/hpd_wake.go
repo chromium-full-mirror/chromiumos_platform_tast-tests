@@ -11,14 +11,16 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/servo"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/fixture"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecutils"
+	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
+
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+// The index of the MCCI port to which the monitor is connected.
+const portUsed = 1
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -29,25 +31,29 @@ func init() {
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},
 		HardwareDeps: hwdep.D(hwdep.ECFeatureTypecCmd(), hwdep.ChromeEC()),
-		Vars:         []string{"servo"},
-		Fixture:      "typeCServo",
 	})
 }
 
 // HpdWake does the following:
-// - Simulate a servo disconnect.
-// - Reconfigure the servo as a DP device with HPD "low".
-// - Reconnect the servo.
-// - Verify that the kernel recognizes the servo partner and DP alt mode.
-// - Measure the EC device wake event count.
+// - Disconnect the monitor via MCCI switch.
 // - Suspend the DUT.
-// - Make the servo's HPD state to "high".
+// - Reconnect the monitor via MCCI switch.
 // - Check that the DUT woke, count the EC wake events and confirm that the wake count increased.
+//
+// This test expects the following hardware topology:
+//
+//	Host -------- DUT -------- dock ----- MCCI (`portUsed`) ---- display
+//	 |                                        |
+//	 |________________________________________|
 func HpdWake(ctx context.Context, s *testing.State) {
 	d := s.DUT()
-	svo := s.FixtValue().(*fixture.Value).Servo()
-	if err := enumerateDP(ctx, svo, d, s); err != nil {
-		s.Fatal("DP enumeration failed: ", err)
+
+	// Disconnect the monitor.
+	mcci.DisablePorts()
+
+	// GoBigSleepLint: Give enough time for a new display modeset after hot unplug.
+	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+		s.Fatal("Failed to sleep for display unplug modeset: ", err)
 	}
 
 	// Count wake sources before.
@@ -69,13 +75,8 @@ func HpdWake(ctx context.Context, s *testing.State) {
 		s.Fatal("Couldn't verify DUT become unreachable after suspend: ", err)
 	}
 
-	// Adding a delay to make more room for DUT EC to complete S0ix trasition
-	testing.Sleep(ctx, 10*time.Second)
-
-	s.Log("Setting HPD to high")
-	if err := svo.RunUSBCDPConfigCommand(ctx, "hpd", "h"); err != nil {
-		s.Fatal("Failed to set HPD high: ", err)
-	}
+	// Reconnect the monitor.
+	mcci.EnablePort(portUsed)
 
 	// Verify DUT reconnected.
 	if err := testing.Poll(ctx, d.Connect, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
@@ -105,52 +106,6 @@ func HpdWake(ctx context.Context, s *testing.State) {
 			s.Fatal("Suspend command returned unexpected error: ", err)
 		}
 	}
-}
-
-// enumerateDP configures the servo as a DP device and verifies that the DUT can detect it.
-// Returns nil on success, otherwise the error message.
-func enumerateDP(ctx context.Context, svo *servo.Servo, d *dut.DUT, s *testing.State) error {
-	s.Log("Simulating servo disconnect")
-	if err := typecutils.CcOffAndWait(ctx, svo); err != nil {
-		return errors.Wrap(err, "failed CC off and wait")
-	}
-
-	if err := d.Disconnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to close the current DUT ssh connection")
-	}
-
-	if err := svo.RunUSBCDPConfigCommand(ctx, "disable"); err != nil {
-		return errors.Wrap(err, "failed to disable DP support")
-	}
-
-	if err := svo.RunUSBCDPConfigCommand(ctx, "hpd", "l"); err != nil {
-		return errors.Wrap(err, "failed to set DP multi-function")
-	}
-
-	if err := svo.RunUSBCDPConfigCommand(ctx, "enable"); err != nil {
-		return errors.Wrap(err, "failed to enable DP support")
-	}
-
-	s.Log("Simulating servo reconnect")
-	if err := svo.SetCC(ctx, servo.On); err != nil {
-		return errors.Wrap(err, "failed to switch on CC")
-	}
-
-	if err := testing.Poll(ctx, d.Connect, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to connect to DUT")
-	}
-
-	// Wait for PD negotiation to stabilize.
-	if err := testing.Sleep(ctx, 2500*time.Millisecond); err != nil {
-		return errors.Wrap(err, "failed to sleep for PD negotiation")
-	}
-
-	s.Log("Verifying DP alt mode detection")
-	if err := typecutils.CheckForDPAltMode(ctx, d, s, ""); err != nil {
-		return errors.Wrap(err, "failed to find the expected partner")
-	}
-
-	return nil
 }
 
 // getWakeCount returns the number of wake ups from the ChromeOS EC device (through which HPD wakeups are passed).
