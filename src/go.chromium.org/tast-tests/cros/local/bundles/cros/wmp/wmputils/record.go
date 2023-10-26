@@ -40,7 +40,7 @@ func EnsureCaptureModeActivated(tconn *chrome.TestConn, activated bool) uiauto.A
 		}
 
 		// TODO(b/257122990): For exit, add a more concrete way instead of relying on the ui tree.
-		screenRecordIconButton := nodewith.HasClass("IconButton").Name("Screen record")
+		screenRecordIconButton := nodewith.HasClass("IconSliderButton").NameContaining("Screen record")
 
 		return testing.Poll(ctx, func(ctx context.Context) error {
 			var condition recordModeCondition

@@ -84,8 +84,8 @@ func RecordFullScreen(ctx context.Context, s *testing.State) {
 	}
 
 	// Starts full screen recording via UI.
-	screenRecordToggleButton := nodewith.HasClass("IconButton").Name("Screen record")
-	recordFullscreenToggleButton := nodewith.HasClass("IconButton").Name("Record full screen")
+	screenRecordToggleButton := nodewith.HasClass("IconSliderButton").NameContaining("Screen record")
+	recordFullscreenToggleButton := nodewith.HasClass("IconSliderButton").Name("Record full screen")
 	stopRecordButton := nodewith.HasClass("TrayBackgroundView").Name("Stop screen recording")
 	recordTakenLabel := nodewith.HasClass("Label").Name("Screen recording taken")
 
