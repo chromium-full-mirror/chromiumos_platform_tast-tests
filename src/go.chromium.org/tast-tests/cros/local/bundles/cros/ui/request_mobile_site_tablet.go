@@ -163,7 +163,7 @@ func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 					browserRoot = nodewith.Role(role.Window).ClassNameRegex(browserClassRegexp).NameContaining(websiteName)
 				}
 
-				res.threeDotMenuBtn = nodewith.HasClass("BrowserAppMenuButton").Role(role.PopUpButton).Ancestor(nodewith.HasClass("ToolbarView").Ancestor(browserRoot))
+				res.threeDotMenuBtn = nodewith.HasClass("BrowserAppMenuButton").Role(role.PopUpButton).Ancestor(nodewith.HasClass("ToolbarView").Role(role.Toolbar).Ancestor(browserRoot))
 				if err := mobileSiteTest(ctx, br, res, websiteName, url); err != nil {
 					s.Fatalf("Failed to run mobileSiteTest on website %q: %v", websiteName, err)
 				}
