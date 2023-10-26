@@ -80,7 +80,7 @@ func ZeroStateDesksBar(ctx context.Context, s *testing.State) {
 	// Zero state desks bar is shown when there is only one desk. Tab to
 	// default desk button inside and press "Enter" should expand the desks
 	// bar but no new desk should be created.
-	desk1DeskNameView := nodewith.ClassName("DeskNameView").Name("Desk 1")
+	desk1DeskNameView := nodewith.ClassName("DeskNameView").First()
 	if err := uiauto.Combine(
 		"press the default desk button to expand desks bar",
 		kb.AccelAction("Tab"),
@@ -101,13 +101,13 @@ func ZeroStateDesksBar(ctx context.Context, s *testing.State) {
 
 	// Tab to the new desk button inside expanded desks bar and press "Enter"
 	// should create a new desk.
-	desk2DeskNameView := nodewith.ClassName("DeskNameView").Name("Desk 2")
+	desk2DeskNameView := nodewith.ClassName("DeskNameView").Nth(1)
 	newDeskName := "new desk"
 	if err := uiauto.Combine(
 		"create a new desk through new desk button in the expanded desks bar",
 		kb.AccelAction("Tab"),
 		kb.AccelAction("Enter"),
-		ac.WaitUntilExists(desk2DeskNameView.Focused()),
+		ac.WaitUntilExists(desk2DeskNameView),
 		kb.TypeAction(newDeskName),
 		kb.AccelAction("Enter"),
 	)(ctx); err != nil {
@@ -124,16 +124,18 @@ func ZeroStateDesksBar(ctx context.Context, s *testing.State) {
 
 	firstDeskMiniViewLoc := twoDeskMiniViewsInfo[0].Location
 	secondDeskMiniViewLoc := twoDeskMiniViewsInfo[1].Location
-	// Verifies that the new desk button inside the expanded desks bar has the same size as the desk preview.
-	newDeskButtonInExpandedDesksBarLoc, err := ac.Location(ctx, nodewith.ClassName("ExpandedDesksBarButton"))
+	// Verifies that the new desk button inside the expanded desks bar has the
+	// same height as the desk preview.
+	newDeskButtonInExpandedDesksBarLoc, err := ac.Location(ctx, nodewith.ClassName("CrOSNextDeskIconButton"))
 	if err != nil {
 		s.Fatal("Failed to get the location of the new desk button inside expanded desks bar: ", err)
 	}
-	if (*newDeskButtonInExpandedDesksBarLoc).Width != secondDeskMiniViewLoc.Width {
-		s.Fatalf("Got width of the expanded new desk button is %d, want %d", (*newDeskButtonInExpandedDesksBarLoc).Width, secondDeskMiniViewLoc.Width)
+	deskPreviewViewLocation, err := ac.Location(ctx, nodewith.ClassName("DeskPreviewView").First())
+	if err != nil {
+		s.Fatal("Failed to get location of desk preview view: ", err)
 	}
-	if (*newDeskButtonInExpandedDesksBarLoc).Height != secondDeskMiniViewLoc.Height {
-		s.Fatalf("Got height of the expanded new desk button is %d, want %d", (*newDeskButtonInExpandedDesksBarLoc).Height, secondDeskMiniViewLoc.Height)
+	if (*newDeskButtonInExpandedDesksBarLoc).Height != deskPreviewViewLocation.Height {
+		s.Fatalf("Got height of the expanded new desk button is %d, want %d", (*newDeskButtonInExpandedDesksBarLoc).Height, deskPreviewViewLocation.Height)
 	}
 
 	// Drag "new desk" to be the first desk and delete it.
@@ -147,13 +149,13 @@ func ZeroStateDesksBar(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to delete new desk: ", err)
 	}
 
-	// It should switch back to zero state desks bar when there is only 1 desk.
-	// Click the new desk button inside the zero state desks bar should create
-	// a new desk and expand the desks bar.
-	addDeskButton := nodewith.ClassName("ZeroStateIconButton")
-	newDeskNameView := nodewith.ClassName("DeskNameView").Name("Desk 2")
+	// It should not switch back to zero state desk bar and should instead stay
+	// expanded when there is only 1 desk. Click the new desk button inside the
+	// zero state desks bar should create a new desk and expand the desks bar.
+	addDeskButton := nodewith.ClassName("CrOSNextDeskIconButton")
+	newDeskNameView := nodewith.ClassName("DeskNameView").First()
 	if err := uiauto.Combine(
-		"create a new desk from zero state desks bar",
+		"create a new desk from expanded state desks bar",
 		ac.LeftClick(addDeskButton),
 		// The focus on the new desk should be on the desk name field.
 		ac.WaitUntilExists(newDeskNameView.Focused()),
