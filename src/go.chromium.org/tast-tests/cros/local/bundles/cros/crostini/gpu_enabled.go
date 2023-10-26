@@ -27,22 +27,6 @@ func init() {
 		Params: []testing.Param{
 			// TODO(b/304170307): Mali-G57 crashes on bookworm.
 			{
-				Name:              "sw_buster_stable",
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"crosvm_no_gpu", "dlc"},
-				ExtraHardwareDeps: crostini.CrostiniStable,
-				Fixture:           "crostiniBuster",
-				Timeout:           7 * time.Minute,
-				Val:               "llvmpipe",
-			}, {
-				Name:              "sw_buster_unstable",
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"crosvm_no_gpu", "dlc"},
-				ExtraHardwareDeps: crostini.CrostiniUnstable,
-				Fixture:           "crostiniBuster",
-				Timeout:           7 * time.Minute,
-				Val:               "llvmpipe",
-			}, {
 				Name:              "sw_bullseye_stable",
 				ExtraSoftwareDeps: []string{"crosvm_no_gpu", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
@@ -73,22 +57,6 @@ func init() {
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
 				Val:               "llvmpipe",
-			}, {
-				Name:              "gpu_buster_stable",
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"crosvm_gpu", "dlc"},
-				ExtraHardwareDeps: crostini.CrostiniStable,
-				Fixture:           "crostiniBuster",
-				Timeout:           7 * time.Minute,
-				Val:               "virgl",
-			}, {
-				Name:              "gpu_buster_unstable",
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"crosvm_gpu", "dlc"},
-				ExtraHardwareDeps: crostini.CrostiniUnstable,
-				Fixture:           "crostiniBuster",
-				Timeout:           7 * time.Minute,
-				Val:               "virgl",
 			}, {
 				Name:              "gpu_bullseye_stable",
 				ExtraSoftwareDeps: []string{"crosvm_gpu", "dlc"},
