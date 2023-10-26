@@ -248,6 +248,12 @@ func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State)
 
 	ui := uiauto.New(tconn)
 
+	// Retrieve the web page with the target text box.
+	var pageRootFinder = nodewith.Name("Editable Text Box").Role(role.RootWebArea)
+	if err := ui.WaitUntilExists(pageRootFinder)(ctx); err != nil {
+		s.Fatal("Unable to find target page: ", err)
+	}
+
 	textBoxNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).First()
 	if err := uiauto.Combine("Pasting into text box",
 		ui.WaitUntilExists(textBoxNode.Visible()),
@@ -293,12 +299,12 @@ func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State)
 	}
 
 	if params.copyAllowed {
-		pastedError := clipboard.CheckPastedContent(ctx, ui, copiedString)
+		pastedError := clipboard.CheckPastedContent(ctx, ui, copiedString, pageRootFinder)
 		if pastedError != nil {
 			s.Error("Checked pasted content but found an error: ", pastedError)
 		}
 	} else {
-		emptyError := clipboard.CheckContentIsNotPasted(ctx, ui, copiedString)
+		emptyError := clipboard.CheckContentIsNotPasted(ctx, ui, copiedString, pageRootFinder)
 		if emptyError != nil {
 			s.Error("Content was pasted but should have been blocked")
 		}

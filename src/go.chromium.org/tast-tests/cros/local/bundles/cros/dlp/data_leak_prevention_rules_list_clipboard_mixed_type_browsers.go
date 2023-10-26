@@ -224,6 +224,8 @@ func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, 
 	if err := dstWin.ActivateWindow(ctx, tconn); err != nil {
 		s.Fatal("Cannot activate destination window: ", err)
 	}
+
+	var pageRootFinder *nodewith.Finder
 	if params.Destination == dragdrop.Chrome {
 		dstConn, err := br.NewConn(ctx, dstURL)
 		if err != nil {
@@ -233,6 +235,12 @@ func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, 
 
 		if err := webutil.WaitForQuiescence(ctx, dstConn, 10*time.Second); err != nil {
 			s.Fatalf("Failed to wait for %q to achieve quiescence: %v", dstURL, err)
+		}
+
+		// Retrieve the web page with the target text box.
+		pageRootFinder = nodewith.Name("Editable Text Box").Role(role.RootWebArea)
+		if err := ui.WaitUntilExists(pageRootFinder)(ctx); err != nil {
+			s.Fatal("Unable to find target page: ", err)
 		}
 
 		textBoxNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).First()
@@ -245,6 +253,13 @@ func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, 
 			s.Fatal("Failed to paste into text box: ", err)
 		}
 	} else {
+
+		// Retrieve the OS Settings page with the target text box.
+		pageRootFinder = nodewith.Name("Settings").Role(role.RootWebArea)
+		if err := ui.WaitUntilExists(pageRootFinder)(ctx); err != nil {
+			s.Fatal("Unable to find target page: ", err)
+		}
+
 		if err := uiauto.Combine("Paste text into search",
 			keyboard.AccelAction("Ctrl+F"),
 			keyboard.AccelAction("Ctrl+V"))(ctx); err != nil {
@@ -258,7 +273,7 @@ func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, 
 	}
 
 	// Check pasted content.
-	pastedError := clipboard.CheckPastedContent(ctx, ui, copiedString)
+	pastedError := clipboard.CheckPastedContent(ctx, ui, copiedString, pageRootFinder)
 	if pastedError == nil {
 		s.Error("Content was pasted but should have been blocked")
 	}

@@ -84,7 +84,7 @@ func GetClipboardContent(ctx context.Context, tconn *chrome.TestConn) (string, e
 	return clipData, nil
 }
 
-func checkNumWordsAndRetrieveContentNode(ctx context.Context, ui *uiauto.Context, content string) (*nodewith.Finder, error) {
+func checkNumWordsAndRetrieveContentNode(ctx context.Context, ui *uiauto.Context, content string, ancestor *nodewith.Finder) (*nodewith.Finder, error) {
 	// Slicing the string to get the first 10 words or less in a single line.
 	// Since pasted string in search box will be in single line format.
 	words := strings.Fields(content)
@@ -96,14 +96,14 @@ func checkNumWordsAndRetrieveContentNode(ctx context.Context, ui *uiauto.Context
 	}
 	content = strings.Join(words[:numSampleWords], " ")
 
-	contentNode := nodewith.NameStartingWith(content).Role(role.InlineTextBox).State(state.Editable, true).First()
+	contentNode := nodewith.NameStartingWith(content).Role(role.InlineTextBox).State(state.Editable, true).Ancestor(ancestor).First()
 
 	return contentNode, nil
 }
 
 // CheckPastedContent checks if a certain string appears in the search box.
-func CheckPastedContent(ctx context.Context, ui *uiauto.Context, content string) error {
-	contentNode, err := checkNumWordsAndRetrieveContentNode(ctx, ui, content)
+func CheckPastedContent(ctx context.Context, ui *uiauto.Context, content string, ancestor *nodewith.Finder) error {
+	contentNode, err := checkNumWordsAndRetrieveContentNode(ctx, ui, content, ancestor)
 	if err != nil {
 		return err
 	}
@@ -114,8 +114,8 @@ func CheckPastedContent(ctx context.Context, ui *uiauto.Context, content string)
 }
 
 // CheckContentIsNotPasted checks that a certain strings do not appear in the search box
-func CheckContentIsNotPasted(ctx context.Context, ui *uiauto.Context, content string) error {
-	contentNode, err := checkNumWordsAndRetrieveContentNode(ctx, ui, content)
+func CheckContentIsNotPasted(ctx context.Context, ui *uiauto.Context, content string, ancestor *nodewith.Finder) error {
+	contentNode, err := checkNumWordsAndRetrieveContentNode(ctx, ui, content, ancestor)
 	if err != nil {
 		return err
 	}

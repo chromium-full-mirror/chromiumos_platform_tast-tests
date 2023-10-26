@@ -262,6 +262,12 @@ func (service *DataLeakPreventionService) ClipboardCopyPaste(ctx context.Context
 
 	ui := uiauto.New(tconn)
 
+	// Retrieve the web page with the target text box.
+	var pageRootFinder = nodewith.Name("Editable Text Box").Role(role.RootWebArea)
+	if err := ui.WaitUntilExists(pageRootFinder)(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to render test page")
+	}
+
 	if err := uiauto.Combine("Pasting into text box",
 		ui.WaitUntilExists(textAreaNode.Visible()),
 		ui.LeftClick(textAreaNode),
@@ -272,7 +278,7 @@ func (service *DataLeakPreventionService) ClipboardCopyPaste(ctx context.Context
 	}
 
 	// We are only testing report mode, since we expect the text to be copied.
-	if err := clipboard.CheckPastedContent(ctx, ui, copiedString); err != nil {
+	if err := clipboard.CheckPastedContent(ctx, ui, copiedString, pageRootFinder); err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to verify pasted content")
 	}
 
