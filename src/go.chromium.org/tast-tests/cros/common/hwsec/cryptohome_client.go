@@ -454,9 +454,9 @@ func (u *CryptohomeClient) CheckPinVault(ctx context.Context, label string, auth
 
 // RemoveVault remove the vault for username.
 func (u *CryptohomeClient) RemoveVault(ctx context.Context, username string) (bool, error) {
-	_, err := u.binary.remove(ctx, username)
+	out, err := u.binary.remove(ctx, username)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to remove vault")
+		return false, errors.Wrapf(err, "failed to remove vault, got: %s", string(out))
 	}
 	return true, nil
 }
@@ -470,7 +470,7 @@ func (u *CryptohomeClient) UnmountAndRemoveVault(ctx context.Context, username s
 	}
 
 	if _, err := u.RemoveVault(ctx, username); err != nil {
-		return errors.Wrap(err, "failed to remove vault")
+		return errors.Wrap(err, "failed to remove vault post unmount")
 	}
 
 	return nil
