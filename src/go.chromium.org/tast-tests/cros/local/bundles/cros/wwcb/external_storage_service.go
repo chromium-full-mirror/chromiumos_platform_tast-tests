@@ -33,7 +33,7 @@ type ExternalStorageService struct {
 	sharedObject *common.SharedObjectsForService
 }
 
-// EjectAll ejects all present USB Drives.
+// EjectAll ejects all present USB drives.
 func (ds *ExternalStorageService) EjectAll(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	cr := ds.sharedObject.Chrome
 	if cr == nil {
@@ -53,7 +53,7 @@ func (ds *ExternalStorageService) EjectAll(ctx context.Context, req *empty.Empty
 	defer filesApp.Close(cleanupCtx)
 
 	if err := filesApp.EjectAll()(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to eject filesapp")
+		return nil, errors.Wrap(err, "failed to eject devices from the Files app")
 	}
 
 	return &empty.Empty{}, nil
