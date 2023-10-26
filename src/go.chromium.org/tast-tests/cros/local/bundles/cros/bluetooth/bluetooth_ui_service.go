@@ -307,6 +307,15 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 		if err := uiauto.Combine("find and click the device",
 			ui.Exists(deviceFinder),
 			ui.LeftClick(deviceFinder))(ctx); err != nil {
+			// Usually this happens when the pairing dialog was closed. Re-open it
+			// anyway to come back.
+			if err := quicksettings.NavigateToBluetoothDetailedView(ctx, tconn); err != nil {
+				return errors.Wrap(err, "failed to navigate to the detailed Bluetooth view")
+			}
+			if err := ui.LeftClickUntil(quicksettings.BluetoothDetailedViewPairNewDeviceButton.First(),
+				ui.Exists(quicksettings.BluetoothPairNewDeviceDialog))(ctx); err != nil {
+				return errors.Wrap(err, "failed to open the pairing dialog")
+			}
 			return errors.Wrap(err, "failed to find and click the device")
 		}
 		return errors.New("failed to pair with the device, retrying")
