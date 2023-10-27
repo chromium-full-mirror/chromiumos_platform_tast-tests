@@ -38,7 +38,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
 		SoftwareDeps: []string{"chrome", "no_tablet_form_factor"},
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps:      []string{arcent.LoginPoolVar},
 		Params: []testing.Param{{
@@ -70,7 +70,7 @@ func init() {
 				arcEnabled:  &policy.ArcEnabled{Val: true},
 				wantEnabled: true,
 			},
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name: "disabled_vm",
@@ -78,6 +78,7 @@ func init() {
 				arcEnabled:  &policy.ArcEnabled{Val: false},
 				wantEnabled: false,
 			},
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name: "unset_vm",
@@ -85,7 +86,7 @@ func init() {
 				arcEnabled:  &policy.ArcEnabled{Stat: policy.StatusUnset},
 				wantEnabled: false,
 			},
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		SearchFlags: []*testing.StringPair{

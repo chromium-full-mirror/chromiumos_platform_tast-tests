@@ -23,7 +23,7 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "cros-arc-te@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
-		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
@@ -32,7 +32,7 @@ func init() {
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 		}},
 		Fixture: "familyLinkUnicornArcLogin",
 	})

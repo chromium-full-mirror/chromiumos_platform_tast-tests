@@ -33,7 +33,7 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
-		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:arc-functional"},
 		VarDeps: []string{
 			arcent.LoginPoolVar,
 		},
@@ -61,6 +61,7 @@ func init() {
 			{
 				Name:              "vm_betty",
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"group:hw_agnostic"},
 			}},
 		Timeout: 7 * time.Minute,
 	})

@@ -32,7 +32,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
 		Fixture:      fixture.PostDemoModeOOBEProd,
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.
 		// We require "arc" and "chrome_internal" because the ARC TOS screen
@@ -47,7 +47,7 @@ func init() {
 			{
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			}},
 	})
 }

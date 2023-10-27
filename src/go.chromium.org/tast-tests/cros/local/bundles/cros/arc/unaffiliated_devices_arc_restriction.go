@@ -6,6 +6,8 @@ package arc
 
 import (
 	"context"
+	"time"
+
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
@@ -17,7 +19,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"time"
 )
 
 type unaffiliatedDevicesArcRestrictionTestArgs struct {
@@ -36,7 +37,7 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "preranap@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:305065309",
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Timeout:      8 * time.Minute,
 		Fixture:      fixture.CleanOwnership,
@@ -58,7 +59,7 @@ func init() {
 					expectArcEnabled:                   true,
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			},
 			{
 				Name: "arc_allowed_when_unaffiliated_device_arc_allowed_is_true_on_unaffiliated",
@@ -82,7 +83,7 @@ func init() {
 					expectArcEnabled:                   true,
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			},
 			{
 				Name: "arc_allowed_when_unaffiliated_device_arc_allowed_is_true_on_affiliated",
@@ -106,7 +107,7 @@ func init() {
 					expectArcEnabled:                   true,
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			},
 			{
 				Name: "arc_allowed_when_unaffiliated_device_arc_allowed_is_false_on_affiliated",
@@ -130,7 +131,7 @@ func init() {
 					expectArcEnabled:                   false,
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			},
 			{
 				Name: "arc_disallowed_when_unaffiliated_device_arc_allowed_is_false_on_unaffiliated",
@@ -154,7 +155,7 @@ func init() {
 					expectArcEnabled:                   false,
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			},
 			{
 				Name: "arc_disabled_when_arc_enabled_is_false_and_unaffiliated_device_arc_allowed_is_true",

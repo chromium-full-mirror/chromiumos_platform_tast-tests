@@ -38,6 +38,7 @@ func init() {
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 		Timeout: 8 * time.Minute, // There is a need to start Chrome 4 times.
 		SearchFlags: []*testing.StringPair{
