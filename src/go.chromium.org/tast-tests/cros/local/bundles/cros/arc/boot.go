@@ -38,7 +38,7 @@ func init() {
 			Val: bootConfig{
 				numTrials: 1,
 			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
+			ExtraAttr:         []string{"group:mainline"},
 			ExtraSoftwareDeps: []string{"android_container"},
 			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
@@ -61,7 +61,7 @@ func init() {
 			Val: bootConfig{
 				numTrials: 1,
 			},
-			ExtraAttr:         []string{"group:mainline"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
@@ -72,7 +72,7 @@ func init() {
 					"--enable-features=ArcEnableVirtioBlkForData",
 				},
 			},
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
@@ -84,7 +84,7 @@ func init() {
 				},
 				dataDiskODirect: true,
 			},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
@@ -95,7 +95,7 @@ func init() {
 				// is more secure but slow.
 				chromeArgs: []string{"--disable-features=ArcEnablePerVmCoreScheduling"},
 			},
-			ExtraAttr:         []string{"group:mainline"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
@@ -103,6 +103,7 @@ func init() {
 			Val: bootConfig{
 				numTrials: 1000000,
 			},
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           365 * 24 * time.Hour,
 		}, {
@@ -111,7 +112,7 @@ func init() {
 				numTrials:     1,
 				rootfsODirect: true,
 			},
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
@@ -119,7 +120,7 @@ func init() {
 			Val: bootConfig{
 				numTrials: 10,
 			},
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           25 * time.Minute,
 		}, {
@@ -129,7 +130,7 @@ func init() {
 				// Boot ARCVM with the largest possible guest memory size.
 				chromeArgs: []string{"--enable-features=ArcVmMemorySize:shift_mib/0"},
 			},
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}},

@@ -32,7 +32,7 @@ func init() {
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
-		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:arc-functional"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val:               browser.TypeAsh,
@@ -46,13 +46,14 @@ func init() {
 			Fixture:           "lacrosWithArcBooted",
 		}, {
 			Name:              "vm",
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               browser.TypeAsh,
 			Fixture:           "arcBooted",
 		}, {
 			Name: "lacros_vm",
 			// TODO(crbug.com/1446233): Remove "informational" attribute (flaky).
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Val:               browser.TypeLacros,
 			Fixture:           "lacrosWithArcBooted",

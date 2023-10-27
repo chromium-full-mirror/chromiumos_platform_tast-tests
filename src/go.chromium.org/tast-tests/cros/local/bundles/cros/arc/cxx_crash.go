@@ -25,7 +25,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test handling of a C++ binary crash",
 		Contacts:     []string{"arc-core@google.com", "matvore@chromium.org"},
-		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
+		Attr:         []string{"group:mainline", "informational"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome"},
@@ -40,10 +40,12 @@ func init() {
 			Val:               crash.MockConsent,
 		}, {
 			Name:              "real_consent_vm",
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm", "metrics_consent"},
 			Val:               crash.RealConsent,
 		}, {
 			Name:              "mock_consent_vm",
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               crash.MockConsent,
 		}},

@@ -28,7 +28,7 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
-		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:arc-functional"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		SoftwareDeps: []string{
 			"chrome",
@@ -39,6 +39,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
