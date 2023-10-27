@@ -224,6 +224,10 @@ func CheckIfL850VerizonAndFixDefaultAPN(ctx context.Context) {
 	if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
 		testing.ContextLog(ctx, "Failed to disconnect: ", err)
 	}
+
+	// Ensure we remove the bearer object created during the previous steps.
+	modem.DeleteAllBearers(ctx, modem)
+
 	// Disable/Enable the modem to ensure shill gets the new modem profiles, otherwise shill will
 	// use the previous value on the next connection attempt and it will override it again.
 	if err := modem.DisableUnchecked(ctx); err != nil {
