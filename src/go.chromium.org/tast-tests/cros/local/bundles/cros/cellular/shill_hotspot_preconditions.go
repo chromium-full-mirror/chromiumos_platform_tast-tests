@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
+	"go.chromium.org/tast-tests/cros/local/shill"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -22,6 +23,10 @@ import (
 // callboxHotspotTestProfileName is the profile we create and use for cellular tethering tests.
 const hotspotTestProfileName = "test"
 
+type hotspotPreconditionsTestParams struct {
+	disableCellularWithoutStop bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShillHotspotPreconditions,
@@ -29,8 +34,19 @@ func init() {
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com", "aleksandermj@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
-		Fixture:      "cellular",
-		Timeout:      2 * time.Minute,
+		Params: []testing.Param{{
+			Name: "start_and_stop",
+			Val: hotspotPreconditionsTestParams{
+				disableCellularWithoutStop: false,
+			},
+		}, {
+			Name: "start_and_disable",
+			Val: hotspotPreconditionsTestParams{
+				disableCellularWithoutStop: true,
+			},
+		}},
+		Fixture: "cellular",
+		Timeout: 2 * time.Minute,
 	})
 }
 
@@ -72,6 +88,9 @@ func getDefaultBearerApn(ctx context.Context, modem *modemmanager.Modem) (string
 }
 
 func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
+	params := s.Param().(hotspotPreconditionsTestParams)
+	disableCellularWithoutStop := params.disableCellularWithoutStop
+
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	cleanupCtx := ctx
@@ -176,28 +195,46 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	testing.ContextLog(ctx, "Disable tethering")
-	if err := helper.Manager.DisableTethering(ctx); err != nil {
-		s.Fatal("Failed to disable tethering: ", err)
-	}
+	if disableCellularWithoutStop {
+		// If we disable cellular without stopping tethering first, we expect tethering to be reported
+		// as idle.
 
-	testing.ContextLog(ctx, "Wait for tethering disabled")
-	if _, err := helper.Manager.WaitForTetheringState(ctx, shillconst.TetheringStateIdle); err != nil {
-		s.Fatal("Failed to reach idle tethering state: ", err)
-	}
+		testing.ContextLog(ctx, "Disable cellular technology")
+		if err := helper.Manager.DisableTechnology(ctx, shill.TechnologyCellular); err != nil {
+			s.Fatal("Cellular technology disabling failed: ", err)
+		}
 
-	testing.ContextLog(ctx, "Check if still connected after disabling tethering")
-	if err := helper.IsConnected(ctx); err != nil {
-		s.Fatal("Failed to check if service is connected after disabling tethering: ", err)
-	}
+		testing.ContextLog(ctx, "Wait for tethering disabled")
+		if _, err := helper.Manager.WaitForTetheringState(ctx, shillconst.TetheringStateIdle); err != nil {
+			s.Fatal("Failed to reach idle tethering state: ", err)
+		}
+	} else {
+		// If we only stop tethering, we expect tethering to be reported as idle, and then modem
+		// connected to the original default PDN
 
-	// Compare the APN with the original one we had before enabling tethering.
-	apnAfterTethering, err := getDefaultBearerApn(ctx, modem)
-	if err != nil {
-		s.Fatal("Failed to get APN after enabling tethering: ", err)
-	}
-	testing.ContextLog(ctx, "APN after enabling tethering retrieved: ", apnAfterTethering)
-	if apnBeforeTethering != apnAfterTethering {
-		s.Fatalf("APN before tethering (%s) is different to the one after tethering (%s)", apnBeforeTethering, apnAfterTethering)
+		testing.ContextLog(ctx, "Disable tethering")
+		if err := helper.Manager.DisableTethering(ctx); err != nil {
+			s.Fatal("Failed to disable tethering: ", err)
+		}
+
+		testing.ContextLog(ctx, "Wait for tethering disabled")
+		if _, err := helper.Manager.WaitForTetheringState(ctx, shillconst.TetheringStateIdle); err != nil {
+			s.Fatal("Failed to reach idle tethering state: ", err)
+		}
+
+		testing.ContextLog(ctx, "Check if still connected after disabling tethering")
+		if err := helper.IsConnected(ctx); err != nil {
+			s.Fatal("No longer connected after disabling tethering: ", err)
+		}
+
+		// Compare the APN with the original one we had before enabling tethering.
+		apnAfterTethering, err := getDefaultBearerApn(ctx, modem)
+		if err != nil {
+			s.Fatal("Failed to get APN after enabling tethering: ", err)
+		}
+		testing.ContextLog(ctx, "APN after enabling tethering retrieved: ", apnAfterTethering)
+		if apnBeforeTethering != apnAfterTethering {
+			s.Fatalf("APN before tethering (%s) is different to the one after tethering (%s)", apnBeforeTethering, apnAfterTethering)
+		}
 	}
 }
