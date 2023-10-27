@@ -11,6 +11,8 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -52,6 +54,14 @@ func init() {
 				numTrial: 1,
 				bt:       browser.TypeLacros},
 			ExtraAttr: []string{"group:mainline", "group:hw_agnostic"},
+			Timeout:   chrome.LoginTimeout + 45*time.Second,
+		}, {
+			Name: "enrolled",
+			Val: chromeTestParams{
+				numTrial: 1,
+				bt:       browser.TypeAsh},
+			ExtraAttr: []string{"group:mainline", "informational", "group:hw_agnostic"},
+			Fixture:   fixture.FakeDMSEnrolled,
 			Timeout:   chrome.LoginTimeout + 45*time.Second,
 		}, {
 			Name: "stress",
@@ -162,6 +172,11 @@ func testChromeLogin(ctx context.Context, s *testing.State, sm *session.SessionM
 
 	// Connect to a fresh ash-chrome instance (cr).
 	opts := append([]chrome.Option{chrome.ExtraArgs("--vmodule=login_display_host*=4,oobe_ui=4")}, params.opts...)
+	fdms, ok := s.FixtValue().(*fakedms.FakeDMS)
+	if ok {
+		opts = append(opts, chrome.KeepEnrollment(), chrome.DMSPolicy(fdms.URL))
+	}
+
 	cr, err := browserfixt.NewChrome(ctx, params.bt, lacrosfixt.NewConfig(), opts...)
 	if err != nil {
 		s.Fatalf("Chrome login failed with %v browser: %v", params.bt, err)
