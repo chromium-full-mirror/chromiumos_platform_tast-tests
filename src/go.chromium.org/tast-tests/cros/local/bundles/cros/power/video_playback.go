@@ -43,7 +43,7 @@ func init() {
 			Fixture:   "powerAshRamfs",
 			Val:       "h264_1080_30fps",
 			ExtraData: []string{"video_playback/h264_1080_30fps.mp4"},
-			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "group:power", "power_regression"},
 		}, {
 			Name:      "h264_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",
@@ -104,7 +104,7 @@ func init() {
 			Fixture:   "powerAshRamfs",
 			Val:       "vp9_1080_30fps",
 			ExtraData: []string{"video_playback/vp9_1080_30fps.webm"},
-			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "group:power", "power_regression"},
 		}, {
 			Name:      "vp9_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",

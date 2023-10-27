@@ -47,7 +47,7 @@ func init() {
 			Fixture:   "powerAsh",
 			Val:       power.TimeParams{Interval: 20 * time.Second, Total: 25 * time.Minute},
 			Timeout:   25*time.Minute + timeoutBuffer + power.RecorderTimeout,
-			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "group:power", "power_regression"},
 		}, {
 			Name:    "2hr_ash",
 			Fixture: "powerAsh",

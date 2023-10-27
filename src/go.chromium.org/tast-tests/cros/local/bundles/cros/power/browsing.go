@@ -75,7 +75,7 @@ func init() {
 			Fixture:   "powerAsh",
 			Timeout:   20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:       browsingTestParam{ConfigName: "heavy_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
-			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "group:power", "power_regression"},
 		}, {
 			Name:              "heavy_20min_lacros",
 			Fixture:           "powerLacros",

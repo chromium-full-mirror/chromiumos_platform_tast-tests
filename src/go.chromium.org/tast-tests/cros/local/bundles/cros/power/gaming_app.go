@@ -52,6 +52,7 @@ func init() {
 					game: gameapp.NewAsphalt8,
 				},
 				ExtraData: []string{gameapp.Asphalt8IconGameScene, gameapp.Asphalt8IconRaceNow},
+				ExtraAttr: []string{"group:power", "power_regression"},
 			},
 			{
 				Name: "super_tux_kart",
@@ -59,6 +60,7 @@ func init() {
 					game: gameapp.NewSuperTuxKart,
 				},
 				ExtraData: []string{gameapp.SuperTuxKartIconGameScene},
+				ExtraAttr: []string{"group:power", "power_regression"},
 			},
 		},
 	})
