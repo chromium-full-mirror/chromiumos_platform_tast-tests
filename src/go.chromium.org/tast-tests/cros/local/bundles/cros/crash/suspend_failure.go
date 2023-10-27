@@ -27,7 +27,7 @@ func init() {
 			"mutexlox@google.com",
 		},
 		BugComponent: "b:1032705",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 	})
 }
 
