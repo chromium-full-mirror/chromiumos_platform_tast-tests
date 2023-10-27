@@ -55,3 +55,14 @@ type VideoEncodeFormatParams struct {
 
 	VideoEncodeTimeParams TimeParams
 }
+
+// DisplayParams defines the screen brightness, display pages and time params
+// for a display test.
+type DisplayParams struct {
+	// If Brightness is set to "all_brightness", then power consumption will be collected at
+	// every UI brightness level.
+	Brightness        string
+	Pages             []string
+	DataDir           string
+	DisplayTimeParams TimeParams
+}
