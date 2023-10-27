@@ -76,6 +76,22 @@ func init() {
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
 			},
+			{
+				Name: "cpd_vc_25m",
+				Val: testParams{
+					filter:  cpdFilter,
+					subtest: "power.VideoCall.25m_ash",
+				},
+				ExtraAttr: []string{"group:power", "power_cpd"},
+			},
+			{
+				Name: "cpd_browsing",
+				Val: testParams{
+					filter:  cpdFilter,
+					subtest: "power.Browsing.light_ash",
+				},
+				ExtraAttr: []string{"group:power", "power_cpd"},
+			},
 		},
 		Vars: []string{"servo", "subtest"},
 	})
