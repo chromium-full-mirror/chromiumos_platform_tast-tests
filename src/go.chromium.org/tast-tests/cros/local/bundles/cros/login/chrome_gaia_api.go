@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast/core/ctxutil"
@@ -43,6 +45,10 @@ func init() {
 		Params: []testing.Param{{
 			Val: false,
 		}, {
+			Name:    "enrolled",
+			Val:     false,
+			Fixture: fixture.FakeDMSEnrolled,
+		}, {
 			Name: "sandbox",
 			Val:  true,
 		}},
@@ -51,6 +57,7 @@ func init() {
 
 func ChromeGaiaAPI(ctx context.Context, s *testing.State) {
 	useSandboxGaia := s.Param().(bool)
+	fdms, ok := s.FixtValue().(*fakedms.FakeDMS)
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -59,6 +66,11 @@ func ChromeGaiaAPI(ctx context.Context, s *testing.State) {
 	if useSandboxGaia {
 		options = append(options, chrome.UseSandboxGaia())
 	}
+	if ok {
+		options = append(options, chrome.KeepEnrollment())
+		options = append(options, chrome.DMSPolicy(fdms.URL))
+	}
+
 	cr, err := chrome.New(
 		ctx,
 		options...)
