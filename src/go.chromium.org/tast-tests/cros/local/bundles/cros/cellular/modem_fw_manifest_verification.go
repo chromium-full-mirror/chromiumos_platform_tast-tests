@@ -269,9 +269,9 @@ func (f *dlcSpecs) setFactoryInstall(value bool) *dlcSpecs {
 var (
 	// This map should be used to override dlcSpecsPerModem on variants that have special requirements
 	dlcSpecsPerDlcID = map[string]dlcSpecs{
-		"modem-fw-dlc-nipperkin":        *newDlcSpec(29, 32),
-		"modem-fw-dlc-guybrush360-l850": *newDlcSpec(29, 32),
-		"modem-fw-dlc-guybrush-fm350":   *newDlcSpec(48, 52).setFactoryInstall(false),
+		"modem-fw-dlc-nipperkin":        *newDlcSpec(29, 30),
+		"modem-fw-dlc-guybrush360-l850": *newDlcSpec(30, 30),
+		"modem-fw-dlc-guybrush-fm350":   *newDlcSpec(50, 50).setFactoryInstall(false),
 	}
 
 	dlcSpecsPerModem = map[cellularconst.ModemType]dlcSpecs{
@@ -327,12 +327,12 @@ func verifyDlcManifest(ctx context.Context, dlcID string, modemType cellularcons
 	} else {
 		return errors.Errorf("cannot find DLC specifications for DLC: %s", dlcID)
 	}
-	preallocSizeInMbs := metadata.Manifest.PreAllocatedSize / 1024.0 / 1024
-	if preallocSizeInMbs < specs.minPreallocSize {
-		return errors.Errorf("pre-allocated size less than expected for %s. DLC: %s. Got %d, expected >= %d", origin, dlcID, preallocSizeInMbs, specs.minPreallocSize)
+	preallocSizeInMib := metadata.Manifest.PreAllocatedSize / 1024.0 / 1024
+	if preallocSizeInMib < specs.minPreallocSize {
+		return errors.Errorf("pre-allocated size less than expected for %s. DLC: %s. Got %d, expected >= %d", origin, dlcID, preallocSizeInMib, specs.minPreallocSize)
 	}
-	if preallocSizeInMbs > specs.maxPreallocSize {
-		return errors.Errorf("pre-allocated size greater than expected for %s. DLC: %s. Got %d, expected <= %d", origin, dlcID, preallocSizeInMbs, specs.maxPreallocSize)
+	if preallocSizeInMib > specs.maxPreallocSize {
+		return errors.Errorf("pre-allocated size greater than expected for %s. DLC: %s. Got %d, expected <= %d", origin, dlcID, preallocSizeInMib, specs.maxPreallocSize)
 	}
 
 	if metadata.Manifest.FactoryInstall != specs.factoryInstall {
