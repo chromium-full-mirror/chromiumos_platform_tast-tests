@@ -37,7 +37,7 @@ func init() {
 		Desc:         "Checks that the HTTPSOnlyMode policy is properly applied",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
-			"jityao@google.com", // Test author
+			"mpetrisor@google.com",
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome", "lacros"},
@@ -167,8 +167,10 @@ func HTTPSOnlyMode(ctx context.Context, s *testing.State) {
 			// Toggle HTTPS only mode button if not in desired state.
 			isChecked := info.Checked == checked.True
 			if param.setChecked != isChecked {
-				if err := ui.WithTimeout(5 * time.Second).DoDefault(httpsOnlyButton)(ctx); err != nil {
-					s.Fatal("Could not click on HTTPS only toggle: ", err)
+				var httpsOnlyChecked = ui.WaitUntilCheckedState(httpsOnlyButton, param.setChecked)
+				// The UI might lag, keep trying until HTTPS only is toggled to the expected state.
+				if err := ui.WithInterval(2*time.Second).DoDefaultUntil(httpsOnlyButton, httpsOnlyChecked)(ctx); err != nil {
+					s.Fatal("Failed to toggle HTTPS only button: ", err)
 				}
 			}
 
