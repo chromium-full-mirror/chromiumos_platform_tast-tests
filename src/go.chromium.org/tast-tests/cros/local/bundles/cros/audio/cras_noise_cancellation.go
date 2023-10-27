@@ -129,6 +129,9 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"))
 	}
 	cr, err := chrome.New(ctx, chromeOpts...)
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
 	defer cr.Close(cleanupCtx)
 
 	if param.noiseCancellationEnabled {
