@@ -34,7 +34,7 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_dual_active"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellular",
-		Timeout:      5 * time.Minute,
+		Timeout:      6 * time.Minute,
 	})
 }
 
@@ -131,6 +131,11 @@ func RenameESimProfileNickname(ctx context.Context, s *testing.State) {
 
 	if err := ossettings.GoToFirstInactiveNetworkDetails(ctx, tconn); err != nil {
 		s.Fatal("Failed to go to disconnected network details: ", err)
+	}
+
+	// GoBigSleepLint: Give some time to modem and shill to stabilize.
+	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+		s.Fatal("Failed to wait for 10 seconds: ", err)
 	}
 
 	if err := testRenameProfile(ctx, tconn); err != nil {
