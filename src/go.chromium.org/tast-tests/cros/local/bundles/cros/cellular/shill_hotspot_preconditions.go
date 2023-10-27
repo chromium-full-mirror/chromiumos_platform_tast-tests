@@ -20,7 +20,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// callboxHotspotTestProfileName is the profile we create and use for cellular tethering tests.
+// hotspotTestProfileName is the profile we create and use for cellular tethering tests.
 const hotspotTestProfileName = "test"
 
 type hotspotPreconditionsTestParams struct {
@@ -112,11 +112,11 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "Create fake user profile")
 	if _, err := helper.Manager.CreateFakeUserProfile(ctx, hotspotTestProfileName); err != nil {
-		s.Fatalf("Failed to create fake profile %q", hotspotTestProfileName)
+		s.Fatalf("Failed to create fake profile %q: %s", hotspotTestProfileName, err)
 	}
 	defer func(ctx context.Context) {
 		if err := helper.Manager.RemoveFakeUserProfile(ctx, hotspotTestProfileName); err != nil {
-			s.Fatalf("Failed to remove profile %q", hotspotTestProfileName)
+			s.Fatalf("Failed to remove profile %q: %s", hotspotTestProfileName, err)
 		}
 	}(ctx)
 
