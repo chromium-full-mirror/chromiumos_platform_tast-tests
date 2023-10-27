@@ -104,12 +104,12 @@ func ResizeRestart(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch terminal: ", err)
 	}
 
-	if err := st.VerifyResizeResults(ctx, cont, sizeOnSlider, size); err != nil {
-		s.Fatal("Failed to verify resize results: ", err)
-	}
-
 	if err := terminalApp.Close()(ctx); err != nil {
 		s.Fatal("Failed to close terminal: ", err)
+	}
+
+	if err := st.VerifyResizeResults(ctx, cont, sizeOnSlider, size); err != nil {
+		s.Fatal("Failed to verify resize results: ", err)
 	}
 
 	// Resize back to the default value.
