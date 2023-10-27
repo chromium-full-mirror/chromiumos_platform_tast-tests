@@ -29,11 +29,12 @@ type hotspotPreconditionsTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillHotspotPreconditions,
-		Desc:         "Verifies that cellular is ready for the hotspot feature. This test is not a complete test, and it will be continuously updated as progress is made in the hotspot project",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com", "aleksandermj@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Func:           ShillHotspotPreconditions,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verifies that cellular is ready for the hotspot feature. This test is not a complete test, and it will be continuously updated as progress is made in the hotspot project",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com", "aleksandermj@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
 		Params: []testing.Param{{
 			Name: "start_and_stop",
 			Val: hotspotPreconditionsTestParams{

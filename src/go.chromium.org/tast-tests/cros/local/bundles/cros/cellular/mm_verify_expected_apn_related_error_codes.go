@@ -33,12 +33,13 @@ type verifyExpectedApnRelatedErrorCodesTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MMVerifyExpectedApnRelatedErrorCodes,
-		Desc:         "Verifies that Modem Manager reports the correct error codes for multiple APN related issues",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
-		Fixture:      "cellularModemManager",
+		Func:           MMVerifyExpectedApnRelatedErrorCodes,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verifies that Modem Manager reports the correct error codes for multiple APN related issues",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
+		Fixture:        "cellularModemManager",
 		Params: []testing.Param{{
 			Name: "ip",
 			Val:  verifyExpectedApnRelatedErrorCodesTestParam{ipErrors},

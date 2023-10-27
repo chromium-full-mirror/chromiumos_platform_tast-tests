@@ -30,11 +30,12 @@ type shillCallboxHotspotTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCallboxHotspot,
-		Desc:         "Verifies the different APN connection setups for tethering work",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "aleksandermj@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
+		Func:           ShillCallboxHotspot,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verifies the different APN connection setups for tethering work",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "aleksandermj@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
 		Params: []testing.Param{
 			// DUN is DEFAULT
 			{

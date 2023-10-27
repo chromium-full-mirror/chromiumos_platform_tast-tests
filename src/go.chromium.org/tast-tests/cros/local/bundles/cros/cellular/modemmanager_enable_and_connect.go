@@ -19,13 +19,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ModemmanagerEnableAndConnect,
-		Desc:         "Verifies that modemmanager can trigger modem enable, disable, connect and disconnect succeeds",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
-		Fixture:      "cellularModemManager",
-		Timeout:      5 * time.Minute,
+		Func:           ModemmanagerEnableAndConnect,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verifies that modemmanager can trigger modem enable, disable, connect and disconnect succeeds",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
+		Fixture:        "cellularModemManager",
+		Timeout:        5 * time.Minute,
 	})
 }
 

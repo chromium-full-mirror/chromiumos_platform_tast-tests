@@ -16,14 +16,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HostStressEnableDisable,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that host has network connectivity via cellular interface",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
-		Fixture:      "cellular",
-		Timeout:      4 * time.Minute,
+		Func:           HostStressEnableDisable,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verifies that host has network connectivity via cellular interface",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
+		Fixture:        "cellular",
+		Timeout:        4 * time.Minute,
 	})
 }
 

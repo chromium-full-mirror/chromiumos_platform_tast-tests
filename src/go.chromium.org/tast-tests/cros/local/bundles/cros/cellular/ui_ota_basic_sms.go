@@ -25,17 +25,18 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UIOtaBasicSms,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the UI shows a notification for a received MT SMS",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_sms"},
-		Fixture:      "cellular",
-		SoftwareDeps: []string{"chrome"},
-		Timeout:      10 * time.Minute,
-		VarDeps:      []string{"cellular.gaiaAccountPool"},
-		Vars:         []string{"autotest_host_info_labels"},
+		Func:           UIOtaBasicSms,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verifies that the UI shows a notification for a received MT SMS",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_sms"},
+		Fixture:        "cellular",
+		SoftwareDeps:   []string{"chrome"},
+		Timeout:        10 * time.Minute,
+		VarDeps:        []string{"cellular.gaiaAccountPool"},
+		Vars:           []string{"autotest_host_info_labels"},
 	})
 }
 

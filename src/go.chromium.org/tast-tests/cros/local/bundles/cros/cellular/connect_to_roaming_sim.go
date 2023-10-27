@@ -19,9 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ConnectToRoamingSim,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Disable roaming on a roaming sim and verify connecting to network fails",
+		Func:           ConnectToRoamingSim,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Disable roaming on a roaming sim and verify connecting to network fails",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"nikhilcn@chromium.org",

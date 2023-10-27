@@ -18,16 +18,17 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CarrierLockEndToEnd,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that carrier lock restrictions are enforced by modem",
-		Contacts:     []string{"ujjwalpande@google.com", "chromeos-cellular-team@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{},
-		Fixture:      "cellularSIMLockCleared",
-		SoftwareDeps: []string{"chrome"},
-		Timeout:      20 * time.Minute,
-		VarDeps:      []string{"cellular.gaiaAccountPool"},
+		Func:           CarrierLockEndToEnd,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verifies that carrier lock restrictions are enforced by modem",
+		Contacts:       []string{"ujjwalpande@google.com", "chromeos-cellular-team@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{},
+		Fixture:        "cellularSIMLockCleared",
+		SoftwareDeps:   []string{"chrome"},
+		Timeout:        20 * time.Minute,
+		VarDeps:        []string{"cellular.gaiaAccountPool"},
 	})
 }
 

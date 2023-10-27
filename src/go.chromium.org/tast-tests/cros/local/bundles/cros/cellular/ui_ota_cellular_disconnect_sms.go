@@ -25,17 +25,18 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UIOtaCellularDisconnectSms,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the UI shows a notification for a received MT SMS sent while disconnected from cellular service",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_sms"},
-		Fixture:      "cellular",
-		SoftwareDeps: []string{"chrome"},
-		Timeout:      10 * time.Minute,
-		VarDeps:      []string{"cellular.gaiaAccountPool"},
-		Vars:         []string{"autotest_host_info_labels"},
+		Func:           UIOtaCellularDisconnectSms,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verifies that the UI shows a notification for a received MT SMS sent while disconnected from cellular service",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_sms"},
+		Fixture:        "cellular",
+		SoftwareDeps:   []string{"chrome"},
+		Timeout:        10 * time.Minute,
+		VarDeps:        []string{"cellular.gaiaAccountPool"},
+		Vars:           []string{"autotest_host_info_labels"},
 	})
 }
 

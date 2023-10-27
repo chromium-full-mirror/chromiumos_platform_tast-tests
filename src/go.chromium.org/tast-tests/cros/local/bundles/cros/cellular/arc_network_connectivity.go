@@ -14,15 +14,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ArcNetworkConnectivity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that Arc has network connectivity via cellular interface",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
-		SoftwareDeps: []string{"chrome", "vm_host"},
-		Fixture:      "cellularArcBooted",
-		Timeout:      4 * time.Minute,
+		Func:           ArcNetworkConnectivity,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verifies that Arc has network connectivity via cellular interface",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		SoftwareDeps:   []string{"chrome", "vm_host"},
+		Fixture:        "cellularArcBooted",
+		Timeout:        4 * time.Minute,
 	})
 }
 

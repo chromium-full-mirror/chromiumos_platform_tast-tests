@@ -20,15 +20,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MojoEnsureNetworkStateAfterCellularToggle,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Enable/disable Cellular service using Mojo and check WiFi/Ethernet are not affected",
-		Contacts:     []string{"cros-network-health-team@google.com", "chromeos-cellular-team@google.com", "shijinabraham@google.com"},
-		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e"},
-		Timeout:      10 * time.Minute,
-		Fixture:      "cellular",
+		Func:           MojoEnsureNetworkStateAfterCellularToggle,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Enable/disable Cellular service using Mojo and check WiFi/Ethernet are not affected",
+		Contacts:       []string{"cros-network-health-team@google.com", "chromeos-cellular-team@google.com", "shijinabraham@google.com"},
+		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		SoftwareDeps:   []string{"chrome"},
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e"},
+		Timeout:        10 * time.Minute,
+		Fixture:        "cellular",
 	})
 }
 

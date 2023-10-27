@@ -16,14 +16,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillAutoconnect,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that Shill auto-connects to a Cellular Service correctly",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "pholla@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
-		Fixture:      "cellular",
-		Timeout:      3 * time.Minute,
+		Func:           ShillAutoconnect,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verifies that Shill auto-connects to a Cellular Service correctly",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "pholla@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
+		Fixture:        "cellular",
+		Timeout:        3 * time.Minute,
 	})
 }
 

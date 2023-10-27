@@ -19,9 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ConnectNotification,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that a notification is shown when the user connects to cellular the first time",
+		Func:           ConnectNotification,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Checks that a notification is shown when the user connects to cellular the first time",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"ejcaruso@google.com",

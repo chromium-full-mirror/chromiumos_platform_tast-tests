@@ -25,9 +25,10 @@ type downloadPerfParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DownloadPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that large files can be downloaded over the network and records the average speed",
+		Func:           DownloadPerf,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verifies that large files can be downloaded over the network and records the average speed",
 		Contacts: []string{
 			"chromeos-cellular-team@google.com",
 			"ejcaruso@google.com",

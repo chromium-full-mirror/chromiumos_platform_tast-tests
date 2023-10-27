@@ -19,9 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PSimNetworkName,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the network name on non-connected psim",
+		Func:           PSimNetworkName,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Tests the network name on non-connected psim",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 		},

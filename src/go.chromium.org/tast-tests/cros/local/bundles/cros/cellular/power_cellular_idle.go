@@ -14,13 +14,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PowerCellularIdle,
-		Desc:         "Collect power metrics when device is in idle with cellular on and no UI",
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Contacts:     []string{"cros-cellular-core@google.com"},
-		Attr:         []string{"group:cellular", "cellular_power", "cellular_unstable", "cellular_sim_active", "group:cellular_crosbolt", "cellular_crosbolt_unstable"},
-		Timeout:      10 * time.Minute,
-		Fixture:      "cellularPower",
+		Func:           PowerCellularIdle,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Collect power metrics when device is in idle with cellular on and no UI",
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Contacts:       []string{"cros-cellular-core@google.com"},
+		Attr:           []string{"group:cellular", "cellular_power", "cellular_unstable", "cellular_sim_active", "group:cellular_crosbolt", "cellular_crosbolt_unstable"},
+		Timeout:        10 * time.Minute,
+		Fixture:        "cellularPower",
 	})
 }
 

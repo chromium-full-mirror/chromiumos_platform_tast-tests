@@ -17,16 +17,17 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ModemRebootVerification,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the modem can be rebooted using GPIO",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
-		Fixture:      "cellular",
-		SoftwareDeps: []string{"modemfwd"},
-		HardwareDeps: hwdep.D(hwdep.SkipOnCellularModemType(cellularconst.ModemTypeFM350)),
-		Timeout:      3 * time.Minute,
+		Func:           ModemRebootVerification,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verifies that the modem can be rebooted using GPIO",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
+		Fixture:        "cellular",
+		SoftwareDeps:   []string{"modemfwd"},
+		HardwareDeps:   hwdep.D(hwdep.SkipOnCellularModemType(cellularconst.ModemTypeFM350)),
+		Timeout:        3 * time.Minute,
 	})
 }
 

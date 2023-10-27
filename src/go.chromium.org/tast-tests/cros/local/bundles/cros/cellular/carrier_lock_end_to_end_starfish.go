@@ -20,16 +20,17 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CarrierLockEndToEndStarfish,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Validates carrier lock on starfish",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "ujjwalpande@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{},
-		Fixture:      "starfish",
-		SoftwareDeps: []string{"chrome"},
-		Timeout:      20 * time.Minute,
-		VarDeps:      []string{"cellular.gaiaAccountPool"},
+		Func:           CarrierLockEndToEndStarfish,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Validates carrier lock on starfish",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "ujjwalpande@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{},
+		Fixture:        "starfish",
+		SoftwareDeps:   []string{"chrome"},
+		Timeout:        20 * time.Minute,
+		VarDeps:        []string{"cellular.gaiaAccountPool"},
 	})
 }
 

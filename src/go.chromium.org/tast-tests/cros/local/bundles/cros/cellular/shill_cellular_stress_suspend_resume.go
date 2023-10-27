@@ -17,15 +17,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularStressSuspendResume,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Stress test suspend resume, verify modem is in right state after each resume",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "rmao@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_stress"},
-		Fixture:      "cellular",
-		Timeout:      60 * time.Minute,
-		SoftwareDeps: []string{"chrome"},
+		Func:           ShillCellularStressSuspendResume,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Stress test suspend resume, verify modem is in right state after each resume",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "rmao@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_stress"},
+		Fixture:        "cellular",
+		Timeout:        60 * time.Minute,
+		SoftwareDeps:   []string{"chrome"},
 	})
 }
 

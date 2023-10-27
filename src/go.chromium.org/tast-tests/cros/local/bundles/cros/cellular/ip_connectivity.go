@@ -22,11 +22,12 @@ type ipTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IPConnectivity,
-		Desc:         "Verifies that traffic can be sent over the Cellular network",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
+		Func:           IPConnectivity,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verifies that traffic can be sent over the Cellular network",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
 		Params: []testing.Param{{
 			Name:      "ipv4",
 			Val:       ipTestParams{"callbox_null_attach_ipv4.pbf", true, false},

@@ -28,11 +28,12 @@ type unknownMNOTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillConnectToUnknownMno,
-		Desc:         "Verifies that the cellular device can connect to a network with no information in the MODB",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
+		Func:           ShillConnectToUnknownMno,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verifies that the cellular device can connect to a network with no information in the MODB",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
 		Params: []testing.Param{{
 			Name:      "unknown_carrier",
 			Val:       unknownMNOTestParam{"callbox_unknown_carrier.pbf", "callbox-default-attach", "callbox-ipv4", map[string]interface{}{"apn": "wrong_attach", "ip-type": mmconst.BearerIPFamilyIPv4, "apn-type": mmconst.BearerAPNTypeInitial}, map[string]interface{}{"apn": "callbox-ipv4", "ip-type": mmconst.BearerIPFamilyIPv4, "apn-type": mmconst.BearerAPNTypeDefault}},

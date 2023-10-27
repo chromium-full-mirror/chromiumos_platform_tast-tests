@@ -21,14 +21,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillValidateProfile,
-		Desc:         "Verifies that change in profile property able to connect after shill reset, mimics OS update",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
-		Data:         []string{"callbox_attach_ipv4_incorrect_apn.pbf", "test_profile.txt"},
-		Fixture:      "cellular",
-		Timeout:      5 * time.Minute,
+		Func:           ShillValidateProfile,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verifies that change in profile property able to connect after shill reset, mimics OS update",
+		Contacts:       []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
+		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
+		Data:           []string{"callbox_attach_ipv4_incorrect_apn.pbf", "test_profile.txt"},
+		Fixture:        "cellular",
+		Timeout:        5 * time.Minute,
 	})
 }
 
