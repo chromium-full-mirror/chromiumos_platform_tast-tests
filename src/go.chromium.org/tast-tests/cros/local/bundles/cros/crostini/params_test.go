@@ -160,7 +160,6 @@ func TestExpensiveParams(t *testing.T) {
 }
 
 var appTests = []string{
-	"app_android_studio.go",
 	"app_audacity.go",
 	"app_audacity_terminal.go",
 	"app_eclipse.go",
@@ -203,6 +202,7 @@ func TestAppTestParams(t *testing.T) {
 }
 
 var appClamshellOnlyTests = []string{
+	"app_android_studio.go",
 	"app_audacity_window_operations.go",
 	"app_emacs_window_operations.go",
 	"app_firefox_window_operations.go",
