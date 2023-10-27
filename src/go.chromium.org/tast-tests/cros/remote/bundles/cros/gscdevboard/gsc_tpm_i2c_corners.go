@@ -36,6 +36,9 @@ func GSCTPMI2CCorners(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
+	// Record everything that goes on on SDA/SCL lines, for manual inspection later.
+	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50DeviceI2cSda, ti50.GpioTi50DeviceI2cScl)
+
 	tpmHandle := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusI2c, ti50.CcdDisconnected, ti50.FfClamshell)
 
 	// Below the low level OpenTitanToolCommand() is used to send I2C transactions in various
@@ -86,6 +89,10 @@ func GSCTPMI2CCorners(ctx context.Context, s *testing.State) {
 	if !bytes.Equal(didVid, expectedDidVidValue) {
 		s.Error("Unexpected TPM DID_VID: ", didVid)
 	}
+
+	// Store transcript of SDA/SCL events in .vcd format, to be reviewed in e.g. Pulseview.
+	events := b.GpioMonitorFinish(ctx, gpioMonitor)
+	gpioMonitor.Save(ctx, events, "i2c.vcd")
 }
 
 // testWedgedAddrAck performs an irregular I2C transaction: Addressing the GSC, but then
