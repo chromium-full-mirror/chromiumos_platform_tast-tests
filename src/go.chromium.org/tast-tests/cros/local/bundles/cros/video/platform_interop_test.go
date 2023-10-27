@@ -160,7 +160,7 @@ func getSoftwareDeps(codec string, encoder, decoder codecAPI) []string {
 
 func getHardwareDeps(decoder codecAPI) string {
 	if decoder == v4l2Stateful {
-		return "hwdep.SupportsV4L2StatefulVideoDecoding()"
+		return `hwdep.SupportsV4L2StatefulVideoDecoding(), hwdep.SkipGPUFamily("rogue")`
 	}
 	if decoder == v4l2Stateless {
 		return "hwdep.SupportsV4L2StatelessVideoDecoding()"

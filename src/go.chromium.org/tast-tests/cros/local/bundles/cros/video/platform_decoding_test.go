@@ -1410,6 +1410,9 @@ func TestPlatformDecodingParams(t *testing.T) {
 							param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9)
 						}
 					}
+					if stateness == "Stateful" && (profile != "profile_0" || levelGroup != "group1" || cat != "buf") {
+						hardwareDeps = append(hardwareDeps, `hwdep.SkipGPUFamily("rogue")`)
+					}
 
 					param.HardwareDeps = strings.Join(hardwareDeps, ", ")
 					params = append(params, param)
@@ -1421,13 +1424,18 @@ func TestPlatformDecodingParams(t *testing.T) {
 		for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
 			files := vp8Files[testGroup]
 
+			hardwareDeps := commonHardwareDeps
+			if stateness == "Stateful" {
+				hardwareDeps = append(hardwareDeps, `hwdep.SkipGPUFamily("rogue")`)
+			}
+
 			param := paramData{
 				Name:               fmt.Sprintf("v4l2_%s_vp8_%s", strings.ToLower(stateness), testGroup),
 				Decoder:            decoderExecutable,
 				DecoderArgsBuilder: decoderArgsBuilder,
 				Files:              files,
 				Timeout:            defaultTimeout,
-				HardwareDeps:       strings.Join(commonHardwareDeps, ", "),
+				HardwareDeps:       strings.Join(hardwareDeps, ", "),
 				SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeVP8},
 				Metadata:           genExtraData(files),
 				Attr:               []string{"graphics_video_vp8"},
@@ -1445,6 +1453,11 @@ func TestPlatformDecodingParams(t *testing.T) {
 		for _, group := range []string{"baseline", "main", "first_mb_in_slice"} {
 			files := h264Files[group]
 
+			hardwareDeps := commonHardwareDeps
+			if stateness == "Stateful" {
+				hardwareDeps = append(hardwareDeps, `hwdep.SkipGPUFamily("rogue")`)
+			}
+
 			// TODO(b/234752983): support first_mb_in_slice for Stateless decoder.
 			if stateness == "Stateless" && group == "first_mb_in_slice" {
 				continue
@@ -1457,7 +1470,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Files:              files,
 				Timeout:            defaultTimeout,
 				SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeH264},
-				HardwareDeps:       strings.Join(commonHardwareDeps, ", "),
+				HardwareDeps:       strings.Join(hardwareDeps, ", "),
 				Metadata:           genExtraData(files),
 				Attr:               []string{"graphics_video_h264"},
 			}
@@ -1473,13 +1486,18 @@ func TestPlatformDecodingParams(t *testing.T) {
 		for _, testGroup := range []string{"main"} {
 			files := hevcFiles[testGroup]
 
+			hardwareDeps := commonHardwareDeps
+			if stateness == "Stateful" {
+				hardwareDeps = append(hardwareDeps, `hwdep.SkipGPUFamily("rogue")`)
+			}
+
 			param := paramData{
 				Name:               fmt.Sprintf("v4l2_%s_hevc_%s", strings.ToLower(stateness), testGroup),
 				Decoder:            decoderExecutable,
 				DecoderArgsBuilder: decoderArgsBuilder,
 				Files:              files,
 				Timeout:            defaultTimeout,
-				HardwareDeps:       strings.Join(commonHardwareDeps, ", "),
+				HardwareDeps:       strings.Join(hardwareDeps, ", "),
 				SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeHEVC},
 				Metadata:           genExtraData(files),
 				Attr:               []string{"graphics_video_hevc"},
