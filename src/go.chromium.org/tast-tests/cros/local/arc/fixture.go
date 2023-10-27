@@ -247,6 +247,8 @@ func init() {
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		return []chrome.Option{
 			chrome.EnableFeatures("Floss"),
+			// FlossIsAvailabilityCheckNeeded needs to be disabled when Floss is enabled (b/300999731).
+			chrome.DisableFeatures("FlossIsAvailabilityCheckNeeded"),
 			chrome.ExtraArgs(DisableSyncFlags()...),
 			chrome.UnRestrictARCCPU(),
 			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),

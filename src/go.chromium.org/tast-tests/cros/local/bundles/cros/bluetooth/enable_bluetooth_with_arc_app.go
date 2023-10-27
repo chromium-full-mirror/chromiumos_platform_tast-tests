@@ -125,8 +125,8 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 	turnOnBluetoothObj := d.Object(ui.ResourceID(bluetoothSwitchID), ui.Checked(false))
 	// This text is different across architectures, "ALLOW" in ARC and "Allow" in ARCVM.
 	allowBluetoothObj := d.Object(ui.TextMatches("(?i)Allow"))
-	// This text is different across architectures, "DENY" in ARC and "Deny" in ARCVM.
-	denyLocationObj := d.Object(ui.TextMatches("(?i)Deny"))
+	// This text is different across architectures, "DENY" in ARC, "Deny" in ARCVM or "Don’t allow".
+	denyLocationObj := d.Object(ui.TextMatches("(?i)Deny|Don’t allow"))
 
 	// Turning Bluetooth on from ARC++ app.
 	if err := uiauto.Combine("turn Bluetooth on",
