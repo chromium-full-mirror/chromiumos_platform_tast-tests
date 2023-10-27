@@ -17,6 +17,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -45,7 +46,9 @@ func init() {
 			"group:complementary",
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
-		Fixture:      "chromeEnrolledLoggedIn",
+		Fixture:      fixture.ChromeEnrolledLoggedIn,
+		// Add two minutes to the timeout for network operations and notification wait time.
+		Timeout: chrome.EnrollmentAndLoginTimeout + 2*time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceDebugPacketCaptureAllowed{}, pci.VerifiedFunctionalityOS),
 		},
@@ -289,7 +292,7 @@ func PacketCapture(ctx context.Context, s *testing.State) {
 
 			// Notification must be gone after all packet captures are stopped.
 			s.Log("Checking if packet capture notification is gone")
-			if err := ash.WaitUntilNotificationGone(ctx, tconn, 20*time.Second, ash.WaitIDContains(notificationID)); err != nil {
+			if err := ash.WaitUntilNotificationGone(ctx, tconn, 30*time.Second, ash.WaitIDContains(notificationID)); err != nil {
 				s.Fatal("Notification isn't gone after stopping packet capture: ", err)
 			}
 
