@@ -108,4 +108,8 @@ const (
 	GpioTi50ChassisOpen GpioName = "CHASSIS_OPEN"
 	// GpioTi50WriteProtectL is the hardware write protect signal that GSC controls
 	GpioTi50WriteProtectL GpioName = "WP_L"
+	// GpioTi50DeviceI2cSda is the SDA signal for I2C TPM communication with the AP
+	GpioTi50DeviceI2cSda GpioName = "DEVICE_I2C_SDA"
+	// GpioTi50DeviceI2cScl is the SCL signal for I2C TPM communication with the AP
+	GpioTi50DeviceI2cScl GpioName = "DEVICE_I2C_SCL"
 )

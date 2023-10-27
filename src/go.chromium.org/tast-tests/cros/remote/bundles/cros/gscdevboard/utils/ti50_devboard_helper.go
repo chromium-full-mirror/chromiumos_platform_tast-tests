@@ -30,6 +30,39 @@ var (
 	gpioOutput = regexp.MustCompile("\"?value\"?: (true|false)")
 )
 
+// GpioMode represents a mode of a debugger pin.
+type GpioMode string
+
+const (
+	// GpioModeInput means the pin is used for digital input.
+	GpioModeInput GpioMode = "Input"
+	// GpioModeOpenDrain means the pin is used for I/O in open drain mode.
+	GpioModeOpenDrain GpioMode = "OpenDrain"
+	// GpioModePushPull means the pin is used for digital output.
+	GpioModePushPull GpioMode = "PushPull"
+	// GpioModeAnalogInput means the pin is used to measure an analog voltage.
+	GpioModeAnalogInput GpioMode = "AnalogInput"
+	// GpioModeAnalogOutput means the pin is used to drive an analog voltage.
+	GpioModeAnalogOutput GpioMode = "AnalogOutput"
+	// GpioModeAlternate means the pin is used in some special mode (UART, SPI, I2C, ...)
+	// the exact alternate functionality supported by each pin depends on the debugger..
+	GpioModeAlternate GpioMode = "Alternate"
+)
+
+// GpioPullMode represents a weak pull mode of a debugger pin (which will take effect if neither
+// the debugger nor the GSC are strongly driving the pin.)
+type GpioPullMode string
+
+const (
+	// GpioPullNone means no weak pulling of the pin.
+	GpioPullNone GpioPullMode = "None"
+	// GpioPullUp means a weak pull towards logic high level (often used with
+	// GpioModeOpenDrain).
+	GpioPullUp GpioPullMode = "PullUp"
+	// GpioPullDown means a weak pull towards logic low level (rarely used).
+	GpioPullDown GpioPullMode = "PullDown"
+)
+
 // GpioEdge represent either rising or falling
 type GpioEdge string
 
@@ -206,6 +239,20 @@ func (h DevboardHelper) GpioGet(ctx context.Context, g ti50.GpioName) bool {
 	}
 	val, _ := strconv.ParseBool(string(matches[1]))
 	return val
+}
+
+// GpioMultiSet configures a gpio pin in a particular logic level, drive mode, and weak pull
+// mode.  If there are any errors, set a fatal condition on the test state
+func (h DevboardHelper) GpioMultiSet(ctx context.Context, g ti50.GpioName, val bool, m GpioMode, p GpioPullMode) {
+	args := []string{"set", string(g)}
+	args = append(args, "--mode", string(m))
+	if m == GpioModePushPull || m == GpioModeOpenDrain {
+		args = append(args, "--value", strconv.FormatBool(val))
+	}
+	args = append(args, "--pull", string(p))
+	if _, err := h.PlainCommand(ctx, "gpio", args...); err != nil {
+		h.Fatalf("Failed to set gpio %s: %s", g, err)
+	}
 }
 
 // GpioApplyStrap applies one or more known gpio strap setting
