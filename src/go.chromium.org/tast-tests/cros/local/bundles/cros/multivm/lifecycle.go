@@ -68,6 +68,16 @@ func init() {
 			Val:               &lifecycleParam{inARC: true, browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 		}, {
+			Name:              "arc_vmmms",
+			Pre:               multivm.ArcStartedVMMMS(),
+			Val:               &lifecycleParam{inARC: true, browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{"android_vm"},
+		}, {
+			Name:              "arc_lacros_vmmms",
+			Pre:               multivm.ArcLacrosStartedVMMMS(),
+			Val:               &lifecycleParam{inARC: true, browserType: browser.TypeLacros},
+			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
+		}, {
 			Name: "crostini",
 			Pre:  multivm.CrostiniStarted(),
 			Val:  &lifecycleParam{inCrostini: true, browserType: browser.TypeAsh},
@@ -89,6 +99,24 @@ func init() {
 		}, {
 			Name:              "host_with_bg_arc",
 			Pre:               multivm.ArcStarted(),
+			Val:               &lifecycleParam{inHost: true, browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraData: []string{
+				memoryuser.AllocPageFilename,
+				memoryuser.JavascriptFilename,
+			},
+		}, {
+			Name:              "arc_host_vmmms",
+			Pre:               multivm.ArcStartedVMMMS(),
+			Val:               &lifecycleParam{inARC: true, inHost: true, browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraData: []string{
+				memoryuser.AllocPageFilename,
+				memoryuser.JavascriptFilename,
+			},
+		}, {
+			Name:              "host_with_bg_arc_vmmms",
+			Pre:               multivm.ArcStartedVMMMS(),
 			Val:               &lifecycleParam{inHost: true, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraData: []string{

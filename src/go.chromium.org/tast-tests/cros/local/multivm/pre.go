@@ -21,10 +21,25 @@ var DefaultChromeOptions = ChromeOptions{
 	BrowserType: browser.TypeAsh,
 }
 
+// DefaultChromeOptionsVMMMS defines the default options for creating Chrome with
+// VMMMS enabled.
+var DefaultChromeOptionsVMMMS = ChromeOptions{
+	EnableFeatures: []string{"CrOSLateBootVmMemoryManagementService"},
+	Timeout:        chrome.LoginTimeout,
+	BrowserType:    browser.TypeAsh,
+}
+
 // LacrosChromeOptions creates Lacros Chrome.
 var LacrosChromeOptions = ChromeOptions{
 	Timeout:     chrome.LoginTimeout,
 	BrowserType: browser.TypeLacros,
+}
+
+// LacrosChromeOptionsVmms creates Lacros Chrome with VMMMS enabled.
+var LacrosChromeOptionsVmms = ChromeOptions{
+	EnableFeatures: []string{"CrOSLateBootVmMemoryManagementService"},
+	Timeout:        chrome.LoginTimeout,
+	BrowserType:    browser.TypeLacros,
 }
 
 // DefaultARCOptions defines the default options for starting ARC VM.
@@ -100,6 +115,19 @@ func ArcStarted() testing.Precondition {
 	return arcStartedPre
 }
 
+var arcStartedVMMMSPre = NewMultiVMPrecondition(
+	"multivm_arc_vmmms",
+	NewStateManager(
+		DefaultChromeOptionsVMMMS,
+		DefaultARCOptions,
+	).SetForceActivate(true))
+
+// ArcStartedVMMMS returns a Precondition that logs into Chrome with VMMMS
+// enabled and starts ARCVM.
+func ArcStartedVMMMS() testing.Precondition {
+	return arcStartedVMMMSPre
+}
+
 var arcLacrosStartedPre = NewMultiVMPrecondition(
 	"multivm_arc_lacros",
 	NewStateManager(
@@ -111,6 +139,19 @@ var arcLacrosStartedPre = NewMultiVMPrecondition(
 // starts ARCVM.
 func ArcLacrosStarted() testing.Precondition {
 	return arcLacrosStartedPre
+}
+
+var arcLacrosStartedVMMMSPre = NewMultiVMPrecondition(
+	"multivm_arc_lacros_vmmms",
+	NewStateManager(
+		LacrosChromeOptionsVmms,
+		DefaultARCOptions,
+	).SetForceActivate(true))
+
+// ArcLacrosStartedVMMMS returns a Precondition that logs into Lacros Chrome
+// with VMMMS enabled and starts ARCVM.
+func ArcLacrosStartedVMMMS() testing.Precondition {
+	return arcLacrosStartedVMMMSPre
 }
 
 var crostiniStartedPre = NewMultiVMPrecondition(
