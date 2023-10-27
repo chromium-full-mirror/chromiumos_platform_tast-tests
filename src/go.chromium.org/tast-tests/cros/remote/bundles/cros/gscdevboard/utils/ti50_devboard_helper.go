@@ -345,13 +345,18 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 	h.GpioApplyStrap(ctx, straps...)
 
 	th := FirmwareTestingHelper{FirmwareTestingHelperDelegate: h}
+	// Ensure the GSC UART is open and collecting results before we reset GSC to ensure that
+	// the UART messages right after GSC reset are captured.
+	th.MustSucceed(h.Open(ctx), "Could not open GSC UART")
 	th.MustSucceed(h.Reset(ctx), "Reset board")
 	// TODO(b/305814102): check board properties on H1 to verify SPI vs I2C
 	if h.TestbedType != ti50.GscHavenShield {
 		// Ti50 prints "I2C" or "SPI" based on the TPM Bus type.
 		m, err := h.ReadSerialSubmatch(ctx, regexp.MustCompile(`Strap config: .* TPM Bus: ([^;]+);`))
-		if err != nil || strings.ToLower(string(m[1])) != string(bus) {
-			h.Fatalf("Wrong TPM strap")
+		if err != nil {
+			h.Fatalf("Could not find TPM strap: %s", err)
+		} else if strings.ToLower(string(m[1])) != string(bus) {
+			h.Fatalf("Wrong TPM strap: got %s, wanted %s", m[1], bus)
 		}
 	}
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
