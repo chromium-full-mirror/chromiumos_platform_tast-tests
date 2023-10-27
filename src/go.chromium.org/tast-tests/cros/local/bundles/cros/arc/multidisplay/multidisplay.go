@@ -858,15 +858,11 @@ func rotateDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *
 					displayInfoID = displays.external.ID
 				}
 
-				currentRot := currentRotation{ctx, tconn, displayInfoID, 0}
-				if err := currentRot.read(); err != nil {
-					return errors.Wrap(err, "could not read rotation")
+				cleanupRotation, err := rotateDisplayBy90Degrees(ctx, tconn, displayInfoID)
+				if err != nil {
+					return errors.Wrap(err, "failed to rotate the display by 90 degrees")
 				}
-				defer currentRot.setTo(currentRot.degree)
-				if err := currentRot.setTo((currentRot.degree + 90) % 360); err != nil {
-					return errors.Wrap(err, "could not set rotation")
-				}
-
+				defer cleanupRotation(ctx)
 				ccList, err := queryConfigurationChanges(ctx, a)
 				if err != nil {
 					return errors.Wrap(err, "could not query config changes")
@@ -989,55 +985,29 @@ func snappingOnDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome,
 
 // Helper functions.
 
-// currentRotation remembers the current display rotation so that it gets back
-// to the original rotation after sub-test completes.
-type currentRotation struct {
-	ctx    context.Context
-	tconn  *chrome.TestConn
-	id     string
-	degree int
-}
-
-// read reads the current display rotation via Chrome API.
-func (current *currentRotation) read() error {
-	info, err := display.GetInfo(current.ctx, current.tconn)
+// rotateDisplayBy90Degrees rotates the screen by 90 degrees. It returns a cleanup function to restore the device rotation to the original state.
+func rotateDisplayBy90Degrees(ctx context.Context, tconn *chrome.TestConn, displayInfoID string) (func(ctx context.Context) error, error) {
+	info, err := display.GetInfoForID(ctx, tconn, displayInfoID)
 	if err != nil {
-		return err
+		return nil, errors.Wrap(err, "could not get display info")
+	}
+	originalRotation := info.Rotation
+	originalAngle, err := display.RotationToAngle(originalRotation)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not get rotation angle for original rotation (%d)", originalRotation)
 	}
 
-	for _, i := range info {
-		if i.ID == current.id {
-			current.degree = i.Rotation
-			return nil
-		}
+	newRotation := (originalRotation + 90) % 360
+	newAngle, err := display.RotationToAngle(newRotation)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not get rotation angle for new rotation (%d)", newRotation)
 	}
-
-	return errors.Errorf("display %s not found", current.id)
-}
-
-// setTo changes the display rotation and waits until the change is effective.
-func (current *currentRotation) setTo(degree int) error {
-	if current.degree == degree {
-		return nil
+	if err := display.SetDisplayRotationSync(ctx, tconn, info.ID, newAngle); err != nil {
+		return nil, errors.Wrap(err, "could not set display rotation")
 	}
-
-	if err := display.SetDisplayProperties(
-		current.ctx, current.tconn, current.id,
-		display.DisplayProperties{Rotation: &degree}); err != nil {
-		return err
-	}
-
-	// Poll is required as completion of display.SetDisplayProperties does not
-	// ensure display.GetInfo returns new info.
-	return testing.Poll(current.ctx, func(ctx context.Context) error {
-		if err := current.read(); err != nil {
-			return testing.PollBreak(err)
-		}
-		if current.degree != degree {
-			return errors.Errorf("display rotation has not been updated: got %d; want %d", current.degree, degree)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second})
+	return func(ctx context.Context) error {
+		return display.SetDisplayRotationSync(ctx, tconn, info.ID, originalAngle)
+	}, nil
 }
 
 // See go/arc-wm-r-spec for details.
