@@ -89,7 +89,7 @@ func NewStarfish(ctx context.Context) (*Starfish, error) {
 	sfish.printLogs(ctx, logs)
 
 	if err := sfish.deviceID(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to read DeviceID")
+		testing.ContextLog(ctx, "Failed to read DeviceID: ", err.Error())
 	}
 	if err := sfish.simStatus(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to read SIM slots status")
@@ -111,17 +111,18 @@ func (s *Starfish) deviceID(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if len(responses) < 2 {
+	n := len(responses)
+	if n < 2 {
 		return errors.New("invalid response")
 	}
-	if !strings.HasPrefix(responses[0], fwVerResp) {
+	if !strings.HasPrefix(responses[n-2], fwVerResp) {
 		return errors.Errorf("invalid response: %s", responses)
 	}
-	if !strings.HasPrefix(responses[1], devIDResp) {
+	if !strings.HasPrefix(responses[n-1], devIDResp) {
 		return errors.Errorf("invalid response: %s", responses)
 	}
-	s.fwVer = strings.TrimPrefix(responses[0], fwVerResp)
-	s.devID = strings.TrimPrefix(responses[1], devIDResp)
+	s.fwVer = strings.TrimPrefix(responses[n-2], fwVerResp)
+	s.devID = strings.TrimPrefix(responses[n-1], devIDResp)
 	testing.ContextLog(ctx, "fw version: ", s.fwVer)
 	testing.ContextLog(ctx, "device id: ", s.devID)
 	return nil
