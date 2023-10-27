@@ -65,13 +65,51 @@ var (
 		AllowOnlyPolicyNetworksToConnect:     false,
 		BlockedHexSSIDs:                      []string{blockedSSIDHex, blockedPreferredSSIDHex},
 	}
-	allSSIDs = []string{notBlockedSSID, blockedSSID, blockedPreferredSSID}
+	allSSIDs                  = []string{notBlockedSSID, blockedSSID, blockedPreferredSSID}
+	openNetworkConfigurations = []*policy.ONCNetworkConfiguration{
+		{
+			GUID: useDeviceGUID,
+			Name: "DeviceWideNetworkConfig",
+			Type: "WiFi",
+			WiFi: &policy.ONCWifi{
+				AutoConnect: false,
+				Security:    "None",
+				SSID:        blockedPreferredSSID,
+			},
+		},
+	}
+	wpaNetworkConfigurations = []*policy.ONCNetworkConfiguration{
+		{
+			GUID: useDeviceGUID,
+			Name: "DeviceWideNetworkConfig",
+			Type: "WiFi",
+			WiFi: &policy.ONCWifi{
+				AutoConnect: false,
+				Security:    "WPA-PSK",
+				SSID:        blockedPreferredSSID,
+				Passphrase:  testPass,
+			},
+		},
+	}
+	openConfigDevicePolicy = &policy.DeviceOpenNetworkConfiguration{
+		Val: &policy.ONC{
+			GlobalNetworkConfiguration: globalNetworkConfig,
+			NetworkConfigurations:      openNetworkConfigurations,
+		},
+	}
+	wpaConfigDevicePolicy = &policy.DeviceOpenNetworkConfiguration{
+		Val: &policy.ONC{
+			GlobalNetworkConfiguration: globalNetworkConfig,
+			NetworkConfigurations:      wpaNetworkConfigurations,
+		},
+	}
 )
 
 type policyBlockedWifiTestcase struct {
-	devicePolicy *policy.DeviceOpenNetworkConfiguration
-	apConfig     security.ConfigFactory
-	wifiCred     wifiutil.Credential
+	devicePolicy    *policy.DeviceOpenNetworkConfiguration
+	apConfig        security.ConfigFactory
+	wifiCred        wifiutil.Credential
+	testUserSession bool
 }
 
 type localContext struct {
@@ -113,65 +151,58 @@ func init() {
 			"tast.cros.browser.ChromeService",
 			"tast.cros.wifi.WifiService",
 		),
-		Timeout:         10 * time.Minute,
+		Timeout:         25 * time.Minute,
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesEnroll),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				// TODO(b/278192058): Extend test with  EAP-TLS and WPA-EAP WiFi if they have different behavior when blocked.
-				// Verify that DUT can connect to an open AP.
-				Name: "open",
+				// Verify that DUT can connect to an open AP on login screen.
+				Name: "open_wifi_login_screen",
 				Val: policyBlockedWifiTestcase{
-					apConfig: nil,
-					wifiCred: &wifiutil.None{},
-					devicePolicy: &policy.DeviceOpenNetworkConfiguration{
-						Val: &policy.ONC{
-							GlobalNetworkConfiguration: globalNetworkConfig,
-							NetworkConfigurations: []*policy.ONCNetworkConfiguration{
-								{
-									GUID: useDeviceGUID,
-									Name: "DeviceWideNetworkConfig",
-									Type: "WiFi",
-									WiFi: &policy.ONCWifi{
-										AutoConnect: false,
-										Security:    "None",
-										SSID:        blockedPreferredSSID,
-									},
-								},
-							},
-						},
-					},
+					apConfig:        nil,
+					wifiCred:        &wifiutil.None{},
+					devicePolicy:    openConfigDevicePolicy,
+					testUserSession: false,
 				},
 			},
 			{
-				// Verify that DUT can connect to a WPA-PSK AP.
-				Name: "wpa_psk",
+				// Verify that DUT can connect to an open AP inside user's session.
+				Name: "open_wifi_user_session",
+				Val: policyBlockedWifiTestcase{
+					apConfig:        nil,
+					wifiCred:        &wifiutil.None{},
+					devicePolicy:    openConfigDevicePolicy,
+					testUserSession: true,
+				},
+			},
+			{
+				// Verify that DUT can connect to a WPA-PSK AP on login screen.
+				Name: "wpa_psk_wifi_login_screen",
 				Val: policyBlockedWifiTestcase{
 					apConfig: wpa.NewConfigFactory(
 						testPass,
 						wpa.Mode(wpa.ModePureWPA2),
 						wpa.Ciphers2(wpa.CipherCCMP),
 					),
-					wifiCred: &wifiutil.Psk{Password: testPass},
-					devicePolicy: &policy.DeviceOpenNetworkConfiguration{
-						Val: &policy.ONC{
-							GlobalNetworkConfiguration: globalNetworkConfig,
-							NetworkConfigurations: []*policy.ONCNetworkConfiguration{
-								{
-									GUID: useDeviceGUID,
-									Name: "DeviceWideNetworkConfig",
-									Type: "WiFi",
-									WiFi: &policy.ONCWifi{
-										AutoConnect: false,
-										Security:    "WPA-PSK",
-										SSID:        blockedPreferredSSID,
-										Passphrase:  testPass,
-									},
-								},
-							},
-						},
-					},
+					wifiCred:        &wifiutil.Psk{Password: testPass},
+					devicePolicy:    wpaConfigDevicePolicy,
+					testUserSession: false,
+				},
+			},
+			{
+				// Verify that DUT can connect to a WPA-PSK AP inside user's session.
+				Name: "wpa_psk_wifi_user_session",
+				Val: policyBlockedWifiTestcase{
+					apConfig: wpa.NewConfigFactory(
+						testPass,
+						wpa.Mode(wpa.ModePureWPA2),
+						wpa.Ciphers2(wpa.CipherCCMP),
+					),
+					wifiCred:        &wifiutil.Psk{Password: testPass},
+					devicePolicy:    wpaConfigDevicePolicy,
+					testUserSession: true,
 				},
 			},
 		},
@@ -202,7 +233,7 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 	rpcClient := testFixture.DUTRPC(wificell.DefaultDUT)
 	policyClient := ps.NewPolicyServiceClient(rpcClient.Conn)
 	wifiSvc := testFixture.DUTWifiClient(wificell.DefaultDUT)
-	longerCtx, cancel := ctxutil.Shorten(ctx, 25*time.Second)
+	longerCtx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 	localCtx := localContext{longerCtx, rpcClient.Conn, wifiSvc, params.wifiCred}
 
@@ -307,7 +338,6 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clean shill and enroll DUT with policies: ", err)
 	}
 
-	// Run WiFi connections tests with applied policy on the login screen.
 	func() {
 		cleanupCtx := ctx
 		ctx, cancel := ctxutil.Shorten(ctx, 25*time.Second)
@@ -318,158 +348,180 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 		}
 		defer chromeService.Close(cleanupCtx, &emptypb.Empty{})
 
-		// ------ Testing join WiFi with one click from the quick settings on the
-		// login screen.
-		s.Log("Start testing WiFi connection from one click in quick settings before login")
-
-		// Connect to blocked WiFi which is also defined in ONC policy.
-		// This WiFi has password/certificate defined in policy, so we should be able
-		// to join it without entering any password.
-		if err := expectSuccJoinWiFi(blockedAndPreferredAP, localCtx, quickSettings, !expectDialog); err != nil {
-			s.Fatal(canNotJoinWiFi, err)
-		}
-
-		// Connect and test connection to the notBlockedAP.
-		if err := expectSuccJoinWiFi(notBlockedAP, localCtx, quickSettings, expectDialog); err != nil {
-			s.Fatal(canNotJoinWiFi, err)
-		}
-
-		// Connect and test connection to the blockedAP.
-		if err := expectSuccJoinWiFi(blockedAP, localCtx, quickSettings, expectDialog); err != nil {
-			s.Fatal(canNotJoinWiFi, err)
-		}
-		// ------ End testing one click join on Login screen.
-
-		// ------- Test join WiFi from "Add a new WiFi connection" in quick settings on the login screen.
-		// For every access point we try to open "Add a new WiFi connection" from the quick
-		// settings and manually put the name, security/password and then click Connect.
-		s.Log("Start testing add new WiFi connection from the quick settings before login")
-
-		// Connect and test connection to the notBlockedAP.
-		if err := expectSuccAddAndJoinWiFiQuickSettings(notBlockedAP, localCtx); err != nil {
-			s.Fatal(canNotAddNewWiFi, err)
-		}
-
-		// Connect and test connection to the blockedAP.
-		if err := expectSuccAddAndJoinWiFiQuickSettings(blockedAP, localCtx); err != nil {
-			s.Fatal(canNotAddNewWiFi, err)
-		}
-
-		// Connect and test connection to the blockedAndPreferredAP.
-		// WiFi popup shows error, previous network is still connected, this is a bug.
-		// TODO(b/278189326): Change this to joinAndTestWiFiFromQuickSettings() after bug is fixed.
-		if err := expectFailAddAndJoinWiFiQuickSettings(blockedAndPreferredAP, localCtx); err != nil {
-			s.Fatal("Expected to fail while joining blocked and preferred WiFi from quick settings: ", err)
-		}
-
-		// Connect back to blockedAP, so can verify that it is disconnected after the login.
-		if err := expectSuccAddAndJoinWiFiQuickSettings(blockedAP, localCtx); err != nil {
-			s.Fatal(canNotAddNewWiFi, err)
+		if !params.testUserSession {
+			// Run WiFi connections tests with applied policy on the login screen.
+			runTestBeforeLoginToSession(localCtx, s, accessPoints)
+		} else {
+			// Connect to blockedAP, so can verify that it is disconnected after the login.
+			if err := expectSuccAddAndJoinWiFiQuickSettings(blockedAP, localCtx); err != nil {
+				s.Fatal(canNotAddNewWiFi, err)
+			}
+			// Login and run WiFi connections tests with applied policy after the login
+			// to users session.
+			runTestAfterLoginToSession(localCtx, s, params.devicePolicy, policyClient, accessPoints)
 		}
 	}()
+}
 
-	// Run WiFi connections tests with applied policy after the login to users session.
-	func() {
-		// Get chrome service and login to users session with default test user.
-		// Policies were applied on device level, so they will be efficient for any logged in user.
-		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 25*time.Second)
-		defer cancel()
-		chromeService := ui.NewChromeServiceClient(rpcClient.Conn)
-		if _, err := chromeService.New(ctx, &ui.NewRequest{KeepState: true}); err != nil {
-			s.Fatal("DUT: failed to start Chrome: ", err)
-		}
+// runTestBeforeLoginToSession runs WiFi connections tests without and with
+// applied policy on login screen without user's session.
+func runTestBeforeLoginToSession(localCtx localContext,
+	s *testing.State,
+	accessPoints map[string]*wificell.APIface) {
+	// ------ Testing join WiFi with one click from the quick settings on the
+	// login screen.
+	s.Log("Start testing WiFi connection from one click in quick settings before login")
 
-		// Check that blockedAP is disconnected after login.
-		if err := expectWiFiNotConnected(ctx, wifiSvc, blockedAP.Config().SSID); err != nil {
-			s.Fatal(err, "failed to verify that blocked WiFi was disconnected after login")
-		}
+	// Connect to blocked WiFi which is also defined in ONC policy.
+	// This WiFi has password/certificate defined in policy, so we should be able
+	// to join it without entering any password.
+	if err := expectSuccJoinWiFi(accessPoints[blockedPreferredSSID], localCtx, quickSettings, !expectDialog); err != nil {
+		s.Fatal(canNotJoinWiFi, err)
+	}
 
-		// --------- Testing join WiFi with one click from quick settings after login.
-		s.Log("Start testing WiFi connection from one click settings after login")
-		// Removed stored passwords from shill and re-enroll DUT with policies to recover shill state.
-		if _, err := chromeService.Close(cleanupCtx, &emptypb.Empty{}); err != nil {
-			s.Fatal("Failed to close chrome: ", err)
-		}
-		if err := cleanShillAndReEnroll(localCtx, params.devicePolicy, policyClient); err != nil {
-			s.Fatal("Failed to clean shill and enroll DUT with policies: ", err)
-		}
-		chromeService = ui.NewChromeServiceClient(rpcClient.Conn)
-		if _, err := chromeService.New(ctx, &ui.NewRequest{KeepState: true}); err != nil {
-			s.Fatal(failedToStartChrome, err)
-		}
+	// Connect and test connection to the notBlockedAP.
+	if err := expectSuccJoinWiFi(accessPoints[notBlockedSSID], localCtx, quickSettings, expectDialog); err != nil {
+		s.Fatal(canNotJoinWiFi, err)
+	}
 
-		// Connect and test connection to the notBlockedAP.
-		if err := expectSuccJoinWiFi(notBlockedAP, localCtx, quickSettings, expectDialog); err != nil {
-			s.Fatal(canNotJoinWiFi, err)
-		}
+	// Connect and test connection to the blockedAP.
+	if err := expectSuccJoinWiFi(accessPoints[blockedSSID], localCtx, quickSettings, expectDialog); err != nil {
+		s.Fatal(canNotJoinWiFi, err)
+	}
+	// ------ End testing one click join on Login screen.
 
-		// Connect to blocked WiFi which is also defined in ONC policy.
-		// This WiFi has password/certificate defined in policy, so we should be able
-		// to join this WiFi without entering any password.
-		if err := expectSuccJoinWiFi(blockedAndPreferredAP, localCtx, quickSettings, !expectDialog); err != nil {
-			s.Fatal(canNotJoinWiFi, err)
-		}
+	// ------- Test join WiFi from "Add a new WiFi connection" in quick settings on the login screen.
+	// For every access point we try to open "Add a new WiFi connection" from the quick
+	// settings and manually put the name, security/password and then click Connect.
+	s.Log("Start testing add new WiFi connection from the quick settings before login")
 
-		// Can not connect to blockedAP.
-		if err := expectFailJoinWiFiFromOneClick(blockedAP, localCtx); err != nil {
-			s.Fatal("Was expecting failure for joining WiFi, but received: ", err)
-		}
-		// --------- End join WiFi with one click from quick settings after login.
+	// Connect and test connection to the notBlockedAP.
+	if err := expectSuccAddAndJoinWiFiQuickSettings(accessPoints[notBlockedSSID], localCtx); err != nil {
+		s.Fatal(canNotAddNewWiFi, err)
+	}
 
-		// --------- Testing join WiFi with one click from OS settings after login.
-		s.Log("Start testing WiFi connection from OS settings after login with one click")
+	// Connect and test connection to the blockedAP.
+	if err := expectSuccAddAndJoinWiFiQuickSettings(accessPoints[blockedSSID], localCtx); err != nil {
+		s.Fatal(canNotAddNewWiFi, err)
+	}
 
-		// Removed stored passwords from shill and re-enroll DUT with policies to recover shill state.
-		if _, err := chromeService.Close(cleanupCtx, &emptypb.Empty{}); err != nil {
-			s.Fatal("Failed to close chrome: ", err)
-		}
-		if err := cleanShillAndReEnroll(localCtx, params.devicePolicy, policyClient); err != nil {
-			s.Fatal("Failed to clean shill and enroll DUT with policies: ", err)
-		}
-		chromeService = ui.NewChromeServiceClient(rpcClient.Conn)
-		if _, err := chromeService.New(ctx, &ui.NewRequest{KeepState: true}); err != nil {
-			s.Fatal(failedToStartChrome, err)
-		}
+	// Connect and test connection to the blockedAndPreferredAP.
+	// WiFi popup shows error, previous network is still connected, this is a bug.
+	// TODO(b/278189326): Change this to joinAndTestWiFiFromQuickSettings() after bug is fixed.
+	if err := expectFailAddAndJoinWiFiQuickSettings(accessPoints[blockedPreferredSSID], localCtx); err != nil {
+		s.Fatal("Expected to fail while joining blocked and preferred WiFi from quick settings: ", err)
+	}
+}
 
-		// Connect and test connection to the notBlockedAP.
-		if err := expectSuccJoinWiFi(notBlockedAP, localCtx, osSettings, expectDialog); err != nil {
-			s.Fatal(canNotJoinWiFi, err)
-		}
+// runTestAfterLoginToSession runs WiFi connections tests with applied policy
+// after the login to users session.
+func runTestAfterLoginToSession(localCtx localContext,
+	s *testing.State,
+	devicePolicy *policy.DeviceOpenNetworkConfiguration,
+	policyClient ps.PolicyServiceClient,
+	accessPoints map[string]*wificell.APIface) {
+	ctx := localCtx.ctx
+	wifiSvc := localCtx.wifiSvc
 
-		// Connect and test connection to the blockedAndPreferredAP.
-		if err := expectSuccJoinWiFi(blockedAndPreferredAP, localCtx, osSettings, !expectDialog); err != nil {
-			s.Fatal(canNotJoinWiFi, err)
-		}
+	s.Log("Start testing WiFi connection with applied policies after the login")
+	// Get chrome service and login to users session with default test user.
+	// Policies were applied on device level, so they will be efficient for any logged in user.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 25*time.Second)
+	defer cancel()
+	chromeService := ui.NewChromeServiceClient(localCtx.rpcClient)
+	if _, err := chromeService.New(ctx, &ui.NewRequest{KeepState: true}); err != nil {
+		s.Fatal("DUT: failed to start Chrome: ", err)
+	}
 
-		// Connect and test connection to the blockedAP.
-		if err := expectBlockedJoinWiFiOSSettings(ctx, rpcClient.Conn, blockedAP); err != nil {
-			s.Fatal("Was expecting to find blocked WiFi, but received: ", err)
-		}
-		//--------- End join WiFi with one click from OS settings after login.
+	// Check that blockedAP is disconnected after login.
+	if err := expectWiFiNotConnected(ctx, wifiSvc, accessPoints[blockedSSID].Config().SSID); err != nil {
+		s.Fatal(err, "failed to verify that blocked WiFi was disconnected after login")
+	}
 
-		//------- Test join WiFi from "Add a new WiFi connection" in quick settings after login.
-		s.Log("Start testing WiFi connection from quick settings after login")
+	// --------- Testing join WiFi with one click from quick settings after login.
+	// Removed stored passwords from shill and re-enroll DUT with policies to recover shill state.
+	if _, err := chromeService.Close(cleanupCtx, &emptypb.Empty{}); err != nil {
+		s.Fatal("Failed to close chrome: ", err)
+	}
+	if err := cleanShillAndReEnroll(localCtx, devicePolicy, policyClient); err != nil {
+		s.Fatal("Failed to clean shill and enroll DUT with policies: ", err)
+	}
+	chromeService = ui.NewChromeServiceClient(localCtx.rpcClient)
+	if _, err := chromeService.New(ctx, &ui.NewRequest{KeepState: true}); err != nil {
+		s.Fatal(failedToStartChrome, err)
+	}
 
-		// Connect and test connection to the notBlockedAP.
-		if err := expectSuccAddAndJoinWiFiQuickSettings(notBlockedAP, localCtx); err != nil {
-			s.Fatal("Failed to join not blocked WiFi from quick settings: ", err)
-		}
+	s.Log("Start testing WiFi connection from one click settings login")
+	// Connect and test connection to the notBlockedAP.
+	if err := expectSuccJoinWiFi(accessPoints[notBlockedSSID], localCtx, quickSettings, expectDialog); err != nil {
+		s.Fatal(canNotJoinWiFi, err)
+	}
 
-		// Connect and test connection to the blockedAP.
-		// WiFi popup expected to show error because network is blocked by policy.
-		if err := expectFailAddAndJoinWiFiQuickSettings(blockedAP, localCtx); err != nil {
-			s.Fatal("Expected to fail while joining blocked WiFi from quick settings: ", err)
-		}
+	// Connect to blocked WiFi which is also defined in ONC policy.
+	// This WiFi has password/certificate defined in policy, so we should be able
+	// to join this WiFi without entering any password.
+	if err := expectSuccJoinWiFi(accessPoints[blockedPreferredSSID], localCtx, quickSettings, !expectDialog); err != nil {
+		s.Fatal(canNotJoinWiFi, err)
+	}
 
-		// Connect and test connection to the blockedAndPreferredAP.
-		// WiFi popup shows error, this is a bug.
-		// TODO(b/278189326): Change this to joinAndTestWiFiFromQuickSettings() after bug is fixed.
-		if err := expectFailAddAndJoinWiFiQuickSettings(blockedAndPreferredAP, localCtx); err != nil {
-			s.Fatal("Expected to fail while joining not blocked prefered WiFi from quick settings: ", err)
-		}
-		// --------- End of test join WiFi from quick settings "Add a new WiFi connection" in quick settings after login.
-	}()
+	// Can not connect to blockedAP.
+	if err := expectFailJoinWiFiFromOneClick(accessPoints[blockedSSID], localCtx); err != nil {
+		s.Fatal("Was expecting failure for joining WiFi, but received: ", err)
+	}
+	// --------- End join WiFi with one click from quick settings after login.
+
+	// --------- Testing join WiFi with one click from OS settings after login.
+	s.Log("Start testing WiFi connection from OS settings after login with one click")
+
+	// Removed stored passwords from shill and re-enroll DUT with policies to recover shill state.
+	if _, err := chromeService.Close(cleanupCtx, &emptypb.Empty{}); err != nil {
+		s.Fatal("Failed to close chrome: ", err)
+	}
+	if err := cleanShillAndReEnroll(localCtx, devicePolicy, policyClient); err != nil {
+		s.Fatal("Failed to clean shill and enroll DUT with policies: ", err)
+	}
+	chromeService = ui.NewChromeServiceClient(localCtx.rpcClient)
+	if _, err := chromeService.New(ctx, &ui.NewRequest{KeepState: true}); err != nil {
+		s.Fatal(failedToStartChrome, err)
+	}
+
+	// Connect and test connection to the notBlockedAP.
+	if err := expectSuccJoinWiFi(accessPoints[notBlockedSSID], localCtx, osSettings, expectDialog); err != nil {
+		s.Fatal(canNotJoinWiFi, err)
+	}
+
+	// Connect and test connection to the blockedAndPreferredAP.
+	if err := expectSuccJoinWiFi(accessPoints[blockedPreferredSSID], localCtx, osSettings, !expectDialog); err != nil {
+		s.Fatal(canNotJoinWiFi, err)
+	}
+
+	// Connect and test connection to the blockedAP.
+	if err := expectBlockedJoinWiFiOSSettings(ctx, localCtx.rpcClient, accessPoints[blockedSSID]); err != nil {
+		s.Fatal("Was expecting to find blocked WiFi, but received: ", err)
+	}
+	//--------- End join WiFi with one click from OS settings after login.
+
+	//------- Test join WiFi from "Add a new WiFi connection" in quick settings after login.
+	s.Log("Start testing add WiFi connection from quick settings after login")
+
+	// Connect and test connection to the notBlockedAP.
+	if err := expectSuccAddAndJoinWiFiQuickSettings(accessPoints[notBlockedSSID], localCtx); err != nil {
+		s.Fatal("Failed to join not blocked WiFi from quick settings: ", err)
+	}
+
+	// Connect and test connection to the blockedAP.
+	// WiFi popup expected to show error because network is blocked by policy.
+	if err := expectFailAddAndJoinWiFiQuickSettings(accessPoints[blockedSSID], localCtx); err != nil {
+		s.Fatal("Expected to fail while joining blocked WiFi from quick settings: ", err)
+	}
+
+	// Connect and test connection to the blockedAndPreferredAP.
+	// WiFi popup shows error, this is a bug.
+	// TODO(b/278189326): Change this to joinAndTestWiFiFromQuickSettings() after bug is fixed.
+	if err := expectFailAddAndJoinWiFiQuickSettings(accessPoints[blockedPreferredSSID], localCtx); err != nil {
+		s.Fatal("Expected to fail while joining not blocked prefered WiFi from quick settings: ", err)
+	}
 }
 
 // expectBlockedJoinWiFiOSSettings verifies that provided network is disabled by administrator.
@@ -890,7 +942,7 @@ func cleanShillAndReEnroll(localCtx localContext, devicePolicy *policy.DeviceOpe
 	return nil
 }
 
-// testJoinWithOneClickBeforeLogin testing join WiFi with one click from quick settings on OOB screen before
+// testJoinWithOneClickBeforeLogin testing join WiFi with one click from quick settings on login screen before
 // policies are applied.
 func testJoinWithOneClickBeforeLogin(localCtx localContext, accessPoints map[string]*wificell.APIface) (retErr error) {
 	// Connect to the wifi which will be blocked by ONC policy.
