@@ -45,15 +45,11 @@ func NavigateToNetworkDetailedView(ctx context.Context, tconn *chrome.TestConn) 
 func OpenNetworkSettings(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
 
-	quickSettingsRoot, err := GetRootFinder(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get quick settings root")
-	}
 	networkDetailedView, err := NetworkDetailedView(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to get network detailed view")
 	}
-	networkSettingsButton := nodewith.HasClass("IconButton").Name("Network settings").Ancestor(quickSettingsRoot)
+	networkSettingsButton := nodewith.HasClass("IconButton").Name("Network settings").Ancestor(QsRootFinder)
 	return uiauto.Combine("click the Network settings",
 		ui.LeftClick(networkSettingsButton),
 		ui.WaitUntilGone(networkDetailedView),
@@ -86,21 +82,15 @@ func SelectNetwork(ctx context.Context, tconn *chrome.TestConn, ssid string) err
 }
 
 // NetworkDetailedView returns the detailed Network view within Quick Settings.
+// TODO(b/290943118): Remove unused ctx and tconn arguments.
 func NetworkDetailedView(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
-	quickSettingsRoot, err := GetRootFinder(ctx, tconn)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get quick settings root")
-	}
-	return nodewith.HasClass("NetworkDetailedNetworkViewImpl").Ancestor(quickSettingsRoot), nil
+	return nodewith.HasClass("NetworkDetailedNetworkViewImpl").Ancestor(QsRootFinder), nil
 }
 
 // NetworkListItemView returns the network item list on the network view in Quick Settings.
+// TODO(b/290943118): Remove unused ctx and tconn arguments.
 func NetworkListItemView(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
-	quickSettingsRoot, err := GetRootFinder(ctx, tconn)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get quick settings root")
-	}
-	return nodewith.HasClass("NetworkListNetworkItemView").Ancestor(quickSettingsRoot), nil
+	return nodewith.HasClass("NetworkListNetworkItemView").Ancestor(QsRootFinder), nil
 }
 
 // NetworkDetailedViewWifiToggleButton returns the WiFi toggle within the Network detailed view.

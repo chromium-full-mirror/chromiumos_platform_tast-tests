@@ -52,10 +52,6 @@ func DoSystemTrayWorkflow(ctx context.Context, tconn *chrome.TestConn, pc pointe
 	// Open and close the system tray bubble.
 	// There is more than one "UnifiedSystemTray" on the UI tree when an extended display is connected.
 	systemTray := quicksettings.SystemTray.First()
-	quickSettingsRoot, err := quicksettings.GetRootFinder(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get quick settings root finder")
-	}
 	ac := uiauto.New(tconn)
 
 	return uiauto.Combine(
@@ -67,12 +63,12 @@ func DoSystemTrayWorkflow(ctx context.Context, tconn *chrome.TestConn, pc pointe
 			return nil
 		},
 		pc.Click(systemTray),
-		ac.WaitUntilExists(quickSettingsRoot),
+		ac.WaitUntilExists(quicksettings.QsRootFinder),
 		// Add a fixed sleep to simulate a user looking for the button that
 		// they want to press.
 		uiauto.Sleep(500*time.Millisecond),
 		pc.Click(systemTray),
-		ac.WaitUntilGone(quickSettingsRoot),
+		ac.WaitUntilGone(quicksettings.QsRootFinder),
 	)(ctx)
 }
 

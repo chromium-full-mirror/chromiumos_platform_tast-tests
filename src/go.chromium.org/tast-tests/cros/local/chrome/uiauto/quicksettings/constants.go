@@ -35,7 +35,6 @@ var FeatureTileBluetooth = nodewith.HasClass("FeatureTile").NameContaining("Blue
 var FeatureTileBluetoothToggle = nodewith.Role(role.Button).NameContaining("Toggle Bluetooth").Ancestor(FeatureTileBluetooth)
 
 // FeatureTileCameraFraming is the finder for the "Camera framing" feature tile.
-// It only exists with QsRevamp.
 var FeatureTileCameraFraming = nodewith.Role(role.ToggleButton).NameContaining("Camera framing")
 
 // FeatureTileCast is the finder for the "Cast screen" feature tile.

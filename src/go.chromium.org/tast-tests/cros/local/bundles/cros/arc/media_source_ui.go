@@ -143,11 +143,7 @@ func MediaSourceUI(ctx context.Context, s *testing.State) {
 			defer quicksettings.Hide(cleanupCtx, tconn)
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, outDir, s.HasError, cr, "ui_quicksettings")
 
-			mediaControlsPod, err := quicksettings.MediaControlsPod(ctx, tconn)
-			if err != nil {
-				s.Fatal("Failed to get media controls pod finder: ", err)
-			}
-
+			mediaControlsPod := quicksettings.MediaControlsPod()
 			resourceName := nodewith.Name(media.Subtitle).HasClass("Label").Ancestor(mediaControlsPod)
 			if err := ui.WaitUntilExists(resourceName)(ctx); err != nil {
 				s.Fatal("Failed to check media control UI: ", err)

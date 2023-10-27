@@ -71,12 +71,6 @@ func clickAndWaitForAnimation(ctx context.Context, tconn *chrome.TestConn, node 
 	return nil
 }
 
-// GetRootFinder returns the finder for the root quick settings view.
-// TODO(b/290943118): Delete this function and inline QsRootFinder.
-func GetRootFinder(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
-	return QsRootFinder, nil
-}
-
 // Rect returns a coords.Rect struct for the Quick Settings area, which contains
 // coordinate information about the rectangular region it occupies on the screen.
 // As clients of this function generally expect the bounds of the window, not the
@@ -90,13 +84,8 @@ func Rect(ctx context.Context, tconn *chrome.TestConn) (coords.Rect, error) {
 		return coords.Rect{}, errors.Wrap(err, "failed to find quick settings")
 	}
 
-	rootFinder, err := GetRootFinder(ctx, tconn)
-	if err != nil {
-		return coords.Rect{}, errors.Wrap(err, "failed to get root finder")
-	}
-
 	for i := range results {
-		if err := ui.Exists(rootFinder.Ancestor(bubbleFrameView.Nth(i)))(ctx); err == nil {
+		if err := ui.Exists(QsRootFinder.Ancestor(bubbleFrameView.Nth(i)))(ctx); err == nil {
 			return results[i].Location, nil
 		}
 	}
@@ -119,11 +108,7 @@ func ClickStatusArea(ctx context.Context, tconn *chrome.TestConn) error {
 
 // Shown checks if Quick Settings exists in the UI.
 func Shown(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
-	rootFinder, err := GetRootFinder(ctx, tconn)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to get root finder")
-	}
-	return uiauto.New(tconn).IsNodeFound(ctx, rootFinder)
+	return uiauto.New(tconn).IsNodeFound(ctx, QsRootFinder)
 }
 
 // Show will click the status area to show Quick Settings and wait for it to appear.
@@ -141,13 +126,8 @@ func Show(ctx context.Context, tconn *chrome.TestConn) error {
 		return errors.Wrap(err, "failed to click the status area")
 	}
 
-	rootFinder, err := GetRootFinder(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get root finder")
-	}
-
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(rootFinder)(ctx); err != nil {
+	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(QsRootFinder)(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for quick settings to appear")
 	}
 	return nil
@@ -166,13 +146,8 @@ func Hide(ctx context.Context, tconn *chrome.TestConn) error {
 		return errors.Wrap(err, "failed to click the status area")
 	}
 
-	rootFinder, err := GetRootFinder(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get root finder")
-	}
-
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(uiTimeout).WaitUntilGone(rootFinder)(ctx); err != nil {
+	if err := ui.WithTimeout(uiTimeout).WaitUntilGone(QsRootFinder)(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for quick settings to be hidden")
 	}
 	return nil
@@ -207,14 +182,9 @@ func ShowWithRetry(ctx context.Context, tconn *chrome.TestConn, timeout time.Dur
 		return errors.Wrap(err, "failed to find the status area widget")
 	}
 
-	rootFinder, err := GetRootFinder(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get root finder")
-	}
-
 	ui := uiauto.New(tconn)
 	if err := ui.WithPollOpts(testing.PollOptions{Timeout: timeout, Interval: time.Second}).
-		LeftClickUntil(statusArea, ui.Exists(rootFinder))(ctx); err != nil {
+		LeftClickUntil(statusArea, ui.Exists(QsRootFinder))(ctx); err != nil {
 		return errors.Wrap(err, "quick settings not shown")
 	}
 	return nil
