@@ -70,6 +70,14 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to ensure battery percentage within %d%% to %d%%: %v", 80, 95, err)
 	}
 
+	// Ensure that charging is turned on.
+	if err := setup.AllowBatteryCharging(ctx); err != nil {
+		s.Fatal("Failed to enable charging for DUT: ", err)
+	}
+	if err := setup.WaitUntilPowerSourceChanges(ctx, true); err != nil {
+		s.Fatal("Timed out waiting for DUT to start charging: ", err)
+	}
+
 	// Stop powerd while we're changing directories that it touches.
 	if err := upstart.StopJob(ctx, "powerd"); err != nil {
 		s.Fatal("Failed to stop powerd: ", err)
