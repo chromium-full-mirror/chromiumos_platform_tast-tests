@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -58,10 +59,17 @@ func OSSettingsWithShadowPiercer(ctx context.Context, tconn *chrome.TestConn, cr
 				return nil, errors.Wrap(err, "failed to close already opened OS Settings instance")
 			}
 		}
-		conn, err = apps.LaunchOSSettings(ctx, cr, launchURL)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to start Chrome session to OS settings with URL %v", launchURL)
+		// Launching OS Settings pagees sometimes fails at the first time so we will retry a few times.
+		if err := uiauto.Retry(5, func(ctx context.Context) error {
+			conn, err = apps.LaunchOSSettings(ctx, cr, launchURL)
+			if err != nil {
+				return errors.Wrapf(err, "failed to start Chrome session to OS settings with URL %v", launchURL)
+			}
+			return nil
+		})(ctx); err != nil {
+			return nil, errors.Wrapf(err, "failed to start Chrome session to OS settings with URL %v after retries", launchURL)
 		}
+
 	}
 	// Execute some arbitrary JS with `EvalWithShadowPiercer` to ensure `shadowPiercingQuery` is loaded.
 	if err := webutil.EvalWithShadowPiercer(ctx, conn, "true", nil); err != nil {

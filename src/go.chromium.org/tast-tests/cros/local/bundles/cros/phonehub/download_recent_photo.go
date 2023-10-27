@@ -124,9 +124,6 @@ func DownloadRecentPhoto(ctx context.Context, s *testing.State) {
 	if err := phonehub.Hide(ctx, tconn); err != nil {
 		s.Fatal("Failed to open Phone Hub: ", err)
 	}
-	if err := phonehub.ToggleRecentPhotosSetting(ctx, tconn, chrome, false); err != nil {
-		s.Fatal("Failed to disable Recent Photos: ", err)
-	}
 }
 
 // waitUntilDownloadComplete waits for the target photo to be fully downloaded to the CrOS device's download directory.

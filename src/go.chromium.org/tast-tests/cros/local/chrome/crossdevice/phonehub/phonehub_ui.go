@@ -69,13 +69,22 @@ func Enable(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) erro
 	}
 	// Phone Hub is still not immediately ready to use after toggling it on from OS Settings,
 	// since it takes a short amount of time for it to connect to the phone and display anything.
-	// Wait for it to become usable by checking for the existence of a settings pod.
-	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
-	if err := Show(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to show Phone Hub")
-	}
-	if err := ui.WaitUntilExists(phoneHubSettingPod.First())(ctx); err != nil {
-		return errors.Wrap(err, "failed to find a Phone Hub setting pod")
+	// Wait for it to become usable by checking for the existence of a settings pod. Retry a few times before we actually fail this step.
+	if err := uiauto.Retry(3, func(ctx context.Context) error {
+		ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+		if err := Show(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to show Phone Hub")
+		}
+		if err := ui.WaitUntilExists(phoneHubSettingPod.First())(ctx); err != nil {
+			// Hide the Phone Hub bubble before retry if not successfully connected this time.
+			if err := Hide(ctx, tconn); err != nil {
+				return errors.Wrap(err, "failed to hide Phone Hub buble before retry")
+			}
+			return errors.Wrap(err, "failed to find a Phone Hub setting pod")
+		}
+		return nil
+	})(ctx); err != nil {
+		return errors.Wrap(err, "failed to connect to phone after retries")
 	}
 
 	return nil
@@ -225,11 +234,11 @@ func OptInSubFeatures(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Ch
 			return errors.Wrap(err, "no setup button found in Phone Hub bubble and failed to toggle the Notification feature in settings page")
 		}
 	} else {
-		if err := ui.LeftClick(FindSubFeaturesSetupButton())(ctx); err != nil {
+		if err := ui.LeftClick(subFeaturesButton)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click on the sub-features opt-in button")
 		}
 
-		setupDialogConn, err := crossdevicesettings.OSSettingsWithShadowPiercer(ctx, tconn, cr, setupDialogURL, false)
+		setupDialogConn, err := crossdevicesettings.OSSettingsWithShadowPiercer(ctx, tconn, cr, setupDialogURL, true)
 		if err != nil {
 			return errors.Wrap(err, "permissions set up dialog did not launch")
 		}
