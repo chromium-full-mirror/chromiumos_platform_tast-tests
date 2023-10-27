@@ -18,7 +18,9 @@ import (
 )
 
 // TODO(b/244254621) : remove "sasukette" when b/244254621 is fixed.
-var crasPlayUnstableModels = []string{"sasukette"}
+// brya models are known to be unstable due to soundwire, but we still need them
+// in the lab
+var crasPlayUnstableModels = []string{"sasukette", "brya"}
 
 func init() {
 	testing.AddTest(&testing.Test{
