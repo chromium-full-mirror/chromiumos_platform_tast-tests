@@ -83,7 +83,7 @@ func (c *RemoteClient) Stop(ctx context.Context) error {
 	defer cancel()
 
 	var allErrors error
-	if err := c.conn.CommandContext(ctx, "killall", "-q", c.iperfPath).Run(); err != nil && err.Error() != "Process exited with status 1" {
+	if err := c.conn.CommandContext(ctx, "killall", "-q", "-9", c.iperfPath).Run(); err != nil && err.Error() != "Process exited with status 1" {
 		allErrors = errors.Wrapf(allErrors, "failed to stop iperf on client host: %v", err) // NOLINT
 	}
 
