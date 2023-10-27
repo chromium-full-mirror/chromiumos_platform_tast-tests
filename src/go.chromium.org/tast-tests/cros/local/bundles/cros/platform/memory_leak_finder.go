@@ -24,8 +24,11 @@ func init() {
 		Desc:         "Open tabs until discard several times; comparing the max tabs each time",
 		Contacts:     []string{"chromeos-memory@google.com", "dianders@google.com"},
 		BugComponent: "b:167286",
-		Attr:         []string{"group:crosbolt", "crosbolt_memory_nightly"},
-		Timeout:      180 * time.Minute,
+		Attr:         []string{},
+		// TODO(b/298491915) - when test no longer times out
+		// add back the attributes as:
+		// ->   "group:crosbolt", "crosbolt_memory_nightly"
+		Timeout: 180 * time.Minute,
 		Data: []string{
 			mempressure.CompressibleData,
 			mempressure.WPRArchiveName,
