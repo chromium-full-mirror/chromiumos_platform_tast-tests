@@ -67,6 +67,11 @@ func SetARCVPNEnabled(ctx context.Context, a *arc.ARC, enabled bool) error {
 func WaitForARCServiceState(ctx context.Context, a *arc.ARC, pkg, svc string, expectedRunning bool) error {
 	testing.ContextLogf(ctx, "Check the state of %s/%s", pkg, svc)
 
+	// Given a service like "com.hello.world", we want to use the last "."-delimited element
+	// which is the actual service name, in this case "world".
+	svcSplits := strings.Split(svc, ".")
+	svcName := svcSplits[len(svcSplits)-1]
+
 	// Poll since it might take some time for the service to start/stop.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		cmd := a.Command(ctx, "dumpsys", "activity", "services", pkg+"/"+svc)
@@ -76,14 +81,15 @@ func WaitForARCServiceState(ctx context.Context, a *arc.ARC, pkg, svc string, ex
 		}
 
 		// Use raw string so we can directly use backslashes
-		matched, matchErr := regexp.Match(`ServiceRecord\{`, o)
+		// example outputs we want to match on:
+		//   ServiceRecord{27b48e1 u0 org.chromium.arc.hostvpn/.ArcHostVpnService}
+		//   ServiceRecord{b1145f6 u0 com.android.vending/com.google.android.finsky.setup.PlaySetupServiceV2}
+		matched, matchErr := regexp.Match(`ServiceRecord\{[0-9a-z]+ u[0-9]+ `+pkg+`\/.+`+svcName, o)
 		if matched != expectedRunning || matchErr != nil {
 			if expectedRunning {
-				// TODO(b/281466593): Stop logging the output, intended as temporary logs for investigation
-				return errors.Wrapf(matchErr, "expected, but didn't find ServiceRecord. dumpsys output: %s", o)
+				return errors.Wrap(matchErr, "expected, but didn't find ServiceRecord")
 			}
-			// TODO(b/281466593): Stop logging the output, intended as temporary logs for investigation
-			return errors.Wrapf(matchErr, "didn't expect, but found ServiceRecord. dumpsys output: %s", o)
+			return errors.Wrap(matchErr, "didn't expect, but found ServiceRecord")
 		}
 
 		return nil
