@@ -9,6 +9,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -17,6 +19,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -63,6 +66,10 @@ type GpioEvents struct {
 	Events map[ti50.GpioName][]GpioEvent
 	// Sorted stores events in the time order that they occurred
 	Sorted []GpioEvent
+	// ElapsedUS contains the number of micros elapsed since the gpio monitoring started.
+	// All signals can be assumed to have remained stable from their last recorded event
+	// until this time.
+	ElapsedUS uint64
 }
 
 // FindFirst returns the first gpio event that matches the specified args
@@ -105,6 +112,56 @@ func (e GpioEvents) String() string {
 		events[i] = fmt.Sprintf("\t%-15s\t%s\t%dms", e.Sorted[i].Name, e.Sorted[i].Edge, e.Sorted[i].TimestampUS/1000)
 	}
 	return "\n" + strings.Join(events, "\n")
+}
+
+// Save stores the sequence of captured GPIO events in the "Value Change Dump" format, which can
+// be loaded into logic analyzer programs, such as the open source Pulseview.
+func (s GpioMonitorSession) Save(ctx context.Context, e GpioEvents, filename string) error {
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return errors.New("failed to get directory for saving events")
+	}
+	path := filepath.Join(dir, filename)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create file `%s`", path)
+	}
+	defer f.Close()
+	fmt.Fprintln(f, "$version")
+	fmt.Fprintln(f, "   ti50_devboard_helper.go")
+	fmt.Fprintln(f, "$end")
+	fmt.Fprintln(f, "$timescale 1000000ps $end")
+	fmt.Fprintln(f, "$scope module logic $end")
+
+	revGpio := make(map[ti50.GpioName]int)
+	for i := range s.Gpios {
+		fmt.Fprintf(f, "$var wire 1 '%d %s $end\n", i, s.Gpios[i])
+		revGpio[s.Gpios[i]] = i
+	}
+
+	fmt.Fprintln(f, "$upscope $end")
+	fmt.Fprintln(f, "$enddefinitions $end")
+	fmt.Fprintf(f, "#%d\n", s.AbsoluteTimestampUS)
+	for i := range s.Gpios {
+		if s.InitialValues[s.Gpios[i]] {
+			fmt.Fprintf(f, "1'%d\n", i)
+		} else {
+			fmt.Fprintf(f, "0'%d\n", i)
+		}
+	}
+	for i := range e.Sorted {
+		fmt.Fprintf(f, "#%d\n", e.Sorted[i].TimestampUS+s.AbsoluteTimestampUS)
+		switch e.Sorted[i].Edge {
+		case GpioEdgeRising:
+			fmt.Fprintf(f, "1'%d\n", revGpio[e.Sorted[i].Name])
+		case GpioEdgeFalling:
+			fmt.Fprintf(f, "0'%d\n", revGpio[e.Sorted[i].Name])
+		}
+	}
+	fmt.Fprintf(f, "#%d\n", s.AbsoluteTimestampUS+e.ElapsedUS)
+
+	testing.ContextLogf(ctx, "Recorded %d GPIO events of %s in `%s`", len(e.Sorted), s.Gpios, filename)
+	return nil
 }
 
 // DevboardHelper wraps a DevBoard service and adds higher level commands that tests should use
@@ -210,7 +267,8 @@ type gpioEvent struct {
 	Time uint64        `json:"timestamp"`
 }
 type monitorFinishOutput struct {
-	Events []gpioEvent `json:"events"`
+	Events  []gpioEvent `json:"events"`
+	EndTime uint64      `json:"timestamp"`
 }
 
 // GpioMonitorRead retrieves the list of events so far the specified gpio monitoring session, the
@@ -247,6 +305,7 @@ func (h DevboardHelper) gpioMonitorRead(ctx context.Context, session GpioMonitor
 	}
 
 	events.Events = make(map[ti50.GpioName][]GpioEvent)
+	events.ElapsedUS = output.EndTime - session.AbsoluteTimestampUS
 	for _, event := range output.Events {
 		event := GpioEvent{
 			Name:        event.Name,
