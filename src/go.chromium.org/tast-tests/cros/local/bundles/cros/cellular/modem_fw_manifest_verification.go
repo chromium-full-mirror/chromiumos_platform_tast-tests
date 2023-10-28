@@ -269,16 +269,16 @@ func (f *dlcSpecs) setFactoryInstall(value bool) *dlcSpecs {
 var (
 	// This map should be used to override dlcSpecsPerModem on variants that have special requirements
 	dlcSpecsPerDlcID = map[string]dlcSpecs{
-		"modem-fw-dlc-nipperkin":        *newDlcSpec(30, 32),
-		"modem-fw-dlc-guybrush360-l850": *newDlcSpec(30, 32),
-		"modem-fw-dlc-guybrush-fm350":   *newDlcSpec(50, 52).setFactoryInstall(false),
+		"modem-fw-dlc-nipperkin":        *newDlcSpec(29, 32),
+		"modem-fw-dlc-guybrush360-l850": *newDlcSpec(29, 32),
+		"modem-fw-dlc-guybrush-fm350":   *newDlcSpec(48, 52).setFactoryInstall(false),
 	}
 
 	dlcSpecsPerModem = map[cellularconst.ModemType]dlcSpecs{
 		cellularconst.ModemTypeL850:  *newDlcSpec(39, 43),
 		cellularconst.ModemTypeFM350: *newDlcSpec(156, 165),
 		cellularconst.ModemTypeFM101: *newDlcSpec(200, 310),
-		cellularconst.ModemTypeEM060: *newDlcSpec(300, 310)}
+		cellularconst.ModemTypeEM060: *newDlcSpec(292, 310)}
 )
 
 // ImageLoaderManifest holds the fields related to a imageloader manifest.
