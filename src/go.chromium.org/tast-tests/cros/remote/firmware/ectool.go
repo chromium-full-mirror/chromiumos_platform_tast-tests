@@ -319,6 +319,28 @@ func (ec *ECTool) CBI(ctx context.Context, cmd CBICmd, args ...string) (string, 
 	return string(out), nil
 }
 
+// BCFGCmd type holds commands for interacting with BCFG using the ectool.
+type BCFGCmd string
+
+const (
+	// BCFGGet for the 'ectool bcfg get'.
+	BCFGGet BCFGCmd = "get"
+	// BCFGSet for the 'ectool bcfg set'.
+	BCFGSet BCFGCmd = "set"
+)
+
+// BCFG runs the 'ectool bcfg' with provided command and args.
+func (ec *ECTool) BCFG(ctx context.Context, cmd BCFGCmd, args ...string) (string, error) {
+	cmdAndArgs := []string{"bcfg", string(cmd)}
+	cmdAndArgs = append(cmdAndArgs, args...)
+	testing.ContextLogf(ctx, "Running cmd: 'ectool %s'", strings.Join(cmdAndArgs, " "))
+	out, err := ec.Command(ctx, cmdAndArgs...).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrapf(err, "running 'ectool %s' on DUT with args %v, got: %v", strings.Join(cmdAndArgs, " "), args, string(out))
+	}
+	return string(out), nil
+}
+
 // TempsInfo parses `tempsinfo all` from ectool, returns map of the sensor name to sensor id.
 // Note, this is opposite of what tempsinfo displays to make it easier to search by sensor name.
 func (ec *ECTool) TempsInfo(ctx context.Context) (map[string]int, error) {
