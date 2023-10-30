@@ -21,7 +21,7 @@ func init() {
 			"chinglinyu@chromium.org",
 		},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 	})
 }
 
@@ -57,7 +57,7 @@ func Profiler(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Wait for 2 seconds to gather perf.data.
+	// GoBigSleepLint: Wait for 2 seconds to gather perf.data
 	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 		s.Fatal("Failure in sleeping: ", err)
 	}
