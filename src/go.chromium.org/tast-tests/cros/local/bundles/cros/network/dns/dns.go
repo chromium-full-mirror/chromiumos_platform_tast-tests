@@ -488,8 +488,8 @@ func queryDNS(ctx context.Context, msg []byte, addr string) ([]byte, error) {
 	return resp[:n], nil
 }
 
-// dohResponder returns a function that responds to HTTPS queries by proxying the queries to DNS server on |addr|.
-func dohResponder(ctx context.Context, addr string) func(http.ResponseWriter, *http.Request) {
+// DoHResponder returns a function that responds to HTTPS queries by proxying the queries to DNS server on |addr|.
+func DoHResponder(ctx context.Context, addr string) func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		msg, err := ioutil.ReadAll(req.Body)
 		if err != nil {
@@ -642,7 +642,7 @@ func NewServer(ctx context.Context, envName string, ipv4Subnet, ipv6Subnet *net.
 	}
 
 	// Start a DoH server.
-	httpsserver := httpserver.New(httpserver.TCP4, "443", dohResponder(ctx, addr.IPv4Addr.String()), httpsCerts)
+	httpsserver := httpserver.New(httpserver.TCP4, "443", DoHResponder(ctx, addr.IPv4Addr.String()), httpsCerts)
 	if err := server.StartServer(ctx, "httpsserver", httpsserver); err != nil {
 		return nil, errors.Wrap(err, "failed to start DoH server")
 	}

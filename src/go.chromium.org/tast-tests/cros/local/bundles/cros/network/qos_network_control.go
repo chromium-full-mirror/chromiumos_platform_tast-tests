@@ -12,11 +12,14 @@ import (
 	"time"
 
 	"github.com/google/gopacket/layers"
+	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/network/capture"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/certs"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/httpserver"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -36,6 +39,7 @@ const (
 	packetICMPv6EchoRequest                     = 1 << iota
 	packetICMPv6RouterSolicitation              = 1 << iota
 	packetICMPv6NeighborSolicitation            = 1 << iota
+	packetDoH                                   = 1 << iota
 	packetAll                                   = (1 << iota) - 1
 )
 
@@ -143,6 +147,7 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 	defer restoreServiceOrder(cleanupCtx)
 
 	// Start packet capture.
+	s.Logf("Starting packet capture on %s", ifaces.AP[0])
 	capturer := capture.NewCapturer(ifaces.AP[0])
 	if err := capturer.Start(ctx); err != nil {
 		s.Fatal("Failed to start capture: ", err)
@@ -183,8 +188,9 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to obtain service IP properties: ", err)
 	}
-
 	s.Logf("IP configuration: client=%s gateway=%s", props.Address, props.Gateway)
+
+	s.Logf("Generating HTTP GET request on %s", testURL)
 
 	// Do a GET request to the webserver running on the gateway to generate DNS
 	// and TCP packets.
@@ -204,6 +210,8 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to GET %s: %v", testURL, err)
 	}
 
+	s.Log("Generating ping to the gateway")
+
 	// Ping all the addresses of the gateway address to generate ICMP echo requests.
 	gwAddrs, err := wifi.Router.GetVethInAddrs(ctx)
 	if err != nil {
@@ -212,6 +220,55 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 	for _, addr := range gwAddrs.All() {
 		if err := ping.ExpectPingSuccessWithTimeout(ctx, addr.String(), "root", 10*time.Second); err != nil {
 			s.Fatalf("Failed to ping %s: %v", addr, err)
+		}
+	}
+
+	s.Log("Generating DNS over HTTPS requests to the gateway")
+
+	// Install test certificates for HTTPS server. In doing so, virtualnet/certs will mount a test certificate directory.
+	// Because DNS proxy lives in its own namespace, it needs to be restarted to be able to see the test certificates.
+	httpsCerts := certs.New(certs.SSLCrtPath, certificate.TestCert3())
+	cleanupCerts, err := httpsCerts.InstallTestCerts(ctx)
+	if err != nil {
+		s.Fatal("Failed to setup certificates: ", err)
+	}
+	defer cleanupCerts(cleanupCtx)
+	if err := dns.RestartDNSProxy(ctx); err != nil {
+		s.Fatal("Failed to restart DNS proxy: ", err)
+	}
+
+	dohServer := httpserver.New(httpserver.TCP4, "443", dns.DoHResponder(ctx, props.Gateway), httpsCerts)
+	if err := wifi.Router.StartServer(ctx, "doh_server", dohServer); err != nil {
+		s.Fatal("Failed to start DoH HTTPS server: ", err)
+	}
+
+	if err := m.SetDNSProxyDOHProviders(ctx, map[string]interface{}{dns.ExampleDoHProvider: ""}); err != nil {
+		s.Fatal("Failed to set dns-proxy DoH providers: ", err)
+	}
+	defer func() {
+		if err := m.SetDNSProxyDOHProviders(cleanupCtx, map[string]interface{}{}); err != nil {
+			testing.ContextLog(cleanupCtx, "Failed to set reset dns-proxy DoH providers: ", err)
+		}
+	}()
+
+	// DoH providers are propagated to DNS proxy from shill call above.
+	// The propagation is expected to happen very quickly (<100 ms).
+	// In order to avoid flakiness on edge cases, add sleep. The test is
+	// expected to pass even without the sleep on the normal case.
+	// GoBigSleepLint: The sleep is necessary as there is currently no
+	// way of querying DNS proxy's state.
+	// TODO(b/281778714): Add a way to query DNS proxy's state.
+	testing.Sleep(ctx, 1*time.Second)
+
+	// Generate requests from different users to let dnsproxy do DoH requests.
+	// TODO(b/296958870): add a test for Chrome that has its own DoH flow.
+	tc := []dns.ProxyTestCase{
+		{Client: dns.System, AllowRetry: true},
+		{Client: dns.User, AllowRetry: true},
+	}
+	if errs := dns.TestQueryDNSProxy(ctx, tc, nil /* arc */, nil /* container */, dns.NewQueryOptions()); len(errs) != 0 {
+		for _, err := range errs {
+			s.Fatal("Failed DNS query check: ", err)
 		}
 	}
 
@@ -279,6 +336,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, gwAddr
 					return errors.Errorf("ICMPv6 Neighbor Solicitation marked with DSCP %d", p.DSCP())
 				}
 				seen |= packetICMPv6NeighborSolicitation
+				continue
 			}
 
 			// Check outgoing DNS packet mark. Outgoing packets are filtered
@@ -290,6 +348,14 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, gwAddr
 					return errors.Errorf("DNS packet marked with DSCP %d", p.DSCP())
 				}
 				seen |= packetDNS
+				continue
+			}
+
+			if isOutgoingPacket(p, gwAddrs) && p.TCP != nil && p.TCP.DstPort == 443 {
+				if !hasDSCP(p, dscpNetworkControl) {
+					return errors.Errorf("DoH/HTTPS/TCP packet marked with DSCP %d", p.DSCP())
+				}
+				seen |= packetDoH
 				continue
 			}
 
