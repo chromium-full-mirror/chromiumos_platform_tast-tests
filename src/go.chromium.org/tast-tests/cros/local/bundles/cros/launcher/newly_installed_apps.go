@@ -11,40 +11,21 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cws"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast-tests/cros/local/colorcmp"
-	"go.chromium.org/tast-tests/cros/local/coords"
-	"go.chromium.org/tast-tests/cros/local/media/imgcmp"
-	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type newlyInstalledAppType int
-
-const (
-	newlyInstalledCwsApp newlyInstalledAppType = iota
-)
-
-type newlyInstalledAppsTestCase struct {
-	appID      string
-	appName    string
-	appType    newlyInstalledAppType
-	tabletMode bool
-}
-
-const (
-	minNewInstallDotPixelsCount = 16
-	newInstallDescription       = "New install"
-)
+const cwsAppID = "mljpablpddhocfbnokacjggdbmafjnon"
+const cwsAppName = "Wicked Good Unarchiver"
+const newInstallDescription = "New install"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -64,23 +45,13 @@ func init() {
 		}},
 		Params: []testing.Param{
 			{
-				Name: "cws_clamshell_mode",
-				Val: newlyInstalledAppsTestCase{
-					appID:      "mljpablpddhocfbnokacjggdbmafjnon",
-					appName:    "Wicked Good Unarchiver",
-					appType:    newlyInstalledCwsApp,
-					tabletMode: false,
-				},
+				Name:    "cws_clamshell_mode",
+				Val:     launcher.TestCase{TabletMode: false},
 				Fixture: "chromeLoggedInWithGaia",
 			},
 			{
-				Name: "cws_tablet_mode",
-				Val: newlyInstalledAppsTestCase{
-					appID:      "mljpablpddhocfbnokacjggdbmafjnon",
-					appName:    "Wicked Good Unarchiver",
-					appType:    newlyInstalledCwsApp,
-					tabletMode: true,
-				},
+				Name:              "cws_tablet_mode",
+				Val:               launcher.TestCase{TabletMode: true},
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 				Fixture:           "chromeLoggedInWithGaia",
 			},
@@ -91,7 +62,7 @@ func init() {
 // NewlyInstalledApps checks that newly installed apps are marked as such in launcher.
 func NewlyInstalledApps(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	tc := s.Param().(newlyInstalledAppsTestCase)
+	tc := s.Param().(launcher.TestCase)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -102,17 +73,15 @@ func NewlyInstalledApps(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	if tc.appType == newlyInstalledCwsApp {
-		if err := cws.InstallApp(ctx, cr.Browser(), tconn, cws.App{
-			Name: tc.appName,
-			URL:  "https://chrome.google.com/webstore/detail/wicked-good-unarchiver/" + tc.appID,
-		}); err != nil {
-			s.Fatal("Unable to install cws app: ", err)
-		}
-		defer closeAppAndUninstallViaSettings(ctx, cr, tconn, tc.appName, tc.appID)
+	if err := cws.InstallApp(ctx, cr.Browser(), tconn, cws.App{
+		Name: cwsAppName,
+		URL:  "https://chrome.google.com/webstore/detail/wicked-good-unarchiver/" + cwsAppID,
+	}); err != nil {
+		s.Fatal("Unable to install cws app: ", err)
 	}
+	defer closeAppAndUninstallViaSettings(ctx, cr, tconn, cwsAppName, cwsAppID)
 
-	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, tc.tabletMode, true /*stabilizeAppCount*/)
+	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, tc.TabletMode, true /*stabilizeAppCount*/)
 	if err != nil {
 		s.Fatal("Failed to set up launcher test case: ", err)
 	}
@@ -120,22 +89,22 @@ func NewlyInstalledApps(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	view := appItemViewNode(tc.appName, tc.tabletMode)
+	view := appItemViewNode(cwsAppName, tc.TabletMode)
 
 	if isNewInstall, err := isInNewInstallState(ctx, cr, tconn, view); err != nil {
 		s.Fatal("Unable to compute new install state: ", err)
 	} else if !isNewInstall {
 		s.Fatalf("Unexpected new install state before launching the app; got %t, want %t", isNewInstall, true)
 	}
-	if err := launcher.HideLauncher(tconn, !tc.tabletMode)(ctx); err != nil {
+	if err := launcher.HideLauncher(tconn, !tc.TabletMode)(ctx); err != nil {
 		s.Fatal("Failed to hide launcher: ", err)
 	}
 
-	if err := launcher.LaunchAndWaitForAppOpen(tconn, apps.App{ID: tc.appID, Name: tc.appName})(ctx); err != nil {
+	if err := launcher.LaunchAndWaitForAppOpen(tconn, apps.App{ID: cwsAppID, Name: cwsAppName})(ctx); err != nil {
 		s.Fatal("Unable to launch the app: ", err)
 	}
 
-	if err := launcher.OpenProductivityLauncher(ctx, tconn, tc.tabletMode); err != nil {
+	if err := launcher.OpenProductivityLauncher(ctx, tconn, tc.TabletMode); err != nil {
 		s.Fatal("Failed to open launcher: ", err)
 	}
 	if isNewInstall, err := isInNewInstallState(ctx, cr, tconn, view); err != nil {
@@ -158,61 +127,12 @@ func appItemViewNode(appName string, tabletMode bool) *nodewith.Finder {
 
 // isInNewInstallState computes if the app view is in new install state.
 func isInNewInstallState(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, view *nodewith.Finder) (bool, error) {
-	hasDescr, err := hasNewInstallDescription(ctx, tconn, view)
-	if err != nil {
-		return false, err
-	}
-
-	hasDot, err := hasNewInstallDot(ctx, cr, tconn, view)
-	if err != nil {
-		return false, err
-	}
-
-	if hasDescr != hasDot {
-		return false, errors.Errorf("accessibility description (%t) and new install dot (%t) should be equal", hasDescr, hasDot)
-	}
-
-	return hasDescr && hasDot, nil
-}
-
-// hasNewInstallDescription computes whether the app view has new install accessibility description.
-func hasNewInstallDescription(ctx context.Context, tconn *chrome.TestConn, view *nodewith.Finder) (bool, error) {
 	ui := uiauto.New(tconn)
 	viewInfo, err := ui.Info(ctx, view)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get app item view info")
 	}
 	return viewInfo.Description == newInstallDescription, nil
-}
-
-// hasNewInstallDot computes whether the app view has a blue dot.
-func hasNewInstallDot(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, view *nodewith.Finder) (bool, error) {
-	ui := uiauto.New(tconn)
-	viewLocation, err := ui.Location(ctx, view)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to get app item view location")
-	}
-
-	displayInfo, err := display.GetPrimaryInfo(ctx, tconn)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to get the primary display info")
-	}
-
-	displayMode, err := displayInfo.GetSelectedMode()
-	if err != nil {
-		return false, errors.Wrap(err, "failed to get the selected display mode of the primary display")
-	}
-
-	rect := coords.ConvertBoundsFromDPToPX(*viewLocation, displayMode.DeviceScaleFactor)
-	img, err := screenshot.GrabAndCropScreenshot(ctx, cr, rect)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to grab a screenshot")
-	}
-
-	hasLightModePixels := imgcmp.CountPixels(img, colorcmp.RGB(0x1a, 0x73, 0xe8)) >= minNewInstallDotPixelsCount
-	hasDarkModePixels := imgcmp.CountPixels(img, colorcmp.RGB(0x8a, 0xb4, 0xf8)) >= minNewInstallDotPixelsCount
-
-	return hasLightModePixels || hasDarkModePixels, nil
 }
 
 // closeAppAndUninstallViaSettings closes the app and uninstalls it via ossettings.
