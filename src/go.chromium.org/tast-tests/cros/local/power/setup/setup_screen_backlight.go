@@ -180,3 +180,52 @@ func levelToLinear(ctx context.Context, level uint) (float64, error) {
 
 	return float64(percent), nil
 }
+
+// LinearToNonlinearBrightness converts the provided linear brightness percent to nonlinear.
+func LinearToNonlinearBrightness(ctx context.Context, percent float64) (float64, error) {
+	percentArg := fmt.Sprintf("--linear_to_nonlinear=%f", percent)
+
+	output, err := testexec.CommandContext(ctx, "backlight_tool", percentArg).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to convert linear to nonlinear percentage")
+	}
+
+	nonlinear, err := strconv.ParseFloat(strings.TrimSpace(string(output)), 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "unable to parse current nonlinear percentage from %q", output)
+	}
+
+	return nonlinear, nil
+}
+
+// NonlinearToLinearBrightness converts the provided nonlinear brightness percent to linear.
+func NonlinearToLinearBrightness(ctx context.Context, percent float64) (float64, error) {
+	percentArg := fmt.Sprintf("--nonlinear_to_linear=%f", percent)
+
+	output, err := testexec.CommandContext(ctx, "backlight_tool", percentArg).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to convert linear to nonlinear percentage")
+	}
+
+	linear, err := strconv.ParseFloat(strings.TrimSpace(string(output)), 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "unable to parse current nonlinear percentage from %q", output)
+	}
+
+	return linear, nil
+}
+
+// LinearBacklight returns the current screen brightness percentage.
+func LinearBacklight(ctx context.Context) (float64, error) {
+	output, err := testexec.CommandContext(ctx, "backlight_tool", "--get_brightness_percent").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to get current brightness percent")
+	}
+
+	brightness, err := strconv.ParseFloat(strings.TrimSpace(string(output)), 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "unable to parse current brightness from %q", output)
+	}
+
+	return brightness, nil
+}
