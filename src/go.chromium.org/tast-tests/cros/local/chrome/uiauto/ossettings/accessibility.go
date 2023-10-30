@@ -54,3 +54,21 @@ func TogglePDFOCR(cr *chrome.Chrome, tconn *chrome.TestConn, value bool) action.
 		)(ctx)
 	}
 }
+
+// CheckPDFOCRToggle checks if PDF OCR is toggled on/off.
+func CheckPDFOCRToggle(cr *chrome.Chrome, tconn *chrome.TestConn, toggled bool) action.Action {
+	return func(ctx context.Context) error {
+		ui := uiauto.New(tconn)
+		ttsHeading := nodewith.NameStartingWith("Text-to-Speech").Role(role.Heading)
+		settings, err := LaunchAtPageURL(ctx, tconn, cr, pdfocr.SettingsSubPageURL, ui.Exists(ttsHeading))
+		if err != nil {
+			return errors.Wrap(err, "failed to open Text-to-Speech setting page")
+		}
+		defer settings.Close(ctx)
+		pdfOcrToggle := nodewith.Name(pdfocr.SettingsToggleName).Role(role.ToggleButton)
+		return uiauto.Combine("toggle PDF OCR",
+			ui.WaitUntilExists(pdfOcrToggle),
+			ui.WaitUntilCheckedState(pdfOcrToggle, toggled),
+		)(ctx)
+	}
+}

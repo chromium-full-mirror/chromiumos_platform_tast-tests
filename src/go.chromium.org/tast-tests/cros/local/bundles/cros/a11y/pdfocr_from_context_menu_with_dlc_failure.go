@@ -140,7 +140,7 @@ func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) 
 			}
 
 			// Failure of screen-ai dlc download makes the PDF OCR menu entry unchecked.
-			pdfOCRMenuEntry := nodewith.Name(pdfocr.ContextMenuName).Role(role.MenuItem)
+			pdfOCRMenuEntry := nodewith.Name(pdfocr.ContextMenuName).Role(role.MenuItemCheckBox)
 			if err := uiauto.Combine("Check the PDF OCR menu entry from the Context Menu",
 				ui.WithInterval(1*time.Second).RightClickUntil(pdfRoot, ui.WaitUntilCheckedState(pdfOCRMenuEntry, false)),
 				ui.WithTimeout(5*time.Second).LeftClick(pdfRoot),

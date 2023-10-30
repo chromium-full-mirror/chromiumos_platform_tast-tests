@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PDFOCRFromContextMenu,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Check the PDF OCR feature by turning it on from the Context Menu",
+		Desc:         "Test the PDF OCR feature and check its menu entry in the Context Menu",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"kyungjunlee@google.com",       // Test author
@@ -80,13 +80,17 @@ func PDFOCRFromContextMenu(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for the PDF ROOT node to be created in the accessibility tree: ", err)
 	}
 
-	if err := pdfocr.TurnOnFromContextMenu(ctx, ui, pdfRoot); err != nil {
-		s.Fatal("Failed to turn on PDF OCR from the Context Menu")
-	}
-
-	// Wait until screen-ai dlc is installed.
+	// PDF OCR is on by default, so wait until screen-ai dlc is installed.
 	if err := testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
+	}
+
+	// PDF OCR is already on, so its menu entry in the context menu should be already checked.
+	pdfOCRMenuEntry := nodewith.Name(pdfocr.ContextMenuName).Role(role.MenuItemCheckBox)
+	if err := uiauto.Combine("Check the PDF OCR menu entry in the Context Menu",
+		ui.WithTimeout(5*time.Second).RightClickUntil(pdfRoot, ui.WaitUntilCheckedState(pdfOCRMenuEntry, true)),
+	)(ctx); err != nil {
+		s.Fatal("Failed to wait for the PDF OCR menu entry to be checked: ", err)
 	}
 
 	status := nodewith.Name(pdfocr.StatusReadyMessage).Role(role.Status)

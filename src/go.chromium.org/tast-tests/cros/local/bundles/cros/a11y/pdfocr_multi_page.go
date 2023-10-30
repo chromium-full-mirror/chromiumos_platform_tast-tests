@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -74,14 +73,6 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 	server := data.Server
 	tconn := data.TConn
 
-	if err := ossettings.TogglePDFOCR(cr, tconn, true)(ctx); err != nil {
-		s.Fatal("Failed to turn on PDF OCR: ", err)
-	}
-	// Wait until screen-ai dlc is installed.
-	if err := testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
-		s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
-	}
-
 	// Open the test PDF.
 	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/"+pdfocr.MultiPagePDFName)
 	if err != nil {
@@ -89,6 +80,11 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 	}
 	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
+
+	// PDF OCR is on by default, so just wait until screen-ai dlc is installed.
+	if err := testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
+		s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
+	}
 
 	// Get a speech monitor for the Google TTS engine.
 	ed := tts.GoogleTTSEngine()
