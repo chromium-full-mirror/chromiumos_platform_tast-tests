@@ -23,9 +23,10 @@ import (
 )
 
 type roamTestcase struct {
-	apOpts1    []hostapd.Option
-	apOpts2    []hostapd.Option
-	secConfFac security.ConfigFactory
+	apOpts1        []hostapd.Option
+	apOpts2        []hostapd.Option
+	secConfFac     security.ConfigFactory
+	enableBSSFlush bool
 }
 
 // EAP certs/keys for EAP tests.
@@ -39,37 +40,40 @@ func init() {
 		Desc: "Tests roaming to an AP that disappears while the client is awake",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
+			"rmekonnen@google.com",
 		},
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:            []string{"group:wificell", "wificell_func"},
+		Attr:            []string{"group:wificell", "wificell_func", "wificell_unstable"},
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
-				ExtraAttr: []string{"wificell_cq"},
 				// Verifies that DUT can roam between two APs in full view of it.
 				Val: roamTestcase{
-					apOpts1:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac: nil,
+					apOpts1:        []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
+					apOpts2:        []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
+					secConfFac:     nil,
+					enableBSSFlush: false,
 				},
 			}, {
 				// Verifies that DUT can roam between two WPA APs in full view of it.
 				Name: "wpa",
 				Val: roamTestcase{
-					apOpts1:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
+					apOpts1:        []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
+					apOpts2:        []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
+					secConfFac:     wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
+					enableBSSFlush: false,
 				},
 			}, {
 				// Verifies that DUT can roam between two WEP APs in full view of it.
 				Name: "wep",
 				Val: roamTestcase{
-					apOpts1:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac: wep.NewConfigFactory([]string{"abcde", "fedcba9876", "ab\xe4\xb8\x89", "\xe4\xb8\x89\xc2\xa2"}, wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					apOpts1:        []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
+					apOpts2:        []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
+					secConfFac:     wep.NewConfigFactory([]string{"abcde", "fedcba9876", "ab\xe4\xb8\x89", "\xe4\xb8\x89\xc2\xa2"}, wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					enableBSSFlush: false,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
@@ -77,20 +81,41 @@ func init() {
 				// Verifies that DUT can roam between two WPA-EAP APs in full view of it.
 				Name: "8021xwpa",
 				Val: roamTestcase{
-					apOpts1:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac: wpaeap.NewConfigFactory(roamCert.CACred.Cert, roamCert.ServerCred, wpaeap.ClientCACert(roamCert.CACred.Cert), wpaeap.ClientCred(roamCert.ClientCred)),
+					apOpts1:        []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
+					apOpts2:        []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
+					secConfFac:     wpaeap.NewConfigFactory(roamCert.CACred.Cert, roamCert.ServerCred, wpaeap.ClientCACert(roamCert.CACred.Cert), wpaeap.ClientCred(roamCert.ClientCred)),
+					enableBSSFlush: false,
 				},
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise},
+			}, {
+				Name: "flushbss",
+				// Verifies that DUT can roam between two APs with minimal idle time after bss flush.
+				Val: roamTestcase{
+					apOpts1:        []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
+					apOpts2:        []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
+					secConfFac:     nil,
+					enableBSSFlush: true,
+				},
 			},
 		},
 	})
 }
 
 func RoamAPGone(ctx context.Context, s *testing.State) {
-	// This test associates a device to an AP, and then configures another AP on the same SSID.
-	// It verifies that, after we deconfigure the first AP, the DUT eventually associates to
-	// the second AP."
+	/*
+		This test checks a DUT's ability to naturally roam after AP lost
+		by using the following steps:
+		1 - Configure AP1.
+		2 - Associate DUT to AP1.
+		3 - Configure AP2 with the same SSID as AP1.
+		4 - Optionally flush all BSSes to simulate the case where all BSS
+		    entries have expired and the DUT would have to trigger a new scan
+		    in order to discover AP2.
+		5 - Deconfigure AP1.
+		6 - Verify the DUT roams to AP2.
+		7 - Deconfigure the DUT.
+		8 - Deconfigure AP2.
+	*/
 	tf := s.FixtValue().(*wificell.TestFixture)
 
 	// Configure the initial AP.
@@ -165,7 +190,7 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 		},
 	}
 
-	waitCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	waitCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 	waitForProps, err := tf.WifiClient().ExpectShillProperty(waitCtx, servicePath, props, nil)
 	if err != nil {
@@ -184,6 +209,16 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 	}
 	// defer deconfig already scheduled above.
 	s.Log("AP2 setup done")
+
+	if param.enableBSSFlush {
+		// Flush all BSSes from cache to ensure that we are forced to rescan
+		// after disconnect
+		clientIface, _ := tf.ClientInterface(ctx)
+		s.Log("Flushing BSS cache")
+		if err := tf.WifiClient().FlushBSS(ctx, clientIface, 0); err != nil {
+			s.Fatal("Failed to flush BSS list: ", err)
+		}
+	}
 
 	// Deconfigure the initial AP.
 	if err := tf.DeconfigAP(ctx, ap1); err != nil {
