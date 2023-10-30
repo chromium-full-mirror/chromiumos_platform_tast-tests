@@ -19,7 +19,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50TpmI2cCorners,
+		Func:    GscTpmI2cCorners,
 		Desc:    "Test TPM I2C corner cases",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
@@ -32,7 +32,7 @@ func init() {
 	})
 }
 
-func Ti50TpmI2cCorners(ctx context.Context, s *testing.State) {
+func GscTpmI2cCorners(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f, s)
 	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
@@ -66,8 +66,8 @@ func Ti50TpmI2cCorners(ctx context.Context, s *testing.State) {
 		}
 		_, err = b.OpenTitanToolCommand(ctx, "i2c", "--bus", "0", "--addr", strconv.Itoa(addr), "raw-write", "--hexdata", "01")
 		if err == nil {
-			// No error from opentitantool means that Ti50 ack'ed the address.
-			s.Error("Ti50 responded to other address: ", addr)
+			// No error from opentitantool means that GSC ack'ed the address.
+			s.Error("GSC responded to other address: ", addr)
 		}
 	}
 
@@ -81,7 +81,7 @@ func Ti50TpmI2cCorners(ctx context.Context, s *testing.State) {
 	testWedgedData(ctx, b, tpmHandle, s)
 	testWedgedDataAck(ctx, b, tpmHandle, s)
 
-	// Check one final time that that Ti50 still responds to DIDVID register, to make sure it
+	// Check one final time that that GSC still responds to DIDVID register, to make sure it
 	// has not crashed or got the I2C driver into a funny state.
 	didVid = tpmHandle.ReadRegister(ti50.TpmRegDidVid)
 	if !bytes.Equal(didVid, expectedDidVidValue) {
@@ -197,7 +197,7 @@ func testWedgedDataAck(ctx context.Context, b utils.DevboardHelper, tpmHandle *u
 // value, and then reconfigure the SDA and SCL pins for bit-banging.  This means that any
 // subsequent I2C read transaction should expect to receive the DID_VID value.
 func prepareBitbanging(ctx context.Context, b utils.DevboardHelper, tpmHandle *utils.TpmHelper, s *testing.State) {
-	// Check that that Ti50 still responds to DIDVID register, to make sure it has not
+	// Check that that GSC still responds to DIDVID register, to make sure it has not
 	// crashed or got the I2C driver into a funny state.
 	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
 	expectedDidVidValue := b.GscProperties().ExpectedDidVidValue()
