@@ -11,14 +11,12 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/data"
 	fixture "go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/fixture/appcompat"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/pre"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type citrixTestCase struct {
@@ -33,12 +31,11 @@ func init() {
 		Desc:         "Checks that physical keyboard can perform typing in citrix",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "informational", "group:vdi_limited"},
+		Attr:         []string{"group:inputs_appcompat_citrix_perbuild"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		Timeout:      5 * time.Minute,
 		Fixture:      fixture.CitrixNotepad,
-		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Params: []testing.Param{
 			{
 				Name:             "french",
