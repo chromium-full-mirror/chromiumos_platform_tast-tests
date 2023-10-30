@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CCDLevel contains possible CCD levels.
@@ -216,6 +217,16 @@ func (i *CrOSImage) SetCCDCapability(ctx context.Context, capability CCDCap, sta
 	return nil
 }
 
+// SendConsoleRebootCmd issues the reboot command but does not listen for a response since the GSC
+// is expected to reboot. Note that this does not detect if reboot was not performed because
+// CCD wasn't open.
+func (i *CrOSImage) SendConsoleRebootCmd(ctx context.Context) error {
+	if err := i.board.WriteSerial(ctx, []byte("reboot")); err != nil {
+		return err
+	}
+	return nil
+}
+
 // SetCCDCapabilities uses the `ccd` GSC console command to set the device
 // capabilities to the given map.
 func (i *CrOSImage) SetCCDCapabilities(ctx context.Context, capabilities map[CCDCap]CCDCapState) error {
@@ -371,4 +382,41 @@ func (i *CrOSImage) GetGscBranch(ctx context.Context) (GscBranch, error) {
 	}
 
 	return MP, errors.Wrap(err, "unknown GSC branch")
+}
+
+// WaitUntilNormalSleep waits until gsc goes into deep sleep via monitoring print statement.
+func (i *CrOSImage) WaitUntilNormalSleep(ctx context.Context, interval time.Duration) error {
+	pOpts := testing.PollOptions{Timeout: interval}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := i.board.ReadSerialSubmatch(ctx, normalSleep)
+		return err
+	}, &pOpts)
+}
+
+// WaitUntilDeepSleep waits until gsc goes into deep sleep via monitoring print statement.
+func (i *CrOSImage) WaitUntilDeepSleep(ctx context.Context, interval time.Duration) error {
+	pOpts := testing.PollOptions{Timeout: interval}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := i.board.ReadSerialSubmatch(ctx, deepSleep)
+		return err
+	}, &pOpts)
+}
+
+// WaitUntilAnySleep waits until gsc goes into deep or normal sleep via monitoring print statement.
+func (i *CrOSImage) WaitUntilAnySleep(ctx context.Context, interval time.Duration) error {
+	pOpts := testing.PollOptions{Timeout: interval}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := i.board.ReadSerialSubmatch(ctx, anySleep)
+		return err
+	}, &pOpts)
+}
+
+// WaitUntilRoBoot waits until initial RO console messages are printed which happens right after
+// reboot or deep sleep resume.
+func (i *CrOSImage) WaitUntilRoBoot(ctx context.Context, interval time.Duration) error {
+	pOpts := testing.PollOptions{Timeout: interval}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := i.board.ReadSerialSubmatch(ctx, roBoot)
+		return err
+	}, &pOpts)
 }

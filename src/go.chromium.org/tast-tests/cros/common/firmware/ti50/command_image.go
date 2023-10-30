@@ -104,53 +104,6 @@ func (i *CommandImage) WaitUntilBooted(ctx context.Context, interval time.Durati
 	}
 }
 
-// SendConsoleRebootCmd issues the reboot command but does not listen for a response since the GSC
-// is expected to reboot. Note that this does not detect if reboot was not performed because
-// CCD wasn't open.
-func (i *CommandImage) SendConsoleRebootCmd(ctx context.Context) error {
-	if err := i.board.WriteSerial(ctx, []byte("reboot")); err != nil {
-		return err
-	}
-	return nil
-}
-
-// WaitUntilNormalSleep waits until gsc goes into deep sleep via monitoring print statement
-func (i *CommandImage) WaitUntilNormalSleep(ctx context.Context, interval time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: interval}
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.board.ReadSerialSubmatch(ctx, normalSleep)
-		return err
-	}, &pOpts)
-}
-
-// WaitUntilDeepSleep waits until gsc goes into deep sleep via monitoring print statement
-func (i *CommandImage) WaitUntilDeepSleep(ctx context.Context, interval time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: interval}
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.board.ReadSerialSubmatch(ctx, deepSleep)
-		return err
-	}, &pOpts)
-}
-
-// WaitUntilAnySleep waits until gsc goes into deep or normal sleep via monitoring print statement
-func (i *CommandImage) WaitUntilAnySleep(ctx context.Context, interval time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: interval}
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.board.ReadSerialSubmatch(ctx, anySleep)
-		return err
-	}, &pOpts)
-}
-
-// WaitUntilRoBoot waits until initial RO console messages are printed which happens right after
-// reboot or deep sleep resume.
-func (i *CommandImage) WaitUntilRoBoot(ctx context.Context, interval time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: interval}
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.board.ReadSerialSubmatch(ctx, roBoot)
-		return err
-	}, &pOpts)
-}
-
 // WaitUntilMatch waits until specified match is present
 func (i *CommandImage) WaitUntilMatch(ctx context.Context, re *regexp.Regexp, interval time.Duration) error {
 	pOpts := testing.PollOptions{Timeout: interval}
