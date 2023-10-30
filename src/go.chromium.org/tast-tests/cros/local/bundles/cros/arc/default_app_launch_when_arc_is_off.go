@@ -34,6 +34,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,

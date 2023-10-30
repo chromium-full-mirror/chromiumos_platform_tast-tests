@@ -41,10 +41,12 @@ func init() {
 			Val:               crash.RealConsent,
 		}, {
 			Name:              "vm_mock_consent",
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               crash.MockConsent,
 		}, {
 			Name:              "vm_real_consent",
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm", "metrics_consent"},
 			Val:               crash.RealConsent,
 		}},

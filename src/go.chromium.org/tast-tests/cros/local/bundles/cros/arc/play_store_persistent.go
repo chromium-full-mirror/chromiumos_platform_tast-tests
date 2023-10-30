@@ -44,10 +44,12 @@ func init() {
 			Val:               browser.TypeLacros,
 		}, {
 			Name:              "vm",
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               browser.TypeAsh,
 		}, {
 			Name:              "lacros_vm",
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Val:               browser.TypeLacros,
 		}},

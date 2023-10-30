@@ -40,7 +40,7 @@ func init() {
 		}, {
 			Name:              "vm_logged_in",
 			Val:               true,
-			ExtraAttr:         []string{"group:mainline"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Timeout: 10 * time.Minute,

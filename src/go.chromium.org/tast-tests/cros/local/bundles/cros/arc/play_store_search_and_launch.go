@@ -51,6 +51,7 @@ func init() {
 			Val: playStoreSearchAndLaunchTestParams{
 				MaxOptinAttempts: 2,
 			},
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm", "chrome"},
 		}},
 		Timeout: 10 * time.Minute,

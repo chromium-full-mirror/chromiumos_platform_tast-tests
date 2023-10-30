@@ -33,6 +33,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
 			Name:              "vm",
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		VarDeps: []string{"arc.AdbSideloadWarningUI.signinProfileTestExtensionManifestKey"},

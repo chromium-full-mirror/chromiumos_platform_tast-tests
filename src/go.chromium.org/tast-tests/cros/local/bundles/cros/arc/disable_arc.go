@@ -41,10 +41,12 @@ func init() {
 			Fixture:           "familyLinkUnicornArcLogin",
 		}, {
 			Name:              "vm",
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "familyLinkParentArcLogin",
 		}, {
 			Name:              "unicorn_vm",
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "familyLinkUnicornArcLogin",
 		}},
