@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
@@ -18,7 +19,19 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
+
+// ApnConfig is struct containing information about an APN.
+type ApnConfig struct {
+	Name               string
+	Username           string
+	Password           string
+	AuthenticationType string
+	IPType             string
+	IsAttach           bool
+	IsDefault          bool
+}
 
 // WaitUntilRefreshProfileCompletes will wait until the cellular refresh profile completes.
 func WaitUntilRefreshProfileCompletes(ctx context.Context, tconn *chrome.TestConn) error {
@@ -119,6 +132,44 @@ func GoToActiveNetworkApnSubpage(ctx context.Context, tconn *chrome.TestConn, is
 		ui.LeftClick(ApnSubpageButton.Focusable()),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to go to APN subpage")
+	}
+	return nil
+}
+
+func getAPNTypeString(isAttach, isDefault bool) (string, error) {
+	if isAttach && isDefault {
+		return "APN is type default and attach.", nil
+	} else if isAttach {
+		return "APN is type attach.", nil
+	} else if isDefault {
+		return "APN is type default.", nil
+	}
+
+	return "", errors.New("Neither Attach nor Default APN")
+}
+
+// ClickAPNMoreActionsButtonOfType will click the 'More Actions' button associated to the APN with the current state |currentState|, and if it is an attach and/or default APN.
+func ClickAPNMoreActionsButtonOfType(ctx context.Context, tconn *chrome.TestConn, apnName string, currentState ApnState, isAttach, isDefault bool) error {
+	ui := uiauto.New(tconn)
+
+	apnTypeString, err := getAPNTypeString(isAttach, isDefault)
+	if err != nil {
+		return errors.Wrap(err, "failed to get APN type string")
+	}
+	apnMoreActionBtn := nodewith.NameContaining(apnName).NameContaining(currentState.String()).NameContaining(apnTypeString).Role(role.Button).HasClass("icon-more-vert").First()
+
+	// More actions button may be temporarily disabled if cellular is connecting or disconnecting.
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(apnMoreActionBtn.Focusable())(ctx); err != nil {
+		return errors.Wrap(err, "failed to show more actions button")
+	}
+
+	expectedMenuItemBtn := DisableBtn
+	if currentState == ApnDisabled {
+		expectedMenuItemBtn = EnableBtn
+	}
+
+	if err := ui.LeftClickUntil(apnMoreActionBtn, ui.Exists(expectedMenuItemBtn))(ctx); err != nil {
+		return errors.Wrap(err, "failed to click more actions button")
 	}
 	return nil
 }
@@ -357,7 +408,9 @@ func (s *OSSettings) VerifyAPNSubpageConnectedApnUI(ctx context.Context, tconn *
 		var connectedNode = undefined;
 		nodes.forEach(node => {
 			if (node.innerText.includes("Connected")) {
-				connectedNode = node
+				if (connectedNode === undefined) {
+					connectedNode = node
+				}
 			}
 		})
 		if (connectedNode == undefined) {
@@ -455,7 +508,7 @@ func (s *OSSettings) VerifyApnIsVisibleInSubtext(ctx context.Context, tconn *chr
 }
 
 // CreateCustomAPN creates new APN and verify it is shown in the APN list after.
-func (s *OSSettings) CreateCustomAPN(ctx context.Context, apnName, username, psswd string) error {
+func (s *OSSettings) CreateCustomAPN(ctx context.Context, apn *ApnConfig) error {
 	if err := s.ui.LeftClick(NewAPNBtn)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click on New APN button")
 	}
@@ -466,15 +519,126 @@ func (s *OSSettings) CreateCustomAPN(ctx context.Context, apnName, username, pss
 	defer kb.Close(ctx)
 	if err := uiauto.Combine("Add custom APN in new APN dialog",
 		s.ui.WaitUntilExists(NameOfAPNInput),
-		kb.TypeAction(apnName),
+		kb.TypeAction(apn.Name),
 		s.ui.LeftClick(UserNameOfAPNInput),
-		kb.TypeAction(username),
+		kb.TypeAction(apn.Username),
 		s.ui.LeftClick(PasswordOfAPNInput),
-		kb.TypeAction(psswd),
+		kb.TypeAction(apn.Password),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to fill non-advanced field")
+	}
+
+	if err := uiauto.Combine("Show advanced settings",
+		s.ui.LeftClick(APNAdvancedBtn),
+		s.ui.WaitUntilExists(AuthenticationTypeDropdown),
+		s.ui.WaitUntilExists(IPTypeDropdown),
+		s.ui.WaitUntilExists(DefaultAPNCheckbox),
+		s.ui.WaitUntilExists(AttachAPNCheckbox),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to show all advanced fields")
+	}
+
+	if len(apn.AuthenticationType) != 0 {
+		authenticationTypeMenuItem := nodewith.Name(apn.AuthenticationType).Role(role.ListBoxOption)
+
+		if err := uiauto.Combine("Select authentication menu item",
+			s.ui.LeftClick(AuthenticationTypeDropdown),
+			s.ui.WaitUntilExists(authenticationTypeMenuItem),
+			s.ui.LeftClick(authenticationTypeMenuItem),
+		)(ctx); err != nil {
+			return errors.Wrapf(err, "failed to select authentication menu item: %s", apn.AuthenticationType)
+		}
+	}
+
+	if !apn.IsDefault {
+		if err := s.ui.LeftClick(DefaultAPNCheckbox)(ctx); err != nil {
+			return errors.Wrap(err, "failed to uncheck default checkbox")
+		}
+	}
+
+	if apn.IsAttach {
+		if err := s.ui.LeftClick(AttachAPNCheckbox)(ctx); err != nil {
+			return errors.Wrap(err, "failed to check attach checkbox")
+		}
+	}
+
+	if len(apn.IPType) != 0 {
+		ipTypeMenuItem := nodewith.Name(apn.IPType).Role(role.ListBoxOption)
+
+		if err := uiauto.Combine("Select IP menu item",
+			s.ui.LeftClick(IPTypeDropdown),
+			s.ui.WaitUntilExists(ipTypeMenuItem),
+			s.ui.LeftClick(ipTypeMenuItem),
+		)(ctx); err != nil {
+			return errors.Wrapf(err, "failed to select IP menu item: %s", apn.IPType)
+		}
+	}
+
+	if err := uiauto.Combine("Add and verify APN added",
 		s.ui.LeftClick(nodewith.Name("Add").Role(role.Button)),
-		s.ui.WaitUntilExists(nodewith.NameContaining(apnName)),
+		s.ui.WaitUntilExists(nodewith.NameContaining(apn.Name).First()),
+		s.ui.EnsureExistsFor(nodewith.NameContaining(apn.Name).First(), 10*time.Second),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to add custom APN and verify it shows in the APN list")
+	}
+
+	return nil
+}
+
+// GetUIStringForIPType returns the UI string that's displayed for the shill IP type
+func GetUIStringForIPType(devicePropertyCellularAPNType string) string {
+	if devicePropertyCellularAPNType == shillconst.DevicePropertyCellularAPNInfoApnIPTypeIPv4 {
+		return "IPv4"
+	}
+
+	if devicePropertyCellularAPNType == shillconst.DevicePropertyCellularAPNInfoApnIPTypeIPv4v6 {
+		return "IPv4/IPv6"
+	}
+
+	if devicePropertyCellularAPNType == shillconst.DevicePropertyCellularAPNInfoApnIPTypeIPv6 {
+		return "IPv6"
+	}
+
+	return "Automatic"
+}
+
+// GetUIStringForAuthenticationType returns the UI string that's displayed for the shill authentication type
+func GetUIStringForAuthenticationType(devicePropertyCellularAPNInfoApnAuthentication string) string {
+	if devicePropertyCellularAPNInfoApnAuthentication == shillconst.DevicePropertyCellularAPNInfoApnAuthenticationChap {
+		return "CHAP"
+	}
+
+	if devicePropertyCellularAPNInfoApnAuthentication == shillconst.DevicePropertyCellularAPNInfoApnAuthenticationPap {
+		return "PAP"
+	}
+
+	return "Automatic"
+}
+// VerifyErrorToastMessageIsShowing will verify that the "Can't disable or remove this APN..." toast is showing
+func (s *OSSettings) VerifyErrorToastMessageIsShowing(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
+	expr := `var node = shadowPiercingQuery(
+		'cr-toast#errorToast span#errorToastMessage');
+		if (node == undefined) {
+			throw new Error("APN name not found");
+		}
+		node.innerText;
+		`
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var errorMessage string
+		if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, &errorMessage); err != nil {
+			return errors.Wrap(err, "failed to find error message container")
+		}
+
+		if !strings.Contains(errorMessage, "Make sure enabled attach APNs are disabled or removed") {
+			return testing.PollBreak(errors.Errorf("failed to show error toast; shows '%q' instead", errorMessage))
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  10 * time.Second,
+		Interval: time.Second,
+	}); err != nil {
+		return err
 	}
 
 	return nil
@@ -607,4 +771,27 @@ func clearTextFieldViaClickingBackspace(kb *input.KeyboardEventWriter, times int
 		keySequence = append(keySequence, "Backspace")
 	}
 	kb.TypeSequenceAction(keySequence)
+}
+
+// VerifyAPNStabilized verifies that the APN row reflects the |state| consistently
+func VerifyAPNStabilized(ctx context.Context, tconn *chrome.TestConn, name string, state ApnState, isAttach, isDefault bool) error {
+	apnTypeString, err := getAPNTypeString(isAttach, isDefault)
+	if err != nil {
+		return errors.Wrap(err, "failed to get APN type string")
+	}
+	moreActionsButtonOfAPN := nodewith.NameContaining(name).NameContaining(state.String()).NameContaining(apnTypeString).Role(role.Button).HasClass("icon-more-vert").First()
+	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := ui.EnsureExistsFor(moreActionsButtonOfAPN, 2*time.Second)(ctx); err != nil {
+			return errors.Wrapf(err, "failed to display APN consistently with name: %s, state: %s, attach: %v, default: %v", name, state, isAttach, isDefault)
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  10 * time.Second,
+		Interval: time.Second,
+	}); err != nil {
+		return errors.Wrap(err, "failed polling for APN more actions button")
+	}
+	return nil
 }

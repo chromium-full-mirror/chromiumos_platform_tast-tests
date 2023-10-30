@@ -154,7 +154,15 @@ func CellularAutomaticallyDetectedApnMultipleNetworks(ctx context.Context, s *te
 		s.Fatal("Failed to verify the connected APN details: ", err)
 	}
 
-	if err := mdp.CreateCustomAPN(ctx, "INVALID_APN", "", ""); err != nil {
+	if err := mdp.CreateCustomAPN(ctx, &ossettings.ApnConfig{
+		Name:               "INVALID_APN",
+		Username:           "",
+		Password:           "",
+		AuthenticationType: "",
+		IPType:             "",
+		IsAttach:           false,
+		IsDefault:          true,
+	}); err != nil {
 		s.Fatalf("Failed to add custom APN with name: %s, err: %v", "INVALID_APN", err)
 	}
 
