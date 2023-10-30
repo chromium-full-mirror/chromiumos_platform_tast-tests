@@ -190,6 +190,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 	},
 	wlan.MediaTekMT7922PCIE: {
 		"5.15": "wireless/mediatek/mt76/mt7921/mt7921e.ko",
+		"6.1":  "wireless/mediatek/mt76/mt7921/mt7921e.ko",
 	},
 }
 
