@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/servod"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -110,10 +111,15 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 
 	// servoCtx is used for async function measuring power.
 	servoCtx, servoCancel := context.WithCancel(ctx)
+	defer servoCancel()
 
 	cleanupCtx := ctx
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Minute)
 	defer cancel()
+
+	// commandCtx is used for running subtest.
+	commandCtx, commandCancel := ctxutil.Shorten(ctx, 1*time.Minute)
+	defer commandCancel()
 
 	param, ok := s.Param().(testParams)
 	if !ok {
@@ -164,12 +170,20 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Avg power rail commands found:", rails)
 
-	chargeBattery(cleanupCtx, s)
+	chargeBattery(ctx, s)
 
 	// Disable charging.
-	if _, err := s.DUT().Conn().CommandContext(cleanupCtx, "ectool", "chargeoverride", "dontcharge").Output(); err != nil {
+	if _, err := s.DUT().Conn().CommandContext(ctx, "ectool", "chargeoverride", "dontcharge").Output(); err != nil {
 		s.Fatal("Unable to disable charging: ", err)
 	}
+
+	defer func() {
+		// Enable charging.
+		// TODO: b/303548068 - Sync CC with setup_battery.go.
+		if _, err := s.DUT().Conn().CommandContext(cleanupCtx, "ectool", "chargeoverride", "off").Output(); err != nil {
+			s.Fatal(cleanupCtx, "Unable to enable charging: ", err)
+		}
+	}()
 
 	intervalMetric := perf.Metric{
 		Name:      intervalMetricName,
@@ -179,11 +193,14 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	}
 
 	ch := make(chan *perf.Values)
+	defer close(ch)
 	// TODO: b/304656798 - Investigate timestamps.
 	measureStarted := float64(time.Now().Unix())
 	// TODO: b/304655966 - Implement timeline interface.
 	go func() {
 		if err = servo.ClearServoAccumulators(ctx, pxy.Servo(), clearRails); err != nil {
+			// TODO: b/308515270 - consolidate error handling.
+			commandCancel()
 			s.Fatal("Unable to clear servo accumulators: ", err)
 		}
 		pv := perf.NewValues()
@@ -194,6 +211,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 				for _, railMw := range rails {
 					mw, err := pxy.Servo().GetFloat(ctx, railMw)
 					if err != nil {
+						commandCancel()
 						s.Fatalf("Failed to get %s mw from servo instance: %s", string(railMw), err)
 					}
 					pv.Append(perf.Metric{
@@ -206,6 +224,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 				}
 				// Clear the accumulator at the end of the loop to measure the interval.
 				if err = servo.ClearServoAccumulators(ctx, pxy.Servo(), clearRails); err != nil {
+					commandCancel()
 					s.Fatal("Unable to clear servo accumulators: ", err)
 				}
 				pv.Append(intervalMetric, float64(time.Now().Unix()))
@@ -217,21 +236,20 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	}()
 
 	s.Log("Starting subtest: ", subtest)
-	skippedTests := tastrun.RunAndEvaluate(cleanupCtx, s, []string{}, []string{subtest}, resultsDir, tastrun.SkipPolicyDisallowSkipping)
+	skippedTests := tastrun.RunAndEvaluate(commandCtx, s, []string{}, []string{subtest}, resultsDir, tastrun.SkipPolicyDisallowSkipping)
 	if len(skippedTests) > 0 {
 		s.Fatal("Test is skipped, abort post-processing")
-	} else {
-		s.Log("Finished subtest: ", subtest)
 	}
 
 	servoCancel()
-	servoResult := <-ch
-
-	// Enable charging.
-	// TODO: b/303548068 - Sync CC with setup_battery.go.
-	if _, err := s.DUT().Conn().CommandContext(cleanupCtx, "ectool", "chargeoverride", "off").Output(); err != nil {
-		s.Fatal("Unable to enable charging: ", err)
+	select {
+	case <-commandCtx.Done():
+		s.Fatal("Subtest is cancelled")
+	default:
+		// Not canceled in servo goroutine.
+		s.Log("Finished subtest: ", subtest)
 	}
+	servoResult := <-ch
 
 	subtestDir := filepath.Join(resultsDir, "tests", subtest)
 	measureStarted, err = servod.FindSubtestStartTime(subtestDir)
