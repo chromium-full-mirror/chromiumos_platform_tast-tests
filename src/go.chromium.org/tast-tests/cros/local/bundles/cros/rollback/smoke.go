@@ -32,7 +32,7 @@ func init() {
 			"crisguerrero@chromium.org",
 		},
 		BugComponent: "b:1031231",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		Timeout:      1 * time.Minute,
 		Fixture:      fixture.CleanOwnership,
 		Params: []testing.Param{{
