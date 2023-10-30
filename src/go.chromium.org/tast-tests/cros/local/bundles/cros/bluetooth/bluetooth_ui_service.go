@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"time"
 
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -251,23 +252,15 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
 
+	ui := uiauto.New(tconn)
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	if err := quicksettings.NavigateToBluetoothDetailedView(ctx, tconn); err != nil {
-		return nil, errors.Wrap(err, "failed to navigate to the detailed Bluetooth view")
+	if err := quicksettings.EnsureBluetoothPairingDialogIsOpened(tconn)(ctx); err != nil {
+		return nil, err
 	}
-	defer quicksettings.Hide(cleanupCtx, tconn)
-	// Capturing the state before closing the QuickSettings.
-	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "quick_settings_bluetooth_detailed_view_ui_dump")
-
-	ui := uiauto.New(tconn)
-	if err := ui.LeftClickUntil(quicksettings.BluetoothDetailedViewPairNewDeviceButton,
-		ui.Exists(quicksettings.BluetoothPairNewDeviceDialog))(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to open the pairing dialog")
-	}
-
 	defer func(ctx context.Context) {
 		// Capturing the state before closing the Bluetooth pair new device dialog.
 		faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(ctx, func() bool { return retErr != nil }, tconn, "bluetooth_pair_new_device_dialog_ui_dump")
@@ -291,36 +284,60 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 	// the device will disappear/reappear sporadically.
 	testing.Sleep(ctx, 5*time.Second)
 
-	deviceFinder := nodewith.NameContaining(req.AdvertisedName).Ancestor(quicksettings.BluetoothPairNewDeviceDialog).Role(role.Button).First()
-	toastFinder := nodewith.NameContaining(req.AdvertisedName + " connected").Ancestor(nodewith.HasClass("ToastOverlay"))
+	pairingTimeout := 2 * time.Minute
+	ensureDeviceIsPairingCtx, cancel := context.WithTimeout(ctx, pairingTimeout)
+	defer cancel()
 
-	// The device we want to pair with may disappear and reappear in the pairing dialog.
-	// To mitigate this flaky behavior we continue to click the device while waiting for
-	// the "device connected" toast to appear for up to 2 minutes.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := ui.Exists(toastFinder)(ctx); err == nil {
-			return nil
-		}
-		if err := uiauto.Combine("find and click the device",
-			ui.Exists(deviceFinder),
-			ui.LeftClick(deviceFinder))(ctx); err != nil {
-			// Usually this happens when the pairing dialog was closed. Re-open it
-			// anyway to come back.
-			if err := quicksettings.NavigateToBluetoothDetailedView(ctx, tconn); err != nil {
-				return errors.Wrap(err, "failed to navigate to the detailed Bluetooth view")
+	// The message that indicates Bluetooth device is connected will last for only 5 seconds whereas
+	// the entire checking action can easily takes over 5 seconds and leads to a timing issue,
+	// so ensure Bluetooth is pairing and check the message simultaneously is necessary.
+	eg, ensureDeviceIsPairingCtx := errgroup.WithContext(ensureDeviceIsPairingCtx)
+	eg.Go(func() error {
+		var lastErr error
+		for {
+			select {
+			case <-time.After(5 * time.Second):
+				// The device we want to pair with may disappear and reappear in the pairing dialog.
+				// To mitigate this flaky behavior we continue to click the device while waiting for
+				// the "device connected" toast to appear for up to 2 minutes.
+				lastErr = bui.ensureDeviceIsPairing(ensureDeviceIsPairingCtx, req.AdvertisedName, tconn)
+			case <-ensureDeviceIsPairingCtx.Done():
+				if lastErr != nil {
+					return errors.Wrap(lastErr, "failed to ensure the Bluetooth device is pairing")
+				}
+				return nil
 			}
-			if err := ui.LeftClickUntil(quicksettings.BluetoothDetailedViewPairNewDeviceButton.First(),
-				ui.Exists(quicksettings.BluetoothPairNewDeviceDialog))(ctx); err != nil {
-				return errors.Wrap(err, "failed to open the pairing dialog")
-			}
-			return errors.Wrap(err, "failed to find and click the device")
 		}
-		return errors.New("failed to pair with the device, retrying")
-	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 5 * time.Second}); err != nil {
-		return nil, errors.Wrap(err, "failed to pair with the device")
+	})
+
+	toastFinder := nodewith.NameContaining(req.AdvertisedName + " connected").Ancestor(nodewith.HasClass("ToastOverlay"))
+	if err := ui.WithTimeout(pairingTimeout).WaitUntilExists(toastFinder)(ctx); err != nil {
+		return nil, errors.Wrap(eg.Wait(), "failed to wait for connected message to appear")
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+// ensureDeviceIsPairing ensure the device in the Bluetooth Pair New Device Dialog is pairing.
+func (bui *BtUIService) ensureDeviceIsPairing(ctx context.Context, deviceName string, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+
+	// pairingFinder is only shown after the specified Bluetooth device is selected
+	// in the Bluetooth Pair New Device dialog, and pairing is successfully started.
+	pairingFinder := nodewith.NameStartingWith(fmt.Sprintf("Pairing to %s", deviceName)).HasClass("text-row").Ancestor(quicksettings.BluetoothPairNewDeviceDialog)
+	if deviceIsPairing, err := ui.IsNodeFound(ctx, pairingFinder); err != nil {
+		return errors.Wrap(err, "failed to verify whether the device is pairing")
+	} else if deviceIsPairing {
+		// No action required if the Bluetooth device is already pairing.
+		return nil
+	}
+
+	deviceFinder := nodewith.NameContaining(deviceName).Ancestor(quicksettings.BluetoothPairNewDeviceDialog).Role(role.Button).First()
+	return uiauto.Combine("attempt to pair with the device",
+		// Re-open dialog if it's closed.
+		quicksettings.EnsureBluetoothPairingDialogIsOpened(tconn),
+		ui.LeftClick(deviceFinder),
+	)(ctx)
 }
 
 // ForgetBluetoothDevice will attempt to navigate to the Device Details subpage

@@ -13,6 +13,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -53,4 +55,37 @@ func NavigateToBluetoothDetailedView(ctx context.Context, tconn *chrome.TestConn
 			ui.WaitUntilExists(bluetoothDetailedView),
 		)(ctx)
 	}, &testing.PollOptions{Timeout: time.Minute, Interval: 5 * time.Second})
+}
+
+// EnsureBluetoothPairingDialogIsOpened returns an action that will navigate to the detailed
+// Bluetooth view within the Quick Settings, then launch the Bluetooth Pair New Device Dialog.
+// It does nothing if the dialog is launched.
+func EnsureBluetoothPairingDialogIsOpened(tconn *chrome.TestConn) uiauto.Action {
+	return func(ctx context.Context) (retErr error) {
+		ui := uiauto.New(tconn)
+
+		if dialogIsFound, err := ui.IsNodeFound(ctx, BluetoothPairNewDeviceDialog); err != nil {
+			return err
+		} else if dialogIsFound {
+			// No action required if the dialog is already launched.
+			return nil
+		}
+
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+
+		if err := NavigateToBluetoothDetailedView(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to navigate to the detailed Bluetooth view")
+		}
+		defer Hide(cleanupCtx, tconn)
+
+		if err := ui.WithInterval(time.Second).LeftClickUntil(
+			BluetoothDetailedViewPairNewDeviceButton,
+			ui.Exists(BluetoothPairNewDeviceDialog),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to open the pairing dialog")
+		}
+		return nil
+	}
 }
