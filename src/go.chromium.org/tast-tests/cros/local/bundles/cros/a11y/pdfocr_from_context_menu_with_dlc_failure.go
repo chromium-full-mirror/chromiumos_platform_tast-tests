@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Check the PDF OCR feature, being turned on from the Context Menu, with the screen-ai dlc install failure",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
-			"kyungjunlee@chromium.org",     // Test author
+			"kyungjunlee@google.com",       // Test author
 		},
 		BugComponent: "b:1272894", // ChromeOS Public Tracker > Experiences > Accessibility > Machine Intelligence
 		Attr:         []string{"group:mainline", "informational"},
