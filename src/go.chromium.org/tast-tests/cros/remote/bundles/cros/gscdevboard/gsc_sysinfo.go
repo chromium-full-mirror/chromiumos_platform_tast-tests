@@ -18,8 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50Sysinfo,
-		Desc:    "Most basic test of the ti50 sysinfo command",
+		Func:    GscSysinfo,
+		Desc:    "Most basic test of the gsc sysinfo command",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
 			"chromeos-faft@google.com", // CrOS Firmware Developers
@@ -33,21 +33,21 @@ func init() {
 
 var devIDRegexp = regexp.MustCompile(`DEV_ID: *0x([0-9a-fA-F]+) +0x([0-9a-fA-F]+)`)
 
-func Ti50Sysinfo(ctx context.Context, s *testing.State) {
+func GscSysinfo(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f, s)
 	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
 
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
-	s.Log("(Re)starting ti50")
+	s.Log("(Re)starting GSC")
 	th.MustSucceed(b.Reset(ctx), "Reset board")
-	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
-	// Simulate the typing of "sysinfo" command on Ti50 console.
+	// Simulate the typing of "sysinfo" command on GSC console.
 	output, err := i.Command(ctx, "sysinfo")
 	if err != nil {
-		s.Fatal("Error communicating with ti50: ", err)
+		s.Fatal("Error communicating with GSC: ", err)
 	}
 
 	// Rudimentary validation of output: find and print "DEV_ID:" line.
