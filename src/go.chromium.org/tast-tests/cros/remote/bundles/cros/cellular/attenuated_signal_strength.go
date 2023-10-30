@@ -15,6 +15,8 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/cellular"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/cellularconst"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -48,6 +50,8 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "callboxManagedFixture",
+		// FM101 only reports RSSI to MM (b/274882743), this test relies on RSRP values.
+		HardwareDeps: hwdep.D(hwdep.SkipOnCellularModemType(cellularconst.ModemTypeFM101)),
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
