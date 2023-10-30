@@ -25,7 +25,7 @@ func init() {
 		Desc:         "Verify closing the controlling tab in Terminal app tmux integration",
 		Contacts: []string{
 			"guestos-ui@google.com",
-			"lxj@chromium.org",
+			"lxj@google.com",
 		},
 		BugComponent: "b:658562",
 		Attr:         []string{"group:mainline", "informational"},
