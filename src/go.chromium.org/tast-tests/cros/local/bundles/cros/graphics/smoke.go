@@ -35,7 +35,8 @@ func init() {
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
 			"chromeos-gfx@google.com",
-			"vsuley@chromium.org",
+			"ihf@chromium.org",
+			"pwang@chromium.org",
 		},
 		Attr:         []string{"group:cq-minimal", "group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
