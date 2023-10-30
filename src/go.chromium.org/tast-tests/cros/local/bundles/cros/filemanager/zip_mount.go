@@ -33,7 +33,6 @@ func init() {
 			"chromeos-files-syd@google.com",
 			"fdegros@chromium.org",
 			"jboulic@chromium.org",
-			"msalomao@chromium.org",
 		},
 		Attr: []string{
 			"group:mainline",

@@ -51,7 +51,6 @@ func init() {
 		Desc:         "Test a file on Google Drive will appear on top of the list in filesapp after edited",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
-			"cienet-development@googlegroups.com",
 			"vivian.tsai@cienet.com",
 		},
 		BugComponent: "b:167289", // ChromeOS > Software > Files
