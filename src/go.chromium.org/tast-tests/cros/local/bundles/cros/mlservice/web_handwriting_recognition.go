@@ -8,24 +8,17 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	localTcpdump "go.chromium.org/tast-tests/cros/local/network/tcpdump"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
-var dataFiles = []string{
-	"web_handwriting_recognition.html",
-	"web_handwriting_recognition_drawing_abc.json",
-	"web_handwriting_recognition_drawing_crossed_out.json",
-}
+const testSupportedRecognizerFileName = "web_handwriting_recognition.html"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -55,7 +48,9 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros", "lacros_unstable"},
 			ExtraAttr:         []string{"informational"},
 		}},
-		Data: dataFiles,
+		Data: []string{
+			testSupportedRecognizerFileName,
+		},
 	})
 }
 
@@ -68,20 +63,6 @@ func WebHandwritingRecognition(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	// Confirm test HTTP server is working.
-	for _, f := range dataFiles {
-		testURL := server.URL + "/" + f
-		s.Log("Request URL: ", testURL)
-		resp, err := http.Get(testURL)
-		if err != nil {
-			s.Fatal("Test HTTP server isn't serving data files correctly: ", err)
-		}
-
-		if resp.StatusCode != 200 {
-			s.Fatal("Test HTTP server returns non-success HTTP response, status code was: ", resp.StatusCode)
-		}
-	}
-
 	// Open browser.
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
@@ -90,30 +71,8 @@ func WebHandwritingRecognition(ctx context.Context, s *testing.State) {
 	}
 	defer closeBrowser(cleanupCtx)
 
-	// Prepare a tdpdump to investigate https://crbug.com/1440735.
-	tcpdumpRunner := localTcpdump.NewLocalRunner()
-	packetPath := path.Join(s.OutDir(), "pcap-crbug-1440735.pcap")
-	stdoutFile, err := os.OpenFile(path.Join(s.OutDir(), "pcap-crbug-1440735.stdout.txt"), os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		s.Log(ctx, "Failed to open tcpdump stdout file: ", err)
-	}
-	stderrFile, err := os.OpenFile(path.Join(s.OutDir(), "pcap-crbug-1440735.stderr.txt"), os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		s.Log(ctx, "Failed to open tcpdump stderr file: ", err)
-	}
-	if err := tcpdumpRunner.StartTcpdump(ctx, "lo", packetPath, stdoutFile, stderrFile); err != nil {
-		s.Error(err, "failed to start tdpdump:")
-		return
-	}
-	cleanupCtx = ctx
-	ctx, cancel = tcpdumpRunner.ReserveForClose(ctx)
-	defer cancel()
-	defer func(cleanupCtx context.Context) {
-		tcpdumpRunner.Close(cleanupCtx)
-	}(cleanupCtx)
-
 	// Open the test page.
-	conn, err := br.NewConn(ctx, server.URL+"/web_handwriting_recognition.html")
+	conn, err := br.NewConn(ctx, server.URL+"/"+testSupportedRecognizerFileName)
 	if err != nil {
 		s.Fatal("Failed to open test web page: ", err)
 	}

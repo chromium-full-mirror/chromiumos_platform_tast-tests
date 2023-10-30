@@ -17,6 +17,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const testUnsupportedRecognizerFileName = "web_handwriting_recognition_not_supported.html"
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebHandwritingRecognitionNotSupported,
@@ -40,7 +42,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 		Data: []string{
-			"web_handwriting_recognition_not_supported.html",
+			testUnsupportedRecognizerFileName,
 		},
 	})
 }
@@ -63,7 +65,7 @@ func WebHandwritingRecognitionNotSupported(ctx context.Context, s *testing.State
 	defer closeBrowser(cleanupCtx)
 
 	// Open the test page.
-	conn, err := br.NewConn(ctx, server.URL+"/web_handwriting_recognition_not_supported.html")
+	conn, err := br.NewConn(ctx, server.URL+"/"+testUnsupportedRecognizerFileName)
 	if err != nil {
 		s.Fatal("Failed to open test web page: ", err)
 	}
