@@ -108,7 +108,15 @@ func CellularCustomApnLimit(ctx context.Context, s *testing.State) {
 
 	for i := 1; i <= 10; i++ {
 		apnName := "custom_apn" + strconv.Itoa(i)
-		if err := mdp.CreateCustomAPN(ctx, apnName, "", ""); err != nil {
+		if err := mdp.CreateCustomAPN(ctx, &ossettings.ApnConfig{
+			Name:               apnName,
+			Username:           "",
+			Password:           "",
+			AuthenticationType: "",
+			IPType:             "",
+			IsAttach:           false,
+			IsDefault:          true,
+		}); err != nil {
 			s.Fatalf("Failed to add custom APN with name: %s, err: %v", apnName, err)
 		}
 	}
