@@ -28,10 +28,13 @@ func init() {
 }
 
 type gpuRemoteWatcherImpl struct {
-	d *dut.DUT
+	d               *dut.DUT
+	rebootRequested bool // If set, reboot the machine in TearDown phase.
 }
 
 func (i *gpuRemoteWatcherImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	// We have to set it to false specifically, as SetUp may be called multiple times after we reboot.
+	i.rebootRequested = false
 	i.d = s.DUT()
 	if err := i.d.Conn().CommandContext(ctx, "stat", graphics_common.GraphicsRemoteWatcherRebootFile).Run(); err == nil {
 		s.Log("Detected stale reboot request file on DUT")
@@ -43,14 +46,13 @@ func (i *gpuRemoteWatcherImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 }
 
 func (i *gpuRemoteWatcherImpl) TearDown(ctx context.Context, s *testing.FixtState) {
-	dut := s.DUT()
-	if err := dut.Conn().CommandContext(ctx, "stat", graphics_common.GraphicsRemoteWatcherRebootFile).Run(); err == nil {
+	if i.rebootRequested {
 		s.Log("Detected reboot request, rebooting DUT")
-		if err := dut.Reboot(ctx); err != nil {
+		if err := i.d.Reboot(ctx); err != nil {
 			s.Fatal("Failed to reboot the DUT")
 		}
 		// Deleting the GraphicsRemoteWatcherRebootFile here in case the reboot does not work out or in case in the future /tmp/ is not memory backed.
-		if err := dut.Conn().CommandContext(ctx, "rm", "-f", graphics_common.GraphicsRemoteWatcherRebootFile).Run(); err != nil {
+		if err := i.d.Conn().CommandContext(ctx, "rm", "-f", graphics_common.GraphicsRemoteWatcherRebootFile).Run(); err != nil {
 			s.Fatal("Failed to remove reboot request file: ", err)
 		}
 	}
@@ -59,7 +61,8 @@ func (i *gpuRemoteWatcherImpl) TearDown(ctx context.Context, s *testing.FixtStat
 func (i *gpuRemoteWatcherImpl) Reset(ctx context.Context) error {
 	// Return an error in Reset stage would leads the fixture to go to TearDown phase and allow all dependent fixtures to recreate.
 	if err := i.d.Conn().CommandContext(ctx, "stat", graphics_common.GraphicsRemoteWatcherRebootFile).Run(); err == nil {
-		return errors.New("detect reboot request")
+		i.rebootRequested = true
+		return errors.New("detected reboot request")
 	}
 	return nil
 }
