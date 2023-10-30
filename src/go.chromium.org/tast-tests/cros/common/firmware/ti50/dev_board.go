@@ -50,6 +50,19 @@ const (
 	UartFPMCU UartName = "FPMCU"
 )
 
+// GscUsbSpiBridgeOperation defines possible control interactions with the SPI
+// bridge.
+type GscUsbSpiBridgeOperation int
+
+const (
+	// DisableSpiBridge disables any active bridge.
+	DisableSpiBridge GscUsbSpiBridgeOperation = iota
+	// EnableApSpiBridge sets the bridge destination to AP flash.
+	EnableApSpiBridge
+	// EnableEcSpiBridge sets the bridge destination to EC flash.
+	EnableEcSpiBridge
+)
+
 // DevBoard is the generic interface for development boards.
 type DevBoard interface {
 	// OpenTitanToolCommand runs an arbitrary OpenTitan tool command (without up-/downloading any files).
@@ -72,6 +85,12 @@ type DevBoard interface {
 	CCDFlashromWrite(ctx context.Context, contents []byte) (durationMs uint32, err error)
 	// CCDFlashromErase erases the SPI flash chip via CCD.
 	CCDFlashromErase(ctx context.Context) (durationMs uint32, err error)
+	/// GscUsbI2cInterfaceTransaction write then reads from the I2C USB interface.
+	GscUsbI2cInterfaceTransaction(ctx context.Context, request []byte) (response []byte, err error)
+	/// GscUsbSpiInterfaceTransaction write then reads from the SPI USB interface.
+	GscUsbSpiInterfaceTransaction(ctx context.Context, request []byte) (response []byte, err error)
+	/// GscUsbSpiBridge interacts with the GSC USB SPI bridge.
+	GscUsbSpiBridge(ctx context.Context, operation GscUsbSpiBridgeOperation) error
 }
 
 // SerialChannel is a handle to communicate using a two-way byte stream.

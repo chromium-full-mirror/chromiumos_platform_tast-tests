@@ -420,3 +420,47 @@ func (a *andreiboardApFlash) EnableApWriteProtect(ctx context.Context, startAddr
 	}
 	return nil
 }
+
+// GscUsbI2cInterfaceTransaction write the requested bytes to the GSC I2C USB
+// interface and returns the response. This method only supports small data
+// sizes for simple interactions.
+func (a *DUTControlAndreiboard) GscUsbI2cInterfaceTransaction(ctx context.Context, request []byte) (response []byte, err error) {
+	req := &dutcontrol.GscUsbTransactionRequest{Iface: dutcontrol.GscUsbInterface_I2C_USB_INTERFACE, RequestData: request}
+	rsp, err := a.client.GscUsbTransaction(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return rsp.ResponseData, nil
+}
+
+// GscUsbSpiInterfaceTransaction write the requested bytes to the GSC SPI USB
+// interface and returns the response. This method only supports small data
+// sizes for simple interactions.
+func (a *DUTControlAndreiboard) GscUsbSpiInterfaceTransaction(ctx context.Context, request []byte) (response []byte, err error) {
+	req := &dutcontrol.GscUsbTransactionRequest{Iface: dutcontrol.GscUsbInterface_SPI_USB_INTERFACE, RequestData: request}
+	rsp, err := a.client.GscUsbTransaction(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return rsp.ResponseData, nil
+}
+
+// GscUsbSpiBridge configures the GSC AP USB interface to bridge to AP flash or
+// EC flash. This method needs to be called first before transacting with the
+// SPI interface.
+func (a *DUTControlAndreiboard) GscUsbSpiBridge(ctx context.Context, operation common.GscUsbSpiBridgeOperation) error {
+	var op dutcontrol.GscUsbSpiRequest
+	switch operation {
+	case common.EnableApSpiBridge:
+		op = dutcontrol.GscUsbSpiRequest_ENABLE_AP_GSC_USB_SPI
+	case common.EnableEcSpiBridge:
+		op = dutcontrol.GscUsbSpiRequest_ENABLE_EC_GSC_USB_SPI
+	default:
+		op = dutcontrol.GscUsbSpiRequest_DISABLE_GSC_USB_SPI
+	}
+	req := &dutcontrol.GscUsbApSpiBridgeRequest{Operation: op}
+	_, err := a.client.GscUsbApSpiBridge(ctx, req)
+	return err
+}
