@@ -195,6 +195,30 @@ func RefreshDlc(ctx context.Context, backupDir string) error {
 // SetUp executes common setup code and returns a SetUpData. See the documentation
 // for SetUpData for more information.
 func SetUp(ctx, cleanupCtx context.Context, dataFS http.FileSystem, bt browser.Type) (SetUpData, error) {
+	setupData, err := SetUpHTTPServer(ctx, cleanupCtx, dataFS, bt)
+	if err != nil {
+		return setupData, errors.Wrap(err, "failed to create a HTTP server")
+	}
+
+	tconn, err := setupData.CR.TestAPIConn(ctx)
+	if err != nil {
+		return SetUpData{}, errors.Wrap(err, "failed to create Test API connection")
+	}
+	setupData.TConn = tconn
+
+	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
+		return SetUpData{}, errors.Wrap(err, "failed to enable ChromeVox")
+	}
+	setupData.TDown.Append(func() error {
+		a11y.ClearFeature(cleanupCtx, tconn, a11y.SpokenFeedback)
+		return nil
+	})
+
+	return setupData, nil
+}
+
+// SetUpHTTPServer sets up a HTTP server that enables file loading and starts a Chrome browser.
+func SetUpHTTPServer(ctx, cleanupCtx context.Context, dataFS http.FileSystem, bt browser.Type) (SetUpData, error) {
 	setupData := SetUpData{nil, nil, nil, &a11y.TearDownHelper{}}
 
 	// Setup test HTTP server.
@@ -215,21 +239,6 @@ func SetUp(ctx, cleanupCtx context.Context, dataFS http.FileSystem, bt browser.T
 	setupData.CR = cr
 	setupData.TDown.Append(func() error {
 		cr.Close(cleanupCtx)
-		return nil
-	})
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return SetUpData{}, errors.Wrap(err, "failed to create Test API connection")
-	}
-	setupData.TConn = tconn
-
-	// TODO(b:291094454): Add a variant of `chromevox.SetUp()` that takes a url as parameter.
-	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
-		return SetUpData{}, errors.Wrap(err, "failed to enable ChromeVox")
-	}
-	setupData.TDown.Append(func() error {
-		a11y.ClearFeature(cleanupCtx, tconn, a11y.SpokenFeedback)
 		return nil
 	})
 

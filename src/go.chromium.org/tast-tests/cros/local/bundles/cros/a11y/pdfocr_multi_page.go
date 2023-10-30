@@ -9,7 +9,7 @@ package a11y
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/pdfocr"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -59,7 +58,9 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	bt := s.Param().(browser.Type)
-	data, err := pdfocr.SetUp(ctx, cleanupCtx, s.DataFileSystem(), bt)
+	// TODO(b/289009784): Create a new helper function that sets up a test environment
+	// for PDF OCR using `chromevox.SetUpWithURLWithoutFocusWaiter()`.
+	data, err := pdfocr.SetUpHTTPServer(ctx, cleanupCtx, s.DataFileSystem(), bt)
 	if err != nil {
 		s.Fatal("Failed to setup PDF OCR test: ", err)
 	}
@@ -71,30 +72,24 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 
 	cr := data.CR
 	server := data.Server
-	tconn := data.TConn
 
-	// Open the test PDF.
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/"+pdfocr.MultiPagePDFName)
+	// Enable ChromeVox and open the test PDF.
+	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.EspeakElVoice(), tts.EspeakEngine(), bt, server.URL+"/"+pdfocr.MultiPagePDFName)
 	if err != nil {
-		s.Fatal("Failed to open test PDF: ", err)
+		s.Fatal("Failed to set up ChromeVox: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
+	defer func() {
+		if err := cvData.TearDown(); err != nil {
+			s.Fatal("Failed to tear down ChromeVox test: ", err)
+		}
+	}()
 
 	// PDF OCR is on by default, so just wait until screen-ai dlc is installed.
 	if err := testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
 	}
 
-	// Get a speech monitor for the Google TTS engine.
-	ed := tts.GoogleTTSEngine()
-	sm, err := tts.RelevantSpeechMonitor(ctx, cr, tconn, ed)
-	if err != nil {
-		s.Fatal("Failed to connect to the TTS background page: ", err)
-	}
-	defer sm.Close()
-
-	ui := uiauto.New(tconn)
+	ui := uiauto.New(cvData.TTSData.TConn)
 	pdfRoot := nodewith.Role(role.PdfRoot)
 	status := nodewith.Name(pdfocr.StatusReadyMessage).Role(role.Status)
 	// Check if PDF OCR successfully extracts text from the inaccessible PDF.
@@ -106,7 +101,7 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 	}
 
 	// Create test steps using expected texts stored in a JSON file.
-	jsonData, _ := ioutil.ReadFile(s.DataPath(pdfocr.MultiPagePDFExpectedTextJSONName))
+	jsonData, _ := os.ReadFile(s.DataPath(pdfocr.MultiPagePDFExpectedTextJSONName))
 	if err != nil {
 		s.Fatal("Failed to open a json file containing expected texts")
 	}
@@ -144,7 +139,7 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 	}
 
 	for _, each := range readingOrder {
-		if err := tts.PressKeysAndConsumeExpectations(ctx, sm, each.KeyCommands, each.Expectations); err != nil {
+		if err := tts.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), each.KeyCommands, each.Expectations); err != nil {
 			s.Error("Error when pressing keys and expecting speech: ", err)
 		}
 	}
