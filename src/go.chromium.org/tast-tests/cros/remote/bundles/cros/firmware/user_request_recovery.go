@@ -43,7 +43,6 @@ func init() {
 func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	pv := s.FixtValue().(*fixture.Value)
 	h := pv.Helper
-	hasBrokenScreen := pv.BootMode != fwCommon.BootModeDev || !h.Config.NoBrokenScreenInDev
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -51,6 +50,9 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to create config: ", err)
 	}
+
+	hasBrokenScreen := pv.BootMode != fwCommon.BootModeDev || !h.Config.NoBrokenScreenInDev
+
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		s.Fatal("Failed to create mode switcher: ", err)
