@@ -17,7 +17,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50Tpm,
+		Func:    GscTpm,
 		Desc:    "Test TPM functionality of ti50 in remote environment(Andreiboard connected to devboardsvc host)",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
@@ -38,7 +38,7 @@ func init() {
 	})
 }
 
-func Ti50Tpm(ctx context.Context, s *testing.State) {
+func GscTpm(ctx context.Context, s *testing.State) {
 	bus := s.Param().(ti50.TpmBus)
 
 	f := s.FixtValue().(*fixture.Value)
