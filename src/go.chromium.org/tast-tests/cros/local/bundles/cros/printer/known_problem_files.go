@@ -30,7 +30,7 @@ func init() {
 			"group:paper-io",
 			"paper-io_printing",
 		},
-		SoftwareDeps: []string{"cups", "ghostscript", "virtual_usb_printer"},
+		SoftwareDeps: []string{"cups", "ghostscript"},
 		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Fixture:      "virtualUsbPrinterModulesLoaded",
 		Params: []testing.Param{
