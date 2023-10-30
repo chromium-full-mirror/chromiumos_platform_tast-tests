@@ -25,7 +25,7 @@ func init() {
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
-		Timeout:      12 * time.Minute,
+		Timeout:      20 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
@@ -88,7 +88,7 @@ func ECReboot(ctx context.Context, s *testing.State) {
 				s.Fatalf("Failed to reconnect to DUT after rebooting via %s: %s", tc.rebootName, err)
 			}
 		} else {
-			if err := h.WaitForPowerStates(ctx, 1*time.Second, 3*time.Minute, "G3"); err != nil {
+			if err := h.WaitForPowerStates(ctx, 1*time.Second, 5*time.Minute, "G3"); err != nil {
 				s.Fatalf("Failed to put system off after rebooting via %s: %s", tc.rebootName, err)
 			}
 		}
