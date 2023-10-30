@@ -6,6 +6,7 @@ package gscdevboard
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/go-tpm/legacy/tpm2"
@@ -27,7 +28,7 @@ func init() {
 			"jbk@chromium.org",         // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_ot_fpga_cw310", "gsc_image_ti50"},
+		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_ot_fpga_cw310", "gsc_image_ti50"},
 		Fixture:      fixture.Ti50CcdOpen,
 	})
 }
@@ -44,15 +45,27 @@ const (
 	uartThroughputBpsTolerance float64 = 400.0
 )
 
+type consoleChannel struct {
+	name  ti50.UartName
+	magic byte
+	// CCD USB endpoint.
+	ccd ti50.SerialChannel
+	// UART console.
+	uart ti50.SerialChannel
+}
+
 func GscUartThroughput(ctx context.Context, s *testing.State) {
 	const crLf = "\r\n"
 	const ecMagic byte = 0xEC
 	const apMagic byte = 0xA5
 	const fpmcuMagic byte = 0xF5
 
+	var consoles []consoleChannel
+
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f, s)
 	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	gscProps := b.GscProperties()
 
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
@@ -62,31 +75,44 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 	// Simulate the AP processor being turned on, in order to enable AP forwarding.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
-	ecUart := f.DevBoard().PhysicalUart(ti50.UartEC, time.Second)
-	ecCcd := f.DevBoard().CcdSerialInterface(ti50.UartEC, time.Second)
-	th.MustSucceed(ecCcd.Open(ctx), "Failed to open EC ccd")
-	th.MustSucceed(ecUart.Open(ctx), "Failed to open EC uart")
-	apUart := f.DevBoard().PhysicalUart(ti50.UartAP, time.Second)
-	apCcd := f.DevBoard().CcdSerialInterface(ti50.UartAP, time.Second)
-	th.MustSucceed(apCcd.Open(ctx), "Failed to open AP ccd")
-	th.MustSucceed(apUart.Open(ctx), "Failed to open AP uart")
-	fpmcuUart := f.DevBoard().PhysicalUart(ti50.UartFPMCU, time.Second)
-	fpmcuCcd := f.DevBoard().CcdSerialInterface(ti50.UartFPMCU, time.Second)
-	th.MustSucceed(fpmcuCcd.Open(ctx), "Failed to open FPMCU ccd")
-	th.MustSucceed(fpmcuUart.Open(ctx), "Failed to open FPMCU uart")
+	// Set up the EC console.
+	consoles = append(consoles, consoleChannel{
+		name:  ti50.UartEC,
+		magic: ecMagic,
+		ccd:   f.DevBoard().CcdSerialInterface(ti50.UartEC, time.Second),
+		uart:  f.DevBoard().PhysicalUart(ti50.UartEC, time.Second),
+	})
+
+	// Set up the AP console.
+	consoles = append(consoles, consoleChannel{
+		name:  ti50.UartAP,
+		magic: apMagic,
+		ccd:   f.DevBoard().CcdSerialInterface(ti50.UartAP, time.Second),
+		uart:  f.DevBoard().PhysicalUart(ti50.UartAP, time.Second),
+	})
+
+	// Set up the FPMCU console on chips that support it.
+	if gscProps.HasFpmcuUart() {
+		consoles = append(consoles, consoleChannel{
+			name:  ti50.UartFPMCU,
+			magic: fpmcuMagic,
+			ccd:   f.DevBoard().CcdSerialInterface(ti50.UartFPMCU, time.Second),
+			uart:  f.DevBoard().PhysicalUart(ti50.UartFPMCU, time.Second),
+		})
+	}
+
+	// Open the CCD and UART interfaces.
+	for _, console := range consoles {
+		th.MustSucceed(console.ccd.Open(ctx), fmt.Sprintf("Failed to open %s ccd", console.name))
+		th.MustSucceed(console.uart.Open(ctx), fmt.Sprintf("Failed to open %s uart", console.name))
+	}
 
 	// Flush out any "DATA LOST" message along with other queued-up data.
-	ecUart.WriteSerial(ctx, []byte(crLf))
-	th.MustSucceed(ecCcd.ClearInput(ctx), "Error clearing buffer")
-	th.MustSucceed(ecUart.ClearInput(ctx), "Error clearing buffer")
-
-	apUart.WriteSerial(ctx, []byte(crLf))
-	th.MustSucceed(apCcd.ClearInput(ctx), "Error clearing buffer")
-	th.MustSucceed(apUart.ClearInput(ctx), "Error clearing buffer")
-
-	fpmcuUart.WriteSerial(ctx, []byte(crLf))
-	th.MustSucceed(fpmcuCcd.ClearInput(ctx), "Error clearing buffer")
-	th.MustSucceed(fpmcuUart.ClearInput(ctx), "Error clearing buffer")
+	for _, console := range consoles {
+		console.uart.WriteSerial(ctx, []byte(crLf))
+		th.MustSucceed(console.ccd.ClearInput(ctx), "Error clearing buffer")
+		th.MustSucceed(console.uart.ClearInput(ctx), "Error clearing buffer")
+	}
 
 	// Start out by sending some initial data on all three UARTS, to fill up the buffers.
 
@@ -94,9 +120,10 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 	var recvBlockNo = 0
 
 	for ; sendBlockNo < uartThroughputNumWarmupBlocks; sendBlockNo++ {
-		sendIteration(ctx, s, f, th, ecUart, ecMagic, sendBlockNo)
-		sendIteration(ctx, s, f, th, apUart, apMagic, sendBlockNo)
-		sendIteration(ctx, s, f, th, fpmcuUart, fpmcuMagic, sendBlockNo)
+		// Transmit block on each UART.
+		for _, console := range consoles {
+			sendIteration(ctx, s, f, th, console.uart, console.magic, sendBlockNo)
+		}
 	}
 
 	// Start a separate goroutine, which will repeatedly create RSA keys in order to load the
@@ -113,12 +140,14 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 	// amount of in-transit data is bounded.
 	start := time.Now()
 	for ; recvBlockNo < uartThroughputNumWarmupBlocks+uartThroughputNumMeasurementBlocks; recvBlockNo, sendBlockNo = recvBlockNo+1, sendBlockNo+1 {
-		recvIteration(ctx, s, f, th, ecCcd, ecMagic, recvBlockNo)
-		recvIteration(ctx, s, f, th, apCcd, apMagic, recvBlockNo)
-		recvIteration(ctx, s, f, th, fpmcuCcd, fpmcuMagic, recvBlockNo)
-		sendIteration(ctx, s, f, th, ecUart, ecMagic, sendBlockNo)
-		sendIteration(ctx, s, f, th, apUart, apMagic, sendBlockNo)
-		sendIteration(ctx, s, f, th, fpmcuUart, fpmcuMagic, sendBlockNo)
+		// Read a block from each console USB endpoint.
+		for _, console := range consoles {
+			recvIteration(ctx, s, f, th, console.ccd, console.magic, recvBlockNo)
+		}
+		// Transmit block on each UART.
+		for _, console := range consoles {
+			sendIteration(ctx, s, f, th, console.uart, console.magic, sendBlockNo)
+		}
 	}
 	elapsed := time.Since(start)
 
@@ -139,16 +168,15 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 	}
 
 	// Gracefully shut down connections.
-	th.MustSucceed(ecCcd.ClearInput(ctx), "Error clearing buffer")
-	th.MustSucceed(apCcd.ClearInput(ctx), "Error clearing buffer")
-	th.MustSucceed(fpmcuCcd.ClearInput(ctx), "Error clearing buffer")
+	for _, console := range consoles {
+		th.MustSucceed(console.ccd.ClearInput(ctx), "Error clearing buffer")
+	}
 
-	th.MustSucceed(ecCcd.Close(ctx), "Failed to close EC ccd")
-	th.MustSucceed(ecUart.Close(ctx), "Failed to close EC uart")
-	th.MustSucceed(apCcd.Close(ctx), "Failed to close AP ccd")
-	th.MustSucceed(apUart.Close(ctx), "Failed to close AP uart")
-	th.MustSucceed(fpmcuCcd.Close(ctx), "Failed to close FPMCU ccd")
-	th.MustSucceed(fpmcuUart.Close(ctx), "Failed to close FPMCU uart")
+	// Close all the console UART and USB endpoints.
+	for _, console := range consoles {
+		th.MustSucceed(console.ccd.Close(ctx), fmt.Sprintf("Failed to close %s ccd", console.name))
+		th.MustSucceed(console.uart.Close(ctx), fmt.Sprintf("Failed to close %s uart", console.name))
+	}
 }
 
 // recvIteration receives a block of data from one specific UART, verifying that it was as expected.
