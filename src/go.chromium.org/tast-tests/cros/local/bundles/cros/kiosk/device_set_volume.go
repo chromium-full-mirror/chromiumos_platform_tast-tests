@@ -14,12 +14,12 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/kioskmode"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 
 	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
 )
@@ -41,7 +41,6 @@ func init() {
 			"group:complementary",
 		},
 		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + 30*time.Second,
@@ -107,6 +106,30 @@ func DeviceSetVolume(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "kiosk_with_FloatingAccessibilityMenuEnabled")
 
+	// Set up loopback devices as fallback.
+	unload, err := audio.LoadAloop(ctx)
+	if err != nil {
+		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
+		s.Fatal("Failed to load ALSA loopback module: ", err)
+	}
+
+	defer func(ctx context.Context) {
+		// Wait for no stream before unloading aloop as unloading while there is a stream
+		// will cause the stream in ARC to be in an invalid state.
+		if err := crastestclient.WaitForNoStream(ctx, 5*time.Second); err != nil {
+			s.Error("Wait for no stream error: ", err)
+		}
+		unload(ctx)
+	}(cleanupCtx)
+
+	// NewVolumeHelper setup also checks that there are existing audio devices to
+	// adjust volume for.
+	vh, err := audio.NewVolumeHelper(ctx)
+	if err != nil {
+		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
+		s.Fatal("Failed to create audio volume helper: ", err)
+	}
+
 	const targetVolume int = 55
 	resp, err := fdms.SendRemoteCommand(ctx, &empb.SendRemoteCommandRequest{
 		RemoteCommand: &empb.RemoteCommand{
@@ -132,10 +155,6 @@ func DeviceSetVolume(ctx context.Context, s *testing.State) {
 		s.Error("The remote command wasn't executed successfully; found result: ", *result.Result.Result)
 	}
 
-	vh, err := audio.NewVolumeHelper(ctx)
-	if err != nil {
-		s.Fatal("Failed to create audio volume helper: ", err)
-	}
 	// Get current volume.
 	curVolume, err := vh.GetVolume(ctx)
 	if err != nil {
