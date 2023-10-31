@@ -1,0 +1,22 @@
+# Default host map
+# Format should be a map of labels to hostnames in json
+testenv.FakeEnv.HostMap: |-
+  {
+    "foobarbaz-preprod": "preprod-foo.bar.baz",
+    "foobarbaz-prod": "foo.bar.baz",
+    "foobarbazqux-preprod": "preprod-foo.bar.baz.qux",
+    "foobarbazqux-prod": "foo.bar.baz.qux"
+  }
+
+# Default route rules
+# Format should be a list of map to the route rules keyed by the rule name in json
+testenv.FakeEnv.RouteRules: |-
+  {
+    "default" : [
+      { "from": "foobarbaz-prod", "to": "foobarbaz-preprod" },
+      { "from": "foobarbazqux-prod", "to": "foobarbazqux-preprod" }
+    ],
+    "login" : [
+      { "from": "foobarbaz-prod", "to": "foobarbazqux-preprod" }
+    ]
+  }
