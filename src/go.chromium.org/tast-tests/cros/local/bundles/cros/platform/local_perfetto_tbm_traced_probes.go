@@ -43,14 +43,11 @@ func init() {
 	})
 }
 
-// processCPUMetric extracts information of the target process in the
+// processCPUMetrics extracts information of the target process in the
 // cpu metric.
-func processCPUMetric(cpuMetric *perfetto_proto.AndroidCpuMetric, s *testing.State) {
-	foundTarget := false
+func processCPUMetrics(cpuMetric *perfetto_proto.AndroidCpuMetric, s *testing.State) {
 	for _, processInfo := range cpuMetric.GetProcessInfo() {
 		if processInfo.GetName() == targetProcessName {
-			foundTarget = true
-
 			metric := processInfo.GetMetrics()
 			s.Log("megacycles: ", metric.GetMcycles())
 			s.Log("runtime in nanosecond: ", metric.GetRuntimeNs())
@@ -58,35 +55,28 @@ func processCPUMetric(cpuMetric *perfetto_proto.AndroidCpuMetric, s *testing.Sta
 			s.Log("max_freq in kHz: ", metric.GetMaxFreqKhz())
 			s.Log("avg_freq in kHz: ", metric.GetAvgFreqKhz())
 
-			break
+			return
 		}
 	}
 
-	if foundTarget == false {
-		s.Error("Failed to find the target process: ", targetProcessName)
-	}
+	s.Fatal("Failed to find the CPU metrics of the target process")
 }
 
-// processMemMetric extracts information of the target process in the
+// processMemMetrics extracts information of the target process in the
 // mem metric.
-func processMemMetric(memMetric *perfetto_proto.AndroidMemoryMetric, s *testing.State) {
-	foundTarget := false
+func processMemMetrics(memMetric *perfetto_proto.AndroidMemoryMetric, s *testing.State) {
 	for _, processMetric := range memMetric.GetProcessMetrics() {
 		if processMetric.GetProcessName() == targetProcessName {
-			foundTarget = true
-
 			counters := processMetric.GetTotalCounters()
 			s.Log("anon_avg in rss: ", counters.GetAnonRss().GetAvg())
 			s.Log("file_avg in rss: ", counters.GetFileRss().GetAvg())
 			s.Log("swap_avg in rss: ", counters.GetSwap().GetAvg())
 
-			break
+			return
 		}
 	}
 
-	if foundTarget == false {
-		s.Error("Failed to find the target process: ", targetProcessName)
-	}
+	s.Fatal("Failed to find the memory metrics of the target process")
 }
 
 // LocalPerfettoTBMTracedProbes tests perfetto trace collection on
@@ -120,14 +110,20 @@ func LocalPerfettoTBMTracedProbes(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to stop the tracing session: ", err)
 	}
 
+	// Run the trace processor and get CPU and memory metrics from the raw trace data.
 	metrics, err := sess.RunMetrics(ctx, []string{traceMetricCPU, traceMetricMEM})
 	if err != nil {
 		s.Fatal("Failed to RunMetrics: ", err)
 	}
 
-	processCPUMetric(metrics.GetAndroidCpu(), s)
-	processMemMetric(metrics.GetAndroidMem(), s)
+	// Check if the target process has CPU and memory metrics.
+	processCPUMetrics(metrics.GetAndroidCpu(), s)
+	processMemMetrics(metrics.GetAndroidMem(), s)
 
+	// Skip removal of the trace file on test error.
+	if s.HasError() {
+		return
+	}
 	// We don't need the trace data for debugging on test success.
 	if err := os.Remove(traceDataPath); err != nil {
 		s.Error("Failed to remove the trace data file: ", err)
