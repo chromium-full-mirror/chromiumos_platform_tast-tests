@@ -11,5 +11,8 @@ const (
 	// For the testbed with Chameleon
 	ChameleonAudioTestbed = "chameleonAudioTestbed"
 
+	// For Audio Latency Toolkit Teensy
+	AudioLatencyToolkit = "audioLatencyToolkit"
+
 	FakeCrasClient = "fakeCrasClient"
 )
