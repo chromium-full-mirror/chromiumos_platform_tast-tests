@@ -45,6 +45,38 @@ type RoutineResultV2 struct {
 	Output   string
 }
 
+// VerifyPassed returns nil if the routine status is passed and the progress is 100. Returns an error otherwise.
+func (result RoutineResultV2) VerifyPassed() error {
+	if result.Status != StatusPassed {
+		return errors.Errorf("unexpected status: got %q, want %q; output = %q", result.Status, StatusPassed, result.Output)
+	}
+	if result.Progress != 100 {
+		return errors.Errorf("unexpected progress: got %d, want 100; output = %q", result.Progress, result.Output)
+	}
+	return nil
+}
+
+// VerifyFinished returns nil if both the following conditions hold
+// (1) the routine status is either passed or failed,
+// (2) the routine progress is 100.
+// Returns an error otherwise.
+//
+// It verifies the routine completes successfully without crashing or throwing
+// errors. For example, some lab machines might have old batteries that would
+// fail the battery diagnostic routines, but this is regarded as a "successful
+// run".
+func (result RoutineResultV2) VerifyFinished() error {
+	if result.Status != StatusPassed && result.Status != StatusFailed {
+		return errors.Errorf("unexpected status: got %q, want %q or %q; output = %q",
+			result.Status, StatusPassed, StatusFailed, result.Output)
+	}
+	if result.Progress != 100 {
+		return errors.Errorf("unexpected progress: got %d, want 100; status = %q; output = %q",
+			result.Progress, result.Status, result.Output)
+	}
+	return nil
+}
+
 // RoutineParamsV2 are different configuration options for running a diagnostic
 // routine.
 type RoutineParamsV2 struct {
@@ -54,6 +86,7 @@ type RoutineParamsV2 struct {
 // RunDiagRoutineV2 runs the specified routine based on `params`. Returns a
 // RoutineResult on success or an error.
 func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (*RoutineResultV2, error) {
+	testing.ContextLogf(ctx, "Running routine: %s", params.Routine)
 	diagParams := []string{params.Routine, "--single_line_json"}
 	switch params.Routine {
 	case RoutineMemoryV2:

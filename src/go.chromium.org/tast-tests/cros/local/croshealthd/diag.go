@@ -84,6 +84,38 @@ type RoutineResult struct {
 	StatusMessage string
 }
 
+// VerifyPassed returns nil if the routine status is passed and the progress is 100. Returns an error otherwise.
+func (result RoutineResult) VerifyPassed() error {
+	if result.Status != StatusPassed {
+		return errors.Errorf("unexpected status: got %q, want %q; message = %q", result.Status, StatusPassed, result.StatusMessage)
+	}
+	if result.Progress != 100 {
+		return errors.Errorf("unexpected progress: got %d, want 100; message = %q", result.Progress, result.StatusMessage)
+	}
+	return nil
+}
+
+// VerifyFinished returns nil if both the following conditions hold
+// (1) the routine status is either passed, failed or not run,
+// (2) if the status is passed or failed, the routine progress is 100.
+// Returns an error otherwise.
+//
+// It verifies the routine completes successfully without crashing or throwing
+// errors. For example, some lab machines might have old batteries that would
+// fail the battery diagnostic routines, but this is regarded as a "successful
+// run".
+func (result RoutineResult) VerifyFinished() error {
+	if result.Status != StatusPassed && result.Status != StatusFailed && result.Status != StatusNotRun {
+		return errors.Errorf("unexpected status: got %q, want %q, %q, or %q; message = %q",
+			result.Status, StatusPassed, StatusFailed, StatusNotRun, result.StatusMessage)
+	}
+	if result.Progress != 100 && result.Status != StatusNotRun {
+		return errors.Errorf("unexpected progress: got %d, want 100; status = %q; message = %q",
+			result.Progress, result.Status, result.StatusMessage)
+	}
+	return nil
+}
+
 // RoutineParams are different configuration options for running a diagnostic
 // routine.
 type RoutineParams struct {
@@ -107,6 +139,7 @@ func NewRoutineParams(routine string) RoutineParams {
 // RunDiagRoutine runs the specified routine based on `params`. Returns a
 // RoutineResult on success or an error.
 func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, error) {
+	testing.ContextLogf(ctx, "Running routine: %s", params.Routine)
 	diagParams := []string{params.Routine}
 	if params.Cancel {
 		diagParams = append(diagParams, "--force_cancel_at_percent=5")

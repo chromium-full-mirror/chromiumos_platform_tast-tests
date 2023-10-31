@@ -163,20 +163,11 @@ func init() {
 // routines can pass, which is a stricter version of DiagnosticsRun.* test.
 func DiagnosticsPass(ctx context.Context, s *testing.State) {
 	params := s.Param().(croshealthd.RoutineParams)
-	routine := params.Routine
-	s.Logf("Running routine: %s", routine)
 	result, err := croshealthd.RunDiagRoutine(ctx, params)
 	if err != nil {
-		s.Fatalf("Unable to run %s routine: %s", routine, err)
+		s.Fatalf("Unable to run routine: %s", err)
 	}
-
-	if result.Status != croshealthd.StatusPassed {
-		s.Fatalf("Unexpected routine status for %q routine : got %q; want Passed; message = %q",
-			routine, result.Status, result.StatusMessage)
-	}
-
-	if result.Progress != 100 {
-		s.Fatalf("Unexpected progress value for %q routine : got %d; want 100; message = %q",
-			routine, result.Progress, result.StatusMessage)
+	if err := result.VerifyPassed(); err != nil {
+		s.Fatalf("Routine is not passed: %s", err)
 	}
 }

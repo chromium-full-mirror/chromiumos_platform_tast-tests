@@ -159,27 +159,11 @@ func init() {
 // fail.
 func DiagnosticsRun(ctx context.Context, s *testing.State) {
 	params := s.Param().(croshealthd.RoutineParams)
-	routine := params.Routine
-	s.Logf("Running routine: %s", routine)
 	result, err := croshealthd.RunDiagRoutine(ctx, params)
 	if err != nil {
-		s.Fatalf("Unable to run %s routine: %s", routine, err)
+		s.Fatalf("Unable to run routine: %s", err)
 	}
-
-	// Test a given routine and ensure that it can complete successfully without
-	// crashing or throwing errors. For example, some lab machines might have
-	// old batteries that would fail the diagnostic routines, but this should
-	// not fail the Tast test.
-	if result.Status != croshealthd.StatusPassed &&
-		result.Status != croshealthd.StatusFailed &&
-		result.Status != croshealthd.StatusNotRun {
-		s.Fatalf("Unexpected routine status for %q: got %q; want %q, %q, or %q; message = %q",
-			routine, result.Status, croshealthd.StatusPassed, croshealthd.StatusFailed, croshealthd.StatusNotRun, result.StatusMessage)
-	}
-
-	// Check to see that if the routine was run, the progress is 100%
-	if result.Progress != 100 && result.Status != croshealthd.StatusNotRun {
-		s.Fatalf("Unexpected progress value for %q routine with status %q: got %d; want 100; message = %q",
-			routine, result.Status, result.Progress, result.StatusMessage)
+	if err := result.VerifyFinished(); err != nil {
+		s.Fatalf("Routine is not finished: %s", err)
 	}
 }
