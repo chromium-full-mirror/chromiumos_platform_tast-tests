@@ -5,24 +5,16 @@
 package wwcb
 
 import (
-	"bytes"
 	"context"
-	"image/color"
-	"image/jpeg"
-	"image/png"
-	"os"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"go.chromium.org/tast-tests/cros/local/colorcmp"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
-	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
-	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -38,7 +30,6 @@ func init() {
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ExtCameraID"},
-
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",
@@ -72,8 +63,15 @@ func CCALaunchWithExternalCamera(ctx context.Context, s *testing.State) {
 
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
-	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
-	fs := dutfs.NewClient(cl.Conn)
+
+	// Check USB webcam can be detect properly (lsusb, dmesg, etc...).
+	builtinDevices, err := utils.USBCamerasFromV4L2Test(ctx, dut)
+	if err != nil {
+		s.Fatal("Failed to get built-in devices from V4L2: ", err)
+	}
+	if len(builtinDevices) == 0 {
+		s.Fatal("Expect to get at least one built-in device, but get nothing")
+	}
 
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
@@ -81,70 +79,11 @@ func CCALaunchWithExternalCamera(ctx context.Context, s *testing.State) {
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
 
-	// Check USB webcam can be detect properly (lsusb, dmesg, etc...).
-	builtin, err := utils.DevicesFromV4L2(ctx, s.DUT())
+	extCamera, err := utils.ConnectExternalCamera(ctx, dut, extCameraID)
 	if err != nil {
-		s.Fatal("Failed to get list of v4l devices: ", err)
+		s.Fatal("Failed to connect external camera: ", err)
 	}
-
-	if err := utils.ControlFixture(ctx, extCameraID, "on"); err != nil {
-		s.Fatal("Failed to control fixture to connect the external camera: ", err)
-	}
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		afterPlugin, err := utils.DevicesFromV4L2(ctx, dut)
-		if err != nil {
-			s.Fatal("Failed to get list of v4l devices: ", err)
-		}
-		if len(builtin) == len(afterPlugin) {
-			s.Fatalf("Expect the number of v4l devices would change, but it remains the same, got: %q", builtin)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-		s.Fatal("Failed to detect the external camera: ", err)
-	}
-
-	// Since the hardware environment is designed as the front camera of Chromebook heading to the external display.
-	// Launch the Filesapp and open the testing image on the external display.
-	// Check the camera app preview from the front camera of Chromebook.
-	testImageFilename := "test_image_red_color.jpg"
-	testImageFile := filepath.Join(utils.MyFilesPath, testImageFilename)
-	testImage := utils.GenerateImage(3840, 2160, color.RGBA{255, 0, 0, 255})
-	if err := utils.WriteImageOnDUT(ctx, fs, testImage, testImageFile); err != nil {
-		s.Fatal("Failed to write test image on DUT: ", err)
-	}
-	defer fs.Remove(ctx, testImageFile)
-
-	if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Files", TimeoutSecs: 60}); err != nil {
-		s.Fatal("Failed to launch Files app: ", err)
-	}
-
-	galleryWindow, err := utils.OpenMediaFileWithGallery(ctx, uiautoSvc, testImageFilename)
-	if err != nil {
-		s.Fatal("Failed to open media file with Gallery app: ", err)
-	}
-	defer appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60})
-
-	if err := utils.ClickOnMaximizeButton(ctx, uiautoSvc, galleryWindow); err != nil {
-		s.Fatal("Failed to click the maximize button on the Gallery window: ", err)
-	}
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
-			return err
-		}
-
-		if _, err := displaySvc.SwitchWindowToDisplay(ctx, &wwcb.QueryRequest{DisplayIndex: 1, WindowTitle: galleryWindow}); err != nil {
-			return err
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-		s.Fatal("Failed to switch Gallery app to the external display: ", err)
-	}
-
-	if _, err := appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Files", TimeoutSecs: 60}); err != nil {
-		s.Fatal("Failed to close Filesapp: ", err)
-	}
+	testing.ContextLogf(ctx, "Found external camera: %s", extCamera)
 
 	if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Camera", TimeoutSecs: 60}); err != nil {
 		s.Fatal("Failed to launch Camera app: ", err)
@@ -155,51 +94,23 @@ func CCALaunchWithExternalCamera(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for camera window to be stabled: ", err)
 	}
 
-	// Check active camera is the front camera of Chromebook.
-	var isCCAUseBuiltinCamera bool = false
-	for _, d := range builtin {
-		if strings.Contains(d, "/dev/video") {
-			processes, _ := utils.ListProcessInfo(ctx, dut, d)
-			if utils.Contains(processes, `arc-camera`) {
-				isCCAUseBuiltinCamera = true
-				s.Logf("CCA app is using the %s from the built-in camera", d)
-				break
-			}
-		}
-	}
-	if !isCCAUseBuiltinCamera {
-		s.Fatal("Expect CCA app is using built-in camera, but is not")
-	}
-
-	cameraScreenshot, err := utils.TakeWindowScreenshot(ctx, uiautoSvc, fs, utils.CameraWindowFinder)
+	// Check CCA app is using built-in camera.
+	current, err := utils.CCAUseDevice(ctx, dut)
 	if err != nil {
-		s.Fatal("Failed to take a window screenshot: ", err)
+		s.Fatal("Failed to retrieve CCA is using which camera: ", err)
+	}
+	if !utils.Contains(builtinDevices, current) {
+		s.Fatalf("Expect CCA app is using built-in camera: %v, but using %s", builtinDevices, current)
 	}
 
-	screenshot := filepath.Join(utils.DownloadsPath, cameraScreenshot.Name())
-	imgBytes, err := fs.ReadFile(ctx, screenshot)
+	ccaPreviewImg, err := utils.CropCCAPreview(ctx, uiautoSvc, s.OutDir())
 	if err != nil {
-		s.Fatal("Failed to read files on the DUT: ", err)
+		s.Fatal("Failed to capture CCA preview: ", err)
 	}
 
-	img, err := png.Decode(bytes.NewReader(imgBytes))
-	if err != nil {
-		s.Fatal("Failed to decode PNG file: ", err)
-	}
-
-	screenshotFile := filepath.Join(s.OutDir(), "camera_screenshot.jpg")
-	file, err := os.Create(screenshotFile)
-	if err != nil {
-		s.Fatal("Failed to create file: ", err)
-	}
-	defer file.Close()
-
-	// Encode to JPEG format to validate the color of the picture.
-	if err := jpeg.Encode(file, img, nil); err != nil {
-		s.Fatal("Failed to encode JPEG file: ", err)
-	}
-
-	if err := utils.ValidateImgColor(ctx, screenshotFile, "red"); err != nil {
-		s.Fatal("Failed to validate image color: ", err)
+	clr, ratio := colorcmp.DominantColor(ccaPreviewImg)
+	testing.ContextLogf(ctx, "CCA preview dominant color: %v, ratio: %f", clr, ratio)
+	if ratio > 95 {
+		s.Fatal("Expect CCA preview to show the real world; it shouldn't have just one color with more than 95% proportion")
 	}
 }
