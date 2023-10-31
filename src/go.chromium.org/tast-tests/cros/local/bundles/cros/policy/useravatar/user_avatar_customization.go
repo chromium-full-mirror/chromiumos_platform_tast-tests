@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/personalization"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
@@ -132,5 +131,5 @@ func TriggerUserAvatarCustomization(ctx context.Context, params networkrequestmo
 }
 
 func selectorFinder(name, class string) *nodewith.Finder {
-	return nodewith.Role(role.ListBoxOption).Name(name).HasClass(class)
+	return nodewith.Name(name).HasClass(class)
 }
