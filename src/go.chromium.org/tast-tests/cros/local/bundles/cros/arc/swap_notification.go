@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/swap"
+	"go.chromium.org/tast-tests/cros/local/arc/vm"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -53,7 +54,7 @@ func SwapNotification(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to install the APK: ", err)
 	}
 
-	socketPath, err := swap.ARCVMSocketPath()
+	socketPath, err := vm.SocketPath()
 	if err != nil {
 		s.Fatal("Failed to get crosvm sock: ", err)
 	}

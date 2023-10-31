@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/swap"
+	"go.chromium.org/tast-tests/cros/local/arc/vm"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcvpn"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/testing"
@@ -60,7 +61,7 @@ func ArcVpnVmmSwap(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Waiting for swap to be disabled")
-	socketPath, err := swap.ARCVMSocketPath()
+	socketPath, err := vm.SocketPath()
 	if err != nil {
 		s.Fatal("Failed to get crosvm sock: ", err)
 	}
