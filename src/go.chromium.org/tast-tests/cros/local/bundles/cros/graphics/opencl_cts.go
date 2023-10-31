@@ -20036,6 +20036,8 @@ func OpenclCts(ctx context.Context, s *testing.State) {
 	os.Setenv("CLVK_COMPILER_TEMP_DIR", os.TempDir())
 	// Set OpenCL version to CL1.2
 	os.Setenv("CLVK_OPENCL_VERSION", "0x00402000")
+	// Force MAX_MEM_ALLOC_SIZE to the minimum required by OpenCL. It will avoid timeout on some devices.
+	os.Setenv("CLVK_MAX_MEM_ALLOC_SIZE_MB", "1024")
 
 	expectation, err := expectations.GetTestExpectation(ctx, s.TestName())
 	if err != nil {

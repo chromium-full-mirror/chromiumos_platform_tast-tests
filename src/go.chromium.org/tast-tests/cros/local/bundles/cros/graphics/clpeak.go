@@ -6,6 +6,7 @@ package graphics
 
 import (
 	"context"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -105,6 +106,11 @@ func Clpeak(ctx context.Context, s *testing.State) {
 			s.Error("Failed to save perf data: ", err)
 		}
 	}()
+
+	// Allow to see clvk error and warn messages directly in test logFile.
+	os.Setenv("CLVK_LOG", "2")
+	// Force MAX_MEM_ALLOC_SIZE to the minimum required by OpenCL. It will avoid timeout on some devices.
+	os.Setenv("CLVK_MAX_MEM_ALLOC_SIZE_MB", "1024")
 
 	// Run the whole suite once.
 	stdout, stderr, err := testexec.CommandContext(ctx, clPeakBinPath).SeparatedOutput(testexec.DumpLogOnError)
