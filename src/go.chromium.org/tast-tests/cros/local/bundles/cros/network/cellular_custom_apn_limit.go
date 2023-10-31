@@ -61,6 +61,7 @@ func CellularCustomApnLimit(ctx context.Context, s *testing.State) {
 		if err := helper.ClearCustomAPNList(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to clear cellular.CustomAPNList: ", err)
 		}
+		cellular.CheckIfL850VerizonAndFixDefaultAPN(ctx)
 		if errs := helper.ResetShill(ctx); errs != nil {
 			s.Fatal("Failed to reset shill: ", errs)
 		}
@@ -98,6 +99,10 @@ func CellularCustomApnLimit(ctx context.Context, s *testing.State) {
 
 	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, serviceLastGoodAPNInfoApnName, serviceLastGoodAPNInfoApnSource); err != nil {
 		s.Fatal("Failed to verify connected APN UI: ", err)
+	}
+
+	if err := helper.ClearCustomAPNList(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to clear cellular.CustomAPNList: ", err)
 	}
 
 	for i := 1; i <= 10; i++ {
