@@ -21,6 +21,13 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type audioFileFormat int
+
+const (
+	raw audioFileFormat = iota
+	wav
+)
+
 // TestRawData is used to specify parameters of the audio test data, which should be raw, signed, and little-endian.
 type TestRawData struct {
 	// Path specifies the file path of audio data.
@@ -137,8 +144,7 @@ func GetRmsAmplitude(ctx context.Context, testData TestRawData) (float64, error)
 	return rms, nil
 }
 
-// GenerateTestRawData generates sine raw data by sox with specified parameters in testData, and stores in testData.Path.
-func GenerateTestRawData(ctx context.Context, testData TestRawData) error {
+func generateSineData(ctx context.Context, testData TestRawData, fileFormat audioFileFormat) error {
 	if len(testData.Frequencies) != testData.Channels {
 		return errors.Errorf("unexpected length of frequencies: got %d; want %d", len(testData.Frequencies), testData.Channels)
 	}
@@ -149,10 +155,15 @@ func GenerateTestRawData(ctx context.Context, testData TestRawData) error {
 		"-c", strconv.Itoa(testData.Channels),
 		"-r", strconv.Itoa(testData.Rate),
 		"-e", "signed",
-		"-t", "raw",
+	}
+	if fileFormat == raw {
+		args = append(args, "-t", "raw")
+	}
+	args = append(args,
 		testData.Path,
 		"synth", strconv.Itoa(testData.Duration),
-	}
+	)
+
 	for _, f := range testData.Frequencies {
 		args = append(args, "sine", strconv.Itoa(f))
 	}
@@ -162,6 +173,16 @@ func GenerateTestRawData(ctx context.Context, testData TestRawData) error {
 		return errors.Wrap(err, "sox failed")
 	}
 	return nil
+}
+
+// GenerateTestRawData generates sine raw data by sox with specified parameters in testData, and stores in testData.Path.
+func GenerateTestRawData(ctx context.Context, testData TestRawData) error {
+	return generateSineData(ctx, testData, raw)
+}
+
+// GenerateTestWavData generates sine data by sox with specified parameters in wavData, and stores in wavData.Path with .wav file format
+func GenerateTestWavData(ctx context.Context, wavData TestRawData) error {
+	return generateSineData(ctx, wavData, wav)
 }
 
 // ReadS16LEPCM reads S16LE PCM data from file, and returns the data in arr[channel][x].
