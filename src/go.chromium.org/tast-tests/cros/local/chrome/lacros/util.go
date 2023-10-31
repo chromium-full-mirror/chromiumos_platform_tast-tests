@@ -46,6 +46,8 @@ func CloseLacros(ctx context.Context, l *Lacros) {
 }
 
 // IsLacrosRunning checks if Lacros is running or not.
+// NOTE: The notion of "running" here corresponds to the ChromeOS shelf indication,
+// so it is false when Lacros is running in the background (without windows).
 func IsLacrosRunning(ctx context.Context, cr *chrome.Chrome) (bool, error) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

@@ -33,18 +33,24 @@ func init() {
 		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Fixture:      "lacros",
 		Timeout:      4 * time.Minute,
+		Params: []testing.Param{{
+			// This variant tests the regular case.
+			Fixture: "lacrosKeepAlive",
+			Val:     true,
+		}, {
+			// This variant tests the case where Lacros isn't running when the URLs are entered into the
+			// launcher (which is very rare in production). In that case, only os:// URLs are supported.
+			Name:    "lacros_not_running",
+			Fixture: "lacros",
+			Val:     false,
+		}},
 	})
-}
-
-type subtest struct {
-	url           string
-	windowMatcher func(w *ash.Window) bool
 }
 
 func ChromeURLsInLauncher(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	testChromeURLs := s.Param().(bool)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -57,31 +63,47 @@ func ChromeURLsInLauncher(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	for i, t := range []subtest{{
-		url:           "chrome://version",
-		windowMatcher: matchLacrosWindow("About Version"),
-	}, {
-		url:           "os://version",
-		windowMatcher: matchSWAWindow("ChromeOS-URLs - About Version"), // OS_URL_HANDLER SWA
-	}, {
-		url:           "chrome://histograms",
-		windowMatcher: matchLacrosWindow("Histograms"),
-	}, {
-		url:           "os://histograms",
-		windowMatcher: matchSWAWindow("ChromeOS-URLs - Histograms"), // OS_URL_HANDLER SWA
-	}, {
-		url:           "chrome://flags",
-		windowMatcher: matchLacrosWindow("Experiments"),
-	}, {
-		url:           "os://flags",
-		windowMatcher: matchSWAWindow("Flags - Experiments"), // FLAGS SWA
-	}, {
-		url:           "chrome://crashes",
-		windowMatcher: matchSWAWindow("ChromeOS-URLs - Crashes"), // OS_URL_HANDLER SWA
-	}, {
-		url:           "os://crashes",
-		windowMatcher: matchSWAWindow("ChromeOS-URLs - Crashes"), // OS_URL_HANDLER SWA
-	}} {
+	runSubTests(ctx, tconn, kb, cr, s, osURLs)
+	if testChromeURLs {
+		runSubTests(ctx, tconn, kb, cr, s, chromeURLs)
+	}
+}
+
+type subtest struct {
+	url           string
+	windowMatcher func(w *ash.Window) bool
+}
+
+var chromeURLs = []subtest{{
+	url:           "chrome://version",
+	windowMatcher: matchLacrosWindow("About Version"),
+}, {
+	url:           "chrome://histograms",
+	windowMatcher: matchLacrosWindow("Histograms"),
+}, {
+	url:           "chrome://flags",
+	windowMatcher: matchLacrosWindow("Experiments"),
+}, {
+	url:           "chrome://crashes",
+	windowMatcher: matchSWAWindow("ChromeOS-URLs - Crashes"), // OS_URL_HANDLER SWA
+}}
+
+var osURLs = []subtest{{
+	url:           "os://version",
+	windowMatcher: matchSWAWindow("ChromeOS-URLs - About Version"), // OS_URL_HANDLER SWA
+}, {
+	url:           "os://histograms",
+	windowMatcher: matchSWAWindow("ChromeOS-URLs - Histograms"), // OS_URL_HANDLER SWA
+}, {
+	url:           "os://flags",
+	windowMatcher: matchSWAWindow("Flags - Experiments"), // FLAGS SWA
+}, {
+	url:           "os://crashes",
+	windowMatcher: matchSWAWindow("ChromeOS-URLs - Crashes"), // OS_URL_HANDLER SWA
+}}
+
+func runSubTests(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, cr *chrome.Chrome, s *testing.State, subtests []subtest) {
+	for i, t := range subtests {
 		s.Run(ctx, t.url, func(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
 			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -105,6 +127,13 @@ func ChromeURLsInLauncher(ctx context.Context, s *testing.State) {
 			}
 			if len(ws) != 1 {
 				s.Fatalf("Unexpected number of windows: want 1, got %d", len(ws))
+			}
+
+			// This is only needed for the keepalive variant, since
+			// ResetState below unfortunately does not touch Lacros
+			// in that case.
+			if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+				s.Fatal("Failed to close all windows: ", err)
 			}
 		})
 		if err := cr.ResetState(ctx); err != nil {
