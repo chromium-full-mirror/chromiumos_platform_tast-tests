@@ -6,7 +6,10 @@
 package secagentd
 
 import (
+	"bufio"
 	"context"
+	"os"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -207,9 +210,32 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 
 	execFound, terminateFound := false, false
 
+	// TODO(b:309045447): Remove relaxed matching when terminate events carry full process information.
+	secagentdLog, err := os.Open("/var/log/secagentd.log")
+	defer secagentdLog.Close()
+	processCacheMissPids := make(map[uint64]bool)
+	cacheMissPids := ""
+	if err == nil {
+		scanner := bufio.NewScanner(secagentdLog)
+		r := regexp.MustCompile(`^\d{4}-\d{1,2}-\d{1,2}T\d{1,2}:\d{1,2}:\d{1,2}\.\d+Z ERR secagentd\[\d+\]: NOT_FOUND: Failed to stat /proc/(?P<PID>\d+)`)
+		for scanner.Scan() {
+			match := r.FindStringSubmatch(scanner.Text())
+			if len(match) == 0 {
+				continue
+			}
+			if pid, err := strconv.ParseUint(match[r.SubexpIndex("PID")], 10, 64); err == nil {
+				processCacheMissPids[pid] = true
+				cacheMissPids += strconv.FormatUint(pid, 10) + " "
+			}
+		}
+	} else {
+		s.Logf("Unable to open %q for determining which pids had a process cache miss", secagentdLog.Name())
+	}
+	if len(cacheMissPids) > 0 {
+		s.Log("A partial terminate match is acceptable for the following PIDs (suffered process cache miss):" + cacheMissPids)
+	}
 	for {
 		bExecs, bTerminates := checkProcessEventWatcher(s, ew)
-
 		if bExecs != nil {
 			for _, exec := range bExecs {
 				if exec != nil && exec.GetSpawnProcess() != nil && exec.GetSpawnProcess().GetCanonicalPid() == expPid {
@@ -247,11 +273,17 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 					// first appearance of either process.
 					expTerm.GetProcess().MetaFirstAppearance = proto.Bool(false)
 					expTerm.GetParentProcess().MetaFirstAppearance = proto.Bool(false)
+					process := terminate.GetProcess()
+
 					if !proto.Equal(&expTerm, terminate) {
-						s.Log("Actual ProcessTerminate: ", terminate.String())
-						s.Log("Expected ProcessTerminate: ", expTerm.String())
-						s.Errorf("Found a ProcessTerminate event for pid %d but its contents failed to match", expPid)
+						if !processCacheMissPids[*process.CanonicalPid] || !proto.Equal(expTerm.GetParentProcess(), terminate.GetParentProcess()) ||
+							(process.GetCommandline() != "" && process.Commandline == nil) || process.GetImage() != nil {
+							s.Log("Actual ProcessTerminate: ", terminate.String())
+							s.Log("Expected ProcessTerminate: ", expTerm.String())
+							s.Errorf("Found a ProcessTerminate event for pid %d but its contents failed to match", expPid)
+						}
 					}
+
 				}
 			}
 		}
