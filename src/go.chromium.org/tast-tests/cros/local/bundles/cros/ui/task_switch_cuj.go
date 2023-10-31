@@ -23,7 +23,7 @@ func init() {
 		Desc:         "Measures the performance of the critical user journey for task switching",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"ramsaroop@chromium.org",
+			"ramsaroop@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},

@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Measures the performance of critical user journey for window state transitions",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"ramsaroop@chromium.org",
+			"ramsaroop@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		SoftwareDeps: []string{"chrome"},

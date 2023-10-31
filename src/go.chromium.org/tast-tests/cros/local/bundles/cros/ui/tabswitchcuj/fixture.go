@@ -74,7 +74,7 @@ func init() {
 		Name: "tabSwitchCUJWPRAshWithFieldTrials",
 		Desc: "Variant of tabSwitchCUJWPRAsh with all field trials enabled",
 		Contacts: []string{
-			"ramsaroop@chromium.org",
+			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {

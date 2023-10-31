@@ -23,7 +23,7 @@ func init() {
 		Desc:         "Measures the performance of a critical user journey of watching a video",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"ramsaroop@chromium.org",
+			"ramsaroop@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},

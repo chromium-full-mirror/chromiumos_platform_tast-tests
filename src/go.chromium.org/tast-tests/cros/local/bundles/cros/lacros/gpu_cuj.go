@@ -21,7 +21,7 @@ func init() {
 		Func:         GpuCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Lacros GPU performance CUJ tests",
-		Contacts:     []string{"cros-sw-perf@google.com", "lacros-team@google.com", "ramsaroop@chromium.org", "edcourtney@chromium.org", "hidehiko@chromium.org"},
+		Contacts:     []string{"cros-sw-perf@google.com", "lacros-team@google.com", "ramsaroop@google.com", "edcourtney@chromium.org", "hidehiko@chromium.org"},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "lacros"},

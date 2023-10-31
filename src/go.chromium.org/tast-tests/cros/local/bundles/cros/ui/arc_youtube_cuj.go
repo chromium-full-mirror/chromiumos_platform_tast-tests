@@ -28,7 +28,7 @@ func init() {
 		Func:         ArcYoutubeCUJ,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the performance of critical user journey for the YouTube ARC app",
-		Contacts:     []string{"cros-sw-perf@google.com", "ramsaroop@chromium.org"},
+		Contacts:     []string{"cros-sw-perf@google.com", "ramsaroop@google.com"},
 		BugComponent: "b:1045832",
 		SoftwareDeps: []string{"chrome", "arc"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},

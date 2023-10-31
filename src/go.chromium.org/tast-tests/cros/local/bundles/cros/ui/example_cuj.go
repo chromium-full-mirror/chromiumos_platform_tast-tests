@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Example of using the CUJ Recorder",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"ramsaroop@chromium.org",
+			"ramsaroop@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		SoftwareDeps: []string{"chrome"},

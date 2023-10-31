@@ -625,7 +625,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLogging",
 		Desc: "CUJ test fixture with WebRTC event logging",
 		Contacts: []string{
-			"ramsaroop@chromium.org",
+			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
 		Data: docsBlockerFiles,
@@ -649,7 +649,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingLacros",
 		Desc: "Lacros variation of loggedInToCUJUserWithWebRTCEventLogging",
 		Contacts: []string{
-			"ramsaroop@chromium.org",
+			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
 		Data: docsBlockerFiles,
@@ -722,7 +722,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
 		Desc: "CUJ test fixture with WebRTC event logging and VC platform effects enabled",
 		Contacts: []string{
-			"ramsaroop@chromium.org",
+			"ramsaroop@google.com",
 			"sammc@chromium.org",
 			"cros-sw-perf@google.com",
 			"cros-pe-pnp@google.com",
@@ -755,7 +755,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffectsLacros",
 		Desc: "CUJ test fixture with WebRTC event logging, VC platform effects enabled and lacros",
 		Contacts: []string{
-			"ramsaroop@chromium.org",
+			"ramsaroop@google.com",
 			"sammc@chromium.org",
 			"cros-sw-perf@google.com",
 			"cros-pe-pnp@google.com",
@@ -1170,7 +1170,7 @@ func init() {
 		Name: "loggedInToCUJUserDisableJelly",
 		Desc: "The main fixture used for UI CUJ tests with Jelly disabled",
 		Contacts: []string{
-			"ramsaroop@chromium.org",
+			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{bt: browser.TypeAsh,
@@ -1189,7 +1189,7 @@ func init() {
 		Name: "loggedInToCUJUserLacrosDisableJelly",
 		Desc: "Fixture used for lacros variation of UI CUJ tests with Jelly disabled",
 		Contacts: []string{
-			"ramsaroop@chromium.org",
+			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{bt: browser.TypeLacros,

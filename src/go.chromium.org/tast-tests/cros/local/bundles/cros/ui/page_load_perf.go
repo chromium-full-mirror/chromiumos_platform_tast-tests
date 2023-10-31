@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Measures FCP and LCP performance",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"ramsaroop@chromium.org",
+			"ramsaroop@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
