@@ -335,7 +335,7 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 	if aggregates["framesDecoded"] > 0 {
 		pv.Set(perf.Metric{
 			Name:      fmt.Sprintf("WebRTCInternals.Video%s.PercentDroppedFrames", directionSuffix),
-			Unit:      "frames",
+			Unit:      "percent",
 			Direction: perf.SmallerIsBetter,
 		}, aggregates["framesDropped"]/aggregates["framesDecoded"])
 	}
