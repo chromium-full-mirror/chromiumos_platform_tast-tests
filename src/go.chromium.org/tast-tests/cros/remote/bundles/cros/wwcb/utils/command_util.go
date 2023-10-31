@@ -415,11 +415,18 @@ func CompareTwoFiles(ctx context.Context, dut *dut.DUT, fileA, fileB string) err
 
 // GetMountPoints gets the mount point information.
 func GetMountPoints(ctx context.Context, dut *dut.DUT) ([]string, error) {
-	lsblkOutput, err := dut.Conn().CommandContext(ctx, "sh", "-c", "lsblk -l -o mountpoint | grep removable").Output(testexec.DumpLogOnError)
-	if err != nil {
-		return nil, errors.Wrap(err, "received an incorrect result when using lsblk in the command")
+	var mountPoints []string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		lsblkOutput, err := dut.Conn().CommandContext(ctx, "sh", "-c", "lsblk -l -o mountpoint | grep removable").Output(testexec.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "received an incorrect result when using lsblk in the command")
+		}
+		mountPoints = strings.Split(strings.TrimSpace(string(lsblkOutput)), "\n")
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
+		return nil, err
 	}
-	return strings.Split(strings.TrimSpace(string(lsblkOutput)), "\n"), nil
+	return mountPoints, nil
 }
 
 // GetDeviceWritableStatus gets the read-write protection status of the device.
