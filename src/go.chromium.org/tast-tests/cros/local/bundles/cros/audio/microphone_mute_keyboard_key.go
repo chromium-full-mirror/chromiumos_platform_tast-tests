@@ -26,7 +26,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-audio-bugs@google.com",
 			"chromeos-sw-engprod@google.com",
-			"rtinkoff@chromium.org",
+			"whalechang@google.com",
 		},
 		BugComponent: "b:776546",
 		// TODO(https://crbug.com/1266507): Remove "informational" once stable.
