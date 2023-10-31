@@ -186,8 +186,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Waiting for the Gaia screen")
-		gaiaInput := nodewith.State(state.Focused, true).Role(role.TextField).Ancestor(nodewith.Role(role.Iframe))
-		if err := ui.WaitUntilExists(gaiaInput)(ctx); err != nil {
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GaiaScreen.isVisible()"); err != nil {
 			s.Fatal("Failed to wait for the login screen to be visible: ", err)
 		}
 	}
