@@ -176,6 +176,9 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		{"gsctool", "root", "root", 0},
 		// src/platform2/hwsec-utils/src/bin/gsc_flash_log.rs
 		{"gsc_flash_log", "root", "root", 0},
+		// The attack surface for 'gdbus' is minimal, and these processes are short-lived by nature
+		// since they are waiting for a D-Bus endpoint to come up.
+		{"gdbus", "root", "root", 0},
 
 		// One-off processes that we see when this test runs together with other tests.
 		// src/overlays/overlay-kip/chromeos-base/modem-watchdog/files/chromeos-kip-modem-watchdog.sh
