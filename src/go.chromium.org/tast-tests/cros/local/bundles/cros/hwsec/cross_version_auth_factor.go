@@ -61,6 +61,16 @@ func init() {
 			}, {
 				Name:              "ti50_r116",
 				Fixture:           "crossVersionTi50R116",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
+			}, {
+				Name:              "ti50_r117",
+				Fixture:           "crossVersionTi50R117",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
+			}, {
+				Name:              "ti50_r118",
+				Fixture:           "crossVersionTi50R118",
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
 			}, {
@@ -201,6 +211,16 @@ func init() {
 			}, {
 				Name:              "tpm2_r116",
 				Fixture:           "crossVersionTpm2R116",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm2_r117",
+				Fixture:           "crossVersionTpm2R117",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm2_r118",
+				Fixture:           "crossVersionTpm2R118",
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
@@ -306,6 +326,16 @@ func init() {
 			}, {
 				Name:              "tpm_dynamic_r116",
 				Fixture:           "crossVersionTpmDynamicR116",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm_dynamic_r117",
+				Fixture:           "crossVersionTpmDynamicR117",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm_dynamic_r118",
+				Fixture:           "crossVersionTpmDynamicR118",
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
 			},
