@@ -27,7 +27,7 @@ func init() {
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:cq-medium"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      fixture.UpdateEngineCleanOwnership, // Ensure to update engine status is idle and to reset between tests (b/263421799).
+		Fixture:      fixture.UpdateEngine, // Ensure to update engine status is idle and to reset between tests (b/263421799).
 		Params: []testing.Param{{
 			Name: "fieldtrial_testing_config_on",
 			Val:  chrome.FieldTrialConfigEnable,
@@ -42,7 +42,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
 		chrome.FieldTrialConfig(s.Param().(chrome.FieldTrialConfigMode)),
 		chrome.NoLogin(),
-		chrome.ExtraArgs("--enable-features=OobeGaiaInfoScreen,OobeSoftwareUpdate"))
+		chrome.SkipAutoEnrollmentCheck())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
