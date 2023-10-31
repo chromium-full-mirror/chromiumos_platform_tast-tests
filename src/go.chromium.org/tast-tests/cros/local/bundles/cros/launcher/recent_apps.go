@@ -49,13 +49,13 @@ func init() {
 			{
 				Name:              "androidp_clamshell",
 				Val:               initParams{TabletMode: false, BootWithArc: true},
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				Timeout:           chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
 			},
 			{
 				Name:              "androidp_tablet",
 				Val:               initParams{TabletMode: true, BootWithArc: true},
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 				Timeout:           chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
 			},
