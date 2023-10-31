@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/go-tpm/legacy/tpm2"
+
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
@@ -55,11 +57,9 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	s.Log("(Re)starting ti50")
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ, ti50.ServoMicroDisconnected)
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusI2c, ti50.CcdSuzyQ, ti50.ServoMicroDisconnected)
 
 	// Simulate the AP processor being turned on, in order to enable AP forwarding.
-	th.MustSucceed(b.Reset(ctx), "Reset board")
-	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
 	ecUart := f.DevBoard().PhysicalUart(ti50.UartEC, time.Second)
@@ -99,6 +99,15 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 		sendIteration(ctx, s, f, th, fpmcuUart, fpmcuMagic, sendBlockNo)
 	}
 
+	// Start a separate goroutine, which will repeatedly create RSA keys in order to load the
+	// GSC with expensive crypto operations, until told to stop.  (Except on OpenTitan, which
+	// does not yet have hardware cryptolib).
+	stop := make(chan bool)
+	done := make(chan bool)
+	if b.TestbedType != ti50.GscOpentitanCw310Fpga {
+		go endlessCrypto(tpm, s, stop, done)
+	}
+
 	// Now, read and verify one 64-byte block of data from each of the three CCD endpoints,
 	// followed by transmitting yet another block on each UART.  This way, we ensure that the
 	// amount of in-transit data is bounded.
@@ -120,6 +129,13 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 	}
 	if bps < uartThroughputNominalBps-uartThroughputBpsTolerance {
 		s.Error("Transfer speed too slow, HyperDebug may not be performing")
+	}
+
+	// Tell the endlessCrypto() goroutine to stop, and wait for it to finish any ongoing
+	// operation.
+	if b.TestbedType != ti50.GscOpentitanCw310Fpga {
+		stop <- true
+		<-done
 	}
 
 	// Gracefully shut down connections.
@@ -175,4 +191,37 @@ func sendIteration(ctx context.Context, s *testing.State, f *fixture.Value, th u
 
 	databuf[4] = magic
 	th.MustSucceed(uart.WriteSerial(ctx, databuf), "Write error")
+}
+
+func endlessCrypto(tpm *utils.TpmHelper, s *testing.State, stop, done chan bool) {
+	defaultKeyParams := tpm2.Public{
+		Type:       tpm2.AlgRSA,
+		NameAlg:    tpm2.AlgSHA1,
+		Attributes: tpm2.FlagStorageDefault,
+		RSAParameters: &tpm2.RSAParams{
+			Symmetric: &tpm2.SymScheme{
+				Alg:     tpm2.AlgAES,
+				KeyBits: 128,
+				Mode:    tpm2.AlgCFB,
+			},
+			KeyBits:     2048,
+			ExponentRaw: 1<<16 + 1,
+		},
+	}
+	for {
+		select {
+		case <-stop:
+			done <- true
+			return
+		default:
+			// Generate RSA key pair.
+			rootHandle, _, err := tpm2.CreatePrimary(tpm, tpm2.HandleOwner, tpm2.PCRSelection{}, "", "", defaultKeyParams)
+			if err != nil {
+				s.Fatalf("Error creating RSA key: %s", err)
+			}
+
+			// Delete newly generated key, in order to not overflow TPM storage.
+			tpm2.FlushContext(tpm, rootHandle)
+		}
+	}
 }
