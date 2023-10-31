@@ -29,6 +29,11 @@ func init() {
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
+			Name:              "container_r",
+			ExtraSoftwareDeps: []string{"android_container_r"},
+			// TODO(b/271846347): Move to critical.
+			ExtraAttr: []string{"informational"},
+		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraAttr:         []string{"informational"},
