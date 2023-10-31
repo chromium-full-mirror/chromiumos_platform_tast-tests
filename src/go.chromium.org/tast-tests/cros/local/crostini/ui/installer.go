@@ -77,10 +77,16 @@ func (p *Installer) SetDiskSize(ctx context.Context, cr *chrome.Chrome, targetSi
 
 	}
 
-	if err := uiauto.Combine("click radio custom and display slider",
-		ui.LeftClick(customStaticText),
-		ui.FocusAndWait(slider))(ctx); err != nil {
-		return 0, err
+	if err := ui.Exists(slider)(ctx); err != nil {
+		if err := ui.LeftClick(customStaticText)(ctx); err != nil {
+			return 0, errors.Wrap(err, "failed to click radio button")
+		}
+	} else {
+		testing.ContextLog(ctx, "Disk size slider is already shown, device may not have enough storage to continue")
+	}
+
+	if err := ui.FocusAndWait(slider)(ctx); err != nil {
+		return 0, errors.Wrap(err, "failed to focus slider")
 	}
 
 	const installerURL = "chrome://crostini-installer/"
