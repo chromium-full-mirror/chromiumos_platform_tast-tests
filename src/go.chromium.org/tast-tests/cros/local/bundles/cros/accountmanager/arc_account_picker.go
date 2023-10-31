@@ -43,7 +43,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "loggedInToChromeAndArcWithLacros",
 		}, {
 			Name:              "vm",
