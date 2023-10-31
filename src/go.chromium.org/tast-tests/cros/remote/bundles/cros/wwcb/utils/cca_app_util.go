@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/media/imgcmp"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/dut"
@@ -395,7 +394,7 @@ func CCAUseDevice(ctx context.Context, dut *dut.DUT) (string, error) {
 
 // CropCCAPreview returns the preview image of the CCA application.
 func CropCCAPreview(ctx context.Context, uiautoSvc ui.AutomationServiceClient, savedFolder string) (image.Image, error) {
-	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 10e6)
+	maxSizeOption := grpc.MaxCallRecvMsgSize(128 * 10e6)
 	resp, err := uiautoSvc.CaptureScreenshot(ctx, &ui.CaptureScreenshotRequest{}, maxSizeOption)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to take screenshot")
@@ -416,27 +415,37 @@ func CropCCAPreview(ctx context.Context, uiautoSvc ui.AutomationServiceClient, s
 		return nil, errors.Wrap(err, "failed to get CCA preview content info")
 	}
 
-	zoomW := img.Bounds().Max.X / int(builtinDisplayInfo.NodeInfo.Location.Width)
-	zoomH := img.Bounds().Max.Y / int(builtinDisplayInfo.NodeInfo.Location.Height)
+	zoomW := float64(img.Bounds().Max.X) / float64(builtinDisplayInfo.NodeInfo.Location.Width)
+	zoomH := float64(img.Bounds().Max.Y) / float64(builtinDisplayInfo.NodeInfo.Location.Height)
 
-	subX0 := int(previewContentInfo.NodeInfo.Location.Left) * zoomW
-	subY0 := int(previewContentInfo.NodeInfo.Location.Top) * zoomH
-	subX1 := int(previewContentInfo.NodeInfo.Location.Left+previewContentInfo.NodeInfo.Location.Width) * zoomW
-	subY1 := int(previewContentInfo.NodeInfo.Location.Top+previewContentInfo.NodeInfo.Location.Height) * zoomH
+	subX0 := int(float64(previewContentInfo.NodeInfo.Location.Left) * zoomW)
+	subY0 := int(float64(previewContentInfo.NodeInfo.Location.Top) * zoomH)
+	subX1 := int(float64(previewContentInfo.NodeInfo.Location.Left+previewContentInfo.NodeInfo.Location.Width) * zoomW)
+	subY1 := int(float64(previewContentInfo.NodeInfo.Location.Top+previewContentInfo.NodeInfo.Location.Height) * zoomH)
 
 	subImage := img.(interface {
 		SubImage(r image.Rectangle) image.Image
 	}).SubImage(image.Rect(subX0, subY0, subX1, subY1))
 
 	builtinDisplayFilepath := filepath.Join(savedFolder, "builtin_display.png")
-	if err := imgcmp.DumpImageToPNG(ctx, &img, builtinDisplayFilepath); err != nil {
+	if err := DumpImageToPNG(ctx, &img, builtinDisplayFilepath); err != nil {
 		return nil, errors.Wrap(err, "failed to save built-in display")
 	}
 
 	ccaPreviewFilepath := filepath.Join(savedFolder, "cca_preview.png")
-	if err := imgcmp.DumpImageToPNG(ctx, &subImage, ccaPreviewFilepath); err != nil {
+	if err := DumpImageToPNG(ctx, &subImage, ccaPreviewFilepath); err != nil {
 		return nil, errors.Wrap(err, "failed to save CCA preview content image")
 	}
 
 	return subImage, nil
+}
+
+// DumpImageToPNG saves the image to path.
+func DumpImageToPNG(ctx context.Context, image *image.Image, path string) error {
+	fd, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+	return png.Encode(fd, *image)
 }
