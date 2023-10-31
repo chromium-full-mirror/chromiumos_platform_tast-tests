@@ -2404,6 +2404,42 @@ func (s *ShillService) SetGlobalFTProperty(ctx context.Context, req *wifi.SetGlo
 	return &empty.Empty{}, nil
 }
 
+// GetRequestScanTypeProperty returns the WiFi.RequestScanType manager property value.
+func (s *ShillService) GetRequestScanTypeProperty(ctx context.Context, _ *empty.Empty) (*wifi.GetRequestScanTypePropertyResponse, error) {
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create a shill manager")
+	}
+
+	props, err := m.GetProperties(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get the shill manager properties")
+	}
+	scanType, err := props.GetString(shillconst.ManagerPropertyRequestScanType)
+	if err != nil {
+		return nil, err
+	}
+	return &wifi.GetRequestScanTypePropertyResponse{ScanType: scanType}, nil
+}
+
+// SetRequestScanTypeProperty sets the WiFi.RequestScanType manager property value.
+func (s *ShillService) SetRequestScanTypeProperty(ctx context.Context, req *wifi.SetRequestScanTypePropertyRequest) (*empty.Empty, error) {
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create a shill manager")
+	}
+	if err := m.SetProperty(ctx, shillconst.ManagerPropertyRequestScanType, req.ScanType); err != nil {
+		return nil, errors.Wrapf(err, "failed to set the shill manager property %s with value %v", shillconst.ManagerPropertyRequestScanType, req.ScanType)
+	}
+	return &empty.Empty{}, nil
+}
+
 // GetScanAllowRoamProperty returns the WiFi.ScanAllowRoam manager property value.
 func (s *ShillService) GetScanAllowRoamProperty(ctx context.Context, _ *empty.Empty) (*wifi.GetScanAllowRoamPropertyResponse, error) {
 	ctx, cancel := reserveForReturn(ctx)

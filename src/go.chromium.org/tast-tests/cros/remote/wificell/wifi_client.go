@@ -578,3 +578,21 @@ func (cli *WifiClient) SetBSSIDRequested(ctx context.Context, bssid string) erro
 	}
 	return nil
 }
+
+// GetRequestScanTypeProperty returns the WiFi.RequestScanType manager property value
+func (cli *WifiClient) GetRequestScanTypeProperty(ctx context.Context) (string, error) {
+	res, err := cli.ShillServiceClient.GetRequestScanTypeProperty(ctx, &empty.Empty{})
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get WiFi.RequestScanType manager property")
+	}
+	return res.ScanType, nil
+}
+
+// SetRequestScanTypeProperty sets the WiFi.RequestScanType manager property value
+func (cli *WifiClient) SetRequestScanTypeProperty(ctx context.Context, scanType string) error {
+	_, err := cli.ShillServiceClient.SetRequestScanTypeProperty(ctx, &wifi.SetRequestScanTypePropertyRequest{ScanType: scanType})
+	if err != nil {
+		return errors.Wrapf(err, "failed to set WiFi.RequestScanType manager property with value %s", scanType)
+	}
+	return nil
+}

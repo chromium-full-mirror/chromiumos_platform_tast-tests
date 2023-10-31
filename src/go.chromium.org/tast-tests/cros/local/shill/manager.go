@@ -1062,3 +1062,11 @@ func (m *Manager) SetEnableDHCPQosWithRestore(ctx context.Context, enable bool) 
 		}
 	}, nil
 }
+
+// SetWiFiRequestScanType sets the WiFi.RequestScanType property
+func (m *Manager) SetWiFiRequestScanType(ctx context.Context, scanType string) error {
+	if err := m.SetProperty(ctx, shillconst.ManagerPropertyRequestScanType, scanType); err != nil {
+		return errors.Wrapf(err, "failed to set WiFi.RequestScanType property to %s", scanType)
+	}
+	return nil
+}

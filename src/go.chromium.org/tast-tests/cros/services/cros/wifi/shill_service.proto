@@ -166,6 +166,12 @@ service ShillService {
   // SetGlobalFTProperty set the WiFi.GlobalFTEnabled manager property value.
   rpc SetGlobalFTProperty(SetGlobalFTPropertyRequest) returns (google.protobuf.Empty) {}
 
+  // GetRequestScanTypeProperty returns the WiFi.RequestScanType manager property value.
+  rpc GetRequestScanTypeProperty(google.protobuf.Empty) returns (GetRequestScanTypePropertyResponse) {}
+
+  // SetRequestScanTypeProperty sets the WiFi.RequestScanType manager property value.
+  rpc SetRequestScanTypeProperty(SetRequestScanTypePropertyRequest) returns (google.protobuf.Empty) {}
+
   // GetScanAllowRoamProperty returns the WiFi.ScanAllowRoam manager property value.
   rpc GetScanAllowRoamProperty(google.protobuf.Empty) returns (GetScanAllowRoamPropertyResponse) {}
 
@@ -567,6 +573,14 @@ message GetGlobalFTPropertyResponse {
 
 message SetGlobalFTPropertyRequest {
   bool enabled = 1;
+}
+
+message GetRequestScanTypePropertyResponse {
+  string scan_type = 1;
+}
+
+message SetRequestScanTypePropertyRequest {
+  string scan_type = 1;
 }
 
 message GetScanAllowRoamPropertyResponse {

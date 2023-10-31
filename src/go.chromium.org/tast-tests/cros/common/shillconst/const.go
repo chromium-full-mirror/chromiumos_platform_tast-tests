@@ -123,6 +123,7 @@ const (
 	ManagerPropertyTetheringAllowed                   = "TetheringAllowed"
 	ManagerPropertyTetheringCapabilities              = "TetheringCapabilities"
 	ManagerPropertyGlobalFTEnabled                    = "WiFi.GlobalFTEnabled"
+	ManagerPropertyRequestScanType                    = "WiFi.RequestScanType"
 	ManagerPropertyScanAllowRoam                      = "WiFi.ScanAllowRoam"
 	ManagerPropertyDOHProviders                       = "DNSProxyDOHProviders"
 	ManagerPropertyPortalHTTPSURL                     = "PortalHttpsUrl"
@@ -525,4 +526,11 @@ const (
 // Common property names for geolocation objects.
 const (
 	GeoInfoGeoAgeProperty = "age"
+)
+
+// WiFi RequestScan type constants defined in dbus-constants.h
+const (
+	WiFiRequestScanTypeActive  = "active"
+	WiFiRequestScanTypeDefault = "default"
+	WiFiRequestScanTypePassive = "passive"
 )
