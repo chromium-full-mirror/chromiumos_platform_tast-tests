@@ -340,9 +340,9 @@ func init() {
 			Name:              "vm_t_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_t"},
-			// x86-64 ARC: kohaku(hatch-Intel), jinlon(hatch-Intel), berknip(zork-AMD), jelboz360(zork-AMD), vilboz(zork-AMD)
+			// x86-64 ARC: kohaku(hatch-Intel), jinlon(hatch-Intel), rex4es(rex-Intel), berknip(zork-AMD), jelboz360(zork-AMD), vilboz(zork-AMD)
 			// arm64 ARC: steelix(corsola), magneton(corsola), starmie(staryu-64only)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "jinlon", "berknip", "jelboz360", "vilboz", "steelix", "magneton", "starmie")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "jinlon", "rex4es", "berknip", "jelboz360", "vilboz", "steelix", "magneton", "starmie")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-tm",
