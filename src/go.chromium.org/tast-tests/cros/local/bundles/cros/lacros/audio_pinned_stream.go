@@ -28,7 +28,7 @@ func init() {
 		BugComponent: "crbug:OS>LaCrOS",
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "lacrosAudio",
-		Data:         []string{"media_session_60sec_test.ogg", "audio_playback_test.html"},
+		Data:         []string{"sine_2ch_440hz_10s_20231101.wav", "audio_playback_test.html"},
 		Params: []testing.Param{{
 			Name:              "play",
 			Val:               audio.OutputStream,
