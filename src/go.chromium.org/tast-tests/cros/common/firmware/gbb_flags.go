@@ -203,7 +203,8 @@ func GBBFlagsStateClearSet(initial, apply *pb.GBBFlagsState) *pb.GBBFlagsState {
 	setMask := CalcGBBMask(apply.Set)
 	newGBB := CalcGBBBits(currentGBB, clearMask, setMask)
 	return &pb.GBBFlagsState{
-		Set: CalcGBBFlags(newGBB),
+		Clear: CalcGBBFlags(^newGBB),
+		Set:   CalcGBBFlags(newGBB),
 	}
 }
 
