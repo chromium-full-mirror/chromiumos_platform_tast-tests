@@ -162,13 +162,14 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 	if err := oobeConn.Eval(ctx, "window.location.href", &url); err != nil {
 		return err
 	}
+
 	if strings.HasPrefix(url, "chrome://oobe/gaia-signin") && !cfg.ReauthMode() {
 		// Force show GAIA webview even if the cryptohome exists. When there is an existing
 		// user on the device, the login screen would be chrome://oobe/gaia-signin instead
-		// of the accounts.google.com webview. Use Oobe.showAddUserForTesting() to open that
+		// of the accounts.google.com webview. Use OobeAPI.showGaiaDialog to open that
 		// webview so we can reuse the same login logic below.
 		testing.ContextLogf(ctx, "Found %s, force opening GAIA webview", url)
-		if err := oobeConn.Call(ctx, nil, "Oobe.showAddUserForTesting"); err != nil {
+		if err := oobeConn.Call(ctx, nil, "OobeAPI.showGaiaDialog"); err != nil {
 			return err
 		}
 

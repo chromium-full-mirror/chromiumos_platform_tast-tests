@@ -194,7 +194,7 @@ func waitForEnrollmentLoginScreen(ctx context.Context, cfg *config.Config, sess 
 
 	// Login window may not be shown yet if for example managed guest session is
 	// enabled.
-	if err := oobeConn.Eval(ctx, "Oobe.showAddUserForTesting()", nil); err != nil {
+	if err := oobeConn.Call(ctx, nil, "OobeAPI.showGaiaDialog"); err != nil {
 		return err
 	}
 
