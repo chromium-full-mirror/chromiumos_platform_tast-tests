@@ -290,7 +290,13 @@ func CrasSpeakOnMuteDetection(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot capture with cras_test_client: ", err)
 	}
 	captureWav := filepath.Join(s.OutDir(), "capture.wav")
-	if err := audio.ConvertRawToWav(ctx, captureRaw, captureWav, 48000, 2); err != nil {
+	rawData := audio.TestRawData{
+		Path:          captureRaw,
+		BitsPerSample: 16,
+		Channels:      2,
+		Rate:          48000,
+	}
+	if err := audio.ConvertRawToWav(ctx, rawData, captureWav); err != nil {
 		s.Errorf("Cannot convert %s to %s: %v", captureRaw, captureWav, err)
 	}
 

@@ -229,7 +229,7 @@ func generateWAVAudioFile(ctx context.Context, rawFilePath, wavFilePath string) 
 	if err := audio.GenerateTestRawData(ctx, rawFile); err != nil {
 		return errors.Wrap(err, "failed to generate audio test data")
 	}
-	if err := audio.ConvertRawToWav(ctx, rawFilePath, wavFilePath, 48000, 2); err != nil {
+	if err := audio.ConvertRawToWav(ctx, rawFile, wavFilePath); err != nil {
 		return errors.Wrap(err, "failed to convert raw to wav")
 	}
 	if err := os.Remove(rawFile.Path); err != nil {

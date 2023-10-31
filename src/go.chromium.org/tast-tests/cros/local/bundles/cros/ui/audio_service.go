@@ -120,7 +120,13 @@ func (as *AudioService) ConvertRawToWav(ctx context.Context, req *ui.AudioServic
 	if as.cr == nil {
 		return nil, errors.New("Chrome not available")
 	}
-	if err := audio.ConvertRawToWav(ctx, req.FilePath, req.FileName, 48000, 2); err != nil {
+	rawData := audio.TestRawData{
+		Path:          req.FilePath,
+		BitsPerSample: 16,
+		Channels:      2,
+		Rate:          48000,
+	}
+	if err := audio.ConvertRawToWav(ctx, rawData, req.FileName); err != nil {
 		return nil, errors.Wrap(err, "failed to convert raw to wav")
 	}
 	return &empty.Empty{}, nil

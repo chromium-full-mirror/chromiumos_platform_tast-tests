@@ -270,7 +270,7 @@ func audioPlayback(ctx context.Context, tconn *chrome.TestConn, downloadsPath st
 
 	wavFileName := "AudioFile.wav"
 	wavFile := filepath.Join(downloadsPath, wavFileName)
-	if err := audio.ConvertRawToWav(ctx, rawFilePath, wavFile, 48000, 2); err != nil {
+	if err := audio.ConvertRawToWav(ctx, rawFile, wavFile); err != nil {
 		return "", errors.Wrap(err, "failed to convert raw to wav")
 	}
 

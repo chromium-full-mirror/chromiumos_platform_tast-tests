@@ -117,9 +117,9 @@ func (t *tester) Run(ctx context.Context, s *testing.State) {
 		c.maybeLogSchedule(ctx, t)
 	}
 
+	var playbackRawData, captureRawData audio.TestRawData
 	if t.Playback != nil {
-		// prepare playback sample
-		if err = audio.GenerateTestRawData(ctx, audio.TestRawData{
+		playbackRawData = audio.TestRawData{
 			Path:          t.playbackRaw,
 			BitsPerSample: 16,
 			Channels:      channels,
@@ -127,7 +127,9 @@ func (t *tester) Run(ctx context.Context, s *testing.State) {
 			Frequencies:   []int{440, 440},
 			Volume:        volume,
 			Duration:      t.Playback.durationSec(),
-		}); err != nil {
+		}
+		// prepare playback sample
+		if err = audio.GenerateTestRawData(ctx, playbackRawData); err != nil {
 			s.Fatal("Failed to generate test audio data: ", err)
 		}
 	}
@@ -152,13 +154,19 @@ func (t *tester) Run(ctx context.Context, s *testing.State) {
 	t.wg.Wait()
 
 	if t.Playback != nil {
-		err = audio.ConvertRawToWav(ctx, t.playbackRaw, t.playbackWav, rate, channels)
+		err = audio.ConvertRawToWav(ctx, playbackRawData, t.playbackWav)
 		if err != nil {
 			s.Error("Playback raw -> wav convertion failed: ", err)
 		}
 	}
 	if t.Capture != nil {
-		err = audio.ConvertRawToWav(ctx, t.captureRaw, t.captureWav, rate, channels)
+		captureRawData = audio.TestRawData{
+			Path:          t.captureRaw,
+			BitsPerSample: 16,
+			Rate:          rate,
+			Channels:      channels,
+		}
+		err = audio.ConvertRawToWav(ctx, captureRawData, t.captureWav)
 		if err != nil {
 			s.Error("Capture raw -> wav convertion failed: ", err)
 		}

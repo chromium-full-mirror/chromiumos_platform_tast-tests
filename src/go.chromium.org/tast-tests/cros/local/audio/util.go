@@ -42,14 +42,15 @@ type TestRawData struct {
 }
 
 // ConvertRawToWav converts the audio raw file to wav file.
-func ConvertRawToWav(ctx context.Context, rawFileName, wavFileName string, rate, channels int) error {
+func ConvertRawToWav(ctx context.Context, rawData TestRawData, wavFileName string) error {
 	err := testexec.CommandContext(
-		ctx, "sox", "-b", "16",
-		"-r", strconv.Itoa(rate),
-		"-c", strconv.Itoa(channels),
+		ctx, "sox",
+		"-b", strconv.Itoa(rawData.BitsPerSample),
+		"-r", strconv.Itoa(rawData.Rate),
+		"-c", strconv.Itoa(rawData.Channels),
 		"-e", "signed",
 		"-t", "raw",
-		rawFileName, wavFileName).Run(testexec.DumpLogOnError)
+		rawData.Path, wavFileName).Run(testexec.DumpLogOnError)
 	if err != nil {
 		return errors.Wrap(err, "sox failed")
 	}

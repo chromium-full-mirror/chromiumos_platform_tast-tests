@@ -96,8 +96,13 @@ func CrasRecordQuality(ctx context.Context, s *testing.State) {
 	).Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to record from CRAS: ", err)
 	}
-
-	if err := audio.ConvertRawToWav(ctx, rawFile, wavFile, 48000, 2); err != nil {
+	rawData := audio.TestRawData{
+		Path:          rawFile,
+		BitsPerSample: 16,
+		Channels:      2,
+		Rate:          48000,
+	}
+	if err := audio.ConvertRawToWav(ctx, rawData, wavFile); err != nil {
 		s.Fatal("Failed to convert raw to wav: ", err)
 	}
 

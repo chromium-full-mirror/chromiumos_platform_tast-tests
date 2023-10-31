@@ -206,8 +206,14 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	).Run(testexec.DumpLogOnError); err != nil {
 		s.Error("Cannot run capture: ", err)
 	}
+	rawData := audio.TestRawData{
+		Path:          captureRaw,
+		BitsPerSample: 16,
+		Channels:      1,
+		Rate:          param.captureRate,
+	}
 	captureWav := filepath.Join(s.OutDir(), "capture.wav")
-	if err := audio.ConvertRawToWav(ctx, captureRaw, captureWav, param.captureRate, 1); err != nil {
+	if err := audio.ConvertRawToWav(ctx, rawData, captureWav); err != nil {
 		s.Errorf("Cannot convert %s to %s: %v", captureRaw, captureWav, err)
 	}
 

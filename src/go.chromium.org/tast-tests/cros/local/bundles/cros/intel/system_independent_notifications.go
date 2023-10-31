@@ -177,7 +177,7 @@ func SystemIndependentNotifications(ctx context.Context, s *testing.State) {
 	if err := wavTempFile.Close(); err != nil {
 		s.Error("Failed to close wav temp file: ", err)
 	}
-	if err := audio.ConvertRawToWav(ctx, rawTempFile.Name(), wavTempFile.Name(), audioRate, audioChannel); err != nil {
+	if err := audio.ConvertRawToWav(ctx, rawFile, wavTempFile.Name()); err != nil {
 		s.Fatal("Failed to convert raw to wav: ", err)
 	}
 

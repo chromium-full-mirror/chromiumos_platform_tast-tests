@@ -86,7 +86,7 @@ func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 
 	wavFileName := "30SEC.wav"
 	wavFile := filepath.Join(downloadsPath, wavFileName)
-	if err := audio.ConvertRawToWav(ctx, rawFilePath, wavFile, 48000, 2); err != nil {
+	if err := audio.ConvertRawToWav(ctx, rawFile, wavFile); err != nil {
 		s.Fatal("Failed to convert raw to wav: ", err)
 	}
 	defer os.Remove(wavFile)
