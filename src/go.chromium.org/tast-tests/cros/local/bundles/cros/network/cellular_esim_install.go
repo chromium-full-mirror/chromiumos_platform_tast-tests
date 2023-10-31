@@ -106,7 +106,7 @@ func CellularESimInstall(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify the newly installed profile appears in the network list
-	if err := ossettings.VerifyCelluarNetworkExistInList(ctx, tconn, "CarrierConfirmationCode"); err != nil {
+	if err := ossettings.VerifyCelluarNetworkExistInList(ctx, tconn, stork.ServiceProviderNameValue); err != nil {
 		s.Fatal("Failed to verify newly installed stork profile: ", err)
 	}
 }

@@ -10,12 +10,10 @@ import (
 
 	"golang.org/x/exp/slices"
 
-	types "go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/local/cellular/esim/mojo"
 	"go.chromium.org/tast-tests/cros/local/network/netconfig"
 	"go.chromium.org/tast-tests/cros/local/stork"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -98,7 +96,7 @@ func PerformSmdsOperationsWithMojo(ctx context.Context, s *testing.State) {
 	}
 
 	for _, p := range profiles {
-		if err := ensureNotInhibited(ctx, netConn); err != nil {
+		if err := netConn.WaitForCellularDeviceUninhibited(ctx); err != nil {
 			s.Fatal("Failed to get uninhibited cellular device: ", err)
 		}
 
@@ -130,28 +128,4 @@ func PerformSmdsOperationsWithMojo(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to uninstall profile ", ep.Iccid)
 		}
 	}
-}
-
-// ensureNotInhibited waits until the cellular device is no longer inhibited, returning an error if the timeout has been reached.
-func ensureNotInhibited(ctx context.Context, netConn *netconfig.CrosNetworkConfig) error {
-	// Ensure network is not inhibited.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		deviceStateList, err := netConn.GetDeviceStateList(ctx)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to get device state list"))
-		}
-
-		cellularDevice := netconfig.DeviceForNetworkType(deviceStateList, types.Cellular)
-		if cellularDevice == nil {
-			return testing.PollBreak(errors.New("failed to find cellular device"))
-		}
-
-		if cellularDevice.InhibitReason != types.NotInhibited {
-			return errors.Errorf("unexpected cellular network inhibit reason = got %v, want %v", cellularDevice.InhibitReason, types.NotInhibited)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: time.Minute * 3, Interval: time.Second * 5}); err != nil {
-		return errors.Wrap(err, "failed to get uninhibited network ")
-	}
-	return nil
 }

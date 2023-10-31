@@ -211,6 +211,12 @@ var (
 	// RenameProfileDoneButton is the finder for the Done button in the rename eSIM profile nickname dialog.
 	RenameProfileDoneButton = nodewith.NameContaining("Rename profile to").Role(role.Button)
 
+	// RemoveProfileOption is the option within the menu opened by `MoreActionsBtn` to remove the eSIM profile.
+	RemoveProfileOption = nodewith.NameContaining("Remove Profile").Role(role.StaticText)
+
+	// RemoveProfileButton is the button within the dialog opened by `RemoveProfileOption` to remove the eSIM profile.
+	RemoveProfileButton = nodewith.NameContaining("Remove").Role(role.Button)
+
 	// ConnectedStatus is the finder for the connected status text UI in the cellular detail page.
 	ConnectedStatus = nodewith.Name("Connected").Role(role.StaticText)
 

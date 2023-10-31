@@ -24,12 +24,14 @@ const (
 
 // Constants for data sent to/from Stork.
 const (
+	// Exported to allow tests to reference this value.
+	ServiceProviderNameValue = "Test Carrier"
+
 	// Used in POST request.
 	gtsTestProfileListKey    = "gtsTestProfileList"
 	maxDownloadAttemptsValue = 5
 	profileStatusValue       = "RELEASED"
 	profileClassValue        = "OPERATIONAL"
-	serviceProviderNameValue = "CarrierConfirmationCode"
 	generateSmdsEventValue   = true
 
 	// Returned in Stork response.
@@ -92,7 +94,7 @@ func generateStorkRequestData(eid string, numProfiles int, confirmationCode stri
 		MaxDownloadAttempts:         maxDownloadAttemptsValue,
 		ProfileStatus:               profileStatusValue,
 		ProfileClass:                profileClassValue,
-		ServiceProviderName:         serviceProviderNameValue,
+		ServiceProviderName:         ServiceProviderNameValue,
 		GenerateSmdsEvent:           generateSmdsEventValue,
 		ProfilePolicyRules:          []int{},
 	}

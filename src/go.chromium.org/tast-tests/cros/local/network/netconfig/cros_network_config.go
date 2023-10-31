@@ -7,11 +7,13 @@ package netconfig
 
 import (
 	"context"
+	"time"
 
 	types "go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ErrNetworkNotFound indicates that the client was asked to do an operation on a network that could not be found.
@@ -160,4 +162,29 @@ func (c *CrosNetworkConfig) GetDeviceStateList(ctx context.Context) ([]types.Dev
 	}
 
 	return result.Result, nil
+}
+
+// WaitForCellularDeviceUninhibited waits until the cellular device is no longer inhibited,
+// returning an error if the timeout has been reached.
+func (c *CrosNetworkConfig) WaitForCellularDeviceUninhibited(ctx context.Context) error {
+	// Ensure network is not inhibited.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		deviceStateList, err := c.GetDeviceStateList(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get device state list"))
+		}
+
+		cellularDevice := DeviceForNetworkType(deviceStateList, types.Cellular)
+		if cellularDevice == nil {
+			return testing.PollBreak(errors.New("failed to find cellular device"))
+		}
+
+		if cellularDevice.InhibitReason != types.NotInhibited {
+			return errors.Errorf("unexpected cellular network inhibit reason = got %v, want %v", cellularDevice.InhibitReason, types.NotInhibited)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute * 3, Interval: time.Second * 5}); err != nil {
+		return errors.Wrap(err, "failed to get uninhibited network ")
+	}
+	return nil
 }
