@@ -7,9 +7,12 @@ package testenv
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"os"
+	"sort"
 	"strings"
 
 	"go.chromium.org/tast/core/errors"
@@ -20,6 +23,7 @@ import (
 // at any desired environments such as preprod.
 type HostsUpdater struct {
 	hostsfile string
+	resolver  Resolver
 }
 
 type entry struct {
@@ -33,18 +37,66 @@ type entries map[string]entry
 // label is an identifier added to each line of the entries modified by HostsUpdater.
 const label = "#testenv-hosts-override="
 
-// NewHostsUpdater creates a HostsUpdater.
+// Resolver is a wrapper interface for the net package. Useful for dependency injection in testing.
+type Resolver interface {
+	LookupHost(hostname string) ([]string, error)
+}
+
+type defaultResolver struct {
+	resolved map[string]string // Pairs of (host, IP that has been already known for the host)
+}
+
+// LookupHost looks up the given host using the local resolver.
+func (r defaultResolver) LookupHost(hostname string) ([]string, error) {
+	// If it has already been resolved, use the cached address.
+	valid, ok := r.resolved[hostname]
+	if ok {
+		return []string{valid}, nil
+	}
+
+	addrs, err := net.LookupHost(hostname)
+	if err != nil {
+		return []string{}, errors.Wrapf(err, "failed to look up host: %v", hostname)
+	}
+	// Sort and return only the first valid address for use
+	sort.Slice(addrs, func(i, j int) bool {
+		return bytes.Compare(net.ParseIP(addrs[i]), net.ParseIP(addrs[j])) < 0
+	})
+	for _, addr := range addrs {
+		if net.ParseIP(addr) != nil {
+			valid = addr
+			break
+		}
+	}
+	if valid == "" {
+		return []string{}, errors.Errorf("no valid address found for host: %v", hostname)
+	}
+	r.resolved[hostname] = valid
+	return []string{valid}, nil
+}
+
+// NewHostsUpdater creates a HostsUpdater. Callers should defer call Cleanup to reset any override entries after use.
 // Callers should defer call a returned function to reset any override entries after use.
 func NewHostsUpdater() (*HostsUpdater, func() error, error) {
-	return newHostsUpdaterInternal("/etc/hosts", true)
+	return newHostsUpdaterInternal("/etc/hosts", true, true, defaultResolver{resolved: make(map[string]string)})
 }
 
 // newHostsUpdaterInternal is an internal version of NewHostsUpdater() with useful params for testing:
 //
-//	hostsfile - /etc/hosts (default) or a mock file for tests
-//	reset - true (default) to clear any override entries before
-func newHostsUpdaterInternal(hostsfile string, reset bool) (*HostsUpdater, func() error, error) {
-	h := &HostsUpdater{hostsfile: hostsfile}
+//	hostsfile - "/etc/hosts" (default)
+//	reset - true (default) to clear any override entries before update
+//	failIfNotDUT - true (default) to ensure that it runs on a DUT
+//	resolver - defaultResolver (default) or a local IP resolver that implements the Resolver interface
+func newHostsUpdaterInternal(hostsfile string, reset, failIfNotDUT bool, resolver Resolver) (*HostsUpdater, func() error, error) {
+	// Safety: This should only be run on a DUT, not a host machine.
+	if isDUT := func() bool {
+		lsb, err := os.ReadFile("/etc/lsb-release")
+		return err == nil && strings.Contains(string(lsb), "CHROMEOS_RELEASE_BOARD")
+	}(); failIfNotDUT && !isDUT {
+		return nil, nil, errors.New("testenv should be run locally only on a DUT")
+	}
+
+	h := &HostsUpdater{hostsfile: hostsfile, resolver: resolver}
 	if !reset {
 		return h, h.Reset, nil
 	}
@@ -70,14 +122,13 @@ func (h *HostsUpdater) Override(rules ...fromTo) (entries, error) {
 		if val, ok := modified[from]; ok && val.hostname == to {
 			return nil, errors.Wrapf(err, "host already overridden from: %v, to: %v", from, to)
 		}
-		addrs, err := net.LookupHost(to)
+		addrs, err := h.resolver.LookupHost(to)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to look up host: %v", to)
 		}
-		// TODO(b/301311992): Refactor the LookupHost in a follow up to check the size of addrs.
 		modified[from] = entry{
 			hostname: to,
-			ip:       addrs[0],
+			ip:       addrs[0], // There will be at least one valid IP when LookupHost returns no error.
 		}
 	}
 
@@ -99,6 +150,9 @@ func (h *HostsUpdater) Reset() error {
 	// Write only the base lines for reset.
 	err = h.writeHosts(entries{}, base)
 	if err != nil {
+		// Safety: If it fails to reset the host file, leave a marker file so the infra can restore it.
+		const ForceProvisionFilePath = "/mnt/stateful_partition/.force_provision"
+		_ = os.WriteFile(ForceProvisionFilePath, nil, 0644)
 		return errors.Wrap(err, "failed to write the host file for reset")
 	}
 	return nil
@@ -145,13 +199,42 @@ func (h *HostsUpdater) readHosts() (entries, []string, error) {
 }
 
 func (h *HostsUpdater) writeHosts(modified entries, base []string) error {
-	// TODO(b/301311992): Replace a direct write to /etc/hosts with an atomic copy of a temp file.
-	f, err := os.Open(h.hostsfile)
-	if err != nil {
-		return errors.Wrapf(err, "failed to read the host file: %v", h.hostsfile)
+	// Write to a temp file, then copy it to the target host file to atomically replace it.
+	var tempfile string
+	if err := func() error {
+		f, err := os.CreateTemp("", "hosts.testenv")
+		if err != nil {
+			return errors.Wrap(err, "failed to create a temp file")
+		}
+		defer f.Close()
+		tempfile = f.Name()
+		return h.writeHostsFile(f, modified, base)
+	}(); err != nil {
+		return err
 	}
-	defer f.Close()
 
+	// Replace the host file by copying it from the temp.
+	if err := func() error {
+		src, err := os.Open(tempfile)
+		if err != nil {
+			return errors.Wrapf(err, "failed to open the source file: %v", tempfile)
+		}
+		defer os.Remove(tempfile)
+		defer src.Close()
+		dst, err := os.Create(h.hostsfile)
+		if err != nil {
+			return errors.Wrapf(err, "failed to open the destination file: %v", h.hostsfile)
+		}
+		defer dst.Close()
+		_, err = io.Copy(dst, src)
+		return err
+	}(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h *HostsUpdater) writeHostsFile(f *os.File, modified entries, base []string) error {
 	w := bufio.NewWriter(f)
 	defer w.Flush()
 
