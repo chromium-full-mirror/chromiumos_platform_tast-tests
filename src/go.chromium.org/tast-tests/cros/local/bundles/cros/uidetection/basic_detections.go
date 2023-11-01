@@ -42,7 +42,7 @@ func init() {
 		Desc:         "Confirm that the image-based uidetection library works as intended",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Contacts:     []string{"chromeos-engprod-syd@google.com", "alvinjia@google.com", "mattlui@google.com"},
-		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Apps
+		BugComponent: "b:1453900", // ChromeOS -> EngProd -> Developer -> uidetection
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      12 * time.Minute,
