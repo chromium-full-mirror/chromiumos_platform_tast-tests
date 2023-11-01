@@ -7,8 +7,10 @@ package secagentd
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	rep "chromiumos/reporting"
@@ -32,11 +34,12 @@ import (
 )
 
 type networkProtocolDetails struct {
-	senderCmd   *testexec.Cmd
-	receiverCmd *testexec.Cmd
-	protocol    string
-	ipAddr      string
-	pipeInText  string
+	senderCmd         *testexec.Cmd
+	receiverCmd       *testexec.Cmd
+	protocol          xdr.NetworkProtocol
+	expectedDirection xdr.NetworkFlow_Direction
+	ipAddr            string
+	pipeInText        string
 }
 
 type networkType string
@@ -252,11 +255,11 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("secagentd enqueued %d events", len(calledMethods))
 
-	foundPid := false
-	foundProtocol := false
 	badRemoteAddress := false
-	for _, method := range calledMethods {
+	foundMatch := false
+	var failedFields []string
 
+	for _, method := range calledMethods {
 		if len(method.Arguments) == 0 {
 			continue
 		}
@@ -277,9 +280,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 			if err := proto.Unmarshal(enq.GetRecord().GetData(), ne); err != nil {
 				s.Fatal("Failed to unmarshal data for a Destination_CROS_SECURITY_NETWORK record: ", err)
 			}
-
 			var bFlows []*xdr.NetworkFlowEvent
-
 			for _, v := range ne.GetBatchedEvents() {
 				if v.GetNetworkFlow() != nil {
 					bFlows = append(bFlows, v.GetNetworkFlow())
@@ -291,34 +292,42 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 			}
 
 			for _, flow := range bFlows {
+				failedFields = nil
 				if localAddress[flow.NetworkFlow.GetRemoteIp()] {
 					s.Log("Detected an event flow that has a local ip address as its remote address:", flow.NetworkFlow.String())
 					badRemoteAddress = true
 				}
 				if flow.GetProcess() != nil && flow.GetProcess().GetCanonicalPid() == cmdPid {
-					foundPid = true
-					if flow.NetworkFlow.Protocol.String() == details.protocol && (details.ipAddr == "" || *flow.NetworkFlow.RemoteIp == details.ipAddr) {
-						foundProtocol = true
-						s.Logf("%s is captured", flow.NetworkFlow.Protocol.String())
+					if *flow.NetworkFlow.Protocol != details.protocol {
+						failedFields = append(failedFields, fmt.Sprintf("Protocol=%s expected %s", *flow.NetworkFlow.Protocol, details.protocol))
 					}
-					s.Log(flow.String())
+					if details.ipAddr != "" && *flow.NetworkFlow.RemoteIp != details.ipAddr {
+						failedFields = append(failedFields, fmt.Sprintf("IP Address=%q expected %q", *flow.NetworkFlow.RemoteIp, details.ipAddr))
+					}
+					if *flow.NetworkFlow.Direction != details.expectedDirection {
+						failedFields = append(failedFields, fmt.Sprintf("Direction=%s expected %s", flow.NetworkFlow.Direction.String(), details.expectedDirection.String()))
+					}
+					if len(failedFields) == 0 {
+						s.Logf("%s found, matches all expectations", flow.String())
+						foundMatch = true
+						break
+					} else {
+						s.Logf("Match failure:%s :%s", strings.Join(failedFields, ","), flow)
+
+					}
 				}
 			}
 		}
-		if foundPid && foundProtocol {
+		if foundMatch {
 			break
 		}
 	}
-	if !foundPid {
-		s.Error("NetworkEvent is not captured")
-	}
-
-	if !foundProtocol {
-		s.Errorf("Protocol %s is not captured", details.protocol)
-	}
-
 	if badRemoteAddress {
 		s.Error("Found one or more flows where the remote address in the flow is the same as a local ip address")
+	}
+	if !foundMatch {
+		s.Errorf("Could not find a network flow event that matches expectations pid:%d remote IP Address:%s protocol:%s direction:%s",
+			cmdPid, details.ipAddr, details.protocol.String(), details.expectedDirection.String())
 	}
 }
 
@@ -368,7 +377,6 @@ func setupL4server(ctx context.Context, network networkType, networkFam l4server
 	}
 	if err := ping.ExpectPingSuccessWithTimeout(ctx, pingAddrsV4, "chronos", 10*time.Second); err != nil {
 		return nil, nil, errors.Wrapf(err, "network verification failed: %v is not reachable as user %s on host", pingAddrsV4, "chronos")
-
 	}
 	var addr net.IP
 
@@ -398,48 +406,52 @@ func getNetworkProtocolDetails(ctx context.Context, network networkType, externI
 		ipAddr := externIP
 		cmd := testexec.CommandContext(ctx, "/bin/ping", ipAddr)
 		return networkProtocolDetails{
-			senderCmd:   cmd,
-			receiverCmd: nil,
-			protocol:    "ICMP",
-			// TODO(jasonling): ICMP doesn't capture IP addr in the event.
-			ipAddr:     "",
-			pipeInText: "",
+			senderCmd:         cmd,
+			receiverCmd:       nil,
+			protocol:          xdr.NetworkProtocol_ICMP,
+			expectedDirection: xdr.NetworkFlow_DIRECTION_UNKNOWN,
+			ipAddr:            externIP,
+			pipeInText:        "",
 		}, nil
 	case tcp:
 		cmd := testexec.CommandContext(ctx, ncCmd, "-v", externIP, externPort)
 		return networkProtocolDetails{
-			senderCmd:   cmd,
-			receiverCmd: nil,
-			protocol:    "TCP",
-			ipAddr:      externIP,
-			pipeInText:  "Hello, TCP",
+			senderCmd:         cmd,
+			receiverCmd:       nil,
+			protocol:          xdr.NetworkProtocol_TCP,
+			expectedDirection: xdr.NetworkFlow_OUTGOING,
+			ipAddr:            externIP,
+			pipeInText:        "Hello, TCP",
 		}, nil
 	case tcpV6:
 		senderCmd := testexec.CommandContext(ctx, ncCmd, "-6", externIP, externPort)
 		return networkProtocolDetails{
-			senderCmd:   senderCmd,
-			receiverCmd: nil,
-			protocol:    "TCP",
-			ipAddr:      externIP,
-			pipeInText:  "Hello TCPv6",
+			senderCmd:         senderCmd,
+			receiverCmd:       nil,
+			protocol:          xdr.NetworkProtocol_TCP,
+			expectedDirection: xdr.NetworkFlow_OUTGOING,
+			ipAddr:            externIP,
+			pipeInText:        "Hello TCPv6",
 		}, nil
 	case udp:
 		senderCmd := testexec.CommandContext(ctx, ncCmd, "-u", externIP, externPort)
 		return networkProtocolDetails{
-			senderCmd:   senderCmd,
-			receiverCmd: nil,
-			protocol:    "UDP",
-			ipAddr:      externIP,
-			pipeInText:  "Hello UDP",
+			senderCmd:         senderCmd,
+			receiverCmd:       nil,
+			protocol:          xdr.NetworkProtocol_UDP,
+			expectedDirection: xdr.NetworkFlow_DIRECTION_UNKNOWN,
+			ipAddr:            externIP,
+			pipeInText:        "Hello UDP",
 		}, nil
 	case udpV6:
 		senderCmd := testexec.CommandContext(ctx, ncCmd, "-6", "-u", externIP, externPort)
 		return networkProtocolDetails{
-			senderCmd:   senderCmd,
-			receiverCmd: nil,
-			protocol:    "UDP",
-			ipAddr:      externIP,
-			pipeInText:  "Hello UDPv6",
+			senderCmd:         senderCmd,
+			receiverCmd:       nil,
+			protocol:          xdr.NetworkProtocol_UDP,
+			expectedDirection: xdr.NetworkFlow_OUTGOING,
+			ipAddr:            externIP,
+			pipeInText:        "Hello UDPv6",
 		}, nil
 	}
 	return networkProtocolDetails{}, errors.Errorf("An unexpected network type is received: %s", network)
