@@ -28,8 +28,9 @@ import (
 
 const (
 	// CycleMaxDuration is the maximum duration of a hibernate cycle.
-	CycleMaxDuration     = 8 * time.Minute
-	hibernateCycleIDPath = "/tmp/hibernate_cycle_id"
+	CycleMaxDuration         = 8 * time.Minute
+	hibernateCycleIDPath     = "/tmp/hibernate_cycle_id"
+	rebootAfterHibernatePath = "/run/power_manager/root/reboot_after_hibernate"
 )
 
 type logger interface {
@@ -113,6 +114,14 @@ func (t *Tester) HibernateAndResume(ctx context.Context) error {
 			return errors.Wrap(err, "failed to open chrome tabs")
 		}
 	}
+
+	err := t.dut.Conn().CommandContext(ctx, "/usr/bin/touch", rebootAfterHibernatePath).Run()
+	if err != nil {
+		return errors.Wrapf(err, "failed to create %s", rebootAfterHibernatePath)
+	}
+	defer func() {
+	      _ = t.dut.Conn().CommandContext(ctx, "/bin/rm", rebootAfterHibernatePath).Run()
+	}()
 
 	if err := t.hibernate(ctx, true); err != nil {
 		return errors.Wrap(err, "failed to hibernate and reboot")
@@ -381,13 +390,7 @@ func (t *Tester) hibernate(ctx context.Context, reboot bool) error {
 	// we can close the connection earlier allowing the next stages of the test to kick off.
 	go t.waitForDutUnreachable(cmdCtx)
 
-	rebootVar := ""
-	if reboot {
-		rebootVar = "-r"
-	}
-
-	out, err := t.dut.Conn().CommandContext(cmdCtx, "/sbin/minijail0", "--config", "/usr/share/minijail/hiberman.conf", "/usr/sbin/hiberman", "hibernate", rebootVar).CombinedOutput()
-	t.logger.Logf("hiberman output: %s", out)
+	err := t.dut.Conn().CommandContext(cmdCtx, "powerd_dbus_suspend", "--flavor=2").Run()
 
 	if err != nil {
 		if strings.Contains(err.Error(), context.DeadlineExceeded.Error()) ||
