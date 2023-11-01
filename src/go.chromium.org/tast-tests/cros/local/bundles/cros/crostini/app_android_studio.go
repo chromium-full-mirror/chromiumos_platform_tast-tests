@@ -128,6 +128,8 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 	}
 
 	newProjectWindow := nodewith.NameStartingWith("My Application").Role(role.Window).First()
+	setupWizardWindow := nodewith.NameStartingWith("Android Studio Setup Wizard").Role(role.Window).First()
+	newProjectDialog := nodewith.NameStartingWith("New Project").Role(role.Window).First()
 	nextButton := uidetection.Word("Next")
 	finishButton := uidetection.Word("Finish")
 	analyticsText := uidetection.TextBlock(strings.Split("Allow Google", " "))
@@ -149,27 +151,27 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 		ud.WaitUntilExists(firstRunText),
 		ud.LeftClick(uidetection.Word("Cancel").First()),
 		ud.WaitUntilGone(firstRunText),
-		ud.LeftClick(nextButton),
+		ud.LeftClick(nextButton.WithinA11yNode(setupWizardWindow)),
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Install Type", " "), uidetection.MaxEditDistance(2))),
-		ud.LeftClick(nextButton),
+		ud.LeftClick(nextButton.WithinA11yNode(setupWizardWindow)),
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Select UI Theme", " "))),
-		ud.LeftClick(nextButton),
+		ud.LeftClick(nextButton.WithinA11yNode(setupWizardWindow)),
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Verify Setting", " "))),
-		ud.LeftClick(nextButton),
+		ud.LeftClick(nextButton.WithinA11yNode(setupWizardWindow)),
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Emulator Settings", " "))),
-		ud.LeftClick(finishButton),
+		ud.LeftClick(finishButton.WithinA11yNode(setupWizardWindow)),
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("SDK is up to date", " "))),
-		ud.LeftClick(finishButton),
+		ud.LeftClick(finishButton.WithinA11yNode(setupWizardWindow)),
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Welcome to Android Studio", " "))),
 		// Activate the "New Project" button. The text label is not clickable.
 		uiauto.New(tconn).WithTimeout(time.Minute).RetryUntil(
 			keyboard.AccelAction("space"),
 			ud.Exists(uidetection.Word("Templates")),
 		),
-		ud.LeftClick(nextButton),
+		ud.LeftClick(nextButton.WithinA11yNode(newProjectDialog)),
 		// Use ImmediateScreenshot to avoid issues with blinking cursors on the following screen.
 		ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).WaitUntilExists(uidetection.TextBlock(strings.Split("Empty Activity", " ")).First()),
-		ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).LeftClick(finishButton),
+		ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).LeftClick(finishButton.WithinA11yNode(newProjectDialog)),
 		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilExists(newProjectWindow),
 	)(ctx); err != nil {
 		s.Fatal("Failed to create a new project with defaults: ", err)
