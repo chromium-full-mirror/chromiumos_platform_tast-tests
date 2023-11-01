@@ -56,6 +56,7 @@ var ashPipTests = pipTestParams{
 	pipType: ashPip,
 	tests: []pipTestFunc{
 		testPipPinchResize,
+		testPipTuck,
 	},
 	browserType:   browser.TypeAsh,
 	pipWindowName: "Picture in picture",
@@ -66,6 +67,7 @@ var lacrosPipTests = pipTestParams{
 	pipType: lacrosPip,
 	tests: []pipTestFunc{
 		testPipPinchResize,
+		testPipTuck,
 	},
 	browserType:   browser.TypeLacros,
 	pipWindowName: "Picture in picture",
@@ -76,6 +78,7 @@ var arcPipTests = pipTestParams{
 	pipType: arcPip,
 	tests: []pipTestFunc{
 		testPipPinchResize,
+		testPipTuck,
 	},
 	browserType:   browser.TypeAsh,
 	pipWindowName: "ArcPipTest",
@@ -117,9 +120,9 @@ func init() {
 func Pip(ctx context.Context, s *testing.State) {
 	testParams := s.Param().(pipTestParams)
 
-	// Enable feature flag for PiP Pinch-to-Resize feature.
+	// Enable feature flag for PiP Pinch-to-Resize feature and PiP Tuck feature.
 	opts := []chrome.Option{chrome.EnableFeatures("PipPinchToResize"),
-		chrome.ExtraArgs("--show-taps")}
+		chrome.EnableFeatures("PipTuck"), chrome.ExtraArgs("--show-taps")}
 
 	switch testParams.pipType {
 	case arcPip:
@@ -280,6 +283,61 @@ func testPipPinchResize(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.
 	return nil
 }
 
+func testPipTuck(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
+	tcc := tsw.NewTouchCoordConverter(dispInfo.Bounds.Size())
+
+	stw, err := tsw.NewSingleTouchWriter()
+	if err != nil {
+		return errors.Wrap(err, "failed to get touch event writer")
+	}
+	defer stw.Close()
+
+	window, err := getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	initialBounds := window.BoundsInRoot
+
+	// Move the PiP window as much to the topleft as possible.
+	// We offset the center of the PiP window to avoid grabbing the area
+	// with buttons to circumvent a bug that makes it impossible for the
+	// window to move if the touch starts in a area with buttons
+	// (b/306537959).
+	// TODO(massan|takise): Remove this offset once this bug is fixed.
+	offset := coords.NewPoint(initialBounds.Width/4, initialBounds.Height/4)
+	initialCenterX, initialCenterY := tcc.ConvertLocation(initialBounds.CenterPoint().Sub(offset))
+	topLeftX, topLeftY := tcc.ConvertLocation(coords.NewPoint(0, 0))
+	if err := stw.Swipe(ctx, initialCenterX, initialCenterY, topLeftX, topLeftY, time.Second); err != nil {
+		return errors.Wrap(err, "failed to move the window to top left")
+	}
+	stw.End()
+
+	// Attempt to tuck the window to the left.
+	window, err = getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	startBounds := window.BoundsInRoot
+	offset = coords.NewPoint(startBounds.Width/4, 0)
+	beforeX, beforeY := tcc.ConvertLocation(startBounds.CenterPoint().Add(offset))
+	if err := stw.Swipe(ctx, beforeX, beforeY, 0, beforeY, time.Second); err != nil {
+		return errors.Wrap(err, "failed to fling the window")
+	}
+	stw.End()
+
+	// Confirm that the window has been tucked.
+	afterBounds, err := waitForNewBounds(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get bounds for the PiP window")
+	}
+	if afterBounds.TopLeft().X >= 0 {
+		return errors.Wrapf(err, "unexpected PiP window position; the origin's coordinate is %v",
+			afterBounds)
+	}
+
+	return nil
+}
+
 func createArcPip(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC, dispInfo *display.Info, test pipTestParams) (*arc.Activity, error) {
 	pipAct, err := arc.NewActivity(a, arcPipTestPkgName, ".PipActivity")
 	if err != nil {
@@ -389,4 +447,22 @@ func cleanUpArcTest(ctx context.Context, tconn *chrome.TestConn, pipAct *arc.Act
 		return errors.Wrap(err, "failed to close all windows")
 	}
 	return nil
+}
+
+// waitForNewBounds waits until Chrome animation completes and returns the bounds
+// of the PIP window in DP.
+func waitForNewBounds(ctx context.Context, tconn *chrome.TestConn) (coords.Rect, error) {
+	var rect coords.Rect
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		window, err := getPIPWindow(ctx, tconn)
+		if err != nil {
+			return errors.New("failed to Get PIP window")
+		}
+		if window.IsAnimating {
+			return errors.New("the window is still animating")
+		}
+		rect = window.BoundsInRoot
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
+	return rect, err
 }
