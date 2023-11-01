@@ -112,8 +112,8 @@ func APROVerificationReboot(ctx context.Context, s *testing.State) {
 
 		// We should be polling UART console for keyboard ready before the above reboot finishes since
 		// there is a 1000ms delay.
-		s.Log("Waiting until keyboard is ready")
-		if err := h.Servo.WaitFirmwareKeyboard(ctx, h.Config.FirmwareScreen); err != nil {
+		s.Log("Waiting for DUT to reach the firmware screen")
+		if err := h.WaitFirmwareScreen(ctx); err != nil {
 			s.Fatal("Failed to get to firmware screen: ", err)
 		}
 

@@ -133,8 +133,8 @@ func AltfwMode(ctx context.Context, s *testing.State) {
 		s.Log("Failed to run reboot command: ", err)
 	}
 
-	s.Log("Waiting until keyboard is ready")
-	if err := h.Servo.WaitFirmwareKeyboard(ctx, h.Config.FirmwareScreen); err != nil {
+	s.Log("Waiting for DUT to reach the firmware screen")
+	if err := h.WaitFirmwareScreen(ctx); err != nil {
 		s.Fatal("Failed to get to firmware screen: ", err)
 	}
 
@@ -168,8 +168,8 @@ func AltfwMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reset: ", err)
 	}
 
-	s.Log("Waiting until keyboard is ready")
-	if err := h.Servo.WaitFirmwareKeyboard(ctx, h.Config.FirmwareScreen); err != nil {
+	s.Log("Waiting for DUT to reach the firmware screen")
+	if err := h.WaitFirmwareScreen(ctx); err != nil {
 		s.Fatal("Failed to get to firmware screen: ", err)
 	}
 

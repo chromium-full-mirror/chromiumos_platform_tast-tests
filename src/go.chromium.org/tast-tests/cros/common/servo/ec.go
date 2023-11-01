@@ -58,6 +58,7 @@ const (
 	reVdownBtnReleased   string = `\[\S+ Button \'Volume Down\' was released(.|\n)*buttons: 0\]`
 	rePwrBtnPressed      string = `\[\S+ power button pressed(.|\n)*buttons: 1\]`
 	rePwrBtnReleased     string = `\[\S+ power button released(.|\n)*buttons: 0\]`
+	reKeyBoardEnabled    string = `Enabled: (\d)`
 )
 
 // USBCDataRole is a USB-C data role.
@@ -536,20 +537,21 @@ func (s *Servo) PressECBtnVerifyOutput(ctx context.Context, button DetachableECB
 	return nil
 }
 
-var keyboardReadyRe *regexp.Regexp = regexp.MustCompile(`KB enable|HC 0x0*67`)
-
-// WaitFirmwareKeyboard waits until the DUT is in firmware with keyboard enabled
-// On entry the DUT can be in firmware or kernel.
-// This function works by waiting for the "KB enable" or "HC 0x67" message shown by the EC when it boots.
-func (s *Servo) WaitFirmwareKeyboard(ctx context.Context, timeout time.Duration) (retErr error) {
-	closeUART, err := s.EnableUARTCapture(ctx, ECUARTCapture)
-	if err != nil {
-		return errors.Wrap(err, "failed to enable capture EC UART")
+// WaitFirmwareKeyboard waits until the DUT is in firmware with keyboard
+// enabled. This function works by running the ec command "8042 kbd", and
+// waiting for the "Enabled: 1" state.
+func (s *Servo) WaitFirmwareKeyboard(ctx context.Context, timeout time.Duration) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := s.RunECCommandGetOutput(ctx, "8042 kbd", []string{reKeyBoardEnabled})
+		if err != nil {
+			return err
+		}
+		if out[0][1] == "1" {
+			return nil
+		}
+		return errors.Errorf("failed to find keyboard enabled after %s", timeout)
+	}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: timeout}); err != nil {
+		return err
 	}
-	defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }()
-	if err := s.PollForRegexp(ctx, ECUARTStream, keyboardReadyRe, timeout); err != nil {
-		return errors.Wrap(err, "failed to find keyboard enable")
-	}
-
 	return nil
 }

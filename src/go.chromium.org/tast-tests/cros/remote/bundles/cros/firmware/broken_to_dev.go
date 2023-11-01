@@ -71,10 +71,9 @@ func BrokenToDev(ctx context.Context, s *testing.State) {
 	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
 		s.Fatal("Failed to wait for DUT to become unreachable, warm reset failed: ", err)
 	}
-	s.Logf("Sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)
-	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+	s.Log("Waiting for DUT to reach the firmware screen")
+	if err := h.WaitFirmwareScreen(ctx); err != nil {
+		s.Fatal("Failed to get to firmware screen: ", err)
 	}
 	newbp, err := firmware.NewBypasser(ctx, h)
 	if err != nil {

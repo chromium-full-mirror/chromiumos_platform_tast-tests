@@ -104,10 +104,9 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper) error {
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
 		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 	}
-	testing.ContextLogf(ctx, "Sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)
-	// GoBigSleepLint: Sleep for model specific time.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		return errors.Wrap(err, "failed to sleep")
+	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
+	if err := h.WaitFirmwareScreen(ctx); err != nil {
+		return errors.Wrap(err, "failed to get to firmware screen")
 	}
 	if h.Config.ModeSwitcherType == firmware.MenuSwitcher {
 		menuNavigator, err := firmware.NewMenuNavigator(ctx, h)

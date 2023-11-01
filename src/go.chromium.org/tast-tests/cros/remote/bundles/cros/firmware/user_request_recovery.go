@@ -140,10 +140,9 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 }
 
 func insertUSBInFirmwareScreen(ctx context.Context, h *firmware.Helper) error {
-	testing.ContextLogf(ctx, "Sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)
-	// GoBigSleepLint: Sleep for model specific time.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		return errors.Wrap(err, "failed to sleep")
+	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
+	if err := h.WaitFirmwareScreen(ctx); err != nil {
+		return errors.Wrap(err, "failed to get to firmware screen")
 	}
 	testing.ContextLog(ctx, "Set DFP mode")
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {

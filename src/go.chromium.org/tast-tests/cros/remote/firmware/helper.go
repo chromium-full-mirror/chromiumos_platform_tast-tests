@@ -1734,3 +1734,25 @@ func (h *Helper) DisableDevBootUSB(ctx context.Context) error {
 	testing.ContextLog(ctx, "Disabling dev_boot_usb")
 	return h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=0").Run(ssh.DumpLogOnError)
 }
+
+// WaitFirmwareScreen waits until the DUT is in firmware with the keyboard
+// ready on x86 devices. On other platforms, such as arm, it sleeps for the
+// h.Config.FirmwareScreen duration.
+func (h *Helper) WaitFirmwareScreen(ctx context.Context) error {
+	if h.Config.HasECCapability(ECX86) {
+		// The longest duration we've seen in waiting for keyboard enabled
+		// was slightly over 1 min, for example on a brya/anahera machine.
+		// Set a 120 seconds timeout to cover margins.
+		maxDurForWaitFirmwareKeyboard := 2 * time.Minute
+		if err := h.Servo.WaitFirmwareKeyboard(ctx, maxDurForWaitFirmwareKeyboard); err != nil {
+			return errors.Wrap(err, "waiting for DUT to be in firmware with keyboard ready")
+		}
+	} else {
+		testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Wait for firmware screen.
+		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+			return errors.Wrapf(err, "sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)
+		}
+	}
+	return nil
+}
