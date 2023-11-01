@@ -6,12 +6,16 @@ package crostini
 
 import (
 	"context"
+	"fmt"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/guestos"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -82,20 +86,34 @@ func LaunchBrowser(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	bt := s.Param().(browser.Type)
 
-	handler := faillog.DumpUITreeWithScreenshotHandler(ctx, tconn, "ui_tree")
-	s.AttachErrorHandlers(handler, handler)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
-	s.Run(ctx, "testing_sh_c ", func(ctx context.Context, s *testing.State) {
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
+
+	runSubTest := func(name string, run func(ctx context.Context, s *testing.State)) {
+		s.Run(ctx, name, func(ctx context.Context, s *testing.State) {
+			handler := faillog.DumpUITreeWithScreenshotHandler(ctx, tconn, fmt.Sprintf("ui_tree_%s", name))
+			s.AttachErrorHandlers(handler, handler)
+			run(ctx, s)
+		})
+	}
+
+	runSubTest("testing_sh_c", func(ctx context.Context, s *testing.State) {
 		if err := guestos.LaunchBrowser(ctx, tconn, bt, cont, "browser-env", []string{"sh", "-c", "${BROWSER} http://browser-env.test/"}); err != nil {
 			s.Fatal("Launching browser failed: ", err)
 		}
 	})
-	s.Run(ctx, "testing_x_www_browser", func(ctx context.Context, s *testing.State) {
+
+	runSubTest("testing_x_www_browser", func(ctx context.Context, s *testing.State) {
 		if err := guestos.LaunchBrowser(ctx, tconn, bt, cont, "x-www-browser", []string{"/etc/alternatives/x-www-browser", "http://x-www-browser.test/"}); err != nil {
 			s.Fatal("Launching browser failed: ", err)
 		}
 	})
-	s.Run(ctx, "testing_xdg_open", func(ctx context.Context, s *testing.State) {
+
+	runSubTest("testing_xdg_open", func(ctx context.Context, s *testing.State) {
 		if err := guestos.LaunchBrowser(ctx, tconn, bt, cont, "xdg-open", []string{"xdg-open", "http://xdg-open.test/"}); err != nil {
 			s.Fatal("Launching browser failed: ", err)
 		}
