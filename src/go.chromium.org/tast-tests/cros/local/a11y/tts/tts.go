@@ -251,14 +251,16 @@ func ensureTTSEngineLoaded(ctx context.Context, tconn *chrome.TestConn, engineDa
 		chrome.tts.speak('wakeUp', {
 			extensionId: %q,
 			onEvent: function(event) {
-				if (event.type === chrome.tts.EventType.START) {
+				if (event.type === chrome.tts.EventType.START ||
+						event.type === chrome.tts.EventType.INTERRUPTED) {
 					// START suggests that TTS extension is fully ready.
+					// If speech was interrupted, then the engine is already awake
+					// and ready.
 					// It's okay to return at this point.
 					resolve();
 				} else if (event.type === chrome.tts.EventType.ERROR) {
 					reject(new Error(event.errorMessage));
-				} else if (event.type === chrome.tts.EventType.CANCELLED ||
-				           event.type === chrome.tts.EventType.INTERRUPTED) {
+				} else if (event.type === chrome.tts.EventType.CANCELLED) {
 					reject(new Error("Unexpected event type: " + event.type));
 				}
 				// not interested in other event types.
