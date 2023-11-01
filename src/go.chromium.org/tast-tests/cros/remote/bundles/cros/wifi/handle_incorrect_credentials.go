@@ -82,7 +82,6 @@ func init() {
 		),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
-		Timeout:      3 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name: "oobe_peap",
