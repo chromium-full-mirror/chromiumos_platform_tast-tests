@@ -1,0 +1,9 @@
+set noparent
+
+# ChromeOS Peripherals team
+michaelcheco@google.com
+jimmyxgong@chromium.org
+ashleydp@google.com
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast

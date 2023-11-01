@@ -31,9 +31,9 @@ func init() {
 		Desc:         "Peripherals app can be found and launched with an accelerator",
 		Contacts: []string{
 			"cros-peripherals@google.com",
+			"michaelcheco@google.com",
 			"jimmyxgong@google.com",
 			"ashleydp@google.com",
-			"zentaro@google.com",
 		},
 		// ChromeOS > Software > System Services > Peripherals
 		BugComponent: "b:1150827",

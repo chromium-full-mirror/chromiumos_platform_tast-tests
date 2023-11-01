@@ -27,9 +27,9 @@ func init() {
 		Desc:         "Peripherals app can be found and launched from guest mode",
 		Contacts: []string{
 			"cros-peripherals@google.com",
+			"michaelcheco@google.com",
 			"jimmyxgong@google.com",
 			"ashleydp@google.com",
-			"zentaro@google.com",
 		},
 		// ChromeOS > Software > System Services > Peripherals
 		BugComponent: "b:1150827",

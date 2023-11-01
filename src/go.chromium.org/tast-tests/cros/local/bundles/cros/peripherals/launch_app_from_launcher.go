@@ -32,13 +32,12 @@ func init() {
 		Desc:         "Peripherals app can be found and launched from the launcher",
 		Contacts: []string{
 			"cros-peripherals@google.com",
+			"michaelcheco@google.com",
 			"jimmyxgong@google.com",
 			"ashleydp@google.com",
-			"michaelcheco@google.com",
-			"zentaro@google.com",
 		},
-		// ChromeOS > Software > System Services > Peripherals > Printing
-		BugComponent: "b:1131981",
+		// ChromeOS > Software > System Services > Peripherals
+		BugComponent: "b:1150827",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
