@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
+	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
@@ -99,9 +100,18 @@ func Fixture(ctx context.Context, s *testing.State) {
 		s.Errorf("Unexpected DUT boot mode: got %q, want %q", curr, v.BootMode)
 	}
 
-	if res, err := common.GetGBBFlags(ctx, h.DUT); err != nil {
+	res, err := common.GetGBBFlags(ctx, h.DUT)
+	if err != nil {
 		s.Error("Failed to get GBB flags: ", err)
-	} else if !common.GBBFlagsStatesEqual(v.GBBFlags, res) {
+	}
+	// The common.GetGBBFlags function explicitly adds the inverse of the set flags to the Clear set
+	// which v.GBBFlags does not do, which means v.GBBFlags.Clear is almost always empty, and res.Clear here
+	// usually has many flags, for this reason, populate the v.GBBFlagsClear with the unset flags to make the comparison valid.
+	fixtureFlags := &pb.GBBFlagsState{
+		Set:   v.GBBFlags.Set,
+		Clear: common.CalcGBBFlags(^common.CalcGBBMask(v.GBBFlags.Set)),
+	}
+	if !common.GBBFlagsStatesEqual(fixtureFlags, res) {
 		s.Errorf("GBB flags: got %v, want %v", res.Set, v.GBBFlags)
 	}
 
@@ -109,7 +119,7 @@ func Fixture(ctx context.Context, s *testing.State) {
 		if devswBoot, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamDevswBoot); err != nil {
 			s.Fatal(err, "failed to get crossystem devsw_boot")
 		} else if devswBoot != "1" {
-			s.Fatalf("expected devsw_boot to be 1, got %s", devswBoot)
+			s.Fatalf("Expected devsw_boot to be 1, got %s", devswBoot)
 		}
 	}
 	if param.leaveStatefulMarker {
