@@ -34,7 +34,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
-		Timeout:      15 * time.Minute,
+		Timeout:      25 * time.Minute,
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
@@ -63,7 +63,7 @@ func CorruptBothFWBodyAB(ctx context.Context, s *testing.State) {
 
 	shouldRestoreFirmware := false
 	cleanupContext := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
 	defer cancel()
 
 	s.Log("Backup AP firmware")
@@ -175,7 +175,7 @@ func CorruptBothFWBodyAB(ctx context.Context, s *testing.State) {
 	if err := h.WaitConnect(waitContext); err == nil {
 		s.Error("DUT is unexpectedly up, corruption failed")
 	}
-	restoreFirmware(cleanupContext)
+	restoreFirmware(ctx)
 
 	s.Log("Checking eventlog for evidence of broken screen")
 
