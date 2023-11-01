@@ -48,8 +48,14 @@ func init() {
 func HpdWake(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 
+	sw, err := mcci.GetSwitch()
+	if err != nil {
+		s.Fatal("Failed to get MCCI switch handle: ", err)
+	}
+	defer sw.Close()
+
 	// Disconnect the monitor.
-	mcci.DisablePorts()
+	sw.DisablePorts()
 
 	// GoBigSleepLint: Give enough time for a new display modeset after hot unplug.
 	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
@@ -76,7 +82,7 @@ func HpdWake(ctx context.Context, s *testing.State) {
 	}
 
 	// Reconnect the monitor.
-	mcci.EnablePort(portUsed)
+	sw.EnablePort(portUsed)
 
 	// Verify DUT reconnected.
 	if err := testing.Poll(ctx, d.Connect, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
