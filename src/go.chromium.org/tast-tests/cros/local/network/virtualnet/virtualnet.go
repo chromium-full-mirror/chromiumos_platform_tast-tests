@@ -262,9 +262,13 @@ func startServersInRouter(ctx context.Context, router *Env, pool *subnet.Pool, o
 	}
 
 	if opts.HTTPServerResponseHandler != nil {
-		httpserver := httpserver.New("80", opts.HTTPServerResponseHandler, nil)
-		if err := router.StartServer(ctx, "httpserver", httpserver); err != nil {
-			return errors.Wrap(err, "failed to start http server")
+		serverIPv4 := httpserver.New(httpserver.TCP4, "80", opts.HTTPServerResponseHandler, nil)
+		if err := router.StartServer(ctx, "httpserver_ipv4", serverIPv4); err != nil {
+			return errors.Wrap(err, "failed to start IPv4 http server")
+		}
+		serverIPv6 := httpserver.New(httpserver.TCP6, "80", opts.HTTPServerResponseHandler, nil)
+		if err := router.StartServer(ctx, "httpserver_ipv6", serverIPv6); err != nil {
+			return errors.Wrap(err, "failed to start IPv6 http server")
 		}
 	}
 
@@ -272,9 +276,13 @@ func startServersInRouter(ctx context.Context, router *Env, pool *subnet.Pool, o
 		if opts.HTTPSCerts == nil {
 			return errors.New("failed to create https server: empty certificate option")
 		}
-		httpsserver := httpserver.New("443", opts.HTTPSServerResponseHandler, opts.HTTPSCerts)
-		if err := router.StartServer(ctx, "httpsserver", httpsserver); err != nil {
-			return errors.Wrap(err, "failed to start https server")
+		serverIPv4 := httpserver.New(httpserver.TCP4, "443", opts.HTTPSServerResponseHandler, opts.HTTPSCerts)
+		if err := router.StartServer(ctx, "httpsserver_ipv4", serverIPv4); err != nil {
+			return errors.Wrap(err, "failed to start IPv4 https server")
+		}
+		serverIPv6 := httpserver.New(httpserver.TCP6, "443", opts.HTTPSServerResponseHandler, opts.HTTPSCerts)
+		if err := router.StartServer(ctx, "httpsserver_ipv6", serverIPv6); err != nil {
+			return errors.Wrap(err, "failed to start IPv6 https server")
 		}
 	}
 

@@ -305,7 +305,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 
 		// Spin up an HTTP server to handle the request.
 		for _, svr := range svrs {
-			if err := svr.rt.StartServer(ctx, "http", httpserver.New("80", handler, nil)); err != nil {
+			if err := svr.rt.StartServer(ctx, "http", httpserver.New(httpserver.TCP4, "80", handler, nil)); err != nil {
 				s.Fatal("Failed to start HTTP server: ", err)
 			}
 			test(expected,

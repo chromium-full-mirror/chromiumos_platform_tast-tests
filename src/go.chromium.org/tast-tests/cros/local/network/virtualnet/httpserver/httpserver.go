@@ -24,7 +24,22 @@ const (
 	logPath = "/tmp/httpServer.log"
 )
 
+// Family describes the IP family for the server.
+type Family int
+
+func (f Family) String() string {
+	return [...]string{"tcp4", "tcp6"}[f]
+}
+
+const (
+	// TCP4 corresponds to "tcp4" as documented in the net package.
+	TCP4 Family = iota
+	// TCP6 corresponds to "tcp6" as documented in the net package.
+	TCP6
+)
+
 type httpServer struct {
+	family Family
 	// port is the port that the HTTP server will listen and serve on.
 	port string
 	// httpsCerts is not nil if the server is using HTTPS. Otherwise, the server is using HTTP.
@@ -49,12 +64,13 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 // httpServer will only respond with |handle|. |port| will be the port the
 // HTTP server listens and serves on. |httpsCerts| is set to non nil value if
 // the server serves HTTPS. If it is empty, the server will serve HTTP.
-func New(port string, handle func(rw http.ResponseWriter, req *http.Request), httpsCerts *certs.Certs) *httpServer {
-	return &httpServer{port: port, handle: handle, httpsCerts: httpsCerts}
+// |family| is the IP family for the server.
+func New(family Family, port string, handle func(rw http.ResponseWriter, req *http.Request), httpsCerts *certs.Certs) *httpServer {
+	return &httpServer{family: family, port: port, handle: handle, httpsCerts: httpsCerts}
 }
 
 // Start starts the HTTP server in a separate process. The HTTP server listens on
-// any IPv4 and IPv6 address within the namespace. If |httpsCerts| is not nil,
+// either IPv4 or IPv6 address within the namespace. If |httpsCerts| is not nil,
 // the server will serve HTTPS.
 func (h *httpServer) Start(ctx context.Context, env *env.Env) (retErr error) {
 	h.env = env
@@ -69,7 +85,7 @@ func (h *httpServer) Start(ctx context.Context, env *env.Env) (retErr error) {
 			return
 		}
 		defer cleanup()
-		ln, err := net.Listen("tcp", h.server.Addr)
+		ln, err := net.Listen(h.family.String(), h.server.Addr)
 		if err != nil {
 			errChannel <- err
 			return
