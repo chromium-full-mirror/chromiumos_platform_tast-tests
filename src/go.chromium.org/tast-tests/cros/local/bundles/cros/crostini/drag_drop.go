@@ -111,6 +111,14 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	}
 	defer restore(cleanupCtx)
 
+	// Ensure device is in clamshell mode.
+	revert, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to ensure clamshell mode")
+		return
+	}
+	defer revert(cleanupCtx)
+
 	s.Log("Copying testing applets to container")
 	if err := cont.PushFile(ctx, s.DataPath(dragApplet), dragApplet); err != nil {
 		s.Fatal("Failed to push drag applet to container: ", err)
