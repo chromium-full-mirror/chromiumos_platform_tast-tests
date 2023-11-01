@@ -7,7 +7,21 @@ package testenv
 import (
 	"context"
 
-	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+// Runtime vars of host maps and route rules per each test environment
+// PreprodEnv (internals from vars in private)
+var (
+	googleHostMapVar = testing.RegisterVarString(
+		"testenv.Google.HostMap",
+		"",
+		"A map of Google service host names keyed by labels")
+
+	googleRouteRulesVar = testing.RegisterVarString(
+		"testenv.Google.RouteRules",
+		"",
+		"A map of host route rules for Google services")
 )
 
 // PreprodEnv is the preprod environment.
@@ -18,7 +32,7 @@ type PreprodEnv struct {
 // NewPreprodEnv creates a PreprodEnv instance.
 func NewPreprodEnv(ctx context.Context) (Env, error) {
 	e, err := newBaseEnv(ctx,
-		Preprod, fakeHostMapVar.Value() /* replace */, fakeRouteRulesVar.Value() /* replace */)
+		Preprod, googleHostMapVar.Value(), googleRouteRulesVar.Value())
 	if err != nil {
 		return nil, err
 	}
@@ -28,11 +42,12 @@ func NewPreprodEnv(ctx context.Context) (Env, error) {
 // SetUp sets up the preprod environment.
 func (p *PreprodEnv) SetUp(ctx context.Context) error {
 	// TODO: Implement host overrides for the given route rules
-	return errors.New("Not implemented")
+	testing.ContextLogf(ctx, "Setting up %v env with hosts: %v", p.name, p.registry.hostMap)
+	return nil
 }
 
 // TearDown cleans up any changes made for the preprod environment.
 func (p *PreprodEnv) TearDown(ctx context.Context) error {
-	// TODO: Clean up any changes made for this environment
-	return errors.New("Not implemented")
+	testing.ContextLogf(ctx, "Tearing down %v env", p.name)
+	return nil
 }

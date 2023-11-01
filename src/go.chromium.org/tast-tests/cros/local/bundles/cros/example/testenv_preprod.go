@@ -13,21 +13,21 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TestenvFake,
-		Desc:         "Example that set up the fake test environments",
+		Func:         TestenvPreprod,
+		Desc:         "Example that set up the preprod test environments",
 		Contacts:     []string{"cros-ufo-testing@google.com", "hyungtaekim@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{},  // manual
 	})
 }
 
-func TestenvFake(ctx context.Context, s *testing.State) {
-	env, err := testenv.NewFakeEnv(ctx)
+func TestenvPreprod(ctx context.Context, s *testing.State) {
+	env, err := testenv.NewPreprodEnv(ctx)
 	if err != nil {
-		s.Error("Failed to set up the fake env: ", err)
+		s.Error("Failed to init the preprod env: ", err)
 	}
 	if err := env.SetUp(ctx); err != nil {
-		s.Error("Failed to turn up the fake env: ", err)
+		s.Error("Failed to set up the preprod env: ", err)
 	}
 	defer env.TearDown(ctx)
 }
