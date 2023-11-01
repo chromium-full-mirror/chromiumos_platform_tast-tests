@@ -11,9 +11,10 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
+	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/pdfocr"
+	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -52,7 +53,7 @@ func PDFOCRFromContextMenu(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	bt := s.Param().(browser.Type)
-	data, err := pdfocr.SetUp(ctx, cleanupCtx, s.DataFileSystem(), bt)
+	data, err := pdfocr.SetUpHTTPServer(ctx, cleanupCtx, s.DataFileSystem(), bt)
 	if err != nil {
 		s.Fatal("Failed to setup PDF OCR test: ", err)
 	}
@@ -64,17 +65,19 @@ func PDFOCRFromContextMenu(ctx context.Context, s *testing.State) {
 
 	cr := data.CR
 	server := data.Server
-	tconn := data.TConn
 
-	// Open the test PDF.
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/"+pdfocr.TestPDFName)
+	// Enable ChromeVox and open the test PDF.
+	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.GoogleTTSEnUsVoice(), tts.GoogleTTSEngine(), bt, server.URL+"/"+pdfocr.TestPDFName)
 	if err != nil {
-		s.Fatal("Failed to open test PDF: ", err)
+		s.Fatal("Failed to set up ChromeVox: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
+	defer func() {
+		if err := cvData.TearDown(); err != nil {
+			s.Fatal("Failed to tear down ChromeVox setup: ", err)
+		}
+	}()
 
-	ui := uiauto.New(tconn)
+	ui := uiauto.New(cvData.TTSData.TConn)
 	pdfRoot := nodewith.Role(role.PdfRoot)
 	if err := ui.WaitUntilExists(pdfRoot)(ctx); err != nil {
 		s.Fatal("Failed to wait for the PDF ROOT node to be created in the accessibility tree: ", err)

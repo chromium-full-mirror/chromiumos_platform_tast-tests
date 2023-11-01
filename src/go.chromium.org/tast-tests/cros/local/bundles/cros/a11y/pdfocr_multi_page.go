@@ -74,13 +74,13 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 	server := data.Server
 
 	// Enable ChromeVox and open the test PDF.
-	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.EspeakElVoice(), tts.EspeakEngine(), bt, server.URL+"/"+pdfocr.MultiPagePDFName)
+	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.GoogleTTSEnUsVoice(), tts.GoogleTTSEngine(), bt, server.URL+"/"+pdfocr.MultiPagePDFName)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}
 	defer func() {
 		if err := cvData.TearDown(); err != nil {
-			s.Fatal("Failed to tear down ChromeVox test: ", err)
+			s.Fatal("Failed to tear down ChromeVox setup: ", err)
 		}
 	}()
 
@@ -111,7 +111,6 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to unmarshal the json file")
 	}
 
-	// Note that ChromeVox was enabled in `pdfocr.SetUp()` above.
 	readingOrder := []pdfocr.TestStep{
 		{
 			KeyCommands:  []string{chromevox.NextLandmark},

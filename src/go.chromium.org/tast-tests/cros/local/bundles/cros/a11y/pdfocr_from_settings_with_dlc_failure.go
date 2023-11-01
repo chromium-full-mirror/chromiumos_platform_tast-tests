@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
+	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/pdfocr"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -85,7 +86,7 @@ func PDFOCRFromSettingsWithDlcFailure(ctx context.Context, s *testing.State) {
 	}()
 
 	bt := s.Param().(browser.Type)
-	poData, err := pdfocr.SetUp(ctx, cleanupCtx, s.DataFileSystem(), bt)
+	poData, err := pdfocr.SetUpHTTPServer(ctx, cleanupCtx, s.DataFileSystem(), bt)
 	if err != nil {
 		s.Fatal("Failed to setup PDF OCR test: ", err)
 	}
@@ -97,7 +98,6 @@ func PDFOCRFromSettingsWithDlcFailure(ctx context.Context, s *testing.State) {
 
 	cr := poData.CR
 	server := poData.Server
-	tconn := poData.TConn
 
 	for _, subtest := range []struct {
 		scenario              string
@@ -110,16 +110,19 @@ func PDFOCRFromSettingsWithDlcFailure(ctx context.Context, s *testing.State) {
 		secondDownloadSuccess: true,
 	}} {
 		s.Run(ctx, subtest.scenario, func(ctx context.Context, s *testing.State) {
-			// Get a speech monitor for the Google TTS engine.
-			ed := tts.GoogleTTSEngine()
-			sm, err := tts.RelevantSpeechMonitor(ctx, cr, tconn, ed)
+			// Enable ChromeVox and open the test PDF.
+			cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.GoogleTTSEnUsVoice(), tts.GoogleTTSEngine(), bt, server.URL+"/"+pdfocr.TestPDFName)
 			if err != nil {
-				s.Fatal("Failed to connect to the TTS background page: ", err)
+				s.Fatal("Failed to set up ChromeVox: ", err)
 			}
-			defer sm.Close()
+			defer func() {
+				if err := cvData.TearDown(); err != nil {
+					s.Fatal("Failed to tear down ChromeVox setup: ", err)
+				}
+			}()
 
+			tconn := cvData.TTSData.TConn
 			ui := uiauto.New(tconn)
-
 			ttsHeading := nodewith.NameStartingWith("Text-to-Speech").Role(role.Heading)
 			settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "textToSpeech", ui.Exists(ttsHeading))
 			if err != nil {
@@ -137,7 +140,7 @@ func PDFOCRFromSettingsWithDlcFailure(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to wait for the PDF OCR to be reset: ", err)
 			}
 
-			if err := pdfocr.ExpectDownloadFailureUtterance(ctx, sm); err != nil {
+			if err := pdfocr.ExpectDownloadFailureUtterance(cvData.Context(), cvData.SpeechMonitor()); err != nil {
 				s.Fatal("Failed to check the ChromeVox announcement for PDF OCR dlc failure: ", err)
 			}
 
@@ -186,7 +189,7 @@ func PDFOCRFromSettingsWithDlcFailure(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to wait for the PDF OCR to be reset: ", err)
 				}
 
-				if err := pdfocr.ExpectDownloadFailureUtterance(ctx, sm); err != nil {
+				if err := pdfocr.ExpectDownloadFailureUtterance(cvData.Context(), cvData.SpeechMonitor()); err != nil {
 					s.Fatal("Failed to check the ChromeVox announcement for PDF OCR dlc failure: ", err)
 				}
 			}
