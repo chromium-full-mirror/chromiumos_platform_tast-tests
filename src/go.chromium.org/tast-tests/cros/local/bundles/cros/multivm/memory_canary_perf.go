@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/memory/memoryuser"
 	"go.chromium.org/tast-tests/cros/local/multivm"
+	"go.chromium.org/tast-tests/cros/local/resourced"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -59,7 +60,8 @@ func init() {
 	})
 }
 
-const canaryAllocatedMiB = 256
+const canaryAllocationMiB = 256
+const canaryAllocationKiB = canaryAllocationMiB * 1024
 const canaryCompressionRatio = 0.67
 const allocatorComplessionRatio = 0.67
 
@@ -87,10 +89,29 @@ func appendAllocatedMetric(p *perf.Values, allocationTimeline []allocationTimeli
 	}
 }
 
+func appendKillLatencyMetric(p *perf.Values, label string, latency time.Duration) {
+	p.Append(perf.Metric{
+		Name:      label + "_latency",
+		Unit:      "s",
+		Direction: perf.SmallerIsBetter,
+		Multiple:  true,
+	}, latency.Seconds())
+}
+
 func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPerfParam, allocationMiB int64, allocationPeriod time.Duration, cr *chrome.Chrome, br *browser.Browser, a *arc.ARC, p *perf.Values) error {
+	allocationKiB := allocationMiB * 1024
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
+
+	rm, err := resourced.NewClient(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to Resource Manager")
+	}
+	margins, err := rm.MemoryMarginsKB(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get memory margins")
+	}
 
 	allocationManager := memoryuser.NewMemoryAllocationManager(ctx, memoryuser.Host, allocationMiB, allocatorComplessionRatio, a)
 	defer allocationManager.Cleanup(cleanupCtx)
@@ -99,7 +120,7 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 	if err != nil {
 		return errors.Wrap(err, "failed to create TestConn for opening canaries")
 	}
-	canaryCloser, err := memoryuser.OpenAppTabCanaries(ctx, canaryAllocatedMiB, canaryCompressionRatio, br, fs, tconn, a)
+	canaryCloser, err := memoryuser.OpenAppTabCanaries(ctx, canaryAllocationMiB, canaryCompressionRatio, br, fs, tconn, a)
 	if err != nil {
 		return err
 	}
@@ -117,6 +138,12 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 	}
 	defer tabDiscards.Close()
 
+	vmmmsKills, err := memoryuser.NewVmmmmsKillObserver(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to observer VMMMS kills")
+	}
+	defer vmmmsKills.Close()
+
 	var allocationTime time.Duration = 0
 	var allocationTimeline []allocationTimelineEntry
 
@@ -128,6 +155,27 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 	for {
 		if err := allocationManager.AssertNoDeadAllocator(); err != nil {
 			return errors.Wrap(err, "an allocator is killed before the canary")
+		}
+
+		availableKB, err := rm.AvailableMemoryKB(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get available memory")
+		}
+
+		// Don't allocate unless after this allocation we would still be less than
+		// one half of a canary size below the ChromeOS critical margin. We don't
+		// want Chrome discarding two canaries at once.
+		aboveCriticalKiB := int64(availableKB) - int64(margins.CriticalKB)
+		if aboveCriticalKiB-allocationKiB < -canaryAllocationKiB/2 {
+			testing.ContextLogf(ctx, "ChromeOS critical margin breached by %d kiB, sleeping", -aboveCriticalKiB)
+			// GoBigSleepLint: Sleep until we are not below the critical margin.
+			if err := testing.Sleep(ctx, time.Second); err != nil {
+				return errors.Wrap(err, "failed to sleep to throttle allocations")
+			}
+			// Update start so that we throttle allocations as if this delay didn't
+			// happen.
+			start = time.Now().Add(-allocationPeriod * time.Duration(allocationNum))
+			continue
 		}
 
 		// Track the time spent actually allocating as a performance metric.
@@ -181,8 +229,14 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		if tabDiscards.Error != nil {
 			return errors.Wrap(tabDiscards.Error, "failed while waiting for tab discard")
 		}
+		if vmmmsKills.Error != nil {
+			return errors.Wrap(vmmmsKills.Error, "failed while waiting for VMMMS kill")
+		}
 
-		if appKills.Foreground != nil && appKills.Perceptible != nil && appKills.Cached != nil && tabDiscards.ProtectedBackground != nil && tabDiscards.Background != nil {
+		if appKills.Foreground != nil && tabDiscards.ProtectedBackground != nil && vmmmsKills.FocusedApp != nil {
+			// We saw the highest priority in all the observers, so we're done. There
+			// might be some missing priorities, but if there are that is a failure
+			// which we will check below.
 			break
 		}
 	}
@@ -196,44 +250,46 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		Multiple:  true,
 	}, float64(totalAllocated)/allocationTime.Seconds())
 
-	if appKills.Foreground != nil {
-		appendAllocatedMetric(p, allocationTimeline, "arc_foreground", appKills.Foreground.Time)
+	if !appKills.AllPrioritiesObserved() {
+		return errors.New("not all app kill priorities observed")
 	}
-	if appKills.Perceptible != nil {
-		appendAllocatedMetric(p, allocationTimeline, "arc_perceptible", appKills.Perceptible.Time)
+
+	if !tabDiscards.AllPrioritiesObserved() {
+		return errors.New("not all tab discard priorities observed")
 	}
-	if appKills.Cached != nil {
-		appendAllocatedMetric(p, allocationTimeline, "arc_cached", appKills.Cached.Time)
+
+	if !vmmmsKills.AllPrioritiesObserved() {
+		return errors.New("not all VMMMS kill priorities observed")
 	}
-	if tabDiscards.ProtectedBackground != nil {
-		appendAllocatedMetric(p, allocationTimeline, "tab_protected", tabDiscards.ProtectedBackground.Time)
-	}
-	if tabDiscards.Background != nil {
-		appendAllocatedMetric(p, allocationTimeline, "tab_background", tabDiscards.Background.Time)
-	}
+
+	appendAllocatedMetric(p, allocationTimeline, "arc_foreground", appKills.Foreground.Time)
+	appendAllocatedMetric(p, allocationTimeline, "arc_perceptible", appKills.Perceptible.Time)
+	appendAllocatedMetric(p, allocationTimeline, "arc_cached", appKills.Cached.Time)
+	appendAllocatedMetric(p, allocationTimeline, "tab_protected", tabDiscards.ProtectedBackground.Time)
+	appendAllocatedMetric(p, allocationTimeline, "tab_background", tabDiscards.Background.Time)
+
+	// TODO(cwd): Figure out how to synchronize guest and host clocks so we don't
+	// get negative latencies from Android.
+	appendKillLatencyMetric(p, "arc_foreground", appKills.Foreground.Time.Sub(vmmmsKills.PerceptibleApp.Time))
+	appendKillLatencyMetric(p, "arc_perceptible", appKills.Perceptible.Time.Sub(vmmmsKills.PerceptibleApp.Time))
+	appendKillLatencyMetric(p, "arc_cached", appKills.Cached.Time.Sub(vmmmsKills.CachedApp.Time))
+	appendKillLatencyMetric(p, "tab_protected", tabDiscards.ProtectedBackground.Time.Sub(vmmmsKills.PerceptibleTab.Time))
+	appendKillLatencyMetric(p, "tab_background", tabDiscards.Background.Time.Sub(vmmmsKills.CachedTab.Time))
 
 	// Check that app kills and tab discards happened in the right order.
 	// NB: We do this here after observing all tab discards and app killed because
 	// we don't want any races between the log parsing in the observers.
-	if appKills.Perceptible.Time.Before(tabDiscards.Background.Time) {
+	if vmmmsKills.CachedTab.Time.Before(vmmmsKills.CachedApp.Time) {
+		return errors.New("background tab discard before cached app kill")
+	}
+	if vmmmsKills.PerceptibleApp.Time.Before(vmmmsKills.CachedTab.Time) {
 		return errors.New("perceptible app kill before background tab discard")
 	}
-	if appKills.Perceptible.Time.Before(appKills.Cached.Time) {
-		return errors.New("perceptible app kill before cached app kill")
+	if vmmmsKills.PerceptibleTab.Time.Before(vmmmsKills.PerceptibleApp.Time) {
+		return errors.New("protected background tab discard before perceptible app kill")
 	}
-	if tabDiscards.ProtectedBackground.Time.Before(tabDiscards.Background.Time) {
-		return errors.New("protected tab discard before background tab discard")
-	}
-	if appKills.Foreground.Time.Before(tabDiscards.ProtectedBackground.Time) {
-		return errors.New("foreground app kill before protected background tab discard")
-	}
-	// These two aren't necessary if we assume there is no priority inversion
-	// within a component, but probably it's best to check.
-	if appKills.Foreground.Time.Before(appKills.Perceptible.Time) {
-		return errors.New("foreground app kill before perceptible app kill")
-	}
-	if tabDiscards.ProtectedBackground.Time.Before(appKills.Cached.Time) {
-		return errors.New("protected tab discard before backgrond tab discard")
+	if vmmmsKills.FocusedApp.Time.Before(vmmmsKills.PerceptibleTab.Time) {
+		return errors.New("focused app kill before protected background tab discard")
 	}
 
 	return nil
@@ -270,8 +326,15 @@ func MemoryCanaryPerf(ctx context.Context, s *testing.State) {
 	const allocationFraction = 0.005
 	allocationMiB := int64(allocationFraction * float64(info.Total) / float64(memory.MiB))
 
-	// Default allocation rate is 1% per second
-	allocationRate := 0.01
+	if allocationMiB*3 > canaryAllocationMiB {
+		// Limit the allocation size to 1/3 of the canary size so that we can't
+		// breach the ChromeOS critical margin by too much with a single
+		// allocation. We don't want Chrome to kill two canaries at once.
+		allocationMiB = canaryAllocationMiB / 3
+	}
+
+	// Default allocation rate is 2% per second
+	allocationRate := 0.02
 	throttleStr, ok := s.Var(throttleVar)
 	if ok {
 		parsedAllocationRate, err := strconv.ParseFloat(throttleStr, 64)
@@ -284,7 +347,7 @@ func MemoryCanaryPerf(ctx context.Context, s *testing.State) {
 		allocationRate = parsedAllocationRate
 	}
 
-	s.Logf("Allocation size: %.3f RAM = %d MiB", allocationFraction, allocationMiB)
+	s.Logf("Allocation size: %d MiB", allocationMiB)
 	allocationPeriod := time.Duration(0)
 	if allocationRate > 0 {
 		allocationPeriod = time.Duration(float64(time.Second) * allocationFraction / allocationRate)
@@ -308,6 +371,15 @@ func MemoryCanaryPerf(ctx context.Context, s *testing.State) {
 	}, float64(info.Total)/float64(memory.MiB))
 
 	for i := 0; i < iterations; i++ {
+		if i > 0 {
+			// GoBigSleepLint: Sleep for 10s in between iterations so that the
+			// highest priority blockers have a chance to expire.
+			// TODO (kalutes): Figure out a good way to clear the blockers in tests
+			// without waiting.
+			if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+				s.Fatal("Failed to sleep between iterations: ", err)
+			}
+		}
 		if err := stressCanary(ctx, s.DataFileSystem(), param, allocationMiB, allocationPeriod, pre.Chrome, br, preARC, p); err != nil {
 			s.Fatal("Error in the canary stress test: ", err)
 		}

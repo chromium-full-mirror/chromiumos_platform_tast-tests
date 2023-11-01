@@ -42,6 +42,12 @@ func (o *ArcMemoryKillObserver) Close() {
 	o.cancel()
 }
 
+// AllPrioritiesObserved returns true if all priorities of apps have been
+// killed.
+func (o *ArcMemoryKillObserver) AllPrioritiesObserved() bool {
+	return o.Cached != nil && o.Perceptible != nil && o.Foreground != nil
+}
+
 // Reset clears any recorded kill events to allow new ones to be recorded.
 func (o *ArcMemoryKillObserver) Reset() {
 	o.Cached = nil
@@ -49,30 +55,12 @@ func (o *ArcMemoryKillObserver) Reset() {
 	o.Foreground = nil
 }
 
-var pressureKillRE = regexp.MustCompile(`^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}) +[0-9]+ +[0-9]+ I ArcProcessService: ApplyHostMemoryPressure\((CACHED|PERCEPTIBLE|FOREGROUND)\) killed ([^ ]+) `)
 var lmkdKillRE = regexp.MustCompile(`^([0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}) +[0-9]+ +[0-9]+ I lowmemorykiller: Kill '([^']+)' \([0-9]+\), uid [0-9]+, oom_(?:score_)?adj ([0-9]+) `)
 
 func (o *ArcMemoryKillObserver) observeLine(ctx context.Context, line string) {
 	var recordLocation **ArcMemoryKillInfo
 	var timeString, packageString string
-	if groups := pressureKillRE.FindStringSubmatch(line); groups != nil {
-		timeString = groups[1]
-		packageString = groups[3]
-
-		priString := groups[2]
-		switch priString {
-		case "CACHED":
-			recordLocation = &o.Cached
-		case "PERCEPTIBLE":
-			recordLocation = &o.Perceptible
-		case "FOREGROUND":
-			recordLocation = &o.Foreground
-		default:
-			testing.ContextLogf(ctx, "Warning: ArcMemoryKillObserver unknown pressure kill priority %q", priString)
-			return
-		}
-		testing.ContextLogf(ctx, "ApplyHostMemoryPressure kill observed, %q, %s", packageString, priString)
-	} else if groups := lmkdKillRE.FindStringSubmatch(line); groups != nil {
+	if groups := lmkdKillRE.FindStringSubmatch(line); groups != nil {
 		timeString = groups[1]
 		packageString = groups[2]
 
@@ -82,25 +70,27 @@ func (o *ArcMemoryKillObserver) observeLine(ctx context.Context, line string) {
 			testing.ContextLog(ctx, "Warning: ArcMemoryKillObserver failed to parse oom_adj: ", err)
 			return
 		}
+		var priString string
 		if oomAdj >= 900 { // ProcessList.CACHED_APP_MIN_ADJ
 			recordLocation = &o.Cached
+			priString = "cached"
 		} else if oomAdj > 0 { // ProcessList.FOREGROUND_APP_ADJ
 			recordLocation = &o.Perceptible
+			priString = "perceptible"
 		} else {
 			recordLocation = &o.Foreground
+			priString = "foreground"
 		}
-		testing.ContextLogf(ctx, "LMKD kill observed, %q, %d", packageString, oomAdj)
-	} else {
-		return
-	}
 
-	if *recordLocation == nil {
-		t, err := adb.ParseLogcatTimestamp(timeString)
-		if err != nil {
-			testing.ContextLog(ctx, "Warning: ArcMemoryKillObserver failed to parse timestamp: ", err)
-			return
+		if *recordLocation == nil {
+			t, err := adb.ParseLogcatTimestamp(timeString)
+			if err != nil {
+				testing.ContextLog(ctx, "Warning: ArcMemoryKillObserver failed to parse timestamp: ", err)
+				return
+			}
+			*recordLocation = &ArcMemoryKillInfo{t, packageString}
+			testing.ContextLogf(ctx, "LMKD kill observed, %q, %d (%s)", packageString, oomAdj, priString)
 		}
-		*recordLocation = &ArcMemoryKillInfo{t, packageString}
 	}
 }
 
@@ -115,7 +105,7 @@ func NewArcMemoryKillObserver(ctx context.Context, a *arc.ARC) (*ArcMemoryKillOb
 	go func() {
 		o.Error = a.WaitForLogcatSince(observeContext, func(line string) bool {
 			o.observeLine(observeContext, line)
-			return false
+			return o.AllPrioritiesObserved()
 		}, now)
 	}()
 	return o, nil

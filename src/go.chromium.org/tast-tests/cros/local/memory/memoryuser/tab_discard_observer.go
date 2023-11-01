@@ -7,13 +7,14 @@ package memoryuser
 import (
 	"bufio"
 	"context"
+	"regexp"
+	"strconv"
+	"time"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"regexp"
-	"strconv"
-	"time"
 )
 
 // TabDiscardInfo describes a tab discard event in Chrome.
@@ -42,6 +43,12 @@ type TabDiscardObserver struct {
 // Close causes this observer to stop monitoring for new kill events.
 func (o *TabDiscardObserver) Close() {
 	o.cancel()
+}
+
+// AllPrioritiesObserved returns true if all priorities of tabs have been
+// discarded.
+func (o *TabDiscardObserver) AllPrioritiesObserved() bool {
+	return o.Background != nil && o.ProtectedBackground != nil
 }
 
 // Reset clears any recorded kill events to allow new ones to be recorded.
@@ -89,18 +96,15 @@ func (o *TabDiscardObserver) observeLine(ctx context.Context, line string) {
 			testing.ContextLogf(ctx, "Unknown tab priority %q", pri)
 			return
 		}
-		testing.ContextLogf(ctx, "Tab discard observed, ID %d, %s", id, pri)
-	} else {
-		return
-	}
-
-	if *recordLocation == nil {
-		t, err := time.ParseInLocation(time.RFC3339Nano, timeString, time.UTC)
-		if err != nil {
-			testing.ContextLog(ctx, "Failed to parse time of discarded tab: ", err)
-			return
+		if *recordLocation == nil {
+			t, err := time.ParseInLocation(time.RFC3339Nano, timeString, time.UTC)
+			if err != nil {
+				testing.ContextLog(ctx, "Failed to parse time of discarded tab: ", err)
+				return
+			}
+			*recordLocation = &TabDiscardInfo{t}
+			testing.ContextLogf(ctx, "Tab discard observed, ID %d, %s", id, pri)
 		}
-		*recordLocation = &TabDiscardInfo{t}
 	}
 }
 
@@ -123,6 +127,7 @@ func NewTabDiscardObserver(ctx context.Context, cr *chrome.Chrome) (*TabDiscardO
 			line, err := reader.ReadString('\n')
 			if err != nil {
 				o.Error = err
+				return
 			}
 			o.observeLine(ctx, line)
 		}
