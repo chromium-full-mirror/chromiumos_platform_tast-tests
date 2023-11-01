@@ -32,7 +32,7 @@ func init() {
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      5*time.Minute + power.RecorderTimeout,
+		Timeout:      time.Hour + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:      "h264_720_30fps_ash",
 			Fixture:   "powerAshRamfs",
@@ -49,6 +49,13 @@ func init() {
 			Val:       videoPlaybackTestParam{VideoName: "h264_1080_30fps"},
 			ExtraData: []string{"video_playback/h264_1080_30fps.mp4"},
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "group:power", "power_regression"},
+		}, {
+			Name:      "h264_1080_30fps_1hr_ash",
+			Fixture:   "powerAshRamfs",
+			ExtraData: []string{"video_playback/h264_1080_30fps.mp4"},
+			Val: videoPlaybackTestParam{
+				VideoName:  "h264_1080_30fps",
+				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
 		}, {
 			Name:      "h264_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",
@@ -111,6 +118,13 @@ func init() {
 			ExtraData: []string{"video_playback/vp9_1080_30fps.webm"},
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "group:power", "power_regression"},
 		}, {
+			Name:      "vp9_1080_30fps_1hr_ash",
+			Fixture:   "powerAshRamfs",
+			ExtraData: []string{"video_playback/vp9_1080_30fps.webm"},
+			Val: videoPlaybackTestParam{
+				VideoName:  "vp9_1080_30fps",
+				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
+		}, {
 			Name:      "vp9_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",
 			Val:       videoPlaybackTestParam{VideoName: "vp9_1080_60fps"},
@@ -164,6 +178,14 @@ func init() {
 			Val:               videoPlaybackTestParam{VideoName: "h264_1080_30fps"},
 			ExtraData:         []string{"video_playback/h264_1080_30fps.mp4"},
 			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		}, {
+			Name:              "h264_1080_30fps_1hr_lacros",
+			Fixture:           "powerLacrosRamfs",
+			ExtraData:         []string{"video_playback/h264_1080_30fps.mp4"},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val: videoPlaybackTestParam{
+				VideoName:  "h264_1080_30fps",
+				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
 		}, {
 			Name:              "h264_1080_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
@@ -237,6 +259,14 @@ func init() {
 			Val:               videoPlaybackTestParam{VideoName: "vp9_1080_30fps"},
 			ExtraData:         []string{"video_playback/vp9_1080_30fps.webm"},
 			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		}, {
+			Name:              "vp9_1080_30fps_1hr_lacros",
+			Fixture:           "powerLacrosRamfs",
+			ExtraData:         []string{"video_playback/vp9_1080_30fps.webm"},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val: videoPlaybackTestParam{
+				VideoName:  "vp9_1080_30fps",
+				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
 		}, {
 			Name:              "vp9_1080_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
