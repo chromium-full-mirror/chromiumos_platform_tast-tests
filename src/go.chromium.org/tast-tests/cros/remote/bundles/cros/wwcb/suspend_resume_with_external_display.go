@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
-	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 
@@ -36,8 +35,12 @@ func init() {
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "DockingID", "ExtDispID1"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.wwcb.DisplayService", "tast.cros.inputs.KeyboardService"},
-		Data:         []string{utils.VideoFile},
+		ServiceDeps: []string{
+			"tast.cros.browser.ChromeService",
+			"tast.cros.apps.AppsService",
+			"tast.cros.ui.AutomationService",
+			"tast.cros.wwcb.DisplayService",
+		},
 	})
 }
 
@@ -78,16 +81,6 @@ func SuspendResumeWithExternalDisplay(ctx context.Context, s *testing.State) {
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
 
-	if err := utils.InitWebcam(ctx, s); err != nil {
-		s.Fatal("Failed to initialize webcam: ", err)
-	}
-
-	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
-	appsSvc := pb.NewAppsServiceClient(cl.Conn)
-	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
-	keyboardSvc := inputspb.NewKeyboardServiceClient(cl.Conn)
-	fs := dutfs.NewClient(cl.Conn)
-
 	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
@@ -105,6 +98,11 @@ func SuspendResumeWithExternalDisplay(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
+	appsSvc := pb.NewAppsServiceClient(cl.Conn)
+	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
+	fs := dutfs.NewClient(cl.Conn)
+
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
 		s.Fatal("Failed to verify display count: ", err)
 	}
@@ -119,9 +117,17 @@ func SuspendResumeWithExternalDisplay(ctx context.Context, s *testing.State) {
 	// GoBigSleepLint: Wait for external display screen to show up.
 	testing.Sleep(ctx, 30*time.Second)
 
-	extDispIDArray := []string{extDispID}
-	if err := utils.MappingWebcam(ctx, s, fs, keyboardSvc, displaySvc, appsSvc, uiautoSvc, extDispIDArray); err != nil {
-		s.Fatal("Failed to do the map about the displays & the webcams: ", err)
+	if err := utils.OpenRGBImageOnDisplays(ctx, fs, appsSvc, uiautoSvc, displaySvc); err != nil {
+		s.Fatal("Failed to open RGB image on each display: ", err)
+	}
+	defer appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60})
+
+	if err := utils.InitWebcam(ctx, s); err != nil {
+		s.Fatal("Failed to initialize webcam: ", err)
+	}
+
+	if err := utils.PairWebcamToDisplay(ctx, s, displayIDs.DisplayIds); err != nil {
+		s.Fatal("Failed to pair webcam to display: ", err)
 	}
 
 	extDispBrightnessAwake, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
