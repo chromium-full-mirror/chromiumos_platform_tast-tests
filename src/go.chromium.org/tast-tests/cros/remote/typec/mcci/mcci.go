@@ -10,7 +10,7 @@ package mcci
 import (
 	"fmt"
 
-	"github.com/tarm/serial"
+	"go.bug.st/serial"
 
 	"go.chromium.org/tast/core/errors"
 )
@@ -38,8 +38,9 @@ func EnablePort(portNum int) error {
 // writeSerial implements the raw write command to the MCCI serial interface.
 func writeSerial(str string) error {
 	// Rather than maintaining an open connection, it's simpler to just open the port each time a write occurs and close it immediately after.
-	c := &serial.Config{Name: mcciPortPath, Baud: 9600, Parity: serial.ParityNone, StopBits: serial.Stop1}
-	port, err := serial.OpenPort(c)
+
+	mode := &serial.Mode{BaudRate: 9600, DataBits: 8, Parity: serial.NoParity, StopBits: serial.OneStopBit}
+	port, err := serial.Open(mcciPortPath, mode)
 	if err != nil {
 		return errors.Wrap(err, "Unable to open MCCI serial port")
 	}
