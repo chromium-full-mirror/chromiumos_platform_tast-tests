@@ -74,7 +74,7 @@ func NewTester(ctx context.Context, s *testing.State, account *tape.OwnedTestAcc
 	return &Tester{dut: s.DUT(), userAccount: testAccount, accountManager: accountManager, isFirstCycle: true, logger: s, rpcHint: s.RPCHint()}, nil
 }
 
-// Cleanup should be called when the test is about to exit to clean up any resources that
+// CleanUp should be called when the test is about to exit to clean up any resources that
 // might be left behind otherwise.
 func (t *Tester) CleanUp(ctx context.Context) error {
 	if t.accountManager != nil {
@@ -85,11 +85,13 @@ func (t *Tester) CleanUp(ctx context.Context) error {
 	return nil
 }
 
+// OverrideCycleID overrides the hibernate cycle id.
 func (t *Tester) OverrideCycleID(cycleID uint32) {
 	t.cycleID = cycleID
 	t.overrideCycleID = true
 }
 
+// SetSimulateMemoryPressure can be used to set the amount of simulated memory pressure in MB.
 func (t *Tester) SetSimulateMemoryPressure(memMB uint32) {
 	t.memPressureMB = memMB
 }
@@ -337,7 +339,7 @@ func (t *Tester) verifyMemPressureHashOnResume(ctx context.Context) error {
 	`
 	out, err := t.dut.Conn().CommandContext(cmdCtx, "/bin/sh", "-c", verifyCmd).CombinedOutput()
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to verify mem pressure: %s", string(out)))
+		return errors.Wrapf(err, "failed to verify mem pressure: %s", string(out))
 	}
 
 	if strings.Contains(string(out), "FAILED HASH VERIFICATION") {
