@@ -23,8 +23,7 @@ import (
 )
 
 type testParameters struct {
-	crashCommand   string
-	expectSafeMode bool
+	crashCommand string
 }
 
 func init() {
@@ -47,38 +46,34 @@ func init() {
 			{
 				Name: "assert",
 				Val: testParameters{
-					crashCommand:   "crash assert",
-					expectSafeMode: true,
+					crashCommand: "crash assert",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.ECFeatureAssertsPanic()),
 			},
 			{
 				Name: "divzero",
 				Val: testParameters{
-					crashCommand:   "crash divzero",
-					expectSafeMode: true,
+					crashCommand: "crash divzero",
 				},
 			},
 			{
 				Name: "stack",
 				Val: testParameters{
-					crashCommand:   "crash stack",
-					expectSafeMode: true,
+					crashCommand: "crash stack",
 				},
 			},
 			{
 				Name: "unaligned",
 				Val: testParameters{
-					crashCommand:   "crash unaligned",
-					expectSafeMode: true,
+					crashCommand: "crash unaligned",
 				},
 			},
 			{
 				Name: "watchdog",
 				Val: testParameters{
-					crashCommand:   "crash watchdog",
-					expectSafeMode: false,
+					crashCommand: "crash watchdog",
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.ECBuildConfigOptions("PANIC_ON_WATCHDOG_WARNING", "PLATFORM_EC_PANIC_ON_WATCHDOG_WARNING")),
 			},
 		},
 	})
@@ -247,22 +242,16 @@ func ECSafeMode(ctx context.Context, s *testing.State) {
 	if panicinfoFlags&panicDataFlagSafeModeFailPreconditions != 0 {
 		s.Error("PANIC_DATA_FLAG_SAFE_MODE_FAIL_PRECONDITIONS is set in panic info flags")
 	}
-	if param.expectSafeMode {
-		if panicinfoFlags&panicDataFlagSafeModeStarted == 0 {
-			s.Error("PANIC_DATA_FLAG_SAFE_MODE_STARTED is not set in panic info flags")
-		}
-		/* Get cros_ec log from previous boot */
-		ecPreviousLog, err := linuxssh.ReadFile(cleanupCtx, d.Conn(), "/var/log/cros_ec.previous")
-		if err != nil || len(ecPreviousLog) == 0 {
-			s.Fatal("Failed to read cros_ec.previous: ", err)
-		}
-		/* Verify timer info line is present */
-		if !strings.Contains(string(ecPreviousLog), timerInfoLine) {
-			s.Fatalf("Time info line %q is missing from cros_ec.previous", timerInfoLine)
-		}
-	} else {
-		if panicinfoFlags&panicDataFlagSafeModeStarted != 0 {
-			s.Error("PANIC_DATA_FLAG_SAFE_MODE_STARTED set unexpectedly in panic info flags")
-		}
+	if panicinfoFlags&panicDataFlagSafeModeStarted == 0 {
+		s.Error("PANIC_DATA_FLAG_SAFE_MODE_STARTED is not set in panic info flags")
+	}
+	/* Get cros_ec log from previous boot */
+	ecPreviousLog, err := linuxssh.ReadFile(cleanupCtx, d.Conn(), "/var/log/cros_ec.previous")
+	if err != nil || len(ecPreviousLog) == 0 {
+		s.Fatal("Failed to read cros_ec.previous: ", err)
+	}
+	/* Verify timer info line is present */
+	if !strings.Contains(string(ecPreviousLog), timerInfoLine) {
+		s.Fatalf("Time info line %q is missing from cros_ec.previous", timerInfoLine)
 	}
 }
