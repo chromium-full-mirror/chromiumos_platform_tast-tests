@@ -246,6 +246,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 
 					return inputsimulations.RepeatMousePressFor(ctx, mw, 500*time.Millisecond, 3*time.Second, individualScrollTimeout)
 				},
+				recordTrace: true,
 			},
 			{
 				description:    "mouse_wheel",
@@ -253,7 +254,6 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 				run: func(ctx context.Context) error {
 					return inputsimulations.ScrollMouseDownFor(ctx, mw, 200*time.Millisecond, individualScrollTimeout)
 				},
-				recordTrace: true,
 			},
 			{
 				description:    "trackpad_gestures",
