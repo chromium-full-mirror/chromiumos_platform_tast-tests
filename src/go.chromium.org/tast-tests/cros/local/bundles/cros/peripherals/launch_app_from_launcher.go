@@ -38,25 +38,23 @@ func init() {
 		},
 		// ChromeOS > Software > System Services > Peripherals
 		BugComponent: "b:1150827",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
+		Pre: chrome.LoggedIn(),
 		Params: []testing.Param{
 			{
 				Name: "diagnostics",
 				Val: testParams{
-					app:         apps.Diagnostics,
-					query:       "diagnostic",
-					featureFlag: "DiagnosticsApp",
+					app:   apps.Diagnostics,
+					query: apps.Diagnostics.Name,
 				},
 			},
 			{
 				Name: "print_management",
 				Val: testParams{
-					app:         apps.PrintManagement,
-					query:       apps.PrintManagement.Name,
-					featureFlag: "",
+					app:   apps.PrintManagement,
+					query: apps.PrintManagement.Name,
 				},
-				Pre: chrome.LoggedIn(),
 			},
 			{
 				Name: "scan",
@@ -65,6 +63,13 @@ func init() {
 					query: apps.Scan.Name,
 				},
 				ExtraAttr: []string{"group:paper-io", "paper-io_scanning"},
+			},
+			{
+				Name: "feedback",
+				Val: testParams{
+					app:   apps.Feedback,
+					query: apps.Feedback.Name,
+				},
 			},
 		},
 	})
@@ -75,16 +80,7 @@ func LaunchAppFromLauncher(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
-
-	cr, ok := s.PreValue().(*chrome.Chrome) // Grab pre existing chrome instance
-	if !ok {
-		crWithFeature, err := chrome.New(ctx, chrome.EnableFeatures(s.Param().(testParams).featureFlag))
-		if err != nil {
-			s.Fatal("Failed to start Chrome: ", err)
-		}
-		defer crWithFeature.Close(cleanupCtx) // Close our own chrome instance
-		cr = crWithFeature
-	}
+	cr := s.PreValue().(*chrome.Chrome) // Grab pre existing chrome instance
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
