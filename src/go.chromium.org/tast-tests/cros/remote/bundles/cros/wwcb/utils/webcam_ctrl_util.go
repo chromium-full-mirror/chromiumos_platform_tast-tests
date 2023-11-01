@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var (
@@ -55,7 +56,17 @@ func OpenGalleryOnDisplay(ctx context.Context, appsSvc pb.AppsServiceClient, uia
 }
 
 // OpenRGBImageOnDisplays opens the image on the multiple displays in red, green and blue order.
-func OpenRGBImageOnDisplays(ctx context.Context, fs *dutfs.Client, appsSvc pb.AppsServiceClient, uiautoSvc ui.AutomationServiceClient, displaySvc wwcb.DisplayServiceClient, dispNum int) error {
+func OpenRGBImageOnDisplays(ctx context.Context, fs *dutfs.Client, appsSvc pb.AppsServiceClient, uiautoSvc ui.AutomationServiceClient, displaySvc wwcb.DisplayServiceClient) error {
+	displayIDs, err := displaySvc.GetDisplayIDs(ctx, &emptypb.Empty{})
+	if err != nil {
+		return errors.Wrap(err, "failed to get display ID")
+	}
+	dispNum := len(displayIDs.DisplayIds)
+
+	if dispNum < 1 || dispNum > 3 {
+		return errors.Errorf("Unexpect number of displays; got %d", dispNum)
+	}
+
 	for dispIndex := 0; dispIndex < dispNum; dispIndex++ {
 		// Write image into the MyFiles folder.
 		image := GenerateImage(3840, 2160, RGBColors[dispIndex])
