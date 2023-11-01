@@ -43,9 +43,8 @@ func init() {
 			{
 				Name: "diagnostics",
 				Val: accelTestParams{
-					app:         apps.Diagnostics,
-					keystroke:   "Ctrl+Search+Esc",
-					featureFlag: "DiagnosticsApp",
+					app:       apps.Diagnostics,
+					keystroke: "Ctrl+Search+Esc",
 				},
 			},
 		},
@@ -60,7 +59,7 @@ func LaunchAppFromAccelerator(ctx context.Context, s *testing.State) {
 
 	params := s.Param().(accelTestParams)
 
-	cr, err := chrome.New(ctx, chrome.EnableFeatures(params.featureFlag))
+	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -77,12 +76,6 @@ func LaunchAppFromAccelerator(ctx context.Context, s *testing.State) {
 		s.Fatal("Error creating keyboard instance: ", err)
 	}
 	defer kb.Close(ctx)
-
-	// Briefly sleep so that the device will be ready to process the input.
-	// TODO(joonbug): Find a suitable polling target for this instead of sleep.
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		s.Fatal("Error stablizing: ", err)
-	}
 
 	s.Logf("Sending keystroke: %s", params.keystroke)
 	err = kb.Accel(ctx, params.keystroke)
