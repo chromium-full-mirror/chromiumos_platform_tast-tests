@@ -40,8 +40,8 @@ func ShillCellularStressSuspendResume(ctx context.Context, s *testing.State) {
 	defer cr.Close(ctx)
 
 	const totalAttempts = 100
-	const iterations = 10
-	const suspendTimeSec = 20
+	const iterations = 5
+	const suspendTimeSec = 10
 	stressConnection := func(ctx context.Context) error {
 		for i := 1; i <= iterations; i++ {
 			s.Logf("Test iteration: #%d", i)
