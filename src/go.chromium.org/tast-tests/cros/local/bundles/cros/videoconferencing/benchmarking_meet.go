@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
@@ -28,19 +27,17 @@ import (
 )
 
 type meetParams struct {
-	appBlur                   bool
-	appLiveCaptions           bool
-	appRelight                bool
-	platformBlur              bool
-	platformLiveCaptions      bool
-	platformRelight           bool
-	platformFraming           bool
-	platformNoiseCancellation bool
-	muteAudio                 bool
-	enableMic                 bool
-	modelType                 effects.ModelType
-	botCount                  int
-	botsOptions               []bond.AddBotsOption
+	appBlur              bool
+	appLiveCaptions      bool
+	appRelight           bool
+	platformBlur         bool
+	platformLiveCaptions bool
+	platformRelight      bool
+	muteAudio            bool
+	enableMic            bool
+	modelType            effects.ModelType
+	botCount             int
+	botsOptions          []bond.AddBotsOption
 }
 
 const botDuration = 7 * time.Minute
@@ -196,19 +193,6 @@ func init() {
 					muteAudio:            true,
 				},
 			},
-			{
-				Name: "platform_framing_720p",
-				Val: meetParams{
-					platformFraming: true,
-				},
-			},
-			{
-				Name: "platform_noise_cancellation_720p",
-				Val: meetParams{
-					platformNoiseCancellation: true,
-					enableMic:                 true,
-				},
-			},
 		},
 	})
 }
@@ -320,26 +304,6 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		s.Log("Turning on Live Captions")
 		if err := ossettings.ToggleLiveCaption(cr, tconn, param.platformLiveCaptions)(ctx); err != nil {
 			s.Fatal("Failed to toggle on live caption: ", err)
-		}
-	}
-
-	if param.platformFraming {
-		s.Log("Enabling Platform Framing from vctray")
-		vct := vctray.New(ctx, tconn)
-		if err := vct.ChangeSettingsInPanel(
-			vct.SetCameraFraming(param.platformFraming),
-		)(ctx); err != nil {
-			s.Fatal("Failed to enable Platform Framing: ", err)
-		}
-	}
-
-	if param.platformNoiseCancellation {
-		s.Log("Enabling Noise Cancellation from vctray")
-		vct := vctray.New(ctx, tconn)
-		if err := vct.ChangeSettingsInPanel(
-			vct.SetNoiseCancellation(param.platformNoiseCancellation),
-		)(ctx); err != nil {
-			s.Fatal("Failed to enable Noise Cancellation: ", err)
 		}
 	}
 
