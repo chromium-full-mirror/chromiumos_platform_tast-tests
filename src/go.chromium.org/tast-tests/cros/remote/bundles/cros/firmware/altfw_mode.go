@@ -136,7 +136,7 @@ func AltfwMode(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Waiting for DUT to reach the firmware screen")
-	if err := h.WaitFirmwareScreen(ctx); err != nil {
+	if err := h.Servo.WaitFirmwareKeyboardNoCmd(ctx, h.Config.FirmwareScreen); err != nil {
 		s.Fatal("Failed to get to firmware screen: ", err)
 	}
 
@@ -171,7 +171,7 @@ func AltfwMode(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Waiting for DUT to reach the firmware screen")
-	if err := h.WaitFirmwareScreen(ctx); err != nil {
+	if err := h.Servo.WaitFirmwareKeyboardNoCmd(ctx, h.Config.FirmwareScreen); err != nil {
 		s.Fatal("Failed to get to firmware screen: ", err)
 	}
 
