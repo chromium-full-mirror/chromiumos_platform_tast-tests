@@ -460,7 +460,8 @@ func savePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 		}
 
 		// Exclude package-non-C0_C1 from typeToMetricMap and the cpupkg chart.
-		if strings.Contains(metric, "package-non-C0_C1") {
+		// Ignore case by comparing everything in lower case.
+		if strings.Contains(strings.ToLower(metric), "package-non-c0_c1") {
 			continue
 		}
 
