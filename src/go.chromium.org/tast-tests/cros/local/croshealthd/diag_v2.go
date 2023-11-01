@@ -35,6 +35,7 @@ const (
 	Fan                         string = "fan"
 	RoutineBluetoothPowerV2     string = "bluetooth_power_v2"
 	RoutineBluetoothDiscoveryV2 string = "bluetooth_discovery_v2"
+	RoutineBluetoothScanningV2  string = "bluetooth_scanning_v2"
 )
 
 // RoutineResultV2 contains the progress of the routine as a percentage and
