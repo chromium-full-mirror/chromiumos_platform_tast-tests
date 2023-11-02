@@ -304,7 +304,7 @@ func runARCVideoPerfTest(ctx context.Context, s *testing.State, cfg arcTestConfi
 
 	// Send a second start to trigger onNewIntent and stop the test
 	s.Log("Stopping target")
-	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
+	if err := act.Start(ctx, tconn); err != nil {
 		s.Fatal("Failed stopping loop: ", err)
 	}
 
