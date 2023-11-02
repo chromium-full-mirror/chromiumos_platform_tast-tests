@@ -39,17 +39,24 @@ main() {
   mount -t tmpfs tmp /tmp
   mount -t tmpfs run /run
 
+  # Same mount options as ARCVM's
+  # `/device/google/bertha/fstab.bertha.virtio_blk_data` that cat affect
+  # performance.
+  BLK_MOUNT_OPTIONS="rw,noatime,discard"
+  # Use the same mount options as `/device/google/bertha/fstab.bertha`
+  # that can affect performance.
+  FS_MOUNT_OPTIONS="rw,noatime"
   case "${kind}" in
     block | block_packed | block_tpq | block_packed_tpq | scsi | pmem)
       [[ -b "${src}" ]] || die "${src} is not a block device"
       mkfs.ext4 "${src}"
-      mount "${src}" "${mountpoint}"
+      mount -o "${BLK_MOUNT_OPTIONS}" "${src}" "${mountpoint}"
       ;;
     virtiofs)
-      mount -t virtiofs "${src}" "${mountpoint}"
+      mount -t virtiofs -o "${FS_MOUNT_OPTIONS}" "${src}" "${mountpoint}"
       ;;
     virtiofs_dax)
-      mount -t virtiofs -o dax "${src}" "${mountpoint}"
+      mount -t virtiofs -o "${FS_MOUNT_OPTIONS},dax" "${src}" "${mountpoint}"
       ;;
     *)
       die "Unknown storage type: ${kind}"
