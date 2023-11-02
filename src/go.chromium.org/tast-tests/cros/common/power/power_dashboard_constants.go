@@ -54,10 +54,15 @@ const (
 	MemoryMetricTypeUnit           = "kiB"
 )
 
-// Keys for battery life metrics in power log.
 const (
-	MinutesBatteryLifeKey       = "minutes_battery_life"
+	// MinutesBatteryLifeKey the metric key for battery life.
+	MinutesBatteryLifeKey = "minutes_battery_life"
+	// MinutesBatteryLifeTestedKey is the metric key for battery life tested.
 	MinutesBatteryLifeTestedKey = "minutes_battery_life_tested"
+	// BacklightPercentNonlinearKey is the metric key for backlight nonlinear.
+	BacklightPercentNonlinearKey = "level_backlight_percent_nonlinear"
+	// BacklightPercentLinearKey is the metric key for backlight linear.
+	BacklightPercentLinearKey = "level_backlight_percent_linear"
 )
 
 // Only keys inside validMetricTypeMap are accepted metric types.

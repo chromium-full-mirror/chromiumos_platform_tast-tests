@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
 	"go.chromium.org/tast-tests/cros/remote/power"
 	"go.chromium.org/tast/core/testing"
@@ -111,12 +110,7 @@ func PowerQualV2(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	pv := perf.NewValues()
-	if err := run.GenerateReport(ctx, s.OutDir(), pv); err != nil {
+	if err := run.GenerateReport(ctx, s.OutDir(), s.TestName()); err != nil {
 		s.Fatal("Failed to generate power qual test results: ", err)
-	}
-
-	if err = pv.Save(s.OutDir()); err != nil {
-		s.Error("Failed to store values: ", err)
 	}
 }

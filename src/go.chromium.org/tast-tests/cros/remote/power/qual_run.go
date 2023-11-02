@@ -17,6 +17,7 @@ import (
 	"gonum.org/v1/gonum/stat"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/power/config"
 	"go.chromium.org/tast-tests/cros/remote/power/result"
@@ -40,6 +41,11 @@ type QualRun struct {
 
 	// testPowers holds the power results for each test.
 	testPowers map[string]*result.Power
+	// deviceInfo contains the DUT information.
+	deviceInfo map[string]interface{}
+	// otherInfo contains other device or test information, such as the
+	// backlight percentage, in a map.
+	otherInfo map[string]interface{}
 	// skippedTests holds skipped tests.
 	skippedTests []string
 }
@@ -70,6 +76,7 @@ func NewQualRun(ctx context.Context, url string) (*QualRun, error) {
 		UnorderedTests: unorderedTests,
 		WeightedTests:  weightedTests,
 		testPowers:     make(map[string]*result.Power),
+		otherInfo:      make(map[string]interface{}),
 	}, nil
 }
 
@@ -110,23 +117,40 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 			return errors.Wrapf(err, "failed to find %s test dir from %s", t, testsDir)
 		}
 		// Read the power metrics from the test power_log json file.
-		power, err := readPowerMetrics(path.Join(testsDir, dir, "power_log.json"))
+		average, deviceInfo, err := readPowerMetrics(path.Join(testsDir, dir, "power_log.json"))
 		if err != nil {
 			return errors.Wrapf(err, "failed to read power metrics for test %s", t)
 		}
-		r.testPowers[t] = &power
+		r.testPowers[t] = &result.Power{Average: result.Average{
+			MinutesBatteryLife:       average[power.MinutesBatteryLifeKey].(float64),
+			MinutesBatteryLifeTested: average[power.MinutesBatteryLifeTestedKey].(float64),
+		}}
+		r.deviceInfo = deviceInfo
+		// Record other average values.
+		for _, key := range []string{power.BacklightPercentNonlinearKey, power.BacklightPercentLinearKey} {
+			if value, ok := average[key]; ok {
+				r.otherInfo[key] = value
+			}
+		}
+
 	}
 	return nil
 }
 
 // GenerateReport generates the power qual run test report.
-func (r *QualRun) GenerateReport(ctx context.Context, outputDir string, pv *perf.Values) error {
+func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string) error {
 	// The power qual test final result.
 	res := result.Result{
 		FormatVersion: result.FormatVersion,
 		Name:          r.Config.Name,
 		Version:       r.Config.Version,
 	}
+
+	// The power log used to generate power_logs.json.
+	var powerLogs []byte
+	// Performance values used to generate results-chart.json.
+	pv := perf.NewValues()
+
 	// Calculate result for each persona.
 	for _, p := range r.Config.Personas {
 		persona := result.Persona{
@@ -165,12 +189,51 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir string, pv *perf
 
 		minutesBatteryLife := stat.HarmonicMean(values, weights)
 
-		// Collect minutes_battery_life for each persona in perf.Values.
+		// Collect battery metrics for each persona in perf.Values.
 		pv.Set(perf.Metric{
-			Name:      p.Name + "." + "minutes_battery_life",
+			Name:      p.Name + "." + power.MinutesBatteryLifeKey,
 			Unit:      "minute",
 			Direction: perf.BiggerIsBetter,
 		}, minutesBatteryLife)
+		pv.Set(perf.Metric{
+			Name:      p.Name + "." + power.MinutesBatteryLifeTestedKey,
+			Unit:      "minute",
+			Direction: perf.SmallerIsBetter,
+		}, minutesBatteryLifeTestedTotal)
+
+		// Persona local perf values that will be used to generate power log.
+		pvLocal := perf.NewValues()
+		// Set these known metrics, so the power log library won't generate
+		// them again. Set no prefix to the metric name to satisfy the library
+		// checking.
+		pvLocal.Set(perf.Metric{
+			Name:      power.MinutesBatteryLifeKey,
+			Unit:      "minute",
+			Direction: perf.BiggerIsBetter,
+		}, minutesBatteryLife)
+		pvLocal.Set(perf.Metric{
+			Name:      power.MinutesBatteryLifeTestedKey,
+			Unit:      "minute",
+			Direction: perf.SmallerIsBetter,
+		}, minutesBatteryLifeTestedTotal)
+		for _, key := range []string{power.BacklightPercentNonlinearKey, power.BacklightPercentLinearKey} {
+			if value, ok := r.otherInfo[key].(float64); ok {
+				pvLocal.Set(perf.Metric{
+					Name:      key,
+					Unit:      power.GeneralPerfMetricTypeUnit,
+					Direction: perf.BiggerIsBetter,
+				}, value)
+			}
+		}
+		powerLog, err := power.CreateSaveUploadPowerLog(ctx, outputDir, testName+"."+p.Name, "_"+p.Name, pvLocal, r.deviceInfo, nil)
+		if err != nil {
+			return errors.Wrap(err, "failed to create power log")
+		}
+		plBytes, err := json.MarshalIndent(powerLog, "", "  ")
+		if err != nil {
+			return errors.Wrap(err, "failed to marshal power log results into JSON")
+		}
+		powerLogs = append(powerLogs, plBytes...)
 
 		persona.Power = result.Power{
 			Average: result.Average{MinutesBatteryLife: minutesBatteryLife, MinutesBatteryLifeTested: minutesBatteryLifeTestedTotal},
@@ -179,12 +242,19 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir string, pv *perf
 		res.Personas = append(res.Personas, persona)
 	}
 
-	bytes, err := json.MarshalIndent(res, "", " ")
+	qualResultBytes, err := json.MarshalIndent(res, "", " ")
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal run results into JSON")
 	}
-	if err := os.WriteFile(path.Join(outputDir, "power_qual_result.json"), bytes, 0644); err != nil {
+	if err := os.WriteFile(path.Join(outputDir, "power_qual_result.json"), qualResultBytes, 0644); err != nil {
 		return errors.Wrap(err, "failed to write power qaul result to file")
+	}
+	if err := os.WriteFile(path.Join(outputDir, "power_log.json"), powerLogs, 0644); err != nil {
+		return errors.Wrap(err, "failed to write power log to file")
+	}
+	// Generate results-chart.json.
+	if err = pv.Save(outputDir); err != nil {
+		return errors.Wrap(err, "failed to store performance values")
 	}
 	return nil
 }
@@ -229,20 +299,22 @@ func findTestDir(test string, dirs []fs.DirEntry) (dir string, err error) {
 
 // powerLogResult is the mapping to the power_log.json content.
 type powerLogResult struct {
-	// We are interested with only the "power" field, with its sub-fields as defined in
-	// result.Power structure.
-	Power result.Power `json:"power"`
+	// We are interested in some fields from the power log.
+	Power struct {
+		Average map[string]interface{} `json:"average"`
+	} `json:"power"`
+	DUT map[string]interface{} `json:"dut"`
 }
 
 // readPowerMetrics reads the power metric values from the given power_log.json file.
-func readPowerMetrics(file string) (result.Power, error) {
+func readPowerMetrics(file string) (map[string]interface{}, map[string]interface{}, error) {
 	bytes, err := os.ReadFile(file)
 	if err != nil {
-		return result.Power{}, errors.Wrapf(err, "failed to read file %s", file)
+		return nil, nil, errors.Wrapf(err, "failed to read file %s", file)
 	}
 	res := &powerLogResult{}
 	if err := json.Unmarshal(bytes, res); err != nil {
-		return result.Power{}, errors.Wrapf(err, "failed to unmarshal json from file %s", file)
+		return nil, nil, errors.Wrapf(err, "failed to unmarshal json from file %s", file)
 	}
-	return res.Power, nil
+	return res.Power.Average, res.DUT, nil
 }
