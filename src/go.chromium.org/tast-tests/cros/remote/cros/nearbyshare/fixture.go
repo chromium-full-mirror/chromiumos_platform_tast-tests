@@ -144,18 +144,23 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 
 	// TODO(b/307335239): Refactor to use fixture data instead of hardcoded path.
 	// Workaround to use data files downloaded in other tests.
-	const (
-		prebuiltLocalDataPath = "/usr/share/tast/data/go.chromium.org/tast-tests/cros/remote/bundles/cros/nearbyshare/data"
-		builtLocalDataPath    = "../platform/tast-tests/src/go.chromium.org/tast-tests/cros/remote/bundles/cros/nearbyshare/data"
-	)
-	pathToUse := builtLocalDataPath
 	// Use the built local data path if it exists, and fall back to the prebuilt data path otherwise.
-	testFileCheck := filepath.Join(builtLocalDataPath, f.testFiles[0])
-	if _, err := os.Stat(testFileCheck); os.IsNotExist(err) {
-		pathToUse = prebuiltLocalDataPath
-	} else if err != nil {
-		s.Fatal("Failed to check if built local data path exists: ", err)
+	dataPaths := []string{
+		"../platform/tast-tests/src/go.chromium.org/tast-tests/cros/remote/bundles/cros/nearbyshare/data",
+		"/usr/local/tast/data/go.chromium.org/tast-tests/cros/remote/bundles/cros/nearbyshare/data",
+		"/usr/share/tast/data/go.chromium.org/tast-tests/cros/remote/bundles/cros/nearbyshare/data",
 	}
+	pathToUse := ""
+	for _, dataPath := range dataPaths {
+		if _, err := os.Stat(filepath.Join(dataPath, f.testFiles[0])); err == nil {
+			s.Log("Test file found at ", dataPath)
+			pathToUse = dataPath
+		}
+	}
+	if pathToUse == "" {
+		s.Fatalf("Failed to find data file %v: %v", f.testFiles[0], err)
+	}
+
 	s.Log("Moving data files to DUT1 (Sender)")
 	for _, data := range f.testFiles {
 		remoteFilePath := filepath.Join(remoteDir, data)
