@@ -18,6 +18,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/android/adb"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	remoteadb "go.chromium.org/tast-tests/cros/remote/android/adb"
@@ -212,17 +213,20 @@ func (p *itsPreImpl) Prepare(ctx context.Context, s *testing.PreState) interface
 		s.Fatal("Failed to copy adb binary: ", err)
 	}
 
-	p.hostname = d.HostName()
-	if err := remoteadb.LaunchServer(ctx); err != nil {
-		s.Fatal("Failed to launch adb server: ", err)
-	}
-
-	testing.ContextLog(ctx, "ADB connect to DUT")
-	adbDevice, err := adb.Connect(ctx, p.hostname, 30*time.Second)
-	if err != nil {
-		s.Fatal("Failed to set up adb connection to DUT: ", err)
-	}
-	p.adbDevice = adbDevice
+	// Setup adb connection with retry
+	err = action.Retry(3, func(ctx context.Context) error {
+		p.hostname = d.HostName()
+		if err := remoteadb.LaunchServer(ctx); err != nil {
+			return errors.Wrap(err, "failed to launch adb server")
+		}
+		testing.ContextLog(ctx, "ADB connect to DUT")
+		adbDevice, err := adb.Connect(ctx, p.hostname, 30*time.Second)
+		if err != nil {
+			return errors.Wrap(err, "failed to set up adb connection to DUT")
+		}
+		p.adbDevice = adbDevice
+		return nil
+	}, 10*time.Second)(ctx)
 
 	// Unpack ITS bundle.
 	if err != nil {
@@ -250,6 +254,10 @@ func (p *itsPreImpl) Prepare(ctx context.Context, s *testing.PreState) interface
 	verifierAPK := path.Join(ctsVerifierRootPath, "CtsVerifier.apk")
 	if err := p.adbDevice.Command(ctx, "install", "-r", "-g", verifierAPK).Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to install CTSVerifier: ", err)
+	}
+
+	if err := p.adbDevice.Command(ctx, "shell", "am", "compat", "enable", "ALLOW_TEST_API_ACCESS", "com.android.cts.verifier").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Fail to enable ALLOW_TEST_API_ACCESS: ", err)
 	}
 
 	p.prepared = true
@@ -368,12 +376,6 @@ func (h *ITSHelper) PrepareEnvironment(ctx context.Context, numpyPath string) (s
 
 	os.Setenv("PATH", os.Getenv("PATH")+fmt.Sprintf(":%s/py3venv/bin/", h.p.itsRoot()))
 	os.Setenv("MPLCONFIGDIR", fmt.Sprintf("%s/tmp", h.p.itsRoot()))
-
-	out, err = testexec.CommandContext(ctx, "adb", "shell", "am", "compat", "enable", "ALLOW_TEST_API_ACCESS", "com.android.cts.verifier").Output(testexec.DumpLogOnError)
-	if err != nil {
-		return "", errors.Wrap(err, "Fail to enable ALLOW_TEST_API_ACCESS")
-	}
-	retStr += string(out)
 
 	return retStr, nil
 }
