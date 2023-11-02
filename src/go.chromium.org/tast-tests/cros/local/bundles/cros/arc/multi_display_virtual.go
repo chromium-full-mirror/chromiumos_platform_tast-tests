@@ -38,6 +38,11 @@ func init() {
 				Val:       arcmultidisplay.AndroidVM,
 				ExtraAttr: []string{"group:mainline", "group:criticalstaging", "group:hw_agnostic", "informational"},
 			},
+			{
+				Name:      "android_vm_unstable",
+				Val:       arcmultidisplay.AndroidVMUnstable,
+				ExtraAttr: []string{"group:mainline", "group:hw_agnostic", "informational"},
+			},
 		},
 	})
 

@@ -82,13 +82,21 @@ var AndroidVM = []testEntry{
 	// Based on http://b/130897153.
 	{"Drag a window between displays", dragWindowBetweenDisplays},
 	{"Remove and re-add displays", removeAddDisplay},
-	{"Rotate display", rotateDisplay},
 	// Based on http://b/129564108.
 	{"Launch activity on external display", launchActivityOnExternalDisplay},
 	// Broken because it relies on launching on external display.
 	{"Snapping", snappingOnDisplay},
 	// Based on http://b/110105532.
 	{"Activity is visible when other is maximized", maximizeVisibility},
+}
+
+// AndroidVMUnstable contains tests that don't always pass due to performance
+// issues, etc, set to be upgraded once bugs are fixed.
+var AndroidVMUnstable = []testEntry{
+	// TODO(b/304444756): Due to a change in T and up, only consider the
+	// first event (yes, this is a hack, but what we're hacking doesn't have
+	// to do with multidisplay).
+	{"Rotate display", rotateDisplay},
 }
 
 // SharedVirtualPhysical is the implementation of the above tests.  It utilizes displayController (if present) to set the displays up when necessary, otherwise it assumes the displays are physical.
