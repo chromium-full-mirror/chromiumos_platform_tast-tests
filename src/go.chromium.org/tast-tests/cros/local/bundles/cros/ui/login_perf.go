@@ -1125,7 +1125,6 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 					allBrowserWindowsCreated,
 					allBrowserWindowsShown,
 					allShelfIconsLoaded,
-					shelfLoginAnimationEnd,
 					ashTastBootTimeLogin2,
 					uptimeLogoutToUIStopAfterLogout,
 					uptimeUIStopToProcessesTerminatedAfterLogout,
@@ -1138,6 +1137,8 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				// Histogram is only collected when the DUT is connected to the display.
 				if displCount > 0 {
 					allHistograms = append(allHistograms, allBrowserWindowsPresented)
+					allHistograms = append(allHistograms, shelfLoginAnimationEnd)
+					allHistograms = append(allHistograms, heuristicsHistograms...)
 				}
 				if arcMode != noarc {
 					allHistograms = append(allHistograms,
@@ -1145,7 +1146,6 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 						arcTastUIAvailableTimeDelta,
 					)
 				}
-				allHistograms = append(allHistograms, heuristicsHistograms...)
 
 				metricsReportingSuffix := fmt.Sprintf("%s.%s.%dwindows", suffix, arcMode, currentWindows)
 
