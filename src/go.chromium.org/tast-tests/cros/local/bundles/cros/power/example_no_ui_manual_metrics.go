@@ -46,7 +46,7 @@ func init() {
 				Interval: 1 * time.Second,
 				Total:    10 * time.Second,
 			},
-			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			ExtraAttr: []string{"group:power", "power_daily"},
 		}},
 	})
 }
