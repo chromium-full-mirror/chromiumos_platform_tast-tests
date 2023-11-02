@@ -49,26 +49,39 @@ func findAccumRails(ctx context.Context, s *Servo) ([]FloatControl, []IntControl
 }
 
 // FindAccumRailsWithFilter gets result from 'avg_power_rails' and applies given filter to results.
-func FindAccumRailsWithFilter(ctx context.Context, s *Servo, filter *regexp.Regexp) ([]FloatControl, []IntControl, error) {
+func FindAccumRailsWithFilter(ctx context.Context, s *Servo, filters []*regexp.Regexp) ([]FloatControl, []IntControl, error) {
 	ctrls, clearCtrls, err := findAccumRails(ctx, s)
 	if err != nil {
 		return []FloatControl{}, []IntControl{}, errors.Wrap(err, "failed to get accum rails")
 	}
-	if filter == nil {
+	if len(filters) == 0 {
 		return ctrls, clearCtrls, nil
 	}
 	var rails []FloatControl
+	for _, ctrl := range ctrls {
+		matchesAll := true
+		for _, filter := range filters {
+			if !filter.MatchString(string(ctrl)) {
+				matchesAll = false
+				break
+			}
+		}
+		if matchesAll {
+			rails = append(rails, ctrl)
+		}
+	}
 	var clearRails []IntControl
-	for _, value := range ctrls {
-		if filter.MatchString(string(value)) {
-			rails = append(rails, value)
+	for _, ctrl := range clearCtrls {
+		matchesAll := true
+		for _, filter := range filters {
+			if !filter.MatchString(string(ctrl)) {
+				matchesAll = false
+				break
+			}
+		}
+		if matchesAll {
+			clearRails = append(clearRails, ctrl)
 		}
 	}
-	for _, value := range clearCtrls {
-		if filter.MatchString(string(value)) {
-			clearRails = append(clearRails, value)
-		}
-	}
-
 	return rails, clearRails, nil
 }

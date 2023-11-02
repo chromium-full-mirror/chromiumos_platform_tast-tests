@@ -4,6 +4,7 @@
 
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. device_info.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. one_time_metrics.proto
+//go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. local_info_service.proto
 
 // Package powerpb defines helpers for transferring information in remote tests.
 package powerpb

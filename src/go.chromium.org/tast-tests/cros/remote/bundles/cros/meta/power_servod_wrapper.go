@@ -11,13 +11,20 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
+	ps "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	rp "go.chromium.org/tast-tests/cros/remote/power"
+
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/servod"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -28,6 +35,8 @@ tast run -var "subtest=power.ExampleUI.ash_kbbl" $DUT_IP meta.PowerServodWrapper
 */
 
 type testParams struct {
+	// cpd indicates if the servo used is CPD (special formatting)
+	cpd bool
 	// filter is applied when first finding servod rails.
 	filter string
 	// subtest specifies the test to be run within.
@@ -58,13 +67,13 @@ func init() {
 			{
 				Name: "cpd_manual",
 				Val: testParams{
-					filter: cpdFilter,
+					cpd: true,
 				},
 			},
 			{
 				Name: "cpd_vp_h264_1080_30fps",
 				Val: testParams{
-					filter:  cpdFilter,
+					cpd:     true,
 					subtest: "power.VideoPlayback.h264_1080_30fps_ash",
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
@@ -72,7 +81,7 @@ func init() {
 			{
 				Name: "cpd_vp_vp9_1080_30fps",
 				Val: testParams{
-					filter:  cpdFilter,
+					cpd:     true,
 					subtest: "power.VideoPlayback.vp9_1080_30fps_ash",
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
@@ -80,7 +89,7 @@ func init() {
 			{
 				Name: "cpd_vc_25m",
 				Val: testParams{
-					filter:  cpdFilter,
+					cpd:     true,
 					subtest: "power.VideoCall.25m_ash",
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
@@ -88,13 +97,14 @@ func init() {
 			{
 				Name: "cpd_browsing",
 				Val: testParams{
-					filter:  cpdFilter,
+					cpd:     true,
 					subtest: "power.Browsing.light_ash",
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
 			},
 		},
-		Vars: []string{"servo", "subtest"},
+		Vars:        []string{"servo", "subtest"},
+		ServiceDeps: []string{"tast.common.power.powerpb.LocalInfoService"},
 	})
 }
 
@@ -103,7 +113,8 @@ const (
 	defaultServoPowerMeasureInterval = "2"
 	chargeTarget                     = 75.
 	intervalMetricName               = "t"
-	cpdFilter                        = "ft4232h_generic"
+	cpdPrefixFilter                  = "ft4232h_generic"
+	servoAccumSuffix                 = "_mw"
 )
 
 func PowerServodWrapper(ctx context.Context, s *testing.State) {
@@ -129,17 +140,14 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	// Determine subtest, prefer command line subtest.
 	var subtest string
 	varTest, ok := s.Var("subtest")
-
 	if !ok {
 		if param.subtest == "" {
 			s.Fatal("Please specify a subtest or use a pre-defined subtest")
 		}
 		subtest = param.subtest
-
 	} else {
 		subtest = varTest
 	}
-
 	s.Log("Subtest: ", subtest)
 
 	// Determine Servo measurement interval.
@@ -159,12 +167,18 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	}
 	defer pxy.Close(ctx)
 
-	// Query for available accumulator rails.
-	var sregex *regexp.Regexp
-	if param.filter != "" {
-		sregex = regexp.MustCompile(param.filter)
+	// Handle filters.
+	var filters []*regexp.Regexp
+	filters = make([]*regexp.Regexp, 0)
+	if param.cpd {
+		filters = append(filters, regexp.MustCompile(cpdPrefixFilter))
 	}
-	rails, clearRails, err := servo.FindAccumRailsWithFilter(ctx, pxy.Servo(), sregex)
+	if param.filter != "" {
+		filters = append(filters, regexp.MustCompile(param.filter))
+	}
+
+	// Query for available accumulator rails.
+	rails, clearRails, err := servo.FindAccumRailsWithFilter(ctx, pxy.Servo(), filters)
 	if err != nil {
 		s.Fatal("Failed to get accum rails: ", err)
 	}
@@ -214,13 +228,15 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 						commandCancel()
 						s.Fatalf("Failed to get %s mw from servo instance: %s", string(railMw), err)
 					}
+					name := formatRailName(ctx, string(railMw), param.cpd)
+
 					pv.Append(perf.Metric{
-						Name:      string(railMw),
-						Unit:      "mW",
+						Name:      cp.ServodMetricType + name,
+						Unit:      "W",
 						Direction: perf.SmallerIsBetter,
 						Multiple:  true,
 						Interval:  intervalMetricName,
-					}, mw)
+					}, mw/1000.0)
 				}
 				// Clear the accumulator at the end of the loop to measure the interval.
 				if err = servo.ClearServoAccumulators(ctx, pxy.Servo(), clearRails); err != nil {
@@ -311,11 +327,40 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 			s.Logf("Average power measured by %s: %f W", metric.Name, sum/float64(len(values)))
 		}
 	}
-
 	if err := servoResult.Save(s.OutDir()); err != nil {
-		s.Error("Failed saving perf data: ", err)
+		s.Fatal("Failed to save perf data for crosbolt: ", err)
 	}
 
+	devInfo, oneTimeMetrics, err := getLocalDUTInfo(ctx, subtestDir, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to get local DUT info: ", err)
+	}
+
+	if _, err := cp.CreateSaveUploadPowerLog(ctx, s.OutDir(), subtest, "", servoResult, devInfo, oneTimeMetrics); err != nil {
+		s.Fatal("Failed to save and upload power log and perf: ", err)
+	}
+
+}
+
+func getLocalDUTInfo(ctx context.Context, subtestDir string, dut *dut.DUT, rpchint *testing.RPCHint) (map[string]interface{}, *ps.OneTimeMetrics, error) {
+	cl, err := rpc.Dial(ctx, dut, rpchint)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+	}
+	defer cl.Close(ctx)
+
+	client := ps.NewLocalInfoServiceClient(cl.Conn)
+	// TODO: b/310761918 - Use gRPC when power qual v2 test is modified.
+	_, devInfo, err := rp.ReadPowerMetrics(filepath.Join(subtestDir, "power_log.json"))
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to read from subtest power_log")
+	}
+
+	oneTimeMetrics, err := client.GetOneTimeMetricsFromDUT(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to call gRPC service for one time metrics")
+	}
+	return devInfo, oneTimeMetrics, nil
 }
 
 func chargeBattery(ctx context.Context, s *testing.State) {
@@ -345,4 +390,11 @@ func chargeBattery(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: 30 * time.Minute, Interval: 5 * time.Second}); err != nil {
 		s.Fatal("Failed to finish charging battery: ", err)
 	}
+}
+
+func formatRailName(ctx context.Context, name string, cpd bool) string {
+	if cpd {
+		name = name[len(cpdPrefixFilter)+1 : len(name)]
+	}
+	return name[:len(name)-len(servoAccumSuffix)]
 }

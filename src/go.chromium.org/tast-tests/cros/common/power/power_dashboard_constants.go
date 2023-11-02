@@ -29,6 +29,7 @@ const (
 	WebrtcQPMetricType         = "webrtc_qp."
 	ZramMetricType             = "zram."
 	MemoryMetricType           = "memory."
+	ServodMetricType           = "servod."
 )
 
 // Units for each metric type.
@@ -68,6 +69,7 @@ const (
 
 // Only keys inside validMetricTypeMap are accepted metric types.
 var validMetricTypeMap = map[string]bool{
+	"other":             true,
 	"battery":           true,
 	"cpuidle":           true,
 	"cpu_usage":         true,
@@ -89,7 +91,7 @@ var validMetricTypeMap = map[string]bool{
 	"webrtc_qp":         true,
 	"zram":              true,
 	"memory":            true,
-	"other":             true,
+	"servod":            true,
 }
 
 // Power log file name.

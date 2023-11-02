@@ -117,7 +117,7 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 			return errors.Wrapf(err, "failed to find %s test dir from %s", t, testsDir)
 		}
 		// Read the power metrics from the test power_log json file.
-		average, deviceInfo, err := readPowerMetrics(path.Join(testsDir, dir, "power_log.json"))
+		average, deviceInfo, err := ReadPowerMetrics(path.Join(testsDir, dir, "power_log.json"))
 		if err != nil {
 			return errors.Wrapf(err, "failed to read power metrics for test %s", t)
 		}
@@ -306,8 +306,8 @@ type powerLogResult struct {
 	DUT map[string]interface{} `json:"dut"`
 }
 
-// readPowerMetrics reads the power metric values from the given power_log.json file.
-func readPowerMetrics(file string) (map[string]interface{}, map[string]interface{}, error) {
+// ReadPowerMetrics reads the power metric values from the given power_log.json file.
+func ReadPowerMetrics(file string) (map[string]interface{}, map[string]interface{}, error) {
 	bytes, err := os.ReadFile(file)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "failed to read file %s", file)

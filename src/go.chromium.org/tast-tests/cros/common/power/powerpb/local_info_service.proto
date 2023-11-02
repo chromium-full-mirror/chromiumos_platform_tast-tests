@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package tast.common.power.powerpb;
+
+import "google/protobuf/empty.proto";
+import "device_info.proto";
+import "one_time_metrics.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/common/power/powerpb";
+
+service LocalInfoService {
+    rpc GetDeviceInfoFromDUT(google.protobuf.Empty) returns (DeviceInfo) {}
+    rpc GetOneTimeMetricsFromDUT(google.protobuf.Empty) returns (OneTimeMetrics) {}
+}
