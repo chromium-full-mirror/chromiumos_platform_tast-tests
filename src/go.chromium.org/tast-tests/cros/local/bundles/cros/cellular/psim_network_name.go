@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
@@ -121,6 +122,8 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to fetch title: ", err)
 	}
 
+	title = strings.TrimSpace(title)
+	networkName = strings.TrimSpace(networkName)
 	if networkName != title {
 		s.Fatalf("Network name is not the same as title. Got %q expected %q", title, networkName)
 	}
