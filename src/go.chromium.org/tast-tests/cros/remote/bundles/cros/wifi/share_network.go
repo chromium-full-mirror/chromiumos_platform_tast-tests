@@ -105,6 +105,11 @@ var (
 	}
 )
 
+// In each test scenario, we check for network sharing up to 1 time,
+// non-sharing up to 2 times, and network connection up to 1 time.
+// Therefore, each scenario requires a 2 minute execution time.
+const testScenarioTimeout = 2 * time.Minute
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShareNetwork,
@@ -133,7 +138,6 @@ func init() {
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
-		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
 				Val: []*shareNetworkTestScenario{
@@ -192,6 +196,8 @@ func init() {
 						},
 					},
 				},
+				// There are a total of 6 test scenarios.
+				Timeout: 3*time.Minute + 6*testScenarioTimeout,
 			},
 		},
 	})
