@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/input"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
@@ -136,6 +137,17 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 			numExistingWindows = numWindows
 
 			suffix := fmt.Sprintf("%dwindows", numWindows)
+			// storeAllMetricsAndLogError stores all metrics to |pv| and print logs if there is any error.
+			storeAllMetricsAndLogError := func(ctx context.Context, pv *perfutil.Values, hists []*metrics.Histogram) error {
+				for _, hist := range hists {
+					if err := perfutil.StoreMetricWithHeuristics(ctx, pv, hist, suffix); err != nil {
+						// Log the error and keep storing other metrics.
+						testing.ContextLogf(ctx, "Failed to store metric %q: %v", hist.Name, err)
+					}
+				}
+				return nil
+			}
+
 			runner.RunMultiple(ctx, suffix, uiperf.Run(s, perfutil.RunAndWaitAny(tconn, func(ctx context.Context) error {
 				// Create a shorter context to ensure the time to release the Alt-key.
 				sctx, cancel := ctxutil.Shorten(ctx, 500*time.Millisecond)
@@ -177,8 +189,7 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 				"Ash.WindowCycleView.AnimationSmoothness.Show",
 				"Ash.WindowCycleView.AnimationSmoothness.Container",
 				"Ash.WindowCycleController.Enter.PresentationTime")),
-				perfutil.StoreAllWithHeuristics(suffix))
-
+				storeAllMetricsAndLogError)
 		}
 		return nil
 	}); err != nil {

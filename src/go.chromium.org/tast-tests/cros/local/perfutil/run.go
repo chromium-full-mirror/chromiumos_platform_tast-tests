@@ -51,24 +51,34 @@ type StoreFunc func(ctx context.Context, pv *Values, hists []*metrics.Histogram)
 func StoreAllWithHeuristics(suffix string) StoreFunc {
 	return func(ctx context.Context, pv *Values, hists []*metrics.Histogram) error {
 		for _, hist := range hists {
-			mean, err := hist.Mean()
-			if err != nil {
-				return errors.Wrapf(err, "failed to get mean for histogram %s", hist.Name)
+			if err := StoreMetricWithHeuristics(ctx, pv, hist, suffix); err != nil {
+				return err
 			}
-			name := hist.Name
-			if suffix != "" {
-				name = name + "." + suffix
-			}
-			testing.ContextLog(ctx, name, " = ", mean)
-			direction, unit := estimateMetricPresenattionType(ctx, name)
-			pv.Append(perf.Metric{
-				Name:      name,
-				Unit:      unit,
-				Direction: direction,
-			}, mean)
 		}
 		return nil
 	}
+}
+
+// StoreMetricWithHeuristics stores the metric to |pv|.
+// It determines the direction of perf (bigger is better or smaller is better)
+// and unit through heuristics from the name of metrics.
+func StoreMetricWithHeuristics(ctx context.Context, pv *Values, hist *metrics.Histogram, suffix string) error {
+	mean, err := hist.Mean()
+	if err != nil {
+		return errors.Wrapf(err, "failed to get mean for histogram %s", hist.Name)
+	}
+	name := hist.Name
+	if suffix != "" {
+		name = name + "." + suffix
+	}
+	testing.ContextLog(ctx, name, " = ", mean)
+	direction, unit := estimateMetricPresentationType(ctx, name)
+	pv.Append(perf.Metric{
+		Name:      name,
+		Unit:      unit,
+		Direction: direction,
+	}, mean)
+	return nil
 }
 
 // StoreAll is a function to store all histograms into values.

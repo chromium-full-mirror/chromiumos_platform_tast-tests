@@ -930,10 +930,10 @@ func storeHistograms(
 	for _, v := range heuristicsHistograms {
 		heuristicsHistogramsMap[v] = true
 	}
-	storeHeuristicsHistograms := perfutil.StoreAllWithHeuristics(fmt.Sprintf("%s.%dwindows", arcMode, currentWindows))
+	suffix := fmt.Sprintf("%s.%dwindows", arcMode, currentWindows)
 	for _, hist := range hists {
 		if heuristicsHistogramsMap[hist.Name] {
-			storeHeuristicsHistograms(ctx, pv, []*metrics.Histogram{hist})
+			perfutil.StoreMetricWithHeuristics(ctx, pv, hist, suffix)
 			continue
 		}
 		valueName := hist.Name + metricsReportingSuffix

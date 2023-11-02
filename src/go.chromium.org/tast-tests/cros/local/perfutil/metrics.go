@@ -44,9 +44,9 @@ func estimateMetricType(ctx context.Context, histname string) metricType {
 	return metricSmoothness
 }
 
-// estimateMetricPresenattionType checks the name of a histogram and returns
+// estimateMetricPresentationType checks the name of a histogram and returns
 // presentation parameters (direction, data type)
-func estimateMetricPresenattionType(ctx context.Context, histname string) (perf.Direction, string) {
+func estimateMetricPresentationType(ctx context.Context, histname string) (perf.Direction, string) {
 	switch estimateMetricType(ctx, histname) {
 	case metricSmoothness:
 		return perf.BiggerIsBetter, "percent"
