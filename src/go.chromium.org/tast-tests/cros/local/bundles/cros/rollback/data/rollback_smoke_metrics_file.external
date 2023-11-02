@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/rollback/enterprise-rollback-metrics-data-20231106",
+  "size": 16,
+  "sha256sum": "0ecf0dfb1653e84ca12e6b9bb831f44a793286d325f88d2bb199a4c4c18596a2"
+}

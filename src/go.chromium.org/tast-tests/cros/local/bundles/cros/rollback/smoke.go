@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	upstartCommon "go.chromium.org/tast-tests/cros/common/upstart"
+	metrics "go.chromium.org/tast-tests/cros/local/metrics"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -38,27 +39,37 @@ func init() {
 		BugComponent: "b:1031231",
 		Attr:         []string{"group:mainline"},
 		Timeout:      1 * time.Minute,
+		Data:         []string{"rollback_smoke_metrics_file"},
 		Fixture:      fixture.CleanOwnership,
 		// CleanOwnership doesn't work on reven/flex.
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("reven")),
 		Params: []testing.Param{{
-			Name: "oobe_confg_restore_running",
+			Name: "oobe_config_restore_running",
 			Val:  oobeConfigRestoreRunningTest,
 		}, {
-			Name: "oobe_config_save_no_flag",
-			Val:  oobeConfigSaveNoFlagTest,
+			Name:      "oobe_config_save_no_flag",
+			Val:       oobeConfigSaveNoFlagTest,
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name: "rollback_encrypt_and_failed_decrypt",
-			Val:  rollbackEncryptFailedDecryptTest,
+			Name:      "rollback_encrypt_and_failed_decrypt",
+			Val:       rollbackEncryptFailedDecryptTest,
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name: "cleanup_metrics_when_oobe_is_not_completed",
-			Val:  onlyCleanupMetricsWhenOobeIsNotCompletedTest,
+			Name:      "cleanup_metrics_when_oobe_is_not_completed",
+			Val:       onlyCleanupMetricsWhenOobeIsNotCompletedTest,
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name: "cleanup_files_if_oobe_is_completed",
-			Val:  cleanupFilesIfOobeIsCompletedTest,
+			Name:      "cleanup_files_if_oobe_is_completed",
+			Val:       cleanupFilesIfOobeIsCompletedTest,
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:              "tpm_encryption",
 			Val:               tpmEncryptionTest,
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpmNvramRollbackSpace()),
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+		}, {
+			Name:              "tpm_encryption_corrupted_metrics",
+			Val:               tpmEncryptionCorruptedMetricsTest,
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpmNvramRollbackSpace()),
 			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 		}, {
@@ -91,6 +102,15 @@ const decryptedRollbackData = "/var/lib/oobe_config_restore/rollback_data"
 
 const oobeCompletedFile = "/home/chronos/.oobe_completed"
 
+const rollbackPolicyActivatedMetric = "cros::RollbackEnterprise::RollbackPolicyActivated"
+const rollbackOobeConfigSaveMetric = "cros::RollbackEnterprise::RollbackOobeConfigSave"
+const rollbackOobeConfigRestoreMetric = "cros::RollbackEnterprise::RollbackOobeConfigRestore"
+
+const rollbackMetricsFileWithPolicyActivatedEvent = "rollback_smoke_metrics_file"
+
+const metricsReportingWaitingTime = 10 * time.Second
+const jobsStatusWaitingTime = 30 * time.Second
+
 // Smoke runs the Smoke tests.
 // Which tests should go here?
 // The goal is to create a suite of non-flaky rollback integration tests that can run in the CQ.
@@ -113,6 +133,12 @@ func Smoke(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	if err := metrics.CleanStructuredEvents(ctx); err != nil {
+		s.Fatal("Failed to delete old reported events: ", err)
+	}
+	if err := placeRollbackMetricsFile(ctx, s.DataPath(rollbackMetricsFileWithPolicyActivatedEvent)); err != nil {
+		s.Fatal("Failed to copy metrics file to DUT: ", err)
+	}
 	// Every small subtest has its own function and is declared in the test parameters.
 	// This allows to run test with different attributes but avoids creating a separate file for each subtest.
 	s.Param().(func(context.Context, *testing.State))(ctx, s)
@@ -133,6 +159,11 @@ func oobeConfigSaveNoFlagTest(ctx context.Context, s *testing.State) {
 
 	if err := checkFileDoesNotExist(sslEncryptedRollbackData); err != nil {
 		s.Fatal("Failure when checking that no encrypted data was created: ", err)
+	}
+
+	rollbackEvents := []string{rollbackPolicyActivatedMetric, rollbackOobeConfigSaveMetric, rollbackOobeConfigRestoreMetric}
+	if err := checkEventsHaveNotBeenReported(ctx, rollbackEvents); err != nil {
+		s.Fatal("Failure when checking that no rollback metrics were reported: ", err)
 	}
 }
 
@@ -163,6 +194,13 @@ func rollbackEncryptFailedDecryptTest(ctx context.Context, s *testing.State) {
 	if err := upstart.CheckJob(ctx, "oobe_config_restore"); err != nil {
 		s.Fatal("Failure when checking that oobe_config_restore is still running after failed decryption: ", err)
 	}
+
+	// All rollback events should have been reported after oobe_config_restore
+	// decryption attempt.
+	rollbackEvents := []string{rollbackPolicyActivatedMetric, rollbackOobeConfigSaveMetric, rollbackOobeConfigRestoreMetric}
+	if err := waitForEventsTobeReported(ctx, rollbackEvents); err != nil {
+		s.Fatal("Failure when checking that all rollback metrics have been reported: ", err)
+	}
 }
 
 // onlyCleanupMetricsWhenOobeIsNotCompletedTest checks that oobe_config_restore's
@@ -170,6 +208,16 @@ func rollbackEncryptFailedDecryptTest(ctx context.Context, s *testing.State) {
 func onlyCleanupMetricsWhenOobeIsNotCompletedTest(ctx context.Context, s *testing.State) {
 	if err := fakePrecedingRollback(ctx); err != nil {
 		s.Fatal("Failed to fake a preceding rollback: ", err)
+	}
+
+	// Create a metrics file with events to check that rollback_cleanup reads and
+	// reports event metrics. The file created in fakePrecedingRollback is not
+	// usable because oobe_config_restore cleaned it out already.
+	if err := metrics.CleanStructuredEvents(ctx); err != nil {
+		s.Fatal("Failed to delete old reported events: ", err)
+	}
+	if err := placeRollbackMetricsFile(ctx, s.DataPath(rollbackMetricsFileWithPolicyActivatedEvent)); err != nil {
+		s.Fatal("Failed to copy metrics file to DUT: ", err)
 	}
 
 	// Run some checks while OOBE is not completed yet.
@@ -180,6 +228,7 @@ func onlyCleanupMetricsWhenOobeIsNotCompletedTest(ctx context.Context, s *testin
 	if err := checkFileExists(metricsData); err != nil {
 		s.Fatal("Failure when checking that non-stale metrics file is kept: ", err)
 	}
+
 	// Make the file stale by modifying it's last modified date.
 	if err := testexec.CommandContext(ctx, "touch", "-d", "16 days ago", metricsData).Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to make the metrics file stale: ", err)
@@ -194,6 +243,15 @@ func onlyCleanupMetricsWhenOobeIsNotCompletedTest(ctx context.Context, s *testin
 	if err := checkFileDoesNotExist(metricsData); err != nil {
 		s.Fatal("Failure when checking that stale metrics file is deleted: ", err)
 	}
+	// Deleting the stale file should report only the events previously tracked.
+	if err := waitForEventsTobeReported(ctx, []string{rollbackPolicyActivatedMetric}); err != nil {
+		s.Fatal("Failure when checking that tracked rollback events have been reported: ", err)
+	}
+	notTrackedRollbackEvents := []string{rollbackOobeConfigSaveMetric, rollbackOobeConfigRestoreMetric}
+	if err := checkEventsHaveNotBeenReported(ctx, notTrackedRollbackEvents); err != nil {
+		s.Fatal("Failure when checking untracked events have not been reported: ", err)
+	}
+
 	// Rollback data should be kept until OOBE is finished.
 	if err := checkFilesExist(
 		[]string{
@@ -211,6 +269,16 @@ func cleanupFilesIfOobeIsCompletedTest(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to fake a preceding rollback: ", err)
 	}
 
+	// Create a metrics file with events to check that rollback_cleanup reads and
+	// reports event metrics. The file created in fakePrecedingRollback is not
+	// usable because oobe_config_restore cleaned it out already.
+	if err := metrics.CleanStructuredEvents(ctx); err != nil {
+		s.Fatal("Failed to delete old reported events: ", err)
+	}
+	if err := placeRollbackMetricsFile(ctx, s.DataPath(rollbackMetricsFileWithPolicyActivatedEvent)); err != nil {
+		s.Fatal("Failed to copy metrics file to DUT: ", err)
+	}
+
 	// Fake oobe is completed and check that all files are deleted.
 	if err := testexec.CommandContext(ctx, "touch", oobeCompletedFile).Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to fake oobe completion: ", err)
@@ -221,8 +289,18 @@ func cleanupFilesIfOobeIsCompletedTest(ctx context.Context, s *testing.State) {
 	}
 
 	// oobe_config_restore daemon is not supposed to start, instead we only ran the cleanup.
-	if err := upstart.WaitForJobStatus(ctx, "oobe_config_restore", upstartCommon.StopGoal, upstartCommon.WaitingState, upstart.TolerateWrongGoal, 30*time.Second); err != nil {
+	if err := upstart.WaitForJobStatus(ctx, "oobe_config_restore", upstartCommon.StopGoal, upstartCommon.WaitingState, upstart.RejectWrongGoal, jobsStatusWaitingTime); err != nil {
 		s.Fatal("Failure while waiting for oobe_config_restore to stop: ", err)
+	}
+
+	// Deleting the rollback metrics file because of rollback cleanup should only
+	// report the events previously tracked.
+	if err := waitForEventsTobeReported(ctx, []string{rollbackPolicyActivatedMetric}); err != nil {
+		s.Fatal("Failure when checking that tracked rollback events have been reported: ", err)
+	}
+	notTrackedRollbackEvents := []string{rollbackOobeConfigSaveMetric, rollbackOobeConfigRestoreMetric}
+	if err := checkEventsHaveNotBeenReported(ctx, notTrackedRollbackEvents); err != nil {
+		s.Fatal("Failure when checking untracked events have not been reported: ", err)
 	}
 
 	if err := checkFilesDoNotExist([]string{
@@ -237,29 +315,57 @@ func cleanupFilesIfOobeIsCompletedTest(ctx context.Context, s *testing.State) {
 // tpmEncryptionTest runs encryption and decryption using the rollback TPM space.
 // It verifies that encrypted file and decrypted file are present and enforces use of TPM encryption.
 func tpmEncryptionTest(ctx context.Context, s *testing.State) {
+	if err := tpmEncryptionDecryption(ctx); err != nil {
+		s.Fatal("Failed to encrypt and decrypt with TPM: ", err)
+	}
+
+	rollbackEvents := []string{rollbackPolicyActivatedMetric, rollbackOobeConfigSaveMetric, rollbackOobeConfigRestoreMetric}
+	if err := checkEventsHaveBeenReported(ctx, rollbackEvents); err != nil {
+		s.Fatal("Rollback events have not been reported: ", err)
+	}
+}
+
+func tpmEncryptionCorruptedMetricsTest(ctx context.Context, s *testing.State) {
+	if err := placeCorruptedRollbackMetrics(ctx); err != nil {
+		s.Fatal("Failed to create corrupted metrics file")
+	}
+
+	if err := tpmEncryptionDecryption(ctx); err != nil {
+		s.Fatal("Failed to encrypt and decrypt with TPM: ", err)
+	}
+
+	// No rollback events should have been reported from a corrupted metrics file.
+	rollbackEvents := []string{rollbackPolicyActivatedMetric, rollbackOobeConfigSaveMetric, rollbackOobeConfigRestoreMetric}
+	if err := checkEventsHaveNotBeenReported(ctx, rollbackEvents); err != nil {
+		s.Fatal("Failure when checking that no rollback metrics have been reported: ", err)
+	}
+}
+
+func tpmEncryptionDecryption(ctx context.Context) error {
 	if err := triggerTpmEncryption(ctx); err != nil {
-		s.Fatal("Failed to encrypt with TPM: ", err)
+		return errors.Wrap(err, "failed to encrypt with TPM")
 	}
 
 	// Check that rollback space is not 0.
 	secret, err := readRollbackTpmNvramSpace(ctx)
 	if err != nil {
-		s.Fatal("Failed to read rollback space: ", err)
+		return errors.Wrap(err, "failed to read rollback space")
 	}
 	if bytes.Equal(secret, zeroTpmSpace[:]) {
-		s.Fatal("TPM space is still zero after encrypting")
+		return errors.New("TPM space is still zero after encrypting")
 	}
 
 	// Delete the fallback openssl encrypted data to force code to use TPM encrypted file.
 	if err := os.Remove(sslEncryptedRollbackData); err != nil {
-		s.Fatal("Failed to remove SSL encrypted rollback data: ", err)
+		return errors.Wrap(err, "failed to remove SSL encrypted rollback data")
 	}
 
 	// Decrypt.
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
-		s.Fatal("Failed to restart ui to decrypt: ", err)
+		return errors.Wrap(err, "failed to restart ui to decrypt")
 	}
 	// Ui will request rollback data, which triggers decryption. Wait for that to finish.
+
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := checkFileExists(decryptedRollbackData); err != nil {
 			return errors.Wrap(err, "could not find decrypted rollback data")
@@ -274,8 +380,10 @@ func tpmEncryptionTest(ctx context.Context, s *testing.State) {
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: time.Second * 10}); err != nil {
-		s.Fatal("Failure while waiting for successful decryption: ", err)
+		return errors.Wrap(err, "failure while waiting for successful decryption")
 	}
+
+	return nil
 }
 
 // cleanupZeroesTpmSpaceTest verifies that running oobe_config_restore upstart job triggers
@@ -323,6 +431,9 @@ func triggerTpmEncryption(ctx context.Context) error {
 	if err := testexec.CommandContext(ctx, "sudo", "-u", "oobe_config_save", "-g", "oobe_config", "--", "oobe_config_save", "-tpm_encrypt").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to run oobe_config_save executable")
 	}
+	if err := upstart.WaitForJobStatus(ctx, "oobe_config_save", upstartCommon.StopGoal, upstartCommon.WaitingState, upstart.TolerateWrongGoal, jobsStatusWaitingTime); err != nil {
+		return errors.Wrap(err, "failed to wait for oobe_config_save to finish running")
+	}
 	return nil
 }
 
@@ -346,15 +457,19 @@ func readRollbackTpmNvramSpace(ctx context.Context) ([]byte, error) {
 
 // fakePrecedingRollback can be used for setup, it creates files that would be left by a preceding rollback.
 func fakePrecedingRollback(ctx context.Context) error {
-	if err := placeFakedRollbackMetrics(ctx); err != nil {
-		return errors.Wrap(err, "failed to create metrics file")
-	}
 	if err := placeFakedDecryptedRollbackData(ctx); err != nil {
 		return errors.Wrap(err, "failed to fake decrypted rollback file")
 	}
 	if err := runSaveAndRestore(ctx); err != nil {
 		return errors.Wrap(err, "failed to run save and restore")
 	}
+
+	// Use reporting rollback events as a sign that oobe_config_restore finished.
+	rollbackEvents := []string{rollbackPolicyActivatedMetric, rollbackOobeConfigSaveMetric, rollbackOobeConfigRestoreMetric}
+	if err := waitForEventsTobeReported(ctx, rollbackEvents); err != nil {
+		return err
+	}
+
 	if err := checkFilesExist(
 		[]string{
 			decryptedRollbackData,
@@ -362,13 +477,6 @@ func fakePrecedingRollback(ctx context.Context) error {
 			tpmEncryptedRollbackData,
 			metricsData}); err != nil {
 		return errors.Wrap(err, "failure when checking that all rollback data was created")
-	}
-	return nil
-}
-
-func placeFakedRollbackMetrics(ctx context.Context) error {
-	if err := os.WriteFile(metricsData, []byte(corruptData), 0664); err != nil {
-		return errors.Wrap(err, "failed to create metrics file")
 	}
 	return nil
 }
@@ -390,7 +498,8 @@ func placeFakedDecryptedRollbackData(ctx context.Context) error {
 }
 
 // runSaveAndRestore runs rollback's save and restore path.
-// Note that while this executes the whole path, decryption will fail on device that use openssl/pstore for encryption.
+// Note that while this executes the whole path, decryption will fail on device
+// that use openssl/pstore for encryption.
 func runSaveAndRestore(ctx context.Context) error {
 	if err := placeDataSaveFlag(ctx); err != nil {
 		return errors.Wrap(err, "failed to place data save flag")
@@ -398,6 +507,7 @@ func runSaveAndRestore(ctx context.Context) error {
 	if err := runOobeConfigSave(ctx); err != nil {
 		return errors.Wrap(err, "failed to run oobe_config_save")
 	}
+
 	// Restart oobe_config_restore as would usually happen during boot after rollback.
 	if err := upstart.RestartJob(ctx, "oobe_config_restore"); err != nil {
 		return errors.Wrap(err, "failed to restart oobe_config_restore")
@@ -414,12 +524,33 @@ func runOobeConfigSave(ctx context.Context) error {
 	if err := testexec.CommandContext(ctx, "start", "oobe_config_save").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to start oobe_config_save")
 	}
+	if err := upstart.WaitForJobStatus(ctx, "oobe_config_save", upstartCommon.StopGoal, upstartCommon.WaitingState, upstart.TolerateWrongGoal, jobsStatusWaitingTime); err != nil {
+		return errors.Wrap(err, "failed to wait for oobe_config_save to finish running")
+	}
 	return nil
 }
 
 func placeDataSaveFlag(ctx context.Context) error {
 	if err := testexec.CommandContext(ctx, "touch", "/mnt/stateful_partition/.save_rollback_data").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to place data save flag")
+	}
+	return nil
+}
+
+func placeCorruptedRollbackMetrics(ctx context.Context) error {
+	if err := os.WriteFile(metricsData, []byte(corruptData), 0664); err != nil {
+		return errors.Wrap(err, "failed to create corrupted metrics file")
+	}
+	return nil
+}
+
+func placeRollbackMetricsFile(ctx context.Context, metricsFileDataPath string) error {
+	data, err := os.ReadFile(metricsFileDataPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to read file")
+	}
+	if err := os.WriteFile(metricsData, data, 0664); err != nil {
+		return errors.Wrap(err, "failed to create metrics file")
 	}
 	return nil
 }
@@ -462,12 +593,51 @@ func checkFileDoesNotExist(path string) error {
 	return errors.Errorf("file %s exists", path)
 }
 
+func waitForEventsTobeReported(ctx context.Context, events []string) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := checkEventsHaveBeenReported(ctx, events); err != nil {
+			return errors.Wrap(err, "failure when checking that all rollback metrics have been reported")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: metricsReportingWaitingTime}); err != nil {
+		return errors.Wrap(err, "failure while waiting for metrics reporting")
+	}
+	return nil
+}
+
+func checkEventsHaveBeenReported(ctx context.Context, events []string) error {
+	for _, event := range events {
+		result, err := metrics.HasStructuredEventBeenReported(ctx, event)
+		if err != nil {
+			return errors.Wrap(err, "failed to check if the event has been reported")
+		}
+		if !result {
+			return errors.Errorf("event %s has not been reported", event)
+		}
+	}
+	return nil
+}
+
+func checkEventsHaveNotBeenReported(ctx context.Context, events []string) error {
+	for _, event := range events {
+		result, err := metrics.HasStructuredEventBeenReported(ctx, event)
+		if err != nil {
+			return errors.Wrap(err, "failed to check if the event has been reported")
+		}
+		if result {
+			return errors.Errorf("event %s has been reported", event)
+		}
+	}
+	return nil
+}
+
 func cleanupRollbackLeftovers(ctx context.Context) (err error) {
 	err = errors.Join(err, upstart.StopJob(ctx, "oobe_config_save"))
 	err = errors.Join(err, upstart.StopJob(ctx, "oobe_config_restore"))
 	paths := []string{
 		dataSaveFlag,
 		sslEncryptedRollbackData,
+		sslKey,
 		tpmEncryptedRollbackData,
 		oobeConfigSaveDir,
 		oobeConfigRestoreDir,
