@@ -7,6 +7,7 @@ package firmware
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -41,6 +42,12 @@ var (
 		"firmware.firmwarePath",
 		"",
 		"A variable to store the path information for the fw download")
+
+	// Local location for the downloaded firmware
+	localFirmwarePath = testing.RegisterVarString(
+		"firmware.localFirmwarePath",
+		"",
+		"A variable to store the local path information for the download firmware")
 )
 
 func init() {
@@ -64,6 +71,17 @@ func init() {
 func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	firmwarePathVal := string(firmwarePath.Value())
+	localFirmwarePathVal := string(localFirmwarePath.Value())
+
+	if firmwarePathVal != "" && localFirmwarePathVal != "" {
+		s.Fatal("Only one of localFirmwarePath or firmwarePath can be specified")
+	}
+	if localFirmwarePathVal != "" {
+		_, err := os.Stat(localFirmwarePathVal)
+		if err != nil {
+			s.Fatal("Could not stat specified local firmware path: ", err)
+		}
+	}
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -162,9 +180,14 @@ func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get AP RO ID: ", err)
 	}
-	if firmwarePathVal != "" {
-		s.Log("Downloading Firmware to Flash")
-		ecBinToFlash, monitorBinToFlash, apBinToFlash := downloadFirmwareFromGCS(ctx, s, tmpDir, firmwarePathVal, fwidModel, flashEC)
+	if firmwarePathVal != "" || localFirmwarePathVal != "" {
+		var ecBinToFlash, monitorBinToFlash, apBinToFlash string
+		if firmwarePathVal != "" {
+			s.Log("Downloading Firmware to Flash")
+			ecBinToFlash, monitorBinToFlash, apBinToFlash = downloadFirmwareFromGCS(ctx, s, tmpDir, firmwarePathVal, fwidModel, flashEC)
+		} else {
+			ecBinToFlash, monitorBinToFlash, apBinToFlash = untarLocalFirmwareFile(ctx, s, tmpDir, localFirmwarePathVal, fwidModel, flashEC)
+		}
 		s.Logf("EC Firmware to Flash %s; monitor file to flash %s; AP Firmware to Flash %s", ecBinToFlash, monitorBinToFlash, apBinToFlash)
 		fileMap := map[string]string{
 			fmt.Sprintf("%s/%s", tmpDir, apBinToFlash): fmt.Sprintf("%s/%s", servoTmpDir, apFirmwareFileToFlash),
@@ -191,6 +214,44 @@ func downloadFirmwareFromGCS(ctx context.Context, s *testing.State, tmpDir, firm
 	}
 	// Untar the binary file with respect to the model name found in 'crossystem fwid'.
 	apBinToFlash, _, err := fwUtils.UntarUnknownFileName(ctx, tmpDir, model, fwUtils.APFirmware)
+	if err != nil {
+		s.Fatalf("Failed to untar file for %s: %s", fwUtils.APFirmware, err)
+	}
+	if !flashEC {
+		return "", "", apBinToFlash
+	}
+	ecBinToFlash, monitorBinToFlash, err = fwUtils.UntarUnknownFileName(ctx, tmpDir, model, fwUtils.ECFirmware)
+	if err != nil {
+		s.Fatalf("Failed to untar file for %s: %s", fwUtils.ECFirmware, err)
+	}
+	return ecBinToFlash, monitorBinToFlash, apBinToFlash
+}
+
+// untarLocalFirmwareFile untars the provided local firmware file to extract AP and EC images
+func untarLocalFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmwareFilepath, model string, flashEC bool) (ecBinToFlash, monitorBinToFlash, apBinToFlash string) {
+	// Copy the fw file to tmp directory.
+	dst, err := os.Create(tmpDir + "/" + fwUtils.FirmwareFileName)
+	if err != nil {
+		s.Fatalf("Failed to open tmp file %q: %s", tmpDir+"/"+fwUtils.FirmwareFileName, err)
+	}
+	// Close file on exit
+	defer func() error {
+		if err := dst.Close(); err != nil {
+			s.Fatalf("Failed to close tmp file %q: %s", tmpDir+"/"+fwUtils.FirmwareFileName, err)
+		}
+		return nil
+	}()
+	src, err := os.Open(firmwareFilepath)
+	if err != nil {
+		s.Fatalf("Failed to open local firmware file %s for copying to tmp directory: %s", firmwareFilepath, err)
+	}
+	defer src.Close()
+	if _, err := io.Copy(dst, src); err != nil {
+		s.Fatal("Failed to copy firmware file to tmp location")
+	}
+
+	// Untar the binary file with respect to the model name.
+	apBinToFlash, _, err = fwUtils.UntarUnknownFileName(ctx, tmpDir, model, fwUtils.APFirmware)
 	if err != nil {
 		s.Fatalf("Failed to untar file for %s: %s", fwUtils.APFirmware, err)
 	}

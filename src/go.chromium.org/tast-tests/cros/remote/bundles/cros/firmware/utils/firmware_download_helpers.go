@@ -27,8 +27,8 @@ import (
 type FirmwareType string
 
 const (
-	// firmwareFileName contains the name of the file to be downloaded from chromeos-image-archive.
-	firmwareFileName = "firmware_from_source.tar.bz2"
+	// FirmwareFileName contains the name of the file to be downloaded from chromeos-image-archive.
+	FirmwareFileName = "firmware_from_source.tar.bz2"
 	// ECFirmware indicates firmware for EC
 	ECFirmware FirmwareType = "EC"
 	// APFirmware indicates firmware for AP
@@ -71,30 +71,30 @@ func GetFwVersion(ctx context.Context, h *firmware.Helper, param reporters.Cross
 
 // DownloadFirmwareFile will download a tar file from cloud and save to a temporary directory,
 // based on the shipped firmware version passed in for test.
-func DownloadFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmwareFilePath string) error {
-	testing.ContextLogf(ctx, "Downloading firmware image from the path: %s", firmwareFilePath)
+func DownloadFirmwareFile(ctx context.Context, s *testing.State, tmpDir, gcsFirmwareFilePath string) error {
+	testing.ContextLogf(ctx, "Downloading firmware image from the path: %s", gcsFirmwareFilePath)
 
 	// Stage the complete path.
-	r, err := s.CloudStorage().Open(ctx, fmt.Sprintf("gs://%s", firmwareFilePath))
+	r, err := s.CloudStorage().Open(ctx, fmt.Sprintf("gs://%s", gcsFirmwareFilePath))
 	if err != nil {
-		return errors.Wrapf(err, "failed to stage file for url %q", firmwareFilePath)
+		return errors.Wrapf(err, "failed to stage file for url %q", gcsFirmwareFilePath)
 	}
 
 	// Open tmp file
-	fo, err := os.Create(tmpDir + "/" + firmwareFileName)
+	fo, err := os.Create(tmpDir + "/" + FirmwareFileName)
 	if err != nil {
-		return errors.Wrapf(err, "failed to open tmp file %q", tmpDir+"/"+firmwareFileName)
+		return errors.Wrapf(err, "failed to open tmp file %q", tmpDir+"/"+FirmwareFileName)
 	}
 	// Close file on exit
 	defer func() error {
 		if err := fo.Close(); err != nil {
-			return errors.Wrapf(err, "failed to close tmp file %q", tmpDir+"/"+firmwareFileName)
+			return errors.Wrapf(err, "failed to close tmp file %q", tmpDir+"/"+FirmwareFileName)
 		}
 		return nil
 	}()
 	w := bufio.NewWriter(fo)
 	if err != nil {
-		return errors.Wrapf(err, "failed to stage file for url %q", firmwareFilePath)
+		return errors.Wrapf(err, "failed to stage file for url %q", gcsFirmwareFilePath)
 	}
 	written, err := io.Copy(w, r)
 	if err != nil {
@@ -118,7 +118,7 @@ func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType 
 		// Find a monitor binary for NPCX_UUT chip type, if any.
 		for _, f := range filenamePool {
 			monitorFile := strings.Replace(f, "ec.bin", ecMonitorFileName, 1)
-			if err := testexec.CommandContext(ctx, "tar", "-xvf", tmpDir+"/"+firmwareFileName, "-C", tmpDir, monitorFile).Run(ssh.DumpLogOnError); err != nil {
+			if err := testexec.CommandContext(ctx, "tar", "-xvf", tmpDir+"/"+FirmwareFileName, "-C", tmpDir, monitorFile).Run(ssh.DumpLogOnError); err != nil {
 				testing.ContextLogf(ctx, "WARNING! failed to untar the image with the name %q: %v", monitorFile, err)
 				continue
 			}
@@ -129,7 +129,7 @@ func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType 
 	}
 	var err error
 	for _, filename := range filenamePool {
-		if err = testexec.CommandContext(ctx, "tar", "-xvf", tmpDir+"/"+firmwareFileName, "-C", tmpDir, filename).Run(ssh.DumpLogOnError); err != nil {
+		if err = testexec.CommandContext(ctx, "tar", "-xvf", tmpDir+"/"+FirmwareFileName, "-C", tmpDir, filename).Run(ssh.DumpLogOnError); err != nil {
 			testing.ContextLogf(ctx, "WARNING! failed to untar the image with the name %q: %v", filename, err)
 			continue
 		}
