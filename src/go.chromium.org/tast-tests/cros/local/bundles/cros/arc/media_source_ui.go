@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
-	"go.chromium.org/tast-tests/cros/local/arc/apputil/youtube"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil/youtubemusic"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -85,13 +84,10 @@ func MediaSourceUI(ctx context.Context, s *testing.State) {
 	}
 
 	ytmusicVideo := "Beat It (Official 4K Video)"
-	ytappLink := "https://www.youtube.com/watch?v=JE3-LkMqBfM"
-	ytappVideo := "Whale Songs and AI, for everyone to explore"
 
 	for appName, media := range map[string]*apputil.Media{
 		apps.Gallery.Name:    apputil.NewMedia("", testfile),
 		youtubemusic.AppName: apputil.NewMedia(ytmusicVideo, ytmusicVideo),
-		youtube.AppName:      apputil.NewMedia(ytappLink, ytappVideo),
 	} {
 		f := func(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
@@ -101,8 +97,6 @@ func MediaSourceUI(ctx context.Context, s *testing.State) {
 			var err error
 			var app apputil.ARCMediaPlayer
 			switch appName {
-			case youtube.AppName:
-				app, err = youtube.NewApp(ctx, kb, tconn, a, device)
 			case apps.Gallery.Name:
 				app = newGallery(ctx, tconn, cr, filepath.Join(s.OutDir(), appName))
 			case youtubemusic.AppName:
