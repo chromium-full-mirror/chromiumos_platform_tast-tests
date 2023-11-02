@@ -10,11 +10,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
-	"go.chromium.org/tast-tests/cros/remote/firmware/suspend"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -55,7 +56,8 @@ func init() {
 			hwdep.SkipOnPlatform("veyron_tiger"),
 		),
 		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
-		SoftwareDeps: []string{"crossystem", "flashrom"},
+		SoftwareDeps: []string{"crossystem", "flashrom", "chrome"},
+		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
@@ -148,6 +150,7 @@ func init() {
 					},
 					prohibitedEvents: `System |Developer Mode|Recovery Mode`,
 				},
+				Timeout: 6 * time.Minute,
 			},
 			// Test eventlog with hardware watchdog.
 			{
@@ -224,33 +227,50 @@ func Eventlog(ctx context.Context, s *testing.State) {
 			s.Fatalf("Error during transition to %s: %+v", param.bootToMode, err)
 		}
 	} else if param.suspendResume {
+		if err := h.RequireConfig(ctx); err != nil {
+			s.Fatal("Requiring fw testing configs: ", err)
+		}
+		if err := h.RequireRPCUtils(ctx); err != nil {
+			s.Fatal("Requiring RPC utils: ", err)
+		}
+		// Create instance of chrome for login so that DUT suspends and does not shut down.
+		s.Log("Use Chrome service")
+		if _, err := h.RPCUtils.ReuseChrome(ctx, &empty.Empty{}); err != nil {
+			s.Fatal("Failed to create instance of chrome: ", err)
+		}
+
 		if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 			s.Error("Failed to remove watchdog for ccd: ", err)
 		}
-		h.CloseRPCConnection(ctx)
 
-		suspendContext, err := suspend.NewContext(ctx, h)
-		if err != nil {
-			s.Fatal("Failed to create suspendContext: ", err)
-		}
-		defer suspendContext.Close()
-		s.Log("Suspending DUT")
-		if err := suspendContext.SuspendDUTAllTypes(suspend.DefaultSuspendArgs()); err != nil {
+		testing.ContextLog(ctx, "Suspending DUT")
+		cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--delay=3")
+		if err := cmd.Start(); err != nil {
 			s.Fatal("Failed to suspend DUT: ", err)
 		}
 
-		s.Log("Waking DUT")
-		if err := suspendContext.WakeDUT(); err != nil {
-			s.Fatal("Failed to wake DUT: ", err)
+		testing.ContextLog(ctx, "Checking for S0ix or S3 powerstate")
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0ix", "S3"); err != nil {
+			s.Fatal("Failed to get S0ix or S3 powerstate: ", err)
+		}
+
+		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
+			s.Fatal("Failed to press power key on DUT: ", err)
+		}
+
+		testing.ContextLog(ctx, "Waiting for S0 powerstate")
+		err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0")
+		if err != nil {
+			s.Fatal("Failed to get S0 powerstate: ", err)
 		}
 
 		s.Log("Reconnecting to DUT")
-		shortCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+		shortCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancel()
 		if err := h.WaitConnect(shortCtx); err != nil {
 			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
-		s.Log("Reconnected to DUT")
+
 	} else if param.hardwareWatchdog {
 		if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 			s.Error("Failed to remove watchdog for ccd: ", err)
