@@ -33,10 +33,15 @@ func init() {
 		Desc:         "Test windows persistent settings with the single external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb"},
+		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "ExtDispID1", "wwcbIPPowerIp"},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.apps.AppsService", "tast.cros.browser.ChromeService"},
+		Params: []testing.Param{
+			{
+				Name:      "smoke",
+				ExtraAttr: []string{"pasit_fast"},
+			}},
 	})
 }
 
