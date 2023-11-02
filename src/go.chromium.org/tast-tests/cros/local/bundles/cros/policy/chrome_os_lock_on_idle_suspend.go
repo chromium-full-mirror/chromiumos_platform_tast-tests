@@ -47,6 +47,14 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ChromeOsLockOnIdleSuspend{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.ChromeOsLockOnIdleSuspend{}, pci.VerifiedFunctionalityOS),
+			{
+				Key: "feature_id",
+				// 1. Configure an OU with a user policy A set to X
+				// 2. Log in with the managed account
+				// 3. Ensure that the policy A is set to X on the device
+				// COM_FOUND_CUJ30_TASK2_WF1
+				Value: "screenplay-80b20d5f-c733-45b8-8bdd-f876457a5145",
+			},
 		},
 	})
 }
