@@ -135,8 +135,17 @@ class HostConnection:
         self.output.flush()
 
     def signal_host_end(self):
-        """Sends a string 'END' to the host"""
+        """Sends a string 'END' to the host
+        This should be sent when each test case is completed.
+        """
         self.output.write('END\n')
+        self.output.flush()
+
+    def signal_host_complete(self):
+        """Sends a string 'COMPLETE' to the host
+        This should be sent when all the test cases are completed.
+        """
+        self.output.write('COMPLETE\n')
         self.output.flush()
 
     def wait_for_host_signal(self):
@@ -205,8 +214,9 @@ def main():
 
     for case in test_cases:
         results[case] = measure(f'test_{case}()')
+        HOST_CONNECTION.signal_host_end()
 
-    HOST_CONNECTION.signal_host_end()
+    HOST_CONNECTION.signal_host_complete()
 
     with open(args.output_json, 'w', encoding='utf-8') as f:
         json.dump(results, f)
