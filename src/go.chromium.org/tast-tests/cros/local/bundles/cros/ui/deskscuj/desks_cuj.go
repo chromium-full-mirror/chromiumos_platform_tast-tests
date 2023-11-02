@@ -215,21 +215,10 @@ func Run(ctx context.Context, s *testing.State) {
 					return errors.Wrapf(err, "failed to switch to the next desk using %s", deskSwitcher.name)
 				}
 
-				if err := ash.WaitUntilDesksFinishAnimating(ctx, tconn); err != nil {
-					return errors.Wrap(err, "failed to wait for desks to finish animating")
+				if err := ash.WaitForDesk(tconn, nextDesk)(ctx); err != nil {
+					return errors.Wrapf(err, "failed to wait for the %d desk to be active", nextDesk)
 				}
-
-				info, err := ash.GetDesksInfo(ctx, tconn)
-				if err != nil {
-					return errors.Wrap(err, "failed to get the active desk index")
-				}
-
-				activeDesk = info.ActiveDeskIndex
-
-				// Compare the actual active desk to the expected active desk.
-				if activeDesk != nextDesk {
-					return errors.Errorf("unexpected active desk: desk %d is active, expected %d to be active", activeDesk, nextDesk)
-				}
+				activeDesk = nextDesk
 
 				// Give a few seconds for the current desk to stabilize
 				// before interacting with it.
