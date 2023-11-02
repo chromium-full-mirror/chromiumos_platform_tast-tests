@@ -92,11 +92,6 @@ func ChangeFWVariant(ctx context.Context, h *firmware.Helper, ms *firmware.ModeS
 		} else if !isFWVerCorrect {
 			return errors.New("failed to boot into the expected firmware version")
 		}
-
-		// Require again here since reboots in test cause nil pointer errors otherwise.
-		if err := h.RequireBiosServiceClient(ctx); err != nil {
-			return errors.Wrap(err, "requiring BiosServiceClient")
-		}
 	}
 	return nil
 }
