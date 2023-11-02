@@ -42,7 +42,7 @@ func UnpinMediaControlsPod(tconn *chrome.TestConn) uiauto.Action {
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("open media controls widget and unpin",
 		ui.WithInterval(time.Second).LeftClickUntil(PinnedMediaControls, ui.Exists(MediaControlsDialog)),
-		ui.LeftClick(nodewith.Role(role.Button).Name("Unpin").Ancestor(MediaControlsDialog)),
+		ui.LeftClick(nodewith.Role(role.ToggleButton).Name("Unpin").Ancestor(MediaControlsDialog)),
 		ui.WaitUntilGone(PinnedMediaControls),
 	)
 }
