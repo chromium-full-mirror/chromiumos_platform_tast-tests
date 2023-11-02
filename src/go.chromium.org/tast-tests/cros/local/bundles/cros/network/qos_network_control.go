@@ -315,7 +315,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, gwAddr
 				continue
 			}
 
-			if p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeEchoRequest {
+			if isOutgoingPacket(p, gwAddrs) && p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeEchoRequest {
 				if !hasDSCP(p, dscpNetworkControl) {
 					return errors.Errorf("ICMPv6 Echo Request marked with DSCP %d", p.DSCP())
 				}
@@ -331,7 +331,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, gwAddr
 				continue
 			}
 
-			if p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeNeighborSolicitation && !p.IPv6.SrcIP.IsUnspecified() {
+			if isOutgoingPacket(p, gwAddrs) && p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeNeighborSolicitation {
 				if !hasDSCP(p, dscpNetworkControl) {
 					return errors.Errorf("ICMPv6 Neighbor Solicitation marked with DSCP %d", p.DSCP())
 				}
@@ -379,6 +379,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, gwAddr
 	return nil
 }
 
+// isOutgoingPacket returns true if the packet targets the gateway.
 func isOutgoingPacket(p *capture.Packet, gw []net.IP) bool {
 	if p.IPv4 != nil {
 		for _, addr := range gw {
@@ -389,11 +390,29 @@ func isOutgoingPacket(p *capture.Packet, gw []net.IP) bool {
 	}
 	if p.IPv6 != nil {
 		for _, addr := range gw {
-			if p.IPv6.DstIP.Equal(addr) {
+			if p.IPv6.DstIP.Equal(addr) || isMulticastSolicitedNode(p.IPv6.DstIP, addr) {
 				return true
 			}
 		}
 	}
+	return false
+}
+
+func isMulticastSolicitedNode(dst, gw net.IP) bool {
+	// Gateway multicast solicited node address follows the pattern
+	// ff02::1:ffxx:xxxx where the last part is a group identifier made of the
+	// 3 last bytes of the gateway address.
+	if !dst.IsLinkLocalMulticast() || dst[11] != 0x1 || dst[12] != 0xff {
+		// The address is not a solicited-node multicast address.
+		return false
+	}
+	// Check the unicast suffix matches one of the gateway addresses.
+	if gwIP6 := gw.To16(); gwIP6 != nil {
+		if gwIP6[13] == dst[13] && gwIP6[14] == dst[14] && gwIP6[15] == dst[15] {
+			return true
+		}
+	}
+
 	return false
 }
 
