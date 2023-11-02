@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"go.chromium.org/tast-tests/cros/common/network/cmd"
 	"go.chromium.org/tast/core/errors"
 )
@@ -77,6 +79,30 @@ func (iface IfType) IsValid() bool {
 	}
 	return false
 }
+
+// RegRuleFlag is string representation of nl80211 regulatory rule flag.
+type RegRuleFlag string
+
+// Source: print_reg_handler() in https://git.kernel.org/pub/scm/linux/kernel/git/jberg/iw.git/tree/reg.c
+const (
+	RRFlagNoOFDM       RegRuleFlag = "NO-OFDM"
+	RRFlagNoCCK        RegRuleFlag = "NO-CCK"
+	RRFlagNoIndoor     RegRuleFlag = "NO-INDOOR"
+	RRFlagNoOutdoor    RegRuleFlag = "NO-OUTDOOR"
+	RRFlagDFS          RegRuleFlag = "DFS"
+	RRFlagPTPOnly      RegRuleFlag = "PTP-ONLY"
+	RRFlagNoIR         RegRuleFlag = "NO-IR"
+	RRFlagNoIBSS       RegRuleFlag = "NO-IBSS"
+	RRFlagAutoBW       RegRuleFlag = "AUTO-BW"
+	RRFlagIRConcurrent RegRuleFlag = "IR-CONCURRENT"
+	RRFlagNoHT40Minus  RegRuleFlag = "NO-HT40MINUS"
+	RRFlagNoHT40Plus   RegRuleFlag = "NO-HT40PLUS"
+	RRFlagNo80MHz      RegRuleFlag = "NO-80MHZ"
+	RRFlagNo160MHz     RegRuleFlag = "NO-160MHZ"
+	RRFlagNoHE         RegRuleFlag = "NO-HE"
+	RRFlagNo320MHz     RegRuleFlag = "NO-320MHZ"
+	RRFlagPassiveScan  RegRuleFlag = "PASSIVE-SCAN"
+)
 
 // The iw link keys.
 const (
@@ -1414,4 +1440,109 @@ func parseSection(regex, text string) ([]section, error) {
 	}
 
 	return sections, nil
+}
+
+// BandRegRule contains regulatory rule flags on a band.
+type BandRegRule struct {
+	StartFreq uint
+	EndFreq   uint
+	MaxBW     uint
+	RRFlags   []RegRuleFlag
+}
+
+// FreqRegulatoryRuleFlags returns the union of regulatory flags on all
+// regulatory rules regulating freq. A frequency can be regulated by multiple
+// rules because: 1) 2.4GHz channels have overlapping frequencies,and the flags
+// can be applied differently, according to channel bandwidth and center
+// frequency. 2) A band edge frequency can be regulated by two consecutive bands.
+func (r *Runner) FreqRegulatoryRuleFlags(ctx context.Context, freq uint, phy string) ([]RegRuleFlag, error) {
+	rules, err := r.PhyRegulatoryRules(ctx, phy)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed get regulatory rules")
+	}
+
+	// 2.4GHz bands can have overlapping frequencies.
+	var matchedRules []*BandRegRule
+	for _, rule := range rules {
+		if rule.StartFreq <= freq && rule.EndFreq >= freq {
+			// A frequency may be in the overlapping of two bands
+			// or at band edge of two consecutive bands. In both
+			// cases, the frequency should be regulated by both band
+			// rules.
+			matchedRules = append(matchedRules, rule)
+		}
+	}
+
+	if len(matchedRules) == 0 {
+		return nil, nil
+	}
+
+	var ret = []RegRuleFlag{}
+	// Calculate the union of RRFlags of each rule in matchedRules.
+	for _, rule := range matchedRules {
+		for _, f := range rule.RRFlags {
+			if !slices.Contains(ret, f) {
+				ret = append(ret, f)
+			}
+		}
+	}
+	return ret, nil
+}
+
+// PhyRegulatoryRules gets the phy-specific regulatory rules of all bands
+// supported.
+func (r *Runner) PhyRegulatoryRules(ctx context.Context, phy string) ([]*BandRegRule, error) {
+	out, err := r.cmd.Output(ctx, "iw", "phy", phy, "reg", "get")
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get regulatory domain on %s", phy)
+	}
+	var rules []*BandRegRule = nil
+	rules, err = parseRegulatoryRules(string(out))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse regulatory rules")
+	}
+	return rules, nil
+}
+
+// parseRegulatoryRules parses the output from iw get get. For example:
+//
+//	(2402 - 2472 @ 40), (N/A, 30), (N/A)
+//	(5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+//	(5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
+//
+// where each line represents a regulatory rule. Within each rule, the second
+// and third of entries separated by commas are not parsed.
+func parseRegulatoryRules(contents string) ([]*BandRegRule, error) {
+	var ret = []*BandRegRule{}
+	r := regexp.MustCompile(`(?:\((?P<startfreq>\d+) \- (?P<endfreq>\d+) @ (?P<maxbw>[0-9]+)\))(?:(, \(.+\)))?(?:, (?P<flags>[a-zA-Z0-9\-, ]+))?`)
+	tags := r.SubexpNames()
+	if len(tags) < 6 || tags[1] != "startfreq" || tags[2] != "endfreq" || tags[3] != "maxbw" || tags[5] != "flags" {
+		return nil, errors.New("failed to initialize desired regular expression")
+	}
+	matches := r.FindAllStringSubmatch(contents, -1)
+	for _, m := range matches {
+		startfreq, err := strconv.Atoi(m[1])
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not parse start frequency %q as int", m[1])
+		}
+		endfreq, err := strconv.Atoi(m[2])
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not parse end frequency %q as int", m[2])
+		}
+		maxbw, err := strconv.Atoi(m[3])
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not parse max bandwidth %q as int", m[3])
+		}
+		strflags := strings.Split(string(m[5]), ",")
+		flags := make([]RegRuleFlag, len(strflags))
+		for i := range strflags {
+			flags[i] = RegRuleFlag(strings.TrimSpace(strflags[i]))
+		}
+		rule := &BandRegRule{StartFreq: uint(startfreq), EndFreq: uint(endfreq), MaxBW: uint(maxbw), RRFlags: []RegRuleFlag{}}
+		if len(flags) > 0 && flags[0] != "" {
+			rule.RRFlags = flags
+		}
+		ret = append(ret, rule)
+	}
+	return ret, nil
 }

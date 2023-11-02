@@ -469,7 +469,7 @@ func TestParseHiddenScanResults(t *testing.T) {
 	beacon interval: 100 TUs
 	signal: -46.00 dBm
 	Information elements from Probe Response frame:
-	SSID: 
+	SSID:
 	Supported rates: 1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0
 	Extended supported rates: 24.0 36.0 48.0 54.0
 	HT capabilities:
@@ -835,6 +835,159 @@ country US: DFS-UNSET
 		} else if selfManaged != tc.selfManaged {
 			t.Errorf("case#%d, got self managed: %t, expect: %t", i, selfManaged, tc.selfManaged)
 		}
+	}
+}
+
+func TestRegulatoryRuleFlags(t *testing.T) {
+	testcases := []struct {
+		out   string
+		freq  uint
+		flags []RegRuleFlag
+	}{
+		// JP.
+		{
+			out: `global
+country JP: DFS-JP
+	(2402 - 2482 @ 40), (N/A, 20), (N/A)
+	(2474 - 2494 @ 20), (N/A, 20), (N/A), NO-OFDM
+	(4910 - 4990 @ 40), (N/A, 23), (N/A)
+	(5030 - 5090 @ 40), (N/A, 23), (N/A)
+	(5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW
+	(5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW
+	(5490 - 5710 @ 160), (N/A, 23), (0 ms), DFS
+	(59000 - 66000 @ 2160), (N/A, 10), (N/A)
+`,
+			freq:  5300,
+			flags: []RegRuleFlag{RRFlagDFS, RRFlagAutoBW},
+		},
+		// edge case 1
+		{
+			out: `global
+	(5490 - 5730 @ 160), (N/A, 20), (0 ms), DFS, PASSIVE-SCAN
+	(5735 - 5835 @ 80), (N/A, 20), (N/A), PASSIVE-SCAN
+`,
+			freq:  5730,
+			flags: []RegRuleFlag{RRFlagDFS, RRFlagPassiveScan},
+		},
+		// edge case 2
+		{
+			out: `global
+country US: DFS-FCC
+        (5470 - 5730 @ 160), (N/A, 24), (0 ms), DFS
+        (5730 - 5850 @ 80), (N/A, 30), (N/A), AUTO-BW
+        (5850 - 5895 @ 40), (N/A, 27), (N/A), NO-OUTDOOR, AUTO-BW, PASSIVE-SCAN
+        (5925 - 7125 @ 320), (N/A, 12), (N/A), NO-OUTDOOR, PASSIVE-SCAN
+        (57240 - 71000 @ 2160), (N/A, 40), (N/A)`,
+			freq:  5850,
+			flags: []RegRuleFlag{RRFlagAutoBW, RRFlagNoOutdoor, RRFlagPassiveScan},
+		},
+		// US.
+		{
+			out: `global
+country US: DFS-FCC
+        (902 - 904 @ 2), (N/A, 30), (N/A)
+        (904 - 920 @ 16), (N/A, 30), (N/A)
+        (920 - 928 @ 8), (N/A, 30), (N/A)
+        (2400 - 2472 @ 40), (N/A, 30), (N/A)
+        (5150 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+        (5250 - 5350 @ 80), (N/A, 24), (0 ms), DFS, AUTO-BW
+        (5470 - 5730 @ 160), (N/A, 24), (0 ms), DFS
+        (5730 - 5850 @ 80), (N/A, 30), (N/A), AUTO-BW
+        (5850 - 5895 @ 40), (N/A, 27), (N/A), NO-OUTDOOR, AUTO-BW, PASSIVE-SCAN
+        (5925 - 7125 @ 320), (N/A, 12), (N/A), NO-OUTDOOR, PASSIVE-SCAN
+        (57240 - 71000 @ 2160), (N/A, 40), (N/A)`,
+			freq:  57240,
+			flags: []RegRuleFlag{},
+		},
+		// US.
+		{
+			out: `global
+country US: DFS-FCC
+        (5470 - 5730 @ 160), (N/A, 24), (0 ms), DFS
+        (5730 - 5850 @ 80), (N/A, 30), (N/A), AUTO-BW
+        (5850 - 5895 @ 40), (N/A, 27), (N/A), NO-OUTDOOR, AUTO-BW, PASSIVE-SCAN
+        (5925 - 7125 @ 320), (N/A, 12), (N/A), NO-OUTDOOR, PASSIVE-SCAN
+        (57240 - 71000 @ 2160), (N/A, 40), (N/A)`,
+			freq:  7130,
+			flags: nil,
+		},
+		// truncated.
+		{
+			out: `global
+country US: DFS-FCC
+        (5470 - 5730 @ 160), (N/A, 24), (0 ms), DFS
+        (5730 - 5850 @ 80), (N/A, 30), (N/A), AUTO-BW
+        (5850 - 5895 @ 40), (N/A, 27), (N/A), NO-OUTDOOR, AUTO-BW, PASSIVE-SCAN
+        (5925 - 7125 @ 320), (N/A, 12), (N/A), NO-OUTDOOR, PASSIVE-SCAN
+        (57240 - 71000 @ 2160), (N/A, 40), (N/A)`,
+			freq:  7125,
+			flags: []RegRuleFlag{RRFlagNoOutdoor, RRFlagPassiveScan},
+		},
+		// Self managed.
+		{
+			out: `phy#0 (self-managed)
+country US: DFS-UNSET
+	(2402 - 2437 @ 40), (6, 22), (N/A), AUTO-BW, NO-HT40MINUS, NO-80MHZ, NO-160MHZ
+	(2422 - 2462 @ 40), (6, 22), (N/A), AUTO-BW, NO-80MHZ, NO-160MHZ
+	(2447 - 2482 @ 40), (6, 22), (N/A), AUTO-BW, NO-HT40PLUS, NO-80MHZ, NO-160MHZ
+	(5170 - 5190 @ 80), (6, 22), (N/A), NO-OUTDOOR, AUTO-BW, IR-CONCURRENT, NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
+	(5190 - 5210 @ 80), (6, 22), (N/A), NO-OUTDOOR, AUTO-BW, IR-CONCURRENT, NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
+	(5210 - 5230 @ 80), (6, 22), (N/A), NO-OUTDOOR, AUTO-BW, IR-CONCURRENT, NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
+	(5230 - 5250 @ 80), (6, 22), (N/A), NO-OUTDOOR, AUTO-BW, IR-CONCURRENT, NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
+	(5250 - 5270 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
+	(5270 - 5290 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
+	(5290 - 5310 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
+	(5310 - 5330 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
+	(5490 - 5510 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
+	(5510 - 5530 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
+	(5530 - 5550 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
+	(5550 - 5570 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
+	(5570 - 5590 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
+	(5590 - 5610 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
+	(5610 - 5630 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
+	(5630 - 5650 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
+	(5650 - 5670 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
+	(5670 - 5690 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
+	(5690 - 5710 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
+	(5710 - 5730 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
+	(5735 - 5755 @ 80), (6, 22), (N/A), AUTO-BW, IR-CONCURRENT, NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
+	(5755 - 5775 @ 80), (6, 22), (N/A), AUTO-BW, IR-CONCURRENT, NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
+	(5775 - 5795 @ 80), (6, 22), (N/A), AUTO-BW, IR-CONCURRENT, NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
+	(5795 - 5815 @ 80), (6, 22), (N/A), AUTO-BW, IR-CONCURRENT, NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
+	(5815 - 5835 @ 20), (6, 22), (N/A), AUTO-BW, IR-CONCURRENT, NO-HT40MINUS, NO-HT40PLUS, NO-80MHZ, NO-160MHZ, PASSIVE-SCAN
+`,
+			freq:  5735,
+			flags: []RegRuleFlag{RRFlagAutoBW, RRFlagIRConcurrent, RRFlagNoHT40Minus, RRFlagNo160MHz, RRFlagPassiveScan},
+		},
+		// overlapping 2.4GHz bands
+		{
+			out: `phy#0 (self-managed)
+country US: DFS-UNSET
+	(2402 - 2437 @ 40), (6, 22), (N/A), AUTO-BW, NO-HT40MINUS, NO-80MHZ, NO-160MHZ
+	(2422 - 2462 @ 40), (6, 22), (N/A), AUTO-BW, NO-80MHZ, NO-160MHZ
+	(2447 - 2482 @ 40), (6, 22), (N/A), AUTO-BW, NO-HT40PLUS, NO-80MHZ, NO-160MHZ
+	(5170 - 5190 @ 80), (6, 22), (N/A), NO-OUTDOOR, AUTO-BW, IR-CONCURRENT, NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN`,
+			freq:  2447,
+			flags: []RegRuleFlag{RRFlagAutoBW, RRFlagNo80MHz, RRFlagNo160MHz, RRFlagNoHT40Plus},
+		},
+	}
+
+	mock := &stubCmdRunner{}
+	r := &Runner{cmd: mock}
+	for i, tc := range testcases {
+		mock.out = []byte(tc.out)
+		// Test regulatory domain.
+		flags, err := r.FreqRegulatoryRuleFlags(context.Background(), tc.freq, "phy0")
+		if err != nil {
+			t.Errorf("case#%d, unexpected error in RegulatoryDomain: %v", i, err)
+		} else if flags == nil && tc.flags != nil {
+			t.Errorf("case#%d, got reg rule flags: nil, expect: %v", i, tc.flags)
+		} else if flags != nil && tc.flags == nil {
+			t.Errorf("case#%d, got reg rule flags: %v, expect: nil", i, flags)
+		} else if flags != nil && tc.flags != nil && !reflect.DeepEqual(flags, tc.flags) {
+			t.Errorf("case#%d, got reg rule flags: %v, expect: %v", i, flags, tc.flags)
+		}
+
 	}
 }
 
