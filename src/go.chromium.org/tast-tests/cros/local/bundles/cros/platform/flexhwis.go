@@ -29,7 +29,7 @@ func init() {
 			"tinghaolin@google.com", // Test author
 		},
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
-		SoftwareDeps: []string{"chrome", "flex_internal"},
+		SoftwareDeps: []string{"chrome", "flex_hwis"},
 		Attr:         []string{"group:criticalstaging", "group:mainline", "informational"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		SearchFlags: []*testing.StringPair{
