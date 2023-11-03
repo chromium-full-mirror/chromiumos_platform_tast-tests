@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -31,6 +32,35 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
+		Params: []testing.Param{{
+			Name: "normal",
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityStandard,
+				DTS:      firmware.DTSModeOn,
+				Shutdown: false,
+			},
+		}, {
+			Name: "flipcc",
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityFlipped,
+				DTS:      firmware.DTSModeOn,
+				Shutdown: false,
+			},
+		}, {
+			Name: "dtsoff",
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityStandard,
+				DTS:      firmware.DTSModeOff,
+				Shutdown: false,
+			},
+		}, {
+			Name: "flipcc_dtsoff",
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityFlipped,
+				DTS:      firmware.DTSModeOff,
+				Shutdown: false,
+			},
+		}},
 	})
 }
 
@@ -45,18 +75,14 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 
 	h := s.FixtValue().(*fixture.Value).Helper
 
-	if err := h.RequireServo(ctx); err != nil {
-		s.Fatal("Failed to init servo: ", err)
-	}
-	// PD tests require both a servo V4 connection and servo debug connection.
-	if err := h.Servo.RequirePDTester(ctx); err != nil {
-		s.Fatal("Servo configuration does not support PD testing: ", err)
+	if err := h.RequireConfig(ctx); err != nil {
+		s.Fatal("Failed to create config: ", err)
 	}
 
-	err := h.Servo.RequireDUTPDInfo(ctx)
+	testParams := s.Param().(firmware.PDTestParams)
 
-	if err != nil {
-		s.Fatal("Error in getting PD port info: ", err)
+	if err := firmware.SetupPDTester(ctx, h, testParams.CC, testParams.DTS, testParams.RequiredPort); err != nil {
+		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
 
 	if dualRole, err := h.Servo.GetDUTDualRoleState(ctx, servo.PDPortUnderTest); dualRole != servo.USBPdDualRoleOn {
