@@ -675,54 +675,49 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 		return errors.Wrap(err, "failed to remove ccd watchdog")
 	}
 
-	// TODO if needed, recovery images are at .../recovery_image.tar.xz.
-	testImageURL := "build-artifact:///chromiumos_test_image.tar.xz"
-	// TODO(b/217635723): Revisit later when we have a solution for accessing dev servers on non-DUT machines.
-	// It would be nicer if CloudStorage had a method ExtractURL(ctx, gsPath, filename) that returned the extract url.
-	dataURL, err := cloudStorage.Stage(ctx, testImageURL)
-	if err != nil {
-		return errors.Wrapf(err, "failed to download test image from %s", testImageURL)
-	}
-	if dataURL.Scheme != "http" && dataURL.Scheme != "https" {
-		return errors.Errorf("CloudStorage url is not http(s): %q", dataURL)
-	}
-	gsBucket := dataURL.Query().Get("gs_bucket")
-	if gsBucket != "" {
-		dataURL.Path = strings.Replace(dataURL.Path, "/static/", fmt.Sprintf("/extract/%s/", gsBucket), 1)
-		query := dataURL.Query()
-		query.Del("gs_bucket")
-		query.Set("file", "chromiumos_test_image.bin")
-		dataURL.RawQuery = query.Encode()
-	} else {
-		dataURL.Path = strings.Replace(dataURL.Path, "chromiumos_test_image.tar.xz", "chromiumos_test_image.bin", 1)
-	}
+	// If it did have tast files, it won't shortly.
+	h.dutUsbHasTastFiles = false
 
 	testing.ContextLog(ctx, "Cleaning usb before flashing a new test OS image")
 	if err := h.FormatUSB(ctx, usbdev); err != nil {
 		return errors.Wrap(err, "failed to format the usb device")
 	}
-	testing.ContextLogf(ctx, "Flashing test OS image to USB from %q", dataURL.String())
 
-	// If it did have tast files, it won't shortly.
-	h.dutUsbHasTastFiles = false
-
-	if err = h.Servo.SetStringTimeout(ctx, servo.DownloadImageToUSBDev, dataURL.String(), 2*time.Hour); err != nil {
-		if strings.Contains(string(err.Error()), "Read-only file system") {
-			modelName, serialNumber, err := h.getUSBModelAndSerial(ctx, usbdev)
-			if err != nil {
-				testing.ContextLog(ctx, "Failed to get info about usb: ", err)
-			}
-			return errors.Errorf("failed to flash os image and found usb device as read-only file system, got usb model: %s, serial number: %s", modelName, serialNumber)
+	// Find a devserver that works from servo host, and flash image from there.
+	for _, devserver := range cloudStorage.Devservers() {
+		testing.ContextLogf(ctx, "Trying devserver at %q", devserver)
+		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "--connect-timeout", "3", fmt.Sprintf("%s/check_health", devserver)); err != nil {
+			testing.ContextLog(ctx, "Devserver not healthy: ", err)
+			continue
 		}
-		return errors.Wrapf(err, "failed to flash os image %q to USB %q from url %q", testImageURL, usbdev, dataURL.String())
-	}
+		artifactsURL := strings.TrimSuffix(cloudStorage.BuildArtifactsURL(), "/")
+		stagingURL := fmt.Sprintf("%s/stage?archive_url=%s&files=chromiumos_test_image.tar.xz", devserver, artifactsURL)
+		testing.ContextLogf(ctx, "Staging image %q", stagingURL)
+		if err := h.ServoProxy.RunCommand(ctx, false, "curl", stagingURL); err != nil {
+			testing.ContextLogf(ctx, "Failed to stage file at %q: %v", stagingURL, err)
+			continue
+		}
+		testImageURL := fmt.Sprintf("%s/extract/%s/chromiumos_test_image.tar.xz?file=chromiumos_test_image.bin", devserver, strings.TrimPrefix(artifactsURL, "gs://"))
 
-	// ensure that image was successfully flashed by reading back OS version
-	if valid, err := h.validateUSBImage(ctx, usbdev, cloudStorage, opts...); valid && err == nil {
+		testing.ContextLogf(ctx, "Flashing test OS image to USB from %q", testImageURL)
+		if err := h.Servo.SetStringTimeout(ctx, servo.DownloadImageToUSBDev, testImageURL, 2*time.Hour); err != nil {
+			if strings.Contains(string(err.Error()), "Read-only file system") {
+				modelName, serialNumber, err := h.getUSBModelAndSerial(ctx, usbdev)
+				if err != nil {
+					testing.ContextLog(ctx, "Failed to get info about usb: ", err)
+				}
+				return errors.Errorf("failed to flash os image and found usb device as read-only file system, got usb model: %s, serial number: %s", modelName, serialNumber)
+			}
+			return errors.Wrapf(err, "failed to flash os image %q to USB %q", testImageURL, usbdev)
+		}
+		// ensure that image was successfully flashed by reading back OS version
+		if valid, err := h.validateUSBImage(ctx, usbdev, cloudStorage, opts...); valid && err != nil {
+			return errors.Wrap(err, "failed to validate USB image after flashing")
+		}
 		testing.ContextLogf(ctx, "Successfully flashed %q from %q", usbdev, testImageURL)
 		return nil
 	}
-	return errors.Wrap(err, "failed to validate USB image after flashing")
+	return errors.New("no devservers able to stage ChromeOS test image")
 }
 
 // CorruptUSBKey makes a minimal change to the USB key to prevent it from booting. Use RestoreUSBKey to repair it afterwards.
