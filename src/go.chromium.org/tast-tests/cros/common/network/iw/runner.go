@@ -1129,7 +1129,7 @@ func parseBandMCSIndices(contents string) ([]int, error) {
 
 func parseFrequencyFlags(contents string) (map[int][]string, error) {
 	ret := make(map[int][]string)
-	r := regexp.MustCompile(`(?P<frequency>\d+) MHz \[\d+\](?: \([0-9.]+ dBm\))?(?: \((?P<flags>[a-zA-Z, ]+)\))?`)
+	r := regexp.MustCompile(`(?P<frequency>\d+)(\.\d)? MHz \[\d+\](?: \([0-9.]+ dBm\))?(?: \((?P<flags>[a-zA-Z, ]+)\))?`)
 	matches := r.FindAllStringSubmatch(contents, -1)
 	var frequency int
 	var err error

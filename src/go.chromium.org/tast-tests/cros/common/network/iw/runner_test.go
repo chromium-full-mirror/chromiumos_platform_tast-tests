@@ -195,7 +195,7 @@ func TestNewPhy(t *testing.T) {
 		Bitrates (non-HT):
 			* 1.0 Mbps
 		Frequencies:
-			* 2412 MHz [1] (22.0 dBm)
+			* 2412.0 MHz [1] (22.0 dBm)
 	Supported commands:
 		 * connect
 		 * disconnect
@@ -407,7 +407,7 @@ func TestNewPhy(t *testing.T) {
 			* 48.0 Mbps
 			* 54.0 Mbps
 		Frequencies:
-			* 5180 MHz [36] (23.0 dBm)
+			* 5180.0 MHz [36] (23.0 dBm)
 	Supported commands:
 		 * new_interface
 		 * set_interface
@@ -520,9 +520,9 @@ func TestParseFrequencyFlags(t *testing.T) {
 	// Hand-crafted data to test different cases.
 	content := `
                 Frequencies:
-                        * 5040 MHz [8] (disabled)
-                        * 5190 MHz [38] (23.0 dBm)
-                        * 5210 MHz [42] (23.0 dBm) (passive scan, radar detection)
+                        * 5040.0 MHz [8] (disabled)
+                        * 5190.0 MHz [38] (23.0 dBm)
+                        * 5210.0 MHz [42] (23.0 dBm) (passive scan, radar detection)
 	`
 	expected := map[int][]string{
 		5040: {"disabled"},
