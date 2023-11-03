@@ -162,7 +162,10 @@ func (i *devboardFixture) Reset(ctx context.Context) error {
 // If not, then this code will silently fail and not do anything
 func resetTpmOpenCcd(ctx context.Context, board ti50.DevBoard) error {
 	testing.ContextLog(ctx, "Erasing TPM data and opening CCD")
-	image := ti50.NewCrOSImage(board)
+	image, err := ti50.NewCrOSImage(ctx, board)
+	if err != nil {
+		return err
+	}
 	// If we don't close the UART connections here, then tests don't get uart data correctly
 	defer board.Close(ctx)
 	image.WaitUntilBooted(ctx)

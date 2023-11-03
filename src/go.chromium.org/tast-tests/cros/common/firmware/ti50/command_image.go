@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -35,8 +36,12 @@ type CommandImage struct {
 
 // NewCommandImage creates a new CommandImage. Typical examples of promptCmd and
 // promptPattern are "\n" and "> " respectively.
-func NewCommandImage(board DevBoard, promptCmd, promptPattern string) *CommandImage {
-	return &CommandImage{board, promptCmd, promptPattern, regexp.MustCompile(promptPattern)}
+func NewCommandImage(ctx context.Context, board DevBoard, promptCmd, promptPattern string) (*CommandImage, error) {
+	// Ensure that the board is open with the correct context (b/298714011)
+	if err := board.Open(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed NewCommandImage board open")
+	}
+	return &CommandImage{board, promptCmd, promptPattern, regexp.MustCompile(promptPattern)}, nil
 }
 
 // RawCommand sends a command to the image and waits for the regex to be matched

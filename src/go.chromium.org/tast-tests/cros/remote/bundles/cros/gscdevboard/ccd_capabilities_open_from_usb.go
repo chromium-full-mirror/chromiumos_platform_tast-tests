@@ -52,7 +52,7 @@ func CCDCapabilitiesOpenFromUSB(ctx context.Context, s *testing.State) {
 	userParams := s.Param().(cCDCapabilitiesOpenFromUSB)
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f, s)
-	i := ti50.NewCrOSImage(b)
+	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
 
 	// Open CCD + chassis when finished
 	defer func() {

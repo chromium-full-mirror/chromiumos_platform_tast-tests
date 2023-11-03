@@ -19,7 +19,10 @@ const (
 
 // Demo uses some of the CrOSImage to control the board.
 func Demo(ctx context.Context, board DevBoard) error {
-	i := NewCrOSImage(board)
+	i, err := NewCrOSImage(ctx, board)
+	if err != nil {
+		return err
+	}
 
 	ctxBoot, cancel := context.WithTimeout(ctx, bootTimeout)
 	defer cancel()

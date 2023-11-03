@@ -43,7 +43,7 @@ func init() {
 func Ti50RboxClamshell(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f, s)
-	i := ti50.NewCrOSImage(b)
+	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	s.Log("Restarting ti50 with clamshell straps and SuzyQ connected")

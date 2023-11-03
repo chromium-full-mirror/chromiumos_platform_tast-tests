@@ -43,7 +43,7 @@ func GscTpm(ctx context.Context, s *testing.State) {
 
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f, s)
-	i := ti50.NewCrOSImage(b)
+	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
 
 	tpmHandle := b.ResetAndTpmStartup(ctx, i, bus, ti50.CcdSuzyQ, ti50.FfClamshell)
 
