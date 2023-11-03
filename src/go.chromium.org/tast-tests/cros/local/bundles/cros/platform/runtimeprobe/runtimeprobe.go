@@ -16,6 +16,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	rppb "chromiumos/system_api/runtime_probe_proto"
+
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -255,7 +256,7 @@ func GenericTest(ctx context.Context, s *testing.State, categories []string, get
 
 	categoryToExpectedComponentCounts := make(map[string]map[string]int)
 	var requestCategories []rppb.ProbeRequest_SupportCategory
-	var knownComponents map[string]struct{}
+	allKnownComponents := make(map[string]struct{})
 	for _, category := range categories {
 		categoryValue, found := rppb.ProbeRequest_SupportCategory_value[category]
 		if !found {
@@ -283,6 +284,9 @@ func GenericTest(ctx context.Context, s *testing.State, categories []string, get
 		if len(knownComponents) == 0 {
 			s.Logf("%q components are not found in the probe config. Skipped", category)
 			continue
+		}
+		for compName := range knownComponents {
+			allKnownComponents[compName] = struct{}{}
 		}
 		requestCategories = append(requestCategories, rppb.ProbeRequest_SupportCategory(categoryValue))
 	}
@@ -314,7 +318,7 @@ func GenericTest(ctx context.Context, s *testing.State, categories []string, get
 		for name := range expectedCompCounts {
 			// Only raise an error when a component exists in host
 			// info labels but not RACC configs on ToT images.
-			if _, found := knownComponents[name]; !found {
+			if _, found := allKnownComponents[name]; !found {
 				if !failOnUnknownComponentLabels {
 					s.Logf("Unknown %s component label: %s. Skipped", category, name)
 					continue
