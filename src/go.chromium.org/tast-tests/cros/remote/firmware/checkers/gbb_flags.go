@@ -18,7 +18,7 @@ func (c *Checker) GBBFlags(ctx context.Context, want *pb.GBBFlagsState) error {
 	if res, err := firmware.GetGBBFlags(ctx, c.h.DUT); err != nil {
 		return errors.Wrap(err, "could not get GBB flags")
 	} else if !firmware.GBBFlagsStatesEqual(want, res) {
-		return errors.Errorf("GBB flags: got %v, want %v", res.Set, want)
+		return errors.Errorf("GBB flags: got %v, want %v", res.Set, want.Set)
 	}
 	return nil
 }
@@ -29,7 +29,7 @@ func (c *Checker) GBBFlagsByServo(ctx context.Context, want *pb.GBBFlagsState) e
 	if res, err := firmware.GetGBBFlagsByServo(ctx, c.h.ServoProxy); err != nil {
 		return errors.Wrap(err, "could not get GBB flags")
 	} else if !firmware.GBBFlagsStatesEqual(want, res) {
-		return errors.Errorf("GBB flags: got %v, want %v", res.Set, want)
+		return errors.Errorf("GBB flags: got %v, want %v", res.Set, want.Set)
 	}
 	return nil
 }

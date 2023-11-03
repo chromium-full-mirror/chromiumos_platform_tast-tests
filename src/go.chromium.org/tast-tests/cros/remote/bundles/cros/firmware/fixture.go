@@ -112,7 +112,7 @@ func Fixture(ctx context.Context, s *testing.State) {
 		Clear: common.CalcGBBFlags(^common.CalcGBBMask(v.GBBFlags.Set)),
 	}
 	if !common.GBBFlagsStatesEqual(fixtureFlags, res) {
-		s.Errorf("GBB flags: got %v, want %v", res.Set, v.GBBFlags)
+		s.Errorf("GBB flags: got %v, want %v", res.Set, v.GBBFlags.Set)
 	}
 
 	if param.isDevModeExpected {
