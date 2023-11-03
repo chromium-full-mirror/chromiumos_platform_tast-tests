@@ -112,8 +112,9 @@ var pdStateFieldIndex = map[TCPMVersion]map[string]int{
 		"Connection": 3,
 		"PowerRole":  4,
 		"DataRole":   5,
-		"PEState":    6,
-		"PEFlags":    7,
+		"VConn":      6,
+		"PEState":    7,
+		"PEFlags":    8,
 	},
 	TCPMv2: {
 		"Full":       0,
@@ -122,10 +123,11 @@ var pdStateFieldIndex = map[TCPMVersion]map[string]int{
 		"Connection": 3,
 		"PowerRole":  4,
 		"DataRole":   5,
-		"TCState":    6,
-		"TCFlags":    7,
-		"PEState":    8,
-		"PEFlags":    9,
+		"VConn":      6,
+		"TCState":    7,
+		"TCFlags":    8,
+		"PEState":    9,
+		"PEFlags":    10,
 	},
 }
 
@@ -149,9 +151,10 @@ var pdStateCmdRegexp = map[TCPMVersion]string{
 	//      3 - Comm Status  -- Enable
 	//      4 - Power role   -- SRC
 	//      5 - Data role    -- DFP
-	//      6 - PE State     -- 8
-	//      7 - PE Flags     -- 16946
-	TCPMv1: `Port\s+C(\d+)\s+(CC\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)\s+State:\s+(\d+)\(\w*\),\s+Flags:\s+0x(\w+)[\r\n]`,
+	//      6 - VConn (optional "-VC")
+	//      7 - PE State     -- 8
+	//      8 - PE Flags     -- 16946
+	TCPMv1: `Port\s+C(\d+)\s+(CC\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)(-VC)?\s+State:\s+(\d+)\(\w*\),\s+Flags:\s+0x(\w+)[\r\n]`,
 	// For TCPMv2 DUTs
 	//   Example: "Port C0 CC1, Enable - Role: SNK-DFP TC State: Attached.SNK, Flags: 0x9012 PE State: PE_SNK_Ready, Flags: 0x0201 SPR"
 	//   Match Index:
@@ -161,12 +164,13 @@ var pdStateCmdRegexp = map[TCPMVersion]string{
 	//      3 - Comm Status  -- Enable
 	//      4 - Power role   -- SRC
 	//      5 - Data role    -- DFP
-	//      6 - TC State     -- Attached.SNK (optional)
-	//      7 - TC Flags     -- 9012
-	//      8 - PE State     -- PE_SNK_Ready
-	//      9 - PE Flags     -- 0201
-	//     10 - Extra fields -- SPR
-	TCPMv2: `Port\s+C(\d+)\s+(CC\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)\s+TC State:\s+([\w\.]+)?,\s+Flags:\s+0x(\w+)\s+PE State:\s+(\w+)?,\s+Flags:\s+0x(\w+)\s+(.*)[\r\n]`,
+	//      6 - VConn (optional "-VC")
+	//      7 - TC State     -- Attached.SNK (optional)
+	//      8 - TC Flags     -- 9012
+	//      9 - PE State     -- PE_SNK_Ready
+	//     10 - PE Flags     -- 0201
+	//     11 - Extra fields -- SPR
+	TCPMv2: `Port\s+C(\d+)\s+(CC\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)(-VC)?\s+TC State:\s+([\w\.]+)?,\s+Flags:\s+0x(\w+)\s+PE State:\s+(\w+)?,\s+Flags:\s+0x(\w+)\s+(.*)[\r\n]`,
 }
 
 const pdStateInvalidPortRegexp string = `Parameter (\d+) invalid`
@@ -214,6 +218,7 @@ type PDState struct {
 	Connection  connectionValue
 	PowerRole   powerRoleValue
 	DataRole    dataRoleValue
+	VConn       bool
 	PEStateName string
 	PEFlags     uint32
 	TCStateName string // TCPMv2 DUTs only
@@ -308,6 +313,12 @@ func (s *Servo) getPDStateByTargetAndVersion(
 		return nil, err
 	}
 	portState.DataRole = dataRoleValue(dataRole)
+
+	if t[pdStateFieldIndex[ver]["VConn"]] == "-VC" {
+		portState.VConn = true
+	} else {
+		portState.VConn = false
+	}
 
 	//
 	// PE state and flags
