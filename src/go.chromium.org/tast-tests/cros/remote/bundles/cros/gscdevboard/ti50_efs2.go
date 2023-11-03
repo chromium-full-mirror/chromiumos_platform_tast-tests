@@ -78,7 +78,7 @@ func init() {
 func Ti50Efs2(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	i := ti50.NewCrOSImage(b)
 	ecUart := b.PhysicalUart(ti50.UartEC, time.Second)
 
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)

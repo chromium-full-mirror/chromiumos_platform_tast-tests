@@ -34,7 +34,7 @@ func init() {
 func Ti50TpmSpiCorners(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	i := ti50.NewCrOSImage(b)
 	tpmHandle := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdDisconnected, ti50.FfClamshell)
 
 	// Perform irregular SPI TPM transaction, ask for content of status register, but never

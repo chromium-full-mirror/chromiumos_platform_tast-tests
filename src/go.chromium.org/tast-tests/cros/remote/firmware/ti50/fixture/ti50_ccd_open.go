@@ -93,7 +93,7 @@ func (c *ccdOpenImpl) Reset(ctx context.Context) error {
 
 func (c *ccdOpenImpl) ensureTestLabOpen(ctx context.Context, s *testing.FixtTestState) {
 	b := c.v.devboard
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	i := ti50.NewCrOSImage(b)
 
 	mustSucceed(s, i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	out := runCommand(ctx, s, i, "ccd testlab")
@@ -147,10 +147,7 @@ func (c *ccdOpenImpl) ensureTestLabOpen(ctx context.Context, s *testing.FixtTest
 
 func (c *ccdOpenImpl) wipeTpmAndOpenCcd(ctx context.Context, s *testing.FixtTestState) {
 	testing.ContextLog(ctx, "Erasing TPM data and opening CCD")
-	i, err := ti50.NewCrOSImage(ctx, c.v.devboard)
-	if err != nil {
-		s.Fatal("NewCrOSImage failed: ", err)
-	}
+	i := ti50.NewCrOSImage(c.v.devboard)
 	// If we don't close the UART connections here, then tests don't get uart data correctly
 	defer c.v.devboard.Close(ctx)
 	mustSucceed(s, i.WaitUntilBooted(ctx), "GSC did not boot")

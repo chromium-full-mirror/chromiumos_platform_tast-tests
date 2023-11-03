@@ -64,7 +64,7 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reset: ", err)
 	}
 
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	i := ti50.NewCrOSImage(b)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	// Wait for reboot output to finish before reading version.

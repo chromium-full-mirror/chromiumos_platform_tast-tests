@@ -36,7 +36,7 @@ var devIDRegexp = regexp.MustCompile(`DEV_ID: *0x([0-9a-fA-F]+) +0x([0-9a-fA-F]+
 func Ti50Sysinfo(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	i := ti50.NewCrOSImage(b)
 
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 

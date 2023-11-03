@@ -35,7 +35,7 @@ func init() {
 func Ti50TpmI2cCorners(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	i := ti50.NewCrOSImage(b)
 
 	tpmHandle := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusI2c, ti50.CcdDisconnected, ti50.FfClamshell)
 
