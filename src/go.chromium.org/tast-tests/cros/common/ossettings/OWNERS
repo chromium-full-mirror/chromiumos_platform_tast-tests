@@ -1,0 +1,25 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+set noparent
+
+# ChromeOS Settings
+wesokuhara@google.com
+xiaohuic@google.com
+
+# ChromeOS Connectivity (Software)
+chadduffin@chromium.org
+gordonseto@google.com
+hsuregan@chromium.org
+jiajunz@google.com
+khorimoto@chromium.org
+nikhilcn@google.com
+tjohnsonkanu@google.com
+
+# ChromeOS Connectivity (EngProd)
+harpreet@chromium.org
+jaredbennett@google.com
+jstanko@google.com
+shijinabraham@google.com
+
+include /OWNERS.tast
