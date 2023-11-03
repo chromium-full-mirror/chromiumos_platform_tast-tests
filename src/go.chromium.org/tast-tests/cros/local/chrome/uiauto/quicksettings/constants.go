@@ -126,7 +126,7 @@ var MicToggle = nodewith.Role(role.ToggleButton).Attribute("name", regexp.MustCo
 var ManagedInfoView = nodewith.Role(role.Button).HasClass("EnterpriseManagedView")
 
 // BatteryView is the finder for the Quick Settings battery display.
-var BatteryView = nodewith.Role(role.LabelText).NameContaining("Battery")
+var BatteryView = nodewith.Role(role.StaticText).NameContaining("Battery")
 
 // AddCellularButton is the finder for adding new SIM profiles in Quick Settings.
 var AddCellularButton = nodewith.Name("Add eSIM").Role(role.Button)
