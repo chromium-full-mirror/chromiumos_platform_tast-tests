@@ -137,7 +137,11 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 		"--component-updater=test-request",
 		"--device-management-url=" + f.dmServerURL}
 
-	defer uploadTapeDeprovisioningIDs(ctx, s, cl)
+	defer func(ctx context.Context) {
+		if err := uploadTapeDeprovisioningIDs(ctx, cl, s.DUT(), []byte(s.RequiredVar(tape.ServiceAccountVar))); err != nil {
+			s.Error("Failed to upload deprovisioning ids: ", err)
+		}
+	}(cleanupCtx)
 
 	chromeService := ui.NewChromeServiceClient(cl.Conn)
 	if _, err := chromeService.New(ctx, &ui.NewRequest{
@@ -205,24 +209,24 @@ func (f *fixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 }
 
-func uploadTapeDeprovisioningIDs(ctx context.Context, s *testing.FixtState, rpcClient *rpc.Client) error {
+func uploadTapeDeprovisioningIDs(ctx context.Context, rpcClient *rpc.Client, dut *dut.DUT, tapeServiceAccount []byte) error {
 	tapeService := tape_service.NewServiceClient(rpcClient.Conn)
 
 	ids, err := tapeService.GetDeviceID(ctx, &empty.Empty{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get device IDs")
 	}
-	stableDeviceSecret, err := getStableDeviceSecret(ctx, s.DUT())
+	stableDeviceSecret, err := getStableDeviceSecret(ctx, dut)
 	if err != nil {
 		return errors.Wrap(err, "failed to get stable device secret")
 	}
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	tapeClient, err := tape.NewClient(ctx, tapeServiceAccount)
 	if err != nil {
 		return errors.Wrap(err, "failed to create tape client")
 	}
 
-	s.Log("Uploading Tape deprovisioning IDs, customer ID: " + ids.CustomerID + " - device ID: " + ids.DeviceID)
+	testing.ContextLog(ctx, "Uploading Tape deprovisioning IDs, customer ID: "+ids.CustomerID+" - device ID: "+ids.DeviceID)
 	if err := tapeClient.StoreDeprovisioningIDs(ctx, ids.DeviceID, ids.CustomerID, stableDeviceSecret); err != nil {
 		return errors.Wrap(err, "failed to store IDs in TAPE")
 	}
