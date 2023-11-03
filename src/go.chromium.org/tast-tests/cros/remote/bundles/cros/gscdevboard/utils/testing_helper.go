@@ -29,6 +29,25 @@ func (fs *FirmwareTestingHelper) MustSucceedVal(val interface{}, err error) inte
 	return val
 }
 
+// Result stores an Ok and Err value as returned from a `(T, error)` function.
+// Use NewResult to construct a new Result.
+type Result[T any] struct {
+	Ok  T
+	Err error
+}
+
+// NewResult constructs a new Result from success and error values passed via multi-return.
+func NewResult[T any](ok T, err error) Result[T] {
+	return Result[T]{ok, err}
+}
+
+// MustSucceed checks that the Result has a nil error, and returns the stored `Ok` value.
+// This is similar in nature to a Rust `Result::expect`, and is intended to chain with `NewResult`.
+func (r Result[T]) MustSucceed(s FirmwareTestingHelperDelegate, format string, args ...interface{}) T {
+	(&FirmwareTestingHelper{s}).MustSucceed(r.Err, format, args...)
+	return r.Ok
+}
+
 // MustSucceedBool aborts the test upon error, otherwise returns val as-is for bools.
 func (fs *FirmwareTestingHelper) MustSucceedBool(val bool, err error) bool {
 	if err != nil {
