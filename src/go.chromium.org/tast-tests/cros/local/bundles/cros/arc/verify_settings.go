@@ -160,6 +160,11 @@ func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) erro
 	}
 
 	buildNumber := arcDevice.Object(androidui.ClassName("android.widget.TextView"), androidui.TextMatches("(?i)build number"), androidui.Enabled(true))
+	// On T and potentially other Android flavors, `buildNumber` can be found at the end of the menu, scrolling on a best effort capacity.
+	if err := scrollLayout.WaitForExists(ctx, timeoutUI); err == nil {
+		scrollLayout.ScrollTo(ctx, buildNumber);
+	}
+
 	if err := buildNumber.WaitForExists(ctx, timeoutUI); err != nil {
 		return errors.Wrap(err, "failed finding Build Number TextView")
 	}
