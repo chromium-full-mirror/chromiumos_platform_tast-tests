@@ -120,6 +120,18 @@ var extraFeaturesVar = testing.RegisterVarString(
 	"A comma separated list of extra features to be passed into Chrome",
 )
 
+var lacrosExtraArgsVar = testing.RegisterVarString(
+	"cuj.lacrosExtraArgs",
+	"",
+	"A comma separated list of extra args to be passed into Lacros Chrome",
+)
+
+var lacrosExtraFeaturesVar = testing.RegisterVarString(
+	"cuj.lacrosExtraFeatures",
+	"",
+	"A comma separated list of extra features to be passed into Lacros Chrome",
+)
+
 // DocsBlocker extension files.
 var docsBlockerFiles = []string{
 	"docs_blocker/background.js",
@@ -1573,6 +1585,18 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		if extraFeatures != "" {
 			testing.ContextLog(ctx, "Enabling additional features: ", extraFeatures)
 			opts = append(opts, chrome.EnableFeatures(strings.Split(extraFeatures, ",")...))
+		}
+
+		lacrosExtraArgs := lacrosExtraArgsVar.Value()
+		if lacrosExtraArgs != "" {
+			testing.ContextLog(ctx, "Adding extra args to Lacros Chrome: ", lacrosExtraArgs)
+			opts = append(opts, chrome.LacrosExtraArgs(strings.Split(lacrosExtraArgs, ",")...))
+		}
+
+		lacrosExtraFeatures := lacrosExtraFeaturesVar.Value()
+		if lacrosExtraFeatures != "" {
+			testing.ContextLog(ctx, "Enabling additional features in Lacros Chrome: ", lacrosExtraFeatures)
+			opts = append(opts, chrome.LacrosEnableFeatures(strings.Split(lacrosExtraFeatures, ",")...))
 		}
 
 		if f.bt == browser.TypeLacros {
