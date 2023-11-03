@@ -301,7 +301,7 @@ func (c *Container) Stop(ctx context.Context) error {
 			return errors.Errorf("the current status %v is not STOPPED", resp.GetStatus())
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		testing.ContextLog(ctx, "Failed to wait for D-Bus LxdContainerStoppingSignal_STOPPED signal: ", err)
 	}
 
