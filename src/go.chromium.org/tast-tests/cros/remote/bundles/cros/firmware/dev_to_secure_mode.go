@@ -23,7 +23,7 @@ func init() {
 			"peep-fleet-infra-sw@google.com",
 		},
 		BugComponent: "b:1032353", // Chrome Operations > Fleet > Software > OS Fleet Automation
-		Attr:         []string{"group:labqual_informational"},
+		Attr:         []string{"group:labqual_informational", "group:labqual_stable"},
 		Params: []testing.Param{
 			{
 				Name:    "dev_mode",
