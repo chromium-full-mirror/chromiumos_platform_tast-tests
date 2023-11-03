@@ -29,6 +29,11 @@ var keepWifiVar = testing.RegisterVarString(
 	"false",
 	"keep_wifi decides whether to keep wifi enabled by default",
 )
+var keepPowerdVar = testing.RegisterVarString(
+	"fixture.keep_powerd",
+	"false",
+	"keep_powerd decides whether to prevent disabling powerd",
+)
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -95,6 +100,10 @@ func (f *benchmarkSetUpFixture) SetUp(ctx context.Context, s *testing.FixtState)
 	keepState := keepWifiVar.Value()
 	if keepState == "false" {
 		options.Wifi = setup.DisableWifiInterfaces
+	}
+	keepPowerd := keepPowerdVar.Value()
+	if keepPowerd == "true" {
+		options.Powerd = setup.DoNotChangePowerd
 	}
 
 	cleanup, err := setup.PowerTestSetup(ctx, "powerUIFixture", f.tconn, &options)

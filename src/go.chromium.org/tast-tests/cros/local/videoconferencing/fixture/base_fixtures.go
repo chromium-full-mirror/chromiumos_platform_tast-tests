@@ -9,6 +9,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
@@ -59,6 +60,18 @@ var vcOpts = []chrome.Option{
 	// Disable VK should avoid VK randomly shows up.
 	chrome.ExtraArgs("--disable-virtual-keyboard"),
 }
+
+// Register variables for overriding a list of enabled features
+var extraFeaturesVar = testing.RegisterVarString(
+	"fixture.extraFeatures",
+	"",
+	"A comma separated list of extra features to be passed into Chrome",
+)
+var disabledFeaturesVar = testing.RegisterVarString(
+	"fixture.disabledFeatures",
+	"",
+	"A comma separated list of disabled features to be passed into Chrome",
+)
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -342,6 +355,18 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 			s.Fatal("Failed to get Chrome options: ", err)
 		}
 		opts = append(opts, fOpts...)
+	}
+
+	// Apply feature overrides from command-line
+	extraFeatures := extraFeaturesVar.Value()
+	if extraFeatures != "" {
+		testing.ContextLog(ctx, "Enabling features: ", extraFeatures)
+		opts = append(opts, chrome.EnableFeatures(strings.Split(extraFeatures, ",")...))
+	}
+	disabledFeatures := disabledFeaturesVar.Value()
+	if disabledFeatures != "" {
+		testing.ContextLog(ctx, "Disabling features: ", disabledFeatures)
+		opts = append(opts, chrome.DisableFeatures(strings.Split(disabledFeatures, ",")...))
 	}
 
 	// keep-alive for lacros extension apps. A no-op for ash extensions.
