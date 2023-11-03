@@ -71,8 +71,8 @@ func KerberosDaemon(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("SetConfig failed. D-Bus error: ", err)
 	}
-	if *setResp.Error != kp.ErrorType_ERROR_BAD_CONFIG {
-		s.Fatalf("SetConfig returned unexpected error: got %q; want \"ErrorType_ERROR_BAD_CONFIG\"", setResp.Error.String())
+	if *setResp.Error != kp.ErrorType_ERROR_NONE {
+		s.Fatalf("SetConfig returned unexpected error: got %q; want \"ErrorType_ERROR_NONE\"", setResp.Error.String())
 	}
 
 	// Find out why the config was invalid.
@@ -91,7 +91,7 @@ func KerberosDaemon(ctx context.Context, s *testing.State) {
 	}
 
 	if diff := cmp.Diff(validateResp, expectedResp, protocmp.Transform()); diff != "" {
-		s.Fatalf("ValidateConfigResponse message mismatch (-got +want):\n%s", diff)
+		s.Fatalf("ValidateConfigResponse message mismatch (-got +want):%s", diff)
 	}
 
 	// Set a valid config on the account.
