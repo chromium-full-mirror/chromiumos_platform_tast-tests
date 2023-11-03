@@ -7,6 +7,7 @@ package testenv
 import (
 	"context"
 
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -27,6 +28,7 @@ var (
 // PreprodEnv is the preprod environment.
 type PreprodEnv struct {
 	*baseEnv
+	cleanup func() error
 }
 
 // NewPreprodEnv creates a PreprodEnv instance.
@@ -41,13 +43,37 @@ func NewPreprodEnv(ctx context.Context) (Env, error) {
 
 // SetUp sets up the preprod environment.
 func (p *PreprodEnv) SetUp(ctx context.Context) error {
-	// TODO: Implement host overrides for the given route rules
-	testing.ContextLogf(ctx, "Setting up %v env with hosts: %v", p.name, p.registry.hostMap)
+	testing.ContextLogf(ctx, "Setting up %v env", p.name)
+
+	// Find the route rules whose destination is preprod.
+	dests, err := p.destRules(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the destination rules for preprod")
+	}
+
+	// Update the hosts file to redirect traffic to the preprod destinations.
+	hostsUpdater, cleanup, err := newHostsUpdater()
+	if err != nil {
+		return errors.Wrap(err, "failed to init the hosts updater")
+	}
+	p.cleanup = cleanup
+	if _, err := hostsUpdater.Override(dests...); err != nil {
+		cleanup()
+		return errors.Wrap(err, "failed to set up the preprod env")
+	}
 	return nil
 }
 
 // TearDown cleans up any changes made for the preprod environment.
 func (p *PreprodEnv) TearDown(ctx context.Context) error {
 	testing.ContextLogf(ctx, "Tearing down %v env", p.name)
+
+	if p.cleanup == nil {
+		return nil
+	}
+	// Reset any overridden hosts in /etc/hosts after use.
+	if err := p.cleanup(); err != nil {
+		return errors.Wrap(err, "failed to reset the hosts file")
+	}
 	return nil
 }

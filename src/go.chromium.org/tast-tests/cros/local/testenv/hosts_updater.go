@@ -9,7 +9,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io"
 	"net"
 	"os"
 	"sort"
@@ -56,7 +55,7 @@ func (r defaultResolver) LookupHost(hostname string) ([]string, error) {
 
 	addrs, err := net.LookupHost(hostname)
 	if err != nil {
-		return []string{}, errors.Wrapf(err, "failed to look up host: %v", hostname)
+		return nil, errors.Wrap(err, "failed to look up host")
 	}
 	// Sort and return only the first valid address for use
 	sort.Slice(addrs, func(i, j int) bool {
@@ -69,15 +68,15 @@ func (r defaultResolver) LookupHost(hostname string) ([]string, error) {
 		}
 	}
 	if valid == "" {
-		return []string{}, errors.Errorf("no valid address found for host: %v", hostname)
+		return nil, errors.New("no valid address found")
 	}
 	r.resolved[hostname] = valid
 	return []string{valid}, nil
 }
 
-// NewHostsUpdater creates a HostsUpdater. Callers should defer call Cleanup to reset any override entries after use.
+// newHostsUpdater creates a HostsUpdater. Callers should defer call Cleanup to reset any override entries after use.
 // Callers should defer call a returned function to reset any override entries after use.
-func NewHostsUpdater() (*HostsUpdater, func() error, error) {
+func newHostsUpdater() (*HostsUpdater, func() error, error) {
 	return newHostsUpdaterInternal("/etc/hosts", true, true, defaultResolver{resolved: make(map[string]string)})
 }
 
@@ -116,15 +115,15 @@ func (h *HostsUpdater) Override(rules ...fromTo) (entries, error) {
 	}
 
 	for _, r := range rules {
-		from := string(r.From)
-		to := string(r.To)
+		from := r.from.hostname
+		to := r.to.hostname
 		// Avoid overriding the same host more than once.
 		if val, ok := modified[from]; ok && val.hostname == to {
-			return nil, errors.Wrapf(err, "host already overridden from: %v, to: %v", from, to)
+			return nil, errors.Wrapf(err, "already overridden for %v => %v", r.from.label, r.to.label)
 		}
 		addrs, err := h.resolver.LookupHost(to)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to look up host: %v", to)
+			return nil, errors.Wrapf(err, "failed to look up the target: %v", r.from.label)
 		}
 		modified[from] = entry{
 			hostname: to,
@@ -133,7 +132,7 @@ func (h *HostsUpdater) Override(rules ...fromTo) (entries, error) {
 	}
 
 	if err := h.writeHosts(modified, base); err != nil {
-		return nil, errors.Wrapf(err, "failed to override host: %v", rules)
+		return nil, errors.Wrap(err, "failed to override hosts")
 	}
 	return modified, nil
 }
@@ -200,38 +199,17 @@ func (h *HostsUpdater) readHosts() (entries, []string, error) {
 
 func (h *HostsUpdater) writeHosts(modified entries, base []string) error {
 	// Write to a temp file, then copy it to the target host file to atomically replace it.
-	var tempfile string
-	if err := func() error {
-		f, err := os.CreateTemp("", "hosts.testenv")
-		if err != nil {
-			return errors.Wrap(err, "failed to create a temp file")
-		}
-		defer f.Close()
-		tempfile = f.Name()
-		return h.writeHostsFile(f, modified, base)
-	}(); err != nil {
+	f, err := os.CreateTemp("", "hosts.testenv")
+	if err != nil {
+		return errors.Wrap(err, "failed to create a temp file")
+	}
+	tempfile := f.Name()
+	if err := h.writeHostsFile(f, modified, base); err != nil {
+		f.Close()
 		return err
 	}
-
-	// Replace the host file by copying it from the temp.
-	if err := func() error {
-		src, err := os.Open(tempfile)
-		if err != nil {
-			return errors.Wrapf(err, "failed to open the source file: %v", tempfile)
-		}
-		defer os.Remove(tempfile)
-		defer src.Close()
-		dst, err := os.Create(h.hostsfile)
-		if err != nil {
-			return errors.Wrapf(err, "failed to open the destination file: %v", h.hostsfile)
-		}
-		defer dst.Close()
-		_, err = io.Copy(dst, src)
-		return err
-	}(); err != nil {
-		return err
-	}
-	return nil
+	f.Close()
+	return replaceFile(tempfile, h.hostsfile)
 }
 
 func (h *HostsUpdater) writeHostsFile(f *os.File, modified entries, base []string) error {

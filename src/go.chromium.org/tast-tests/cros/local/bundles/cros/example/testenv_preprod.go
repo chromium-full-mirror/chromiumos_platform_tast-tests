@@ -24,10 +24,10 @@ func init() {
 func TestenvPreprod(ctx context.Context, s *testing.State) {
 	env, err := testenv.NewPreprodEnv(ctx)
 	if err != nil {
-		s.Error("Failed to init the preprod env: ", err)
+		s.Fatal("Failed to init the preprod env: ", err)
 	}
 	if err := env.SetUp(ctx); err != nil {
-		s.Error("Failed to set up the preprod env: ", err)
+		s.Fatal("Failed to set up the preprod env: ", err)
 	}
 	defer env.TearDown(ctx)
 }

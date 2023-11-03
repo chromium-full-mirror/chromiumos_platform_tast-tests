@@ -83,13 +83,14 @@ func TestHostsUpdater(t *testing.T) {
 
 	// Override a new host to an alternate host.
 	rule := fromTo{
-		From: "foo.bar.baz", To: "preprod-foo.bar.baz",
+		from: hostInfo{hostname: "foo.bar.baz", label: "foobarbaz-prod"},
+		to:   hostInfo{hostname: "preprod-foo.bar.baz", label: "foobarbaz-preprod"},
 	}
 	expectedAddr := "10.0.0.10"
 	entities, err := mockHosts.Override(rule)
-	actualAddr := entities[string(rule.From)].ip
+	actualAddr := entities[string(rule.from.hostname)].ip
 	if err != nil {
-		t.Fatalf("Failed to override, from: %v, to:%v, %v", rule.From, rule.To, err)
+		t.Fatalf("Failed to override, from: %v, to:%v, %v", rule.from.label, rule.to.label, err)
 	}
 
 	// Verify that the host file is updated with the host changes.
@@ -98,7 +99,7 @@ func TestHostsUpdater(t *testing.T) {
 		t.Fatalf("Failed to read the host file: %v", err)
 	}
 	if diff := cmp.Diff(expectedAddr, actualAddr); diff != "" {
-		t.Errorf("Failed to look up %v, got: %v, want: %v", rule.To, actualAddr, expectedAddr)
+		t.Errorf("Failed to look up %v, got: %v, want: %v", rule.to.label, actualAddr, expectedAddr)
 	}
 	if diff := cmp.Diff(mockHostsOverride, got); diff != "" {
 		t.Fatalf("Failed to override hosts:\ndiff: %v\ngot: %v\nwant: %v", string(diff), string(got), string(mockHostsOverride))
@@ -145,10 +146,11 @@ func TestHostsUpdater_DuplicateOverrideFailure(t *testing.T) {
 
 	// Override a new host to an alternate host twice. The second try should fail.
 	rule := fromTo{
-		From: "foo.bar.baz", To: "preprod-foo.bar.baz",
+		from: hostInfo{hostname: "foo.bar.baz", label: "foobarbaz-prod"},
+		to:   hostInfo{hostname: "preprod-foo.bar.baz", label: "foobarbaz-preprod"},
 	}
 	if _, err = mockHosts.Override(rule); err != nil {
-		t.Fatalf("Failed to override, from: %v, to:%v, %v", rule.From, rule.To, err)
+		t.Fatalf("Failed to override, from: %v, to:%v, %v", rule.from.label, rule.to.label, err)
 	}
 	if _, err = mockHosts.Override(rule); err == nil {
 		t.Fatal("Override the same host and target just once to avoid any conflicts in /etc/hosts")

@@ -24,10 +24,10 @@ func init() {
 func TestenvFake(ctx context.Context, s *testing.State) {
 	env, err := testenv.NewFakeEnv(ctx)
 	if err != nil {
-		s.Error("Failed to set up the fake env: ", err)
+		s.Fatal("Failed to set up the fake env: ", err)
 	}
 	if err := env.SetUp(ctx); err != nil {
-		s.Error("Failed to turn up the fake env: ", err)
+		s.Fatal("Failed to turn up the fake env: ", err)
 	}
 	defer env.TearDown(ctx)
 }
