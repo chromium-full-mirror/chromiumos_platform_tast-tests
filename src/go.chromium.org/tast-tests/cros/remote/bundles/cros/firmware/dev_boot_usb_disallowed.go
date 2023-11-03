@@ -72,7 +72,7 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 
 	s.Log("Rebooting DUT to developer screen")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		s.Fatal("Failed to cold reset dut: ", err)
+		s.Fatal("Failed to warm reset dut: ", err)
 	}
 	s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
 	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
@@ -175,7 +175,7 @@ func identifyDisabledUSBBootFwLog(h *firmware.Helper) disabledUSBBootFwLog {
 		data.screenIds = []fwCommon.FwScreenID{
 			fwCommon.DeveloperMode,
 		}
-		data.logs = []string{`ui_display_screen: External boot is disabled`}
+		data.logs = []string{`External boot is disabled`}
 	case firmware.TabletDetachableSwitcher:
 		data.screenIds = []fwCommon.FwScreenID{
 			fwCommon.LegacyDeveloperWarningMenu,
@@ -183,7 +183,7 @@ func identifyDisabledUSBBootFwLog(h *firmware.Helper) disabledUSBBootFwLog {
 			fwCommon.LegacyDeveloperWarningMenu,
 			fwCommon.LegacyBlank,
 		}
-		data.logs = []string{`vb2_error_notify: USB booting is disabled`}
+		data.logs = []string{`USB booting is disabled`}
 	case firmware.KeyboardDevSwitcher:
 		data.screenIds = []fwCommon.FwScreenID{
 			fwCommon.LegacyDeveloperWarning,
@@ -191,7 +191,7 @@ func identifyDisabledUSBBootFwLog(h *firmware.Helper) disabledUSBBootFwLog {
 			fwCommon.LegacyDeveloperWarning,
 			fwCommon.LegacyBlank,
 		}
-		data.logs = []string{`vb2_error_notify: VbBootDeveloper\(\) - USB booting is disabled`}
+		data.logs = []string{`(USB booting is disabled|Dev mode external boot not allowed)`}
 	}
 	return data
 }
