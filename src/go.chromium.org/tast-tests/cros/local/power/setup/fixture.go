@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode"
 
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -83,6 +84,55 @@ type PowerFixtureOptions struct {
 	EnableGAIALogin  bool
 	EnableARC        bool
 }
+
+// Register variables for overriding PowerFixtureOptions.
+
+// Extra Chrome features to enable when running any test based on
+// powerUIFixture. Note that this will override any feature enable options
+// coming from the fixture caller so it is up to the user to ensure that it is
+// safe and meaningful to enable given features in scope of a given test.
+// This variable is for manual A/B testing scenarios where one would like to
+// run a test based on the powerUIFixture without modifying it but ensure some
+// features are enabled.
+var extraFeaturesVar = testing.RegisterVarString(
+	"setup.extraFeatures",
+	"",
+	"A comma separated list of extra features to be passed into Chrome",
+)
+
+// Chrome features to disable when running any test based on powerUIFixture.
+// Note that this will override any feature disable options coming from the
+// fixture caller so it is up to the user to ensure that it is safe and
+// meaningful to disable given features in scope of a given test.
+// This variable is for manual A/B testing scenarios where one would like to
+// run a test based on the powerUIFixture without modifying it but ensure some
+// features are disabled.
+var disabledFeaturesVar = testing.RegisterVarString(
+	"setup.disabledFeatures",
+	"",
+	"A comma separated list of disabled features to be passed into Chrome",
+)
+
+// Register variables for overriding PowerTestOptions.
+
+// When true, powerd will be kept running during any test based on the
+// powerUIFixture irrespective of what the test itself may configure.
+// This variable is meant to be used in conjunction with setup.extraFeatures
+// and setup.disabledFeatures when a given feature requires powerd to work (e.g.
+// to initiate some DBUS requests).
+//
+// Note: keep in mind that powerd performs runtime tuning of various power
+// parameters such as screen brightness (using ambient light sensor if present)
+// keyboard backlight, etc. This can make test results dependent on the physical
+// setup environment. Be sure that this behavior is intended in your test when
+// using this variable.
+// b/310050824 tracks creation of a "test mode" which would disable runtime
+// tuning in powerd while leaving other features enabled.
+var keepPowerdVar = testing.RegisterVarString(
+	"setup.keep_powerd",
+	"false",
+	"keep_powerd decides whether to keep powerd running during the test",
+)
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -810,6 +860,30 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 			chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	}
 
+	// Apply PowerFixtureOptions feature command-line overrides.
+	// The extraFeaturesVar and disabledFeaturesVar are meant for manual testing
+	// where user wants to compare results of an unmodified test against a
+	// particular feature being enabled and disabled but does not want to create
+	// a new test variant or fixture.
+	spaceRemover := func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}
+	extraFeatures := extraFeaturesVar.Value()
+	if extraFeatures != "" {
+		extraFeatures = strings.Map(spaceRemover, extraFeatures)
+		testing.ContextLog(ctx, "Enabling features: ", extraFeatures)
+		opts = append(opts, chrome.EnableFeatures(strings.Split(extraFeatures, ",")...))
+	}
+	disabledFeatures := disabledFeaturesVar.Value()
+	if disabledFeatures != "" {
+		disabledFeatures = strings.Map(spaceRemover, disabledFeatures)
+		testing.ContextLog(ctx, "Disabling features: ", disabledFeatures)
+		opts = append(opts, chrome.DisableFeatures(strings.Split(disabledFeatures, ",")...))
+	}
+
 	bt := f.powerFixtureOption.BrowserType
 	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
 	if err != nil {
@@ -843,8 +917,15 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		f.arcSnapshot = arcSnapshot
 	}
 
+	// Apply PowerTestOptions command-line overrides.
+	powerTestOptions := f.powerTestOptions
+	keepPowerd := keepPowerdVar.Value()
+	if keepPowerd == "true" {
+		powerTestOptions.Powerd = DoNotChangePowerd
+	}
+
 	// Set up the testing environment.
-	cleanup, err := PowerTestSetup(ctx, "powerUIFixture", tconn, f.powerTestOptions)
+	cleanup, err := PowerTestSetup(ctx, "powerUIFixture", tconn, powerTestOptions)
 	if err != nil {
 		s.Fatal("Power fixture failed: ", err)
 	}
