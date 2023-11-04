@@ -17,10 +17,16 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/oobe"
+	"go.chromium.org/tast-tests/cros/local/testenv"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
+
+type param struct {
+	isAddPersonFlow bool
+	usePreprod      bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -42,10 +48,16 @@ func init() {
 		},
 		Timeout: chrome.GAIALoginTimeout + 5*time.Minute,
 		Params: []testing.Param{{
-			Val: false,
+			Val: param{isAddPersonFlow: false, usePreprod: false},
 		}, {
 			Name: "add_person_flow",
-			Val:  true,
+			Val:  param{isAddPersonFlow: true, usePreprod: false},
+		}, {
+			Name: "preprod",
+			Val:  param{isAddPersonFlow: false, usePreprod: true},
+		}, {
+			Name: "preprod_add_person_flow",
+			Val:  param{isAddPersonFlow: true, usePreprod: true},
 		}},
 	})
 }
@@ -62,7 +74,19 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, time.Second*10)
 	defer cancel()
 
-	isAddPersonFlow := s.Param().(bool)
+	// Run against Google frontend in the given environment.
+	if s.Param().(param).usePreprod {
+		env, err := testenv.NewPreprodEnv(ctx)
+		if err != nil {
+			s.Fatal("Failed to init the preprod env: ", err)
+		}
+		if err := env.SetUp(ctx); err != nil {
+			s.Fatal("Failed to set up the preprod env: ", err)
+		}
+		defer env.TearDown(ctx)
+	}
+
+	isAddPersonFlow := s.Param().(param).isAddPersonFlow
 	if isAddPersonFlow {
 		// Create user on the device.
 		cr, err := chrome.New(ctx)
