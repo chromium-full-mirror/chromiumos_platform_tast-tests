@@ -17,6 +17,7 @@ import (
 	mediacpu "go.chromium.org/tast-tests/cros/local/media/cpu"
 	"go.chromium.org/tast-tests/cros/local/media/logging"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
+	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -30,7 +31,6 @@ func init() {
 			"bchoobineh@google.com",
 		},
 		SoftwareDeps: []string{"v4l2_codec"},
-		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("mediatek")),
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Fixture:      "graphicsNoChrome",
@@ -38,22 +38,48 @@ func init() {
 			"images/puppets-1280x720.nv12.yuv",
 			"images/puppets-1280x720.nv12.yuv.json",
 		},
+		Params: []testing.Param{
+			{
+				Name:              "scaling",
+				Timeout:           5 * time.Minute,
+				ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("qualcomm")),
+				Val:               "*scaling*",
+			},
+			{
+				Name:              "mediatek",
+				Timeout:           5 * time.Minute,
+				ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("mediatek")),
+				Val:               "*-*scaling*",
+			},
+		},
 	})
 }
 
 func ImageProcessorPerf(ctx context.Context, s *testing.State) {
-	const exec = "image_processor_perf_test"
 	dataDirectory := filepath.Dir(s.DataPath("images/puppets-1280x720.nv12.yuv"))
+	const imageProcessorPerfTestBin = "image_processor_perf_test"
+
 	testArgs := []string{fmt.Sprintf("--source_directory=%s", dataDirectory),
 		logging.ChromeVmoduleFlag()}
 
-	if report, err := gtest.New(
-		filepath.Join(chrome.BinTestDir, exec),
-		gtest.Logfile(filepath.Join(s.OutDir(), exec+".log")),
+	exec := filepath.Join(chrome.BinTestDir, imageProcessorPerfTestBin)
+	logfile := filepath.Join(s.OutDir(),
+		fmt.Sprintf("output_%s_%d.txt", filepath.Base(exec), time.Now().Unix()))
+
+	testName := s.Param().(string)
+	gtestFilter := gtest.Filter(testName)
+	t := gtest.New(exec, gtest.Logfile(logfile),
+		gtestFilter,
 		gtest.ExtraArgs(testArgs...),
-		gtest.UID(int(sysutil.ChronosUID)),
-	).Run(ctx); err != nil {
-		s.Errorf("Failed to run %v: %v", exec, err)
+		gtest.UID(int(sysutil.ChronosUID)))
+
+	command, err := t.Args()
+	if err != nil {
+		s.Fatal("Failed to get gtest args: ", err)
+	}
+	testing.ContextLogf(ctx, "Running %s", shutil.EscapeSlice(command))
+
+	if report, err := t.Run(ctx); err != nil {
 		if report != nil {
 			s.Error("Following gTests failed to pass: ", report.FailedTestNames())
 		}
@@ -72,8 +98,9 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 	go graphics.MeasureGPUCounters(ctx, measureDuration, p)
 
 	measurements, err := mediacpu.MeasureProcessUsage(ctx, measureDuration, mediacpu.WaitProcess, gtest.New(
-		filepath.Join(chrome.BinTestDir, exec),
+		exec,
 		gtest.Logfile(filepath.Join(s.OutDir(), exec+".log")),
+		gtestFilter,
 		gtest.ExtraArgs(testArgs...),
 	))
 	if err != nil {
