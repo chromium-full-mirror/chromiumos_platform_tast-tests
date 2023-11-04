@@ -88,6 +88,21 @@ func init() {
 				Val:       "verizon",
 				ExtraAttr: []string{"cellular_carrier_verizon"},
 			},
+			{
+				Name:      "bell",
+				Val:       "bell",
+				ExtraAttr: []string{"cellular_carrier_bell"},
+			},
+			{
+				Name:      "roger",
+				Val:       "roger",
+				ExtraAttr: []string{"cellular_carrier_roger"},
+			},
+			{
+				Name:      "telus",
+				Val:       "telus",
+				ExtraAttr: []string{"cellular_carrier_telus"},
+			},
 		},
 	})
 }
