@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/arcapp/ArcAppMemoryLimit_20231103.apk",
+  "size": 2039109,
+  "sha256sum": "346ac55c84881786a3f996e3a9dd5533856e99191a802e5328ee32706274c283"
+}
