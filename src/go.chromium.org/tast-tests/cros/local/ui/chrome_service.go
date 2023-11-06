@@ -201,6 +201,10 @@ func toOptions(req *pb.NewRequest) ([]chrome.Option, error) {
 		options = append(options, chrome.DontSkipOOBEAfterLogin())
 	}
 
+	if req.Region != "" {
+		options = append(options, chrome.Region(req.Region))
+	}
+
 	switch req.GetLoginMode() {
 	case pb.LoginMode_LOGIN_MODE_NO_LOGIN:
 		options = append(options, chrome.NoLogin())

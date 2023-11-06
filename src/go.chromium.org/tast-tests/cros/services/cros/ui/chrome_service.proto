@@ -25,11 +25,13 @@ service ChromeService {
 
   // Reconnect reconnects to the current browser session.
   //
-  // This method is called when connection need to be re-established, e.g. after suspend/resume.
-  // After the session is reconnected, all existing connections associated with chrome.Chrome instance also
-  // needs to be re-established. For example, chrome.TestAPIConn(), chrome.NewConn().
+  // This method is called when connection need to be re-established, e.g. after
+  // suspend/resume. After the session is reconnected, all existing connections
+  // associated with chrome.Chrome instance also needs to be re-established. For
+  // example, chrome.TestAPIConn(), chrome.NewConn().
   //
-  // Note that this method cannot be used to recover Chrome after crashes since the devtools port may change.
+  // Note that this method cannot be used to recover Chrome after crashes since
+  // the devtools port may change.
   rpc Reconnect(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // UserHash retrieves the user hash of the current logged in user.
@@ -108,7 +110,8 @@ message NewRequest {
 
   // Used to pass |ui.signinProfileTestExtensionManifestKey| string.
   // |ui.signinProfileTestExtensionManifestKey| is used to start chrome
-  // in OOBE, by passing the value into chrome options |LoadSigninProfileExtension|.
+  // in OOBE, by passing the value into chrome options
+  // |LoadSigninProfileExtension|.
   string signin_profile_test_extension_id = 14;
 
   // Pass directories of unpacked extensions to be loaded by Ash Chrome.
@@ -123,15 +126,18 @@ message NewRequest {
 
   // If true, stay in OOBE after user login.
   bool dont_skip_oobe_after_login = 18;
+
+  // Region of a user session.
+  string region = 19;
 }
 
 // LoginMode describes the user mode for the login.
 enum LoginMode {
   LOGIN_MODE_UNSPECIFIED = 0;
-  LOGIN_MODE_NO_LOGIN = 1;     // restart Chrome but don't log in
-  LOGIN_MODE_FAKE_LOGIN = 2;   // fake login with no authentication
-  LOGIN_MODE_GAIA_LOGIN = 3;   // real network-based login using GAIA backend
-  LOGIN_MODE_GUEST_LOGIN = 4;  // sign in as ephemeral guest user
+  LOGIN_MODE_NO_LOGIN = 1;    // restart Chrome but don't log in
+  LOGIN_MODE_FAKE_LOGIN = 2;  // fake login with no authentication
+  LOGIN_MODE_GAIA_LOGIN = 3;  // real network-based login using GAIA backend
+  LOGIN_MODE_GUEST_LOGIN = 4; // sign in as ephemeral guest user
 }
 
 // Lacros to enable Lacros browser with configurable selection of whether rootfs
@@ -144,7 +150,7 @@ message Lacros {
   // Selection is where to locate a Lacros browser.
   // TODO(b/246961327): Support locally deployed Lacros binary when needed.
   enum Selection {
-    SELECTION_UNSPECIFIED = 0;  // let the system choose
+    SELECTION_UNSPECIFIED = 0; // let the system choose
     SELECTION_ROOTFS = 1;
     SELECTION_OMAHA = 2;
   }
@@ -159,6 +165,4 @@ enum ArcMode {
   ARC_MODE_SUPPORTED = 3;
 }
 
-message UserHashResponse {
-  string user_hash = 1;
-}
+message UserHashResponse { string user_hash = 1; }

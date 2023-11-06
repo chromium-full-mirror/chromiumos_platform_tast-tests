@@ -38,6 +38,11 @@ func init() {
 			Name: "default_fake_login",
 			Val:  &pb.NewRequest{},
 		}, {
+			Name: "default_fake_login_with_region",
+			Val: &pb.NewRequest{
+				Region: "jp",
+			},
+		}, {
 			Name: "fake_login",
 			Val: &pb.NewRequest{
 				LoginMode: pb.LoginMode_LOGIN_MODE_FAKE_LOGIN,
