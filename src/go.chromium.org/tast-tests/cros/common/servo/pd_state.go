@@ -7,6 +7,7 @@ package servo
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
 
 	"go.chromium.org/tast/core/errors"
@@ -168,6 +169,8 @@ var pdStateCmdRegexp = map[TCPMVersion]string{
 	TCPMv2: `Port\s+C(\d+)\s+(CC\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)\s+TC State:\s+([\w\.]+)?,\s+Flags:\s+0x(\w+)\s+PE State:\s+(\w+)?,\s+Flags:\s+0x(\w+)\s+(.*)[\r\n]`,
 }
 
+const pdStateInvalidPortRegexp string = `Parameter (\d+) invalid`
+
 // Helper type that stores raw regex output
 type pdStateTokens []string
 
@@ -237,7 +240,8 @@ func (s *Servo) getPDStateByTargetAndVersion(
 	}
 
 	// Get the correct regex based on version and build the command
-	regex := pdStateCmdRegexp[ver]
+	regex := pdStateCmdRegexp[ver] + "|" + pdStateInvalidPortRegexp
+
 	cmd := fmt.Sprintf("pd %d state", port)
 
 	var t pdStateTokens
@@ -247,12 +251,20 @@ func (s *Servo) getPDStateByTargetAndVersion(
 		if err != nil {
 			return nil, errors.Wrapf(err, "EC command %q failed", cmd)
 		}
+		invalidPort, _ := regexp.MatchString(pdStateInvalidPortRegexp, cmdOutput[0][0])
+		if invalidPort {
+			return nil, errors.Errorf("invalid PD port %d", port)
+		}
 		t = pdStateTokens(cmdOutput[0])
 	} else if target == pdStateServo {
 		// Run command on the servo console
 		cmdOutput, err := s.RunServoCommandGetOutput(ctx, cmd, []string{regex})
 		if err != nil {
 			return nil, errors.Wrapf(err, "Servo command %q failed", cmd)
+		}
+		invalidPort, _ := regexp.MatchString(pdStateInvalidPortRegexp, cmdOutput[0][0])
+		if invalidPort {
+			return nil, errors.Errorf("invalid PD port %d", port)
 		}
 		t = pdStateTokens(cmdOutput[0])
 	} else {
