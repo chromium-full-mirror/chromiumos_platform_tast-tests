@@ -170,8 +170,9 @@ func AcceptWarningAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chro
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to existing Files app")
 	}
-	proceedButton := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("(Copy|Transfer) anyway"))
 
+	// Proceed the warning by clicking the "Copy anyway" or "Transfer anyway" button.
+	proceedButton := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("(Copy|Transfer) anyway"))
 	if err := uiauto.Combine("Click proceed button",
 		filesApp.WaitUntilExists(proceedButton),
 		ui.DoDefault(proceedButton),
@@ -190,8 +191,8 @@ func CancelWarningAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chro
 		return errors.Wrap(err, "failed to connect to existing Files app")
 	}
 
-	cancelButton := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("Cancel"))
-
+	// Cancel the warning by clicking the "Cancel" button.
+	cancelButton := nodewith.Role(role.Button).Name("Cancel")
 	if err := uiauto.Combine("Click cancel button",
 		filesApp.WaitUntilExists(cancelButton),
 		ui.DoDefault(cancelButton),

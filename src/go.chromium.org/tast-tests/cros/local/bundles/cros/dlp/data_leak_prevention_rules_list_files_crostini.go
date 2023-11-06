@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -128,9 +126,6 @@ func DataLeakPreventionRulesListFilesCrostini(ctx context.Context, s *testing.St
 	// Start interacting with the UI.
 	ui := uiauto.New(tconn)
 
-	proceedButton := nodewith.Role(role.Button).Name("Copy anyway").First()
-	cancelButton := nodewith.Role(role.Button).Name("Cancel").First()
-
 	if err := files.IsFileManaged(ctx, ui, tconn, keyboard, files.DlFileName, true); err != nil {
 		s.Fatal("File isn't managed when it should be: ", err)
 	}
@@ -139,11 +134,8 @@ func DataLeakPreventionRulesListFilesCrostini(ctx context.Context, s *testing.St
 	if err := copyToLinuxFiles(ctx, ui, filesApp, keyboard, files.DlFileName); err != nil {
 		s.Fatal("Failed to copy to Linux files: ", err)
 	}
-	if err := uiauto.Combine("Click cancel button",
-		filesApp.WaitUntilExists(cancelButton),
-		ui.DoDefault(cancelButton),
-		filesApp.EnsureFileGone(files.DlFileName, 10*time.Second),
-	)(ctx); err != nil {
+
+	if err := files.CancelWarningAndVerify(ctx, ui, tconn, files.DlFileName); err != nil {
 		s.Fatal("Failed to cancel the warning: ", err)
 	}
 
@@ -151,11 +143,8 @@ func DataLeakPreventionRulesListFilesCrostini(ctx context.Context, s *testing.St
 	if err := copyToLinuxFiles(ctx, ui, filesApp, keyboard, files.DlFileName); err != nil {
 		s.Fatal("Failed to copy to Linux files: ", err)
 	}
-	if err := uiauto.Combine("Click proceed button",
-		filesApp.WaitUntilExists(proceedButton),
-		ui.DoDefault(proceedButton),
-		filesApp.WithTimeout(10*time.Second).WaitForFile(files.DlFileName),
-	)(ctx); err != nil {
+
+	if err := files.AcceptWarningAndVerify(ctx, ui, tconn, files.DlFileName); err != nil {
 		s.Fatal("Failed to proceed the warning: ", err)
 	}
 
