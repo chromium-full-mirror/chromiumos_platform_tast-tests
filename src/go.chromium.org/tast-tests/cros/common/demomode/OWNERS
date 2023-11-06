@@ -1,0 +1,12 @@
+set noparent
+
+llin@chromium.org
+xiqiruan@chromium.org
+yilkal@chromium.org
+thv@chromium.org
+
+# Old owner, for backup
+jacksontadie@google.com
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
