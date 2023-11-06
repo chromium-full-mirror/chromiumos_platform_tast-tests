@@ -22,7 +22,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: DevModeECRW,
+		Func: RecToDevFromECRW,
 		Desc: "Tests that DUT cannot boot to dev mode from rec mode while in EC RW",
 		Contacts: []string{
 			"chromeos-faft@google.com",
@@ -39,7 +39,7 @@ func init() {
 	})
 }
 
-func DevModeECRW(ctx context.Context, s *testing.State) {
+func RecToDevFromECRW(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
