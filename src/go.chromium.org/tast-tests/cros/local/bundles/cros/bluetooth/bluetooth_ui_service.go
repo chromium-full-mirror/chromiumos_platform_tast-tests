@@ -263,10 +263,7 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "quick_settings_bluetooth_detailed_view_ui_dump")
 
 	ui := uiauto.New(tconn)
-	// Pre-QsRevamp there are two buttons labeled "Pair new device" (the whole
-	// HoverHighlightView and the plus icon), so click the first one.
-	// Post-QsRevamp there is only one button labeled "Pair new device".
-	if err := ui.LeftClickUntil(quicksettings.BluetoothDetailedViewPairNewDeviceButton.First(),
+	if err := ui.LeftClickUntil(quicksettings.BluetoothDetailedViewPairNewDeviceButton,
 		ui.Exists(quicksettings.BluetoothPairNewDeviceDialog))(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to open the pairing dialog")
 	}
