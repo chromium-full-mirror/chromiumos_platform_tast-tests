@@ -100,16 +100,12 @@ func restoreLsbRelease(ctx context.Context, d *dut.DUT) error {
 	return nil
 }
 
-// Run the triggering command in the background to avoid the DUT potentially going down before
-// success is reported over the SSH connection. Redirect all I/O streams to ensure that the
-// SSH exec request doesn't hang (see https://en.wikipedia.org/wiki/Nohup#Overcoming_hanging).
-
-const kernelPanicCmd = `(sleep 2
+const kernelPanicCmd = `
   if [ -f /sys/kernel/debug/provoke-crash/DIRECT ]; then
     echo PANIC > /sys/kernel/debug/provoke-crash/DIRECT
   else
     echo panic > /proc/breakme
-  fi) >/dev/null 2>&1 </dev/null &`
+  fi`
 
 func KernelCrash(ctx context.Context, s *testing.State) {
 	const systemCrashDir = "/var/spool/crash"
@@ -191,30 +187,16 @@ func KernelCrash(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to sync filesystems: %s", out)
 		}
 
-		// Trigger a panic. We run the command with nohup so that the command is not
-		// affected by disconnection. The command should report success before panicking.
-		if err := d.Conn().CommandContext(ctx, "nohup", "sh", "-c", crash.panicCmd).Run(); err != nil {
+		// Trigger a panic. By the time RebootWithCommand() returns the DUT will be reconnected.
+		if err := d.RebootWithCommand(ctx, "sh", "-c", crash.panicCmd); err != nil {
 			s.Fatal("Failed to panic DUT: ", err)
 		}
-
-		s.Log("Waiting for DUT to become unreachable")
-
-		if err := d.WaitUnreachable(ctx); err != nil {
-			s.Fatal("Failed to wait for DUT to become unreachable: ", err)
-		}
-		s.Log("DUT became unreachable (as expected)")
 	}
 
 	// When we lost the connection, these connections broke.
 	cl.Close(ctx)
 	cl = nil
 	fs = nil
-
-	s.Log("Reconnecting to DUT")
-	if err := d.WaitConnect(ctx); err != nil {
-		s.Fatal("Failed to reconnect to DUT: ", err)
-	}
-	s.Log("Reconnected to DUT")
 
 	cl, err = rpc.Dial(ctx, d, s.RPCHint())
 	if err != nil {

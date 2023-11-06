@@ -117,35 +117,17 @@ func WatchdogCrash(ctx context.Context, s *testing.State) {
 	}
 
 	// Trigger a watchdog reset
-	// Run the triggering command in the background to avoid the DUT potentially going down before
-	// success is reported over the SSH connection. Redirect all I/O streams to ensure that the
-	// SSH exec request doesn't hang (see https://en.wikipedia.org/wiki/Nohup#Overcoming_hanging).
 
 	// Daisydog is the watchdog service
-	cmd := `nohup sh -c 'sleep 2
-	stop daisydog
-	sleep 60 > /dev/watchdog' >/dev/null 2>&1 </dev/null &`
-	if err := d.Conn().CommandContext(ctx, "bash", "-c", cmd).Run(); err != nil {
+	cmd := "stop daisydog; sleep 60 > /dev/watchdog"
+	if err := d.RebootWithCommand(ctx, "sh", "-c", cmd); err != nil {
 		s.Fatal("Failed to panic DUT: ", err)
 	}
-
-	s.Log("Waiting for DUT to become unreachable")
-
-	if err := d.WaitUnreachable(ctx); err != nil {
-		s.Fatal("Failed to wait for DUT to become unreachable: ", err)
-	}
-	s.Log("DUT became unreachable (as expected)")
 
 	// When we lost the connection, these connections broke.
 	cl.Close(ctx)
 	cl = nil
 	fs = nil
-
-	s.Log("Reconnecting to DUT")
-	if err := d.WaitConnect(ctx); err != nil {
-		s.Fatal("Failed to reconnect to DUT: ", err)
-	}
-	s.Log("Reconnected to DUT")
 
 	cl, err = rpc.Dial(ctx, d, s.RPCHint())
 	if err != nil {
