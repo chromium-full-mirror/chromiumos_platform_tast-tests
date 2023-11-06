@@ -166,13 +166,13 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 		// Activate the "New Project" button. The text label is not clickable.
 		uiauto.New(tconn).WithTimeout(time.Minute).RetryUntil(
 			keyboard.AccelAction("space"),
-			ud.Exists(uidetection.Word("Templates")),
+			ud.Exists(uidetection.Word("Templates").WithinA11yNode(newProjectDialog)),
 		),
 		ud.LeftClick(nextButton.WithinA11yNode(newProjectDialog)),
 		// Use ImmediateScreenshot to avoid issues with blinking cursors on the following screen.
 		ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).WaitUntilExists(uidetection.TextBlock(strings.Split("Empty Activity", " ")).First()),
 		ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).LeftClick(finishButton.WithinA11yNode(newProjectDialog)),
-		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilExists(newProjectWindow),
+		uiauto.New(tconn).WithTimeout(time.Minute).WaitUntilExists(newProjectWindow),
 	)(ctx); err != nil {
 		s.Fatal("Failed to create a new project with defaults: ", err)
 	}
