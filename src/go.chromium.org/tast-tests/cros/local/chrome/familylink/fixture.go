@@ -180,6 +180,41 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "familyLinkGriffinLogin",
+		Desc:     "Supervised Family Link user login with Griffin account",
+		Contacts: []string{"agawronska@chromium.org", "cros-families-eng+test@google.com"},
+		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.griffinEmail", "family.griffinPassword", true),
+		Vars: []string{
+			"family.parentEmail",
+			"family.parentPassword",
+			"family.griffinEmail",
+			"family.griffinPassword",
+		},
+		SetUpTimeout:    chrome.GAIALoginChildTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "familyLinkGriffinLoginWithLacros",
+		Desc:     "Supervised Family Link user login with Griffin account on Lacros",
+		Contacts: []string{"agawronska@chromium.org", "cros-families-eng+test@google.com"},
+		Impl:     NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.griffinEmail", "family.griffinPassword", true),
+		Vars: []string{
+			"family.parentEmail",
+			"family.parentPassword",
+			"family.griffinEmail",
+			"family.griffinPassword",
+		},
+		SetUpTimeout:    chrome.GAIALoginChildTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name:     "familyLinkParentArcLogin",
 		Desc:     "Non-supervised Family Link user login with regular parent account and ARC support",
 		Contacts: []string{"tobyhuang@chromium.org", "cros-families-eng+test@google.com"},
