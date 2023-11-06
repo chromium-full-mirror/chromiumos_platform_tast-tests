@@ -18,7 +18,7 @@ import (
 )
 
 var idleTimeParams = power.TimeParams{Interval: 20 * time.Second, Total: 4 * time.Minute}
-var idleFastTimeParams = power.TimeParams{Interval: 10 * time.Second, Total: 20 * time.Second}
+var idleFastTimeParams = power.TimeParams{Interval: 10 * time.Second, Total: 1 * time.Minute}
 
 var displayOffBTOff = power.IdleParams{
 	DisplayPower:   false,
@@ -28,6 +28,9 @@ var displayOnBTOff = power.IdleParams{
 	DisplayPower:   true,
 	BluetoothPower: false,
 	IdleTimeParams: idleTimeParams}
+
+// By default, both display and bluetooth are on. So tests using this parameter
+// can be seen as the default version of the idle test.
 var displayOnBTOn = power.IdleParams{
 	DisplayPower:   true,
 	BluetoothPower: true,
@@ -49,29 +52,26 @@ func init() {
 		Desc:         "Collects data on idle with Chrome logged in",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-platform-power@google.com", "jingmuli@google.com"},
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{
-			Name:    "display_off_bt_off_ash",
-			Fixture: "powerAsh",
-			Val:     displayOffBTOff,
+			Name:      "display_off_bt_off_ash",
+			Fixture:   "powerAsh",
+			Val:       displayOffBTOff,
+			ExtraAttr: []string{"group:power", "power_daily"},
 		}, {
 			Name:    "display_on_bt_off_ash",
 			Fixture: "powerAsh",
 			Val:     displayOnBTOff,
 		}, {
-			Name:    "display_on_bt_on_ash",
-			Fixture: "powerAsh",
-			Val:     displayOnBTOn,
+			Name:      "display_on_bt_on_ash",
+			Fixture:   "powerAsh",
+			Val:       displayOnBTOn,
+			ExtraAttr: []string{"group:power", "power_daily"},
 		}, {
 			Name:    "display_off_bt_on_ash",
 			Fixture: "powerAsh",
 			Val:     displayOffBTOn,
-		}, {
-			Name:    "default_ash",
-			Fixture: "powerAsh",
-			Val:     displayOnBTOn,
 		}, {
 			Name:    "default_fast_ash",
 			Fixture: "powerAsh",
@@ -81,6 +81,7 @@ func init() {
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               displayOffBTOff,
+			ExtraAttr:         []string{"group:power", "power_daily"},
 		}, {
 			Name:              "display_on_bt_off_lacros",
 			Fixture:           "powerLacros",
@@ -91,16 +92,12 @@ func init() {
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               displayOnBTOn,
+			ExtraAttr:         []string{"group:power", "power_daily"},
 		}, {
 			Name:              "display_off_bt_on_lacros",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               displayOffBTOn,
-		}, {
-			Name:              "default_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               displayOnBTOn,
 		}, {
 			Name:              "default_fast_lacros",
 			Fixture:           "powerLacros",
