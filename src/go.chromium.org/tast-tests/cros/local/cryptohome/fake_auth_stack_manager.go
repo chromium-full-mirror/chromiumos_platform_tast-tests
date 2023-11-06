@@ -100,9 +100,23 @@ func ecdhPublicKeyToFpPublicKey(pub *ecdh.PublicKey) *messages.FpPublicKey {
 	return &opub
 }
 
+// GetNonce handles the incoming same name D-Bus call. It returns a random nonce.
+func (m *FakeAuthStackManager) GetNonce() ([]byte, *dbus.Error) {
+	nonce := make([]byte, 32)
+	rand.Read(nonce)
+	reply := messages.GetNonceReply{
+		Nonce: nonce,
+	}
+	marshaledReply, err := proto.Marshal(&reply)
+	if err != nil {
+		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to marshal the response"))
+	}
+	return marshaledReply, nil
+}
+
 // StartEnrollSession handles the incoming same name D-Bus call. It starts listening on a specific dbus
 // path for the enroll session.
-func (m *FakeAuthStackManager) StartEnrollSession() (dbus.ObjectPath, *dbus.Error) {
+func (m *FakeAuthStackManager) StartEnrollSession(request []byte) (dbus.ObjectPath, *dbus.Error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	if m.sessionDBusPath != "" || m.sessionState != noSession {
@@ -130,7 +144,7 @@ func (m *FakeAuthStackManager) Cancel() *dbus.Error {
 
 // StartAuthSession handles the incoming same name D-Bus call. It starts listening on a specific dbus
 // path for the auth session.
-func (m *FakeAuthStackManager) StartAuthSession(username string) (dbus.ObjectPath, *dbus.Error) {
+func (m *FakeAuthStackManager) StartAuthSession(reqBytes []byte) (dbus.ObjectPath, *dbus.Error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	if m.sessionDBusPath != "" || m.sessionState != noSession {
@@ -188,13 +202,12 @@ func (m *FakeAuthStackManager) CreateCredential(reqBytes []byte) ([]byte, *dbus.
 	if m.sessionState != enrollSession {
 		return nil, dbus.MakeFailedError(errors.New("cannot respond to CreateCredential outside active enroll sessions"))
 	}
-	var request messages.CreateCredentialRequest
+	var request messages.CreateCredentialRequestV2
 	if err := proto.Unmarshal(reqBytes, &request); err != nil {
 		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to unmarshal request"))
 	}
 
 	// cryptohome's PublicKey comes from the request.
-	// Ignore UserId, GscNonce, and Iv from the request.
 	cpub, err := fpPublicKeyToEcdhPublicKey(request.Pub)
 	if err != nil {
 		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to convert public key from the request"))
@@ -244,13 +257,12 @@ func (m *FakeAuthStackManager) AuthenticateCredential(reqBytes []byte) ([]byte, 
 	if m.sessionState != noSession {
 		return nil, dbus.MakeFailedError(errors.New("cannot respond to AuthenticateCredential with active sessions"))
 	}
-	var request messages.AuthenticateCredentialRequest
+	var request messages.AuthenticateCredentialRequestV2
 	if err := proto.Unmarshal(reqBytes, &request); err != nil {
 		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to unmarshal request"))
 	}
 
 	// cryptohome's PublicKey comes from the request.
-	// Ignore UserId, GscNonce, and Iv from the request.
 	cpub, err := fpPublicKeyToEcdhPublicKey(request.Pub)
 	if err != nil {
 		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to convert public key from the request"))
@@ -435,11 +447,7 @@ func (m *FakeAuthStackManager) emitAuthSignalAndTerminate() {
 	defer m.mutex.Unlock()
 
 	if len(m.authScanResults) > 0 {
-		nonce := make([]byte, 32)
-		rand.Read(nonce)
-		marshaledSignal, err := proto.Marshal(&messages.AuthScanDone{
-			AuthNonce: nonce,
-		})
+		marshaledSignal, err := proto.Marshal(&messages.AuthScanDone{})
 		if err != nil {
 			testing.ContextLog(m.ctx, "Failed to marshal AuthScanDone: ", err)
 		}
@@ -456,16 +464,10 @@ func (m *FakeAuthStackManager) emitAuthSignalAndTerminate() {
 // emitEnrollment emits an EnrollScanDone signal.
 func (m *FakeAuthStackManager) emitEnrollment(p EnrollmentProgress) {
 	done := p.Percentage >= 100
-	var nonce []byte
-	if done && p.ScanResult == messages.ScanResult_SCAN_RESULT_SUCCESS {
-		nonce = make([]byte, 32)
-		rand.Read(nonce)
-	}
 	marshaledSignal, err := proto.Marshal(&messages.EnrollScanDone{
 		ScanResult:      &p.ScanResult,
 		PercentComplete: &p.Percentage,
 		Done:            &done,
-		AuthNonce:       nonce,
 	})
 	if err != nil {
 		testing.ContextLog(m.ctx, "Failed to marshal EnrollScanDone: ", err)

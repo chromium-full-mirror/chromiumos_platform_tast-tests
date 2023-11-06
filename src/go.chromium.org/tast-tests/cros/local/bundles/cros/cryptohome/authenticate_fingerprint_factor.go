@@ -175,10 +175,6 @@ func AuthenticateFingerprintFactor(ctx context.Context, s *testing.State) {
 				},
 				{
 					AuthCredStatus: biod.AuthenticateCredentialReply_SUCCESS,
-					ScanResult:     biod.ScanResult_SCAN_RESULT_TOO_SLOW,
-				},
-				{
-					AuthCredStatus: biod.AuthenticateCredentialReply_SUCCESS,
 					ScanResult:     biod.ScanResult_SCAN_RESULT_SUCCESS,
 				},
 			},
