@@ -303,6 +303,11 @@ func (c *Container) Stop(ctx context.Context) error {
 		return nil
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		testing.ContextLog(ctx, "Failed to wait for D-Bus LxdContainerStoppingSignal_STOPPED signal: ", err)
+
+		// The container didn't stop, try to stop it with more force.
+		if _, err := c.VM.LXCCommand(ctx, "stop", c.containerName, "-f"); err != nil {
+			return errors.Wrap(err, "failed to stop container with command")
+		}
 	}
 
 	testing.ContextLogf(ctx, "Stopped container %q in VM %q", c.containerName, c.VM.name)
@@ -612,6 +617,11 @@ func (c *Container) CreateSnapshot(ctx context.Context, snapshotName, logDir str
 		}
 	}
 
+	// Wait for background operations to complete before stopping the container.
+	if err := c.VM.WaitForLXDOperations(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for LXD background operations")
+	}
+
 	// Stop the container.
 	// It prevents race conditions when the container is using the filesystem.
 	if err := c.Stop(ctx); err != nil {
@@ -652,6 +662,11 @@ func (c *Container) DeleteSnapshot(ctx context.Context, snapshotName string) err
 
 // RestoreSnapshot restores the Linux container from a snapshot.
 func (c *Container) RestoreSnapshot(ctx context.Context, snapshotName, logDir string) error {
+	// Wait for background operations to complete before stopping the container.
+	if err := c.VM.WaitForLXDOperations(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for LXD background operations")
+	}
+
 	// Stop the container.
 	if err := c.Stop(ctx); err != nil {
 		return errors.Wrap(err, "failed to stop the container")

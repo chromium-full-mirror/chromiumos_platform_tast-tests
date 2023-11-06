@@ -7,9 +7,11 @@ package vm
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
@@ -269,6 +271,39 @@ func (vm *VM) LXCCommandCombined(ctx context.Context, lxcArgs ...string) (string
 		return "", errors.Wrapf(err, "failed to run %q", strings.Join(cmd.Args, " "))
 	}
 	return string(result), nil
+}
+
+// WaitForLXDOperations waits for all LXD background operations to finish.
+func (vm *VM) WaitForLXDOperations(ctx context.Context) error {
+	type Operation struct {
+		description string
+		status      string
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := vm.makeLXCCommand(ctx, "operation", "list", "-f", "json").Output(testexec.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to list operations")
+		}
+
+		var ops []Operation
+		if err := json.Unmarshal(out, &ops); err != nil {
+			return errors.Wrap(err, "failed to parse operations")
+		}
+
+		for _, op := range ops {
+			if op.status == "Running" {
+				testing.ContextLogf(ctx, "LXD operation with description %q is still running", op.description)
+				return errors.Errorf("operation with description %q is still running", op.description)
+			}
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ShareDownloadsPath shares a path relative to Downloads with the VM.
