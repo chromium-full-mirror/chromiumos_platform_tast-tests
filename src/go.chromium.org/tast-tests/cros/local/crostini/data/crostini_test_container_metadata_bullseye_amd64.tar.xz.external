@@ -1,5 +1,5 @@
 {
-    "sha256sum": "99c9924c1b674b445cb47dfa7606949478e4004a24c6ef430703c855c23bd06a",
-    "size": 688,
-    "url": "gs://cros-containers-staging/121/images/debian/bullseye/amd64/test/20231103_03:11/lxd.tar.xz"
+    "sha256sum": "f16bdac54e50f8a8514b74fec5c98915b4cbf447253cf85a20b69de6f7f0f48e",
+    "size": 680,
+    "url": "gs://cros-containers-staging/121/images/debian/bullseye/amd64/test/20231106_01:59/lxd.tar.xz"
 }
