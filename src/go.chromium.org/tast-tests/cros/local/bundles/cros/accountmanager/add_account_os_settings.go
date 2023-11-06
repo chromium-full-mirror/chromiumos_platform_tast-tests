@@ -122,7 +122,8 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 	addAccountButton := mapui.OSSettingsAddGoogleAccountButton
 	if err := uiauto.Combine("Click Add Google Account button",
 		accountmanager.OpenAccountManagerSettingsAction(tconn, cr),
-		ui.LeftClickUntil(addAccountButton, ui.Exists(accountmanager.AddAccountDialog())),
+		ui.DoDefault(addAccountButton),
+		ui.WaitUntilExists(accountmanager.AddAccountDialog()),
 	)(ctx); err != nil {
 		s.Fatal("Failed to click Add Google Account button: ", err)
 	}

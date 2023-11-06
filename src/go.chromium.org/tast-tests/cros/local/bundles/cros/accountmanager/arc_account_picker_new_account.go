@@ -101,7 +101,8 @@ func ARCAccountPickerNewAccount(ctx context.Context, s *testing.State) {
 	// Open Account Manager page in OS Settings and click Add Google Account button.
 	if err := uiauto.Combine("click add Google Account button",
 		accountmanager.OpenAccountManagerSettingsAction(tconn, cr),
-		ui.LeftClickUntil(addAccountButton, ui.Exists(accountmanager.AddAccountDialog())),
+		ui.DoDefault(addAccountButton),
+		ui.WaitUntilExists(accountmanager.AddAccountDialog()),
 		// Uncheck ARC toggle.
 		ui.LeftClickUntil(arcToggle, accountmanager.CheckARCToggleStatusAction(tconn, browser.TypeLacros, false /*expectedVal*/)),
 	)(ctx); err != nil {

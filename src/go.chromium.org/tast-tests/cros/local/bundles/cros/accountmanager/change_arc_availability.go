@@ -99,7 +99,8 @@ func ChangeARCAvailability(ctx context.Context, s *testing.State) {
 	// Open Account Manager page in OS Settings and click Add Google Account button.
 	if err := uiauto.Combine("Click Add Google Account button",
 		accountmanager.OpenAccountManagerSettingsAction(tconn, cr),
-		ui.LeftClickUntil(addAccountButton, ui.Exists(accountmanager.AddAccountDialog())),
+		ui.DoDefault(addAccountButton),
+		ui.WaitUntilExists(accountmanager.AddAccountDialog()),
 	)(ctx); err != nil {
 		s.Fatal("Failed to click Add Google Account button: ", err)
 	}
@@ -134,7 +135,8 @@ func ChangeARCAvailability(ctx context.Context, s *testing.State) {
 		accountmanager.OpenAccountManagerSettingsAction(tconn, cr),
 		// Find and click "More actions, <email>" > "Stop using with Android apps" button.
 		ui.FocusAndWait(moreActionsButton),
-		ui.LeftClickUntil(moreActionsButton, ui.Exists(removeFromARCButton)),
+		ui.DoDefault(moreActionsButton),
+		ui.WaitUntilExists(removeFromARCButton),
 		ui.LeftClick(removeFromARCButton),
 		// Check that account is not present in ARC.
 		accountmanager.CheckIsAccountPresentInARCAction(tconn, arcDevice,
@@ -148,7 +150,8 @@ func ChangeARCAvailability(ctx context.Context, s *testing.State) {
 		accountmanager.OpenAccountManagerSettingsAction(tconn, cr),
 		// Find and click "More actions, <email>" > "Use with Android apps" button.
 		ui.FocusAndWait(moreActionsButton),
-		ui.LeftClickUntil(moreActionsButton, ui.Exists(addToARCButton)),
+		ui.DoDefault(moreActionsButton),
+		ui.WaitUntilExists(addToARCButton),
 		ui.LeftClick(addToARCButton),
 		// Check that account is present in ARC.
 		accountmanager.CheckIsAccountPresentInARCAction(tconn, arcDevice,
