@@ -12,11 +12,14 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/accountmanager"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -204,5 +207,24 @@ func WaitForProvisioning(ctx context.Context, a *arc.ARC, attempt int) error {
 		}
 		return err
 	}
+	return nil
+}
+
+// AddSecondaryAccount adds a secondary account to CrOS account manager.
+func AddSecondaryAccount(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, d *ui.Device, user, pass string) error {
+	ui := uiauto.New(tconn).WithTimeout(time.Minute)
+	if err := uiauto.Combine("open account manager settings",
+		accountmanager.OpenAccountManagerSettingsAction(tconn, cr),
+		ui.LeftClickUntil(
+			nodewith.Name("Add Google Account").Role(role.Button),
+			ui.Exists(accountmanager.AddAccountDialog())),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to open account manager settings")
+	}
+
+	if err := accountmanager.AddAccount(ctx, tconn, user, pass); err != nil {
+		return errors.Wrap(err, "failed to add an account in account manager")
+	}
+
 	return nil
 }

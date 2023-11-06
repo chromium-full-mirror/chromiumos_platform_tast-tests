@@ -13,17 +13,12 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 
-	"go.chromium.org/tast-tests/cros/local/accountmanager"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/retry"
 
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -164,7 +159,7 @@ func ManagedPlayStoreAccountSwitch(ctx context.Context, s *testing.State) {
 			rl.Exit("get secondary user creds", err)
 		}
 
-		if err := addSecondaryAccount(ctx, tconn, cr, d, secondaryUser.User, secondaryUser.Pass); err != nil {
+		if err := arcent.AddSecondaryAccount(ctx, tconn, cr, d, secondaryUser.User, secondaryUser.Pass); err != nil {
 			rl.Exit("add secondary account", err)
 		}
 
@@ -187,23 +182,4 @@ func ManagedPlayStoreAccountSwitch(ctx context.Context, s *testing.State) {
 	}, nil); err != nil {
 		s.Fatal("Play Store mode account switch test failed: ", err)
 	}
-}
-
-// addSecondaryAccount adds a secondary account to CrOS account manager.
-func addSecondaryAccount(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, d *ui.Device, user, pass string) error {
-	addAccountButton := nodewith.Name("Add Google Account").Role(role.Button)
-
-	ui := uiauto.New(tconn).WithTimeout(time.Minute)
-	if err := uiauto.Combine("open account manager settings",
-		accountmanager.OpenAccountManagerSettingsAction(tconn, cr),
-		ui.LeftClickUntil(addAccountButton, ui.Exists(accountmanager.AddAccountDialog())),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to open account manager settings")
-	}
-
-	if err := accountmanager.AddAccount(ctx, tconn, user, pass); err != nil {
-		return errors.Wrap(err, "failed to an add account in account manager")
-	}
-
-	return nil
 }
